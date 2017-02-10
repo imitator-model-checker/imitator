@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2016/10/11
+ * Last modified     : 2017/02/10
  *
  ************************************************************)
 
@@ -378,13 +378,13 @@ val pxd_time_elapse_assign : variable list -> variable list -> pxd_linear_constr
 (** Time elapsing function, in backward direction (corresponds to the "past" operation in, e.g., [JLR15]) *)
 val pxd_time_past_assign : variable list -> variable list -> pxd_linear_constraint -> unit
 
-(** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
+(*(** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
 (** TODO: describe better *)
-val grow_to_infinity_assign : variable list -> variable list -> p_linear_constraint -> unit
+val p_grow_to_infinity_assign : variable list -> variable list -> p_linear_constraint -> unit
 
 (** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
 (** TODO: describe better *)
-val grow_to_zero_assign : variable list -> variable list -> p_linear_constraint -> unit
+val p_grow_to_zero_assign : variable list -> variable list -> p_linear_constraint -> unit*)
 
 
 (** Replace all strict inequalities with non-strict (and keeps others unchanged) within a p_linear_constraint *)
@@ -419,6 +419,7 @@ val pxd_of_px_constraint : px_linear_constraint -> pxd_linear_constraint
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** "cast_p_of_pxd_linear_term p c" converts a PXD-term p to a P-term ; if c then a test if performed to check casting validity *)
+(*** WARNING: in fact, for now NO TEST IS EVER PERFORMED ***)
 val cast_p_of_pxd_linear_term : pxd_linear_term -> bool -> p_linear_term
 val cast_p_of_pxd_linear_constraint : pxd_linear_constraint -> bool -> p_linear_constraint
 
@@ -591,8 +592,8 @@ val string_of_p_convex_or_nonconvex_constraint : (variable -> string) -> p_conve
 val serialize_variable : variable -> string
 val unserialize_variable : string -> variable
 
-val serialize_linear_constraint : p_linear_constraint -> string
-val unserialize_linear_constraint : string -> p_linear_constraint
+(*val serialize_p_linear_constraint : p_linear_constraint -> string
+val unserialize_p_linear_constraint : string -> p_linear_constraint*)
 
 val serialize_p_nnconvex_constraint : p_nnconvex_constraint -> string
 val unserialize_p_nnconvex_constraint : string -> p_nnconvex_constraint
