@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2017/02/04
+# Last modified: 2017/02/10
 #************************************************************
 
 
@@ -516,8 +516,8 @@ Number of computed states               : 0
 		'expectations' : [
 			{'file': 'testEFdegenerate2.res' , 'content' : """
 BEGIN CONSTRAINT
- p2 >= 0
-& p1 >= p2
+ p1 >= p2
+& p2 >= 0
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -783,9 +783,9 @@ Number of computed states               : 20
 			{'file': 'PDFC4.res' , 'content' : """
 BEGIN CONSTRAINT
  10 >= p2
-& p1 + 5 >= p2
 & p2 >= 0
 & p1 >= 0
+& p1 + 5 >= p2
 END CONSTRAINT
 
 ------------------------------------------------------------
