@@ -10,7 +10,7 @@
 # 
 # File contributors : Étienne André
 # Created           : 2016/08/08
-# Last modified     : 2016/08/24
+# Last modified     : 2017/02/10
 #************************************************************
 
 
@@ -25,6 +25,16 @@ import sys
 import subprocess
 import webbrowser 
 
+# To output colored text
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 
 #************************************************************
@@ -69,7 +79,8 @@ V_2_6_1		= 2
 V_2_6_2_825	= 3
 V_2_7_3		= 4
 V_2_8		= 5
-V_current	= 6
+V_2_8_2146	= 6
+V_current	= 7
 
 #------------------------------------------------------------
 # Options
@@ -210,6 +221,26 @@ versions = {
 		'files_suffix'			: '_2_8',
 	},
 	#------------------------------------------------------------
+	V_2_8_2146 : {
+		'version_name'		: '2.8-2146',
+		'binary'			: 'imitator2146',
+		'binary_dist'		: 'patator',
+		'syntax':
+			{
+			OPT_DISTR_SUBDOMAIN		: '-distributed dynamic',
+			OPT_INCLUSION			: '-incl',
+			OPT_MERGING				: '-merge',
+			OPT_MODE_COVER			: '-mode cover',
+			OPT_MODE_EF				: '-mode EFold',
+			OPT_OUTPUT_CART			: '-output-cart',
+			OPT_OUTPUT_PREFIX		: '-output-prefix',
+			OPT_OUTPUT_RES			: '-output-result',
+			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
+			OPT_PRP					: '-PRP',
+			},
+		'files_suffix'			: '_2_8_2146',
+	},
+	#------------------------------------------------------------
 	V_current : {
 		'version_name'		: 'current',
 		'binary'			: 'imitator',
@@ -250,20 +281,20 @@ def make_log_file(benchmark, version):
 	return RESULT_FILES_PATH + benchmark['log_prefix'] +  versions[version]['files_suffix'] + ".benchlog"
 
 def fail_with(text) :
-	print_to_screen('Fatal error!')
-	print_to_screen(text)
+	print_to_screen(bcolors.FAIL + 'Fatal error!' + bcolors.ENDC)
+	print_to_screen(bcolors.FAIL + text + bcolors.ENDC)
 	sys.exit(1)
 
 def print_warning(text) :
-	print_to_screen(' *** Warning: ' + text)
+	print_to_screen(bcolors.WARNING + ' *** Warning: ' + text + bcolors.ENDC)
 
 def print_error(text) :
-	print_to_screen(' *** Error: ' + text)
+	print_to_screen(bcolors.FAIL + ' *** Error: ' + text + bcolors.ENDC)
 
 def print_to_screen(content):
 	# Print
 	print content
-	
+
 def write_to_file(PATH_FILE, content):
 	wrote_file = open(PATH_FILE, "a")
 	wrote_file.write(content)
@@ -306,7 +337,7 @@ def get_computation_time(benchmark, version, cartography_mode):
 		print_error("Time not found for benchmark " + benchmark['benchmark_name'] + " with version " + versions[version]['version_name'])
 		return ANALYSIS_FAILED
 	
-	if version == V_2_8 or version == V_current:
+	if version == V_2_8 or version == V_2_8_2146 or version == V_current:
 		# Open res file
 		res_file = RESULT_FILES_PATH + benchmark['log_prefix'] +  versions[version]['files_suffix'] + ".res"
 		if not os.path.isfile(res_file):
@@ -337,7 +368,7 @@ def run(benchmark, versions_to_test):
 	# Print something
 	print_to_screen('')
 	print_to_screen('############################################################')
-	print_to_screen(' BENCHMARK ' + benchmark['benchmark_name'])
+	print_to_screen(bcolors.BOLD + ' BENCHMARK ' + benchmark['benchmark_name'] + bcolors.ENDC)
 	
 	# Create the row in the results array
 	results[benchmark['log_prefix']] = {}
@@ -457,14 +488,14 @@ def print_line(versions_to_test, benchmark_name, result):
 	
 	for version in versions_to_test:
 		# Normal case
-		result_str = str(result[version])
+		result_str = bcolors.OKBLUE + str(result[version]) + bcolors.ENDC
 		# Case: not run
 		if result[version] == ANALYSIS_NOT_RUN:
-			result_str = 'not run'
+			result_str = bcolors.WARNING + 'not run' + bcolors.ENDC
 		# Case: could not get the result (analys failed)
 		else:
 			if result[version] == ANALYSIS_FAILED:
-				result_str = 'failed'
+				result_str = bcolors.FAIL + 'failed' + bcolors.ENDC
 		line = line + result_str + "; "
 	
 	print_to_screen(line)
@@ -474,7 +505,7 @@ def print_results(versions_to_test):
 	# Print something
 	print_to_screen('')
 	print_to_screen('############################################################')
-	print_to_screen(' RESULTS')
+	print_to_screen(bcolors.BOLD + ' RESULTS' + bcolors.ENDC)
 	
 	header_line = 'version; '
 	
@@ -503,14 +534,14 @@ def write_line(PATH_FILE, versions_to_test, benchmark_name, result):
 	
 	for version in versions_to_test:
 		# Normal case
-		result_str = str(result[version])
+		result_str = bcolors.OKBLUE + str(result[version]) + bcolors.ENDC
 		# Case: not run
 		if result[version] == ANALYSIS_NOT_RUN:
-			result_str = 'not run'
+			result_str = bcolors.WARNING + 'not run' + bcolors.ENDC
 		# Case: could not get the result (analys failed)
 		else:
 			if result[version] == ANALYSIS_FAILED:
-				result_str = 'failed'
+				result_str = bcolors.FAIL + 'failed' + bcolors.ENDC
 		line = line + result_str + "; "
 	
 	write_to_file(PATH_FILE, line + "\n")
@@ -524,7 +555,8 @@ def reset_data_file(PATH_FILE):
 # RUN!
 #************************************************************
 
-all_versions = [V_2_5, V_2_6_1, V_2_6_2_825, V_2_7_3, V_2_8, V_current]
+#all_versions = [V_2_5, V_2_6_1, V_2_6_2_825, V_2_7_3, V_2_8, V_current]
+all_versions = [V_2_8_2146, V_current]
 
 # IMPORTING THE BENCHMARKS CONTENT
 import comparator_data
