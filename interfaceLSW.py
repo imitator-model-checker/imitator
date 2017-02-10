@@ -10,7 +10,7 @@
 # 
 # File contributors : Étienne André
 # Created           : 2016/11/07
-# Last modified     : 2017/02/03
+# Last modified     : 2017/02/10
 #************************************************************
 
 # ###
@@ -66,10 +66,18 @@ LEARNING_OUTPUT_FILE_COUNTEREXAMPLE = LEARNING_TMP_DIR + 'counterexample.imi'
 # Init definition for abstraction output by learning
 LEARNING_INIT_DEFINITION = 'loc[AbstractERA] = AbstractERA_init'
 
-DEBUG_MODE = True
-#DEBUG_MODE = False
+#DEBUG_MODE = True
+DEBUG_MODE = False
 
 
+# To output colored text
+class bcolors:
+	ERROR = '\033[91m'
+	INTERFACATOR = '\033[0;36;40m'
+	NORMAL = '\033[0m'
+	WARNING = '\033[93m'
+
+  
 #************************************************************
 # TAGS
 #************************************************************
@@ -123,17 +131,17 @@ def print_to_screen(content):
 	# Revert stdout
 	#sys.stdout = orig_stdout
 	# Print
-	print content
+	print bcolors.INTERFACATOR + content + bcolors.INTERFACATOR
 	# Put back stdout to log file
 	#sys.stdout = logfile
 
 
 def print_warning(text) :
-	print_to_screen('Warning: ' + text)
+	print_to_screen( bcolors.WARNING + 'Warning: ' + text + bcolors.INTERFACATOR)
 
 def fail_with(text) :
-	print_to_screen('Fatal error!')
-	print_to_screen(text)
+	print_to_screen(bcolors.ERROR + 'Fatal error!' + bcolors.INTERFACATOR)
+	print_to_screen(bcolors.ERROR + text + bcolors.INTERFACATOR)
 	sys.exit(1)
 
 
@@ -697,7 +705,7 @@ write_file_content(new_model_name, abstracted_model)
 
 print_to_screen('')
 print_to_screen('…The end of ' + THIS_SCRIPT_NAME + '!')
-print_to_screen('*-**--***---****---***--**-*')
+print_to_screen('*-**--***---****---***--**-*' + bcolors.NORMAL)
 
 # Happy end
 sys.exit(0)
