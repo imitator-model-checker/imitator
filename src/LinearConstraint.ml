@@ -1750,7 +1750,22 @@ let p_intersection_assign l c = intersection_assign !p_dim l c
 let px_intersection_assign l c = intersection_assign !px_dim l c
 let pxd_intersection_assign l c = intersection_assign !pxd_dim l c
 
-let px_intersection_assign_p px_linear_constraint p_linear_constraint_list =
+let px_intersection_assign_p px_linear_constraint = function
+	(* No constraint: nothing to do *)
+	| [] -> ()
+	(* Some p_linear_constraint's *)
+	| first :: (rest : p_linear_constraint list) -> 
+		(* Copy the first constraint *)
+		let first_copy : p_linear_constraint = p_copy first in
+		(* Intersect with others *)
+		p_intersection_assign first_copy rest;
+		(* Increase dimensions *)
+		ippl_add_dimensions (!px_dim - !p_dim) first_copy;
+		(* Intersect *)
+		px_intersection_assign px_linear_constraint [first_copy]
+
+	(*** NOTE: old version; less efficient????? (not formally tested) ***)
+(*	
 	(*** NOTE: we first need to increase the number of dimensions ***)
 	(* Copy the intersected constraints *)
 	let p_linear_constraint_list_copy = List.map p_copy p_linear_constraint_list in
@@ -1758,7 +1773,7 @@ let px_intersection_assign_p px_linear_constraint p_linear_constraint_list =
 	(*** NOTE: 'ippl_add_dimensions nb' adds nb new dimensions ***)
 	List.iter (ippl_add_dimensions (!px_dim - !p_dim)) p_linear_constraint_list_copy;
 	(* Intersect *)
-	px_intersection_assign px_linear_constraint p_linear_constraint_list_copy
+	px_intersection_assign px_linear_constraint p_linear_constraint_list_copy*)
 
 
 (** Performs the intersection of a list of linear constraints *)
