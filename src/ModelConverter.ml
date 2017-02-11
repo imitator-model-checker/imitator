@@ -2295,7 +2295,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	end;
 	
 	(* A (constant) array of hash tables 'automaton_index -> location_name -> location_index' *)
-	let index_of_locations = Array.create nb_automata (Hashtbl.create 0) in
+	let index_of_locations = Array.make nb_automata (Hashtbl.create 0) in
 	for automaton_index = 0 to nb_automata - 1 do
 		let nb_locations = Array.length (array_of_location_names.(automaton_index)) in
 		let location_index_table = Hashtbl.create nb_locations in

@@ -2856,7 +2856,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	new_transitions_array_hashtbl.(automaton_index) <- Array.make new_nb_locations (Hashtbl.create 0);
 	
 	(* Sort the transitions according to their origin location index using a structure Array : location_index -> (action_index, transition) list *)
-	let transitions_per_location = Array.create new_nb_locations [] in
+	let transitions_per_location = Array.make new_nb_locations [] in
 	
 	print_message Verbose_low ("\nSorting new transitions per origin location...");
 	

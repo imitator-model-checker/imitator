@@ -3686,8 +3686,9 @@ let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
 								| Var v -> ()
 								| Pl (lterm, rterm) -> 	(
 													(*** TODO: problem here?? (ÉA, 2017/02/08) ***)
-			  											isMinus lterm;
-														isMinus rterm;
+			  											(* isMinus lterm;
+														isMinus rterm; *)
+														b := (isMinus lterm || isMinus rterm);
 														()
 														)
 								| Mi (lterm, rterm) -> 	( 
