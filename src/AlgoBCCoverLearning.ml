@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/07/22
- * Last modified     : 2017/02/03
+ * Last modified     : 2017/02/13
  *
  ************************************************************)
 
@@ -24,6 +24,7 @@ open Exceptions
 open AbstractModel
 open Result
 open AlgoBCCover
+open Statistics
 
 
 (************************************************************)
@@ -65,6 +66,9 @@ class algoBCCoverLearning =
 	(* Backup the original model file names *)
 	val original_file = (Input.get_options ())#model_input_file_name
 	val original_files_prefix = (Input.get_options ())#files_prefix
+	
+	val counter_interface = create_hybrid_counter_and_register "learning" Algorithm_counter Verbose_standard
+	val counter_reparsing = create_hybrid_counter_and_register "learning: re-parsing" Algorithm_counter Verbose_standard
 	
 	
 	
@@ -145,7 +149,10 @@ class algoBCCoverLearning =
 		 
 		
 		(* Call the script *)
+		counter_interface#increment;
+		counter_interface#start;
 		let execution = Sys.command script_line in
+		counter_interface#stop;
 		if execution <> 0 then
 			raise (InternalError ("Something went wrong in the command.\nExit code: " ^ (string_of_int execution) ^ ".\nCommand: '" ^ script_line ^ "'");)
 		else
@@ -190,9 +197,10 @@ class algoBCCoverLearning =
 		options#set_file learning_based_model_filename;
 		options#set_files_prefix learning_based_model_filename_prefix;
 		
-		(*** TODO: counter ***)
+		counter_reparsing#increment;
+		counter_reparsing#start;
 		let new_model = ParsingUtility.compile_model options false in
-		(*** TODO: counter ***)
+		counter_reparsing#stop;
 		
 		(* Set model *)
 		Input.set_model new_model;
