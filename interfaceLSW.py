@@ -10,7 +10,7 @@
 # 
 # File contributors : Étienne André
 # Created           : 2016/11/07
-# Last modified     : 2017/02/10
+# Last modified     : 2017/02/14
 #************************************************************
 
 # ###
@@ -278,6 +278,8 @@ def valuate_component(component, pi0):
 #------------------------------------------------------------
 def add_INIT_locations(component, component_automata, initial_locations):
 	
+	new_component = component
+	
 	# Iterate on the component automata
 	for automaton_name in component_automata:
 		# Find the initial location for automaton
@@ -304,6 +306,9 @@ def add_INIT_locations(component, component_automata, initial_locations):
 # WARNING: this is based on string replacing, so location names should not overlap each other
 #------------------------------------------------------------
 def add_ACCEPTING_locations(component, component_automata):
+
+	new_component = component
+	
 	# Iterate on the component automata
 	for automaton_name in component_automata:
 		# Replace 'loc location' with 'loc location[INIT]'
