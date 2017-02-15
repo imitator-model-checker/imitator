@@ -1969,8 +1969,8 @@ END CONSTRAINT
 		'options'    : '-IMK -output-result -no-random',
 		'expectations' : [
 			{'file': 'exVariantes.res' , 'content' : """
-		   5*p1 > p2
-    & p2 > 2
+ p2 > 2
+& 5*p1 > p2
 		  """
 			} # end result file
 			,
@@ -4002,12 +4002,12 @@ Average number of transitions : 14.1
 """
 			} # end BC file
 			, 
-			{'file': 'flipflop_cart_points_2.txt' , 'content' : """14. 3.
-8. 9.
+			{'file': 'flipflop_cart_points_2.txt' , 'content' : """8. 9.
 8. 16.
 17. 7.
 17. 3.
 14. 3.
+8. 9.
 # """
 			} # end tile file
 			,
