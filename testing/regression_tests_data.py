@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2017/02/10
+# Last modified: 2017/02/15
 #************************************************************
 
 
@@ -31,7 +31,8 @@ tests = [
   /************************************************************/
   INITIAL
   STATE 0:
-  input: Input0, g1: G10011, g2: G2101, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0, qLevel = 0 ==> 
+  input: Input0, g1: G10011, g2: G2101, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 5 >= s
 & dG3_u >= 8
 & dG4_u >= 3
 & s >= 0
@@ -39,7 +40,6 @@ tests = [
 & ckG2 >= s
 & ckG3 >= s
 & ckG4 >= s
-& 5 >= s
 
   Projection onto the parameters:
    dG4_u >= 3
@@ -47,14 +47,14 @@ tests = [
 
   /************************************************************/
   STATE 1:
-  input: Input1, g1: G11011, g2: G2101, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0, qLevel = 0 ==> 
-& ckG4 >= s
+  input: Input1, g1: G11011, g2: G2101, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 12 >= s
 & dG3_u >= 8
 & dG4_u >= 3
 & s >= 5
 & ckG2 >= s
 & ckG3 >= s
-& 12 >= s
+& ckG4 >= s
 & s = 5 + ckG1
 
   Projection onto the parameters:
@@ -63,14 +63,14 @@ tests = [
 
   /************************************************************/
   STATE 2:
-  input: Input1, g1: G11010, g2: G2001, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0, qLevel = 0 ==> 
-& ckG4 >= s
+  input: Input1, g1: G11010, g2: G2001, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 15 >= s
 & dG3_u >= 8
 & dG4_u >= 3
 & s >= 12
 & ckG2 >= s
 & ckG3 >= s
-& 15 >= s
+& ckG4 >= s
 & s = 5 + ckG1
 
   Projection onto the parameters:
@@ -79,32 +79,32 @@ tests = [
 
   /************************************************************/
   STATE 3:
-  input: Input2, g1: G11110, g2: G2011, g3: G30111, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0, qLevel = 0 ==> 
+  input: Input2, g1: G11110, g2: G2011, g3: G30111, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& dG3_u + 15 >= s
 & 32 >= s
-& ckG4 >= s
 & dG3_u >= 8
 & dG4_u >= 3
 & ckG2 >= s
 & s >= 15
-& dG3_u + 15 >= s
-& s = 15 + ckG3
+& ckG4 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 8
+   dG3_u >= 8
+& dG4_u >= 3
 
   /************************************************************/
   STATE 4:
-  input: Input3, g1: G10110, g2: G2011, g3: G30111, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0, qLevel = 0 ==> 
-& ckG4 >= s
+  input: Input3, g1: G10110, g2: G2011, g3: G30111, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 39 >= s
 & dG3_u + 15 >= s
 & dG4_u >= 3
 & ckG2 >= s
 & s >= 32
-& 39 >= s
-& s = 15 + ckG3
+& ckG4 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
    dG3_u >= 17
@@ -112,66 +112,66 @@ tests = [
 
   /************************************************************/
   STATE 5:
-  input: Input2, g1: G11110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0, qLevel = 0 ==> 
-& dG4_u >= ckG4
+  input: Input2, g1: G11110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 32 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 23 + ckG4
 & ckG4 >= 0
 & ckG2 >= s
-& 32 >= s
-& s = 15 + ckG3
+& dG4_u >= ckG4
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 8
+   dG3_u >= 8
+& dG4_u >= 3
 
   /************************************************************/
   STATE 6:
-  input: Input4, g1: G10010, g2: G2001, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_2, qLevel = 0 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u >= 24
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 39
+& s = 0
 & ckG1 = 0
 & ckG3 = 24
-& s = 0
 
   Projection onto the parameters:
-   dG3_u >= 24
-& dG4_u >= 3
+   dG4_u >= 3
+& dG3_u >= 24
 
   /************************************************************/
   STATE 7:
-  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0, qLevel = 0 ==> 
-& dG4_u >= ckG4
+  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 32 + ckG4
 & ckG4 >= 0
 & ckG2 >= s
-& 39 >= s
-& s = 15 + ckG3
+& dG4_u >= ckG4
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 17
+   dG3_u >= 17
+& dG4_u >= 3
 
   /************************************************************/
   STATE 8:
-  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0, qLevel = 0 ==> 
-& ckG4 + 32 >= s
+  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= ckG4
 & dG4_u >= 3
 & ckG2 >= s
 & s >= 32
 & s >= 23 + ckG4
-& 39 >= s
-& s = 15 + ckG3
+& ckG4 + 32 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
    dG3_u + dG4_u >= 17
@@ -180,32 +180,32 @@ tests = [
 
   /************************************************************/
   STATE 9:
-  input: Input2, g1: G11110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1, qLevel = 1 ==> 
+  input: Input2, g1: G11110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 23 + ckG4
 & ckG4 >= 3
 & ckG2 >= s
 & 32 >= s
-& s = 15 + ckG3
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 8
+   dG3_u >= 8
+& dG4_u >= 3
 
   /************************************************************/
   STATE 10:
-  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, automatically_generated_observer: loc_AutoGen_obs_2, qLevel = 0 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 0
 & 7 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 0
-& s = 0
 
   Projection onto the parameters:
    dG3_u + dG4_u >= 24
@@ -214,41 +214,41 @@ tests = [
 
   /************************************************************/
   STATE 11:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1, qLevel = 1 ==> 
+  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 32 + ckG4
 & ckG4 >= 3
 & ckG2 >= s
 & 39 >= s
-& s = 15 + ckG3
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 17
+   dG3_u >= 17
+& dG4_u >= 3
 
   /************************************************************/
   STATE 12:
-  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, automatically_generated_observer: loc_AutoGen_obs_2, qLevel = 0 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & ckG2 >= 39
 & ckG4 >= 7
 & 16 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 0
-& s = 0
 
   Projection onto the parameters:
    dG4_u >= 7
-& dG3_u + dG4_u >= 24
 & dG3_u >= 8
+& dG3_u + dG4_u >= 24
 
   /************************************************************/
   STATE 13:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1, qLevel = 1 ==> 
-& ckG4 + 32 >= s
+  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
+& 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u + s >= 32 + ckG4
 & dG4_u >= 3
@@ -256,27 +256,27 @@ tests = [
 & s >= 23 + ckG4
 & ckG4 >= 3
 & ckG2 >= s
-& 39 >= s
-& s = 15 + ckG3
+& ckG4 + 32 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u + dG4_u >= 17
+   dG3_u + dG4_u >= 17
 & dG3_u >= 8
+& dG4_u >= 3
 
   /************************************************************/
   STATE 14:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1, qLevel = 1 ==> 
-& ckG4 + 29 >= s
+  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
+& 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & ckG2 >= s
 & s >= 32
 & s >= 23 + ckG4
-& 39 >= s
-& s = 15 + ckG3
+& ckG4 + 29 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
    dG3_u >= 8
@@ -284,16 +284,16 @@ tests = [
 
   /************************************************************/
   STATE 15:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u + 7 >= ckG4
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 7
 & 16 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 24
-& s = 0
 
   Projection onto the parameters:
    dG3_u + dG4_u >= 17
@@ -302,32 +302,32 @@ tests = [
 
   /************************************************************/
   STATE 16:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_2, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & ckG2 >= 39
 & ckG4 >= 7
 & 16 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 0
-& s = 0
 
   Projection onto the parameters:
    dG4_u >= 7
-& dG3_u + dG4_u >= 24
 & dG3_u >= 8
+& dG3_u + dG4_u >= 24
 
   /************************************************************/
   STATE 17:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 3
 & 7 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 24
-& s = 0
 
   Projection onto the parameters:
    dG3_u >= 17
@@ -335,32 +335,32 @@ tests = [
 
   /************************************************************/
   STATE 18:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_2, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & ckG2 >= 39
 & ckG4 >= 3
 & 7 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 0
-& s = 0
 
   Projection onto the parameters:
    dG4_u >= 3
-& dG3_u + dG4_u >= 24
 & dG3_u >= 17
+& dG3_u + dG4_u >= 24
 
   /************************************************************/
   STATE 19:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 10
 & 16 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 24
-& s = 0
 
   Projection onto the parameters:
    dG3_u >= 8
@@ -461,8 +461,8 @@ tests = [
 		'expectations' : [
 			{'file': 'testEFdegenerate1.res' , 'content' : """
 BEGIN CONSTRAINT
- p1 >= 0
-& p2 >= 0
+ p2 >= 0
+& p1 >= 0
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -611,11 +611,11 @@ END CONSTRAINT
 		'expectations' : [
 			{'file': 'coffeeDrinker-TACAS.res' , 'content' : """
 BEGIN CONSTRAINT
- p_add_sugar + p_coffee >= 15
+ 15 >= p_add_sugar
 & p_button > 0
-& 15 >= p_add_sugar
-& p_coffee > 0
+& p_add_sugar + p_coffee >= 15
 & p_add_sugar >= 3*p_button
+& p_coffee > 0
  OR 
  p_add_sugar + p_coffee >= 15
 & p_button >= 5
@@ -624,50 +624,50 @@ BEGIN CONSTRAINT
 & p_add_sugar >= 2*p_button
  OR 
  3*p_button >= p_add_sugar + p_coffee
-& p_coffee > 0
-& 15 >= p_add_sugar + p_coffee
 & p_add_sugar >= 2*p_button
+& 15 >= p_add_sugar + p_coffee
+& p_coffee > 0
  OR 
- p_add_sugar >= 15
-& 5 >= p_button
+ 5 >= p_button
 & p_button > 0
+& p_add_sugar >= 15
 & p_coffee > 0
  OR 
- p_add_sugar >= 15
-& 15 >= 2*p_button
+ 15 >= 2*p_button
 & p_button >= 5
+& p_add_sugar >= 15
 & p_coffee > 0
  OR 
  p_add_sugar + p_coffee >= 15
+& p_add_sugar >= p_button
+& 15 >= p_add_sugar
+& p_coffee > 0
 & 2*p_button >= 15
-& 15 >= p_add_sugar
-& p_coffee > 0
-& p_add_sugar >= p_button
  OR 
- 2*p_button >= p_add_sugar + p_coffee
+ p_add_sugar >= p_button
 & p_coffee > 0
 & 15 >= p_add_sugar + p_coffee
-& p_add_sugar >= p_button
+& 2*p_button >= p_add_sugar + p_coffee
  OR 
- p_add_sugar + p_coffee >= 15
+ p_coffee > 0
+& 15 >= p_add_sugar
+& p_add_sugar > 0
+& p_add_sugar + p_coffee >= 15
 & p_button >= 15
-& 15 >= p_add_sugar
-& p_coffee > 0
-& p_add_sugar > 0
  OR 
- p_button >= p_add_sugar + p_coffee
-& p_coffee > 0
+ p_add_sugar > 0
 & 15 >= p_add_sugar + p_coffee
-& p_add_sugar > 0
+& p_coffee > 0
+& p_button >= p_add_sugar + p_coffee
  OR 
- p_add_sugar >= 15
+ 2*p_button >= 15
 & 15 >= p_button
-& 2*p_button >= 15
+& p_add_sugar >= 15
 & p_coffee > 0
  OR 
- p_add_sugar >= 15
-& p_button >= 15
+ p_button >= 15
 & p_coffee > 0
+& p_add_sugar >= 15
 END CONSTRAINT
 """
 			} #end result file
@@ -812,8 +812,8 @@ Number of computed states               : 3
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
- p2 >= 0
-& p3 >= 0
+ p3 >= 0
+& p2 >= 0
 & p1 >= 0
 END CONSTRAINT
 
@@ -895,8 +895,8 @@ Number of computed states               : 5
 		'expectations' : [
 			{'file': 'CUBPTA1.res' , 'content' : """
 BEGIN CONSTRAINT
- p2 >= 1
-& p1 >= 0
+ p1 >= 0
+& p2 >= 1
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -926,8 +926,8 @@ BEGIN CONSTRAINT
  p2 >= 0
 & p1 >= 5
 OR
-  p2 >= 1
-& p1 >= 0
+  p1 >= 0
+& p2 >= 1
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -1039,8 +1039,8 @@ Number of computed states     : 2
 & x >= 0
 
   Projection onto the parameters:
-   p1 >= 0
-& p2 >= 0
+   p2 >= 0
+& p1 >= 0
 
   /************************************************************/
   STATE 1:
@@ -1053,9 +1053,9 @@ Number of computed states     : 2
 
   Projection onto the parameters:
    10 >= p2
-& p1 + 5 >= p2
 & p2 >= 0
 & p1 >= 0
+& p1 + 5 >= p2
 
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1 via "a"
@@ -1105,8 +1105,8 @@ Number of computed states     : 3
 & x >= 0
 
   Projection onto the parameters:
-   p1 >= 0
-& p2 >= 0
+   p2 >= 0
+& p1 >= 0
 
   /************************************************************/
   STATE 1:
@@ -1119,9 +1119,9 @@ Number of computed states     : 3
 
   Projection onto the parameters:
    10 >= p2
-& p1 + 5 >= p2
 & p2 >= 0
 & p1 >= 0
+& p1 + 5 >= p2
 
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1 via "a"
@@ -1288,8 +1288,8 @@ Number of computed states     : 7
 & x1 = x2
 
   Projection onto the parameters:
-   p2 >= 0
-& p3 >= 0
+   p3 >= 0
+& p2 >= 0
 & p1 >= 0
 
   /************************************************************/
@@ -1302,8 +1302,8 @@ Number of computed states     : 7
 & x1 = x2
 
   Projection onto the parameters:
-   p2 >= 0
-& p3 >= 0
+   p3 >= 0
+& p2 >= 0
 & p1 >= 0
 
   /************************************************************/
@@ -1318,9 +1318,9 @@ Number of computed states     : 7
 
   Projection onto the parameters:
    p1 + 5 >= p3
-& p2 >= 0
 & p3 >= 0
 & p1 >= 0
+& p2 >= 0
 
   /************************************************************/
   STATE 3:
@@ -1332,8 +1332,8 @@ Number of computed states     : 7
 & x1 = x2
 
   Projection onto the parameters:
-   p2 >= 0
-& p3 >= 0
+   p3 >= 0
+& p2 >= 0
 & p1 >= 0
 
   /************************************************************/
@@ -1348,9 +1348,9 @@ Number of computed states     : 7
 
   Projection onto the parameters:
    p1 + 5 >= p3
-& p2 >= 0
 & p3 >= 0
 & p1 >= 0
+& p2 >= 0
 
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_2
@@ -1393,7 +1393,8 @@ Number of computed states     : 20
   /************************************************************/
   INITIAL
   STATE 0:
-  input: Input0, g1: G10011, g2: G2101, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0, qLevel = 0 ==> 
+  input: Input0, g1: G10011, g2: G2101, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 5 >= s
 & dG3_u >= 8
 & dG4_u >= 3
 & s >= 0
@@ -1401,7 +1402,6 @@ Number of computed states     : 20
 & ckG2 >= s
 & ckG3 >= s
 & ckG4 >= s
-& 5 >= s
 
   Projection onto the parameters:
    dG4_u >= 3
@@ -1409,14 +1409,14 @@ Number of computed states     : 20
 
   /************************************************************/
   STATE 1:
-  input: Input1, g1: G11011, g2: G2101, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0, qLevel = 0 ==> 
-& ckG4 >= s
+  input: Input1, g1: G11011, g2: G2101, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 12 >= s
 & dG3_u >= 8
 & dG4_u >= 3
 & s >= 5
 & ckG2 >= s
 & ckG3 >= s
-& 12 >= s
+& ckG4 >= s
 & s = 5 + ckG1
 
   Projection onto the parameters:
@@ -1425,14 +1425,14 @@ Number of computed states     : 20
 
   /************************************************************/
   STATE 2:
-  input: Input1, g1: G11010, g2: G2001, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0, qLevel = 0 ==> 
-& ckG4 >= s
+  input: Input1, g1: G11010, g2: G2001, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 15 >= s
 & dG3_u >= 8
 & dG4_u >= 3
 & s >= 12
 & ckG2 >= s
 & ckG3 >= s
-& 15 >= s
+& ckG4 >= s
 & s = 5 + ckG1
 
   Projection onto the parameters:
@@ -1441,32 +1441,32 @@ Number of computed states     : 20
 
   /************************************************************/
   STATE 3:
-  input: Input2, g1: G11110, g2: G2011, g3: G30111, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0, qLevel = 0 ==> 
+  input: Input2, g1: G11110, g2: G2011, g3: G30111, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& dG3_u + 15 >= s
 & 32 >= s
-& ckG4 >= s
 & dG3_u >= 8
 & dG4_u >= 3
 & ckG2 >= s
 & s >= 15
-& dG3_u + 15 >= s
-& s = 15 + ckG3
+& ckG4 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 8
+   dG3_u >= 8
+& dG4_u >= 3
 
   /************************************************************/
   STATE 4:
-  input: Input3, g1: G10110, g2: G2011, g3: G30111, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0, qLevel = 0 ==> 
-& ckG4 >= s
+  input: Input3, g1: G10110, g2: G2011, g3: G30111, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 39 >= s
 & dG3_u + 15 >= s
 & dG4_u >= 3
 & ckG2 >= s
 & s >= 32
-& 39 >= s
-& s = 15 + ckG3
+& ckG4 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
    dG3_u >= 17
@@ -1474,66 +1474,66 @@ Number of computed states     : 20
 
   /************************************************************/
   STATE 5:
-  input: Input2, g1: G11110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0, qLevel = 0 ==> 
-& dG4_u >= ckG4
+  input: Input2, g1: G11110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 32 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 23 + ckG4
 & ckG4 >= 0
 & ckG2 >= s
-& 32 >= s
-& s = 15 + ckG3
+& dG4_u >= ckG4
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 8
+   dG3_u >= 8
+& dG4_u >= 3
 
   /************************************************************/
   STATE 6:
-  input: Input4, g1: G10010, g2: G2001, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_2, qLevel = 0 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u >= 24
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 39
+& s = 0
 & ckG1 = 0
 & ckG3 = 24
-& s = 0
 
   Projection onto the parameters:
-   dG3_u >= 24
-& dG4_u >= 3
+   dG4_u >= 3
+& dG3_u >= 24
 
   /************************************************************/
   STATE 7:
-  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0, qLevel = 0 ==> 
-& dG4_u >= ckG4
+  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 32 + ckG4
 & ckG4 >= 0
 & ckG2 >= s
-& 39 >= s
-& s = 15 + ckG3
+& dG4_u >= ckG4
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 17
+   dG3_u >= 17
+& dG4_u >= 3
 
   /************************************************************/
   STATE 8:
-  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0, qLevel = 0 ==> 
-& ckG4 + 32 >= s
+  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= ckG4
 & dG4_u >= 3
 & ckG2 >= s
 & s >= 32
 & s >= 23 + ckG4
-& 39 >= s
-& s = 15 + ckG3
+& ckG4 + 32 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
    dG3_u + dG4_u >= 17
@@ -1542,32 +1542,32 @@ Number of computed states     : 20
 
   /************************************************************/
   STATE 9:
-  input: Input2, g1: G11110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1, qLevel = 1 ==> 
+  input: Input2, g1: G11110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 23 + ckG4
 & ckG4 >= 3
 & ckG2 >= s
 & 32 >= s
-& s = 15 + ckG3
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 8
+   dG3_u >= 8
+& dG4_u >= 3
 
   /************************************************************/
   STATE 10:
-  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, automatically_generated_observer: loc_AutoGen_obs_2, qLevel = 0 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 0
 & 7 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 0
-& s = 0
 
   Projection onto the parameters:
    dG3_u + dG4_u >= 24
@@ -1576,41 +1576,41 @@ Number of computed states     : 20
 
   /************************************************************/
   STATE 11:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1, qLevel = 1 ==> 
+  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 32 + ckG4
 & ckG4 >= 3
 & ckG2 >= s
 & 39 >= s
-& s = 15 + ckG3
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 17
+   dG3_u >= 17
+& dG4_u >= 3
 
   /************************************************************/
   STATE 12:
-  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, automatically_generated_observer: loc_AutoGen_obs_2, qLevel = 0 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & ckG2 >= 39
 & ckG4 >= 7
 & 16 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 0
-& s = 0
 
   Projection onto the parameters:
    dG4_u >= 7
-& dG3_u + dG4_u >= 24
 & dG3_u >= 8
+& dG3_u + dG4_u >= 24
 
   /************************************************************/
   STATE 13:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1, qLevel = 1 ==> 
-& ckG4 + 32 >= s
+  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
+& 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u + s >= 32 + ckG4
 & dG4_u >= 3
@@ -1618,27 +1618,27 @@ Number of computed states     : 20
 & s >= 23 + ckG4
 & ckG4 >= 3
 & ckG2 >= s
-& 39 >= s
-& s = 15 + ckG3
+& ckG4 + 32 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u + dG4_u >= 17
+   dG3_u + dG4_u >= 17
 & dG3_u >= 8
+& dG4_u >= 3
 
   /************************************************************/
   STATE 14:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1, qLevel = 1 ==> 
-& ckG4 + 29 >= s
+  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
+& 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & ckG2 >= s
 & s >= 32
 & s >= 23 + ckG4
-& 39 >= s
-& s = 15 + ckG3
+& ckG4 + 29 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
    dG3_u >= 8
@@ -1646,16 +1646,16 @@ Number of computed states     : 20
 
   /************************************************************/
   STATE 15:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u + 7 >= ckG4
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 7
 & 16 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 24
-& s = 0
 
   Projection onto the parameters:
    dG3_u + dG4_u >= 17
@@ -1664,32 +1664,32 @@ Number of computed states     : 20
 
   /************************************************************/
   STATE 16:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_2, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & ckG2 >= 39
 & ckG4 >= 7
 & 16 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 0
-& s = 0
 
   Projection onto the parameters:
    dG4_u >= 7
-& dG3_u + dG4_u >= 24
 & dG3_u >= 8
+& dG3_u + dG4_u >= 24
 
   /************************************************************/
   STATE 17:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 3
 & 7 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 24
-& s = 0
 
   Projection onto the parameters:
    dG3_u >= 17
@@ -1697,32 +1697,32 @@ Number of computed states     : 20
 
   /************************************************************/
   STATE 18:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_2, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & ckG2 >= 39
 & ckG4 >= 3
 & 7 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 0
-& s = 0
 
   Projection onto the parameters:
    dG4_u >= 3
-& dG3_u + dG4_u >= 24
 & dG3_u >= 17
+& dG3_u + dG4_u >= 24
 
   /************************************************************/
   STATE 19:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 10
 & 16 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 24
-& s = 0
 
   Projection onto the parameters:
    dG3_u >= 8
