@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/27
- * Last modified     : 2016/06/08
+ * Last modified     : 2017/02/15
  *
  ************************************************************)
 
@@ -36,8 +36,9 @@ let useless_clocks = ref None (* not yet initialized *)
 (**************************************************************)
 (* Statistics *)
 (**************************************************************)
-let counter_preparation = create_time_counter_and_register "dynamic clock elimination (preparation)" Algorithm_counter Verbose_standard
-let counter_elimination = create_hybrid_counter_and_register "dynamic clock elimination" Algorithm_counter Verbose_standard
+let counter_preparation = ref None
+let counter_elimination = ref None
+
 
 (**************************************************************)
 (* Functions *)
@@ -173,7 +174,7 @@ let find_useless_clocks_in_automata local_clocks_per_automaton =
 				let transitions = model.transitions automaton_index location_index action_index in
 				
 				(* For each transition starting from this location *)
-				List.iter (fun ((*guard*) _ , clock_updates , (*discrete_update*) _ , destination_index) ->
+				List.iter (fun ((*guard*) _ , clock_updates , (*discrete_update*) _ , target_index) ->
 					(* Get the clocks updated or reset *)
 					let reset_clocks =
 					match clock_updates with
@@ -186,7 +187,7 @@ let find_useless_clocks_in_automata local_clocks_per_automaton =
 					(* Compute the local clocks updated or reset *)
 					let reset_local_clocks = list_inter reset_clocks local_clocks in
 					(* Update the predecessors *)
-					predecessors.(destination_index) <- (location_index, reset_local_clocks) :: predecessors.(destination_index);
+					predecessors.(target_index) <- (location_index, reset_local_clocks) :: predecessors.(target_index);
 				) transitions; (* end for each transition *)
 			) actions_for_this_location; (* end for each action *)
 		) locations_for_this_automaton; (* end for each location *)
@@ -232,7 +233,7 @@ let find_useless_clocks_in_automata local_clocks_per_automaton =
 							(* Retrieve the transitions from this location & action *)
 							let transitions = model.transitions automaton_index location_index action_index in
 							(* Check if there exists a guard in an outgoing transition where the clock is constrained *)
-							let exists_guard = List.exists (fun (guard , (*clock_updates*)_ , (*discrete_update_list*)_ , (*destination_index*)_) ->
+							let exists_guard = List.exists (fun (guard , (*clock_updates*)_ , (*discrete_update_list*)_ , (*target_index*)_) ->
 								(* Check if the clock is present in the guard *)
 								let constrained = LinearConstraint.pxd_is_constrained guard clock_index in
 								(* Print some information *)
@@ -326,14 +327,19 @@ let find_useless_clocks_in_automata local_clocks_per_automaton =
 (*------------------------------------------------------------*)
 (* NOTE: This function is only called if the dynamic clock elimination option is activated *)
 let prepare_clocks_elimination () =
+	(* Create counters *)
+	let counter_preparation_ref = create_time_counter_and_register "dynamic clock elimination (preparation)" Algorithm_counter Verbose_standard in
+	counter_preparation := Some counter_preparation_ref;
+	counter_elimination := Some (create_hybrid_counter_and_register "dynamic clock elimination" Algorithm_counter Verbose_standard);
+
 	(* Start counter *)
-	counter_preparation#start;
+	counter_preparation_ref#start;
 	
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
 	(* Compute the local clocks per automaton *)
-	print_message Verbose_low ("*** Building local clocks per automaton...");
+	print_message Verbose_low ("*** Building local clocks per automaton…");
 	let local_clocks_per_automaton = find_local_clocks () in
 
 	(* Debug print: local clocks per automaton *)
@@ -351,11 +357,11 @@ let prepare_clocks_elimination () =
 	
 	
 	(* Compute and update useless clocks *)
-	print_message Verbose_low ("*** Building useless clocks per location per automaton...");
+	print_message Verbose_low ("*** Building useless clocks per location per automaton…");
 	useless_clocks := Some (find_useless_clocks_in_automata local_clocks_per_automaton);
 
 	(* Stop counter *)
-	counter_preparation#stop;
+	counter_preparation_ref#stop;
 	
 	(* The end *)
 	()
@@ -364,7 +370,13 @@ let prepare_clocks_elimination () =
 (*------------------------------------------------------------*)
 (* Eliminating useless clocks in a linear constraint *)
 (*------------------------------------------------------------*)
-let dynamic_clock_elimination dest_location current_constraint =
+let dynamic_clock_elimination target_location current_constraint =
+	(* Get counter *)
+	let counter_elimination = match !counter_elimination with
+		| Some counter_elimination -> counter_elimination
+		| None -> raise (InternalError("Counter counter_elimination not yet initialized in ClockElimination.dynamic_clock_elimination"))
+	in
+	
 	(* Start counter *)
 	counter_elimination#start;
 	(* Increment counter *)
@@ -382,8 +394,8 @@ let dynamic_clock_elimination dest_location current_constraint =
 	
 	(* Compute the useless clocks *)
 	let clocks_to_remove = List.fold_left (fun current_list_of_clocks automaton_index ->
-		(* Retrieve dest location for this automaton *)
-		let location_index = Location.get_location dest_location automaton_index in
+		(* Retrieve target location for this automaton *)
+		let location_index = Location.get_location target_location automaton_index in
 		(* Get the clocks and append to previously computed clocks (rev_append because the order doesn't matter) *)
 		List.rev_append current_list_of_clocks (compute_clocks_to_eliminate automaton_index location_index)
 	) [] model.automata in
