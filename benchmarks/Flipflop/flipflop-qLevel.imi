@@ -1,0 +1,455 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Modeling of the circuit described in "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella)
+ *
+ * Description     : A flip-flop circuit made of 4 gates
+ * Correctness     : TODO
+ * Source          : "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella); Design Automation Conference, 2004. Proceedings of the ASP-DAC 2004. Asia and South Pacific; DOI: 10.1109/ASPDAC.2004.1337668
+ * Author          : Roberto Clariso and Jordi Cortadella
+ * Modeling        : Etienne Andre and Laurent Fribourg
+ * Input by        : Etienne Andre
+ *
+ * Created         : 2007/11
+ * Fork from       : flipflop.imi
+ * Fork date       : 2017/02/15
+ * Last modified   : 2013/04/09
+ *
+ * IMITATOR version: 2.7.1
+ ************************************************************)
+
+var 	s, ckG1, ckG2, ckG3, ckG4
+		: clock;
+(*
+	tHI, tLO,
+	tSetup, tHold,
+	dG1_l, dG1_u,
+	dG2_l, dG2_u,
+	dG3_l, dG3_u,
+	dG4_l, dG4_u
+			: parameter; *)
+			
+	tHI    = 24,
+	tLO    = 15,
+	tSetup = 10,
+	tHold  = 17,
+	dG1_l  = 7,
+	dG1_u  = 7,
+	dG2_l  = 5,
+	dG2_u  = 6,
+	dG3_l  = 8,
+	dG3_u, --  = 8 .. 30 -- 10
+	dG4_l  = 3,
+	dG4_u -- = 3 .. 30 -- 7
+	: parameter;
+
+-- 	tCKQ,
+	qLevel
+-- 	ckLevel
+			: discrete;
+
+
+--****************************************************--
+  automaton input
+--****************************************************--
+synclabs: dUp, dDown, ckUp, ckDown;
+initially Input0;
+
+loc Input0: while s <= tLO - tSetup wait {}
+	when s = tLO - tSetup sync dUp do {} goto Input1;
+
+loc Input1: while s <= tLO wait {}
+	when s = tLO sync ckUp do {} goto Input2;
+
+loc Input2: while s <= tLO + tHold wait {}
+	when s = tLO + tHold sync dDown do {} goto Input3;
+
+loc Input3: while s <= tLO + tHI wait {}
+	when s = tLO + tHI sync ckDown do {s'=0} goto Input4;  -- IF ONE WANTS TO BLOCK THE TIME AFTER ckDown
+-- 	when s = tLO + tHI sync ckDown do {} goto Input4;
+
+loc Input4: while s <= 0 wait {} -- IF ONE WANTS TO BLOCK THE TIME AFTER ckDown
+-- loc Input4: while True wait {}
+
+end -- input
+
+
+--****************************************************--
+  automaton g1
+--****************************************************--
+-- Input : D, ck, qG2
+-- Output : qG1
+
+synclabs: dUp, dDown, ckUp, ckDown, qG2Up, qG2Down,
+	qG1Up, qG1Down;
+initially G10011;
+
+loc G10000: while ckG1 <= dG1_u wait {}
+	when True sync dUp do {ckG1' = 0} goto G11000;
+	when True sync ckUp do {ckG1' = 0} goto G10100;
+	when True sync qG2Up do {ckG1' = 0} goto G10010;
+	when ckG1 >= dG1_l sync qG1Up do {} goto G10001;
+
+loc G10001: while ckG1 >= 0 wait {}
+	when True sync dUp do {} goto G11001;
+	when True sync ckUp do {} goto G10101;
+	when True sync qG2Up do {} goto G10011;
+
+loc G10010: while ckG1 <= dG1_u wait {}
+	when True sync dUp do {} goto G11010;
+	when True sync ckUp do {} goto G10110;
+	when True sync qG2Down do {ckG1' = 0} goto G10000;
+	when ckG1 >= dG1_l sync qG1Up do {} goto G10011;
+
+loc G10011: while ckG1 >= 0 wait {}
+	when True sync dUp do {ckG1' = 0} goto G11011;
+	when True sync ckUp do {ckG1' = 0} goto G10111;
+	when True sync qG2Down do {} goto G10001;
+
+loc G10100: while ckG1 <= dG1_u wait {}
+	when True sync dUp do {ckG1' = 0} goto G11100;
+	when True sync ckDown do {ckG1' = 0} goto G10000;
+	when True sync qG2Up do {} goto G10110;
+	when ckG1 >= dG1_l sync qG1Up do {} goto G10101;
+
+loc G10101: while ckG1 >= 0 wait {}
+	when True sync dUp do {} goto G11101;
+	when True sync ckDown do {} goto G10001;
+	when True sync qG2Up do {ckG1' = 0} goto G10111;
+
+loc G10110: while ckG1 >= 0 wait {}
+	when True sync dUp do {} goto G11110;
+	when True sync ckDown do {ckG1' = 0} goto G10010;
+	when True sync qG2Down do {ckG1' = 0} goto G10100;
+
+loc G10111: while ckG1 <= dG1_u wait {}
+	when True sync dUp do {ckG1' = 0} goto G11111;
+	when True sync ckDown do {} goto G10011;
+	when True sync qG2Down do {} goto G10101;
+	when ckG1 >= dG1_l sync qG1Down do {} goto G10110;
+
+loc G11000: while ckG1 <= dG1_u wait {}
+	when True sync dDown do {ckG1' = 0} goto G10000;
+	when True sync ckUp do {ckG1' = 0} goto G11100;
+	when True sync qG2Up do {} goto G11010;
+	when ckG1 >= dG1_l sync qG1Up do {} goto G11001;
+
+loc G11001: while ckG1 >= 0 wait {}
+	when True sync dDown do {} goto G10001;
+	when True sync ckUp do {} goto G11101;
+	when True sync qG2Up do {ckG1' = 0} goto G11011;
+
+loc G11010: while ckG1 >= 0 wait {}
+	when True sync dDown do {ckG1' = 0} goto G10010;
+	when True sync ckUp do {} goto G11110;
+	when True sync qG2Down do {ckG1' = 0} goto G11000;
+
+loc G11011: while ckG1 <= dG1_u wait {}
+	when True sync dDown do {} goto G10011;
+	when True sync ckUp do {ckG1' = 0} goto G11111;
+	when True sync qG2Down do {} goto G11001;
+	when ckG1 >= dG1_l sync qG1Down do {} goto G11010;
+
+loc G11100: while ckG1 <= dG1_u wait {}
+	when True sync dDown do {ckG1' = 0} goto G10100;
+	when True sync ckDown do {ckG1' = 0} goto G11000;
+	when True sync qG2Up do {} goto G11110;
+	when ckG1 >= dG1_l sync qG1Up do {} goto G11101;
+
+loc G11101: while ckG1 >= 0 wait {}
+	when True sync dDown do {} goto G10101;
+	when True sync ckDown do {} goto G11001;
+	when True sync qG2Up do {ckG1' = 0} goto G11111;
+
+loc G11110: while ckG1 >= 0 wait {}
+	when True sync dDown do {} goto G10110;
+	when True sync ckDown do {} goto G11010;
+	when True sync qG2Down do {ckG1' = 0} goto G11100;
+
+loc G11111: while ckG1 <= dG1_u wait {}
+	when True sync dDown do {ckG1' = 0} goto G10111;
+	when True sync ckDown do {ckG1' = 0} goto G11011;
+	when True sync qG2Down do {} goto G11101;
+	when ckG1 >= dG1_l sync qG1Down do {} goto G11110;
+end -- g1
+
+
+
+--****************************************************--
+  automaton g2
+--****************************************************--
+-- Input : qG1, ck
+-- Output : qG2
+
+synclabs: qG1Up, qG1Down, ckUp, ckDown,
+	qG2Up, qG2Down;
+initially G2101;
+
+loc G2001: while ckG2 >= 0 wait {}
+	when True sync qG1Up do {} goto G2101;
+	when True sync ckUp do {} goto G2011;
+
+loc G2000: while ckG2 <= dG2_u wait {}
+	when True sync qG1Up do {ckG2' = 0} goto G2100;
+	when True sync ckUp do {ckG2' = 0} goto G2010;
+	when ckG2 >= dG2_l sync qG2Up do {} goto G2001;
+
+loc G2011: while ckG2 >= 0 wait {}
+	when True sync qG1Up do {ckG2' = 0} goto G2111;
+	when True sync ckDown do {} goto G2001;
+
+loc G2010: while ckG2 <= dG2_u wait {}
+	when True sync qG1Up do {} goto G2110;
+	when True sync ckDown do {ckG2' = 0} goto G2000;
+	when ckG2 >= dG2_l sync qG2Up do {} goto G2011;
+
+loc G2101: while ckG2 >= 0 wait {}
+	when True sync qG1Down do {} goto G2001;
+	when True sync ckUp do {ckG2' = 0} goto G2111;
+
+loc G2100: while ckG2 <= dG2_u wait {}
+	when True sync qG1Down do {ckG2' = 0} goto G2000;
+	when True sync ckUp do {} goto G2110;
+	when ckG2 >= dG2_l sync qG2Up do {} goto G2101;
+
+loc G2111: while ckG2 <= dG2_u wait {}
+	when True sync qG1Down do {} goto G2011;
+	when True sync ckDown do {} goto G2101;
+	when ckG2 >= dG2_l sync qG2Down do {} goto G2110;
+
+loc G2110: while ckG2 >= 0 wait {}
+	when True sync qG1Down do {ckG2' = 0} goto G2010;
+	when True sync ckDown do {ckG2' = 0} goto G2100;
+end -- g2
+
+
+
+--****************************************************--
+  automaton g3
+--****************************************************--
+-- Input : q, ck, qG2
+-- Output : qG3
+
+synclabs: qUp, qDown, ckUp, ckDown, qG2Up, qG2Down,
+	qG3Up, qG3Down;
+initially G30011;
+
+loc G30000: while ckG3 <= dG3_u wait {}
+	when True sync qUp do {ckG3' = 0} goto G31000;
+	when True sync ckUp do {ckG3' = 0} goto G30100;
+	when True sync qG2Up do {ckG3' = 0} goto G30010;
+	when ckG3 >= dG3_l sync qG3Up do {} goto G30001;
+
+loc G30001: while ckG3 >= 0 wait {}
+	when True sync qUp do {} goto G31001;
+	when True sync ckUp do {} goto G30101;
+	when True sync qG2Up do {} goto G30011;
+
+loc G30010: while ckG3 <= dG3_u wait {}
+	when True sync qUp do {} goto G31010;
+	when True sync ckUp do {} goto G30110;
+	when True sync qG2Down do {ckG3' = 0} goto G30000;
+	when ckG3 >= dG3_l sync qG3Up do {} goto G30011;
+
+loc G30011: while ckG3 >= 0 wait {}
+	when True sync qUp do {ckG3' = 0} goto G31011;
+	when True sync ckUp do {ckG3' = 0} goto G30111;
+	when True sync qG2Down do {} goto G30001;
+
+loc G30100: while ckG3 <= dG3_u wait {}
+	when True sync qUp do {ckG3' = 0} goto G31100;
+	when True sync ckDown do {ckG3' = 0} goto G30000;
+	when True sync qG2Up do {} goto G30110;
+	when ckG3 >= dG3_l sync qG3Up do {} goto G30101;
+
+loc G30101: while ckG3 >= 0 wait {}
+	when True sync qUp do {} goto G31101;
+	when True sync ckDown do {} goto G30001;
+	when True sync qG2Up do {ckG3' = 0} goto G30111;
+
+loc G30110: while ckG3 >= 0 wait {}
+	when True sync qUp do {} goto G31110;
+	when True sync ckDown do {ckG3' = 0} goto G30010;
+	when True sync qG2Down do {ckG3' = 0} goto G30100;
+
+loc G30111: while ckG3 <= dG3_u wait {}
+	when True sync qUp do {ckG3' = 0} goto G31111;
+	when True sync ckDown do {} goto G30011;
+	when True sync qG2Down do {} goto G30101;
+	when ckG3 >= dG3_l sync qG3Down do {} goto G30110;
+
+loc G31000: while ckG3 <= dG3_u wait {}
+	when True sync qDown do {ckG3' = 0} goto G30000;
+	when True sync ckUp do {ckG3' = 0} goto G31100;
+	when True sync qG2Up do {} goto G31010;
+	when ckG3 >= dG3_l sync qG3Up do {} goto G31001;
+
+loc G31001: while ckG3 >= 0 wait {}
+	when True sync qDown do {} goto G30001;
+	when True sync ckUp do {} goto G31101;
+	when True sync qG2Up do {ckG3' = 0} goto G31011;
+
+loc G31010: while ckG3 >= 0 wait {}
+	when True sync qDown do {ckG3' = 0} goto G30010;
+	when True sync ckUp do {} goto G31110;
+	when True sync qG2Down do {ckG3' = 0} goto G31000;
+
+loc G31011: while ckG3 <= dG3_u wait {}
+	when True sync qDown do {} goto G30011;
+	when True sync ckUp do {ckG3' = 0} goto G31111;
+	when True sync qG2Down do {} goto G31001;
+	when ckG3 >= dG3_l sync qG3Down do {} goto G31010;
+
+loc G31100: while ckG3 <= dG3_u wait {}
+	when True sync qDown do {ckG3' = 0} goto G30100;
+	when True sync ckDown do {ckG3' = 0} goto G31000;
+	when True sync qG2Up do {} goto G31110;
+	when ckG3 >= dG3_l sync qG3Up do {} goto G31101;
+
+loc G31101: while ckG3 >= 0 wait {}
+	when True sync qDown do {} goto G30101;
+	when True sync ckDown do {} goto G31001;
+	when True sync qG2Up do {ckG3' = 0} goto G31111;
+
+loc G31110: while ckG3 >= 0 wait {}
+	when True sync qDown do {} goto G30110;
+	when True sync ckDown do {} goto G31010;
+	when True sync qG2Down do {ckG3' = 0} goto G31100;
+
+loc G31111: while ckG3 <= dG3_u wait {}
+	when True sync qDown do {ckG3' = 0} goto G30111;
+	when True sync ckDown do {ckG3' = 0} goto G31011;
+	when True sync qG2Down do {} goto G31101;
+	when ckG3 >= dG3_l sync qG3Down do {} goto G31110;
+end -- g3
+
+
+
+--****************************************************--
+  automaton g4
+--****************************************************--
+-- Input : qG3
+-- Output : q
+
+synclabs: qG3Up, qG3Down,
+	qUp, qDown;
+initially G410;
+
+loc G401: while ckG4 >= 0 wait {}
+	when True sync qG3Up do {ckG4' = 0} goto G411;
+
+loc G411: while ckG4 <= dG4_u wait {}
+	when True sync qG3Down do {} goto G401;
+	when ckG4 >= dG4_l sync qDown do {qLevel'=0} goto G410;
+
+loc G410: while ckG4 >= 0 wait {}
+	when True sync qG3Down do {ckG4' = 0} goto G400;
+
+loc G400: while ckG4 <= dG4_u wait {}
+	when True sync qG3Up do {} goto G410;
+	when ckG4 >= dG4_l sync qUp do {qLevel' = 1} goto G401; -- q goes high at this point (*tCKQ' = s - tLO, *)
+end -- g4
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(*   INITIAL LOCATION *)
+	(*------------------------------------------------------------*)
+	& loc[input] = Input0
+	& loc[g1] = G10011
+	& loc[g2] = G2101
+	& loc[g3] = G30011
+	& loc[g4] = G410
+
+	(*------------------------------------------------------------*)
+	(*   INITIAL DISCRETE *)
+	(*------------------------------------------------------------*)
+	& qLevel = 0
+-- 	& ckLevel = 1 -- actually initially CK = 0, then raise to 1, then go back to 0: we are here only interested in the last fall of CK
+
+	(*------------------------------------------------------------*)
+	(*   INITIAL CLOCKS *)
+	(*------------------------------------------------------------*)
+	& s = 0
+	& ckG1 >= 0
+	& ckG2 >= 0
+	& ckG3 >= 0
+	& ckG4 >= 0
+
+	(*------------------------------------------------------------*)
+	(*   PARAMETER CONSTRAINTS *)
+	(*------------------------------------------------------------*)
+
+	& dG1_l >= 0
+	& dG2_l >= 0
+	& dG3_l >= 0
+	& dG4_l >= 0
+
+	& tHI  >= 0
+	& tLO  >= 0
+	& tSetup >= 0
+	& tHold  >= 0
+
+	& dG1_l <= dG1_u 
+	& dG2_l <= dG2_u
+	& dG3_l <= dG3_u
+	& dG4_l <= dG4_u
+	
+	& tSetup <= tLO
+	& tHold <= tHI
+	
+	----------------------
+	-- Result of IMITATOR 2
+	----------------------
+--       & dG2_l <= dG2_u
+--       & 0 < dG1_l
+--       & tSetup <= tLO
+-- --       & tSetup < tLO -- IMITATOR 1
+--       & 0 <= dG3_u
+--       & dG3_l <= dG3_u
+--       & dG1_l <= dG1_u
+--       & dG1_u < tSetup
+--       & tHold <= dG4_u + dG3_u
+--       & dG4_u + dG3_u < tHI
+--       & dG3_u < tHold
+--       & dG4_l + dG3_l <= tHold
+--       & dG4_l <= dG4_u
+--       & dG4_l <= tHold
+
+
+	----------------------
+	-- Pi0
+	----------------------
+-- 	& tHI    = 24
+-- 	& tLO    = 15
+-- 	& tSetup = 10
+-- 	& tHold  = 17
+-- 	& dG1_l  = 7
+-- 	& dG1_u  = 7
+-- 	& dG2_l  = 5
+-- 	& dG2_u  = 6
+-- 	& dG3_l  = 8
+ -- 	& dG3_u  = 10 -- 8 .. 30
+-- 	& dG4_l  = 3
+ -- 	& dG4_u  = 7 -- 3 .. 30
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* Not exactly the property that we would like! The real property is qUp and ckDown always occur, and qUp occurs before ckDown *)
+(* property := if qUp then eventually ckDown *)
+property := if ckDown then qUp has happened before;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
