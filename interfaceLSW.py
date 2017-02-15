@@ -10,7 +10,7 @@
 # 
 # File contributors : Étienne André
 # Created           : 2016/11/07
-# Last modified     : 2017/02/14
+# Last modified     : 2017/02/15
 #************************************************************
 
 # ###
@@ -307,22 +307,12 @@ def add_INIT_locations(component, component_automata, initial_locations):
 #------------------------------------------------------------
 def add_ACCEPTING_locations(component, component_automata):
 
-	new_component = component
+	# Replace 'loc location' with 'loc location[INIT]'
+	if DEBUG_MODE:
+		print 'Replace "' + TAG_ACCEPTING_LOC + '" with "' + '[' + KEYWORD_ACCEPTING + ']"'
 	
-	# Iterate on the component automata
-	for automaton_name in component_automata:
-		# Replace 'loc location' with 'loc location[INIT]'
-		if DEBUG_MODE:
-			print 'Replace "' + TAG_ACCEPTING_LOC + '" with "' + '[' + KEYWORD_ACCEPTING + ']"'
+	new_component = re.sub(TAG_ACCEPTING_LOC_RE, '[' + KEYWORD_ACCEPTING + ']', component)
 		
-		new_component = re.sub(TAG_ACCEPTING_LOC_RE, '[' + KEYWORD_ACCEPTING + ']', component)
-		
-		# Check
-		if new_component == component:
-			# NOTE: only a warning as not all component automata have an accepting location
-			print_warning('Could not find pattern "' + TAG_ACCEPTING_LOC + '" in automaton "' + automaton_name + '"')
-		component = new_component
-	
 	return new_component
 
 
