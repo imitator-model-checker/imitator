@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/07/22
- * Last modified     : 2017/02/13
+ * Last modified     : 2017/02/20
  *
  ************************************************************)
 
@@ -132,10 +132,40 @@ class algoBCCoverLearning =
 			(* Return *)
 			pi0_string
 		in
-
 		
+		(* Try to locate the interace script (and raises an exception if not found) *)
+		let interface_script_path =
+
+		(* Locate the current directory *)
+		let current_dir = (Sys.getcwd ()) ^ "/" in
+		
+		print_message Verbose_standard Sys.executable_name;
+		
+		(* Print some information *)
+		print_message Verbose_medium ("Current directory: '" ^ current_dir ^ "'.");
+		
+		(* First try in the same directory *)
+		if Sys.file_exists (current_dir ^ interface_script_name) then(
+			print_message Verbose_low ("Interfacing script '" ^ interface_script_name ^ "' successfully found in the current directory.");
+			current_dir ^ interface_script_name
+		)
+		(* Else try in the IMITATOR binary directory *)
+		else if Sys.file_exists (Constants.path_to_program ^ interface_script_name) then(
+			print_message Verbose_low ("Interfacing script '" ^ interface_script_name ^ "' successfully found in the " ^ (Constants.program_name) ^ " directory.");
+			Constants.path_to_program ^ interface_script_name
+		)
+		(* Else try in the parent dir of the IMITATOR binary directory *)
+		else if Sys.file_exists (Constants.path_to_program ^ "../" ^ interface_script_name) then(
+			print_message Verbose_low ("Interfacing script '" ^ interface_script_name ^ "' successfully found in the parent directory of the " ^ (Constants.program_name) ^ " directory.");
+			Constants.path_to_program ^ "../" ^ interface_script_name
+		)
+		(* Else not found *)
+		else(
+			raise (InternalError ("Interfacing script '" ^ interface_script_name ^ "' not found. Make sure this file is either in the current directory ('" ^ (current_dir) ^ "'), or in the same directory as the " ^ (Constants.program_name) ^ " binary ('" ^ (Constants.path_to_program) ^ "'), or in its parent directory ('" ^ (Constants.path_to_program ^ "../") ^ "')."))
+		) in
+		 
 		(* Prepare command *)
-		let script_line = "python " ^ interface_script_name
+		let script_line = "python " ^ interface_script_path
 			(* 1st argument: input model *)
 			^ " " ^ options#model_input_file_name
 			(* 2nd argument: output model name *)
@@ -144,9 +174,8 @@ class algoBCCoverLearning =
 			^ " " ^ (format_pi0 current_point) ^ ""
 		 in
 		 
-		 (* Print some information *)
+		(* Print some information *)
 		print_message Verbose_standard ("Executing: '" ^ script_line ^ "'");
-		 
 		
 		(* Call the script *)
 		counter_interface#increment;
@@ -154,7 +183,7 @@ class algoBCCoverLearning =
 		let execution = Sys.command script_line in
 		counter_interface#stop;
 		if execution <> 0 then
-			raise (InternalError ("Something went wrong in the command.\nExit code: " ^ (string_of_int execution) ^ ".\nCommand: '" ^ script_line ^ "'");)
+			raise (InternalError ("Something went wrong in the command.\nExit code: " ^ (string_of_int execution) ^ ".\nCommand: '" ^ script_line ^ "'"))
 		else
 			print_message Verbose_low ("Script terminated successfully");
 		
