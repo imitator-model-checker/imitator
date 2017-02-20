@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2017/01/18
+ * Last modified     : 2017/02/20
  *
  ************************************************************)
 
@@ -1013,7 +1013,7 @@ class virtual algoCartoGeneric =
 			(*** HACK: only print if non-distributed ***)
 (* 			if options#distribution_mode = Options.Non_distributed then( *)
 			print_message Verbose_standard ("\n**************************************************");
-			print_message Verbose_standard ("BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int current_iteration) ^ "");
+			print_message Verbose_standard ("ALGORITHM " ^ (self#algorithm_name) ^ ": iteration " ^ (string_of_int current_iteration) ^ "");
 			print_message Verbose_standard ("Considering the following pi" ^ (string_of_int current_iteration));
 			print_message Verbose_standard (ModelPrinter.string_of_pi0 model pi0);
 (* 			); *)
