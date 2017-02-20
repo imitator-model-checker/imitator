@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2017/02/03
+ * Last modified     : 2017/02/16
  *
  ************************************************************)
 
@@ -24,7 +24,7 @@ open Exceptions
 open AbstractModel
 open Result
 open AlgoBFS
-
+open Statistics
 
 
 (************************************************************)
@@ -50,6 +50,13 @@ class virtual algoEFsynth =
 		let model = Input.get_model () in
 		LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint model.initial_p_constraint
 
+	(* Counters *)
+	(*** NOTE: if EF is called several times, then each call will create a counter ***)
+	
+	(* The bad state has been found *)
+	val counter_found_bad = create_discrete_counter_and_register "found bad state" PPL_counter Verbose_low
+	(* The constraint of a new state is smaller than the bad constraint: cut branch *)
+	val counter_cut_branch = create_discrete_counter_and_register "cut branch (constraint <= bad)" PPL_counter Verbose_low
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
@@ -116,21 +123,33 @@ class virtual algoEFsynth =
 					);
 				end;
 
-				(* Print some information *)
-				self#print_algo_message Verbose_standard "Found a state violating the property.";
-					
-				(* Update the bad constraint using the current constraint *)
-				(*** NOTE: perhaps try first whether p_constraint <= bad_constraint ? ***)
-				LinearConstraint.p_nnconvex_p_union bad_constraint p_constraint;
+				(* Statistics *)
+				counter_found_bad#increment;
 				
-				(* Print some information *)
-				if verbose_mode_greater Verbose_low then(
-					self#print_algo_message Verbose_medium "Adding the following constraint to the bad constraint:";
-					print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+				(*** TODO: test if these two operations are more or less expensive than just adding without testing ***)
+				(*** NOTE: advantage of doing it twice: print less information :-) ***)
+				
+				if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) bad_constraint then(
+					self#print_algo_message Verbose_low "Found a state violating the property (but the constraint was already known).";
+				)else(
+					(* The constraint is new! *)
 					
-					self#print_algo_message Verbose_low "The bad constraint is now:";
-					print_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
-				);
+					(* Print some information *)
+					self#print_algo_message Verbose_standard "Found a new state violating the property.";
+						
+					(* Update the bad constraint using the current constraint *)
+					(*** NOTE: perhaps try first whether p_constraint <= bad_constraint ? ***)
+					LinearConstraint.p_nnconvex_p_union bad_constraint p_constraint;
+					
+					(* Print some information *)
+					if verbose_mode_greater Verbose_low then(
+						self#print_algo_message Verbose_medium "Adding the following constraint to the bad constraint:";
+						print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+						
+						self#print_algo_message Verbose_low "The bad constraint is now:";
+						print_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
+					);
+				); (* end if new bad constraint *)
 				
 				(* Do NOT compute its successors; cut the branch *)
 				false
@@ -162,11 +181,6 @@ class virtual algoEFsynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** WARNING/BADPROG: the following is partially copy/paste to AlgoPRP.ml ***)
 	method add_a_new_state source_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
-		(* Retrieve the model *)
-(* 		let model = Input.get_model () in *)
-
-		(* Retrieve the input options *)
-(* 		let options = Input.get_options () in *)
 
 		(* Build the state *)
 		let new_state = location, current_constraint in
@@ -194,9 +208,12 @@ class virtual algoEFsynth =
 				
 				(* if p_constraint <= bad_constraint *)
 				if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) bad_constraint then (
-					(* Print some information *)
-					self#print_algo_message Verbose_standard "Found a state included in bad valuations; cut branch.";
+					(* Statistics *)
+					counter_cut_branch#increment;
 					
+					(* Print some information *)
+					self#print_algo_message Verbose_low "Found a state included in bad valuations; cut branch.";
+
 					(* Do NOT compute its successors; cut the branch *)
 					to_be_added := false;
 				);
