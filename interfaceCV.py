@@ -6,11 +6,11 @@
 # 
 # LIPN, Université Paris 13, Sorbonne Paris Cité (France)
 # 
-# Script description: interface between IMITATOR and Lin Shang-Wei's learning-based tool
+# Script description: interface between IMITATOR and Lin Shang-Wei's learning-based tool (CV, for compositional verifier)
 # 
 # File contributors : Étienne André
 # Created           : 2016/11/07
-# Last modified     : 2017/02/15
+# Last modified     : 2017/02/20
 #************************************************************
 
 # ###
@@ -45,8 +45,8 @@ import re
 # Name for the larning binary
 THIS_SCRIPT_NAME = 'Interfaçator'
 
-# Path to the learning binary
-LEARNING_BINARY_PATH = './CV/'
+# Path to the learning binary (should be in the CV subdirectory of the directory in which the current sript is located)
+LEARNING_BINARY_PATH = os.path.dirname(sys.argv[0]) + '/CV/'
 
 # Name for the learning binary
 LEARNING_BINARY_NAME = LEARNING_BINARY_PATH + 'Compositional_Verifier'
@@ -112,7 +112,7 @@ SEPARATOR_PI0_ASSIGNEMENT = '='
 KEYWORD_AUTOMATON = 'automaton'
 KEYWORD_LOC = 'loc'
 
-# Keywords in LSW syntax
+# Keywords in CV syntax
 KEYWORD_ACCEPTING = 'ACCEPTING'
 KEYWORD_INIT = 'INIT'
 
@@ -120,7 +120,7 @@ KEYWORD_INIT = 'INIT'
 IMI_EXTENSION = '.imi'
 
 # Extension for output model
-LSW_EXTENSION = '.lsw'
+CV_EXTENSION = '.cv'
 
 
 #************************************************************
@@ -548,16 +548,16 @@ if DEBUG_MODE:
 
 
 #------------------------------------------------------------
-# Building the exported file name: if original_model_name is 'file_name.imi', then it becomes 'file_name.lsw'; if original_model_name is 'model', then 'model.lsw'
+# Building the exported file name: if original_model_name is 'file_name.imi', then it becomes 'file_name.cv'; if original_model_name is 'model', then 'model.cv'
 #------------------------------------------------------------
 exported_file_name = ''
 
 # Try to find a pattern file_name.imi
 m = re.search('(.+?)' + IMI_EXTENSION + '$', original_model_name)
 if m:
-	exported_file_name = m.group(1) + LSW_EXTENSION
+	exported_file_name = m.group(1) + CV_EXTENSION
 else:
-	exported_file_name = original_model_name + LSW_EXTENSION
+	exported_file_name = original_model_name + CV_EXTENSION
 
 
 #------------------------------------------------------------
@@ -682,7 +682,7 @@ else:
 # Move the result file to an archive location
 #------------------------------------------------------------
 # NOTE: otherwise, it will still be there at the next call
-new_location = new_model_name + '-output' + LSW_EXTENSION
+new_location = new_model_name + '-output' + CV_EXTENSION
 print_to_screen('Moving learning result from "' + output_file + '" to "' + new_location + '"…')
 os.rename(output_file, new_location)
 
