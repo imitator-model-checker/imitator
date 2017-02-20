@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2017/02/03
+ * Last modified     : 2017/02/20
  *
  ************************************************************)
 
@@ -60,10 +60,15 @@ TAGS USED THROUGHOUT THIS PROJECT
 terminate_program();*)
 
 (************************************************************)
-(* Start the global counter *)
+(* Start the global counters *)
 (************************************************************)
+(* Counter counting everything from beginning to the end *)
 let global_counter = create_time_counter_and_register "total" Global_counter Verbose_standard in
 global_counter#start;
+
+(* Counter counting everything except the final processing (graphics, external files generation, etc.) *)
+let algorithm_counter = create_time_counter_and_register "main algorithm" Algorithm_counter Verbose_standard in
+algorithm_counter#start;
 
 
 (************************************************************)
@@ -761,6 +766,9 @@ in
 
 (* Run! *)
 let result = algorithm#run() in
+
+(* Stop the main algorithm counter *)
+algorithm_counter#stop;
 
 (* Process *)
 ResultProcessor.process_result result algorithm#algorithm_name None;
