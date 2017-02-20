@@ -139,8 +139,6 @@ class algoBCCoverLearning =
 		(* Locate the current directory *)
 		let current_dir = (Sys.getcwd ()) ^ "/" in
 		
-		print_message Verbose_standard Sys.executable_name;
-		
 		(* Print some information *)
 		print_message Verbose_medium ("Current directory: '" ^ current_dir ^ "'.");
 		
