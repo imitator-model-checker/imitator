@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/10/08
+ * Last modified     : 2017/02/20
  *
  ************************************************************)
 
@@ -26,6 +26,19 @@ let version_string = "2.8.1-working"
 
 let version_name = "Butter Ham"
 
+(* Path ending with "/" *)
+let path_to_program =
+	(* Try to find the last occurrence of '/' in the string *)
+	try(
+		let full_path_to_binary = Sys.executable_name in
+		let last_position = String.rindex full_path_to_binary '/' in
+		(* Remove last element (program name) *)
+		(String.sub full_path_to_binary 0 last_position)
+		(* Add final "/" *)
+		^ "/"
+	) with Not_found ->
+	(* If unexpected form, assume path is root *)
+		"/"
 
 
 (************************************************************)

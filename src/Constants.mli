@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/10/08
+ * Last modified     : 2017/02/20
  *
  ************************************************************)
 
@@ -26,6 +26,8 @@ val version_string : string
 
 val version_name : string
 
+(* Path ending with "/" *)
+val path_to_program : string
 
 
 (************************************************************)
