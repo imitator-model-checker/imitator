@@ -1,0 +1,85 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Small example to test the subtleties of parametric livelock-checking.
+ *
+ * Description     : Small example to test the subtleties of parametric livelock-checking.
+ * Correctness     : no livelock
+ * Source          : Étienne André
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2016/11/03
+ * Last modified   : 2016/11/03
+ *
+ * IMITATOR version: 2.8
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x
+		: clock;
+
+(* Parameters *)
+	p
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a, b, c;
+
+loc l1: while x <= 8 wait {}
+	when x = p & 1 <= x & x <= 2 sync a goto l2;
+	when x = p & 3 <= x & x <= 4 sync b goto l3;
+	when x = p & x = 5 sync c goto l4;
+
+loc l2: while True wait {}
+	when True goto l2;
+
+loc l3: while True wait {}
+	when True goto l3;
+
+loc l4: while True wait {}
+	when True goto l4;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

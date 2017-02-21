@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2016/02/11
+ * Last modified     : 2016/10/11
  *
  ************************************************************)
 
@@ -205,7 +205,7 @@ class algoIMK =
 	(*** TODO: move new_states_indexes to a variable of the class ***)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method add_a_new_state state_space orig_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
+	method add_a_new_state source_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 
@@ -256,11 +256,6 @@ class algoIMK =
 			(* Build the state *)
 			let new_state = location, final_constraint in
 
-			(* Print some information *)
-			if verbose_mode_greater Verbose_total then(
-				self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
-			);
-
 			(* If IM or BC: Add the inequality to the result (except if case variants) *)
 	(*		begin
 			match options#imitator_mode with 
@@ -302,7 +297,7 @@ class algoIMK =
 				
 			) (* end if new state *)
 			else (
-				(* This is a loop *)
+				(* This may be a loop *)
 				self#process_looping_state new_state_index;
 	
 	(*** TODO: add back ***)
@@ -320,13 +315,7 @@ class algoIMK =
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 
 			(* Update the transitions *)
-			StateSpace.add_transition state_space (orig_state_index, action_index, new_state_index);
-			(* Print some information *)
-			if verbose_mode_greater Verbose_high then (
-				let beginning_message = (if added then "NEW STATE" else "Old state") in
-				self#print_algo_message Verbose_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (model.action_names action_index) ^ "': ");
-				print_message Verbose_high (ModelPrinter.string_of_state model new_state);
-			);
+			self#add_transition_to_state_space (source_state_index, action_index, new_state_index) added;
 		); (* end if valid new state *)
 		
 		(* Return true if the state is pi-compatible *)
@@ -334,6 +323,22 @@ class algoIMK =
 
 
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method process_initial_state initial_state =
+		(* Get the constraint *)
+		let _, initial_constraint = initial_state in
+		
+		(*** NOTE: the addition of neg J to all reached states is performed as a side effect inside the following function ***)
+		(*** BADPROG: same reason ***)
+		let pi0_compatible = self#check_pi0compatibility initial_constraint in
+		
+		(* Keep only if pi-compatible *)
+		pi0_compatible
+		
+
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -419,30 +424,30 @@ class algoIMK =
 		(* Constraint is exact if termination is normal, possibly over-approximated otherwise (as there may be pi-incompatible inequalities missing) *)
 		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_over in
 
+		let result = match statespace_nature with
+			| StateSpace.Good | StateSpace.Unknown -> Good_constraint(LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint, soundness)
+			| StateSpace.Bad -> Bad_constraint(LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint, soundness)
+		in
+
 		(* Return result *)
-		IM_result
+		Point_based_result
 		{
+			(* Reference valuation *)
+			reference_val		= Input.get_pi0();
+			
 			(* Result of the algorithm *)
-			result				= LinearConstraint.Convex_p_constraint p_constraint;
+			result				= result;
 			
 			(* Explored state space *)
 			state_space			= state_space;
 			
-			(* Nature of the state space *)
-			statespace_nature	= statespace_nature;
-			
-			(* Number of random selections of pi-incompatible inequalities performed *)
-			nb_random_selections= nb_random_selections;
-	
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;
 			
-			(* Soudndness of the result *)
-			soundness			= soundness;
-	
 			(* Termination *)
 			termination			= termination_status;
 		}
+		
 	
 (************************************************************)
 (************************************************************)

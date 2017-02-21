@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/05/04
+ * Last modified     : 2016/10/18
  *
  ************************************************************)
 
@@ -60,26 +60,20 @@ class algoPostStar =
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the reachability_graph (if indeed needed) *)
+	(* Add a new state to the state space (if indeed needed) *)
 	(* Side-effects: modify new_states_indexes *)
 	(*** TODO: move new_states_indexes to a variable of the class ***)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method add_a_new_state reachability_graph orig_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
+	method add_a_new_state source_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
 		(* Retrieve the model *)
-		let model = Input.get_model () in
+(* 		let model = Input.get_model () in *)
 
 		(* Build the state *)
 		let new_state = location, final_constraint in
 
-		(* Print some information *)
-		if verbose_mode_greater Verbose_total then(
-			(*** TODO: move that comment to a higher level function? (post_from_one_state?) ***)
-			print_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
-		);
-
 		let new_state_index, added = (
-			StateSpace.add_state reachability_graph new_state
+			StateSpace.add_state state_space new_state
 		) in
 		
 		(* If this is really a new state *)
@@ -99,18 +93,20 @@ class algoPostStar =
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 		
 		(* Update the transitions *)
-		StateSpace.add_transition reachability_graph (orig_state_index, action_index, new_state_index);
-		(* Print some information *)
-		if verbose_mode_greater Verbose_high then (
-			let beginning_message = (if added then "NEW STATE" else "Old state") in
-			print_message Verbose_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (model.action_names action_index) ^ "': ");
-			print_message Verbose_high (ModelPrinter.string_of_state model new_state);
-		);
+		self#add_transition_to_state_space (source_state_index, action_index, new_state_index) added;
 	
 		(* The state is necessarily kept by the algorithm *)
 		true
 	
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method process_initial_state _ =
+		(* Always keep the initial state *)
+		true
+
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

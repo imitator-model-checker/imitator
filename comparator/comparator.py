@@ -10,7 +10,7 @@
 # 
 # File contributors : Étienne André
 # Created           : 2016/08/08
-# Last modified     : 2016/08/13
+# Last modified     : 2017/02/10
 #************************************************************
 
 
@@ -23,7 +23,18 @@ import datetime
 import os
 import sys
 import subprocess
+import webbrowser 
 
+# To output colored text
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 
 #************************************************************
@@ -31,7 +42,9 @@ import subprocess
 #************************************************************
 
 # Root path to the main IMITATOR root directory
-IMITATOR_PATH = ''
+IMITATOR_PATH = os.path.dirname(os.path.realpath(__file__)) #ADDED
+IMITATOR_PATH = IMITATOR_PATH.replace(os.path.basename(IMITATOR_PATH),"") #ADDED
+
 # Path to the example directory
 BENCHMARKS_PATH = IMITATOR_PATH + 'benchmarks/'
 # Path to the binary directory
@@ -41,6 +54,14 @@ BINARY_PATH = IMITATOR_PATH + 'bin/'
 BINARY_NAME = 'imitator'
 # Result files prefix
 RESULT_FILES_PATH = IMITATOR_PATH + 'comparator/results/'
+
+#ADDED
+#Path to webgen directory
+WEBGEN_PATH= IMITATOR_PATH + 'comparator/webgen/'
+
+#Data file for HTML Generation
+HTML_DATA = 'comparator_data.txt'
+HTML_FILE = 'graph_result.html'
 
 orig_stdout = sys.stdout
 
@@ -58,6 +79,8 @@ V_2_6_1		= 2
 V_2_6_2_825	= 3
 V_2_7_3		= 4
 V_2_8		= 5
+V_2_8_2146	= 6
+V_current	= 7
 
 #------------------------------------------------------------
 # Options
@@ -180,8 +203,8 @@ versions = {
 	#------------------------------------------------------------
 	V_2_8 : {
 		'version_name'		: '2.8',
-		'binary'			: 'imitator',
-		'binary_dist'		: 'patator',
+		'binary'			: 'imitator28',
+		'binary_dist'		: 'patator28',
 		'syntax':
 			{
 			OPT_DISTR_SUBDOMAIN		: '-distributed dynamic',
@@ -196,6 +219,46 @@ versions = {
 			OPT_PRP					: '-PRP',
 			},
 		'files_suffix'			: '_2_8',
+	},
+	#------------------------------------------------------------
+	V_2_8_2146 : {
+		'version_name'		: '2.8-2146',
+		'binary'			: 'imitator2146',
+		'binary_dist'		: 'patator',
+		'syntax':
+			{
+			OPT_DISTR_SUBDOMAIN		: '-distributed dynamic',
+			OPT_INCLUSION			: '-incl',
+			OPT_MERGING				: '-merge',
+			OPT_MODE_COVER			: '-mode cover',
+			OPT_MODE_EF				: '-mode EFold',
+			OPT_OUTPUT_CART			: '-output-cart',
+			OPT_OUTPUT_PREFIX		: '-output-prefix',
+			OPT_OUTPUT_RES			: '-output-result',
+			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
+			OPT_PRP					: '-PRP',
+			},
+		'files_suffix'			: '_2_8_2146',
+	},
+	#------------------------------------------------------------
+	V_current : {
+		'version_name'		: 'current',
+		'binary'			: 'imitator',
+		'binary_dist'		: 'patator',
+		'syntax':
+			{
+			OPT_DISTR_SUBDOMAIN		: '-distributed dynamic',
+			OPT_INCLUSION			: '-incl',
+			OPT_MERGING				: '-merge',
+			OPT_MODE_COVER			: '-mode cover',
+			OPT_MODE_EF				: '-mode EFold',
+			OPT_OUTPUT_CART			: '-output-cart',
+			OPT_OUTPUT_PREFIX		: '-output-prefix',
+			OPT_OUTPUT_RES			: '-output-result',
+			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
+			OPT_PRP					: '-PRP',
+			},
+		'files_suffix'			: '_current',
 	},
 }
 
@@ -218,19 +281,24 @@ def make_log_file(benchmark, version):
 	return RESULT_FILES_PATH + benchmark['log_prefix'] +  versions[version]['files_suffix'] + ".benchlog"
 
 def fail_with(text) :
-	print_to_screen('Fatal error!')
-	print_to_screen(text)
+	print_to_screen(bcolors.FAIL + 'Fatal error!' + bcolors.ENDC)
+	print_to_screen(bcolors.FAIL + text + bcolors.ENDC)
 	sys.exit(1)
 
 def print_warning(text) :
-	print_to_screen(' *** Warning: ' + text)
+	print_to_screen(bcolors.WARNING + ' *** Warning: ' + text + bcolors.ENDC)
 
 def print_error(text) :
-	print_to_screen(' *** Error: ' + text)
+	print_to_screen(bcolors.FAIL + ' *** Error: ' + text + bcolors.ENDC)
 
 def print_to_screen(content):
 	# Print
 	print content
+
+def write_to_file(PATH_FILE, content):
+	wrote_file = open(PATH_FILE, "a")
+	wrote_file.write(content)
+	wrote_file.close()
 
 
 # Function to retrieve the computation time depending on the benchmark
@@ -269,7 +337,7 @@ def get_computation_time(benchmark, version, cartography_mode):
 		print_error("Time not found for benchmark " + benchmark['benchmark_name'] + " with version " + versions[version]['version_name'])
 		return ANALYSIS_FAILED
 	
-	if version == V_2_8:
+	if version == V_2_8 or version == V_2_8_2146 or version == V_current:
 		# Open res file
 		res_file = RESULT_FILES_PATH + benchmark['log_prefix'] +  versions[version]['files_suffix'] + ".res"
 		if not os.path.isfile(res_file):
@@ -300,7 +368,7 @@ def run(benchmark, versions_to_test):
 	# Print something
 	print_to_screen('')
 	print_to_screen('############################################################')
-	print_to_screen(' BENCHMARK ' + benchmark['benchmark_name'])
+	print_to_screen(bcolors.BOLD + ' BENCHMARK ' + benchmark['benchmark_name'] + bcolors.ENDC)
 	
 	# Create the row in the results array
 	results[benchmark['log_prefix']] = {}
@@ -410,6 +478,7 @@ def run(benchmark, versions_to_test):
 			# TODO: test whether the termination is ok
 	# Print the current benchmark
 	print_line(versions_to_test, benchmark['benchmark_name'], results[benchmark['log_prefix']])
+	write_line(WEBGEN_PATH + HTML_DATA, versions_to_test, benchmark['benchmark_name'], results[benchmark['log_prefix']])
 
 
 
@@ -419,14 +488,14 @@ def print_line(versions_to_test, benchmark_name, result):
 	
 	for version in versions_to_test:
 		# Normal case
-		result_str = str(result[version])
+		result_str = bcolors.OKBLUE + str(result[version]) + bcolors.ENDC
 		# Case: not run
 		if result[version] == ANALYSIS_NOT_RUN:
-			result_str = 'not run'
+			result_str = bcolors.WARNING + 'not run' + bcolors.ENDC
 		# Case: could not get the result (analys failed)
 		else:
 			if result[version] == ANALYSIS_FAILED:
-				result_str = 'failed'
+				result_str = bcolors.FAIL + 'failed' + bcolors.ENDC
 		line = line + result_str + "; "
 	
 	print_to_screen(line)
@@ -436,7 +505,7 @@ def print_results(versions_to_test):
 	# Print something
 	print_to_screen('')
 	print_to_screen('############################################################')
-	print_to_screen(' RESULTS')
+	print_to_screen(bcolors.BOLD + ' RESULTS' + bcolors.ENDC)
 	
 	header_line = 'version; '
 	
@@ -450,18 +519,52 @@ def print_results(versions_to_test):
 	for benchmark_id, result in results.iteritems():
 		print_line(versions_to_test, benchmark_id, result)
 
-
+def write_line(PATH_FILE, versions_to_test, benchmark_name, result):
+	
+	header_line = 'version; '
+	
+	for version in versions_to_test:
+		# First line with all version names
+		header_line += versions[version]['version_name'] + "; "
+	
+	write_to_file(PATH_FILE, header_line + "\n")
+	
+	# Create text line
+	line = benchmark_name + "; "
+	
+	for version in versions_to_test:
+		# Normal case
+		result_str = bcolors.OKBLUE + str(result[version]) + bcolors.ENDC
+		# Case: not run
+		if result[version] == ANALYSIS_NOT_RUN:
+			result_str = bcolors.WARNING + 'not run' + bcolors.ENDC
+		# Case: could not get the result (analys failed)
+		else:
+			if result[version] == ANALYSIS_FAILED:
+				result_str = bcolors.FAIL + 'failed' + bcolors.ENDC
+		line = line + result_str + "; "
+	
+	write_to_file(PATH_FILE, line + "\n")
+	
+def reset_data_file(PATH_FILE):
+	file2reset = open(PATH_FILE, "w")
+	file2reset.write("")
+	file2reset.close()
+	
 #************************************************************
 # RUN!
 #************************************************************
 
-all_versions = [V_2_5, V_2_6_1, V_2_6_2_825, V_2_7_3, V_2_8]
+#all_versions = [V_2_5, V_2_6_1, V_2_6_2_825, V_2_7_3, V_2_8, V_current]
+all_versions = [V_2_8_2146, V_current]
 
 # IMPORTING THE BENCHMARKS CONTENT
 import comparator_data
 tests = comparator_data.data
 
 print_to_screen('')
+
+reset_data_file(WEBGEN_PATH + HTML_DATA)
 
 for test in tests:
 	run(test, all_versions)
@@ -472,7 +575,12 @@ print_results(all_versions)
 # THE END
 #************************************************************
 
+# à adapter pour le write dans un fichier (pour le fichier de html/js ou bien trouver un moyen de rediriger le printf
+
 print_to_screen('')
+print_to_screen('Browser will open soon with result if not already opened')
 print_to_screen('...The end of COMPARATOR!')
+
+webbrowser.open(WEBGEN_PATH + HTML_FILE)
 
 sys.exit(0)

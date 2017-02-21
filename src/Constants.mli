@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/01/15
+ * Last modified     : 2017/02/20
  *
  ************************************************************)
 
@@ -26,6 +26,8 @@ val version_string : string
 
 val version_name : string
 
+(* Path ending with "/" *)
+val path_to_program : string
 
 
 (************************************************************)
@@ -55,3 +57,11 @@ val dot_file_extension : string
 val states_file_extension : string
 val cartography_extension : string
 
+
+(************************************************************)
+(************************************************************)
+(* Internal cuisine *)
+(************************************************************)
+(************************************************************)
+(* Name of the special clock always reset (used for NZ model checking, and not to be printed in normal operations) *)
+val special_reset_clock_name : string

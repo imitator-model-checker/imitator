@@ -11,7 +11,7 @@
  * Created           : 2014/04/27
  * Fork from         : Counter.ml
  * Fork date         : 2016/05/17
- * Last modified     : 2016/06/07
+ * Last modified     : 2017/02/15
  *
  ************************************************************)
 
@@ -54,6 +54,14 @@ type counterCategory =
 	(** States computations *)
 	| States_counter
 	
+
+(************************************************************)
+(************************************************************)
+(* Global variable *)
+(************************************************************)
+(************************************************************)
+let all_counters_enabled = ref false
+
 
 (************************************************************)
 (************************************************************)
@@ -134,7 +142,7 @@ class timeCounter (name : string) (counter_category : counterCategory) (level : 
 	(** Start the counter *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method start =
-		if verbose_mode_greater level then(
+		if !all_counters_enabled || verbose_mode_greater level then(
 			running <- true;
 			start_time <- Unix.gettimeofday()
 		)
@@ -144,7 +152,7 @@ class timeCounter (name : string) (counter_category : counterCategory) (level : 
 	(** Stop the counter *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method stop =
-		if verbose_mode_greater level then(
+		if !all_counters_enabled || verbose_mode_greater level then(
 			running <- false;
 			value <- value +. Unix.gettimeofday() -. start_time
 		)
@@ -153,7 +161,7 @@ class timeCounter (name : string) (counter_category : counterCategory) (level : 
 	(** Reset the counter *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method reset =
-		if verbose_mode_greater level then(
+		if !all_counters_enabled || verbose_mode_greater level then(
 			value <- 0.0
 		)
 
@@ -217,7 +225,7 @@ class discreteCounter (name : string) (counter_category : counterCategory) (leve
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Get the counter's discrete value *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* 	method discrete_value = discrete_counter *)
+	method discrete_value = discrete_counter
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Get the counter's value in the form of a string: continuous value, number of calls, and average call excecution *)
@@ -351,7 +359,7 @@ let create_gen_counter_and_register creation_function (name : string) (counter_c
 	
 	(* Only register if verbose mode allows for it *)
 	(*** NOTE: for now, register all counters (as the verbose_mode may not be initialized when the counters are created ***)
-(* 	if verbose_mode_greater level then( *)
+(* 	if !all_counters_enabled || verbose_mode_greater level then( *)
 		(* Print some information *)
 		print_message Verbose_low ("Registered counter " ^ name ^ ".");
 		register my_new_counter
@@ -369,7 +377,7 @@ let create_time_counter_and_register (name : string) (counter_category : counter
 	
 	(* Only register if verbose mode allows for it *)
 	(*** NOTE: for now, register all counters (as the verbose_mode may not be initialized when the counters are created ***)
-(* 	if verbose_mode_greater level then( *)
+(* 	if !all_counters_enabled || verbose_mode_greater level then( *)
 		(* Print some information *)
 		print_message Verbose_low ("Registered counter " ^ name ^ ".");
 		register my_new_counter
@@ -400,7 +408,7 @@ let create_discrete_counter_and_register (name : string) (counter_category : cou
 
 	(* Only register if verbose mode allows for it *)
 	(*** NOTE: for now, register all counters (as the verbose_mode may not be initialized when the counters are created ***)
-(* 	if verbose_mode_greater level then( *)
+(* 	if !all_counters_enabled || verbose_mode_greater level then( *)
 		(* Print some information *)
 		print_message Verbose_low ("Registered counter " ^ name ^ ".");
 		register my_new_counter
@@ -414,9 +422,13 @@ let create_discrete_counter_and_register (name : string) (counter_category : cou
 
 
 (** Retrieve all counters of a category *)
-(*** NOTE: not smart programming (we have to go through the entire list of counters once for each category) but, come on, there are relatively few counters and few categories.... ***)
+(*** NOTE: not smart programming (we have to go through the entire list of counters once for each category) but, come on, there are relatively few counters and few categories… ***)
 let get_counters_by_category counter_category =
 	List.filter (fun counter -> counter#category = counter_category) !all_counters
+
+(** Enable all counters (past and future), independently of their verbose level; typicaly, this function will be called if -statistics option is enabled *)
+let enable_all_counters () =
+	all_counters_enabled := true
 
 
 (** Get all counters values with a pretty-printed string *)
@@ -432,7 +444,7 @@ let string_of_all_counters () =
 		let counters = get_counters_by_category category in
 		
 		(* Filter active counters for this level of verbosity *)
-		let active_counters = List.filter (fun counter -> verbose_mode_greater counter#level) counters in
+		let active_counters = if !all_counters_enabled then counters else List.filter (fun counter -> verbose_mode_greater counter#level) counters in
 		
 		(* Only print non-empty categories *)
 		if List.length active_counters > 0 then(
@@ -441,7 +453,7 @@ let string_of_all_counters () =
 				^ "\n------------------------------------------------------------";
 			List.iter (fun counter ->
 				(* Only print suitable counters *)
-				if verbose_mode_greater counter#level then(
+				if !all_counters_enabled || verbose_mode_greater counter#level then(
 					let counter_name_length = String.length counter#name in
 					let name = if counter_name_length <= max_name_size then
 						(counter#name ^ (string_n_times (max_name_size - counter_name_length) " "))

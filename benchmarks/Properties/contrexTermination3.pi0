@@ -1,0 +1,24 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Example for non termination of Inverse Method
+ *
+ * Description     : Example for non termination of Inverse Method. The idea is that constraints are generated of the form i*p2 >= (i-1)*p1, with i growing without bounds, i.e., eventually p2 >= p1. Given p1=1, any valuation of p2 >= 1 yields non-termination of IM. (Valuations p2 < p1 terminate.) Constraining the system with p2 >= p1 yields termination. Also note that no other valuation than p1=p2=1 yields the same trace set.
+ * Correctness     : N/A
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2012/07/02
+ * Fork from       : contrexTermination.imi
+ * Fork date       : 2016/08/31
+ * Last modified   : 2016/08/31
+ *
+ * IMITATOR version: 2.8
+ ************************************************************)
+ 
+
+	& p2 = 1 & p1 = 1
+;

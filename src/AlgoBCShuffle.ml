@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/14
- * Last modified     : 2016/05/04
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -78,10 +78,6 @@ class algoBCShuffle =
 	(** Compute an array made of *all* points in V0 *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private compute_all_points =
-	(*	(* Get the model *)
-		let model = Input.get_model() in
-		(* Get the v0 *)
-		let v0 = Input.get_v0() in*)
 		(* Retrieve the input options *)
 		let options = Input.get_options () in
 
@@ -95,7 +91,7 @@ class algoBCShuffle =
 			raise (InternalError("The number of points in V0 has not been computed (but it should)."));
 		);
 		
-		(* First check that the number of points can be represented as an int *)
+		(* Check that the number of points can be represented as an int *)
 		if not (NumConst.is_int nb_points) then(
 			raise (InternalError("The number of points in V0 is too big to be represented as an int."));
 		);
@@ -133,9 +129,6 @@ class algoBCShuffle =
 			(* Update the current point *)
 			current_point := next_pi0;
 
-			(* Get the current pi0 and COPY it! Very important *)
-			(*** NOTE (2016/03/14): why?? ***)
-(* 			let current_pi0_copy = next_pi0#copy in *)
 			(* Fill the array *)
 			all_points.(pi0_index) <- !current_point;
 		done;
@@ -156,10 +149,6 @@ class algoBCShuffle =
 		
 		(* Return the array *)
 		all_points
-
-(*		(* Set the first pi0 *)
-		current_pi0 := Some (all_points.(0));
-		all_pi0_array_current := 0;*)
 		
 		
 		
@@ -208,23 +197,6 @@ class algoBCShuffle =
 		()
 
 		
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Global method on pi0 *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Compute the sequential successor of a point. Returns Some next_pi0 if there is indeed one, or None if no more point is available. *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-      
-(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_instance =
-		(* Create a new instance of IM *)
-		new AlgoIM.algoIM*)
-
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create the initial point for the analysis *)
@@ -274,8 +246,6 @@ class algoBCShuffle =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** BADPROG: code mostly copied from AlgoBCCover ***)
 	method find_next_point =
-		(* Get the model *)
-	(* 	let model = Input.get_model() in *)
 
 		(* Print some information *)
 		self#print_algo_message Verbose_medium ("Finding the next point (next point index = " ^ (string_of_int next_point_index) ^ ")");
@@ -327,44 +297,11 @@ class algoBCShuffle =
 			| Some status -> status
 		in
 
-		(* Coverage is... *)
-		(*** NOTE: this is only true for the original behavioral cartography; for variants this may not hold ***)
-		let coverage =
-			(* INTEGER COMPLETE if termination is regular and all tiles are exact or under-approximations *)
-			if termination_status = BC_Regular_termination && (List.for_all (fun abstract_im_result -> match abstract_im_result.soundness with
-					| Constraint_exact | Constraint_maybe_under -> true
-					| Constraint_maybe_over | Constraint_maybe_invalid -> false
-					| Constraint_under_over -> raise (InternalError("BC is not suppose to handle under/over-approximations"))
-				) im_results)
-				then Coverage_integer_complete
-			(* UNKNOWN otherwise *)
-			else Coverage_unknown
-		in
+		(* Retrieve the manager *)
+		let tiles_manager = self#get_tiles_manager in
 		
-		(* Return result *)
-		BC_result {
-			(* Number of points in V0 *)
-			size_v0				= nb_points;
-			
-			(* List of tiles *)
-			(*** NOTE: reverse as each im_result was added as first element ***)
-			tiles				= List.rev im_results;
-			
-			(* Total computation time of the algorithm *)
-			computation_time	= time_from start_time;
-			
-			(* Computation time to look for points *)
-			find_point_time		= find_next_point_counter#value;
-			
-			(* Number of points on which IM could not be called because already covered *)
-			nb_unsuccessful_points = nb_unsuccessful_points;
-			
-			(* Evaluation of the coverage of V0 by tiles computed by the cartography *)
-			coverage			= coverage;
-			
-			(* Termination *)
-			termination			= termination_status;
-		}
+		(* Ask the tiles manager to process the result itself, by passing the appropriate arguments *)
+		tiles_manager#process_result start_time nb_points nb_unsuccessful_points termination_status None
 
 
 (************************************************************)

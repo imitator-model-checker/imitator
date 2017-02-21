@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2016/08/08
+ * Last modified     : 2017/02/15
  *
  ************************************************************)
 
@@ -71,10 +71,10 @@ class imitator_options =
 		(*** WARNING: why so many mutable ref, although mutable would do ?? ***)
 		
 		(* imitator model input file *)
-		val mutable file = ""
+		val mutable model_input_file_name = ""
 		
 		(* pi0 file *)
-		val mutable pi0file = ""
+		val mutable second_file_name = ""
 		
 		(* Create a "fake" pi0 file (USELESS) *)
 (* 		val mutable forcePi0 = ref false *)
@@ -205,6 +205,9 @@ class imitator_options =
 		(* no time elapsing in zones (in fact, time elapsing is performed before taking a transition, not after) *)
 		val mutable no_time_elapsing = ref false
 		
+		(* No automatic removal of variables declared but never used *)
+		val mutable no_variable_autoremove = ref false
+
 		(* Returns contraint K ("algo IMK") *)
 		val mutable pi_compatible = ref false 
 		
@@ -233,8 +236,8 @@ class imitator_options =
 		
 		(* TRANSLATION *)
 		
-		(* Translate PTA model into a CLP program *)
-		val mutable pta2clp = ref false
+(*		(* Translate PTA model into a CLP program *)
+		val mutable pta2clp = ref false*)
 		
 		(* Translate PTA model into a GML model *)
 		val mutable pta2gml = ref false
@@ -288,17 +291,18 @@ class imitator_options =
 		method dynamic_clock_elimination = !dynamic_clock_elimination
 		method efim = !efim
 		method fancy = !fancy
-		method file = file
 		method files_prefix = !files_prefix
 		method fromGML = fromGML
 		method imitator_mode = imitator_mode
 		method new_ef_mode = new_ef_mode
 		method inclusion = !inclusion
-		method nb_args = nb_args
 		method merge = !merge
 		method merge_before = !merge_before
+		method model_input_file_name = model_input_file_name
+		method nb_args = nb_args
 		method no_time_elapsing = !no_time_elapsing
 		method no_random = !no_random
+		method no_variable_autoremove = !no_variable_autoremove
 		method output_bc_cart = !output_bc_cart
 		method output_bc_result = !output_bc_result
 		method output_cart_x_min = !output_cart_x_min
@@ -309,12 +313,13 @@ class imitator_options =
 		method output_tiles_files = !output_tiles_files
 		method pi_compatible = !pi_compatible
 		method precomputepi0 = !precomputepi0
-		method pta2clp = !pta2clp
+(* 		method pta2clp = !pta2clp *)
 		method pta2gml = !pta2gml
 		method pta2imi = !pta2imi
 		method pta2hytech = !pta2hytech
 		method pta2jpg = !pta2jpg
 		method pta2tikz = !pta2tikz
+		method second_file_name = second_file_name
 		method states_limit = !states_limit
 		method statistics = !statistics
 		method step = !step
@@ -329,9 +334,19 @@ class imitator_options =
 		method with_log = !with_log
 (* 		method with_parametric_log = !with_parametric_log *)
 
-		method pi0file = pi0file
 		
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Set methods *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		
+		(*** NOTE: set methods are only used for the learning-based abstraction construction ***)
+		
+		method set_file file_name =
+			model_input_file_name <- file_name
+
+		method set_files_prefix file_name =
+			files_prefix <- ref file_name
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Parse method *)
@@ -359,15 +374,51 @@ class imitator_options =
 				if mode = "statespace" then 
 					imitator_mode <- State_space_exploration
 					
-				(* Case: EF-synthesis *)
-				else if mode = "EF" then 
+				(* Case: old version of EF-synthesis using a list of constraints *)
+				else if mode = "EFold" then 
 					imitator_mode <- EF_synthesis
 					
-				(* Case: new experimental EF-synthesis using PointSetPowerSet *)
-				else if mode = "EFnew" then(
+				(* Case: new EF-synthesis using PointSetPowerSet *)
+				else if mode = "EF" then(
 					new_ef_mode <- true;
 					imitator_mode <- EF_synthesis
-					)
+				)
+					
+				(* Case: EF-synthesis w.r.t. bad states (unsafe) *)
+				else if mode = "EFunsafe" then(
+					imitator_mode <- EFunsafe_synthesis
+				)
+					
+				(* Case: Parametric loop synthesis *)
+				else if mode = "LoopSynth" then 
+					imitator_mode <- Loop_synthesis
+				
+				(** Case: Parametric Büchi-emptiness checking with non-Zenoness (method: check whether the PTA is CUB) *)
+				else if mode = "NZCUBcheck" then(
+					imitator_mode <- Parametric_NZ_CUBcheck;
+					
+					(*** NOTE: very important! This algorithm requires the alternative definition of time-elapsing ***)
+					no_time_elapsing := true;
+				)
+					
+				(* Case: Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
+				else if mode = "NZCUBtrans" then(
+					imitator_mode <- Parametric_NZ_CUBtransform;
+					
+					(*** NOTE: very important! This algorithm requires the alternative definition of time-elapsing ***)
+					no_time_elapsing := true;
+				)
+					
+				(* Case: Parametric Büchi-emptiness checking with non-Zenoness on a CUB-PTA: hidden option (mainly for testing) *)
+				else if mode = "NZCUB" then(
+					imitator_mode <- Parametric_NZ_CUB;
+					
+					(*** NOTE: very important! This algorithm requires the alternative definition of time-elapsing ***)
+					no_time_elapsing := true;
+					
+					(*** HACK!!! otherwise Graphics won't generate the .jpg file to test...) ***)
+					output_trace_set := true;
+				)
 					
 				(* Case: Parametric deadlock checking *)
 				else if mode = "PDFC" then 
@@ -377,17 +428,29 @@ class imitator_options =
 				else if mode = "inversemethod" then 
 					imitator_mode <- Inverse_method
 					
+				(* Case: PRP *)
+				else if mode = "PRP" then 
+					imitator_mode <- PRP
+					
 				(* Case: cover *)
 				else if mode = "cover" then 
 					imitator_mode <- Cover_cartography
 					
-				(* Case: cover *)
+				(* Case: learning *)
+				else if mode = "coverlearning" then 
+					imitator_mode <- Learning_cartography
+					
+				(* Case: shuffle *)
 				else if mode = "shuffle" then 
 					imitator_mode <- Shuffle_cartography
 					
 				(* Case: border *)
 				else if mode = "border" then 
 					imitator_mode <- Border_cartography
+					
+				(* Case: PRPC *)
+				else if mode = "PRPC" then 
+					imitator_mode <- PRPC
 					
 				(* Case: number of iterations *)
 				else try (
@@ -520,6 +583,9 @@ class imitator_options =
         Use 'statespace' for the generation of the entire parametric state space (no pi0 needed).
         Use 'EF' for a parametric non-reachability analysis (no pi0 needed).
         Use 'PDFC' for parametric non-deadlock checking (no pi0 needed).
+        Use 'LoopSynth' for cycle-synthesis (without non-Zeno assumption).
+        Use 'NZCUBcheck' for cycle-synthesis (with non-Zeno assumption, using a CUB-detection). [EXPERIMENTAL]
+        Use 'NZCUBtrans' for cycle-synthesis (with non-Zeno assumption, using a transformation into a CUB-PTA). [EXPERIMENTAL]
         Use 'inversemethod' for the inverse method.
         For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). Default: 'inversemethod'.");
 				(*** NOTE: hidden option! 'shuffle' to cover all the points within v0 after shuffling the array. (Reason for hiding: only useful in the distributed cartography) ***)
@@ -528,6 +594,8 @@ class imitator_options =
 				("-no-random", Set no_random, " In IM, no random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 
 				("-no-time-elapsing", Set no_time_elapsing, " No time elapsing in zone computation (i.e., time elapsing is performed before taking a transition, not after). Default: false.");
+
+				("-no-var-autoremove", Set no_variable_autoremove, " Prevent the automatic removal of variables (discrete, clocks, parameters) declared in the header but never used in the IPTAs. Default: false.");
 
 				(* 				("-PTA2CLP", Unit (fun _ -> pta2clp := true; imitator_mode <- Translation), "Translate PTA into a CLP program, and exit without performing any analysis. Work in progress! Defaut : 'false'"); *)
 				
@@ -559,7 +627,7 @@ class imitator_options =
 				
 				("-precomputepi0", Set precomputepi0, " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode only). Default: false.");
 
-				("-PRP", Set efim, " Reachability-preservation algorithm mixing IM and EFsynth [ALNS15]. Default: false.");
+				("-PRP", Set efim, " Reachability-preservation algorithm mixing IM and EFsynth [ALNS15]. Default: false. WARNING: deprecated option (use -mode PRP or -mode PRPC)");
 				
 				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode <- Translation), "Translate the model into a GrML model, and exit without performing any analysis. Defaut : 'false'");
 				
@@ -578,7 +646,7 @@ class imitator_options =
 				
 				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
 				
-				("-statistics", Set statistics, " Print info on number of calls to PPL, and other statistics. Default: 'false'");
+				("-statistics", Unit (fun _ -> statistics := true; Statistics.enable_all_counters()), " Print info on number of calls to PPL, and other statistics. Default: 'false'");
 				
 				("-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography. Default: 1/1.");
 				
@@ -605,12 +673,12 @@ class imitator_options =
 				(* If 1st argument: main file *)
 				if nb_args = 0 then(
 					nb_args <- nb_args + 1;
-					file <- arg;
+					model_input_file_name <- arg;
 				)
 				(* If 2nd argument: pi0 file *)
 				else if nb_args = 1 then(
 					nb_args <- nb_args + 1;
-					pi0file <- arg;
+					second_file_name <- arg;
 				)
 				(* If more than one argument : warns *)
 				else (
@@ -630,7 +698,7 @@ class imitator_options =
 			);
 			
 			(* Case no pi0 file *)
-			if nb_args = 1 && (imitator_mode != State_space_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != Parametric_deadlock_checking) && (imitator_mode != Translation) (*&& not !forcePi0*) then(
+			if nb_args = 1 && (imitator_mode != State_space_exploration) && (imitator_mode != EF_synthesis)  && (imitator_mode != EFunsafe_synthesis) && (imitator_mode != Loop_synthesis) && (imitator_mode != Parametric_NZ_CUBtransform) && (imitator_mode != Parametric_NZ_CUBcheck) && (imitator_mode != Parametric_NZ_CUB) && (imitator_mode != Parametric_deadlock_checking) && (imitator_mode != Translation) then(
 				(*** HACK: print header now ***)
 				print_header_string();
 				print_error ("Please give a file name for the reference valuation.");
@@ -642,7 +710,7 @@ class imitator_options =
 			(* Set prefix for files *)
 			if !files_prefix = "" then
 				(*** WHAT ? ***)
-			  files_prefix := file
+			  files_prefix := model_input_file_name
 			;
 			  
 			(* Remove the ".imi" at the end of the program prefix, if any *)
@@ -665,7 +733,7 @@ class imitator_options =
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method recall() =
 			(* File *)
-			print_message Verbose_standard ("Model: " ^ file);
+			print_message Verbose_standard ("Model: " ^ model_input_file_name);
 			(* File prefix *)
 			print_message Verbose_low ("Prefix for output files: " ^ !files_prefix);
 			(* Print full command *)
@@ -677,13 +745,21 @@ class imitator_options =
 				| Translation -> "translation"
 				| State_space_exploration -> "parametric state space exploration"
 				| EF_synthesis -> "EF-synthesis"
+				| EFunsafe_synthesis -> "EFunsafe-synthesis"
+				| Loop_synthesis -> "loop-synthesis"
+				| Parametric_NZ_CUBcheck -> "parametric non-Zeno emptiness checking (CUB checking)"
+				| Parametric_NZ_CUBtransform -> "parametric non-Zeno emptiness checking (CUB transformation)"
+				| Parametric_NZ_CUB -> "parametric non-Zeno emptiness checking [testing mode without transformation]"
 				| Parametric_deadlock_checking -> "Parametric deadlock-checking"
 				| Inverse_method -> "inverse method"
+				| PRP -> "parametric reachability preservation"
 				| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step)
+				| Learning_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step) ^ " and using learning-based abstractions"
 				| Shuffle_cartography -> "behavioral cartography algorithm with full coverage (shuffled version) and step " ^ (NumConst.string_of_numconst !step)
 				| Border_cartography -> "behavioral cartography algorithm with border detection (experimental) and step " ^ (NumConst.string_of_numconst !step)
 				| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " ^ (NumConst.string_of_numconst !step)
 				| RandomSeq_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations + sequential phase and step " ^ (NumConst.string_of_numconst !step)
+				| PRPC -> "parametric reachability preservation cartography"
 			in print_message Verbose_standard ("Mode: " ^ message ^ ".");
 
 
@@ -696,8 +772,8 @@ class imitator_options =
 			(* Shortcut *)
 			let in_cartography_mode =
 				match imitator_mode with
-				| Translation | State_space_exploration | EF_synthesis| Parametric_deadlock_checking | Inverse_method -> false
-				| Cover_cartography | Shuffle_cartography | Border_cartography | Random_cartography _  | RandomSeq_cartography _ -> true	
+				| Translation | State_space_exploration | EF_synthesis| EFunsafe_synthesis | Loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUBcheck | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | PRP -> false
+				| Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _  | RandomSeq_cartography _ | PRPC -> true
 			in
 			
 			
@@ -744,21 +820,33 @@ class imitator_options =
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Check compatibility between options *) 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			
+			(*** TODO: add warning if Learning_cartography is used with some incompatible options (such as -PRP) ***)
+			
 			if nb_args = 2 then(
 				if imitator_mode = Translation then
-					print_warning ("The pi0 file " ^ pi0file ^ " will be ignored since this is a translation.")
+					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a translation.")
 				;
 				if imitator_mode = State_space_exploration then
-					print_warning ("The pi0 file " ^ pi0file ^ " will be ignored since this is a state space exploration.")
+					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a state space exploration.")
 				;
-				if imitator_mode = EF_synthesis then
-					print_warning ("The pi0 file " ^ pi0file ^ " will be ignored since this is a synthesis with respect to a property.")
+				if imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis then
+					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a synthesis with respect to a property.")
+				;
+				if imitator_mode = Loop_synthesis then
+					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a loop synthesis.")
+				;
+				if imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform then
+					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a non-Zeno parametric model checking.")
+				;
+				if imitator_mode = Parametric_NZ_CUB then
+					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a non-Zeno parametric model checking.")
 				;
 				if imitator_mode = Parametric_deadlock_checking then
-					print_warning ("The pi0 file " ^ pi0file ^ " will be ignored since this is parametric deadlock checking.")
+					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is parametric deadlock checking.")
 				;
 			(*	if !forcePi0 then
-					print_warning ("The pi0 file " ^ !pi0file ^ " will be ignored since this the pi0 file is automatically generated.")
+					print_warning ("The second " ^ !second_file_name ^ " will be ignored since this the pi0 file is automatically generated.")
 				;*)
 			);
 
@@ -779,7 +867,7 @@ class imitator_options =
 				print_warning (Constants.program_name ^ " is not run in cartography mode; the option regarding to the step of the cartography algorithm will thus be ignored.");
 			
 			(* Options for variants of IM, but not in IM mode *)
-			if (imitator_mode = State_space_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
+			if (imitator_mode = State_space_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = Loop_synthesis || imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
 				print_warning (Constants.program_name ^ " is run in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
 
 			
@@ -796,7 +884,7 @@ class imitator_options =
 				(*** NOTE: why this test??? better to warn if this option is used in another context ***)
 				begin
 				match imitator_mode with
-				| Inverse_method | Cover_cartography | Shuffle_cartography | Border_cartography | Random_cartography _ | RandomSeq_cartography _
+				| Inverse_method | Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _ | RandomSeq_cartography _
 					-> print_message Verbose_standard ("Considering variant of IM with inclusion in the fixpoint [AS11].")
 				| _ -> print_message Verbose_standard ("Considering fixpoint variant with inclusion of symbolic zones (instead of equality).")
 				end
@@ -822,8 +910,10 @@ class imitator_options =
 			(* Should add a warning in case of incompatible mode (IMoriginal incompatible with IMunion) + VARIANT ROMAIN *)
 
 
-			if !efim then
-				print_message Verbose_standard ("Considering algorithm PRP [ALNS15].")
+			if !efim then(
+				print_message Verbose_standard ("Considering algorithm PRP [ALNS15].");
+				print_warning ("Option -prp is deprecated. Use '-mode PRP' or '-mode PRPC' instead.");
+			)
 			else
 				print_message Verbose_medium ("No PRP algorithm (default).")
 			;
@@ -949,6 +1039,11 @@ class imitator_options =
 				print_message Verbose_standard ("No random selection for pi0-incompatible inequalities.")
 			else
 				print_message Verbose_medium ("Standard random selection for pi0-incompatible inequalities (default).");
+
+			if !no_variable_autoremove then
+				print_message Verbose_standard ("No automatic removal of variables declared but not used.")
+			else
+				print_message Verbose_medium ("Automatic removal of variables declared but not used (default).");
 
 			if !acyclic then
 				print_message Verbose_standard ("Acyclic mode: will only check inclusion or equality of a new state into a former state of the same iteration (graph depth).")

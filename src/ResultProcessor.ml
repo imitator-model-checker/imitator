@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2016/08/11
+ * Last modified     : 2017/02/10
  *
  ************************************************************)
 
@@ -27,13 +27,46 @@ open Result
 
 
 
+(************************************************************)
+(* Conversion of a good_bad_constraint into a list of (1 or 2) zones *)
+(************************************************************)
+let zones_of_good_bad_constraint = function
+	(* Only good valuations: convert to GOOD convex polyhedron *)
+	| Good_constraint (p_nnconvex_constraint, _) ->
+		[LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint, StateSpace.Good]
+		
+	(* Only bad valuations: convert to BAD convex polyhedron *)
+	| Bad_constraint (p_nnconvex_constraint, _) ->
+		[LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint, StateSpace.Bad]
+
+	(* Both good and bad valuations *)
+	| Good_bad_constraint good_and_bad_constraint ->
+		let good_p_nnconvex_constraint, _ = good_and_bad_constraint.good in
+		let bad_p_nnconvex_constraint, _ = good_and_bad_constraint.bad in
+		[
+			LinearConstraint.Nonconvex_p_constraint good_p_nnconvex_constraint, StateSpace.Good;
+			LinearConstraint.Nonconvex_p_constraint bad_p_nnconvex_constraint, StateSpace.Bad;
+		]
+
 
 (************************************************************)
-(* I/O functions *)
+(* Conversion of enumerated types to string *)
 (************************************************************)
 
 (*** NOTE: this part should be modified with care, as external tools calling IMITATOR may use this syntax ***)
 
+(** Subclass of the model *)
+let string_of_lu_status = function
+	(* General PTA *)
+	| PTA_notLU -> "not L/U"
+	(* L/U-PTA with parameters partitioned into L- and U-parameters *)
+	| PTA_LU _ -> "L/U-PTA"
+	(* L-PTA *)
+	| PTA_L -> "L-PTA"
+	(* U-PTA *)
+	| PTA_U -> "U-PTA"
+
+	
 
 let string_of_bfs_algorithm_termination = function
 	(* Fixpoint-like termination *)
@@ -69,27 +102,31 @@ let string_of_soundness = function
 	(* Constraint equal to or larger than the real result *)
 	| Constraint_maybe_over -> "possible over-approximation"
 	(* Pair of constraints: one under-approximation and one over-approximation *)
-	| Constraint_under_over -> "both a possible under- and a possible over-approximation"
+(* 	| Constraint_under_over -> "both a possible under- and a possible over-approximation" *)
 	(* Impossible to compare the constraint with the original result *)
 	| Constraint_maybe_invalid -> "possibly invalid"
 
 
-let verbose_string_of_soundness = function
+let verbose_string_of_soundness_suffix = function
 	(* Constraint included in or equal to the real result *)
-	| Constraint_maybe_under -> "This constraint is an under-approximation of the actual result (or the actual result itself)"
+	| Constraint_maybe_under -> "is an under-approximation of the actual result (or the actual result itself)"
 	(* Exact result *)
-	| Constraint_exact -> "This constraint is exact (sound and complete)"
+	| Constraint_exact -> "is exact (sound and complete)"
 	(* Constraint equal to or larger than the real result *)
-	| Constraint_maybe_over -> "This constraint is an over-approximation of the actual result (or the actual result itself)"
+	| Constraint_maybe_over -> "is an over-approximation of the actual result (or the actual result itself)"
 	(* Pair of constraints: one under-approximation and one over-approximation *)
-	| Constraint_under_over -> "This constraint is both a possibly under-approximation and a possibly over-approximation (or the actual result itself)"
+(* 	| Constraint_under_over -> "This constraint is both a possibly under-approximation and a possibly over-approximation (or the actual result itself)" *)
 	(* Impossible to compare the constraint with the original result *)
-	| Constraint_maybe_invalid -> "The validity of this constraint cannot be assessed"
+	| Constraint_maybe_invalid -> "validity cannot be assessed"
+let verbose_string_of_soundness s = "This constraint " ^ (verbose_string_of_soundness_suffix s)
 
 
 let string_of_coverage = function
 	(* Full coverage in all dimensions, including rational points *)
 	| Coverage_full -> "full"
+
+	(* No constraint computed at all *)
+	| Coverage_empty -> "empty"
 
 	(* At least all integers are covered, rationals perhaps not *)
 	| Coverage_integer_complete -> "integer-complete"
@@ -102,6 +139,9 @@ let verbose_string_of_coverage = function
 	(* Full coverage in all dimensions, including rational points *)
 	| Coverage_full -> "The entire input parameter domain has been covered by tiles."
 
+	(* No constraint computed at all *)
+	| Coverage_empty -> "None of the input parameter domain has been covered: no tiles could be computed."
+
 	(* At least all integers are covered, rationals perhaps not *)
 	| Coverage_integer_complete -> "All integer points of the input parameter domain have been covered by tiles; rational points may have been covered too (not evaluated)."
 
@@ -109,6 +149,86 @@ let verbose_string_of_coverage = function
 	| Coverage_unknown -> "The coverage of the input parameter domain is probably incomplete and cannot be evaluated."
 
 
+(** Convert a Result.good_or_bad_constraint into a string *)
+let string_of_good_or_bad_constraint variable_names = function 
+	(* Only good valuations *)
+	| Good_constraint (p_nnconvex_constraint, _)
+	(* Only bad valuations *)
+	| Bad_constraint (p_nnconvex_constraint, _)
+		-> LinearConstraint.string_of_p_nnconvex_constraint variable_names p_nnconvex_constraint
+
+	(* Both good and bad valuations *)
+	| Good_bad_constraint good_and_bad_constraint
+		->
+		let good_p_nnconvex_constraint, _ = good_and_bad_constraint.good in
+		let bad_p_nnconvex_constraint, _ = good_and_bad_constraint.bad in
+		(LinearConstraint.string_of_p_nnconvex_constraint variable_names good_p_nnconvex_constraint)
+		^
+		"\n<good|bad>\n"
+		^
+		(LinearConstraint.string_of_p_nnconvex_constraint variable_names bad_p_nnconvex_constraint)
+
+(** Convert a Result.good_or_bad_constraint into a string for the sole soundness *)
+let string_soundness_of_good_or_bad_constraint = function
+	(* Only good valuations *)
+	| Good_constraint (_, soundness)
+	(* Only bad valuations *)
+	| Bad_constraint (_, soundness)
+		-> string_of_soundness soundness
+
+	(* Both good and bad valuations *)
+	| Good_bad_constraint good_and_bad_constraint
+		->
+		let _, good_soundness = good_and_bad_constraint.good in
+		let _, bad_soundness = good_and_bad_constraint.bad in
+		(string_of_soundness good_soundness)
+		^
+		" <good|bad> "
+		^
+		(string_of_soundness bad_soundness)
+
+
+(** Convert a Result.good_or_bad_constraint into a string for the sole statespace nature *)
+let string_statespace_nature_of_good_or_bad_constraint = function
+	(* Only good valuations *)
+	| Good_constraint _ -> StateSpace.string_of_statespace_nature StateSpace.Good
+	(* Only bad valuations *)
+	| Bad_constraint _ -> StateSpace.string_of_statespace_nature StateSpace.Bad
+	(* Both good and bad valuations *)
+	| Good_bad_constraint _ -> (StateSpace.string_of_statespace_nature StateSpace.Good) ^ "/" ^ (StateSpace.string_of_statespace_nature StateSpace.Bad)
+
+
+(** Convert a Result.good_or_bad_constraint into a verbose string for the sole soundness *)
+let verbose_string_soundness_of_good_or_bad_constraint = function 
+	(* Only good valuations *)
+	| Good_constraint (_, soundness) -> "This good constraint " ^ (verbose_string_of_soundness_suffix soundness)
+	(* Only bad valuations *)
+	| Bad_constraint (_, soundness) -> "This bad constraint " ^ (verbose_string_of_soundness_suffix soundness)
+
+	(* Both good and bad valuations *)
+	| Good_bad_constraint good_and_bad_constraint
+		->
+		let _, good_soundness = good_and_bad_constraint.good in
+		let _, bad_soundness = good_and_bad_constraint.bad in
+		"The good constraint " ^ (verbose_string_of_soundness_suffix good_soundness)
+		^
+		". "
+		^
+		"The bad constraint " ^ (verbose_string_of_soundness_suffix bad_soundness) ^ "."
+
+
+(** Add standardised delimiters to constraints *)
+let add_constraints_delimiters constraint_str =
+	(* begin delimiter *)
+	"\n\nBEGIN CONSTRAINT\n"
+	^ constraint_str ^ ""
+	(* end delimiter *)
+	^ "\nEND CONSTRAINT\n"
+
+
+(************************************************************)
+(* I/O functions *)
+(************************************************************)
 (* Header for result files *)
 let file_header () =
 	(* Retrieve the input options *)
@@ -118,7 +238,7 @@ let file_header () =
 	^ "\n * Result output by " ^ Constants.program_name ^ ""
 	^ "\n * Version  : " ^ (ImitatorUtilities.program_name_and_version_and_nickname_and_build())
 	^ "\n * Git      : " ^ (ImitatorUtilities.git_branch_and_hash)
-	^ "\n * Model    : '" ^ options#file ^ "'"
+	^ "\n * Model    : '" ^ options#model_input_file_name ^ "'"
 	(* Date *)
 	^ "\n * Generated: " ^ (now()) ^ ""
 	(* Command *)
@@ -135,6 +255,7 @@ let model_statistics () =
 	    "Number of IPTAs                         : " ^ (string_of_int model.nb_automata)
 	^ "\nNumber of clocks                        : " ^ (string_of_int model.nb_clocks)
 	^ "\nHas stopwatches?                        : " ^ (string_of_bool model.has_stopwatches)
+	^ "\nL/U subclass                            : " ^ (string_of_lu_status model.lu_status)
 	^ "\nNumber of parameters                    : " ^ (string_of_int model.nb_parameters)
 	^ "\nNumber of discrete variables            : " ^ (string_of_int model.nb_discrete)
 	^ "\nNumber of actions                       : " ^ (string_of_int model.nb_actions)
@@ -175,17 +296,22 @@ let abstract_statespace_statistics abstract_state_space total_time =
 
 	
 (* Return a string made of some information concerning the result *)
-let result_nature_statistics soundness termination statespace_nature =
-	    "Constraint soundness                    : " ^ (string_of_soundness soundness)
+let result_nature_statistics (soundness_str : string) termination (statespace_nature_str : string) =
+	    "Constraint soundness                    : " ^ soundness_str
 	^ "\nTermination                             : " ^ (string_of_bfs_algorithm_termination termination)
-	^ "\nState space nature                      : " ^ (StateSpace.string_of_statespace_nature statespace_nature)
+	^ "\nConstraint nature                       : " ^ statespace_nature_str
 
+(* Return a string made of some information concerning the result (for multiple_synthesis_result) *)
+let result_nature_statistics_bc (soundness_str : string) termination (statespace_nature_str : string) =
+	    "Constraint soundness                    : " ^ soundness_str
+	^ "\nTermination                             : " ^ (string_of_bc_algorithm_termination termination)
+	^ "\nConstraint nature                       : " ^ statespace_nature_str
 
 
 (*** TODO: would be smarter to have a generic function write_result_to_file : imitator_result -> unit () ***)
 
 (* Write an ef_synth result to the result file *)
-let write_efsynth_result_to_file file_name (efsynth_result : Result.efsynth_result) =
+let write_deprecated_efsynth_result_to_file file_name (deprecated_efsynth_result : Result.deprecated_efsynth_result) =
 	(*** WARNING: duplicate code concerning the counter creation ***)
 	(* Create counter *)
 	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
@@ -199,7 +325,7 @@ let write_efsynth_result_to_file file_name (efsynth_result : Result.efsynth_resu
 (* 	let options = Input.get_options () in *)
 
 	(* Convert the constraint to a string *)
-	let result_str = string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) efsynth_result.constraints) in
+	let result_str = string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) deprecated_efsynth_result.constraints) in
 
 	(* Prepare the string to write *)
 	let file_content =
@@ -212,19 +338,15 @@ let write_efsynth_result_to_file file_name (efsynth_result : Result.efsynth_resu
 		^ "\n------------------------------------------------------------"
 
 		(* 3) The actual result *)
-		(* begin delimiter *)
-		^ "\n\nBEGIN CONSTRAINT\n"
-		^ result_str ^ ""
-		(* end delimiter *)
-		^ "\nEND CONSTRAINT\n"
+		^ (add_constraints_delimiters result_str)
 		
 		(* 4) Statistics about result *)
 		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (result_nature_statistics efsynth_result.soundness efsynth_result.termination efsynth_result.statespace_nature)
+		^ "\n" ^ (result_nature_statistics (string_of_soundness deprecated_efsynth_result.soundness) deprecated_efsynth_result.termination (StateSpace.string_of_statespace_nature deprecated_efsynth_result.statespace_nature))
 		
 		(* 5) Statistics about state space *)
 		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (statespace_statistics efsynth_result.state_space efsynth_result.computation_time)
+		^ "\n" ^ (statespace_statistics deprecated_efsynth_result.state_space deprecated_efsynth_result.computation_time)
 		^ "\n------------------------------------------------------------"
 		
 		(* 6) General statistics *)
@@ -243,8 +365,8 @@ let write_efsynth_result_to_file file_name (efsynth_result : Result.efsynth_resu
 	()
 
 
-(* Write a pdfc_result to the result file *)
-let write_pdfc_result_to_file file_name (pdfc_result : Result.pdfc_result) =
+(* Write a single_synthesis_result to the result file *)
+let write_single_synthesis_result file_name (single_synthesis_result : Result.single_synthesis_result) =
 	(*** WARNING: duplicate code concerning the counter creation ***)
 	(* Create counter *)
 	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
@@ -256,39 +378,15 @@ let write_pdfc_result_to_file file_name (pdfc_result : Result.pdfc_result) =
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
 (* 	let options = Input.get_options () in *)
-	let result_str, soundness = match pdfc_result.result with
-		| Single_constraint (result, soundness) ->
-			(
-			(* Convert the constraint to a string *)
-			let result_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names result in
 
-			(* begin delimiter *)
-			"\n\nBEGIN CONSTRAINT\n"
-			^ result_str ^ ""
-			(* end delimiter *)
-			^ "\nEND CONSTRAINT\n"
-			)
-			, soundness
-			
-		| Under_over_constraint (under, over) ->
-			(
-			(* Convert the constraints to a string *)
-			let under_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names under in
-			let over_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names over in
+	(* Convert the resulting constraint to a string *)
+	let result_str : string = string_of_good_or_bad_constraint model.variable_names single_synthesis_result.result in
 
-			(* begin delimiter *)
-			"\n\nBEGIN UNDER CONSTRAINT\n"
-			^ under_str ^ ""
-			(* end delimiter *)
-			^ "\nEND UNDER CONSTRAINT\n"
-			(* begin delimiter *)
-			^ "\n\nBEGIN OVER CONSTRAINT\n"
-			^ over_str ^ ""
-			(* end delimiter *)
-			^ "\nEND OVER CONSTRAINT\n"
-			)
-			, Constraint_under_over
-	in
+	(* Handle the soundness separately *)
+	let soundness_str : string = string_soundness_of_good_or_bad_constraint single_synthesis_result.result in 
+
+	(* Handle the statespace nature separately *)
+	let statespace_nature_str = string_statespace_nature_of_good_or_bad_constraint single_synthesis_result.result in
 
 	(* Prepare the string to write *)
 	let file_content =
@@ -300,19 +398,73 @@ let write_pdfc_result_to_file file_name (pdfc_result : Result.pdfc_result) =
 		^ "\n" ^ (model_statistics ())
 		^ "\n------------------------------------------------------------"
 
-		(* 3) The actual result *)
-		^ result_str
+		(* 3) The actual result with delimiters *)
+		^ (add_constraints_delimiters result_str)
 		
 		(* 4) Statistics about result *)
 		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (result_nature_statistics soundness pdfc_result.termination pdfc_result.statespace_nature)
+		^ "\n" ^ (result_nature_statistics soundness_str single_synthesis_result.termination statespace_nature_str)
 		
 		(* 5) Statistics about state space *)
 		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (statespace_statistics pdfc_result.state_space pdfc_result.computation_time)
+		^ "\n" ^ (statespace_statistics single_synthesis_result.state_space single_synthesis_result.computation_time)
 		^ "\n------------------------------------------------------------"
 		
 		(* 6) General statistics *)
+		^ "\n" ^ (Statistics.string_of_all_counters())
+		^ "\n------------------------------------------------------------"
+	in
+	
+	(* Write to file *)
+	write_to_file file_name file_content;
+	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	
+	(* Stop counter *)
+	counter#stop;
+	
+	(* The end *)
+	()
+
+
+(* Write a multiple_synthesis_result to the result file *)
+let write_multiple_synthesis_result file_name (multiple_synthesis_result : Result.multiple_synthesis_result) =
+	(*** WARNING: duplicate code concerning the counter creation ***)
+	(* Create counter *)
+	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
+	
+	(* Start counter *)
+	counter#start;
+
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+
+	(* Convert the resulting constraint to a string *)
+	let result_str : string = string_of_good_or_bad_constraint model.variable_names multiple_synthesis_result.result in
+
+	(* Handle the soundness separately *)
+	let soundness_str : string = string_soundness_of_good_or_bad_constraint multiple_synthesis_result.result in 
+
+	(* Handle the statespace nature separately *)
+	let statespace_nature_str = string_statespace_nature_of_good_or_bad_constraint multiple_synthesis_result.result in
+
+	(* Prepare the string to write *)
+	let file_content =
+		(* 1) Header *)
+		file_header ()
+		
+		(* 2) Statistics about model *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (model_statistics ())
+		^ "\n------------------------------------------------------------"
+
+		(* 3) The actual result with delimiters *)
+		^ (add_constraints_delimiters result_str)
+		
+		(* 4) Statistics about result *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (result_nature_statistics_bc soundness_str multiple_synthesis_result.termination statespace_nature_str)
+		
+		(* 5) General statistics *)
 		^ "\n" ^ (Statistics.string_of_all_counters())
 		^ "\n------------------------------------------------------------"
 	in
@@ -330,7 +482,7 @@ let write_pdfc_result_to_file file_name (pdfc_result : Result.pdfc_result) =
 
 
 (* Write an ef_synth result to the result file *)
-let write_im_result_to_file file_name (im_result : Result.im_result) =
+let write_point_based_result_to_file file_name (point_based_result : Result.point_based_result) =
 	(*** WARNING: duplicate code concerning the counter creation ***)
 	(* Create counter *)
 	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
@@ -344,11 +496,17 @@ let write_im_result_to_file file_name (im_result : Result.im_result) =
 (* 	let options = Input.get_options () in *)
 
 	(* Convert the constraint to a string *)
-	let result_str = LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names im_result.result in
+	let result_str = string_of_good_or_bad_constraint model.variable_names point_based_result.result in
+
+	(* Handle the soundness separately *)
+	let soundness_str = string_soundness_of_good_or_bad_constraint point_based_result.result in 
+	
+	(* Handle the statespace nature separately *)
+	let statespace_nature_str = string_statespace_nature_of_good_or_bad_constraint point_based_result.result in
 
 	(* Prepare the string to write *)
 	let file_content =
-		let pi0 = Input.get_pi0 () in
+		let pi0 = point_based_result.reference_val in
 		
 		(* 1) Header *)
 		file_header ()
@@ -364,21 +522,17 @@ let write_im_result_to_file file_name (im_result : Result.im_result) =
 		^ "\n" ^ (ModelPrinter.string_of_pi0 model pi0)
 		^ "\n------------------------------------------------------------"
 		
-		(* 4) The actual result *)
-		(* begin delimiter *)
-		^ "\n\nBEGIN CONSTRAINT\n"
-		^ result_str ^ ""
-		(* end delimiter *)
-		^ "\nEND CONSTRAINT\n"
+		(* 4) The actual result with delimiters *)
+		^ (add_constraints_delimiters result_str)
 		
 		(* 5) Statistics about result *)
 		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (result_nature_statistics im_result.soundness im_result.termination im_result.statespace_nature)
-		^ "\nNumber of random selections             : " ^ (string_of_int im_result.nb_random_selections)
+		^ "\n" ^ (result_nature_statistics soundness_str point_based_result.termination statespace_nature_str)
+(* 		^ "\nNumber of random selections             : " ^ (string_of_int point_based_result.nb_random_selections) *)
 		
 		(* 6) Statistics about state space *)
 		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (statespace_statistics im_result.state_space im_result.computation_time)
+		^ "\n" ^ (statespace_statistics point_based_result.state_space point_based_result.computation_time)
 		^ "\n------------------------------------------------------------"
 		
 		(* 7) General statistics *)
@@ -398,62 +552,43 @@ let write_im_result_to_file file_name (im_result : Result.im_result) =
 	()
 
 
-(*
-	(* Write constraint to file (from im_result) *)
-(*** TODO: remove ***)
-let write_constraint_to_file file_name constraint_str =
-	(* Retrieve the input options *)
-(* 	let options = Input.get_options () in *)
-	(* Prepare the string to write *)
-	let file_content =
-		file_header ()
-			(*** TODO: other statistics (number of states, transitions, etc.) ***)
-		(* The actual result *)
-		^ constraint_str ^ "\n"
-	in
-	(* Write to file *)
-	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.")
-*)
-
-
-let general_bc_statistics bc_result =
+let general_bc_statistics (cartography_result : Result.cartography_result) =
 	(* Store number of tiles *)
-	let nb_tiles = List.length bc_result.tiles in
+	let nb_tiles = List.length cartography_result.tiles in
 
 	(* First, compute average number of states and transitions (for info purpose) *)
 	(*** WARNING: use int, but using NumConst (unbounded) would be smarter in case of very large state spaces ***)
 	let total_states, total_transitions, time_im = List.fold_left (
-		fun (current_sum_states, current_sum_transitions, current_sum_time) abstract_im_result ->
+		fun (current_sum_states, current_sum_transitions, current_sum_time) abstract_point_based_result ->
 			(
-				current_sum_states + abstract_im_result.abstract_state_space.nb_states
+				current_sum_states + abstract_point_based_result.abstract_state_space.nb_states
 				,
-				current_sum_transitions +  + abstract_im_result.abstract_state_space.nb_transitions
+				current_sum_transitions +  + abstract_point_based_result.abstract_state_space.nb_transitions
 				,
-				current_sum_time +. abstract_im_result.computation_time
+				current_sum_time +. abstract_point_based_result.computation_time
 			)
-	) (0, 0, 0.0) bc_result.tiles
+	) (0, 0, 0.0) cartography_result.tiles
 	in
 	(* Compute average *)
 	let average_nb_states = (float_of_int total_states) /. (float_of_int nb_tiles) in
 	let average_nb_transitions = (float_of_int total_transitions) /. (float_of_int nb_tiles) in
 	
        ""
-	^   "Number of integers in v0                : " ^ (NumConst.string_of_numconst bc_result.size_v0)
+	^   "Number of integers in v0                : " ^ (NumConst.string_of_numconst cartography_result.size_v0)
 	^ "\nNumber of tiles computed                : " ^ (string_of_int nb_tiles)
-	^ "\nCoverage                                : " ^ (string_of_coverage bc_result.coverage)
-	^ "\nTermination                             : " ^ (string_of_bc_algorithm_termination bc_result.termination)
-	^ "\nNumber of unsuccessful points           : " ^ (string_of_int bc_result.nb_unsuccessful_points)
+	^ "\nCoverage                                : " ^ (string_of_coverage cartography_result.coverage)
+	^ "\nTermination                             : " ^ (string_of_bc_algorithm_termination cartography_result.termination)
+	^ "\nNumber of unsuccessful points           : " ^ (string_of_int cartography_result.nb_unsuccessful_points)
 	^ "\nAverage number of states                : " ^ (round1_float average_nb_states)
 	^ "\nAverage number of transitions           : " ^ (round1_float average_nb_transitions)
-    ^ "\nTotal computation time                  : " ^ (string_of_seconds bc_result.computation_time)
+    ^ "\nTotal computation time                  : " ^ (string_of_seconds cartography_result.computation_time)
 	^ "\nTotal computation time (IM)             : " ^ (string_of_seconds time_im)
-	^ "\nTotal computation time (find point)     : " ^ (string_of_seconds bc_result.find_point_time)
+(* 	^ "\nTotal computation time (find point)     : " ^ (string_of_seconds bc_result.find_point_time) *)
 	^ "\nEstimated memory                        : " ^ (memory_used ())
 
 		
 (* Write result of BC to file *)
-let write_bc_result_to_file file_name bc_result =
+let write_cartography_result_to_file file_name (cartography_result : Result.cartography_result) =
 	(*** WARNING: duplicate code concerning the counter creation ***)
 	(* Create counter *)
 	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
@@ -465,33 +600,41 @@ let write_bc_result_to_file file_name bc_result =
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
 (* 	let options = Input.get_options () in *)
-	
-	(* Convert the im_result's to string *)
-	let im_results_str = string_of_list_of_string_with_sep "\n" (
-		List.mapi (fun index abstract_im_result ->
+
+	(* Convert the abstract_point_based_result's to string *)
+	let abstract_point_based_results_str = string_of_list_of_string_with_sep "\n" (
+		List.mapi (fun index (abstract_point_based_result : abstract_point_based_result) ->
+		
+			(* Handle the soundness separately *)
+			let soundness_str : string = string_soundness_of_good_or_bad_constraint abstract_point_based_result.result in 
+			
+			(* Handle the statespace nature separately *)
+			let statespace_nature_str = string_statespace_nature_of_good_or_bad_constraint abstract_point_based_result.result in
+
+
 			(* mapi starts counting from 0, but we like starting counting from 1 *)
 			let index_from_one = index + 1 in
 			"\n(************************************************************)"
 			^ "\n Tile #" ^ (string_of_int index_from_one)
 			(* 1) Reference valuation *)
 			^ "\n\n Pi" ^ (string_of_int index_from_one) ^ ":"
-			^ "\n" ^ (ModelPrinter.string_of_pi0 model abstract_im_result.reference_val)
+			^ "\n" ^ (ModelPrinter.string_of_pi0 model abstract_point_based_result.reference_val)
 
 			(* 2) Constraint *)
 			^ "\n\n K" ^ (string_of_int index_from_one) ^ ":"
-			^ "\n" ^ (LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names abstract_im_result.result)
+			^ "\n" ^ (string_of_good_or_bad_constraint model.variable_names abstract_point_based_result.result)
 			
 			(* 3) Statistics about result *)
 			^ "\n\n------------------------------------------------------------"
-			^ "\n" ^ (result_nature_statistics abstract_im_result.soundness abstract_im_result.termination abstract_im_result.statespace_nature)
-			^ "\nNumber of random selections             : " ^ (string_of_int abstract_im_result.nb_random_selections)
+			^ "\n" ^ (result_nature_statistics soundness_str abstract_point_based_result.termination statespace_nature_str)
+(*			^ "\nNumber of random selections             : " ^ (string_of_int abstract_point_based_result.nb_random_selections)*)
 			
 			(* 4) Statistics about state space *)
 			^ "\n------------------------------------------------------------"
-			^ "\n" ^ (abstract_statespace_statistics abstract_im_result.abstract_state_space abstract_im_result.computation_time)
+			^ "\n" ^ (abstract_statespace_statistics abstract_point_based_result.abstract_state_space abstract_point_based_result.computation_time)
 			^ "\n------------------------------------------------------------"
 			^ "\n(************************************************************)\n"
-		) bc_result.tiles
+		) cartography_result.tiles
 	)
 	in
 	
@@ -514,14 +657,14 @@ let write_bc_result_to_file file_name bc_result =
 		^ "\n------------------------------------------------------------"
 		
 		(* 4) The actual result *)
-		^ "\n" ^ im_results_str ^ "\n"
+		^ "\n" ^ abstract_point_based_results_str ^ "\n"
 		
 		(* 5) Statistics on BC *)
 		^ "\n(************************************************************)"
 		^ "\nGENERAL STATISTICS"
 		^ "\n(************************************************************)"
 		^ "\n------------------------------------------------------------"
-		^ "\n" ^ (general_bc_statistics bc_result)
+		^ "\n" ^ (general_bc_statistics cartography_result)
 		^ "\n------------------------------------------------------------"
 		
 		(* 6) General statistics *)
@@ -542,11 +685,9 @@ let write_bc_result_to_file file_name bc_result =
 
 
 (*------------------------------------------------------------*)
-(* Performances *)
+(* Display statistics on the state space *)
 (*------------------------------------------------------------*)
-let print_statistics total_time state_space =
-	(* Retrieve the model *)
-(* 	let model = Input.get_model() in *)
+let print_state_space_statistics total_time state_space =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
@@ -577,14 +718,25 @@ let print_statistics total_time state_space =
 	);
 
 	
-	if options#statistics then (
+	if options#statistics || verbose_mode_greater Verbose_low then (
 		(* State space *)
 (*		print_message Verbose_standard "------------------------------------------------------------";
 		print_message Verbose_standard "Statistics: Graph";
 		print_message Verbose_standard "------------------------------------------------------------";*)
-		print_message Verbose_standard (StateSpace.get_statistics ());
+(* 		print_message Verbose_standard (StateSpace.get_statistics ()); *)
 		print_message Verbose_standard (StateSpace.get_statistics_states state_space);
 		
+	)
+
+
+(*------------------------------------------------------------*)
+(* Display statistics on the memory used (only in mode statistics or if verbose enough) *)
+(*------------------------------------------------------------*)
+let print_memory_statistics () =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	if options#statistics || verbose_mode_greater Verbose_low then (
 		print_message Verbose_standard "------------------------------------------------------------";
 		print_message Verbose_standard "Statistics on memory";
 		print_message Verbose_standard "------------------------------------------------------------";
@@ -597,8 +749,79 @@ let print_statistics total_time state_space =
 		Gc.full_major();
 		Gc.print_stat stdout;*)
 	)
-
 	
+
+(************************************************************)
+(* Print single_synthesis_result (or in fact point_based_result too) on screen *)
+(************************************************************)
+let print_single_synthesis_or_point_based_result result computation_time =
+	(* Print the result *)
+	if verbose_mode_greater Verbose_standard then(
+		(* Retrieve the model *)
+		let model = Input.get_model() in
+		
+		(* Convert result to string *)
+		(*** NOTE: this conversion to string is duplicate, since it will again be converted in write_pdfc_result_to_file; but it not sure wether both operations are done, in addition they are not extremely time consuming, and they are not part of the computation time anyway *)
+	
+		let result_str = string_of_good_or_bad_constraint model.variable_names result in
+		
+		let text = 
+		match result with
+			| Good_constraint _ -> "Final constraint such that the system is correct"
+			| Bad_constraint _  -> "Final constraint such that the system is incorrect"
+			| Good_bad_constraint _  -> "Final constraints such that the system is correct/incorrect"
+		in
+		
+		(* Print some information *)
+		print_message Verbose_standard ("\n" ^ text ^ ":");
+		print_highlighted_message Shell_result Verbose_standard (result_str);
+	
+(*			let soundness = match single_synthesis_result.result with
+			| Single_constraint (_, soundness) -> soundness
+			| Under_over_constraint _ -> Constraint_under_over
+		in*)
+		
+		(* Give a comment on the validity of the result *)
+		print_highlighted_message Shell_soundness Verbose_standard (verbose_string_soundness_of_good_or_bad_constraint result);
+	
+		print_message Verbose_low (
+			"Computation time: "
+			^ (string_of_seconds computation_time) ^ "."
+		);
+
+		(* Print memory information *)
+		print_newline();
+		print_message Verbose_standard (memory_used ());
+		
+	);
+	()
+
+
+let process_single_synthesis_or_point_based_result file_prefix algorithm_name result state_space computation_time termination =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	(* Print statistics *)
+	print_state_space_statistics computation_time state_space;
+	print_memory_statistics ();
+	
+	print_message Verbose_high "Drawing state space…";
+	
+	(* Draw state space *)
+	let radical = file_prefix ^ "-statespace" in
+	Graphics.draw_statespace state_space algorithm_name radical;
+	
+	(* Render zones in a graphical form *)
+	if options#cart then (
+		let zones = zones_of_good_bad_constraint result in
+		Graphics.draw_cartography zones (file_prefix ^ "_cart")
+	) else (
+			print_message Verbose_high "Graphical cartography not asked: not drawn.";
+	);
+	
+	(* The end *)
+	()
+
 
 (************************************************************)
 (* Main function to process IMITATOR result *)
@@ -606,8 +829,6 @@ let print_statistics total_time state_space =
 
 (** Process the result of IMITATOR. The 3rd optional argument is the file name prefix (otherwise options#files_prefix is used). *)
 let process_result result algorithm_name prefix_option =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -619,6 +840,7 @@ let process_result result algorithm_name prefix_option =
 		| None -> options#files_prefix
 	in
 	
+	
 	match result with
 	| PostStar_result poststar_result ->
 		print_message Verbose_low (
@@ -627,8 +849,11 @@ let process_result result algorithm_name prefix_option =
 		);
 
 		(* Print statistics *)
-		print_statistics poststar_result.computation_time poststar_result.state_space;
+		print_state_space_statistics poststar_result.computation_time poststar_result.state_space;
+		print_memory_statistics ();
 		
+		print_message Verbose_high "Drawing state space…";
+	
 		(* Draw state space *)
 		let radical = file_prefix ^ "-statespace" in
 		Graphics.draw_statespace poststar_result.state_space algorithm_name radical;
@@ -636,23 +861,23 @@ let process_result result algorithm_name prefix_option =
 		(* The end *)
 		()
 
-		
-		
-		
-	| EFsynth_result efsynth_result ->
-		
 
+	| Deprecated_efsynth_result efsynth_result ->
+		
 		(* Print the result *)
 		if verbose_mode_greater Verbose_standard then(
+			(* Retrieve the model *)
+			let model = Input.get_model() in
+			
 			(* Convert result to string *)
 			(*** NOTE: this conversion to string is duplicate, since it will again be converted in write_efsynth_result_to_file; but it not sure wether both operations are done, in addition they are not extremely time consuming, and they are not part of the computation time anyway *)
 			let result_str = string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) efsynth_result.constraints) in
 			
 			print_message Verbose_standard ("\nFinal constraint such that the property is *violated* (" ^ (string_of_int (List.length efsynth_result.constraints)) ^ " constraint" ^ (s_of_int (List.length efsynth_result.constraints)) ^ "): ");
-			print_message Verbose_standard (result_str);
+			print_highlighted_message Shell_result Verbose_standard (result_str);
 
 			(* Give a comment on the validity of the result *)
-			print_message Verbose_standard (verbose_string_of_soundness efsynth_result.soundness);
+			print_highlighted_message Shell_soundness Verbose_standard (verbose_string_of_soundness efsynth_result.soundness);
 		);
 		
 		print_message Verbose_low (
@@ -674,12 +899,17 @@ let process_result result algorithm_name prefix_option =
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			write_efsynth_result_to_file file_name efsynth_result;
+			write_deprecated_efsynth_result_to_file file_name efsynth_result;
+		)else(
+			print_message Verbose_high "No result export to file requested.";
 		);
 		
 		(* Print statistics *)
-		print_statistics efsynth_result.computation_time efsynth_result.state_space;
+		print_state_space_statistics efsynth_result.computation_time efsynth_result.state_space;
+		print_memory_statistics ();
 		
+		print_message Verbose_high "Drawing state space…";
+	
 		(* Draw state space *)
 		let radical = file_prefix ^ "-statespace" in
 		Graphics.draw_statespace efsynth_result.state_space algorithm_name radical;
@@ -687,168 +917,56 @@ let process_result result algorithm_name prefix_option =
 		(* Render zones in a graphical form *)
 		if options#cart then (
 			let zones = List.map (fun p_linear_constraint -> (LinearConstraint.Convex_p_constraint p_linear_constraint, StateSpace.Bad)) efsynth_result.constraints in
-			Graphics.draw_cartography zones (file_prefix ^ "_cart_ef")
+			Graphics.draw_cartography zones (file_prefix ^ "_cart")
 		) else (
-				print_message Verbose_high "Graphical cartography not asked: not drawn.";
+			print_message Verbose_high "Graphical cartography not asked: not drawn.";
 		);
 		
 		(* The end *)
 		()
 
 
-
-	(*** TODO: merge with efsynth when efsynth becomes non convex, with possible under/over-approximation? ***)
-	| PDFC_result pdfc_result ->
-		
-		(* Print the result *)
-		if verbose_mode_greater Verbose_standard then(
-			(* Convert result to string *)
-			(*** NOTE: this conversion to string is duplicate, since it will again be converted in write_pdfc_result_to_file; but it not sure wether both operations are done, in addition they are not extremely time consuming, and they are not part of the computation time anyway *)
-		
-			begin
-			match pdfc_result.result with
-				| Single_constraint (result, _) ->
-					let result_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names result in
-					
-					print_message Verbose_standard ("\nFinal constraint such that the system is deadlock-free:");
-					print_message Verbose_standard (result_str);
-
-				| Under_over_constraint (under, over) ->
-					(* Convert the constraints to a string *)
-					let under_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names under in
-					let over_str = LinearConstraint.string_of_p_nnconvex_constraint model.variable_names over in
-
-					print_message Verbose_standard ("\nFinal possibly under-approximated constraint such that the system is deadlock-free:");
-					print_message Verbose_standard (under_str);
-					print_message Verbose_standard ("\nFinal possibly over-approximated constraint such that the system is deadlock-free:");
-					print_message Verbose_standard (over_str);
-			
-			end;
-
-			let soundness = match pdfc_result.result with
-				| Single_constraint (_, soundness) -> soundness
-				| Under_over_constraint _ -> Constraint_under_over
-			in
-			
-			(* Give a comment on the validity of the result *)
-			print_message Verbose_standard (verbose_string_of_soundness soundness);
-		);
-		
-		print_message Verbose_low (
-			"Computation time: "
-			^ (string_of_seconds pdfc_result.computation_time) ^ "."
-		);
-
-		(* Print memory information *)
-		if verbose_mode_greater Verbose_standard then(
-			print_newline();
-			print_message Verbose_standard (memory_used ());
-		);
-		
-(*		(* Print on terminal *)
-		print_message Verbose_standard (
-			"\nEF-synthesis successfully finished " ^ (after_seconds ()) ^ "."
-		);*)
+	| Single_synthesis_result result ->
+		(* First print the result on the terminal *)
+		print_single_synthesis_or_point_based_result result.result result.computation_time;
 
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			write_pdfc_result_to_file file_name pdfc_result;
+			write_single_synthesis_result file_name result;
+		)else(
+			print_message Verbose_high "No result export to file requested.";
 		);
 		
-		(* Print statistics *)
-		print_statistics pdfc_result.computation_time pdfc_result.state_space;
+		(* Generic handling for drawing etc. *)
+		process_single_synthesis_or_point_based_result file_prefix algorithm_name result.result result.state_space result.computation_time result.termination
 		
-		(* Draw state space *)
-		let radical = file_prefix ^ "-statespace" in
-		Graphics.draw_statespace pdfc_result.state_space algorithm_name radical;
-		
-		(* Render zones in a graphical form *)
-		if options#cart then (
-			let result = match pdfc_result.result with
-				| Single_constraint (result, _) -> result
-				| _ -> raise (InternalError("not implemented"))
-			in
 
-			let zones = List.map (fun p_linear_constraint -> (LinearConstraint.Convex_p_constraint p_linear_constraint, StateSpace.Bad (*** TODO ? ***))) (LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint result) in
-			Graphics.draw_cartography zones (file_prefix ^ "_cart_pdfc")
-		) else (
-				print_message Verbose_high "Graphical cartography not asked: not drawn.";
-		);
-		
-		(* The end *)
-		()
+	| Point_based_result result ->
+		(* First print the result on the terminal *)
+		print_single_synthesis_or_point_based_result result.result result.computation_time;
 
-	
-
-	| IM_result im_result ->
-
-		(* Print on terminal *)
-		if verbose_mode_greater Verbose_standard then(
-			(* Convert result to string *)
-			let result_str = LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names im_result.result in
-			print_message Verbose_standard ("\nResult:\n" ^ result_str);
-			
-			(* Give a comment on the validity of the result *)
-			print_message Verbose_standard (verbose_string_of_soundness im_result.soundness);
-		);
-		
-		(* Print memory information *)
-		if verbose_mode_greater Verbose_standard then(
-			print_newline();
-			print_message Verbose_standard (memory_used ());
-		);
-		
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			write_im_result_to_file file_name im_result;
-		);
-
-		print_message Verbose_low (
-			"Computation time for IM only: "
-			^ (string_of_seconds im_result.computation_time) ^ "."
+			write_point_based_result_to_file file_name result;
+		)else(
+			print_message Verbose_high "No result export to file requested.";
 		);
 		
-		(* Print statistics *)
-		print_statistics im_result.computation_time im_result.state_space;
-
-		(* Draw state space *)
-		(*** TODO: move inside inverse_method_gen ***)
-		let radical = file_prefix ^ "-statespace" in
-		Graphics.draw_statespace im_result.state_space algorithm_name radical;
-		
-		if options#cart then (
-			(* Render zones in a graphical form *)
-			let zones =
-			[im_result.result, im_result.statespace_nature]
-(*				match im_result.result with
-				| LinearConstraint.Convex_p_constraint p_linear_constraint -> [Convex_constraint (p_linear_constraint, AbstractModel.Unknown (*** TODO ***))]
-				
-				(*** A bit a HACk here ***)
-				| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint ->
-					let convex_constraints = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint p_nnconvex_constraint in
-					[Union_of_constraints (convex_constraints, AbstractModel.Unknown (*** TODO ***))]*)
-			in
-			Graphics.draw_cartography zones (file_prefix ^ "_cart_im")
-		) else (
-				print_message Verbose_high "Graphical cartography not asked: not drawn.";
-		);
-
-		(* The end *)
-		()
+		(* Generic handling for drawing etc. *)
+		process_single_synthesis_or_point_based_result file_prefix algorithm_name result.result result.state_space result.computation_time result.termination
 
 
-
-	| BC_result bc_result ->
+	| Cartography_result cartography_result ->
 		(* Print some information *)
 		if verbose_mode_greater Verbose_standard then(
 			print_message Verbose_standard ("\n**************************************************");
 			print_message Verbose_standard (" END OF THE BEHAVIORAL CARTOGRAPHY ALGORITHM");
-			print_message Verbose_standard ("" ^ general_bc_statistics bc_result);
+			print_message Verbose_standard ("" ^ general_bc_statistics cartography_result);
 			print_message Verbose_standard ("**************************************************");
 		
-			print_message Verbose_standard ("\n" ^ (verbose_string_of_coverage bc_result.coverage));
+			print_highlighted_message Shell_soundness Verbose_standard ("\n" ^ (verbose_string_of_coverage cartography_result.coverage));
 		);
 		
 		(* Print memory information *)
@@ -860,7 +978,9 @@ let process_result result algorithm_name prefix_option =
 		(* Write to file if requested for BC *)
 		if options#output_bc_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			write_bc_result_to_file file_name bc_result;
+			write_cartography_result_to_file file_name cartography_result;
+		)else(
+			print_message Verbose_high "No result export to file requested.";
 		);
 		
 		(* If cartography required for BC *)
@@ -869,11 +989,18 @@ let process_result result algorithm_name prefix_option =
 			print_message Verbose_high "Graphical cartography asked: prepare tiles to be drawn...";
 
 			(* Keep only valid tiles, i.e., underapproximations or exact *)
-			let valid_tiles = List.filter (fun abstract_im_result -> abstract_im_result.soundness = Result.Constraint_maybe_under || abstract_im_result.soundness = Result.Constraint_exact) bc_result.tiles in
+			let valid_tiles = cartography_result.tiles (*** TODO ***)(* List.filter (fun (abstract_point_based_result : abstract_point_based_result) -> abstract_point_based_result.soundness = Result.Constraint_maybe_under || abstract_point_based_result.soundness = Result.Constraint_exact) cartography_result.tiles*) in
 			
 			(* Render zones in a graphical form *)
-			let zones = List.map (fun abstract_im_result -> (abstract_im_result.result, abstract_im_result.statespace_nature)) valid_tiles in
-			Graphics.draw_cartography zones (file_prefix ^ "_cart_bc")
+			let zones = List.fold_left (fun computed_zones (abstract_point_based_result : abstract_point_based_result) ->
+				(* Compute the 1 or 2 zones for this tile *)
+				let zones_for_this_result = zones_of_good_bad_constraint abstract_point_based_result.result in
+				(* Add it to the previously computed zones *)
+				list_append computed_zones zones_for_this_result
+			) [] valid_tiles
+			in
+			
+			Graphics.draw_cartography zones (file_prefix ^ "_cart")
 		) else (
 			(* Print some information *)
 			print_message Verbose_high "Graphical cartography not asked: not drawn.";
@@ -882,10 +1009,39 @@ let process_result result algorithm_name prefix_option =
 		(* The end *)
 		()
 	
+	
+	(* Multiple synthesis (e.g., PRPC) *)
+	| Multiple_synthesis_result result ->
+		(* First print the result on the terminal *)
+		print_single_synthesis_or_point_based_result result.result result.computation_time;
+
+		(* Write to file if requested *)
+		if options#output_bc_result then(
+			let file_name = file_prefix ^ Constants.result_file_extension in
+			write_multiple_synthesis_result file_name result;
+			()
+		)else(
+			print_message Verbose_high "No result export to file requested.";
+		);
+		
+		(* Print statistics *)
+		print_memory_statistics ();
+
+		(* Render zones in a graphical form *)
+		if options#output_bc_cart then (
+			let zones = zones_of_good_bad_constraint result.result in
+			Graphics.draw_cartography zones (file_prefix ^ "_cart")
+		) else (
+			print_message Verbose_high "Graphical cartography not asked: not drawn.";
+		);
+		
+		(* The end *)
+		()
+
+
 	(* Nothing to do for workers in distributed mode *)
 	| Distributed_worker_result ->
 		()
-		
-		
-		
-(* 	| _ -> raise (InternalError ("function process_result not implemented for all cases")) *)
+
+
+(* 	| _ -> raise (NotImplemented ("function process_result not implemented for all cases")) *)

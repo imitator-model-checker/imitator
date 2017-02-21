@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2016/05/13
+ * Last modified: 2017/02/04
  *
  ****************************************************************)
  
@@ -67,16 +67,17 @@ class imitator_options :
 		method dynamic_clock_elimination : bool
 		method efim : bool
 		method fancy : bool
-		method file : string
 		method files_prefix : string
 		method fromGML : bool
 		method imitator_mode : imitator_mode
 		(* experimental variant for EFsynth *)
 		method new_ef_mode : bool
 		method inclusion : bool
-		method nb_args : int
 		method merge : bool
 		method merge_before : bool
+		method model_input_file_name : string
+		method nb_args : int
+		method no_variable_autoremove : bool
 		method no_random : bool
 		method no_time_elapsing : bool
 		method output_bc_cart : bool
@@ -87,15 +88,15 @@ class imitator_options :
 		method output_cart_y_max : int option
 		method output_result : bool
 		method output_tiles_files : bool
-		method pi0file : string
 		method pi_compatible : bool
 		method precomputepi0 : bool
-		method pta2clp : bool
+(* 		method pta2clp : bool *)
 		method pta2gml : bool
 		method pta2hytech : bool
 		method pta2imi : bool
 		method pta2jpg : bool
 		method pta2tikz : bool
+		method second_file_name : string
 		method states_limit : int option
 		method statistics : bool
 		method step : NumConst.t
@@ -110,6 +111,17 @@ class imitator_options :
 		method with_log : bool
 (* 		method with_parametric_log : bool *)
 
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Set methods *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		
+		(*** NOTE: set methods are only used for the learning-based abstraction construction ***)
+		
+		method set_file : string -> unit
+
+		method set_files_prefix : string -> unit
+
+		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Other methods *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

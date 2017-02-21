@@ -1,0 +1,158 @@
+#!/usr/bin/env python
+
+############################################################
+#                      IMITATOR MODEL                      
+#
+# Fischer mutual exclusion protocol (parametric timed version with n processes) ERA version. NO VARIABLE AT ALL.
+#
+# Description     : Generator for Fischer with n processes. This model has no variable (the global variable is simulated with an untimed PTA).
+# Correctness     : No more than 'n' (3, but can be changed) processes in critical section
+# Source          : "SAT-based Unbounded Model Checking of Timed Automata", Fundamatica Informatica 85(1-4): 425-440 (2008), Figure 1.
+# Authors         : Wojciech Penczek, Maciej Szreter
+# Script authors  : Michal Knapick, Etienne Andre
+#
+# Created         : 2015/05/15
+# Fork from       : fischer-novar-gen.py
+# Fork date       : 2017/02/14
+# Last modified   : 2017/02/16
+#
+# IMITATOR version: 2.8-learning
+############################################################
+
+import sys
+
+
+def getVars(n):
+	print("var")
+	print("\t"+", ".join(["clock_Start"+str(i) + ", clock_SetX"+str(i) + ", clock_Enter"+str(i) + ", clock_SetX0"+str(i) + "\n\t" for i in range(1,n+1)]))
+	print("\t: clock;\n")
+	#print("\tnb\n\t: discrete;\n")
+	print("\tdelta, Delta\n\t: parameter;\n")
+
+
+def getProcess(i):
+
+	autStr = """
+(************************************************************)
+automaton process{0}
+(************************************************************)
+\tsynclabs: Start{0}, SetX{0}, Enter{0}, SetX0{0};
+
+\tloc idle{0}(*** INIT ***)(*-*- ACCEPTING -*-*): while True wait {{ }}
+	\twhen True sync Start{0} do {{clock_Start{0}' = 0}} goto trying{0};
+
+\tloc trying{0}(*-*- ACCEPTING -*-*): while True wait {{ }}
+	\twhen clock_Start{0} < delta sync SetX{0} do {{clock_SetX{0}' = 0}} goto waiting{0};
+
+\tloc waiting{0}(*-*- ACCEPTING -*-*): while True wait {{ }}
+	\twhen clock_SetX{0} > Delta sync Enter{0} do {{clock_Enter{0}' = 0}} goto critical{0};
+
+\tloc critical{0}(*-*- ACCEPTING -*-*): while True wait {{ }}
+	\twhen True sync SetX0{0} do {{clock_SetX0{0}' = 0}} goto idle{0};
+
+end\n"""
+
+	print(autStr.format(i))
+
+
+def getVar(n):
+	
+	templ = "when True sync {0}{1} do {{clock_{0}{1}' = 0}} goto Val{2};"
+
+	starts = "\t"+"\n\t".join([templ.format("Start", j, 0) for j in range(1, n+1)])
+	sets = "\t"+"\n\t".join([templ.format("SetX", j, j) for j in range(1, n+1)])
+
+	def getloc(i):
+		lstt = "\n\tloc Val{}(*-*- ACCEPTING -*-*): while True wait {{}}\n".format(i)
+		if i == 0:
+			lstt += starts + "\n"
+		else:
+			lstt += "\t" + templ.format("Enter", i, i) + "\n"
+			lstt += "\t" + templ.format("SetX0", i, 0) + "\n"            
+		lstt += sets
+		return lstt
+
+	print "(* --- END COMPONENT A --- *)"
+	print "(* --- BEGIN COMPONENT B --- *)"
+	
+	print "(************************************************************)"
+	print("automaton variable")
+	print "(************************************************************)"
+
+	print("\tsynclabs:")
+	labs = ["Start", "SetX", "Enter", "SetX0"]
+	print("\t"+", ".join([lab + str(i) for i in range(1, n+1) for lab in labs]) + ";")
+
+	for i in range(n + 1):
+		print(getloc(i))
+	
+	print("end")
+	print "(* --- END COMPONENT B --- *)"
+
+
+def getInit(n):
+	print "(* --- BEGIN SPECIFICATION --- *)"
+	
+	print "(************************************************************)"
+	print("\nautomaton observer")
+	print "(************************************************************)"
+
+	print("\tsynclabs:")
+	labs = ["Enter", "SetX0"]
+	print("\t"+", ".join([lab + str(i) for i in range(1, n+1) for lab in labs]) + ";")
+
+	print("\n\tloc obs_0(*** INIT ***): while True wait {}")
+	for i in range(1, n + 1):
+		print("\t	when True sync Enter" + str(i) + " do {clock_Enter" + str(i) + "' = 0} goto obs_1;")
+
+	print("\n\tloc obs_1: while True wait {}")
+	for i in range(1, n + 1):
+		print("\t	when True sync Enter" + str(i) + " do {clock_Enter" + str(i) + "' = 0} goto obs_BAD;")
+		print("\t	when True sync SetX0" + str(i) + " do {clock_SetX0" + str(i) + "' = 0} goto obs_0;")
+
+	print("\n\tloc obs_BAD(*-*- ACCEPTING -*-*): while True wait {}")
+	print("end (* observer *)")
+	
+	print "(* --- END SPECIFICATION --- *)"
+
+
+	print "(************************************************************)"
+	print "(************************************************************)"
+	
+	print("\n\n\tinit := True")
+	for lp in ["\t& loc[process{0}] = idle{0}".format(i) for i in range(1, n+1)]:
+		print(lp) 
+	print("\t& loc[variable] = Val0")
+	print("\t& loc[observer] = obs_0")
+
+	for i in range(1, n+1):
+		print("\n\t& clock_Start"+str(i) + " = 0\n\t& clock_SetX"+str(i) + " = 0\n\t& clock_Enter"+str(i) + " = 0\n\t& clock_SetX0"+str(i) + " = 0")
+
+	#print("\n\t& nb = 0")
+	print("\t& Delta >= 0\n\t& delta >= 0;")
+	
+	print("\nproperty := unreachable loc[observer] = obs_BAD;")
+	
+	print ("\nend")
+
+
+if __name__ == "__main__":
+
+	if len(sys.argv) < 2:
+		print("Usage: python " + sys.argv[0] + " NoOfProcs")
+		exit(1)
+
+	NoOfProcs = int(sys.argv[1])
+
+	print("(*** WARNING! This IMITATOR model was automatically generated by " + sys.argv[0] + " ***)\n")
+
+	getVars(NoOfProcs)
+
+	print "(* --- BEGIN COMPONENT A --- *)"
+	
+	for i in range(1, NoOfProcs + 1):
+		getProcess(i)
+
+	getVar(NoOfProcs)
+
+	getInit(NoOfProcs)

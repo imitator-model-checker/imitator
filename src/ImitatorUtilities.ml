@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/05/23
+ * Last modified     : 2017/02/10
  *
  ************************************************************)
 
@@ -204,14 +204,35 @@ type imitator_mode =
 	(** EF-synthesis *)
 	| EF_synthesis
 	
+	(** EF-synthesis w.r.t. unsafe locations *)
+	| EFunsafe_synthesis
+	
+	(** Parametric loop synthesis *)
+	| Loop_synthesis
+	
+	(** Parametric Büchi-emptiness checking with non-Zenoness (method: check whether the PTA is CUB) *)
+	| Parametric_NZ_CUBcheck
+	
+	(** Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
+	| Parametric_NZ_CUBtransform
+	
+	(** Parametric Büchi-emptiness checking with non-Zenoness on a CUB-PTA: hidden option (mainly for testing) *)
+	| Parametric_NZ_CUB
+	
 	(** Parametric deadlock-checking *)
 	| Parametric_deadlock_checking
 	
-	(** Classical inverse method *)
+	(** Inverse method *)
 	| Inverse_method
+	
+	(** Parametric reachability preservation *)
+	| PRP
 	
 	(** Cover the whole cartography *)
 	| Cover_cartography
+	
+	(** Cover the whole cartography using learning-based abstractions *)
+	| Learning_cartography
 	
 	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 	| Shuffle_cartography
@@ -221,9 +242,12 @@ type imitator_mode =
 	
 	(** Randomly pick up values for a given number of iterations *)
 	| Random_cartography of int
-
+	
 	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 	| RandomSeq_cartography of int
+
+	(** Synthesis using iterative calls to PRP *)
+	| PRPC
 
 
 (** Get the value of the counter *)
@@ -260,6 +284,35 @@ let set_timed_mode () =
 (************************************************************)
 (** Messages *)
 (************************************************************)
+
+type shell_highlighting_type =
+	| Shell_bold
+	| Shell_error
+	| Shell_normal
+	| Shell_result
+	| Shell_soundness
+	| Shell_warning
+
+let shell_code_of_shell_highlighting_type = function
+	| Shell_bold -> "\027[1m"
+	| Shell_error -> "\027[91m"
+	| Shell_normal -> "\027[0m"
+	| Shell_result -> "\027[92m"
+	| Shell_soundness -> "\027[94m"
+	| Shell_warning -> "\027[93m"
+
+(*    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'*)
+
+
+
+
 (* Print a string *)
 let print_message_generic printing_function channel message =
 	(* Timed mode *)
@@ -273,7 +326,7 @@ let print_message_generic printing_function channel message =
 
 
 (* Print a message if global_verbose_mode >= message_verbose_mode *)
-let print_message message_verbose_mode message =
+let print_highlighted_message shell_highlighting_type message_verbose_mode message =
 	(* Only print the message if its message_verbose_mode is smaller or equal to the global_verbose_mode *)
 	if verbose_mode_greater message_verbose_mode then(
 		(* Compute the verbose level *)
@@ -283,10 +336,14 @@ let print_message message_verbose_mode message =
 		(* Create blanks proportionnally to the verbose_level (at least one space) *)
 		let spaces = " " ^ (string_n_times nb_spaces "   ") in
 		(* Add new lines and blanks everywhere *)
-		let formatted_message = spaces ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) in
+		let formatted_message = spaces ^ (shell_code_of_shell_highlighting_type shell_highlighting_type) ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) ^ (shell_code_of_shell_highlighting_type Shell_normal) in
 		(* Print *)
 		print_message_generic print_string Pervasives.stdout formatted_message
 	)
+
+
+(* Print a message if global_verbose_mode >= message_verbose_mode *)
+let print_message = print_highlighted_message Shell_normal
 
 
 
@@ -296,7 +353,7 @@ let print_warning message =
 	if verbose_mode_greater Verbose_warnings then(
 		let spaces = " " in
 		(* Add new lines and blanks everywhere *)
-		let formatted_message = spaces ^ "*** Warning: " ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) in
+		let formatted_message = spaces ^ (shell_code_of_shell_highlighting_type Shell_warning) ^ "*** Warning: " ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) ^ (shell_code_of_shell_highlighting_type Shell_normal) in
 		(* Print *)
 		(*** NOTE: warnings are displaied to stderr (hence the OCaml function 'prerr_string') ***)
 		print_message_generic prerr_string Pervasives.stderr formatted_message
@@ -307,7 +364,7 @@ let print_warning message =
 let print_error message =
 	let spaces = " " in
 	(* Add new lines and blanks everywhere *)
-	let formatted_message = spaces ^ "*** ERROR: " ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) in
+	let formatted_message = spaces ^ (shell_code_of_shell_highlighting_type Shell_error) ^ "*** ERROR: " ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) ^ (shell_code_of_shell_highlighting_type Shell_normal) in
 	(* Print *)
 	print_message_generic prerr_string Pervasives.stderr formatted_message
 
@@ -332,7 +389,7 @@ let print_header_string () =
 	let imi_name = program_name_and_version_and_nickname() in
 	
 	"************************************************************\n"
-	^ "*  " ^ imi_name ^ (string_n_times (length_header - (String.length imi_name)) " ") ^ "  *\n"
+	^ "*  " ^ (shell_code_of_shell_highlighting_type Shell_bold) ^ imi_name ^ (shell_code_of_shell_highlighting_type Shell_normal) ^  (string_n_times (length_header - (String.length imi_name)) " ") ^ "  *\n"
 	^ "*                                                          *\n"
 	^ "*                     Etienne Andre, Ulrich Kuehne et al.  *\n"
 	^ "*                                             2009 - " ^ (BuildInfo.build_year) ^ "  *\n"
@@ -358,11 +415,12 @@ let print_contributors()  =
 	print_string "    * Nguyen Hoang Gia    (2014 - 2016)\n";
 	print_string "    * Romain Soulat       (2010 - 2013)\n";
 	print_string "\n";
-	print_string "    Compiling and packaging:\n";
+	print_string "    Compiling, testing and packaging:\n";
 	print_string "    * Corentin Guillevic  (2015)\n";
 	print_string "    * Sarah Hadbi         (2015)\n";
 	print_string "    * Fabrice Kordon      (2015)\n";
 	print_string "    * Alban Linard        (2014 - 2015)\n";
+	print_string "    * Stéphane Rosse      (2017)\n";
 	print_string "\n";
 	print_string "    Moral support and suggestions by:\n";
 	print_string "    * Emmanuelle Encrenaz\n";
@@ -436,7 +494,7 @@ let abort_program () =
 (* Terminate program *)
 let terminate_program () =
 	print_newline();
-	print_message Verbose_standard (Constants.program_name ^ " successfully terminated (" ^ (after_seconds ()) ^ ")");
+	print_message Verbose_standard ((shell_code_of_shell_highlighting_type Shell_bold) ^ Constants.program_name ^ " successfully terminated" ^ (shell_code_of_shell_highlighting_type Shell_normal) ^ " (" ^ (after_seconds ()) ^ ")");
 	(* Print memory info *)
 	if verbose_mode_greater Verbose_standard then(
 		print_message Verbose_standard ("Estimated memory used: " ^ (memory_used ()));

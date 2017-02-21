@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
- * Last modified     : 2016/01/28
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
  
@@ -28,12 +28,6 @@ val string_of_var_type : var_type -> string
 (*** TODO/BADPROG : Move elsewhere? ***)
 (* Convert a state into a string *)
 val string_of_state : abstract_model -> (Location.global_location * LinearConstraint.px_linear_constraint) -> string
-
-(**************************************************)
-(** Result *)
-(**************************************************)
-(*** TODO/BADPROG : Move elsewhere? ***)
-(* val string_of_returned_constraint : (int -> string) -> Result.returned_constraint -> string *)
 
 
 

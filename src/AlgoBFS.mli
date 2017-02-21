@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/05/04
+ * Last modified     : 2016/10/18
  *
  ************************************************************)
 
@@ -46,9 +46,6 @@ class virtual algoBFS :
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
-		(*** TODO: make private (while accessible to subclasses ***)
-		val mutable state_space : StateSpace.state_space
-
 		(* Status of the analysis *)
 		(*** TODO: make private (while accessible to subclasses ***)
 		val mutable termination_status : Result.bfs_algorithm_termination option
@@ -70,6 +67,12 @@ class virtual algoBFS :
 		method initialize_variables : unit
 
 
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method virtual process_initial_state : State.state -> bool
+		
+		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Set the PaTATOR termination function *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

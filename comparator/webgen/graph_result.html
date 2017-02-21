@@ -1,0 +1,279 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Comparator for Imitator</title>
+		<script src="./lib/Chart.js" ></script>
+		<script src="./lib/utils.js" ></script>
+		<style>
+		canvas{
+			-moz-user-select: none;
+			-webkit-user-select: none;
+			-ms-user-select: none;
+		}
+		.chart-container {
+			width: 500px;
+			margin-left: 40px;
+			margin-right: 40px;
+			margin-bottom: 40px;
+		}
+		.container {
+			display: flex;
+			flex-direction: row;
+			flex-wrap: wrap;
+			justify-content: center;
+		}
+		</style>
+	</head>
+
+	<body>
+		<div id="d1"></div>
+		<div class="container" id="rez"></div>
+		<script>
+			window.onload = refresh();
+			var type = true;
+			var order = true;
+			var vers_ori = [];
+			
+			function rez() {
+				document.getElementById("rez").innerHTML = ""; //clear the charts area
+			}
+			
+			function refresh(){ // clean the page and reload new charts
+				rez();
+				getDatas(init);
+			}
+			
+			function setType(){ // set the type of the chart displayed
+				if(type){
+					type = false;
+					document.getElementById("type").innerHTML = "Change for pie chart";
+				}else{
+					type = true;
+					document.getElementById("type").innerHTML = "Change for bar chart";
+				}
+				refresh();
+			}
+			
+			function setOrder(){ // Type of order
+				if(order){
+					order = false;
+					document.getElementById("order").innerHTML = "Order by version";
+				}else{
+					order = true;
+					document.getElementById("order").innerHTML = "Order by values";
+				}
+				refresh();
+			}
+			
+			function createReader(){
+				if(window.XMLHttpRequest){
+					/* Firefox, Opera, Google Chrome */
+					return new XMLHttpRequest();
+				}else if(window.ActiveXObject){
+					/* Internet Explorer */
+					var names = [
+					"Msxml2.XMLHTTP.6.0",
+					"Msxml2.XMLHTTP.3.0",
+					"Msxml2.XMLHTTP",
+					"Microsoft.XMLHTTP"
+					];
+					for(var i in names){
+						/* test different version */
+						try{ return new ActiveXObject(names[i]); }
+						catch(e){}
+					}
+					alert("Non supporte");
+					return null; // not supported browser
+				}
+			}
+
+			function getDatas(callback){ // function to read the data file
+				var req =  createReader();
+				var donneeClient = null;
+				req.onreadystatechange = function(){
+					/* if state = finished */
+					if(req.readyState == 4){
+						/* if status = OK */
+						if(req.status == 200){
+							/* send text of file to callback (getDatas) */
+							callback(req.responseText);
+						}else{
+							alert("Error: returned status code " + req.status + " " + req.statusText);
+						}
+					}
+				}
+				
+				req.open("GET", "comparator_data.txt", true); //get the data file
+				req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+				/* send datas*/
+				req.send(donneeClient);
+			}
+			
+			function createConfig(title, datas, versions, ind){ // create config for a bar chart
+				versions.shift();
+				datas.shift();
+				var inten = (255)/(versions.length-1); //intensity for each color
+				var green;
+				var red;
+				var data2set = [];
+				var t;
+				var typ;
+				var scal;
+				var bgColor = [];
+				var bColor = [];
+				
+				for (var j = 0 ; j < versions.length ; j++){
+					green = (versions.length-1-j)*inten; //generating color for each dataset
+					green = parseInt(green);
+					red = 255-green;
+					bgColor[j] = 'rgba('+ red +', '+ green +', 0, 0.2)'; // Background Color
+					bColor[j] = 'rgba('+ red +', '+ green +', 0, 0.3)';	// Border Color (also used as Hover Color)
+				}
+				
+				if( order == true ){ // order by version but keep the order by value for color (green to red)
+					for (var i = 0 ; i < vers_ori[ind].length ; i++){
+						t=0;
+						while( vers_ori[ind][i] != versions[t] ){
+							t++;
+						}
+						temp = versions[i];
+						versions[i] = versions[t];
+						versions[t] = temp;
+						temp = datas[i];
+						datas[i] = datas[t];
+						datas[t] = temp;
+						temp = bgColor[i];
+						bgColor[i] = bgColor[t];
+						bgColor[t] = temp;
+						temp = bColor[i];
+						bColor[i] = bColor[t];
+						bColor[t] = temp;
+					}
+				}
+				
+				if( type ){
+					for (var i = 0 ; i < versions.length ; i++){
+						data2set[i] = { // each dataset contains 1 data... Can be optimized
+							label: versions[i],
+							backgroundColor: bgColor[i],
+							borderColor: bColor[i],
+							//~ hoverBackgroundColor: 'rgba('+ red +', '+ green[i] +', 0, 0.2)',
+							data: datas[i].split(";"),
+							fill: false,
+							borderWidth: 1,
+						};
+					}
+					data = { // data configuration for bar chart
+						labels: '',
+						datasets: data2set,
+					};
+					typ = 'bar';
+					scal = { // option for bar to start at 0
+						yAxes: [{
+							ticks: {
+								beginAtZero:true
+							}
+						}]
+					};
+				}else{
+					var data = { // data configuration for pie chart
+					labels: versions,
+					datasets: [
+						{
+							data: datas,
+							backgroundColor: bgColor,
+							hoverBackgroundColor: bColor,
+							borderColor: bColor
+						}]
+					};
+					typ = 'pie';
+					scal = ''; // we don't want a scale for pie (give something ugly if activated)
+					
+				}
+				return { //set parameters for Chart.js
+					type: typ,
+					data: data,
+					options: {
+						responsive: true,
+						title:{
+							display: true,
+							text: title //display the name of the test above the chart
+						},
+						scales: scal,
+					}
+				};
+			}
+			
+			
+			function createChart(tests_name, all_tim, all_versions){ //create HTML elements for each chart
+				var container = document.querySelector('.container');
+				for (var i = 0 ; i < tests_name.length ; i++){
+					var div = document.createElement('div'); // generates invisible field for each chart (1 chart per test)
+					div.classList.add('chart-container');
+
+					var canvas = document.createElement('canvas');
+					div.appendChild(canvas);
+					container.appendChild(div);
+
+					var ctx = canvas.getContext('2d');
+					var config = createConfig(tests_name[i], all_tim[i], all_versions[i], i); //get a config for Chart.js from datas
+					new Chart(ctx, config); // creating a chart with the configuration setted above
+				}
+			}
+			
+			function init(results){
+				var tests = results.split("\n");
+				var nb_test = (tests.length - 1)/2; /* version.length -1 is always even (beaceause for each test there are 2 lines in the file) */
+				var all_versions = new Array();
+				var all_tim = new Array();
+				var tests_name = new Array();
+				for (var i = 0; i < tests.length-1; i=i+2) {
+					all_versions[i/2] = tests[i].split(";"); // seperating versions and results
+					all_tim[i/2] = tests[i+1].split(";");
+				}
+				
+				
+				div0 = document.getElementById("d1");
+				div0.innerHTML = "<center><font face=\"arial\"<bold>Hello, welcome to Comparator for Imitator<br>" + nb_test + " test(s) were performed!</bold></font></center><br>";
+				var div1 = document.getElementById("rez");
+				document.body.insertBefore(div0, div1);
+				
+				for (var i = 0 ; i < all_versions.length ; i++ ){
+					for ( var j = 0 ; j < all_versions[i].length ; j++ ){
+						all_versions[i][j] = all_versions[i][j]+ ' '; // adding sapce for better readability
+					}
+				}
+
+				for (var i = 0 ; i < nb_test; i++){
+					all_versions[i].shift(); //we shift table beceause the first data in each table is "version"
+					vers_ori[i] = all_versions[i].slice();
+					vers_ori[i].pop();
+					tests_name[i] = all_tim[i].shift();
+					for (var j = 0 ; j < all_tim[i].length ; j++ ){
+						for (var k = j+1 ; k < all_tim[i].length ; k ++ ){
+							if(all_tim[i][k] < all_tim[i][j]){
+								var temp1 = all_tim[i][j]; // sort data in ascending order
+								all_tim[i][j] = all_tim[i][k];
+								all_tim[i][k] = temp1;
+								var temp2 = all_versions[i][j]; // change version order to make the result index correspond to its version index
+								all_versions[i][j] = all_versions[i][k];
+								all_versions[i][k] = temp2;
+							}
+						}
+					}
+				}
+				createChart(tests_name, all_tim, all_versions); // create the chart
+			}	
+		</script>
+
+		<center>
+		<!--
+		This button is used to refresh data, but in fact it doesn't refresh data... It create new Charts with the new Data and make old charts disappear...	
+		-->
+			<button onclick="setOrder()" id="order">Order by values</button>
+			<button onclick="refresh()">Refresh Data</button>
+			<button onclick="setType()" id="type">Change for pie chart</button>
+		</center>
+	</body>
+</html>

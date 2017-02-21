@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2016/06/07
+ * Last modified     : 2017/02/20
  *
  ************************************************************)
 
@@ -60,10 +60,15 @@ TAGS USED THROUGHOUT THIS PROJECT
 terminate_program();*)
 
 (************************************************************)
-(* Start the global counter *)
+(* Start the global counters *)
 (************************************************************)
+(* Counter counting everything from beginning to the end *)
 let global_counter = create_time_counter_and_register "total" Global_counter Verbose_standard in
 global_counter#start;
+
+(* Counter counting everything except the final processing (graphics, external files generation, etc.) *)
+let algorithm_counter = create_time_counter_and_register "main algorithm" Algorithm_counter Verbose_standard in
+algorithm_counter#start;
 
 
 (************************************************************)
@@ -121,11 +126,77 @@ options#recall();
 let parsing_counter = create_time_counter_and_register "model parsing" Parsing_counter Verbose_standard in
 parsing_counter#start;
 
-let model, pi0, v0 = ParsingUtility.compile options in
+(*------------------------------------------------------------*)
+(* Parse the model *)
+(*------------------------------------------------------------*)
+
+(* Should we add a special clock reset at each transition? *)
+let with_special_reset_clock =
+match options#imitator_mode with
+	| Parametric_NZ_CUB | Parametric_NZ_CUBcheck | Parametric_NZ_CUBtransform -> true
+	| _ -> false
+in
+
+let model = ParsingUtility.compile_model options with_special_reset_clock in
 
 Input.set_model model;
-Input.set_pi0 pi0;
-Input.set_v0 v0;
+
+
+(*------------------------------------------------------------*)
+(* Set the parameter dimensions *)
+(*------------------------------------------------------------*)
+
+(*** NOTE: must be done one and exactly one time ***)
+
+(* Set dimensions for hyper rectangles *)
+HyperRectangle.set_dimensions model.nb_parameters;
+
+(* Set dimensions for parameter valuations *)
+PVal.set_dimensions model.nb_parameters;
+
+
+(*------------------------------------------------------------*)
+(* Parse the additional file (pi0 or v0) *)
+(*------------------------------------------------------------*)
+begin
+match options#imitator_mode with
+	(*** BADPROG!!! This should be defined elsewhere... ***)
+	| Translation
+	| State_space_exploration
+	| EF_synthesis
+	| EFunsafe_synthesis
+	| Loop_synthesis
+	| Parametric_NZ_CUBcheck
+	| Parametric_NZ_CUBtransform
+	| Parametric_NZ_CUB
+	| Parametric_deadlock_checking
+	(* Case: no additional file *)
+	-> ()
+	
+	(* Inverse method : pi0 *)
+	| Inverse_method
+	| PRP
+	(* Case: pi0 *)
+	->
+		let pi0 = ParsingUtility.compile_pi0 options in
+		Input.set_pi0 pi0;
+
+		
+	| Cover_cartography
+	| Border_cartography
+	| Random_cartography _
+	| Learning_cartography
+	| Shuffle_cartography
+	| RandomSeq_cartography _
+	| PRPC
+	(* Case: v0 *)
+	->
+		let v0 = ParsingUtility.compile_v0 options in
+		Input.set_v0 v0;
+	
+end;
+
+
 
 parsing_counter#stop;
 
@@ -150,13 +221,13 @@ if verbose_mode_greater Verbose_low then(
 (* Case translation *)
 (************************************************************)
 
-(* Translation to CLP (work in progress) *)
+(*(* Translation to CLP (work in progress) *)
 if options#pta2clp then(
 	print_message Verbose_standard ("Translating model to CLP.");
 	print_warning ("Work in progress!!!!");
 	print_message Verbose_standard ("\nmodel in CLP:\n" ^ (PTA2CLP.string_of_model model) ^ "\n");
 	terminate_program()
-);
+);*)
 
 (* Translation to GrML (experimental) *)
 if options#pta2gml then(
@@ -227,7 +298,7 @@ if options#pta2tikz then(
 );
 (* Direct cartography output *)
 if options#cartonly then(
-	raise (InternalError("Not implemented! "))
+	raise (NotImplemented("Direct cartography output (#cartonly) is disabled"))
 
 	(*** TODO ***)
 	
@@ -331,9 +402,10 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 (*** TODO: also add IMK, etc., if needed ***)
 let new_im_or_prp =
 	if options#efim then
-		fun () -> new AlgoPRP.algoPRP
+		fun () ->
+		let myalgo :> AlgoBFS.algoBFS = new AlgoPRP.algoPRP in myalgo
 	else
-		fun () -> new AlgoIM.algoIM
+		fun () -> (*new AlgoIM.algoIM*)let myalgo :> AlgoBFS.algoBFS = new AlgoIM.algoIM in myalgo
 in
 
 
@@ -351,15 +423,119 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(************************************************************)
 	(* EF-synthesis *)
 	(************************************************************)
-	(* Experimental mode with PointSetPowerSet *)
+	(* New version with PointSetPowerSet *)
 	| EF_synthesis when options#new_ef_mode ->
-		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFsynth.algoEFsynth in myalgo
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGsafeSynth.algoAGsafeSynth in myalgo
 	
-	(* Normal (and old) mode *)
+	(* Old version (with list of constraints) *)
 	| EF_synthesis (*when not options#new_ef_mode*) ->
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFsynthOld.algoEFsynth in myalgo
 	
+	(* EF-synthesis w.r.t. a set of bad states (unsafe result) *)
+	| EFunsafe_synthesis ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFunsafeSynth.algoEFunsafeSynth in myalgo
 	
+	
+	(************************************************************)
+	(* Parametric loop synthesis *)
+	(************************************************************)
+	| Loop_synthesis ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoLoopSynth.algoLoopSynth in myalgo
+	
+	
+	(************************************************************)
+	(* Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
+	(************************************************************)
+	| Parametric_NZ_CUBcheck ->
+		(* Computing a constraint for which the PTA is CUB *)
+		print_message Verbose_standard ("Checking whether the PTA is CUB for some parameter valuations…");
+		
+		let cub_constraint = CUBchecker.check_cub model in
+		
+		if verbose_mode_greater Verbose_low then(
+			(* Computing a constraint for which the PTA is CUB *)
+			print_message Verbose_low ("Computed CUB constraint");
+			print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names cub_constraint);
+			print_message Verbose_low ("Comparing the computed constraint with the initial constraint:");
+			print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names model.initial_p_constraint);
+			
+		);
+		
+		(* Compare if the model is CUB for *all* valuations *)
+		let is_universally_cub = LinearConstraint.p_is_equal cub_constraint model.initial_p_constraint in
+
+		if is_universally_cub then(
+			print_message Verbose_standard ("The model is a CUB-PTA for all defined parameter valuations, i.e.:");
+		)else(
+			print_message Verbose_standard ("The model is a CUB-PTA for the following parameter valuations:");
+		);
+		print_message Verbose_standard (LinearConstraint.string_of_p_linear_constraint model.variable_names cub_constraint);
+		
+		(*** TODO: check if the constraint is stricter than the original constraint; if yes, the result can only be an under-approximation ***)
+
+		(* Update the model *)
+		LinearConstraint.px_intersection_assign_p model.initial_constraint [cub_constraint];
+		(* Update the initial p constraint too *)
+		LinearConstraint.p_intersection_assign model.initial_p_constraint [cub_constraint];
+		
+		(* Call the NZ emptiness check *)
+		let nz_algo = new AlgoNZCUB.algoNZCUB in
+		
+		(* Force under-approximation if not universally CUB *)
+		if not is_universally_cub then(
+			nz_algo#force_underapproximation;
+		);
+
+		let myalgo :> AlgoGeneric.algoGeneric = nz_algo in myalgo
+
+		
+	| Parametric_NZ_CUBtransform ->
+		print_message Verbose_standard ("Generating the transformed model…");
+
+		let cub_model = CUBchecker.cubpta_of_pta model in
+		(*** HACK: set the model in the input module too ***)
+		Input.set_model cub_model;
+		
+		print_message Verbose_standard ("Transformation completed");
+
+		(* Only export to file in graphics for >= Verbose_low *)
+		if verbose_mode_greater Verbose_low then(
+			(* Export the model to a file *)
+			(*** TODO: not necessary? (but so far useful to test) ***)
+			
+			let translated_model = ModelPrinter.string_of_model cub_model in
+
+			let imi_file = options#files_prefix ^ "-cub.imi" in
+			if verbose_mode_greater Verbose_total then(
+				print_message Verbose_total ("\n" ^ translated_model ^ "\n");
+			);
+			
+			(* Write *)
+			write_to_file imi_file translated_model;
+			print_message Verbose_low ("File '" ^ imi_file ^ "' successfully created.");
+			
+			
+			(* Then transform to a graphics *)
+			(*** TODO: not necessary? (but so far useful to test) ***)
+
+			let translated_model = PTA2JPG.string_of_model cub_model in
+			if verbose_mode_greater Verbose_high then(
+				print_message Verbose_high ("\n" ^ translated_model ^ "\n");
+			);
+			
+			Graphics.dot (options#files_prefix ^ "-cubpta") translated_model;
+
+			print_message Verbose_low ("Graphic export successfully created."); (*** TODO: add file name in a proper manner ***)
+		); (* end export *)
+		
+		(* Call the NZ emptiness check *)
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB in myalgo
+		
+		
+	| Parametric_NZ_CUB ->
+		(* Just call the NZ emptiness check *)
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB in myalgo
+
 	
 	(************************************************************)
 	(* Parametric deadlock checking *)
@@ -377,6 +553,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMK.algoIMK in myalgo
 
 	(* PRP *)
+	(*** NOTE: deprecated ***)
 	| Inverse_method when options#efim ->
 			let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRP.algoPRP in myalgo
 
@@ -388,6 +565,11 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	| Inverse_method ->
 			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIM.algoIM in myalgo
 
+	(************************************************************)
+	(* PRP *)
+	(************************************************************)
+	| PRP ->
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRP.algoPRP in myalgo
 
 
 	(************************************************************)
@@ -408,12 +590,14 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 				let bc_algo = new AlgoBCCoverDistributedMSSeqMaster.algoBCCoverDistributedMSSeqMaster in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 			else
 				let bc_algo = new AlgoBCCoverDistributedMSSeqWorker.algoBCCoverDistributedMSSeqWorker in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
@@ -424,12 +608,14 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 				let bc_algo = new AlgoBCCoverDistributedMSShuffleMaster.algoBCCoverDistributedMSShuffleMaster in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 			else
 				let bc_algo = new AlgoBCCoverDistributedMSShuffleWorker.algoBCCoverDistributedMSShuffleWorker in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
@@ -441,6 +627,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_max_tries nb_tries;
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 			else
@@ -448,6 +635,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 				(*** NOTE: very important: must set NOW the parameters ***)
 (* 				bc_algo#set_max_tries nb_tries; *)
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 		
@@ -458,12 +646,14 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 				let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCoordinator.algoBCCoverDistributedSubdomainDynamicCoordinator in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 			else
 				let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCollaborator.algoBCCoverDistributedSubdomainDynamicCollaborator in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
@@ -474,12 +664,14 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 				let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCoordinator.algoBCCoverDistributedSubdomainStaticCoordinator in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 			else
 				let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCollaborator.algoBCCoverDistributedSubdomainStaticCollaborator in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				bc_algo#set_algo_instance_function new_im_or_prp;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
@@ -506,6 +698,16 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		let bc_algo = new AlgoBCCover.algoBCCover in
 		(*** NOTE: very important: must set NOW the parameters ***)
 		bc_algo#set_algo_instance_function new_im_or_prp;
+		bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
+		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+		myalgo
+	
+	(* BC with full coverage and learning-based abstractions *)
+	| Learning_cartography ->
+		let bc_algo = new AlgoBCCoverLearning.algoBCCoverLearning in
+		(*** NOTE: very important: the algo instance function should NOT be set for this algorithm (as it always uses EFsynth or PRP anyway) ***)
+(* 		bc_algo#set_algo_instance_function new_im_or_prp; *)
+		bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_good_bad_constraint;
 		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 		myalgo
 	
@@ -514,11 +716,12 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		let bc_algo = new AlgoBCShuffle.algoBCShuffle in
 		(*** NOTE: very important: must set NOW the parameters ***)
 		bc_algo#set_algo_instance_function new_im_or_prp;
+		bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 		myalgo
 	
 	| Border_cartography ->
-		raise (InternalError("Not implemented !!!"))
+		raise (NotImplemented("Border cartography is disabled"))
 		
 	(* BC with random coverage *)
 	| Random_cartography nb ->
@@ -526,6 +729,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		(*** NOTE: very important: must set NOW the parameters ***)
 		bc_algo#set_max_tries nb;
 		bc_algo#set_algo_instance_function new_im_or_prp;
+		bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 		myalgo
 
@@ -536,6 +740,17 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		(*** NOTE: very important: must set NOW the parameters ***)
 		bc_algo#set_max_tries nb;
 		bc_algo#set_algo_instance_function new_im_or_prp;
+		bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
+		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+		myalgo
+	
+	(* Iterative calls to PRP *)
+	| PRPC ->
+		let bc_algo = new AlgoBCCover.algoBCCover in
+		(*** NOTE: very important: must set NOW the parameters ***)
+		bc_algo#set_algo_instance_function (fun () -> let myalgo :> AlgoBFS.algoBFS = new AlgoPRP.algoPRP in myalgo);
+		(*** NOTE: for PRPC, we use a constraint manager! ***)
+		bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_good_bad_constraint;
 		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 		myalgo
 	
@@ -547,8 +762,13 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.");
 in
 
+
+
 (* Run! *)
 let result = algorithm#run() in
+
+(* Stop the main algorithm counter *)
+algorithm_counter#stop;
 
 (* Process *)
 ResultProcessor.process_result result algorithm#algorithm_name None;
@@ -561,9 +781,11 @@ ResultProcessor.process_result result algorithm#algorithm_name None;
 	e ->(
 	let error_message = match e with
 		| InternalError msg -> "Fatal internal error: " ^ msg ^ ""
+		| NotImplemented msg -> "A non-implemented feature has been called: " ^ msg ^ ""
 		| Failure msg -> "'Failure' exception: '" ^ msg ^ "'"
 		| Invalid_argument msg -> "'Invalid_argument' exception: '" ^ msg ^ "'"
 		| SerializationError msg -> "Serialization error: " ^ msg ^ ""
+		| InterfacingError msg -> "Interfacing error: " ^ msg ^ ""
 		| Not_found -> "'Not_found' exception!"
 		| Random_generator_initialization_exception-> "A fatal error occurred during the random generator initialization."
 		| e -> "Fatal exception '" ^ (Printexc.to_string e) ^ "'."
@@ -578,6 +800,7 @@ ResultProcessor.process_result result algorithm#algorithm_name None;
 	
 	)
 end; (* try *)
+
 
 
 

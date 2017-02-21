@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/06/03
+ * Last modified     : 2016/10/11
  *
  ************************************************************)
 
@@ -176,9 +176,22 @@ let counter_nb_unsat1 = create_discrete_counter_and_register "early unsat (D ^ g
 (************************************************************)
 
 (*------------------------------------------------------------*)
+(* Create a PXD constraint of the form D_i = d_i for the discrete variables *)
+(*------------------------------------------------------------*)
+let discrete_constraint_of_global_location (global_location : Location.global_location) : LinearConstraint.pxd_linear_constraint = 
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+
+	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value global_location discrete_index)) model.discrete in
+	
+	(* Constraint of the form D_i = d_i *)
+	LinearConstraint.pxd_constraint_of_point discrete_values
+
+
+(*------------------------------------------------------------*)
 (* Compute the invariant associated to a location   *)
 (*------------------------------------------------------------*)
-let compute_plain_invariant location =
+let compute_plain_invariant (location : Location.global_location) : LinearConstraint.pxd_linear_constraint =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	
@@ -215,20 +228,49 @@ let compute_invariant location =
 			invariant
 		)
 
+
+(*------------------------------------------------------------*)
+(* Compute the invariant associated to a location and valuate the value of the discrete variables   *)
+(*------------------------------------------------------------*)
+let compute_valuated_invariant (location : Location.global_location) : LinearConstraint.px_linear_constraint =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	
+	(* Compute the invariant with the discrete variables *)
+	let invariant = compute_plain_invariant location in
+	
+	(* Valuate the discrete variables *)
+	let discrete_constraint = discrete_constraint_of_global_location location in
+
+	(* Perform intersection of C(X) and I_l0(X) and D_i = d_i *)
+	print_message Verbose_high ("Performing intersection of I_l(X) and D_i = d_i");
+	let current_constraint = LinearConstraint.pxd_intersection [invariant ; discrete_constraint ] in
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
+	
+	(* Eliminate the discrete variables *)
+	print_message Verbose_high ("Hide discrete");
+	LinearConstraint.pxd_hide_discrete_and_collapse current_constraint
+	
+
+
+
 (*------------------------------------------------------------*)
 (* Compute the polyhedron p projected onto rho(X) *)
 (*------------------------------------------------------------*)
 (*** TO OPTIMIZE: use cache (?) *)
-let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) clock_updates =
+let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) (clock_updates : AbstractModel.clock_updates list) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
 	if clock_updates != [] then(
 		(* Merge updates *)
 		
-		(** TO OPTIMIZE: only create the hash if there are indeed some resets/updates *)
+		(*** TO OPTIMIZE: only create the hash if there are indeed some resets/updates ***)
 		
 		let clocks_hash = Hashtbl.create model.nb_clocks in
+		
 		(* Check wether there are some complex updates of the form clock' = linear_term *)
 		let arbitrary_updates = ref false in
 		(* Iterate on the lists of clocks for all synchronized automaton *)
@@ -264,7 +306,7 @@ let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) cloc
 		
 		(* THREE CASES: no updates, only resets (to 0) or updates (to linear terms) *)
 		
-		(* CASE 1: no update *)
+		(* CASE 1: no update nor reset *)
 		if Hashtbl.length clocks_hash = 0 then (
 			
 			(* do nothing! *)
@@ -323,7 +365,7 @@ let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) cloc
 		)else(
 		
 		
-			(* TODO (not urgent) : add "update" function to LinearConstraint *)
+			(*** TODO (not urgent) : add "update" function to LinearConstraint ***)
 		
 		
 		
@@ -425,7 +467,7 @@ let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) cloc
 				print_constraint linear_constraint;
 			);
 			
-			(** TO CHECK: what about discrete variables ?!! *)
+			(*** TODO: check what about discrete variables ?!! ***)
 		)
 		)
 	)
@@ -589,9 +631,7 @@ let create_initial_state () =
 	
 	(* Compute constraint for assigning a (constant) value to discrete variables *)
 	print_message Verbose_high ("Computing constraint for discrete variables");
-	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value initial_location discrete_index)) model.discrete in
-	(* Constraint of the form D_i = d_i *)
-	let discrete_constraint = LinearConstraint.pxd_constraint_of_point discrete_values in
+	let discrete_constraint = discrete_constraint_of_global_location initial_location in
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names discrete_constraint);
@@ -687,7 +727,7 @@ let compute_initial_state_or_abort () =
 
 
 	(* Check the satisfiability *)
-	let begin_message = "The initial constraint of the model after invariant " ^ (if not options#no_time_elapsing then " and time elapsing" else "") in
+	let begin_message = "The initial constraint of the model after invariant " ^ (if not options#no_time_elapsing then "and time elapsing " else "") in
 	if not (LinearConstraint.px_is_satisfiable initial_constraint_after_time_elapsing) then (
 		print_warning (begin_message ^ "is not satisfiable.");
 		terminate_program();
@@ -847,14 +887,14 @@ let compute_new_location aut_table trans_table action_index original_location =
 (* orig_constraint : contraint in source location   *)
 (* discrete_constr_src : contraint D_i = d_i in source location (discrete variables) *)
 (* orig_location   : source location                *)
-(* dest_location   : target location                *)
+(* target_location : target location                *)
 (* guards          : guard constraints per automaton*)
 (* clock_updates   : updated clock variables        *)
 (*------------------------------------------------------------*)
 (*** TODO: remove the model from the arguments, and retrieve it ***)
-let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstraint.pxd_linear_constraint) orig_location dest_location guards clock_updates =
+let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstraint.pxd_linear_constraint) orig_location target_location guards clock_updates =
 	(* Retrieve the model *)
-	let model = Input.get_model() in	
+	let model = Input.get_model() in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
@@ -872,6 +912,17 @@ let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstrai
 
 		(* Alternative IMITATOR semantics for time-elapsing: apply time-elapsing NOW, and intersect with invariant *)
 		if options#no_time_elapsing then(
+		
+			(* If special clock to be reset at each transition: reset it now! *)
+			begin
+			match model.special_reset_clock with
+				| None -> ()
+				| Some clock_index ->
+				(* Reset it *)
+					print_message Verbose_medium "Resetting the special reset clock…";
+					rho_assign orig_constraint_with_maybe_time_elapsing [Resets [clock_index]];
+			end;
+			
 			print_message Verbose_total ("\nAlternative time elapsing: Applying time elapsing NOW");
 			apply_time_elapsing orig_location orig_constraint_with_maybe_time_elapsing;
 			
@@ -932,9 +983,9 @@ let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstrai
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
 		);
 
-		(* Compute the invariant in the destination location I_l'(X) *)
+		(* Compute the invariant in the target location I_l'(X) *)
 		print_message Verbose_total ("\nComputing invariant I_l'(X)");
-		let invariant = compute_invariant dest_location in
+		let invariant = compute_invariant target_location in
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
@@ -956,23 +1007,22 @@ let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstrai
 		(* Normal IMITATOR semantics for time-elapsing: apply time-elapsing now *)
 		if not options#no_time_elapsing then(
 			print_message Verbose_high ("Applying time elapsing to [C(X) and g(X)]rho and I_l'(X) ]");
-			apply_time_elapsing dest_location current_constraint;
+			apply_time_elapsing target_location current_constraint;
 		);
 	
 	
-		(* Compute the equalities for the discrete variables in destination location *)
-		let discrete_values_dest = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value dest_location discrete_index)) model.discrete in
-		(* Convert to a constraint *)
-		let discrete_constraint_dest = LinearConstraint.pxd_constraint_of_point discrete_values_dest in
+		(* Compute the equalities for the discrete variables in target location *)
+		let discrete_constraint_target = discrete_constraint_of_global_location target_location in
 		
 		(* Perform the intersection *)
 		print_message Verbose_total ("\nPerforming intersection of the constraint with D_i = d_i and I_l'(X) ");
 		LinearConstraint.pxd_intersection_assign current_constraint
 			[
-				discrete_constraint_dest;
+				discrete_constraint_target;
 				(*** NOTE: in principle, no need to intersect with invariant if time elapsing was NOT applied (alternating semantics). This could be improved (and tested) in the future. ***)
 				invariant;
 			];
+		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
@@ -1004,7 +1054,7 @@ let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstrai
 		(* Remove useless clocks (if option activated) *)
 		(*** WARNING: code duplication!!! ***)
 		if options#dynamic_clock_elimination then(
-			ClocksElimination.dynamic_clock_elimination dest_location current_constraint;
+			ClocksElimination.dynamic_clock_elimination target_location current_constraint;
 		);
 		
 		
@@ -1134,8 +1184,14 @@ class virtual algoStateBased =
 	(* Class variables *)
 	(************************************************************)
 
+	(*** TODO: better have some option, or better initialize it to the good value from now on ***)
+	val mutable state_space = StateSpace.make 0
+	
 	(* Nature of the state space according to a property *)
 	val mutable statespace_nature = StateSpace.Unknown
+	
+(*	(* Clock that may be reset at each transition *)
+	val mutable reset_clock : Automaton.clock_index option = None*)
 	
 	
 	
@@ -1185,15 +1241,15 @@ class virtual algoStateBased =
 	(*** TODO: move new_states_indexes to a variable of the class ***)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** TODO: simplify signature by removing the orig_state_index and returning the list of actually added states ***)
-	method virtual add_a_new_state : StateSpace.state_space -> state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
+	(*** TODO: simplify signature by removing the source_state_index and returning the list of actually added states ***)
+	method virtual add_a_new_state : state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** TODO: to get a more abstract method, should get rid of the state space, and update the state space from another function ***)
-	method post_from_one_state state_space orig_state_index =
+	method post_from_one_state state_space source_state_index =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 
@@ -1201,17 +1257,17 @@ class virtual algoStateBased =
 		let options = Input.get_options () in
 		
 		(* Original location: static *)
-		let original_location, _ = StateSpace.get_state state_space orig_state_index in
+		let original_location, _ = StateSpace.get_state state_space source_state_index in
 		(* Dynamic version of the original px_constraint (can change!) *)
 		(*** NOTE / TO OPTIMIZE: OK but not in all algorithms !! ***)
 		let orig_constraint () =
-			let _, orig_constraint = StateSpace.get_state state_space orig_state_index in
+			let _, orig_constraint = StateSpace.get_state state_space source_state_index in
 			orig_constraint
 		in
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
-			let orig_state = StateSpace.get_state state_space orig_state_index in
+			let orig_state = StateSpace.get_state state_space source_state_index in
 			let _, orig_constraint = orig_state in
 			let orig_constraint_projection = LinearConstraint.px_hide_nonparameters_and_collapse orig_constraint in
 			print_message Verbose_high ("Performing post from state:");
@@ -1241,14 +1297,12 @@ class virtual algoStateBased =
 		
 
 		(* Create a constraint D_i = d_i for the discrete variables *)
-		let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value original_location discrete_index)) model.discrete in
-		(* Convert to a constraint *)
-		let discrete_constr = LinearConstraint.pxd_constraint_of_point discrete_values in
+		let discrete_constr = discrete_constraint_of_global_location original_location in
 
 		(* FOR ALL ACTION DO: *)
 		List.iter (fun action_index ->
 
-			print_message Verbose_medium ("\nComputing destination states for action '" ^ (model.action_names action_index) ^ "'");
+			print_message Verbose_medium ("\nComputing target states for action '" ^ (model.action_names action_index) ^ "'");
 			(* Get the automata declaring the action *)
 			let automata_for_this_action = model.automata_per_action action_index in
 			let nb_automata_for_this_action = List.length automata_for_this_action in
@@ -1346,7 +1400,14 @@ class virtual algoStateBased =
 						)else(
 						
 						(* EXPERIMENTAL BRANCHING: CASE MERGE BEFORE (classical version) *)
-							let added = self#add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint in
+							(* Print some information *)
+							if verbose_mode_greater Verbose_total then(
+								(* Build the state *)
+								let new_state = location, final_constraint in
+								self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
+							);
+
+							let added = self#add_a_new_state source_state_index new_states_indexes action_index location final_constraint in
 							
 							(* Update *)
 							has_successors := !has_successors || added;
@@ -1378,7 +1439,7 @@ class virtual algoStateBased =
 		if options#union && !new_states_indexes = [] then (
 			print_message Verbose_low ("\nMode union: adding a state without successor to SLast.");
 			(* Adding the state *)
-			slast := orig_state_index :: !slast;
+			slast := source_state_index :: !slast;
 		);*)
 	(**********************************************************************************************************************)
 	(**********************************************************************************************************************)
@@ -1407,7 +1468,14 @@ class virtual algoStateBased =
 				(* Iterate on all actions *)
 				(*** WARNING: not very beautiful !! ***)
 				List.iter (fun action_index ->
-					let added = self#add_a_new_state state_space orig_state_index new_states_indexes action_index location final_constraint in
+					(* Print some information *)
+					if verbose_mode_greater Verbose_total then(
+						(* Build the state *)
+						let new_state = location, final_constraint in
+						self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
+					);
+
+					let added = self#add_a_new_state source_state_index new_states_indexes action_index location final_constraint in
 					(* Update flag for deadlock checking *)
 					has_successors := !has_successors || added;
 				) action_index_list;
@@ -1419,7 +1487,7 @@ class virtual algoStateBased =
 		(* Algorithm-specific handling of deadlock states, i.e., states without successors *)
 		if not !has_successors then (
 			(* Virtual function to be defined in subclasses *)
-			self#process_deadlock_state orig_state_index;
+			self#process_deadlock_state source_state_index;
 		);
 		
 
@@ -1430,6 +1498,32 @@ class virtual algoStateBased =
 
 	
 	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Add a transition to the state space *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method add_transition_to_state_space transition is_new_state =
+		(* Expand the transition *)
+		let source_state_index, action_index, target_state_index = transition in
+		
+		(* Update state space *)
+		StateSpace.add_transition state_space (source_state_index, action_index, target_state_index);
+		
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then (
+			(* Retrieve the model *)
+			let model = Input.get_model() in
+			
+			(* Retrieve the target state *)
+			let new_target_state = StateSpace.get_state state_space target_state_index in
+		
+			let beginning_message = (if is_new_state then "NEW STATE" else "Old state") in
+			print_message Verbose_high ("\n" ^ beginning_message ^ " s_" ^ (string_of_int target_state_index) ^ " reachable from s_" ^ (string_of_int source_state_index) ^ " via action '" ^ (model.action_names action_index) ^ "': ");
+			print_message Verbose_high (ModelPrinter.string_of_state model new_target_state);
+		);
+		(* The end *)
+		()
+
+		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when meeting a state with no successors: virtual method to be defined in subclasses *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

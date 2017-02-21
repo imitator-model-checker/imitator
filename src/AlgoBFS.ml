@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/05/04
+ * Last modified     : 2016/10/18
  *
  ************************************************************)
 
@@ -80,9 +80,6 @@ class virtual algoBFS =
 	
 	(* Function to be called from the distributed IMITATOR *)
 	val mutable patator_termination_function = None
-	
-	(*** TODO: better have some option, or better initialize it to the good value from now on ***)
-	val mutable state_space = StateSpace.make 0
 	
 	(* Status of the analysis *)
 	val mutable termination_status = None
@@ -185,7 +182,6 @@ class virtual algoBFS =
 			
 			| None -> raise (InternalError "The termination status should be set when displaying warnings concerning early termination.")
 
-
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
@@ -198,9 +194,16 @@ class virtual algoBFS =
 		()
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method virtual process_initial_state : State.state -> bool
+
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual process_post_n : state_index list -> unit
+	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Check whether the algorithm should terminate at the end of some post, independently of the number of states to be processed (e.g., if the constraint is already true or false) *)
@@ -255,8 +258,24 @@ class virtual algoBFS =
 		let guessed_nb_transitions = guessed_nb_states * nb_actions in 
 		print_message Verbose_high ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
 		
-		(* Create the reachability graph *)
+		(* Create the state space *)
 		state_space <- StateSpace.make guessed_nb_transitions;
+		
+		(* Check if the initial state should be kept according to the algorithm *)
+		let initial_state_added = self#process_initial_state init_state in
+		
+		(* Degenerate case: initial state cannot be kept: terminate *)
+		if not initial_state_added then(
+			(* Output a warning because this situation is still a little strange *)
+			print_warning "The initial state is not kept. Analysis will now terminate.";
+			
+			(* Set the termination status *)
+			termination_status <- Some (Regular_termination);
+			
+			(* Return the algorithm-dependent result and terminate *)
+			self#compute_result
+		(* Else: start the algorithm in a regular manner *)
+		)else(
 		
 		(* Add the initial state to the reachable states *)
 		let init_state_index, _ = StateSpace.add_state state_space init_state in
@@ -462,6 +481,7 @@ class virtual algoBFS =
 		self#compute_result
 		
 		(*** TODO: split between process result and return result; in between, add some info (algo_name finished after....., etc.) ***)
+		) (* end if initial state added *)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Packaging the result at the end of the exploration (to be defined in subclasses) *)

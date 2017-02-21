@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/08/11
+ * Last modified     : 2017/02/21
  *
  ************************************************************)
 
@@ -21,6 +21,7 @@
 open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
+open Statistics
 open AbstractModel
 open Result
 open AlgoGeneric
@@ -40,6 +41,13 @@ type more_points =
 	(* Some more uncovered parameter valuations *)
 	| Some_pval of PVal.pval
 
+
+(*** NOTE: this should be a class parameter (but would require much work in other classes… so TODO later) ***)
+type tiles_storage =
+	(* List of constraints, as in the legacy cartography [AF10] *)
+	| Tiles_list
+	(* A good/bad representation of the tiles, when only the parameter valuations are of interest *)
+	| Tiles_good_bad_constraint
 
 
 (************************************************************)
@@ -81,16 +89,15 @@ exception Stop_loop of more_points
 (************************************************************)
 (************************************************************)
 
-
 (*------------------------------------------------------------*)
-(* Convert an 'im_result' into an 'abstract_im_result' *)
+(** Convert a 'single_synthesis_result' into an 'abstract_point_based_result' *)
 (*------------------------------------------------------------*)
-let abstract_im_result_of_im_result (im_result : im_result) reference_val : abstract_im_result =
+let abstract_point_based_result_of_single_synthesis_result (single_synthesis_result : single_synthesis_result) reference_val : abstract_point_based_result =
 	(* First, abstract state space *)
 	let abstract_state_space = {
-		nb_states		= StateSpace.nb_states im_result.state_space;
-		nb_transitions	= StateSpace.nb_transitions im_result.state_space;
-(* 		depth		 	= im_result.state_space; *)
+		nb_states		= StateSpace.nb_states single_synthesis_result.state_space;
+		nb_transitions	= StateSpace.nb_transitions single_synthesis_result.state_space;
+(* 		depth		 	= single_synthesis_result.state_space; *)
 	}
 	in
 	
@@ -100,35 +107,86 @@ let abstract_im_result_of_im_result (im_result : im_result) reference_val : abst
 	reference_val		= reference_val;
 
 	(* Convex constraint *)
-	result				= im_result.result;
+	result				= single_synthesis_result.result;
 	
 	(* Abstracted version of the explored state space *)
 	abstract_state_space	= abstract_state_space;
 	
 	(* Nature of the state space *)
-	statespace_nature		= im_result.statespace_nature;
+(* 	statespace_nature		= single_synthesis_result.statespace_nature; *)
 	
 	(* Number of random selections of pi-incompatible inequalities performed *)
-	nb_random_selections= im_result.nb_random_selections;
+(* 	nb_random_selections= im_result.nb_random_selections; *)
 	
 	(* Total computation time of the algorithm *)
-	computation_time	= im_result.computation_time;
+	computation_time	= single_synthesis_result.computation_time;
 		
 	(* Soundness of the result *)
-	soundness			= im_result.soundness;
+(* 	soundness			= single_synthesis_result.soundness; *)
 	
 	(* Termination *)
-	termination			= im_result.termination;
+	termination			= single_synthesis_result.termination;
 }
 
 
 (*------------------------------------------------------------*)
-(** Check if a parameter valuation belongs to the constraint of an im_result *)
+(** Convert a 'point_based_result' into an 'abstract_point_based_result' *)
 (*------------------------------------------------------------*)
-let pi0_in_tiles pval (abstract_im_result : abstract_im_result) =
-	match abstract_im_result.result with
-	| LinearConstraint.Convex_p_constraint p_linear_constraint -> LinearConstraint.is_pi0_compatible pval#get_value p_linear_constraint
-	| LinearConstraint.Nonconvex_p_constraint p_nnconvex_constraint -> LinearConstraint.p_nnconvex_constraint_is_pi0_compatible pval#get_value p_nnconvex_constraint
+let abstract_point_based_result_of_point_based_result (point_based_result : point_based_result) reference_val : abstract_point_based_result =
+	(* First, abstract state space *)
+	let abstract_state_space = {
+		nb_states		= StateSpace.nb_states point_based_result.state_space;
+		nb_transitions	= StateSpace.nb_transitions point_based_result.state_space;
+(* 		depth		 	= point_based_result.state_space; *)
+	}
+	in
+	
+	(* Construct the abstraction *)
+	{
+	(* Reference valuation *)
+	reference_val		= reference_val;
+
+	(* Convex constraint *)
+	result				= point_based_result.result;
+	
+	(* Abstracted version of the explored state space *)
+	abstract_state_space	= abstract_state_space;
+	
+	(* Nature of the state space *)
+(* 	statespace_nature		= point_based_result.statespace_nature; *)
+	
+	(* Number of random selections of pi-incompatible inequalities performed *)
+(* 	nb_random_selections= im_result.nb_random_selections; *)
+	
+	(* Total computation time of the algorithm *)
+	computation_time	= point_based_result.computation_time;
+		
+	(* Soundness of the result *)
+(* 	soundness			= point_based_result.soundness; *)
+	
+	(* Termination *)
+	termination			= point_based_result.termination;
+}
+
+
+
+(*------------------------------------------------------------*)
+(* Check if a good_or_bad_constraint is sound *)
+(*------------------------------------------------------------*)
+(*let is_good_or_bad_constraint_sound (good_or_bad_constraint : Result.good_or_bad_constraint) =
+	let is_soundness_valid soundness = soundness = Constraint_exact || soundness = Constraint_maybe_under in
+	match good_or_bad_constraint with
+	(* Only good valuations *)
+	| Good_constraint (_, soundness) -> is_soundness_valid soundness
+	(* Only bad valuations *)
+	| Bad_constraint (_, soundness) -> is_soundness_valid soundness
+	(* Both good and bad valuations *)
+	| Good_bad_constraint good_and_bad ->
+		let _, s_good = good_and_bad.good in
+		let _, s_bad = good_and_bad.bad in
+		is_soundness_valid s_good
+		&& is_soundness_valid s_bad*)
+
 
 (*------------------------------------------------------------*)
 (* Print warning(s) depending on a Result.bc_algorithm_termination *)
@@ -163,14 +221,19 @@ class virtual algoCartoGeneric =
 	(* Class variables *)
 	(************************************************************)
 	
-	(*** BADPROG: code shared with AlgoBCCoverDistributedMSPointBased ***)
+	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
 	(* The function creating a new instance of the algorithm to call (typically IM or PRP). Initially None, to be updated immediatly after the object creation. *)
 	(*** NOTE: this should be a parameter of the class; but cannot due to inheritance from AlgoGeneric ***)
 	val mutable algo_instance_function = None
 	
+	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
+	(* The type of the tiles manager *)
+	(*** NOTE: must be initialized first (and should be in the future passed as a class paramater) ***)
+	val mutable tiles_manager_type : tiles_storage option = None
 	
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Given a cartography termination and a list of abstract_im_result, evalutes the coverage of the cartography *)
+	(** Given a cartography termination and a list of abstract_point_based_result, evalutes the coverage of the cartography *)
 	(*** NOTE: this should be a parameter of the class; but cannot due to inheritance from AlgoGeneric ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (* 	val mutable coverage_evaluation_function = None *)
@@ -195,19 +258,26 @@ class virtual algoCartoGeneric =
 	
 	(* The current algorithm instance *)
 	(*** NOTE: this initialiation is useless (and time consuming?), as a new instance will be overwritten when needed ***)
-	val mutable current_algo_instance : AlgoIMK.algoIMK = new AlgoIMK.algoIMK
+	val mutable current_algo_instance : AlgoBFS.algoBFS =
+		let myalgo :> AlgoBFS.algoBFS = new AlgoIMK.algoIMK in myalgo
 	
-	(* List of im_results *)
-	val mutable im_results : abstract_im_result list = []
+(*	(* List of im_results *)
+	val mutable im_results : abstract_point_based_result list = []*)
+	
+	(* Manager for the tiles, the class of which depends on the tiles_storage type *)
+	(*** NOTE: arbitrarily set to TilesManagerList, but will be initialized later anyway ***)
+	(*** TODO: when the class is parameterized, will be directly set to the correct manager, without mutable ***)
+	val mutable tiles_manager = new TilesManagerList.tilesManagerList
 	
 	(* Initial p-constraint (needed to check whether points satisfy it) *)
 	val mutable init_p_constraint = LinearConstraint.p_true_constraint ()
 
-	(* Counts the points actually member of an existing constraint for information purpose *)
+	(* Counts the points actually member of an existing constraint OR for which the constraint turned invalid (for statistics purpose) *)
+	(*** TODO: split between unsuccessful and uncovered??? ***)
 	val mutable nb_unsuccessful_points = 0
 	
 	(* Counter tracking the computation time to look for points *)
-	val find_next_point_counter = new Counter.counter
+	val find_next_point_counter = create_hybrid_counter_and_register "find next point" Algorithm_counter Verbose_standard
 
 	(* Is the time/state/etc. limit reached? *)
 	val mutable limit_reached = Keep_going
@@ -221,33 +291,44 @@ class virtual algoCartoGeneric =
 	(* Class methods to simulate class parameters *)
 	(************************************************************)
 	
-	(*** BADPROG: code shared with AlgoBCCoverDistributedMSPointBased ***)
+	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
 	(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-	method set_algo_instance_function (f : unit -> AlgoIMK.algoIMK) : unit =
+	method set_algo_instance_function (f : unit -> AlgoBFS.algoBFS) : unit =
 		match algo_instance_function with
 		| Some _ -> 
 			raise (InternalError("algo_instance_function was already set in AlgoCartoGeneric."))
 		| None ->
 			algo_instance_function <- Some f
 	
-	(*** BADPROG: code shared with AlgoBCCoverDistributedMSPointBased ***)
+	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
 	(* Get the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-	method private get_algo_instance_function =
+	method get_algo_instance_function =
 		match algo_instance_function with
 		| Some f -> f
 		| None ->
 			raise (InternalError("algo_instance_function not yet set in AlgoCartoGeneric."))
 		
 (*	(* Sets the coverage evaluation function *)
-	method set_coverage_evaluation_function : (f : Result.bc_algorithm_termination -> Result.abstract_im_result list -> Result.bc_coverage) =
+	method set_coverage_evaluation_function : (f : Result.bc_algorithm_termination -> Result.abstract_point_based_result list -> Result.bc_coverage) =
 		match coverage_evaluation_function with
 		| Some _ -> 
 			raise (InternalError("coverage_evaluation_function was already set in AlgoCartoGeneric."))
 		| None ->
 			coverage_evaluation_function <- f*)
 	
+	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
+	(* Set the tiles_manager type *)
+	method set_tiles_manager_type new_tiles_manager_type =
+		tiles_manager_type <- Some new_tiles_manager_type
 
+	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
+	(* Get the tiles_manager type *)
+	method private get_tiles_manager_type =
+	match tiles_manager_type with
+		| Some t -> t
+		| None -> raise (InternalError("tiles_manager_type not yet set in AlgoCartoGeneric."))
 
+	
 	(************************************************************)
 	(* Class methods: methods used in subclasses as building blocks *)
 	(************************************************************)
@@ -394,7 +475,7 @@ class virtual algoCartoGeneric =
 	
 	(*** WARNING! Does not work with step <> 1 !!!! ***)
 	if options#step <> NumConst.one then
-		raise (InternalError("Random pi0 not implemented with steps <> 1."));
+		raise (NotImplemented("Random pi0 not implemented with steps <> 1."));
 	
 	(* Create the pi0 *)
 	let random_pi0 = new PVal.pval in
@@ -520,15 +601,25 @@ class virtual algoCartoGeneric =
 		nb_unsuccessful_points <- 0;
 		
 		(* Initialize the counter *)
-		find_next_point_counter#init;
+		find_next_point_counter#reset;
 
 		(* Initial constraint of the model *)
 		let _, init_px_constraint = init_state in
 		(* Hide non parameters *)
 		init_p_constraint <- LinearConstraint.px_hide_nonparameters_and_collapse init_px_constraint;
 
-		(* List of tiles *)
-		im_results <- [];
+(*		(* List of tiles *)
+		im_results <- [];*)
+
+		(* First create the tiles manager *)
+		(*** NOTE: the get function takes care of the Some/None cases (and may raise an exception if not properly initialized) ***)
+		begin
+		match self#get_tiles_manager_type with
+			| Tiles_list -> tiles_manager <- new TilesManagerList.tilesManagerList
+			| Tiles_good_bad_constraint -> tiles_manager <- new TilesManagerConstraint.tilesManagerConstraint
+		end;
+		(* Now initialize the tiles manager *)
+		tiles_manager#initialize;
 
 		(* Status of the analysis *)
 		termination_status <- None;
@@ -578,7 +669,7 @@ class virtual algoCartoGeneric =
 		begin
 		match options#carto_tiles_limit with
 			| None -> ()
-			| Some limit -> if List.length im_results >= limit then(
+			| Some limit -> if (*List.length im_results*)tiles_manager#get_nb_results >= limit then(
 				raise (Limit_detected Tiles_limit_reached)
 			)
 		end
@@ -609,12 +700,12 @@ class virtual algoCartoGeneric =
 (* 		let options = Input.get_options () in *)
 
 		(* Check that the point does not belong to any constraint *)
-		if List.exists (pi0_in_tiles tentative_pi0) im_results then (
+		if (*List.exists (pi0_in_tiles tentative_pi0) im_results*) tiles_manager#pval_in_tiles tentative_pi0 then (
 			(* Update the number of unsuccessful points *)
 			nb_unsuccessful_points <- nb_unsuccessful_points + 1;
-			if verbose_mode_greater Verbose_medium then (
-				self#print_algo_message Verbose_medium "The following pi0 is already included in a constraint.";
-				print_message Verbose_medium (ModelPrinter.string_of_pi0 model tentative_pi0);
+			if verbose_mode_greater Verbose_low then (
+				self#print_algo_message Verbose_low "The following pi0 is already included in a constraint.";
+				print_message Verbose_low (ModelPrinter.string_of_pi0 model tentative_pi0);
 			);
 			(*** TODO: could be optimized by finding the nearest multiple of tile next to the border, and directly switching to that one ***)
 			false
@@ -623,9 +714,9 @@ class virtual algoCartoGeneric =
 		) else if not (LinearConstraint.is_pi0_compatible tentative_pi0#get_value init_p_constraint) then (
 			(* Update the number of unsuccessful points *)
 			nb_unsuccessful_points <- nb_unsuccessful_points + 1;
-			if verbose_mode_greater Verbose_medium then (
-				self#print_algo_message Verbose_medium "The following pi0 does not satisfy the initial constraint of the model.";
-				print_message Verbose_medium (ModelPrinter.string_of_pi0 model tentative_pi0);
+			if verbose_mode_greater Verbose_low then (
+				self#print_algo_message Verbose_low "The following pi0 does not satisfy the initial constraint of the model.";
+				print_message Verbose_low (ModelPrinter.string_of_pi0 model tentative_pi0);
 			);
 			false
 		(* If both checks passed, then pi0 found *)
@@ -646,11 +737,11 @@ class virtual algoCartoGeneric =
 		let v0 = Input.get_v0() in
 
 		(* Print some information *)
-		self#print_algo_message Verbose_standard ("Starting running cartography...\n"); (* " ^ self#algorithm_name ^ " *)
+		self#print_algo_message Verbose_standard ("Starting running cartography…\n"); (* " ^ self#algorithm_name ^ " *)
 		
 		(* Variable initialization *)
 		(*** NOTE: done before printing, since the number of points is needed just below ***)
-		self#print_algo_message Verbose_low ("Initializing the algorithm local variables...");
+		self#print_algo_message Verbose_low ("Initializing the algorithm local variables…");
 		self#initialize_variables;
 
 		(* Print some information *)
@@ -662,7 +753,7 @@ class virtual algoCartoGeneric =
 		print_message Verbose_standard (" Number of points inside V0: " ^ (NumConst.string_of_numconst nb_points));
 
 		(* Retrieve the first point *)
-		self#print_algo_message Verbose_low ("Retrieving initial point...");
+		self#print_algo_message Verbose_low ("Retrieving initial point…");
 		(* Count *)
 		find_next_point_counter#start;
 		current_point <- self#get_initial_point;
@@ -677,18 +768,28 @@ class virtual algoCartoGeneric =
 	
 	
 	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get all tiles *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method get_abstract_im_result_list =
-		im_results
-	
-	
+		im_results*)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Get the tiles manager *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method get_tiles_manager =
+		tiles_manager
+	
+	
+(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Set all tiles, i.e., replace the list of abstract_im_result by that given in argument (used when the collaborator creates a new AlgoCartoGeneric, and wants to add the previously computed tiles) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method set_abstract_im_result_list abstract_im_result_list =
-		im_results <- abstract_im_result_list
+		im_results <- abstract_im_result_list*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Set the tiles manager, i.e., replace the list of tiles as managed by the manager with that given in argument (used when the collaborator creates a new AlgoCartoGeneric, and wants to add the previously computed tiles) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method set_tiles_manager new_tiles_manager =
+		tiles_manager <- new_tiles_manager
 
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -702,7 +803,7 @@ class virtual algoCartoGeneric =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create auxiliary files generated by one instance of IM *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private create_auxiliary_files imitator_result =
+	method create_auxiliary_files imitator_result =
 		(* Retrieve the input options *)
 		let options = Input.get_options () in
 
@@ -717,53 +818,63 @@ class virtual algoCartoGeneric =
 	(* Abstract the result of IM *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private abstract_result imitator_result reference_val =
-		(* Get the result *)
-		let im_result =  match imitator_result with
-			| IM_result im_result -> im_result
-			| _ -> raise (InternalError("The result of IM must be an im_result."))
-		in
+		(* Get the result and compute the abstraction *)
+		match imitator_result with
+			(* Result for most regular algorithms (EF, PDFC) *)
+			| Single_synthesis_result single_synthesis_result -> abstract_point_based_result_of_single_synthesis_result single_synthesis_result reference_val
+			
+			(* Result for point-based algorithms (IM, PRP…) *)
+			| Point_based_result point_based_result -> abstract_point_based_result_of_point_based_result point_based_result reference_val
+			
+			| _ -> raise (InternalError("The expected result must be a Single_synthesis_result or a Point_based_result (in function AlgoCartoGeneric.abstract_result)."))
 
-		(* Compute the abstraction *)
-		abstract_im_result_of_im_result im_result reference_val
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Process one result of an abstract version of an instance of IM *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_result abstract_result =
+	method process_result (abstract_point_based_result : Result.abstract_point_based_result) =
+
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 
 		(* Print some information *)
-		self#print_algo_message Verbose_low ("Processing the result by IM...");
-
-(*		(* Get the point *)
-		let pi0 = self#get_current_point_instance in*)
-		
-(*		(* Abstract the result by IM and add to list of tiles *)
-		self#abstract_and_store_result im_result pi0;*)
-		(* Add to the list of tiles *)
-		im_results <- abstract_result :: im_results;
-	
-		
-		
-		(*** TODO: check validity of result! ***)
-		(* may not be valid if early termination for PRP without bad state, for example *)
-		
-		
-		(* Print some information *)
-		let nb_states = abstract_result.abstract_state_space.nb_states (*StateSpace.nb_states im_result.state_space*) in
-		let nb_transitions = abstract_result.abstract_state_space.nb_transitions (*StateSpace.nb_transitions im_result.state_space*) in
+		let nb_states = abstract_point_based_result.abstract_state_space.nb_states (*StateSpace.nb_states im_result.state_space*) in
+		let nb_transitions = abstract_point_based_result.abstract_state_space.nb_transitions (*StateSpace.nb_transitions im_result.state_space*) in
 		print_message Verbose_standard (
 			"\nK" ^ (string_of_int current_iteration) ^ " computed by " ^ current_algo_instance#algorithm_name
 (* 					^ " after " ^ (string_of_int im_result.nb_iterations) ^ " iteration" ^ (s_of_int im_result.nb_iterations) ^ "" *)
-			^ " in " ^ (string_of_seconds abstract_result.computation_time) ^ ": "
+			^ " in " ^ (string_of_seconds abstract_point_based_result.computation_time) ^ ": "
 			^ (string_of_int nb_states) ^ " state" ^ (s_of_int nb_states)
 			^ " with "
 			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " explored.");
 
 		print_message Verbose_low ("Constraint K0 computed:");
-		print_message Verbose_standard (LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names abstract_result.result);
+		print_message Verbose_standard (ResultProcessor.string_of_good_or_bad_constraint model.variable_names abstract_point_based_result.result);
+		
+
+		(*** TODO: check validity of result! ***)
+		(* may not be valid if early termination for PRP without bad state, for example *)
+		if TilesManager.is_good_or_bad_constraint_sound abstract_point_based_result.result then(
+			(* Print some information *)
+			self#print_algo_message Verbose_low ("Processing the result by IM…");
+
+			(* Add to the list of tiles *)
+			tiles_manager#process_tile abstract_point_based_result;
+		)else(
+			(* Print some information *)
+			print_message Verbose_standard ("\nK" ^ (string_of_int current_iteration) ^ " is not valid: discarded!");
+			
+			(* Inform the tiles manager, so that it is able to find out that the resulting cartography is not complete (and probably not even integer-complete) *)
+			tiles_manager#set_point_skipped;
+			
+			(* Found an unsuccessful point *)
+			nb_unsuccessful_points <- nb_unsuccessful_points + 1;
+		);
+		
+		
+		
+
 		
 		(*** TODO ***)
 (*			if model.correctness_condition <> None then(
@@ -786,7 +897,7 @@ class virtual algoCartoGeneric =
 		(* Only compute next point if limit not reached *)
 		if limit_reached = Keep_going then(
 			(* Print some information *)
-			self#print_algo_message Verbose_low ("Computing the next point...");
+			self#print_algo_message Verbose_low ("Computing the next point…");
 
 			(* Count! *)
 			find_next_point_counter#start;
@@ -818,6 +929,35 @@ class virtual algoCartoGeneric =
 		else No_more
 
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Call the algorithm on the current point (typically call IM or PRP) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method call_point =
+		(* Save the verbose mode as it may be modified *)
+		let global_verbose_mode = get_verbose_mode() in
+
+		(* Prevent the verbose messages (except in verbose medium, high or total) *)
+		(*------------------------------------------------------------*)
+		if not (verbose_mode_greater Verbose_medium) then
+			set_verbose_mode Verbose_mute;
+					
+		(* Call the algorithm to be iterated on (typically IM or PRP) *)
+		(*** NOTE: the bc time limit is NOT checked inside one execution of the algorithm to be iterated (but also note that the max execution time of the algorithm to be iterated is set to that of BC, in the Options pre-processing) ***)
+		current_algo_instance <- self#get_algo_instance_function ();
+		let imitator_result : imitator_result = current_algo_instance#run() in
+
+		(** Create auxiliary files with the proper file prefix, if requested *)
+		self#create_auxiliary_files imitator_result;
+
+		(* Get the verbose mode back *)
+		set_verbose_mode global_verbose_mode;
+		(*------------------------------------------------------------*)
+		
+		(* Return result *)
+		imitator_result
+		
+
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Update termination condition, depending on the limit reached *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -873,37 +1013,20 @@ class virtual algoCartoGeneric =
 			(*** HACK: only print if non-distributed ***)
 (* 			if options#distribution_mode = Options.Non_distributed then( *)
 			print_message Verbose_standard ("\n**************************************************");
-			print_message Verbose_standard ("BEHAVIORAL CARTOGRAPHY ALGORITHM: " ^ (string_of_int current_iteration) ^ "");
+			print_message Verbose_standard ("ALGORITHM " ^ (self#algorithm_name) ^ ": iteration " ^ (string_of_int current_iteration) ^ "");
 			print_message Verbose_standard ("Considering the following pi" ^ (string_of_int current_iteration));
 			print_message Verbose_standard (ModelPrinter.string_of_pi0 model pi0);
 (* 			); *)
 			
 			
 			(* Print some information *)
-			self#print_algo_message Verbose_low ("Setting new pi0...");
+			self#print_algo_message Verbose_low ("Setting new pi0…");
 
 			(* Set the new pi0 *)
 			Input.set_pi0 (pi0);
 			
-			(* Save the verbose mode as it may be modified *)
-			let global_verbose_mode = get_verbose_mode() in
-			
-			(* Prevent the verbose messages (except in verbose medium, high or total) *)
-			(*------------------------------------------------------------*)
-			if not (verbose_mode_greater Verbose_medium) then
-				set_verbose_mode Verbose_mute;
-						
-			(* Call the algorithm to be iterated on (typically IM or PRP) *)
-			(*** NOTE: the bc time limit is NOT checked inside one execution of the algorithm to be iterated (but also note that the max execution time of the algorithm to be iterated is set to that of BC, in the Options pre-processing) ***)
-			current_algo_instance <- self#get_algo_instance_function ();
-			let imitator_result : imitator_result = current_algo_instance#run() in
-
-			(** Create auxiliary files with the proper file prefix, if requested *)
-			self#create_auxiliary_files imitator_result;
-
-			(* Get the verbose mode back *)
-			set_verbose_mode global_verbose_mode;
-			(*------------------------------------------------------------*)
+			(* Actual call to IM/PRP (or whatever) *)
+			let imitator_result = self#call_point in
 			
 			(* Create the abstraction of the result *)
 			let abstract_result = self#abstract_result imitator_result pi0 in

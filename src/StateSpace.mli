@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/05/03
+ * Last modified     : 2016/10/11
  *
  ************************************************************)
 
@@ -19,7 +19,6 @@
 (************************************************************)
 open Automaton
 open State
-(* open AbstractModel *)
 
 
 
@@ -37,6 +36,9 @@ type statespace_nature =
 (** State space structure *)
 (************************************************************)
 type state_space
+
+(** An SCC is just a list of states *)
+type scc = state_index list
 
 
 (************************************************************)
@@ -141,6 +143,28 @@ val last_states: AbstractModel.abstract_model -> state_space -> state_index list
 (* val is_bad: abstract_model -> state_space -> bool *)
 
 
+
+(*------------------------------------------------------------*)
+(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the guard ***)
+(*------------------------------------------------------------*)
+val get_guard : state_space -> state_index -> action_index -> state_index -> LinearConstraint.pxd_linear_constraint
+
+(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the set of clocks to be reset along a transition ***)
+(*** NOTE: the function only works for regular resets (it raises an NotImplemented for other updates) ***)
+val get_resets : state_space -> state_index -> action_index -> state_index -> Automaton.clock_index list
+
+
+(*------------------------------------------------------------*)
+(* When a state is encountered for a second time, then a loop exists (or more generally an SCC): 'reconstruct_scc state_space state_index' reconstructs the SCC from state_index to state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; returns None if no SCC found *)
+(*------------------------------------------------------------*)
+val reconstruct_scc : state_space -> state_index -> scc option
+
+(*------------------------------------------------------------*)
+(** From a set of states, return all transitions within this set of states, in the form of a triple (state_index, action_index, state_index) *)
+(*------------------------------------------------------------*)
+val find_transitions_in : state_space -> scc -> (state_index * action_index * state_index) list
+
+
 (************************************************************)
 (** Actions on a state space *)
 (************************************************************)
@@ -179,17 +203,20 @@ val iterate_on_states : (state_index -> abstract_state -> unit) -> state_space -
 
 
 
+
 (************************************************************)
-(** Misc: tile natures *)
+(** Misc: conversion to string *)
 (************************************************************)
+val string_of_state_index : state_index -> string
+
 val string_of_statespace_nature : statespace_nature -> string
 
 
 (************************************************************)
 (** Debug and performances *)
 (************************************************************)
-(** Get statistics on number of comparisons *)
-val get_statistics : unit -> string
+(*(** Get statistics on number of comparisons *)
+val get_statistics : unit -> string*)
 
 (** Get statistics on states *)
 val get_statistics_states : state_space -> string

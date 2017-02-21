@@ -1,24 +1,28 @@
-(*****************************************************************
+(************************************************************
  *
- *                     IMITATOR
+ *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Etienne Andre
- * Created:       2014/03/15
- * Last modified: 2016/02/08
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * 
+ * Module description: Parsing functions for input elements
+ * 
+ * File contributors : Ulrich Kühne, Étienne André
+ * Created           : 2014/03/15
+ * Last modified     : 2016/10/10
  *
- ****************************************************************)
+ ************************************************************)
 
 
-(**************************************************)
+(************************************************************)
 (* External modules *)
-(**************************************************)
+(************************************************************)
 open Gc
 
 
-(**************************************************)
+(************************************************************)
 (* Internal modules *)
-(**************************************************)
+(************************************************************)
 open Exceptions
 open AbstractModel
 open OCamlUtilities
@@ -101,16 +105,16 @@ let parser_lexer_from_string the_parser the_lexer the_string =
 
 
 (************************************************************)
-(** Compile the different files and set the models *)
+(** Compile the concrete model and convert it into an abstract model *)
 (************************************************************)
-let compile options =
+let compile_model options (with_special_reset_clock : bool) =
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Parsing *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* Parsing the main model *)
-	print_message Verbose_low ("Parsing file " ^ options#file ^ "...");
+	print_message Verbose_low ("Parsing file " ^ options#model_input_file_name ^ "...");
 	let parsing_structure = 
 		(* Branching between 2 input syntaxes *)
 		
@@ -118,7 +122,7 @@ let compile options =
 		if options#fromGML then(
 			(*** HACK: for EFsynth, we will have to get the property from the command line and insert it into the parsed structure ***)
 			let variable_declarations, automata, init_definition, noproperty_definition, noprojection, nocarto_definition =
-			try parser_lexer_from_file GrMLParser.main GrMLLexer.token options#file
+			try parser_lexer_from_file GrMLParser.main GrMLLexer.token options#model_input_file_name
 			with InvalidModel -> (print_error ("GrML input contains error. Please check it again."); abort_program (); exit 1)
 			in
 			if options#imitator_mode = EF_synthesis then(
@@ -165,32 +169,7 @@ let compile options =
 		) (* end if GrML *)
 		
 		(* Case normal parsing *)
-		else parser_lexer_from_file ModelParser.main ModelLexer.token options#file
-	in
-
-	if options#imitator_mode != State_space_exploration && options#imitator_mode != Translation then
-		print_message Verbose_low ("Parsing reference valuation in file " ^ options#pi0file ^ "...");
-
-	(* Pi0 Parsing *)
-	let pi0_parsed, v0_parsed =
-		(* Depending on which operation we are performing *)
-		match options#imitator_mode with
-			(* If translation, reachability, synthesis: no pi0 *)
-			(*** BADPROG!!! This should be defined elsewhere... ***)
-			| Translation
-			| State_space_exploration
-			| EF_synthesis
-			| Parametric_deadlock_checking
-				-> [], []
-			
-			(* Inverse method : pi0 *)
-			| Inverse_method ->
-	(*			(* Case forcePi0 *)
-				if options#forcePi0 then  parser_lexer_from_string Pi0Parser.main Pi0Lexer.token "p1 = 1 & p2 = 2 & p3 = 3 & p4 = 4 & p5 = 5", []
-				(* Normal case *)
-				else*) parser_lexer_from_file Pi0Parser.main Pi0Lexer.token options#pi0file, []
-			(* Cartography : v0 *)
-			| _ -> [], parser_lexer_from_file V0Parser.main V0Lexer.token options#pi0file
+		else parser_lexer_from_file ModelParser.main ModelLexer.token options#model_input_file_name
 	in
 
 	print_message Verbose_low ("\nParsing completed " ^ (after_seconds ()) ^ ".");
@@ -202,16 +181,15 @@ let compile options =
 	(* Conversion to an abstract model *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-	let model, pi0, v0 = 
+	let model = 
 	try (
-		ModelConverter.abstract_model_of_parsing_structure
-			parsing_structure pi0_parsed v0_parsed options
+		ModelConverter.abstract_model_of_parsing_structure options with_special_reset_clock parsing_structure
 	) with 
 		| InvalidModel -> (print_error ("The input model contains errors. Please check it again."); abort_program (); exit 1)
-		| ModelConverter.InvalidPi0 -> (print_error ("The input pi_0 file contains errors. Please check it again."); abort_program (); exit 1)
-		| InternalError e -> (print_error ("Internal error: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
+		| InternalError e -> (print_error ("Internal error while parsing the input model: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
 		in
 
+	(* Print some information *)
 	print_message Verbose_standard ("\nAbstract model built " ^ (after_seconds ()) ^ ".");
 	let gc_stat = Gc.stat () in
 	let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
@@ -231,5 +209,62 @@ let compile options =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* return *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	model, pi0, v0
+	model
 
+
+(************************************************************)
+(** Parse the pi0 file and convert it into an abstract representation *)
+(************************************************************)
+let compile_pi0 options =
+	(* Print some information *)
+	print_message Verbose_low ("Parsing reference valuation in file " ^ options#second_file_name ^ "...");
+	
+	(* Pi0 Parsing *)
+	let pi0_parsed =
+	(*
+	(* Case forcePi0 *)
+	if options#forcePi0 then  parser_lexer_from_string Pi0Parser.main Pi0Lexer.token "p1 = 1 & p2 = 2 & p3 = 3 & p4 = 4 & p5 = 5", []
+	(* Normal case *)
+	else
+	*)
+	parser_lexer_from_file Pi0Parser.main Pi0Lexer.token options#second_file_name
+	in
+	
+	(* Convert to an abstract representation *)
+	let pi0 =
+	try (
+		ModelConverter.check_and_make_pi0 pi0_parsed
+	) with 
+		| ModelConverter.InvalidPi0 -> (print_error ("The input reference valuation file contains errors. Please check it again."); abort_program (); exit 1)
+		| InternalError e -> (print_error ("Internal error while parsing the reference valuation: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
+	in
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* return *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	pi0
+
+
+(************************************************************)
+(** Parse the v0 file and convert it into an abstract representation *)
+(************************************************************)
+let compile_v0 options =
+	(* Print some information *)
+	print_message Verbose_low ("Parsing hyper-rectangle in file " ^ options#second_file_name ^ "...");
+	
+	(* Parsing *)
+	let v0_parsed = parser_lexer_from_file V0Parser.main V0Lexer.token options#second_file_name in
+	
+	(* Convert to an abstract representation *)
+	let v0 =
+	try (
+		ModelConverter.check_and_make_v0 v0_parsed
+	) with 
+		| ModelConverter.InvalidV0 -> (print_error ("The input reference hyper-rectangle file contains errors. Please check it again."); abort_program (); exit 1)
+		| InternalError e -> (print_error ("Internal error while parsing the reference hyper-rectangle: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
+	in
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* return *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	v0

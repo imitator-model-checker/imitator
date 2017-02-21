@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/03/23
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -46,7 +46,7 @@ class virtual algoBCCoverDistributedSubdomainStatic :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Finalization method to process results communication to the coordinator *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method virtual finalize : Result.bc_result -> unit
+		method virtual finalize : Result.cartography_result -> unit
 
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

@@ -1,17 +1,18 @@
-(*****************************************************************
+(************************************************************
  *
  *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Author:        Etienne Andre, Ulrich Kuehne
+ * Module description: All graphics handling (cartography, trace set…)
  * 
- * Created:       2010/07/05
- * Last modified: 2016/06/03
+ * File contributors : Étienne André, Ulrich Kühne
+ * Created           : 2010/07/05
+ * Last modified     : 2017/02/15
  *
- ****************************************************************)
-
+ ************************************************************)
+ 
 
 (************************************************************)
 (* Modules *)
@@ -30,7 +31,6 @@ open Result
 (************************************************************)
 (** Statistics *)
 (************************************************************)
-let counter_graphics_cartography = create_time_counter_and_register "cartography drawing" Graphics_counter Verbose_standard
 let counter_graphics_statespace = create_time_counter_and_register "state space drawing" Graphics_counter Verbose_standard
 
 
@@ -80,26 +80,27 @@ exception CartographyError
 
 
 let draw_cartography (returned_constraint_list : (LinearConstraint.p_convex_or_nonconvex_constraint * StateSpace.statespace_nature) list) cartography_file_prefix =
-try(
+	(* Create counter *)
+	let counter_graphics_cartography = create_time_counter_and_register "cartography drawing" Graphics_counter Verbose_standard in
+
 	(* Statistics *)
 	counter_graphics_cartography#start;
 	
+try(
 	(* No cartography if no zone *)
 	if returned_constraint_list = [] then(
 		print_warning ("No cartography can be drawn since the list of constraints is empty.");
 		raise CartographyError
 	);
 
-	print_message Verbose_standard ("\nDrawing the cartography...");
+	print_message Verbose_standard ("\nDrawing the cartography…");
 
 	(* Retrieve the model *)
 	let model = Input.get_model () in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
-	(* Retrieve the V0 *)
-	let v0 = Input.get_v0 () in
 	
-	print_message Verbose_low "Starting to compute graphical cartography...";
+	print_message Verbose_low "Starting to compute graphical cartography…";
 	
 	(* Converting to convex constraints *)
 	(*** BADPROG: creating a list of singletons and lists, and then flatten ***)
@@ -122,7 +123,7 @@ try(
 	) returned_constraint_list
 	in*)
 	
-	(* From now on, we work with a list [(LinearConstraint.p_linear_constraint, statespace_nature), ...] *)
+	(* From now on, we work with a list [(LinearConstraint.p_linear_constraint, statespace_nature), …] *)
 
 
 (*	(*** HORRIBLE IMPERATIVE (and not tail recursive) programming !!!!! ***)
@@ -148,7 +149,7 @@ try(
 	
 	(* First find the dimensions *)
 
-	print_message Verbose_low "Looking for dimensions...";
+	print_message Verbose_low "Looking for dimensions…";
 	let range_params : int list ref = ref [] in
 	let bounds = ref (Array.make 2 (NumConst.zero, NumConst.zero)) in
 
@@ -156,11 +157,12 @@ try(
 	(*** TODO: take the projection into account! ***)
 	begin
 	match options#imitator_mode with
-		| EF_synthesis | Parametric_deadlock_checking | Inverse_method ->
+		(*** TODO: better use an option "is_cartography" ***)
+		| EF_synthesis | EFunsafe_synthesis | Loop_synthesis | Parametric_NZ_CUBcheck | Parametric_NZ_CUBtransform | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | PRP ->
 			print_message Verbose_low "Pick up the first 2 parameters to draw the cartography";
 			(* First check that there are at least 2 parameters *)
 			if model.nb_parameters < 2 then(
-				print_error "Could not plot cartography (which requires 2 parameters)";
+				print_error ("Could not plot cartography (which requires 2 parameters) because there is only " ^ (string_of_int model.nb_parameters) ^ " parameter.");
 				raise CartographyError
 			);
 			(* Choose the first 2 *)
@@ -193,7 +195,11 @@ try(
 	(* If cartography: find indices of first two variables with a parameter range *)
 	(*** TODO: better use an option "cartography mode" ***)
 	(*** TODO: take the projection into account! ***)
-		| Cover_cartography | Shuffle_cartography | Random_cartography _ | RandomSeq_cartography _ | Border_cartography ->
+		| Cover_cartography | Shuffle_cartography | Random_cartography _ | RandomSeq_cartography _ | Learning_cartography | Border_cartography | PRPC ->
+			(* Retrieve the V0 *)
+			(*** NOTE: only retrieve here because, in other mode (e.g., EF or IM) this object is not defined ***)
+			let v0 = Input.get_v0 () in
+			
 			print_message Verbose_low "Case real cartography: first 2 parameters with a range";
 			for index = 0 to model.nb_parameters - 1 do
 (* 			Array.iteri (fun index (a,b) ->  *)
@@ -294,7 +300,7 @@ try(
 	in
 	
 	(* Print some information *)
-	print_message Verbose_low ("Computing the zone...");
+	print_message Verbose_low ("Computing the zone…");
 	
 	let str_rectangle_v0 =
 				(graph_string_of_numconst (fst (!bounds.(x_pos))))
@@ -320,7 +326,7 @@ try(
 	(* find the minimum and maximum abscissa and ordinate for each constraint and store them in a list *)
 	
 	(* Print some information *)
-	print_message Verbose_low ("Finding zone corners...");
+	print_message Verbose_low ("Finding zone corners…");
 
 	(* get corners of bounds *)
 	let init_min_abs, init_max_abs = !bounds.(x_pos) in
@@ -351,7 +357,7 @@ try(
 	let bad_float_of_num_const n = float_of_string (NumConst.string_of_numconst n) in
 
 	(* Print some information *)
-	print_message Verbose_low ("Finding minima and maxima for axes...");
+	print_message Verbose_low ("Finding minima and maxima for axes…");
 
 	(* Find mininma and maxima for axes (version Etienne, who finds imperative here better ) *)
 	let min_abs = ref (bad_float_of_num_const init_min_abs) in
@@ -377,7 +383,7 @@ try(
 	List.iter (function (p_linear_constraint, _) -> update_min_max p_linear_constraint) returned_constraint_list;
 
 	(* Print some information *)
-	print_message Verbose_low ("Adding a 1-unit margin...");
+	print_message Verbose_low ("Adding a 1-unit margin…");
 
 	(* Add a margin of 1 unit *)
 	min_abs := !min_abs -. 1.0;
@@ -483,7 +489,7 @@ try(
 			"\n# File automatically generated by " ^ Constants.program_name ^ ""
 			^ "\n" ^"# Version  : " ^ (ImitatorUtilities.program_name_and_version_and_nickname_and_build())
 			^ "\n" ^"# Git      : " ^ (ImitatorUtilities.git_branch_and_hash)
-			^ "\n" ^"# Model    : '" ^ options#file ^ "'"
+			^ "\n" ^"# Model    : '" ^ options#model_input_file_name ^ "'"
 			^ "\n" ^"# Command  : " ^ (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv) ^ ""
 			^ "\n" ^"# Generated: " ^ (now()) ^ ""
 			(* This line is used by Giuseppe Lipari: do not change without prior agreement *)
@@ -566,13 +572,13 @@ try(
 
 	(* Remove files *)
 	if not options#with_graphics_source then(
-		print_message Verbose_medium ("Removing V0 file...");
+		print_message Verbose_medium ("Removing V0 file…");
 		delete_file file_v0_name;
-		print_message Verbose_medium ("Removing script file...");
+		print_message Verbose_medium ("Removing script file…");
 		delete_file script_name;
 		(* Removing all point files *)
 		for i = 1 to !file_index do
-			print_message Verbose_medium ("Removing points file #" ^ (string_of_int i) ^ "...");
+			print_message Verbose_medium ("Removing points file #" ^ (string_of_int i) ^ "…");
 			delete_file (make_file_name cartography_file_prefix i);
 		done;
 	);
@@ -654,7 +660,7 @@ let dot_of_statespace state_space algorithm_name ~fancy =
 	"/************************************************************"
 		^ "\n * File automatically generated by " ^ Constants.program_name ^ ""
 		^ "\n" ^" * Version  : " ^ (ImitatorUtilities.program_name_and_version_and_nickname_and_build())
-		^ "\n" ^" * Model    : '" ^ options#file ^ "'"
+		^ "\n" ^" * Model    : '" ^ options#model_input_file_name ^ "'"
 		^ "\n" ^" * Algorithm: " ^ algorithm_name ^ ""
 		^ "\n" ^" * Command  : " ^ (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv) ^ ""
 		^ "\n" ^" * Generated: " ^ (now()) ^ ""
@@ -679,7 +685,7 @@ let dot_of_statespace state_space algorithm_name ~fancy =
 	
 	print_message Verbose_high "[dot_of_statespace] Header completed.";
 
-	print_message Verbose_high "[dot_of_statespace] Retrieving states indexes...";
+	print_message Verbose_high "[dot_of_statespace] Retrieving states indexes…";
 
 	(* Retrieve the states *)
 	let state_indexes = StateSpace.all_state_indexes state_space in
@@ -687,7 +693,7 @@ let dot_of_statespace state_space algorithm_name ~fancy =
 	(* Sort the list (for better presentation in the file) *)
 	let state_indexes = List.sort (fun a b -> if a = b then 0 else if a < b then -1 else 1) state_indexes in
 	
-	print_message Verbose_high "[dot_of_statespace] Starting to convert states...";
+	print_message Verbose_high "[dot_of_statespace] Starting to convert states…";
 
 	let states_description =	
 		(* Give the state indexes in comments *)
@@ -721,7 +727,7 @@ let dot_of_statespace state_space algorithm_name ~fancy =
 		^ "\n"
 	in
 	
-	print_message Verbose_high "[dot_of_statespace] Starting to convert transitions...";
+	print_message Verbose_high "[dot_of_statespace] Starting to convert transitions…";
 
 	
 	let transitions_description =
@@ -747,14 +753,14 @@ let dot_of_statespace state_space algorithm_name ~fancy =
 		^ "\n"
 	in
 	
-	print_message Verbose_high "[dot_of_statespace] Generating dot file...";
+	print_message Verbose_high "[dot_of_statespace] Generating dot file…";
 	
 	let dot_file =
 		"\n\ndigraph G { label=\"Trace set for
-" ^ options#file ^ "\" labeljust=\"c\" labelloc=\"top\" "
+" ^ options#model_input_file_name ^ "\" labeljust=\"c\" labelloc=\"top\" "
 			
 		(* Generator information *)
-(*		^ "\ninfos[shape=record, style=filled, fillcolor=\"0.99,0.98,0.99\", fontsize=18, label=\"{Trace set for|" ^ options#file ^ "|Generated by " ^ (ImitatorUtilities.program_name_and_version_and_build()) ^ "|Generation time: " ^ (now()) ^ "}\"];"*)
+(*		^ "\ninfos[shape=record, style=filled, fillcolor=\"0.99,0.98,0.99\", fontsize=18, label=\"{Trace set for|" ^ options#model_input_file_name ^ "|Generated by " ^ (ImitatorUtilities.program_name_and_version_and_build()) ^ "|Generation time: " ^ (now()) ^ "}\"];"*)
 (*		^ "\nname[shape=none, style=bold, fontsize=24, label=\"\"];"
 		^ "\ngenerator[shape=none, style=bold, fontsize=10, label=\"\"];"
 		^ "\ndate[shape=none, style=bold, fontsize=10, label=\"\"];"*)
@@ -875,6 +881,7 @@ let dot_of_statespace state_space algorithm_name ~fancy =
 		
 		(* Version and generation time infos *)
 		^ "\ngeneration[rotation=90.0, shape=rectangle, fontsize=10, label=\"Generated by " ^ (ImitatorUtilities.program_name_and_version_and_build()) ^ "
+Git hash: " ^ ImitatorUtilities.git_branch_and_hash ^ "
 Generation time: " ^ (now()) ^ "\"];"
 		
 		^ "\n}"
@@ -896,6 +903,9 @@ let dot radical dot_source_file =
 	let options = Input.get_options () in
 
 	(* Do not write if no dot AND no log *)
+	
+	(*** WARNING! that's bad programming… it shouldn't be the role of this function to test options ***)
+	
 	if options#output_trace_set || options#with_log then (
 		(* Get the file names *)
 		let dot_file_name = (radical ^ "." ^ dot_file_extension) in
@@ -905,21 +915,21 @@ let dot radical dot_source_file =
 		print_message Verbose_standard "";
 		
 		(* Create the input file *)
-		print_message Verbose_medium ("Creating input file for dot...");
+		print_message Verbose_medium ("Creating input file for dot…");
 
 		if options#output_trace_set then (
 			(* Write dot file *)
 			if options#with_graphics_source then(
-				print_message Verbose_standard ("Creating source file for dot...");
+				print_message Verbose_standard ("Creating source file for dot…");
 			)else(
-				print_message Verbose_medium ("Writing to dot file...");
+				print_message Verbose_medium ("Writing to dot file…");
 			);
 			write_to_file dot_file_name dot_source_file;
 
 			(* Generate gif file using dot *)
 			(*** WARNING: don't change this string (parsed by CosyVerif) **)
 			(*** TODO: add CosyVerif mode with output of the form "key : value" **)
-			print_message Verbose_standard ("Generating graphical output to '" ^ image_file_name ^ "'...");
+			print_message Verbose_standard ("Generating graphical output to '" ^ image_file_name ^ "'…");
 			begin
 			try (
 				let command_result = Sys.command (dot_command ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ image_file_name ^ "") in
@@ -933,7 +943,7 @@ let dot radical dot_source_file =
 			
 			(* Removing dot file (except if option) *)
 			if not options#with_graphics_source then(
-				print_message Verbose_medium ("Removing dot file...");
+				print_message Verbose_medium ("Removing dot file…");
 				delete_file dot_file_name;
 			);
 		); (* end if output_trace_set *)
@@ -942,6 +952,11 @@ let dot radical dot_source_file =
 
 (** Draw the state space using dot *)
 let draw_statespace state_space algorithm_name radical =
+	(* Preliminary check: the state space shall not be empty *)
+	if (StateSpace.nb_states state_space) = 0 then (
+		print_warning "State space is empty: not drawing";
+	)else(
+	
 	(* Statistics *)
 	counter_graphics_statespace#start;
 
@@ -963,26 +978,26 @@ let draw_statespace state_space algorithm_name radical =
 		print_message Verbose_standard "";
 		
 		(* Create the input file *)
-		print_message Verbose_medium ("Creating input file for dot...");
+		print_message Verbose_medium ("Creating input file for dot…");
 
 		if options#output_trace_set then (
 			(* Write dot file *)
 			if options#output_trace_set_source then(
-				print_message Verbose_standard ("Creating source file for dot...");
+				print_message Verbose_standard ("Creating source file for dot…");
 			)else(
-				print_message Verbose_medium ("Writing to dot file...");
+				print_message Verbose_medium ("Writing to dot file…");
 			);
 			write_to_file dot_file_name dot_model;
 
 			(* Generate gif file using dot *)
-			print_message Verbose_standard "Generating graphical output...";
-			print_message Verbose_medium ("Calling dot...");
+			print_message Verbose_standard "Generating graphical output…";
+			print_message Verbose_medium ("Calling dot…");
 			let command_result = Sys.command (dot_command ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ gif_file_name ^ "") in
 			print_message Verbose_medium ("Result of the 'dot' command: " ^ (string_of_int command_result));
 			
 			(* Removing dot file (except if option) *)
 			if not options#output_trace_set_source then(
-				print_message Verbose_medium ("Removing dot file...");
+				print_message Verbose_medium ("Removing dot file…");
 				delete_file dot_file_name;
 			);
 		);*)
@@ -990,7 +1005,7 @@ let draw_statespace state_space algorithm_name radical =
 		(* Write states file *)
 		if options#with_log then (
 			let states_file_name = (radical ^ "." ^ states_file_extension) in
-			print_message Verbose_standard ("Writing the states description to file '" ^ states_file_name ^ "'...");
+			print_message Verbose_standard ("Writing the states description to file '" ^ states_file_name ^ "'…");
 			write_to_file states_file_name states;
 		);
 	);
@@ -998,8 +1013,11 @@ let draw_statespace state_space algorithm_name radical =
 	(* Statistics *)
 	counter_graphics_statespace#stop;
 	
+	); (* end if state space not empty *)
+	
 	(* The end *)
 	()
+
 
 
 

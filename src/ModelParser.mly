@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2015/07/31
+ * Last modified : 2016/10/08
 ***********************************************/
 
 %{
@@ -58,6 +58,8 @@ let parse_error s =
 	CT_UNKNOWN CT_UNREACHABLE CT_URGENT
 	CT_VAR
 	CT_WAIT CT_WHEN CT_WHILE CT_WITHIN
+	/* NOTE: just to forbid their use in the input model */
+	CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
 
 
 %token EOF

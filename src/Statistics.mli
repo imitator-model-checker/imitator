@@ -11,7 +11,7 @@
  * Created           : 2014/04/27
  * Fork from         : Counter.mli
  * Fork date         : 2016/05/17
- * Last modified     : 2016/06/07
+ * Last modified     : 2017/02/15
  *
  ************************************************************)
 
@@ -142,7 +142,7 @@ class discreteCounter : string -> counterCategory -> ImitatorUtilities.verbose_m
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Get the counter's discrete value *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* 		method discrete_value : int *)
+		method discrete_value : int
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Get the counter's value in the form of a string *)
@@ -192,6 +192,10 @@ end
 val create_time_counter_and_register : string -> counterCategory -> ImitatorUtilities.verbose_mode -> timeCounter
 val create_discrete_counter_and_register : string -> counterCategory -> ImitatorUtilities.verbose_mode -> discreteCounter
 val create_hybrid_counter_and_register : string -> counterCategory -> ImitatorUtilities.verbose_mode -> hybridCounter
+
+(** Enable all counters (past and future), independently of their verbose level; typicaly, this function will be called if -statistics option is enabled *)
+val enable_all_counters : unit -> unit
+
 
 (** Register a counter *)
 (* val register : timeCounter -> unit *)

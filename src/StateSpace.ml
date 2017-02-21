@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/05/04
+ * Last modified     : 2016/10/11
  *
  ************************************************************)
 
@@ -24,6 +24,7 @@ open Ppl*)
 open Exceptions
 open OCamlUtilities
 open ImitatorUtilities
+open Statistics
 open Automaton
 open AbstractModel
 open State
@@ -37,6 +38,7 @@ type statespace_nature =
 	| Good
 	| Bad
 	| Unknown
+
 
 
 
@@ -86,6 +88,10 @@ type state_space = {
 }
 
 
+(** An SCC is just a list of states *)
+type scc = state_index list
+
+
 (************************************************************)
 (** Constant *)
 (************************************************************)
@@ -96,9 +102,23 @@ let initial_size = 100
 (************************************************************)
 (** Statistics *)
 (************************************************************)
-(*** TODO: move to a statistics class / object ***)
-let nb_state_comparisons = ref 0
-let nb_constraint_comparisons = ref 0
+(*let nb_state_comparisons = ref 0
+let nb_constraint_comparisons = ref 0*)
+let statespace_dcounter_nb_state_comparisons = create_discrete_counter_and_register "number of state comparisons" States_counter Verbose_standard
+let statespace_dcounter_nb_constraint_comparisons = create_discrete_counter_and_register "number of constraints comparisons" States_counter Verbose_standard
+
+
+
+(************************************************************)
+(** Local exception *)
+(************************************************************)
+exception Found_cycle
+
+
+(************************************************************)
+(** Debug string function *)
+(************************************************************)
+let string_of_state_index state_index = "s_" ^ (string_of_int state_index)
 
 
 (************************************************************)
@@ -367,6 +387,437 @@ let is_bad program state_space =
 	) *)
 
 
+
+(*------------------------------------------------------------*)
+(** Big hack: guard and resets reconstruction *)
+(*------------------------------------------------------------*)
+
+(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the guard ***)
+let get_guard state_space state_index action_index state_index' =
+	(* Retrieve the model *)
+	let model = Input.get_model () in
+	
+	(* Retrieve source and target locations *)
+	let (location : Location.global_location), _ = get_state state_space state_index in
+	let (location' : Location.global_location), _ = get_state state_space state_index' in
+	
+	(* Create the list of local guards *)
+	let local_guards = ref [] in
+	
+	(* For all PTA *)
+	List.iter (fun automaton_index ->
+		(* Retrieve source and target location indexes *)
+		let l : Automaton.location_index = Location.get_location location automaton_index in
+		let l' : Automaton.location_index = Location.get_location location' automaton_index in
+		
+		(* Now, compute the local guard, i.e., the guard in the current PTA *)
+		let local_guard =
+		(* If source and target are equal: either a self-loop (if there exists a self-loop with this action), or the current PTA is not concerned by the transition *)
+		if l = l' then (
+			(* Find the transitions l -> action_index -> l' *)
+			(*** NOTE: type transition = guard * clock_updates * discrete_update list * location_index ***)
+			let transitions = List.filter (fun (_,_,_, target) -> target = l') (model.transitions automaton_index l action_index) in
+			
+			(* If none: then not concerned -> true gard *)
+			if List.length transitions = 0 then LinearConstraint.pxd_true_constraint()
+			
+			(* If exactly one: good situation: return the guard *)
+			else if List.length transitions = 1 then let g,_,_,_ = List.nth transitions 0 in g
+			(* If more than one: take the first one (*** HACK ***) and warn *)
+			else(
+				(* Warning *)
+				print_warning ("Non-deterministic PTA! Selecting a guard arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
+				
+				(* Take arbitrarily the first element *)
+				let g,_,_,_ = List.nth transitions 0 in g
+			
+			)
+
+		(* Otherwise, if the source and target locations differ: necessarily a transition with this action *)
+		) else (
+			(* Find the transitions l -> action_index -> l' *)
+			let transitions = List.filter (fun (_,_,_, target) -> target = l') (model.transitions automaton_index l action_index) in
+			
+			(* There cannot be none *)
+			if List.length transitions = 0 then raise (raise (InternalError("There cannot be no transition from '" ^ (model.location_names automaton_index l) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' with action to '" ^ (model.action_names action_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ ".")))
+			
+			(* If exactly one: good situation: return the guard *)
+			else if List.length transitions = 1 then let g,_,_,_ = List.nth transitions 0 in g
+			(* If more than one: take the first one (*** HACK ***) and warn *)
+			else(
+				(* Warning *)
+				print_warning ("Non-deterministic PTA! Selecting a guard arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
+				
+				(* Take arbitrarily the first element *)
+				let g,_,_,_ = List.nth transitions 0 in g
+			)
+			
+		) in
+		
+		(* Add the guard *)
+		local_guards := local_guard :: !local_guards;
+	
+	) model.automata;
+	
+	(* Compute constraint for assigning a (constant) value to discrete variables *)
+	print_message Verbose_high ("Computing constraint for discrete variables");
+	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value location discrete_index)) model.discrete in
+	(* Constraint of the form D_i = d_i *)
+	let discrete_constraint = LinearConstraint.pxd_constraint_of_point discrete_values in
+
+	(* Create the constraint guard ^ D_i = d_i *)
+	let guard = LinearConstraint.pxd_intersection (discrete_constraint :: !local_guards) in
+	
+	(* Finally! Return the guard *)
+	guard
+
+
+(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the set of clocks to be reset along a transition ***)
+(*** NOTE: the function only works for regular resets (it raises an NotImplemented for other updates) ***)
+let get_resets state_space state_index action_index state_index' =
+	(* Retrieve the model *)
+	let model = Input.get_model () in
+	
+	(* Retrieve source and target locations *)
+	let (location : Location.global_location), _ = get_state state_space state_index in
+	let (location' : Location.global_location), _ = get_state state_space state_index' in
+	
+	(* Create the list of clocks to be reset *)
+	let clock_resets = ref [] in
+	
+	(* For all PTA *)
+	List.iter (fun automaton_index ->
+		(* Retrieve source and target location indexes *)
+		let l : Automaton.location_index = Location.get_location location automaton_index in
+		let l' : Automaton.location_index = Location.get_location location' automaton_index in
+		
+		(* Now, compute the clock_updates in the current PTA *)
+		let clock_updates =
+		(* If source and target are equal: either a self-loop (if there exists a self-loop with this action), or the current PTA is not concerned by the transition *)
+		if l = l' then (
+			(* Find the transitions l -> action_index -> l' *)
+			(*** NOTE: type transition = guard * clock_updates * discrete_update list * location_index ***)
+			let transitions = List.filter (fun (_,_,_, target) -> target = l') (model.transitions automaton_index l action_index) in
+			
+			(* If none: then not concerned -> no reset nor update *)
+			if List.length transitions = 0 then No_update
+			
+			(* If exactly one: good situation: find the clock_updates *)
+			else if List.length transitions = 1 then let _,clock_updates,_,_ = List.nth transitions 0 in clock_updates
+				(* If more than one: take the first one (*** HACK ***) and warn *)
+				else(
+					(* Warning *)
+					print_warning ("Non-deterministic PTA! Selecting an edge arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
+					
+					(* Take arbitrarily the first element *)
+					let _,clock_updates,_,_ = List.nth transitions 0 in clock_updates
+				)
+
+		(* Otherwise, if the source and target locations differ: necessarily a transition with this action *)
+		) else (
+			(* Find the transitions l -> action_index -> l' *)
+			let transitions = List.filter (fun (_,_,_, target) -> target = l') (model.transitions automaton_index l action_index) in
+			
+			(* There cannot be none *)
+			if List.length transitions = 0 then raise (raise (InternalError("There cannot be no transition from '" ^ (model.location_names automaton_index l) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' with action to '" ^ (model.action_names action_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ ".")))
+			
+			(* If exactly one: good situation: return the clock_updates *)
+			else if List.length transitions = 1 then let _,clock_updates,_,_ = List.nth transitions 0 in clock_updates
+			(* If more than one: take the first one (*** HACK ***) and warn *)
+			else(
+				(* Warning *)
+				print_warning ("Non-deterministic PTA! Selecting an edge arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
+				
+				(* Take arbitrarily the first element *)
+				let _,clock_updates,_,_ = List.nth transitions 0 in clock_updates
+			)
+			
+		) in
+		
+		let local_clock_resets =
+		(*** WARNING: we only accept clock resets (no arbitrary updates) ***)
+		match clock_updates with
+			(* No update at all *)
+			| No_update -> []
+			(* Reset to 0 only *)
+			| Resets clock_resets -> clock_resets
+			(* Reset to arbitrary value (including discrete, parameters and clocks) *)
+			| Updates _ -> raise (NotImplemented "Only clock resets are allowed for now in StateSpace.get_resets")
+		in
+		
+		(* Add the guard *)
+		clock_resets := List.rev_append !clock_resets local_clock_resets;
+	
+	) model.automata;
+	
+	(* Keep each clock once *)
+	let unique_clock_resets = list_only_once !clock_resets in
+	
+	(* Finally! Return the list of clocks to reset *)
+	unique_clock_resets
+	
+
+
+(************************************************************)
+(** SCC detection *)
+(************************************************************)
+
+(*** NOTE: this part is heavily based on the Tarjan's strongly connected components algorithm, as presented on Wikipedia, with some mild modification:
+	- the top level algorithm is run once only (as we start from a state which we know belongs to the desired SCC)
+	- the other SCCs are discarded
+***)
+
+(* Data structure: node with index / lowlink / onStack *)
+type tarjan_node = {
+	(* Additional field used to record the real state_index in the state space *)
+	state_index	: state_index;
+	mutable index		: state_index option;
+	mutable lowlink		: state_index option;
+	mutable onStack		: bool;
+}
+
+(* Exception raised when the SCC is found *)
+exception Found_scc of scc
+
+
+(* When a state is encountered for a second time, then a loop exists (or more generally an SCC): 'reconstruct_scc state_space source_state_index' reconstructs the SCC from source_state_index to source_state_index (using the actions) using a variant of Tarjan's strongly connected components algorithm; returns None if no SCC found *)
+(*** NOTE: added the requirement that a single node is not an SCC in our setting ***)
+let reconstruct_scc state_space source_state_index : scc option =
+	(* Print some information *)
+	print_message Verbose_high ("Entering reconstruct_scc " ^ (string_of_state_index source_state_index) ^ "…");
+
+	(* Variables used for Tarjan *)
+	let current_index = ref 0 in
+
+	(* Hashtable state_index -> tarjan_node *)
+	let tarjan_nodes = Hashtbl.create initial_size in
+	
+	(* tarjan_node stack *)
+	let stack = Stack.create () in
+	
+	(* Get the tarjan_node associated with a state_index; create it if not found in the Hashtable *)
+	let tarjan_node_of_state_index state_index =
+		(* If present in the hashtable already *)
+		if Hashtbl.mem tarjan_nodes state_index then(
+			Hashtbl.find tarjan_nodes state_index
+		)else(
+			(* Create an empty node *)
+			let tarjan_node = {
+				state_index = state_index;
+				index		= None;
+				lowlink		= None;
+				onStack		= false;
+			} in
+			(* Add it *)
+			Hashtbl.add tarjan_nodes state_index tarjan_node;
+			(* Return it *)
+			tarjan_node
+		)
+	in
+	
+	(* Get the index field from a tarjan_node; raise InternalError if index = None *)
+	let get_index tarjan_node =
+		match tarjan_node.index with
+			| Some ll -> ll
+			| _ -> raise (InternalError "v.index should not be undefined at that point")
+	in
+	
+	(* Get the lowlink field from a tarjan_node; raise InternalError if lowlink = None *)
+	let get_lowlink tarjan_node =
+		match tarjan_node.lowlink with
+			| Some ll -> ll
+			| _ -> raise (InternalError "v.lowlink should not be undefined at that point")
+	in
+	
+	
+	(* Define a main local, recursive function *)
+	let rec strongconnect state_index =
+		(* Print some information *)
+		print_message Verbose_high ("  Entering strongconnect " ^ (string_of_state_index state_index) ^ "…");
+		
+		(* Get the associated tarjan node *)
+		let v = tarjan_node_of_state_index state_index in
+		(* Set the depth index for v to the smallest unused index *)
+		(*v.index := index*)
+		v.index <- Some !current_index;
+		
+		(*v.lowlink := index*)
+		v.lowlink <- Some !current_index;
+		
+		(*index := index + 1*)
+		incr current_index;
+		
+		(* S.push(v) *)
+		Stack.push v stack;
+
+		(* Print some information *)
+		print_message Verbose_high ("  Push " ^ (string_of_state_index state_index) ^ "");
+		
+		(* v.onStack := true *)
+		v.onStack <- true;
+	
+		(* Print some information *)
+		print_message Verbose_high ("  Considering successors of " ^ (string_of_state_index state_index) ^ "…");
+		
+		(* Consider successors of v *)
+		(* for each (v, w) in E do *)
+		let successors = get_successors state_space state_index in
+
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high (string_of_list_of_string_with_sep ", " (List.map string_of_state_index successors));
+		);
+		
+		List.iter (fun successor_index ->
+			(* Print some information *)
+			print_message Verbose_high ("    Considering successor " ^ (string_of_state_index successor_index) ^ "");
+			
+			let w = tarjan_node_of_state_index successor_index in
+			(* if (w.index is undefined) then *)
+			if w.index = None then (
+			(* // Successor w has not yet been visited; recurse on it
+				strongconnect(w) *)
+				strongconnect successor_index;
+				
+				(* v.lowlink  := min(v.lowlink, w.lowlink) *)
+
+				let vlowlink = get_lowlink v in
+				let wlowlink = get_lowlink w in
+				
+				(* Print some information *)
+				print_message Verbose_high ("    " ^ (string_of_state_index v.state_index) ^ ".lowlink  := min(" ^ (string_of_state_index v.state_index) ^ ".lowlink, " ^ (string_of_state_index w.state_index) ^ ".lowlink) = min(" ^ (string_of_int vlowlink) ^ ", " ^ (string_of_int wlowlink) ^ ")");
+
+				if wlowlink < vlowlink then(
+					v.lowlink <- Some wlowlink;
+				);
+			(* else if (w.onStack) then *)
+			) else if w.onStack then (
+				(* // Successor w is in stack S and hence in the current SCC
+				v.lowlink  := min(v.lowlink, w.index) *)
+				let vlowlink = get_lowlink v in
+				let windex = get_index w in
+				if windex < vlowlink then v.lowlink <- Some windex;
+			(* end if *)
+			);
+		(* end for *)
+		) successors;
+		
+		(* // If v is a root node, pop the stack and generate an SCC *)
+		(* if (v.lowlink = v.index) then *)
+		let vlowlink = get_lowlink v in
+		let vindex = get_index v in
+		
+		if vlowlink = vindex then (
+			(* Print some information *)
+			print_message Verbose_high ("  Root node! Start SCC");
+			
+			(* start a new strongly connected component *)
+			let scc : scc ref = ref [] in
+			
+			(* repeat *)
+			let found_v = ref false in
+			while not !found_v do
+				(* w := S.pop() *)
+				let w = Stack.pop stack in
+
+				(* Print some information *)
+				print_message Verbose_high ("  Pop " ^ (string_of_state_index w.state_index) ^ "");
+				
+				(* w.onStack := false *)
+				w.onStack <- false;
+				
+				(* add w to current strongly connected component *)
+				scc := w.state_index :: !scc;
+			
+				if w = v then found_v := true
+			(* while (w != v) *)
+			done;
+			
+			(* output the current strongly connected component *)
+			(* In fact, we differ from the traditional Tarjan here: if the original source_state_index belongs to the scc, we are done; otherwise we keep working and this scc is discarded *)
+			if List.mem source_state_index !scc then(
+			
+				(* In addition, the SCC must not be reduced to a singleton without a loop *)
+				if List.length !scc > 1 then(
+					print_message Verbose_high ("  Found SCC of size > 1 containing " ^ (string_of_state_index source_state_index) ^ "!");
+
+					raise (Found_scc !scc)
+				)else(
+					(* If reduced to a state: must contain a self-loop, i.e., source_state_index must belong to its successors *)
+					let successors = get_successors state_space source_state_index in
+					
+					(* Print some information *)
+					if verbose_mode_greater Verbose_high then(
+						print_message Verbose_high ("  Successors of " ^ (string_of_state_index source_state_index) ^ ": " ^ (string_of_list_of_string_with_sep ", " (List.map string_of_state_index successors)) );
+					);
+					
+					let found_scc = List.mem source_state_index successors in
+					
+					if found_scc then(
+						(* Print some information *)
+						print_message Verbose_high ("  Found SCC containing exactly " ^ (string_of_state_index source_state_index) ^ "!");
+
+						raise (Found_scc !scc)
+					)else(
+						(* Print some information *)
+						print_message Verbose_high ("  Found SCC containing exactly " ^ (string_of_state_index source_state_index) ^ " but without a loop: discard.");
+					);
+				);
+			)else(
+				(* Print some information *)
+				print_message Verbose_high ("  SCC NOT containing " ^ (string_of_state_index source_state_index) ^ ": discard.");
+			);
+		(* end if *)
+		);
+		
+		(* Print some information *)
+		print_message Verbose_high ("  Exiting strongconnect " ^ (string_of_state_index state_index) ^ ".");
+		
+		(* end local function strongconnect *)
+		()
+    
+    
+	in
+
+	(* Call strongconnect from the desired starting node *)
+	let scc =
+	try
+		strongconnect source_state_index;
+		
+		(* If an exception was not raised, we reach this point *)
+		print_message Verbose_high ("SCC not found in strongconnect!");
+		None
+	with
+		(* if an exception was raised while looking for the SCC: we found the SCC! *)
+		Found_scc scc -> (
+			(* Return the scc *)
+			Some scc
+		)
+	in
+	(* Return SCC *)
+	scc
+
+
+(*------------------------------------------------------------*)
+(** From a set of states, return all transitions within this set of states, in the form of a triple (state_index, action_index, state_index) *)
+(*------------------------------------------------------------*)
+let find_transitions_in state_space (scc : scc) : (state_index * action_index * state_index) list =
+	List.fold_left (fun current_list state_index ->
+		(* Compute the successors of state_index *)
+		let successors = get_successors_with_actions state_space state_index in
+		
+		(* Filter only those who belong to the scc *)
+		let successors_in_scc = List.filter (fun (state_index, _) -> List.mem state_index scc) successors in
+		
+		(* Convert into triple (state_index, action_index, state_index) *)
+		let triples = List.map (fun (target_state_index, action_index) -> (state_index, action_index, target_state_index) ) successors_in_scc in
+		
+		(* Add them to the current list *)
+		List.rev_append triples current_list
+	) [] scc
+
+
+
 (************************************************************)
 (** Actions on a state space *)
 (************************************************************)
@@ -389,8 +840,15 @@ let states_equal state1 state2 =
 	if not (Location.location_equal loc1 loc2) then false else (
 		(* Statistics *)
 		print_message Verbose_high ("About to compare equality between two constraints.");
-		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
-		print_message Verbose_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparison" ^ (s_of_int !nb_constraint_comparisons) ^ ".");
+
+		statespace_dcounter_nb_constraint_comparisons#increment;
+(* 		nb_constraint_comparisons := !nb_constraint_comparisons + 1; *)
+
+		if verbose_mode_greater Verbose_high then(
+			let nb_comparisons = statespace_dcounter_nb_constraint_comparisons#discrete_value in
+			print_message Verbose_high ("Already performed " ^ (string_of_int nb_comparisons) ^ " constraint comparison" ^ (s_of_int nb_comparisons) ^ ".");
+		);
+		
 		LinearConstraint.px_is_equal constr1 constr2
 	)
 	
@@ -401,8 +859,14 @@ let states_equal_dyn state1 state2 constr =
 	if not (Location.location_equal loc1 loc2) then false else (
 		(* Statistics *)
 		print_message Verbose_high ("About to compare (dynamic) equality between two constraints.");
-		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
-		print_message Verbose_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparison" ^ (s_of_int !nb_constraint_comparisons) ^ ".");
+		statespace_dcounter_nb_constraint_comparisons#increment;
+(* 		nb_constraint_comparisons := !nb_constraint_comparisons + 1; *)
+
+		if verbose_mode_greater Verbose_high then(
+			let nb_comparisons = statespace_dcounter_nb_constraint_comparisons#discrete_value in
+			print_message Verbose_high ("Already performed " ^ (string_of_int nb_comparisons) ^ " constraint comparison" ^ (s_of_int nb_comparisons) ^ ".");
+		);
+		
 		(*** WARNING!!! Really sure that one wants do MODIFY the constraints here?!!! ***)
 		LinearConstraint.px_intersection_assign constr1  [constr];
 		LinearConstraint.px_intersection_assign constr2 [constr];
@@ -417,9 +881,14 @@ let state_included state1 state2 =
 	let (loc2, constr2) = state2 in
 	if not (Location.location_equal loc1 loc2) then false else (
 		(* Statistics *)
-		print_message Verbose_high ("About to compare inclusion between two constraints.");
-		nb_constraint_comparisons := !nb_constraint_comparisons + 1;
-		print_message Verbose_high ("Already performed " ^ (string_of_int (!nb_constraint_comparisons)) ^ " constraint comparison" ^ (s_of_int !nb_constraint_comparisons) ^ ".");
+		statespace_dcounter_nb_constraint_comparisons#increment;
+(* 		nb_constraint_comparisons := !nb_constraint_comparisons + 1; *)
+
+		if verbose_mode_greater Verbose_high then(
+			let nb_comparisons = statespace_dcounter_nb_constraint_comparisons#discrete_value in
+			print_message Verbose_high ("Already performed " ^ (string_of_int nb_comparisons) ^ " constraint comparison" ^ (s_of_int nb_comparisons) ^ ".");
+		);
+
 		LinearConstraint.px_is_leq constr1 constr2
 	)
 
@@ -551,8 +1020,14 @@ let add_state state_space new_state =
 
 			(* Statistics *)
 			print_message Verbose_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " state" ^ (s_of_int (List.length old_states)) ^ ".");
-			nb_state_comparisons := !nb_state_comparisons + (List.length old_states);
-			print_message Verbose_medium ("Already performed " ^ (string_of_int (!nb_state_comparisons)) ^ " comparison" ^ (s_of_int !nb_state_comparisons) ^ ".");
+			
+			statespace_dcounter_nb_state_comparisons#increment_by (List.length old_states);
+			
+(* 			nb_state_comparisons := !nb_state_comparisons + (List.length old_states); *)
+			if verbose_mode_greater Verbose_medium then(
+				let nb_comparisons = statespace_dcounter_nb_state_comparisons#discrete_value in
+				print_message Verbose_medium ("Already performed " ^ (string_of_int nb_comparisons) ^ " comparison" ^ (s_of_int nb_comparisons) ^ ".");
+			);
 			
 			List.iter (fun index -> 
 				let state = get_state state_space index in
@@ -848,6 +1323,7 @@ let empty_states_for_comparison state_space =
 
 
 
+
 (************************************************************)
 (** Misc: tile natures *)
 (************************************************************)
@@ -865,10 +1341,10 @@ let string_of_statespace_nature = function
 (************************************************************)
 
 
-(** Get statistics on the number of comparisons between states *)
+(*(** Get statistics on the number of comparisons between states *)
 let get_statistics () =
 	(string_of_int !nb_state_comparisons) ^ " comparison" ^ (s_of_int !nb_state_comparisons) ^ " between states were performed."
-	^ "\n" ^ (string_of_int !nb_constraint_comparisons) ^ " comparison" ^ (s_of_int !nb_constraint_comparisons) ^ " between constraints were performed."
+	^ "\n" ^ (string_of_int !nb_constraint_comparisons) ^ " comparison" ^ (s_of_int !nb_constraint_comparisons) ^ " between constraints were performed."*)
 
 
 (** Get statistics on the structure of the states: number of different locations, number of different constraints *)

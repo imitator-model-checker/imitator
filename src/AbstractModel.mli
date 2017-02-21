@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/11
- * Last modified     : 2016/02/11
+ * Last modified     : 2016/10/08
  *
  ************************************************************)
 
@@ -186,7 +186,7 @@ type projection = (parameter_index list) option
 
 
 (************************************************************)
-(** Nature of the tiles *)
+(** Subclass of the model *)
 (************************************************************)
 type lu_status =
 	(* General PTA *)
@@ -229,6 +229,10 @@ type abstract_model = {
 	clocks : clock_index list;
 	(* True for clocks, false otherwise *)
 	is_clock : variable_index -> bool;
+	(* Index of the special clock to be reset at each transition to measure time elapsing (only used in NZ checking) *)
+	special_reset_clock : clock_index option;
+	(* The list of clock indexes except the reset clock (used, e.g., to print the model *)
+	clocks_without_special_reset_clock : clock_index list;
 	(* The list of discrete indexes *)
 	discrete : discrete_index list;
 	(* True for discrete, false otherwise *)
@@ -287,7 +291,7 @@ type abstract_model = {
 	(* Initial constraint of the model projected onto P *)
 	initial_p_constraint : LinearConstraint.p_linear_constraint;
 
-	(* Property defined by the user *)
+	(* Property defined by the user (not used in the analysis, only for printing purpose; at this stage, the user property is already transformed into the correctness_condition below) *)
 	user_property : property_definition;
 	(* Property defined by the model *)
 	correctness_condition : correctness_condition;

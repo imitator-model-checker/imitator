@@ -201,7 +201,7 @@ let index_of e a =
 	let i = ref 0 in
 	while not !found && !i < length do
 		if a.(!i) = e then found := true;
-		i := !i + 1;
+		incr i;
 	done;
 	if not !found then raise Not_found;
 	(* Return the index *)
@@ -442,6 +442,12 @@ let round3_float d =
 (**************************************************)
 (** System functions *)
 (**************************************************)
+
+(** Read the first line of a file and convert to string *)
+let read_first_line_from_file file_name =
+	(*** TODO: test for file existence! ***)
+	let ic = open_in file_name in
+	input_line ic
 
 (** Read a file and convert to string *)
 let read_from_file file_name =

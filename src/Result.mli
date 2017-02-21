@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/05/04
+ * Last modified     : 2017/01/18
  *
  ************************************************************)
 
@@ -71,7 +71,7 @@ type constraint_soundness =
 (* 	| Constraint_over *)
 
 	(* Pair of constraints: one under-approximation and one over-approximation *)
-	| Constraint_under_over
+(* 	| Constraint_under_over *)
 	
 	(* Impossible to compare the constraint with the original result *)
 	(*** NOTE: technically it used by variants of IM where the intersection with the real result is not null ***)
@@ -79,14 +79,24 @@ type constraint_soundness =
 
 
 (************************************************************)
-(** Constraint that can be exact, over, under or an interval under/over-approximation *)
+(** Constraint with its soundness *)
 (************************************************************)
-type constraint_interval =
-	(* One constraint that can be exact, approximated or invalid *)
-	| Single_constraint of LinearConstraint.p_nnconvex_constraint * constraint_soundness
-	
-	(* One under-approximated p-constraint, and one over-approximated p-constraint *)
-	| Under_over_constraint of LinearConstraint.p_nnconvex_constraint * LinearConstraint.p_nnconvex_constraint
+type constraint_and_soundness = LinearConstraint.p_nnconvex_constraint * constraint_soundness
+
+(** A pair good valuations / bad valuations *)
+type good_and_bad_constraint = {
+	good	: constraint_and_soundness;
+	bad		: constraint_and_soundness;
+}
+
+(** A good, a bad, or a pair *)
+type good_or_bad_constraint =
+	(* Only good valuations *)
+	| Good_constraint of constraint_and_soundness
+	(* Only bad valuations *)
+	| Bad_constraint of constraint_and_soundness
+	(* Both good and bad valuations *)
+	| Good_bad_constraint of good_and_bad_constraint
 
 
 (************************************************************)
@@ -95,6 +105,9 @@ type constraint_interval =
 type bc_coverage =
 	(* Full coverage in all dimensions, including rational points *)
 	| Coverage_full
+
+	(* No constraint computed at all *)
+	| Coverage_empty
 
 	(* At least all integers are covered, rationals perhaps not *)
 	| Coverage_integer_complete
@@ -126,9 +139,10 @@ type poststar_result = {
 }
 
 
-(*** TODO: merge with pdfc_result when EFsynth will allow for non-convex constraints ***)
-type efsynth_result = {
-	(* List of constraints ensuring EF location *)
+
+(*** NOTE: former version of EFsynth, that works as a list of constraints (and kept for now, at least) ***)
+type deprecated_efsynth_result = {
+	(* List of convex constraints ensuring reachability of EF location *)
 	constraints			: LinearConstraint.p_linear_constraint list;
 	
 	(* Explored state space *)
@@ -148,45 +162,38 @@ type efsynth_result = {
 }
 
 
-type pdfc_result = {
-	(* Non-necessarily convex constraint *)
-	result				: constraint_interval;
+(** Result for single synthesis: EF, PDFC *)
+type single_synthesis_result = {
+	(* Good and/or bad valuations *)
+	result				: good_or_bad_constraint;
 	
 	(* Explored state space *)
 	state_space			: StateSpace.state_space;
 	
-	(* Nature of the state space *)
-	statespace_nature	: StateSpace.statespace_nature;
-	
 	(* Total computation time of the algorithm *)
 	computation_time	: float;
-	
-	(* No soundness as it is included in constraint_interval *)
 	
 	(* Termination *)
 	termination			: bfs_algorithm_termination;
 }
 
 
-(* Result of IM and variants *)
-type im_result = {
-	(* Convex constraint *)
-	result				: LinearConstraint.p_convex_or_nonconvex_constraint;
+(** Result for single synthesis based on a reference valuation: IM and its variants, PRP *)
+type point_based_result = {
+	(* Reference valuation *)
+	reference_val		: PVal.pval;
+	
+	(* Good and/or bad valuations *)
+	result				: good_or_bad_constraint;
 	
 	(* Explored state space *)
 	state_space			: StateSpace.state_space;
 	
-	(* Nature of the state space *)
-	statespace_nature	: StateSpace.statespace_nature;
-	
 	(* Number of random selections of pi-incompatible inequalities performed *)
-	nb_random_selections: int;
+(* 	nb_random_selections: int; *)
 	
 	(* Total computation time of the algorithm *)
 	computation_time	: float;
-	
-	(* Soundness of the result *)
-	soundness			: constraint_soundness;
 	
 	(* Termination *)
 	termination			: bfs_algorithm_termination;
@@ -197,56 +204,48 @@ type im_result = {
 (* Cartography algorithms *)
 (*------------------------------------------------------------*)
 
-(* Abstract state space of IM for BC (to save memory) *)
+(** Abstract state space of IM for BC (to save memory) *)
 type abstract_state_space = {
 	nb_states			: int;
 	nb_transitions		: int;
 (* 	depth				: int; *)
 }
 
-(* Abstract result of IM for BC (to save memory) *)
-type abstract_im_result = {
+(** Abstract result of point-based algorithms for BC (to save memory) *)
+type abstract_point_based_result = {
 	(* Reference valuation *)
 	reference_val		: PVal.pval;
 	
-	(* Convex constraint *)
-	result				: LinearConstraint.p_convex_or_nonconvex_constraint;
+	(* Good and/or bad valuations *)
+	result				: good_or_bad_constraint;
 	
 	(* Abstracted version of the explored state space *)
-	abstract_state_space			: abstract_state_space;
+	abstract_state_space	: abstract_state_space;
 	
-	(* Nature of the state space *)
-	statespace_nature	: StateSpace.statespace_nature;
-
-	(*** TODO: add depth (?) ***)
-	
-	(* Number of random selections of pi-incompatible inequalities performed *)
-	nb_random_selections: int;
+(*	(* Number of random selections of pi-incompatible inequalities performed *)
+	nb_random_selections: int;*)
 	
 	(* Total computation time of the algorithm *)
 	computation_time	: float;
-	
-	(* Soundness of the result *)
-	soundness			: constraint_soundness;
-	
+
 	(* Termination *)
 	termination			: bfs_algorithm_termination;
 }
 
-(* Result for BC and variants *)
-type bc_result = {
+(** Result for the original behavioral cartography and its variants: a list of tiles *)
+type cartography_result = {
 	(* Number of points in V0 *)
 	(*** NOTE: not technically part of the result, but useful to have it here *)
 	size_v0				: NumConst.t;
 	
 	(* List of tiles *)
-	tiles				: abstract_im_result list;
+	tiles				: abstract_point_based_result list;
 	
 	(* Total computation time of the algorithm *)
 	computation_time	: float;
 	
 	(* Computation time to look for points *)
-	find_point_time		: float;
+(* 	find_point_time		: float; *)
 	
 	(* Number of points on which IM could not be called because already covered *)
 	nb_unsuccessful_points: int;
@@ -261,6 +260,38 @@ type bc_result = {
 }
 
 
+(** Result for the cartography-based algorithms for which mainly the resulting constraint (and not the list of tiles) is important: PRPC *)
+type multiple_synthesis_result = {
+	(* Number of points in V0 *)
+	(*** NOTE: not technically part of the result, but useful to have it here *)
+	size_v0				: NumConst.t;
+	
+	(* Good and/or bad valuations *)
+	result				: good_or_bad_constraint;
+
+	(* List of tiles *)
+	(*** NOTE: so far we do NOT keep tiles ***)
+	(*** TODO: compact to save memory? ***)
+(* 	tiles				: abstract_point_based_result list; *)
+	
+	(* Total computation time of the algorithm *)
+	computation_time	: float;
+	
+	(* Computation time to look for points *)
+(* 	find_point_time		: float; *)
+	
+	(* Number of points on which IM could not be called because already covered *)
+	nb_unsuccessful_points: int;
+	
+	(* Evaluation of the coverage of V0 by tiles computed by the cartography *)
+	coverage			: bc_coverage;
+	
+	(* Termination *)
+	termination			: bc_algorithm_termination;
+
+	(*** TODO: compute a percentage of the points explored ?? ***)
+}
+
 (************************************************************)
 (** A unified type for all results *)
 (************************************************************)
@@ -269,20 +300,20 @@ type imitator_result =
 	(* Result for Post* *)
 	| PostStar_result of poststar_result
 
-	(* Result for EFsynth *)
-	| EFsynth_result of efsynth_result
+	(* Result for old version of EFsynth *)
+	| Deprecated_efsynth_result of deprecated_efsynth_result
 	
-	(* Result for Parametric_deadlock_checking *)
-	| PDFC_result of pdfc_result
-
-	(* Result for IM, IMK, IMunion *)
-	| IM_result of im_result
-
-(*	(* Result for IMunion *)
-	| IMNonconvex_result of imnonconvex_result*)
+	(* Result for EFsynth, PDFC PRP *)
+	| Single_synthesis_result of single_synthesis_result
 	
-	(* Result for cartography *)
-	| BC_result of bc_result
+	(* Result for IM, PRP *)
+	| Point_based_result of point_based_result
+	
+	(* Result for original cartography *)
+	| Cartography_result of cartography_result
+	
+	(* Result for PRPC *)
+	| Multiple_synthesis_result of multiple_synthesis_result
 	
 	(* No result for workers in distributed mode *)
 	| Distributed_worker_result

@@ -1,7 +1,7 @@
 (************************************************************
  *                      IMITATOR MODEL                      
  *
- * AIP from [LALSD14]
+ * AIP from [LALSD14] ; version with parameters
  *
  * Description     : The AIP manufacturing system [LLD06] produces two products from two types of materials. It consists of ten components, namely an I/O station, three transport units, two assembly stations, three external loops, and a central loop. Properties requiring that the routs of the two types of materials should be opposite and that output of each loop should be within three time units after its input are verified. After verification, we found that the AIP system has wrong routing problems and buffer-overflow problems. The models and the properties of the AIP example can be viewed and download from the following links. This model was extended to time in "Learning Assumptions for Compositional Verification of Timed Systems" [LALSD14]
  * Correctness     : Error state unreachable
@@ -13,38 +13,43 @@
 
  *
  * Created         : 2016/07/05
- * Last modified   : 2016/07/07
+ * Last modified   : 2016/07/08
  *
  * IMITATOR version: 2.8-beta
  ************************************************************)
 
  var
-  c_L3_in_I1, c_I_L3_I1, xO_L3_TU3_1: clock;
-  
-  c_L3_in_I2, c_I_L3_I2, xO_L3_TU3_2: clock;
-  
-  xI_L3_TU3_1, xO_L3_I1, xproduct1, xI_L3_TU3_2, xO_L3_I2, xproduct2: clock;
-  
-  xI_CL_TU3_1, xO_CL_TU1_1, xI_L1_TU1_1, xO_L1_AS1_1,
-  xI_L1_AS1_1, xO_L1_TU1_1, xI_CL_TU1_1,
-  xI_CL_TU2_2, xO_CL_TU1_2, xI_L1_TU1_2, xO_L1_AS1_2,
-  xI_L1_AS1_2, xO_L1_TU1_2, xI_CL_TU1_2: clock;
-  
-  xO_CL_TU2_1, xI_L2_TU2_1, xO_L2_AS2_1,
-  xI_L2_AS2_1, xO_L2_TU2_1, xI_CL_TU2_1,
-  xI_CL_TU3_2, xO_CL_TU2_2, xI_L2_TU2_2, xO_L2_AS2_2,
-  xI_L2_AS2_2, xO_L2_TU2_2: clock;
-  
-  xL3_out_TU3_1: clock;
-  
-  xL3_out_TU3_2: clock;
-  
-  xO_CL_TU3_1, xO_CL_TU3_2: clock;
-  
-  xtask1B, xtask1A: clock;
-  
-  xtask2A, xtask2B: clock;
+	c_L3_in_I1, c_I_L3_I1, xO_L3_TU3_1: clock;
+	
+	c_L3_in_I2, c_I_L3_I2, xO_L3_TU3_2: clock;
+	
+	xI_L3_TU3_1, xO_L3_I1, xproduct1, xI_L3_TU3_2, xO_L3_I2, xproduct2: clock;
+	
+	xI_CL_TU3_1, xO_CL_TU1_1, xI_L1_TU1_1, xO_L1_AS1_1,
+	xI_L1_AS1_1, xO_L1_TU1_1, xI_CL_TU1_1,
+	xI_CL_TU2_2, xO_CL_TU1_2, xI_L1_TU1_2, xO_L1_AS1_2,
+	xI_L1_AS1_2, xO_L1_TU1_2, xI_CL_TU1_2: clock;
+	
+	xO_CL_TU2_1, xI_L2_TU2_1, xO_L2_AS2_1,
+	xI_L2_AS2_1, xO_L2_TU2_1, xI_CL_TU2_1,
+	xI_CL_TU3_2, xO_CL_TU2_2, xI_L2_TU2_2, xO_L2_AS2_2,
+	xI_L2_AS2_2, xO_L2_TU2_2: clock;
+	
+	xL3_out_TU3_1: clock;
+	
+	xL3_out_TU3_2: clock;
+	
+	xO_CL_TU3_1, xO_CL_TU3_2: clock;
+	
+	xtask1B, xtask1A: clock;
+	
+	xtask2A, xtask2B: clock;
 
+	p_is1 (*= 1*),
+	p_is2 = 1,
+	p_tu3a = 1,
+	p_deadline9(* = 3*),
+		: parameter;
 
 (************************************************************)
   automaton InputStation_1
@@ -56,7 +61,7 @@ loc I0:	while True wait {}
 	when True sync L3_in_I1 do {c_L3_in_I1' = 0} goto I1;
 	
 loc I1: while True wait {}
-	when c_L3_in_I1 <= 1 sync I_L3_I1 do {c_I_L3_I1' = 0} goto I2;
+	when c_L3_in_I1 <= p_is1 sync I_L3_I1 do {c_I_L3_I1' = 0} goto I2;
 	
 loc I2: while True wait {}
 	when True sync O_L3_TU3_1 do {xO_L3_TU3_1' = 0} goto I0;
@@ -71,7 +76,7 @@ synclabs: L3_in_I2, I_L3_I2, O_L3_TU3_2;
 
 loc I0: while True wait {}
 	when True sync L3_in_I2 do {c_L3_in_I2' = 0} goto I0;
-	when c_L3_in_I2 <= 1 sync I_L3_I2 do {c_I_L3_I2' = 0} goto I1;
+	when c_L3_in_I2 <= p_is2 sync I_L3_I2 do {c_I_L3_I2' = 0} goto I1;
 
 loc I1: while True wait {}
 	when True sync O_L3_TU3_2 do {xO_L3_TU3_2' = 0} goto I0;
@@ -214,7 +219,7 @@ loc T0: while True wait {}
 	when True sync I_L3_I1 do {c_I_L3_I1' = 0} goto T1;
 
 loc T1: while True wait {}
-	when c_I_L3_I1 <= 1 sync L3_out_TU3_1 do {xL3_out_TU3_1' = 0} goto T2;
+	when c_I_L3_I1 <= p_tu3a sync L3_out_TU3_1 do {xL3_out_TU3_1' = 0} goto T2;
 
 loc T2: while True wait {}
 	when True sync O_L3_TU3_1 do {xO_L3_TU3_1' = 0} goto T3;
@@ -349,7 +354,7 @@ loc T6: while True wait {}
 end (*  AssemblyStation_2  *)
 
 
-(************************************************************)
+(*(************************************************************)
   automaton  Spec_1
 (************************************************************)
 synclabs: 
@@ -375,7 +380,7 @@ loc T3: while True wait {}
 	
 loc ERROR: while True wait {}
 
-end (*  Spec_1 *)
+end (*  Spec_1 *)*)
 
 
 (*(************************************************************)
@@ -567,7 +572,7 @@ loc ERROR: while True wait {}
 end (*  Spec_8 *)*)
 
 
-(*(************************************************************)
+(************************************************************)
   automaton  Spec_9 
 (************************************************************)
 synclabs: 
@@ -578,13 +583,13 @@ loc T0: while True wait {}
 	when True sync L3_out_TU3_1 do {xL3_out_TU3_1' = 0} goto ERROR;
 
 loc T1: while True wait {}
-	when c_L3_in_I1 <= 3 sync L3_out_TU3_1 do {xL3_out_TU3_1' = 0} goto T0;
+	when c_L3_in_I1 <= p_deadline9 sync L3_out_TU3_1 do {xL3_out_TU3_1' = 0} goto T0;
 	when True sync L3_in_I1 do {c_L3_in_I1' = 0} goto ERROR;
-	when c_L3_in_I1 > 3 sync L3_out_TU3_1 do {xL3_out_TU3_1' = 0} goto ERROR;
+	when c_L3_in_I1 > p_deadline9 sync L3_out_TU3_1 do {xL3_out_TU3_1' = 0} goto ERROR;
 
 loc ERROR: while True wait {}
 
-end (*  Spec_9 *)*)
+end (*  Spec_9 *)
 
 
 
@@ -630,7 +635,7 @@ init :=
 	& loc[TransportUnit_3C] = T0
 	& loc[AssemblyStation_1] = T0
 	& loc[AssemblyStation_2] = T0
-	& loc[Spec_1] = T0
+(* 	& loc[Spec_1] = T0 *)
 	(*& loc[Spec_2] = T0*)
 	(*& loc[Spec_3] = T0*)
 	(*& loc[Spec_4] = T0*)
@@ -638,7 +643,7 @@ init :=
 	(*& loc[Spec_6] = T0*)
 	(*& loc[Spec_7] = T0*)
 	(*& loc[Spec_8] = T0*)
-	(*& loc[Spec_9] = T0*)
+	& loc[Spec_9] = T0
 	(*& loc[Spec_10] = T0*)
 	
 	(*------------------------------------------------------------*)
@@ -705,13 +710,22 @@ init :=
 	
 	& xtask2B = 0 
 	& xtask2A = 0
+	
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p_is1 >= 0
+	& p_is2 >= 0
+	& p_tu3a >= 0
+	& p_deadline9 >= 0
+
 ;
 
 (************************************************************)
 (* Property specification *)
 (************************************************************)
 
-property := unreachable loc[Spec_1] = ERROR;
+(* property := unreachable loc[Spec_1] = ERROR; *)
 (*property := unreachable loc[Spec_2] = ERROR;*)
 (*property := unreachable loc[Spec_3] = ERROR;*)
 (*property := unreachable loc[Spec_4] = ERROR;*)
@@ -719,5 +733,5 @@ property := unreachable loc[Spec_1] = ERROR;
 (*property := unreachable loc[Spec_6] = ERROR;*)
 (*property := unreachable loc[Spec_7] = ERROR;*)
 (*property := unreachable loc[Spec_8] = ERROR;*)
-(*property := unreachable loc[Spec_9] = ERROR;*)
+property := unreachable loc[Spec_9] = ERROR;
 (*property := unreachable loc[Spec_10] = ERROR;*)

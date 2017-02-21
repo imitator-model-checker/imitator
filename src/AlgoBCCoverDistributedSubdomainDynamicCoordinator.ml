@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/08/11
+ * Last modified     : 2016/10/10
  *
  ************************************************************)
 
@@ -209,9 +209,14 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 	(* List of subdomains maintained by the coordinator *)
 	val mutable subdomains : HyperRectangle.hyper_rectangle list = []
 	
-	(* List of abstract_im_results received by the coordinator *)
-	val mutable abstract_im_results : Result.abstract_im_result list = []
+	(* List of abstract_point_based_results received by the coordinator *)
+(* 	val mutable abstract_point_based_results : Result.abstract_point_based_result list = [] *)
 	
+	(* Manager for the tiles, the class of which depends on the tiles_storage type *)
+	(*** NOTE: arbitrarily set to TilesManagerList, but will be initialized later anyway ***)
+	(*** TODO: when the class is parameterized, will be directly set to the correct manager, without mutable ***)
+	val mutable tiles_manager = new TilesManagerList.tilesManagerList
+
 	(* Flag to check whether the set of integers in V0 entirely is covered *)
 	val mutable covered = false
 	
@@ -262,14 +267,24 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 	method initialize_variables =
 (* 		super#initialize_variables; *)
 		
+		(* First create the tiles manager *)
+		(*** NOTE: the get function takes care of the Some/None cases (and may raise an exception if not properly initialized) ***)
+		begin
+		match self#get_tiles_manager_type with
+			| AlgoCartoGeneric.Tiles_list -> tiles_manager <- new TilesManagerList.tilesManagerList
+			| AlgoCartoGeneric.Tiles_good_bad_constraint -> raise (NotImplemented "not implemented yet")
+		end;
+		(* Now initialize the tiles manager *)
+		tiles_manager#initialize;
+
 		(* The end *)
 		()
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add an abstract_im_result to the list of received abstract_im_result *)
+	(* Add an abstract_point_based_result to the list of received abstract_point_based_result *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private add_abstract_im_result (abstract_im_result : abstract_im_result) =
+	method private add_abstract_point_based_result (abstract_point_based_result : abstract_point_based_result) =
 		
 		(* Check if already present *)
 		
@@ -277,7 +292,8 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 		
 		
 		(* Otherwise add *)
-		abstract_im_results <- abstract_im_result :: abstract_im_results;
+(* 		abstract_point_based_results <- abstract_point_based_result :: abstract_point_based_results; *)
+		tiles_manager#process_tile abstract_point_based_result;
 		
 		(* For now always add, hence return true *)
 		true
@@ -382,15 +398,15 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 				self#print_algo_message Verbose_total ("Received a pull request from collaborator " ^ (string_of_int collaborator_rank) ^ "; end.");
 				
 			(*Tile Tag*)
-			| Tile (collaborator_rank , abstract_im_result) ->
+			| Tile (collaborator_rank , abstract_point_based_result) ->
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
 					(* Retrieve the model *)
 					let model = Input.get_model() in
 					
-					self#print_algo_message Verbose_low ("Received an abstract_im_result from collaborator " ^ (string_of_int collaborator_rank) ^ " computed in " ^ (string_of_seconds abstract_im_result.computation_time)
+					self#print_algo_message Verbose_low ("Received an abstract_point_based_result from collaborator " ^ (string_of_int collaborator_rank) ^ " computed in " ^ (string_of_seconds abstract_point_based_result.computation_time)
 						^ "\nConstraint:\n"
-						^ (LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names abstract_im_result.result)
+						^ (ResultProcessor.string_of_good_or_bad_constraint model.variable_names abstract_point_based_result.result)
 						^ ""
 					);
 				);
@@ -399,19 +415,19 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 				(* Count! *)
 				tcounter_process_result#start;
 				tcounter_process_result#increment;
-				let constraint_added = self#add_abstract_im_result abstract_im_result in
+				let constraint_added = self#add_abstract_point_based_result abstract_point_based_result in
 				(* Count! *)
 				tcounter_process_result#stop;
 
 				if constraint_added then(
-					(*receive abstract_im_result then send to the other collaborators to update*)
+					(*receive abstract_point_based_result then send to the other collaborators to update*)
 					for i = 0 to (List.length current_subdomains)-1 do
 						if (fst (List.nth current_subdomains i)) <> collaborator_rank then(
 							(*** QUESTION: why is the following line commented out? So the other collaborators are NEVER informed of a tile computation? ***)
-							(* send_tile abstract_im_result (first (List.nth current_subdomains i));*)
+							(* send_tile abstract_point_based_result (first (List.nth current_subdomains i));*)
 							
 							(*** NOTE: this structure seems really inaccurate to me; TODO: improve ***)
-							tiles_buffer <- tiles_buffer @ [(fst (List.nth current_subdomains i)), abstract_im_result];
+							tiles_buffer <- tiles_buffer @ [(fst (List.nth current_subdomains i)), abstract_point_based_result];
 						);
 					done
 				) (* end if constraint_added *)
@@ -419,7 +435,7 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 				else(
 					nb_wasted_tiles <- nb_wasted_tiles + 1;
 				);
-				self#print_algo_message Verbose_total ("Received an abstract_im_result from collaborator " ^ (string_of_int collaborator_rank) ^ ": end.");
+				self#print_algo_message Verbose_total ("Received an abstract_point_based_result from collaborator " ^ (string_of_int collaborator_rank) ^ ": end.");
 
 			(*Pi0 Tag*)
 			| Pi0 (collaborator_rank , pi0) -> 
@@ -576,7 +592,7 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 			begin
 			match options#carto_tiles_limit with
 				| None -> ()
-				| Some limit -> if List.length abstract_im_results >= limit then(
+				| Some limit -> if (*List.length abstract_point_based_results*)tiles_manager#get_nb_results >= limit then(
 					termination <- Some BC_Tiles_limit
 				)
 			end
@@ -642,47 +658,9 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 			| None -> BC_Regular_termination
 			| Some bc_termination -> bc_termination
 		in
-
 	
-		(* Coverage is... *)
-		(*** NOTE: this is only true for the original behavioral cartography; for variants this may not hold ***)
-		let coverage =
-			(* INTEGER COMPLETE if termination is regular and all tiles are exact or under-approximations *)
-			if termination = BC_Regular_termination && (List.for_all (fun abstract_im_result -> match abstract_im_result.soundness with
-					| Constraint_exact | Constraint_maybe_under -> true
-					| Constraint_maybe_over | Constraint_maybe_invalid -> false
-					| Constraint_under_over -> raise (InternalError("BC is not suppose to handle under/over-approximations"))
-				) abstract_im_results)
-				then Coverage_integer_complete
-			(* UNKNOWN otherwise *)
-			else Coverage_unknown
-		in
-
-		(* Return the bc_result *)
-		BC_result
-		{
-			size_v0				= size_v0;
-			
-			(* List of tiles *)
-			tiles				= abstract_im_results;
-			
-			(* Total computation time of the algorithm *)
-			(*** NOTE: here the local coordinator time only ***)
-			computation_time	= time_from start_time;
-			
-			(* Computation time to look for points *)
-			(*** NOTE: the coordinator is NOT responsible for finding next points ***)
-			find_point_time		= 0.;
-			
-			(* Number of points on which IM could not be called because already covered *)
-			nb_unsuccessful_points= 0 (*** TODO ***);
-			
-			(* Evaluation of the coverage of V0 by tiles computed by the cartography *)
-			coverage			= coverage;
-			
-			(* Termination *)
-			termination			= termination;
-		}
+		(* Ask the tiles manager to process the result itself, by passing the appropriate arguments *)
+		tiles_manager#process_result start_time size_v0 (*** TODO ***)0 termination None
 
 
 (************************************************************)

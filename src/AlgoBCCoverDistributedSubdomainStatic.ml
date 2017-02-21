@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/03/23
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -110,7 +110,7 @@ class virtual algoBCCoverDistributedSubdomainStatic =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Finalization method to process results communication to the coordinator *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual finalize : Result.bc_result -> unit
+	method virtual finalize : Result.cartography_result -> unit
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -142,6 +142,7 @@ class virtual algoBCCoverDistributedSubdomainStatic =
 		let bc_instance = new AlgoBCCover.algoBCCover in
 		(* Set the instance of IM / PRP that was itself set from the current cartography class *)
 		bc_instance#set_algo_instance_function self#get_algo_instance_function;
+		bc_instance#set_tiles_manager_type (self#get_tiles_manager_type);
 		
 		(* Print some information *)
 		self#print_algo_message Verbose_standard ("Launching cartography on own static subdomain...");
@@ -150,14 +151,14 @@ class virtual algoBCCoverDistributedSubdomainStatic =
 		let imitator_result = bc_instance#run () in
 
 		(* Retrieve the result *)
-		let bc_result =
+		let cartography_result =
 		match imitator_result with
-			| BC_result bc_result -> bc_result
-			| _ -> raise (InternalError ("The result of BC should be 'BC_result bc_result'"))
+			| Cartography_result cartography_result -> cartography_result
+			| _ -> raise (InternalError ("The result of BC should be 'BC_result cartography_result'"))
 		in
 		
 		(* Send the results to the coordinator (if collaborator), or collect results from collaborators (if coordinator) *)
-		self#finalize bc_result;
+		self#finalize cartography_result;
 		
 		(* Return the result *)
 		self#compute_bc_result

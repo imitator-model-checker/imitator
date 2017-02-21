@@ -1,0 +1,21 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * PTA for which the initial state is unsatisfiable
+ *
+ * Description     : PTA for which the initial state is unsatisfiable
+ * Correctness     : N/A
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+ *
+ * Created         : 2016/10/18
+ * Last modified   : 2016/10/18
+ *
+ * IMITATOR version: 2.8
+ ************************************************************)
+p1 = 1
+p2 = 2

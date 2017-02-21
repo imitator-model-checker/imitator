@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/02/11
+ * Last modified     : 2016/10/18
  *
  ************************************************************)
 
@@ -46,7 +46,7 @@ class algoEFsynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "EFsynth"
+	method algorithm_name = "EFsynth (old version)"
 	
 	
 	
@@ -66,27 +66,92 @@ class algoEFsynth =
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Process a symbolic state *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private process_state state =
+		(* Retrieve the model *)
+		let model = Input.get_model () in
+		
+		let state_location, state_constraint = state in
+		
+		let to_be_added = match model.correctness_condition with
+		| None -> raise (InternalError("A correctness property must be defined to perform EF-synthesis or PRP. This should have been checked before."))
+		| Some (Unreachable unreachable_global_locations) ->
+			
+			(* Check whether the current location matches one of the unreachable global locations *)
+			if State.match_unreachable_global_locations unreachable_global_locations state_location then(
+			
+				(* Project onto the parameters *)
+				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state_constraint in
+				
+				(* Projecting onto SOME parameters if required *)
+				begin
+				match model.projection with
+				(* Unchanged *)
+				| None -> ()
+				(* Project *)
+				| Some parameters ->
+					self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
+					(*** TODO! do only once for all... ***)
+					let all_but_projectparameters = list_diff model.parameters parameters in
+					(* Eliminate other parameters *)
+					LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
+				end;
+				
+				(* Add the constraint to the list of constraints, unless it is already present there *)
+				(*** TODO: also check for REVERSE inclusion (old included in new) ***)
+				(*** TODO: merge this list on-the-fly!! ***)
+				(*** TODO: even better, directly use a non-convex constraint using PPL, and leave the work to PPL ***)
+				if List.exists (LinearConstraint.p_is_leq p_constraint) bad_constraints then(
+					self#print_algo_message Verbose_low "Found a state violating the property but the constraint is not new.";
+				)else(
+					bad_constraints <- p_constraint :: bad_constraints;
+					(* Print some information *)
+					self#print_algo_message Verbose_standard "Found a state violating the property.";
+					
+					(* Print some information *)
+					if verbose_mode_greater Verbose_medium then(
+						self#print_algo_message Verbose_medium "Adding the following constraint to the list of bad constraints:";
+						print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+					);
+					
+				);
+				
+				(* Do NOT compute its successors *)
+				false
+				
+			)else(
+				self#print_algo_message Verbose_medium "State not corresponding to the one wanted.";
+				
+				(* Keep the state as it is not a bad state *)
+				true
+			);
+		| _ -> raise (InternalError("IMITATOR currently ony supports non-reachability-like properties. This should have been checked before."))
+
+		in
+		(* Return result *)
+		to_be_added
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method process_initial_state initial_state = self#process_state initial_state
+
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add a new state to the state_space (if indeed needed) *)
 	(* Side-effects: modify new_states_indexes *)
 	(*** TODO: move new_states_indexes to a variable of the class ***)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** WARNING/BADPROG: the following is partially copy/paste to AlgoPRP.ml ***)
-	method add_a_new_state state_space orig_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
+	method add_a_new_state orig_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
 		(* Retrieve the model *)
-		let model = Input.get_model () in
-
-		(* Retrieve the input options *)
-(* 		let options = Input.get_options () in *)
+(* 		let model = Input.get_model () in *)
 
 		(* Build the state *)
 		let new_state = location, final_constraint in
-
-		(* Print some information *)
-		if verbose_mode_greater Verbose_total then(
-			(*** TODO: move that comment to a higher level function? (post_from_one_state?) ***)
-			self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
-		);
 
 		let new_state_index, added = (
 			StateSpace.add_state state_space new_state
@@ -98,81 +163,19 @@ class algoEFsynth =
 			self#update_statespace_nature new_state;
 			
 			(* Will the state be added to the list of new states (the successors of which will be computed)? *)
-			let to_be_added = ref true in
-			
-			(* If synthesis / PRP: add the constraint to the list of successful constraints if this corresponds to a bad location *)
-			begin
-			match model.correctness_condition with
-			| None -> raise (InternalError("A correctness property must be defined to perform EF-synthesis or PRP. This should have been checked before."))
-			| Some (Unreachable unreachable_global_locations) ->
-				
-				(* Check whether the current location matches one of the unreachable global locations *)
-				if State.match_unreachable_global_locations unreachable_global_locations location then(
-				
-					(* Project onto the parameters *)
-					let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse final_constraint in
-					
-					(* Projecting onto SOME parameters if required *)
-					begin
-					match model.projection with
-					(* Unchanged *)
-					| None -> ()
-					(* Project *)
-					| Some parameters ->
-						self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
-						(*** TODO! do only once for all... ***)
-						let all_but_projectparameters = list_diff model.parameters parameters in
-						(* Eliminate other parameters *)
-						LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
-					end;
-					
-					(* Add the constraint to the list of constraints, unless it is already present there *)
-					(*** TODO: also check for REVERSE inclusion (old included in new) ***)
-					(*** TODO: merge this list on-the-fly!! ***)
-					(*** TODO: even better, directly use a non-convex constraint using PPL, and leave the work to PPL ***)
-					if List.exists (LinearConstraint.p_is_leq p_constraint) bad_constraints then(
-						self#print_algo_message Verbose_low "Found a state violating the property but the constraint is not new.";
-					)else(
-						bad_constraints <- p_constraint :: bad_constraints;
-						(* Print some information *)
-						self#print_algo_message Verbose_standard "Found a state violating the property.";
-						
-						(* Print some information *)
-						if verbose_mode_greater Verbose_medium then(
-							self#print_algo_message Verbose_medium "Adding the following constraint to the list of bad constraints:";
-							print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-						);
-						
-					);
-					
-					(* Do NOT compute its successors *)
-					to_be_added := false;
-					
-				)else(
-					self#print_algo_message Verbose_medium "State not corresponding to the one wanted.";
-				);
-			| _ -> raise (InternalError("[EFsynth/PRP] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
-			end
-			;
+			let to_be_added = self#process_state new_state in
 
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
-			if !to_be_added then
+			if to_be_added then
 				new_states_indexes := new_state_index :: !new_states_indexes;
 			
 		) (* end if new state *)
 		;
 		
-		
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 		
 		(* Update the transitions *)
-		StateSpace.add_transition state_space (orig_state_index, action_index, new_state_index);
-		(* Print some information *)
-		if verbose_mode_greater Verbose_high then (
-			let beginning_message = (if added then "NEW STATE" else "Old state") in
-			print_message Verbose_high ("\n" ^ beginning_message ^ " reachable through action '" ^ (model.action_names action_index) ^ "': ");
-			print_message Verbose_high (ModelPrinter.string_of_state model new_state);
-		);
+		self#add_transition_to_state_space (orig_state_index, action_index, new_state_index) added;
 	
 		(* The state is kept in any case *)
 		true
@@ -226,7 +229,7 @@ class algoEFsynth =
 		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
 
 		(* Return the result *)
-		EFsynth_result
+		Deprecated_efsynth_result
 		{
 			(* List of constraints ensuring EF location *)
 			constraints			= bad_constraints;

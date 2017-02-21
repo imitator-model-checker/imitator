@@ -1,0 +1,22 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy model to exhibit differences between BC and PRPC (in 2 dimensions)
+ *
+ * Description     : Toy model to exhibit differences between BC and PRPC (in 2 dimensions)
+ * Correctness     : lbad unreachable
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2016/08/16
+ * Last modified   : 2016/08/16
+ *
+ * IMITATOR version: 2.8
+ ************************************************************)
+
+
+	p1 = 0..4
+	p2 = 0..4

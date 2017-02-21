@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/05/23
+ * Last modified     : 2017/02/10
  *
  ************************************************************)
 
@@ -86,14 +86,35 @@ type imitator_mode =
 	(** EF-synthesis *)
 	| EF_synthesis
 	
+	(** EF-synthesis w.r.t. unsafe locations *)
+	| EFunsafe_synthesis
+	
+	(** Parametric loop synthesis *)
+	| Loop_synthesis
+	
+	(** Parametric Büchi-emptiness checking with non-Zenoness (method: check whether the PTA is CUB) *)
+	| Parametric_NZ_CUBcheck
+	
+	(** Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
+	| Parametric_NZ_CUBtransform
+	
+	(** Parametric Büchi-emptiness checking with non-Zenoness on a CUB-PTA: hidden option (mainly for testing) *)
+	| Parametric_NZ_CUB
+	
 	(** Parametric deadlock-checking *)
 	| Parametric_deadlock_checking
 	
-	(** Classical inverse method *)
+	(** Inverse method *)
 	| Inverse_method
+	
+	(** Parametric reachability preservation *)
+	| PRP
 	
 	(** Cover the whole cartography *)
 	| Cover_cartography
+	
+	(** Cover the whole cartography using learning-based abstractions *)
+	| Learning_cartography
 	
 	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 	| Shuffle_cartography
@@ -106,7 +127,11 @@ type imitator_mode =
 	
 	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 	| RandomSeq_cartography of int
+
+	(** Synthesis using iterative calls to PRP *)
+	| PRPC
 	
+
 
 (************************************************************)
 (** Global time counter *)
@@ -154,8 +179,19 @@ val memory_used : unit -> string
 (** Messages *)
 (************************************************************)
 
+type shell_highlighting_type =
+	| Shell_bold
+	| Shell_error
+	| Shell_normal
+	| Shell_result
+	| Shell_soundness
+	| Shell_warning
+
 (* Print a message if global_verbose_mode >= message_verbose_mode *)
 val print_message : verbose_mode -> string -> unit
+
+(* Print a message with some highlighting *)
+val print_highlighted_message : shell_highlighting_type -> verbose_mode -> string -> unit
 
 (* Print a warning *)
 val print_warning : string -> unit

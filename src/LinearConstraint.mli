@@ -9,9 +9,10 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2016/05/24
+ * Last modified     : 2017/02/10
  *
  ************************************************************)
+
  
 
 (************************************************************)
@@ -31,8 +32,8 @@ type variable = int
 type coef = NumConst.t
 
 
-(** Add on for TA2CLP *)
-val string_of_var : (variable -> string) -> variable -> string
+(*(** Add on for TA2CLP *)
+val string_of_var : (variable -> string) -> variable -> string*)
 
 
 (************************************************************)
@@ -73,6 +74,10 @@ val add_pxd_linear_terms : pxd_linear_term -> pxd_linear_term -> pxd_linear_term
 (** Perform linear_term1 - linear_term2 *)
 (* val sub_linear_terms : linear_term -> linear_term -> linear_term *)
 
+val sub_p_linear_terms : p_linear_term -> p_linear_term -> p_linear_term
+(*val sub_px_linear_terms : px_linear_term -> px_linear_term -> px_linear_term*)
+val sub_pxd_linear_terms : pxd_linear_term -> pxd_linear_term -> pxd_linear_term
+
 (** Evaluate a linear term with a function assigning a value to each variable. *)
 val evaluate_p_linear_term : (variable -> coef) -> p_linear_term -> coef
 val evaluate_pxd_linear_term : (variable -> coef) -> pxd_linear_term -> coef
@@ -102,6 +107,9 @@ type op =
 	| Op_le
 	| Op_l
 
+(** Reverse an operator: <= becomes >= and conversely. < becomes > and conversely. = remains =. *)
+val reverse_op : op -> op
+
 (* type linear_inequality *)
 type p_linear_inequality
 type px_linear_inequality
@@ -114,6 +122,7 @@ type pxd_linear_inequality
 
 (** Create a linear inequality using linear term and an operator *)
 (* val make_linear_inequality : linear_term -> op -> linear_inequality *)
+val make_p_linear_inequality : p_linear_term -> op -> p_linear_inequality
 val make_pxd_linear_inequality : pxd_linear_term -> op -> pxd_linear_inequality
 
 
@@ -140,7 +149,7 @@ val negate_wrt_pi0 : (variable -> coef) -> p_linear_inequality -> p_linear_inequ
 (*------------------------------------------------------------*)
 (** Convert a linear inequality into a clock guard (i.e. a triple clock, operator, parametric linear term); raises Not_a_clock_guard if the linear_inequality is not a proper clock guard x ~ plterm *)
 (*------------------------------------------------------------*)
-val clock_guard_of_linear_inequality : pxd_linear_inequality -> (variable * op * p_linear_term)
+val clock_guard_of_linear_inequality : pxd_linear_inequality -> (Automaton.clock_index * op * p_linear_term)
 
 
 (** Convert a linear inequality into a string *)
@@ -243,6 +252,7 @@ val partition_lu : variable list -> pxd_linear_constraint list -> (variable list
 (** Check if a constraint is false *)
 (* val is_false : linear_constraint -> bool *)
 val p_is_false : p_linear_constraint -> bool
+val pxd_is_false : pxd_linear_constraint -> bool
 
 (** Check if a constraint is true *)
 (* val is_true : linear_constraint -> bool *)
@@ -259,13 +269,36 @@ val pxd_is_satisfiable : pxd_linear_constraint -> bool
 (* val is_equal : linear_constraint -> linear_constraint -> bool *)
 val p_is_equal : p_linear_constraint -> p_linear_constraint -> bool
 val px_is_equal : px_linear_constraint -> px_linear_constraint -> bool
+val pxd_is_equal : pxd_linear_constraint -> pxd_linear_constraint -> bool
 
 (** Check if a constraint is included in another one *)
 val p_is_leq : p_linear_constraint -> p_linear_constraint -> bool
 val px_is_leq : px_linear_constraint -> px_linear_constraint -> bool
+val pxd_is_leq : pxd_linear_constraint -> pxd_linear_constraint -> bool
 
-(** Check if a variable v is bound to be >= 0 in a constraint c *)
+(** Check if a variable is bound to be >= 0 in a constraint *)
 val px_is_positive_in : variable -> px_linear_constraint -> bool
+
+(** Check if a variable is bound to be = 0 in a constraint *)
+val px_is_zero_in : variable -> px_linear_constraint -> bool
+
+(** Check if a variable is bound to be = 0 in a constraint *)
+val pxd_is_zero_in : variable -> pxd_linear_constraint -> bool
+
+(** Check if a variable is bounded from above in a constraint *)
+(*** WARNING: in an equality x <= p, x is NOT considered to be bounded (when p is not itself) ***)
+val px_is_bounded_from_above_in : variable -> px_linear_constraint -> bool
+
+(** Check if a variable is bounded from above in a constraint *)
+(*** WARNING: in an equality x <= p, x is NOT considered to be bounded (when p is not itself) ***)
+val pxd_is_bounded_from_above_in : variable -> pxd_linear_constraint -> bool
+
+(*------------------------------------------------------------*)
+(** Return the parametric linear term which is the upper bound of the clock x in a px_linear_constraint; return None if no upper bound *)
+(*** NOTE: we asssume that all inequalities are of the form x \sim plt, and that a single inequality constrains x as an upper bound. Raises Not_a_clock_guard otherwise ***)
+(*------------------------------------------------------------*)
+val clock_upper_bound_in : Automaton.clock_index -> px_linear_constraint -> p_linear_term option
+
 
 (** Check if a constraint contains an integer point *)
 val px_contains_integer_point : px_linear_constraint -> bool
@@ -345,13 +378,13 @@ val pxd_time_elapse_assign : variable list -> variable list -> pxd_linear_constr
 (** Time elapsing function, in backward direction (corresponds to the "past" operation in, e.g., [JLR15]) *)
 val pxd_time_past_assign : variable list -> variable list -> pxd_linear_constraint -> unit
 
-(** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
+(*(** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
 (** TODO: describe better *)
-val grow_to_infinity_assign : variable list -> variable list -> p_linear_constraint -> unit
+val p_grow_to_infinity_assign : variable list -> variable list -> p_linear_constraint -> unit
 
 (** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
 (** TODO: describe better *)
-val grow_to_zero_assign : variable list -> variable list -> p_linear_constraint -> unit
+val p_grow_to_zero_assign : variable list -> variable list -> p_linear_constraint -> unit*)
 
 
 (** Replace all strict inequalities with non-strict (and keeps others unchanged) within a p_linear_constraint *)
@@ -386,6 +419,7 @@ val pxd_of_px_constraint : px_linear_constraint -> pxd_linear_constraint
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** "cast_p_of_pxd_linear_term p c" converts a PXD-term p to a P-term ; if c then a test if performed to check casting validity *)
+(*** WARNING: in fact, for now NO TEST IS EVER PERFORMED ***)
 val cast_p_of_pxd_linear_term : pxd_linear_term -> bool -> p_linear_term
 val cast_p_of_pxd_linear_constraint : pxd_linear_constraint -> bool -> p_linear_constraint
 
@@ -558,8 +592,8 @@ val string_of_p_convex_or_nonconvex_constraint : (variable -> string) -> p_conve
 val serialize_variable : variable -> string
 val unserialize_variable : string -> variable
 
-val serialize_linear_constraint : p_linear_constraint -> string
-val unserialize_linear_constraint : string -> p_linear_constraint
+(*val serialize_p_linear_constraint : p_linear_constraint -> string
+val unserialize_p_linear_constraint : string -> p_linear_constraint*)
 
 val serialize_p_nnconvex_constraint : p_nnconvex_constraint -> string
 val unserialize_p_nnconvex_constraint : string -> p_nnconvex_constraint
@@ -578,3 +612,51 @@ val unserialize_p_convex_or_nonconvex_constraint : string -> p_convex_or_nonconv
 (** {2 Tests} *)
 (************************************************************)
 val test_PDBMs : unit -> unit
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Gia's function for CUB **)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*for linear term*)
+val operator2string : op -> string
+
+(*
+val get_coefs_vars : p_linear_term -> (variable*coef) list
+*)
+
+(*
+type smaller_term =
+	| NotDetermine (*not determined*)
+	| First
+	| Second
+
+(*for linear term*)
+val isComparable_linear_terms : p_linear_term -> p_linear_term -> (bool*smaller_term)
+
+val isComparable_linear_terms_2 : p_linear_term -> p_linear_term -> p_linear_constraint
+(* val get_coefficient_in_linear_term : Ppl.linear_expression -> NumConst.t   *) 
+
+*)
+
+
+
+type smaller_term =
+	| NotDetermine (*not determined*)
+	| First
+	| Second
+
+(*for linear term*)
+(*val isSmaller : p_linear_term -> p_linear_term -> (bool*smaller_term)*)
+val isSmaller : p_linear_term -> p_linear_term -> smaller_term
+
+(*
+val isComparable_linear_terms : p_linear_term -> p_linear_term -> (bool*smaller_term)
+*)
+
+(*
+val isComparable_linear_terms_2 : p_linear_term -> p_linear_term -> p_linear_constraint
+(* val get_coefficient_in_linear_term : Ppl.linear_expression -> NumConst.t   *) 
+*)
+
+

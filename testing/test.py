@@ -10,7 +10,7 @@
 # 
 # File contributors : Étienne André
 # Created           : 2012/05/??
-# Last modified     : 2016/03/23
+# Last modified     : 2017/02/10
 #************************************************************
 
 
@@ -23,6 +23,14 @@ import os
 import sys
 import subprocess
 
+
+# To output colored text
+class bcolors:
+	ERROR	= '\033[91m'
+	BOLD	= '\033[1m'
+	GOOD	= '\033[1;32;40m'
+	NORMAL	= '\033[0m'
+	WARNING	= '\033[93m'
 
 
 #************************************************************
@@ -89,7 +97,7 @@ def print_to_screen(content):
 	sys.stdout = logfile
 
 # Print text both to log file and to screen
-# NOTE: can probably do better...
+# NOTE: can probably do better…
 def print_to_screen_and_log(content):
 	# Print to log
 	print_to_log(content)
@@ -112,7 +120,7 @@ def test(binary_name, tests, logfile, logfile_name):
 		fail_with('Binary ' + binary + ' does not exist')
 		all_files_ok = False
 		
-	print_to_screen('# TESTING BINARY ' + binary_name)
+	print_to_screen(bcolors.BOLD + '# TESTING BINARY ' + binary_name + bcolors.NORMAL)
 
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# TEST CASES
@@ -136,9 +144,9 @@ def test(binary_name, tests, logfile, logfile_name):
 		print_to_log('')
 		print_to_log('############################################################')
 		print_to_log(' BENCHMARK ' + str(benchmark_id))
-		print_to_log(' purpose : ' + test_case['purpose'])
+		print_to_log(' purpose: ' + test_case['purpose'])
 		print_to_log('')
-		print_to_screen(' Benchmark ' + str(benchmark_id) + " : " + test_case['purpose'] + "...")
+		print_to_screen(' Benchmark ' + str(benchmark_id) + ": " + test_case['purpose'] + "…")
 
 		# Add the path to all input files
 		cmd_inputs = []
@@ -148,7 +156,7 @@ def test(binary_name, tests, logfile, logfile_name):
 		
 		
 		#------------------------------------------------------------
-		# NOTE: complicated 'if' in case of distributed...
+		# NOTE: complicated 'if' in case of distributed…
 		cmd = ''
 		
 		# Case 1: distributed: binary = mpiexec, options = all the rest including IMITATOR binary
@@ -231,7 +239,7 @@ def test(binary_name, tests, logfile, logfile_name):
 		if passed:
 			passed_benchmarks += 1
 		else:
-			print_to_screen("FAILED!")
+			print_to_screen(bcolors.ERROR + "FAILED!" + bcolors.NORMAL)
 
 		# Increment the benchmark id
 		benchmark_id += 1
@@ -245,7 +253,7 @@ def test(binary_name, tests, logfile, logfile_name):
 	print_to_log('')
 	print_to_log('############################################################')
 
-	# NOTE: ugly...
+	# NOTE: ugly…
 	total_benchmarks = benchmark_id - 1
 	total_test_cases = test_case_id - 1
 
@@ -253,11 +261,32 @@ def test(binary_name, tests, logfile, logfile_name):
 		print_to_screen_and_log('All benchmarks (' + str(passed_benchmarks) + '/' + str(total_benchmarks) + ') passed successfully.')
 		print_to_screen_and_log('All test cases (' + str(passed_test_cases) + '/' + str(total_test_cases) + ') passed successfully.')
 	else:
-		print_to_screen_and_log('WARNING! Some tests failed.')
-		print_to_screen_and_log('' + str(passed_benchmarks) + '/' + str(total_benchmarks) + ' benchmarks passed successfully.')
-		print_to_screen_and_log('' + str(total_benchmarks - passed_benchmarks) + '/' + str(total_benchmarks) + ' benchmarks failed.')
-		print_to_screen_and_log('' + str(passed_test_cases) + '/' + str(total_test_cases) + ' test cases passed successfully.')
-		print_to_screen_and_log('' + str(total_test_cases - passed_test_cases) + '/' + str(total_test_cases) + ' test cases failed.')
+		print_to_screen(bcolors.WARNING + 'WARNING! Some tests failed.' + bcolors.NORMAL)
+		print_to_log('WARNING! Some tests failed.')
+		
+		if(passed_benchmarks == total_benchmarks):
+			print_to_screen(bcolors.GOOD + '' + str(passed_benchmarks) + '/' + str(total_benchmarks) + ' benchmarks passed successfully.' + bcolors.NORMAL)
+		else:
+			print_to_screen(bcolors.WARNING + '' + str(passed_benchmarks) + '/' + str(total_benchmarks) + ' benchmarks passed successfully.' + bcolors.NORMAL)
+		print_to_log('' + str(passed_benchmarks) + '/' + str(total_benchmarks) + ' benchmarks passed successfully.')
+	
+		if passed_benchmarks < total_benchmarks:
+			print_to_screen(bcolors.ERROR + '' + str(total_benchmarks - passed_benchmarks) + '/' + str(total_benchmarks) + ' benchmarks failed.' + bcolors.NORMAL)
+		else:
+			print_to_screen('' + str(total_benchmarks - passed_benchmarks) + '/' + str(total_benchmarks) + ' benchmarks failed.')
+		print_to_log('' + str(total_benchmarks - passed_benchmarks) + '/' + str(total_benchmarks) + ' benchmarks failed.')
+		
+		if passed_test_cases == total_test_cases:
+			print_to_screen(bcolors.GOOD + '' + str(passed_test_cases) + '/' + str(total_test_cases) + ' test cases passed successfully.' + bcolors.NORMAL)
+		else:
+			print_to_screen(bcolors.WARNING + '' + str(passed_test_cases) + '/' + str(total_test_cases) + ' test cases passed successfully.' + bcolors.NORMAL)
+		print_to_log('' + str(passed_test_cases) + '/' + str(total_test_cases) + ' test cases passed successfully.')
+	
+		if passed_test_cases < total_test_cases:
+			print_to_screen(bcolors.ERROR + '' + str(total_test_cases - passed_test_cases) + '/' + str(total_test_cases) + ' test cases failed.' + bcolors.NORMAL)
+		else:
+			print_to_screen('' + str(total_test_cases - passed_test_cases) + '/' + str(total_test_cases) + ' test cases failed.')
+		print_to_log('' + str(total_test_cases - passed_test_cases) + '/' + str(total_test_cases) + ' test cases failed.')
 
 	print_to_screen('(See ' + logfile_name + ' for details.)')
 
@@ -269,7 +298,8 @@ def test(binary_name, tests, logfile, logfile_name):
 
 #print '*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-'
 print_to_screen_and_log('############################################################')
-print_to_screen_and_log(' TESTATOR                                              v0.1')
+print_to_screen(bcolors.BOLD + ' TESTATOR' + bcolors.NORMAL + '                                              v0.1')
+print_to_log(' TESTATOR' + '                                              v0.1')
 print_to_screen_and_log('')
 print_to_screen_and_log(' Étienne André')
 print_to_screen_and_log(' LIPN, Université Paris 13, Sorbonne Paris Cité (France)')
@@ -313,6 +343,6 @@ test(DISTRIBUTED_BINARY_NAME, tests_distr + tests, logfile, DISTRIBUTED_LOGFILE)
 #************************************************************
 
 print_to_screen_and_log('')
-print_to_screen_and_log('...The end of TESTATOR!')
+print_to_screen_and_log('…The end of TESTATOR!')
 
 sys.exit(0)

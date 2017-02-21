@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/04
- * Last modified     : 2016/04/01
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -52,30 +52,46 @@ class virtual algoBCCoverDistributed =
 	(*** NOTE: this should be a parameter of the class; but cannot due to inheritance from AlgoGeneric ***)
 	val mutable algo_instance_function = None
 	
+	(*** BADPROG: code shared with AlgoCartoGeneric ***)
+	(* The type of the tiles manager *)
+	(*** NOTE: must be initialized first (and should be in the future passed as a class paramater) ***)
+	val mutable tiles_manager_type : AlgoCartoGeneric.tiles_storage option = None
 		
 	
 	(************************************************************)
 	(* Class methods to simulate class parameters *)
 	(************************************************************)
 	
-	(*** BADPROG: code shared with AlgoBCCoverDistributedMSPointBased ***)
+	(*** BADPROG: code shared with AlgoCartoGeneric ***)
 	(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-	method set_algo_instance_function (f : unit -> AlgoIMK.algoIMK) : unit =
+	method set_algo_instance_function (f : unit -> AlgoBFS.algoBFS) : unit =
 		match algo_instance_function with
 		| Some _ -> 
-			raise (InternalError("algo_instance_function was already set in algoBCCoverDistributedMSPointBased."))
+			raise (InternalError("algo_instance_function was already set in algoBCCoverDistributed."))
 		| None ->
 			algo_instance_function <- Some f
 	
-	(*** BADPROG: code shared with AlgoBCCoverDistributedMSPointBased ***)
+	(*** BADPROG: code shared with AlgoCartoGeneric ***)
 	(* Get the function creating a new instance of the algorithm to call (typically IM or PRP) *)
 	method get_algo_instance_function =
 		match algo_instance_function with
 		| Some f -> f
 		| None ->
-			raise (InternalError("algo_instance_function not yet set in algoBCCoverDistributedMSPointBased."))
+			raise (InternalError("algo_instance_function not yet set in algoBCCoverDistributed."))
 
-			
+	(*** BADPROG: code shared with AlgoCartoGeneric ***)
+	(* Set the tiles_manager type *)
+	method set_tiles_manager_type new_tiles_manager_type =
+		tiles_manager_type <- Some new_tiles_manager_type
+
+	(*** BADPROG: code shared with AlgoCartoGeneric ***)
+	(* Get the tiles_manager type *)
+	method get_tiles_manager_type =
+	match tiles_manager_type with
+		| Some t -> t
+		| None -> raise (InternalError("tiles_manager_type not yet set in algoBCCoverDistributed."))
+
+
 	(************************************************************)
 	(* Class methods *)
 	(************************************************************)
@@ -87,7 +103,7 @@ class virtual algoBCCoverDistributed =
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Run IM and return an abstract_im_result *)
+	(* Run IM and return an abstract_point_based_result *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run_im pi0 patator_termination_function_option =
 		(* Create instance of the algorithm to be called *)
@@ -133,19 +149,18 @@ class virtual algoBCCoverDistributed =
 		
 		self#print_algo_message Verbose_low ("Finished a computation of " ^ (algo#algorithm_name) ^ ".");
 		
-		(* Checking the result type *)
-		let im_result = match imitator_result with
+		(* Checking the result type, and computing abstraction *)
+		let abstract_point_based_result = match imitator_result with
 			(* Result for IM, IMK, IMunion *)
-			| IM_result im_result -> im_result
+			| Single_synthesis_result single_synthesis_result -> AlgoCartoGeneric.abstract_point_based_result_of_single_synthesis_result single_synthesis_result pi0
+			(* Result for IM, IMK, IMunion *)
+			| Point_based_result point_based_result -> AlgoCartoGeneric.abstract_point_based_result_of_point_based_result point_based_result pi0
 			(* Other *)
-			| _ -> raise (InternalError("An im_result is expected as an output of the execution of " ^ algo#algorithm_name ^ "."))
+			| _ -> raise (InternalError("A point_based_result is expected as an output of the execution of " ^ algo#algorithm_name ^ "."))
 		in
 		
-		(* Abstracting the result *)
-		let abstract_im_result = AlgoCartoGeneric.abstract_im_result_of_im_result im_result pi0 in
-		
 		(* Return the abstract result *)
-		abstract_im_result
+		abstract_point_based_result
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

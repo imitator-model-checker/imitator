@@ -1,0 +1,81 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Fig. 5 in [JLR15]
+ *
+ * Description     : Fig.5 in "Integer Parameter Synthesis for Real-Time Systems" by Aleksandra Jovanovic, Didier Lime and Olivier H. Roux. TSE, 2015.
+ * Correctness     : AF(l1, l2)
+ * Source          : [JLR15]
+ * Author          : [JLR15]
+ * Modeling        : [JLR15]
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2016/10/21
+ * Last modified   : 2016/10/21
+ *
+ * IMITATOR version: 2.8
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x
+		: clock;
+
+(* Parameters *)
+	a
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l0: while True wait {}
+	when x >= 2 & x <= a goto l1;
+	when x >= 0 goto l2;
+
+loc l1: while True wait {}
+
+loc l2: while True wait {}
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l0
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& a >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* property := AF( loc[pta] = l1 or loc[pta] = l2); *)
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

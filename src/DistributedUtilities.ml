@@ -1,27 +1,28 @@
-(*****************************************************************
+(************************************************************
  *
  *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
  * 
- * Author:        Etienne Andre, Camille Coti
+ * Module description: All common functions needed for the interface with MPI
  * 
- * Created:       2014/03/24
- * Last modified: 2016/05/09
+ * File contributors : Étienne André, Camille Coti
+ * Created           : 2014/03/24
+ * Last modified     : 2017/02/08
  *
- ****************************************************************)
+ ************************************************************)
+ 
 
-
-(**************************************************)
+(************************************************************)
 (* External modules *)
-(**************************************************)
+(************************************************************)
 open Mpi
 
 
-(**************************************************)
+(************************************************************)
 (* Internal modules *)
-(**************************************************)
+(************************************************************)
 open AbstractModel
 open Exceptions
 open OCamlUtilities
@@ -29,15 +30,15 @@ open ImitatorUtilities
 open Result
 
 
-(****************************************************************)
+(************************************************************)
 (** Public types *)
-(****************************************************************)
+(************************************************************)
 type rank = int
 
 (** Tags sent by workers *)
 type pull_request =
 	| PullOnly of rank
-	| Tile of rank * Result.abstract_im_result
+	| Tile of rank * Result.abstract_point_based_result
 	| OutOfBound of rank
 	(* Subdomain tags *)
 (* 	| Tiles of rank * (Result.abstract_im_result list) *)
@@ -52,7 +53,7 @@ type work_assignment =
 	| Stop
 	(* Subdomain tags *)
 	| Subdomain of HyperRectangle.hyper_rectangle
-	| TileUpdate of Result.abstract_im_result
+	| TileUpdate of Result.abstract_point_based_result
 	| Terminate
 	| Continue
 
@@ -61,9 +62,9 @@ type pi0_list = (Automaton.variable_index * NumConst.t) list
 
 
 
-(****************************************************************)
+(************************************************************)
 (** Private types *)
-(****************************************************************)
+(************************************************************)
 (** Tags sent by slave *)
 type mpi_slave_tag =
 	| Slave_tile_tag (*Tile tag or constraint K*)
@@ -89,9 +90,9 @@ type mpi_master_tag =
 
 
 
-(****************************************************************)
+(************************************************************)
 (** Constants *)
-(****************************************************************)
+(************************************************************)
 (* Who is the master? (in a master-worker algorithm) *)
 let master_rank = 0
 
@@ -99,9 +100,9 @@ let master_rank = 0
 let coordinator_rank = 0
 
 
-(****************************************************************)
+(************************************************************)
 (** Serialization Functions *)
-(****************************************************************)
+(************************************************************)
 (*------------------------------------------------------------*)
 (* General *)
 (*------------------------------------------------------------*)
@@ -296,7 +297,7 @@ let serialize_constraint_soundness = function
 	(* Impossible to compare the constraint with the original result *)
 	| Result.Constraint_maybe_invalid -> "I"
 	
-	| Result.Constraint_under_over -> raise (InternalError("BC is not suppose to handle under/over-approximations"))
+(* 	| Result.Constraint_under_over -> raise (InternalError("BC is not suppose to handle under/over-approximations")) *)
 	
 
 let unserialize_constraint_soundness = function
@@ -349,6 +350,73 @@ let unserialize_returned_constraint returned_constraint_string =
 	in result 
 	*)
 
+
+let serialize_good_or_bad_constraint = function
+	(* Only good valuations *)
+	| Good_constraint (p_nnconvex_constraint, constraint_soundness) ->
+		"G" ^ serialize_SEP_PAIR ^ (LinearConstraint.serialize_p_nnconvex_constraint p_nnconvex_constraint) ^ serialize_SEP_PAIR ^ (serialize_constraint_soundness constraint_soundness)
+	
+	(* Only bad valuations *)
+	| Bad_constraint (p_nnconvex_constraint, constraint_soundness) ->
+		"B" ^ serialize_SEP_PAIR ^ (LinearConstraint.serialize_p_nnconvex_constraint p_nnconvex_constraint) ^ serialize_SEP_PAIR ^ (serialize_constraint_soundness constraint_soundness)
+	
+	(* Both good and bad valuations *)
+	| Good_bad_constraint good_and_bad_constraint ->
+		let good_p_nnconvex_constraint, good_soundness = good_and_bad_constraint.good in
+		let bad_p_nnconvex_constraint, bad_soundness = good_and_bad_constraint.bad in
+		(* 'M' stands (quite arbitrarily) for mixed *)
+		"M" ^
+		serialize_SEP_PAIR ^ (LinearConstraint.serialize_p_nnconvex_constraint good_p_nnconvex_constraint) ^ serialize_SEP_PAIR ^ (serialize_constraint_soundness good_soundness)
+		^
+		serialize_SEP_PAIR ^ (LinearConstraint.serialize_p_nnconvex_constraint bad_p_nnconvex_constraint) ^ serialize_SEP_PAIR ^ (serialize_constraint_soundness bad_soundness)
+
+
+let unserialize_good_or_bad_constraint good_or_bad_constraint_str =
+	(* First check that testing the first letter has a meaning *)
+	if String.length good_or_bad_constraint_str < 1 then
+		raise (SerializationError ("Cannot unserialize an empty good_or_bad_constraint_str '" ^ good_or_bad_constraint_str ^ "'"));
+	
+	(* Separate between the initial flag and the rest of the structure *)
+	let first_char = good_or_bad_constraint_str.[0] in
+	let rest = String.sub good_or_bad_constraint_str 1 (String.length good_or_bad_constraint_str - 1) in
+	
+	match first_char with
+	(* Good constraint *)
+	| 'G' ->
+		let p_nnconvex_constraint, constraint_soundness =
+		match split serialize_SEP_PAIR rest with
+			| [p_nnconvex_constraint_str; constraint_soundness_str] -> LinearConstraint.unserialize_p_nnconvex_constraint p_nnconvex_constraint_str, unserialize_constraint_soundness constraint_soundness_str
+			| _ -> raise (SerializationError ("Cannot unserialize (good) good_or_bad_constraint_str '" ^ good_or_bad_constraint_str ^ "'."))
+		in
+		Good_constraint (p_nnconvex_constraint, constraint_soundness)
+		
+	(* Bad constraint *)
+	| 'B' ->
+		let p_nnconvex_constraint, constraint_soundness =
+		match split serialize_SEP_PAIR rest with
+			| [p_nnconvex_constraint_str; constraint_soundness_str] -> LinearConstraint.unserialize_p_nnconvex_constraint p_nnconvex_constraint_str, unserialize_constraint_soundness constraint_soundness_str
+			| _ -> raise (SerializationError ("Cannot unserialize (bad) good_or_bad_constraint_str '" ^ good_or_bad_constraint_str ^ "'."))
+		in
+		Bad_constraint (p_nnconvex_constraint, constraint_soundness)
+
+	(* Good and bad constraint *)
+	| 'M' ->
+	let good_p_nnconvex_constraint, good_constraint_soundness, bad_p_nnconvex_constraint, bad_constraint_soundness =
+		match split serialize_SEP_PAIR rest with
+			| [good_p_nnconvex_constraint_str; good_constraint_soundness_str; bad_p_nnconvex_constraint_str; bad_constraint_soundness_str] ->
+				LinearConstraint.unserialize_p_nnconvex_constraint good_p_nnconvex_constraint_str, unserialize_constraint_soundness good_constraint_soundness_str,
+				LinearConstraint.unserialize_p_nnconvex_constraint bad_p_nnconvex_constraint_str, unserialize_constraint_soundness bad_constraint_soundness_str
+			| _ -> raise (SerializationError ("Cannot unserialize (good/bad) good_or_bad_constraint_str '" ^ good_or_bad_constraint_str ^ "'."))
+		in
+		Good_bad_constraint {
+			good	= good_p_nnconvex_constraint, good_constraint_soundness;
+			bad		= bad_p_nnconvex_constraint, bad_constraint_soundness;
+		}
+	
+	| _ -> raise (InternalError ("Cannot find initial flag while unserializing good_or_bad_constraint_str '" ^ good_or_bad_constraint_str ^ "'"))
+
+
+
 let serialize_abstract_state_space abstract_state_space =
 	(* Number of states *)
 	(string_of_int abstract_state_space.nb_states)
@@ -370,65 +438,65 @@ let unserialize_abstract_state_space abstract_state_space_string =
 	| _ -> raise (SerializationError ("Cannot unserialize abstract_state_space_string value '" ^ abstract_state_space_string ^ "'."))
 
 
-let serialize_abstract_im_result abstract_im_result =
+let serialize_abstract_point_based_result abstract_point_based_result =
 	(* Reference valuation *)
-	(serialize_pi0 abstract_im_result.reference_val)
+	(serialize_pi0 abstract_point_based_result.reference_val)
 	^
 	serialize_SEP_STRUCT
 	^
-	(* Convex constraint *)
-	(LinearConstraint.serialize_p_convex_or_nonconvex_constraint abstract_im_result.result)
+	(* Serialize the good_or_bad_constraint *)
+	(serialize_good_or_bad_constraint abstract_point_based_result.result)
 	^
 	serialize_SEP_STRUCT
 	^
 	(* Abstracted version of the explored state space *)
-	(serialize_abstract_state_space abstract_im_result.abstract_state_space)
+	(serialize_abstract_state_space abstract_point_based_result.abstract_state_space)
 	^
 	serialize_SEP_STRUCT
 	^
-	(* Nature of the state space *)
-	(serialize_statespace_nature abstract_im_result.statespace_nature)
+(*	(* Nature of the state space *)
+	(serialize_statespace_nature abstract_point_based_result.statespace_nature)
 	^
 	serialize_SEP_STRUCT
 	^
 	(* Number of random selections of pi-incompatible inequalities performed *)
-	(string_of_int abstract_im_result.nb_random_selections)
+	(string_of_int abstract_point_based_result.nb_random_selections)
 	^
 	serialize_SEP_STRUCT
-	^
+	^*)
 	(* Total computation time of the algorithm *)
-	(string_of_float abstract_im_result.computation_time)
+	(string_of_float abstract_point_based_result.computation_time)
 	^
 	serialize_SEP_STRUCT
 	^
-	(* Soundness of the result *)
-	(serialize_constraint_soundness abstract_im_result.soundness)
+(*	(* Soundness of the result *)
+	(serialize_constraint_soundness abstract_point_based_result.soundness)
 	^
 	serialize_SEP_STRUCT
-	^
+	^*)
 	(* Termination *)
-	(serialize_bfs_algorithm_termination abstract_im_result.termination)
+	(serialize_bfs_algorithm_termination abstract_point_based_result.termination)
 
 
 
 
-let unserialize_abstract_im_result abstract_im_result_string =
+let unserialize_abstract_point_based_result abstract_point_based_result_string =
 
-	print_message Verbose_high ( "[Master] About to unserialize '" ^ abstract_im_result_string ^ "'");
-	let reference_val_str, result_str, abstract_state_space_str, statespace_nature_str, nb_random_selections_str , computation_time_str, soundness_str, termination_str =
-	match split serialize_SEP_STRUCT abstract_im_result_string with
-		| [reference_val_str; result_str; abstract_state_space_str; statespace_nature_str; nb_random_selections_str ; computation_time_str; soundness_str; termination_str ]
-			-> reference_val_str, result_str, abstract_state_space_str, statespace_nature_str, nb_random_selections_str , computation_time_str, soundness_str, termination_str
-		| _ -> raise (SerializationError ("Cannot unserialize im_result '" ^ abstract_im_result_string ^ "'."))
+	print_message Verbose_high ( "[Master] About to unserialize '" ^ abstract_point_based_result_string ^ "'");
+	let reference_val_str, result_str, abstract_state_space_str, (*statespace_nature_str, nb_random_selections_str , *)computation_time_str, (*soundness_str, *)termination_str =
+	match split serialize_SEP_STRUCT abstract_point_based_result_string with
+		| [reference_val_str; result_str; abstract_state_space_str; (*statespace_nature_str; nb_random_selections_str ; *)computation_time_str; (*soundness_str; *)termination_str ]
+			-> reference_val_str, result_str, abstract_state_space_str, (*statespace_nature_str, nb_random_selections_str , *)computation_time_str, (*soundness_str, *)termination_str
+		| _ -> raise (SerializationError ("Cannot unserialize im_result '" ^ abstract_point_based_result_string ^ "'."))
 	in
 	{
 		reference_val 			= unserialize_pi0 reference_val_str;
-		result 					= LinearConstraint.unserialize_p_convex_or_nonconvex_constraint result_str;
+		result 					= unserialize_good_or_bad_constraint result_str;
 		abstract_state_space 	= unserialize_abstract_state_space abstract_state_space_str;
-		statespace_nature		= unserialize_statespace_nature statespace_nature_str;
-		nb_random_selections	= int_of_string nb_random_selections_str;
+(* 		statespace_nature		= unserialize_statespace_nature statespace_nature_str; *)
+(* 		nb_random_selections	= int_of_string nb_random_selections_str; *)
 		computation_time		= float_of_string computation_time_str;
-		soundness				= unserialize_constraint_soundness soundness_str;
+(* 		soundness				= unserialize_constraint_soundness soundness_str; *)
 		termination				= unserialize_bfs_algorithm_termination termination_str;
 	}
 
@@ -460,6 +528,8 @@ let unserialize_bc_termination  = function
 let serialize_bc_coverage = function
 	(* Full coverage in all dimensions, including rational points *)
 	| Coverage_full -> "F"
+	(* No constraint computed at all *)
+	| Coverage_empty -> "E"
 	(* At least all integers are covered, rationals perhaps not *)
 	| Coverage_integer_complete -> "I"
 	(* No indication of coverage *)
@@ -467,20 +537,21 @@ let serialize_bc_coverage = function
 
 let unserialize_bc_coverage = function
 	| "F" -> Coverage_full
+	| "E" -> Coverage_empty
 	| "I" -> Coverage_integer_complete
 	| "U" -> Coverage_unknown
 	| other -> raise (InternalError ("Impossible match '" ^ other ^ "' in unserialize_bc_coverage."))
 
 	
-(** Serialize a list of abstract_im_result *)
-let serialize_abstract_im_result_list abstract_im_result_list =
-	String.concat serialize_SEP_LIST_IMRESULT (List.map serialize_abstract_im_result abstract_im_result_list)
+(** Serialize a list of abstract_point_based_result *)
+let serialize_abstract_point_based_result_list abstract_point_based_result_list =
+	String.concat serialize_SEP_LIST_IMRESULT (List.map serialize_abstract_point_based_result abstract_point_based_result_list)
 
 
 (** Unserialize a list of im_result *)
-let unserialize_abstract_im_result_list abstract_im_result_list_string =
+let unserialize_abstract_point_based_result_list abstract_point_based_result_list_string =
 	(* Retrieve the list of im_result *)
-	let split_list = split serialize_SEP_LIST_IMRESULT abstract_im_result_list_string in
+	let split_list = split serialize_SEP_LIST_IMRESULT abstract_point_based_result_list_string in
 	
 (*	(* DEBUG *)
 	print_string "\n**********";
@@ -492,59 +563,59 @@ let unserialize_abstract_im_result_list abstract_im_result_list_string =
 	) split_list;
 	print_string "\n**********";*)
 	
-	List.map unserialize_abstract_im_result split_list
+	List.map unserialize_abstract_point_based_result split_list
 
 
 
 
-let serialize_bc_result bc_result =
+let serialize_cartography_result (cartography_result : Result.cartography_result) : string =
 	(* Number of points in V0 *)
-	(serialize_numconst bc_result.size_v0)
+	(serialize_numconst cartography_result.size_v0)
 	^
 	serialize_SEP_SUPER_STRUCT
 	^
 	(* List of tiles *)
-	(serialize_abstract_im_result_list bc_result.tiles)
+	(serialize_abstract_point_based_result_list cartography_result.tiles)
 	^
 	serialize_SEP_SUPER_STRUCT
 	^
 	(* Total computation time of the algorithm *)
-	(string_of_float bc_result.computation_time)
+	(string_of_float cartography_result.computation_time)
 	^
 	serialize_SEP_SUPER_STRUCT
 	^
-	(* Computation time to look for points *)
-	(string_of_float bc_result.find_point_time)
+(*	(* Computation time to look for points *)
+	(string_of_float cartography_result.find_point_time)
 	^
 	serialize_SEP_SUPER_STRUCT
-	^
+	^*)
 	(* Number of points on which IM could not be called because already covered *)
-	(string_of_int bc_result.nb_unsuccessful_points)
+	(string_of_int cartography_result.nb_unsuccessful_points)
 	^
 	serialize_SEP_SUPER_STRUCT
 	^
 	(* Evaluation of the coverage of V0 by tiles computed by the cartography *)
-	(serialize_bc_coverage bc_result.coverage)
+	(serialize_bc_coverage cartography_result.coverage)
 	^
 	serialize_SEP_SUPER_STRUCT
 	^
 	(* Termination *)
-	(serialize_bc_termination bc_result.termination)
+	(serialize_bc_termination cartography_result.termination)
 
 
-let unserialize_bc_result bc_result_string =
-	print_message Verbose_high ("[Coordinator] About to unserialize '" ^ bc_result_string ^ "'");
-	let size_v0_str, tiles_str, computation_time_str, find_point_time_str, nb_unsuccessful_points_str , coverage_str, termination_str =
-	match split serialize_SEP_SUPER_STRUCT bc_result_string with
-		| [size_v0_str; tiles_str; computation_time_str; find_point_time_str; nb_unsuccessful_points_str ; coverage_str; termination_str ]
-			-> size_v0_str, tiles_str, computation_time_str, find_point_time_str, nb_unsuccessful_points_str , coverage_str, termination_str
-		| _ -> raise (SerializationError ("Cannot unserialize im_result '" ^ bc_result_string ^ "'."))
+let unserialize_cartography_result (cartography_result_string : string) : Result.cartography_result =
+	print_message Verbose_high ("[Coordinator] About to unserialize '" ^ cartography_result_string ^ "'");
+	let size_v0_str, tiles_str, computation_time_str, (*find_point_time_str, *)nb_unsuccessful_points_str , coverage_str, termination_str =
+	match split serialize_SEP_SUPER_STRUCT cartography_result_string with
+		| [size_v0_str; tiles_str; computation_time_str; (*find_point_time_str; *)nb_unsuccessful_points_str ; coverage_str; termination_str ]
+			-> size_v0_str, tiles_str, computation_time_str, (*find_point_time_str, *)nb_unsuccessful_points_str , coverage_str, termination_str
+		| _ -> raise (SerializationError ("Cannot unserialize im_result '" ^ cartography_result_string ^ "'."))
 	in
 	{
 		size_v0 				= NumConst.numconst_of_string size_v0_str;
-		tiles 					= unserialize_abstract_im_result_list tiles_str;
+		tiles 					= unserialize_abstract_point_based_result_list tiles_str;
 		computation_time		= float_of_string computation_time_str;
-		find_point_time 		= float_of_string find_point_time_str;
+(* 		find_point_time 		= float_of_string find_point_time_str; *)
 		nb_unsuccessful_points	= int_of_string nb_unsuccessful_points_str;
 		coverage				= unserialize_bc_coverage coverage_str;
 		termination				= unserialize_bc_termination termination_str;
@@ -700,9 +771,9 @@ test_serialization();
 abort_program();;*)
 	
 
-(****************************************************************)
+(************************************************************)
 (** MPI Functions *)
-(****************************************************************)
+(************************************************************)
 (*** NOTE: le "ref 1" ne signifie rien du tout ***)
 let weird_stuff() = ref 1
 
@@ -757,9 +828,9 @@ let master_tag_of_int = function
 
 
 
-(****************************************************************)
+(************************************************************)
 (** Public access functions *)
-(****************************************************************)
+(************************************************************)
 
 let get_nb_nodes () = Mpi.comm_size Mpi.comm_world
 let get_rank () = Mpi.comm_rank Mpi.comm_world
@@ -790,7 +861,7 @@ let send_serialized_data recipient tag serialized_data =
 	let data_size = String.length serialized_data in
 
 	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("[Node " ^ (string_of_int rank) ^ "] Serialized abstract_im_result '" ^ serialized_data ^ "'");
+		print_message Verbose_high ("[Node " ^ (string_of_int rank) ^ "] Serialized abstract_point_based_result '" ^ serialized_data ^ "'");
 	);
 	
 	(* Send the result: 1st send the data size, then the data *)
@@ -799,37 +870,25 @@ let send_serialized_data recipient tag serialized_data =
 	Mpi.send serialized_data recipient tag Mpi.comm_world
 
 
-let send_abstract_im_result abstract_im_result =
+let send_abstract_point_based_result abstract_point_based_result =
 	(* For information purpose *)
 	let rank = get_rank() in
 
-	let serialized_data = serialize_abstract_im_result abstract_im_result in
+	let serialized_data = serialize_abstract_point_based_result abstract_point_based_result in
 	
-	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Serialized abstract_im_result '" ^ serialized_data ^ "'");
+	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Serialized abstract_point_based_result '" ^ serialized_data ^ "'");
 	
 	(* Call generic function *)
 	send_serialized_data master_rank (int_of_slave_tag Slave_tile_tag) serialized_data
 
 
-(*let send_abstract_im_result_list abstract_im_result_list =
+let send_cartography_result (cartography_result : Result.cartography_result) =
 	(* For information purpose *)
 	let rank = get_rank() in
 
-	let serialized_data = serialize_abstract_im_result_list abstract_im_result_list in
+	let serialized_data = serialize_cartography_result cartography_result in
 	
-	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Serialized abstract_im_result_list '" ^ serialized_data ^ "'");
-	
-	(* Call generic function *)
-	send_serialized_data master_rank (int_of_slave_tag Slave_tiles_tag) serialized_data*)
-
-
-let send_bc_result bc_result =
-	(* For information purpose *)
-	let rank = get_rank() in
-
-	let serialized_data = serialize_bc_result bc_result in
-	
-	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Serialized serialize_bc_result '" ^ serialized_data ^ "'");
+	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Serialized serialize_cartography_result '" ^ serialized_data ^ "'");
 	
 	(* Call generic function *)
 	send_serialized_data master_rank (int_of_slave_tag Slave_bcresult_tag) serialized_data
@@ -844,61 +903,13 @@ let send_pi0 (pi0 : PVal.pval) slave_rank =
 	(* Call generic function *)
 	send_serialized_data slave_rank (int_of_master_tag Master_data_tag) serialized_data
 
-(*	let mpi0 = serialize_pi0 pi0 in
-	let res_size = String.length mpi0 in
-	
-	(* Send the result: 1st send the data size, then the data *)
-	Mpi.send res_size slave_rank (int_of_master_tag Master_data_tag) Mpi.comm_world;
-	Mpi.send mpi0 slave_rank (int_of_master_tag Master_data_tag) Mpi.comm_world*)
-
-
-
-(*(* Sends a result (first the size then the constraint), by the slave *)
-let send_abstract_im_result abstract_im_result =
-	let rank = get_rank() in
-
-	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Entering send_abstract_im_result");
-	let mlc = serialize_abstract_im_result abstract_im_result in
-	let res_size = String.length mlc in
-
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Serialized abstract_im_result '" ^ mlc ^ "'");
-	);
-	
-	(* Send the result: 1st send the data size, then the data *)
-	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the abstract_im_result.");
-	Mpi.send res_size master_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world;
-	Mpi.send mlc master_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world*)
-
-(* 
-(** Sends a list of tiles from the worker to the master *)
-let send_tiles im_result_list =
-	let rank = get_rank() in
-
-	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Entering send_tiles");
-	let mlc = serialize_im_result_list im_result_list in
-	let res_size = String.length mlc in
-
-	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Serialized constraint list '" ^ mlc ^ "'");
-	);
-	
-	(* Send the result: 1st send the data size, then the data *)
-	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] About to send the size (" ^ (string_of_int res_size) ^ ") of the constraint.");
-
-	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Sending size");
-	Mpi.send res_size master_rank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world;
-	
-	print_message Verbose_high ("[Worker " ^ (string_of_int rank) ^ "] Sending tiles");
-	Mpi.send mlc master_rank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world*)
-
 	
 
 (** Master sends a tile update to a worker *)
-let send_tileupdate abstract_im_result slave_rank =
-	let serialized_data = serialize_abstract_im_result abstract_im_result in
+let send_tileupdate abstract_point_based_result slave_rank =
+	let serialized_data = serialize_abstract_point_based_result abstract_point_based_result in
 	
-	print_message Verbose_high ("[Master] Serialized abstract_im_result '" ^ serialized_data ^ "'");
+	print_message Verbose_high ("[Master] Serialized abstract_point_based_result '" ^ serialized_data ^ "'");
 	
 	(* Call generic function *)
 	send_serialized_data slave_rank (int_of_master_tag Master_tileupdate_tag) serialized_data
@@ -960,13 +971,13 @@ let receive_pull_request () =
      print_message Verbose_high("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int l) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
 			
      (* Get the constraint *)
-     let abstract_im_result = unserialize_abstract_im_result !res in
+     let abstract_point_based_result = unserialize_abstract_point_based_result !res in
      
-     Tile (source_rank , abstract_im_result)
+     Tile (source_rank , abstract_point_based_result)
 		   
   | Slave_tiles_tag ->
 		print_error "Tag 'Slave_tiles_tag' not implemented in receive_pull_request";
-		raise (InternalError("Tag 'Slave_tiles_tag' not implemented in receive_pull_request"))
+		raise (NotImplemented("Tag 'Slave_tiles_tag' not implemented in receive_pull_request"))
   (*
       print_message Verbose_high ("[Master] Received Slave_tiles_tag from " ^ ( string_of_int source_rank) );
 
@@ -1082,8 +1093,8 @@ let receive_work () =
 		print_message Verbose_high ("Received " ^ (string_of_int w) ^ " bytes of work '" ^ !work1 ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_tileupdate_tag)));
 		
 		(* Get the result *)
-		let abstract_im_result = unserialize_abstract_im_result !work1 in
-		TileUpdate abstract_im_result
+		let abstract_point_based_result = unserialize_abstract_point_based_result !work1 in
+		TileUpdate abstract_point_based_result
 		
 	| Master_subdomain_tag -> 
 	  	(* Receive the data itself *)
@@ -1104,7 +1115,7 @@ let receive_work () =
 
 
 (* Function used for collaborator - coordinator static distribution scheme *)
-let receive_bcresult () =
+let receive_cartography_result () : rank * Result.cartography_result =
 	(* First receive the length of the data we are about to receive *)
 	let (l, source_rank, tag) = 
 		Mpi.receive_status Mpi.any_source Mpi.any_tag Mpi.comm_world
@@ -1129,10 +1140,10 @@ let receive_bcresult () =
 		res := Mpi.receive source_rank (int_of_slave_tag Slave_bcresult_tag) Mpi.comm_world ;
 		print_message Verbose_high("[Coordinator] received buffer " ^ !res ^ " of size " ^ ( string_of_int l) ^ " from Worker "  ^ (string_of_int source_rank) ^ "");
 				
-		(* Get the bc_result *)
-		let bc_result = unserialize_bc_result !res in
+		(* Get the cartography_result *)
+		let cartography_result = unserialize_cartography_result !res in
 		
 		(* Return rank and result *)
-		source_rank , bc_result
+		source_rank , cartography_result
 	
 	| _ -> raise (InternalError("Unexpected tag received in receive_bcresult"))

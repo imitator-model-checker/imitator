@@ -1,0 +1,88 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy case study to detect non-Zeno cycles
+ *
+ * Description     : Toy case study to detect non-Zeno cycles
+ * Correctness     : Objective: synthesize parameter valuations for which there exists at least one non-Zeno cycle.
+						The result should be p1 <= p2
+						NOTE: the PTA is CUB if p2 <= p1
+						NOTE: there exists (potentially Zeno) cycles for p1 <= p2 OR 2 <= p1
+ * Source          : own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2016/11/25
+ * Last modified   : 2016/11/25
+ *
+ * IMITATOR version: 2.8
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y
+		: clock;
+
+(* Parameters *)
+	p1, p2
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l0: while x <= p2 wait {}
+	when p1 <= x & x <= p2 goto l1;
+	when 2 <= x & x <= p1 do {y' = 0} goto l2;
+
+loc l1: while True wait {}
+	when True goto l1;
+
+loc l2: while x <= p2 & y <= 0 wait {}
+	when y = 0 goto l2;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l0
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p1 >= 0
+	& p2 >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* property := unreachable loc[pta] = l1; *)
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

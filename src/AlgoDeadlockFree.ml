@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/08
- * Last modified     : 2016/05/09
+ * Last modified     : 2016/10/18
  *
  ************************************************************)
 
@@ -32,86 +32,6 @@ open AlgoPostStar
 (* Class-independent functions *)
 (************************************************************)
 (************************************************************)
-
-(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the guard ***)
-let get_guard state_space state_index action_index state_index' =
-	(* Retrieve the model *)
-	let model = Input.get_model () in
-	
-	(* Retrieve source and destination locations *)
-	let (location : Location.global_location), _ = StateSpace.get_state state_space state_index in
-	let (location' : Location.global_location), _ = StateSpace.get_state state_space state_index' in
-	
-	(* Create the list of local guards *)
-	let local_guards = ref [] in
-	
-	(* For all PTA *)
-	List.iter (fun automaton_index ->
-		(* Retrieve source and destination location indexes *)
-		let l : Automaton.location_index = Location.get_location location automaton_index in
-		let l' : Automaton.location_index = Location.get_location location' automaton_index in
-		
-		(* Now, compute the local guard, i.e., the guard in the current PTA *)
-		let local_guard =
-		(* If source and destination are equal: either a self-loop (if there exists a self-loop with this action), or the current PTA is not concerned by the transition *)
-		if l = l' then (
-			(* Find the transitions l -> action_index -> l' *)
-			(*** NOTE: type transition = guard * clock_updates * discrete_update list * location_index ***)
-			let transitions = List.filter (fun (_,_,_, destination) -> destination = l') (model.transitions automaton_index l action_index) in
-			
-			(* If none: then not concerned -> true gard *)
-			if List.length transitions = 0 then LinearConstraint.pxd_true_constraint()
-			
-			(* If exactly one: good situation: return the guard *)
-			else if List.length transitions = 1 then let g,_,_,_ = List.nth transitions 0 in g
-			(* If more than one: take the first one (*** HACK ***) and warn *)
-			else(
-				(* Warning *)
-				print_warning ("Non-deterministic PTA! Selecting a guard arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
-				
-				(* Take arbitrarily the first element *)
-				let g,_,_,_ = List.nth transitions 0 in g
-			
-			)
-
-		(* Otherwise, if the source and destination locations differ: necessarily a transition with this action *)
-		) else (
-			(* Find the transitions l -> action_index -> l' *)
-			let transitions = List.filter (fun (_,_,_, destination) -> destination = l') (model.transitions automaton_index l action_index) in
-			
-			(* There cannot be none *)
-			if List.length transitions = 0 then raise (raise (InternalError("There cannot be no transition from '" ^ (model.location_names automaton_index l) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' with action to '" ^ (model.action_names action_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ ".")))
-			
-			(* If exactly one: good situation: return the guard *)
-			else if List.length transitions = 1 then let g,_,_,_ = List.nth transitions 0 in g
-			(* If more than one: take the first one (*** HACK ***) and warn *)
-			else(
-				(* Warning *)
-				print_warning ("Non-deterministic PTA! Selecting a guard arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
-				
-				(* Take arbitrarily the first element *)
-				let g,_,_,_ = List.nth transitions 0 in g
-			)
-			
-		) in
-		
-		(* Add the guard *)
-		local_guards := local_guard :: !local_guards;
-	
-	) model.automata;
-	
-	(* Compute constraint for assigning a (constant) value to discrete variables *)
-	print_message Verbose_high ("Computing constraint for discrete variables");
-	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value location discrete_index)) model.discrete in
-	(* Constraint of the form D_i = d_i *)
-	let discrete_constraint = LinearConstraint.pxd_constraint_of_point discrete_values in
-
-	(* Create the constraint guard ^ D_i = d_i *)
-	let guard = LinearConstraint.pxd_intersection (discrete_constraint :: !local_guards) in
-	
-	(* Finally! Return the guard *)
-	guard
-
 
 (* Convert a state_index for pretty-printing purpose *)
 let debug_string_of_state state_index =
@@ -210,7 +130,8 @@ class algoDeadlockFree =
 			
 			(* retrieve the guard *)
 			(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the guard ***)
-			let guard = get_guard state_space state_index action_index state_index' in
+			(*** WARNING: very expensive function (for now) ***)
+			let guard = StateSpace.get_guard state_space state_index action_index state_index' in
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then(
@@ -309,6 +230,15 @@ class algoDeadlockFree =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_deadlock_state state_index = ()*)
 	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method process_initial_state _ =
+		(* Always keep the initial state *)
+		(*** NOTE: if the initial state is deadlocked, this will be processed in process_post_n anyway ***)
+		true
+
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed). Nothing to do for this algorithm. *)
@@ -668,12 +598,13 @@ class algoDeadlockFree =
 			| Some status -> status
 		in
 		
-		(* The tile nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
+		(*** NOTE: unused variable ***)
+(*		(* The tile nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
 		let statespace_nature =
 			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
 			(* Otherwise: unchanged *)
 			else statespace_nature
-		in
+		in*)
 		
 		(* Constraint is exact if termination is normal, possibly over-approximated otherwise (since we compute the negation) *)
 		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_over in
@@ -681,7 +612,7 @@ class algoDeadlockFree =
 		let result =
 		(* If exact: everything is fine *)
 		if termination_status = Regular_termination then(
-			Single_constraint (result, soundness)
+			Good_constraint (result, soundness)
 		)
 		(* Else: compute backward under-approximation *)
 		else(
@@ -705,52 +636,55 @@ class algoDeadlockFree =
 			);
 			
 			(* Perform result = initial_state|P \ bad_constraint *)
-			let under_result = LinearConstraint.p_nnconvex_copy init_p_nnconvex_constraint in
-			LinearConstraint.p_nnconvex_difference under_result bad_constraint;
+			let good_under_result = LinearConstraint.p_nnconvex_copy init_p_nnconvex_constraint in
+			LinearConstraint.p_nnconvex_difference good_under_result bad_constraint;
 			
 			self#print_algo_message_newline Verbose_medium (
 				"Negation of final under-approximated constraint completed."
 			);
 			
 			(* Test if under=over (in which case the result is exact *)
-			if LinearConstraint.p_nnconvex_constraint_is_equal under_result result then(
+			if LinearConstraint.p_nnconvex_constraint_is_equal good_under_result result then(
 				(* Print some information *)
 				self#print_algo_message_newline Verbose_standard (
 					"Under-approximation is equal to over-approximation: result is exact."
 				);
 			
-				Single_constraint (result, Constraint_exact)
+				(* Then the constraint is exact *)
+				Good_constraint (result, Constraint_exact)
 			
 			)else(
-				Under_over_constraint (under_result, result)
-			
-			);
+				(* A possibly under-approximated good constraint, and a possibly under-approximated bad constraint *)
+				Good_bad_constraint {
+					good	= (good_under_result, Constraint_maybe_under);
+					bad		= (bad_constraint, Constraint_maybe_under);
+				}
+			)
 			
 		) (* end if not regular termination *)
 		in
-		
+
+		(*** NOTE: unused variable ***)
+(*		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
+		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in*)
+
 		(* Return the result *)
-		PDFC_result
+		Single_synthesis_result
 		{
-			(* List of constraints ensuring potential deadlocks *)
+			(* Non-necessarily convex constraint guaranteeing the non-reachability of the bad location *)
 			result				= result;
 			
 			(* Explored state space *)
 			state_space			= state_space;
 			
-			(* Nature of the state space *)
-			statespace_nature	= statespace_nature;
-			
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;
 			
-			(* No soundness as it is included in constraint_interval *)
-
 			(* Termination *)
 			termination			= termination_status;
 		}
-		
-	
+
+
 (************************************************************)
 (************************************************************)
 end;;

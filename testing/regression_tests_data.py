@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2016/08/13
+# Last modified: 2017/02/15
 #************************************************************
 
 
@@ -23,7 +23,7 @@ tests = [
 	{
 		'purpose'    : 'Test the state space',
 		'input_files': ['flipflop.imi'],
-		'options'    : '-mode statespace -output-states',
+		'options'    : '-mode statespace -output-states -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'flipflop-statespace.states' , 'content' : """
   DESCRIPTION OF THE STATES
@@ -31,7 +31,8 @@ tests = [
   /************************************************************/
   INITIAL
   STATE 0:
-  input: Input0, g1: G10011, g2: G2101, g3: G30011, g4: G410, observer: locobs_0, qLevel = 0 ==> 
+  input: Input0, g1: G10011, g2: G2101, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 5 >= s
 & dG3_u >= 8
 & dG4_u >= 3
 & s >= 0
@@ -39,7 +40,6 @@ tests = [
 & ckG2 >= s
 & ckG3 >= s
 & ckG4 >= s
-& 5 >= s
 
   Projection onto the parameters:
    dG4_u >= 3
@@ -47,14 +47,14 @@ tests = [
 
   /************************************************************/
   STATE 1:
-  input: Input1, g1: G11011, g2: G2101, g3: G30011, g4: G410, observer: locobs_0, qLevel = 0 ==> 
-& ckG4 >= s
+  input: Input1, g1: G11011, g2: G2101, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 12 >= s
 & dG3_u >= 8
 & dG4_u >= 3
 & s >= 5
 & ckG2 >= s
 & ckG3 >= s
-& 12 >= s
+& ckG4 >= s
 & s = 5 + ckG1
 
   Projection onto the parameters:
@@ -63,14 +63,14 @@ tests = [
 
   /************************************************************/
   STATE 2:
-  input: Input1, g1: G11010, g2: G2001, g3: G30011, g4: G410, observer: locobs_0, qLevel = 0 ==> 
-& ckG4 >= s
+  input: Input1, g1: G11010, g2: G2001, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 15 >= s
 & dG3_u >= 8
 & dG4_u >= 3
 & s >= 12
 & ckG2 >= s
 & ckG3 >= s
-& 15 >= s
+& ckG4 >= s
 & s = 5 + ckG1
 
   Projection onto the parameters:
@@ -79,32 +79,32 @@ tests = [
 
   /************************************************************/
   STATE 3:
-  input: Input2, g1: G11110, g2: G2011, g3: G30111, g4: G410, observer: locobs_0, qLevel = 0 ==> 
+  input: Input2, g1: G11110, g2: G2011, g3: G30111, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& dG3_u + 15 >= s
 & 32 >= s
-& ckG4 >= s
 & dG3_u >= 8
 & dG4_u >= 3
 & ckG2 >= s
 & s >= 15
-& dG3_u + 15 >= s
-& s = 15 + ckG3
+& ckG4 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 8
+   dG3_u >= 8
+& dG4_u >= 3
 
   /************************************************************/
   STATE 4:
-  input: Input3, g1: G10110, g2: G2011, g3: G30111, g4: G410, observer: locobs_0, qLevel = 0 ==> 
-& ckG4 >= s
+  input: Input3, g1: G10110, g2: G2011, g3: G30111, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 39 >= s
 & dG3_u + 15 >= s
 & dG4_u >= 3
 & ckG2 >= s
 & s >= 32
-& 39 >= s
-& s = 15 + ckG3
+& ckG4 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
    dG3_u >= 17
@@ -112,66 +112,66 @@ tests = [
 
   /************************************************************/
   STATE 5:
-  input: Input2, g1: G11110, g2: G2011, g3: G30110, g4: G400, observer: locobs_0, qLevel = 0 ==> 
-& dG4_u >= ckG4
+  input: Input2, g1: G11110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 32 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 23 + ckG4
 & ckG4 >= 0
 & ckG2 >= s
-& 32 >= s
-& s = 15 + ckG3
+& dG4_u >= ckG4
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 8
+   dG3_u >= 8
+& dG4_u >= 3
 
   /************************************************************/
   STATE 6:
-  input: Input4, g1: G10010, g2: G2001, g3: G30011, g4: G410, observer: locobs_2, qLevel = 0 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u >= 24
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 39
+& s = 0
 & ckG1 = 0
 & ckG3 = 24
-& s = 0
 
   Projection onto the parameters:
-   dG3_u >= 24
-& dG4_u >= 3
+   dG4_u >= 3
+& dG3_u >= 24
 
   /************************************************************/
   STATE 7:
-  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, observer: locobs_0, qLevel = 0 ==> 
-& dG4_u >= ckG4
+  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 32 + ckG4
 & ckG4 >= 0
 & ckG2 >= s
-& 39 >= s
-& s = 15 + ckG3
+& dG4_u >= ckG4
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 17
+   dG3_u >= 17
+& dG4_u >= 3
 
   /************************************************************/
   STATE 8:
-  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, observer: locobs_0, qLevel = 0 ==> 
-& ckG4 + 32 >= s
+  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= ckG4
 & dG4_u >= 3
 & ckG2 >= s
 & s >= 32
 & s >= 23 + ckG4
-& 39 >= s
-& s = 15 + ckG3
+& ckG4 + 32 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
    dG3_u + dG4_u >= 17
@@ -180,32 +180,32 @@ tests = [
 
   /************************************************************/
   STATE 9:
-  input: Input2, g1: G11110, g2: G2011, g3: G31110, g4: G401, observer: locobs_1, qLevel = 1 ==> 
+  input: Input2, g1: G11110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 23 + ckG4
 & ckG4 >= 3
 & ckG2 >= s
 & 32 >= s
-& s = 15 + ckG3
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 8
+   dG3_u >= 8
+& dG4_u >= 3
 
   /************************************************************/
   STATE 10:
-  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, observer: locobs_2, qLevel = 0 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 0
 & 7 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 0
-& s = 0
 
   Projection onto the parameters:
    dG3_u + dG4_u >= 24
@@ -214,41 +214,41 @@ tests = [
 
   /************************************************************/
   STATE 11:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, observer: locobs_1, qLevel = 1 ==> 
+  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 32 + ckG4
 & ckG4 >= 3
 & ckG2 >= s
 & 39 >= s
-& s = 15 + ckG3
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 17
+   dG3_u >= 17
+& dG4_u >= 3
 
   /************************************************************/
   STATE 12:
-  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, observer: locobs_2, qLevel = 0 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & ckG2 >= 39
 & ckG4 >= 7
 & 16 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 0
-& s = 0
 
   Projection onto the parameters:
    dG4_u >= 7
-& dG3_u + dG4_u >= 24
 & dG3_u >= 8
+& dG3_u + dG4_u >= 24
 
   /************************************************************/
   STATE 13:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, observer: locobs_1, qLevel = 1 ==> 
-& ckG4 + 32 >= s
+  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
+& 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u + s >= 32 + ckG4
 & dG4_u >= 3
@@ -256,27 +256,27 @@ tests = [
 & s >= 23 + ckG4
 & ckG4 >= 3
 & ckG2 >= s
-& 39 >= s
-& s = 15 + ckG3
+& ckG4 + 32 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u + dG4_u >= 17
+   dG3_u + dG4_u >= 17
 & dG3_u >= 8
+& dG4_u >= 3
 
   /************************************************************/
   STATE 14:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, observer: locobs_1, qLevel = 1 ==> 
-& ckG4 + 29 >= s
+  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
+& 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & ckG2 >= s
 & s >= 32
 & s >= 23 + ckG4
-& 39 >= s
-& s = 15 + ckG3
+& ckG4 + 29 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
    dG3_u >= 8
@@ -284,16 +284,16 @@ tests = [
 
   /************************************************************/
   STATE 15:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, observer: locobs_1, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u + 7 >= ckG4
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 7
 & 16 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 24
-& s = 0
 
   Projection onto the parameters:
    dG3_u + dG4_u >= 17
@@ -302,32 +302,32 @@ tests = [
 
   /************************************************************/
   STATE 16:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, observer: locobs_2, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & ckG2 >= 39
 & ckG4 >= 7
 & 16 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 0
-& s = 0
 
   Projection onto the parameters:
    dG4_u >= 7
-& dG3_u + dG4_u >= 24
 & dG3_u >= 8
+& dG3_u + dG4_u >= 24
 
   /************************************************************/
   STATE 17:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, observer: locobs_1, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 3
 & 7 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 24
-& s = 0
 
   Projection onto the parameters:
    dG3_u >= 17
@@ -335,32 +335,32 @@ tests = [
 
   /************************************************************/
   STATE 18:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, observer: locobs_2, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & ckG2 >= 39
 & ckG4 >= 3
 & 7 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 0
-& s = 0
 
   Projection onto the parameters:
    dG4_u >= 3
-& dG3_u + dG4_u >= 24
 & dG3_u >= 17
+& dG3_u + dG4_u >= 24
 
   /************************************************************/
   STATE 19:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, observer: locobs_1, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 10
 & 16 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 24
-& s = 0
 
   Projection onto the parameters:
    dG3_u >= 8
@@ -450,12 +450,124 @@ tests = [
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	
 	,
+	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with basic unreachability',
-		'input_files': ['F3.imi'],
+		'purpose'    : 'Test EF (old version) with bad initial state',
+		'input_files': ['testEFdegenerate1.imi'],
+		'options'    : '-mode EFold -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFdegenerate1.res' , 'content' : """
+BEGIN CONSTRAINT
+ p2 >= 0
+& p1 >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 0
+Number of transitions                   : 0
+Number of computed states               : 0
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with bad initial state',
+		'input_files': ['testEFdegenerate1.imi'],
 		'options'    : '-mode EF -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFdegenerate1.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 0
+Number of transitions                   : 0
+Number of computed states               : 0
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF (old version) with bad initial state and some constrained valuations',
+		'input_files': ['testEFdegenerate2.imi'],
+		'options'    : '-mode EFold -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFdegenerate2.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= p2
+& p2 >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 0
+Number of transitions                   : 0
+Number of computed states               : 0
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with bad initial state and some constrained valuations',
+		'input_files': ['testEFdegenerate2.imi'],
+		'options'    : '-mode EF -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFdegenerate2.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 0
+Number of transitions                   : 0
+Number of computed states               : 0
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF (old version) with basic unreachability',
+		'input_files': ['F3.imi'],
+		'options'    : '-mode EFold -merge -incl -output-result',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -471,16 +583,91 @@ END CONSTRAINT
 	} # end test case
 	#------------------------------------------------------------
 	,
+	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EFnew with basic unreachability',
+		'purpose'    : 'Test EF with basic unreachability',
 		'input_files': ['F3.imi'],
-		'options'    : '-mode EFnew -merge -incl -output-result',
+		'options'    : '-mode EF -merge -incl -output-result',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
 delta >= Delta
     & Delta >= 0
+END CONSTRAINT
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF (old version) with complex unreachability property',
+		'input_files': ['coffeeDrinker-TACAS.imi'],
+		'options'    : '-mode EFold -merge -output-result',
+		'expectations' : [
+			{'file': 'coffeeDrinker-TACAS.res' , 'content' : """
+BEGIN CONSTRAINT
+ 15 >= p_add_sugar
+& p_button > 0
+& p_add_sugar + p_coffee >= 15
+& p_add_sugar >= 3*p_button
+& p_coffee > 0
+ OR 
+ p_add_sugar + p_coffee >= 15
+& p_button >= 5
+& 15 >= p_add_sugar
+& p_coffee > 0
+& p_add_sugar >= 2*p_button
+ OR 
+ 3*p_button >= p_add_sugar + p_coffee
+& p_add_sugar >= 2*p_button
+& 15 >= p_add_sugar + p_coffee
+& p_coffee > 0
+ OR 
+ 5 >= p_button
+& p_button > 0
+& p_add_sugar >= 15
+& p_coffee > 0
+ OR 
+ 15 >= 2*p_button
+& p_button >= 5
+& p_add_sugar >= 15
+& p_coffee > 0
+ OR 
+ p_add_sugar + p_coffee >= 15
+& p_add_sugar >= p_button
+& 15 >= p_add_sugar
+& p_coffee > 0
+& 2*p_button >= 15
+ OR 
+ p_add_sugar >= p_button
+& p_coffee > 0
+& 15 >= p_add_sugar + p_coffee
+& 2*p_button >= p_add_sugar + p_coffee
+ OR 
+ p_coffee > 0
+& 15 >= p_add_sugar
+& p_add_sugar > 0
+& p_add_sugar + p_coffee >= 15
+& p_button >= 15
+ OR 
+ p_add_sugar > 0
+& 15 >= p_add_sugar + p_coffee
+& p_coffee > 0
+& p_button >= p_add_sugar + p_coffee
+ OR 
+ 2*p_button >= 15
+& 15 >= p_button
+& p_add_sugar >= 15
+& p_coffee > 0
+ OR 
+ p_button >= 15
+& p_coffee > 0
+& p_add_sugar >= 15
 END CONSTRAINT
 """
 			} #end result file
@@ -493,78 +680,6 @@ END CONSTRAINT
 		'purpose'    : 'Test EF with complex unreachability property',
 		'input_files': ['coffeeDrinker-TACAS.imi'],
 		'options'    : '-mode EF -merge -output-result',
-		'expectations' : [
-			{'file': 'coffeeDrinker-TACAS.res' , 'content' : """
-BEGIN CONSTRAINT
- p_add_sugar + p_coffee >= 15
-& p_button > 0
-& 15 >= p_add_sugar
-& p_coffee > 0
-& p_add_sugar >= 3*p_button
- OR 
- p_add_sugar + p_coffee >= 15
-& p_button >= 5
-& 15 >= p_add_sugar
-& p_coffee > 0
-& p_add_sugar >= 2*p_button
- OR 
- 3*p_button >= p_add_sugar + p_coffee
-& p_coffee > 0
-& 15 >= p_add_sugar + p_coffee
-& p_add_sugar >= 2*p_button
- OR 
- p_add_sugar >= 15
-& 5 >= p_button
-& p_button > 0
-& p_coffee > 0
- OR 
- p_add_sugar >= 15
-& 15 >= 2*p_button
-& p_button >= 5
-& p_coffee > 0
- OR 
- p_add_sugar + p_coffee >= 15
-& 2*p_button >= 15
-& 15 >= p_add_sugar
-& p_coffee > 0
-& p_add_sugar >= p_button
- OR 
- 2*p_button >= p_add_sugar + p_coffee
-& p_coffee > 0
-& 15 >= p_add_sugar + p_coffee
-& p_add_sugar >= p_button
- OR 
- p_add_sugar + p_coffee >= 15
-& p_button >= 15
-& 15 >= p_add_sugar
-& p_coffee > 0
-& p_add_sugar > 0
- OR 
- p_button >= p_add_sugar + p_coffee
-& p_coffee > 0
-& 15 >= p_add_sugar + p_coffee
-& p_add_sugar > 0
- OR 
- p_add_sugar >= 15
-& 15 >= p_button
-& 2*p_button >= 15
-& p_coffee > 0
- OR 
- p_add_sugar >= 15
-& p_button >= 15
-& p_coffee > 0
-END CONSTRAINT
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-	,
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test EFnew with complex unreachability property',
-		'input_files': ['coffeeDrinker-TACAS.imi'],
-		'options'    : '-mode EFnew -merge -output-result',
 		'expectations' : [
 			{'file': 'coffeeDrinker-TACAS.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -597,9 +712,9 @@ END CONSTRAINT
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with observer + depth-limit + project-result (quite basic)',
+		'purpose'    : 'Test EF (old version) with observer + depth-limit + project-result (quite basic)',
 		'input_files': ['coffeeDrinker-TACAS-within.imi'],
-		'options'    : '-mode EF -merge -depth-limit 10 -output-result',
+		'options'    : '-mode EFold -merge -depth-limit 10 -output-result',
 		'expectations' : [
 			{'file': 'coffeeDrinker-TACAS-within.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -614,9 +729,9 @@ END CONSTRAINT
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EFnew with observer + depth-limit + project-result (quite basic)',
+		'purpose'    : 'Test EF with observer + depth-limit + project-result (quite basic)',
 		'input_files': ['coffeeDrinker-TACAS-within.imi'],
-		'options'    : '-mode EFnew -merge -depth-limit 10 -output-result',
+		'options'    : '-mode EF -merge -depth-limit 10 -output-result',
 		'expectations' : [
 			{'file': 'coffeeDrinker-TACAS-within.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -628,26 +743,207 @@ END CONSTRAINT
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	
 	,
+	
+
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'FMTV challenge: Test EFnew with project-result',
-		'input_files': ['fmtv1A1-v2.imi'],
-		'options'    : '-mode EFnew -merge -incl -output-result',
+		'purpose'    : 'Test LoopSynth: flip-flop (no loop)',
+		'input_files': ['flipflop.imi'],
+		'options'    : '-mode LoopSynth -output-result',
 		'expectations' : [
-			{'file': 'fmtv1A1-v2.res' , 'content' : """
+			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
-63 > e2e
-& e2e >= 0
-OR
-125*e2e > 18126
+False
 END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 20
+Number of transitions                   : 19
+Number of computed states               : 20
 """
-			} # end result file
-			,
+			} #end result file
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test LoopSynth: simple example with loop',
+		'input_files': ['PDFC4.imi'],
+		'options'    : '-mode LoopSynth -output-result',
+		'expectations' : [
+			{'file': 'PDFC4.res' , 'content' : """
+BEGIN CONSTRAINT
+ 10 >= p2
+& p2 >= 0
+& p1 >= 0
+& p1 + 5 >= p2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 2
+Number of transitions                   : 2
+Number of computed states               : 3
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation',
+		'input_files': ['PDFC5.imi'],
+		'options'    : '-mode LoopSynth -output-result',
+		'expectations' : [
+			{'file': 'PDFC5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p3 >= 0
+& p2 >= 0
+& p1 >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 5
+Number of transitions                   : 6
+Number of computed states               : 7
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test NZCUB: flip-flop (no loop)',
+		'input_files': ['flipflop.imi'],
+		'options'    : '-mode NZCUB -output-result',
+		'expectations' : [
+			{'file': 'flipflop.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 20
+Number of transitions                   : 19
+Number of computed states               : 20
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno)',
+		'input_files': ['PDFC4.imi'],
+		'options'    : '-mode NZCUB -output-result',
+		'expectations' : [
+			{'file': 'PDFC4.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 4
+Number of transitions                   : 4
+Number of computed states               : 5
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test NZCUB: CUBPTA1 (non-Zeno loop)',
+		'input_files': ['CUBPTA1.imi'],
+		'options'    : '-mode NZCUB -output-result',
+		'expectations' : [
+			{'file': 'CUBPTA1.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 4
+Number of transitions                   : 4
+Number of computed states               : 5
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test NZCUB: CUBPTA2 (2 non-Zeno loops)',
+		'input_files': ['CUBPTA2.imi'],
+		'options'    : '-mode NZCUB -output-result',
+		'expectations' : [
+			{'file': 'CUBPTA2.res' , 'content' : """
+BEGIN CONSTRAINT
+ p2 >= 0
+& p1 >= 5
+OR
+  p1 >= 0
+& p2 >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 9
+Number of transitions                   : 14
+Number of computed states               : 15
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
 	,
 	
 	#------------------------------------------------------------
@@ -665,7 +961,7 @@ END CONSTRAINT
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
+Constraint nature             : good
 ------------------------------------------------------------
 Number of states              : 2
 Number of transitions         : 2
@@ -705,7 +1001,9 @@ Number of computed states     : 3
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	
 	,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (false result)',
@@ -720,7 +1018,7 @@ END CONSTRAINT
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
+Constraint nature             : good
 ------------------------------------------------------------
 Number of states              : 2
 Number of transitions         : 1
@@ -741,8 +1039,8 @@ Number of computed states     : 2
 & x >= 0
 
   Projection onto the parameters:
-   p1 >= 0
-& p2 >= 0
+   p2 >= 0
+& p1 >= 0
 
   /************************************************************/
   STATE 1:
@@ -755,9 +1053,9 @@ Number of computed states     : 2
 
   Projection onto the parameters:
    10 >= p2
-& p1 + 5 >= p2
 & p2 >= 0
 & p1 >= 0
+& p1 + 5 >= p2
 
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1 via "a"
@@ -766,7 +1064,9 @@ Number of computed states     : 2
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	
 	,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (normal result)',
@@ -784,7 +1084,7 @@ END CONSTRAINT
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
+Constraint nature             : good
 ------------------------------------------------------------
 Number of states              : 2
 Number of transitions         : 2
@@ -805,8 +1105,8 @@ Number of computed states     : 3
 & x >= 0
 
   Projection onto the parameters:
-   p1 >= 0
-& p2 >= 0
+   p2 >= 0
+& p1 >= 0
 
   /************************************************************/
   STATE 1:
@@ -819,9 +1119,9 @@ Number of computed states     : 3
 
   Projection onto the parameters:
    10 >= p2
-& p1 + 5 >= p2
 & p2 >= 0
 & p1 >= 0
+& p1 + 5 >= p2
 
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1 via "a"
@@ -831,12 +1131,14 @@ Number of computed states     : 3
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+
 	,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (false result)',
 		'input_files': ['PDFC6.imi'],
-		'options'    : '-mode PDFC -output-result  -output-states',
+		'options'    : '-mode PDFC -output-result  -output-states -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC6.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -846,7 +1148,7 @@ END CONSTRAINT
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
+Constraint nature             : good
 ------------------------------------------------------------
 Number of states              : 2
 Number of transitions         : 1
@@ -898,7 +1200,7 @@ END CONSTRAINT
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
+Constraint nature             : good
 ------------------------------------------------------------
 Number of states              : 2
 Number of transitions         : 2
@@ -963,7 +1265,7 @@ END CONSTRAINT
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
+Constraint nature             : good
 ------------------------------------------------------------
 Number of states              : 5
 Number of transitions         : 6
@@ -986,8 +1288,8 @@ Number of computed states     : 7
 & x1 = x2
 
   Projection onto the parameters:
-   p2 >= 0
-& p3 >= 0
+   p3 >= 0
+& p2 >= 0
 & p1 >= 0
 
   /************************************************************/
@@ -1000,8 +1302,8 @@ Number of computed states     : 7
 & x1 = x2
 
   Projection onto the parameters:
-   p2 >= 0
-& p3 >= 0
+   p3 >= 0
+& p2 >= 0
 & p1 >= 0
 
   /************************************************************/
@@ -1016,9 +1318,9 @@ Number of computed states     : 7
 
   Projection onto the parameters:
    p1 + 5 >= p3
-& p2 >= 0
 & p3 >= 0
 & p1 >= 0
+& p2 >= 0
 
   /************************************************************/
   STATE 3:
@@ -1030,8 +1332,8 @@ Number of computed states     : 7
 & x1 = x2
 
   Projection onto the parameters:
-   p2 >= 0
-& p3 >= 0
+   p3 >= 0
+& p2 >= 0
 & p1 >= 0
 
   /************************************************************/
@@ -1046,9 +1348,9 @@ Number of computed states     : 7
 
   Projection onto the parameters:
    p1 + 5 >= p3
-& p2 >= 0
 & p3 >= 0
 & p1 >= 0
+& p2 >= 0
 
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_2
@@ -1067,7 +1369,7 @@ Number of computed states     : 7
 	{
 		'purpose'    : 'Test PDFC: example with early termination due to false constraint',
 		'input_files': ['flipflop.imi'],
-		'options'    : '-mode PDFC -output-result  -output-states',
+		'options'    : '-mode PDFC -output-result  -output-states -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1077,7 +1379,7 @@ END CONSTRAINT
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
+Constraint nature             : good
 ------------------------------------------------------------
 Number of states              : 20
 Number of transitions         : 19
@@ -1091,7 +1393,8 @@ Number of computed states     : 20
   /************************************************************/
   INITIAL
   STATE 0:
-  input: Input0, g1: G10011, g2: G2101, g3: G30011, g4: G410, observer: locobs_0, qLevel = 0 ==> 
+  input: Input0, g1: G10011, g2: G2101, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 5 >= s
 & dG3_u >= 8
 & dG4_u >= 3
 & s >= 0
@@ -1099,7 +1402,6 @@ Number of computed states     : 20
 & ckG2 >= s
 & ckG3 >= s
 & ckG4 >= s
-& 5 >= s
 
   Projection onto the parameters:
    dG4_u >= 3
@@ -1107,14 +1409,14 @@ Number of computed states     : 20
 
   /************************************************************/
   STATE 1:
-  input: Input1, g1: G11011, g2: G2101, g3: G30011, g4: G410, observer: locobs_0, qLevel = 0 ==> 
-& ckG4 >= s
+  input: Input1, g1: G11011, g2: G2101, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 12 >= s
 & dG3_u >= 8
 & dG4_u >= 3
 & s >= 5
 & ckG2 >= s
 & ckG3 >= s
-& 12 >= s
+& ckG4 >= s
 & s = 5 + ckG1
 
   Projection onto the parameters:
@@ -1123,14 +1425,14 @@ Number of computed states     : 20
 
   /************************************************************/
   STATE 2:
-  input: Input1, g1: G11010, g2: G2001, g3: G30011, g4: G410, observer: locobs_0, qLevel = 0 ==> 
-& ckG4 >= s
+  input: Input1, g1: G11010, g2: G2001, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 15 >= s
 & dG3_u >= 8
 & dG4_u >= 3
 & s >= 12
 & ckG2 >= s
 & ckG3 >= s
-& 15 >= s
+& ckG4 >= s
 & s = 5 + ckG1
 
   Projection onto the parameters:
@@ -1139,32 +1441,32 @@ Number of computed states     : 20
 
   /************************************************************/
   STATE 3:
-  input: Input2, g1: G11110, g2: G2011, g3: G30111, g4: G410, observer: locobs_0, qLevel = 0 ==> 
+  input: Input2, g1: G11110, g2: G2011, g3: G30111, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& dG3_u + 15 >= s
 & 32 >= s
-& ckG4 >= s
 & dG3_u >= 8
 & dG4_u >= 3
 & ckG2 >= s
 & s >= 15
-& dG3_u + 15 >= s
-& s = 15 + ckG3
+& ckG4 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 8
+   dG3_u >= 8
+& dG4_u >= 3
 
   /************************************************************/
   STATE 4:
-  input: Input3, g1: G10110, g2: G2011, g3: G30111, g4: G410, observer: locobs_0, qLevel = 0 ==> 
-& ckG4 >= s
+  input: Input3, g1: G10110, g2: G2011, g3: G30111, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 39 >= s
 & dG3_u + 15 >= s
 & dG4_u >= 3
 & ckG2 >= s
 & s >= 32
-& 39 >= s
-& s = 15 + ckG3
+& ckG4 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
    dG3_u >= 17
@@ -1172,66 +1474,66 @@ Number of computed states     : 20
 
   /************************************************************/
   STATE 5:
-  input: Input2, g1: G11110, g2: G2011, g3: G30110, g4: G400, observer: locobs_0, qLevel = 0 ==> 
-& dG4_u >= ckG4
+  input: Input2, g1: G11110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 32 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 23 + ckG4
 & ckG4 >= 0
 & ckG2 >= s
-& 32 >= s
-& s = 15 + ckG3
+& dG4_u >= ckG4
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 8
+   dG3_u >= 8
+& dG4_u >= 3
 
   /************************************************************/
   STATE 6:
-  input: Input4, g1: G10010, g2: G2001, g3: G30011, g4: G410, observer: locobs_2, qLevel = 0 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u >= 24
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 39
+& s = 0
 & ckG1 = 0
 & ckG3 = 24
-& s = 0
 
   Projection onto the parameters:
-   dG3_u >= 24
-& dG4_u >= 3
+   dG4_u >= 3
+& dG3_u >= 24
 
   /************************************************************/
   STATE 7:
-  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, observer: locobs_0, qLevel = 0 ==> 
-& dG4_u >= ckG4
+  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 32 + ckG4
 & ckG4 >= 0
 & ckG2 >= s
-& 39 >= s
-& s = 15 + ckG3
+& dG4_u >= ckG4
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 17
+   dG3_u >= 17
+& dG4_u >= 3
 
   /************************************************************/
   STATE 8:
-  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, observer: locobs_0, qLevel = 0 ==> 
-& ckG4 + 32 >= s
+  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==> 
+& 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= ckG4
 & dG4_u >= 3
 & ckG2 >= s
 & s >= 32
 & s >= 23 + ckG4
-& 39 >= s
-& s = 15 + ckG3
+& ckG4 + 32 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
    dG3_u + dG4_u >= 17
@@ -1240,32 +1542,32 @@ Number of computed states     : 20
 
   /************************************************************/
   STATE 9:
-  input: Input2, g1: G11110, g2: G2011, g3: G31110, g4: G401, observer: locobs_1, qLevel = 1 ==> 
+  input: Input2, g1: G11110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 23 + ckG4
 & ckG4 >= 3
 & ckG2 >= s
 & 32 >= s
-& s = 15 + ckG3
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 8
+   dG3_u >= 8
+& dG4_u >= 3
 
   /************************************************************/
   STATE 10:
-  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, observer: locobs_2, qLevel = 0 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 0
 & 7 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 0
-& s = 0
 
   Projection onto the parameters:
    dG3_u + dG4_u >= 24
@@ -1274,41 +1576,41 @@ Number of computed states     : 20
 
   /************************************************************/
   STATE 11:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, observer: locobs_1, qLevel = 1 ==> 
+  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 32 + ckG4
 & ckG4 >= 3
 & ckG2 >= s
 & 39 >= s
-& s = 15 + ckG3
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 17
+   dG3_u >= 17
+& dG4_u >= 3
 
   /************************************************************/
   STATE 12:
-  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, observer: locobs_2, qLevel = 0 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & ckG2 >= 39
 & ckG4 >= 7
 & 16 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 0
-& s = 0
 
   Projection onto the parameters:
    dG4_u >= 7
-& dG3_u + dG4_u >= 24
 & dG3_u >= 8
+& dG3_u + dG4_u >= 24
 
   /************************************************************/
   STATE 13:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, observer: locobs_1, qLevel = 1 ==> 
-& ckG4 + 32 >= s
+  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
+& 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u + s >= 32 + ckG4
 & dG4_u >= 3
@@ -1316,27 +1618,27 @@ Number of computed states     : 20
 & s >= 23 + ckG4
 & ckG4 >= 3
 & ckG2 >= s
-& 39 >= s
-& s = 15 + ckG3
+& ckG4 + 32 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u + dG4_u >= 17
+   dG3_u + dG4_u >= 17
 & dG3_u >= 8
+& dG4_u >= 3
 
   /************************************************************/
   STATE 14:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, observer: locobs_1, qLevel = 1 ==> 
-& ckG4 + 29 >= s
+  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
+& 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & ckG2 >= s
 & s >= 32
 & s >= 23 + ckG4
-& 39 >= s
-& s = 15 + ckG3
+& ckG4 + 29 >= s
 & s = 5 + ckG1
+& s = 15 + ckG3
 
   Projection onto the parameters:
    dG3_u >= 8
@@ -1344,16 +1646,16 @@ Number of computed states     : 20
 
   /************************************************************/
   STATE 15:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, observer: locobs_1, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u + 7 >= ckG4
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 7
 & 16 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 24
-& s = 0
 
   Projection onto the parameters:
    dG3_u + dG4_u >= 17
@@ -1362,32 +1664,32 @@ Number of computed states     : 20
 
   /************************************************************/
   STATE 16:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, observer: locobs_2, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & ckG2 >= 39
 & ckG4 >= 7
 & 16 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 0
-& s = 0
 
   Projection onto the parameters:
    dG4_u >= 7
-& dG3_u + dG4_u >= 24
 & dG3_u >= 8
+& dG3_u + dG4_u >= 24
 
   /************************************************************/
   STATE 17:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, observer: locobs_1, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 3
 & 7 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 24
-& s = 0
 
   Projection onto the parameters:
    dG3_u >= 17
@@ -1395,32 +1697,32 @@ Number of computed states     : 20
 
   /************************************************************/
   STATE 18:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, observer: locobs_2, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_2 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & ckG2 >= 39
 & ckG4 >= 3
 & 7 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 0
-& s = 0
 
   Projection onto the parameters:
    dG4_u >= 3
-& dG3_u + dG4_u >= 24
 & dG3_u >= 17
+& dG3_u + dG4_u >= 24
 
   /************************************************************/
   STATE 19:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, observer: locobs_1, qLevel = 1 ==> 
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==> 
 & dG3_u + ckG4 >= 24
 & dG4_u >= 3
 & ckG2 >= 39
 & ckG4 >= 10
 & 16 >= ckG4
+& s = 0
 & ckG1 = 0
 & ckG3 = 24
-& s = 0
 
   Projection onto the parameters:
    dG3_u >= 8
@@ -1456,30 +1758,27 @@ Number of computed states     : 20
 	{
 		'purpose'    : 'Test PDFC: example with basic backward under-approximation',
 		'input_files': ['PDFC8.imi'],
-		'options'    : '-mode PDFC -output-result -depth-limit 5',
+		'options'    : '-mode PDFC -output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC8.res' , 'content' : """
-BEGIN UNDER CONSTRAINT
+BEGIN CONSTRAINT
  p1 > 2
 & 3 >= p1
 OR
   p1 > 0
 & 2 > p1
-END UNDER CONSTRAINT
-
-
-BEGIN OVER CONSTRAINT
- p1 > 2
-& 3 >= p1
+<good|bad>
+ p1 > 3
 OR
-  p1 >= 0
-& 2 > p1
-END OVER CONSTRAINT
+  p1 = 2
+OR
+  p1 = 0
+END CONSTRAINT
 
 ------------------------------------------------------------
-Constraint soundness          : both a possible under- and a possible over-approximation
+Constraint soundness          : possible under-approximation <good|bad> possible under-approximation
 Termination                   : depth limit (1 successor unexplored)
-State space nature            : unknown
+Constraint nature             : good/bad
 ------------------------------------------------------------
 Number of states              : 7
 Number of transitions         : 7
@@ -1493,7 +1792,7 @@ Number of computed states     : 8
 	{
 		'purpose'    : 'Test PDFC: example with basic backward under-approximation and exact result',
 		'input_files': ['PDFC8b.imi'],
-		'options'    : '-mode PDFC -output-result -depth-limit 5',
+		'options'    : '-mode PDFC -output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC8b.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1507,7 +1806,7 @@ END CONSTRAINT
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : depth limit (1 successor unexplored)
-State space nature            : unknown
+Constraint nature             : good
 ------------------------------------------------------------
 Number of states              : 7
 Number of transitions         : 7
@@ -1521,22 +1820,20 @@ Number of computed states     : 8
 	{
 		'purpose'    : 'Test PDFC: another example with basic backward under-approximation',
 		'input_files': ['PDFC9.imi'],
-		'options'    : '-mode PDFC -output-result -depth-limit 5',
+		'options'    : '-mode PDFC -output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC9.res' , 'content' : """
-BEGIN UNDER CONSTRAINT
+BEGIN CONSTRAINT
  p1 > 2
-END UNDER CONSTRAINT
-
-
-BEGIN OVER CONSTRAINT
- p1 >= 2
-END OVER CONSTRAINT
+<good|bad>
+ 2 >= p1
+& p1 >= 0
+END CONSTRAINT
 
 ------------------------------------------------------------
-Constraint soundness          : both a possible under- and a possible over-approximation
+Constraint soundness          : possible under-approximation <good|bad> possible under-approximation
 Termination                   : depth limit (1 successor unexplored)
-State space nature            : unknown
+Constraint nature             : good/bad
 ------------------------------------------------------------
 Number of states              : 7
 Number of transitions         : 8
@@ -1550,22 +1847,20 @@ Number of computed states     : 9
 	{
 		'purpose'    : 'Test PDFC: again another example with basic backward under-approximation',
 		'input_files': ['PDFC9b.imi'],
-		'options'    : '-mode PDFC -output-result -depth-limit 5',
+		'options'    : '-mode PDFC -output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC9b.res' , 'content' : """
-BEGIN UNDER CONSTRAINT
+BEGIN CONSTRAINT
  p1 > 2
-END UNDER CONSTRAINT
-
-
-BEGIN OVER CONSTRAINT
- p1 >= 2
-END OVER CONSTRAINT
+<good|bad>
+ 2 >= p1
+& p1 >= 0
+END CONSTRAINT
 
 ------------------------------------------------------------
-Constraint soundness          : both a possible under- and a possible over-approximation
+Constraint soundness          : possible under-approximation <good|bad> possible under-approximation
 Termination                   : depth limit (1 successor unexplored)
-State space nature            : unknown
+Constraint nature             : good/bad
 ------------------------------------------------------------
 Number of states              : 7
 Number of transitions         : 8
@@ -1674,8 +1969,8 @@ END CONSTRAINT
 		'options'    : '-IMK -output-result -no-random',
 		'expectations' : [
 			{'file': 'exVariantes.res' , 'content' : """
-		   5*p1 > p2
-    & p2 > 2
+ p2 > 2
+& 5*p1 > p2
 		  """
 			} # end result file
 			,
@@ -1700,7 +1995,7 @@ END CONSTRAINT
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test PRP on a simple example (good reference valuation)',
+		'purpose'    : 'Test PRP (old version) on a simple example (good reference valuation)',
 		'input_files': ['testPRP.imi', 'testPRP.pigood'],
 		'options'    : '-PRP -output-result -output-states',
 		'expectations' : [
@@ -1782,7 +2077,89 @@ END CONSTRAINT
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test PRP on a simple example (bad reference valuation)',
+		'purpose'    : 'Test PRP on a simple example (good reference valuation)',
+		'input_files': ['testPRP.imi', 'testPRP.pigood'],
+		'options'    : '-mode PRP -output-result -output-states',
+		'expectations' : [
+			{'file': 'testPRP.res' , 'content' : """
+BEGIN CONSTRAINT
+	4 > p2
+    & 3 > p1
+    & p1 >= 0
+    & p2 >= 0
+END CONSTRAINT
+		  """
+			} # end result file
+			,
+			{'file': 'testPRP-statespace.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1 ==> 
+& p1 >= 0
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: l2 ==> 
+& p1 >= 0
+& p2 >= 0
+& x >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 2:
+  pta: l3 ==> 
+& p1 >= x
+& p2 >= 0
+& x >= 0
+& 1 >= p2
+& x = y
+
+  Projection onto the parameters:
+   p1 >= 0
+& 1 >= p2
+& p2 >= 0
+
+  /************************************************************/
+  STATE 3:
+  pta: l4 ==> 
+& p1 >= p2
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= p2
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_1 -> s_2
+  s_0 -> s_1
+  s_1 -> s_3
+  s_2 -> s_2
+		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PRP (old version) on a simple example (bad reference valuation)',
 		'input_files': ['testPRP.imi', 'testPRP.pibad'],
 		'options'    : '-PRP -output-result -output-states',
 		'expectations' : [
@@ -1872,7 +2249,97 @@ OR
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test PRP on a simple example (looping reference valuation)',
+		'purpose'    : 'Test PRP on a simple example (bad reference valuation)',
+		'input_files': ['testPRP.imi', 'testPRP.pibad'],
+		'options'    : '-mode PRP -output-result -output-states',
+		'expectations' : [
+			{'file': 'testPRP.res' , 'content' : """
+		 & p1 >= 0
+OR
+  p2 >= 0
+& p1 >= 3
+		  """
+			} # end result file
+			,
+			{'file': 'testPRP-statespace.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1 ==> 
+& p1 >= 0
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: l2 ==> 
+& p1 >= 0
+& p2 >= 0
+& x >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 2:
+  pta: locBad1 ==> 
+& p1 >= 0
+& p2 >= 4
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 4
+& p1 >= 0
+
+  /************************************************************/
+  STATE 3:
+  pta: l4 ==> 
+& p1 >= p2
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= p2
+
+  /************************************************************/
+  STATE 4:
+  pta: locBad2 ==> 
+& p1 >= 3
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 3
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_1 -> s_4
+  s_0 -> s_1
+  s_1 -> s_3
+  s_0 -> s_2
+		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PRP (old version) on a simple example (looping reference valuation)',
 		'input_files': ['testPRP.imi', 'testPRP.piloop'],
 		'options'    : '-PRP -output-result -depth-limit 10 -output-states',
 		'expectations' : [
@@ -2091,6 +2558,226 @@ OR
 	
 	,
 	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PRP on a simple example (looping reference valuation)',
+		'input_files': ['testPRP.imi', 'testPRP.piloop'],
+		'options'    : '-mode PRP -output-result -depth-limit 10 -output-states',
+		'expectations' : [
+			{'file': 'testPRP.res' , 'content' : """
+ p2 >= 4
+    & p1 >= 0
+    OR
+      p2 >= 0
+    & p1 >= 3
+		  """
+			} # end result file
+			,
+			{'file': 'testPRP-statespace.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1 ==> 
+& p1 >= 0
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: l2 ==> 
+& p1 >= 0
+& p2 >= 0
+& x >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 0
+
+  /************************************************************/
+  STATE 2:
+  pta: locBad1 ==> 
+& p1 >= 0
+& p2 >= 4
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 4
+& p1 >= 0
+
+  /************************************************************/
+  STATE 3:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 4:
+  pta: l4 ==> 
+& p1 >= p2
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= p2
+
+  /************************************************************/
+  STATE 5:
+  pta: locBad2 ==> 
+& p1 >= 3
+& p2 >= 0
+& y >= 0
+& x = y
+
+  Projection onto the parameters:
+   p2 >= 0
+& p1 >= 3
+
+  /************************************************************/
+  STATE 6:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 1 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 7:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 2 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 8:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 3 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 9:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 4 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 10:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 5 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 11:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 6 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 12:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 7 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  /************************************************************/
+  STATE 13:
+  pta: infiniteLoop ==> 
+& 1 >= x
+& p1 >= 0
+& p2 >= 5
+& x >= 0
+& x + 8 = y
+
+  Projection onto the parameters:
+   p2 >= 5
+& p1 >= 0
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_3
+  s_3 -> s_6
+  s_8 -> s_9
+  s_1 -> s_5
+  s_0 -> s_1
+  s_1 -> s_4
+  s_10 -> s_11
+  s_7 -> s_8
+  s_0 -> s_2
+  s_6 -> s_7
+  s_12 -> s_13
+  s_11 -> s_12
+  s_9 -> s_10
+
+
+		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
 	
 	#------------------------------------------------------------
 	{
@@ -2116,8 +2803,7 @@ OR
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -2141,8 +2827,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -2166,8 +2851,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -2191,8 +2875,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -2216,8 +2899,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -2241,8 +2923,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -2266,8 +2947,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -2291,8 +2971,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 9
 Local number of transitions   : 8
@@ -2316,8 +2995,7 @@ Local number of transitions   : 8
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -2341,8 +3019,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -2366,8 +3043,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 9
 Local number of transitions   : 8
@@ -2391,8 +3067,7 @@ Local number of transitions   : 8
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 10
 Local number of transitions   : 9
@@ -2416,8 +3091,7 @@ Local number of transitions   : 9
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -2441,8 +3115,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 9
 Local number of transitions   : 8
@@ -2466,8 +3139,7 @@ Local number of transitions   : 8
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 10
 Local number of transitions   : 9
@@ -2491,8 +3163,7 @@ Local number of transitions   : 9
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 11
 Local number of transitions   : 10
@@ -2546,8 +3217,7 @@ Average number of transitions : 7.0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 3
 Local number of transitions   : 2
@@ -2571,8 +3241,7 @@ Local number of transitions   : 2
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 4
 Local number of transitions   : 3
@@ -2596,8 +3265,7 @@ Local number of transitions   : 3
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -2621,8 +3289,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 4
 Local number of transitions   : 3
@@ -2646,8 +3313,7 @@ Local number of transitions   : 3
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -2671,8 +3337,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -2696,8 +3361,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -2721,8 +3385,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -2746,8 +3409,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -2783,139 +3445,146 @@ Average number of transitions : 4.0
 		'options'    : '-mode cover -depth-limit 5 -output-result',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
-			{'file': 'testBC-grid-plain.res' , 'content' : """
-(************************************************************)
- Tile #1
+			#{'file': 'testBC-grid-plain.res' , 'content' : """
+#(************************************************************)
+ #Tile #1
 
- Pi1:
-  p1 = 1
-& p2 = 1
+ #Pi1:
+  #p1 = 1
+#& p2 = 1
 
- K1:
- p2 >= 1
-& p1 >= 1
-& 2 > p2
-& 2 > p1
+ #K1:
+ #p2 >= 1
+#& p1 >= 1
+#& 2 > p2
+#& 2 > p1
 
-------------------------------------------------------------
-Constraint soundness          : possible over-approximation
-Termination                   : depth limit (1 successor unexplored)
-State space nature            : unknown
-Number of random selections   : 0
-------------------------------------------------------------
-Local number of states        : 5
-Local number of transitions   : 4
-"""
-			} # end BC file
-			, 
-			{'file': 'testBC-grid-plain.res' , 'content' : """
-(************************************************************)
- Tile #2
+#------------------------------------------------------------
+#Constraint soundness          : possible over-approximation
+#Termination                   : depth limit (1 successor unexplored)
+#Constraint nature             : good
+#------------------------------------------------------------
+#Local number of states        : 5
+#Local number of transitions   : 4
+#"""
+			#} # end BC file
+			#, 
+			#{'file': 'testBC-grid-plain.res' , 'content' : """
+#(************************************************************)
+ #Tile #2
 
- Pi2:
-  p1 = 2
-& p2 = 1
+ #Pi2:
+  #p1 = 2
+#& p2 = 1
 
- K2:
- p2 >= 1
-& p1 >= 2
-& 3 > p1
+ #K2:
+ #p2 >= 1
+#& p1 >= 2
+#& 3 > p1
 
-------------------------------------------------------------
-Constraint soundness          : possible over-approximation
-Termination                   : depth limit (1 successor unexplored)
-State space nature            : unknown
-Number of random selections   : 0
-------------------------------------------------------------
-Local number of states        : 5
-Local number of transitions   : 4
-"""
-			} # end BC file
-			, 
-			{'file': 'testBC-grid-plain.res' , 'content' : """
-(************************************************************)
- Tile #3
+#------------------------------------------------------------
+#Constraint soundness          : possible over-approximation
+#Termination                   : depth limit (1 successor unexplored)
+#Constraint nature             : good
+#------------------------------------------------------------
+#Local number of states        : 5
+#Local number of transitions   : 4
+#"""
+			#} # end BC file
+			#, 
+			#{'file': 'testBC-grid-plain.res' , 'content' : """
+#(************************************************************)
+ #Tile #3
 
- Pi3:
-  p1 = 3
-& p2 = 1
+ #Pi3:
+  #p1 = 3
+#& p2 = 1
 
- K3:
- p2 >= 0
-& p1 >= 3
-& 4 > p1
+ #K3:
+ #p2 >= 0
+#& p1 >= 3
+#& 4 > p1
 
-------------------------------------------------------------
-Constraint soundness          : possible over-approximation
-Termination                   : depth limit (1 successor unexplored)
-State space nature            : unknown
-Number of random selections   : 0
-------------------------------------------------------------
-Local number of states        : 5
-Local number of transitions   : 4
-"""
-			} # end BC file
-			, 
-			{'file': 'testBC-grid-plain.res' , 'content' : """
-(************************************************************)
- Tile #4
+#------------------------------------------------------------
+#Constraint soundness          : possible over-approximation
+#Termination                   : depth limit (1 successor unexplored)
+#Constraint nature             : good
+#------------------------------------------------------------
+#Local number of states        : 5
+#Local number of transitions   : 4
+#"""
+			#} # end BC file
+			#, 
+			#{'file': 'testBC-grid-plain.res' , 'content' : """
+#(************************************************************)
+ #Tile #4
 
- Pi4:
-  p1 = 4
-& p2 = 1
+ #Pi4:
+  #p1 = 4
+#& p2 = 1
 
- K4:
- p1 >= 4
-& p2 >= 0
+ #K4:
+ #p1 >= 4
+#& p2 >= 0
 
-------------------------------------------------------------
-Constraint soundness          : possible over-approximation
-Termination                   : depth limit (1 successor unexplored)
-State space nature            : unknown
-Number of random selections   : 0
-------------------------------------------------------------
-Local number of states        : 5
-Local number of transitions   : 4
-"""
-			} # end BC file
-			, 
-			{'file': 'testBC-grid-plain.res' , 'content' : """
-(************************************************************)
- Tile #5
+#------------------------------------------------------------
+#Constraint soundness          : possible over-approximation
+#Termination                   : depth limit (1 successor unexplored)
+#Constraint nature             : good
+#------------------------------------------------------------
+#Local number of states        : 5
+#Local number of transitions   : 4
+#"""
+			#} # end BC file
+			#, 
+			#{'file': 'testBC-grid-plain.res' , 'content' : """
+#(************************************************************)
+ #Tile #5
 
- Pi5:
-  p1 = 1
-& p2 = 2
+ #Pi5:
+  #p1 = 1
+#& p2 = 2
 
- K5:
- p2 >= 2
-& p1 >= 1
-& 2 > p1
+ #K5:
+ #p2 >= 2
+#& p1 >= 1
+#& 2 > p1
 
-------------------------------------------------------------
-Constraint soundness          : possible over-approximation
-Termination                   : depth limit (1 successor unexplored)
-State space nature            : unknown
-Number of random selections   : 0
-------------------------------------------------------------
-Local number of states        : 5
-Local number of transitions   : 4
-"""
-			} # end BC file
-			, 
+#------------------------------------------------------------
+#Constraint soundness          : possible over-approximation
+#Termination                   : depth limit (1 successor unexplored)
+#Constraint nature             : good
+#------------------------------------------------------------
+#Local number of states        : 5
+#Local number of transitions   : 4
+#"""
+			#} # end BC file
+			#, 
 			# NOTE: actual result
+			#{'file': 'testBC-grid-plain.res' , 'content' : """
+#(************************************************************)
+#GENERAL STATISTICS
+#(************************************************************)
+#------------------------------------------------------------
+#Number of integers in v0      : 16
+#Number of tiles computed      : 5
+#Coverage                      : unknown
+#Termination                   : regular termination
+#Number of unsuccessful points : 11
+#Average number of states      : 5.0
+#Average number of transitions : 4.0
+#"""
+			#} # end BC file
 			{'file': 'testBC-grid-plain.res' , 'content' : """
 (************************************************************)
 GENERAL STATISTICS
 (************************************************************)
 ------------------------------------------------------------
-Number of integers in v0      : 16
-Number of tiles computed      : 5
-Coverage                      : unknown
-Termination                   : regular termination
-Number of unsuccessful points : 11
-Average number of states      : 5.0
-Average number of transitions : 4.0
+Number of integers in v0                : 16
+Number of tiles computed                : 0
+Coverage                                : empty
+Termination                             : regular termination
+Number of unsuccessful points           : 16
 """
 			} # end BC file
 		] # end expectations
@@ -2936,23 +3605,22 @@ Average number of transitions : 4.0
  Tile #1
 
  Pi1:
-  a = 0
+  a = 1
 & b = 0
 
  K1:
- 1 > 4*b
-& 2 > 9*b
-& b >= a
-& a >= 0
+ a > b
+& b >= 0
+& 2 > b
+& 10 >= a
 
 ------------------------------------------------------------
-Constraint soundness          : possible over-approximation
-Termination                   : depth limit (1 successor unexplored)
-State space nature            : unknown
-Number of random selections   : 0
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
-Local number of states        : 10
-Local number of transitions   : 9
+Local number of states                  : 1
+Local number of transitions             : 0
 """
 			} # end BC file
 			, 
@@ -2961,109 +3629,32 @@ Local number of transitions   : 9
  Tile #2
 
  Pi2:
-  a = 1
-& b = 0
-
- K2:
- a > b
-& b >= 0
-& 2 > b
-& 10 >= a
-
-------------------------------------------------------------
-Constraint soundness          : exact
-Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
-------------------------------------------------------------
-Local number of states        : 1
-Local number of transitions   : 0
-"""
-			} # end BC file
-			, 
-			{'file': 'JLR-TACAS13.res' , 'content' : """
-(************************************************************)
- Tile #3
-
- Pi3:
-  a = 0
-& b = 1
-
- K3:
- b >= 1
-& 2 > b
-& b >= a
-& a >= 0
-
-------------------------------------------------------------
-Constraint soundness          : possible over-approximation
-Termination                   : depth limit (2 successors unexplored)
-State space nature            : bad
-Number of random selections   : 0
-------------------------------------------------------------
-Local number of states        : 18
-Local number of transitions   : 17
-"""
-			} # end BC file
-			, 
-			{'file': 'JLR-TACAS13.res' , 'content' : """
-(************************************************************)
- Tile #4
-
- Pi4:
-  a = 0
-& b = 2
-
- K4:
- b >= 2
-& 10 >= b
-& b >= a
-& a >= 0
-
-------------------------------------------------------------
-Constraint soundness          : possible over-approximation
-Termination                   : depth limit (2 successors unexplored)
-State space nature            : bad
-Number of random selections   : 0
-------------------------------------------------------------
-Local number of states        : 19
-Local number of transitions   : 18
-"""
-			} # end BC file
-			, 
-			{'file': 'JLR-TACAS13.res' , 'content' : """
-(************************************************************)
- Tile #5
-
- Pi5:
   a = 3
 & b = 2
 
- K5:
+ K2:
  a > b
 & b >= 2
 & 10 >= a
 
 ------------------------------------------------------------
-Constraint soundness          : exact
-Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : bad
 ------------------------------------------------------------
-Local number of states        : 2
-Local number of transitions   : 1
+Local number of states                  : 2
+Local number of transitions             : 1
 """
 			} # end BC file
-			, 
+			,
 			{'file': 'JLR-TACAS13.res' , 'content' : """
-------------------------------------------------------------
-Number of integers in v0      : 121
-Number of tiles computed      : 5
-Coverage                      : unknown
-Termination                   : regular termination
-Number of unsuccessful points : 116
-Average number of states      : 10.0
-Average number of transitions : 9.0
+    Number of integers in v0                : 121
+    Number of tiles computed                : 2
+    Coverage                                : unknown
+    Termination                             : regular termination
+    Number of unsuccessful points           : 119
+    Average number of states                : 1.5
+    Average number of transitions           : 0.5
 """
 			} # end BC file
 		] # end expectations
@@ -3080,25 +3671,26 @@ Average number of transitions : 9.0
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'testBC-grid-plain-loop.res' , 'content' : """
- (************************************************************)
-Tile #1
+(************************************************************)
+ Tile #1
 
  Pi1:
-  p1 = 1
+  p1 = 2
 & p2 = 1
 
  K1:
- p1 = 1
-& p2 = 1
+ p2 >= 1
+& p1 >= 2
+& 2 > p2
+& 3 > p1
 
 ------------------------------------------------------------
-Constraint soundness          : possible over-approximation
-Termination                   : depth limit (1 successor unexplored)
-State space nature            : unknown
-Number of random selections   : 0
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
-Local number of states        : 14
-Local number of transitions   : 13
+Local number of states                  : 6
+Local number of transitions             : 5
 """
 			} # end BC file
 			, 
@@ -3107,23 +3699,22 @@ Local number of transitions   : 13
  Tile #2
 
  Pi2:
-  p1 = 2
+  p1 = 3
 & p2 = 1
 
  K2:
  p2 >= 1
-& p1 >= 2
+& p1 >= 3
 & 2 > p2
-& 3 > p1
+& 4 > p1
 
 ------------------------------------------------------------
-Constraint soundness          : exact
-Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
-Local number of states        : 6
-Local number of transitions   : 5
+Local number of states                  : 7
+Local number of transitions             : 6
 """
 			} # end BC file
 			, 
@@ -3132,23 +3723,22 @@ Local number of transitions   : 5
  Tile #3
 
  Pi3:
-  p1 = 3
-& p2 = 1
+  p1 = 1
+& p2 = 2
 
  K3:
- p2 >= 1
-& p1 >= 3
-& 2 > p2
-& 4 > p1
+ p2 >= 2
+& p1 >= 1
+& 3 > p2
+& 2 > p1
 
 ------------------------------------------------------------
-Constraint soundness          : exact
-Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
-Local number of states        : 7
-Local number of transitions   : 6
+Local number of states                  : 6
+Local number of transitions             : 5
 """
 			} # end BC file
 			, 
@@ -3157,23 +3747,22 @@ Local number of transitions   : 6
  Tile #4
 
  Pi4:
-  p1 = 1
+  p1 = 2
 & p2 = 2
 
  K4:
  p2 >= 2
-& p1 >= 1
+& p1 >= 2
 & 3 > p2
-& 2 > p1
+& 3 > p1
 
 ------------------------------------------------------------
-Constraint soundness          : exact
-Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
-Local number of states        : 6
-Local number of transitions   : 5
+Local number of states                  : 7
+Local number of transitions             : 6
 """
 			} # end BC file
 			, 
@@ -3182,23 +3771,22 @@ Local number of transitions   : 5
  Tile #5
 
  Pi5:
-  p1 = 2
+  p1 = 3
 & p2 = 2
 
  K5:
  p2 >= 2
-& p1 >= 2
+& p1 >= 3
 & 3 > p2
-& 3 > p1
+& 4 > p1
 
 ------------------------------------------------------------
-Constraint soundness          : possible under-approximation
-Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 1
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
-Local number of states        : 7
-Local number of transitions   : 6
+Local number of states                  : 8
+Local number of transitions             : 7
 """
 			} # end BC file
 			, 
@@ -3207,23 +3795,22 @@ Local number of transitions   : 6
  Tile #6
 
  Pi6:
-  p1 = 3
-& p2 = 2
+  p1 = 1
+& p2 = 3
 
  K6:
- p2 >= 2
-& p1 >= 3
-& 3 > p2
-& 4 > p1
+ p2 >= 3
+& p1 >= 1
+& 4 > p2
+& 2 > p1
 
 ------------------------------------------------------------
-Constraint soundness          : possible under-approximation
-Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 1
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
-Local number of states        : 8
-Local number of transitions   : 7
+Local number of states                  : 7
+Local number of transitions             : 6
 """
 			} # end BC file
 			, 
@@ -3232,73 +3819,22 @@ Local number of transitions   : 7
  Tile #7
 
  Pi7:
-  p1 = 1
-& p2 = 3
-
- K7:
- p2 >= 3
-& p1 >= 1
-& 4 > p2
-& 2 > p1
-
-------------------------------------------------------------
-Constraint soundness          : exact
-Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
-------------------------------------------------------------
-Local number of states        : 7
-Local number of transitions   : 6
-"""
-			} # end BC file
-			, 
-			{'file': 'testBC-grid-plain-loop.res' , 'content' : """
-(************************************************************)
- Tile #8
-
- Pi8:
   p1 = 2
 & p2 = 3
 
- K8:
+ K7:
  p2 >= 3
 & p1 >= 2
 & 4 > p2
 & 3 > p1
 
 ------------------------------------------------------------
-Constraint soundness          : possible under-approximation
-Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 1
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
-Local number of states        : 8
-Local number of transitions   : 7
-"""
-			} # end BC file
-			, 
-			{'file': 'testBC-grid-plain-loop.res' , 'content' : """
-(************************************************************)
- Tile #9
-
- Pi9:
-  p1 = 3
-& p2 = 3
-
- K9:
- p2 >= 3
-& p1 >= 3
-& 4 > p2
-& 4 > p1
-
-------------------------------------------------------------
-Constraint soundness          : possibly invalid
-Termination                   : depth limit (0 successor unexplored)
-State space nature            : unknown
-Number of random selections   : 1
-------------------------------------------------------------
-Local number of states        : 9
-Local number of transitions   : 8
+Local number of states                  : 8
+Local number of transitions             : 7
 """
 			} # end BC file
 			, 
@@ -3308,13 +3844,13 @@ Local number of transitions   : 8
 GENERAL STATISTICS
 (************************************************************)
 ------------------------------------------------------------
-Number of integers in v0      : 9
-Number of tiles computed      : 9
-Coverage                      : unknown
-Termination                   : regular termination
-Number of unsuccessful points : 0
-Average number of states      : 8.0
-Average number of transitions : 7.0
+Number of integers in v0                : 9
+Number of tiles computed                : 7
+Coverage                                : unknown
+Termination                             : regular termination
+Number of unsuccessful points           : 2
+Average number of states                : 7.0
+Average number of transitions           : 6.0
 """
 			} # end BC file
 		] # end expectations
@@ -3430,8 +3966,7 @@ Tile #7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -3451,8 +3986,7 @@ Number of random selections   : 0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -3468,16 +4002,16 @@ Average number of transitions : 14.1
 """
 			} # end BC file
 			, 
-			{'file': 'flipflop_cart_bc_points_2.txt' , 'content' : """14. 3.
-8. 9.
+			{'file': 'flipflop_cart_points_2.txt' , 'content' : """8. 9.
 8. 16.
 17. 7.
 17. 3.
 14. 3.
+8. 9.
 # """
 			} # end tile file
 			,
-			{'file': 'flipflop_cart_bc_points_8.txt' , 'content' : """17. 31.
+			{'file': 'flipflop_cart_points_8.txt' , 'content' : """17. 31.
 17. 7.
 8. 16.
 8. 31.
@@ -3514,8 +4048,7 @@ Average number of transitions : 14.1
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -3540,8 +4073,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 11
 Local number of transitions   : 10
@@ -3564,8 +4096,7 @@ Local number of transitions   : 10
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 15
 Local number of transitions   : 14
@@ -3589,8 +4120,7 @@ Local number of transitions   : 14
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 Local number of states        : 17
 Local number of transitions   : 16
@@ -3632,8 +4162,7 @@ Average number of transitions : 11.7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -3650,8 +4179,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -3668,8 +4196,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -3686,8 +4213,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -3704,8 +4230,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -3722,8 +4247,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -3740,8 +4264,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -3758,8 +4281,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 9
 Local number of transitions   : 8
@@ -3776,8 +4298,7 @@ Local number of transitions   : 8
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -3794,8 +4315,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -3812,8 +4332,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 9
 Local number of transitions   : 8
@@ -3830,8 +4349,7 @@ Local number of transitions   : 8
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 10
 Local number of transitions   : 9
@@ -3848,8 +4366,7 @@ Local number of transitions   : 9
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -3866,8 +4383,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 9
 Local number of transitions   : 8
@@ -3884,8 +4400,7 @@ Local number of transitions   : 8
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 10
 Local number of transitions   : 9
@@ -3902,8 +4417,7 @@ Local number of transitions   : 9
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 11
 Local number of transitions   : 10
@@ -3946,8 +4460,7 @@ Termination                   : regular termination
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 3
 Local number of transitions   : 2
@@ -3964,8 +4477,7 @@ Local number of transitions   : 2
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 4
 Local number of transitions   : 3
@@ -3982,8 +4494,7 @@ Local number of transitions   : 3
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -4000,8 +4511,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 4
 Local number of transitions   : 3
@@ -4018,8 +4528,7 @@ Local number of transitions   : 3
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -4036,8 +4545,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -4054,8 +4562,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -4072,8 +4579,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -4090,8 +4596,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -4177,8 +4682,7 @@ Termination                   : regular termination
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -4191,8 +4695,7 @@ Number of random selections   : 0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -4204,7 +4707,7 @@ Average number of transitions : 14.1
 			} # end BC file
 			, 
 			# NOTE: impossible to check graphics source, as the order of the tiles is not known
-			#{'file': 'flipflop_cart_bc_points_2.txt' , 'content' : """14. 3.
+			#{'file': 'flipflop_cart_points_2.txt' , 'content' : """14. 3.
 #8. 9.
 #8. 16.
 #17. 7.
@@ -4213,7 +4716,7 @@ Average number of transitions : 14.1
 ## """
 			#} # end tile file
 			#,
-			#{'file': 'flipflop_cart_bc_points_8.txt' , 'content' : """17. 31.
+			#{'file': 'flipflop_cart_points_8.txt' , 'content' : """17. 31.
 #17. 7.
 #8. 16.
 #8. 31.
@@ -4285,8 +4788,7 @@ Average number of transitions : 14.1
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -4299,8 +4801,7 @@ Number of random selections   : 0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -4335,8 +4836,7 @@ Termination                   : regular termination
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -4353,8 +4853,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -4371,8 +4870,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -4389,8 +4887,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -4407,8 +4904,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -4425,8 +4921,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -4443,8 +4938,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -4461,8 +4955,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 9
 Local number of transitions   : 8
@@ -4479,8 +4972,7 @@ Local number of transitions   : 8
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -4497,8 +4989,7 @@ Local number of transitions   : 6
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -4515,8 +5006,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 9
 Local number of transitions   : 8
@@ -4533,8 +5023,7 @@ Local number of transitions   : 8
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 10
 Local number of transitions   : 9
@@ -4551,8 +5040,7 @@ Local number of transitions   : 9
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 8
 Local number of transitions   : 7
@@ -4569,8 +5057,7 @@ Local number of transitions   : 7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 9
 Local number of transitions   : 8
@@ -4587,8 +5074,7 @@ Local number of transitions   : 8
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 10
 Local number of transitions   : 9
@@ -4605,8 +5091,7 @@ Local number of transitions   : 9
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 11
 Local number of transitions   : 10
@@ -4651,8 +5136,7 @@ Average number of transitions : 7.0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 3
 Local number of transitions   : 2
@@ -4669,8 +5153,7 @@ Local number of transitions   : 2
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 4
 Local number of transitions   : 3
@@ -4687,8 +5170,7 @@ Local number of transitions   : 3
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -4705,8 +5187,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 4
 Local number of transitions   : 3
@@ -4723,8 +5204,7 @@ Local number of transitions   : 3
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -4741,8 +5221,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -4759,8 +5238,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 5
 Local number of transitions   : 4
@@ -4777,8 +5255,7 @@ Local number of transitions   : 4
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 6
 Local number of transitions   : 5
@@ -4795,8 +5272,7 @@ Local number of transitions   : 5
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 7
 Local number of transitions   : 6
@@ -4884,8 +5360,7 @@ Average number of transitions : 4.0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -4898,8 +5373,7 @@ Number of random selections   : 0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint nature             : bad
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -4923,7 +5397,475 @@ Average number of transitions : 14.1
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test PRPC in mode cover with depth limit (JLR15)',
+		'purpose'    : 'Test BC in mode cover (on the case study BC vs. PRPC)',
+		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
+		'options'    : '-mode cover -no-random -output-result',
+		'expectations' : [
+			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #1
+
+ Pi1:
+  p1 = 0
+& p2 = 0
+
+ K1:
+ p2 >= 0
+& p1 >= 0
+& 1 > p2
+& 1 > p1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Local number of states                  : 8
+Local number of transitions             : 12
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #2
+
+ Pi2:
+  p1 = 1
+& p2 = 0
+
+ K2:
+ p2 >= 0
+& p1 >= 1
+& 1 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Local number of states                  : 8
+Local number of transitions             : 12
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #3
+
+ Pi3:
+  p1 = 2
+& p2 = 0
+
+ K3:
+ p2 >= 0
+& p1 >= 2
+& 1 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : bad
+------------------------------------------------------------
+Local number of states                  : 7
+Local number of transitions             : 10
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #4
+
+ Pi4:
+  p1 = 3
+& p2 = 0
+
+ K4:
+ p2 >= 0
+& p1 >= 3
+& 1 > p2
+& 4 >= p1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : bad
+------------------------------------------------------------
+Local number of states                  : 7
+Local number of transitions             : 10
+"""
+			} # end BC file
+			,
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #5
+
+ Pi5:
+  p1 = 0
+& p2 = 1
+
+ K5:
+ p2 >= 1
+& p1 >= 0
+& 2 > p2
+& 1 > p1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Local number of states                  : 7
+Local number of transitions             : 11
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #6
+
+ Pi6:
+  p1 = 1
+& p2 = 1
+
+ K6:
+ p2 >= 1
+& p1 >= 1
+& 2 > p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Local number of states                  : 8
+Local number of transitions             : 12
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #7
+
+ Pi7:
+  p1 = 2
+& p2 = 1
+
+ K7:
+ p2 >= 1
+& p1 >= 2
+& 2 > p2
+& 3 > p1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : bad
+------------------------------------------------------------
+Local number of states                  : 7
+Local number of transitions             : 10
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #8
+
+ Pi8:
+  p1 = 3
+& p2 = 1
+
+ K8:
+ p2 >= 1
+& p1 >= 3
+& 2 > p2
+& 4 >= p1
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : bad
+------------------------------------------------------------
+Local number of states                  : 7
+Local number of transitions             : 10
+"""
+			} # end BC file
+			,
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #9
+
+ Pi9:
+  p1 = 0
+& p2 = 2
+
+ K9:
+ p1 >= 0
+& p2 >= 2
+& 4 >= p2
+& 2 > p1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : bad
+------------------------------------------------------------
+Local number of states                  : 7
+Local number of transitions             : 10
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #10
+
+ Pi10:
+  p1 = 2
+& p2 = 2
+
+ K10:
+ p1 >= 2
+& p2 >= 2
+& 4 >= p2
+& 4 >= p1
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : bad
+------------------------------------------------------------
+Local number of states                  : 8
+Local number of transitions             : 11
+"""
+			} # end BC file
+			,
+			{'file': 'diffBCPRPC.res' , 'content' : """
+------------------------------------------------------------
+Number of integers in v0                : 25
+Number of tiles computed                : 10
+Coverage                                : integer-complete
+Termination                             : regular termination
+Number of unsuccessful points           : 15
+Average number of states                : 7.4
+Average number of transitions           : 10.8
+"""
+			} # end BC file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PRPC (old version) in mode cover (on the case study BC vs. PRPC)',
+		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
+		'options'    : '-mode cover -PRP -no-random -output-result',
+		'expectations' : [
+			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #1
+
+ Pi1:
+  p1 = 0
+& p2 = 0
+
+ K1:
+ p2 >= 0
+& p1 >= 0
+& 1 > p1
+& 1 > p2
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Local number of states                  : 8
+Local number of transitions             : 12
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #2
+
+ Pi2:
+  p1 = 1
+& p2 = 0
+
+ K2:
+ p2 >= 0
+& 2 > p1
+& 1 > p2
+& p1 >= 1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Local number of states                  : 8
+Local number of transitions             : 12
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #3
+
+ Pi3:
+  p1 = 2
+& p2 = 0
+
+ K3:
+ p2 >= 0
+& 4 >= p2
+& 4 >= p1
+& p1 >= 2
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : bad
+------------------------------------------------------------
+Local number of states                  : 6
+Local number of transitions             : 9
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #4
+
+ Pi4:
+  p1 = 0
+& p2 = 1
+
+ K4:
+ p1 >= 0
+& 1 > p1
+& 2 > p2
+& p2 >= 1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Local number of states                  : 7
+Local number of transitions             : 11
+"""
+			} # end BC file
+			,
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #5
+
+ Pi5:
+  p1 = 1
+& p2 = 1
+
+ K5:
+ p1 >= 0
+& 2 > p1
+& 2 > p2
+& p2 >= 1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Local number of states                  : 8
+Local number of transitions             : 12
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+(************************************************************)
+ Tile #6
+
+ Pi6:
+  p1 = 0
+& p2 = 2
+
+ K6:
+ p1 >= 0
+& p2 >= 2
+& 4 >= p2
+& 4 >= p1
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : bad
+------------------------------------------------------------
+Local number of states                  : 7
+Local number of transitions             : 10
+"""
+			} # end BC file
+			, 
+			{'file': 'diffBCPRPC.res' , 'content' : """
+------------------------------------------------------------
+Number of integers in v0                : 25
+Number of tiles computed                : 6
+Coverage                                : integer-complete
+Termination                             : regular termination
+Number of unsuccessful points           : 19
+Average number of states                : 7.3
+Average number of transitions           : 11.0
+"""
+			} # end BC file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PRPC (on the case study BC vs. PRPC)',
+		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
+		'options'    : '-mode PRPC -no-random -output-result',
+		'expectations' : [
+			{'file': 'diffBCPRPC.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= 0
+& 2 > p2
+& 2 > p1
+<good|bad>
+ p2 >= 0
+& 4 >= p2
+& 4 >= p1
+& p1 >= 2
+OR
+  p1 >= 0
+& p2 >= 2
+& 4 >= p2
+& 4 >= p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact <good|bad> exact
+Termination                             : regular termination
+Constraint nature                       : good/bad
+"""
+			} # end BC file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PRPC (old version) in mode cover with depth limit (JLR15)',
 		'input_files': ['JLR-TACAS13.imi', 'JLR-TACAS13.v0'],
 		'options'    : '-mode cover -PRP -depth-limit 10 -output-result',
 		'expectations' : [
@@ -4933,24 +5875,22 @@ Average number of transitions : 14.1
  Tile #1
 
  Pi1:
-  a = 0
+  a = 1
 & b = 0
 
  K1:
- a >= 0
+ 2 > b
 & b >= 0
-& 2 > 9*b
-& 1 > 4*b
+& a > b
 & 10 >= a
 
 ------------------------------------------------------------
-Constraint soundness          : possibly invalid
-Termination                   : depth limit (1 successor unexplored)
-State space nature            : unknown
-Number of random selections   : 0
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
 ------------------------------------------------------------
-Local number of states        : 10
-Local number of transitions   : 9
+Local number of states                  : 1
+Local number of transitions             : 0
 """
 			} # end BC file
 			, 
@@ -4969,13 +5909,12 @@ Local number of transitions   : 9
 & 10 >= b
 
 ------------------------------------------------------------
-Constraint soundness          : possible under-approximation
-Termination                   : depth limit (1 successor unexplored)
-State space nature            : bad
-Number of random selections   : 0
+Constraint soundness                    : possible under-approximation
+Termination                             : depth limit (1 successor unexplored)
+Constraint nature                       : bad
 ------------------------------------------------------------
-Local number of states        : 18
-Local number of transitions   : 17
+Local number of states                  : 18
+Local number of transitions             : 17
 """
 			} # end BC file
 			, 
@@ -4984,60 +5923,37 @@ Local number of transitions   : 17
  Tile #3
 
  Pi3:
-  a = 2
-& b = 1
-
- K3:
- 2 > b
-& b >= 0
-& a > b
-& 10 >= a
-
-------------------------------------------------------------
-Constraint soundness          : exact
-Termination                   : regular termination
-State space nature            : good
-Number of random selections   : 0
-------------------------------------------------------------
-Local number of states        : 1
-Local number of transitions   : 0
-"""
-			} # end BC file
-			, 
-			{'file': 'JLR-TACAS13.res' , 'content' : """
-(************************************************************)
- Tile #4
-
- Pi4:
   a = 3
 & b = 2
 
- K4:
+ K3:
  b >= 2
 & 10 >= b
 & 10 >= a
 & a >= 0
 
 ------------------------------------------------------------
-Constraint soundness          : exact
-Termination                   : regular termination
-State space nature            : bad
-Number of random selections   : 0
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : bad
 ------------------------------------------------------------
-Local number of states        : 2
-Local number of transitions   : 1
+Local number of states                  : 2
+Local number of transitions             : 1
 """
 			} # end BC file
-			,
+			, 
 			{'file': 'JLR-TACAS13.res' , 'content' : """
+(************************************************************)
+GENERAL STATISTICS
+(************************************************************)
 ------------------------------------------------------------
-Number of integers in v0      : 121
-Number of tiles computed      : 4
-Coverage                      : unknown
-Termination                   : regular termination
-Number of unsuccessful points : 117
-Average number of states      : 7.7
-Average number of transitions : 6.7
+Number of integers in v0                : 121
+Number of tiles computed                : 3
+Coverage                                : unknown
+Termination                             : regular termination
+Number of unsuccessful points           : 118
+Average number of states                : 7.0
+Average number of transitions           : 6.0
 """
 			} # end BC file
 		] # end expectations
@@ -5899,7 +6815,7 @@ end
 	{
 		'purpose'    : 'Test conversion to HyTech',
 		'input_files': ['flipflop.imi'],
-		'options'    : '-PTA2HyTech',
+		'options'    : '-PTA2HyTech -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'flipflop.hy' , 'content' : """
  -- Created to be compatible with 'hytech-v1.04f-Linux_static'
@@ -6250,7 +7166,31 @@ init := True
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
-	#,
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'FMTV challenge: Test EF with project-result',
+		'input_files': ['fmtv1A1-v2.imi'],
+		'options'    : '-mode EF -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'fmtv1A1-v2.res' , 'content' : """
+BEGIN CONSTRAINT
+63 > e2e
+& e2e >= 0
+OR
+125*e2e > 18126
+END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
 	##------------------------------------------------------------
 	#{
 		#'purpose'    : 'XXXX',

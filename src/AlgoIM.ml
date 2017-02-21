@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/06
- * Last modified     : 2016/01/29
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -132,31 +132,40 @@ class algoIM =
 			(* UNKNOWN otherwise *)
 			else Constraint_maybe_invalid
 		in
+		
+		let result = match statespace_nature with
+			(*** NOTE: if a safety property is defined and if the state space reaches some unsafe states, then the constraint is considered as bad.
+	In any other case (safe state space, or no safety property defined), the constraint nature is considered as good. ***)
+			| StateSpace.Good | StateSpace.Unknown -> Good_constraint(LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint, soundness)
+			| StateSpace.Bad -> Bad_constraint(LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint, soundness)
+		in
 
 		(* Return result *)
-		IM_result
+		Point_based_result
 		{
+			(* Reference valuation *)
+			reference_val		= Input.get_pi0();
+			
 			(* Result of the algorithm *)
-			result				= LinearConstraint.Convex_p_constraint p_constraint;
+			result				= result;
 			
 			(* Explored state space *)
 			state_space			= state_space;
 			
 			(* Nature of the state space *)
-			statespace_nature	= statespace_nature;
+(* 			statespace_nature	= statespace_nature; *)
 			
 			(* Number of random selections of pi-incompatible inequalities performed *)
-			nb_random_selections= nb_random_selections;
+(* 			nb_random_selections= nb_random_selections; *)
 	
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;
 			
-			(* Soudndness of the result *)
-			soundness			= soundness;
-	
 			(* Termination *)
 			termination			= termination_status;
 		}
+
+
 	
 (************************************************************)
 (************************************************************)

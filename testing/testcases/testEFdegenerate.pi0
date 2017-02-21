@@ -1,0 +1,22 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * PTA for which the initial state is already bad
+ *
+ * Description     : PTA for which the initial state is already bad
+ * Correctness     : The system is bad for any valuation
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+ *
+ * Created         : 2016/10/18
+ * Last modified   : 2016/10/18
+ *
+ * IMITATOR version: 2.8
+ ************************************************************)
+
+p1 = 3
+p2 = 1

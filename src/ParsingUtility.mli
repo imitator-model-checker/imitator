@@ -1,17 +1,23 @@
-(*****************************************************************
+(************************************************************
  *
- *                     IMITATOR II
+ *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Etienne Andre
- * Created:       2014/03/15
- * Last modified: 2014/03/15
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * 
+ * Module description: Parsing functions for input elements
+ * 
+ * File contributors : Ulrich Kühne, Étienne André
+ * Created           : 2014/03/15
+ * Last modified     : 2016/10/10
  *
- ****************************************************************)
+ ************************************************************)
 
+(** Compile the concrete model and convert it into an abstract model *)
+val compile_model: Options.imitator_options -> bool -> AbstractModel.abstract_model
 
-open AbstractModel
+(** Parse the pi0 file and convert it into an abstract representation *)
+val compile_pi0: Options.imitator_options -> PVal.pval
 
-(** Compile the different files and set the models *)
-val compile: Options.imitator_options -> abstract_model * pi0 * v0
-
+(** Parse the v0 file and convert it into an abstract representation *)
+val compile_v0: Options.imitator_options -> HyperRectangle.hyper_rectangle

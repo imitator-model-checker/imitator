@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/08/11
+ * Last modified     : 2016/08/15
  *
  ************************************************************)
 
@@ -32,6 +32,12 @@ type more_points =
 	| Some_pval of PVal.pval
 
 	
+(*** NOTE: this should be a class parameter (but would require much work in other classes… so TODO later) ***)
+type tiles_storage =
+	(* List of constraints, as in the legacy cartography [AF10] *)
+	| Tiles_list
+	(* A good/bad representation of the tiles, when only the parameter valuations are of interest *)
+	| Tiles_good_bad_constraint
 
 
 (************************************************************)
@@ -39,8 +45,11 @@ type more_points =
 (* Class-independent functions *)
 (************************************************************)
 (************************************************************)
-(* Convert an 'im_result' into an 'abstract_im_result' *)
-val abstract_im_result_of_im_result : Result.im_result -> PVal.pval -> Result.abstract_im_result
+(** Convert a 'single_synthesis_result' into an 'abstract_point_based_result' *)
+val abstract_point_based_result_of_single_synthesis_result : Result.single_synthesis_result -> PVal.pval -> Result.abstract_point_based_result
+
+(** Convert a 'point_based_result' into an 'abstract_point_based_result' *)
+val abstract_point_based_result_of_point_based_result : Result.point_based_result -> PVal.pval -> Result.abstract_point_based_result
 
 (*------------------------------------------------------------*)
 (* Print warning(s) depending on a Result.bc_algorithm_termination *)
@@ -60,6 +69,9 @@ class virtual algoCartoGeneric :
 		(************************************************************)
 		(* Current point *)
 		val mutable current_point : more_points
+		
+		(* Current iteration (number of times IM is called); used for printing only *)
+		val mutable current_iteration : int
 
 		(* Number of dimensions *)
 		val mutable nb_dimensions : int
@@ -71,18 +83,17 @@ class virtual algoCartoGeneric :
 		val mutable min_bounds : NumConst.t array
 		val mutable max_bounds : NumConst.t array
 
-		(* List of im_results *)
-		val mutable im_results : Result.abstract_im_result list
+		(* The current algorithm instance *)
+		val mutable current_algo_instance : AlgoBFS.algoBFS
 		
-(*		(* Initial p-constraint (needed to check whether points satisfy it) *)
-		val mutable init_p_constraint = LinearConstraint.p_true_constraint ()
-*)
-
+		(* List of im_results *)
+(* 		val mutable im_results : Result.abstract_im_result list *)
+		
 		(* Counts the points actually member of an existing constraint for information purpose *)
 		val mutable nb_unsuccessful_points : int
 
 		(* Counter tracking the computation time to look for points *)
-		val find_next_point_counter : Counter.counter
+(* 		val find_next_point_counter : Counter.counter *)
 		
 		(* Status of the analysis *)
 		val mutable termination_status : Result.bc_algorithm_termination option
@@ -93,8 +104,14 @@ class virtual algoCartoGeneric :
 		(************************************************************)
 		
 		(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-		method set_algo_instance_function : (unit -> AlgoIMK.algoIMK) -> unit
+		method set_algo_instance_function : (unit -> AlgoBFS.algoBFS) -> unit
 
+		(* Get the function creating a new instance of the algorithm to call (typically IM or PRP) *)
+		method get_algo_instance_function : (unit -> AlgoBFS.algoBFS)
+
+		(* Set the tiles_manager type *)
+		method set_tiles_manager_type : tiles_storage -> unit
+		
 		
 		(************************************************************)
 		(* Class methods: methods used in subclasses as building blocks *)
@@ -172,12 +189,6 @@ class virtual algoCartoGeneric :
 		(* Main method to run the algorithm: virtual method to be defined in subclasses *)
 		method run : unit -> Result.imitator_result
 		
-		
-		(* Processing the result of IM *)
-(* 		method virtual process_result : Result.im_result -> PVal.pval -> unit *)
-
-(* Packaging the result at the end of the exploration (to be defined in subclasses) *)
-(* 		method virtual compute_result : Result.imitator_result *)
 
 
 		(************************************************************)
@@ -193,38 +204,50 @@ class virtual algoCartoGeneric :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Get all tiles *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method get_abstract_im_result_list : Result.abstract_im_result list
+(* 		method get_abstract_im_result_list : Result.abstract_im_result list *)
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Set all tiles, i.e., replace the list of abstract_im_result by that given in argument (used when the collaborator creates a new AlgoCartoGeneric, and wants to add the previously computed tiles) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method set_abstract_im_result_list : Result.abstract_im_result list -> unit
+(* 		method set_abstract_im_result_list : Result.abstract_im_result list -> unit *)
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Get the tiles manager *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method get_tiles_manager : TilesManager.tilesManager
 		
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Set the tiles manager, i.e., replace the list of tiles as managed by the manager with that given in argument (used when the collaborator creates a new AlgoCartoGeneric, and wants to add the previously computed tiles) *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method set_tiles_manager : TilesManager.tilesManager -> unit
+	
+	
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Iteration condition to keep computing new tiles *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method check_iteration_condition : bool
 		
-(*		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Create auxiliary files generated by one instance of IM *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method create_auxiliary_files : Result.imitator_result -> unit*)
+		method create_auxiliary_files : Result.imitator_result -> unit
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Process one result of an abstract version of an instance of IM *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method process_result : Result.abstract_im_result -> unit
+		method process_result : Result.abstract_point_based_result -> unit
 		
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Update the limits *)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* 		method update_limit : unit *)
-
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Compute the next point, store it; return it if new point exists and limits not reached *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method compute_and_return_next_point : more_points
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Call the algorithm on the current point (typically call IM or PRP) *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method call_point : Result.imitator_result
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Update termination condition, depending on the limit reached *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

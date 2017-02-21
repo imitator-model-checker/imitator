@@ -1,0 +1,382 @@
+\documentclass[a4paper,11pt]{report}
+
+% \sloppy
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PACKAGES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[utf8x]{inputenc}
+
+\usepackage[english]{babel} % francais,
+
+\usepackage{fourier}
+\usepackage{eulervm}
+
+\usepackage{pdflscape}
+
+% \usepackage{geometry} % to change margins
+
+\usepackage{amsmath,amssymb,amsthm,url}
+\usepackage{amsfonts}
+
+% \usepackage{caption}
+\usepackage{subcaption}
+% \usepackage{marginnote}
+
+% \usepackage[pdftex]{graphicx,color}
+\usepackage[pdftex,
+		colorlinks=true,
+		pagebackref=true,
+		citecolor=darkgreen,
+		linkcolor=darkblue,
+		urlcolor=darkpurple,
+	]{hyperref}
+
+
+% BEGIN Watermarking
+\ifdefined\DraftVersion
+	\usepackage{draftwatermark}
+	\SetWatermarkText{draft}
+	\SetWatermarkScale{2}
+	\SetWatermarkColor[gray]{0.9}
+\fi
+% END Watermarking
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TIKZ
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{pgf}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata,decorations.pathmorphing}
+% Couleurs
+
+\definecolor{darkblue}{rgb}{0, 0, 0.7}
+\definecolor{darkgreen}{rgb}{0, 0.5, 0}
+\definecolor{darkpurple}{rgb}{0.7, 0, 0.7}
+
+
+\definecolor{turquoise}{rgb}{0 0.41 0.41}
+\definecolor{rouge}{rgb}{0.79 0.0 0.1}
+\definecolor{vert}{rgb}{0.15 0.4 0.1}
+\definecolor{mauve}{rgb}{0.6 0.4 0.8}
+\definecolor{violet}{rgb}{0.58 0. 0.41}
+\definecolor{orange}{rgb}{0.8 0.4 0.2}
+\definecolor{bleu}{rgb}{0.39, 0.58, 0.93}
+\definecolor{gris}{rgb}{0.6,0.6,0.6}
+\definecolor{grisfonce}{rgb}{0.4,0.4,0.4}
+% Jeu de couleurs pales
+\definecolor{cpale1}{rgb}{1, 0.3, 0.3}
+\definecolor{cpale2}{rgb}{0.3, 1, 0.3}
+\definecolor{cpale3}{rgb}{0.3, 0.3, 1}
+\definecolor{cpale4}{rgb}{1, 0.3, 1}
+\definecolor{cpale5}{rgb}{1, 1, 0.3}
+\definecolor{cpale6}{rgb}{0.3, 1, 1}
+\definecolor{cpale7}{rgb}{0.9, 0.6, 0.2}
+\definecolor{cpale8}{rgb}{0.7, 0.4, 1}
+\definecolor{cpale9}{rgb}{0.5, 1, 0.75}
+\definecolor{cpale10}{rgb}{0.8, 0.7, 0.6}
+\definecolor{cpale11}{rgb}{0.6, 0.7, 0.8}
+\definecolor{cpale12}{rgb}{0.2, 0.5, 0.9}
+\definecolor{cpale13}{rgb}{0.5, 0.9, 0.2}
+\definecolor{cpale14}{rgb}{0.9, 0.2, 0.5}
+\definecolor{cpale15}{rgb}{0.7, 0.7, 0.7}
+\definecolor{cpale16}{rgb}{0.8, 0.8, 0.5}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CLEVER REFERENCES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[capitalise,english,nameinlink]{cleveref} % load after algorithm2e and hyperref
+% \crefname{line}{\text{line}}{\text{lines}} % to remove the capital
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CONSTANTS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+% MATHS
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+% Variables
+\def\init{\ensuremath{\textsf{init}}} % \xspace
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\Action}{\ensuremath{\Sigma}}
+\newcommand{\action}{a}
+\newcommand{\C}{C}
+\newcommand{\Cinit}{\C_\init} % initial constraint
+\newcommand{\Clock}{X} % set of clocks
+\newcommand{\ClockCard}{H} % cardinality of clocks
+\newcommand{\clock}{x} % clock
+\newcommand{\clockval}{w} % clock valuation
+\newcommand{\Cupdates}{\Clock_\mathsf{up}}
+\newcommand{\Dupdates}{\DVar_\mathsf{up}}
+\newcommand{\dval}{\ensuremath{\delta}} % discrete variable
+\newcommand{\DVar}{D} % set of discrete variables
+\newcommand{\dvar}{d} % discrete variable
+\newcommand{\DVarCard}{J} % cardinality of discrete variables
+% \newcommand{\DVarinit}{\DVar_\init} % discrete variable
+\newcommand{\edge}{e}
+\newcommand{\guard}{g}
+\newcommand{\invariant}{I}
+\newcommand{\LConstraint}{\mathcal{LC}} % (#1)% set of all constraints over some set
+\newcommand{\LConstraintD}{\LConstraint(\DVar)}
+\newcommand{\LConstraintXP}{\LConstraint(\Clock \cup \Param)}
+\newcommand{\LConstraintXPD}{\LConstraint(\Clock \cup \Param \cup \DVar)}
+\newcommand{\lterm}{\mathit{lt}}
+\newcommand{\LTerm}{\mathcal{LT}} % (#1)% set of all linear terms over some set
+\newcommand{\LTermD}{\LTerm(\DVar)}
+\newcommand{\LTermXPD}{\LTerm(\Clock \cup \Param \cup \DVar)}
+\newcommand{\loc}{l} % location
+\newcommand{\locinit}{\loc_\init}
+\newcommand{\Loc}{L} % set of locations
+\newcommand{\Param}{P} % set of parameters
+\newcommand{\param}{p} % parameter
+\newcommand{\ParamCard}{M} % number of parameters
+\newcommand{\pval}{v} % parameter valuation
+% \newcommand{\resets}{R}
+\newcommand{\steps}{ {\rightarrow} }
+\newcommand{\stopwatches}{S}
+\newcommand{\tuple}[1]{\langle#1\rangle}
+\newcommand{\unobs}{\ensuremath{\epsilon}}
+\newcommand{\Var}{\mathit{Var}} % set of variables
+\newcommand{\var}{\mathit{z}} % variable
+\newcommand{\VarCard}{N} % cardinality of variables % TODO: conflict
+
+% Ensembles
+\newcommand{\grandb}{{\mathbb B}}
+\newcommand{\grandn}{{\mathbb N}}
+\newcommand{\grandq}{{\mathbb Q}}
+\newcommand{\grandqplus}{{\mathbb Q}_{\geq 0}}
+\newcommand{\grandr}{{\mathbb R}}
+\newcommand{\grandrplus}{\grandr_{\geq 0}}
+\newcommand{\grandz}{{\mathbb Z}}
+
+% Unites
+\newcommand{\micros}{\mathit{\mu s}}
+\newcommand{\nanos}{ns}
+
+% Noms
+\newcommand{\tiling}{\mathit{Tiling}}
+% \newcommand{\true}{\mathbf{true}}
+\newcommand{\Ko}{K}
+\newcommand{\pio}{\pi_0}
+\newcommand{\piprime}{\pi}
+\newcommand{\To}{T_0}
+\newcommand{\Tprime}{T}
+
+% Symboles
+\newcommand{\emptystring}{$\epsilon$}
+\newcommand{\fleche}[1]{\stackrel{#1}{\rightarrow}}
+\newcommand{\Fleche}[1]{\stackrel{#1}{\Rightarrow}}
+% \newcommand{\steps}[0]{ {\rightarrow} }
+
+% Booleens
+\newcommand{\false}{{\tt false}}
+\newcommand{\true}{{\tt true}}
+
+% PARAMETRES RCP
+\newcommand{\rcpFMax}{\mathit{rc\_fast\_max}}
+\newcommand{\rcpFMin}{\mathit{rc\_fast\_min}}
+\newcommand{\rcpSMax}{\mathit{rc\_slow\_max}}
+\newcommand{\rcpSMin}{\mathit{rc\_slow\_min}}
+\newcommand{\rcpD}{\mathit{delay}}
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+% ALGORITHMES
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+% Algorithmes PTA
+\newcommand{\BC}{\ensuremath{\mathsf{BC}}}
+\newcommand{\EFsynth}{\ensuremath{\mathsf{EFsynth}}}
+\newcommand{\IM}{\ensuremath{\mathsf{IM}}}
+\newcommand{\PDFC}{\ensuremath{\mathsf{PDFC}}}
+\newcommand{\PRP}{\ensuremath{\mathsf{PRP}}}
+\newcommand{\PRPC}{\ensuremath{\mathsf{PRPC}}}
+
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+% CONSTANTES DE CHAINES
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+% Outils
+% \newcommand{\apron}{\textsc{Apron}}
+\newcommand{\CosyVerif}{\emph{CosyVerif}}
+\newcommand{\gdot}{\texttt{dot}}
+\newcommand{\graphviz}{Graphviz}
+\newcommand{\hytech}{{\sc HyTech}}
+% \newcommand{\imitator}{\textsc{Imitator}}
+\newcommand{\imitator}{\textsf{IMITATOR}}
+\newcommand{\imitatorExec}{\code{imitator}}
+\newcommand{\IPTA}{IPTA}
+\newcommand{\NIPTA}{NIPTA}
+\newcommand{\ocaml}{OCaml}
+\newcommand{\pat}{PAT}
+\newcommand{\phaver}{PHAVer}
+% \newcommand{\polka}{NewPolka}
+% \newcommand{\prism}{\textsc{Prism}}
+% \newcommand{\red}{RED}
+\newcommand{\uppaal}{\textsc{Uppaal}}
+
+\newcommand{\binimitator}{./imitator}
+
+
+% Current version
+\newcommand{\imitatorversion}{2.8}
+\newcommand{\imitatorversionname}{Butter Ham}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% THEOREMS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newtheorem{definition}{Definition}
+\newtheorem{remark}{Remark}
+\newtheorem{hint}{Hint}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% FORMATING
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\hyphenation{IMITATOR}
+\hyphenation{Uppaal}
+
+% \newcommand{\paragraphe}[1]{\paragraph{#1.}}
+
+% Non terminal in a grammar
+\newcommand{\nt}[1]{$\langle$\emph{#1}$\rangle$}
+% Rule name in a grammar
+\newcommand{\regleGrammaire}[1]{\bigskip \noindent \nt{#1} :: \\}
+% Not taken into account in the grammar
+\newcommand{\npec}[1]{\textcolor{green!50!black}{#1}}
+
+\newcommand{\probleme}[2]{
+	\medskip
+	\noindent
+	\fbox{
+		\begin{minipage}{0.95\textwidth}
+		\textbf{#1}
+		
+		#2
+		\end{minipage}
+	}
+	
+	\medskip
+}
+
+\newcommand{\warningbox}[2]{
+	\medskip
+	\noindent
+	\fcolorbox{red!50!black}{red!20}{
+		\begin{minipage}{0.95\textwidth}
+		\textbf{Warning: #1}
+		
+		#2
+		\end{minipage}
+	}
+	
+	\medskip
+}
+
+% \newcommand{\commentaire}[1]{\textcolor{red}{\textbf{$\Leftarrow$  #1 $\Rightarrow$}}} % commentaire dans un paragraphe
+% \newcommand{\commentaire}[1]{}
+
+
+% Code integre au texte
+\newcommand{\code}[1]{\textbf{\texttt{#1}}}
+
+
+\definecolor{imicolor}{rgb}{0, .4, .4}
+\newcommand{\styleIMI}[1]{\textcolor{imicolor}{\texttt{#1}}}
+
+\definecolor{optioncolor}{rgb}{.4, 0, .4}
+\newcommand{\styleOption}[1]{\textcolor{optioncolor}{\texttt{#1}}}
+\newcommand{\styleOptionValue}[1]{\textcolor{optioncolor}{\texttt{#1}}}
+
+\definecolor{pathcolor}{rgb}{1, .5, 0}
+\newcommand{\stylePath}[1]{\textcolor{pathcolor}{\texttt{#1}}}
+
+\definecolor{filecontentcolor}{rgb}{.1, .4, .2}
+\newcommand{\styleFileContent}[1]{\textcolor{filecontentcolor}{\texttt{#1}}}
+
+\newcommand{\GitHubIMI}{GitHub} % TODO : URL
+
+\newcommand{\styleCommand}[1]{
+	\medskip
+	
+	% \mbox{}\hspace{.5cm}
+	\noindent\fcolorbox{white}{black!90}{
+		\textcolor{yellow!30}{\$\ \ \texttt{#1}}
+	}
+	
+	\medskip
+
+}
+
+\newcommand{\styleTerminalOutput}[1]{
+	\medskip
+	
+	% \mbox{}\hspace{.5cm}
+	\noindent\fcolorbox{white}{black!90}{
+	\begin{minipage}{.97\textwidth}
+		\textcolor{yellow!30}{\texttt{#1}}
+	\end{minipage}
+	}
+	
+	\medskip
+
+}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% I.E. / E.G. / W.R.T.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Helps to spot the places where macros are NOT used
+\ifdefined \DraftVersion
+ 	\definecolor{colorok}{RGB}{80,80,150}
+\else
+	\definecolor{colorok}{RGB}{0,0,0}
+\fi
+
+% \newcommand{\eg}{\textcolor{colorok}{\textit{e.g.}}\xspace}
+% \newcommand{\ie}{\textcolor{colorok}{\textit{i.e.}}\xspace}
+% \newcommand{\wrt}{\textcolor{colorok}{w.r.t.}\xspace}
+\newcommand{\adhoc}{\textcolor{colorok}{\textit{ad-hoc}\@}}
+\newcommand{\eg}{\textcolor{colorok}{\textit{e.g.},\@}}
+\newcommand{\ie}{\textcolor{colorok}{\textit{i.e.},\@}}
+\newcommand{\wrt}{\textcolor{colorok}{w.r.t.}\@}
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% IMITATOR FILES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{listings}
+\newcommand{\IncludeIMIfile}[1]{
+	\lstset{language=Imitator}
+	\lstinputlisting[
+		basicstyle=\footnotesize,
+		breaklines=true,
+		breakatwhitespace=true,
+		columns=fixed,
+		numbers=left,
+		frame=single,
+		numberstyle=\tiny,
+		tabsize=4,
+% 		title=\lstname
+	]{#1}
+}
+
+\lstdefinelanguage{Imitator}{
+	morekeywords={
+		and, automaton, clock, constant, discrete, do, end, endreach, False, forward, from, goto, if, in, init, initially, loc, locations, not, or, parameter, print, property, reach, region, unreachable, urgent, sync, synclabs, True, var, wait, when, while
+	},
+	sensitive=false,
+% 	morecomment=[l][\color{gray}]{--},
+	morecomment=[s][keywordstyle]{"}{"},
+% 	morecomment=[s]{/*}{*/},
+	morecomment=[s][\color{gray!50!blue}]{(*}{*)},
+}
+

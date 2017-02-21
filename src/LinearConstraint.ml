@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2016/05/24
+ * Last modified     : 2017/02/10
  *
  ************************************************************)
 
@@ -48,7 +48,7 @@ exception Not_a_clock_guard
 (* CONSTANTS *)
 (************************************************************)
 (** Check or not the number of dimensions of new polyhedra (not doing it may save around 0,5% of computation time, and no error ever occurred) *)
-let check_assert_dimensions = false
+let check_assert_dimensions = true
 
 
 (************************************************************)
@@ -112,6 +112,8 @@ let ppl_nb_add_constraints = ref 0
 
 	let ppl_tcounter_constrains = create_hybrid_counter_and_register "constrains" PPL_counter Verbose_low
 
+	let ppl_tcounter_bounds_from_above = create_hybrid_counter_and_register "bounds_from_above" PPL_counter Verbose_low
+	
 
 
 (*let ppl_nb_hull = ref 0
@@ -163,6 +165,7 @@ let ppl_nb_hull_assign_if_exact_false = ref 0
 	let ppl_t_copy_polyhedron = ref 0.0*)
 	let ppl_tcounter_copy = create_hybrid_counter_and_register "NNC_Polyhedron_from_NNC_Polyhedron" PPL_counter Verbose_low
 
+	let ppl_nncc_tcounter_space_dimension = create_hybrid_counter_and_register "nncc_tcounter_space_dimension" PPL_counter Verbose_low
 
 	let ppl_nncc_false_constraint = create_hybrid_counter_and_register "nncc_false_constraint" PPL_counter Verbose_low
 
@@ -203,62 +206,7 @@ let ppl_nb_hull_assign_if_exact_false = ref 0
 
 	let ppl_nncc_difference_assign = create_hybrid_counter_and_register "nncc_difference_assign" PPL_counter Verbose_low
 
-
-(*let get_statistics total_time =
-	let which_statistics = [
-		("space_dimension" , !ppl_nb_space_dimension , !ppl_t_space_dimension) ;
-		("normalize_linear_term" , !ppl_nb_normalize_linear_term , !ppl_t_normalize_linear_term) ;
-		("true_constraint" , !ppl_nb_true_constraint , !ppl_t_true_constraint) ;
-		("false_constraint" , !ppl_nb_false_constraint , !ppl_t_false_constraint) ;
-		("is_true" , !ppl_nb_is_true , !ppl_t_is_true) ;
-		("is_false" , !ppl_nb_is_false , !ppl_t_is_false) ;
-		("is_equal" , !ppl_nb_is_equal , !ppl_t_is_equal) ;
-		("contains" , !ppl_nb_contains , !ppl_t_contains) ;
-		("contains_integer_point" , !ppl_nb_contains_integer_point , !ppl_t_contains_integer_point) ;
-		("get_constraints" , !ppl_nb_get_constraints  , !ppl_t_get_constraints ) ;
-		("get_generators" , !ppl_nb_get_generators, !ppl_t_get_generators) ;
-		("add_constraints" , !ppl_nb_add_constraints, !ppl_t_add_constraints) ;
-(* 		("difference_assign" , !ppl_nb_difference, !ppl_t_difference) ; *)
-(* 		("hull_assign" , !ppl_nb_hull, !ppl_t_hull) ; *)
-		("hull_assign_if_exact" , !ppl_nb_hull_assign_if_exact, !ppl_t_hull_assign_if_exact) ;
-(* 		("hull_assign_if_exact_true" , !ppl_nb_hull_assign_if_exact_true, !ppl_t_hull_assign_if_exact_true) ; *)
-(* 		("hull_assign_if_exact_false" , !ppl_nb_hull_assign_if_exact_false, !ppl_t_hull_assign_if_exact_false) ; *)
-		("intersection_assign" , !ppl_nb_intersection_assign, !ppl_t_intersection_assign) ;
-		("unconstrain" , !ppl_nb_unconstrain, !ppl_t_unconstrain) ;
-		("map" , !ppl_nb_map, !ppl_t_map) ;
-(* 		("preimage" , !ppl_nb_preimage, !ppl_t_preimage) ; *)
-		("remove_dimension" , !ppl_nb_remove_dim, !ppl_t_remove_dim) ;
-		("time_elapsing" , !ppl_nb_elapse, !ppl_t_elapse) ;
-		("copy_polyhedron" , !ppl_nb_copy_polyhedron, !ppl_t_copy_polyhedron) ;
-	] in
-	(* Gather info *)
-	let statistics_string, total_ppl_nb, total_ppl_t = 
-	List.fold_left (fun (current_string, current_nb, current_t) (name, nb, time) ->
-		let new_string =
-			current_string ^ "\n" ^ (string_of_int nb) ^ " call" ^ (s_of_int nb) ^ " to '" ^ name ^ "'\n"
-		^ (if nb > 0 then
-			(* Time *)
-			"Time: " ^ (string_of_seconds time)
-			(* % of total time *)
-			^ " (" ^ (string_of_percent (time /. total_time) ) ^ ")"
-			(* Time per call *)
-			^ "\nTime per call: " ^ (string_of_float (time /. (float_of_int nb))) ^ " s \n" else "")
-		in
-		new_string , current_nb + nb , current_t +. time
-	) ("" , 0, 0.0) which_statistics
-	in
-	(* Totals *)
-	(* Should not sum up hull_assign_if_exact / hull_assign_if_exact_false / hull_assign_if_exact_true *)
-(*	let total_ppl_nb = total_ppl_nb - !ppl_nb_hull_assign_if_exact_true - !ppl_nb_hull_assign_if_exact_false in
-	let total_ppl_t = total_ppl_t -. !ppl_t_hull_assign_if_exact_true -. !ppl_t_hull_assign_if_exact_false in*)
-	let total_str = 
-		"\n" ^ (string_of_int total_ppl_nb) ^ " calls to PPL functions"
-		^ "\nTotal PPL time: " ^ (string_of_seconds total_ppl_t)
-		(* % of total time *)
-		^ " (" ^ (string_of_percent (total_ppl_t /. total_time) ) ^ ")"
-	in
-	statistics_string ^ total_str*)
-
+	let ppl_nncc_remove_higher_space_dimensions = create_hybrid_counter_and_register "nncc_remove_higher_space_dimensions" PPL_counter Verbose_low
 
 
 (************************************************************)
@@ -295,6 +243,14 @@ type op =
 	| Op_le
 	| Op_l
 
+(** Reverse an operator: <= becomes >= and conversely. < becomes > and conversely. = remains =. *)
+let reverse_op = function 
+	| Op_g		-> Op_l
+	| Op_ge		-> Op_le
+	| Op_eq		-> Op_eq
+	| Op_le		-> Op_ge
+	| Op_l		-> Op_g
+
 
 type linear_inequality = Ppl.linear_constraint
 type p_linear_inequality = linear_inequality
@@ -316,7 +272,7 @@ type pxd_linear_constraint = linear_constraint
 (* to the corresponding PPL data structure, it is normalized such *)
 (* that the only non-rational coefficient is outside the term:    *)
 (* p/q * ( ax + by + c ) *)
-let normalize_linear_term lt =
+let normalize_linear_term (lt : linear_term) : (Ppl.linear_expression * NumConst.t) =
 	(* Increment discrete counter *)
 	ppl_tcounter_normalize_linear_term#increment;
 	
@@ -379,23 +335,20 @@ let string_of_var names variable =
 
 
 	
-(************************************************************)
+(***********************************************coef*************)
 (************************************************************)
 (** Global variables *)
 (************************************************************)
 (************************************************************)
 
-(* The number of integer dimensions *)
-(* let int_dim = ref 0 *)
-
-(* The number of real dimensions *)
-(* let real_dim = ref 0 *)
-
-(* Total number of dimensions *)
+(* Dimensions by type *)
 let nb_parameters	= ref 0
 let nb_clocks		= ref 0
 let nb_discrete		= ref 0
-let total_dim		= ref 0
+(* Total numbers of dimensions *)
+let p_dim			= ref 0
+let px_dim			= ref 0
+let pxd_dim			= ref 0
 
 
 
@@ -406,7 +359,8 @@ let total_dim		= ref 0
 (************************************************************)
 (*** WARNING: this strongly relies on the fact that the parameters are the first dimensions (followed by clocks and then discrete) ***)
 (*** NOTE: would be smarter to compute this list only once, when the dimensions have been initialized ***)
-let nonparameters () = list_of_interval !nb_parameters (!total_dim - 1)
+(* let nonparameters () = list_of_interval !nb_parameters (!pxd_dim - 1) *)
+let clocks () = list_of_interval !nb_parameters (!px_dim - 1)
 
 
 (************************************************************)
@@ -462,12 +416,12 @@ let ippl_remove_dim poly remove =
 	ippl_generic (fun () -> ppl_Polyhedron_remove_space_dimensions poly remove) ppl_tcounter_remove_space_dimensions
 
 (** Create a false constraint *)
-let ippl_false_constraint () =
-	ippl_generic (fun () -> ppl_new_NNC_Polyhedron_from_space_dimension !total_dim Empty) ppl_tcounter_false_constraint
+let ippl_false_constraint nb_dimensions =
+	ippl_generic (fun () -> ppl_new_NNC_Polyhedron_from_space_dimension nb_dimensions Empty) ppl_tcounter_false_constraint
 
 
-let ippl_true_constraint () = 
-	ippl_generic (fun () -> ppl_new_NNC_Polyhedron_from_space_dimension !total_dim Universe) ppl_tcounter_true_constraint
+let ippl_true_constraint nb_dimensions = 
+	ippl_generic (fun () -> ppl_new_NNC_Polyhedron_from_space_dimension nb_dimensions Universe) ppl_tcounter_true_constraint
 
 
 (** Check if a constraint is false *)
@@ -497,6 +451,10 @@ let ippl_contains_integer_point c =
 (** Return true if the variable is constrained in a linear_constraint *)
 let ippl_is_constrained =
 	ippl_generic (fun () -> ppl_Polyhedron_constrains) ppl_tcounter_constrains
+	
+(** Return true if the variable is constrained from above by a linear_expression *)
+let ippl_bounds_from_above =
+	ippl_generic (fun () -> ppl_Polyhedron_bounds_from_above) ppl_tcounter_bounds_from_above
 	
 
 let ippl_copy_linear_constraint linear_constraint =
@@ -566,13 +524,16 @@ let ippl_time_elapse_assign linear_constraint linear_constraint_time =
 (* Pointset powerset NNC polyhedra *)
 (*------------------------------------------------------------*)
 
+let ippl_nncc_space_dimension c =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_space_dimension c) ppl_nncc_tcounter_space_dimension
+
 (** Create a false non-necessarily convex constraint *)
-let ippl_nncc_false_constraint () =
-	ippl_generic (fun () -> ppl_new_Pointset_Powerset_NNC_Polyhedron_from_space_dimension !total_dim Empty) ppl_nncc_false_constraint
+let ippl_nncc_false_constraint nb_dimensions =
+	ippl_generic (fun () -> ppl_new_Pointset_Powerset_NNC_Polyhedron_from_space_dimension nb_dimensions Empty) ppl_nncc_false_constraint
 
 (** Create a true non-necessarily convex constraint *)
-let ippl_nncc_true_constraint () =
-	ippl_generic (fun () -> ppl_new_Pointset_Powerset_NNC_Polyhedron_from_space_dimension !total_dim Universe) ppl_nncc_true_constraint
+let ippl_nncc_true_constraint nb_dimensions =
+	ippl_generic (fun () -> ppl_new_Pointset_Powerset_NNC_Polyhedron_from_space_dimension nb_dimensions Universe) ppl_nncc_true_constraint
 
 (** Create a new p_nnconvex_constraint from a linear_constraint *)
 let ippl_nncc_from_poly polyhedron =
@@ -629,6 +590,8 @@ let ippl_nncc_add_disjunct nnconvex_constraint p_linear_constraint=
 let ippl_nncc_difference_assign nnconvex_constraint nnconvex_constraint' =
 	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_difference_assign nnconvex_constraint nnconvex_constraint') ppl_nncc_difference_assign
 
+let ippl_nncc_remove_higher_space_dimensions nnconvex_constraint new_dimensions =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_remove_higher_space_dimensions nnconvex_constraint new_dimensions) ppl_nncc_remove_higher_space_dimensions
 
 
 (*** TODO: more PPL interfaces ***)
@@ -641,14 +604,29 @@ let ippl_nncc_difference_assign nnconvex_constraint nnconvex_constraint' =
 (************************************************************)
 
 (** check the dimensionality of a polyhedron *)
-let assert_dimensions poly =
+let assert_dimensions nb_dimensions poly =
+	
+(* 	(*** NOTE: disabled since check_assert_dimensions is false ***) *)
+	
 	if check_assert_dimensions then(
 		let ndim = ippl_space_dimension poly in
-		if not (ndim = !total_dim) then (
-			print_error ("Polyhedron has too few dimensions (" ^ (string_of_int ndim) ^ " / " ^ (string_of_int !total_dim) ^ ")");
+		if ndim <> nb_dimensions then (
+			print_error ("Polyhedron does not have the expected number of dimensions (" ^ (string_of_int ndim) ^ " / " ^ (string_of_int nb_dimensions) ^ ")");
 			raise (InternalError "Inconsistent polyhedron found")
 		)
 	)
+
+(** check the dimensionality of a NNCC polyhedron *)
+let nncc_assert_dimensions nb_dimensions nncc =
+	if check_assert_dimensions then(
+		let ndim = ippl_nncc_space_dimension nncc in
+		if ndim <> nb_dimensions then (
+			print_error ("NCC polyhedron does not have the expected number of dimensions (" ^ (string_of_int ndim) ^ " / " ^ (string_of_int nb_dimensions) ^ ")");
+			raise (InternalError "Inconsistent polyhedron found")
+		)
+	)
+
+
 
 
 (************************************************************)
@@ -693,6 +671,10 @@ let add_pxd_linear_terms = add_linear_terms
 let sub_linear_terms lt1 lt2 =
 	Mi (lt1, lt2)
 
+
+let sub_p_linear_terms = sub_linear_terms
+let sub_px_linear_terms = sub_linear_terms
+let sub_pxd_linear_terms = sub_linear_terms
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -803,6 +785,12 @@ let get_coefficient_in_linear_term linear_term =
 		(* If exception not raised: return 0 *)
 		NumConst.zero
 	) with Found_coef coef -> coef
+
+
+
+
+
+
 
 
 
@@ -933,11 +921,15 @@ let rec string_of_linear_term_ppl names linear_term =
 (** {3 Creation} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** Create a linear inequality using a linear term and an operator *)
-let make_linear_inequality linear_term op =
+let ppl_linear_expression_of_linear_term (linear_term : linear_term) : Ppl.linear_expression =
 	let ppl_term, r = normalize_linear_term linear_term in
 	let p = NumConst.get_num r in
-	let lin_term = Times (p, ppl_term) in
+	Times (p, ppl_term)
+
+
+(** Create a linear inequality using a linear term and an operator *)
+let make_linear_inequality linear_term op =
+	let lin_term = ppl_linear_expression_of_linear_term linear_term in
 	let zero_term = Coefficient Gmp.Z.zero in
 	match op with
 		| Op_g -> Greater_Than (lin_term, zero_term)
@@ -947,6 +939,7 @@ let make_linear_inequality linear_term op =
 		| Op_l -> Less_Than (lin_term, zero_term)
 
 
+let make_p_linear_inequality = make_linear_inequality
 let make_px_linear_inequality = make_linear_inequality
 let make_pxd_linear_inequality = make_linear_inequality
 
@@ -1236,10 +1229,14 @@ let clock_guard_of_linear_inequality linear_inequality =
 	let parametric_linear_term = make_linear_term !members coefficient in
 	
 	(* Negate it if needed: if the clock is NEGATIVE, it will be naturally moved to the other side, hence no need to change the sign of the plterm *)
+	
+	(*check this small code again*)
+	
 	let parametric_linear_term = if !positive_clock_option = Some true
 		then Mi ((make_linear_term [] NumConst.zero) , parametric_linear_term)
-		else parametric_linear_term
+		else parametric_linear_term 
 	in
+	
 	
 	(* Retrieve the operator *)
 	let operator =
@@ -1318,13 +1315,17 @@ let set_dimensions nb_p nb_c nb_d =
 	nb_parameters	:= nb_p;
 	nb_clocks 		:= nb_c;
 	nb_discrete		:= nb_d;
-	total_dim		:= nb_p + nb_c + nb_d;
+	p_dim			:= nb_p;
+	px_dim			:= nb_p + nb_c;
+	pxd_dim			:= nb_p + nb_c + nb_d;
 	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("\nDimensions set");
 		print_message Verbose_high ("  nb_parameters := " ^ (string_of_int !nb_parameters));
 		print_message Verbose_high ("  nb_clocks := " ^ (string_of_int !nb_clocks));
 		print_message Verbose_high ("  nb_discrete := " ^ (string_of_int !nb_discrete));
-		print_message Verbose_high ("  total_dim := " ^ (string_of_int !total_dim));
+		print_message Verbose_high ("  p_dim := " ^ (string_of_int !p_dim));
+		print_message Verbose_high ("  px_dim := " ^ (string_of_int !px_dim));
+		print_message Verbose_high ("  pxd_dim := " ^ (string_of_int !pxd_dim));
 	);
 	()
 
@@ -1334,34 +1335,35 @@ let set_dimensions nb_p nb_c nb_d =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a false constraint *)
-let p_false_constraint = ippl_false_constraint
-let pxd_false_constraint = ippl_false_constraint
+let p_false_constraint () = ippl_false_constraint !p_dim
+let pxd_false_constraint () = ippl_false_constraint !pxd_dim
 
 
 
 (** Create a true constraint *)
-let true_constraint = ippl_true_constraint
-let p_true_constraint = ippl_true_constraint
-let px_true_constraint = ippl_true_constraint
-let pxd_true_constraint = ippl_true_constraint
+let true_constraint nb_dimensions = ippl_true_constraint nb_dimensions
+let p_true_constraint () = ippl_true_constraint !p_dim
+let px_true_constraint () = ippl_true_constraint !px_dim
+let pxd_true_constraint () = ippl_true_constraint !pxd_dim
 
 
 (** Create a linear constraint from a list of linear inequalities *)
-let make inequalities = 
-	let poly = true_constraint () in
+let make nb_dimensions inequalities = 
+	let poly = true_constraint nb_dimensions in
 	ippl_add_constraints poly inequalities;
-	assert_dimensions poly;
+	assert_dimensions nb_dimensions poly;
   poly
 
 
-let make_p_constraint = make
-let make_px_constraint = make
-let make_pxd_constraint = make
+(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+let make_p_constraint inequalities = make !p_dim inequalities
+let make_px_constraint inequalities = make !px_dim inequalities
+let make_pxd_constraint inequalities = make !pxd_dim inequalities
 
 
 (** Create a linear constraint from a single point *)
 (*** WARNING: non-robust (no check for variable existence) ***)
-let constraint_of_point (thepoint : (variable * coef) list) =
+let constraint_of_point nb_dimensions (thepoint : (variable * coef) list) =
 	let inequalities =
 	List.map (fun (variable , value) ->
 		(* Create linear inequality "variable = value" *)
@@ -1371,14 +1373,15 @@ let constraint_of_point (thepoint : (variable * coef) list) =
 			Op_eq
 	) thepoint
 	in
-	make inequalities
+	make nb_dimensions inequalities
 
-let p_constraint_of_point = constraint_of_point
-let pxd_constraint_of_point = constraint_of_point
+(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+let p_constraint_of_point v_c_list = constraint_of_point !p_dim v_c_list
+let pxd_constraint_of_point v_c_list = constraint_of_point !pxd_dim v_c_list
 
 
 (** "linear_constraint_of_clock_and_parameters x ~ d neg" will create a linear_constraint x ~ d, with "x" a clock, "~" in {>, >=, =}, "d" a PConstraint.linear_term, and "neg" indicates whether x and d should be kept in this direction or reversed (e.g., "x > p1 true" generates "x > p1" whereas "x >= p1+p2 false" generates "p1+p2 >= x" *)
-let linear_constraint_of_clock_and_parameters (x : variable) (op : op) (d : linear_term) (direction : bool) =
+let linear_constraint_of_clock_and_parameters nb_dimensions (x : variable) (op : op) (d : linear_term) (direction : bool) =
 	(* Create a linear term made of x *)
 	let lt_x = make_linear_term [NumConst.one, x] NumConst.zero in
 	(* Handle order *)
@@ -1388,14 +1391,15 @@ let linear_constraint_of_clock_and_parameters (x : variable) (op : op) (d : line
 		else sub_linear_terms lt_x d
 	in
 	(* Create the constraint with the operator *)
-	make [make_linear_inequality lt op]
+	make nb_dimensions [make_linear_inequality lt op]
 
-let px_linear_constraint_of_clock_and_parameters = linear_constraint_of_clock_and_parameters
-let pxd_linear_constraint_of_clock_and_parameters = linear_constraint_of_clock_and_parameters
+(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+let px_linear_constraint_of_clock_and_parameters x = linear_constraint_of_clock_and_parameters !px_dim x
+let pxd_linear_constraint_of_clock_and_parameters x = linear_constraint_of_clock_and_parameters !pxd_dim x
 
 
 (** Create a constraint bounding all variables in the list to non-negative *)
-let constraint_of_nonnegative_variables variables = 
+let constraint_of_nonnegative_variables nb_dimensions variables = 
 	let inequalities =
 	List.map (fun variable ->
 		(* Create linear inequality "variable >= 0" *)
@@ -1405,11 +1409,12 @@ let constraint_of_nonnegative_variables variables =
 			Op_ge
 	) variables
 	in
-	make inequalities
+	make nb_dimensions inequalities
 
-let p_constraint_of_nonnegative_variables = constraint_of_nonnegative_variables
-let px_constraint_of_nonnegative_variables = constraint_of_nonnegative_variables
-let pxd_constraint_of_nonnegative_variables = constraint_of_nonnegative_variables
+(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+let p_constraint_of_nonnegative_variables v = constraint_of_nonnegative_variables !p_dim v
+let px_constraint_of_nonnegative_variables v = constraint_of_nonnegative_variables !px_dim v
+let pxd_constraint_of_nonnegative_variables v = constraint_of_nonnegative_variables !pxd_dim v
 
 
 
@@ -1421,6 +1426,7 @@ let pxd_constraint_of_nonnegative_variables = constraint_of_nonnegative_variable
 let is_false = ippl_is_false
 let p_is_false = ippl_is_false
 let px_is_false = ippl_is_false
+let pxd_is_false = ippl_is_false
 
 
 (** Check if a constraint is true *)
@@ -1440,12 +1446,14 @@ let pxd_is_satisfiable = is_satisfiable
 let is_equal = ippl_is_equal
 let p_is_equal = ippl_is_equal
 let px_is_equal = ippl_is_equal
+let pxd_is_equal = ippl_is_equal
 
 
 (** Check if a constraint is included in another one *)
 let is_leq = ippl_is_leq
 let p_is_leq = ippl_is_leq
 let px_is_leq = ippl_is_leq
+let pxd_is_leq = ippl_is_leq
 
 
 (** Check if a constraint contains an integer point *)
@@ -1458,7 +1466,7 @@ let px_contains_integer_point = ippl_contains_integer_point
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Get the number of inequalities of a constraint *)
-let nb_inequalities linear_constraint = 
+let p_nb_inequalities linear_constraint = 
 	(* First check if true *)
 	(*** NOTE: might be more costly than the general check; perhaps move after getting the list? ***)
 	if p_is_true linear_constraint || p_is_false linear_constraint then 0
@@ -1467,11 +1475,12 @@ let nb_inequalities linear_constraint =
 	let list_of_inequalities = ippl_get_inequalities linear_constraint in
 	List.length list_of_inequalities
 
-let p_nb_inequalities = nb_inequalities
+(* let p_nb_inequalities = nb_inequalities *)
 
 
 (** Get the inequalities of a constraint *)
 let pxd_get_inequalities = ippl_get_inequalities
+let px_get_inequalities = ippl_get_inequalities
 
 
 (** Return true if the variable is constrained in a linear_constraint *)
@@ -1624,13 +1633,39 @@ let partition_lu variables linear_constraints =
 
 
 
-	
-	
-	
-	
-	
-	
-	
+(*------------------------------------------------------------*)
+(** Return the parametric linear term which is the upper bound of the clock x in a px_linear_constraint; return None if no upper bound *)
+(*** NOTE: we asssume that all inequalities are of the form x \sim plt, and that a single inequality constrains x as an upper bound. Raises Not_a_clock_guard otherwise ***)
+(*------------------------------------------------------------*)
+exception Found_upper_bound of p_linear_term
+let clock_upper_bound_in clock_index px_linear_constraint =
+	let inequalities = px_get_inequalities px_linear_constraint in
+	let p_linear_term_option =
+	try(
+		(* Iterate on all inequalities until x < plt is found *)
+		List.iter (fun inequality -> 
+			(* Transform to clock guard *)
+			let clock_index', operator, parametric_linear_term = clock_guard_of_linear_inequality inequality in
+			(* Only interested in our clock *)
+			if clock_index' = clock_index then(
+				(* Check the operator *)
+				match operator with
+					(* Case upper bound *)
+					| Op_l | Op_le | Op_eq -> raise (Found_upper_bound parametric_linear_term)
+					(* Otherwise not an upper bound *)
+					| _ -> ()
+			)
+		) inequalities;
+		(* If ending iterating without finding an upper bound: there is none *)
+		None
+	)
+	with 
+		Found_upper_bound parametric_linear_term -> Some parametric_linear_term
+	in
+	(* Return result *)
+	p_linear_term_option
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1674,9 +1709,9 @@ let string_of_linear_constraint names linear_constraint =
 		(List.map (string_of_linear_inequality names) list_of_inequalities)
 	)
 
-let string_of_p_linear_constraint = string_of_linear_constraint 
-let string_of_px_linear_constraint = string_of_linear_constraint 
-let string_of_pxd_linear_constraint = string_of_linear_constraint 
+let string_of_p_linear_constraint = string_of_linear_constraint
+let string_of_px_linear_constraint = string_of_linear_constraint
+let string_of_pxd_linear_constraint = string_of_linear_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1698,30 +1733,61 @@ let pxd_copy = ippl_copy_linear_constraint
 (*------------------------------------------------------------*)
 
 (** Perform the intersection of a linear constrain with a list of constraints (with side effect) *)
-let intersection_assign linear_constraint constrs =
+let intersection_assign nb_dimensions linear_constraint constrs =
 (* 	try( *)
 		List.iter (fun poly ->
 			(* Perform the actual intersection *)
 			ippl_intersection_assign linear_constraint poly;
 			(* Check satisfiability *)
-			(** ACTUALLY: this does not bring anything on the examples I tried -- on the contrary! *)
+			(*** NOTE: this does not bring anything on the examples I tried -- on the contrary! ***)
 (* 			if not (is_satisfiable linear_constraint) then raise Unsat_exception; *)
 		) constrs;
-		assert_dimensions linear_constraint
+		assert_dimensions nb_dimensions linear_constraint
 	(* If false: stop *)
 (* 	) with Unsat_exception -> () *)
 
-let p_intersection_assign = intersection_assign
-let px_intersection_assign = intersection_assign
-let pxd_intersection_assign = intersection_assign
+let p_intersection_assign l c = intersection_assign !p_dim l c
+let px_intersection_assign l c = intersection_assign !px_dim l c
+let pxd_intersection_assign l c = intersection_assign !pxd_dim l c
 
-let px_intersection_assign_p = intersection_assign
+let px_intersection_assign_p px_linear_constraint = function
+	(* No constraint: nothing to do *)
+	| [] -> ()
+	(* Some p_linear_constraint's *)
+	| first :: (rest : p_linear_constraint list) -> 
+		(* Copy the first constraint *)
+		let first_copy : p_linear_constraint = p_copy first in
+		(* Intersect with others *)
+		p_intersection_assign first_copy rest;
+		(* Increase dimensions *)
+		ippl_add_dimensions (!px_dim - !p_dim) first_copy;
+		(* Intersect *)
+		px_intersection_assign px_linear_constraint [first_copy]
+
+	(*** NOTE: old version; less efficient????? (not formally tested) ***)
+(*	
+	(*** NOTE: we first need to increase the number of dimensions ***)
+	(* Copy the intersected constraints *)
+	let p_linear_constraint_list_copy = List.map p_copy p_linear_constraint_list in
+	(* Increase dimensions *)
+	(*** NOTE: 'ippl_add_dimensions nb' adds nb new dimensions ***)
+	List.iter (ippl_add_dimensions (!px_dim - !p_dim)) p_linear_constraint_list_copy;
+	(* Intersect *)
+	px_intersection_assign px_linear_constraint p_linear_constraint_list_copy*)
 
 
 (** Performs the intersection of a list of linear constraints *)
-let intersection linear_constraints =
-	let result_poly = true_constraint () in
-	intersection_assign result_poly linear_constraints;
+let intersection nb_dimensions linear_constraints =
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total (
+			"Entering 'LinearConstraint.intersection' with " ^ (string_of_int nb_dimensions) ^ " dimensions.
+			The linear constraints to be intersected have " ^ (string_of_list_of_string_with_sep ", " (List.map (fun lc -> string_of_int (ippl_space_dimension lc)) linear_constraints )) ^ " dimensions."
+	);
+
+	let result_poly = true_constraint nb_dimensions in
+	intersection_assign nb_dimensions result_poly linear_constraints;
 	result_poly
 (*	try(
 		List.iter (fun poly ->
@@ -1732,9 +1798,10 @@ let intersection linear_constraints =
 		result_poly
 	) with Unsat_exception -> false_constraint ()*)
 
-let p_intersection = intersection
-let px_intersection = intersection
-let pxd_intersection = intersection
+(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+let p_intersection l = intersection !p_dim l
+let px_intersection l = intersection !px_dim l
+let pxd_intersection l = intersection !pxd_dim l
 
 
 (*------------------------------------------------------------*)
@@ -1761,46 +1828,79 @@ let px_hull_assign_if_exact = ippl_hull_assign_if_exact
 (*------------------------------------------------------------*)
 
 (** Eliminate a set of variables, side effects version *)
-let hide_assign variables linear_constraint =
+let hide_assign nb_dimensions variables linear_constraint =
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total (
+			"Function 'LinearConstraint.hide_assign': hiding variables "
+			^ (string_of_list_of_string_with_sep ", " (List.map string_of_int variables) )
+			^ ". Number of dimensions: " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ "."
+	);
+	
 	(* Only hide a non-empty list *)
 	if List.length variables > 0 then (
 		ippl_unconstrain linear_constraint variables;
-		assert_dimensions linear_constraint
+		assert_dimensions nb_dimensions linear_constraint
 	)
 
-let p_hide_assign = hide_assign
-let px_hide_assign = hide_assign
-let pxd_hide_assign = hide_assign
+
+(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+let p_hide_assign v l = hide_assign !p_dim v l
+let px_hide_assign v l = hide_assign !px_dim v l
+let pxd_hide_assign v l = hide_assign !pxd_dim v l
 
 
 (** Eliminate (using existential quantification) a set of variables in a linear constraint *)
-let hide variables linear_constraint =
+let hide nb_dimensions variables linear_constraint =
 	(* copy polyhedron, as PPL function has sideeffects *)
 	let poly = copy linear_constraint in
 	(* Call the function with side-effects *)
-	hide_assign variables poly;
+	hide_assign nb_dimensions variables poly;
 	poly
 
+(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+let px_hide v l = hide !px_dim v l
+let pxd_hide v l = hide !pxd_dim v l
 
 
 
-(** Eliminate (using existential quantification) all non-parameters (clocks and discrete) in a px_linear constraint *)
+(** Eliminate (using existential quantification) all non-parameters (clocks only, as it is a PX constraint) in a px_linear constraint *)
 let px_hide_nonparameters_and_collapse linear_constraint = 
-	let non_parameter_variables = nonparameters () in
+	let non_parameter_variables = clocks () in
+	
+	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (
 			"Function 'LinearConstraint.px_hide_nonparameters_and_collapse': hiding variables "
 			^ (string_of_list_of_string_with_sep ", " (List.map string_of_int non_parameter_variables) )
 			^ "."
 		);
-	hide non_parameter_variables linear_constraint 
+	(* First hide *)
+	let result = px_hide non_parameter_variables linear_constraint in
+	(* Remove higher space dimensions *)
+	ippl_remove_higher_dimensions result !p_dim;
+	(* Return result *)
+	result
 
 
 
-let pxd_hide_discrete_and_collapse linear_constraint = 
+let pxd_hide_discrete_and_collapse pxd_linear_constraint = 
 	(*** TODO: to move elsewhere, and to compute once for all, when the dimensions have been set ***)
-	let discretes = list_of_interval (!nb_parameters + !nb_clocks) (!total_dim - 1) in
-	hide discretes linear_constraint
+	let discretes = list_of_interval (!nb_parameters + !nb_clocks) (!pxd_dim - 1) in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total (
+			"Function 'LinearConstraint.pxd_hide_discrete_and_collapse': hiding variables "
+			^ (string_of_list_of_string_with_sep ", " (List.map string_of_int discretes) )
+			^ "."
+		);
+	(* First hide *)
+	let result = pxd_hide discretes pxd_linear_constraint in
+	(* Remove higher space dimensions *)
+	ippl_remove_higher_dimensions result !px_dim;
+	(* Return result *)
+	result
 
 
 
@@ -1839,7 +1939,7 @@ let pxd_remove_dimensions = remove_dimensions
 (*------------------------------------------------------------*)
 
 (** rename variables in a constraint, with side effects *)
-let rename_variables_assign list_of_couples linear_constraint =
+let pxd_rename_variables_assign list_of_couples linear_constraint =
 	(* add reverse mapping *)
 	let reverse_couples = List.map (fun (a,b) -> (b,a)) list_of_couples in
 	let joined_couples = List.rev_append list_of_couples reverse_couples in
@@ -1854,7 +1954,7 @@ let rename_variables_assign list_of_couples linear_constraint =
 				add_id list (i-1)
 		in 
 	
-	let complete_list = add_id joined_couples (!total_dim - 1) in
+	let complete_list = add_id joined_couples (!pxd_dim - 1) in
 	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then (
@@ -1866,17 +1966,17 @@ let rename_variables_assign list_of_couples linear_constraint =
 	(* perfom the mapping *)
 	ippl_map_space_dimensions linear_constraint complete_list;
 
-	assert_dimensions linear_constraint
+	assert_dimensions !pxd_dim linear_constraint
 
-let pxd_rename_variables_assign = rename_variables_assign
+(* let pxd_rename_variables_assign = rename_variables_assign *)
 
 
-(** Rename variables in a constraint *)
+(*(** Rename variables in a constraint *)
 let rename_variables list_of_couples linear_constraint =
 	(* copy polyhedron, as ppl function has sideeffects *)
 	let poly = copy linear_constraint in
 	rename_variables_assign list_of_couples poly;
-	poly
+	poly*)
 
 (* let pxd_rename_variables = rename_variables *)
 
@@ -1887,7 +1987,7 @@ let rename_variables list_of_couples linear_constraint =
 
 (* Generic time elapsing function *)
 (* 'reverse_direction' should be minus_one for growing, one for decreasing *)
-let time_elapse_gen_assign reverse_direction variables_elapse variables_constant linear_constraint =
+let time_elapse_gen_assign reverse_direction nb_dimensions variables_elapse variables_constant linear_constraint =
 	(* Create the inequalities var = 1, for var in variables_elapse *)
 	let inequalities_elapse = List.map (fun variable ->
 		(* Create a linear term *)
@@ -1903,7 +2003,7 @@ let time_elapse_gen_assign reverse_direction variables_elapse variables_constant
 		make_linear_inequality linear_term Op_eq
 	) variables_constant in
 	(* Convert both sets of inequalities to a constraint *)
-	let linear_constraint_time = make (List.rev_append inequalities_elapse inequalities_constant) in
+	let linear_constraint_time = make nb_dimensions (List.rev_append inequalities_elapse inequalities_constant) in
 	
 	(* Apply the time elapsing using PPL *)
 	ippl_time_elapse_assign linear_constraint linear_constraint_time
@@ -1912,20 +2012,21 @@ let time_elapse_gen_assign reverse_direction variables_elapse variables_constant
 (** Time elapsing function *)
 let time_elapse_assign = time_elapse_gen_assign NumConst.minus_one
 
-let pxd_time_elapse_assign = time_elapse_assign
+(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+let pxd_time_elapse_assign c = time_elapse_assign !pxd_dim c
 
 
 
-let time_elapse variables_elapse variables_constant linear_constraint =
+(*let time_elapse variables_elapse variables_constant linear_constraint =
 	let linear_constraint = copy linear_constraint in
 	time_elapse_assign variables_elapse variables_constant linear_constraint;
-	linear_constraint
+	linear_constraint*)
 
 
 (** Time elapsing function, in backward direction (corresponds to the "past" operation in, e.g., [JLR15]) *)
-let time_past_assign variables_elapse variables_constant linear_constraint =
+let time_past_assign nb_dimensions variables_elapse variables_constant linear_constraint =
 	(* 1) Apply generic function *)
-	time_elapse_gen_assign NumConst.one variables_elapse variables_constant linear_constraint;
+	time_elapse_gen_assign NumConst.one nb_dimensions variables_elapse variables_constant linear_constraint;
 	
 	(* 2) Constrain the elapsing variables to be non-negative! *)
 	(* Create the inequalities var >= 0, for var in variables_elapse *)
@@ -1936,10 +2037,11 @@ let time_past_assign variables_elapse variables_constant linear_constraint =
 		make_linear_inequality linear_term Op_ge
 	) variables_elapse in
 	(* Take intersection *)
-	intersection_assign linear_constraint [(make inequalities_nonnegative)]
+	intersection_assign nb_dimensions linear_constraint [(make nb_dimensions inequalities_nonnegative)]
 	
 
-let pxd_time_past_assign = time_past_assign
+(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+let pxd_time_past_assign c = time_past_assign !pxd_dim c
 
 
 (*------------------------------------------------------------*)
@@ -1949,12 +2051,12 @@ let pxd_time_past_assign = time_past_assign
 (** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
 (*** TODO: describe better ***)
 (*** WARNING: this function is certainly not optimized at all! somehow we don't care considering it's not called "often" in IMITATOR ***)
-let grow_to_infinity_assign variables_elapse variables_constant linear_constraint =
+let p_grow_to_infinity_assign variables_elapse variables_constant linear_constraint =
 	(* Compute all variables *)
 	let all_variables = List.rev_append variables_elapse variables_constant in
 	(* Perform time elapsing on each variable *)
 	List.iter (fun variable ->
-		time_elapse_assign [variable] (list_diff all_variables [variable]) linear_constraint;
+		time_elapse_assign !p_dim [variable] (list_diff all_variables [variable]) linear_constraint;
 	) variables_elapse;
 	(* The end *)
 	()
@@ -1963,12 +2065,12 @@ let grow_to_infinity_assign variables_elapse variables_constant linear_constrain
 (** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
 (** TODO: describe better *)
 (** WARNING: this function is certainly not optimized at all! somehow we don't care considering it's not called "often" in IMITATOR *)
-let grow_to_zero_assign variables_elapse variables_constant linear_constraint =
+let p_grow_to_zero_assign variables_elapse variables_constant linear_constraint =
 	(* Compute all variables *)
 	let all_variables = List.rev_append variables_elapse variables_constant in
 	(* Perform time elapsing on each variable *)
 	List.iter (fun variable ->
-		time_past_assign [variable] (list_diff all_variables [variable]) linear_constraint;
+		time_past_assign !p_dim [variable] (list_diff all_variables [variable]) linear_constraint;
 	) variables_elapse;
 	(* The end *)
 	()
@@ -1999,7 +2101,7 @@ let px_is_positive_in v c =
 	let v_lt = make_px_linear_term [
 			NumConst.minus_one, v;
 		] NumConst.zero in
-	let v_l_zero = make [make_px_linear_inequality v_lt Op_g] in
+	let v_l_zero = make !px_dim [make_px_linear_inequality v_lt Op_g] in
 (* 	let variable_names variable_index ="v" ^ (string_of_int variable_index) in *)
 	(* Intersect with c *)
 	(*				print_string (string_of_linear_constraint variable_names v_l_zero);
@@ -2011,6 +2113,36 @@ let px_is_positive_in v c =
 					print_newline();*)
 	(* Check *)
 	not (is_satisfiable v_l_zero)
+
+
+(** Check if a variable v is bound to be = 0 in a constraint *)
+let is_zero_in nb_dimensions v c =
+	(* Idea: perform equality check of (v = 0 & c) =?= c *)
+	(* Create v = 0 *)
+	let v_lt = make_px_linear_term [
+			NumConst.one, v;
+		] NumConst.zero in
+	let v_l_zero = make nb_dimensions [make_px_linear_inequality v_lt Op_eq] in
+	px_intersection_assign v_l_zero [c];
+	(* Check *)
+	px_is_equal v_l_zero c
+
+(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+let px_is_zero_in v c = is_zero_in !px_dim v c
+let pxd_is_zero_in v c = is_zero_in !pxd_dim v c
+
+
+(** Check if a variable v is bounded from above in a constraint *)
+let px_is_bounded_from_above_in v c =
+	(* Idea: use ppl_Polyhedron_bounds_from_above with 'v' as the linear_expression *)
+	(* Create v *)
+	let v_lt = ppl_linear_expression_of_linear_term (make_px_linear_term [NumConst.one, v;] NumConst.zero) in
+
+	(* Apply *)
+(* val ppl_Polyhedron_bounds_from_above : polyhedron -> linear_expression -> bool *)
+	ippl_bounds_from_above c v_lt
+
+let pxd_is_bounded_from_above_in = px_is_bounded_from_above_in
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2185,8 +2317,25 @@ let pxd_constraint_of_discrete_values (discrete_values : (variable * coef) list)
 
 
 (** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
-let pxd_of_p_constraint c = copy c
-let pxd_of_px_constraint = pxd_of_p_constraint
+let pxd_of_p_constraint c =
+	(* First copy *)
+	let pxd_constraint = copy c in
+	(* Extend number of dimensions *)
+	ippl_add_dimensions (!pxd_dim - !p_dim) pxd_constraint;
+	(* Assert *)
+	assert_dimensions !pxd_dim pxd_constraint;
+	(* Return *)
+	pxd_constraint
+	
+let pxd_of_px_constraint c =
+	(* First copy *)
+	let pxd_constraint = copy c in
+	(* Extend number of dimensions *)
+	ippl_add_dimensions (!pxd_dim - !px_dim) pxd_constraint;
+	(* Assert *)
+	assert_dimensions !pxd_dim pxd_constraint;
+	(* Return *)
+	pxd_constraint
 
 
 
@@ -2195,8 +2344,17 @@ let pxd_of_px_constraint = pxd_of_p_constraint
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** "cast_p_of_pxd_linear_term p c" converts a PXD-constraint p to a P-constraint ; if c then a test if performed to check casting validity *)
+(*** WARNING: in fact, for now NO TEST IS EVER PERFORMED ***)
 let cast_p_of_pxd_linear_term p c = p (*** WARNING! should be copied here! *)
-let cast_p_of_pxd_linear_constraint p c = copy p
+
+(*** WARNING: in fact, for now NO TEST IS EVER PERFORMED ***)
+let cast_p_of_pxd_linear_constraint p c =
+	(* First copy *)
+	let p_constraint = copy p in
+	(* Extend number of dimensions *)
+	ippl_remove_higher_dimensions p_constraint !p_dim;
+	(* Return *)
+	p_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2470,7 +2628,7 @@ let make_zero_cpdbm (nb_clocks : int) =
 		PDBM_leq
 	in
 	(** TODO: canonicalize ?!!! *)
-	p_true_constraint()
+	p_true_constraint ()
 	,
 	Array.make_matrix (nb_clocks+1) (nb_clocks+1) (init_element())
 
@@ -2680,7 +2838,7 @@ let px_linear_constraint_of_cpdbm clock_offset cpdbm =
 	(* Convert PDBM *)
 	let px_linear_constraint = px_linear_constraint_of_pdbm clock_offset pdbm in
 	(* Intersect *)
-	intersection_assign px_linear_constraint [p_linear_constraint];
+	px_intersection_assign_p px_linear_constraint [p_linear_constraint];
 	(* Return *)
 	px_linear_constraint
 
@@ -2852,18 +3010,27 @@ type px_nnconvex_constraint = nnconvex_constraint
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a false non-necessarily convex constraint *)
-let false_p_nnconvex_constraint = ippl_nncc_false_constraint
-let false_px_nnconvex_constraint = false_p_nnconvex_constraint
+let false_p_nnconvex_constraint () = ippl_nncc_false_constraint !p_dim
+let false_px_nnconvex_constraint () = ippl_nncc_false_constraint !px_dim
 
 
 (** Create a true non-necessarily convex constraint *)
-let true_p_nnconvex_constraint = ippl_nncc_true_constraint
-let true_px_nnconvex_constraint = true_p_nnconvex_constraint
+let true_p_nnconvex_constraint () = ippl_nncc_true_constraint !p_dim
+let true_px_nnconvex_constraint () = ippl_nncc_true_constraint !px_dim
 
 
 (** Create a new p_nnconvex_constraint from a linear_constraint *)
 let p_nnconvex_constraint_of_p_linear_constraint (p_linear_constraint : p_linear_constraint) = ippl_nncc_from_poly p_linear_constraint
-let px_nnconvex_constraint_of_px_linear_constraint = p_nnconvex_constraint_of_p_linear_constraint
+
+let px_nnconvex_constraint_of_px_linear_constraint c =
+	(* Assert *)
+	assert_dimensions !px_dim c;
+	(* Copy *)
+	let result = ippl_nncc_from_poly c in
+	(* Assert *)
+	nncc_assert_dimensions !px_dim result;
+	(* Return result *)
+	result
 
 (** Copy a nnconvex_constraint *)
 let nnconvex_copy nnconvex_constraint = ippl_nncc_copy nnconvex_constraint
@@ -2986,37 +3153,70 @@ let string_of_px_nnconvex_constraint = string_of_p_nnconvex_constraint
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Performs the intersection of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
-let p_nnconvex_intersection p_nnconvex_constraint p_linear_constraint =
-	(* First retrieve inequalities *)
-	let constraint_system =  ippl_get_inequalities p_linear_constraint in
+let nnconvex_intersection nb_dimensions nnconvex_constraint linear_constraint =
+	(* Assert *)
+	nncc_assert_dimensions nb_dimensions nnconvex_constraint;
+	assert_dimensions nb_dimensions linear_constraint;
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total (
+			"Entering 'LinearConstraint.p_nnconvex_intersection' with " ^ (string_of_int (ippl_nncc_space_dimension nnconvex_constraint)) ^ " and " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions."
+	);
 
-	ippl_nncc_add_constraints p_nnconvex_constraint constraint_system;
+	(* First retrieve inequalities *)
+	let constraint_system =  ippl_get_inequalities linear_constraint in
+
+	ippl_nncc_add_constraints nnconvex_constraint constraint_system;
 
 	(* Simplify the constraint (avoids identical disjuncts) *)
-	simplify p_nnconvex_constraint;
+	simplify nnconvex_constraint;
 	
 	(* The end *)
 	()
 
-let px_nnconvex_intersection = p_nnconvex_intersection
+(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+let p_nnconvex_intersection c = nnconvex_intersection !p_dim c
+let px_nnconvex_intersection c = nnconvex_intersection !px_dim c
 
 
 (** Performs the union of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
-let p_nnconvex_p_union p_nnconvex_constraint p_linear_constraint =
-	ippl_nncc_add_disjunct p_nnconvex_constraint p_linear_constraint;
+let nnconvex_union nb_dimensions nnconvex_constraint linear_constraint =
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total (
+			"Entering 'LinearConstraint.nnconvex_union' with " ^ (string_of_int (ippl_nncc_space_dimension nnconvex_constraint)) ^ " and " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions. Expected: " ^ (string_of_int nb_dimensions) ^ "."
+	);
+	
+	(* Assert *)
+	nncc_assert_dimensions nb_dimensions nnconvex_constraint;
+	assert_dimensions nb_dimensions linear_constraint;
+
+	ippl_nncc_add_disjunct nnconvex_constraint linear_constraint;
 
 	(* Simplify the constraint (avoids identical disjuncts) *)
-	simplify p_nnconvex_constraint;
+	simplify nnconvex_constraint;
 	
 	(* The end *)
 	()
 
 
-let px_nnconvex_px_union = p_nnconvex_p_union
+(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+let p_nnconvex_p_union c =
+	print_message Verbose_total ("Entering 'LinearConstraint.p_nnconvex_p_union'");
+	nnconvex_union !p_dim c
+
+let px_nnconvex_px_union c =
+	print_message Verbose_total ("Entering 'LinearConstraint.px_nnconvex_px_union'");
+	nnconvex_union !px_dim c
 
 
 (** Performs the union of a p_nnconvex_constraint with another p_nnconvex_constraint; the first p_nnconvex_constraint is modified, the second is not *)
 let p_nnconvex_union p_nnconvex_constraint p_nnconvex_constraint' =
+	(* Assert *)
+(*	nncc_assert_dimensions nb_dimensions p_nnconvex_constraint;
+	nncc_assert_dimensions nb_dimensions p_nnconvex_constraint';*)
+
 	(* Get the disjuncts of the second p_nnconvex_constraint *)
 	let disjuncts = get_disjuncts p_nnconvex_constraint' in
 	
@@ -3026,6 +3226,11 @@ let p_nnconvex_union p_nnconvex_constraint p_nnconvex_constraint' =
 
 (** Performs the difference between a first p_nnconvex_constraint and a second p_nnconvex_constraint; the first is modified, the second is not *)
 let p_nnconvex_difference p_nnconvex_constraint p_nnconvex_constraint' =
+	(* Assert *)
+(*	nncc_assert_dimensions nb_dimensions p_nnconvex_constraint;
+	nncc_assert_dimensions nb_dimensions p_nnconvex_constraint';*)
+
+	(* Execute *)
 	ippl_nncc_difference_assign p_nnconvex_constraint p_nnconvex_constraint';
 
 	(* Simplify the constraint (avoids identical disjuncts) *)
@@ -3074,7 +3279,7 @@ let nnconvex_hide_assign variables nnconvex_constraint =
 
 
 
-(** Create a new p_nnconvex_constraint from a list of linear_constraint *)
+(** Create a new p_nnconvex_constraint from a list of p_linear_constraint *)
 let p_nnconvex_constraint_of_p_linear_constraints (p_linear_constraints : p_linear_constraint list) =
 	(* Create a false constraint *)
 	let result = false_p_nnconvex_constraint() in
@@ -3085,57 +3290,70 @@ let p_nnconvex_constraint_of_p_linear_constraints (p_linear_constraints : p_line
 	(* Return result *)
 	result
 
+(** Create a new px_nnconvex_constraint from a list of px_linear_constraint *)
+let px_nnconvex_constraint_of_px_linear_constraints (px_linear_constraints : px_linear_constraint list) =
+	(* Create a false constraint *)
+	let result = false_px_nnconvex_constraint() in
+	(* Add each constraint as a disjunction *)
+	List.iter (fun px_linear_constraint -> 
+		px_nnconvex_px_union result px_linear_constraint;
+	) px_linear_constraints;
+	(* Return result *)
+	result
 
 
-let adhoc_nnconvex_hide variables nnconvex_constraint =
+let p_nnconvex_hide variables p_nnconvex_constraint =
 	(* 1) Get disjuncts *)
-	let disjuncts = get_disjuncts nnconvex_constraint in
+	let disjuncts = get_disjuncts p_nnconvex_constraint in
 	
 	(* 2) Hide in each disjuncts *)
-	let disjuncts_hidden = List.map (hide variables) disjuncts in
-(*	let disjuncts_hidden = List.map (function p_constraint ->
-		(*** DEBUG ***)
-		print_string ("\n------About to eliminate non-parameters in: \n" ^ (string_of_p_linear_constraint (fun i -> "v_" ^ (string_of_int i)) p_constraint));
-		let result = hide variables p_constraint in
-		(*** DEBUG ***)
-		print_string ("\n------After eliminating non-parameters: \n" ^ (string_of_p_linear_constraint (fun i -> "v_" ^ (string_of_int i)) result));
-		result
-	) disjuncts in*)
-	
-	(*** DEBUG ***)
-(* 	print_string ("\n------"); *)
+	let disjuncts_hidden = List.map (hide !p_dim variables) disjuncts in
 	
 	(* 3) Recreate the nnconvex_constraint *)
 	p_nnconvex_constraint_of_p_linear_constraints disjuncts_hidden
 	
 
-
-let p_nnconvex_hide = adhoc_nnconvex_hide
-let px_nnconvex_hide = adhoc_nnconvex_hide
-
+let px_nnconvex_hide variables px_nnconvex_constraint =
+	(* 1) Get disjuncts *)
+	let disjuncts = get_disjuncts px_nnconvex_constraint in
+	
+	(* 2) Hide in each disjuncts *)
+	let disjuncts_hidden = List.map (hide !px_dim variables) disjuncts in
+	
+	(* 3) Recreate the nnconvex_constraint *)
+	px_nnconvex_constraint_of_px_linear_constraints disjuncts_hidden
 
 
 
 
 (** Eliminate (using existential quantification) all non-parameters (clocks) in a px_linear constraint *)
 let px_nnconvex_hide_nonparameters_and_collapse px_nnconvex_constraint =
-	(*** DEBUG ***)
-(* 	print_string ("\nAbout to eliminate non-parameters in: \n" ^ (string_of_p_nnconvex_constraint (fun i -> "v_" ^ (string_of_int i)) px_nnconvex_constraint)); *)
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total (
+			"Entering 'LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse' with " ^ (string_of_int (ippl_nncc_space_dimension px_nnconvex_constraint)) ^ " dimensions."
+	);
 
-	(* First: copy *)
-(* 	let copy = px_nnconvex_copy px_nnconvex_constraint in *)
+	(* Assert *)
+	nncc_assert_dimensions !px_dim px_nnconvex_constraint;
+
 	(* Compute non-parameters *)
-	let non_parameter_variables = nonparameters () in
+	let non_parameter_variables = clocks () in
 	
-	(*** DEBUG ***)
-(* 	print_string ("\nAbout to eliminate " ^ (string_of_int (List.length non_parameter_variables)) ^ " variables:\n"); 
-	List.iter (fun i -> print_string ("v_" ^ (string_of_int i) ^ "\n") ) non_parameter_variables;
-	*)
 	(* Call the actual elimination function *)
 	let result = px_nnconvex_hide non_parameter_variables px_nnconvex_constraint in
 	
-	(*** DEBUG ***)
-(* 	print_string ("\nAfter eliminating non-parameters in: \n" ^ (string_of_p_nnconvex_constraint (fun i -> "v_" ^ (string_of_int i)) result)); *)
+	(* Decrease the number of dimensions *)
+	ippl_nncc_remove_higher_space_dimensions result !p_dim;
+
+	(* Assert *)
+	nncc_assert_dimensions !p_dim result;
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total (
+			"Exiting 'LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse' with " ^ (string_of_int (ippl_nncc_space_dimension result)) ^ " dimensions."
+	);
 
 	(* Return result *)
 	result
@@ -3354,7 +3572,7 @@ let unserialize_linear_inequality linear_inequality_string =
 (** {3 Linear constraints} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** Serialize a linear constraint *)
-let serialize_linear_constraint linear_constraint =
+let serialize_p_linear_constraint linear_constraint =
 	(* Get a list of linear inequalities and serialize *)
 	let list_of_inequalities = List.map serialize_linear_inequality (ippl_get_inequalities linear_constraint) in
 	(* Add separators *)
@@ -3362,7 +3580,7 @@ let serialize_linear_constraint linear_constraint =
 
 
 
-let unserialize_linear_constraint linear_constraint_string =
+let unserialize_p_linear_constraint linear_constraint_string =
 	(* Split according to the separator serialize_SEP_AND *)
 	let inequalities_string =
 		try
@@ -3372,7 +3590,7 @@ let unserialize_linear_constraint linear_constraint_string =
 	(* Convert to linear inequalities *)
 	let inequalities =  List.map unserialize_linear_inequality inequalities_string in
 	(* Reconstruct the linear constraint *)
-	make inequalities
+	make !p_dim inequalities
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3380,7 +3598,7 @@ let unserialize_linear_constraint linear_constraint_string =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 let serialize_p_nnconvex_constraint p_nnconvex_constraint =
 	(* Get a list of linear constraints and serialize *)
-	let list_of_constraints = List.map serialize_linear_constraint (get_disjuncts p_nnconvex_constraint) in
+	let list_of_constraints = List.map serialize_p_linear_constraint (get_disjuncts p_nnconvex_constraint) in
 	(* Add separators *)
 	String.concat serialize_SEP_OR list_of_constraints
 
@@ -3392,7 +3610,7 @@ let unserialize_p_nnconvex_constraint p_nnconvex_constraint_string =
 		with Failure f -> raise (SerializationError("Splitting failure while unserializing linear inequality '" ^ p_nnconvex_constraint_string ^ "'. Error: " ^ f))
 	in
 	(* Convert to linear constraints *)
-	let constraints =  List.map unserialize_linear_constraint constraints_string in
+	let constraints =  List.map unserialize_p_linear_constraint constraints_string in
 	(* Reconstruct the p_nnconvex_constraint *)
 	p_nnconvex_constraint_of_p_linear_constraints constraints
 
@@ -3402,7 +3620,7 @@ let unserialize_p_nnconvex_constraint p_nnconvex_constraint_string =
 (** {3 Non-necessarily convex linear Constraints} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 let serialize_p_convex_or_nonconvex_constraint = function
-	| Convex_p_constraint p_linear_constraint -> serialize_linear_constraint p_linear_constraint
+	| Convex_p_constraint p_linear_constraint -> serialize_p_linear_constraint p_linear_constraint
 	| Nonconvex_p_constraint p_nnconvex_constraint -> serialize_p_nnconvex_constraint p_nnconvex_constraint
 
 let unserialize_p_convex_or_nonconvex_constraint p_convex_or_nonconvex_constraint_string =
@@ -3414,4 +3632,507 @@ let unserialize_p_convex_or_nonconvex_constraint p_convex_or_nonconvex_constrain
 	if String.contains p_convex_or_nonconvex_constraint_string sep_char then
 		Nonconvex_p_constraint (unserialize_p_nnconvex_constraint p_convex_or_nonconvex_constraint_string)
 	else
-		Convex_p_constraint (unserialize_linear_constraint p_convex_or_nonconvex_constraint_string)
+		Convex_p_constraint (unserialize_p_linear_constraint p_convex_or_nonconvex_constraint_string)
+
+
+
+
+
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** Gia's function for CUB **)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** IMITATOR operator style to string **)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(*Begin - Needed functions for part 1*)
+
+(*get string of operators*)
+let operator2string op = match op with
+	| Op_g  -> ">"
+	| Op_ge -> ">="
+	| Op_eq -> "="
+	| Op_le -> "<="
+	| Op_l  -> "<"
+
+(*End - Needed functions for part 1*)
+
+
+(*Begin - Needed functions for part 2*)
+
+(* check whether vars in liear term 1 is a subset of linear term 2 *)
+let is_var_subset var_list1 var_list2 = let result = ref true in
+										List.iter 	(fun var ->	if not (List.mem var var_list2) 
+																then 
+																	(
+																	result := false;
+																	print_message Verbose_standard ("\n	 the var1: "^ string_of_int var ^" is not in var_list2 ");
+																	);
+
+													) var_list1;
+										!result
+
+
+(*for linear term*)
+let rec isMinus linear_term =	(* let coef = ref NumConst.zero in *)
+								let b = ref false in
+								begin
+								match linear_term with
+								| Coef c -> ()
+								| Var v -> ()
+								| Pl (lterm, rterm) -> 	(
+													(*** TODO: problem here?? (ÉA, 2017/02/08) ***)
+			  											(* isMinus lterm;
+														isMinus rterm; *)
+														b := (isMinus lterm || isMinus rterm);
+														()
+														)
+								| Mi (lterm, rterm) -> 	( 
+														b := true; 
+														() 
+														)
+								| Ti (c1, rterm) -> ()
+								(*| _ -> raise (InternalError("Detection error 'get_coef' function"))*)
+								end;
+								!b
+
+
+(*for linear term*)
+let rec get_coefs_vars linear_term =	let coefs_vars = ref [] in
+										let _ = match linear_term with
+										| Coef c -> coefs_vars := !coefs_vars@[(9999, c)]
+										| Var v -> coefs_vars := !coefs_vars@[(v, NumConst.one)] (*()*)
+										| Pl (lterm, rterm) -> (
+			  								coefs_vars := !coefs_vars@get_coefs_vars lterm;
+											coefs_vars := !coefs_vars@get_coefs_vars rterm;
+											() )
+										| Mi (lterm, rterm) -> (
+			  								coefs_vars := !coefs_vars@get_coefs_vars lterm;
+											coefs_vars := !coefs_vars@get_coefs_vars rterm;
+											() )
+										| Ti (c1, rterm) -> (
+															match rterm with
+															| Var  v1 -> coefs_vars := !coefs_vars@[(v1, c1)]
+															| _ -> raise (InternalError("Could not detect RightTerm in Time*RightTerm error 'get_coefs_vars' function")) 
+															)
+										in 
+
+										!coefs_vars
+
+let is_all_smaller_or_equal_mems coefs_vars1 coefs_vars2 = 	let result = ref true in
+															List.iter 	(fun (var1, coef1) ->
+																		let coef2 = List.assoc var1 coefs_vars2 in
+																		if not ( NumConst.le coef1 coef2 )
+																		then 
+																			result := false
+																		) coefs_vars1; 
+															!result
+
+
+
+type smaller_term =
+	| NotDetermine (*not determined*)
+	| First
+	| Second
+
+(*return true if 2 linear terms contain the same clocks*)
+(*
+This function used 
+*)
+let isSmaller term1 term2 	=	
+								(*let result = ref true in*)
+
+								print_message Verbose_standard ("\n	 Analyzing!!!!!");
+
+								let coefs_vars1 = get_coefs_vars term1 in
+								(*length of linear term 1*)
+								let length_coefs_vars1 = List.length coefs_vars1 in
+
+								let coefs_vars2 = get_coefs_vars term2 in
+								(*length of linear term 2*)
+								let length_coefs_vars2 = List.length coefs_vars2 in
+
+								print_message Verbose_standard ("\n	 Linear term 1:");
+								print_message Verbose_standard ("\n	 Mems/Length:" ^ (string_of_int length_coefs_vars1) );
+								
+								print_message Verbose_standard ("\n	 Linear term 2:");
+								print_message Verbose_standard ("\n	 Mems/Length:" ^ (string_of_int length_coefs_vars2) );
+
+								(*check if there have minus operation inside the linear term or coeff < 0*)
+								let checkMinus1 = isMinus term1 in
+								let checkMinus2 = isMinus term2 in		
+
+								(*check whether the both linear terms contain negative coef*)
+								let (vars1, coefs1) = List.split coefs_vars1 in
+								let (vars2, coefs2) = List.split coefs_vars2 in
+								
+								(*
+								let less_than_zero1 = is_mem_in_coef_list_less_than_zero coefs1 in
+								let less_than_zero2 = is_mem_in_coef_list_less_than_zero coefs2 in
+								*)
+								
+								(*check*)
+								(* if (checkMinus1 || checkMinus2 || less_than_zero1 || less_than_zero2) *)
+								if (checkMinus1 || checkMinus2) 
+								then
+									(*let _ = result := false in*)
+									print_message Verbose_standard ("\n	 Contain Minus Sign!!!!!")
+								else
+									print_message Verbose_standard ("\n	 Ok! Not Contain Minus Sign!!!!!");
+
+								(*check whether 1/2 is subset of the other*)
+								let smaller = ref NotDetermine in 
+								(* if !result = true
+								then ( *)
+									(*case: mems term 1 = mems term 2*)
+									if length_coefs_vars1 - length_coefs_vars2 = 0 
+									then
+										(
+										print_message Verbose_standard ("\n	 mems of term and term 2 are equal!!!!!");
+										(*check 2 sets of vars are equal*)
+										if is_var_subset vars2 vars1 && is_var_subset vars1 vars2 
+										then (
+											print_message Verbose_standard ("\n Sets of vars of term 1 and term 2 are equal!!!!!");
+											if is_all_smaller_or_equal_mems coefs_vars1 coefs_vars2
+											then
+												(
+												smaller := First;
+												print_message Verbose_standard ("\n	 coefs in term 1 less than or equal coefs in term 2!!!!!");
+												)
+											else
+												(
+												if is_all_smaller_or_equal_mems coefs_vars2 coefs_vars1
+												then
+													(
+													smaller := Second;
+													print_message Verbose_standard ("\n	 coefs in term 2 less than or equal coefs in term 1!!!!!");
+													)
+												(*coefs of term 1 = coefs of term 2*)
+												else
+													(
+													smaller := NotDetermine;
+													(*result := false;*)
+													print_message Verbose_standard ("\n	 Could not determine!!!!!");
+													);
+												);
+											)
+										else 
+											(
+											print_message Verbose_standard ("\n	 not is_var_subset vars2 vars1 && is_var_subset vars1 vars2!!!!!");
+											smaller := NotDetermine;
+											(*result := false*)
+											);
+										) 
+									else
+										(
+											if length_coefs_vars1 - length_coefs_vars2 < 0 
+											then(
+												print_message Verbose_standard ("\n	 length_coefs_vars1 - length_coefs_vars2 < 0!!!!!");
+												if is_var_subset vars1 vars2 
+												then
+													( 
+													smaller := First;
+													print_message Verbose_standard ("\n	 Set of vars of term 1 is subset of term 2!!!!!");
+
+													(*test*)
+													if is_all_smaller_or_equal_mems coefs_vars1 coefs_vars2
+													then 
+														(
+														print_message Verbose_standard ("\n	 coefs in term 1 less than or equal coefs in term 2!!!!!");
+														)
+													else
+														(
+														smaller := NotDetermine;
+														(*result := false;*)
+														print_message Verbose_standard ("\n	 coefs in term 1 not less than or equal coefs in term 2!!!!!");
+														);
+													(*test*)
+
+													)
+												else
+													( 
+													if length_coefs_vars1 - length_coefs_vars2 > 0 
+													then(
+														print_message Verbose_standard ("\n	 length_coefs_vars1 - length_coefs_vars2 > 0!!!!!");
+														if is_var_subset vars2 vars1 
+														then 
+															(
+															smaller := Second;
+															print_message Verbose_standard ("\n	 Set of vars of term 2 is subset of term 1!!!!!");
+
+															(*test*)
+															if is_all_smaller_or_equal_mems coefs_vars2 coefs_vars1
+															then 
+																(
+																print_message Verbose_standard ("\n	 coefs in term 2 less than or equal coefs in term 1!!!!!");
+																)
+															else
+																(
+																smaller := NotDetermine;
+																(*result := false;*)
+																print_message Verbose_standard ("\n	 coefs in term 2 not less than or equal coefs in term 1!!!!!");
+																);
+															(*test*)
+
+															)
+														else 
+															(
+															smaller := NotDetermine;
+															(*result := false;*)
+															print_message Verbose_standard ("\n	 Could not determine!!!!!");
+															);
+														);
+													);
+												);
+
+											
+
+											);
+
+								(* ); *)
+
+								((*!result,*)!smaller)
+
+(*End - Needed functions for part 2*)
+
+
+
+
+
+
+
+(*olde version code, maybe reuse in future*)
+
+(*
+(*using *)
+let compare coeff1 coeff2 = let first_minus_second = Gmp.Z.compare coeff1 coeff2 in first_minus_second 
+*)
+
+(*
+let get_coef term = match term with
+	| Coef coef -> coef 
+	
+	(* | Pl of linear_term * linear_term
+	| Mi of linear_term * linear_term *)
+	(* | Ti of coef * linear_term -> coef *)
+
+	| _ -> raise (SerializationError("get_coef function error")) 	
+*)
+
+
+										
+
+
+(*
+(* check whether list of coefs contains a negative coef*)
+let is_mem_in_coef_list_less_than_zero	list_coef	=	let result = ref false in
+														List.iter (fun coef ->
+															if (NumConst.l coef NumConst.zero)
+															then (
+																result := true; 
+																print_message Verbose_standard ("\n	 coef: "^ NumConst.string_of_numconst coef ^" less than 0");
+																);
+
+														) list_coef;
+														!result
+*)
+
+(*
+(* check whether vars in liear term 1 is a subset of linear term 2 *)
+let is_var_subset var_list1 var_list2 = let result = ref true in
+										List.iter 	(fun var ->	if not (List.mem var var_list2) 
+																then 
+																	(
+																	result := false;
+																	print_message Verbose_standard ("\n	 the var1: "^ string_of_int var ^" is not in var_list2 ");
+																	);
+
+													) var_list1;
+										!result
+*)
+
+
+
+(*
+
+type smaller_term =
+	| NotDetermine (*not determined*)
+	| First
+	| Second
+
+(*return true if 2 linear terms contain the same clocks*)
+let isComparable_linear_terms term1 term2 	=	
+												let result = ref true in
+
+												print_message Verbose_standard ("\n	 Analyzing!!!!!");
+
+												let coefs_vars1 = get_coefs_vars term1 in
+												(*length of linear term 1*)
+												let length_coefs_vars1 = List.length coefs_vars1 in
+
+												let coefs_vars2 = get_coefs_vars term2 in
+												(*length of linear term 2*)
+												let length_coefs_vars2 = List.length coefs_vars2 in
+
+												print_message Verbose_standard ("\n	 Linear term 1:");
+												print_message Verbose_standard ("\n	 Mems/Length:" ^ (string_of_int length_coefs_vars1) );
+												
+												print_message Verbose_standard ("\n	 Linear term 2:");
+												print_message Verbose_standard ("\n	 Mems/Length:" ^ (string_of_int length_coefs_vars2) );
+
+												(*check if there have minus operation inside the linear term or coeff < 0*)
+												let checkMinus1 = isMinus term1 in
+												let checkMinus2 = isMinus term2 in		
+
+												(*check whether the both linear terms contain negative coef*)
+												let (vars1, coefs1) = List.split coefs_vars1 in
+												let (vars2, coefs2) = List.split coefs_vars2 in
+												
+												(*
+												let less_than_zero1 = is_mem_in_coef_list_less_than_zero coefs1 in
+												let less_than_zero2 = is_mem_in_coef_list_less_than_zero coefs2 in
+												*)
+												
+												(*check*)
+												(* if (checkMinus1 || checkMinus2 || less_than_zero1 || less_than_zero2) *)
+												if (checkMinus1 || checkMinus2) 
+												then
+													let _ = result := false in 
+													print_message Verbose_standard ("\n	 Contain Minus Sign!!!!!")
+												else
+													print_message Verbose_standard ("\n	 Not Contain Minus Sign!!!!!");
+
+												(*check whether 1/2 is subset of the other*)
+												let smaller = ref NotDetermine in 
+												if !result = true
+												then (
+												(*case: mems term 1 = mems term 2*)
+												if length_coefs_vars1 - length_coefs_vars2 = 0 
+												then
+													(
+													print_message Verbose_standard ("\n	 mems of term and term 2 are equal!!!!!");
+													(*check 2 sets of vars are equal*)
+													if is_var_subset vars2 vars1 && is_var_subset vars1 vars2 
+													then (
+														print_message Verbose_standard ("\n Sets of vars of term 1 and term 2 are equal!!!!!");
+														if is_all_smaller_or_equal_mems coefs_vars1 coefs_vars2
+														then
+															(
+															smaller := First;
+															print_message Verbose_standard ("\n	 coefs in term 1 less than or equal coefs in term 2!!!!!");
+															)
+														else
+															(
+															if is_all_smaller_or_equal_mems coefs_vars2 coefs_vars1
+															then
+																(
+																smaller := Second;
+																print_message Verbose_standard ("\n	 coefs in term 2 less than or equal coefs in term 1!!!!!");
+																)
+															(*coefs of term 1 = coefs of term 2*)
+															else
+																(
+																smaller := NotDetermine;
+																result := false;
+																print_message Verbose_standard ("\n	 Could not determine!!!!!");
+																);
+															);
+														)
+													else 
+														(
+														print_message Verbose_standard ("\n	 not is_var_subset vars2 vars1 && is_var_subset vars1 vars2!!!!!");
+														smaller := NotDetermine;
+														result := false
+														);
+													) 
+												else
+													(
+														if length_coefs_vars1 - length_coefs_vars2 < 0 
+														then(
+															print_message Verbose_standard ("\n	 length_coefs_vars1 - length_coefs_vars2 < 0!!!!!");
+															if is_var_subset vars1 vars2 
+															then
+																( 
+																smaller := First;
+																print_message Verbose_standard ("\n	 Set of vars of term 1 is subset of term 2!!!!!");
+
+																(*test*)
+																if is_all_smaller_or_equal_mems coefs_vars1 coefs_vars2
+																then 
+																	(
+																	print_message Verbose_standard ("\n	 coefs in term 1 less than or equal coefs in term 2!!!!!");
+																	)
+																else
+																	(
+																	smaller := NotDetermine;
+																	result := false;
+																	print_message Verbose_standard ("\n	 coefs in term 1 not less than or equal coefs in term 2!!!!!");
+																	);
+																(*test*)
+
+																)
+															else
+																( 
+																if length_coefs_vars1 - length_coefs_vars2 > 0 
+																then(
+																	print_message Verbose_standard ("\n	 length_coefs_vars1 - length_coefs_vars2 > 0!!!!!");
+																	if is_var_subset vars2 vars1 
+																	then 
+																		(
+																		smaller := Second;
+																		print_message Verbose_standard ("\n	 Set of vars of term 2 is subset of term 1!!!!!");
+
+																		(*test*)
+																		if is_all_smaller_or_equal_mems coefs_vars2 coefs_vars1
+																		then 
+																			(
+																			print_message Verbose_standard ("\n	 coefs in term 2 less than or equal coefs in term 1!!!!!");
+																			)
+																		else
+																			(
+																			smaller := NotDetermine;
+																			result := false;
+																			print_message Verbose_standard ("\n	 coefs in term 2 not less than or equal coefs in term 1!!!!!");
+																			);
+																		(*test*)
+
+																		)
+																	else 
+																		(
+																		smaller := NotDetermine;
+																		result := false;
+																		print_message Verbose_standard ("\n	 Could not determine!!!!!");
+																		);
+																	);
+																);
+															);
+
+														
+
+														);
+
+												);
+
+  												(!result,!smaller)
+*)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

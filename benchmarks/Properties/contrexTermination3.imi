@@ -1,0 +1,88 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Example for non termination of Inverse Method
+ *
+ * Description     : Example for non termination of Inverse Method. The idea is that constraints are generated of the form i*p2 >= (i-1)*p1, with i growing without bounds, i.e., eventually p2 >= p1. Given p1=p2=1, IM does not terminate. Constraining the system with p2 >= p1 yields termination. Also note that no other valuation than p1=p2=1 yields the same trace set / language. The language is a(ab)*c
+ * Correctness     : N/A
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2012/07/02
+ * Fork from       : contrexTermination.imi
+ * Fork date       : 2016/08/31
+ * Last modified   : 2016/08/31
+ *
+ * IMITATOR version: 2.8
+ ************************************************************)
+ 
+var 	x1, x2
+	: clock;
+
+	p1, p2
+	: parameter;
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs : a, b, c;
+
+loc l1 : while x2 <= p2 wait{}
+	when True sync a do {x2'=0} goto l2;
+
+loc l2 : while x1 <= p1 wait{}
+	(* Note: inequality x1 <= p1 ensures termination *)
+	when x1 = p1 sync b do {x1'=0} goto l1;
+	
+	(* Branching to ensure that p2 <= p1 *)
+	when x1 >= p2 sync c do {x1'=0, x2'=0} goto l3;
+
+loc l3 : while x1 <= 0 wait{}
+
+end (* pta *)
+
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	(* Note: starting in l2 does not ensure termination either *)
+	& loc[pta]= l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x1 = 0
+	& x2 = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p1 >= 0
+	& p2 >= 0
+	
+(* Yields termination *)
+(* 	& p2 = p1 *)
+
+(* Yields termination with false constraint *)
+(* 	& p2 > p1 *)
+
+(* Yields termination *)
+(* 	& p2 >= p1 *)
+
+(* Does not yield termination *)
+(* 	& p2 <= p1 *)
+
+(* Reference valuation *)
+(* 	& p2 = 1 & p1 = 1 *)
+;

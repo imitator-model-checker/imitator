@@ -1,0 +1,433 @@
+(************************************************************
+* IMITATOR MODEL
+*
+* Aerial Video Tracking Sytem
+*
+* Description : Preemptive model
+* Source : Thales
+* Author : Baptiste Parquier
+* Modeling : Baptiste Parquier
+* Input by : Baptiste Parquier
+*
+* Created : 2016/08/29
+* Last modified : 2016/08/29
+*
+* IMITATOR version: 2.8 "Butter Ham"
+************************************************************)
+
+var
+
+(* Clocks *)
+	x2p, (* Periodic Event T2_1's clock *)
+	x2, (* Process T2_1's clock *)
+	x6p, (* Periodic Event T6_1's clock and Jitter's clock *)
+	x61, x5, x62, x63, (* clocks for T6 and T5 *)
+	x7, (* T7_1's clocks *)
+	t1, t2 (* observer's clocks *)
+		: clock;
+
+(* Discrete *)
+	c2, c61, c5, c62, c63, c7, (* for each task: compute the number of activations waiting *)
+	chemin_T6_1, chemin_T7_1
+		: discrete;
+
+(* Parameters *)
+	 WT
+		: parameter;
+
+(* Contants *)
+	jitter = 30, offset = 0
+		: constant;
+
+(************************************************************)
+automaton periodic_event_T2_1
+(************************************************************)
+synclabs: recommence_T2_1;
+
+loc p20: while x2p <= offset wait{}
+	when x2p >= offset do {x2p' = 0} goto p2;
+
+loc p2: while x2p <= 40 wait {}
+	when x2p = 40 sync recommence_T2_1 do {x2p' = 0} goto p2;
+
+end (* periodic_event_T2_1 *)
+
+
+(************************************************************)
+automaton memoire_lancement_T2_1
+(************************************************************)
+synclabs: recommence_T2_1, lance_T2_1, fin_T2_1;
+
+loc m20: while True wait {}
+	when True sync recommence_T2_1 do {c2' = c2 + 1} goto m21;
+	when True sync fin_T2_1 do {c2' = c2 - 1} goto m21;
+
+urgent loc m21: while True wait {}
+	when c2 = 1 sync lance_T2_1 goto m20;
+	when c2 > 1 goto m20;
+	when c2 < 1 goto m20;
+
+end (* memoire_lancement_T2_1 *)
+
+
+(************************************************************)
+automaton periodic_event_T6_1
+(************************************************************)
+synclabs: recommence_T6_1;
+
+loc p60: while x6p <= 100 wait {}
+	when x6p = 100 do {x6p' = 0} goto p61;
+
+loc p61: while x6p <= jitter wait {}
+	when True sync recommence_T6_1 goto p60;
+
+end (* periodic_event_T6_1 *)
+
+
+(************************************************************)
+automaton memoire_lancement_T6_1
+(************************************************************)
+synclabs: recommence_T6_1, lance_T6_1, fin_T6_1;
+
+loc m610: while True wait {}
+	when True sync recommence_T6_1 do {c61' = c61 + 1} goto m611;
+	when True sync fin_T6_1 do {c61' = c61 - 1} goto obs61;
+
+urgent loc m611: while True wait {}
+	when c61 = 1 sync lance_T6_1 goto m610;
+	when c61 > 1 goto m610;
+	when c61 < 1 goto m610;
+
+urgent loc obs61: while True wait {}
+	when chemin_T6_1 = 1 do {chemin_T6_1' = 2} goto m611;
+	when chemin_T6_1 = 2 do {chemin_T6_1' = 1} goto m611;
+
+end (* memoire_lancement_T6_1 *)
+
+
+(************************************************************)
+automaton memoire_lancement_T5_1
+(************************************************************)
+synclabs: fin_T6_1, lance_T5_1, fin_T5_1;
+
+loc m510: while True wait {}
+	when True sync fin_T6_1 do {c5' = c5 + 1} goto m511;
+	when True sync fin_T5_1 do {c5' = c5 - 1} goto m511;
+
+urgent loc m511: while True wait {}
+	when c5 = 1 sync lance_T5_1 goto m510;
+	when c5 > 1 goto m510;
+	when c5 < 1 goto m510;
+
+end (* memoire_lancement_T5_1 *)
+
+
+(************************************************************)
+automaton memoire_lancement_T6_2
+(************************************************************)
+synclabs: fin_T6_2, lance_T6_2, fin_T5_1;
+
+loc m620: while True wait {}
+	when True sync fin_T5_1 do {c62' = c62 + 1} goto m621;
+	when True sync fin_T6_2 do {c62' = c62 - 1} goto m621;
+
+urgent loc m621: while True wait {}
+	when c62 = 1 sync lance_T6_2 goto m620;
+	when c62 > 1 goto m620;
+	when c62 < 1 goto m620;
+
+end (* memoire_lancement_T6_2 *)
+
+
+(************************************************************)
+automaton memoire_lancement_T6_3
+(************************************************************)
+synclabs: fin_T6_3, lance_T6_3, fin_T6_2;
+
+loc m630: while True wait {}
+	when True sync fin_T6_2 do {c63' = c63 + 1} goto m631;
+	when True sync fin_T6_3 do {c63' = c63 - 1} goto m631;
+
+urgent loc m631: while True wait {}
+	when c63 = 1 sync lance_T6_3 goto m630;
+	when c63 > 1 goto m630;
+	when c63 < 1 goto m630;
+
+end (* memoire_lancement_T6_3 *)
+
+
+(************************************************************)
+automaton memoire_lancement_T7_1
+(************************************************************)
+synclabs: fin_T6_2, lance_T7_1, fin_T7_1;
+
+loc m70: while True wait {}
+	when True sync fin_T6_2 do {c7' = c7 + 1} goto m71;
+	when True sync fin_T7_1 do {c7' = c7 - 1} goto obs7;
+
+urgent loc m71: while True wait {}
+	when c7 = 1 sync lance_T7_1 goto m70;
+	when c7 > 1 goto m70;
+	when c7 < 1 goto m70;
+
+urgent loc obs7: while True wait {}
+	when chemin_T7_1 = 1 do {chemin_T7_1' = 2} goto m71;
+	when chemin_T7_1 = 2 do {chemin_T7_1' = 1} goto m71;
+
+end (* memoire_lancement_T7_1 *)
+
+
+
+
+(************************************************************)
+automaton tasks
+(************************************************************)
+synclabs : lance_T2_1, lance_T6_1, lance_T5_1, lance_T6_2, lance_T6_3, lance_T7_1,
+	fin_T2_1, fin_T6_1, fin_T5_1, fin_T6_2, fin_T6_3, fin_T7_1;
+
+loc l0: while True wait {}
+	when True sync lance_T2_1 do {x2' = 0} goto l2;
+	when True sync lance_T6_1 do {x61' = 0} goto l61;
+	when True sync lance_T5_1 do {x5' = 0} goto l5;
+	when True sync lance_T6_2 do {x62' = 0} goto l62;
+	when True sync lance_T6_3 do {x63' = 0} goto l63;
+	when True sync lance_T7_1 do {x7' = 0} goto l7;
+
+loc l2: while x2 <= 17 stop{x63, x62, x61, x5, x7} wait {}
+	when True sync lance_T2_1 do {x2' = 0} goto l2;
+	when x2 >= 17 sync fin_T2_1 goto l2U;
+	when True sync lance_T6_3 do {x63' = 0} goto l2;
+	when True sync lance_T6_2 do {x62' = 0} goto l2;
+	when True sync lance_T6_1 do {x61' = 0} goto l2;
+	when True sync lance_T5_1 do {x5' = 0} goto l2;
+	when True sync lance_T7_1 do {x7' = 0} goto l2;
+
+urgent loc l2U: while True wait {}
+	when c63 > 0 goto l63;
+	when c63 = 0 & c62 > 0 goto l62;
+	when c63 = 0 & c62 = 0 & c61 > 0 goto l61;
+	when c63 = 0 & c62 = 0 & c61 = 0 & c5 > 0 goto l5;
+	when c63 = 0 & c62 = 0 & c61 = 0 & c5 = 0 & c7 > 0 goto l7;
+	when c63 = 0 & c62 = 0 & c61 = 0 & c5 = 0 & c7 = 0 goto l0;
+	when True sync lance_T6_3 do {x63' = 0} goto l2U;
+	when True sync lance_T6_2 do {x62' = 0} goto l2U;
+	when True sync lance_T6_1 do {x61' = 0} goto l2U;
+	when True sync lance_T5_1 do {x5' = 0} goto l2U;
+	when True sync lance_T7_1 do {x7' = 0} goto l2U;
+
+loc l63: while x63 <= 5 stop{x62, x61, x5, x7} wait {}
+	when True sync lance_T2_1 do {x2' = 0} goto l2;
+	when True sync lance_T6_3 do {x63' = 0} goto l63;
+	when x63 >= 4 sync fin_T6_3 goto l63U;
+	when True sync lance_T6_2 do {x62' = 0} goto l63;
+	when True sync lance_T6_1 do {x61' = 0} goto l63;
+	when True sync lance_T5_1 do {x5' = 0} goto l63;
+	when True sync lance_T7_1 do {x7' = 0} goto l63;
+
+urgent loc l63U: while True wait {}
+	when c62 > 0 goto l62;
+	when c62 = 0 & c61 > 0 goto l61;
+	when c62 = 0 & c61 = 0 & c5 > 0 goto l5;
+	when c62 = 0 & c61 = 0 & c5 = 0 & c7 > 0 goto l7;
+	when c62 = 0 & c61 = 0 & c5 = 0 & c7 = 0 goto l0;
+	when True sync lance_T6_2 do {x62' = 0} goto l63U;
+	when True sync lance_T6_1 do {x61' = 0} goto l63U;
+	when True sync lance_T5_1 do {x5' = 0} goto l63U;
+	when True sync lance_T7_1 do {x7' = 0} goto l63U;
+
+loc l62: while x62 <= 10 stop{x61, x5, x7} wait {}
+	when True sync lance_T2_1 do {x2' = 0} goto l2;
+	when True sync lance_T6_3 do {x63' = 0} goto l63;
+	when True sync lance_T6_2 do {x62' = 0} goto l62;
+	when x62 >= 9 sync fin_T6_2 goto l62U;
+	when True sync lance_T6_1 do {x61' = 0} goto l62;
+	when True sync lance_T5_1 do {x5' = 0} goto l62;
+	when True sync lance_T7_1 do {x7' = 0} goto l62;
+
+urgent loc l62U: while True wait {}
+	when c61 > 0 goto l61;
+	when c61 = 0 & c5 > 0 goto l5;
+	when c61 = 0 & c5 = 0 & c7 > 0 goto l7;
+	when c61 = 0 & c5 = 0 & c7 = 0 goto l0;
+	when True sync lance_T6_1 do {x61' = 0} goto l62U;
+	when True sync lance_T5_1 do {x5' = 0} goto l62U;
+	when True sync lance_T7_1 do {x7' = 0} goto l62U;
+
+loc l61: while x61 <= 4 stop{x5, x7} wait {}
+	when True sync lance_T2_1 do {x2' = 0} goto l2;
+	when True sync lance_T6_3 do {x63' = 0} goto l63;
+	when True sync lance_T6_2 do {x62' = 0} goto l62;
+	when True sync lance_T6_1 do {x61' = 0} goto l61;
+	when x61 >= 4 sync fin_T6_1 goto l61U;
+	when True sync lance_T5_1 do {x5' = 0} goto l61;
+	when True sync lance_T7_1 do {x7' = 0} goto l61;
+
+urgent loc l61U: while True wait {}
+	when c5 > 0 goto l5;
+	when c5 = 0 & c7 > 0 goto l7;
+	when c5 = 0 & c7 = 0 goto l0;
+	when True sync lance_T5_1 do {x5' = 0} goto l61U;
+	when True sync lance_T7_1 do {x7' = 0} goto l61U;
+
+loc l5: while x5 <= 7 stop{x7} wait {}
+	when True sync lance_T2_1 do {x2' = 0} goto l2;
+	when True sync lance_T6_3 do {x63' = 0} goto l63;
+	when True sync lance_T6_2 do {x62' = 0} goto l62;
+	when True sync lance_T6_1 do {x61' = 0} goto l61;
+	when True sync lance_T5_1 do {x5' = 0} goto l5;
+	when x5 >= 4 sync fin_T5_1 goto l5U;
+	when True sync lance_T7_1 do {x7' = 0} goto l5;
+
+urgent loc l5U: while True wait {}
+	when c7 > 0 goto l7;
+	when c7 = 0 goto l0;
+	when True sync lance_T7_1 do {x7' = 0} goto l5U;
+
+loc l7: while x7 <= 14 wait {}
+	when True sync lance_T2_1 do {x2' = 0} goto l2;
+	when True sync lance_T6_3 do {x63' = 0} goto l63;
+	when True sync lance_T6_2 do {x62' = 0} goto l62;
+	when True sync lance_T6_1 do {x61' = 0} goto l61;
+	when True sync lance_T5_1 do {x5' = 0} goto l5;
+	when True sync lance_T7_1 do {x7' = 0} goto l7;
+	when x7 >= 11 sync fin_T7_1 goto l0;
+
+end (* tasks *)
+
+
+
+
+(************************************************************)
+(* Observateur *)
+(************************************************************)
+
+automaton Observateur1
+
+synclabs: lance_T6_1, fin_T7_1, obs1_bloc;
+
+loc obs10: while True stop {t1} wait {}
+	when chemin_T6_1 = 1 sync lance_T6_1 do {t1' = 0} goto obs11;
+	when chemin_T6_1 > 1 sync lance_T6_1 goto obs10;
+	when chemin_T6_1 < 1 sync lance_T6_1 goto obs10;
+	when True sync fin_T7_1 goto obs10;
+
+loc obs11: while True wait {}
+	when chemin_T7_1 = 1 sync fin_T7_1 goto obs13;
+	when chemin_T7_1 > 1 sync fin_T7_1 goto obs11;
+	when chemin_T7_1 < 1 sync fin_T7_1 goto obs11;
+	when True sync lance_T6_1 goto obs11;
+
+urgent loc obs13: while True stop {t1} wait {}
+	when t1 > WT sync obs1_bloc goto bloque1;
+	when t1 <= WT goto obs10;
+
+loc bloque1: while True wait {}
+	
+end (* Observateur1 *)
+
+
+automaton Observateur2
+
+synclabs: lance_T6_1, fin_T7_1, obs2_bloc;
+
+loc obs20: while True stop {t2} wait {}
+	when chemin_T6_1 = 2 sync lance_T6_1 do {t2' = 0} goto obs21;
+	when chemin_T6_1 > 2 sync lance_T6_1 goto obs20;
+	when chemin_T6_1 < 2 sync lance_T6_1 goto obs20;
+	when True sync fin_T7_1 goto obs20;
+
+loc obs21: while True wait {}
+	when chemin_T7_1 = 2 sync fin_T7_1 goto obs23;
+	when chemin_T7_1 > 2 sync fin_T7_1 goto obs21;
+	when chemin_T7_1 < 2 sync fin_T7_1 goto obs21;
+	when True sync lance_T6_1 goto obs21;
+
+urgent loc obs23: while True stop {t2} wait {}
+	when t2 > WT sync obs2_bloc goto bloque2;
+	when t2 <= WT goto obs20;
+
+loc bloque2: while True wait {}
+	
+end (* Observateur2 *)
+
+
+automaton Observateur
+
+synclabs: obs1_bloc, obs2_bloc;
+
+loc obsI: while True wait{}
+	when True sync obs1_bloc goto obsF;
+	when True sync obs2_bloc goto obsF;
+
+loc obsF: while True wait {}
+
+end (* Observateur *)
+
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[periodic_event_T2_1] = p20
+	& loc[memoire_lancement_T2_1] = m20
+	& loc[periodic_event_T6_1] = p60
+	& loc[memoire_lancement_T6_1] = m610
+	& loc[memoire_lancement_T5_1] = m510
+	& loc[memoire_lancement_T6_2] = m620
+	& loc[memoire_lancement_T6_3] = m630
+	& loc[memoire_lancement_T7_1] = m70
+	& loc[tasks] = l0
+	& loc[Observateur1] = obs10
+	& loc[Observateur2] = obs20
+	& loc[Observateur] = obsI
+
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+	& c2 = 0
+	& c61 = 0
+	& c5 = 0
+	& c62 = 0
+	& c63 = 0
+	& c7 = 0
+	& chemin_T6_1 = 1
+	& chemin_T7_1 = 1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x2p = 0
+	& x2 = 0
+	& x6p = 0
+	& x61 = 0
+	& x62 = 0
+	& x63 = 0
+	& x5 = 0
+	& x7 = 0
+	& t1 = 0
+	& t2 = 0
+	
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& WT >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[Observateur] = obsF;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
