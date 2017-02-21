@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2017/02/20
+ * Last modified     : 2017/02/21
  *
  ************************************************************)
 
@@ -277,7 +277,7 @@ class virtual algoCartoGeneric =
 	val mutable nb_unsuccessful_points = 0
 	
 	(* Counter tracking the computation time to look for points *)
-	val find_next_point_counter = create_hybrid_counter_and_register "find next point" Algorithm_counter Verbose_low
+	val find_next_point_counter = create_hybrid_counter_and_register "find next point" Algorithm_counter Verbose_standard
 
 	(* Is the time/state/etc. limit reached? *)
 	val mutable limit_reached = Keep_going
