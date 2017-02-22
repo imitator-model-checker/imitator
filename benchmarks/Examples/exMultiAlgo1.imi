@@ -1,0 +1,87 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Dummy example to illustrate various algorithms in IMITATOR.
+ *
+ * Description     : Dummy example to illustrate various algorithms in IMITATOR.
+ * Correctness     : TODO
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2017/02/22
+ * Last modified   : 2017/02/22
+ *
+ * IMITATOR version: 2.9
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y
+		: clock;
+
+(* Parameters *)
+	p1, p2
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l0: while y <= p2 wait {}
+	when x = 1 & x > p1 goto l1;
+	when True goto l2;
+
+loc l1: while True wait {}
+
+loc l2: while y <= 1 wait {}
+	when x > p2 do {x' = 0} goto l2;
+	when y = 1 & y < p1 goto l3;
+
+loc l3: while True wait {}
+	when x >= p2 do {x' = 0, y'=0} goto l3;
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l0
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p1 >= 0
+	& p2 >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[pta] = l1 or loc[pta] = l3;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
