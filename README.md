@@ -7,13 +7,17 @@ IMITATOR takes as input a network of IMITATOR parametric timed automata (NIPTA):
 IMITATOR addresses several variants of the following problem:
 _given a concurrent timed system, what are the values of the timing constants that guarantee that the model of the system satisfies some property?_
 Specifically, IMITATOR implements:
-* parametric safety analysis [AHV93,JLR15],
+* parametric safety and parametric reachability analysis [AHV93,JLR15],
 * parametric deadlock-freeness checking [Andre16],
+* cycle-existence synthesis,
+* cycle-existence synthesis under the non-Zenoness assumption [ANPS17],
 * the inverse method (also known as (robust) language or trace preservation synthesis) [ACEF09,AM15],
 * the behavioral cartography [AF10], and
-* parametric reachability preservation [ALNS15].
+* parametric reachability preservation (PRP and PRPC) [ALNS15].
 
 Numerous analysis options are available.
+
+IMITATOR is able to run in a distributed fashion on a cluster (using the PRPC algorithm).
 
 IMITATOR is mainly a command-line tool, but that can output results in graphical form.
 Furthermore, a graphical user interface is available in the [CosyVerif](http://cosyverif.org/) platform.
@@ -42,6 +46,8 @@ formal verification, model checking, software verification, parameter synthesis,
 
 [AM15] Étienne André and Nicolas Markey. **Language Preservation Problems in Parametric Timed Automata**. In Sriram Sankaranarayanan and Enrico Vicario (eds.), FORMATS’15, Springer LNCS, September 2015.
 
-[Andre16] Étienne André. **Parametric Deadlock-Freeness Checking Timed Automata**. In Augusto Cesar Alves Sampaio and Farn Wang (eds.), ICTAC’16, Springer LNCS, October 2016.
+[Andre16] Étienne André. **Parametric Deadlock-Freeness Checking Timed Automata**. In Augusto Cesar Alves Sampaio and Farn Wang (eds.), ICTAC’16, LNCS 9965, Springer, pages 469–478, October 2016.
+
+[ANPS17] Étienne André, Nguyễn Hoàng Gia, Laure Petrucci and Sun Jun. **Parametric model checking timed automata under non-Zenoness assumption**. In Clark Barrett and Temesghen Kahsai (eds.), NFM’17, Springer LNCS, May 2017. To appear.
 
 [JLR15] Aleksandra Jovanovic, Didier Lime, Olivier H. Roux. **Integer Parameter Synthesis for Real-Time Systems**. IEEE Trans. Software Eng. 41(5): 445–461, 2015.
