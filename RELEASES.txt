@@ -4,12 +4,12 @@ release 2.XXXXX    (XXXXX) FUTURE MAJOR RELEASE
 Major
 - New algorithm LoopSynthesis (option -mode LoopSynth): synthesizes valuations for which there exists an infinite run in the model.
 - New algorithms for non-Zeno cycle emptiness checking: with CUB-detection (-mode NZCUBcheck) or transformation to a CUB-PTA (-mode NZCUBtrans) [still in an experimental phase]
-- EFsynth rewritten to output a single, disjunctive constraint (instead of a list of constraints as until version 2.8); Legacy written still usable using option -mode EFold
+- EFsynth rewritten to output a single, disjunctive constraint (instead of a list of constraints as until version 2.8); Legacy version still usable using option -mode EFold
 - PRP and PRPC now disconnected from IM and BC: new syntax (-mode PRP and -mode PRPC), and result in the form of a single good and/or bad constraint.
 
 Minor features
 - Variables not used in a model apart from resets (or updates) are simply removed entirely, so as to speed up the execution. If that behavior is not the one intended by the user, this automatic removal can be disabled using the new option -no-var-autoremove.
-- Limited colored terminal output :-)
+- (Limited) colored terminal output :-)
 
 Bug fixing
 - Solved a bug for EF / PRP when the initial state is already bad
@@ -25,6 +25,7 @@ Install and compile
 
 Internal
 - In cartography algorithms, the list of tiles is now externalized to a dedicated manager (that can store a list of tiles, or a single good/bad constraints)
+- New experimental version of PRPC using an external compositional verifier; hidden option "-mode coverlearning"
 
 
 *******************************************************
