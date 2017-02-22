@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/10/11
+ * Last modified     : 2017/02/22
  *
  ************************************************************)
 
@@ -142,6 +142,11 @@ let upd_cache = Cache.make upd_hash 100*)
 (** Statistics *)
 (************************************************************)
 
+
+(*** NOTE: defined OUTSIDE the class, as many instances of this class can be created (for BC), and we want a single counter *)
+
+
+
 (*(* Print statistics for cache usage *)
 let print_stats _ =
 	print_message Verbose_standard "invariant cache:"; 
@@ -164,6 +169,10 @@ let counter_nb_combinations = create_discrete_counter_and_register "different co
 
 (* Early unsatisfiability when computing new states, after performing intersection of Di = di and C(X) and g(X) *)
 let counter_nb_unsat1 = create_discrete_counter_and_register "early unsat (D ^ g)" States_counter Verbose_low
+
+(* Counter measuring the time spent on the computation of successor (discrete) transitions *)
+(*** NOTE: if this is correct, this counter should not measure any PPL-based computation! ***)
+let tcounter_next_transitions = create_time_counter_and_register "next transitions" States_counter Verbose_low
 
 (* let nb_unsat2 = ref 0 *)
 
@@ -1190,6 +1199,7 @@ class virtual algoStateBased =
 	(* Nature of the state space according to a property *)
 	val mutable statespace_nature = StateSpace.Unknown
 	
+	
 (*	(* Clock that may be reset at each transition *)
 	val mutable reset_clock : Automaton.clock_index option = None*)
 	
@@ -1276,8 +1286,12 @@ class virtual algoStateBased =
 			print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names orig_constraint_projection);
 		);
 
+		(* Statistics *)
+		tcounter_next_transitions#start;
 		(* get possible actions originating from current state *)
 		let list_of_possible_actions = compute_possible_actions original_location in
+		(* Statistics *)
+		tcounter_next_transitions#stop;
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then (
@@ -1302,11 +1316,18 @@ class virtual algoStateBased =
 		(* FOR ALL ACTION DO: *)
 		List.iter (fun action_index ->
 
+			(* Statistics *)
+			tcounter_next_transitions#start;
+
+			(* Print some information *)
 			print_message Verbose_medium ("\nComputing target states for action '" ^ (model.action_names action_index) ^ "'");
 			(* Get the automata declaring the action *)
 			let automata_for_this_action = model.automata_per_action action_index in
 			let nb_automata_for_this_action = List.length automata_for_this_action in
 		
+			(* Statistics *)
+			tcounter_next_transitions#stop;
+
 			(*------------------------------------------------------------*)
 			(* Compute the reachable states on the fly: i.e., all the possible transitions for all the automata belonging to 'automata' *)
 			(*------------------------------------------------------------*)
@@ -1322,6 +1343,9 @@ class virtual algoStateBased =
 				apply_time_elapsing original_location orig_plus_discrete;
 			);
 			
+			(* Statistics *)
+			tcounter_next_transitions#start;
+
 			(* Give a new index to those automata *)
 			let real_indexes = Array.make nb_automata_for_this_action 0 in
 			(* Keep an array of possible transition indices for each automaton *)
@@ -1333,6 +1357,9 @@ class virtual algoStateBased =
 			(* Array for the currently selected transition indices *)
 			let current_transitions = Array.make nb_automata_for_this_action 0 in
 			
+			(* Statistics *)
+			tcounter_next_transitions#stop;
+
 			(* compute the possible combinations of transitions *)
 			let legal_transitions_exist = compute_transitions original_location orig_plus_discrete action_index automata_for_this_action real_indexes max_indexes possible_transitions in 
 		
@@ -1348,6 +1375,9 @@ class virtual algoStateBased =
 			let more_combinations = ref legal_transitions_exist in
 			let debug_i = ref 0 in
 			while !more_combinations do
+				(* Statistics *)
+				tcounter_next_transitions#start;
+
 				debug_i := !debug_i +1;
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then (
@@ -1363,6 +1393,9 @@ class virtual algoStateBased =
 					current_transitions.(i) <- List.nth (possible_transitions.(i)) (current_indexes.(i))
 				done; 
 		
+				(* Statistics *)
+				tcounter_next_transitions#stop;
+				
 				(* Compute the new location for the current combination of transitions *)
 				let location, guards, clock_updates = compute_new_location real_indexes current_transitions action_index original_location in
 				
