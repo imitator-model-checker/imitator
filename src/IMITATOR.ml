@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2017/02/20
+ * Last modified     : 2017/03/08
  *
  ************************************************************)
 
@@ -28,9 +28,6 @@ open ModelPrinter
 open Options
 open Statistics
 
-
-(*** NOTE: just to allow compiling ***)
-open CUBchecker
 
 
 (**************************************************
@@ -403,9 +400,9 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 let new_im_or_prp =
 	if options#efim then
 		fun () ->
-		let myalgo :> AlgoBFS.algoBFS = new AlgoPRP.algoPRP in myalgo
+		let myalgo :> AlgoStateBased.algoStateBased = new AlgoPRP.algoPRP in myalgo
 	else
-		fun () -> (*new AlgoIM.algoIM*)let myalgo :> AlgoBFS.algoBFS = new AlgoIM.algoIM in myalgo
+		fun () -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM in myalgo
 in
 
 
@@ -748,7 +745,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	| PRPC ->
 		let bc_algo = new AlgoBCCover.algoBCCover in
 		(*** NOTE: very important: must set NOW the parameters ***)
-		bc_algo#set_algo_instance_function (fun () -> let myalgo :> AlgoBFS.algoBFS = new AlgoPRP.algoPRP in myalgo);
+		bc_algo#set_algo_instance_function (fun () -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoPRP.algoPRP in myalgo);
 		(*** NOTE: for PRPC, we use a constraint manager! ***)
 		bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_good_bad_constraint;
 		let myalgo :> AlgoGeneric.algoGeneric = bc_algo in

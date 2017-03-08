@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/07/22
- * Last modified     : 2016/07/22
+ * Last modified     : 2017/03/08
  *
  ************************************************************)
 
@@ -39,7 +39,7 @@ class algoBCCoverLearning :
 		
 		(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
 		(*** NOTE: for this class, the method is redefined to throw an exception ***)
-		method set_algo_instance_function : (unit -> AlgoBFS.algoBFS) -> unit
+		method set_algo_instance_function : (unit -> AlgoStateBased.algoStateBased) -> unit
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Call the algorithm on the current point: 1) run the abstraction 2) call either EFsynth or PRP depending on the result *)

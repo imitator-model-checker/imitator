@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2017/02/21
+ * Last modified     : 2017/03/08
  *
  ************************************************************)
 
@@ -258,8 +258,8 @@ class virtual algoCartoGeneric =
 	
 	(* The current algorithm instance *)
 	(*** NOTE: this initialiation is useless (and time consuming?), as a new instance will be overwritten when needed ***)
-	val mutable current_algo_instance : AlgoBFS.algoBFS =
-		let myalgo :> AlgoBFS.algoBFS = new AlgoIMK.algoIMK in myalgo
+	val mutable current_algo_instance : AlgoStateBased.algoStateBased =
+		let myalgo :> AlgoStateBased.algoStateBased = new AlgoIMK.algoIMK in myalgo
 	
 (*	(* List of im_results *)
 	val mutable im_results : abstract_point_based_result list = []*)
@@ -293,7 +293,7 @@ class virtual algoCartoGeneric =
 	
 	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
 	(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-	method set_algo_instance_function (f : unit -> AlgoBFS.algoBFS) : unit =
+	method set_algo_instance_function (f : unit -> AlgoStateBased.algoStateBased) : unit =
 		match algo_instance_function with
 		| Some _ -> 
 			raise (InternalError("algo_instance_function was already set in AlgoCartoGeneric."))

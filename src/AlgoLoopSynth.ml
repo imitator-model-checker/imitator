@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2016/10/18
+ * Last modified     : 2017/03/08
  *
  ************************************************************)
 
@@ -23,7 +23,7 @@ open ImitatorUtilities
 open Exceptions
 open AbstractModel
 open Result
-open AlgoBFS
+open AlgoStateBased
 
 
 (************************************************************)
@@ -42,7 +42,7 @@ type has_loop =
 (************************************************************)
 (************************************************************)
 class algoLoopSynth =
-	object (self) inherit algoBFS as super
+	object (self) inherit algoStateBased as super
 	
 	(************************************************************)
 	(* Class variables *)

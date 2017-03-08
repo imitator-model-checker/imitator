@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2016/10/18
+ * Last modified     : 2017/03/08
  *
  ************************************************************)
 
@@ -16,7 +16,7 @@
 (************************************************************)
 (* Modules *)
 (************************************************************)
-open AlgoBFS
+open AlgoStateBased
 open State
 
 
@@ -24,7 +24,7 @@ open State
 (* Class definition *)
 (************************************************************)
 class algoEFsynth :
-	object inherit algoBFS
+	object inherit algoStateBased
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)

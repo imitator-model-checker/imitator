@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/04
- * Last modified     : 2016/08/15
+ * Last modified     : 2017/03/08
  *
  ************************************************************)
 
@@ -64,7 +64,7 @@ class virtual algoBCCoverDistributed =
 	
 	(*** BADPROG: code shared with AlgoCartoGeneric ***)
 	(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-	method set_algo_instance_function (f : unit -> AlgoBFS.algoBFS) : unit =
+	method set_algo_instance_function (f : unit -> AlgoStateBased.algoStateBased) : unit =
 		match algo_instance_function with
 		| Some _ -> 
 			raise (InternalError("algo_instance_function was already set in algoBCCoverDistributed."))

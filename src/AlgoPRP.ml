@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/11
- * Last modified     : 2016/10/18
+ * Last modified     : 2017/03/08
  *
  ************************************************************)
 
@@ -23,7 +23,6 @@ open ImitatorUtilities
 open Exceptions
 open AbstractModel
 open Result
-open AlgoBFS
 open AlgoIMK
 
 

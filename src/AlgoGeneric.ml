@@ -32,7 +32,7 @@ class virtual algoGeneric =
 	val mutable start_time = 0.
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Virtual method: the algorithm name is not defined for BFS as it is not supposed to be called *)
+	(* Virtual method: the algorithm name is to be defined in concrete classes *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual algorithm_name : string
 	

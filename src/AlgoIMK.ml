@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2016/10/11
+ * Last modified     : 2017/03/08
  *
  ************************************************************)
 
@@ -23,7 +23,7 @@ open ImitatorUtilities
 open Exceptions
 open AbstractModel
 open Result
-open AlgoBFS
+open AlgoStateBased
 
 
 
@@ -33,7 +33,7 @@ open AlgoBFS
 (************************************************************)
 (************************************************************)
 class algoIMK =
-	object (self) inherit algoBFS as super
+	object (self) inherit algoStateBased as super
 	
 	(************************************************************)
 	(* Class variables *)

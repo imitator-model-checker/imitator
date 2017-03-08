@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2016/10/11
+ * Last modified     : 2017/03/08
  *
  ************************************************************)
 
@@ -19,6 +19,22 @@
 open ImitatorUtilities
 open AlgoGeneric
 open State
+
+
+
+(************************************************************)
+(************************************************************)
+(* Types *)
+(************************************************************)
+(************************************************************)
+
+(* Type to define the state_index that have unexplored successors in case of premature termination *)
+type unexplored_successors =
+	(* Not defined (i.e., not yet defined, or no premature termination) *)
+	| UnexSucc_undef
+	(* A list of states with unexplored successors *)
+	| UnexSucc_some of state_index list
+	
 
 (**************************************************************)
 (* Class-independent functions *)
@@ -60,22 +76,50 @@ class virtual algoStateBased :
 
 		(* Nature of the state space according to a property *)
 		val mutable statespace_nature : StateSpace.statespace_nature
+		
+		(* Function to be called from the distributed IMITATOR *)
+		(*** TODO: make private (while accessible to subclasses ***)
+		val mutable patator_termination_function : (unit -> unit) option
 
+
+		(* Status of the analysis *)
+		(*** TODO: make private (while accessible to subclasses ***)
+		val mutable termination_status : Result.bfs_algorithm_termination option
+
+		(* Constraint of the initial state (used by some algorithms to initialize their variables) *)
+		val mutable initial_constraint : LinearConstraint.px_linear_constraint option
+		
+		(* List of state_index that have unexplored successors in case of premature termination *)
+		val mutable unexplored_successors : unexplored_successors
+		
 		
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Write a message preceeded by "[algorithm_name]" *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method print_algo_message : verbose_mode -> string -> unit
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Write a message preceeded by "\n[algorithm_name]" *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method print_algo_message_newline : verbose_mode -> string -> unit
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Variable initialization (to be defined in subclasses) *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method initialize_variables : unit
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Set the PaTATOR termination function *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method set_patator_termination_function : (unit -> unit) -> unit
+	
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Update the nature of the trace set *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method update_statespace_nature : State.state -> unit
 		
 		(*------------------------------------------------------------*)
@@ -94,18 +138,49 @@ class virtual algoStateBased :
 		method add_transition_to_state_space : (state_index * Automaton.action_index * state_index) -> bool -> unit
 
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method virtual process_initial_state : State.state -> bool
+		
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Actions to perform when meeting a state with no successors: virtual method to be defined in subclasses *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method virtual process_deadlock_state : state_index -> unit
 		
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
 		(** TODO: to get a more abstract method, should get rid of the state space, and update the state space from another function ***)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method post_from_one_state : StateSpace.state_space -> state_index -> state_index list
 
 		
-		(* Main method to run the algorithm: virtual method to be defined in subclasses *)
-		method virtual run : unit -> Result.imitator_result
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed) *)
+		(*** NOTE: this is in fact a BFS function ***)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method virtual process_post_n : state_index list -> unit
+
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Check whether the algorithm should terminate at the end of some post, independently of the number of states to be processed (e.g., if the constraint is already true or false) *)
+		(*** NOTE: this is in fact a BFS function ***)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method virtual check_termination_at_post_n : bool
+		
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Main method to run the algorithm *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method run : unit -> Result.imitator_result
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Packaging the result at the end of the exploration (to be defined in subclasses) *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method virtual compute_result : Result.imitator_result
+
 (************************************************************)
 (************************************************************)
 end

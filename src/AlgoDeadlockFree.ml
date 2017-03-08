@@ -23,7 +23,7 @@ open ImitatorUtilities
 open Exceptions
 open AbstractModel
 open Result
-open AlgoBFS (* for type UnexSucc_some *)
+open AlgoStateBased (* for type UnexSucc_some *)
 open AlgoPostStar
 
 

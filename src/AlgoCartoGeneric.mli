@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/08/15
+ * Last modified     : 2017/03/08
  *
  ************************************************************)
 
@@ -84,7 +84,7 @@ class virtual algoCartoGeneric :
 		val mutable max_bounds : NumConst.t array
 
 		(* The current algorithm instance *)
-		val mutable current_algo_instance : AlgoBFS.algoBFS
+		val mutable current_algo_instance : AlgoStateBased.algoStateBased
 		
 		(* List of im_results *)
 (* 		val mutable im_results : Result.abstract_im_result list *)
@@ -104,10 +104,10 @@ class virtual algoCartoGeneric :
 		(************************************************************)
 		
 		(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-		method set_algo_instance_function : (unit -> AlgoBFS.algoBFS) -> unit
+		method set_algo_instance_function : (unit -> AlgoStateBased.algoStateBased) -> unit
 
 		(* Get the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-		method get_algo_instance_function : (unit -> AlgoBFS.algoBFS)
+		method get_algo_instance_function : (unit -> AlgoStateBased.algoStateBased)
 
 		(* Set the tiles_manager type *)
 		method set_tiles_manager_type : tiles_storage -> unit

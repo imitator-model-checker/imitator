@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2017/02/16
+ * Last modified     : 2017/03/08
  *
  ************************************************************)
 
@@ -23,7 +23,7 @@ open ImitatorUtilities
 open Exceptions
 open AbstractModel
 open Result
-open AlgoBFS
+open AlgoStateBased
 open Statistics
 
 
@@ -33,7 +33,7 @@ open Statistics
 (************************************************************)
 (************************************************************)
 class virtual algoEFsynth =
-	object (self) inherit algoBFS as super
+	object (self) inherit algoStateBased as super
 	
 	(************************************************************)
 	(* Class variables *)
