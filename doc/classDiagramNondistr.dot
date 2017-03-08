@@ -1,0 +1,82 @@
+//#################################################################
+ //
+ //                       CLASSDIAGRAMATOR
+ // 
+ // Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ // 
+ // Author:        Etienne Andre
+ // 
+ // Created:       2017/03/08
+ // Last modified: 2017/03/08
+ //
+//###############################################################
+
+// Manually edited!
+// TODO: should be automated from the OCaml code, of course
+
+	AGsafeSynth [
+			label = "{AGsafeSynth|}"
+	]
+
+	BCCover [label = "{BCCover|}"]
+	
+	BCCoverLearning [label = "{BCCoverLearning|}"]
+	
+	BCRandom [label = "{BCRandom|}"]
+	
+	BCRandomSeq [label = "{BCRandomSeq|}"]
+
+	BCShuffle [label = "{BCShuffle|}"]
+
+	BFS [label = "{BFS| |+ process_initial_state\lv process_post_n()\lv check_termination_at_post_n \l}", fillcolor=yellow, style=filled]
+
+	CartoGeneric [label = "{CartoGeneric|}", fillcolor=yellow, style=filled]
+
+	DeadlockFree [label = "{DeadlockFree|}"]
+
+	EFsynth [label = "{EFsynth|}", fillcolor=yellow, style=filled]
+	
+	EFsynthOld [label = "{EFsynthOld|}"]
+	
+	EFunsafeSynth [label = "{EFunsafeSynth|}"]
+	
+	Generic [label = "{Generic|+ algorithm_name\l|+ run(): Result.imitator_result}", fillcolor=yellow, style=filled]
+	
+	IM [label = "{IM|}"]
+	
+	IMK [label = "{IMK|}"]
+	
+	IMunion [label = "{IMunion|}"]
+	
+	LoopSynth [label = "{LoopSynth|}"]
+	
+	NZCUB [label = "{NZCUB|}"]
+	
+	PostStar [label = "{PostStar|}"]
+	
+	PRP [label = "{PRP|}"]
+
+	StateBased [label = "{StateBased| |v add_a_new_state()\lv process_deadlock_state\l+ post_from_one_state\l}", fillcolor=yellow, style=filled]
+	
+	
+	AGsafeSynth -> EFsynth
+	BCCover -> CartoGeneric
+	
+	BCCoverLearning -> BCCover
+	BCRandom -> CartoGeneric
+	BCRandomSeq -> CartoGeneric
+	BCShuffle -> CartoGeneric
+	BFS -> StateBased
+	CartoGeneric -> Generic
+	DeadlockFree -> PostStar
+	EFsynth -> BFS
+	EFsynthOld -> BFS
+	EFunsafeSynth -> EFsynth
+	IM -> IMK
+	IMK -> BFS
+	IMunion -> IMK
+	LoopSynth -> BFS
+	NZCUB -> LoopSynth
+	PostStar -> BFS
+	PRP -> IMK
+	StateBased -> Generic
