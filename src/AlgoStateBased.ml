@@ -1722,77 +1722,24 @@ class virtual algoStateBased =
 			| None -> raise (InternalError "The termination status should be set when displaying warnings concerning early termination.")
 
 			
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Main method to run the algorithm: virtual method to be defined in subclasses *)
+	(* Main method to run the queue-based BFS algorithm  *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method run () =
-		(* Retrieve the model *)
-		let model = Input.get_model () in
+(*	method private explore_queue_bfs init_state_index =
+		raise(NotImplemented "explore_queue_bfs not yet implemented")*)
+
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Main method to run the BFS algorithm  *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private explore_layer_bfs init_state_index =
+(*		(* Retrieve the model *)
+		let model = Input.get_model () in*)
 		
 		(* Retrieve the input options *)
 		let options = Input.get_options () in
-		
-		(* Get some variables *)
-		let nb_actions = model.nb_actions in
-		let nb_variables = model.nb_variables in
-		let nb_automata = model.nb_automata in
-
-		(* Time counter for the algorithm *)
-		start_time <- Unix.gettimeofday();
-
-		(* Compute initial state *)
-		let init_state = compute_initial_state_or_abort() in
-		
-		(* copy init state, as it might be destroyed later *)
-		(*** NOTE: this operation appears to be here totally useless ***)
-		let init_loc, init_constr = init_state in
-		let init_state = (init_loc, LinearConstraint.px_copy init_constr) in
-
-		(* Set up the initial state constraint *)
-		initial_constraint <- Some init_constr;
-
-(*		(*Initialization of slast : used in union mode only*)
-		slast := [];*)
-		
-		(* Print some information *)
-		print_message Verbose_standard ("Starting running algorithm " ^ self#algorithm_name ^ "…\n");
-		
-		(* Variable initialization *)
-		print_message Verbose_low ("Initializing the algorithm local variables…");
-		self#initialize_variables;
-
-		(* Debut prints *)
-		print_message Verbose_low ("Starting exploring the parametric zone graph from the following initial state:");
-		print_message Verbose_low (ModelPrinter.string_of_state model init_state);
-		(* Guess the number of reachable states *)
-		let guessed_nb_states = 10 * (nb_actions + nb_automata + nb_variables) in 
-		let guessed_nb_transitions = guessed_nb_states * nb_actions in 
-		print_message Verbose_high ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
-		
-		(* Create the state space *)
-		state_space <- StateSpace.make guessed_nb_transitions;
-		
-		(* Check if the initial state should be kept according to the algorithm *)
-		let initial_state_added = self#process_initial_state init_state in
-		
-		(* Degenerate case: initial state cannot be kept: terminate *)
-		if not initial_state_added then(
-			(* Output a warning because this situation is still a little strange *)
-			print_warning "The initial state is not kept. Analysis will now terminate.";
-			
-			(* Set the termination status *)
-			termination_status <- Some (Result.Regular_termination);
-			
-			(* Return the algorithm-dependent result and terminate *)
-			self#compute_result
-		(* Else: start the algorithm in a regular manner *)
-		)else(
-		
-		(* Add the initial state to the reachable states *)
-		let init_state_index, _ = StateSpace.add_state state_space init_state in
-		
-		(* Increment the number of computed states *)
-		StateSpace.increment_nb_gen_states state_space;
 		
 		(* Set the depth to 1 *)
 		bfs_current_depth <- 1;
@@ -1987,6 +1934,85 @@ class virtual algoStateBased =
 			^ " with "
 			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " in the final state space.");
 			(*** NOTE: in fact, more states and transitions may have been explored (and deleted); here, these figures are the number of states in the state space. ***)
+
+		(* The end *)
+		()
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Main method to run the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method run () =
+		(* Retrieve the model *)
+		let model = Input.get_model () in
+		
+(*		(* Retrieve the input options *)
+		let options = Input.get_options () in*)
+		
+		(* Get some variables *)
+		let nb_actions = model.nb_actions in
+		let nb_variables = model.nb_variables in
+		let nb_automata = model.nb_automata in
+
+		(* Time counter for the algorithm *)
+		start_time <- Unix.gettimeofday();
+
+		(* Compute initial state *)
+		let init_state = compute_initial_state_or_abort() in
+		
+		(* copy init state, as it might be destroyed later *)
+		(*** NOTE: this operation appears to be here totally useless ***)
+		let init_loc, init_constr = init_state in
+		let init_state = (init_loc, LinearConstraint.px_copy init_constr) in
+
+		(* Set up the initial state constraint *)
+		initial_constraint <- Some init_constr;
+
+(*		(*Initialization of slast : used in union mode only*)
+		slast := [];*)
+		
+		(* Print some information *)
+		print_message Verbose_standard ("Starting running algorithm " ^ self#algorithm_name ^ "…\n");
+		
+		(* Variable initialization *)
+		print_message Verbose_low ("Initializing the algorithm local variables…");
+		self#initialize_variables;
+
+		(* Debut prints *)
+		print_message Verbose_low ("Starting exploring the parametric zone graph from the following initial state:");
+		print_message Verbose_low (ModelPrinter.string_of_state model init_state);
+		(* Guess the number of reachable states *)
+		let guessed_nb_states = 10 * (nb_actions + nb_automata + nb_variables) in 
+		let guessed_nb_transitions = guessed_nb_states * nb_actions in 
+		print_message Verbose_high ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
+		
+		(* Create the state space *)
+		state_space <- StateSpace.make guessed_nb_transitions;
+		
+		(* Check if the initial state should be kept according to the algorithm *)
+		let initial_state_added = self#process_initial_state init_state in
+		
+		(* Degenerate case: initial state cannot be kept: terminate *)
+		if not initial_state_added then(
+			(* Output a warning because this situation is still a little strange *)
+			print_warning "The initial state is not kept. Analysis will now terminate.";
+			
+			(* Set the termination status *)
+			termination_status <- Some (Result.Regular_termination);
+			
+			(* Return the algorithm-dependent result and terminate *)
+			self#compute_result
+		(* Else: start the algorithm in a regular manner *)
+		)else(
+		
+		(* Add the initial state to the reachable states *)
+		let init_state_index, _ = StateSpace.add_state state_space init_state in
+		
+		(* Increment the number of computed states *)
+		StateSpace.increment_nb_gen_states state_space;
+
+		(* Generic method handling BFS *)
+		self#explore_layer_bfs init_state_index;
 
 		(* Return the algorithm-dependent result *)
 		self#compute_result
