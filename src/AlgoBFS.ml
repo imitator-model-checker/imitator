@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2016/10/18
+ * Last modified     : 2017/03/08
  *
  ************************************************************)
 
@@ -76,18 +76,23 @@ class virtual algoBFS =
 	(************************************************************)
 
 	(* Depth in the explored state space *)
+	(*** NOTE: private ***)
 	val mutable current_depth = 0
 	
 	(* Function to be called from the distributed IMITATOR *)
+	(*** NOTE: private ***)
 	val mutable patator_termination_function = None
 	
 	(* Status of the analysis *)
+	(*** NOTE: public ***)
 	val mutable termination_status = None
 	
 	(* Constraint of the initial state (used by some algorithms to initialize their variables) *)
+	(*** NOTE: public ***)
 	val mutable initial_constraint : LinearConstraint.px_linear_constraint option = None
 	
 	(* List of state_index that have unexplored successors in case of premature termination *)
+	(*** NOTE: public ***)
 	val mutable unexplored_successors : unexplored_successors = UnexSucc_undef
 	
 	
@@ -244,10 +249,10 @@ class virtual algoBFS =
 		slast := [];*)
 		
 		(* Print some information *)
-		print_message Verbose_standard ("Starting running algorithm " ^ self#algorithm_name ^ "...\n");
+		print_message Verbose_standard ("Starting running algorithm " ^ self#algorithm_name ^ "…\n");
 		
 		(* Variable initialization *)
-		print_message Verbose_low ("Initializing the algorithm local variables...");
+		print_message Verbose_low ("Initializing the algorithm local variables…");
 		self#initialize_variables;
 
 		(* Debut prints *)
@@ -370,7 +375,7 @@ class virtual algoBFS =
 			(*** WARNING!! ONLY works for the classical inverse method (not for variants) ***)
 			(*** TODO: also allow for BC ***)
 			if options#imitator_mode = Inverse_method  && options#check_point then(
-				print_message Verbose_low ("\nMode check-point: checking whether the resulting constraint is restricted to pi0...");
+				print_message Verbose_low ("\nMode check-point: checking whether the resulting constraint is restricted to pi0…");
 				(* Get all constraints *)
 				let all_p_constraints = StateSpace.all_p_constraints state_space in
 				(* Computing the constraint intersection *)
@@ -422,8 +427,8 @@ class virtual algoBFS =
 			(* If still going, ask the concrete algorithm whether it wants to terminate for other reasons *)
 			if !limit_reached = Keep_going then(
 				(* Print some information *)
-				(*** HACK: 'current_depth - 1' because current_depth was just incremented... ***)
-				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (current_depth - 1)) ^ "...");
+				(*** HACK: 'current_depth - 1' because current_depth was just incremented… ***)
+				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (current_depth - 1)) ^ "…");
 
 				if self#check_termination_at_post_n then(
 					algorithm_keep_going := false;
@@ -474,13 +479,13 @@ class virtual algoBFS =
 			^ ": "
 			^ (string_of_int nb_states) ^ " state" ^ (s_of_int nb_states)
 			^ " with "
-			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " explored.");
+			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " in the final state space.");
 			(*** NOTE: in fact, more states and transitions may have been explored (and deleted); here, these figures are the number of states in the state space. ***)
 
 		(* Return the algorithm-dependent result *)
 		self#compute_result
 		
-		(*** TODO: split between process result and return result; in between, add some info (algo_name finished after....., etc.) ***)
+		(*** TODO: split between process result and return result; in between, add some info (algo_name finished after….., etc.) ***)
 		) (* end if initial state added *)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
