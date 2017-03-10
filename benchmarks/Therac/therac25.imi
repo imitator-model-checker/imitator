@@ -1,0 +1,175 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Simplified model of the Therac 25 bug
+ *
+ * Description     : Simplified model of the Therac 25 bug
+ * Correctness     : The patient should not be given a massive dose of radiation
+ * Source          : "The failure only occurred when a particular nonstandard sequence of keystrokes was entered on the VT-100 terminal which controlled the PDP-11 computer: an X to (erroneously) select 25MV photon mode followed by ↑, E to (correctly) select 25 MeV Electron mode, then Enter, all within eight seconds."
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2017/03/10
+ * Last modified   : 2017/03/10
+ *
+ * IMITATOR version: 2.9
+ ************************************************************)
+
+var
+
+(* Constants *)
+
+(* Modes for the machine *)
+MODE25MV = 1,
+MODE25MeV = 2,
+	: constant;
+
+(* Clocks *)
+ 	x_engineer,
+ 	x_buffer,
+		: clock;
+
+(* Discrete *)
+(* The buffer for the VT-100 *)
+	buffer_VT100,
+(* The buffer for the PDP-11 *)
+	buffer_PDP11
+		: discrete;
+
+(* Parameters *)
+(* Time between 2 consecutive key strokes *)
+	p_key,
+(* Buffer copier period *)
+	p_period (*= 8*),
+		: parameter;
+
+
+(************************************************************)
+ automaton engineer
+(************************************************************)
+(* Every at least 30 seconds, the engineer either selects E and enter, or selects X, up, E and enter; the time between each key stroke is p_key *)
+synclabs: key_E, key_X, key_enter, key_up;
+
+loc engineer_idle: while True wait {}
+	(* Non-deterministically goes into the correct or incorrect behavior *)
+	when x_engineer >= 30 do {x_engineer' = 0} goto engineer_correct1;
+	when x_engineer >= 30 do {x_engineer' = 0} goto engineer_incorrect1;
+
+loc engineer_correct1: while True wait {}
+	when x_engineer >= p_key do {x_engineer' = 0} sync key_E goto engineer_correct2;
+
+loc engineer_correct2: while True wait {}
+	when x_engineer >= p_key do {x_engineer' = 0} sync key_enter goto engineer_idle;
+
+loc engineer_incorrect1: while True wait {}
+	when x_engineer >= p_key do {x_engineer' = 0} sync key_X goto engineer_incorrect2;
+
+loc engineer_incorrect2: while True wait {}
+	when x_engineer >= p_key do {x_engineer' = 0} sync key_up goto engineer_incorrect3;
+
+loc engineer_incorrect3: while True wait {}
+	when x_engineer >= p_key do {x_engineer' = 0} sync key_E goto engineer_incorrect4;
+
+loc engineer_incorrect4: while True wait {}
+	when x_engineer >= p_key do {x_engineer' = 0} sync key_enter goto engineer_idle;
+
+end (* engineer *)
+
+(************************************************************)
+  automaton buffer_copier
+(************************************************************)
+(* Copies the buffer of the VT-100 into the buffer of the PDP-11 every 8 seconds *)
+synclabs: copy_25MV, copy_25MeV;
+
+loc loc_buffer_copier: while x_buffer <= p_period wait {}
+	when x_buffer = p_period & buffer_VT100 = MODE25MV sync copy_25MV do {buffer_PDP11' = MODE25MV, x_buffer' = 0} goto loc_buffer_copier;
+	when x_buffer = p_period & buffer_VT100 = MODE25MeV sync copy_25MeV do {buffer_PDP11' = MODE25MeV, x_buffer' = 0} goto loc_buffer_copier;
+
+end (* buffer_copier *)
+
+
+(************************************************************)
+  automaton PDP11
+(************************************************************)
+(* The PDP-11 computer reacts to key strokes: select the mode, or send what is in its buffer when asked to do so *)
+synclabs: key_E, key_X, key_enter, send_25MV, send_25MeV;
+
+loc loc_PDP11: while True wait {}
+	(* Select MODE25MV mode *)
+	when True sync key_X do {buffer_VT100' = MODE25MV} goto loc_PDP11;
+	(* Select MODE25MeV mode *)
+	when True sync key_E do {buffer_VT100' = MODE25MeV} goto loc_PDP11;
+	(* Send radiations: go to a second location to send the right radiations *)
+	when True sync key_enter goto loc_PDP11_send;
+
+(* Send what is in the buffer *)
+urgent loc loc_PDP11_send: while True wait {}
+	(* Send MODE25MV mode *)
+	when buffer_PDP11 = MODE25MV sync send_25MV goto loc_PDP11;
+	(* Send MODE25MeV mode *)
+	when buffer_PDP11 = MODE25MeV sync send_25MeV goto loc_PDP11;
+	
+
+end (* PDP11 *)
+
+
+(************************************************************)
+  automaton observer
+(************************************************************)
+(* The observer just waits until a send_25MV radiations *)
+synclabs: send_25MV;
+
+loc obs_ok: while True wait {}
+	when True sync send_25MV goto obs_nok;
+
+loc obs_nok: while True wait {}
+
+end (* observer *)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[engineer] = engineer_idle
+	& loc[buffer_copier] = loc_buffer_copier
+	& loc[PDP11] = loc_PDP11
+	& loc[observer] = obs_ok
+
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+	& buffer_VT100 = MODE25MeV
+	& buffer_PDP11 = MODE25MeV
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x_engineer = 0
+	& x_buffer = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p_key >= 1
+	& p_period >= 1
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[observer] = obs_nok;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
