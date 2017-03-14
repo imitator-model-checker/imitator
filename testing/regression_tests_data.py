@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2017/02/15
+# Last modified: 2017/03/14
 #************************************************************
 
 
@@ -682,6 +682,36 @@ END CONSTRAINT
 		'options'    : '-mode EF -merge -output-result',
 		'expectations' : [
 			{'file': 'coffeeDrinker-TACAS.res' , 'content' : """
+BEGIN CONSTRAINT
+ p_add_sugar > 0
+& 2*p_button > p_add_sugar
+& p_add_sugar + p_coffee > 2*p_button
+& 15 > 2*p_button
+OR
+  p_add_sugar >= 2*p_button
+& p_add_sugar + p_coffee > 3*p_button
+& 3*p_button > p_add_sugar
+& 5 > p_button
+OR
+  p_add_sugar > 0
+& 2*p_button >= 15
+& p_add_sugar + p_coffee > 15
+& 15 > p_button
+& p_button > p_add_sugar
+OR
+  2*p_button >= p_add_sugar + p_coffee
+& p_add_sugar > 0
+& p_add_sugar + p_coffee > p_button
+& p_button > p_add_sugar
+& 15 >= p_add_sugar + p_coffee
+OR
+  15 > p_add_sugar + p_coffee
+& p_coffee > 0
+& p_button > 0
+& 5 > p_button
+& p_add_sugar >= 3*p_button
+END CONSTRAINT
+
 BEGIN CONSTRAINT
 p_add_sugar > 0
 & p_button > p_add_sugar
@@ -2047,9 +2077,9 @@ END CONSTRAINT
 & x = y
 
   Projection onto the parameters:
-   p1 >= 0
-& 1 >= p2
+   1 >= p2
 & p2 >= 0
+& p1 >= 0
 
   /************************************************************/
   STATE 3:
@@ -2060,8 +2090,8 @@ END CONSTRAINT
 & x = y
 
   Projection onto the parameters:
-   p2 >= 0
-& p1 >= p2
+   p1 >= p2
+& p2 >= 0
 
   DESCRIPTION OF THE TRANSITIONS
   s_1 -> s_2
@@ -2129,9 +2159,9 @@ END CONSTRAINT
 & x = y
 
   Projection onto the parameters:
-   p1 >= 0
-& 1 >= p2
+   1 >= p2
 & p2 >= 0
+& p1 >= 0
 
   /************************************************************/
   STATE 3:
@@ -2142,8 +2172,8 @@ END CONSTRAINT
 & x = y
 
   Projection onto the parameters:
-   p2 >= 0
-& p1 >= p2
+   p1 >= p2
+& p2 >= 0
 
   DESCRIPTION OF THE TRANSITIONS
   s_1 -> s_2
@@ -2220,8 +2250,8 @@ OR
 & x = y
 
   Projection onto the parameters:
-   p2 >= 0
-& p1 >= p2
+   p1 >= p2
+& p2 >= 0
 
   /************************************************************/
   STATE 4:
@@ -2310,8 +2340,8 @@ OR
 & x = y
 
   Projection onto the parameters:
-   p2 >= 0
-& p1 >= p2
+   p1 >= p2
+& p2 >= 0
 
   /************************************************************/
   STATE 4:
@@ -2414,8 +2444,8 @@ OR
 & x = y
 
   Projection onto the parameters:
-   p2 >= 0
-& p1 >= p2
+   p1 >= p2
+& p2 >= 0
 
   /************************************************************/
   STATE 5:
@@ -2635,8 +2665,8 @@ OR
 & x = y
 
   Projection onto the parameters:
-   p2 >= 0
-& p1 >= p2
+   p1 >= p2
+& p2 >= 0
 
   /************************************************************/
   STATE 5:
@@ -5835,20 +5865,20 @@ Average number of transitions           : 11.0
 		'expectations' : [
 			{'file': 'diffBCPRPC.res' , 'content' : """
 BEGIN CONSTRAINT
- p1 >= 0
+ 2 > p1
 & p2 >= 0
 & 2 > p2
-& 2 > p1
+& p1 >= 0
 <good|bad>
  p2 >= 0
-& 4 >= p2
-& 4 >= p1
 & p1 >= 2
-OR
-  p1 >= 0
-& p2 >= 2
-& 4 >= p2
 & 4 >= p1
+& 4 >= p2
+OR
+  p2 >= 2
+& p1 >= 0
+& 4 >= p1
+& 4 >= p2
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -5903,10 +5933,11 @@ Local number of transitions             : 0
 & b = 1
 
  K2:
- b >= a
+ a >= 0
 & 9*b >= 2
-& a >= 0
 & 10 >= b
+& b >= a
+
 
 ------------------------------------------------------------
 Constraint soundness                    : possible under-approximation
@@ -5928,9 +5959,9 @@ Local number of transitions             : 17
 
  K3:
  b >= 2
-& 10 >= b
-& 10 >= a
 & a >= 0
+& 10 >= a
+& 10 >= b
 
 ------------------------------------------------------------
 Constraint soundness                    : exact
@@ -5992,8 +6023,8 @@ Average number of transitions           : 6.0
 & 2 >= p
 
   Projection onto the parameters:
-   p >= 0
-& 2 >= p
+   2 >= p
+& p >= 0
 
   /************************************************************/
   STATE 2:
@@ -6824,9 +6855,6 @@ var
 	s, ckG1, ckG2, ckG3, ckG4
 		: clock;
 
-	qLevel
-		: discrete;
-
 	dG3_u, dG4_u
 		: parameter;
 
@@ -7104,14 +7132,14 @@ loc G401: while  ckG4 >= 0 wait{}
  
 loc G411: while  dG4_u >= ckG4 wait{}
 	when True do {}  sync qG3Down goto G401;
-	when  ckG4 >= 3 do {qLevel' = 0}  sync qDown goto G410;
+	when  ckG4 >= 3 do {} sync qDown goto G410;
  
 loc G410: while  ckG4 >= 0 wait{}
 	when True do {ckG4' = 0}  sync qG3Down goto G400;
  
 loc G400: while  dG4_u >= ckG4 wait{}
 	when True do {}  sync qG3Up goto G410;
-	when  ckG4 >= 3 do {qLevel' = 1}  sync qUp goto G401;
+	when  ckG4 >= 3 do {} sync qUp goto G401;
  end -- g4
 --************************************************************
 
@@ -7134,19 +7162,17 @@ init := True
 	------------------------------------------------------------
 	-- Initial discrete assignments 
 	------------------------------------------------------------
-	& qLevel = 0
 
 	------------------------------------------------------------
 	-- Initial constraint
 	------------------------------------------------------------
-	 &  ckG1 >= 0
+	 &  dG4_u >= 3
+& ckG1 >= 0
 & ckG2 >= 0
 & ckG3 >= 0
 & ckG4 >= 0
 & dG3_u >= 8
-& dG4_u >= 3
 & s = 0
-
 ;
 
 --************************************************************
