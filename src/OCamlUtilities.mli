@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/05/04
+ * Last modified     : 2017/03/15
  *
  ************************************************************)
 
@@ -64,6 +64,15 @@ val list_diff : 'a list	 -> 'a list-> 'a list
 
 (** Tail-recursive function for 'append' *)
 val list_append : 'a list -> 'a list -> 'a list
+
+(**  Returns the last element of the list, or raise Empty_list if the list is empty. This function takes linear time *)
+val list_last : 'a list -> 'a
+
+(**  Returns the list without its last element; raises Empty_list if the list is empty *)
+val list_without_last  : 'a list -> 'a list
+
+(**  Returns a pair (the list without its last element, the last element of the list), or raise Empty_list if the list is empty. *)
+val list_split_last : 'a list -> 'a list * 'a
 
 (** Return a list where every element only appears once *)
 val list_only_once : 'a list -> 'a list

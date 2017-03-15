@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/05/04
+ * Last modified     : 2017/03/15
  *
  ************************************************************)
  
@@ -126,16 +126,46 @@ let list_diff (l1 : 'a list) (l2 : 'a list) : 'a list =
 (* Tail-recursive function for 'append' *)
 let list_append l1 l2 =
 	ExtList.(@) l1 l2
-	
+
+
+(**  Returns the last element of the list, or raise Empty_list if the list is empty. This function takes linear time *)
+let list_last = ExtList.List.last
+
+
+(**  Returns the list without its last element; raises Empty_list if the list is empty *)
+let list_without_last l =
+	(* Check non-empty list *)
+	if List.length l = 0 then raise ExtList.List.Empty_list;
+	(* Split at position l-1 *)
+	let result, _ = ExtList.List.split_nth (List.length l - 1) l in
+	(* Return *)
+	result
+
+
+(**  Returns a pair (the list without its last element, the last element of the list), or raise Empty_list if the list is empty. *)
+let list_split_last l =
+	(* Check non-empty list *)
+	if List.length l = 0 then raise ExtList.List.Empty_list;
+	(* Split at position l-1 *)
+	let rest, last = ExtList.List.split_nth (List.length l - 1) l in
+	(* Return *)
+	match last with
+	| [last] -> rest, last
+	| _ -> raise (Exceptions.InternalError("Wrong split in list_split_last"))
+
+
+
 
 (* Return a list where every element only appears once *)
-(** WARNING: exponential here *)
-let list_only_once l =
+(*** WARNING: exponential here ***)
+(*let list_only_once l =
 	List.rev (List.fold_left
 		(fun current_list e -> if List.mem e current_list then current_list else e::current_list)
 		[]
 		l
-	)
+	)*)
+(*** WARNING: not tested ***)
+let list_only_once l = ExtList.List.unique ~cmp:(=) l
 
 
 (* Return a sublist of a list with only the elements existing several times *)
@@ -155,10 +185,12 @@ let elements_existing_several_times l =
 
 
 (* Remove the first occurence of element e in list l ; returns the list unchanged if not found *)
-let rec list_remove_first_occurence e = function
+(*let rec list_remove_first_occurence e = function
 	| [] -> []
 	| first :: rest -> if e = first then rest
-		else first :: (list_remove_first_occurence e rest)
+		else first :: (list_remove_first_occurence e rest)*)
+(*** WARNING: not tested ***)
+let list_remove_first_occurence e l = ExtList.List.remove l e
 
 
 (** Remove the ith element of a list *)
