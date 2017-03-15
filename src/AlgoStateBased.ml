@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2017/03/08
+ * Last modified     : 2017/03/15
  *
  ************************************************************)
 
@@ -1197,7 +1197,24 @@ type unexplored_successors =
 
 (************************************************************)
 (************************************************************)
-(* Types and exceptions for BFS *)
+(* Types and exceptions for queue-based BFS *)
+(************************************************************)
+(************************************************************)
+(*(* state struct for constructing set type *)
+module State = struct
+	type t = state_index
+	let compare = compare
+end
+
+(* set of states for efficient lookup *)
+module StateindexQueue = Queue.Make(State)*)
+
+
+
+
+(************************************************************)
+(************************************************************)
+(* Types and exceptions for layer-based BFS *)
 (************************************************************)
 (************************************************************)
 
@@ -1726,8 +1743,47 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the queue-based BFS algorithm  *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(*	method private explore_queue_bfs init_state_index =
-		raise(NotImplemented "explore_queue_bfs not yet implemented")*)
+	method private explore_queue_bfs init_state_index =
+		
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
+
+		(* List of states computed before *)
+		(*** NOTE: we encode the queue using a list, with the LAST element of the list being the first of the queue ***)
+		(*** NOTE: we don't use module Queue so as to filter easily the list when needed ***)
+		let queue = ref [init_state_index] in
+
+		(* Boolean to check whether the time limit / state limit is reached *)
+		let limit_reached = ref Keep_going in
+		
+		(* Flag modified by the algorithm to perhaps terminate earlier *)
+		let algorithm_keep_going = ref true in
+
+		(* Count the states for verbose purpose: *)
+		let num_state = ref 0 in
+		
+		(* Explore further until the limit is reached or the list of lastly computed states is empty *)
+		while !limit_reached = Keep_going && !queue <> [] && !algorithm_keep_going do
+			(* Print some information *)
+			if verbose_mode_greater Verbose_low then (
+				print_message Verbose_low ("\n");
+				print_message Verbose_low ("Computing successors (" ^ (string_of_int (List.length !queue)) ^ "state" ^ (s_of_int (List.length !queue)) ^ " in the queue).");
+			);
+			
+			(* Take the first element, i.e., last from the list *)
+			(*** NOTE: no test for emptiness, as it was performed just above in the while loop condition ***)
+			let new_queue, popped_from_queue = OCamlUtilities.list_split_last !queue in
+			(* Remove from the queue *)
+			queue := new_queue;
+						
+			(* Count the states for verbose purpose: *)
+			num_state := !num_state + 1;
+
+
+			raise(NotImplemented "explore_queue_bfs not yet implemented")
+		done;
+		(* The end *)
+		()
 
 	
 	
@@ -1765,13 +1821,13 @@ class virtual algoStateBased =
 				print_message Verbose_standard ("Computing post^" ^ (string_of_int bfs_current_depth) ^ " from "  ^ (string_of_int (List.length !post_n)) ^ " state" ^ (s_of_int (List.length !post_n)) ^ ".");
 			);
 			
-			(* Count the states for debug purpose: *)
+			(* Count the states for verbose purpose: *)
 			let num_state = ref 0 in
 
 			let post_n_plus_1 =
 			(* For each newly found state: *)
 			List.fold_left (fun current_post_n_plus_1 orig_state_index ->
-				(* Count the states for debug purpose: *)
+				(* Count the states for verbose purpose: *)
 				num_state := !num_state + 1;
 				(* Perform the post *)
 				let new_states = self#post_from_one_state state_space orig_state_index in
