@@ -1234,6 +1234,45 @@ exception BFS_Limit_detected of bfs_limit_reached
 
 
 
+
+(************************************************************)
+(************************************************************)
+(* Class definition for state_index waiting lists *)
+(************************************************************)
+(************************************************************)
+class waiting_list =
+	object(self)
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+	val mutable waiting_list = []
+
+	(************************************************************)
+	(* Class methods *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Add a state to the waiting list *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method add (state_index : State.state_index) =
+		waiting_list <- state_index :: waiting_list;
+		()
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Get all states from the waiting list (in the form of a list) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private to_list =
+		waiting_list
+
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
+
+
 (************************************************************)
 (************************************************************)
 (* Class definition *)
@@ -1798,7 +1837,8 @@ class virtual algoStateBased =
 			let successors = self#post_from_one_state popped_from_queue in
 			
 			(* Add (or not) successors to state space and queue *)
-			List.iter (fun state_index ->
+			List.iter (fun new_state ->
+							
 				(* Check if existing in state space *)
 				
 				raise(NotImplemented "explore_queue_bfs not yet implemented")
