@@ -1343,8 +1343,8 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** TODO: to get a more abstract method, should get rid of the state space, and update the state space from another function ***)
-	method private post_from_one_state state_space source_state_index =
+	(** TODO: to get a more abstract method, and update the state space from another function ***)
+	method private post_from_one_state source_state_index =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 
@@ -1740,7 +1740,7 @@ class virtual algoStateBased =
 
 			
 	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the queue-based BFS algorithm  *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private explore_queue_bfs init_state_index =
@@ -1778,11 +1778,22 @@ class virtual algoStateBased =
 			
 			(* Count the states for verbose purpose: *)
 			num_state := !num_state + 1;
+			
+			(* Compute successors *)
+			let successors = self#post_from_one_state popped_from_queue in
+			
+			(* Add (or not) successors to state space and queue *)
+			List.iter (fun state_index ->
+				(* Check if existing in state space *)
+				
+				raise(NotImplemented "explore_queue_bfs not yet implemented")
+				
+			) successors;
 
-			raise(NotImplemented "explore_queue_bfs not yet implemented")
+			
 		done;
 		(* The end *)
-		()
+		()*)
 
 	
 	
@@ -1829,7 +1840,7 @@ class virtual algoStateBased =
 				(* Count the states for verbose purpose: *)
 				num_state := !num_state + 1;
 				(* Perform the post *)
-				let new_states = self#post_from_one_state state_space orig_state_index in
+				let new_states = self#post_from_one_state orig_state_index in
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then (
 					let beginning_message = if new_states = [] then "Found no new state" else ("Found " ^ (string_of_int (List.length new_states)) ^ " new state" ^ (s_of_int (List.length new_states)) ^ "") in
