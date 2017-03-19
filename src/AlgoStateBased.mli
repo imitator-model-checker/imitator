@@ -154,7 +154,7 @@ class virtual algoStateBased :
 		(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
 		(** TODO: to get a more abstract method, should get rid of the state space, and update the state space from another function ***)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method post_from_one_state : StateSpace.state_space -> state_index -> state_index list
+(* 		method post_from_one_state : StateSpace.state_space -> state_index -> state_index list *)
 
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

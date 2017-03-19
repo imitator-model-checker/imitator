@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2017/03/15
+ * Last modified     : 2017/03/19
  *
  ************************************************************)
 
@@ -1344,7 +1344,7 @@ class virtual algoStateBased =
 	(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** TODO: to get a more abstract method, should get rid of the state space, and update the state space from another function ***)
-	method post_from_one_state state_space source_state_index =
+	method private post_from_one_state state_space source_state_index =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 
@@ -1775,10 +1775,9 @@ class virtual algoStateBased =
 			let new_queue, popped_from_queue = OCamlUtilities.list_split_last !queue in
 			(* Remove from the queue *)
 			queue := new_queue;
-						
+			
 			(* Count the states for verbose purpose: *)
 			num_state := !num_state + 1;
-
 
 			raise(NotImplemented "explore_queue_bfs not yet implemented")
 		done;
