@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2017/03/08
+ * Last modified     : 2017/03/19
  *
  ************************************************************)
 
@@ -270,13 +270,13 @@ class algoIMK =
 					);
 			end;*)
 			
-			(* Try to add this new state to the graph *)
-			let new_state_index, added = (
-				StateSpace.add_state state_space new_state
-			) in
-			(* If this is really a new state *)
-			if added then (
-
+		(* Try to add the new state to the state space *)
+		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
+		
+		begin
+		match addition_result with
+			(* If this is really a new state, or a state larger than a former state *)
+			| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
 			(*** TODO: add back later ***)
 			
 (*				(* Check if the new state contains an integer point *)
@@ -295,8 +295,8 @@ class algoIMK =
 				(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
 				new_states_indexes := new_state_index :: !new_states_indexes;
 				
-			) (* end if new state *)
-			else (
+			(* If the state was present: *)
+			| StateSpace.State_already_present new_state_index ->
 				(* This may be a loop *)
 				self#process_looping_state new_state_index;
 	
@@ -309,13 +309,13 @@ class algoIMK =
 					slast := new_state_index :: !slast;
 				);*)
 	
-			); (* end else if added *)
+			end; (* end else if added *)
 			
 			
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 
 			(* Update the transitions *)
-			self#add_transition_to_state_space (source_state_index, action_index, new_state_index) added;
+			self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
 		); (* end if valid new state *)
 		
 		(* Return true if the state is pi-compatible *)

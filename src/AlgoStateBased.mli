@@ -122,6 +122,12 @@ class virtual algoStateBased :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method update_statespace_nature : State.state -> unit
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Create a StateSpace.state_comparison from the options *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method state_comparison_operator_of_options : StateSpace.state_comparison
+
+		
 		(*------------------------------------------------------------*)
 		(* Add a new state to the reachability_graph (if indeed needed) *)
 		(* Side-effects: modify new_states_indexes *)
@@ -133,9 +139,9 @@ class virtual algoStateBased :
 		
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Add a transition to the state space (takes as a second argument a flag stating whether the state is new) *)
+		(* Add a transition to the state space *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method add_transition_to_state_space : (state_index * Automaton.action_index * state_index) -> bool -> unit
+		method add_transition_to_state_space : (state_index * Automaton.action_index * state_index) -> StateSpace.addition_result -> unit
 
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

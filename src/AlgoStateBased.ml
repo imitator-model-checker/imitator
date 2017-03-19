@@ -25,7 +25,6 @@ open AlgoGeneric
 open State
 
 
-
 (************************************************************)
 (************************************************************)
 (* Object-independent functions *)
@@ -1619,7 +1618,7 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add a transition to the state space *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method add_transition_to_state_space transition is_new_state =
+	method add_transition_to_state_space transition addition_result =
 		(* Expand the transition *)
 		let source_state_index, action_index, target_state_index = transition in
 		
@@ -1634,7 +1633,11 @@ class virtual algoStateBased =
 			(* Retrieve the target state *)
 			let new_target_state = StateSpace.get_state state_space target_state_index in
 		
-			let beginning_message = (if is_new_state then "NEW STATE" else "Old state") in
+			let beginning_message = match addition_result with 
+				| StateSpace.New_state _ -> "NEW STATE"
+				| StateSpace.State_already_present _ -> "Old state"
+				| StateSpace.State_replacing _ -> "BIGGER STATE than a former state"
+			 in
 			print_message Verbose_high ("\n" ^ beginning_message ^ " s_" ^ (string_of_int target_state_index) ^ " reachable from s_" ^ (string_of_int source_state_index) ^ " via action '" ^ (model.action_names action_index) ^ "': ");
 			print_message Verbose_high (ModelPrinter.string_of_state model new_target_state);
 		);
@@ -1738,9 +1741,21 @@ class virtual algoStateBased =
 			
 			| None -> raise (InternalError "The termination status should be set when displaying warnings concerning early termination.")
 
-			
-	
-(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Create a State_space.state_comparison from the options *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method state_comparison_operator_of_options =
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
+
+		(* Mode tree: no comparison *)
+		if options#tree then StateSpace.No_check
+			else if options#inclusion then StateSpace.Inclusion_check
+			else StateSpace.Equality_check
+
+
+		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the queue-based BFS algorithm  *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private explore_queue_bfs init_state_index =
@@ -1793,7 +1808,7 @@ class virtual algoStateBased =
 			
 		done;
 		(* The end *)
-		()*)
+		()
 
 	
 	
@@ -2071,8 +2086,12 @@ class virtual algoStateBased =
 		(* Else: start the algorithm in a regular manner *)
 		)else(
 		
-		(* Add the initial state to the reachable states *)
-		let init_state_index, _ = StateSpace.add_state state_space init_state in
+		(* Add the initial state to the reachable states; no need to check whether the state is present since it is the first state anyway *)
+		let init_state_index = match StateSpace.add_state state_space StateSpace.No_check init_state with
+			(* The state is necessarily new as the state space was empty *)
+			| StateSpace.New_state state_index -> state_index
+			| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")
+		in
 		
 		(* Increment the number of computed states *)
 		StateSpace.increment_nb_gen_states state_space;

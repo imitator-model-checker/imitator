@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/10/11
+ * Last modified     : 2017/03/19
  *
  ************************************************************)
 
@@ -39,6 +39,31 @@ type statespace_nature =
 	| Bad
 	| Unknown
 
+
+(************************************************************)
+(** Check when adding a new state *)
+(************************************************************)
+type state_comparison =
+	(* Does not check whether the state is present, add directly *)
+	| No_check
+	(* Does not add the new state if another state is exactly equal to it *)
+	| Equality_check
+	(* Does not add the new state if it is included in another state *)
+	| Inclusion_check
+	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
+	| Double_inclusion_check
+
+
+(************************************************************)
+(** Result of the function adding a new state *)
+(************************************************************)
+type addition_result =
+	(* Completely new state *)
+	| New_state of state_index
+	(* State already present (possibly included depending on options), returns the old state index *)
+	| State_already_present of state_index
+	(* The new state replaced a former state (because the newer is larger), returns the old state index *)
+	| State_replacing of state_index
 
 
 
@@ -992,24 +1017,32 @@ let add_state_dyn program state_space new_state constr =
 	)*)
 
 
-(** Add a state to a state space, if it is not present yet *)
-let add_state state_space new_state =
+
+(** Add a state to a state space: takes as input the state space, a comparison instruction, the state to add, and returns whether the state was indeed added or not *)
+let add_state state_space state_comparison new_state =
 	(* Retrieve the input options *)
-	let options = Input.get_options () in
+(* 	let options = Input.get_options () in *)
+
 	(* compute hash value for the new state *)
 	let hash = hash_code new_state in
 	if verbose_mode_greater Verbose_total then (
 		print_message Verbose_total ("hash : " ^ (string_of_int hash));
 	); 
-	(* In tree mode: does not test anything *)
-	if options#tree then (
-		(* Since the state does NOT belong to the state space: find the state index *)
+	(* If no check requested: does not test anything *)
+	if state_comparison = No_check then (
+		(* Since the state does NOT belong to the state space: insert directly and find the state index *)
 		let new_state_index = insert_state state_space hash new_state in
-		(* Return state_index, true *)
-		new_state_index, true
+		(* Return state_index  *)
+		New_state new_state_index
 	) else (
-		(* The check used for equality *)
-		let check_states = if options#inclusion then state_included else states_equal in
+		(* The check function used for state comparison *)
+		let check_function = match state_comparison with
+			| No_check -> raise (InternalError("Case 'No_check' should have been handled before, in function StateSpace.add_state"))
+			| Equality_check -> states_equal
+			| Inclusion_check -> state_included
+			| Double_inclusion_check -> raise (NotImplemented ("Case Double_inclusion_check not yet implemented in StateSpace"))
+		in
+
 		try (
 			(* use hash table to find all states with same locations (modulo hash collisions) *)
 			let old_states = Hashtbl.find_all state_space.states_for_comparison hash in
@@ -1031,14 +1064,14 @@ let add_state state_space new_state =
 			
 			List.iter (fun index -> 
 				let state = get_state state_space index in
-				if check_states new_state state then raise (Found index)
+				if check_function new_state state then raise (Found index)
 			) old_states;
 			(* Not found -> insert state *)
 			let new_state_index = insert_state state_space hash new_state in
-			(* Return state_index, true *)
-			new_state_index, true
+			(* Return *)
+			New_state new_state_index
 		)	with Found state_index -> (
-				state_index, false
+				State_already_present state_index
 		)
 	)
 			

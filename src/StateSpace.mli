@@ -31,7 +31,33 @@ type statespace_nature =
 	| Unknown
 
 
-	
+(************************************************************)
+(** Check when adding a new state *)
+(************************************************************)
+type state_comparison =
+	(* Does not check whether the state is present, add directly *)
+	| No_check
+	(* Does not add the new state if another state is exactly equal to it *)
+	| Equality_check
+	(* Does not add the new state if it is included in another state *)
+	| Inclusion_check
+	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
+	| Double_inclusion_check
+
+
+(************************************************************)
+(** Result of the function adding a new state *)
+(************************************************************)
+type addition_result =
+	(* Completely new state *)
+	| New_state of state_index
+	(* State already present (possibly included depending on options), returns the old state index *)
+	| State_already_present of state_index
+	(* The new state replaced a former state (because the newer is larger), returns the old state index *)
+	| State_replacing of state_index
+
+
+
 (************************************************************)
 (** State space structure *)
 (************************************************************)
@@ -172,8 +198,8 @@ val find_transitions_in : state_space -> scc -> (state_index * action_index * st
 (** Increment the number of generated states (even though not member of the state space) *)
 val increment_nb_gen_states : state_space -> unit
 
-(** Add a state to a state space: return (state_index, added), where state_index is the index of the state, and 'added' is false if the state was already in the state space, true otherwise *)
-val add_state : state_space -> state -> (state_index * bool)
+(** Add a state to a state space: takes as input the state space, a comparison instruction, the state to add, and returns whether the state was indeed added or not *)
+val add_state : state_space -> state_comparison -> state -> addition_result
 
 (**Add a state to a state space dynamically**)
 (* val add_state_dyn : AbstractModel.abstract_model -> state_space -> state -> LinearConstraint.linear_constraint -> (state_index * bool) *)
