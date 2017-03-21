@@ -2025,6 +2025,46 @@ END CONSTRAINT
 	,
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test IM on an incomplete example',
+		'input_files': ['exIMnoncomplete.imi', 'exIMnoncomplete.pi0'],
+		'options'    : '-output-result -no-random',
+		'expectations' : [
+			{'file': 'exIMnoncomplete.res' , 'content' : """
+BEGIN CONSTRAINT
+p1 >= 0
+& p2 >= 0
+& p3 > p1
+END CONSTRAINT		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test IMcomplete on an incomplete example',
+		'input_files': ['exIMnoncomplete.imi', 'exIMnoncomplete.pi0'],
+		'options'    : '-mode IMcomplete -output-result -no-random',
+		'expectations' : [
+			{'file': 'exIMnoncomplete.res' , 'content' : """
+BEGIN CONSTRAINT
+     p1 >= 0
+    & p2 > p1
+    & p3 >= 0
+    OR
+      p3 > p1
+    & p2 >= 0
+    & p1 >= p2
+END CONSTRAINT		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test PRP (old version) on a simple example (good reference valuation)',
 		'input_files': ['testPRP.imi', 'testPRP.pigood'],
 		'options'    : '-PRP -output-result -output-states',
