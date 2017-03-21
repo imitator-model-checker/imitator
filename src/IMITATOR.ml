@@ -226,7 +226,7 @@ if options#pta2clp then(
 	terminate_program()
 );*)
 
-(* Translation to GrML (experimental) *)
+(*(* Translation to GrML *)
 if options#pta2gml then(
 	print_message Verbose_standard ("Translating model to GrML.");
 	let translated_model = PTA2GrML.string_of_model model in
@@ -238,7 +238,7 @@ if options#pta2gml then(
 	write_to_file grml_file translated_model;
 	print_message Verbose_standard ("File '" ^ grml_file ^ "' successfully created.");
 	terminate_program()
-);
+);*)
 
 (* Translation to HyTech *)
 if options#pta2hytech then(

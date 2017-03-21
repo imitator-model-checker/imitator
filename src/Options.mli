@@ -48,7 +48,7 @@ class imitator_options :
 		method exploration_order : exploration_order
 		method fancy : bool
 		method files_prefix : string
-		method fromGML : bool
+(* 		method fromGML : bool *)
 		method imitator_mode : imitator_mode
 		(* experimental variant for EFsynth *)
 		method new_ef_mode : bool
@@ -71,7 +71,7 @@ class imitator_options :
 		method pi_compatible : bool
 		method precomputepi0 : bool
 (* 		method pta2clp : bool *)
-		method pta2gml : bool
+(* 		method pta2gml : bool *)
 		method pta2hytech : bool
 		method pta2imi : bool
 		method pta2jpg : bool

@@ -56,7 +56,7 @@ class imitator_options =
 (* 		val mutable forcePi0 = ref false *)
 		
 		(* GML syntax *)
-		val mutable fromGML = false
+(* 		val mutable fromGML = false *)
 		
 		
 	
@@ -219,7 +219,7 @@ class imitator_options =
 		val mutable pta2clp = ref false*)
 		
 		(* Translate PTA model into a GML model *)
-		val mutable pta2gml = ref false
+(* 		val mutable pta2gml = ref false *)
 		
 		(* Translate PTA model into a HyTech file *)
 		val mutable pta2hytech = ref false
@@ -272,7 +272,7 @@ class imitator_options =
 		method exploration_order = exploration_order
 		method fancy = !fancy
 		method files_prefix = !files_prefix
-		method fromGML = fromGML
+(* 		method fromGML = fromGML *)
 		method imitator_mode = imitator_mode
 		method new_ef_mode = new_ef_mode
 		method inclusion = !inclusion
@@ -294,7 +294,7 @@ class imitator_options =
 		method pi_compatible = !pi_compatible
 		method precomputepi0 = !precomputepi0
 (* 		method pta2clp = !pta2clp *)
-		method pta2gml = !pta2gml
+(* 		method pta2gml = !pta2gml *)
 		method pta2imi = !pta2imi
 		method pta2hytech = !pta2hytech
 		method pta2jpg = !pta2jpg
@@ -568,7 +568,7 @@ class imitator_options =
         Default: layerBFS.
 				");
 				
-				("-fromGrML", Unit (fun () -> fromGML <- true), "GrML syntax for input files (experimental). Defaut : 'false'");
+(* 				("-fromGrML", Unit (fun () -> fromGML <- true), "GrML syntax for input files (experimental). Defaut : 'false'"); *)
 				
 				("-IMK", Set pi_compatible, " Algorithm IMoriginal (defined in [AS11]): return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
 				
@@ -631,7 +631,7 @@ class imitator_options =
 
 				("-PRP", Set efim, " Reachability-preservation algorithm mixing IM and EFsynth [ALNS15]. Default: false. WARNING: deprecated option (use -mode PRP or -mode PRPC)");
 				
-				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode <- Translation), "Translate the model into a GrML model, and exit without performing any analysis. Defaut : 'false'");
+(* 				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode <- Translation), "Translate the model into a GrML model, and exit without performing any analysis. Defaut : 'false'"); *)
 				
 				("-PTA2HyTech", Unit (fun _ -> pta2hytech := true; imitator_mode <- Translation), "Translate the model into a HyTech model, and exit without performing any analysis. Defaut : 'false'");
 				
@@ -1003,9 +1003,9 @@ class imitator_options =
 
 
 
-			(* Syntax *)
+(*			(* Syntax *)
 			if fromGML then
-				print_message Verbose_standard ("GrML syntax used.");
+				print_message Verbose_standard ("GrML syntax used.");*)
 
 			(* Syntax *)
 			(*if !forcePi0 then

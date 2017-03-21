@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2016/10/10
+ * Last modified     : 2017/03/21
  *
  ************************************************************)
 
@@ -118,7 +118,7 @@ let compile_model options (with_special_reset_clock : bool) =
 	let parsing_structure = 
 		(* Branching between 2 input syntaxes *)
 		
-		(* Case GrML *)
+(*		(* Case GrML *)
 		if options#fromGML then(
 			(*** HACK: for EFsynth, we will have to get the property from the command line and insert it into the parsed structure ***)
 			let variable_declarations, automata, init_definition, noproperty_definition, noprojection, nocarto_definition =
@@ -169,7 +169,7 @@ let compile_model options (with_special_reset_clock : bool) =
 		) (* end if GrML *)
 		
 		(* Case normal parsing *)
-		else parser_lexer_from_file ModelParser.main ModelLexer.token options#model_input_file_name
+		else*) parser_lexer_from_file ModelParser.main ModelLexer.token options#model_input_file_name
 	in
 
 	print_message Verbose_low ("\nParsing completed " ^ (after_seconds ()) ^ ".");
