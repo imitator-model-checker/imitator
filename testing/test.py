@@ -4,7 +4,7 @@
 #
 #                       IMITATOR
 # 
-# LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+# LIPN, Université Paris 13 (France)
 # 
 # Script description: TESTATOR (script for non-regression tests)
 # 
@@ -302,7 +302,7 @@ print_to_screen(bcolors.BOLD + ' TESTATOR' + bcolors.NORMAL + '                 
 print_to_log(' TESTATOR' + '                                              v0.1')
 print_to_screen_and_log('')
 print_to_screen_and_log(' Étienne André')
-print_to_screen_and_log(' LIPN, Université Paris 13, Sorbonne Paris Cité (France)')
+print_to_screen_and_log(' LIPN, Université Paris 13 (France)')
 print_to_screen_and_log('############################################################')
 now = datetime.datetime.now()
 print_to_screen_and_log(now.strftime("%A %d. %B %Y %H:%M:%S %z"))
