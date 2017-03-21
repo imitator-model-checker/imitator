@@ -5,33 +5,12 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2017/02/04
+ * Last modified: 2017/03/21
  *
  ****************************************************************)
  
 open ImitatorUtilities
 
-
-type distribution_mode =
-	(** Normal mode *)
-	| Non_distributed
-	
-	(** Distributed mode: static distribution mode (each node has its own part with no communication) *)
-	| Distributed_static
-	
-	(** Distributed mode: Master slave with sequential pi0 *)
-	| Distributed_ms_sequential
-	(** Distributed mode: Master slave with sequential pi0 shuffled *)
-	| Distributed_ms_shuffle
-	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
-	| Distributed_ms_random of int	
-	(** Distributed mode: Master slave with subpart distribution *)
-	| Distributed_ms_subpart
-
-	(**  Distributed mode: Workers live their own lives and communicate results to the coordinator  **)
-	| Distributed_unsupervised
-	(**  Distributed mode: multi-threaded version of Distributed_unsupervised  **)
-	| Distributed_unsupervised_multi_threaded
 
 
 
@@ -66,6 +45,7 @@ class imitator_options :
 (* 		method dynamic : bool *)
 		method dynamic_clock_elimination : bool
 		method efim : bool
+		method exploration_order : exploration_order
 		method fancy : bool
 		method files_prefix : string
 		method fromGML : bool

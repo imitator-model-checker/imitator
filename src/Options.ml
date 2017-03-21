@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2017/02/15
+ * Last modified     : 2017/03/21
  *
  ************************************************************)
 
@@ -28,32 +28,8 @@ open Exceptions
 open ImitatorUtilities
 
 
-(*** WARNING: why is the distribition mode here, but the IMITATOR mode in ImitatorUtilities?? ***)
-type distribution_mode =
-	(** Normal mode *)
-	| Non_distributed
-	
-	(** Distributed mode: static distribution mode (each node has its own part with no communication) *)
-	| Distributed_static
-	
-	(** Distributed mode: Master slave with sequential pi0 *)
-	| Distributed_ms_sequential
-	(** Distributed mode: Master slave with sequential pi0 shuffled *)
-	| Distributed_ms_shuffle
-	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
-	| Distributed_ms_random of int	
-	(** Distributed mode: Master slave with subpart distribution *)
-	| Distributed_ms_subpart
-
-	(**  Distributed mode: Workers live their own lives and communicate results to the coordinator  **)
-	| Distributed_unsupervised
-	(**  Distributed mode: multi-threaded version of Distributed_unsupervised  **)
-	| Distributed_unsupervised_multi_threaded
-
-
-
-let do_unit something =
-	Unit (fun () -> something)
+(*let do_unit something =
+	Unit (fun () -> something)*)
 
 			
 
@@ -152,6 +128,9 @@ class imitator_options =
 		
 		(* imitator mode *)
 		val mutable imitator_mode = Inverse_method
+		
+		(* Exploration order *)
+		val mutable exploration_order = Exploration_layer_BFS
 		
 		(* experimental variant for EFsynth *)
 		val mutable new_ef_mode = false
@@ -290,6 +269,7 @@ class imitator_options =
 		(* method dynamic = !dynamic *)
 		method dynamic_clock_elimination = !dynamic_clock_elimination
 		method efim = !efim
+		method exploration_order = exploration_order
 		method fancy = !fancy
 		method files_prefix = !files_prefix
 		method fromGML = fromGML
@@ -518,6 +498,21 @@ class imitator_options =
 					abort_program ();
 					exit(1);
 				)
+				
+			and set_exploration_order order =
+				(*  *)
+				if order = "layerBFS" then
+					exploration_order <- Exploration_layer_BFS
+				else if order = "queueBFS" then
+					exploration_order <- Exploration_queue_BFS
+				else(
+					(*** HACK: print header now ***)
+					print_header_string();
+					print_error ("The exploration order '" ^ order ^ "' is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
 
 			(* Options *)
 			and speclist = [
@@ -567,6 +562,12 @@ class imitator_options =
 				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 				
+				("-explOrder", String set_exploration_order, " Exploration order.
+        Use 'layerBFS' for a layer-based breadth-first search.
+        Use 'queueBFS' for a queue-based breadth-first search. [EXPERIMENTAL]
+        Default: layerBFS.
+				");
+				
 				("-fromGrML", Unit (fun () -> fromGML <- true), "GrML syntax for input files (experimental). Defaut : 'false'");
 				
 				("-IMK", Set pi_compatible, " Algorithm IMoriginal (defined in [AS11]): return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
@@ -587,7 +588,8 @@ class imitator_options =
         Use 'NZCUBcheck' for cycle-synthesis (with non-Zeno assumption, using a CUB-detection). [EXPERIMENTAL]
         Use 'NZCUBtrans' for cycle-synthesis (with non-Zeno assumption, using a transformation into a CUB-PTA). [EXPERIMENTAL]
         Use 'inversemethod' for the inverse method.
-        For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). Default: 'inversemethod'.");
+        For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000).
+        Default: 'inversemethod'.");
 				(*** NOTE: hidden option! 'shuffle' to cover all the points within v0 after shuffling the array. (Reason for hiding: only useful in the distributed cartography) ***)
 				(*** NOTE: hidden option! or 'randomseqXX' where XX is a number to iterate random calls to IM followed by a sequential check (e.g., randomseq5 or randomseq10000) (Reason for hiding: only useful in the distributed cartography) ***)
 				
@@ -878,6 +880,13 @@ class imitator_options =
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Recall modes *) 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+			(* Exploration order *)
+			begin
+			match exploration_order with
+				| Exploration_layer_BFS -> print_message Verbose_standard ("Exploration order: layer-based BFS.")
+				| Exploration_queue_BFS -> print_message Verbose_standard ("Exploration order: queue-based BFS.")
+			end;
 
 			(* Variant of the inverse method *)
 			if !inclusion then

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/02/10
+ * Last modified     : 2017/03/21
  *
  ************************************************************)
 
@@ -249,6 +249,42 @@ type imitator_mode =
 	(** Synthesis using iterative calls to PRP *)
 	| PRPC
 
+
+
+
+type distribution_mode =
+	(** Normal mode *)
+	| Non_distributed
+	
+	(** Distributed mode: static distribution mode (each node has its own part with no communication) *)
+	| Distributed_static
+	
+	(** Distributed mode: Master slave with sequential pi0 *)
+	| Distributed_ms_sequential
+	(** Distributed mode: Master slave with sequential pi0 shuffled *)
+	| Distributed_ms_shuffle
+	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
+	| Distributed_ms_random of int
+	(** Distributed mode: Master slave with subpart distribution *)
+	| Distributed_ms_subpart
+
+	(**  Distributed mode: Workers live their own lives and communicate results to the coordinator  **)
+	| Distributed_unsupervised
+	(**  Distributed mode: multi-threaded version of Distributed_unsupervised  **)
+	| Distributed_unsupervised_multi_threaded
+
+
+
+type exploration_order =
+	(** Layer-BFS: all states at depth i are computed, and then their successors at depth i+1 *)
+	| Exploration_layer_BFS
+	(** Queue-BFS: basic queue, independent of the depth *)
+	| Exploration_queue_BFS
+	
+
+(************************************************************)
+(** Time functions *)
+(************************************************************)
 
 (** Get the value of the counter *)
 let get_time() =

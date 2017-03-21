@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2017/03/19
+ * Last modified     : 2017/03/21
  *
  ************************************************************)
 
@@ -91,7 +91,7 @@ let instantiate_costs pi0 =
 (* Check whether at least one local location is urgent *)
 (*------------------------------------------------------------*)
 
-(*** TODO: move to Location.mli (but creates a dependency problem, as the model is needed...) ***)
+(*** TODO: move to Location.mli (but creates a dependency problem, as the model is needed…) ***)
 
 let is_location_urgent location =
 	(* Retrieve the model *)
@@ -127,7 +127,7 @@ let upd_hash clock_update =
 
 
 
-(*** TODO: move to the class! (otherwise, if several algorithms in the row, cache will not be reinitialized... ***)
+(*** TODO: move to the class! (otherwise, if several algorithms in the row, cache will not be reinitialized… ***)
 
 
 (* Cache for computed invariants *)
@@ -552,7 +552,7 @@ let apply_time_shift direction location the_constraint =
 		);
 		
 		(* Perform time elapsing *)
-		print_message Verbose_high ("Now applying time " ^ direction_str ^ "...");
+		print_message Verbose_high ("Now applying time " ^ direction_str ^ "…");
 		let time_shift_function = match direction with
 			| Forward -> LinearConstraint.pxd_time_elapse_assign
 			| Backward -> LinearConstraint.pxd_time_past_assign
@@ -593,7 +593,7 @@ let apply_time_elapsing location the_constraint = apply_time_shift Forward locat
 		);
 		
 		(* Perform time elapsing *)
-		print_message Verbose_high ("Now applying time elapsing...");
+		print_message Verbose_high ("Now applying time elapsing…");
 		(*** NOTE: the comment is to be changed in alternative TE mode ***)
 		LinearConstraint.pxd_time_elapse_assign
 			elapsing_clocks
@@ -1539,7 +1539,7 @@ class virtual algoStateBased =
 							print_message Verbose_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
 						) else (
 						
-						(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding ...) *)
+						(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding …) *)
 						StateSpace.increment_nb_gen_states state_space;
 				
 						(************************************************************)
@@ -1706,7 +1706,7 @@ class virtual algoStateBased =
 	(* Check whether the limit of an BFS exploration has been reached, according to the analysis options *)
 	(*** NOTE: May raise an exception when used in PaTATOR mode (the exception will be caught by PaTATOR) ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private check_bfs_limit =
+	method private check_layer_bfs_limit =
 		(* Retrieve the input options *)
 		let options = Input.get_options () in
 		
@@ -1756,7 +1756,53 @@ class virtual algoStateBased =
 		(* If exception caught, then update termination status, and return the reason *)
 		with BFS_Limit_detected reason -> reason
 
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check whether the limit of an BFS exploration has been reached, according to the analysis options *)
+	(*** NOTE: May raise an exception when used in PaTATOR mode (the exception will be caught by PaTATOR) ***)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private check_queue_bfs_limit =
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
 		
+		(* Check all limits *)
+		
+		(* Depth limit *)
+		try(
+		(* States limit *)
+		begin
+		match options#states_limit with
+			| None -> ()
+			| Some limit -> if StateSpace.nb_states state_space > limit then(
+(* 				termination_status <- States_limit; *)
+				raise (BFS_Limit_detected States_limit_reached)
+			)
+		end
+		;
+		(* Time limit *)
+		begin
+		match options#time_limit with
+			| None -> ()
+			| Some limit -> if time_from start_time > (float_of_int limit) then(
+(* 				termination_status <- Time_limit; *)
+				raise (BFS_Limit_detected Time_limit_reached)
+			)
+		end
+		;
+		(* External function for PaTATOR (would raise an exception in case of stop needed) *)
+		begin
+		match patator_termination_function with
+			| None -> ()
+			| Some f -> f (); () (*** NOTE/BADPROG: Does nothing but in fact will directly raise an exception in case of required termination, caught at a higher level (PaTATOR) ***)
+		end
+		;
+		(* If reached here, then everything is fine: keep going *)
+		Keep_going
+		)
+		(* If exception caught, then update termination status, and return the reason *)
+		with BFS_Limit_detected reason -> reason
+
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Print warning(s) if the limit of an exploration has been reached, according to the analysis options *)
@@ -1800,7 +1846,7 @@ class virtual algoStateBased =
 	method private explore_queue_bfs init_state_index =
 		
 		(* Retrieve the input options *)
-		let options = Input.get_options () in
+(* 		let options = Input.get_options () in *)
 
 		(* List of states computed before *)
 		(*** NOTE: we encode the queue using a list, with the LAST element of the list being the first of the queue ***)
@@ -1816,12 +1862,12 @@ class virtual algoStateBased =
 		(* Count the states for verbose purpose: *)
 		let num_state = ref 0 in
 		
-		(* Explore further until the limit is reached or the list of lastly computed states is empty *)
+		(* Explore further until the limit is reached or the queue is empty *)
 		while !limit_reached = Keep_going && !queue <> [] && !algorithm_keep_going do
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then (
 				print_message Verbose_low ("\n");
-				print_message Verbose_low ("Computing successors (" ^ (string_of_int (List.length !queue)) ^ "state" ^ (s_of_int (List.length !queue)) ^ " in the queue).");
+				print_message Verbose_low ("Computing successors of state #" ^ (string_of_int !num_state) ^ " (" ^ (string_of_int (List.length !queue)) ^ " state" ^ (s_of_int (List.length !queue)) ^ " in the queue).");
 			);
 			
 			(* Take the first element, i.e., last from the list *)
@@ -1836,17 +1882,70 @@ class virtual algoStateBased =
 			(* Compute successors *)
 			let successors = self#post_from_one_state popped_from_queue in
 			
-			(* Add (or not) successors to state space and queue *)
-			List.iter (fun new_state ->
-							
-				(* Check if existing in state space *)
-				
-				raise(NotImplemented "explore_queue_bfs not yet implemented")
-				
-			) successors;
+			(* Add to queue *)
+			queue := list_append successors !queue;
+			
+			(* Check if the limit has been reached *)
+			limit_reached := self#check_queue_bfs_limit;
+			
+			(* If still going, ask the concrete algorithm whether it wants to terminate for other reasons *)
+			if !limit_reached = Keep_going then(
+				(* Print some information *)
+				(*** HACK: 'bfs_current_depth - 1' because bfs_current_depth was just incremented… ***)
+				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (bfs_current_depth - 1)) ^ "…");
 
+				if self#check_termination_at_post_n then(
+					algorithm_keep_going := false;
+				);
+			);
 			
 		done;
+		
+		(* Were they any more states to explore? *)
+		let nb_unexplored_successors = List.length !queue in
+		
+		(* Set the list of states with unexplored successors, if any *)
+		if nb_unexplored_successors > 0 then(
+			unexplored_successors <- UnexSucc_some !queue;
+		);
+		
+		(* Update termination condition *)
+		begin
+		match !limit_reached with
+			(* No limit: regular termination *)
+			| Keep_going -> termination_status <- Some (Result.Regular_termination)
+			(* Termination due to time limit reached *)
+			| Time_limit_reached -> termination_status <- Some (Result.Time_limit nb_unexplored_successors)
+			
+			(* Termination due to state space depth limit reached *)
+			| Depth_limit_reached -> raise (InternalError("A depth limit should not be met in Queue-based BFS"))
+			
+			(* Termination due to a number of explored states reached *)
+			| States_limit_reached -> termination_status <- Some (Result.States_limit nb_unexplored_successors)
+		end
+		;
+	
+		(* Print some information *)
+		(*** NOTE: must be done after setting the limit (above) ***)
+		self#bfs_print_warnings_limit ();
+		
+		if not !algorithm_keep_going && nb_unexplored_successors > 0 then(
+			self#print_algo_message Verbose_standard ("A sufficient condition to ensure termination was met although there were still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore");
+		);
+
+
+		print_message Verbose_standard (
+			let nb_states = StateSpace.nb_states state_space in
+			let nb_transitions = StateSpace.nb_transitions state_space in
+			let fixpoint_str = if nb_unexplored_successors > 0 then "State space exploration stopped" else "Fixpoint reached" in
+			"\n" ^ fixpoint_str ^ (*" at a depth of "
+			^ (string_of_int bfs_current_depth) ^ ""
+			^ *)": "
+			^ (string_of_int nb_states) ^ " state" ^ (s_of_int nb_states)
+			^ " with "
+			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " in the final state space.");
+			(*** NOTE: in fact, more states and transitions may have been explored (and deleted); here, these figures are the number of states in the state space. ***)
+
 		(* The end *)
 		()
 
@@ -1878,7 +1977,7 @@ class virtual algoStateBased =
 		(* Flag modified by the algorithm to perhaps terminate earlier *)
 		let algorithm_keep_going = ref true in
 
-		(* Explore further until the limit is reached or the list of lastly computed states is empty *)
+		(* Explore further until the limit is reached or the list of states computed at the previous depth is empty *)
 		while !limit_reached = Keep_going && !post_n <> [] && !algorithm_keep_going do
 			(* Print some information *)
 			if verbose_mode_greater Verbose_standard then (
@@ -1996,7 +2095,7 @@ class virtual algoStateBased =
 			bfs_current_depth <- bfs_current_depth + 1;
 			
 			(* Check if the limit has been reached *)
-			limit_reached := self#check_bfs_limit;
+			limit_reached := self#check_layer_bfs_limit;
 			
 			(* If still going, ask the concrete algorithm whether it wants to terminate for other reasons *)
 			if !limit_reached = Keep_going then(
@@ -2067,8 +2166,8 @@ class virtual algoStateBased =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 		
-(*		(* Retrieve the input options *)
-		let options = Input.get_options () in*)
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
 		
 		(* Get some variables *)
 		let nb_actions = model.nb_actions in
@@ -2136,8 +2235,12 @@ class virtual algoStateBased =
 		(* Increment the number of computed states *)
 		StateSpace.increment_nb_gen_states state_space;
 
-		(* Generic method handling BFS *)
-		self#explore_layer_bfs init_state_index;
+		(* Call generic method handling BFS *)
+		begin
+		match options#exploration_order with
+			| Exploration_layer_BFS -> self#explore_layer_bfs init_state_index;
+			| Exploration_queue_BFS -> self#explore_queue_bfs init_state_index;
+		end;
 
 		(* Return the algorithm-dependent result *)
 		self#compute_result
