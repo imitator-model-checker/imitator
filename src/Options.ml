@@ -121,10 +121,10 @@ class imitator_options =
 		val mutable branch_and_bound = ref false
 		
 		(* Complete version of IM (experimental) *)
-		val mutable completeIM = ref false
+(* 		val mutable completeIM = ref false *)
 		
 		(* Property input via CosyVerif *)
-		val mutable cosyprop = ref ""
+(* 		val mutable cosyprop = ref "" *)
 		
 		(* imitator mode *)
 		val mutable imitator_mode = Inverse_method
@@ -260,8 +260,8 @@ class imitator_options =
 		method cartonly = cartonly
 		method check_ippta = !check_ippta
 		method check_point = !check_point
-		method completeIM = !completeIM
-		method cosyprop = !cosyprop
+(* 		method completeIM = !completeIM *)
+(* 		method cosyprop = !cosyprop *)
 (* 		method counterex = !counterex *)
 		method depth_limit = !depth_limit
 		method distribution_mode = !distribution_mode
@@ -404,9 +404,13 @@ class imitator_options =
 				else if mode = "PDFC" then 
 					imitator_mode <- Parametric_deadlock_checking
 					
-				(* Case: inverse method *)
+				(* Case: Inverse method with convex, and therefore possibly incomplete result *)
 				else if mode = "inversemethod" then 
 					imitator_mode <- Inverse_method
+					
+				(* Case: Inverse method with full, non-convex result *)
+				else if mode = "IMcomplete" then 
+					imitator_mode <- Inverse_method_complete
 					
 				(* Case: PRP *)
 				else if mode = "PRP" then 
@@ -533,10 +537,10 @@ class imitator_options =
 				
 				("-check-point", Set check_point, " For IM, check at each iteration whether the accumulated parameter constraint is restricted to pi0 (warning! very costly). Default: false.");
 				
-				("-completeIM", Set completeIM, " Experimental version of IM that outputs a complete (full) result. Default: false.");
+(* 				("-completeIM", Set completeIM, " Experimental version of IM that outputs a complete (full) result. Default: false."); *)
 				
 				(*** HACK: property input from CosyVerif ***)
-				("-cosyProp", Set_string cosyprop, " File name containing the property (for the CosyVerif input only! This option should not be called manually). Default: none.");
+(* 				("-cosyProp", Set_string cosyprop, " File name containing the property (for the CosyVerif input only! This option should not be called manually). Default: none."); *)
 		
 				("-contributors", Unit (fun _ ->
 					(*** HACK: print header now ***)
@@ -582,13 +586,14 @@ class imitator_options =
 				
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
         Use 'statespace' for the generation of the entire parametric state space (no pi0 needed).
-        Use 'EF' for a parametric non-reachability analysis (no pi0 needed).
-        Use 'PDFC' for parametric non-deadlock checking (no pi0 needed).
-        Use 'LoopSynth' for cycle-synthesis (without non-Zeno assumption).
-        Use 'NZCUBcheck' for cycle-synthesis (with non-Zeno assumption, using a CUB-detection). [EXPERIMENTAL]
-        Use 'NZCUBtrans' for cycle-synthesis (with non-Zeno assumption, using a transformation into a CUB-PTA). [EXPERIMENTAL]
-        Use 'inversemethod' for the inverse method.
-        For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000).
+        Use 'EF' for a parametric non-reachability analysis (no pi0 needed). [AHV93,JLR15]
+        Use 'PDFC' for parametric non-deadlock checking (no pi0 needed). [Andre16]
+        Use 'LoopSynth' for cycle-synthesis (without non-Zeno assumption). [ANPS17]
+        Use 'NZCUBcheck' for cycle-synthesis (with non-Zeno assumption, using a CUB-detection). [EXPERIMENTAL] [ANPS17]
+        Use 'NZCUBtrans' for cycle-synthesis (with non-Zeno assumption, using a transformation into a CUB-PTA). [EXPERIMENTAL] [ANPS17]
+        Use 'inversemethod' for the inverse method with convex, and therefore potentially incomplete, result. [ACEF09]
+        Use 'IMcomplete' for the inverse method with complete, possibly non-convex result. [AM15]
+        For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). [AF10]
         Default: 'inversemethod'.");
 				(*** NOTE: hidden option! 'shuffle' to cover all the points within v0 after shuffling the array. (Reason for hiding: only useful in the distributed cartography) ***)
 				(*** NOTE: hidden option! or 'randomseqXX' where XX is a number to iterate random calls to IM followed by a sequential check (e.g., randomseq5 or randomseq10000) (Reason for hiding: only useful in the distributed cartography) ***)
@@ -754,6 +759,7 @@ class imitator_options =
 				| Parametric_NZ_CUB -> "parametric non-Zeno emptiness checking [testing mode without transformation]"
 				| Parametric_deadlock_checking -> "Parametric deadlock-checking"
 				| Inverse_method -> "inverse method"
+				| Inverse_method_complete -> "inverse method with complete result"
 				| PRP -> "parametric reachability preservation"
 				| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step)
 				| Learning_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step) ^ " and using learning-based abstractions"
@@ -774,7 +780,7 @@ class imitator_options =
 			(* Shortcut *)
 			let in_cartography_mode =
 				match imitator_mode with
-				| Translation | State_space_exploration | EF_synthesis| EFunsafe_synthesis | Loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUBcheck | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | PRP -> false
+				| Translation | State_space_exploration | EF_synthesis| EFunsafe_synthesis | Loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUBcheck | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP -> false
 				| Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _  | RandomSeq_cartography _ | PRPC -> true
 			in
 			
@@ -893,7 +899,7 @@ class imitator_options =
 				(*** NOTE: why this test??? better to warn if this option is used in another context ***)
 				begin
 				match imitator_mode with
-				| Inverse_method | Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _ | RandomSeq_cartography _
+				| Inverse_method | Inverse_method_complete | Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _ | RandomSeq_cartography _
 					-> print_message Verbose_standard ("Considering variant of IM with inclusion in the fixpoint [AS11].")
 				| _ -> print_message Verbose_standard ("Considering fixpoint variant with inclusion of symbolic zones (instead of equality).")
 				end
@@ -1015,11 +1021,11 @@ class imitator_options =
 			(* OPTIONS *)
 
 			(*** TODO: check that only in IM/BC mode ***)
-			if !completeIM then (
+(*			if !completeIM then (
 				print_message Verbose_standard ("IM will output a complete, possibly non-convex, constraint.");
 			) else
 				print_message Verbose_medium ("IM will output a possibly incomplete, but convex, constraint (default).")
-			;
+			;*)
 
 
 			if !merge then (
@@ -1077,7 +1083,7 @@ class imitator_options =
 			(*** TODO: check that only in IM/BC mode ***)
 			if !check_point then(
 				print_message Verbose_standard ("At each iteration, it will be checked whether the parameter constraint is restricted to the sole pi0 point (experimental and costly!).");
-				if imitator_mode <> Inverse_method then
+				if imitator_mode <> Inverse_method && imitator_mode <> Inverse_method_complete then
 					print_warning("The -check-point option is only valid for the inverse method. It will hence be ignored.");
 			)
 			else

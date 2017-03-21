@@ -172,6 +172,7 @@ match options#imitator_mode with
 	
 	(* Inverse method : pi0 *)
 	| Inverse_method
+	| Inverse_method_complete
 	| PRP
 	(* Case: pi0 *)
 	->
@@ -562,6 +563,11 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	| Inverse_method ->
 			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIM.algoIM in myalgo
 
+	(* Inverse Method *)
+	| Inverse_method_complete ->
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMcomplete.algoIMcomplete in myalgo
+
+	
 	(************************************************************)
 	(* PRP *)
 	(************************************************************)

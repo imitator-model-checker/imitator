@@ -222,8 +222,11 @@ type imitator_mode =
 	(** Parametric deadlock-checking *)
 	| Parametric_deadlock_checking
 	
-	(** Inverse method *)
+	(** Inverse method with convex, and therefore possibly incomplete result *)
 	| Inverse_method
+	
+	(** Inverse method with full, non-convex result*)
+	| Inverse_method_complete
 	
 	(** Parametric reachability preservation *)
 	| PRP

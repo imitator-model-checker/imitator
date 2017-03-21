@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2017/03/19
+ * Last modified     : 2017/03/21
  *
  ************************************************************)
 
@@ -81,9 +81,9 @@ class algoIMK =
 		(* Retrieve the pi0 (dynamic!) *)
 		let pi0 = Input.get_pi0 () in
 		
-		self#print_algo_message_newline Verbose_medium ("Sarting pi0-compatibility check...");
+		self#print_algo_message_newline Verbose_medium ("Sarting pi0-compatibility check…");
 		
-		self#print_algo_message_newline Verbose_high ("Hiding non parameters...");
+		self#print_algo_message_newline Verbose_high ("Hiding non parameters…");
 		
 		(* Hide non-parameters *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse constr in
@@ -211,17 +211,6 @@ class algoIMK =
 
 		(* Is the new state valid? *)
 		
-		(*** TODO: add back ***)
-(*		(* 1) Complete version of IM *)
-		if options#completeIM then(
-			let valid_new_state, bad_p_constraint = completeIM_check_constraint model state_space final_constraint in
-			(* Update the set of bad polyhedra *)
-			k_bad := bad_p_constraint :: !k_bad;
-			(* Return locally the result *)
-			valid_new_state
-		
-		(* 2) Regular IM *)
-		)else( *)
 		(*** NOTE: the addition of neg J to all reached states is performed as a side effect inside the following function ***)
 		(*** BADPROG: same reason ***)
 		let pi0_compatible = self#check_pi0compatibility final_constraint
@@ -398,7 +387,7 @@ class algoIMK =
 		(* Retrieve the constraint of the initial state *)
 		let (_ , px_constraint ) = initial_state in
 		
-		self#print_algo_message Verbose_total ("projecting the initial state constraint onto the parameters...");
+		self#print_algo_message Verbose_total ("projecting the initial state constraint onto the parameters…");
 		
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
 (* 		Convex_constraint (LinearConstraint.px_hide_nonparameters_and_collapse px_constraint , !tile_nature)  *)

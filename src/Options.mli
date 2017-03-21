@@ -35,9 +35,9 @@ class imitator_options :
 		method carto_time_limit : int option
 		method check_ippta : bool
 		method check_point : bool
-		method completeIM : bool
+(* 		method completeIM : bool *)
 		(** HACK: property input from CosyVerif *)
-		method cosyprop : string
+(* 		method cosyprop : string *)
 (* 		method counterex : bool *)
 		method depth_limit : int option
 		method distribution_mode : distribution_mode
