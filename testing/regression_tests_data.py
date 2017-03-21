@@ -683,36 +683,6 @@ END CONSTRAINT
 		'expectations' : [
 			{'file': 'coffeeDrinker-TACAS.res' , 'content' : """
 BEGIN CONSTRAINT
- p_add_sugar > 0
-& 2*p_button > p_add_sugar
-& p_add_sugar + p_coffee > 2*p_button
-& 15 > 2*p_button
-OR
-  p_add_sugar >= 2*p_button
-& p_add_sugar + p_coffee > 3*p_button
-& 3*p_button > p_add_sugar
-& 5 > p_button
-OR
-  p_add_sugar > 0
-& 2*p_button >= 15
-& p_add_sugar + p_coffee > 15
-& 15 > p_button
-& p_button > p_add_sugar
-OR
-  2*p_button >= p_add_sugar + p_coffee
-& p_add_sugar > 0
-& p_add_sugar + p_coffee > p_button
-& p_button > p_add_sugar
-& 15 >= p_add_sugar + p_coffee
-OR
-  15 > p_add_sugar + p_coffee
-& p_coffee > 0
-& p_button > 0
-& 5 > p_button
-& p_add_sugar >= 3*p_button
-END CONSTRAINT
-
-BEGIN CONSTRAINT
 p_add_sugar > 0
 & p_button > p_add_sugar
 & p_add_sugar + p_coffee > p_button
