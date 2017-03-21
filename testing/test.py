@@ -10,7 +10,7 @@
 # 
 # File contributors : Étienne André
 # Created           : 2012/05/??
-# Last modified     : 2017/02/10
+# Last modified     : 2017/03/21
 #************************************************************
 
 
@@ -26,11 +26,11 @@ import subprocess
 
 # To output colored text
 class bcolors:
-	ERROR	= '\033[91m'
+	ERROR	= '\033[1;37;41m'
 	BOLD	= '\033[1m'
 	GOOD	= '\033[1;32;40m'
 	NORMAL	= '\033[0m'
-	WARNING	= '\033[93m'
+	WARNING	= '\033[93;40m'
 
 
 #************************************************************

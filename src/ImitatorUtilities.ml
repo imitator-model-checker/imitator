@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/02/10
+ * Last modified     : 2017/03/21
  *
  ************************************************************)
 
@@ -295,11 +295,11 @@ type shell_highlighting_type =
 
 let shell_code_of_shell_highlighting_type = function
 	| Shell_bold -> "\027[1m"
-	| Shell_error -> "\027[91m"
+	| Shell_error -> "\027[1;37;41m"
 	| Shell_normal -> "\027[0m"
-	| Shell_result -> "\027[92m"
+	| Shell_result -> "\027[92;40m"
 	| Shell_soundness -> "\027[94m"
-	| Shell_warning -> "\027[93m"
+	| Shell_warning -> "\027[93;40m"
 
 (*    HEADER = '\033[95m'
     OKBLUE = '\033[94m'
