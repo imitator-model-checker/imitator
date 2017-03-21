@@ -1,0 +1,71 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy example for which IM [ACEF09] does not output a complete result
+ *
+ * Description     : Toy example for which IM [ACEF09] does not output a complete result
+ * Correctness     : Same untimed language as pi0
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2017/03/21
+ * Last modified   : 2017/03/21
+ *
+ * IMITATOR version: 2.9
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x
+		: clock;
+
+(* Parameters *)
+	p1, p2, p3
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: while x <= p1 wait {}
+	when x >= p2 && x >= p3 sync a goto l2;
+
+loc l2: while True wait {}
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p1 >= 0
+	& p2 >= 0
+	& p3 >= 0
+;
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
