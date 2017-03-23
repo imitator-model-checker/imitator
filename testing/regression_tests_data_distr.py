@@ -11,7 +11,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2016/03/14
-# Last modified: 2016/09/10
+# Last modified: 2017/03/21
 #************************************************************
 
 
@@ -2711,233 +2711,36 @@ Termination                             : regular termination
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Distributed cartography: PRPC (old version) with sequential distribution (on the case study BC vs. PRPC)',
+		'purpose'    : 'Distributed cartography: PRPC with sequential distribution (on the case study BC vs. PRPC)',
 		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
-		'options'    : '-mode cover -PRP -no-random -distributed sequential -output-result',
+		'options'    : '-mode PRPC -no-random -distributed sequential -output-result',
 		'nb_nodes'   : 4,
 		'expectations' : [
-			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'diffBCPRPC.res' , 'content' : """
- p2 >= 0
-& p1 >= 0
-& 1 > p2
-& 1 > p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Local number of states                  : 8
-Local number of transitions             : 12
-"""
-			} # end BC file
-			, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
-p2 >= 0
-& p1 >= 1
-& 1 > p2
-& 2 > p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Local number of states                  : 8
-Local number of transitions             : 12
-"""
-			} # end BC file
-			, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
- p1 >= 2
+ BEGIN CONSTRAINT
+ 2 > p1
 & p2 >= 0
-& 4 >= p2
-& 4 >= p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : bad
-------------------------------------------------------------
-Local number of states                  : 6
-Local number of transitions             : 9
-"""
-			} # end BC file
-			, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
- p2 >= 1
-& p1 >= 0
 & 2 > p2
-& 1 > p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Local number of states                  : 7
-Local number of transitions             : 11
-"""
-			} # end BC file
-			,
-			{'file': 'diffBCPRPC.res' , 'content' : """
- p2 >= 1
 & p1 >= 0
-& 2 > p2
-& 2 > p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Local number of states                  : 8
-Local number of transitions             : 12
-"""
-			} # end BC file
-			, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
- p1 >= 0
-& p2 >= 2
-& 4 >= p2
-& 4 >= p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : bad
-------------------------------------------------------------
-Local number of states                  : 7
-Local number of transitions             : 10
-"""
-			} # end BC file
-			, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
-Coverage                                : integer-complete
-Termination                             : regular termination
-"""
-			} # end BC file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-	
-	,
-	
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Distributed cartography: PRPC (old version) with shuffle distribution (on the case study BC vs. PRPC)',
-		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
-		'options'    : '-mode cover -PRP -no-random -distributed shuffle -output-result',
-		'nb_nodes'   : 4,
-		'expectations' : [
-			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
-			{'file': 'diffBCPRPC.res' , 'content' : """
+<good|bad>
  p2 >= 0
-& p1 >= 0
-& 1 > p2
-& 1 > p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Local number of states                  : 8
-Local number of transitions             : 12
-"""
-			} # end BC file
-			, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
-p2 >= 0
-& p1 >= 1
-& 1 > p2
-& 2 > p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Local number of states                  : 8
-Local number of transitions             : 12
-"""
-			} # end BC file
-			, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
- p1 >= 2
-& p2 >= 0
-& 4 >= p2
+& p1 >= 2
 & 4 >= p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : bad
-------------------------------------------------------------
-Local number of states                  : 6
-Local number of transitions             : 9
-"""
-			} # end BC file
-			, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
- p2 >= 1
-& p1 >= 0
-& 2 > p2
-& 1 > p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Local number of states                  : 7
-Local number of transitions             : 11
-"""
-			} # end BC file
-			,
-			{'file': 'diffBCPRPC.res' , 'content' : """
- p2 >= 1
-& p1 >= 0
-& 2 > p2
-& 2 > p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Local number of states                  : 8
-Local number of transitions             : 12
-"""
-			} # end BC file
-			, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
- p1 >= 0
-& p2 >= 2
 & 4 >= p2
-& 4 >= p1
 OR
-  p1 >= 2
-& p2 >= 0
-& 4 >= p2
+  p2 >= 2
+& p1 >= 0
 & 4 >= p1
+& 4 >= p2
+END CONSTRAINT
 
 ------------------------------------------------------------
-Constraint soundness                    : exact
+Constraint soundness                    : exact <good|bad> exact
 Termination                             : regular termination
-Constraint nature                       : bad
-------------------------------------------------------------
-Local number of states                  : 8
-Local number of transitions             : 11
+Constraint nature                       : good/bad
 """
 			} # end BC file
 			, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
-Coverage                                : integer-complete
-Termination                             : regular termination
-"""
-			} # end BC file
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
@@ -2946,114 +2749,36 @@ Termination                             : regular termination
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Distributed cartography: PRPC (old version) with static distribution (on the case study BC vs. PRPC)',
+		'purpose'    : 'Distributed cartography: PRPC with shuffle distribution (on the case study BC vs. PRPC)',
 		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
-		'options'    : '-mode cover -PRP -no-random -distributed static -output-result',
+		'options'    : '-mode PRPC -no-random -distributed shuffle -output-result',
 		'nb_nodes'   : 4,
 		'expectations' : [
-			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'diffBCPRPC.res' , 'content' : """
- p2 >= 0
-& p1 >= 0
-& 1 > p2
-& 1 > p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Local number of states                  : 8
-Local number of transitions             : 12
-"""
-			} # end BC file
-			, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
-p2 >= 0
-& p1 >= 1
-& 1 > p2
-& 2 > p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Local number of states                  : 8
-Local number of transitions             : 12
-"""
-			} # end BC file
-			, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
- p1 >= 2
+ BEGIN CONSTRAINT
+ 2 > p1
 & p2 >= 0
-& 4 >= p2
-& 4 >= p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : bad
-------------------------------------------------------------
-Local number of states                  : 6
-Local number of transitions             : 9
-"""
-			} # end BC file
-			, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
- p2 >= 1
-& p1 >= 0
 & 2 > p2
-& 1 > p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Local number of states                  : 7
-Local number of transitions             : 11
-"""
-			} # end BC file
-			,
-			# NOTE: this tile is non-deterministic (depends which reference valuation is called first)
-			#{'file': 'diffBCPRPC.res' , 'content' : """
- #p2 >= 1
-#& p1 >= 0
-#& 2 > p2
-#& 2 > p1
-
-#------------------------------------------------------------
-#Constraint soundness                    : exact
-#Termination                             : regular termination
-#Constraint nature                       : good
-#------------------------------------------------------------
-#Local number of states                  : 8
-#Local number of transitions             : 12
-#"""
-			#} # end BC file
-			#, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
- p1 >= 0
-& p2 >= 2
-& 4 >= p2
+& p1 >= 0
+<good|bad>
+ p2 >= 0
+& p1 >= 2
 & 4 >= p1
+& 4 >= p2
+OR
+  p2 >= 2
+& p1 >= 0
+& 4 >= p1
+& 4 >= p2
+END CONSTRAINT
 
 ------------------------------------------------------------
-Constraint soundness                    : exact
+Constraint soundness                    : exact <good|bad> exact
 Termination                             : regular termination
-Constraint nature                       : bad
-------------------------------------------------------------
-Local number of states                  : 7
-Local number of transitions             : 10
+Constraint nature                       : good/bad
 """
 			} # end BC file
 			, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
-Coverage                                : integer-complete
-Termination                             : regular termination
-"""
-			} # end BC file
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
@@ -3062,113 +2787,114 @@ Termination                             : regular termination
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Distributed cartography: PRPC (old version) with dynamic distribution (on the case study BC vs. PRPC)',
+		'purpose'    : 'Distributed cartography: PRPC with static distribution (on the case study BC vs. PRPC)',
 		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
-		'options'    : '-mode cover -PRP -no-random -distributed dynamic -output-result',
+		'options'    : '-mode PRPC -no-random -distributed static -output-result',
+		'nb_nodes'   : 4,
+		'expectations' : [
+			{'file': 'diffBCPRPC.res' , 'content' : """
+ BEGIN CONSTRAINT
+ 2 > p1
+& p2 >= 0
+& 2 > p2
+& p1 >= 0
+<good|bad>
+ p2 >= 0
+& p1 >= 2
+& 4 >= p1
+& 4 >= p2
+OR
+  p2 >= 2
+& p1 >= 0
+& 4 >= p1
+& 4 >= p2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact <good|bad> exact
+Termination                             : regular termination
+Constraint nature                       : good/bad
+"""
+			} # end BC file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Distributed cartography: PRPC with dynamic distribution (on the case study BC vs. PRPC), 4 nodes',
+		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
+		'options'    : '-mode PRPC -no-random -distributed dynamic -output-result',
 		'nb_nodes'   : 4,
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'diffBCPRPC.res' , 'content' : """
- p2 >= 0
-& p1 >= 0
-& 1 > p2
-& 1 > p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Local number of states                  : 8
-Local number of transitions             : 12
-"""
-			} # end BC file
-			, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
-p2 >= 0
-& p1 >= 1
-& 1 > p2
-& 2 > p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Local number of states                  : 8
-Local number of transitions             : 12
-"""
-			} # end BC file
-			, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
- p1 >= 2
+ BEGIN CONSTRAINT
+ 2 > p1
 & p2 >= 0
-& 4 >= p2
-& 4 >= p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : bad
-------------------------------------------------------------
-Local number of states                  : 6
-Local number of transitions             : 9
-"""
-			} # end BC file
-			, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
- p2 >= 1
-& p1 >= 0
 & 2 > p2
-& 1 > p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Local number of states                  : 7
-Local number of transitions             : 11
-"""
-			} # end BC file
-			,
-			{'file': 'diffBCPRPC.res' , 'content' : """
- p2 >= 1
 & p1 >= 0
-& 2 > p2
-& 2 > p1
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Local number of states                  : 8
-Local number of transitions             : 12
-"""
-			} # end BC file
-			, 
-			{'file': 'diffBCPRPC.res' , 'content' : """
- p1 >= 0
-& p2 >= 2
-& 4 >= p2
+<good|bad>
+ p2 >= 0
+& p1 >= 2
 & 4 >= p1
+& 4 >= p2
+OR
+  p2 >= 2
+& p1 >= 0
+& 4 >= p1
+& 4 >= p2
+END CONSTRAINT
 
 ------------------------------------------------------------
-Constraint soundness                    : exact
+Constraint soundness                    : exact <good|bad> exact
 Termination                             : regular termination
-Constraint nature                       : bad
-------------------------------------------------------------
-Local number of states                  : 7
-Local number of transitions             : 10
+Constraint nature                       : good/bad
 """
 			} # end BC file
 			, 
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Distributed cartography: PRPC with dynamic distribution (on the case study BC vs. PRPC), 8 nodes',
+		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
+		'options'    : '-mode PRPC -no-random -distributed dynamic -output-result',
+		'nb_nodes'   : 8,
+		'expectations' : [
+			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'diffBCPRPC.res' , 'content' : """
-Coverage                                : integer-complete
+ BEGIN CONSTRAINT
+ 2 > p1
+& p2 >= 0
+& 2 > p2
+& p1 >= 0
+<good|bad>
+ p2 >= 0
+& p1 >= 2
+& 4 >= p1
+& 4 >= p2
+OR
+  p2 >= 2
+& p1 >= 0
+& 4 >= p1
+& 4 >= p2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact <good|bad> exact
 Termination                             : regular termination
+Constraint nature                       : good/bad
 """
 			} # end BC file
+			, 
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
