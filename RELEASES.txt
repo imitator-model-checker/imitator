@@ -1,5 +1,5 @@
 *******************************************************
-release 2.XXXXX    (XXXXX) FUTURE MAJOR RELEASE
+release 2.9    (2017-03-23) MAJOR RELEASE
 
 Major
 - New algorithm LoopSynthesis (option -mode LoopSynth): synthesizes valuations for which there exists an infinite run in the model.
