@@ -13,6 +13,7 @@ Minor features
 
 Bug fixing
 - Solved a bug for EF / PRP when the initial state is already bad
+- Solved a bug in the equality and inclusion check of non-convex parameter constraints (wrong PPL function used)
 
 Export
 - PDFC now outputs both an under-approximated good constraint and an under-approximated bad constraint (instead of an over-approximated good constraint for the latter); so presentation of the result changes compared to version 2.8
