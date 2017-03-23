@@ -587,6 +587,8 @@ class imitator_options =
         Use 'NZCUBcheck' for cycle-synthesis (with non-Zeno assumption, using a CUB-detection). [EXPERIMENTAL]
         Use 'NZCUBtrans' for cycle-synthesis (with non-Zeno assumption, using a transformation into a CUB-PTA). [EXPERIMENTAL]
         Use 'inversemethod' for the inverse method.
+        Use 'PRP' for parametric reachability preservation.
+        Use 'PRPC' for parametric reachability preservation cartography.
         For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). Default: 'inversemethod'.");
 				(*** NOTE: hidden option! 'shuffle' to cover all the points within v0 after shuffling the array. (Reason for hiding: only useful in the distributed cartography) ***)
 				(*** NOTE: hidden option! or 'randomseqXX' where XX is a number to iterate random calls to IM followed by a sequential check (e.g., randomseq5 or randomseq10000) (Reason for hiding: only useful in the distributed cartography) ***)
