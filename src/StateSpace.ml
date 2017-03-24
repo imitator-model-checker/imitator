@@ -132,6 +132,10 @@ let nb_constraint_comparisons = ref 0*)
 let statespace_dcounter_nb_state_comparisons = create_discrete_counter_and_register "number of state comparisons" States_counter Verbose_standard
 let statespace_dcounter_nb_constraint_comparisons = create_discrete_counter_and_register "number of constraints comparisons" States_counter Verbose_standard
 
+(* Numbers of new states that were in fact included into an old state *)
+let statespace_dcounter_nb_states_included = create_discrete_counter_and_register "number of new states <= old" States_counter Verbose_standard
+(* Numbers of new states that were in fact larger than an old state *)
+let statespace_dcounter_nb_states_including = create_discrete_counter_and_register "number of new states >= old" States_counter Verbose_standard
 
 
 (************************************************************)
@@ -1088,13 +1092,21 @@ let add_state state_space state_comparison new_state =
 					(* Inclusion: check for new <= old *)
 					| Inclusion_check ->
 						statespace_dcounter_nb_state_comparisons#increment;
-						if state_included new_state state then raise (Found_old index)
+						if state_included new_state state then(
+							(* Statistics *)
+							statespace_dcounter_nb_states_included#increment;
+							raise (Found_old index)
+						)
 					
 					(* Double inclusion: check for new <= old OR old <= new, in which case replace *)
 					| Double_inclusion_check ->
 						(* First check: new <= old *)
 						statespace_dcounter_nb_state_comparisons#increment;
-						if state_included new_state state then raise (Found_old index)
+						if state_included new_state state then(
+							(* Statistics *)
+							statespace_dcounter_nb_states_included#increment;
+							raise (Found_old index)
+						)
 						(* Second check: old <= new *)
 						else(
 						statespace_dcounter_nb_state_comparisons#increment;
@@ -1108,6 +1120,9 @@ let add_state state_space state_comparison new_state =
 							(* Replace old with new *)
 							replace_constraint state_space index new_constraint;
 							
+							(* Statistics *)
+							statespace_dcounter_nb_states_including#increment;
+
 							(* Stop looking for states *)
 							raise (Found_new index)
 						))
