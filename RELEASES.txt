@@ -1,7 +1,7 @@
 next: the GrML syntax (in and out) is now discontinued, as CosyVerif is not maintained anymore, and the next version will not support GrML.
 
 *******************************************************
-release 2.XXXXX    (XXXXX) FUTURE MAJOR RELEASE
+release 2.9    (2017-03-23) MAJOR RELEASE
 
 Major
 - New algorithm LoopSynthesis (option -mode LoopSynth): synthesizes valuations for which there exists an infinite run in the model.
@@ -15,6 +15,7 @@ Minor features
 
 Bug fixing
 - Solved a bug for EF / PRP when the initial state is already bad
+- Solved a bug in the equality and inclusion check of non-convex parameter constraints (wrong PPL function used)
 
 Export
 - PDFC now outputs both an under-approximated good constraint and an under-approximated bad constraint (instead of an over-approximated good constraint for the latter); so presentation of the result changes compared to version 2.8

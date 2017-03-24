@@ -4,7 +4,7 @@
 #
 #                       IMITATOR
 # 
-# LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+# LIPN, Université Paris 13 (France)
 # 
 # Script description: COMPARATOR (script for non-regression tests)
 # 

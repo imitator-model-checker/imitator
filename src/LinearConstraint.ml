@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2017/02/10
+ * Last modified     : 2017/03/23
  *
  ************************************************************)
 
@@ -192,9 +192,9 @@ let ppl_nb_hull_assign_if_exact_false = ref 0
 	
 	let ppl_nncc_is_universe = create_hybrid_counter_and_register "nncc_is_universe" PPL_counter Verbose_low
 	
-	let ppl_nncc_contains = create_hybrid_counter_and_register "nncc_contains" PPL_counter Verbose_low
+	let ppl_nncc_geometrically_covers = create_hybrid_counter_and_register "nncc_geometrically_covers" PPL_counter Verbose_low
 	
-	let ppl_nncc_equals = create_hybrid_counter_and_register "nncc_equals" PPL_counter Verbose_low
+	let ppl_nncc_geometrically_equals = create_hybrid_counter_and_register "nncc_geometrically_equals" PPL_counter Verbose_low
 	
 	let ppl_nncc_pairwise_reduce = create_hybrid_counter_and_register "nncc_pairwise_reduce" PPL_counter Verbose_low
 	
@@ -569,11 +569,14 @@ let ippl_nncc_is_empty nnconvex_constraint =
 let ippl_nncc_is_universe nnconvex_constraint =
 	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_is_universe nnconvex_constraint) ppl_nncc_is_universe
 
-let ippl_nncc_contains nnconvex_constraint nnconvex_constraint' =
-	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_contains_Pointset_Powerset_NNC_Polyhedron nnconvex_constraint nnconvex_constraint') ppl_nncc_contains
+let ippl_nncc_geometrically_covers nnconvex_constraint nnconvex_constraint' =
+	ippl_generic (fun () ->
+		(*** NOTE: ppl_Pointset_Powerset_NNC_Polyhedron_contains_Pointset_Powerset_NNC_Polyhedron is NOT the right function, as it checks whether each disjunct of p is contained in a disjunct of p'. ***)
+		ppl_Pointset_Powerset_NNC_Polyhedron_geometrically_covers_Pointset_Powerset_NNC_Polyhedron nnconvex_constraint nnconvex_constraint') ppl_nncc_geometrically_covers
 
-let ippl_nncc_equals nnconvex_constraint nnconvex_constraint' =
-	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_equals_Pointset_Powerset_NNC_Polyhedron nnconvex_constraint nnconvex_constraint') ppl_nncc_equals
+let ippl_nncc_geometrically_equals nnconvex_constraint nnconvex_constraint' =
+	(*** NOTE: ppl_Pointset_Powerset_NNC_Polyhedron_equals_Pointset_Powerset_NNC_Polyhedron is NOT the right function ***)
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_geometrically_equals_Pointset_Powerset_NNC_Polyhedron nnconvex_constraint nnconvex_constraint') ppl_nncc_geometrically_equals
 
 let ippl_nncc_pairwise_reduce nnconvex_constraint =
 	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_pairwise_reduce nnconvex_constraint) ppl_nncc_pairwise_reduce
@@ -3107,11 +3110,11 @@ let p_nnconvex_constraint_is_pi0_compatible pval p_nnconvex_constraint =
 
 (** Check if a nnconvex_constraint is included in another one *)
 let p_nnconvex_constraint_is_leq p_nnconvex_constraint p_nnconvex_constraint' =
-	(*** NOTE: PPL works in the reverse order: the 2nd contains the 1st one ***)
-	ippl_nncc_contains p_nnconvex_constraint' p_nnconvex_constraint
+	(*** NOTE: PPL works in the reverse order: the 2nd covers the 1st one ***)
+	ippl_nncc_geometrically_covers p_nnconvex_constraint' p_nnconvex_constraint
 
 (** Check if a nnconvex_constraint is equal to another one *)
-let p_nnconvex_constraint_is_equal = ippl_nncc_equals
+let p_nnconvex_constraint_is_equal = ippl_nncc_geometrically_equals
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

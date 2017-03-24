@@ -334,11 +334,11 @@ type shell_highlighting_type =
 
 let shell_code_of_shell_highlighting_type = function
 	| Shell_bold -> "\027[1m"
-	| Shell_error -> "\027[91m"
+	| Shell_error -> "\027[1;37;41m"
 	| Shell_normal -> "\027[0m"
-	| Shell_result -> "\027[92m"
+	| Shell_result -> "\027[92;40m"
 	| Shell_soundness -> "\027[94m"
-	| Shell_warning -> "\027[93m"
+	| Shell_warning -> "\027[93;40m"
 
 (*    HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -433,7 +433,7 @@ let print_header_string () =
 	^ "*                     Etienne Andre, Ulrich Kuehne et al.  *\n"
 	^ "*                                             2009 - " ^ (BuildInfo.build_year) ^ "  *\n"
 	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
-	^ "*  LIPN, Universite Paris 13, Sorbonne Paris Cite, France  *\n"
+	^ "*                       LIPN, Universite Paris 13, France  *\n"
 	^ "*  " ^ (string_n_times (length_header - (String.length imitator_url)) " ") ^ imitator_url ^ "  *\n"
 	^ "*                                                          *\n"
 	^ "*  " ^ (string_n_times (length_header - (String.length build_info)) " ") ^ build_info ^ "  *\n"

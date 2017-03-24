@@ -4,13 +4,13 @@
 #
 #                       IMITATOR
 # 
-# LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+# LIPN, Université Paris 13 (France)
 # 
 # Script description: TESTATOR (script for non-regression tests)
 # 
 # File contributors : Étienne André
 # Created           : 2012/05/??
-# Last modified     : 2017/02/10
+# Last modified     : 2017/03/21
 #************************************************************
 
 
@@ -26,11 +26,11 @@ import subprocess
 
 # To output colored text
 class bcolors:
-	ERROR	= '\033[91m'
+	ERROR	= '\033[1;37;41m'
 	BOLD	= '\033[1m'
 	GOOD	= '\033[1;32;40m'
 	NORMAL	= '\033[0m'
-	WARNING	= '\033[93m'
+	WARNING	= '\033[93;40m'
 
 
 #************************************************************
@@ -302,7 +302,7 @@ print_to_screen(bcolors.BOLD + ' TESTATOR' + bcolors.NORMAL + '                 
 print_to_log(' TESTATOR' + '                                              v0.1')
 print_to_screen_and_log('')
 print_to_screen_and_log(' Étienne André')
-print_to_screen_and_log(' LIPN, Université Paris 13, Sorbonne Paris Cité (France)')
+print_to_screen_and_log(' LIPN, Université Paris 13 (France)')
 print_to_screen_and_log('############################################################')
 now = datetime.datetime.now()
 print_to_screen_and_log(now.strftime("%A %d. %B %Y %H:%M:%S %z"))

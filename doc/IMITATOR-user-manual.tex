@@ -759,13 +759,13 @@ By preserving the reachability, we mean that $\loc$ is reachable for the other v
 
 This algorithm~$\PRP$, that combines \EFsynth{} and \IM{} (see~\cite{ALNS15} for details), is called as follows:
 
-\styleCommand{\binimitator{} model.imi model.pi0 -PRP -output-result}
+\styleCommand{\binimitator{} model.imi model.pi0 -mode PRP -output-result}
 
 Note that a bad location (as in \cref{ss:mode:EFsynth}) or a property (as in \cref{ss:mode:prop}) must be defined in the model.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection*{Parametric reachability preservation cartography}
+\subsection*{Parametric reachability preservation cartography}\label{sss:mode:PRPC}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 An extension of $\PRP$ to the cartography (named \PRPC{}) is also available: \PRPC{} synthesizes parameter constraints in which the (non-)reachability of $\loc$ is uniform.
@@ -773,7 +773,7 @@ An extension of $\PRP$ to the cartography (named \PRPC{}) is also available: \PR
 
 This algorithm~$\PRPC$ is called as follows:
 
-\styleCommand{\binimitator{} model.imi model.v0 -mode cover -PRP -output-result}
+\styleCommand{\binimitator{} model.imi model.v0 -mode PRPC -output-result}
 
 Again, a bad location (as in \cref{ss:mode:EFsynth}) or a property (as in \cref{ss:mode:prop}) must be defined in the model.
 
@@ -1196,6 +1196,12 @@ The mode for \imitator{}.
 	\styleOption{inversemethod} & Inverse method \\
 	& (see \cref{ss:mode:IM}) \\
 	
+	\styleOption{PRP} & Parametric reachability preservation \\
+	& (see \cref{ss:mode:PRP}) \\
+	
+	\styleOption{PRPC} & Parametric reachability preservation cartography \\
+	& (see \cref{sss:mode:PRPC}) \\
+	
 	\styleOption{cover} & Behavioral cartography with full coverage \\
 	& (see \cref{ss:mode:BC}) \\
 	
@@ -1351,16 +1357,19 @@ Enabling this option will yield a very large graph, and it is useful (and readab
 %------------------------------------------------------------
 \paragraph{\styleOption{-PRP} (default: false)}
 %------------------------------------------------------------
-Option used to activate \PRP{} or \PRPC{} \cite{ALNS15}.
+Deprecated option.
+% TODO: add macro for deprecated
+Option used to activate the former and deprecated versions of \PRP{} or \PRPC{} \cite{ALNS15}.
 These options must be used in addition to the \styleOption{-mode} option.
-That is, in order to call \PRP{}, use:
+That is, in order to call the former version of \PRP{}, use:
 
 \styleCommand{\binimitator{} model.imi model.pi0 -PRP}
 
-And in order to call \PRPC{}, use:
+And in order to call the former version of \PRPC{}, use:
 
 \styleCommand{\binimitator{} model.imi model.v0 -mode cover -PRP}
 
+Since version 2.9, it is advised to use instead \styleOption{-mode PRP} and \styleOption{-mode PRPC}, which call newly implemented versions of these algorithms, with a better structured result.
 
 
 % %------------------------------------------------------------
@@ -2230,6 +2239,9 @@ Camille~Coti, Sami~Evangelista and Nguy\~{ê}n~Hoàng~Gia worked on the distribu
 Nguy\~{ê}n~Hoàng~Gia worked on the non-Zeno synthesis algorithms.
 %
 Stéphane Rosse improved a script for comparing results and speeds of various versions of \imitator{}.
+
+We acknowledge the help of the PPL~\cite{bhz08} developers for their help with solving several issues over the years, and more generally for making this very useful library available.
+
 
 % TODO: projects
 

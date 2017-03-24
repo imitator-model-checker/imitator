@@ -3,7 +3,7 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13 (France)
  * 
  * Module description: Main file for IMITATOR
  * 

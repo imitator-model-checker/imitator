@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2017/03/21
+ * Last modified     : 2017/03/24
  *
  ************************************************************)
 
@@ -593,6 +593,8 @@ class imitator_options =
         Use 'NZCUBtrans' for cycle-synthesis (with non-Zeno assumption, using a transformation into a CUB-PTA). [EXPERIMENTAL] [ANPS17]
         Use 'inversemethod' for the inverse method with convex, and therefore potentially incomplete, result. [ACEF09]
         Use 'IMcomplete' for the inverse method with complete, possibly non-convex result. [AM15]
+        Use 'PRP' for parametric reachability preservation. [ALNS15]
+        Use 'PRPC' for parametric reachability preservation cartography. [ALNS15]
         For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). [AF10]
         Default: 'inversemethod'.");
 				(*** NOTE: hidden option! 'shuffle' to cover all the points within v0 after shuffling the array. (Reason for hiding: only useful in the distributed cartography) ***)
