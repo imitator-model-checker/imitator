@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/03/23
+ * Last modified     : 2017/03/24
  *
  ************************************************************)
 
@@ -22,7 +22,7 @@
 
 let program_name = "IMITATOR"
 
-let version_string = "2.9"
+let version_string = "2.9.1-working"
 
 let version_name = "Butter Incaberry"
 
