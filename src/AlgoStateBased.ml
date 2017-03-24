@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2017/03/21
+ * Last modified     : 2017/03/24
  *
  ************************************************************)
 
@@ -1836,6 +1836,7 @@ class virtual algoStateBased =
 		(* Mode tree: no comparison *)
 		if options#tree then StateSpace.No_check
 			else if options#inclusion then StateSpace.Inclusion_check
+			else if options#inclusion2 then StateSpace.Double_inclusion_check
 			else StateSpace.Equality_check
 
 

@@ -5,7 +5,7 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Author:        Etienne Andre
  * Created:       2012/05/10
- * Last modified: 2017/03/21
+ * Last modified: 2017/03/24
  *
  ****************************************************************)
  
@@ -53,6 +53,7 @@ class imitator_options :
 		(* experimental variant for EFsynth *)
 		method new_ef_mode : bool
 		method inclusion : bool
+		method inclusion2 : bool
 		method merge : bool
 		method merge_before : bool
 		method model_input_file_name : string

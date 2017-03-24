@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2017/03/19
+ * Last modified     : 2017/03/24
  *
  ************************************************************)
 
@@ -89,7 +89,7 @@ type state_space = {
 	(** The number of generated states (even not added to the state space) *)
 	nb_generated_states : int ref;
 
-	(** An Array 'state_index' -> 'abstract_state'; contains ALL states *)
+	(** An Array 'state_index' -> 'State.abstract_state'; contains ALL states *)
 	all_states : (state_index, abstract_state) Hashtbl.t;
 	
 	(** The id of the initial state *)
@@ -846,7 +846,10 @@ let find_transitions_in state_space (scc : scc) : (state_index * action_index * 
 (************************************************************)
 (** Actions on a state space *)
 (************************************************************)
-exception Found of state_index
+(* Old state found *)
+exception Found_old of state_index
+(* State found that is smaller that the new one (in which case the old state will be replaced with the new one) *)
+exception Found_new of state_index
 
 (** Increment the number of generated states (even though not member of the state space) *)
 let increment_nb_gen_states state_space =
@@ -866,8 +869,8 @@ let states_equal state1 state2 =
 		(* Statistics *)
 		print_message Verbose_high ("About to compare equality between two constraints.");
 
+		(* Statistics *)
 		statespace_dcounter_nb_constraint_comparisons#increment;
-(* 		nb_constraint_comparisons := !nb_constraint_comparisons + 1; *)
 
 		if verbose_mode_greater Verbose_high then(
 			let nb_comparisons = statespace_dcounter_nb_constraint_comparisons#discrete_value in
@@ -884,8 +887,9 @@ let states_equal_dyn state1 state2 constr =
 	if not (Location.location_equal loc1 loc2) then false else (
 		(* Statistics *)
 		print_message Verbose_high ("About to compare (dynamic) equality between two constraints.");
+
+		(* Statistics *)
 		statespace_dcounter_nb_constraint_comparisons#increment;
-(* 		nb_constraint_comparisons := !nb_constraint_comparisons + 1; *)
 
 		if verbose_mode_greater Verbose_high then(
 			let nb_comparisons = statespace_dcounter_nb_constraint_comparisons#discrete_value in
@@ -905,9 +909,9 @@ let state_included state1 state2 =
 	let (loc1, constr1) = state1 in
 	let (loc2, constr2) = state2 in
 	if not (Location.location_equal loc1 loc2) then false else (
+
 		(* Statistics *)
 		statespace_dcounter_nb_constraint_comparisons#increment;
-(* 		nb_constraint_comparisons := !nb_constraint_comparisons + 1; *)
 
 		if verbose_mode_greater Verbose_high then(
 			let nb_comparisons = statespace_dcounter_nb_constraint_comparisons#discrete_value in
@@ -1017,6 +1021,18 @@ let add_state_dyn program state_space new_state constr =
 	)*)
 
 
+(** Replace the constraint of a state in a state space by another one (the constraint is copied to avoid side-effects later) *)
+let replace_constraint state_space state_index px_linear_constraint =
+	(* Copy to avoid side-effects *)
+	let linear_constraint_copy = LinearConstraint.px_copy px_linear_constraint in
+	try (
+		(* Get the location index *)
+		let location_index, _ = Hashtbl.find state_space.all_states state_index in
+		(* Replace with the new constraint *)
+		Hashtbl.replace state_space.all_states state_index (location_index, linear_constraint_copy);
+	) with Not_found -> raise (InternalError ("Error when replacing state '" ^ (string_of_int state_index) ^ "' in StateSpace.replace_constraint."))
+
+
 
 (** Add a state to a state space: takes as input the state space, a comparison instruction, the state to add, and returns whether the state was indeed added or not *)
 let add_state state_space state_comparison new_state =
@@ -1035,14 +1051,6 @@ let add_state state_space state_comparison new_state =
 		(* Return state_index  *)
 		New_state new_state_index
 	) else (
-		(* The check function used for state comparison *)
-		let check_function = match state_comparison with
-			| No_check -> raise (InternalError("Case 'No_check' should have been handled before, in function StateSpace.add_state"))
-			| Equality_check -> states_equal
-			| Inclusion_check -> state_included
-			| Double_inclusion_check -> raise (NotImplemented ("Case Double_inclusion_check not yet implemented in StateSpace"))
-		in
-
 		try (
 			(* use hash table to find all states with same locations (modulo hash collisions) *)
 			let old_states = Hashtbl.find_all state_space.states_for_comparison hash in
@@ -1054,25 +1062,66 @@ let add_state state_space state_comparison new_state =
 			(* Statistics *)
 			print_message Verbose_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " state" ^ (s_of_int (List.length old_states)) ^ ".");
 			
-			statespace_dcounter_nb_state_comparisons#increment_by (List.length old_states);
+(* 			statespace_dcounter_nb_state_comparisons#increment_by (List.length old_states); *)
 			
 (* 			nb_state_comparisons := !nb_state_comparisons + (List.length old_states); *)
 			if verbose_mode_greater Verbose_medium then(
 				let nb_comparisons = statespace_dcounter_nb_state_comparisons#discrete_value in
-				print_message Verbose_medium ("Already performed " ^ (string_of_int nb_comparisons) ^ " comparison" ^ (s_of_int nb_comparisons) ^ ".");
+				print_message Verbose_medium ("Already performed " ^ (string_of_int nb_comparisons) ^ " state comparison" ^ (s_of_int nb_comparisons) ^ ".");
 			);
 			
+			(* Iterate on each state *)
 			List.iter (fun index -> 
 				let state = get_state state_space index in
-				if check_function new_state state then raise (Found index)
+				
+				(* Branch depending on the check function used for state comparison *)
+				match state_comparison with
+				
+					(* No_check: case considered above already *)
+					| No_check -> raise (InternalError("Case 'No_check' should have been handled before, in function StateSpace.add_state"))
+				
+					(* Equality: check for equality *)
+					| Equality_check ->
+						statespace_dcounter_nb_state_comparisons#increment;
+						if states_equal new_state state then raise (Found_old index)
+					
+					(* Inclusion: check for new <= old *)
+					| Inclusion_check ->
+						statespace_dcounter_nb_state_comparisons#increment;
+						if state_included new_state state then raise (Found_old index)
+					
+					(* Double inclusion: check for new <= old OR old <= new, in which case replace *)
+					| Double_inclusion_check ->
+						(* First check: new <= old *)
+						statespace_dcounter_nb_state_comparisons#increment;
+						if state_included new_state state then raise (Found_old index)
+						(* Second check: old <= new *)
+						else(
+						statespace_dcounter_nb_state_comparisons#increment;
+						if state_included state new_state then (
+							(* Print some information *)
+							print_message Verbose_medium ("Found an old state <= the new state");
+							
+							(* Retrieve the constraint *)
+							let _, new_constraint = new_state in
+							
+							(* Replace old with new *)
+							replace_constraint state_space index new_constraint;
+							
+							(* Stop looking for states *)
+							raise (Found_new index)
+						))
+						
 			) old_states;
+			
 			(* Not found -> insert state *)
 			let new_state_index = insert_state state_space hash new_state in
+			
 			(* Return *)
 			New_state new_state_index
-		)	with Found state_index -> (
-				State_already_present state_index
-		)
+		)	with
+			| Found_old state_index -> State_already_present state_index
+			| Found_new state_index -> State_replacing state_index
 	)
 			
 
@@ -1109,18 +1158,6 @@ let add_p_constraint_to_states state_space p_constraint =
 	) state_space
 
 
-(*
-	CURRENTLY USELESS
-(** Replace the constraint of a state in a state space by another one (the constraint is copied to avoid side-effects later) *)
-let replace_constraint state_space linear_constraint state_index =
-	(* Copy to avoid side-effects *)
-	let linear_constraint_copy = LinearConstraint.copy linear_constraint in
-	try (
-		(* Get the location index *)
-		let location_index, _ = Hashtbl.find state_space.all_states state_index in
-		(* Replace with the new constraint *)
-		Hashtbl.replace state_space.all_states state_index (location_index, linear_constraint_copy);
-	) with Not_found -> raise (InternalError ("Error when handling state '" ^ (string_of_int state_index) ^ "' in Graph:replace_constraint."))*)
 
 (*
 (** Merge two states by replacing the second one with the first one, in the whole state_space structure (lists of states, and transitions) *)

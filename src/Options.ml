@@ -178,6 +178,9 @@ class imitator_options =
 		(* inclusion mode *)
 		val mutable inclusion = ref false
 		
+		(* Double inclusion mode *)
+		val mutable inclusion2 = ref false
+		
 		(* do not use random values *)
 		val mutable no_random = ref false
 		
@@ -276,6 +279,7 @@ class imitator_options =
 		method imitator_mode = imitator_mode
 		method new_ef_mode = new_ef_mode
 		method inclusion = !inclusion
+		method inclusion2 = !inclusion2
 		method merge = !merge
 		method merge_before = !merge_before
 		method model_input_file_name = model_input_file_name
@@ -578,7 +582,9 @@ class imitator_options =
 				
 				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
 				
-				("-incl", Set inclusion, " Consider an inclusion of symbolic zones instead of the equality when checking for a fixpoint. Default: 'false'");
+				("-incl", Set inclusion, " Consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: 'false'");
+				
+				("-incl2", Set inclusion2, " Consider a bidirectional inclusion of symbolic zones (new <= old or old <= new) instead of the equality when checking for a fixpoint. Default: 'false'");
 				
 				("-merge", Set merge, " Use the merging technique of [AFS13]. Default: 'false' (disable)");
 				
@@ -903,10 +909,22 @@ class imitator_options =
 				match imitator_mode with
 				| Inverse_method | Inverse_method_complete | Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _ | RandomSeq_cartography _
 					-> print_message Verbose_standard ("Considering variant of IM with inclusion in the fixpoint [AS11].")
-				| _ -> print_message Verbose_standard ("Considering fixpoint variant with inclusion of symbolic zones (instead of equality).")
+				| _ -> print_message Verbose_standard ("Considering fixpoint variant with monodirectional inclusion of symbolic zones (instead of equality).")
 				end
 			else
 				print_message Verbose_medium ("No fixpoint variant (default).");
+
+			(* Variant of the inverse method *)
+			if !inclusion2 then
+				(*** NOTE: why this test??? better to warn if this option is used in another context ***)
+				begin
+				match imitator_mode with
+				| Inverse_method | Inverse_method_complete | Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _ | RandomSeq_cartography _
+					-> print_message Verbose_standard ("Considering variant of IM with bidirectional inclusion in the fixpoint.")
+				| _ -> print_message Verbose_standard ("Considering fixpoint variant with bidirectional inclusion of symbolic zones (instead of equality).")
+				end
+			else
+				print_message Verbose_medium ("No bidirectional fixpoint variant (default).");
 
 			if !no_time_elapsing then
 				print_message Verbose_standard ("Time elapsing will be applied at the beginning of the computation of a new state.")
