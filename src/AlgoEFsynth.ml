@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2017/03/19
+ * Last modified     : 2017/03/28
  *
  ************************************************************)
 
@@ -181,6 +181,8 @@ class virtual algoEFsynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** WARNING/BADPROG: the following is partially copy/paste to AlgoPRP.ml ***)
 	method add_a_new_state source_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
+		(* Retrieve the model *)
+		let model = Input.get_model () in
 
 		(* Build the state *)
 		let new_state = location, current_constraint in
@@ -210,6 +212,16 @@ class virtual algoEFsynth =
 				(* Project onto the parameters *)
 				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse current_constraint in
 				
+				(* Print some information *)
+				self#print_algo_message Verbose_medium "Checking whether the new state is included into known bad valuations…";
+				if verbose_mode_greater Verbose_high then(
+					self#print_algo_message Verbose_high "\nNew constraint:";
+					print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+					
+					self#print_algo_message Verbose_high "\nCurrent bad constraint:";
+					print_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
+				);
+
 				(* if p_constraint <= bad_constraint *)
 				if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) bad_constraint then (
 					(* Statistics *)
