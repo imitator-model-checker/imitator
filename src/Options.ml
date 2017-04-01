@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2017/03/24
+ * Last modified     : 2017/04/01
  *
  ************************************************************)
 
@@ -19,6 +19,7 @@
 (* External modules *)
 (************************************************************)
 open Arg
+open OCamlUtilities
 
 
 (************************************************************)
@@ -521,6 +522,65 @@ class imitator_options =
 					abort_program ();
 					exit(1);
 				)
+			
+			(* Very useful option (April fool 2017) *)
+			and call_romeo () =
+				(*** HACK: print header now ***)
+				print_header_string();
+				print_message Verbose_standard "Calling the Romeo model-checker instead of the IMITATOR core engine.";
+				print_warning "option -romeo is still very experimental";
+				print_warning "Romeo is a very unreliable tool to be manipulated with the highest care.";
+				print_warning "The use of Romeo is highly unadvised in the presence of children.";
+				print_warning "Romeo is developed in a city where it rains too much.";
+				print_message Verbose_standard "Converting model into a parametric timed Petri net… OK";
+				Unix.sleep 2;
+				print_message Verbose_standard "Romeo currently checking the syntax… OK";
+				Unix.sleep 3;
+				print_message Verbose_standard "Romeo now running…";
+				Unix.sleep 5;
+				print_message Verbose_standard "Verification by Romeo in progress… Please wait…";
+				Unix.sleep 6;
+				print_message Verbose_standard "Romeo still running…";
+				Unix.sleep 6;
+				print_message Verbose_standard "Romeo still running and it might take a little more time…";
+				Unix.sleep 8;
+				print_message Verbose_standard "Romeo might soon output a result… (but might also not)";
+				(*Unix.sleep 8;
+				print_message Verbose_standard "Wait a little longer please…";*)
+				for i = 1 to 8 do
+					let messages = [
+						"Did you know? The first computation of Romeo started in 2004. We are still awaiting its result.";
+						"Did you know? A recent study showed that the Juliet model checker is by far more efficient in verifying concurrent systems.";
+						"Verification in progress. Please wait.";
+						"Romeo almost completed…";
+						"Romeo currently running verification…";
+						"Romeo just found a Petri net transition!";
+						"Romeo just found a Petri net place!";
+						"Romeo just computed a symbolic marking!";
+						"Romeo just computed a parametric firing time!";
+						"Would you seriously rely on a model-checker developed in a city that does not even know with full certainty whether it is or not part of Brittany?";
+						"The computation by Romeo will still last for a few more seconds. Consider having a beer (or two (or three (or four))).";
+						(*** NOTE: having the definition in the while loop ensures a new % at each iteration ***)
+						"The chance of termination of Romeo is now evaluated to about " ^ (string_of_int (random_element (list_of_interval 2 49))) ^ "%.";
+						"The expected time before getting a result from Romeo is now evaluated to about " ^ (string_of_int (random_element (list_of_interval 4 42))) ^ " seconds. (Maybe.)";
+						"Memory occupancy by Romeo is now " ^ (string_of_int (random_element (list_of_interval 82 99))) ^ "%.";
+					] in
+					Unix.sleep (random_element (list_of_interval 4 8));
+					(random_element[print_message Verbose_standard; print_message Verbose_standard; print_message Verbose_standard; print_warning]) (random_element messages);
+				done;
+				print_message Verbose_standard "Romeo just answered!";
+				Unix.sleep 2;
+				print_message Verbose_standard "Processing answer…";
+				Unix.sleep 2;
+				let answers = [
+					"Segmentation fault";
+					"I don't know";
+					"Maybe";
+					"42";
+				] in
+				print_message Verbose_standard ("Answer: '" ^ (random_element answers) ^ "'.");
+				terminate_program ();
+				()
 
 			(* Options *)
 			and speclist = [
@@ -658,6 +718,10 @@ class imitator_options =
 				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : 'false'");
 				
 				("-PTA2TikZ", Unit (fun _ -> pta2tikz := true; imitator_mode <- Translation), "Translate the model into LaTeX TikZ code (no positioning yet), and exit without performing any analysis. Defaut : 'false'");
+				
+				(* Hidden option (April fool 2017) *)
+				(*** NOTE: "Beware: options that have an empty doc string will not be included in the list." ***)
+				("-romeo", Unit call_romeo, "");
 				
 				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
 				
