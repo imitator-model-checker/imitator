@@ -1,4 +1,12 @@
-next: the GrML syntax (in and out) is now discontinued, as CosyVerif is not maintained anymore, and the next version will not support GrML.
+*******************************************************
+release 2.9.1    (2017-04-01) MINOR RELEASE
+
+Major feature:
+- The GrML syntax (in and out) is now discontinued, as CosyVerif is not maintained anymore, and the next version will not support GrML.
+
+Minor feature:
+- New option -romeo (April 1st 2017 feature)… Try it ;-)
+
 
 *******************************************************
 release 2.9    (2017-03-23) MAJOR RELEASE
