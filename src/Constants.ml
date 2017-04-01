@@ -22,7 +22,7 @@
 
 let program_name = "IMITATOR"
 
-let version_string = "2.9.1"
+let version_string = "2.9.2-working"
 
 let version_name = "Butter Incaberry"
 
