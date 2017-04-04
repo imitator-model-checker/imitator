@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13
  * 
  * Module description: Convert a parsing structure into an abstract model
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/09
- * Last modified     : 2017/02/04
+ * Last modified     : 2017/04/04
  *
  ************************************************************)
 
@@ -616,10 +616,20 @@ let only_discrete_in_linear_term index_of_variables type_of_variables constants 
 	| Variable (_, variable_name) ->
 		(* Constants are allowed *)
 		(Hashtbl.mem constants variable_name)
+		
 		(* Or discrete *)
 		||
-		let variable_index = Hashtbl.find index_of_variables variable_name in
-			type_of_variables variable_index = Var_type_discrete
+		try(
+		let variable_index = 
+			Hashtbl.find index_of_variables variable_name
+		in
+		type_of_variables variable_index = Var_type_discrete
+		) with Not_found -> (
+			(* Variable not found! *)
+			(*** TODO: why is this checked here…? It should have been checked before ***)
+			print_error ("The variable '" ^ variable_name ^ "' used in an update was not declared.");
+			false
+		)
 
 let only_discrete_in_linear_expression = check_f_in_linear_expression only_discrete_in_linear_term
 
@@ -662,12 +672,12 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 		(* Only check the rest if the variable is not to be removed *)
 		if to_be_removed then true else(
 			(* Get the type of the variable *)
-			print_message Verbose_total ("                Getting the type of the variable");
+			print_message Verbose_total ("                Getting the type of the variable'" ^ variable_name ^ "'");
 			let type_of_variable = try (type_of_variables index)
 				with Invalid_argument comment -> (
 				raise (InternalError ("The variable '" ^ variable_name ^ "' was not found in '" ^ automaton_name ^ "', although this has been checked before. OCaml says: " ^ comment ^ "."))
 			) in
-			print_message Verbose_total ("                Checking the type of the variable");
+			print_message Verbose_total ("                Checking the type of the variable '" ^ variable_name ^ "'");
 			match type_of_variable with
 			(* Case of a clock: allow only 0 as an update *)
 			| AbstractModel.Var_type_clock ->
@@ -688,7 +698,10 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 				let result = only_discrete_in_linear_expression index_of_variables type_of_variables constants linear_expression in
 				if not result then
 					(print_error ("The variable '" ^ variable_name ^ "' is a discrete and its update can only be a linear combination of constants and discrete variables in automaton '" ^ automaton_name ^ "'."); false)
-				else true
+				else(
+					print_message Verbose_total ("                Check passed.");
+					true
+				)
 			(* Case of a parameter: forbidden! *)
 			| AbstractModel.Var_type_parameter -> print_error ("The variable '" ^ variable_name ^ "' is a parameter and can not be updated in automaton '" ^ automaton_name ^ "'."); false
 		)
@@ -2042,6 +2055,15 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* Make the array of constants *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let constants, constants_consistent = make_constants constants in
+
+	if verbose_mode_greater Verbose_high then(
+		(* Constants *)
+		print_message Verbose_high ("\n*** Constants:");
+		Hashtbl.iter (fun key value ->
+			print_message Verbose_total (key ^ " = " ^ (NumConst.string_of_numconst value) ^ "")
+		) constants;
+	);
+
 	
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
