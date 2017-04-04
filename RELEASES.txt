@@ -8,7 +8,7 @@ Minor feature:
 - New option -romeo (April 1st 2017 feature)… Try it ;-)
 
 Bug fixing
-- Solved a bug in the parsing module that crashed IMITATOR when a discrete is assigned to an undeclared variable
+- Fixed a bug in the parsing module that crashed IMITATOR when a discrete was assigned to an undeclared variable
 
 
 
