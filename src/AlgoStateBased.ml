@@ -1,4 +1,4 @@
-(************************************************************
+	(************************************************************
  *
  *                       IMITATOR
  * 
@@ -33,7 +33,7 @@ open State
 
 (************************************************************)
 (* Exception *)
-(************************************************************)
+(************************************************************)	
 
 exception Unsat_exception
 
@@ -1845,6 +1845,9 @@ class virtual algoStateBased =
 	(* Main method to run the queue-based BFS algorithm  *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private explore_queue_bfs init_state_index =
+
+		(* Retrieve the model *)
+		let model = Input.get_model () in
 		
 		(* Retrieve the input options *)
 (* 		let options = Input.get_options () in *)
@@ -1852,7 +1855,10 @@ class virtual algoStateBased =
 		(* List of states computed before *)
 		(*** NOTE: we encode the queue using a list, with the LAST element of the list being the first of the queue ***)
 		(*** NOTE: we don't use module Queue so as to filter easily the list when needed ***)
-		let queue = ref [init_state_index] in
+		let queueWaiting = ref [init_state_index] in
+		let queueVisited = ref [] in
+
+
 
 		(* Boolean to check whether the time limit / state limit is reached *)
 		let limit_reached = ref Keep_going in
@@ -1862,21 +1868,46 @@ class virtual algoStateBased =
 
 		(* Count the states for verbose purpose: *)
 		let num_state = ref 0 in
+
+		print_message Verbose_standard("Begin Ordering!!!");
 		
 		(* Explore further until the limit is reached or the queue is empty *)
-		while !limit_reached = Keep_going && !queue <> [] && !algorithm_keep_going do
+		while !limit_reached = Keep_going && !queueWaiting <> [] && !algorithm_keep_going do
+			print_message Verbose_low ("I am here!!!!!!");
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then (
 				print_message Verbose_low ("\n");
-				print_message Verbose_low ("Computing successors of state #" ^ (string_of_int !num_state) ^ " (" ^ (string_of_int (List.length !queue)) ^ " state" ^ (s_of_int (List.length !queue)) ^ " in the queue).");
+				print_message Verbose_low ("Computing successors of state #" ^ (string_of_int !num_state) 
+											^ " (" ^ (string_of_int (List.length !queueWaiting)) ^ " state" ^ (s_of_int (List.length !queueWaiting)) 
+											^ " in the queue).");
 			);
 			
 			(* Take the first element, i.e., last from the list *)
 			(*** NOTE: no test for emptiness, as it was performed just above in the while loop condition ***)
-			let new_queue, popped_from_queue = OCamlUtilities.list_split_last !queue in
+			let new_queue, popped_from_queue = OCamlUtilities.list_split_last !queueWaiting in
 			(* Remove from the queue *)
-			queue := new_queue;
+			queueWaiting := new_queue;
+			(* Add poped state into queueVisited *)
+			queueVisited := list_append [popped_from_queue] !queueVisited;
+
+
+
+			(* popped state information *)
+			(* location: static , constraint*)
+			let poppedlocation, poppedconstr = StateSpace.get_state state_space popped_from_queue in
+
+			(* get locations from global location *)
+			let poppedlocArr = Location.get_locations poppedlocation in
+
+			print_message Verbose_standard ("poped state info: S_" ^ (string_of_int popped_from_queue) 
+													^ " Constr: \n" 
+													^ (LinearConstraint.string_of_px_linear_constraint model.variable_names poppedconstr));		
+			Array.iter ( fun loc -> 
+						print_message Verbose_standard (" l" ^ (string_of_int (loc + 1) ) );
+			) poppedlocArr;
 			
+			(* print_message Verbose_standard ("\n"); *)
+
 			(* Count the states for verbose purpose: *)
 			num_state := !num_state + 1;
 			
@@ -1884,7 +1915,50 @@ class virtual algoStateBased =
 			let successors = self#post_from_one_state popped_from_queue in
 			
 			(* Add to queue *)
-			queue := list_append successors !queue;
+			queueWaiting := list_append successors !queueWaiting;
+
+			(*Ordering function will be here*)
+			let queueOrder = ref 1 in
+			List.iter ( fun state_index -> 		
+				(* location: static, constraint *)
+				let location, constr = StateSpace.get_state state_space state_index in
+
+				(* get locations from global location *)
+				let locArr = Location.get_locations location in
+
+
+				print_message Verbose_standard ("W Queue Order #" ^ (string_of_int !queueOrder) ^ " S_" ^ (string_of_int state_index) 
+												^ " Constr: " 
+												^ (LinearConstraint.string_of_px_linear_constraint model.variable_names constr));		
+
+				Array.iter ( fun loc -> 
+					print_message Verbose_standard (" l" ^ (string_of_int (loc + 1) ) );
+				) locArr;
+
+				(* check vistited state*)
+				List.iter ( fun visitedState_index -> 	
+					let visitedlocation, visitedconstr = StateSpace.get_state state_space visitedState_index in
+
+					let visitedCheck = Location.location_equal visitedlocation location in
+					if (visitedCheck = true) then
+					(
+						print_message Verbose_standard ( (string_of_bool visitedCheck) ^ "!!!!" );
+						(* Check inclusion here *)
+						
+					);
+					
+
+				) !queueVisited;
+
+				(* print_message Verbose_standard *)
+
+				queueOrder := !queueOrder + 1;
+				()
+
+			) !queueWaiting;
+			print_message Verbose_standard ("\n");
+
+			
 			
 			(* Check if the limit has been reached *)
 			limit_reached := self#check_queue_bfs_limit;
@@ -1901,13 +1975,15 @@ class virtual algoStateBased =
 			);
 			
 		done;
+
+		print_message Verbose_standard ("End of Ordering!!! \n");
 		
 		(* Were they any more states to explore? *)
-		let nb_unexplored_successors = List.length !queue in
+		let nb_unexplored_successors = List.length !queueWaiting in
 		
 		(* Set the list of states with unexplored successors, if any *)
 		if nb_unexplored_successors > 0 then(
-			unexplored_successors <- UnexSucc_some !queue;
+			unexplored_successors <- UnexSucc_some !queueWaiting;
 		);
 		
 		(* Update termination condition *)
