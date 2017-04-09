@@ -1234,6 +1234,27 @@ exception BFS_Limit_detected of bfs_limit_reached
 
 
 
+(*GIA**)
+type rank_value =
+    | Infinity
+    | Int of int
+
+
+let initial_rank state_index state_space = 
+	(* popped state information *)
+	(* location: static , constraint*)
+	let loc, constr = StateSpace.get_state state_space state_index in
+	let checkTrueConstr = LinearConstraint.pxd_is_true (LinearConstraint.pxd_of_px_constraint constr) in
+	
+	let rank = if (checkTrueConstr) 
+	then Infinity 
+	else Int 0
+	in
+	rank
+    	
+
+
+
 
 (************************************************************)
 (************************************************************)
@@ -1846,11 +1867,17 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private explore_queue_bfs init_state_index =
 
+		print_message Verbose_standard("Entering explore_queue_bfs!!!");
+
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 		
 		(* Retrieve the input options *)
 (* 		let options = Input.get_options () in *)
+
+
+
+
 
 		(* List of states computed before *)
 		(*** NOTE: we encode the queue using a list, with the LAST element of the list being the first of the queue ***)
@@ -1869,7 +1896,6 @@ class virtual algoStateBased =
 		(* Count the states for verbose purpose: *)
 		let num_state = ref 0 in
 
-		print_message Verbose_standard("Begin Ordering!!!");
 		
 		(* Explore further until the limit is reached or the queue is empty *)
 		while !limit_reached = Keep_going && !queueWaiting <> [] && !algorithm_keep_going do
@@ -1942,8 +1968,10 @@ class virtual algoStateBased =
 					let visitedCheck = Location.location_equal visitedlocation location in
 					if (visitedCheck = true) then
 					(
-						print_message Verbose_standard ( (string_of_bool visitedCheck) ^ "!!!!" );
+						print_message Verbose_standard ("Visited: " ^ (string_of_bool visitedCheck) ^ "!!!!" );
 						(* Check inclusion here *)
+						let isIncluded = LinearConstraint.px_is_leq constr visitedconstr in
+						print_message Verbose_standard ("Included: " ^ (string_of_bool isIncluded) ^ "!!!!" );
 						
 					);
 					
@@ -2023,6 +2051,9 @@ class virtual algoStateBased =
 			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " in the final state space.");
 			(*** NOTE: in fact, more states and transitions may have been explored (and deleted); here, these figures are the number of states in the state space. ***)
 
+
+
+		print_message Verbose_standard("Exiting explore_queue_bfs!!!");
 		(* The end *)
 		()
 
