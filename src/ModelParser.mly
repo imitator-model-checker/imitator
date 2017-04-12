@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2016/10/08
+ * Last modified : 2017/04/12
 ***********************************************/
 
 %{
@@ -112,10 +112,10 @@ decl_var_lists:
 
 decl_var_list:
 	| NAME comma_opt { [($1, None)] }
-	| NAME OP_EQ rational comma_opt { [($1, Some $3)] }
+	| NAME OP_EQ rational_linear_expression comma_opt { [($1, Some $3)] }
 	
 	| NAME COMMA decl_var_list { ($1, None) :: $3 }
-	| NAME OP_EQ rational COMMA decl_var_list { ($1, Some $3) :: $5 }
+	| NAME OP_EQ rational_linear_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
 ;
 
 /**********************************************/
@@ -330,12 +330,14 @@ relop:
 	| OP_G { OP_G }
 ;
 
+/* Linear expression over variables and rationals */
 linear_expression:
 	linear_term { Linear_term $1 }
 	| linear_expression OP_PLUS linear_term { Linear_plus_expression ($1, $3) }
 	| linear_expression OP_MINUS linear_term { Linear_minus_expression ($1, $3) } /* linear_term a la deuxieme place */
 ;
 
+/* Linear term over variables and rationals */
 linear_term:
 	rational { Constant $1 }
 	| rational NAME { Variable ($1, $2) }
@@ -344,6 +346,21 @@ linear_term:
 	| NAME { Variable (NumConst.one, $1) }
 // 	| LPAREN linear_expression RPAREN { $2 }
 	| LPAREN linear_term RPAREN { $2 }
+;
+
+/* Linear expression over rationals only */
+rational_linear_expression:
+	rational_linear_term { $1 }
+	| rational_linear_expression OP_PLUS rational_linear_term { NumConst.add $1 $3 }
+	| rational_linear_expression OP_MUL rational_linear_term { NumConst.mul $1 $3 }
+	| rational_linear_expression OP_MINUS rational_linear_term { NumConst.sub $1 $3 } /* linear_term a la deuxieme place */
+;
+
+/* Linear term over rationals only */
+rational_linear_term:
+	rational { $1 }
+	| OP_MINUS rational { NumConst.sub NumConst.zero $2 }
+	| LPAREN rational_linear_term RPAREN { $2 }
 ;
 
 rational:
