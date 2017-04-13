@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/03/21
+ * Last modified     : 2017/04/13
  *
  ************************************************************)
 
@@ -283,6 +283,8 @@ type exploration_order =
 	| Exploration_layer_BFS
 	(** Queue-BFS: basic queue, independent of the depth *)
 	| Exploration_queue_BFS
+	(** Queue-BFS: queue-based, independent of the depth, with ranking system for the selection of the next state *)
+	| Exploration_queue_BFS_RS
 	
 
 (************************************************************)

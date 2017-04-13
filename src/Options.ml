@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2017/04/01
+ * Last modified     : 2017/04/13
  *
  ************************************************************)
 
@@ -514,6 +514,8 @@ class imitator_options =
 					exploration_order <- Exploration_layer_BFS
 				else if order = "queueBFS" then
 					exploration_order <- Exploration_queue_BFS
+				else if order = "queueBFSRS" then
+					exploration_order <- Exploration_queue_BFS_RS
 				else(
 					(*** HACK: print header now ***)
 					print_header_string();
@@ -633,6 +635,7 @@ class imitator_options =
 				("-explOrder", String set_exploration_order, " Exploration order.
         Use 'layerBFS' for a layer-based breadth-first search.
         Use 'queueBFS' for a queue-based breadth-first search. [EXPERIMENTAL]
+        Use 'queueBFSRS' for a queue-based breadth-first search with ranking system. [WORK IN PROGRES]
         Default: layerBFS.
 				");
 				
@@ -963,7 +966,8 @@ class imitator_options =
 			begin
 			match exploration_order with
 				| Exploration_layer_BFS -> print_message Verbose_standard ("Exploration order: layer-based BFS.")
-				| Exploration_queue_BFS -> print_message Verbose_standard ("Exploration order: queue-based BFS.")
+				| Exploration_queue_BFS -> print_message Verbose_standard ("Exploration order: queue-based BFS [EXPERIMENTAL].")
+				| Exploration_queue_BFS_RS -> print_message Verbose_standard ("Exploration order: queue-based BFS with ranking system [WORK IN PROGRESS].")
 			end;
 
 			(* Variant of the inverse method *)

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2017/03/24
+ * Last modified     : 2017/04/13
  *
  ************************************************************)
 
@@ -1240,24 +1240,23 @@ type rank_value =
     | Int of int
 
 
-let initial_rank state_index state_space = 	
-	(*** TODO: compute statically ***)
-	(* Compute the "true" constraint, in fact X >= 0 ^ K0 *)
-	
-	
+let initial_rank state_index state_space =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
 	
 	(* popped state information *)
 	(* location: static , constraint*)
 	let loc, constr = StateSpace.get_state state_space state_index in
-	let checkTrueConstr = LinearConstraint.pxd_is_true (LinearConstraint.pxd_of_px_constraint constr) in
+	let checkTrueConstr = LinearConstraint.px_is_equal constr model.px_clocks_non_negative_and_initial_p_constraint in
 	
 	let rank = if (checkTrueConstr) 
 	then Infinity 
 	else Int 0
 	in
 	rank
-    	
 
+
+exception FoundInfiniteRank of state_index
 
 
 
@@ -1878,19 +1877,21 @@ class virtual algoStateBased =
 		let model = Input.get_model () in
 		
 		(* Retrieve the input options *)
-(* 		let options = Input.get_options () in *)
+		let options = Input.get_options () in
 
 
 
 
 
+(*		(* List of states computed before *)
+		let queueWaiting = ref [init_state_index] in
+		let queueVisited = ref [] in*)
+		
+		
 		(* List of states computed before *)
 		(*** NOTE: we encode the queue using a list, with the LAST element of the list being the first of the queue ***)
 		(*** NOTE: we don't use module Queue so as to filter easily the list when needed ***)
-		let queueWaiting = ref [init_state_index] in
-		let queueVisited = ref [] in
-
-
+		let queue = ref [init_state_index] in
 
 		(* Boolean to check whether the time limit / state limit is reached *)
 		let limit_reached = ref Keep_going in
@@ -1902,28 +1903,106 @@ class virtual algoStateBased =
 		let num_state = ref 0 in
 
 		
+		
+		(*** BEGIN: code for ranking system ***)
+		(*** TODO: move one day ***)
+		(* Hashtable: state_index -> rank *)
+		let rank_hashtable = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
+		
+		(* Try to get the rank from the hash table; if absent, compute it *)
+		let get_or_compute_rank state_index =
+			(* If already computed: return *)
+			if Hashtbl.mem rank_hashtable state_index then Hashtbl.find rank_hashtable state_index
+			else (
+				(* Else: compute it! *)
+				(*** TODO: compute the rank ***)
+				let rank = raise (NotImplemented "Gia") in
+				
+				(* Store the rank in the hash table *)
+				Hashtbl.add rank_hashtable state_index rank;
+				
+				(* Return the rank *)
+				rank
+			)
+		in
+		
+		
+		(*** TODO Gia ***)
+		let select_from_queue () =
+			try(
+				(* First look for infinite rank *)
+				List.iter (fun state_index -> 
+					(* Get the rank from the hashtable (or compute it if necessarily) *)
+					let rank = get_or_compute_rank state_index in
+					(* If infinite: found *)
+					if rank = Infinity then raise (FoundInfiniteRank state_index)
+				) !queue;
+				
+				(* Else: find the highest rank *)
+				(*** TODO: Gia ***)
+				raise (NotImplemented("Gia"))
+			
+			) with FoundInfiniteRank state_index -> state_index
+		in
+		
+		(*** END: code for ranking system ***)
+		
+			
 		(* Explore further until the limit is reached or the queue is empty *)
-		while !limit_reached = Keep_going && !queueWaiting <> [] && !algorithm_keep_going do
+		while !limit_reached = Keep_going && !queue <> [] && !algorithm_keep_going do
 			print_message Verbose_low ("I am here!!!!!!");
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then (
 				print_message Verbose_low ("\n");
 				print_message Verbose_low ("Computing successors of state #" ^ (string_of_int !num_state) 
-											^ " (" ^ (string_of_int (List.length !queueWaiting)) ^ " state" ^ (s_of_int (List.length !queueWaiting)) 
+											^ " (" ^ (string_of_int (List.length !queue)) ^ " state" ^ (s_of_int (List.length !queue)) 
 											^ " in the queue).");
 			);
 			
+			
+			
+			
+
 			(* Take the first element, i.e., last from the list *)
 			(*** NOTE: no test for emptiness, as it was performed just above in the while loop condition ***)
+			let new_queue, popped_from_queue = match options#exploration_order with
+				(* Classical queue: just pop! *)
+				| Exploration_queue_BFS -> OCamlUtilities.list_split_last !queue
+				
+				(* Ranking system: TODO *)
+				| Exploration_queue_BFS_RS -> 
+					(* Find the state to be selected *)
+					let state_index = select_from_queue () in
+					(* Remove from queue *)
+					let updated_queue = list_remove_first_occurence state_index !queue in
+					(* Return new queue, popped state *)
+					updated_queue, state_index
+				
+				(* Impossible *)
+				| _ -> raise (InternalError ("Impossible situation: at that point, it should be a (variant of) queue BFS"))
+			in
+			
+			(* Remove from the queue *)
+			queue := new_queue;
+			
+			(* Count the states for verbose purpose: *)
+			num_state := !num_state + 1;
+
+(*(* Take the first element, i.e., last from the list *)
+			(*** NOTE: no test for emptiness, as it was performed just above in the while loop condition ***)
 			let new_queue, popped_from_queue = OCamlUtilities.list_split_last !queueWaiting in
+			
+			
+			
+			
 			(* Remove from the queue *)
 			queueWaiting := new_queue;
 			(* Add poped state into queueVisited *)
-			queueVisited := list_append [popped_from_queue] !queueVisited;
+			queueVisited := list_append [popped_from_queue] !queueVisited;*)
 
 
 
-			(* popped state information *)
+(*			(* popped state information *)
 			(* location: static , constraint*)
 			let poppedlocation, poppedconstr = StateSpace.get_state state_space popped_from_queue in
 
@@ -1936,19 +2015,16 @@ class virtual algoStateBased =
 			Array.iter ( fun loc -> 
 						print_message Verbose_standard (" l" ^ (string_of_int (loc + 1) ) );
 			) poppedlocArr;
-			
-			(* print_message Verbose_standard ("\n"); *)
-
-			(* Count the states for verbose purpose: *)
-			num_state := !num_state + 1;
+			*)
 			
 			(* Compute successors *)
 			let successors = self#post_from_one_state popped_from_queue in
 			
 			(* Add to queue *)
-			queueWaiting := list_append successors !queueWaiting;
+			queue := list_append successors !queue;
+(* 			queueWaiting := list_append successors !queueWaiting; *)
 
-			(*Ordering function will be here*)
+(*			(*Ordering function will be here*)
 			let queueOrder = ref 1 in
 			List.iter ( fun state_index -> 		
 				(* location: static, constraint *)
@@ -1991,7 +2067,7 @@ class virtual algoStateBased =
 			) !queueWaiting;
 			print_message Verbose_standard ("\n");
 
-			
+			*)
 			
 			(* Check if the limit has been reached *)
 			limit_reached := self#check_queue_bfs_limit;
@@ -2012,11 +2088,11 @@ class virtual algoStateBased =
 		print_message Verbose_standard ("End of Ordering!!! \n");
 		
 		(* Were they any more states to explore? *)
-		let nb_unexplored_successors = List.length !queueWaiting in
+		let nb_unexplored_successors = List.length !queue in
 		
 		(* Set the list of states with unexplored successors, if any *)
 		if nb_unexplored_successors > 0 then(
-			unexplored_successors <- UnexSucc_some !queueWaiting;
+			unexplored_successors <- UnexSucc_some !queue;
 		);
 		
 		(* Update termination condition *)
@@ -2353,6 +2429,7 @@ class virtual algoStateBased =
 		match options#exploration_order with
 			| Exploration_layer_BFS -> self#explore_layer_bfs init_state_index;
 			| Exploration_queue_BFS -> self#explore_queue_bfs init_state_index;
+			| Exploration_queue_BFS_RS -> self#explore_queue_bfs init_state_index;
 		end;
 
 		(* Return the algorithm-dependent result *)
