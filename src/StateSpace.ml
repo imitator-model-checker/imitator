@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2017/03/24
+ * Last modified     : 2017/04/13
  *
  ************************************************************)
 
@@ -118,13 +118,6 @@ type scc = state_index list
 
 
 (************************************************************)
-(** Constant *)
-(************************************************************)
-(** Initial size of the array of states (will be updated automatically *)
-let initial_size = 100
-
-
-(************************************************************)
 (** Statistics *)
 (************************************************************)
 (*let nb_state_comparisons = ref 0
@@ -157,13 +150,13 @@ let string_of_state_index state_index = "s_" ^ (string_of_int state_index)
 (** Create a fresh state space *)
 let make guessed_nb_transitions = 
 	(* Create a Hashtbl : state_index -> (location_index, linear_constraint) for the reachable states *)
-	let states = Hashtbl.create initial_size in
+	let states = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
 	(* Create a hashtable : location -> location_index for the locations *)
-	let index_of_locations = Hashtbl.create initial_size in
+	let index_of_locations = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
 	(* Create a DynArray : location_index -> location for the locations *)
-	let locations = DynArray.make initial_size in
+	let locations = DynArray.make Constants.guessed_nb_states_for_hashtable in
 	(* Create an empty lookup table : hash -> state_index *)
-	let states_for_comparison = Hashtbl.create initial_size in
+	let states_for_comparison = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
 	(* Create a hashtable for the state space *)
 	let transitions_table = Hashtbl.create guessed_nb_transitions in
 	
@@ -619,7 +612,7 @@ let reconstruct_scc state_space source_state_index : scc option =
 	let current_index = ref 0 in
 
 	(* Hashtable state_index -> tarjan_node *)
-	let tarjan_nodes = Hashtbl.create initial_size in
+	let tarjan_nodes = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
 	
 	(* tarjan_node stack *)
 	let stack = Stack.create () in
