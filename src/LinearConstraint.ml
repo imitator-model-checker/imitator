@@ -2323,6 +2323,17 @@ let pxd_constraint_of_discrete_values (discrete_values : (variable * coef) list)
 
 
 (** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
+let px_of_p_constraint c =
+	(* First copy *)
+	let px_constraint = copy c in
+	(* Extend number of dimensions *)
+	ippl_add_dimensions (!px_dim - !p_dim) px_constraint;
+	(* Assert *)
+	assert_dimensions !px_dim px_constraint;
+	(* Return *)
+	px_constraint
+	
+(** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
 let pxd_of_p_constraint c =
 	(* First copy *)
 	let pxd_constraint = copy c in

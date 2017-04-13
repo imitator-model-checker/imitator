@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2017/02/10
+ * Last modified     : 2017/04/13
  *
  ************************************************************)
 
@@ -320,6 +320,7 @@ val pxd_copy : pxd_linear_constraint -> pxd_linear_constraint
 (** Performs the intersection of a list of linear constraints *)
 (* val intersection : linear_constraint list -> linear_constraint *)
 val p_intersection : p_linear_constraint list -> p_linear_constraint
+val px_intersection : px_linear_constraint list -> px_linear_constraint
 val pxd_intersection : pxd_linear_constraint list -> pxd_linear_constraint
 
 (** Performs the intersection of a list of linear constraints with sideeffect *)
@@ -410,6 +411,7 @@ val partition_pi0_compatible : (variable -> coef) -> p_linear_constraint -> (p_l
 val pxd_constraint_of_discrete_values : (variable * coef) list -> pxd_linear_constraint
 
 (** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
+val px_of_p_constraint : p_linear_constraint -> px_linear_constraint
 val pxd_of_p_constraint : p_linear_constraint -> pxd_linear_constraint
 val pxd_of_px_constraint : px_linear_constraint -> pxd_linear_constraint
 

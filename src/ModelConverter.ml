@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/09
- * Last modified     : 2017/04/04
+ * Last modified     : 2017/04/13
  *
  ************************************************************)
 
@@ -2642,6 +2642,36 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	end;
 	
 	
+
+	(* Build the K0 constraint *)
+	let initial_p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse initial_constraint in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_low then(
+		print_message Verbose_low ("Initial parameter constraint:");
+		print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint variable_names initial_p_constraint);
+	);
+		
+
+	(* Build the X >= 0 constraint *)
+	let px_clocks_non_negative = LinearConstraint.px_constraint_of_nonnegative_variables clocks in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_medium then(
+		print_message Verbose_medium ("Constraint X >= 0:");
+		print_message Verbose_medium (LinearConstraint.string_of_px_linear_constraint variable_names px_clocks_non_negative);
+	);
+		
+	
+	(* Build the X >= 0 ^ K0 constraint *)
+	let px_clocks_non_negative_and_initial_p_constraint = LinearConstraint.px_intersection [px_clocks_non_negative; (LinearConstraint.px_of_p_constraint initial_p_constraint)] in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_medium then(
+		print_message Verbose_medium ("Constraint X >= 0 ^ K0:");
+		print_message Verbose_medium (LinearConstraint.string_of_px_linear_constraint variable_names px_clocks_non_negative_and_initial_p_constraint);
+	);
+		
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Convert the projection definition *) 
@@ -2843,10 +2873,17 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches = stopwatches;
 
-	(* Init : the initial state *)
+	(* All clocks non-negative *)
+	px_clocks_non_negative = px_clocks_non_negative;
+	(* Initial location of the model *)
 	initial_location = initial_location;
+	(* Initial constraint of the model *)
 	initial_constraint = initial_constraint;
-	initial_p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse initial_constraint;
+	(* Initial constraint of the model projected onto P *)
+	initial_p_constraint = initial_p_constraint;
+	(* Initial constraint of the model projected onto P and all clocks non-negative *)
+	px_clocks_non_negative_and_initial_p_constraint = px_clocks_non_negative_and_initial_p_constraint;
+	
 	
 	(* Property defined by the user *)
 	user_property = property;

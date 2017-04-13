@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2017/02/08
+ * Last modified     : 2017/04/13
  *
  ************************************************************)
 
@@ -3298,6 +3298,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(*** NOTE: dummy function ***)
 		stopwatches = (fun _ _-> []);
 
+	
+		(* All clocks non-negative *)
+		px_clocks_non_negative = model.px_clocks_non_negative;
 		(* Initial location of the model *)
 			(*** TODO ***)
 		initial_location = new_initial_location;
@@ -3305,6 +3308,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		initial_constraint = model.initial_constraint;
 		(* Initial constraint of the model projected onto P *)
 		initial_p_constraint = model.initial_p_constraint;
+		(* Initial constraint of the model projected onto P and all clocks non-negative *)
+		px_clocks_non_negative_and_initial_p_constraint = model.px_clocks_non_negative_and_initial_p_constraint;
 
 		(* Property defined by the user *)
 		(*** TODO ***)
