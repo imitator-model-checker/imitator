@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2017/03/23
+ * Last modified     : 2017/04/13
  *
  ************************************************************)
 
@@ -1403,6 +1403,9 @@ let pxd_linear_constraint_of_clock_and_parameters x = linear_constraint_of_clock
 
 (** Create a constraint bounding all variables in the list to non-negative *)
 let constraint_of_nonnegative_variables nb_dimensions variables = 
+	(* First check that the variables are compatible with the dimensions *)
+	List.iter (fun variable -> if variable >= nb_dimensions then raise (InternalError ("In function LinearConstraint.constraint_of_nonnegative_variables, trying to create a variable of dimension " ^ (string_of_int variable) ^ " for a polyhedron in " ^ (string_of_int nb_dimensions) ^ " dimension" ^ (s_of_int nb_dimensions) ^ ".") )) variables;
+	
 	let inequalities =
 	List.map (fun variable ->
 		(* Create linear inequality "variable >= 0" *)

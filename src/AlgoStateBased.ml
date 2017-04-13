@@ -1240,7 +1240,12 @@ type rank_value =
     | Int of int
 
 
-let initial_rank state_index state_space = 
+let initial_rank state_index state_space = 	
+	(*** TODO: compute statically ***)
+	(* Compute the "true" constraint, in fact X >= 0 ^ K0 *)
+	
+	
+	
 	(* popped state information *)
 	(* location: static , constraint*)
 	let loc, constr = StateSpace.get_state state_space state_index in
