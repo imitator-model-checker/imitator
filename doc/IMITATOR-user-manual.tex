@@ -855,6 +855,16 @@ The result file finally contains general statistics such as the global computati
 Finally, some statistics on specific operations (model parsing, graphics drawing, etc.) are given.
 More statistics are obtained with higher levels of verbosity, or with the \styleOption{-statistics} option.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Projection onto some parameters}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The result can be projected onto selected parameters, by using the following syntax at the end of the model file:
+
+\styleIMI{projectresult(param1, \dots, paramn);}
+
+In that case, all parameters not in that set are eliminated using variable elimination, and the result in the result file only contains the selected parameters.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2093,6 +2103,8 @@ The following words are reserved keywords and cannot be used as names for automa
 \styleIMI{initially},
 \styleIMI{loc},
 \styleIMI{locations},
+\styleIMI{maximize},
+\styleIMI{minimize},
 \styleIMI{next},
 \styleIMI{not},
 \styleIMI{once},
