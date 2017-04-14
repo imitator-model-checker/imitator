@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  *
  * Created:       2009/09/08
- * Last modified: 2015/07/31
+ * Last modified: 2017/04/14
  *
  ****************************************************************)
 
@@ -213,6 +213,17 @@ type projection = (variable_name list) option
 
 
 (****************************************************************)
+(** Optimization of a parameter *)
+(****************************************************************)
+
+type parsed_optimization =
+	| No_parsed_optimization
+	| Parsed_minimize of variable_name
+	| Parsed_maximize of variable_name
+
+
+
+(****************************************************************)
 (** Carto definition *)
 (****************************************************************)
 
@@ -236,6 +247,7 @@ type parsing_structure =
 	* init_definition
 	* property_definition
 	* projection
+	* parsed_optimization
 	* carto_definition
 
 

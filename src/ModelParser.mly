@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2017/04/12
+ * Last modified : 2017/04/14
 ***********************************************/
 
 %{
@@ -49,6 +49,7 @@ let parse_error s =
 	CT_HAPPENED CT_HAS
 	CT_IF CT_IN CT_INIT CT_INITIALLY
 	CT_LOC CT_LOCATIONS
+	CT_MAXIMIZE CT_MINIMIZE
 	CT_NEXT CT_NOT
 	CT_ONCE CT_OR
 	CT_PARAMETER CT_PROJECTRESULT CT_PROPERTY
@@ -79,8 +80,8 @@ main:
 	 automata_descriptions commands EOF
 	{
 		let decl, automata = $1 in
-		let init, bad, projection, carto = $2 in
-		decl, automata, init, bad, projection, carto
+		let init_definition, bad, projection_definition, optimization_definition, carto = $2 in
+		decl, automata, init_definition, bad, projection_definition, optimization_definition, carto
 	}
 ;
 
@@ -422,7 +423,7 @@ pos_float:
 /***********************************************/
 
 commands:
-	| init_declaration_opt init_definition property_definition projection_definition carto_definition rest_of_commands_opt { ($2, $3, $4, $5) }
+	| init_declaration_opt init_definition property_definition projection_definition optimization_definition carto_definition rest_of_commands_opt { ($2, $3, $4, $5, $6) }
 // 	| init_declaration_opt init_definition bad_definition { ($2, $3, ([] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero))) }
 ;
 
@@ -544,11 +545,19 @@ property_definition:
 ;
 
 projection_definition:
-	// Pattern
 	| CT_PROJECTRESULT LPAREN name_nonempty_list RPAREN semicolon_opt { Some $3 }
 	
-	// Case: no property
+	// Case: no projection
 	|  { None }
+	
+;
+
+optimization_definition:
+	| CT_MINIMIZE LPAREN NAME RPAREN semicolon_opt { Parsed_minimize $3 }
+	| CT_MAXIMIZE LPAREN NAME RPAREN semicolon_opt { Parsed_maximize $3 }
+	
+	// Case: no min/max
+	|  { No_parsed_optimization }
 	
 ;
 

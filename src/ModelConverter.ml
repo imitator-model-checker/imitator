@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/09
- * Last modified     : 2017/04/13
+ * Last modified     : 2017/04/14
  *
  ************************************************************)
 
@@ -1502,6 +1502,17 @@ let check_projection_definition parameters_names = function
 		!well_formed
 	)
 
+(*------------------------------------------------------------*)
+(** Check that the optimization definition is valid *)
+(*------------------------------------------------------------*)
+let check_optimization parameters_names = function
+	| No_parsed_optimization -> true
+	| Parsed_minimize parameter_name | Parsed_maximize parameter_name -> 
+		if not (List.mem parameter_name parameters_names) then(
+				print_error ("Parameter " ^ parameter_name  ^ " is not a valid parameter in the optimization definition.");
+				false
+		) else true
+
 
 (************************************************************)
 (** MODEL CONVERSION *)
@@ -1976,6 +1987,19 @@ let convert_projection_definition index_of_variables = function
 	) parsed_parameters)
 
 
+(*------------------------------------------------------------*)
+(** Convert the optimization definition *)
+(*------------------------------------------------------------*)
+let convert_optimization_definition index_of_variables = function
+	| No_parsed_optimization -> No_optimization
+	| Parsed_minimize parameter_name -> Minimize (
+		(* No check because this was checked before *)
+		Hashtbl.find index_of_variables parameter_name
+		)
+	| Parsed_maximize parameter_name -> Maximize (
+		(* No check because this was checked before *)
+		Hashtbl.find index_of_variables parameter_name
+		)
 
 
 (*------------------------------------------------------------*)
@@ -2009,7 +2033,7 @@ let get_clocks_in_updates : clock_updates -> clock_index list = function
 (*------------------------------------------------------------*)
 (* Convert the parsing structure into an abstract model *)
 (*------------------------------------------------------------*)
-let abstract_model_of_parsing_structure options (with_special_reset_clock : bool) (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_property_definition, parsed_projection_definition, parsed_carto_definition) =
+let abstract_model_of_parsing_structure options (with_special_reset_clock : bool) (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_property_definition, parsed_projection_definition, parsed_optimization_definition, parsed_carto_definition) =
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2382,6 +2406,12 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	let well_formed_projection = check_projection_definition parameters_names parsed_projection_definition in
 	
 	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check optimization definition *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	let well_formed_optimization = check_optimization parameters_names parsed_optimization_definition in
+	
+	
 	
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2422,7 +2452,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* exit if not well formed *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	if not (check_no_unassigned_constants && well_formed_automata && well_formed_property && well_formed_projection && well_formed_init && !well_formed_carto)
+	if not (check_no_unassigned_constants && well_formed_automata && well_formed_property && well_formed_projection && well_formed_optimization && well_formed_init && !well_formed_carto)
 		then raise InvalidModel;
 	
 	print_message Verbose_medium ("Model syntax successfully checked.");
@@ -2891,6 +2921,9 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	correctness_condition = correctness_condition;
 	(* List of parameters to project the result onto *)
 	projection = projection;
+	(* Parameter to be minimized or maximized *)
+	(*** TODO ***)
+	optimized_parameter = No_optimization;
 
 	(* Optional polyhedra *)
 (* 	carto = carto_linear_constraints , (p1_min , p1_max) , (p2_min , p2_max); *)

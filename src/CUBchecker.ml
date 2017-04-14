@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2017/04/13
+ * Last modified     : 2017/04/14
  *
  ************************************************************)
 
@@ -3319,6 +3319,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		correctness_condition = if new_unreachable_locations = [] then None else Some (Unreachable new_unreachable_locations);
 		(* List of parameters to project the result onto *)
 		projection = model.projection;
+		(* Parameter to be minimized or maximized *)
+		optimized_parameter = model.optimized_parameter;
 	}
 	
 	in

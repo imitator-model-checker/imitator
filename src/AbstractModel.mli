@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/11
- * Last modified     : 2017/04/13
+ * Last modified     : 2017/04/14
  *
  ************************************************************)
 
@@ -184,6 +184,11 @@ type correctness_condition = reachability_property option
 
 type projection = (parameter_index list) option
 
+type optimization =
+	| No_optimization
+	| Minimize of parameter_index
+	| Maximize of parameter_index
+
 
 (************************************************************)
 (** Subclass of the model *)
@@ -301,6 +306,8 @@ type abstract_model = {
 	correctness_condition : correctness_condition;
 	(* List of parameters to project the result onto *)
 	projection : projection;
+	(* Parameter to be minimized or maximized *)
+	optimized_parameter : optimization;
 	
 	(* Set of polyhedra (only used for direct cartography without running the model) *)
 	(*** BADPROG ***)
