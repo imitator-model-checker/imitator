@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
- * Last modified     : 2016/10/17
+ * Last modified     : 2017/04/17
  *
  ************************************************************)
 
@@ -453,6 +453,13 @@ let string_of_property model property =
 	
 	(*** NOTE: Would be better to have an "option" type ***)
 	| Noproperty -> "(* no property *)"
+
+(** Convert the projection to a string *)
+let string_of_projection model =
+	match model.projection with
+	| None -> ""
+	| Some parameter_index_list ->
+		"projectresult(" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names parameter_index_list)) ^ ");"
 
 
 (************************************************************)
