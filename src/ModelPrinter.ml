@@ -112,7 +112,7 @@ let string_of_initially model automaton_index = ""
 
 (* Convert the invariant of a location into a string *)
 let string_of_invariant model automaton_index location_index =
-	print_message Verbose_high "Entering string_of_invariant...";
+(* 	print_message Verbose_high "Entering string_of_invariant…"; *)
 	let result = 
 	(* Invariant *)
 	"while "
@@ -129,7 +129,7 @@ let string_of_invariant model automaton_index location_index =
 	let stopped_str = string_of_list_of_string_with_sep "," (List.map model.variable_names stopped) in
 	" stop{" ^ stopped_str ^ "}" 
 	in
-	print_message Verbose_high "Entering string_of_invariant...End";
+(* 	print_message Verbose_high "Entering string_of_invariant…End"; *)
 	result
 
 
@@ -218,7 +218,7 @@ let string_of_transitions model automaton_index location_index =
 
 (* Convert a location of an automaton into a string *)
 let string_of_location model automaton_index location_index =
-	print_message Verbose_high "Entering string_of_location...";
+(* 	print_message Verbose_high "Entering string_of_location…"; *)
 	(* print_message Verbose_high ("Location index: " ^ string_of_int location_index);  *)
 	let result =
 	"\n"
@@ -232,29 +232,29 @@ let string_of_location model automaton_index location_index =
 	^ (string_of_invariant model automaton_index location_index) (* bug here! *)
 	^ (string_of_transitions model automaton_index location_index)
 	in
-	print_message Verbose_high "Entering string_of_location...End";
+(* 	print_message Verbose_high "Entering string_of_location…End"; *)
 	result
 
 
 (* Convert the locations of an automaton into a string *)
 let string_of_locations model automaton_index =
-	print_message Verbose_high "Entering string_of_locations...";
-	print_message Verbose_high ("Locations_per_automaton length : " ^ 
-		(string_of_int (List.length (model.locations_per_automaton automaton_index))));
+(* 	print_message Verbose_high "Entering string_of_locations…"; *)
+(*	print_message Verbose_high ("Locations_per_automaton length : " ^ 
+		(string_of_int (List.length (model.locations_per_automaton automaton_index))));*)
 
 	let result =
 	string_of_list_of_string_with_sep "\n " (List.map (fun location_index ->
-		print_message Verbose_high ("location_index : " ^ (string_of_int location_index));
+(* 		print_message Verbose_high ("location_index : " ^ (string_of_int location_index)); *)
 		string_of_location model automaton_index location_index
 	) (model.locations_per_automaton automaton_index))
 	in
-	print_message Verbose_high "Entering string_of_locations...End";
+(* 	print_message Verbose_high "Entering string_of_locations…End"; *)
 	result
 
 
 (* Convert an automaton into a string *)
 let string_of_automaton model automaton_index =
-	print_message Verbose_high "Entering string_of_automaton...";
+(* 	print_message Verbose_high "Entering string_of_automaton…"; *)
 	let result =
 	"\n(************************************************************)"
 	^ "\n automaton " ^ (model.automata_names automaton_index)
@@ -265,13 +265,13 @@ let string_of_automaton model automaton_index =
 	^ "\n end (* " ^ (model.automata_names automaton_index) ^ " *)"
 	^ "\n(************************************************************)"
 	in
-	print_message Verbose_high "Entering string_of_automaton...End";
+(* 	print_message Verbose_high "Entering string_of_automaton…End"; *)
 	result
 
 
 (* Convert the automata into a string *)
 let string_of_automata model =
-	print_message Verbose_high "Entering string_of_automata...";
+(* 	print_message Verbose_high "Entering string_of_automata…"; *)
 	(*** WARNING: Do not print the observer ***)
 	let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
 	in
@@ -283,7 +283,7 @@ let string_of_automata model =
 		List.map (fun automaton_index -> string_of_automaton model automaton_index
 	) pta_without_obs)
 	in
-	print_message Verbose_high "Entering string_of_automata...End";
+(* 	print_message Verbose_high "Entering string_of_automata…End"; *)
 	result
 
 
@@ -444,10 +444,10 @@ let string_of_property model property =
 	| TB_response_cyclicstrict (a1 , a2, d) ->
 		"property := if " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " once before next;"
 
-	(* sequence a1, ..., an *)
+	(* sequence a1, …, an *)
 	| Sequence_acyclic action_index_list ->
 		"property := sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
-	(* always sequence a1, ..., an *)
+	(* always sequence a1, …, an *)
 	| Sequence_cyclic action_index_list ->
 		"property := always sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
 	
@@ -468,7 +468,7 @@ let string_of_projection model =
 
 (* Convert the model into a string *)
 let string_of_model model =
-	print_message Verbose_high "\n Entering string_of_model!...";
+(* 	print_message Verbose_high "\n Entering string_of_model!…"; *)
 	let result = 
 	(* The header *)
 	string_of_header model
@@ -484,7 +484,7 @@ let string_of_model model =
 	(* The footer *)
 	^  "\n" ^ footer
 	in
-	print_message Verbose_high "\n Entering string_of_model!... End";
+(* 	print_message Verbose_high "\n Entering string_of_model!… End"; *)
 	result
 
 
