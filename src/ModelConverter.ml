@@ -2709,6 +2709,13 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	print_message Verbose_total ("*** Building the projection definition…");
 	let projection = convert_projection_definition index_of_variables parsed_projection_definition in
 	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Convert the optimization definition *) 
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	print_message Verbose_total ("*** Building the optimization definition…");
+	let optimization = convert_optimization_definition index_of_variables parsed_optimization_definition in
+	
+	
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug prints *) 
@@ -2922,8 +2929,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* List of parameters to project the result onto *)
 	projection = projection;
 	(* Parameter to be minimized or maximized *)
-	(*** TODO ***)
-	optimized_parameter = No_optimization;
+	optimized_parameter = optimization;
 
 	(* Optional polyhedra *)
 (* 	carto = carto_linear_constraints , (p1_min , p1_max) , (p2_min , p2_max); *)

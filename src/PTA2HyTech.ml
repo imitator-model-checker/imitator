@@ -11,7 +11,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/26
- * Last modified     : 2016/10/08
+ * Last modified     : 2017/04/17
  *
  ************************************************************)
 
@@ -477,6 +477,26 @@ let string_of_property model property =
 	| Noproperty -> "-- (no property)"
 
 
+
+(** Convert the projection to a string *)
+let string_of_projection model =
+	match model.projection with
+	| None -> ""
+	| Some parameter_index_list ->
+		"\n-- projectresult(" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names parameter_index_list)) ^ "); (NOT CONSIDERED BY HyTech)"
+
+
+(** Convert the optimization to a string *)
+let string_of_optimization model =
+	match model.optimized_parameter with
+	| No_optimization -> ""
+	| Minimize parameter_index ->
+		"-- minimize(" ^ (model.variable_names parameter_index) ^ "); (NOT CONSIDERED BY HyTech)"
+	| Maximize parameter_index ->
+		"-- maximize(" ^ (model.variable_names parameter_index) ^ "); (NOT CONSIDERED BY HyTech)"
+
+
+
 (************************************************************)
 (** Model *)
 (************************************************************)
@@ -493,13 +513,23 @@ let string_of_model model =
 	string_of_header model
 	(* The variable declarations *)
 	^  "\n" ^ string_of_declarations model stopwatches clocks
+	
 	(* All automata *)
 	^  "\n" ^ string_of_automata model stopwatches clocks
+	
 	(* The initial state *)
 	^ "\n" ^ string_of_initial_state ()
+	
 	(* The property *)
+	(*** TODO: encode reachability properties! ***)
 	^ property_header
 	^  "\n" ^ "--" ^ string_of_property model model.user_property ^ " (NOT CONSIDERED BY HYTECH)"
-	(*** TODO: encode reachability properties! ***)
+	
+	(* The projection *)
+	^  "\n" ^ string_of_projection model
+	
+	(* The optimization *)
+	^  "\n" ^ string_of_optimization model
+	
 	(* The footer *)
 	^  "\n" ^ footer

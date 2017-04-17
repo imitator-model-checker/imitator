@@ -459,7 +459,17 @@ let string_of_projection model =
 	match model.projection with
 	| None -> ""
 	| Some parameter_index_list ->
-		"projectresult(" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names parameter_index_list)) ^ ");"
+		"\nprojectresult(" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names parameter_index_list)) ^ ");"
+
+
+(** Convert the optimization to a string *)
+let string_of_optimization model =
+	match model.optimized_parameter with
+	| No_optimization -> ""
+	| Minimize parameter_index ->
+		"minimize(" ^ (model.variable_names parameter_index) ^ ");"
+	| Maximize parameter_index ->
+		"maximize(" ^ (model.variable_names parameter_index) ^ ");"
 
 
 (************************************************************)
@@ -483,6 +493,8 @@ let string_of_model model =
 	^  "\n" ^ string_of_property model model.user_property
 	(* The projection *)
 	^  "\n" ^ string_of_projection model
+	(* The optimization *)
+	^  "\n" ^ string_of_optimization model
 	(* The footer *)
 	^  "\n" ^ footer
 	in
