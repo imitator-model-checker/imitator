@@ -475,12 +475,14 @@ let string_of_model model =
 	(* The variable declarations *)
 	^  "\n" ^ string_of_declarations model
 	(* All automata *)
-	^  "\n" ^ string_of_automata model (* bug here! *)
+	^  "\n" ^ string_of_automata model
 	(* The initial state *)
 	^ "\n" ^ string_of_initial_state ()
 	(* The property *)
 	^ property_header
 	^  "\n" ^ string_of_property model model.user_property
+	(* The projection *)
+	^  "\n" ^ string_of_projection model
 	(* The footer *)
 	^  "\n" ^ footer
 	in
