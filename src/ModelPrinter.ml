@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
- * Last modified     : 2017/04/17
+ * Last modified     : 2017/04/18
  *
  ************************************************************)
 
@@ -516,7 +516,10 @@ let string_of_model model =
 
 (* Convert a state into a string *)
 let string_of_state model (global_location, linear_constraint) =
-	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names linear_constraint) ^ "" 
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names options#output_float global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names linear_constraint) ^ "" 
 
 
 (************************************************************)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2017/04/13
+ * Last modified     : 2017/04/18
  *
  ************************************************************)
 
@@ -87,6 +87,9 @@ class imitator_options =
 		val mutable output_cart_y_min = ref None
 		val mutable output_cart_y_max = ref None
 
+		(* Output the approximate float value of discrete variables *)
+		val output_float = ref false
+		
 		(* Output result to a file *)
 		val mutable output_result = ref false
 		
@@ -294,6 +297,7 @@ class imitator_options =
 		method output_cart_x_max = !output_cart_x_max
 		method output_cart_y_min = !output_cart_y_min
 		method output_cart_y_max = !output_cart_y_max
+		method output_float = !output_float
 		method output_result = !output_result
 		method output_tiles_files = !output_tiles_files
 		method pi_compatible = !pi_compatible
@@ -690,6 +694,8 @@ class imitator_options =
 (* 				("-output-parametric-states", Set with_parametric_log, " Adds the elimination of the clock variables to the constraints in the description of all reachable states. Default: false."); *)
 
 				("-output-prefix", Set_string files_prefix, " Set the prefix for output files. Default: [model].");
+				
+				("-output-float", Set output_float, " Approximates the value of discrete variables as floats. Default: false.");
 				
 				("-output-result", Set output_result, " Write the result to a file. Default: false.");
 				
@@ -1218,6 +1224,12 @@ class imitator_options =
 				| Some n -> print_message Verbose_low ("The maximum value for the y axis for the cartography will be " ^ (string_of_int n) ^ ".");
 			end;
 			
+			
+			if !output_float then
+				print_message Verbose_standard ("The approximate value of all discrete variables will be given.")
+			else
+				print_message Verbose_medium ("No approximate value of discrete variables will be given (default).")
+			;
 			
 			if !output_result then
 				print_message Verbose_standard ("The result will be written to a file.")

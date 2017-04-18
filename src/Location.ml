@@ -10,7 +10,7 @@
  * File contributors        : Étienne André
  * Created                  : 2010/03/10
  * Renamed from Automaton.ml: 2015/10/22
- * Last modified            : 2015/10/22
+ * Last modified            : 2017/04/18
  *
  ************************************************************)
  
@@ -193,8 +193,8 @@ let get_discrete_value location discrete_index =
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
-(** 'string_of_location automata_names location_names discrete_names location' converts a location to a string. *)
-let string_of_location automata_names location_names discrete_names location =
+(** 'string_of_location automata_names location_names discrete_names location' converts a location to a string. The Boolean indicates whether the discrete variables should be converted into float or not *)
+let string_of_location automata_names location_names discrete_names convert_to_float location =
 	(* Get the locations per automaton *)
 	let locations = get_locations location in
 	(* Get the values for discrete variables *)
@@ -206,7 +206,13 @@ let string_of_location automata_names location_names discrete_names location =
 	let location_string = string_of_array_of_string_with_sep ", " string_array in
 	(* Convert the discrete *)
 	let string_array = Array.mapi (fun discrete_index value ->
-		(string_of_discrete discrete_names discrete_index) ^ " = " ^ (NumConst.string_of_numconst value)
+		(string_of_discrete discrete_names discrete_index) ^ " = " ^ (NumConst.string_of_numconst value) ^(
+			(* Convert to float? *)
+			if convert_to_float then (
+				" (~ " ^ (string_of_float (NumConst.to_float value)) ^ ")"
+			)
+			else ""
+		)
 	) discrete in
 	let discrete_string = string_of_array_of_string_with_sep ", " string_array in
 	(* Return the string *)
