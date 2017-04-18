@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2016/03/23
+ * Last modified     : 2017/04/18
  *
  ************************************************************)
  
@@ -259,6 +259,12 @@ let to_int n =
 		(* Convert to int *)
 		raw_to_int n
 	)
+
+
+(** Convert a NumConst to a float thanks to the GMP.Q conversion *)
+let to_float = Gmp.Q.to_float
+
+
 
 
 
