@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/09
- * Last modified     : 2017/04/14
+ * Last modified     : 2017/04/24
  *
  ************************************************************)
 
@@ -172,10 +172,10 @@ let sub_array array1 array2 =
 (*------------------------------------------------------------*)
 (* Convert a ParsingStructure.linear_constraint into a Constraint.linear_inequality *)
 (*------------------------------------------------------------*)
-let linear_inequality_of_linear_constraint index_of_variables constants (le1, relop, le2) =
+let linear_inequality_of_linear_constraint index_of_variables constants (linexpr1, relop, linexpr2) =
 	(* Get the array of variables and constant associated to the linear terms *)
-	let array1, constant1 = array_of_coef_of_linear_expression index_of_variables constants le1 in
-	let array2, constant2 = array_of_coef_of_linear_expression index_of_variables constants le2 in
+	let array1, constant1 = array_of_coef_of_linear_expression index_of_variables constants linexpr1 in
+	let array2, constant2 = array_of_coef_of_linear_expression index_of_variables constants linexpr2 in
 	(* Consider the operator *)
 	match relop with
 	(* a < b <=> b - a > 0 *)
@@ -243,7 +243,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (le1, re
 (*------------------------------------------------------------*)
 (* Convert a ParsingStructure.convex_predicate into a Constraint.linear_constraint *)
 (*------------------------------------------------------------*)
-let linear_constraint_of_convex_predicate index_of_variables constants convex_predicate =
+let linear_constraint_of_convex_predicate index_of_variables constants convex_predicate : LinearConstraint.pxd_linear_constraint =
 	try(
 	(* Compute a list of inequalities *)
 	let linear_inequalities = List.fold_left
@@ -251,7 +251,7 @@ let linear_constraint_of_convex_predicate index_of_variables constants convex_pr
 		match linear_inequality with
 		| True_constraint -> linear_inequalities
 		| False_constraint -> raise False_exception
-		| Linear_constraint (le1, relop, le2) -> (linear_inequality_of_linear_constraint index_of_variables constants (le1, relop, le2)) :: linear_inequalities
+		| Linear_constraint (linexpr1, relop, linexpr2) -> (linear_inequality_of_linear_constraint index_of_variables constants (linexpr1, relop, linexpr2)) :: linear_inequalities
 	) [] convex_predicate
 	in LinearConstraint.make_pxd_constraint linear_inequalities
 	(* Stop if any false constraint is found *)
@@ -1810,6 +1810,58 @@ let make_automata_per_action actions_per_automaton nb_automata nb_actions =
 	fun automaton_index -> automata_per_action.(automaton_index)
 	
 
+(*------------------------------------------------------------*)
+(** Split between the discrete and continuous inequalities of a convex predicate; raises False_exception if a false linear expression is found *)
+(*------------------------------------------------------------*)
+let split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants convex_predicate =
+	(* Compute a list of inequalities *)
+	List.partition
+		(fun linear_inequality -> 
+		match linear_inequality with
+		| True_constraint -> true (*** NOTE: we arbitrarily send "true" to the discrete part ***)
+		| False_constraint -> raise False_exception
+		| Linear_constraint (linexpr1, _, linexpr2) -> only_discrete_in_linear_expression index_of_variables type_of_variables constants linexpr1 && only_discrete_in_linear_expression index_of_variables type_of_variables constants linexpr2
+	) convex_predicate
+
+
+(*------------------------------------------------------------*)
+(* Convert a guard *)
+(*------------------------------------------------------------*)
+let convert_guard index_of_variables type_of_variables constants guard_convex_predicate =
+
+	try(
+	(* Separate the guard into a discrete guard (on discrete variables) and a continuous guard (on all variables) *)
+	let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants guard_convex_predicate in
+	
+	match discrete_guard_convex_predicate, continuous_guard_convex_predicate with
+		(* No inequalities: true *)
+		| [] , [] -> True_guard
+		(* Only discrete inequalities: discrete *)
+		| discrete_guard_convex_predicate , [] -> Discrete_guard (LinearConstraint.cast_d_of_pxd_linear_constraint (verbose_mode_greater Verbose_low) (linear_constraint_of_convex_predicate index_of_variables constants discrete_guard_convex_predicate))
+		(* Only continuous inequalities: continuous *)
+		| [] , continuous_guard_convex_predicate -> Continuous_guard (linear_constraint_of_convex_predicate index_of_variables constants continuous_guard_convex_predicate)
+		(* Otherwise: both *)
+		| discrete_guard_convex_predicate , continuous_guard_convex_predicate ->
+			(* Convert both parts *)
+			let discrete_guard = LinearConstraint.cast_d_of_pxd_linear_constraint (verbose_mode_greater Verbose_low) (linear_constraint_of_convex_predicate index_of_variables constants discrete_guard_convex_predicate) in
+			let continuous_guard = linear_constraint_of_convex_predicate index_of_variables constants continuous_guard_convex_predicate in
+			
+			(*** NOTE: try to simplify a bit if possible (costly, but would save a lot of time later if checks are successful) ***)
+			let intersection = LinearConstraint.pxd_intersection_with_d continuous_guard discrete_guard in
+			
+			if LinearConstraint.pxd_is_true intersection then True_guard
+			else if LinearConstraint.pxd_is_false intersection then False_guard
+			else
+			(* Else create mixed guard as planned *)
+			Discrete_continuous_guard
+			{
+				discrete_guard		= discrete_guard;
+				continuous_guard	= continuous_guard;
+			}
+	
+	(* If some false construct found: false guard *)
+	) with False_exception -> False_guard
+
 
 (*------------------------------------------------------------*)
 (* Convert the transitions *)
@@ -1833,8 +1885,9 @@ let convert_transitions nb_actions index_of_variables constants removed_variable
 			array_of_transitions.(automaton_index).(location_index) <- Array.make nb_actions [];
 			(* Iterate on transitions *)
 			List.iter (fun (action_index, guard, updates, target_location_index) ->
+			
 				(* Convert the guard *)
-				let converted_guard = linear_constraint_of_convex_predicate index_of_variables constants guard in
+				let converted_guard = convert_guard index_of_variables type_of_variables constants guard in
 
 				(* Filter the updates that should assign some variable name to be removed to any expression *)
 				let filtered_updates = List.filter (fun (variable_name, (*linear_expression*)_) ->
@@ -2612,6 +2665,15 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* Detect the L/U nature of the PTA *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	
+	(*** NOTE/HACK: duplicate function in StateSpace ***)
+	let continuous_part_of_guard (*: LinearConstraint.pxd_linear_constraint*) = function
+		| True_guard -> LinearConstraint.pxd_true_constraint()
+		| False_guard -> LinearConstraint.pxd_false_constraint()
+		| Discrete_guard discrete_guard -> LinearConstraint.pxd_true_constraint()
+		| Continuous_guard continuous_guard -> continuous_guard
+		| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard
+	in
+	
 	(* 1) Get ALL constraints of guards and invariants *)
 	print_message Verbose_total ("*** Retrieving all constraints to detect the L/U nature of the model…");
 	(*** BADPROG ***)
@@ -2634,7 +2696,8 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 				List.iter (fun (guard, _, _, _) ->
 				
 					(* Add guard *)
-					all_constraints := guard :: !all_constraints;
+					(*** NOTE: quite inefficient as we create a lot of pxd_true_constraint() although we just want to know whether they are L/U or not (but OK because prior to model analysis) ***)
+					all_constraints := (continuous_part_of_guard guard) :: !all_constraints;
 					
 				) transitions_for_this_location;
 			) actions_for_this_location;

@@ -11,6 +11,8 @@ Minor feature:
 Bug fixing
 - Fixed a bug in the parsing module that crashed IMITATOR when a discrete was assigned to an undeclared variable
 
+Internal
+- Better separation between the discrete variables and other variables in guards, so as to first check whether the discrete part is satisfiable (which is cheap) before checking the continuous part (which is expensive)
 
 
 *******************************************************

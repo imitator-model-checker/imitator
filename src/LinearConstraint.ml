@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2017/04/13
+ * Last modified     : 2017/04/24
  *
  ************************************************************)
 
@@ -262,8 +262,13 @@ type linear_constraint = Ppl.polyhedron
 
 (** Convex constraint (polyhedron) on the parameters *)
 type p_linear_constraint = linear_constraint
+
 (** Convex constraint (polyhedron) on the parameters and clocks *)
 type px_linear_constraint = linear_constraint
+
+(** Convex constraint (polyhedron) on the discrete variables *)
+type d_linear_constraint = linear_constraint
+
 (** Convex constraint (polyhedron) on the parameters, clocks and discrete *)
 type pxd_linear_constraint = linear_constraint
 
@@ -1684,6 +1689,10 @@ let string_of_false = "False"
 let string_of_true = "True"
 
 
+(** String for the intersection symbol *)
+let string_of_intersection = "\n& "
+
+
 (** Convert a linear constraint into a string *)
 let string_of_linear_constraint names linear_constraint =
 
@@ -1711,12 +1720,13 @@ let string_of_linear_constraint names linear_constraint =
 	let list_of_inequalities = ippl_get_inequalities linear_constraint in
 	" " ^
 	(string_of_list_of_string_with_sep
-		"\n& "
+		string_of_intersection
 		(List.map (string_of_linear_inequality names) list_of_inequalities)
 	)
 
 let string_of_p_linear_constraint = string_of_linear_constraint
 let string_of_px_linear_constraint = string_of_linear_constraint
+let string_of_d_linear_constraint = string_of_linear_constraint
 let string_of_pxd_linear_constraint = string_of_linear_constraint
 
 
@@ -1808,6 +1818,8 @@ let intersection nb_dimensions linear_constraints =
 let p_intersection l = intersection !p_dim l
 let px_intersection l = intersection !px_dim l
 let pxd_intersection l = intersection !pxd_dim l
+
+let pxd_intersection_with_d pxd_linear_constraint d_linear_constraint = intersection !pxd_dim [pxd_linear_constraint; d_linear_constraint]
 
 
 (*------------------------------------------------------------*)
@@ -2155,12 +2167,16 @@ let pxd_is_bounded_from_above_in = px_is_bounded_from_above_in
 (** {3 Pi0-compatibility} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** Check if a linear constraint is pi0-compatible *)
+(** Check if a p_linear_constraint is pi0-compatible, i.e., whether the parameter valuation satisfies the linear constraint *)
 let is_pi0_compatible pi0 linear_constraint =
 	(* Get a list of linear inequalities *)
 	let list_of_inequalities = ippl_get_inequalities linear_constraint in
 	(* Check the pi0-compatibility for all *)
 	List.for_all (is_pi0_compatible_inequality pi0) list_of_inequalities
+
+(** Check if a d_linear_constraint is pi0-compatible, i.e., whether the discrete valuation satisfies the linear constraint *)
+let d_is_pi0_compatible = is_pi0_compatible
+
 
 
 (** Compute the pi0-compatible and pi0-incompatible inequalities within a constraint *)
@@ -2362,16 +2378,24 @@ let pxd_of_px_constraint c =
 
 (** "cast_p_of_pxd_linear_term p c" converts a PXD-constraint p to a P-constraint ; if c then a test if performed to check casting validity *)
 (*** WARNING: in fact, for now NO TEST IS EVER PERFORMED ***)
-let cast_p_of_pxd_linear_term p c = p (*** WARNING! should be copied here! *)
+let cast_p_of_pxd_linear_term p check = p (*** WARNING! should be copied here! ***)
 
 (*** WARNING: in fact, for now NO TEST IS EVER PERFORMED ***)
-let cast_p_of_pxd_linear_constraint p c =
+let cast_p_of_pxd_linear_constraint pxd_linear_constraint check =
 	(* First copy *)
-	let p_constraint = copy p in
-	(* Extend number of dimensions *)
+	let p_constraint = copy pxd_linear_constraint in
+	(* Decrease number of dimensions *)
 	ippl_remove_higher_dimensions p_constraint !p_dim;
 	(* Return *)
 	p_constraint
+
+
+(*** WARNING: in fact, for now NO TEST IS EVER PERFORMED ***)
+let cast_d_of_pxd_linear_constraint check pxd_linear_constraint =
+	(* Just copy *)
+	let d_constraint = copy pxd_linear_constraint in
+	(* Return *)
+	d_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

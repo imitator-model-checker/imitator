@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2012/08/24
- * Last modified     : 2017/04/18
+ * Last modified     : 2017/04/24
  *
  ************************************************************)
 
@@ -115,8 +115,8 @@ let string_of_transition model automaton_index source_location action_index (gua
 	^ "label=\""
 	(* Guard *)
 	^ (
-		if not (LinearConstraint.pxd_is_true guard) then
-			(escape_string_for_dot (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)) ^ "\\n"
+		if guard <> AbstractModel.True_guard then
+			(escape_string_for_dot (ModelPrinter.string_of_guard model.variable_names guard)) ^ "\\n"
 		else ""
 		)
 	(* Sync *)
@@ -129,21 +129,6 @@ let string_of_transition model automaton_index source_location action_index (gua
 	^ (string_of_updates model discrete_updates)
 	^ "\"];"
 	
-	(* Convert the guard *)
-(* 	^ (LinearConstraint.string_of_linear_constraint model.variable_names guard) *)
-	(* Convert the updates *)
-(* 	^ " do {" *)
-(* 	^ (string_of_clock_updates model clock_updates) *)
-	
-	
-(*	^ (string_of_updates model discrete_updates)
-	^ "} "
-	(* Convert the sync *)
-	^ (string_of_sync model action_index)
-	(* Convert the destination location *)
-	^ " goto " ^ (model.location_names automaton_index destination_location)
-	^ ";"*)
-
 
 (* Convert the transitions of a location into a string *)
 let string_of_transitions model automaton_index location_index =

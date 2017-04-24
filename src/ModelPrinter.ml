@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
- * Last modified     : 2017/04/18
+ * Last modified     : 2017/04/24
  *
  ************************************************************)
 
@@ -76,6 +76,25 @@ let string_of_declarations model =
 	^
 	(if model.nb_parameters > 0 then
 		("\n\t" ^ (string_of_variables model.parameters) ^ "\n\t\t: parameter;\n") else "")
+
+(************************************************************)
+(** Guard *)
+(************************************************************)
+
+(*** NOTE: special handling as we have a discrete and a continuous guard that must be handled homogeneously ***)
+
+(** Convert a guard into a string *)
+let string_of_guard variable_names = function
+	| True_guard -> LinearConstraint.string_of_true
+	| False_guard -> LinearConstraint.string_of_false
+	| Discrete_guard discrete_guard -> LinearConstraint.string_of_d_linear_constraint variable_names discrete_guard
+	| Continuous_guard continuous_guard -> LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard
+	| Discrete_continuous_guard discrete_continuous_guard ->
+		(LinearConstraint.string_of_d_linear_constraint variable_names discrete_continuous_guard.discrete_guard)
+		^ LinearConstraint.string_of_intersection ^
+		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
+
+
 
 
 (************************************************************)
@@ -181,7 +200,7 @@ let string_of_transition model automaton_index action_index (guard, clock_update
 	
 	"\n\t" ^ "when "
 	(* Convert the guard *)
-	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)
+	^ (string_of_guard model.variable_names guard)
 
 	(* Convert the updates *)
 	^ " do {"

@@ -10,7 +10,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2013/02/04
- * Last modified: 2016/10/07
+ * Last modified: 2017/04/24
  *
  ****************************************************************)
 
@@ -42,7 +42,7 @@ let truec = LinearConstraint.pxd_true_constraint
 (****************************************************************)
 (** Useful (parameterized) constants *)
 (****************************************************************)
-let untimedt destination_index = [truec (), No_update, [], destination_index]
+let untimedt destination_index = [True_guard, No_update, [], destination_index]
 
 (* Constraint x <= d, with 'd' a LinearConstraint.p_linear_term : d - x >= 0 *)
 let ct_x_leq_d x d =
@@ -300,7 +300,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		invariants.(0) <- ct_x_leq_d x_obs d ;
 		(* Compute transitions *)
 		transitions.(0).(a) <- untimedt 1;
-		transitions.(0).(nosync_index) <- [ct_x_eq_d x_obs d, No_update, [], 2];
+		transitions.(0).(nosync_index) <- [Continuous_guard (ct_x_eq_d x_obs d), No_update, [], 2];
 		transitions.(1) <- allow_all 1;
 		transitions.(2) <- allow_all 2;
 		(* Return structure (and add silent action) *)
@@ -318,12 +318,12 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no silent action here) *)
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [truec (), Resets [x_obs], [], 1];
+		transitions.(0).(a1) <- [True_guard, Resets [x_obs], [], 1];
 		transitions.(0).(a2) <- untimedt 3;
-		transitions.(1).(a1) <- [truec (), Resets [x_obs], [], 1];
+		transitions.(1).(a1) <- [True_guard, Resets [x_obs], [], 1];
 		transitions.(1).(a2) <- [
-			ct_x_leq_d x_obs d, No_update, [], 2;
-			ct_x_geq_d x_obs d, No_update, [], 3
+			Continuous_guard (ct_x_leq_d x_obs d), No_update, [], 2;
+			Continuous_guard (ct_x_geq_d x_obs d), No_update, [], 3
 			];
 		transitions.(2) <- allow_all 2;
 		transitions.(3) <- allow_all 3;
@@ -342,12 +342,12 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no silent action here) *)
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [truec (), Resets [x_obs], [], 1];
+		transitions.(0).(a1) <- [True_guard, Resets [x_obs], [], 1];
 		transitions.(0).(a2) <- untimedt 2;
-		transitions.(1).(a1) <- [truec (), Resets [x_obs], [], 1];
+		transitions.(1).(a1) <- [True_guard, Resets [x_obs], [], 1];
 		transitions.(1).(a2) <- [
-			ct_x_leq_d x_obs d, No_update, [], 0;
-			ct_x_geq_d x_obs d, No_update, [], 2
+			Continuous_guard (ct_x_leq_d x_obs d), No_update, [], 0;
+			Continuous_guard (ct_x_geq_d x_obs d), No_update, [], 2
 			];
 		transitions.(2) <- allow_all 2;
 		(* Return structure *)
@@ -365,12 +365,12 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no silent action here) *)
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [truec (), Resets [x_obs], [], 1];
+		transitions.(0).(a1) <- [True_guard, Resets [x_obs], [], 1];
 		transitions.(0).(a2) <- untimedt 2;
 		transitions.(1).(a1) <- untimedt 2;
 		transitions.(1).(a2) <- [
-			ct_x_leq_d x_obs d, No_update, [], 0;
-			ct_x_geq_d x_obs d, No_update, [], 2
+			Continuous_guard (ct_x_leq_d x_obs d), No_update, [], 0;
+			Continuous_guard (ct_x_geq_d x_obs d), No_update, [], 2
 			];
 		transitions.(2) <- allow_all 2;
 		(* Return structure *)
@@ -391,11 +391,11 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* Update invariants *)
 		invariants.(1) <- ct_x_leq_d x_obs d;
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [truec (), Resets [x_obs], [], 1];
+		transitions.(0).(a1) <- [True_guard, Resets [x_obs], [], 1];
 		transitions.(0).(a2) <- untimedt 0;
 		transitions.(1).(a1) <- untimedt 1;
 		transitions.(1).(a2) <- untimedt 2;
-		transitions.(1).(nosync_index) <- [ct_x_eq_d x_obs d, No_update, [], 3];
+		transitions.(1).(nosync_index) <- [Continuous_guard (ct_x_eq_d x_obs d), No_update, [], 3];
 		transitions.(2) <- allow_all 2;
 		transitions.(3) <- allow_all 3;
 		(* Return structure (and add silent action) *)
@@ -415,11 +415,11 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* Update invariants *)
 		invariants.(1) <- ct_x_leq_d x_obs d;
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [truec (), Resets [x_obs], [], 1];
+		transitions.(0).(a1) <- [True_guard, Resets [x_obs], [], 1];
 		transitions.(0).(a2) <- untimedt 0;
 		transitions.(1).(a1) <- untimedt 1;
 		transitions.(1).(a2) <- untimedt 0;
-		transitions.(1).(nosync_index) <- [ct_x_eq_d x_obs d, No_update, [], 2];
+		transitions.(1).(nosync_index) <- [Continuous_guard (ct_x_eq_d x_obs d), No_update, [], 2];
 		transitions.(2) <- allow_all 2;
 		(* Return structure (and add silent action) *)
 		nosync_index :: all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
@@ -439,11 +439,11 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* Update invariants *)
 		invariants.(1) <- ct_x_leq_d x_obs d;
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [truec (), Resets [x_obs], [], 1];
+		transitions.(0).(a1) <- [True_guard, Resets [x_obs], [], 1];
 		transitions.(0).(a2) <- untimedt 2;
 		transitions.(1).(a1) <- untimedt 2;
 		transitions.(1).(a2) <- untimedt 0;
-		transitions.(1).(nosync_index) <- [ct_x_eq_d x_obs d, No_update, [], 2];
+		transitions.(1).(nosync_index) <- [Continuous_guard (ct_x_eq_d x_obs d), No_update, [], 2];
 		transitions.(2) <- allow_all 2;
 		(* Return structure (and add silent action) *)
 		nosync_index :: all_actions, actions_per_location, observer_location_urgency, invariants, transitions,

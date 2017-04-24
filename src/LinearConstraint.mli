@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2017/04/13
+ * Last modified     : 2017/04/24
  *
  ************************************************************)
 
@@ -173,6 +173,9 @@ type p_linear_constraint
 (** Convex constraint (polyhedron) on the parameters and clocks *)
 type px_linear_constraint
 
+(** Convex constraint (polyhedron) on the discrete variables *)
+type d_linear_constraint
+
 (** Convex constraint (polyhedron) on the parameters, clocks and discrete *)
 type pxd_linear_constraint
 
@@ -322,6 +325,7 @@ val pxd_copy : pxd_linear_constraint -> pxd_linear_constraint
 val p_intersection : p_linear_constraint list -> p_linear_constraint
 val px_intersection : px_linear_constraint list -> px_linear_constraint
 val pxd_intersection : pxd_linear_constraint list -> pxd_linear_constraint
+val pxd_intersection_with_d : pxd_linear_constraint -> d_linear_constraint -> pxd_linear_constraint
 
 (** Performs the intersection of a list of linear constraints with sideeffect *)
 (* val intersection_assign : linear_constraint -> linear_constraint list -> unit *)
@@ -397,8 +401,12 @@ val render_non_strict_p_linear_constraint : p_linear_constraint -> p_linear_cons
 (** {3 Pi0-compatibility} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** Check if a linear constraint is pi0-compatible *)
+(** Check if a p_linear_constraint is pi0-compatible, i.e., whether the parameter valuation satisfies the linear constraint *)
 val is_pi0_compatible : (variable -> coef) -> p_linear_constraint -> bool
+
+(** Check if a d_linear_constraint is pi0-compatible, i.e., whether the discrete valuation satisfies the linear constraint *)
+val d_is_pi0_compatible : (variable -> coef) -> d_linear_constraint -> bool
+
 
 (** Compute the pi0-compatible and pi0-incompatible inequalities within a constraint *)
 val partition_pi0_compatible : (variable -> coef) -> p_linear_constraint -> (p_linear_inequality list * p_linear_inequality list)
@@ -425,6 +433,7 @@ val pxd_of_px_constraint : px_linear_constraint -> pxd_linear_constraint
 val cast_p_of_pxd_linear_term : pxd_linear_term -> bool -> p_linear_term
 val cast_p_of_pxd_linear_constraint : pxd_linear_constraint -> bool -> p_linear_constraint
 
+val cast_d_of_pxd_linear_constraint : bool -> pxd_linear_constraint -> d_linear_constraint
 
 
 
@@ -436,13 +445,17 @@ val cast_p_of_pxd_linear_constraint : pxd_linear_constraint -> bool -> p_linear_
 (* val string_of_linear_constraint : (variable -> string) -> linear_constraint -> string *)
 val string_of_p_linear_constraint : (variable -> string) -> p_linear_constraint -> string
 val string_of_px_linear_constraint : (variable -> string) -> px_linear_constraint -> string
+val string_of_d_linear_constraint : (variable -> string) -> d_linear_constraint -> string
 val string_of_pxd_linear_constraint : (variable -> string) -> pxd_linear_constraint -> string
 
 (** String for the false constraint *)
-(* val string_of_false : string *)
+val string_of_false : string
 
 (** String for the true constraint *)
-(* val string_of_true : string *)
+val string_of_true : string
+
+(** String for the intersection symbol *)
+val string_of_intersection : string
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

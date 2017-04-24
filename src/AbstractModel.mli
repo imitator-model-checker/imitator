@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/11
- * Last modified     : 2017/04/14
+ * Last modified     : 2017/04/24
  *
  ************************************************************)
 
@@ -78,8 +78,22 @@ type clock_updates =
 
 type discrete_update = discrete_index * LinearConstraint.pxd_linear_term
 
-(** Guard: linear constraint *)
-type guard = LinearConstraint.pxd_linear_constraint
+(** Guard: a linear constraint on the sole discrete variables, and a linear constraint on (possibly) all variables *)
+
+type discrete_guard = LinearConstraint.d_linear_constraint
+type continuous_guard = LinearConstraint.pxd_linear_constraint
+
+type discrete_continuous_guard = {
+	discrete_guard		: discrete_guard;
+	continuous_guard	: continuous_guard;
+}
+type guard =
+	| True_guard
+	| False_guard
+	| Discrete_guard of discrete_guard
+	| Continuous_guard of continuous_guard
+	| Discrete_continuous_guard of discrete_continuous_guard
+
 
 (** Invariant: linear constraint *)
 type invariant = LinearConstraint.pxd_linear_constraint

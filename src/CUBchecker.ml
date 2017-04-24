@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2017/04/14
+ * Last modified     : 2017/04/24
  *
  ************************************************************)
 
@@ -32,6 +32,14 @@ open Statistics
 (************************************************************)
 (************************************************************)
 
+(*** NOTE/HACK: duplicate function in ModelConverter and StateSpace ***)
+(*** NOTE2: NOT efficient, as we create a lot of such pxd_true_constraint(), which are expensive! ***)
+let continuous_part_of_guard (*: LinearConstraint.pxd_linear_constraint*) = function
+	| True_guard -> LinearConstraint.pxd_true_constraint()
+	| False_guard -> LinearConstraint.pxd_false_constraint()
+	| Discrete_guard discrete_guard -> LinearConstraint.pxd_true_constraint()
+	| Continuous_guard continuous_guard -> continuous_guard
+	| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard
 
 (* 
 Simple funtion to covert from list of inequalities to list of tuple (clock; operator; linear expression) 
@@ -802,7 +810,7 @@ let check_cub model =
 													| Updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); in
 
 
-	                			let (result, inequalities) = cub_check_2 model invariant1 guard invariant2 clock_updates in
+	                			let (result, inequalities) = cub_check_2 model invariant1 (continuous_part_of_guard guard) invariant2 clock_updates in
 	                			
 	                			inequalities_need_to_solve := !inequalities_need_to_solve@inequalities;
 	                			if result = false
@@ -873,7 +881,7 @@ let check_cub model =
 let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clock_updates, parameters_constraints) = 	
 	print_message Verbose_low ("\nCHECKING FOR REMOVING PROBLEMATIC TRANSITIONS!" ); 
 	let inequalities_s0 = LinearConstraint.pxd_get_inequalities invariant_s0 in
-	let inequalities_t 	= LinearConstraint.pxd_get_inequalities guard_t in
+	let inequalities_t 	= LinearConstraint.pxd_get_inequalities (continuous_part_of_guard guard_t) in
 	let inequalities_s1 = LinearConstraint.pxd_get_inequalities invariant_s1 in
 	let tuple_inequalities_s0 	= convert_inequality_list_2_tuple_list model inequalities_s0 in
 	let tuple_inequalities_t 	= convert_inequality_list_2_tuple_list model inequalities_t in
@@ -961,7 +969,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 						*)
 
 						let constrCUB = make_CUB_constraint [ineq] in
-						let constr = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_p_constraint constrCUB); invariant_s0; guard_t] in
+						let constr = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_p_constraint constrCUB); invariant_s0; continuous_part_of_guard guard_t] in
 			
 						if LinearConstraint.pxd_is_true constr
 						then
@@ -1089,7 +1097,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 						*)
 
 						let constrCUB = make_CUB_constraint [ineq] in
-						let constr = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_p_constraint constrCUB); invariant_s0; guard_t] in
+						let constr = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_p_constraint constrCUB); invariant_s0; continuous_part_of_guard guard_t] in
 						if LinearConstraint.pxd_is_true constr
 						then 
 							(
@@ -1151,7 +1159,7 @@ let check_problematic_transition model (invariant_s0, guard_t, invariant_s1, clo
 						*)
 
 						let constrCUB = make_CUB_constraint [ineq1; ineq2] in
-						let constr = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_p_constraint constrCUB); invariant_s0; guard_t; invariant_s1] in
+						let constr = LinearConstraint.pxd_intersection [(LinearConstraint.pxd_of_p_constraint constrCUB); invariant_s0; continuous_part_of_guard guard_t; invariant_s1] in
 						if LinearConstraint.pxd_is_true constr
 						then 
 							(
@@ -2044,7 +2052,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(*covert input model into specific data stucture*)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 	List.iter (fun automaton_index ->
-		print_message Verbose_low ("\nConverting automaton " ^ (model.automata_names automaton_index) ^ "...");
+		print_message Verbose_low ("\nConverting automaton " ^ (model.automata_names automaton_index) ^ "…");
 		
 		(* We create a new, silent action specifically for this automaton: its value is (nb of regular action) + automaton_index *)
 		(*** NOTE: unused code written by Gia, removed by ÉA (2017/02/08) ***)
@@ -2119,7 +2127,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 						(*add transitions*)
 						DynArray.add transitions_ini ((model.location_names automaton_index location_index), (model.location_names automaton_index target_location_index),
-														guard, clock_updates, action_index, discrete_update);
+														continuous_part_of_guard guard, clock_updates, action_index, discrete_update);
 						
 						()
 					) (model.transitions automaton_index location_index action_index); 
@@ -2572,7 +2580,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 									); 
 			*)
 
-			let isCUB = check_problematic_transition model (s0_cons, guard, s1_cons, clock_updates, p_constraints) in 
+			let isCUB = check_problematic_transition model (s0_cons, Continuous_guard guard, s1_cons, clock_updates, p_constraints) in 
 			if isCUB = true
 			then
 				(
@@ -2632,7 +2640,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* [CUB-PTA TRANSFORMATION] FINAL STAGE - MERGING SUB-MODELS *)
 	
 	(* First create a normalized location name *)
-	(*** BADPROG...... ***)
+	(*** BADPROG…… ***)
 
 	let location_name_of_location_index_and_submodel_index location_index submodel_index =
 		location_index ^ "_m" ^ (string_of_int submodel_index)
@@ -2858,13 +2866,13 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Sort the transitions according to their origin location index using a structure Array : location_index -> (action_index, transition) list *)
 	let transitions_per_location = Array.make new_nb_locations [] in
 	
-	print_message Verbose_low ("\nSorting new transitions per origin location...");
+	print_message Verbose_low ("\nSorting new transitions per origin location…");
 	
 	DynArray.iter (fun (newloc1, newloc2, guard, clock_updates, action_index, discrete_update) -> 
 	
 		(* Print some information *)
 		if verbose_mode_greater Verbose_low then(
-			print_message Verbose_low ("  Considering transition (newloc1 = " ^ (newloc1) ^ ", newloc2 = " ^ (newloc2) ^ ", guard = " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard) ^ ", clock_updates = reset [" ^ (string_of_list_of_string_with_sep "-" (List.map model.variable_names clock_updates)) ^ "], action_index = " ^ (string_of_int action_index) ^ ", discrete_update = TODO)...");
+			print_message Verbose_low ("  Considering transition (newloc1 = " ^ (newloc1) ^ ", newloc2 = " ^ (newloc2) ^ ", guard = " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard) ^ ", clock_updates = reset [" ^ (string_of_list_of_string_with_sep "-" (List.map model.variable_names clock_updates)) ^ "], action_index = " ^ (string_of_int action_index) ^ ", discrete_update = TODO)…");
 		);
 	
 		(* Get the source location index *)
@@ -2877,7 +2885,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 		(*** WARNING: other updates than clock updates not considered so far ***)
 		
-		let new_transition = action_index , (guard, Resets clock_updates, discrete_update, target_location_index) in
+		let new_transition = action_index , (Continuous_guard guard, Resets clock_updates, discrete_update, target_location_index) in
 		
 		(* Add to array *)
 		transitions_per_location.(source_location_index) <- new_transition :: transitions_per_location.(source_location_index);
@@ -3166,7 +3174,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* Dummy pretty-printing of transitions *)
 		let string_of_transition automaton_index (guard , clock_updates , discrete_update, target_location_index) = 
 			"["
-				^ "g=" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)
+				^ "g=" ^ (ModelPrinter.string_of_guard model.variable_names guard)
 				^
 				", Xupdates=" ^ (string_of_clock_updates clock_updates)
 				^

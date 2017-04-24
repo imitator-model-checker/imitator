@@ -11,7 +11,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/26
- * Last modified     : 2017/04/17
+ * Last modified     : 2017/04/24
  *
  ************************************************************)
 
@@ -224,7 +224,7 @@ let string_of_updates model updates =
 let string_of_transition model automaton_index action_index (guard, clock_updates, discrete_updates, destination_location) =
 	"\n\t" ^ "when "
 	(* Convert the guard *)
-	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)
+	^ (ModelPrinter.string_of_guard model.variable_names guard)
 
 	(* Convert the updates *)
 	^ " do {"

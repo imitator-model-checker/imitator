@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2017/04/13
+ * Last modified     : 2017/04/24
  *
  ************************************************************)
 
@@ -414,6 +414,16 @@ let is_bad program state_space =
 (** Big hack: guard and resets reconstruction *)
 (*------------------------------------------------------------*)
 
+(*** NOTE: this function is defined here just because it was necessary here first; perhaps a better module would be more logical… ***)
+(*** NOTE/HACK: duplicate function in ModelConverter ***)
+let continuous_part_of_guard (*: LinearConstraint.pxd_linear_constraint*) = function
+	| True_guard -> LinearConstraint.pxd_true_constraint()
+	| False_guard -> LinearConstraint.pxd_false_constraint()
+	| Discrete_guard discrete_guard -> LinearConstraint.pxd_true_constraint()
+	| Continuous_guard continuous_guard -> continuous_guard
+	| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard
+
+
 (*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the guard ***)
 let get_guard state_space state_index action_index state_index' =
 	(* Retrieve the model *)
@@ -444,14 +454,14 @@ let get_guard state_space state_index action_index state_index' =
 			if List.length transitions = 0 then LinearConstraint.pxd_true_constraint()
 			
 			(* If exactly one: good situation: return the guard *)
-			else if List.length transitions = 1 then let g,_,_,_ = List.nth transitions 0 in g
+			else if List.length transitions = 1 then let g,_,_,_ = List.nth transitions 0 in continuous_part_of_guard g
 			(* If more than one: take the first one (*** HACK ***) and warn *)
 			else(
 				(* Warning *)
 				print_warning ("Non-deterministic PTA! Selecting a guard arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
 				
 				(* Take arbitrarily the first element *)
-				let g,_,_,_ = List.nth transitions 0 in g
+				let g,_,_,_ = List.nth transitions 0 in continuous_part_of_guard g
 			
 			)
 
@@ -464,19 +474,20 @@ let get_guard state_space state_index action_index state_index' =
 			if List.length transitions = 0 then raise (raise (InternalError("There cannot be no transition from '" ^ (model.location_names automaton_index l) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' with action to '" ^ (model.action_names action_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ ".")))
 			
 			(* If exactly one: good situation: return the guard *)
-			else if List.length transitions = 1 then let g,_,_,_ = List.nth transitions 0 in g
+			else if List.length transitions = 1 then let g,_,_,_ = List.nth transitions 0 in continuous_part_of_guard g
 			(* If more than one: take the first one (*** HACK ***) and warn *)
 			else(
 				(* Warning *)
 				print_warning ("Non-deterministic PTA! Selecting a guard arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
 				
 				(* Take arbitrarily the first element *)
-				let g,_,_,_ = List.nth transitions 0 in g
+				let g,_,_,_ = List.nth transitions 0 in continuous_part_of_guard g
 			)
 			
 		) in
 		
-		(* Add the guard *)
+		(* Add the guard *)	
+		(*** NOTE: VERY inefficient as we create a lot of pxd_true_constraint() (when the guards are true) although it would be better to just NOT add them to the list… ***)
 		local_guards := local_guard :: !local_guards;
 	
 	) model.automata;

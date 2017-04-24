@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/27
- * Last modified     : 2017/02/15
+ * Last modified     : 2017/04/24
  *
  ************************************************************)
 
@@ -54,6 +54,22 @@ let get_clocks_in_updates : clock_updates -> Automaton.clock_index list = functi
 	| Updates clock_update_list -> let result, _ = List.split clock_update_list in result
 
 
+let get_clocks_in_guard clocks : guard -> Automaton.clock_index list = function
+	| True_guard -> []
+	| False_guard -> []
+	| Discrete_guard _ -> []
+	| Continuous_guard continuous_guard -> LinearConstraint.pxd_find_variables clocks continuous_guard
+	| Discrete_continuous_guard discrete_continuous_guard -> LinearConstraint.pxd_find_variables clocks discrete_continuous_guard.continuous_guard
+
+let is_constrained_in_guard clock_index : guard -> bool = function
+	| True_guard -> false
+	| False_guard -> false
+	| Discrete_guard _ -> false
+	| Continuous_guard continuous_guard -> LinearConstraint.pxd_is_constrained continuous_guard clock_index
+	| Discrete_continuous_guard discrete_continuous_guard -> LinearConstraint.pxd_is_constrained discrete_continuous_guard.continuous_guard clock_index
+
+	
+
 (*------------------------------------------------------------*)
 (* Find the local clocks per automaton *)
 (*------------------------------------------------------------*)
@@ -93,7 +109,7 @@ let find_local_clocks () =
 				let clocks_for_transitions = List.fold_left (fun list_of_clocks_for_previous_transitions transition ->
 					(* Name the elements in the transition *)
 					let guard , clock_updates , _ , _ = transition in
-					let clocks_in_guards = LinearConstraint.pxd_find_variables model.clocks guard in
+					let clocks_in_guards = get_clocks_in_guard model.clocks guard in
 					let clocks_in_updates = get_clocks_in_updates clock_updates in
 						(* Add these 2 new lists to the current list *)
 						List.rev_append (List.rev_append clocks_in_guards clocks_in_updates) list_of_clocks_for_previous_transitions
@@ -235,7 +251,7 @@ let find_useless_clocks_in_automata local_clocks_per_automaton =
 							(* Check if there exists a guard in an outgoing transition where the clock is constrained *)
 							let exists_guard = List.exists (fun (guard , (*clock_updates*)_ , (*discrete_update_list*)_ , (*target_index*)_) ->
 								(* Check if the clock is present in the guard *)
-								let constrained = LinearConstraint.pxd_is_constrained guard clock_index in
+								let constrained = is_constrained_in_guard clock_index guard in
 								(* Print some information *)
 								if constrained then (
 									print_message Verbose_high ("Found a transition where clock '" ^ (model.variable_names clock_index) ^ "' is constrained in guard from location '" ^ (model.location_names automaton_index location_index) ^ "', through '" ^ (model.action_names action_index) ^ "'");

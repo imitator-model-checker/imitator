@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2015/03/24
- * Last modified: 2016/04/19
+ * Last modified: 2017/04/24
  *
  ****************************************************************)
 
@@ -50,6 +50,11 @@ let tikz_string_of_lc_gen lc_fun lc =
 (** Proper form for constraints *)
 let tikz_string_of_linear_constraint =
 	tikz_string_of_lc_gen LinearConstraint.string_of_pxd_linear_constraint
+
+
+(** Proper form for constraints *)
+let tikz_string_of_guard =
+	tikz_string_of_lc_gen ModelPrinter.string_of_guard
 
 
 
@@ -124,8 +129,8 @@ let string_of_transition model automaton_index source_location action_index (gua
 	"\n\n\t\t\\path (" ^ source_location_name ^ ") edge node{\\begin{tabular}{@{} c @{\\ } c@{} }"
 	
 	(* GUARD *)
-	^ (if not (LinearConstraint.pxd_is_true guard) then (
-		"\n\t\t" ^ (tikz_string_of_linear_constraint guard) ^ "\\\\"
+	^ (if guard <> AbstractModel.True_guard then (
+		"\n\t\t" ^ (tikz_string_of_guard guard) ^ "\\\\"
 	) else "" )
 	
 	(* ACTION *)

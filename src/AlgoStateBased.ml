@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2017/04/13
+ * Last modified     : 2017/04/24
  *
  ************************************************************)
 
@@ -154,14 +154,20 @@ let print_stats _ =
 (* 	Cache.print_stats upd_cache *)*)
 	 
 
+(* Number of constraints checked unsatisfiable while looking for the actions (discrete guard unsatisfiable) *)
+let counter_nb_early_unsatisfiable_discrete = create_discrete_counter_and_register "early unsat states (local discrete guard)" States_counter Verbose_low
+
 (* Number of constraints checked unsatisfiable while looking for the actions *)
-let counter_nb_early_unsatisfiable = create_discrete_counter_and_register "early unsat states (guard)" States_counter Verbose_low
+let counter_nb_early_unsatisfiable = create_discrete_counter_and_register "early unsat states (local continuous guard)" States_counter Verbose_low
 
 (* Number of actions discarded *)
-let counter_nb_early_skip = create_discrete_counter_and_register "early skips" States_counter Verbose_low
+let counter_nb_early_skip = create_discrete_counter_and_register "skipped actions" States_counter Verbose_low
 
 (* Number of constraints computed but unsatisfiable *)
 let counter_nb_unsatisfiable = create_discrete_counter_and_register "unsatisfiable constraints" States_counter Verbose_low
+
+(* Number of discrete constraints unsatisfiable *)
+let counter_nb_unsatisfiable_discrete = create_discrete_counter_and_register "unsatisfiable global discrete constraints" States_counter Verbose_low
 
 (* Number of different combinations considered when computing post *)
 let counter_nb_combinations = create_discrete_counter_and_register "different combinations" States_counter Verbose_low
@@ -817,10 +823,10 @@ let compute_possible_actions original_location =
 (* action_index      : index of current action                      *)
 (* original_location : the source location                          *)
 (*------------------------------------------------------------------*)
-(* returns the new location, the guards, the updates                *)
+(* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of pxd_linear_constraint), and the updates *)
 (*------------------------------------------------------------------*)
 (*** TODO: remove the model from the arguments, and retrieve it ***)
-let compute_new_location aut_table trans_table action_index original_location =
+let compute_new_location_guards_updates aut_table trans_table action_index original_location =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	
@@ -882,10 +888,25 @@ let compute_new_location aut_table trans_table action_index original_location =
 	Hashtbl.iter (fun discrete_index discrete_value ->
 		updated_discrete_couples := (discrete_index, discrete_value) :: !updated_discrete_couples;
 	) updated_discrete;
+	
 	(* Update the global location *)
 	Location.update_location_with [] !updated_discrete_couples location;
-  (* return the new location, the guards, and the clock updates (if any!) *)
-	(location, guards, (if !has_updates then clock_updates else []))
+	
+	(* Split guards between discrete and continuous *)
+	let discrete_guards, continuous_guards = List.fold_left (fun (current_discrete_guards, current_continuous_guards) guard ->
+		match guard with
+		(* True guard: unchanged *)
+		| True_guard -> current_discrete_guards, current_continuous_guards
+		(* False guard: should have been tested before! *)
+		| False_guard -> raise (InternalError "Met a false guard while computing new location, although this should have been tested in a local automaton")
+		| Discrete_guard discrete_guard -> discrete_guard :: current_discrete_guards, current_continuous_guards
+		| Continuous_guard continuous_guard -> current_discrete_guards, continuous_guard :: current_continuous_guards
+		| Discrete_continuous_guard discrete_continuous_guard ->
+			discrete_continuous_guard.discrete_guard :: current_discrete_guards, discrete_continuous_guard.continuous_guard :: current_continuous_guards
+	) ([], []) guards in
+	
+	(* Return the new location, the guards, and the clock updates (if any!) *)
+	location, discrete_guards, continuous_guards, (if !has_updates then clock_updates else [])
 	
 	
 
@@ -1108,6 +1129,40 @@ let next_combination combination max_indexes =
 
 
 
+(** Check whether a d_linear_constraint is satisfied by the discrete values in a location *)
+let evaluate_d_linear_constraint_in_location location =
+	(* Directly call the build-in function *)
+	LinearConstraint.d_is_pi0_compatible (Location.get_discrete_value location)
+
+(** Check whether the discrete part of a guard is satisfied by the discrete values in a location *)
+let is_discrete_guard_satisfied location (guard : AbstractModel.guard) : bool =
+	match guard with
+	| True_guard -> true
+	| False_guard -> false
+	| Discrete_guard discrete_guard -> evaluate_d_linear_constraint_in_location location discrete_guard
+	| Continuous_guard _ -> true
+	| Discrete_continuous_guard discrete_continuous_guard -> evaluate_d_linear_constraint_in_location location discrete_continuous_guard.discrete_guard
+	
+
+(** Check whether the intersection between a pxd_constraint with an AbstractModel.guard if satisfiable (both inputs remain unchanged) *)
+let is_constraint_and_continuous_guard_satisfiable pxd_linear_constraint = function
+	(* True: trivially satisfiable because we assume the original constraint was satisfiable *)
+	| True_guard -> true
+	
+	(* False: trivially unsatisfiable *)
+	| False_guard -> false
+	
+	(* Discrete guard: trivially satisfiable because no continuous part, and we assume the original constraint was satisfiable *)
+	| Discrete_guard _ -> true
+	
+	(* Continuous guard: we have to intersect and check satisfiability *)
+	| Continuous_guard continuous_guard ->
+		LinearConstraint.pxd_is_satisfiable (LinearConstraint.pxd_intersection [pxd_linear_constraint; continuous_guard])
+	
+	(* Discrete + continuous guard: we have to intersect and check satisfiability *)
+	| Discrete_continuous_guard discrete_continuous_guard ->
+		LinearConstraint.pxd_is_satisfiable (LinearConstraint.pxd_intersection [pxd_linear_constraint; discrete_continuous_guard.continuous_guard])
+
 
 (*-------------------------------------------------------*)
 (* Computes all possible transition combinations for the *)
@@ -1141,14 +1196,25 @@ let compute_transitions location constr action_index automata aut_table max_inde
 			(* Keep only possible transitions *)
 			let is_possible = fun trans -> (
 				let guard, _, _, _ = trans in
-				let constr_and_guard = LinearConstraint.pxd_intersection [constr; guard] in
- 				let is_possible = LinearConstraint.pxd_is_satisfiable constr_and_guard in 
-				if not is_possible then (
+				
+				(* First check whether the discrete part is possible *)
+				let discrete_part_possible = is_discrete_guard_satisfied location guard in
+				
+				if not discrete_part_possible then(
 					(* Statistics *)
-					counter_nb_early_unsatisfiable#increment;
-					print_message Verbose_medium "** early skip transition **"
-				);
-				is_possible(*true*)
+					counter_nb_early_unsatisfiable_discrete#increment;
+					print_message Verbose_medium "** early skip transition (discrete guard unsatisfiable) **";
+					false
+				)else(
+				(* Else: the discrete part is satisfiable; so now we check the continuous intersection between the current constraint and the discrete + continuous outgoing guard *)
+					let is_possible = is_constraint_and_continuous_guard_satisfiable constr guard in
+					if not is_possible then (
+						(* Statistics *)
+						counter_nb_early_unsatisfiable#increment;
+						print_message Verbose_medium "** early skip transition (constraint+guard unsatisfiable) **"
+					);
+					is_possible
+				)
 			) in
 			let legal_transitions = ref [] in
 			let trans_index = ref 0 in
@@ -1545,59 +1611,75 @@ class virtual algoStateBased =
 				tcounter_next_transitions#stop;
 				
 				(* Compute the new location for the current combination of transitions *)
-				let location, guards, clock_updates = compute_new_location real_indexes current_transitions action_index original_location in
+				let location, (discrete_guards : LinearConstraint.d_linear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates real_indexes current_transitions action_index original_location in
 				
-				(* Compute the new constraint for the current transition *)
-				let new_constraint = compute_new_constraint orig_constraint discrete_constr original_location location guards clock_updates in
+				(* Check if the discrete guards are satisfied *)
+				if not (List.for_all (evaluate_d_linear_constraint_in_location original_location) discrete_guards) then(
+					(* Statistics *)
+					counter_nb_unsatisfiable_discrete#increment;
+					(* Print some information *)
+					print_message Verbose_high ("\nThis combination of discrete guards is not satisfiable.");
 				
-				begin
-				(* Check the satisfiability *)
-				match new_constraint with
-					| None -> 
-						(* Statistics *)
-						counter_nb_unsatisfiable#increment;
-						print_message Verbose_high ("\nThis constraint is not satisfiable ('None').");
-					| Some (final_constraint : LinearConstraint.px_linear_constraint) -> (
-						if not (LinearConstraint.px_is_satisfiable final_constraint) then(
+				(* Else: the discrete part is satisfied *)
+				)else(
+					(* Compute the new constraint for the current transition *)
+					let new_constraint = compute_new_constraint orig_constraint discrete_constr original_location location continuous_guards clock_updates in
+					
+					begin
+					(* Check the satisfiability *)
+					match new_constraint with
+						| None -> 
 							(* Statistics *)
 							counter_nb_unsatisfiable#increment;
-							print_message Verbose_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
-						) else (
-						
-						(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding …) *)
-						StateSpace.increment_nb_gen_states state_space;
-				
-						(************************************************************)
-						(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
-						(************************************************************)
-						(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
-						(*** NOTE: why not in mode state space??? ***)
-						if options#imitator_mode <> State_space_exploration && options#merge_before then(
-						
-							(* Only add to the local list of new states *)
-							new_action_and_state_list := ([action_index], location, final_constraint) :: !new_action_and_state_list;
-						
-						(* EXPERIMENTAL BRANCHING: END CASE MERGE AFTER *)
-						)else(
-						
-						(* EXPERIMENTAL BRANCHING: CASE MERGE BEFORE (classical version) *)
+							
 							(* Print some information *)
-							if verbose_mode_greater Verbose_total then(
-								(* Build the state *)
-								let new_state = location, final_constraint in
-								self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
-							);
+							print_message Verbose_high ("\nThis constraint is not satisfiable ('None').");
+							
+						| Some (final_constraint : LinearConstraint.px_linear_constraint) -> (
+							if not (LinearConstraint.px_is_satisfiable final_constraint) then(
+								(* Statistics *)
+								counter_nb_unsatisfiable#increment;
+								
+								(* Print some information *)
+								print_message Verbose_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
+							) else (
+							
+							(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding …) *)
+							StateSpace.increment_nb_gen_states state_space;
+					
+							(************************************************************)
+							(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
+							(************************************************************)
+							(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
+							(*** NOTE: why not in mode state space??? ***)
+							if options#imitator_mode <> State_space_exploration && options#merge_before then(
+							
+								(* Only add to the local list of new states *)
+								new_action_and_state_list := ([action_index], location, final_constraint) :: !new_action_and_state_list;
+							
+							(* EXPERIMENTAL BRANCHING: END CASE MERGE AFTER *)
+							)else(
+							
+							(* EXPERIMENTAL BRANCHING: CASE MERGE BEFORE (classical version) *)
+								(* Print some information *)
+								if verbose_mode_greater Verbose_total then(
+									(* Build the state *)
+									let new_state = location, final_constraint in
+									self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
+								);
 
-							let added = self#add_a_new_state source_state_index new_states_indexes action_index location final_constraint in
+								let added = self#add_a_new_state source_state_index new_states_indexes action_index location final_constraint in
+								
+								(* Update *)
+								has_successors := !has_successors || added;
+								
+							); (* EXPERIMENTAL BRANCHING: END CASE MERGE BEFORE (classical version) *)
 							
-							(* Update *)
-							has_successors := !has_successors || added;
-							
-						); (* EXPERIMENTAL BRANCHING: END CASE MERGE BEFORE (classical version) *)
-						
-					); (* end if satisfiable *)
-				); (* end if Some constraint *)
-				end; (* end match constraint *)
+						); (* end if satisfiable *)
+					); (* end if Some constraint *)
+					end; (* end match constraint *)
+					
+				); (* end discrete part of the guard is satisfied *)
 			
 				(* Update the next combination *)
 				more_combinations := next_combination current_indexes max_indexes;
