@@ -209,6 +209,9 @@ let ppl_nb_hull_assign_if_exact_false = ref 0
 	let ppl_nncc_remove_higher_space_dimensions = create_hybrid_counter_and_register "nncc_remove_higher_space_dimensions" PPL_counter Verbose_low
 
 
+(* Other counters *)
+	let tcounter_pi0_compatibility = create_hybrid_counter_and_register "pi0-compatibility" States_counter Verbose_low
+
 (************************************************************)
 (* TYPES *)
 (************************************************************)
@@ -2169,10 +2172,25 @@ let pxd_is_bounded_from_above_in = px_is_bounded_from_above_in
 
 (** Check if a p_linear_constraint is pi0-compatible, i.e., whether the parameter valuation satisfies the linear constraint *)
 let is_pi0_compatible pi0 linear_constraint =
+	(* Increment discrete counter *)
+	tcounter_pi0_compatibility#increment;
+
+	(* Start continuous counter *)
+	tcounter_pi0_compatibility#start;
+
 	(* Get a list of linear inequalities *)
 	let list_of_inequalities = ippl_get_inequalities linear_constraint in
 	(* Check the pi0-compatibility for all *)
+	let result =
 	List.for_all (is_pi0_compatible_inequality pi0) list_of_inequalities
+	in
+
+	(* Stop continuous counter *)
+	tcounter_pi0_compatibility#start;
+	
+	(* Return *)
+	result
+
 
 (** Check if a d_linear_constraint is pi0-compatible, i.e., whether the discrete valuation satisfies the linear constraint *)
 let d_is_pi0_compatible = is_pi0_compatible
