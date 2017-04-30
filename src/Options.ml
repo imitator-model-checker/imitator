@@ -520,6 +520,8 @@ class imitator_options =
 					exploration_order <- Exploration_queue_BFS
 				else if order = "queueBFSRS" then
 					exploration_order <- Exploration_queue_BFS_RS
+				else if order = "queueBFSPRIOR" then
+					exploration_order <- Exploration_queue_BFS_PRIOR
 				else(
 					(*** HACK: print header now ***)
 					print_header_string();
@@ -974,6 +976,7 @@ class imitator_options =
 				| Exploration_layer_BFS -> print_message Verbose_standard ("Exploration order: layer-based BFS.")
 				| Exploration_queue_BFS -> print_message Verbose_standard ("Exploration order: queue-based BFS [EXPERIMENTAL].")
 				| Exploration_queue_BFS_RS -> print_message Verbose_standard ("Exploration order: queue-based BFS with ranking system [WORK IN PROGRESS].")
+				| Exploration_queue_BFS_PRIOR -> print_message Verbose_standard ("Exploration order: queue-based BFS with priority [WORK IN PROGRESS].")
 			end;
 
 			(* Variant of the inverse method *)

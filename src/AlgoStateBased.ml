@@ -1306,20 +1306,7 @@ type rank_value =
     | Int of int
 
 
-let initial_rank state_index state_space =
-	(* Retrieve the model *)
-	let model = Input.get_model() in
-	
-	(* popped state information *)
-	(* location: static , constraint*)
-	let loc, constr = StateSpace.get_state state_space state_index in
-	let checkTrueConstr = LinearConstraint.px_is_equal constr model.px_clocks_non_negative_and_initial_p_constraint in
-	
-	let rank = if (checkTrueConstr) 
-	then Infinity 
-	else Int 0
-	in
-	rank
+
 
 
 exception FoundInfiniteRank of state_index
@@ -1956,7 +1943,7 @@ class virtual algoStateBased =
 		print_message Verbose_standard("Entering explore_queue_bfs!!!");
 
 		(* Retrieve the model *)
-		let model = Input.get_model () in
+		(* let model = Input.get_model () in *)
 		
 		(* Retrieve the input options *)
 		let options = Input.get_options () in
@@ -1973,7 +1960,8 @@ class virtual algoStateBased =
 		(* List of states computed before *)
 		(*** NOTE: we encode the queue using a list, with the LAST element of the list being the first of the queue ***)
 		(*** NOTE: we don't use module Queue so as to filter easily the list when needed ***)
-		let queue = ref [init_state_index] in
+		
+		let queue = ref [] in 
 
 		(* Boolean to check whether the time limit / state limit is reached *)
 		let limit_reached = ref Keep_going in
@@ -1988,48 +1976,231 @@ class virtual algoStateBased =
 		
 		(*** BEGIN: code for ranking system ***)
 		(*** TODO: move one day ***)
+
+
+
+			
+		(*****************************************************RANKING TBL******************************************************)	
 		(* Hashtable: state_index -> rank *)
 		let rank_hashtable = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
+
+
+		let initial_rank state_index state_space =
+			print_message Verbose_low ("Access Initial Ranking!");
+			print_message Verbose_low ("Ranking State: " ^ (StateSpace.string_of_state_index state_index) ^"!");
+
+			(* Retrieve the model *)
+			let model = Input.get_model() in
+			
+			(* popped state information *)
+			(* location: static , constraint*)
+			let loc, constr = StateSpace.get_state state_space state_index in
+
+			print_message Verbose_low ( ModelPrinter.string_of_state model (loc, constr) );
+
+			let checkTrueConstr = LinearConstraint.px_is_equal constr model.px_clocks_non_negative_and_initial_p_constraint in
+			
+			let rank = if (checkTrueConstr) 
+			then
+				(
+				print_message Verbose_low ("Rank: Infinity!");
+				Infinity
+				) 
+			else 
+				(
+				print_message Verbose_low ("Rank: 0!");
+				Int 0
+				);
+			in
+			print_message Verbose_low ("End Initial Ranking!");
+			rank
+		in
+
+		(*
+		let isRanked state_index = 
+			(* try to find in the hashtbl *)
+			try(
+				let rank = Hashtbl.find rank_hashtable state_index in
+				true
+			) with Not_found -> false;
+		in
+		*)
+		(*****************************************************RANKING TBL END**************************************************)
+
+
+
+
+
+		(*****************************************************RANKINK**********************************************************)
+
+		let getSmallerVisitedLocation state_index1 rank_hashtable = 
+			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
+
+			let smallers = Hashtbl.fold (fun state_index2 rank smaller_state_index -> 
+				let loc2, constr2 = StateSpace.get_state state_space state_index2 in
+				if (loc1 == loc2) && not (LinearConstraint.px_is_leq constr1 constr2)
+				then  (state_index2)::smaller_state_index 
+				else smaller_state_index;
+			) rank_hashtable [];
+			in
+			smallers
+		in
+
+
+		let getMaxRank rank1 rank2 = match (rank1, rank2) with
+									| (Int x1, Int x2) ->  if x1 < x2 then Int x2 else Int x1
+									| (_, _) -> Infinity;
+		in
+
+		let getMaxRankStateIndex state_index1 state_index2 = 
+			let rank1 = Hashtbl.find rank_hashtable state_index1 in
+			let rank2 = Hashtbl.find rank_hashtable state_index2 in
+			match (rank1, rank2) with
+			| (Int x1, Int x2) ->  if x1 < x2 then state_index2 else state_index1
+			| (Infinity, Infinity) -> state_index1
+			| (Infinity, Int x2) -> state_index2
+			| (Int x1, Infinity) -> state_index1;
+		in
+
+
+		let getHighestRank queue rank_hashtable = 
+			
+			let highestRank_state_index = ref (List.hd queue) in
+			
+			List.iter ( fun state_index ->
+							highestRank_state_index := (getMaxRankStateIndex state_index !highestRank_state_index);
+						) queue;
+			!highestRank_state_index;
+		in
+
+
 		
-		(* Try to get the rank from the hash table; if absent, compute it *)
-		let get_or_compute_rank state_index =
-			(* If already computed: return *)
-			if Hashtbl.mem rank_hashtable state_index then Hashtbl.find rank_hashtable state_index
-			else (
-				(* Else: compute it! *)
-				(*** TODO: compute the rank ***)
-				let rank = raise (NotImplemented "Gia") in
+		let rankingSuccessors successors = 
+
+			List.iter (fun state_index ->	
+				let rank = ref (initial_rank state_index state_space) in
 				
-				(* Store the rank in the hash table *)
-				Hashtbl.add rank_hashtable state_index rank;
-				
-				(* Return the rank *)
-				rank
-			)
+
+				let smallers = getSmallerVisitedLocation state_index rank_hashtable in
+				if smallers = [] 
+				then
+					queue := state_index :: !queue
+				else
+					(
+						List.iter ( fun state_index_smaller -> 
+							if not (List.mem state_index_smaller !queue)
+							then
+								rank := getMaxRank !rank (Hashtbl.find rank_hashtable state_index);
+	
+						) smallers;
+					);
+
+				Hashtbl.add rank_hashtable state_index !rank;
+			) successors;
 		in
 		
+		(*****************************************************RANKINK END******************************************************)
+
+
+
+
+
+		(*****************************************************PRIOR**********************************************************)
+		(*It will sort the queue from largest to snmallest zone*)
+		let rec addInfinityToPriorQueue state_index queue = 
+			match queue with
+			  | [] -> [state_index]
+			  | x :: l -> (
+							let rank = Hashtbl.find rank_hashtable x in
+							if rank = Infinity
+							then 
+								x :: (addInfinityToPriorQueue state_index l)
+							else 
+								state_index :: x :: l
+							);
+		in
+		
+		let rec addNonInfinityToPriorQueue state_index queue = 
+			match queue with
+			  | [] -> [state_index]
+			  | x :: l -> (
+							let rank = Hashtbl.find rank_hashtable x in
+							match rank with 
+							| Infinity -> x :: (addNonInfinityToPriorQueue state_index l)
+							| Int r -> 	let loc1, constr1 = StateSpace.get_state state_space state_index in
+										let loc2, constr2 = StateSpace.get_state state_space x in
+										(
+										if not (LinearConstraint.px_is_leq constr2 constr1)
+										then
+											(
+											x :: (addNonInfinityToPriorQueue state_index l);
+											)
+										else
+											(
+											state_index :: x :: l
+											);
+										);
+							);
+		in
+
+		let addToPriorQueue successors queue= 
+			(* initial ranking and sorting *)
+			let q = ref queue in
+			List.iter (fun state_index ->	let rank = initial_rank state_index state_space in
+											Hashtbl.add rank_hashtable state_index rank;
+												match rank with 
+													| Infinity -> q := addInfinityToPriorQueue state_index !q
+													| Int _ -> q := addNonInfinityToPriorQueue state_index !q;
+			) successors;
+			!q
+		in
+		(*****************************************************PRIOR END******************************************************)
+		
+
 		
 		(*** TODO Gia ***)
-		let select_from_queue () =
-			try(
-				(* First look for infinite rank *)
-				List.iter (fun state_index -> 
-					(* Get the rank from the hashtable (or compute it if necessarily) *)
-					let rank = get_or_compute_rank state_index in
-					(* If infinite: found *)
-					if rank = Infinity then raise (FoundInfiniteRank state_index)
-				) !queue;
-				
-				(* Else: find the highest rank *)
-				(*** TODO: Gia ***)
-				raise (NotImplemented("Gia"))
-			
-			) with FoundInfiniteRank state_index -> state_index
+		let select_from_queue () = match options#exploration_order with 
+			| Exploration_queue_BFS_RS -> 	(
+											try(
+												(* First look for infinite rank *)
+												List.iter (fun state_index -> 
+													(* Get the rank from the hashtable (or compute it if necessarily) *)
+													let rank = Hashtbl.find rank_hashtable state_index in
+													(* If infinite: found *)
+													if rank = Infinity then raise (FoundInfiniteRank state_index)
+												) !queue;
+												(* raise (NotImplemented("Gia")) *)
+												(* get the highest rank *)
+												
+												let state_index2 = getHighestRank !queue rank_hashtable in
+												state_index2;
+												(* List.hd !queue;*)
+											) with FoundInfiniteRank state_index -> state_index
+											);
+
+			| Exploration_queue_BFS_PRIOR -> List.hd !queue;
+			|  _ -> raise (InternalError ("Impossible situation: at that point, it should be a (variant of) queue BFS"));
+
 		in
+
 		
+
+
 		(*** END: code for ranking system ***)
+
+
+		queue := [init_state_index];
 		
-			
+		(* for ranking algo *)
+		let rank = initial_rank init_state_index state_space in
+		Hashtbl.add rank_hashtable init_state_index rank;
+
+		
+		
+
+
+
+
 		(* Explore further until the limit is reached or the queue is empty *)
 		while !limit_reached = Keep_going && !queue <> [] && !algorithm_keep_going do
 			print_message Verbose_low ("I am here!!!!!!");
@@ -2050,106 +2221,54 @@ class virtual algoStateBased =
 			let new_queue, popped_from_queue = match options#exploration_order with
 				(* Classical queue: just pop! *)
 				| Exploration_queue_BFS -> OCamlUtilities.list_split_last !queue
-				
 				(* Ranking system: TODO *)
-				| Exploration_queue_BFS_RS -> 
-					(* Find the state to be selected *)
-					let state_index = select_from_queue () in
-					(* Remove from queue *)
-					let updated_queue = list_remove_first_occurence state_index !queue in
-					(* Return new queue, popped state *)
-					updated_queue, state_index
-				
+				| Exploration_queue_BFS_RS -> 	(* Find the state to be selected *)
+												let state_index = select_from_queue () in
+												(* Remove from queue *)
+												let updated_queue = list_remove_first_occurence state_index !queue in
+												(* Return new queue, popped state *)
+												updated_queue, state_index
+				(* Priority: TODO *)
+				| Exploration_queue_BFS_PRIOR -> 	(* Find the state to be selected *)
+													let state_index = select_from_queue () in
+													(* Remove from queue *)
+													let updated_queue = list_remove_first_occurence state_index !queue in
+													(* Return new queue, popped state *)
+													updated_queue, state_index
 				(* Impossible *)
 				| _ -> raise (InternalError ("Impossible situation: at that point, it should be a (variant of) queue BFS"))
 			in
+			
 			
 			(* Remove from the queue *)
 			queue := new_queue;
 			
 			(* Count the states for verbose purpose: *)
 			num_state := !num_state + 1;
-
-(*(* Take the first element, i.e., last from the list *)
-			(*** NOTE: no test for emptiness, as it was performed just above in the while loop condition ***)
-			let new_queue, popped_from_queue = OCamlUtilities.list_split_last !queueWaiting in
-			
-			
-			
-			
-			(* Remove from the queue *)
-			queueWaiting := new_queue;
-			(* Add poped state into queueVisited *)
-			queueVisited := list_append [popped_from_queue] !queueVisited;*)
-
-
-
-(*			(* popped state information *)
-			(* location: static , constraint*)
-			let poppedlocation, poppedconstr = StateSpace.get_state state_space popped_from_queue in
-
-			(* get locations from global location *)
-			let poppedlocArr = Location.get_locations poppedlocation in
-
-			print_message Verbose_standard ("poped state info: S_" ^ (string_of_int popped_from_queue) 
-													^ " Constr: \n" 
-													^ (LinearConstraint.string_of_px_linear_constraint model.variable_names poppedconstr));		
-			Array.iter ( fun loc -> 
-						print_message Verbose_standard (" l" ^ (string_of_int (loc + 1) ) );
-			) poppedlocArr;
-			*)
 			
 			(* Compute successors *)
 			let successors = self#post_from_one_state popped_from_queue in
-			
+
+
 			(* Add to queue *)
-			queue := list_append successors !queue;
-(* 			queueWaiting := list_append successors !queueWaiting; *)
+			queue := 
+				(match options#exploration_order with
+				| Exploration_queue_BFS -> list_append successors !queue
+				(* Ranking system: TODO *)
+				| Exploration_queue_BFS_RS -> 	rankingSuccessors successors;
+												list_append successors !queue
+				(* Priority system: TODO *)
+				| Exploration_queue_BFS_PRIOR -> addToPriorQueue successors !queue
+				(* Impossible *)
+				| _ -> raise (InternalError ("Impossible situation: at that point, it should be a (variant of) queue BFS"))
+			);
+			
 
-(*			(*Ordering function will be here*)
-			let queueOrder = ref 1 in
-			List.iter ( fun state_index -> 		
-				(* location: static, constraint *)
-				let location, constr = StateSpace.get_state state_space state_index in
-
-				(* get locations from global location *)
-				let locArr = Location.get_locations location in
+			
 
 
-				print_message Verbose_standard ("W Queue Order #" ^ (string_of_int !queueOrder) ^ " S_" ^ (string_of_int state_index) 
-												^ " Constr: " 
-												^ (LinearConstraint.string_of_px_linear_constraint model.variable_names constr));		
 
-				Array.iter ( fun loc -> 
-					print_message Verbose_standard (" l" ^ (string_of_int (loc + 1) ) );
-				) locArr;
 
-				(* check vistited state*)
-				List.iter ( fun visitedState_index -> 	
-					let visitedlocation, visitedconstr = StateSpace.get_state state_space visitedState_index in
-
-					let visitedCheck = Location.location_equal visitedlocation location in
-					if (visitedCheck = true) then
-					(
-						print_message Verbose_standard ("Visited: " ^ (string_of_bool visitedCheck) ^ "!!!!" );
-						(* Check inclusion here *)
-						let isIncluded = LinearConstraint.px_is_leq constr visitedconstr in
-						print_message Verbose_standard ("Included: " ^ (string_of_bool isIncluded) ^ "!!!!" );
-						
-					);
-					
-
-				) !queueVisited;
-
-				(* print_message Verbose_standard *)
-
-				queueOrder := !queueOrder + 1;
-				()
-
-			) !queueWaiting;
-			print_message Verbose_standard ("\n");
-
-			*)
 			
 			(* Check if the limit has been reached *)
 			limit_reached := self#check_queue_bfs_limit;
@@ -2512,6 +2631,7 @@ class virtual algoStateBased =
 			| Exploration_layer_BFS -> self#explore_layer_bfs init_state_index;
 			| Exploration_queue_BFS -> self#explore_queue_bfs init_state_index;
 			| Exploration_queue_BFS_RS -> self#explore_queue_bfs init_state_index;
+			| Exploration_queue_BFS_PRIOR -> self#explore_queue_bfs init_state_index;
 		end;
 
 		(* Return the algorithm-dependent result *)
