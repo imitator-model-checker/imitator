@@ -2016,7 +2016,7 @@ class virtual algoStateBased =
 			rank
 		in
 
-		(*
+		
 		let isRanked state_index = 
 			(* try to find in the hashtbl *)
 			try(
@@ -2024,7 +2024,7 @@ class virtual algoStateBased =
 				true
 			) with Not_found -> false;
 		in
-		*)
+		
 		(*****************************************************RANKING TBL END**************************************************)
 
 
@@ -2074,23 +2074,59 @@ class virtual algoStateBased =
 		in
 
 
+		let getVisitedStates rank_hashtable = Hashtbl.fold ( fun state_index rank acc -> state_index::acc ) rank_hashtable [] in
+
+
+		let getHighestRankSuccessor state_index = 
+			let rank = ref (Hashtbl.find rank_hashtable state_index) in
+			let successors = ref (StateSpace.get_successors state_space state_index ) in
+
+			while not (!successors = []) do 
+				(
+			 	let successor = List.hd !successors in
+			 	successors := (List.tl !successors)@(StateSpace.get_successors state_space successor);
+			 	rank := getMaxRank !rank (Hashtbl.find rank_hashtable successor);
+			 	);
+			done;
+			!rank;
+		in
+
+
 		
-		let rankingSuccessors successors = 
+		let rankingSuccessors successors from_state_index queue= 
+
+			(* let queue = ref queue in *)
 
 			List.iter (fun state_index ->	
 				let rank = ref (initial_rank state_index state_space) in
 				
-
 				let smallers = getSmallerVisitedLocation state_index rank_hashtable in
 				if smallers = [] 
 				then
-					queue := state_index :: !queue
+					()
 				else
 					(
 						List.iter ( fun state_index_smaller -> 
-							if not (List.mem state_index_smaller !queue)
-							then
-								rank := getMaxRank !rank (Hashtbl.find rank_hashtable state_index);
+							if not (List.mem state_index_smaller queue)
+							then (
+								(* rank := getMaxRank !rank (Hashtbl.find rank_hashtable state_index); *)
+								rank := getHighestRankSuccessor state_index;
+								);
+
+							(*Add transition*)
+							let lsTransitions = StateSpace.find_transitions_in state_space (state_index_smaller::(getVisitedStates rank_hashtable)) in
+
+							List.iter ( fun (pre, actions, smaller) -> 
+								if (state_index_smaller == smaller) then
+								StateSpace.add_transition state_space (pre, actions, state_index);
+
+								(* remove smaller state *)
+								(*
+								let abstract_state = Hashtbl.find (state_space.all_states) smaller in
+								Hashtbl.remove (state_space.all_states) (s,abstract_state);
+								*)
+
+							) lsTransitions;
 	
 						) smallers;
 					);
@@ -2148,9 +2184,31 @@ class virtual algoStateBased =
 			let q = ref queue in
 			List.iter (fun state_index ->	let rank = initial_rank state_index state_space in
 											Hashtbl.add rank_hashtable state_index rank;
-												match rank with 
-													| Infinity -> q := addInfinityToPriorQueue state_index !q
-													| Int _ -> q := addNonInfinityToPriorQueue state_index !q;
+
+											let smallers = getSmallerVisitedLocation state_index rank_hashtable in
+											if not (smallers = [])
+											then (
+													List.iter ( fun state_index_smaller ->
+														(*Add transition*)
+														let lsTransitions = StateSpace.find_transitions_in state_space (state_index_smaller::(getVisitedStates rank_hashtable)) in
+
+														List.iter ( fun (pre, actions, smaller) -> 
+															if (state_index_smaller == smaller) then
+															StateSpace.add_transition state_space (pre, actions, state_index);
+
+															(* remove smaller state *)
+															(*
+															let abstract_state = Hashtbl.find (state_space.all_states) smaller in
+															Hashtbl.remove (state_space.all_states) (s,abstract_state);
+															*)
+
+														) lsTransitions;
+													) smallers;
+												);
+
+											match rank with 
+												| Infinity -> q := addInfinityToPriorQueue state_index !q
+												| Int _ -> q := addNonInfinityToPriorQueue state_index !q;
 			) successors;
 			!q
 		in
@@ -2255,8 +2313,8 @@ class virtual algoStateBased =
 				(match options#exploration_order with
 				| Exploration_queue_BFS -> list_append successors !queue
 				(* Ranking system: TODO *)
-				| Exploration_queue_BFS_RS -> 	rankingSuccessors successors;
-												list_append successors !queue
+				| Exploration_queue_BFS_RS -> 	rankingSuccessors successors popped_from_queue !queue;
+												list_append successors !queue 
 				(* Priority system: TODO *)
 				| Exploration_queue_BFS_PRIOR -> addToPriorQueue successors !queue
 				(* Impossible *)
