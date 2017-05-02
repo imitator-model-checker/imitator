@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2017/03/08
+ * Last modified     : 2017/05/02
  *
  ************************************************************)
 
@@ -162,6 +162,7 @@ match options#imitator_mode with
 	| State_space_exploration
 	| EF_synthesis
 	| EFunsafe_synthesis
+	| EF_min
 	| Loop_synthesis
 	| Parametric_NZ_CUBcheck
 	| Parametric_NZ_CUBtransform
@@ -326,11 +327,11 @@ if options#cartonly then(
 (* Preliminary checks *)
 (************************************************************)
 
-if options#imitator_mode = EF_synthesis then(
+if options#imitator_mode = EF_synthesis || options#imitator_mode = EFunsafe_synthesis || options#imitator_mode = EF_min then(
 	match model.correctness_condition with
 		(* Synthesis only works w.r.t. (un)reachability *)
 		| Some (Unreachable _) -> ()
-		| _ -> print_error ("EF-synthesis can only be run if an unreachability property is defined in the model.");
+		| _ -> print_error ("Parametric reachability algorithms can only be run if an unreachability property is defined in the model.");
 			abort_program();
 );
 
@@ -434,6 +435,13 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFunsafeSynth.algoEFunsafeSynth in myalgo
 	
 	
+	(************************************************************)
+	(* EF-minimization *)
+	(************************************************************)
+	| EF_min ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFmin.algoEFmin in myalgo
+	
+
 	(************************************************************)
 	(* Parametric loop synthesis *)
 	(************************************************************)

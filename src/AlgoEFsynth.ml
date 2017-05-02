@@ -193,8 +193,16 @@ class virtual algoEFsynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_initial_state initial_state = self#process_state initial_state
 
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Actions to perform when trying to minimize/maximize a parameter; to be redefined in appropriate subclasses. Returns true if the same should be kept, false if discarded. *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method optimize_parameter state = true
+
 	
-	(* Compute the p-constraint only if it is not cached *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Compute the p-constraint only if it is not cached *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private compute_p_constraint_with_cache px_linear_constraint =
 		match cached_p_constraint with
 		(* Cache empty: *)
@@ -244,74 +252,83 @@ class virtual algoEFsynth =
 
 		(* Build the state *)
 		let new_state = location, current_constraint in
-
-		(* Try to add the new state to the state space *)
-		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
 		
-		begin
-		match addition_result with
-		(* If the state was present: do nothing *)
-		| StateSpace.State_already_present _ -> ()
-		(* If this is really a new state, or a state larger than a former state *)
-		| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
+		(* If we have to optimize a parameter, do that now *)
+		let keep_processing = self#optimize_parameter new_state in
 
-			(* First check whether this is a bad tile according to the property and the nature of the state *)
-			self#update_statespace_nature new_state;
+		(* Only process if we have to *)
+		if keep_processing then(
+			(* Try to add the new state to the state space *)
+			let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
 			
-			(* Will the state be added to the list of new states (the successors of which will be computed)? *)
-			(*** BADPROG: ugly bool ref that may be updated in an IF condition below ***)
-			let to_be_added = ref (self#process_state new_state) in
-			
-			(* If to be added: if the state is included into the bad constraint, no need to explore further, and hence do not add *)
-			if !to_be_added then(
-			
-				(* Print some information *)
-				if verbose_mode_greater Verbose_medium then(
-					self#print_algo_message Verbose_medium "Projecting onto the parameters…";
-				);
+			begin
+			match addition_result with
+			(* If the state was present: do nothing *)
+			| StateSpace.State_already_present _ -> ()
+			(* If this is really a new state, or a state larger than a former state *)
+			| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
 
-				(* Project onto the parameters *)
-				(*** NOTE: here, we use the cache system ***)
-				let p_constraint = self#compute_p_constraint_with_cache current_constraint in
+				(* First check whether this is a bad tile according to the property and the nature of the state *)
+				self#update_statespace_nature new_state;
 				
-				(* Print some information *)
-				self#print_algo_message Verbose_medium "Checking whether the new state is included into known bad valuations…";
-				if verbose_mode_greater Verbose_high then(
-					self#print_algo_message Verbose_high "\nNew constraint:";
-					print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-					
-					self#print_algo_message Verbose_high "\nCurrent bad constraint:";
-					print_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
-				);
+				(* Will the state be added to the list of new states (the successors of which will be computed)? *)
+				(*** BADPROG: ugly bool ref that may be updated in an IF condition below ***)
+				let to_be_added = ref (self#process_state new_state) in
+				
+				(* If to be added: if the state is included into the bad constraint, no need to explore further, and hence do not add *)
+				if !to_be_added then(
+				
+					(* Print some information *)
+					if verbose_mode_greater Verbose_medium then(
+						self#print_algo_message Verbose_medium "Projecting onto the parameters…";
+					);
 
-				(* if p_constraint <= bad_constraint *)
-				if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) bad_constraint then (
-					(* Statistics *)
-					counter_cut_branch#increment;
+					(* Project onto the parameters *)
+					(*** NOTE: here, we use the cache system ***)
+					let p_constraint = self#compute_p_constraint_with_cache current_constraint in
 					
 					(* Print some information *)
-					self#print_algo_message Verbose_low "Found a state included in bad valuations; cut branch.";
+					self#print_algo_message Verbose_medium "Checking whether the new state is included into known bad valuations…";
+					if verbose_mode_greater Verbose_high then(
+						self#print_algo_message Verbose_high "\nNew constraint:";
+						print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+						
+						self#print_algo_message Verbose_high "\nCurrent bad constraint:";
+						print_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
+					);
 
-					(* Do NOT compute its successors; cut the branch *)
-					to_be_added := false;
+					(* if p_constraint <= bad_constraint *)
+					if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) bad_constraint then (
+						(* Statistics *)
+						counter_cut_branch#increment;
+						
+						(* Print some information *)
+						self#print_algo_message Verbose_low "Found a state included in bad valuations; cut branch.";
+
+						(* Do NOT compute its successors; cut the branch *)
+						to_be_added := false;
+					);
 				);
-			);
 
-			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
-			if !to_be_added then
-				new_states_indexes := new_state_index :: !new_states_indexes;
+				(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
+				if !to_be_added then
+					new_states_indexes := new_state_index :: !new_states_indexes;
+				
+			end (* end if new state *)
+			;
 			
-		end (* end if new state *)
-		;
+			(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
+			
+			(* Add the transition to the state space *)
+			self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
 		
-		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
-		
-		(* Add the transition to the state space *)
-		self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
-	
-		(* The state is kept in any case *)
-		true
+			(* The state is kept in any case *)
+			true
 	(*** WARNING/BADPROG: what preceedes is partially copy/paste to AlgoPRP.ml ***)
+		)else(
+			(* If state discarded after minimization: do not keep it *)
+			false
+		)
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

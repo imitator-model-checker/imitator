@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2017/03/08
+ * Last modified     : 2017/05/02
  *
  ************************************************************)
 
@@ -62,6 +62,12 @@ class virtual algoEFsynth :
 		method process_initial_state : State.state -> bool
 		
 
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Actions to perform when trying to minimize/maximize a parameter; to be redefined in appropriate subclasses. Returns true if the same should be kept, false if discarded. *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method optimize_parameter : State.state -> bool
+
+		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

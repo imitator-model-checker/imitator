@@ -207,6 +207,9 @@ type imitator_mode =
 	(** EF-synthesis w.r.t. unsafe locations *)
 	| EFunsafe_synthesis
 	
+	(** EF-minimization *)
+	| EF_min
+	
 	(** Parametric loop synthesis *)
 	| Loop_synthesis
 	
