@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2017/03/28
+ * Last modified     : 2017/05/02
  *
  ************************************************************)
 
@@ -57,6 +57,16 @@ class virtual algoEFsynth =
 	val counter_found_bad = create_discrete_counter_and_register "found bad state" PPL_counter Verbose_low
 	(* The constraint of a new state is smaller than the bad constraint: cut branch *)
 	val counter_cut_branch = create_discrete_counter_and_register "cut branch (constraint <= bad)" PPL_counter Verbose_low
+	(* How many times the cache was useful *)
+	val counter_cache = create_discrete_counter_and_register "cache (EF)" PPL_counter Verbose_low
+	(* Number of cache misses *)
+	val counter_cache_miss = create_discrete_counter_and_register "cache miss (EF)" PPL_counter Verbose_low
+	
+	
+	(* Mini cache system: keep in memory the current p-constraint to save computation time *)
+	(*** WARNING: a bit dangerous, as its handling is not very very strictly controlled ***)
+	val mutable cached_p_constraint : LinearConstraint.p_linear_constraint option = None
+	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
@@ -85,6 +95,11 @@ class virtual algoEFsynth =
 	(** Process a symbolic state *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private process_state state =
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message Verbose_medium "Entering process_state…";
+		);
+
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 		
@@ -97,9 +112,15 @@ class virtual algoEFsynth =
 			(* Check whether the current location matches one of the unreachable global locations *)
 			if State.match_unreachable_global_locations unreachable_global_locations state_location then(
 			
+				(* Print some information *)
+				if verbose_mode_greater Verbose_medium then(
+					self#print_algo_message Verbose_medium "Projecting onto the parameters (using the cache)…";
+				);
+
 				(* Project onto the parameters *)
-				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state_constraint in
-				
+				(*** NOTE: here, we use the cache system ***)
+				let p_constraint = self#compute_p_constraint_with_cache state_constraint in
+
 				(* Projecting onto SOME parameters if required *)
 				(*** BADPROG: Duplicate code (AlgoLoopSynth / AlgoPRP) ***)
 				begin
@@ -111,7 +132,7 @@ class virtual algoEFsynth =
 					(* Print some information *)
 					self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
 
-					(*** TODO! do only once for all... ***)
+					(*** TODO! do only once for all… ***)
 					let all_but_projectparameters = list_diff model.parameters parameters in
 					
 					(* Eliminate other parameters *)
@@ -173,6 +194,35 @@ class virtual algoEFsynth =
 	method process_initial_state initial_state = self#process_state initial_state
 
 	
+	(* Compute the p-constraint only if it is not cached *)
+	method private compute_p_constraint_with_cache px_linear_constraint =
+		match cached_p_constraint with
+		(* Cache empty: *)
+		| None ->
+			(* Compute the p_constraint *)
+			let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_linear_constraint in
+			(* Statistics *)
+			counter_cache_miss#increment;
+			(* Print some information *)
+			if verbose_mode_greater Verbose_medium then(
+				self#print_algo_message Verbose_medium "\nCache miss!";
+			);
+			(* Update cache *)
+			cached_p_constraint <- Some p_constraint;
+			(* Return result *)
+			p_constraint
+		(* Cache not empty: directly use it *)
+		| Some p_constraint ->
+			(* Statistics *)
+			counter_cache#increment;
+			(* Print some information *)
+			if verbose_mode_greater Verbose_medium then(
+				self#print_algo_message Verbose_medium "\nCache hit!";
+			);
+			(* Return the value in cach *)
+			p_constraint
+	
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add a new state to the state_space (if indeed needed) *)
 	(* Side-effects: modify new_states_indexes *)
@@ -181,6 +231,14 @@ class virtual algoEFsynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** WARNING/BADPROG: the following is partially copy/paste to AlgoPRP.ml ***)
 	method add_a_new_state source_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message Verbose_medium "Entering add_a_new_state (and reset cache)…";
+		);
+		
+		(* Reset the cached p-constraint *)
+		cached_p_constraint <- None;
+		
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 
@@ -207,10 +265,14 @@ class virtual algoEFsynth =
 			(* If to be added: if the state is included into the bad constraint, no need to explore further, and hence do not add *)
 			if !to_be_added then(
 			
-				(*** WARNING: this may have been computed above! ***)
-				(*** TODO: use a small ad-hoc cache system ***)
+				(* Print some information *)
+				if verbose_mode_greater Verbose_medium then(
+					self#print_algo_message Verbose_medium "Projecting onto the parameters…";
+				);
+
 				(* Project onto the parameters *)
-				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse current_constraint in
+				(*** NOTE: here, we use the cache system ***)
+				let p_constraint = self#compute_p_constraint_with_cache current_constraint in
 				
 				(* Print some information *)
 				self#print_algo_message Verbose_medium "Checking whether the new state is included into known bad valuations…";
