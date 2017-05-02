@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13 (France)
  * 
  * Module description: Useful and general functions for IMITATOR
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/04/13
+ * Last modified     : 2017/05/02
  *
  ************************************************************)
 
@@ -209,6 +209,9 @@ type imitator_mode =
 	
 	(** EF-minimization *)
 	| EF_min
+	
+	(** EF-maximization *)
+	| EF_max
 	
 	(** Parametric loop synthesis *)
 	| Loop_synthesis

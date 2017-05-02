@@ -163,6 +163,7 @@ match options#imitator_mode with
 	| EF_synthesis
 	| EFunsafe_synthesis
 	| EF_min
+	| EF_max
 	| Loop_synthesis
 	| Parametric_NZ_CUBcheck
 	| Parametric_NZ_CUBtransform
@@ -327,13 +328,31 @@ if options#cartonly then(
 (* Preliminary checks *)
 (************************************************************)
 
-if options#imitator_mode = EF_synthesis || options#imitator_mode = EFunsafe_synthesis || options#imitator_mode = EF_min then(
+if options#imitator_mode = EF_synthesis || options#imitator_mode = EFunsafe_synthesis || options#imitator_mode = EF_min  || options#imitator_mode = EF_max then(
 	match model.correctness_condition with
 		(* Synthesis only works w.r.t. (un)reachability *)
 		| Some (Unreachable _) -> ()
 		| _ -> print_error ("Parametric reachability algorithms can only be run if an unreachability property is defined in the model.");
 			abort_program();
 );
+
+if options#imitator_mode = EF_min then(
+	match model.optimized_parameter with
+		| Minimize _ -> ()
+		| _ ->
+			print_error ("A minimized parameter must be defined in the model to run EFmin.");
+			abort_program();
+);
+
+if options#imitator_mode = EF_max then(
+	match model.optimized_parameter with
+		| Maximize _ -> ()
+		| _ ->
+			print_error ("A maximized parameter must be defined in the model to run EFmax.");
+			abort_program();
+);
+
+
 
 
 if (options#imitator_mode = Border_cartography && model.correctness_condition = None) then(
@@ -393,7 +412,7 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 
 (************************************************************)
 (************************************************************)
-(* Execute IMITATOR *)
+(* Run IMITATOR *)
 (************************************************************)
 (************************************************************)
 
@@ -440,6 +459,13 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(************************************************************)
 	| EF_min ->
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFmin.algoEFmin in myalgo
+	
+
+	(************************************************************)
+	(* EF-minimization *)
+	(************************************************************)
+	| EF_max ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFmax.algoEFmax in myalgo
 	
 
 	(************************************************************)

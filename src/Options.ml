@@ -3,7 +3,7 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13 (France)
  * 
  * Module description: Options definitions
  * 
@@ -381,6 +381,10 @@ class imitator_options =
 				(* Case: EF-minimization *)
 				else if mode = "EFmin" then 
 					imitator_mode <- EF_min
+					
+				(* Case: EF-maximization *)
+				else if mode = "EFmax" then 
+					imitator_mode <- EF_max
 					
 				(* Case: Parametric loop synthesis *)
 				else if mode = "LoopSynth" then 
@@ -794,14 +798,13 @@ class imitator_options =
 			);
 			
 			(* Case no pi0 file *)
-			if nb_args = 1 && (imitator_mode != State_space_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != EFunsafe_synthesis) && (imitator_mode != EF_min) && (imitator_mode != Loop_synthesis) && (imitator_mode != Parametric_NZ_CUBtransform) && (imitator_mode != Parametric_NZ_CUBcheck) && (imitator_mode != Parametric_NZ_CUB) && (imitator_mode != Parametric_deadlock_checking) && (imitator_mode != Translation) then(
+			if nb_args = 1 && (imitator_mode != State_space_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != EFunsafe_synthesis) && (imitator_mode != EF_min) && (imitator_mode != EF_max) && (imitator_mode != Loop_synthesis) && (imitator_mode != Parametric_NZ_CUBtransform) && (imitator_mode != Parametric_NZ_CUBcheck) && (imitator_mode != Parametric_NZ_CUB) && (imitator_mode != Parametric_deadlock_checking) && (imitator_mode != Translation) then(
 				(*** HACK: print header now ***)
 				print_header_string();
 				print_error ("Please give a file name for the reference valuation.");
 				Arg.usage speclist usage_msg;
 				abort_program (); exit(1)
 			);
-			
 			
 			(* Set prefix for files *)
 			if !files_prefix = "" then
@@ -843,6 +846,7 @@ class imitator_options =
 				| EF_synthesis -> "EF-synthesis"
 				| EFunsafe_synthesis -> "EFunsafe-synthesis"
 				| EF_min -> "EF-minimization"
+				| EF_max -> "EF-maximization"
 				| Loop_synthesis -> "loop-synthesis"
 				| Parametric_NZ_CUBcheck -> "parametric non-Zeno emptiness checking (CUB checking)"
 				| Parametric_NZ_CUBtransform -> "parametric non-Zeno emptiness checking (CUB transformation)"
@@ -870,7 +874,7 @@ class imitator_options =
 			(* Shortcut *)
 			let in_cartography_mode =
 				match imitator_mode with
-				| Translation | State_space_exploration | EF_synthesis| EFunsafe_synthesis | EF_min | Loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUBcheck | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP -> false
+				| Translation | State_space_exploration | EF_synthesis| EFunsafe_synthesis | EF_min | EF_max | Loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUBcheck | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP -> false
 				| Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _  | RandomSeq_cartography _ | PRPC -> true
 			in
 			
@@ -928,7 +932,7 @@ class imitator_options =
 				if imitator_mode = State_space_exploration then
 					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a state space exploration.")
 				;
-				if imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min then
+				if imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_max then
 					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a synthesis with respect to a property.")
 				;
 				if imitator_mode = Loop_synthesis then
@@ -965,7 +969,7 @@ class imitator_options =
 				print_warning (Constants.program_name ^ " is not run in cartography mode; the option regarding to the step of the cartography algorithm will thus be ignored.");
 			
 			(* Options for variants of IM, but not in IM mode *)
-			if (imitator_mode = State_space_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = Loop_synthesis || imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
+			if (imitator_mode = State_space_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_max || imitator_mode = Loop_synthesis || imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
 				print_warning (Constants.program_name ^ " is run in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
 
 			

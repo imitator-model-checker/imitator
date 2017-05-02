@@ -2,12 +2,12 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13 (France)
  * 
- * Module description: EFsynth algorithm [JLR15]
+ * Module description: "EF optimized" algorithm: minimization or minimization of a parameter valuation for which there exists a run leading to some states
  * 
  * File contributors : Étienne André
- * Created           : 2015/11/25
+ * Created           : 2017/05/02
  * Last modified     : 2017/05/02
  *
  ************************************************************)
@@ -23,30 +23,45 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoEFsynth :
+class virtual algoEFopt :
 	object inherit algoStateBased
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
 
-		method algorithm_name : string
-		
-		(* Non-necessarily convex constraint allowing the reachability of the bad location *)
-		val mutable bad_constraint : LinearConstraint.p_nnconvex_constraint
-	
-		(* Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is used at the end of the algorithm) *)
-		(*** WARNING: these lines are copied from AlgoDeadlockFree ***)
-		val init_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint
-
-
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
+		(*------------------------------------------------------------*)
+		(* Shortcuts *)
+		(*------------------------------------------------------------*)
 		
+		(* Retrieve the parameter to be projected onto *)
+		val parameter_index : Automaton.parameter_index
+
+		
+		(*------------------------------------------------------------*)
+		(* Instantiating min/max *)
+		(*------------------------------------------------------------*)
+		(* Function to remove upper bounds (if minimum) or lower bounds (if maximum) *)
+		method virtual remove_bounds : Automaton.parameter_index list -> Automaton.parameter_index list -> LinearConstraint.p_linear_constraint -> unit
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Function to negate an inequality (to be defined in subclasses) *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method virtual negate_inequality : LinearConstraint.p_linear_constraint -> LinearConstraint.p_linear_constraint
+
+		(* Various strings *)
+		method virtual str_optimum : string
+		method virtual str_upper_lower : string
+		
+		
+		(*------------------------------------------------------------*)
+		(* Algorithmic methods *)
+		(*------------------------------------------------------------*)
 		method run : unit -> Result.imitator_result
 		
-		method initialize_variables : unit
-		
+
 		(*------------------------------------------------------------*)
 		(* Add a new state to the reachability_graph (if indeed needed) *)
 		(* Also update tile_nature and slast (*** TODO: remove these operations, and move them back to their algorithms ***) *)
@@ -79,5 +94,5 @@ class virtual algoEFsynth :
 		method check_termination_at_post_n : bool
 
 		
-		method virtual compute_result : Result.imitator_result
+		method compute_result : Result.imitator_result
 end

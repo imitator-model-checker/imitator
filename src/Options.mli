@@ -1,14 +1,19 @@
-(*****************************************************************
+(************************************************************
  *
- *                     IMITATOR
+ *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Etienne Andre
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13 (France)
+ * 
+ * Module description: Options definitions
+ * 
+ * File contributors : Étienne André
  * Created:       2012/05/10
  * Last modified: 2017/04/18
  *
- ****************************************************************)
+ ************************************************************)
  
+
 open ImitatorUtilities
 
 

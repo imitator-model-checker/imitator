@@ -4,7 +4,7 @@
  * 
  * LIPN, Université Paris 13 (France)
  * 
- * Module description: "EF min" algorithm: minimization of a parameter valuation for which there exists a run leading to some states
+ * Module description: "EF max" algorithm: maximization of a parameter valuation for which there exists a run leading to some states
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
@@ -22,7 +22,7 @@ open AlgoEFopt
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoEFmin :
+class algoEFmax :
 	object inherit algoEFopt
 		(************************************************************)
 		(* Class variables *)
@@ -39,7 +39,6 @@ class algoEFmin :
 		(* Function to negate an inequality *)
 		method negate_inequality : LinearConstraint.p_linear_constraint -> LinearConstraint.p_linear_constraint
 
-		
 		(* Various strings *)
 		method str_optimum : string
 		method str_upper_lower : string

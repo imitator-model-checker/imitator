@@ -3,7 +3,7 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13 (France)
  * 
  * Module description: All graphics handling (cartography, trace set…)
  * 
@@ -158,7 +158,7 @@ try(
 	begin
 	match options#imitator_mode with
 		(*** TODO: better use an option "is_cartography" ***)
-		| EF_synthesis | EFunsafe_synthesis | EF_min | Loop_synthesis | Parametric_NZ_CUBcheck | Parametric_NZ_CUBtransform | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP ->
+		| EF_synthesis | EFunsafe_synthesis | EF_min | EF_max | Loop_synthesis | Parametric_NZ_CUBcheck | Parametric_NZ_CUBtransform | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP ->
 			print_message Verbose_low "Pick up the first 2 parameters to draw the cartography";
 			(* First check that there are at least 2 parameters *)
 			if model.nb_parameters < 2 then(
