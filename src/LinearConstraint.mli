@@ -358,6 +358,13 @@ val pxd_hide_discrete_and_collapse : pxd_linear_constraint -> px_linear_constrai
 (** Eliminate (using existential quantification) the non-parameters in a pxd_linear constraint, and remove the corresponding dimensions *)
 (* val pxd_hide_nonparameters_and_collapse : pxd_linear_constraint -> p_linear_constraint *)
 
+(*------------------------------------------------------------*)
+(* Convex negation *)
+(*------------------------------------------------------------*)
+(** Assuming p_linear_constraint contains a single inequality, this function returns the negation of this inequality (in the form of a p_constraint). Raises InternalError if more than one inequality. *)
+val negate_single_inequality_p_constraint : p_linear_constraint -> p_linear_constraint
+
+
 (** Eliminate (using existential quantification) a set of variables in a linear constraint, with side effects *)
 val p_hide_assign : variable list -> p_linear_constraint -> unit
 val px_hide_assign : variable list -> px_linear_constraint -> unit

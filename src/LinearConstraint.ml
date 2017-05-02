@@ -1039,6 +1039,16 @@ let negate_wrt_pi0 pi0 linear_inequality =
 			)
 
 
+(* Negate an inequality ('=' is disallowed); raises InternalError if "=" is used *)
+let negate_inequality = function
+	| Less_Than (lterm, rterm) -> Greater_Or_Equal (lterm, rterm)
+	| Less_Or_Equal (lterm, rterm) -> Greater_Than (lterm, rterm)
+	| Greater_Than (lterm, rterm) -> Less_Or_Equal (lterm, rterm)
+	| Greater_Or_Equal (lterm, rterm) -> Less_Than (lterm, rterm)
+	| Equal (lterm, rterm) -> raise (InternalError "Trying to negate an equality in negate_inequality")
+
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)				   	
@@ -1495,6 +1505,7 @@ let p_nb_inequalities linear_constraint =
 (** Get the inequalities of a constraint *)
 let pxd_get_inequalities = ippl_get_inequalities
 let px_get_inequalities = ippl_get_inequalities
+let p_get_inequalities = ippl_get_inequalities
 
 
 (** Return true if the variable is constrained in a linear_constraint *)
@@ -1747,6 +1758,7 @@ let px_copy = ippl_copy_linear_constraint
 let pxd_copy = ippl_copy_linear_constraint
 
 
+
 (*------------------------------------------------------------*)
 (* Intersection *)
 (*------------------------------------------------------------*)
@@ -1845,17 +1857,38 @@ let px_hull_assign_if_exact = ippl_hull_assign_if_exact
 
 
 (*------------------------------------------------------------*)
+(* Convex negation *)
+(*------------------------------------------------------------*)
+(** Assuming p_linear_constraint contains a single inequality, this function returns the negation of this inequality (in the form of a p_constraint). Raises InternalError if more than one inequality. *)
+let negate_single_inequality_p_constraint p_linear_constraint =
+	(* Retrieve the inequalities *)
+	let inequalities = p_get_inequalities p_linear_constraint in
+	(* Check *)
+	if List.length inequalities <> 1 then(
+		raise (InternalError("Exactly one inequality should be contained in negate_single_inequality_p_constraint"))
+	);
+	(* Get the (only) inequality *)
+	let inequality = List.nth inequalities 0 in
+	(* Negate it *)
+	let negated_inequality = negate_inequality inequality in
+	(* Reconstruct a linear constraint *)
+	make_p_constraint [inequality]
+
+
+
+(*------------------------------------------------------------*)
 (* Variable elimination *)
 (*------------------------------------------------------------*)
 
 (** Eliminate a set of variables, side effects version *)
 let hide_assign nb_dimensions variables linear_constraint =
 	(* Print some information *)
-	if verbose_mode_greater Verbose_total then
+	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total (
 			"Function 'LinearConstraint.hide_assign': hiding variables "
 			^ (string_of_list_of_string_with_sep ", " (List.map string_of_int variables) )
 			^ ". Number of dimensions: " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ "."
+		);
 	);
 	
 	(* Only hide a non-empty list *)
