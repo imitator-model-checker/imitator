@@ -2113,9 +2113,9 @@ class virtual algoStateBased =
 								rank := getHighestRankSuccessor state_index;
 								);
 
+							(*
 							(*Add transition*)
 							let lsTransitions = StateSpace.find_transitions_in state_space (state_index_smaller::(getVisitedStates rank_hashtable)) in
-
 							List.iter ( fun (pre, actions, smaller) -> 
 								if (state_index_smaller == smaller) then
 								StateSpace.add_transition state_space (pre, actions, state_index);
@@ -2127,6 +2127,7 @@ class virtual algoStateBased =
 								*)
 
 							) lsTransitions;
+							*)
 	
 						) smallers;
 					);
@@ -2185,6 +2186,7 @@ class virtual algoStateBased =
 			List.iter (fun state_index ->	let rank = initial_rank state_index state_space in
 											Hashtbl.add rank_hashtable state_index rank;
 
+											(*
 											let smallers = getSmallerVisitedLocation state_index rank_hashtable in
 											if not (smallers = [])
 											then (
@@ -2205,6 +2207,7 @@ class virtual algoStateBased =
 														) lsTransitions;
 													) smallers;
 												);
+											*)
 
 											match rank with 
 												| Infinity -> q := addInfinityToPriorQueue state_index !q
