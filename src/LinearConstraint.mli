@@ -386,12 +386,11 @@ val pxd_time_elapse_assign : variable list -> variable list -> pxd_linear_constr
 (** Time elapsing function, in backward direction (corresponds to the "past" operation in, e.g., [JLR15]) *)
 val pxd_time_past_assign : variable list -> variable list -> pxd_linear_constraint -> unit
 
-(*(** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
-(** TODO: describe better *)
+(** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
+(*** WARNING: this function is certainly not optimized at all! ***)
 val p_grow_to_infinity_assign : variable list -> variable list -> p_linear_constraint -> unit
 
-(** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
-(** TODO: describe better *)
+(*(** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
 val p_grow_to_zero_assign : variable list -> variable list -> p_linear_constraint -> unit*)
 
 

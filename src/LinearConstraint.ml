@@ -2090,7 +2090,7 @@ let pxd_time_past_assign c = time_past_assign !pxd_dim c
 
 (** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
 (*** TODO: describe better ***)
-(*** WARNING: this function is certainly not optimized at all! somehow we don't care considering it's not called "often" in IMITATOR ***)
+(*** WARNING: this function is certainly not optimized at all! ***)
 let p_grow_to_infinity_assign variables_elapse variables_constant linear_constraint =
 	(* Compute all variables *)
 	let all_variables = List.rev_append variables_elapse variables_constant in
