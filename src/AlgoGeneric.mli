@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/03/30
+ * Last modified     : 2017/02/05
  *
  ************************************************************)
 
@@ -32,7 +32,20 @@ class virtual algoGeneric :
 		(* Start time for the algorithm *)
 		val mutable start_time : float
 
+		(*------------------------------------------------------------*)
+		(* Shortcuts *)
+		(*------------------------------------------------------------*)
+		
+		(* Retrieve the model *)
+		val model : AbstractModel.abstract_model
+		
+		(* Retrieve the input options *)
+		val options : Options.imitator_options
+		
+		
+		(*------------------------------------------------------------*)
 		(* Name of the algorithm (to be defined in subclasses) *)
+		(*------------------------------------------------------------*)
 		method virtual algorithm_name : string
 		
 

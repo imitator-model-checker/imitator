@@ -122,9 +122,6 @@ class virtual algoBCCoverDistributed =
 		
 		(* Print some messages *)
 		if verbose_mode_greater Verbose_low then(
-			(* Retrieve the model *)
-			let model = Input.get_model() in
-			
 			self#print_algo_message Verbose_medium ("**************************************************");
 			self#print_algo_message Verbose_medium ("BEHAVIORAL CARTOGRAPHY ALGORITHM: "(* ^ (string_of_int !current_iteration) ^ ""*));
 			self#print_algo_message Verbose_low ("Running IM for the following reference valuation:" (*^ (string_of_int !current_iteration)*));

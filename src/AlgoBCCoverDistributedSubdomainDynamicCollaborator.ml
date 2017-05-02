@@ -218,11 +218,6 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 	(* Find the next point, process it, send the tile to the master (and possibly stop or raise NewSubdomainAssigned depending on the master orders) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private process_one_point =
-		(* Retrieve the model *)
-		let model = Input.get_model() in
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
-		
 		(* Compute next point *)
 		self#compute_next_point;
 		

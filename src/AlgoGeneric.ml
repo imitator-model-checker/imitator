@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/03/30
+ * Last modified     : 2017/05/02
  *
  ************************************************************)
 
@@ -31,6 +31,17 @@ class virtual algoGeneric =
 	(* Start time for the algorithm *)
 	val mutable start_time = 0.
 
+	(*------------------------------------------------------------*)
+	(* Shortcuts *)
+	(*------------------------------------------------------------*)
+	
+	(* Retrieve the model *)
+	val model = Input.get_model ()
+	
+	(* Retrieve the input options *)
+	val options = Input.get_options ()
+	
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Virtual method: the algorithm name is to be defined in concrete classes *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
