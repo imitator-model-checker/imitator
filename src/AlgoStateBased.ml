@@ -2094,7 +2094,9 @@ class virtual algoStateBased =
 			 				count := !count + 1;
 			 			);
 			 	) nextSuccessors;
+			 	
 			 	(* successors := (List.tl !successors); *)
+
 			 	rank := getMaxRank !rank (Hashtbl.find rank_hashtable successor);
 			 	count := !count - 1;
 			 	);
