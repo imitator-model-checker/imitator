@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2017/04/24
+ * Last modified     : 2017/05/02
  *
  ************************************************************)
 
@@ -1886,7 +1886,7 @@ let pxd_hide v l = hide !pxd_dim v l
 
 
 (** Eliminate (using existential quantification) all non-parameters (clocks only, as it is a PX constraint) in a px_linear constraint *)
-let px_hide_nonparameters_and_collapse linear_constraint = 
+let px_hide_nonparameters_and_collapse px_linear_constraint = 
 	let non_parameter_variables = clocks () in
 	
 	(* Print some information *)
@@ -1897,7 +1897,26 @@ let px_hide_nonparameters_and_collapse linear_constraint =
 			^ "."
 		);
 	(* First hide *)
-	let result = px_hide non_parameter_variables linear_constraint in
+	let result = px_hide non_parameter_variables px_linear_constraint in
+	(* Remove higher space dimensions *)
+	ippl_remove_higher_dimensions result !p_dim;
+	(* Return result *)
+	result
+
+
+(** Eliminate (using existential quantification) all non-parameters (clocks only, as it is a PX constraint) and some parameters in a px_linear constraint *)
+let px_hide_allclocks_and_someparameters_and_collapse parameters_to_hide px_linear_constraint = 
+	let variables_to_hide = List.rev_append (clocks ()) parameters_to_hide in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total (
+			"Function 'LinearConstraint.px_hide_allclocks_and_someparameters_and_collapse': hiding variables "
+			^ (string_of_list_of_string_with_sep ", " (List.map string_of_int variables_to_hide) )
+			^ "."
+		);
+	(* First hide *)
+	let result = px_hide variables_to_hide px_linear_constraint in
 	(* Remove higher space dimensions *)
 	ippl_remove_higher_dimensions result !p_dim;
 	(* Return result *)

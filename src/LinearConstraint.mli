@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2017/04/24
+ * Last modified     : 2017/05/02
  *
  ************************************************************)
 
@@ -348,6 +348,9 @@ val px_hull_assign_if_exact : px_linear_constraint -> px_linear_constraint -> bo
 
 (** Eliminate (using existential quantification) all non-parameters (clocks) in a px_linear constraint *)
 val px_hide_nonparameters_and_collapse : px_linear_constraint -> p_linear_constraint
+
+(** Eliminate (using existential quantification) all non-parameters (clocks only, as it is a PX constraint) and some parameters in a px_linear constraint *)
+val px_hide_allclocks_and_someparameters_and_collapse : variable list -> px_linear_constraint -> p_linear_constraint
 
 (** Eliminate (using existential quantification) the discrete variables in a pxd_linear constraint, and remove the corresponding dimensions *)
 val pxd_hide_discrete_and_collapse : pxd_linear_constraint -> px_linear_constraint
