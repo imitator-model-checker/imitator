@@ -2077,15 +2077,26 @@ class virtual algoStateBased =
 		let getVisitedStates rank_hashtable = Hashtbl.fold ( fun state_index rank acc -> state_index::acc ) rank_hashtable [] in
 
 
+
+
 		let getHighestRankSuccessor state_index = 
 			let rank = ref (Hashtbl.find rank_hashtable state_index) in
 			let successors = ref (StateSpace.get_successors state_space state_index ) in
-
-			while not (!successors = []) do 
+			let count = ref (List.length !successors) in
+			while not (!count = 0) do 
 				(
 			 	let successor = List.hd !successors in
-			 	successors := (List.tl !successors)@(StateSpace.get_successors state_space successor);
+			 	let nextSuccessors = (StateSpace.get_successors state_space successor) in
+			 	List.iter (fun successor2 -> 
+			 		if not (List.mem successor2 (!successors)) 
+			 		then (
+			 				successors := !successors@[successor2];
+			 				count := !count + 1;
+			 			);
+			 	) nextSuccessors;
+			 	(* successors := (List.tl !successors); *)
 			 	rank := getMaxRank !rank (Hashtbl.find rank_hashtable successor);
+			 	count := !count - 1;
 			 	);
 			done;
 			!rank;
@@ -2099,18 +2110,25 @@ class virtual algoStateBased =
 
 			List.iter (fun state_index ->	
 				let rank = ref (initial_rank state_index state_space) in
-				
+				Hashtbl.add rank_hashtable state_index !rank;
+
+				print_message Verbose_low ("buggg!!!");
+
 				let smallers = getSmallerVisitedLocation state_index rank_hashtable in 
 				if smallers = [] 
 				then
 					()
 				else
 					(
+						print_message Verbose_low ("buggg!!!1");
 						List.iter ( fun state_index_smaller -> 
 							if not (List.mem state_index_smaller queue)
 							then (
 								(* rank := getMaxRank !rank (Hashtbl.find rank_hashtable state_index); *)
+								print_message Verbose_low ("buggg!!!2");
 								rank := getHighestRankSuccessor state_index;
+								Hashtbl.replace rank_hashtable state_index !rank;
+								print_message Verbose_low ("buggg!!!3");
 								);
 
 							(*
@@ -2132,7 +2150,7 @@ class virtual algoStateBased =
 						) smallers;
 					);
 
-				Hashtbl.add rank_hashtable state_index !rank;
+				(*Hashtbl.replace rank_hashtable state_index !rank;*)
 			) successors;
 		in
 		
