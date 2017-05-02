@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2017/04/18
+ * Last modified     : 2017/05/02
  *
  ************************************************************)
 
@@ -642,6 +642,7 @@ class imitator_options =
         Use 'layerBFS' for a layer-based breadth-first search.
         Use 'queueBFS' for a queue-based breadth-first search. [EXPERIMENTAL]
         Use 'queueBFSRS' for a queue-based breadth-first search with ranking system. [WORK IN PROGRES]
+        Use 'queueBFSPRIOR' for a priority-based BFS with ranking system. [WORK IN PROGRES]
         Default: layerBFS.
 				");
 				
