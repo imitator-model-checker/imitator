@@ -1872,7 +1872,7 @@ let negate_single_inequality_p_constraint p_linear_constraint =
 	(* Negate it *)
 	let negated_inequality = negate_inequality inequality in
 	(* Reconstruct a linear constraint *)
-	make_p_constraint [inequality]
+	make_p_constraint [negated_inequality]
 
 
 
