@@ -2100,7 +2100,7 @@ class virtual algoStateBased =
 			List.iter (fun state_index ->	
 				let rank = ref (initial_rank state_index state_space) in
 				
-				let smallers = getSmallerVisitedLocation state_index rank_hashtable in
+				let smallers = getSmallerVisitedLocation state_index rank_hashtable in 
 				if smallers = [] 
 				then
 					()
