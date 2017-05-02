@@ -3,7 +3,7 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13 (France)
  * 
  * Module description: ommon definitions for linear terms and constraints (interface to PPL)
  * 
@@ -1039,7 +1039,7 @@ let negate_wrt_pi0 pi0 linear_inequality =
 			)
 
 
-(* Negate an inequality ('=' is disallowed); raises InternalError if "=" is used *)
+(** Negate an inequality ('=' is disallowed); raises InternalError if "=" is used *)
 let negate_inequality = function
 	| Less_Than (lterm, rterm) -> Greater_Or_Equal (lterm, rterm)
 	| Less_Or_Equal (lterm, rterm) -> Greater_Than (lterm, rterm)
@@ -1875,6 +1875,45 @@ let negate_single_inequality_p_constraint p_linear_constraint =
 	make_p_constraint [negated_inequality]
 
 
+(** Negates a constraint made either of a single inequality, or made of 2 inequalities, one of which is p >= 0, for a given p *)
+(*** HACK: a very ad-hoc function, needed for EFmax ***)
+(** NOTE: We kind of need to 'reimplement' the negate_single_inequality_p_constraint function, because there may be some p >= 0 inequality, that we do not need to negate ***)
+let negate_single_inequality_nonnegative_p_constraint parameter_index p_linear_constraint =
+	(* Retrieve the inequalities *)
+	let inequalities = p_get_inequalities p_linear_constraint in
+	
+	(* Count *)
+	let nb_inequalities = List.length inequalities in
+	
+	(* 2 or more inequality or 0 inequality: problem *)
+	if nb_inequalities < 1 || nb_inequalities > 2 then(
+		raise (InternalError("Exactly one or two inequalities should be contained in negate_inequality"))
+	);
+	
+	(* Easy case: only one inequality *)
+	if nb_inequalities = 1 then negate_single_inequality_p_constraint p_linear_constraint
+	(* At that point there must be two inequalities *)
+	else(
+		(* Let us try to see if the first equality is the form p >= 0 *)
+		let found_p_geq_0 = match List.nth inequalities 0 with
+		| Greater_Or_Equal (Variable p, Coefficient c)
+		| Less_Or_Equal (Coefficient c, Variable p)
+			when p = parameter_index && Gmp.Z.equal c Gmp.Z.zero
+			-> true
+		| Greater_Or_Equal (Times (one, Variable p), Coefficient zero)
+		| Less_Or_Equal (Coefficient zero, Times (one, Variable p))
+			when p = parameter_index && Gmp.Z.equal zero Gmp.Z.zero && Gmp.Z.equal one Gmp.Z.one
+			-> true
+
+		| _ -> false
+		in
+		
+		(* If the first inequality is p >= 0, negate the second one *)
+		if found_p_geq_0 then make_p_constraint [negate_inequality (List.nth inequalities 1)]
+		(* If the first inequality is not p >= 0, negate it *)
+		else make_p_constraint [negate_inequality (List.nth inequalities 0)]
+	)
+
 
 (*------------------------------------------------------------*)
 (* Variable elimination *)
@@ -2121,9 +2160,9 @@ let pxd_time_past_assign c = time_past_assign !pxd_dim c
 (* Extrapolation to zero/infinity *)
 (*------------------------------------------------------------*)
 
-(** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
-(*** TODO: describe better ***)
+(** Remove all upper bounds on the first variable list; the second list will remain constant *)
 (*** WARNING: this function is certainly not optimized at all! ***)
+(*** WARNING: the behavior is unspecified if some variables belong to no list, or to both lists ***)
 let p_grow_to_infinity_assign variables_elapse variables_constant linear_constraint =
 	(* Compute all variables *)
 	let all_variables = List.rev_append variables_elapse variables_constant in
@@ -2135,9 +2174,9 @@ let p_grow_to_infinity_assign variables_elapse variables_constant linear_constra
 	()
 
 
-(** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
-(** TODO: describe better *)
-(** WARNING: this function is certainly not optimized at all! somehow we don't care considering it's not called "often" in IMITATOR *)
+(** Remove all lower bounds on the first variable list; the second list will remain constant *)
+(** WARNING: this function is certainly not optimized at all! *)
+(*** WARNING: the behavior is unspecified if some variables belong to no list, or to both lists ***)
 let p_grow_to_zero_assign variables_elapse variables_constant linear_constraint =
 	(* Compute all variables *)
 	let all_variables = List.rev_append variables_elapse variables_constant in

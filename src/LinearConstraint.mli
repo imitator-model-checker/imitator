@@ -3,9 +3,9 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13 (France)
  * 
- * Module description: ommon definitions for linear terms and constraints (interface to PPL)
+ * Module description: common definitions for linear terms and constraints (interface to PPL)
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
@@ -140,6 +140,9 @@ val make_pxd_linear_inequality : pxd_linear_term -> op -> pxd_linear_inequality
 (** Negate a linear inequality; for an equality, perform the pi0-compatible negation *)
 val negate_wrt_pi0 : (variable -> coef) -> p_linear_inequality -> p_linear_inequality
 
+(** Negate an inequality ('=' is disallowed); raises InternalError if "=" is used *)
+val negate_inequality : p_linear_inequality -> p_linear_inequality
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion} *)
@@ -230,11 +233,11 @@ val pxd_constraint_of_nonnegative_variables : variable list -> pxd_linear_constr
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Get the number of inequalities of a constraint *)
-(* val nb_inequalities : linear_constraint -> int *)
 val p_nb_inequalities : p_linear_constraint -> int
 
 (** Get the linear inequalities of a constraint *)
 val pxd_get_inequalities : pxd_linear_constraint -> pxd_linear_inequality list
+val p_get_inequalities : p_linear_constraint -> p_linear_inequality list
 
 (** Return true if the variable is constrained in a linear_constraint *)
 val pxd_is_constrained : pxd_linear_constraint -> variable -> bool
@@ -364,6 +367,10 @@ val pxd_hide_discrete_and_collapse : pxd_linear_constraint -> px_linear_constrai
 (** Assuming p_linear_constraint contains a single inequality, this function returns the negation of this inequality (in the form of a p_constraint). Raises InternalError if more than one inequality. *)
 val negate_single_inequality_p_constraint : p_linear_constraint -> p_linear_constraint
 
+(** Negates a constraint made either of a single inequality, or made of 2 inequalities, one of which is p >= 0, for a given p *)
+(*** HACK: a very ad-hoc function, needed for EFmax ***)
+val negate_single_inequality_nonnegative_p_constraint : Automaton.parameter_index -> p_linear_constraint -> p_linear_constraint
+
 
 (** Eliminate (using existential quantification) a set of variables in a linear constraint, with side effects *)
 val p_hide_assign : variable list -> p_linear_constraint -> unit
@@ -393,12 +400,15 @@ val pxd_time_elapse_assign : variable list -> variable list -> pxd_linear_constr
 (** Time elapsing function, in backward direction (corresponds to the "past" operation in, e.g., [JLR15]) *)
 val pxd_time_past_assign : variable list -> variable list -> pxd_linear_constraint -> unit
 
-(** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
+(** Remove all upper bounds on the first variable list; the second list will remain constant *)
 (*** WARNING: this function is certainly not optimized at all! ***)
+(*** WARNING: the behavior is unspecified if some variables belong to no list, or to both lists ***)
 val p_grow_to_infinity_assign : variable list -> variable list -> p_linear_constraint -> unit
 
-(*(** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
-val p_grow_to_zero_assign : variable list -> variable list -> p_linear_constraint -> unit*)
+(** Remove all lower bounds on the first variable list; the second list will remain constant *)
+(** WARNING: this function is certainly not optimized at all! *)
+(*** WARNING: the behavior is unspecified if some variables belong to no list, or to both lists ***)
+val p_grow_to_zero_assign : variable list -> variable list -> p_linear_constraint -> unit
 
 
 (** Replace all strict inequalities with non-strict (and keeps others unchanged) within a p_linear_constraint *)
