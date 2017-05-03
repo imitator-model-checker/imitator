@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13 (France)
  * 
  * Module description: main virtual class to explore the state space: only defines post-related function, i.e., to compute the successor states of ONE state. That (still) represents a large list of functions.
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2017/04/24
+ * Last modified     : 2017/05/03
  *
  ************************************************************)
 
@@ -1307,7 +1307,10 @@ type rank_value =
 
 
 
-
+type new_maximum =
+	| No_new_maximum
+	| New_maximum of int
+    
 
 exception FoundInfiniteRank of state_index
 
@@ -1425,10 +1428,6 @@ class virtual algoStateBased =
 	(* Update the nature of the trace set *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method update_statespace_nature ((location : Location.global_location), (_ : LinearConstraint.px_linear_constraint)) =
-		(* Retrieve the model *)
-		let model = Input.get_model() in
-		(* Retrieve the input options *)
-(* 		let options = Input.get_options () in *)
 
 		match model.correctness_condition with
 		| None -> ()
@@ -1461,12 +1460,7 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** TODO: to get a more abstract method, and update the state space from another function ***)
 	method private post_from_one_state source_state_index =
-		(* Retrieve the model *)
-		let model = Input.get_model () in
 
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
-		
 		(* Original location: static *)
 		let original_location, _ = StateSpace.get_state state_space source_state_index in
 		(* Dynamic version of the original px_constraint (can change!) *)
@@ -1760,9 +1754,6 @@ class virtual algoStateBased =
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then (
-			(* Retrieve the model *)
-			let model = Input.get_model() in
-			
 			(* Retrieve the target state *)
 			let new_target_state = StateSpace.get_state state_space target_state_index in
 		
@@ -1801,9 +1792,6 @@ class virtual algoStateBased =
 	(*** NOTE: May raise an exception when used in PaTATOR mode (the exception will be caught by PaTATOR) ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private check_layer_bfs_limit =
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
-		
 		(* Check all limits *)
 		
 		(* Depth limit *)
@@ -1856,9 +1844,6 @@ class virtual algoStateBased =
 	(*** NOTE: May raise an exception when used in PaTATOR mode (the exception will be caught by PaTATOR) ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private check_queue_bfs_limit =
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
-		
 		(* Check all limits *)
 		
 		(* Depth limit *)
@@ -1924,9 +1909,6 @@ class virtual algoStateBased =
 	(* Create a State_space.state_comparison from the options *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method state_comparison_operator_of_options =
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
-
 		(* Mode tree: no comparison *)
 		if options#tree then StateSpace.No_check
 			else if options#inclusion then StateSpace.Inclusion_check
@@ -1942,11 +1924,6 @@ class virtual algoStateBased =
 
 		print_message Verbose_standard("Entering explore_queue_bfs!!!");
 
-		(* Retrieve the model *)
-		(* let model = Input.get_model () in *)
-		
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
 
 
 
@@ -1989,18 +1966,17 @@ class virtual algoStateBased =
 			print_message Verbose_low ("Access Initial Ranking!");
 			print_message Verbose_low ("Ranking State: " ^ (StateSpace.string_of_state_index state_index) ^"!");
 
-			(* Retrieve the model *)
-			let model = Input.get_model() in
-			
 			(* popped state information *)
 			(* location: static , constraint*)
 			let loc, constr = StateSpace.get_state state_space state_index in
 
-			print_message Verbose_low ( ModelPrinter.string_of_state model (loc, constr) );
+			if verbose_mode_greater Verbose_low then(
+				print_message Verbose_low ( ModelPrinter.string_of_state model (loc, constr) );
+			);
 
 			let checkTrueConstr = LinearConstraint.px_is_equal constr model.px_clocks_non_negative_and_initial_p_constraint in
 			
-			let rank = if (checkTrueConstr) 
+			let rank = if checkTrueConstr
 			then
 				(
 				print_message Verbose_low ("Rank: Infinity!");
@@ -2010,7 +1986,7 @@ class virtual algoStateBased =
 				(
 				print_message Verbose_low ("Rank: 0!");
 				Int 0
-				);
+				)
 			in
 			print_message Verbose_low ("End Initial Ranking!");
 			rank
@@ -2058,19 +2034,47 @@ class virtual algoStateBased =
 			match (rank1, rank2) with
 			| (Int x1, Int x2) ->  if x1 < x2 then state_index2 else state_index1
 			| (Infinity, Infinity) -> state_index1
-			| (Infinity, Int x2) -> state_index2
-			| (Int x1, Infinity) -> state_index1;
+			| (Infinity, Int x2) -> state_index1
+			| (Int x1, Infinity) -> state_index2;
 		in
 
+		
+		(* Small helpful function for getHighestRank: compare a rank with the current maximum; return a new_maximum result *)
+		let compare_index_with_max current_max state_index =
+			(* Get the rank from the hash table *)
+			(*** WARNING: is that safe?? ***)
+			let rank = Hashtbl.find rank_hashtable state_index in
+			(* Get the integer value (which cannot be infinity because it was tested before *)
+			let value = match rank with
+			| Int value -> value
+			| Infinity -> raise (InternalError("No state should have a rank Infinity in compare_index_with_max"))
+			in
+			(* Did we find a new maximum? *)
+			if value > current_max then New_maximum value else No_new_maximum
+		in
 
-		let getHighestRank queue rank_hashtable = 
+		
+		let get_highest_rank_index queue = 
 			
-			let highestRank_state_index = ref (List.hd queue) in
+(*			let highestRank_state_index = ref (List.hd queue) in
 			
 			List.iter ( fun state_index ->
 							highestRank_state_index := (getMaxRankStateIndex state_index !highestRank_state_index);
 						) queue;
-			!highestRank_state_index;
+			!highestRank_state_index;*)
+			
+			let max, max_index =
+			List.fold_left (fun (current_max, current_max_index) current_index -> 
+				(* If we found a new maximum *)
+				match compare_index_with_max current_max current_index with
+				(* We update the maximum *)
+				| New_maximum new_value -> new_value, current_index
+				(* Otherwise we do not change it *)
+				| No_new_maximum -> current_max, current_max_index
+			(* Initially, the maximum is 0 *)
+			(*** HACK: use -1 for index ***)
+			) (0, -1) queue
+			in max_index
 		in
 
 
@@ -2111,18 +2115,22 @@ class virtual algoStateBased =
 			(* let queue = ref queue in *)
 
 			List.iter (fun state_index ->	
-				let rank = ref (initial_rank state_index state_space) in
-				Hashtbl.add rank_hashtable state_index !rank;
-
+				(*** NOTE: here, we ALWAYS add (and compute) the rank; would it be smarter to add it on the fly, i.e., to only compute it when it is needed? ***)
+				
 				print_message Verbose_low ("buggg!!!");
 
 				let smallers = getSmallerVisitedLocation state_index rank_hashtable in 
 				if smallers = [] 
 				then
-					()
+					(
+						(* If no state is smaller, we compute the initial rank *)
+						let rank = initial_rank state_index state_space in
+						Hashtbl.add rank_hashtable state_index rank;
+					)
 				else
 					(
 						print_message Verbose_low ("buggg!!!1");
+						let rank = ref (Int 0) in
 						List.iter ( fun state_index_smaller -> 
 							if not (List.mem state_index_smaller queue)
 							then (
@@ -2253,7 +2261,7 @@ class virtual algoStateBased =
 												(* raise (NotImplemented("Gia")) *)
 												(* get the highest rank *)
 												
-												let state_index2 = getHighestRank !queue rank_hashtable in
+												let state_index2 = get_highest_rank_index !queue in
 												state_index2;
 												(* List.hd !queue;*)
 											) with FoundInfiniteRank state_index -> state_index
@@ -2426,11 +2434,6 @@ class virtual algoStateBased =
 	(* Main method to run the BFS algorithm  *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private explore_layer_bfs init_state_index =
-(*		(* Retrieve the model *)
-		let model = Input.get_model () in*)
-		
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
 		
 		(* Set the depth to 1 *)
 		bfs_current_depth <- 1;
@@ -2634,12 +2637,6 @@ class virtual algoStateBased =
 	(* Main method to run the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run () =
-		(* Retrieve the model *)
-		let model = Input.get_model () in
-		
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
-		
 		(* Get some variables *)
 		let nb_actions = model.nb_actions in
 		let nb_variables = model.nb_variables in
