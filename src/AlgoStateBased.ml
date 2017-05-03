@@ -2056,14 +2056,16 @@ class virtual algoStateBased =
 		
 		let get_highest_rank_index queue = 
 
-			(*
+			
 			let highestRank_state_index = ref (List.hd queue) in
 			
 			List.iter ( fun state_index ->
 							highestRank_state_index := (getMaxRankStateIndex state_index !highestRank_state_index);
 						) queue;
 			!highestRank_state_index;
-			*)
+			
+
+			(*
 
 			let init_state_index = List.hd queue in
 
@@ -2084,6 +2086,7 @@ class virtual algoStateBased =
 			(*** HACK: use -1 for index ***)
 			) (init_max_value, init_state_index) queue
 			in max_index
+		*)
 			
 			
 		in
