@@ -545,6 +545,37 @@ The option \styleOption{-dynamic-elimination} can also be used to reduce the sta
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{EF-minimization}\label{ss:mode:EFmin}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This algorithm synthesizes the minimum valuation for a given parameter for which a given location is reachable.
+The property must be specified as for \EFsynth{} (see \cref{ss:mode:EFsynth}).
+
+In addition, the parameter to be minimized must be specified at the end of the model as follows:
+
+\styleIMI{minimize(parameter\_name)}\\
+
+The standard command is:
+
+\styleCommand{\binimitator{} model.imi -mode EFmin -merge -incl -output-result}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{EF-maximization}\label{ss:mode:EFmax}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This algorithm is the dual of EF-minimization (see \cref{ss:mode:EFmin}).
+
+The parameter to be maximized must be specified at the end of the model as follows:
+
+\styleIMI{maximize(parameter\_name)}\\
+
+The standard command is:
+
+\styleCommand{\binimitator{} model.imi -mode EFmax -merge -incl -output-result}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Parameter synthesis using properties}\label{ss:mode:prop}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1165,10 +1196,19 @@ uses a variant of the inverse method that returns the union of the constraints a
 %------------------------------------------------------------
 \paragraph{\styleOption{-incl} (default: false)}
 %------------------------------------------------------------
-Consider an inclusion of region instead of the equality when performing the $\textit{Post}$ operation.
+Consider an inclusion of parametric zone instead of the equality when performing the $\textit{Post}$ operation.
 In other terms, when encountering a new state, \imitator{} checks if the same state (same location and same constraint) has been encountered before and, if so, discards this ``new'' state.
-However, when the \code{-incl} option is activated, it suffices that a previous state with the same location and a constraint \emph{greater than or equal} to the constraint of the new state has been encountered to stop the analysis.
+However, when the \code{-incl} option is activated, it suffices that a previous state with the same location and a constraint \emph{greater than or equal} to the constraint of the new state has been encountered to discard the new state and stop exploring the current branch.
 This option corresponds to the way that, \eg{} \hytech{} works, and suffices when one wants to check the \emph{non-reachability} of a given bad state.
+
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-incl2} (default: false)}
+%------------------------------------------------------------
+Consider a bidirectional inclusion of parametric zone instead of the equality when performing the $\textit{Post}$ operation.
+When the \code{-incl2} option is activated, it suffices that a previous state with the same location and a constraint greater than or equal to (resp.\ \emph{smaller or equal} to) the constraint of the new state has been encountered to discard the new state (resp.\ the old state, which is replaced by the new one).
+
+It seems that, although less states are computed, this option is \emph{less} efficient than \styleOption{-incl} (in part due to the extra inclusion checks required by \styleOption{-incl2}).
 
 
 %------------------------------------------------------------
@@ -1190,8 +1230,14 @@ The mode for \imitator{}.
 	\styleOption{statespace} & Generation of the entire parametric state space \\
 	& (see \cref{ss:mode:statespace}) \\
 	
-	\styleOption{EF} & Parametric non-reachability analysis (\EFsynth{} \cite{JLR15}) \\
+	\styleOption{EF} & Parametric reachability synthesis (\EFsynth{} \cite{JLR15}) \\
 	& (see \cref{ss:mode:EFsynth}) \\
+	
+	\styleOption{EFmin} & Parametric minimization synthesis \\
+	& (see \cref{ss:mode:EFmin}) \\
+	
+	\styleOption{EFmax} & Parametric maximization synthesis \\
+	& (see \cref{ss:mode:EFmax}) \\
 	
 	\styleOption{PDFC} & Parametric deadlock-freeness checking (\PDFC{} \cite{Andre16}) \\
 	& (see \cref{ss:mode:PDFC}) \\
