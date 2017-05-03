@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2017/05/02
+ * Last modified     : 2017/05/03
  *
  ************************************************************)
 
@@ -671,7 +671,8 @@ class imitator_options =
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
         Use 'statespace' for the generation of the entire parametric state space (no pi0 needed).
         Use 'EF' for a parametric non-reachability analysis (no pi0 needed). [AHV93,JLR15]
-        Use 'EFmin' for a parametric non-reachability analysis with parameter minimization (no pi0 needed). [WORK IN PROGRESS]
+        Use 'EFmin' for a parametric non-reachability analysis with parameter minimization (no pi0 needed).
+        Use 'EFmax' for a parametric non-reachability analysis with parameter maximization (no pi0 needed).
         Use 'PDFC' for parametric non-deadlock checking (no pi0 needed). [Andre16]
         Use 'LoopSynth' for cycle-synthesis (without non-Zeno assumption). [ANPS17]
         Use 'NZCUBcheck' for cycle-synthesis (with non-Zeno assumption, using a CUB-detection). [EXPERIMENTAL] [ANPS17]
