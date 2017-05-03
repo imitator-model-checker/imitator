@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2017/03/23
+# Last modified: 2017/05/03
 #************************************************************
 
 
@@ -744,6 +744,65 @@ END CONSTRAINT
 BEGIN CONSTRAINT
  False
 END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFmin on a toy example',
+		'input_files': ['testEFmin.imi'],
+		'options'    : '-mode EFmin -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFmin.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 10
+Number of transitions                   : 9
+Number of computed states               : 12
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFmax on a toy example',
+		'input_files': ['testEFmax.imi'],
+		'options'    : '-mode EFmax -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFmax.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 0
+& 11 >= p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 10
+Number of transitions                   : 9
+Number of computed states               : 20
 """
 			} # end result file
 			,
@@ -7046,7 +7105,7 @@ init := True
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'FMTV challenge: Test EF with project-result',
+		'purpose'    : 'FMTV challenge: Test EF with project-result -verbose mute',
 		'input_files': ['fmtv1A1-v2.imi'],
 		'options'    : '-mode EF -merge -incl -output-result',
 		'expectations' : [
@@ -7057,6 +7116,57 @@ BEGIN CONSTRAINT
 OR
 125*e2e > 18126
 END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'FMTV challenge: Test EFmin',
+		'input_files': ['fmtv1A1-v2-min.imi'],
+		'options'    : '-mode EFmin -merge -incl -output-result -verbose mute',
+		'expectations' : [
+			{'file': 'fmtv1A1-v2-min.res' , 'content' : """
+BEGIN CONSTRAINT
+ e2e >= 63
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'FMTV challenge: Test EFmax',
+		'input_files': ['fmtv1A1-v2-max.imi'],
+		'options'    : '-mode EFmax -merge -incl -output-result -verbose mute',
+		'expectations' : [
+			{'file': 'fmtv1A1-v2-max.res' , 'content' : """
+BEGIN CONSTRAINT
+ e2e >= 0
+& 18126 >= 125*e2e
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} # end result file
 			,
