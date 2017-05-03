@@ -2047,7 +2047,7 @@ class virtual algoStateBased =
 			(* Get the integer value (which cannot be infinity because it was tested before *)
 			let value = match rank with
 			| Int value -> value
-			| Infinity -> raise (InternalError("No state should have a rank Infinity in compare_index_with_max"))
+			| Infinity -> raise (InternalError("No state should have a rank Infinity in compare_index_with_max 2"))
 			in
 			(* Did we find a new maximum? *)
 			if value > current_max then New_maximum value else No_new_maximum
@@ -2055,13 +2055,22 @@ class virtual algoStateBased =
 
 		
 		let get_highest_rank_index queue = 
-			
-(*			let highestRank_state_index = ref (List.hd queue) in
+
+			(*
+			let highestRank_state_index = ref (List.hd queue) in
 			
 			List.iter ( fun state_index ->
 							highestRank_state_index := (getMaxRankStateIndex state_index !highestRank_state_index);
 						) queue;
-			!highestRank_state_index;*)
+			!highestRank_state_index;
+			*)
+
+			let init_state_index = List.hd queue in
+
+			let init_max_value = match (Hashtbl.find rank_hashtable init_state_index) with
+			| Int value -> value
+			| Infinity -> raise (InternalError("No state should have a rank Infinity in compare_index_with_max 1"))
+			in
 			
 			let max, max_index =
 			List.fold_left (fun (current_max, current_max_index) current_index -> 
@@ -2073,8 +2082,10 @@ class virtual algoStateBased =
 				| No_new_maximum -> current_max, current_max_index
 			(* Initially, the maximum is 0 *)
 			(*** HACK: use -1 for index ***)
-			) (0, -1) queue
+			) (init_max_value, init_state_index) queue
 			in max_index
+			
+			
 		in
 
 
@@ -2113,19 +2124,35 @@ class virtual algoStateBased =
 		let rankingSuccessors successors from_state_index queue= 
 
 			(* let queue = ref queue in *)
-
+			(* The Successors are always ranked before adding into queue and hastbl. Because after that we need exploring the highest rank one *)
 			List.iter (fun state_index ->	
 				(*** NOTE: here, we ALWAYS add (and compute) the rank; would it be smarter to add it on the fly, i.e., to only compute it when it is needed? ***)
+				let rank = ref (Int 0) in
+				(
+					if (Hashtbl.mem rank_hashtable state_index) 
+					then (
+							rank := Hashtbl.find rank_hashtable state_index; 
+							()
+						)
+					else (
+							rank := initial_rank state_index state_space;
+							Hashtbl.add rank_hashtable state_index !rank;
+						);
+				);
+				
 				
 				print_message Verbose_low ("buggg!!!");
 
+				(* finding the previous smaller visited zone with the same location (exploring mistakes) *)
 				let smallers = getSmallerVisitedLocation state_index rank_hashtable in 
 				if smallers = [] 
 				then
 					(
 						(* If no state is smaller, we compute the initial rank *)
+						(*
 						let rank = initial_rank state_index state_space in
 						Hashtbl.add rank_hashtable state_index rank;
+						*)
 					)
 				else
 					(
@@ -2141,7 +2168,7 @@ class virtual algoStateBased =
 								print_message Verbose_low ("buggg!!!3");
 								);
 
-							(*
+							(* since we have the -incl2 then we don't need this one
 							(*Add transition*)
 							let lsTransitions = StateSpace.find_transitions_in state_space (state_index_smaller::(getVisitedStates rank_hashtable)) in
 							List.iter ( fun (pre, actions, smaller) -> 
