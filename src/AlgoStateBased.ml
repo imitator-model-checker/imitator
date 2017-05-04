@@ -1964,8 +1964,9 @@ class virtual algoStateBased =
 
 		let initial_rank state_index state_space =
 			print_message Verbose_low ("Access Initial Ranking!");
+			if verbose_mode_greater Verbose_low then(
 			print_message Verbose_low ("Ranking State: " ^ (StateSpace.string_of_state_index state_index) ^"!");
-
+			);
 			(* popped state information *)
 			(* location: static , constraint*)
 			let loc, constr = StateSpace.get_state state_space state_index in
@@ -2065,8 +2066,8 @@ class virtual algoStateBased =
 			!highestRank_state_index;
 			
 
+			
 			(*
-
 			let init_state_index = List.hd queue in
 
 			let init_max_value = match (Hashtbl.find rank_hashtable init_state_index) with
@@ -2086,7 +2087,7 @@ class virtual algoStateBased =
 			(*** HACK: use -1 for index ***)
 			) (init_max_value, init_state_index) queue
 			in max_index
-		*)
+			*)
 			
 			
 		in
@@ -2098,14 +2099,27 @@ class virtual algoStateBased =
 
 
 		let getHighestRankSuccessor state_index = 
+			print_message Verbose_low ("Get the highest rank of successors");
 			let rank = ref (Hashtbl.find rank_hashtable state_index) in
 			let successors = ref (StateSpace.get_successors state_space state_index ) in
 			let count = ref (List.length !successors) in
-			while not (!count = 0) do 
+
+			let elem = ref 0 in
+
+			if (!count > 0) && verbose_mode_greater Verbose_low then(
+				print_message Verbose_low ("Found the subtree at State: " ^ (StateSpace.string_of_state_index state_index) ^"!");
+			);
+
+			while (!count > 0) do 
 				(
-			 	let successor = List.hd !successors in
+				
+			 	let successor = List.nth !successors !elem in
+			 	
 			 	let nextSuccessors = (StateSpace.get_successors state_space successor) in
-			 	List.iter (fun successor2 -> 
+			 	List.iter (fun successor2 ->
+			 	 	if verbose_mode_greater Verbose_low then(
+						print_message Verbose_low ("Found the subtree State: " ^ (StateSpace.string_of_state_index successor2) ^"!");
+					);
 			 		if not (List.mem successor2 (!successors)) 
 			 		then (
 			 				successors := !successors@[successor2];
@@ -2117,14 +2131,16 @@ class virtual algoStateBased =
 
 			 	rank := getMaxRank !rank (Hashtbl.find rank_hashtable successor);
 			 	count := !count - 1;
+			 	elem := !elem + 1;
 			 	);
 			done;
 			!rank;
 		in
 
 
+
 		
-		let rankingSuccessors successors from_state_index queue= 
+		let rankingSuccessors successors from_state_index= 
 
 			(* let queue = ref queue in *)
 			(* The Successors are always ranked before adding into queue and hastbl. Because after that we need exploring the highest rank one *)
@@ -2144,13 +2160,15 @@ class virtual algoStateBased =
 				);
 				
 				
-				print_message Verbose_low ("buggg!!!");
+				
 
 				(* finding the previous smaller visited zone with the same location (exploring mistakes) *)
 				let smallers = getSmallerVisitedLocation state_index rank_hashtable in 
+				(
 				if smallers = [] 
 				then
 					(
+						print_message Verbose_low ("There is no smaller zone with the same location");
 						(* If no state is smaller, we compute the initial rank *)
 						(*
 						let rank = initial_rank state_index state_space in
@@ -2159,16 +2177,21 @@ class virtual algoStateBased =
 					)
 				else
 					(
-						print_message Verbose_low ("buggg!!!1");
+						print_message Verbose_low ("Found the smaller zone with the same location");
 						let rank = ref (Int 0) in
 						List.iter ( fun state_index_smaller -> 
-							if not (List.mem state_index_smaller queue)
+							(* to be sure not a leaf on the search tree*)
+							if not (List.mem state_index_smaller !queue)
 							then (
+
+								if verbose_mode_greater Verbose_low then(
+									print_message Verbose_low ("Smaller State: " ^ (StateSpace.string_of_state_index state_index_smaller) ^"!");
+								);
+
 								(* rank := getMaxRank !rank (Hashtbl.find rank_hashtable state_index); *)
-								print_message Verbose_low ("buggg!!!2");
 								rank := getHighestRankSuccessor state_index;
 								Hashtbl.replace rank_hashtable state_index !rank;
-								print_message Verbose_low ("buggg!!!3");
+
 								);
 
 							(* since we have the -incl2 then we don't need this one
@@ -2188,10 +2211,21 @@ class virtual algoStateBased =
 							*)
 	
 						) smallers;
+						if verbose_mode_greater Verbose_low then(
+							match !rank with
+							| Infinity -> print_message Verbose_low ("Return max rank: Infinity!");
+							| Int value -> print_message Verbose_low ("Return max rank: " ^ string_of_int value ^"!");
+						);
 					);
 
 				(*Hashtbl.replace rank_hashtable state_index !rank;*)
+				 
+				);
+				(* using incl2 instead *)
+				(* queue :=  !queue@[state_index]; *) 
+				(*queue := list_append [state_index] !queue;*)
 			) successors;
+			(*!queue;*)
 		in
 		
 		(*****************************************************RANKINK END******************************************************)
@@ -2368,14 +2402,22 @@ class virtual algoStateBased =
 			(* Compute successors *)
 			let successors = self#post_from_one_state popped_from_queue in
 
+			if verbose_mode_greater Verbose_low then(
+					print_message Verbose_low ("Poped State: " ^ (StateSpace.string_of_state_index popped_from_queue) ^" from queue!");
+					print_message Verbose_low ("States in queue!");
+					List.iter ( fun state_index ->
+						print_message Verbose_low ("State: " ^ (StateSpace.string_of_state_index state_index) ^" \n");
+					) !queue;
+			);
+
 
 			(* Add to queue *)
 			queue := 
 				(match options#exploration_order with
 				| Exploration_queue_BFS -> list_append successors !queue
 				(* Ranking system: TODO *)
-				| Exploration_queue_BFS_RS -> 	rankingSuccessors successors popped_from_queue !queue;
-												list_append successors !queue 
+				| Exploration_queue_BFS_RS -> 	rankingSuccessors successors popped_from_queue;
+												list_append successors !queue
 				(* Priority system: TODO *)
 				| Exploration_queue_BFS_PRIOR -> addToPriorQueue successors !queue
 				(* Impossible *)
