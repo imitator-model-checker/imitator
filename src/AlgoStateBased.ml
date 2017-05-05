@@ -2035,7 +2035,7 @@ class virtual algoStateBased =
 									| (_, _) -> Infinity;
 		in
 
-		(*
+		
 		let getMaxRankStateIndex state_index1 state_index2 = 
 			let rank1 = Hashtbl.find rank_hashtable state_index1 in
 			let rank2 = Hashtbl.find rank_hashtable state_index2 in
@@ -2045,7 +2045,7 @@ class virtual algoStateBased =
 			| (Infinity, Int x2) -> state_index1
 			| (Int x1, Infinity) -> state_index2;
 		in
-		*)
+		
 		
 		(* Small helpful function for getHighestRank: compare a rank with the current maximum; return a new_maximum result *)
 		let compare_index_with_max current_max state_index =
@@ -2064,17 +2064,17 @@ class virtual algoStateBased =
 		
 		let get_highest_rank_index queue = 
 
-			(*
+			
 			let highestRank_state_index = ref (List.hd queue) in
 			
 			List.iter ( fun state_index ->
 							highestRank_state_index := (getMaxRankStateIndex state_index !highestRank_state_index);
 						) queue;
 			!highestRank_state_index;
-			*)
+			
 
 			
-			
+			(*
 			let init_state_index = List.hd queue in
 
 			let init_max_value = match (Hashtbl.find rank_hashtable init_state_index) with
@@ -2094,6 +2094,7 @@ class virtual algoStateBased =
 			(*** HACK: use -1 for index ***)
 			) (init_max_value, init_state_index) queue
 			in max_index
+			*)
 			
 			
 			
@@ -2127,7 +2128,7 @@ class virtual algoStateBased =
 			 	let nextSuccessors = (StateSpace.get_successors state_space successor) in
 			 	List.iter (fun successor2 ->
 
-			 		if not (List.mem successor2 (!successors)) && (Hashtbl.mem rank_hashtable successor2 )
+			 		if not (List.mem successor2 (!successors)) && (Hashtbl.mem rank_hashtable successor2 ) && (successor2 <> state_index)
 			 		then (
 
 			 				if verbose_mode_greater Verbose_low then(
