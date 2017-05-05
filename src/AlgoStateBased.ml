@@ -1993,7 +1993,7 @@ class virtual algoStateBased =
 			rank
 		in
 
-		
+		(*
 		let isRanked state_index = 
 			(* try to find in the hashtbl *)
 			try(
@@ -2001,6 +2001,7 @@ class virtual algoStateBased =
 				true
 			) with Not_found -> false;
 		in
+		*)
 
 		let printrank rank = match rank with
 							| Infinity -> ("Infinity")
@@ -2034,6 +2035,7 @@ class virtual algoStateBased =
 									| (_, _) -> Infinity;
 		in
 
+		(*
 		let getMaxRankStateIndex state_index1 state_index2 = 
 			let rank1 = Hashtbl.find rank_hashtable state_index1 in
 			let rank2 = Hashtbl.find rank_hashtable state_index2 in
@@ -2043,7 +2045,7 @@ class virtual algoStateBased =
 			| (Infinity, Int x2) -> state_index1
 			| (Int x1, Infinity) -> state_index2;
 		in
-
+		*)
 		
 		(* Small helpful function for getHighestRank: compare a rank with the current maximum; return a new_maximum result *)
 		let compare_index_with_max current_max state_index =
@@ -2098,8 +2100,9 @@ class virtual algoStateBased =
 		in
 
 
+		(*
 		let getVisitedStates rank_hashtable = Hashtbl.fold ( fun state_index rank acc -> state_index::acc ) rank_hashtable [] in
-
+		*)
 
 
 
@@ -2207,21 +2210,21 @@ class virtual algoStateBased =
 
 								);
 
-							(* since we have the -incl2 then we don't need this one
-							(*Add transition*)
-							let lsTransitions = StateSpace.find_transitions_in state_space (state_index_smaller::(getVisitedStates rank_hashtable)) in
-							List.iter ( fun (pre, actions, smaller) -> 
-								if (state_index_smaller == smaller) then
-								StateSpace.add_transition state_space (pre, actions, state_index);
+								(* since we have the -incl2 then we don't need this one
+								(*Add transition*)
+								let lsTransitions = StateSpace.find_transitions_in state_space (state_index_smaller::(getVisitedStates rank_hashtable)) in
+								List.iter ( fun (pre, actions, smaller) -> 
+									if (state_index_smaller == smaller) then
+									StateSpace.add_transition state_space (pre, actions, state_index);
 
-								(* remove smaller state *)
-								(*
-								let abstract_state = Hashtbl.find (state_space.all_states) smaller in
-								Hashtbl.remove (state_space.all_states) (s,abstract_state);
+									(* remove smaller state *)
+									(*
+									let abstract_state = Hashtbl.find (state_space.all_states) smaller in
+									Hashtbl.remove (state_space.all_states) (s,abstract_state);
+									*)
+
+								) lsTransitions;
 								*)
-
-							) lsTransitions;
-							*)
 	
 						) smallers;
 
