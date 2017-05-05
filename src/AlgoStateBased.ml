@@ -2001,6 +2001,11 @@ class virtual algoStateBased =
 				true
 			) with Not_found -> false;
 		in
+
+		let printrank rank = match rank with
+							| Infinity -> ("Infinity")
+							| Int value -> (string_of_int value);
+		in
 		
 		(*****************************************************RANKING TBL END**************************************************)
 
@@ -2057,17 +2062,17 @@ class virtual algoStateBased =
 		
 		let get_highest_rank_index queue = 
 
-			
+			(*
 			let highestRank_state_index = ref (List.hd queue) in
 			
 			List.iter ( fun state_index ->
 							highestRank_state_index := (getMaxRankStateIndex state_index !highestRank_state_index);
 						) queue;
 			!highestRank_state_index;
-			
+			*)
 
 			
-			(*
+			
 			let init_state_index = List.hd queue in
 
 			let init_max_value = match (Hashtbl.find rank_hashtable init_state_index) with
@@ -2087,7 +2092,7 @@ class virtual algoStateBased =
 			(*** HACK: use -1 for index ***)
 			) (init_max_value, init_state_index) queue
 			in max_index
-			*)
+			
 			
 			
 		in
@@ -2101,7 +2106,8 @@ class virtual algoStateBased =
 		let getHighestRankSuccessor state_index = 
 			print_message Verbose_low ("Get the highest rank of successors");
 			let rank = ref (Hashtbl.find rank_hashtable state_index) in
-			let successors = ref (StateSpace.get_successors state_space state_index ) in
+			(*let successors = ref (StateSpace.get_successors state_space state_index ) in*)
+			let successors = ref [state_index] in
 			let count = ref (List.length !successors) in
 
 			let elem = ref 0 in
@@ -2117,11 +2123,15 @@ class virtual algoStateBased =
 			 	
 			 	let nextSuccessors = (StateSpace.get_successors state_space successor) in
 			 	List.iter (fun successor2 ->
-			 	 	if verbose_mode_greater Verbose_low then(
-						print_message Verbose_low ("Found the subtree State: " ^ (StateSpace.string_of_state_index successor2) ^"!");
-					);
-			 		if not (List.mem successor2 (!successors)) 
+
+			 		if not (List.mem successor2 (!successors)) && (Hashtbl.mem rank_hashtable successor2 )
 			 		then (
+
+			 				if verbose_mode_greater Verbose_low then(
+							print_message Verbose_low ("Found the subtree State: " ^ (StateSpace.string_of_state_index successor2) 
+														^ " with rank value: " ^ printrank (Hashtbl.find rank_hashtable successor2)^ "!");
+														);
+
 			 				successors := !successors@[successor2];
 			 				count := !count + 1;
 			 			);
@@ -2136,7 +2146,6 @@ class virtual algoStateBased =
 			done;
 			!rank;
 		in
-
 
 
 		
@@ -2159,8 +2168,6 @@ class virtual algoStateBased =
 						);
 				);
 				
-				
-				
 
 				(* finding the previous smaller visited zone with the same location (exploring mistakes) *)
 				let smallers = getSmallerVisitedLocation state_index rank_hashtable in 
@@ -2177,20 +2184,26 @@ class virtual algoStateBased =
 					)
 				else
 					(
-						print_message Verbose_low ("Found the smaller zone with the same location");
-						let rank = ref (Int 0) in
+						print_message Verbose_low ("Found " ^ string_of_int (List.length smallers) ^ " smaller zone with the same location");
+						let rank = ref (Hashtbl.find rank_hashtable state_index) in
+						let rerank = ref false in
+
 						List.iter ( fun state_index_smaller -> 
 							(* to be sure not a leaf on the search tree*)
 							if not (List.mem state_index_smaller !queue)
 							then (
 
 								if verbose_mode_greater Verbose_low then(
-									print_message Verbose_low ("Smaller State: " ^ (StateSpace.string_of_state_index state_index_smaller) ^"!");
+									print_message Verbose_low ("Smaller State: " ^ (StateSpace.string_of_state_index state_index_smaller) ^ " with rank value: " ^printrank (Hashtbl.find rank_hashtable state_index_smaller)^ "!");
 								);
 
-								(* rank := getMaxRank !rank (Hashtbl.find rank_hashtable state_index); *)
-								rank := getHighestRankSuccessor state_index;
-								Hashtbl.replace rank_hashtable state_index !rank;
+								rerank := true;
+
+								rank := getMaxRank !rank (getHighestRankSuccessor state_index_smaller); 
+								
+								(* rank := getHighestRankSuccessor state_index; *)
+
+								(*Hashtbl.replace rank_hashtable state_index !rank;*)
 
 								);
 
@@ -2211,6 +2224,17 @@ class virtual algoStateBased =
 							*)
 	
 						) smallers;
+
+						if !rerank = true 
+						then (
+						rank := ( match !rank with
+								| Infinity -> Infinity
+								| Int value -> Int (value + 1); 
+								);
+
+						Hashtbl.replace rank_hashtable state_index !rank;
+						);
+
 						if verbose_mode_greater Verbose_low then(
 							match !rank with
 							| Infinity -> print_message Verbose_low ("Return max rank: Infinity!");
@@ -2218,12 +2242,9 @@ class virtual algoStateBased =
 						);
 					);
 
-				(*Hashtbl.replace rank_hashtable state_index !rank;*)
 				 
 				);
-				(* using incl2 instead *)
-				(* queue :=  !queue@[state_index]; *) 
-				(*queue := list_append [state_index] !queue;*)
+
 			) successors;
 			(*!queue;*)
 		in
