@@ -2064,17 +2064,17 @@ class virtual algoStateBased =
 		
 		let get_highest_rank_index queue = 
 
-			
+			(*
 			let highestRank_state_index = ref (List.hd queue) in
 			
 			List.iter ( fun state_index ->
 							highestRank_state_index := (getMaxRankStateIndex state_index !highestRank_state_index);
 						) queue;
 			!highestRank_state_index;
-			
+			*)
 
 			
-			(*
+			
 			let init_state_index = List.hd queue in
 
 			let init_max_value = match (Hashtbl.find rank_hashtable init_state_index) with
@@ -2094,7 +2094,7 @@ class virtual algoStateBased =
 			(*** HACK: use -1 for index ***)
 			) (init_max_value, init_state_index) queue
 			in max_index
-			*)
+			
 			
 			
 			
@@ -2109,53 +2109,61 @@ class virtual algoStateBased =
 
 		let getHighestRankSuccessor state_index = 
 			print_message Verbose_low ("Get the highest rank of successors");
+
 			let rank = ref (Hashtbl.find rank_hashtable state_index) in
-			(*let successors = ref (StateSpace.get_successors state_space state_index ) in*)
-			let successors = ref [state_index] in
-			let count = ref (List.length !successors) in
-
-			let elem = ref 0 in
-
-			if (!count > 0) && verbose_mode_greater Verbose_low then(
-				print_message Verbose_low ("Found the subtree at State: " ^ (StateSpace.string_of_state_index state_index) ^"!");
-			);
-
-			while (!count > 0) do 
+			(*if successor is in the waiting queue then return the rank*)
+			if (List.mem state_index !queue)
+			then (
+					!rank;
+				)
+			else
 				(
-				
-			 	let successor = List.nth !successors !elem in
-			 	
-			 	let nextSuccessors = (StateSpace.get_successors state_space successor) in
-			 	List.iter (fun successor2 ->
+				(*let successors = ref (StateSpace.get_successors state_space state_index ) in*)
+				let successors = ref [state_index] in
+				let count = ref (List.length !successors) in
 
-			 		if not (List.mem successor2 (!successors)) && (Hashtbl.mem rank_hashtable successor2 ) && (successor2 <> state_index)
-			 		then (
+				let elem = ref 0 in
 
-			 				if verbose_mode_greater Verbose_low then(
-							print_message Verbose_low ("Found the subtree State: " ^ (StateSpace.string_of_state_index successor2) 
-														^ " with rank value: " ^ printrank (Hashtbl.find rank_hashtable successor2)^ "!");
-														);
+				if (!count > 0) && verbose_mode_greater Verbose_low then(
+					print_message Verbose_low ("Found the subtree at State: " ^ (StateSpace.string_of_state_index state_index) ^"!");
+				);
 
-			 				successors := !successors@[successor2];
-			 				count := !count + 1;
-			 			);
-			 	) nextSuccessors;
-			 	
-			 	(* successors := (List.tl !successors); *)
+				while (!count > 0) do 
+					(
+					
+				 	let successor = List.nth !successors !elem in
+				 	
+				 	let nextSuccessors = (StateSpace.get_successors state_space successor) in
+				 	List.iter (fun successor2 ->
 
-			 	rank := getMaxRank !rank (Hashtbl.find rank_hashtable successor);
-			 	count := !count - 1;
-			 	elem := !elem + 1;
-			 	);
-			done;
-			!rank;
+				 		if not (List.mem successor2 (!successors)) && (Hashtbl.mem rank_hashtable successor2 ) (* && (successor2 <> state_index) *)
+				 		then (
+
+				 				if verbose_mode_greater Verbose_low then(
+								print_message Verbose_low ("Found the subtree State: " ^ (StateSpace.string_of_state_index successor2) 
+															^ " with rank value: " ^ printrank (Hashtbl.find rank_hashtable successor2)^ "!");
+															);
+
+				 				successors := !successors@[successor2];
+				 				count := !count + 1;
+				 			);
+				 	) nextSuccessors;
+				 	
+				 	(* successors := (List.tl !successors); *)
+
+				 	rank := getMaxRank !rank (Hashtbl.find rank_hashtable successor);
+				 	count := !count - 1;
+				 	elem := !elem + 1;
+				 	);
+				done;
+				!rank;
+				);
 		in
 
 
 		
 		let rankingSuccessors successors from_state_index= 
 
-			(* let queue = ref queue in *)
 			(* The Successors are always ranked before adding into queue and hastbl. Because after that we need exploring the highest rank one *)
 			List.iter (fun state_index ->	
 				(*** NOTE: here, we ALWAYS add (and compute) the rank; would it be smarter to add it on the fly, i.e., to only compute it when it is needed? ***)
@@ -2190,7 +2198,8 @@ class virtual algoStateBased =
 					(
 						print_message Verbose_low ("Found " ^ string_of_int (List.length smallers) ^ " smaller zone with the same location");
 						let rank = ref (Hashtbl.find rank_hashtable state_index) in
-						let rerank = ref false in
+						
+						let rerank = ref false in 
 
 						List.iter ( fun state_index_smaller -> 
 							(* to be sure not a leaf on the search tree*)
@@ -2201,43 +2210,47 @@ class virtual algoStateBased =
 									print_message Verbose_low ("Smaller State: " ^ (StateSpace.string_of_state_index state_index_smaller) ^ " with rank value: " ^printrank (Hashtbl.find rank_hashtable state_index_smaller)^ "!");
 								);
 
-								rerank := true;
+								rerank := true; 
 
-								rank := getMaxRank !rank (getHighestRankSuccessor state_index_smaller); 
+								(* This method is from the paper, it's not really efficient in practice *)
 								
-								(* rank := getHighestRankSuccessor state_index; *)
+								let rank2 = (match (getHighestRankSuccessor state_index_smaller) with
+									| Infinity -> Infinity
+									| Int value -> Int (value + 1); 
+								)
+								in
+								
+								rank := getMaxRank !rank rank2; 
+								
 
-								(*Hashtbl.replace rank_hashtable state_index !rank;*)
+								(*
+								(* This is the newer one and simpler, more efficient - proof: need to benchmark *)
+								
+								let rank2 = (match (Hashtbl.find rank_hashtable state_index_smaller) with
+									| Infinity -> Infinity
+									| Int value -> Int (value + 1); 
+								)
+								in
+
+								rank := getMaxRank !rank rank2; 
+								*)
+																
 
 								);
 
-								(* since we have the -incl2 then we don't need this one
-								(*Add transition*)
-								let lsTransitions = StateSpace.find_transitions_in state_space (state_index_smaller::(getVisitedStates rank_hashtable)) in
-								List.iter ( fun (pre, actions, smaller) -> 
-									if (state_index_smaller == smaller) then
-									StateSpace.add_transition state_space (pre, actions, state_index);
+							(*reomove the state_index_smaller n the hastable*)
+							Hashtbl.remove rank_hashtable state_index_smaller;
+							queue := list_remove_first_occurence state_index_smaller !queue;
 
-									(* remove smaller state *)
-									(*
-									let abstract_state = Hashtbl.find (state_space.all_states) smaller in
-									Hashtbl.remove (state_space.all_states) (s,abstract_state);
-									*)
-
-								) lsTransitions;
-								*)
-	
 						) smallers;
 
+						
 						if !rerank = true 
 						then (
-						rank := ( match !rank with
-								| Infinity -> Infinity
-								| Int value -> Int (value + 1); 
-								);
-
 						Hashtbl.replace rank_hashtable state_index !rank;
 						);
+						
+
 
 						if verbose_mode_greater Verbose_low then(
 							match !rank with
@@ -2248,9 +2261,13 @@ class virtual algoStateBased =
 
 				 
 				);
-
+				
+				 						
+				if not (List.mem state_index !queue)
+					then queue := list_append [state_index] !queue;
+				
 			) successors;
-			(*!queue;*)
+			!queue; 
 		in
 		
 		(*****************************************************RANKINK END******************************************************)
@@ -2303,32 +2320,29 @@ class virtual algoStateBased =
 			List.iter (fun state_index ->	let rank = initial_rank state_index state_space in
 											Hashtbl.add rank_hashtable state_index rank;
 
+
+											(*first version of prior*)
 											(*
-											let smallers = getSmallerVisitedLocation state_index rank_hashtable in
-											if not (smallers = [])
-											then (
-													List.iter ( fun state_index_smaller ->
-														(*Add transition*)
-														let lsTransitions = StateSpace.find_transitions_in state_space (state_index_smaller::(getVisitedStates rank_hashtable)) in
-
-														List.iter ( fun (pre, actions, smaller) -> 
-															if (state_index_smaller == smaller) then
-															StateSpace.add_transition state_space (pre, actions, state_index);
-
-															(* remove smaller state *)
-															(*
-															let abstract_state = Hashtbl.find (state_space.all_states) smaller in
-															Hashtbl.remove (state_space.all_states) (s,abstract_state);
-															*)
-
-														) lsTransitions;
-													) smallers;
-												);
-											*)
-
 											match rank with 
 												| Infinity -> q := addInfinityToPriorQueue state_index !q
 												| Int _ -> q := addNonInfinityToPriorQueue state_index !q;
+											*)
+
+											(*Priority +: if a successor is visited before and has larger zone than the previous 
+												then it will be considered as mistake and sorted right after the infinity rank in the queue *)
+
+											match rank with 
+												| Infinity -> q := addInfinityToPriorQueue state_index !q
+												| Int _ -> q := 
+												(
+													if (Hashtbl.mem rank_hashtable state_index)
+													then
+														addInfinityToPriorQueue state_index !q
+													else
+														addNonInfinityToPriorQueue state_index !q;
+												);
+
+
 			) successors;
 			!q
 		in
@@ -2442,7 +2456,7 @@ class virtual algoStateBased =
 				| Exploration_queue_BFS -> list_append successors !queue
 				(* Ranking system: TODO *)
 				| Exploration_queue_BFS_RS -> 	rankingSuccessors successors popped_from_queue;
-												list_append successors !queue
+												(* list_append successors !queue *)
 				(* Priority system: TODO *)
 				| Exploration_queue_BFS_PRIOR -> addToPriorQueue successors !queue
 				(* Impossible *)
