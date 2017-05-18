@@ -1314,6 +1314,8 @@ type new_maximum =
 
 exception FoundInfiniteRank of state_index
 
+exception FoundLargerZone 
+
 
 
 (************************************************************)
@@ -2016,7 +2018,24 @@ class virtual algoStateBased =
 
 		(*****************************************************RANKINK**********************************************************)
 
-		let getSmallerVisitedLocation state_index1 rank_hashtable = 
+		let checkLargerVisitedLocation state_index1 rank_hashtable = 
+			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
+			(
+				try(
+					Hashtbl.iter (fun state_index2 rank -> 
+						let loc2, constr2 = StateSpace.get_state state_space state_index2 in
+						if (loc1 == loc2) && not (LinearConstraint.px_is_leq constr2 constr1)
+						then  raise (FoundLargerZone);
+					) rank_hashtable;
+					false;
+
+				) with FoundLargerZone -> true;
+			);
+		in
+
+
+
+		let getSmallerVisitedLocations state_index1 rank_hashtable = 
 			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
 
 			let smallers = Hashtbl.fold (fun state_index2 rank smaller_state_index -> 
@@ -2098,12 +2117,13 @@ class virtual algoStateBased =
 			
 			
 			
+			
 		in
 
 
-		(*
+		
 		let getVisitedStates rank_hashtable = Hashtbl.fold ( fun state_index rank acc -> state_index::acc ) rank_hashtable [] in
-		*)
+		
 
 
 
@@ -2179,88 +2199,121 @@ class virtual algoStateBased =
 							Hashtbl.add rank_hashtable state_index !rank;
 						);
 				);
+
+
+				if not (checkLargerVisitedLocation state_index rank_hashtable) then
+				(
 				
 
-				(* finding the previous smaller visited zone with the same location (exploring mistakes) *)
-				let smallers = getSmallerVisitedLocation state_index rank_hashtable in 
-				
-				if smallers = [] 
-				then
-					(
-						print_message Verbose_low ("There is no smaller zone with the same location");
-						(* If no state is smaller, we compute the initial rank *)
-						(*
-						let rank = initial_rank state_index state_space in
-						Hashtbl.add rank_hashtable state_index rank;
-						*)
-					)
-				else
-					(
-						print_message Verbose_low ("Found " ^ string_of_int (List.length smallers) ^ " smaller zone with the same location");
-						let rank = ref (Hashtbl.find rank_hashtable state_index) in
-						
-						let rerank = ref false in 
+					(* finding the previous smaller visited zone with the same location (exploring mistakes) *)
+					let smallers = getSmallerVisitedLocations state_index rank_hashtable in 
+					
+					if smallers = [] 
+					then
+						(
+							print_message Verbose_low ("There is no smaller zone with the same location");
+							(* If no state is smaller, we compute the initial rank *)
+							(*
+							let rank = initial_rank state_index state_space in
+							Hashtbl.add rank_hashtable state_index rank;
+							*)
+						)
+					else
+						(
+							print_message Verbose_low ("Found " ^ string_of_int (List.length smallers) ^ " smaller zone with the same location");
+							let rank = ref (Hashtbl.find rank_hashtable state_index) in
+							
+							let rerank = ref false in 
 
-						List.iter ( fun state_index_smaller -> 
-							(* to be sure not a leaf on the search tree*)
-							if not (List.mem state_index_smaller !queue)
-							then (
+							List.iter ( fun state_index_smaller -> 
+								(* to be sure not a leaf on the search tree*)
+								if not (List.mem state_index_smaller !queue)
+								then (
 
-								if verbose_mode_greater Verbose_low then(
-									print_message Verbose_low ("Smaller State: " ^ (StateSpace.string_of_state_index state_index_smaller) ^ " with rank value: " ^printrank (Hashtbl.find rank_hashtable state_index_smaller)^ "!");
-								);
+									if verbose_mode_greater Verbose_low then(
+										print_message Verbose_low ("Smaller State: " ^ (StateSpace.string_of_state_index state_index_smaller) ^ " with rank value: " ^printrank (Hashtbl.find rank_hashtable state_index_smaller)^ "!");
+									);
 
-								rerank := true; 
+									rerank := true; 
 
-								(* This method is from the paper, it's not really efficient in practice *)
+									(* This method is from the paper, it's not really efficient in practice *)
+									
+									let rank2 = (match (getHighestRankSuccessor state_index_smaller) with
+										| Infinity -> Infinity
+										| Int value -> Int (value + 1); 
+									)
+									in
+									
+									rank := getMaxRank !rank rank2; 
+									
+
+									(*
+									(* This is the newer one and simpler, more efficient - proof: need to benchmark *)
+									
+									let rank2 = (match (Hashtbl.find rank_hashtable state_index_smaller) with
+										| Infinity -> Infinity
+										| Int value -> Int (value + 1); 
+									)
+									in
+
+									rank := getMaxRank !rank rank2; 
+									*)
+																	
+
+									);
 								
-								let rank2 = (match (getHighestRankSuccessor state_index_smaller) with
-									| Infinity -> Infinity
-									| Int value -> Int (value + 1); 
-								)
-								in
-								
-								rank := getMaxRank !rank rank2; 
-								
 
+
+								(*reomove the state_index_smaller n the hastable*)
+								(* Hashtbl.remove rank_hashtable state_index_smaller; *) 
+								
+								(*Hashtbl.replace rank_hashtable state_index_smaller (Int 0);*)
+
+								(* remove smaller state in the waiting list: may be cause bugs *)
+								(* queue := list_remove_first_occurence state_index_smaller !queue; *)
+								
 								(*
-								(* This is the newer one and simpler, more efficient - proof: need to benchmark *)
-								
-								let rank2 = (match (Hashtbl.find rank_hashtable state_index_smaller) with
-									| Infinity -> Infinity
-									| Int value -> Int (value + 1); 
-								)
-								in
+								(*Add transition*)
+								let lsTransitions = StateSpace.find_transitions_in state_space (state_index_smaller::(getVisitedStates rank_hashtable)) in
 
-								rank := getMaxRank !rank rank2; 
+								List.iter ( fun (pre, actions, smaller) -> 
+									if (state_index_smaller == smaller) then
+									StateSpace.add_transition state_space (pre, actions, state_index);
+
+									(* remove smaller state *)
+									(*
+									let abstract_state = Hashtbl.find (state_space.all_states) smaller in
+									Hashtbl.remove (state_space.all_states) (s,abstract_state);
+									*)
+
+
+								) lsTransitions;
 								*)
-																
+								
+								(*
+								Hashtbl.remove rank_hashtable state_index_smaller;
+								queue := list_remove_first_occurence state_index_smaller !queue; 
+								*)
 
-								);
 
-							(*reomove the state_index_smaller n the hastable*)
-							Hashtbl.remove rank_hashtable state_index_smaller;
-							(* remove smaller state in the waiting list: may be cause bugs *)
-							(* queue := list_remove_first_occurence state_index_smaller !queue; *)
+							) smallers;
 
-						) smallers;
+							
+							if !rerank = true 
+							then (
+							Hashtbl.replace rank_hashtable state_index !rank;
+							);
+							
 
-						
-						if !rerank = true 
-						then (
-						Hashtbl.replace rank_hashtable state_index !rank;
+
+							if verbose_mode_greater Verbose_low then(
+								match !rank with
+								| Infinity -> print_message Verbose_low ("Return max rank: Infinity!");
+								| Int value -> print_message Verbose_low ("Return max rank: " ^ string_of_int value ^"!");
+							);
 						);
-						
 
-
-						if verbose_mode_greater Verbose_low then(
-							match !rank with
-							| Infinity -> print_message Verbose_low ("Return max rank: Infinity!");
-							| Int value -> print_message Verbose_low ("Return max rank: " ^ string_of_int value ^"!");
-						);
-					);
-
-				 
+				 );
 				
 				
 				(*					
