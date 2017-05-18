@@ -2183,7 +2183,7 @@ class virtual algoStateBased =
 
 				(* finding the previous smaller visited zone with the same location (exploring mistakes) *)
 				let smallers = getSmallerVisitedLocation state_index rank_hashtable in 
-				(
+				
 				if smallers = [] 
 				then
 					(
@@ -2240,7 +2240,8 @@ class virtual algoStateBased =
 
 							(*reomove the state_index_smaller n the hastable*)
 							Hashtbl.remove rank_hashtable state_index_smaller;
-							queue := list_remove_first_occurence state_index_smaller !queue;
+							(* remove smaller state in the waiting list: may be cause bugs *)
+							(* queue := list_remove_first_occurence state_index_smaller !queue; *)
 
 						) smallers;
 
@@ -2260,11 +2261,14 @@ class virtual algoStateBased =
 					);
 
 				 
-				);
 				
-				 						
+				
+				(*					
 				if not (List.mem state_index !queue)
 					then queue := list_append [state_index] !queue;
+				*)
+
+				queue := list_append [state_index] !queue;
 				
 			) successors;
 			!queue; 
