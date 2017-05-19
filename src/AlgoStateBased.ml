@@ -2018,6 +2018,8 @@ class virtual algoStateBased =
 
 		(*****************************************************RANKINK**********************************************************)
 
+		let uncheckAgainStates = ref [] in
+
 		let checkLargerVisitedLocation state_index1 rank_hashtable = 
 			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
 			(
@@ -2028,11 +2030,9 @@ class virtual algoStateBased =
 						then  raise (FoundLargerZone);
 					) rank_hashtable;
 					false;
-
 				) with FoundLargerZone -> true;
 			);
 		in
-
 
 
 		let getSmallerVisitedLocations state_index1 rank_hashtable = 
@@ -2040,7 +2040,8 @@ class virtual algoStateBased =
 
 			let smallers = Hashtbl.fold (fun state_index2 rank smaller_state_index -> 
 				let loc2, constr2 = StateSpace.get_state state_space state_index2 in
-				if (loc1 == loc2) && not (LinearConstraint.px_is_leq constr1 constr2)
+				(* if (loc1 == loc2) && not (LinearConstraint.px_is_leq constr1 constr2) *)
+				if (loc1 == loc2) && not (LinearConstraint.px_is_leq constr1 constr2) && not (List.mem state_index2 !uncheckAgainStates)
 				then  (state_index2)::smaller_state_index 
 				else smaller_state_index;
 			) rank_hashtable [];
@@ -2092,8 +2093,6 @@ class virtual algoStateBased =
 			!highestRank_state_index;
 			*)
 
-			
-			
 			let init_state_index = List.hd queue in
 
 			let init_max_value = match (Hashtbl.find rank_hashtable init_state_index) with
@@ -2113,18 +2112,10 @@ class virtual algoStateBased =
 			(*** HACK: use -1 for index ***)
 			) (init_max_value, init_state_index) queue
 			in max_index
-			
-			
-			
-			
-			
 		in
-
 
 		
 		let getVisitedStates rank_hashtable = Hashtbl.fold ( fun state_index rank acc -> state_index::acc ) rank_hashtable [] in
-		
-
 
 
 		let getHighestRankSuccessor state_index = 
@@ -2245,25 +2236,10 @@ class virtual algoStateBased =
 									in
 									
 									rank := getMaxRank !rank rank2; 
-									
-
-									(*
-									(* This is the newer one and simpler, more efficient - proof: need to benchmark *)
-									
-									let rank2 = (match (Hashtbl.find rank_hashtable state_index_smaller) with
-										| Infinity -> Infinity
-										| Int value -> Int (value + 1); 
-									)
-									in
-
-									rank := getMaxRank !rank rank2; 
-									*)
 																	
-
 									);
-								
 
-
+								(* in order to adapt to IMITATOR, this code will be commented *)
 								(*reomove the state_index_smaller n the hastable*)
 								(* Hashtbl.remove rank_hashtable state_index_smaller; *) 
 								
@@ -2286,7 +2262,6 @@ class virtual algoStateBased =
 									Hashtbl.remove (state_space.all_states) (s,abstract_state);
 									*)
 
-
 								) lsTransitions;
 								*)
 								
@@ -2295,9 +2270,9 @@ class virtual algoStateBased =
 								queue := list_remove_first_occurence state_index_smaller !queue; 
 								*)
 
+								uncheckAgainStates := state_index_smaller::(!uncheckAgainStates);
 
 							) smallers;
-
 							
 							if !rerank = true 
 							then (
@@ -2312,14 +2287,8 @@ class virtual algoStateBased =
 								| Int value -> print_message Verbose_low ("Return max rank: " ^ string_of_int value ^"!");
 							);
 						);
-
 				 );
 				
-				
-				(*					
-				if not (List.mem state_index !queue)
-					then queue := list_append [state_index] !queue;
-				*)
 
 				queue := list_append [state_index] !queue;
 				
