@@ -109,6 +109,7 @@ class algoEFunsafeSynth =
 		in*)
 		
 		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
+		(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
 		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
 
 		(* Return the result *)

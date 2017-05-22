@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2017/05/02
+ * Last modified     : 2017/05/22
  *
  ************************************************************)
 
@@ -25,6 +25,8 @@ open AbstractModel
 open Result
 open AlgoStateBased
 open Statistics
+
+
 
 
 (************************************************************)
@@ -92,7 +94,7 @@ class virtual algoEFsynth =
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Process a symbolic state *)
+	(** Process a symbolic state: returns false if the state is a target state (and should not be added to the next states to explore), true otherwise *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private process_state state =
 		(* Print some information *)
@@ -244,6 +246,9 @@ class virtual algoEFsynth =
 		(* Try to add the new state to the state space *)
 		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
 		
+		(* Boolean to check whether the analysis should be terminated immediately *)
+		let terminate_analysis_immediately = ref false in
+		
 		begin
 		match addition_result with
 		(* If the state was present: do nothing *)
@@ -257,6 +262,9 @@ class virtual algoEFsynth =
 			(* Will the state be added to the list of new states (the successors of which will be computed)? *)
 			(*** BADPROG: ugly bool ref that may be updated in an IF condition below ***)
 			let to_be_added = ref (self#process_state new_state) in
+			
+			(* If the state is a target state (i.e., process_state returned false) AND the option to stop the analysis as soon as a counterexample is found is activated, then we will throw an exception *)
+			terminate_analysis_immediately := options#counterex && not !to_be_added;
 			
 			(* If to be added: if the state is included into the bad constraint, no need to explore further, and hence do not add *)
 			if !to_be_added then(
@@ -304,6 +312,16 @@ class virtual algoEFsynth =
 		
 		(* Add the transition to the state space *)
 		self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
+		
+		(* If an immediate termination is requested: raise exception! *)
+		if !terminate_analysis_immediately then(
+			(* Update termination status *)
+			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
+			self#print_algo_message Verbose_standard "Target state found! Terminating…";
+			termination_status <- Some Target_found;
+			
+			raise TerminateAnalysis;
+		);
 	
 		(* The state is kept in any case *)
 		true

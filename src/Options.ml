@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2017/05/03
+ * Last modified     : 2017/05/22
  *
  ************************************************************)
 
@@ -153,7 +153,7 @@ class imitator_options =
 		val mutable carto_time_limit = None
 		
 		(* stop the analysis as soon as a counterexample is found *)
-(* 		val mutable counterex = ref false *)
+		val mutable counterex = ref false
 
 		(* Check whether each constraint contains an integer point *)
 		val mutable check_ippta = ref false
@@ -269,7 +269,7 @@ class imitator_options =
 		method check_point = !check_point
 (* 		method completeIM = !completeIM *)
 (* 		method cosyprop = !cosyprop *)
-(* 		method counterex = !counterex *)
+		method counterex = !counterex
 		method depth_limit = !depth_limit
 		method distribution_mode = !distribution_mode
 		method distributedKillIM = !distributedKillIM
@@ -628,7 +628,7 @@ class imitator_options =
 					print_contributors();
 					exit 0), " Print contributors and exit.");
 				
-(* 				("-counterex", Set counterex, " Stop the analysis as soon as a bad state is discovered (work in progress). Default: false."); *)
+				("-counterexample", Set counterex, " For EF or PRP, stop the analysis as soon as a bad state is discovered. Default: false.");
 				
 				("-depth-limit", Int (fun i -> depth_limit := Some i), " Limits the depth of the exploration of the state space. Default: no limit.");
 
@@ -973,6 +973,13 @@ class imitator_options =
 			if (imitator_mode = State_space_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_max || imitator_mode = Loop_synthesis || imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
 				print_warning (Constants.program_name ^ " is run in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
 
+				
+				
+				
+			(* No counterex if not EF *)
+			if !counterex && (imitator_mode <> EF_synthesis && imitator_mode <> EFunsafe_synthesis && imitator_mode <> PRP) then(
+				print_warning ("The option '-counterexample' is reserved for EF and PRP. It will thus be ignored.");
+			);
 			
 			(*** TODO: add warning if -cart but mode translation or statespace ***)
 
@@ -1043,6 +1050,15 @@ class imitator_options =
 			;
 
 
+			if (imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = PRP) then(
+				if !counterex then(
+					print_message Verbose_standard ("Counterexample mode: the analysis will stop as soon as a target state is found.");
+				)else(
+					print_message Verbose_medium ("No counterexample mode (default).");
+				);
+			);
+
+			
 			begin
 			match !distribution_mode with
 			| Non_distributed -> 

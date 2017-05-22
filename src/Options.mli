@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created:       2012/05/10
- * Last modified: 2017/04/18
+ * Last modified: 2017/05/22
  *
  ************************************************************)
  
@@ -43,7 +43,7 @@ class imitator_options :
 (* 		method completeIM : bool *)
 		(** HACK: property input from CosyVerif *)
 (* 		method cosyprop : string *)
-(* 		method counterex : bool *)
+		method counterex : bool
 		method depth_limit : int option
 		method distribution_mode : distribution_mode
 		method distributedKillIM : bool

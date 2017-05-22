@@ -7,6 +7,7 @@ Major feature:
 
 Minor feature:
 - New option to convert exact-valued discrete variables into (possibly approximated) floats in all outputs
+- Reintroduced the -counterexample option (stops the analysis as soon as a counterexample is found) for EF and PRP
 - New option -romeo (April 1st 2017 feature)… Try it ;-)
 
 Bug fixing

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2016/10/11
+ * Last modified     : 2017/05/22
  *
  ************************************************************)
 
@@ -45,6 +45,8 @@ exception Random_generator_initialization_exception
 
 exception SerializationError of string
 
-exception UnexpectedToken of char
+(* Used when an algorithm must suddenly stop (e.g., because it found a certain sort of state) *)
+exception TerminateAnalysis
 
+exception UnexpectedToken of char
 

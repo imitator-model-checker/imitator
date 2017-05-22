@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2017/02/10
+ * Last modified     : 2017/05/22
  *
  ************************************************************)
 
@@ -77,6 +77,9 @@ let string_of_bfs_algorithm_termination = function
 	| Depth_limit nb_unexplored_successors -> "depth limit (" ^ (string_of_int nb_unexplored_successors) ^ " successor" ^ (s_of_int nb_unexplored_successors) ^ " unexplored)"
 	(* Termination due to a number of explored states reached *)
 	| States_limit nb_unexplored_successors -> "states limit (" ^ (string_of_int nb_unexplored_successors) ^ " successor" ^ (s_of_int nb_unexplored_successors) ^ " unexplored)"
+	(* Termination due to a target state found *)
+	(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
+	| Target_found -> "terminated after reaching a target state (some states may have been unexplored)"
 
 
 let string_of_bc_algorithm_termination = function

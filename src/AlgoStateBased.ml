@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2017/05/03
+ * Last modified     : 2017/05/22
  *
  ************************************************************)
 
@@ -1299,7 +1299,6 @@ type bfs_limit_reached =
 exception BFS_Limit_detected of bfs_limit_reached
 
 
-
 (*GIA**)
 type rank_value =
     | Infinity
@@ -1330,6 +1329,7 @@ class waiting_list =
 	(* Class variables *)
 	(************************************************************)
 	val mutable waiting_list = []
+	
 
 	(************************************************************)
 	(* Class methods *)
@@ -1400,6 +1400,11 @@ class virtual algoStateBased =
 	(*** NOTE: private ***)
 	val mutable bfs_current_depth = 0
 	
+	(* Variable to remain of the termination *)
+	(*** NOTE: private ***)
+	(*** TODO: merge with termination_status… ***)
+	val mutable limit_reached = Keep_going
+	
 	
 	(************************************************************)
 	(* Class methods *)
@@ -1452,6 +1457,7 @@ class virtual algoStateBased =
 	(* Side-effects: modify new_states_indexes *)
 	(*** TODO: move new_states_indexes to a variable of the class ***)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
+	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** TODO: simplify signature by removing the source_state_index and returning the list of actually added states ***)
 	method virtual add_a_new_state : state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
@@ -1793,7 +1799,7 @@ class virtual algoStateBased =
 	(* Check whether the limit of an BFS exploration has been reached, according to the analysis options *)
 	(*** NOTE: May raise an exception when used in PaTATOR mode (the exception will be caught by PaTATOR) ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private check_layer_bfs_limit =
+	method private check_and_update_layer_bfs_limit =
 		(* Check all limits *)
 		
 		(* Depth limit *)
@@ -1835,17 +1841,18 @@ class virtual algoStateBased =
 		end
 		;
 		(* If reached here, then everything is fine: keep going *)
-		Keep_going
+		()
 		)
-		(* If exception caught, then update termination status, and return the reason *)
-		with BFS_Limit_detected reason -> reason
+		(* If exception caught, then update termination status *)
+		with BFS_Limit_detected reason ->
+			limit_reached <- reason
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check whether the limit of an BFS exploration has been reached, according to the analysis options *)
 	(*** NOTE: May raise an exception when used in PaTATOR mode (the exception will be caught by PaTATOR) ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private check_queue_bfs_limit =
+	method private check_and_update_queue_bfs_limit =
 		(* Check all limits *)
 		
 		(* Depth limit *)
@@ -1878,10 +1885,11 @@ class virtual algoStateBased =
 		end
 		;
 		(* If reached here, then everything is fine: keep going *)
-		Keep_going
+		()
 		)
 		(* If exception caught, then update termination status, and return the reason *)
-		with BFS_Limit_detected reason -> reason
+		with BFS_Limit_detected reason ->
+			limit_reached <- reason
 
 
 
@@ -1903,6 +1911,10 @@ class virtual algoStateBased =
 			| Some (Result.Time_limit nb_unexplored_successors) -> print_warning (
 				"The time limit has been reached. The exploration now stops, although there " ^ (waswere_of_int nb_unexplored_successors) ^ " still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore at this iteration."
 					(* (" ^ (string_of_int limit) ^ " second" ^ (s_of_int limit) ^ ")*)
+			)
+			
+			| Some (Result.Target_found) -> print_warning (
+				"A target state has been found. The exploration now stops, although there are still some unexplored states."
 			)
 			
 			| None -> raise (InternalError "The termination status should be set when displaying warnings concerning early termination.")
@@ -1942,8 +1954,8 @@ class virtual algoStateBased =
 		
 		let queue = ref [] in 
 
-		(* Boolean to check whether the time limit / state limit is reached *)
-		let limit_reached = ref Keep_going in
+		(* Set the limit *)
+		limit_reached <- Keep_going;
 		
 		(* Flag modified by the algorithm to perhaps terminate earlier *)
 		let algorithm_keep_going = ref true in
@@ -2420,7 +2432,7 @@ class virtual algoStateBased =
 
 
 		(* Explore further until the limit is reached or the queue is empty *)
-		while !limit_reached = Keep_going && !queue <> [] && !algorithm_keep_going do
+		while limit_reached = Keep_going && !queue <> [] && !algorithm_keep_going do
 			print_message Verbose_low ("I am here!!!!!!");
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then (
@@ -2497,10 +2509,10 @@ class virtual algoStateBased =
 
 			
 			(* Check if the limit has been reached *)
-			limit_reached := self#check_queue_bfs_limit;
+			self#check_and_update_queue_bfs_limit;
 			
 			(* If still going, ask the concrete algorithm whether it wants to terminate for other reasons *)
-			if !limit_reached = Keep_going then(
+			if limit_reached = Keep_going then(
 				(* Print some information *)
 				(*** HACK: 'bfs_current_depth - 1' because bfs_current_depth was just incremented… ***)
 				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (bfs_current_depth - 1)) ^ "…");
@@ -2524,7 +2536,7 @@ class virtual algoStateBased =
 		
 		(* Update termination condition *)
 		begin
-		match !limit_reached with
+		match limit_reached with
 			(* No limit: regular termination *)
 			| Keep_going -> termination_status <- Some (Result.Regular_termination)
 			(* Termination due to time limit reached *)
@@ -2582,14 +2594,14 @@ class virtual algoStateBased =
 		(* Set of states computed at the previous depth *)
 		let post_n = ref [init_state_index] in
 		
-		(* Boolean to check whether the time limit / state limit is reached *)
-		let limit_reached = ref Keep_going in
+		(* To check whether the time limit / state limit is reached *)
+		limit_reached <- Keep_going;
 		
 		(* Flag modified by the algorithm to perhaps terminate earlier *)
 		let algorithm_keep_going = ref true in
 
 		(* Explore further until the limit is reached or the list of states computed at the previous depth is empty *)
-		while !limit_reached = Keep_going && !post_n <> [] && !algorithm_keep_going do
+		while limit_reached = Keep_going && !post_n <> [] && !algorithm_keep_going do
 			(* Print some information *)
 			if verbose_mode_greater Verbose_standard then (
 				print_message Verbose_low ("\n");
@@ -2599,7 +2611,10 @@ class virtual algoStateBased =
 			(* Count the states for verbose purpose: *)
 			let num_state = ref 0 in
 
+			(* The concrete function post_from_one_state may raise exception TerminateAnalysis *)
+			
 			let post_n_plus_1 =
+			try(
 			(* For each newly found state: *)
 			List.fold_left (fun current_post_n_plus_1 orig_state_index ->
 				(* Count the states for verbose purpose: *)
@@ -2615,7 +2630,12 @@ class virtual algoStateBased =
 				(* Return the concatenation of the new states *)
 				(**** OPTIMIZED: do not care about order (else shoud consider 'list_append current_post_n_plus_1 (List.rev new_states)') *)
 				List.rev_append current_post_n_plus_1 new_states
-			) [] !post_n in
+			) [] !post_n
+			)
+			(* If analysis terminate: successors are just the empty list *)
+			with TerminateAnalysis -> []
+			
+			in
 			
 			self#process_post_n !post_n;
 			
@@ -2706,10 +2726,10 @@ class virtual algoStateBased =
 			bfs_current_depth <- bfs_current_depth + 1;
 			
 			(* Check if the limit has been reached *)
-			limit_reached := self#check_layer_bfs_limit;
+			self#check_and_update_layer_bfs_limit;
 			
 			(* If still going, ask the concrete algorithm whether it wants to terminate for other reasons *)
-			if !limit_reached = Keep_going then(
+			if limit_reached = Keep_going then(
 				(* Print some information *)
 				(*** HACK: 'bfs_current_depth - 1' because bfs_current_depth was just incremented… ***)
 				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (bfs_current_depth - 1)) ^ "…");
@@ -2726,14 +2746,18 @@ class virtual algoStateBased =
 		
 		(* Set the list of states with unexplored successors, if any *)
 		if nb_unexplored_successors > 0 then(
+			(*** NOTE: if an exception TerminateAnalysis was raised, this list is empty :( ***)
 			unexplored_successors <- UnexSucc_some !post_n;
 		);
 		
 		(* Update termination condition *)
 		begin
-		match !limit_reached with
+		match limit_reached with
 			(* No limit: regular termination *)
-			| Keep_going -> termination_status <- Some (Result.Regular_termination)
+			(*** NOTE: check None, as it may have been edited from outside, in which case it should not be Regular_termination ***)
+			| Keep_going when termination_status = None -> termination_status <- Some (Result.Regular_termination)
+			| Keep_going when termination_status <> None -> ()
+			
 			(* Termination due to time limit reached *)
 			| Time_limit_reached -> termination_status <- Some (Result.Time_limit nb_unexplored_successors)
 			
