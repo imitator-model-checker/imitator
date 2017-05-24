@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2017/05/22
+ * Last modified     : 2017/05/24
  *
  ************************************************************)
 
@@ -2477,7 +2477,13 @@ class virtual algoStateBased =
 			num_state := !num_state + 1;
 			
 			(* Compute successors *)
-			let successors = self#post_from_one_state popped_from_queue in
+			(* The concrete function post_from_one_state may raise exception TerminateAnalysis, and update termination_status *)
+			let successors =
+			try(
+				self#post_from_one_state popped_from_queue
+			)
+			with TerminateAnalysis -> []
+			in
 
 			if verbose_mode_greater Verbose_low then(
 					print_message Verbose_low ("Poped State: " ^ (StateSpace.string_of_state_index popped_from_queue) ^" from queue!");
@@ -2611,8 +2617,7 @@ class virtual algoStateBased =
 			(* Count the states for verbose purpose: *)
 			let num_state = ref 0 in
 
-			(* The concrete function post_from_one_state may raise exception TerminateAnalysis *)
-			
+			(* The concrete function post_from_one_state may raise exception TerminateAnalysis, and update termination_status *)
 			let post_n_plus_1 =
 			try(
 			(* For each newly found state: *)
