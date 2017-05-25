@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2017/05/03
+# Last modified: 2017/05/25
 #************************************************************
 
 
@@ -565,7 +565,7 @@ Number of computed states               : 0
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF (old version) with basic unreachability',
+		'purpose'    : 'Test EF (old version) with basic unreachability property for Fischer:3',
 		'input_files': ['F3.imi'],
 		'options'    : '-mode EFold -merge -incl -output-result',
 		'expectations' : [
@@ -586,7 +586,7 @@ END CONSTRAINT
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with basic unreachability',
+		'purpose'    : 'Test EF with basic unreachability property for Fischer:3',
 		'input_files': ['F3.imi'],
 		'options'    : '-mode EF -merge -incl -output-result',
 		'expectations' : [
@@ -595,6 +595,112 @@ BEGIN CONSTRAINT
 delta >= Delta
     & Delta >= 0
 END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (double-directional inclusion)',
+		'input_files': ['F3.imi'],
+		'options'    : '-mode EF -merge -incl2 -output-result',
+		'expectations' : [
+			{'file': 'F3.res' , 'content' : """
+BEGIN CONSTRAINT
+delta >= Delta
+    & Delta >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (queueBFS exploration order)',
+		'input_files': ['F3.imi'],
+		'options'    : '-mode EF -merge -incl -explOrder queueBFS -output-result',
+		'expectations' : [
+			{'file': 'F3.res' , 'content' : """
+BEGIN CONSTRAINT
+delta >= Delta
+    & Delta >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (layerBFS exploration order) with counterexample',
+		'input_files': ['F3.imi'],
+		'options'    : '-mode EF -merge -incl -explOrder layerBFS -counterexample -output-result',
+		'expectations' : [
+			{'file': 'F3.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2*delta >= Delta
+& Delta >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (queueBFS exploration order) with counterexample',
+		'input_files': ['F3.imi'],
+		'options'    : '-mode EF -merge -incl -explOrder queueBFS -counterexample -output-result',
+		'expectations' : [
+			{'file': 'F3.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2*delta >= Delta
+& Delta >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} #end result file
 		] # end expectations
