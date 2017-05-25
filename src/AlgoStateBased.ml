@@ -2482,7 +2482,13 @@ class virtual algoStateBased =
 			try(
 				self#post_from_one_state popped_from_queue
 			)
-			with TerminateAnalysis -> []
+			with TerminateAnalysis ->
+				(*** HACK: empty the queue to force termination… ***)
+				(*** TODO: improve the termination mechanism (by unifying limit_reached and termination_status) ***)
+				queue := [];
+				
+				(* Return an empty list of successors *)
+				[]
 			in
 
 			if verbose_mode_greater Verbose_low then(
@@ -2543,8 +2549,11 @@ class virtual algoStateBased =
 		(* Update termination condition *)
 		begin
 		match limit_reached with
-			(* No limit: regular termination *)
-			| Keep_going -> termination_status <- Some (Result.Regular_termination)
+			(*** NOTE: check None, as it may have been edited from outside, in which case it should not be Regular_termination ***)
+			| Keep_going when termination_status = None -> termination_status <- Some (Result.Regular_termination)
+			(*** NOTE: obliged to comment out the condition below, otherwise there is a compiling warning… ***)
+			| Keep_going (*when termination_status <> None*) -> ()
+			
 			(* Termination due to time limit reached *)
 			| Time_limit_reached -> termination_status <- Some (Result.Time_limit nb_unexplored_successors)
 			
@@ -2761,7 +2770,8 @@ class virtual algoStateBased =
 			(* No limit: regular termination *)
 			(*** NOTE: check None, as it may have been edited from outside, in which case it should not be Regular_termination ***)
 			| Keep_going when termination_status = None -> termination_status <- Some (Result.Regular_termination)
-			| Keep_going when termination_status <> None -> ()
+			(*** NOTE: obliged to comment out the condition below, otherwise there is a compiling warning… ***)
+			| Keep_going (*when termination_status <> None*) -> ()
 			
 			(* Termination due to time limit reached *)
 			| Time_limit_reached -> termination_status <- Some (Result.Time_limit nb_unexplored_successors)
