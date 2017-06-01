@@ -42,6 +42,26 @@ type variable_declarations = variable_declaration list
 
 
 (****************************************************************)
+(** Arithmetic expressions for discrete variables *)
+(****************************************************************)
+type discrete_arithmetic_expression =
+	| DAE_plus of discrete_arithmetic_expression * discrete_term
+	| DAE_minus of discrete_arithmetic_expression * discrete_term
+	| DAE_term of discrete_term
+
+and discrete_term =
+	| DT_mul of discrete_term * discrete_factor
+	| DT_div of discrete_term * discrete_factor
+	| DT_factor of discrete_factor
+
+and discrete_factor =
+	| DF_variable of discrete_index
+	| DF_constant of discrete_value
+	| DF_expression of discrete_arithmetic_expression
+
+
+
+(****************************************************************)
 (** Convex predicates and linear expressions *)
 (****************************************************************)
 

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/11
- * Last modified     : 2017/04/24
+ * Last modified     : 2017/06/01
  *
  ************************************************************)
 
@@ -21,7 +21,7 @@ open Automaton
 
 
 (************************************************************)
-(** Pi 0 *)
+(** Reference valuation *)
 (************************************************************)
 type pi0 = PVal.pval
 
@@ -44,6 +44,8 @@ type action_type =
 	| Action_type_nosync
 
 
+type discrete_value = NumConst.t
+
 
 (************************************************************)
 (** Locations *)
@@ -53,6 +55,25 @@ type location_urgency =
 	| Location_urgent
 	(* Non-urgent location *)
 	| Location_nonurgent
+
+
+(************************************************************)
+(** Arithmetic expressions (in updates) *)
+(************************************************************)
+type discrete_arithmetic_expression =
+	| DAE_plus of discrete_arithmetic_expression * discrete_term
+	| DAE_minus of discrete_arithmetic_expression * discrete_term
+	| DAE_term of discrete_term
+
+and discrete_term =
+	| DT_mul of discrete_term * discrete_factor
+	| DT_div of discrete_term * discrete_factor
+	| DT_factor of discrete_factor
+
+and discrete_factor =
+	| DF_variable of discrete_index
+	| DF_constant of discrete_value
+	| DF_expression of discrete_arithmetic_expression
 
 
 (************************************************************)
@@ -110,8 +131,6 @@ type transition = guard * clock_updates * discrete_update list * location_index
 type duration = LinearConstraint.p_linear_term
 
 type unreachable_location = automaton_index * location_index
-
-type discrete_value = NumConst.t
 
 type discrete_constraint =
 	| Discrete_l of discrete_index * discrete_value
