@@ -44,20 +44,20 @@ type variable_declarations = variable_declaration list
 (****************************************************************)
 (** Arithmetic expressions for discrete variables *)
 (****************************************************************)
-type discrete_arithmetic_expression =
-	| DAE_plus of discrete_arithmetic_expression * discrete_term
-	| DAE_minus of discrete_arithmetic_expression * discrete_term
-	| DAE_term of discrete_term
+type parsed_discrete_arithmetic_expression =
+	| Parsed_DAE_plus of parsed_discrete_arithmetic_expression * parsed_discrete_term
+	| Parsed_DAE_minus of parsed_discrete_arithmetic_expression * parsed_discrete_term
+	| Parsed_DAE_term of parsed_discrete_term
 
-and discrete_term =
-	| DT_mul of discrete_term * discrete_factor
-	| DT_div of discrete_term * discrete_factor
-	| DT_factor of discrete_factor
+and parsed_discrete_term =
+	| Parsed_DT_mul of parsed_discrete_term * parsed_discrete_factor
+	| Parsed_DT_div of parsed_discrete_term * parsed_discrete_factor
+	| Parsed_DT_factor of parsed_discrete_factor
 
-and discrete_factor =
-	| DF_variable of discrete_index
-	| DF_constant of discrete_value
-	| DF_expression of discrete_arithmetic_expression
+and parsed_discrete_factor =
+	| Parsed_DF_variable of variable_name
+	| Parsed_DF_constant of var_value
+	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
 
 
 
