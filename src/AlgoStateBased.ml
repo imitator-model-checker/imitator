@@ -1710,6 +1710,7 @@ class virtual algoStateBased =
 		(************************************************************)
 		(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
 		(*** NOTE: why not in mode state space ??? ***)
+		(*** NOTE/WARNING: this is the ONLY place where the StatesMerging module is called :/ Otherwise, the function used is the one in StateSpace ***)
 		if options#imitator_mode <> State_space_exploration && options#merge_before then(
 		
 			(* Merge *)
@@ -2516,8 +2517,17 @@ class virtual algoStateBased =
 
 			
 
-
-
+			(* Merge states! *)
+			(*** Here, we merge only the queue ***)
+			(*** TODO: merge something else? ***)
+			let new_states_after_merging = ref (!queue) in
+			if options#merge || options#merge_before then (
+				(* New version *)
+				let eaten_states = StateSpace.merge state_space !new_states_after_merging in
+				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
+			);
+			(* Copy back the merged queue *)
+			queue := !new_states_after_merging;
 
 			
 			(* Check if the limit has been reached *)
@@ -2662,10 +2672,9 @@ class virtual algoStateBased =
 				let eaten_states = StateSpace.merge state_space !new_states_after_merging in
 				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
 			);
-
-
 			(* Update the post_n, i.e., at that point we replace the post^n by post^n+1 in our BFS algorithm, and go one step deeper in the state space *)
 			post_n := !new_states_after_merging;
+			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then (
 				let beginning_message = if !post_n = [] then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length !post_n)) ^ " new state" ^ (s_of_int (List.length !post_n)) ^ "") in
