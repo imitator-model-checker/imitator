@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2017/04/24
+ * Last modified     : 2017/06/01
  *
  ************************************************************)
 
@@ -129,6 +129,12 @@ let statespace_dcounter_nb_constraint_comparisons = create_discrete_counter_and_
 let statespace_dcounter_nb_states_included = create_discrete_counter_and_register "number of new states <= old" States_counter Verbose_standard
 (* Numbers of new states that were in fact larger than an old state *)
 let statespace_dcounter_nb_states_including = create_discrete_counter_and_register "number of new states >= old" States_counter Verbose_standard
+
+(* Numbers of merging attempts (for states that have the same discrete location) *)
+let nb_merging_attempts = create_discrete_counter_and_register "StateSpace.merging attempts" States_counter Verbose_standard
+(* Numbers of actual merges *)
+let nb_merged = create_discrete_counter_and_register "StateSpace.merges" States_counter Verbose_standard
+
 
 
 (************************************************************)
@@ -1340,10 +1346,18 @@ let get_siblings state_space si =
 )*)
 
 
+(* Check if two states can be merged *)
+(*** NOTE: with side-effects! ***)
+let are_mergeable s s' =
+	(* Statistics *)
+	nb_merging_attempts#increment;
+	
+	(* Call dedicated function *)
+	LinearConstraint.px_hull_assign_if_exact s s'
+
 
 (* Try to merge new states with existing ones. Returns list of merged states (ULRICH) *)
 let merge state_space new_states =
-	let mergeable = LinearConstraint.px_hull_assign_if_exact in
 	
 	(* function for merging one state with its siblings *)
 	let merge_state si =
@@ -1357,8 +1371,13 @@ let merge state_space new_states =
 				| [] -> [] (* here, we are really done *)
 				| m :: tail_mc -> begin
 					let sj, (_, c') = m in
-					if mergeable c c' then begin
+					if are_mergeable c c' then begin
+						(* Statistics *)
+						nb_merged#increment;
+					
+						(* Print some information *)
 						print_message Verbose_high ("merged with state " ^ (string_of_int sj));
+						
 						(* we ate sj, start over with new bigger state, removing sj *)
 						let all_mc' = List.filter (fun (sk, _) -> sk <> sj) all_mc in
 						sj :: eat all_mc' all_mc'
