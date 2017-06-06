@@ -2317,6 +2317,10 @@ class virtual algoStateBased =
 
 		(*****************************************************PRIOR**********************************************************)
 		(*It will sort the queue from largest to snmallest zone*)
+		let addToPriorQueue state_index queue = 
+			[state_index]@queue
+		in
+
 		let rec addInfinityToPriorQueue state_index queue = 
 			match queue with
 			  | [] -> [state_index]
@@ -2376,7 +2380,8 @@ class virtual algoStateBased =
 												(
 													if (Hashtbl.mem rank_hashtable state_index)
 													then
-														addInfinityToPriorQueue state_index !q
+														(*addInfinityToPriorQueue state_index !q*)
+														addToPriorQueue state_index !q
 													else
 														addNonInfinityToPriorQueue state_index !q;
 												);
