@@ -2078,7 +2078,8 @@ class virtual algoStateBased =
 									| (_, _) -> Infinity;
 		in
 
-		
+
+		(*
 		let getMaxRankStateIndex state_index1 state_index2 = 
 			let rank1 = Hashtbl.find rank_hashtable state_index1 in
 			let rank2 = Hashtbl.find rank_hashtable state_index2 in
@@ -2088,6 +2089,8 @@ class virtual algoStateBased =
 			| (Infinity, Int x2) -> state_index1
 			| (Int x1, Infinity) -> state_index2;
 		in
+		*)
+
 		
 		
 		(* Small helpful function for getHighestRank: compare a rank with the current maximum; return a new_maximum result *)
@@ -2138,7 +2141,9 @@ class virtual algoStateBased =
 		in
 
 		
+		(*
 		let getVisitedStates rank_hashtable = Hashtbl.fold ( fun state_index rank acc -> state_index::acc ) rank_hashtable [] in
+		*)
 
 
 		let getHighestRankSuccessor state_index = 
@@ -2333,9 +2338,11 @@ class virtual algoStateBased =
 
 		(*****************************************************PRIOR**********************************************************)
 		(*It will sort the queue from largest to snmallest zone*)
+		(*
 		let addToPriorQueue state_index queue = 
 			[state_index]@queue
 		in
+		*)
 
 		let rec addInfinityToPriorQueue state_index queue = 
 			match queue with
@@ -2398,8 +2405,8 @@ class virtual algoStateBased =
 												(
 													if (Hashtbl.mem rank_hashtable state_index)
 													then
-														(*addInfinityToPriorQueue state_index !q*)
-														addToPriorQueue state_index !q
+														addInfinityToPriorQueue state_index !q
+														(* addToPriorQueue state_index !q *)
 													else
 														addNonInfinityToPriorQueue state_index !q;
 												);
