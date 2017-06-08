@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/09
- * Last modified     : 2017/04/24
+ * Last modified     : 2017/06/08
  *
  ************************************************************)
 
@@ -314,6 +314,42 @@ let get_declared_synclabs_names =
 (* First define a string set structure *)
 module StringSet = Set.Make(String)
 
+
+(*------------------------------------------------------------*)
+(* Gather all variable names used in a parsed_discrete_arithmetic_expression *)
+(*------------------------------------------------------------*)
+let rec get_variables_in_parsed_discrete_factor variables_used_ref = function
+	| Parsed_DF_variable variable_name ->
+		(* Add the variable name to the set and update the reference *)
+		variables_used_ref := StringSet.add variable_name !variables_used_ref
+		
+	| Parsed_DF_constant _ -> ()
+	
+	| Parsed_DF_expression parsed_discrete_arithmetic_expression ->
+		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref parsed_discrete_arithmetic_expression
+
+	
+and get_variables_in_parsed_discrete_term variables_used_ref = function
+	| Parsed_DT_mul (parsed_discrete_term, parsed_discrete_factor)
+	| Parsed_DT_div (parsed_discrete_term, parsed_discrete_factor) ->
+		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term;
+		get_variables_in_parsed_discrete_factor variables_used_ref parsed_discrete_factor
+	
+	| Parsed_DT_factor parsed_discrete_factor ->
+		get_variables_in_parsed_discrete_factor variables_used_ref parsed_discrete_factor
+	
+
+and get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref = function
+	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression, parsed_discrete_term)
+	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
+		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref parsed_discrete_arithmetic_expression;
+		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term
+
+	| Parsed_DAE_term parsed_discrete_term ->
+		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term
+
+
+
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a linear_term *)
 (*------------------------------------------------------------*)
@@ -402,6 +438,7 @@ let get_variables_in_property variables_used_ref = function
 	(* sequence: always a1, …, an *)
 	| Sequence_cyclic _
 		-> ()
+
 
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a convex predicate *)
@@ -556,11 +593,50 @@ let all_locations_different =
 (*------------------------------------------------------------*)
 (* Check that all variables are defined in a linear_term *)
 (*------------------------------------------------------------*)
+let rec check_variables_in_parsed_discrete_factor variable_names constants = function
+	| Parsed_DF_variable variable_name ->
+		if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
+		print_error ("The variable '" ^ variable_name ^ "' used in an arithmetic expression was not declared."); false
+		) else true
+		
+	| Parsed_DF_constant _ -> true
+	
+	| Parsed_DF_expression parsed_discrete_arithmetic_expression ->
+		check_variables_in_parsed_discrete_arithmetic_expression variable_names constants parsed_discrete_arithmetic_expression
+
+	
+and check_variables_in_parsed_discrete_term variable_names constants = function
+	| Parsed_DT_mul (parsed_discrete_term, parsed_discrete_factor)
+	| Parsed_DT_div (parsed_discrete_term, parsed_discrete_factor) ->
+		evaluate_and
+		(check_variables_in_parsed_discrete_term variable_names constants parsed_discrete_term)
+		(check_variables_in_parsed_discrete_factor variable_names constants parsed_discrete_factor)
+	
+	| Parsed_DT_factor parsed_discrete_factor ->
+		check_variables_in_parsed_discrete_factor variable_names constants parsed_discrete_factor
+	
+
+and check_variables_in_parsed_discrete_arithmetic_expression variable_names constants = function
+	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression, parsed_discrete_term)
+	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
+		evaluate_and
+		(check_variables_in_parsed_discrete_arithmetic_expression variable_names constants parsed_discrete_arithmetic_expression)
+		(check_variables_in_parsed_discrete_term variable_names constants parsed_discrete_term)
+
+	| Parsed_DAE_term parsed_discrete_term ->
+		check_variables_in_parsed_discrete_term variable_names constants parsed_discrete_term
+
+
+
+(*------------------------------------------------------------*)
+(* Check that all variables are defined in a linear_term *)
+(*------------------------------------------------------------*)
 let check_linear_term variable_names constants = function
 	| Constant _ -> true
 	| Variable (_, variable_name) -> if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
-		print_error ("The variable '" ^ variable_name ^ "' used in the model was not declared."); false
+		print_error ("The variable '" ^ variable_name ^ "' used in a linear constraint was not declared."); false
 		) else true
+
 
 (*------------------------------------------------------------*)
 (* Check that all variables are defined in a linear_expression *)
