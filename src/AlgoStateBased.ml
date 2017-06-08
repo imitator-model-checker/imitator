@@ -2550,6 +2550,17 @@ class virtual algoStateBased =
 				(* New version *)
 				let eaten_states = StateSpace.merge state_space !new_states_after_merging in
 				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
+
+				(match options#exploration_order with
+					| Exploration_queue_BFS_RS ->
+													List.iter ( fun state_index -> 
+														Hashtbl.remove rank_hashtable state_index;
+
+													) eaten_states;
+					| _ -> ();
+				)
+
+
 			);
 			(* Copy back the merged queue *)
 			queue := !new_states_after_merging;
