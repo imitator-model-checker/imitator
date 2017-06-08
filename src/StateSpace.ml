@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2017/06/01
+ * Last modified     : 2017/06/08
  *
  ************************************************************)
 
@@ -209,7 +209,7 @@ let get_state state_space state_index =
 		(* Exception just in case *)
 		try (
 			Hashtbl.find state_space.all_states state_index
-		) with Not_found -> raise (InternalError ("State of index '" ^ (string_of_int state_index) ^ "' was not found in state_space (function: get_state)."))
+		) with Not_found -> raise (InternalError ("State of index '" ^ (string_of_int state_index) ^ "' was not found in state_space (in function: StateSpace.get_state)."))
 	in
 	(* Find the location *)
 	let global_location = get_location state_space location_index in

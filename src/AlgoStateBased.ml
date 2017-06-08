@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2017/05/24
+ * Last modified     : 2017/06/08
  *
  ************************************************************)
 
@@ -2034,10 +2034,20 @@ class virtual algoStateBased =
 		let uncheckAgainStates = ref [] in
 
 		let checkLargerVisitedLocation state_index1 rank_hashtable = 
+			(* Print some information *)
+			print_message Verbose_total ("Entering checkLargerVisitedLocation(" ^ (string_of_int state_index1) ^ ")…");
+
 			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
+
+			(* Print some information *)
+			print_message Verbose_total ("Retrieved state information");
 			(
 				try(
 					Hashtbl.iter (fun state_index2 rank -> 
+					
+						(* Print some information *)
+						print_message Verbose_total ("Comparing with state " ^ (string_of_int state_index2) ^ "…");
+						
 						let loc2, constr2 = StateSpace.get_state state_space state_index2 in
 						if (loc1 == loc2) && not (LinearConstraint.px_is_leq constr2 constr1)
 						then  raise (FoundLargerZone);
@@ -2196,11 +2206,17 @@ class virtual algoStateBased =
 					if (Hashtbl.mem rank_hashtable state_index) 
 					then (
 							rank := Hashtbl.find rank_hashtable state_index; 
-							()
 						)
 					else (
 							rank := initial_rank state_index state_space;
+							
+							(* Print some information *)
+							print_message Verbose_total ("rankingSuccessors: Initial rank computed for state " ^ (string_of_int state_index));
+							
 							Hashtbl.add rank_hashtable state_index !rank;
+							
+							(* Print some information *)
+							print_message Verbose_total ("rankingSuccessors: Initial rank added to hashtable for state " ^ (string_of_int state_index));
 						);
 				);
 
@@ -2361,6 +2377,8 @@ class virtual algoStateBased =
 			(* initial ranking and sorting *)
 			let q = ref queue in
 			List.iter (fun state_index ->	let rank = initial_rank state_index state_space in
+											(* Print some information *)
+											print_message Verbose_high ("addToPriorQueue: Initial rank computed for state " ^ (string_of_int state_index));
 											Hashtbl.add rank_hashtable state_index rank;
 
 
@@ -2429,6 +2447,8 @@ class virtual algoStateBased =
 		
 		(* for ranking algo *)
 		let rank = initial_rank init_state_index state_space in
+		(* Print some information *)
+		print_message Verbose_high ("Ranking algorithm: Initial rank computed for state " ^ (string_of_int init_state_index));
 		Hashtbl.add rank_hashtable init_state_index rank;
 
 		
