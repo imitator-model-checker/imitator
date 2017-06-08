@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2017/04/14
+ * Last modified : 2017/06/08
 ***********************************************/
 
 %{
@@ -304,6 +304,31 @@ syn_label:
 
 
 /**********************************************/
+/** ARITHMETIC EXPRESSIONS */
+/***********************************************/
+
+arithmetic_expression:
+	| arithmetic_term { Parsed_DAE_term $1 }
+	| arithmetic_expression OP_PLUS arithmetic_term { Parsed_DAE_plus ($1, $3) }
+	| arithmetic_expression OP_MINUS arithmetic_term { Parsed_DAE_minus ($1, $3) }
+;
+
+/* Term over variables and rationals (includes recursivity with arithmetic_expression) */
+arithmetic_term:
+	| rational NAME { Parsed_DT_mul (Parsed_DT_factor (Parsed_DF_constant $1), Parsed_DF_variable $2) }
+	| arithmetic_term OP_MUL arithmetic_factor { Parsed_DT_mul ($1, $3) }
+	| arithmetic_term OP_DIV arithmetic_factor { Parsed_DT_div ($1, $3) }
+	| OP_MINUS arithmetic_term { Parsed_DT_mul($2, Parsed_DF_constant NumConst.minus_one) }
+;
+
+arithmetic_factor:
+	| rational { Parsed_DF_constant $1 }
+	| NAME { Parsed_DF_variable $1 }
+	| LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
+;
+
+
+/**********************************************/
 /** RATIONALS, LINEAR TERMS, LINEAR CONSTRAINTS AND CONVEX PREDICATES */
 /***********************************************/
 
@@ -313,12 +338,12 @@ convex_predicate:
 ;
 
 convex_predicate_fol:
-	linear_constraint AMPERSAND convex_predicate { $1 :: $3 }
+	| linear_constraint AMPERSAND convex_predicate { $1 :: $3 }
 	| linear_constraint { [$1] }
 ;
 
 linear_constraint:
-	linear_expression relop linear_expression { Linear_constraint ($1, $2, $3) }
+	| linear_expression relop linear_expression { Linear_constraint ($1, $2, $3) }
 	| CT_TRUE { True_constraint }
 	| CT_FALSE { False_constraint }
 ;
@@ -333,12 +358,12 @@ relop:
 
 /* Linear expression over variables and rationals */
 linear_expression:
-	linear_term { Linear_term $1 }
+	| linear_term { Linear_term $1 }
 	| linear_expression OP_PLUS linear_term { Linear_plus_expression ($1, $3) }
 	| linear_expression OP_MINUS linear_term { Linear_minus_expression ($1, $3) } /* linear_term a la deuxieme place */
 ;
 
-/* Linear term over variables and rationals */
+/* Linear term over variables and rationals (no recursivity, no division) */
 linear_term:
 	rational { Constant $1 }
 	| rational NAME { Variable ($1, $2) }
