@@ -1361,7 +1361,7 @@ let merge state_space new_states =
 	
 	(* function for merging one state with its siblings *)
 	let merge_state si =
-		print_message Verbose_total ("try to merge state " ^ (string_of_int si));
+		print_message Verbose_total ("[merging] Try to merge state " ^ (string_of_int si));
 		let l, c = get_state state_space si in
 		(* get merge candidates as pairs (index, state) *)
 		let candidates = get_siblings state_space si in
@@ -1376,7 +1376,7 @@ let merge state_space new_states =
 						nb_merged#increment;
 					
 						(* Print some information *)
-						print_message Verbose_high ("merged with state " ^ (string_of_int sj));
+						print_message Verbose_high ("[merging] State " ^ (string_of_int si) ^ " merged with state " ^ (string_of_int sj));
 						
 						(* we ate sj, start over with new bigger state, removing sj *)
 						let all_mc' = List.filter (fun (sk, _) -> sk <> sj) all_mc in
