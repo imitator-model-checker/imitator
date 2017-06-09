@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2017/06/08
+ * Last modified     : 2017/06/09
  *
  ************************************************************)
 
@@ -1142,7 +1142,28 @@ let is_discrete_guard_satisfied location (guard : AbstractModel.guard) : bool =
 	| Discrete_guard discrete_guard -> evaluate_d_linear_constraint_in_location location discrete_guard
 	| Continuous_guard _ -> true
 	| Discrete_continuous_guard discrete_continuous_guard -> evaluate_d_linear_constraint_in_location location discrete_continuous_guard.discrete_guard
-	
+
+
+(* Evaluate a discrete_arithmetic_expression using a discrete variable valuation *)
+(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
+let evaluate_discrete_arithmetic_expression v =
+	let rec evaluate_discrete_arithmetic_expression_rec = function
+		| DAE_plus (discrete_arithmetic_expression, discrete_term) -> NumConst.add (evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression) (evaluate_discrete_term discrete_term)
+		| DAE_minus (discrete_arithmetic_expression, discrete_term) -> NumConst.sub (evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression) (evaluate_discrete_term discrete_term)
+		| DAE_term discrete_term -> evaluate_discrete_term discrete_term
+
+	and evaluate_discrete_term = function
+		| DT_mul (discrete_term, discrete_factor) -> NumConst.mul (evaluate_discrete_term discrete_term) (evaluate_discrete_factor discrete_factor)
+		| DT_div (discrete_term, discrete_factor) -> NumConst.div (evaluate_discrete_term discrete_term) (evaluate_discrete_factor discrete_factor)
+		| DT_factor discrete_factor -> evaluate_discrete_factor discrete_factor
+
+	and evaluate_discrete_factor = function
+		| DF_variable discrete_index -> v discrete_index
+		| DF_constant discrete_value -> discrete_value
+		| DF_expression discrete_arithmetic_expression -> evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression
+	in
+	evaluate_discrete_arithmetic_expression_rec
+
 
 (** Check whether the intersection between a pxd_constraint with an AbstractModel.guard if satisfiable (both inputs remain unchanged) *)
 let is_constraint_and_continuous_guard_satisfiable pxd_linear_constraint = function

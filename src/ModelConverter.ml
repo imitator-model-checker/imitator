@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/09
- * Last modified     : 2017/06/08
+ * Last modified     : 2017/06/09
  *
  ************************************************************)
 
@@ -591,41 +591,73 @@ let all_locations_different =
 
 
 (*------------------------------------------------------------*)
-(* Check that all variables are defined in a linear_term *)
+(* Generic function to test something in discrete updates *)
 (*------------------------------------------------------------*)
-let rec check_variables_in_parsed_discrete_factor variable_names constants = function
+(*** NOTE: f : variable_name -> bool is the function to check *)
+let rec check_f_in_parsed_discrete_factor f = function
 	| Parsed_DF_variable variable_name ->
-		if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
-		print_error ("The variable '" ^ variable_name ^ "' used in an arithmetic expression was not declared."); false
-		) else true
+		f variable_name
 		
 	| Parsed_DF_constant _ -> true
 	
 	| Parsed_DF_expression parsed_discrete_arithmetic_expression ->
-		check_variables_in_parsed_discrete_arithmetic_expression variable_names constants parsed_discrete_arithmetic_expression
+		check_f_in_parsed_discrete_arithmetic_expression f parsed_discrete_arithmetic_expression
 
 	
-and check_variables_in_parsed_discrete_term variable_names constants = function
+and check_f_in_parsed_discrete_term f = function
 	| Parsed_DT_mul (parsed_discrete_term, parsed_discrete_factor)
 	| Parsed_DT_div (parsed_discrete_term, parsed_discrete_factor) ->
 		evaluate_and
-		(check_variables_in_parsed_discrete_term variable_names constants parsed_discrete_term)
-		(check_variables_in_parsed_discrete_factor variable_names constants parsed_discrete_factor)
+		(check_f_in_parsed_discrete_term f parsed_discrete_term)
+		(check_f_in_parsed_discrete_factor f parsed_discrete_factor)
 	
 	| Parsed_DT_factor parsed_discrete_factor ->
-		check_variables_in_parsed_discrete_factor variable_names constants parsed_discrete_factor
+		check_f_in_parsed_discrete_factor f parsed_discrete_factor
 	
 
-and check_variables_in_parsed_discrete_arithmetic_expression variable_names constants = function
+and check_f_in_parsed_discrete_arithmetic_expression f = function
 	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression, parsed_discrete_term)
 	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
 		evaluate_and
-		(check_variables_in_parsed_discrete_arithmetic_expression variable_names constants parsed_discrete_arithmetic_expression)
-		(check_variables_in_parsed_discrete_term variable_names constants parsed_discrete_term)
+		(check_f_in_parsed_discrete_arithmetic_expression f parsed_discrete_arithmetic_expression)
+		(check_f_in_parsed_discrete_term f parsed_discrete_term)
 
 	| Parsed_DAE_term parsed_discrete_term ->
-		check_variables_in_parsed_discrete_term variable_names constants parsed_discrete_term
+		check_f_in_parsed_discrete_term f parsed_discrete_term
 
+
+(*------------------------------------------------------------*)
+(* Check that all variables are defined in a discrete update *)
+(*------------------------------------------------------------*)
+let check_variables_in_parsed_discrete_arithmetic_expression variable_names constants =
+	check_f_in_parsed_discrete_arithmetic_expression (fun variable_name -> 
+		if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
+		print_error ("The variable '" ^ variable_name ^ "' used in an arithmetic expression was not declared."); false
+		) else true
+	)
+
+(*------------------------------------------------------------*)
+(* Check that only discrete variables are used in a discrete update *)
+(*------------------------------------------------------------*)
+let check_only_discretes_in_parsed_discrete_arithmetic_expression index_of_variables type_of_variables constants =
+	check_f_in_parsed_discrete_arithmetic_expression (fun variable_name -> 
+		(* Case constant: no problem *)
+		if Hashtbl.mem constants variable_name then true
+		else (
+			(* Get the type of the variable *)
+			try(
+			let variable_index = 
+				Hashtbl.find index_of_variables variable_name
+			in
+			type_of_variables variable_index = Var_type_discrete
+			) with Not_found -> (
+				(* Variable not found! *)
+				(*** TODO: why is this checked here…? It should have been checked before ***)
+				print_error ("The variable '" ^ variable_name ^ "' used in an update was not declared.");
+				false
+			)
+		)
+	)
 
 
 (*------------------------------------------------------------*)
@@ -1593,6 +1625,53 @@ let check_optimization parameters_names = function
 (************************************************************)
 (** MODEL CONVERSION *)
 (************************************************************)
+
+(*------------------------------------------------------------*)
+(* Convert a parsed_discrete_arithmetic_expression into a discrete_arithmetic_expression*)
+(*------------------------------------------------------------*)
+
+(*** TODO (though really not critical): try to do some simplifications… ***)
+
+(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
+let discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression index_of_variables constants z =
+	let rec discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec = function
+		| Parsed_DAE_plus (parsed_discrete_arithmetic_expression, parsed_discrete_term) ->
+			DAE_plus ((discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec parsed_discrete_arithmetic_expression), (discrete_term_of_parsed_discrete_term parsed_discrete_term))
+		| Parsed_DAE_minus (parsed_discrete_arithmetic_expression, parsed_discrete_term) ->
+			DAE_minus ((discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec parsed_discrete_arithmetic_expression), (discrete_term_of_parsed_discrete_term parsed_discrete_term))
+		| Parsed_DAE_term parsed_discrete_term ->
+			DAE_term (discrete_term_of_parsed_discrete_term parsed_discrete_term)
+
+	and discrete_term_of_parsed_discrete_term = function
+		| Parsed_DT_mul (parsed_discrete_term, parsed_discrete_factor) ->
+			DT_mul ((discrete_term_of_parsed_discrete_term parsed_discrete_term), (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor))
+		| Parsed_DT_div (parsed_discrete_term, parsed_discrete_factor) ->
+			DT_div ((discrete_term_of_parsed_discrete_term parsed_discrete_term), (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor))
+		| Parsed_DT_factor parsed_discrete_factor -> DT_factor (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor)
+
+	and discrete_factor_of_parsed_discrete_factor = function
+		| Parsed_DF_variable variable_name ->
+			(* Try to find the variable_index *)
+			if Hashtbl.mem index_of_variables variable_name then (
+				let variable_index = Hashtbl.find index_of_variables variable_name in
+				(* Convert *)
+				DF_variable variable_index
+			(* Try to find a constant *)
+			) else (
+				if Hashtbl.mem constants variable_name then (
+					(* Retrieve the value of the global constant *)
+					let value = Hashtbl.find constants variable_name in
+					(* Convert *)
+					DF_constant value
+				) else (
+					raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although it was checked before."))
+				)
+			)
+		| Parsed_DF_constant var_value -> DF_constant var_value
+		| Parsed_DF_expression parsed_discrete_arithmetic_expression -> DF_expression (discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec parsed_discrete_arithmetic_expression)
+	in
+	discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec
+
 
 (*------------------------------------------------------------*)
 (* Create the hash table of constants ; check on the fly the validity *)
