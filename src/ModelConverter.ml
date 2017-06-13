@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/09
- * Last modified     : 2017/06/09
+ * Last modified     : 2017/06/13
  *
  ************************************************************)
 
@@ -1671,6 +1671,68 @@ let discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression inde
 		| Parsed_DF_expression parsed_discrete_arithmetic_expression -> DF_expression (discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec parsed_discrete_arithmetic_expression)
 	in
 	discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec
+
+
+(*------------------------------------------------------------*)
+(* Convert a parsed_discrete_arithmetic_expression into a linear_term *)
+(*------------------------------------------------------------*)
+(*** TODO (though really not critical): try to do some simplifications… ***)
+
+(*(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
+let linear_term_of_parsed_discrete_arithmetic_expression index_of_variables constants z =
+	(* Create an array of coef *)
+	let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
+	(* Create a zero constant *)
+	let constant = ref NumConst.zero in
+
+(* Create the linear term *)
+(* 	LinearConstraint.make_pxd_linear_term !members constant *)
+
+	let rec update_coef_array_in_parsed_discrete_arithmetic_expression mult_factor = function
+		| Parsed_DAE_plus (parsed_discrete_arithmetic_expression, parsed_discrete_term) ->
+			(* Update coefficients in the arithmetic expression *)
+			update_coef_array_in_parsed_discrete_arithmetic_expression mult_factor parsed_discrete_arithmetic_expression;
+			(* Update coefficients in the term *)
+			update_coef_array_in_parsed_discrete_term mult_factor parsed_discrete_term;
+		| Parsed_DAE_minus (parsed_discrete_arithmetic_expression, parsed_discrete_term) ->
+			(* Update coefficients in the arithmetic expression *)
+			update_coef_array_in_parsed_discrete_arithmetic_expression_rec mult_factor parsed_discrete_arithmetic_expression;
+			(* Update coefficients in the term: multiply by -1 for negation *)
+			update_coef_array_in_parsed_discrete_term (NumConst.neg mult_factor) parsed_discrete_term;
+		| Parsed_DAE_term parsed_discrete_term ->
+			update_coef_array_in_parsed_discrete_term mult_factor parsed_discrete_term;
+
+	and update_coef_array_in_parsed_discrete_term mult_factor = function
+		| Parsed_DT_mul (parsed_discrete_term, parsed_discrete_factor) ->
+			DT_mul ((discrete_term_of_parsed_discrete_term parsed_discrete_term), (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor))
+		| Parsed_DT_div _ ->
+			(* No division outside discrete updates *)
+			raise (InternalError ("Division found in an update, although its absence should have been checked before."))
+		| Parsed_DT_factor parsed_discrete_factor -> DT_factor (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor)
+
+	and update_coef_array_in_parsed_discrete_factor mult_factor = function
+		| Parsed_DF_variable variable_name ->
+			(* Try to find the variable_index *)
+			if Hashtbl.mem index_of_variables variable_name then (
+				let variable_index = Hashtbl.find index_of_variables variable_name in
+				(* Convert *)
+				DF_variable variable_index
+			(* Try to find a constant *)
+			) else (
+				if Hashtbl.mem constants variable_name then (
+					(* Retrieve the value of the global constant *)
+					let value = Hashtbl.find constants variable_name in
+					(* Convert *)
+					DF_constant value
+				) else (
+					raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although it was checked before."))
+				)
+			)
+		| Parsed_DF_constant var_value -> DF_constant var_value
+		| Parsed_DF_expression parsed_discrete_arithmetic_expression -> DF_expression (discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec parsed_discrete_arithmetic_expression)
+	in
+	
+	update_coef_array_in_parsed_discrete_arithmetic_expression mult_factor*)
 
 
 (*------------------------------------------------------------*)
