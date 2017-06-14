@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/09
- * Last modified     : 2017/06/13
+ * Last modified     : 2017/06/14
  *
  ************************************************************)
 
@@ -104,7 +104,7 @@ let array_of_coef_of_linear_expression index_of_variables constants linear_expre
 					(* Update the NumConst *)
 					constant := NumConst.add !constant (NumConst.mul (NumConst.mul value coef) mul_coef);
 				) else (
-					raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although it was checked before."))
+					raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although this should have been checked before."))
 				)
 			);
 	in
@@ -132,7 +132,7 @@ let array_of_coef_of_linear_expression index_of_variables constants linear_expre
 (*------------------------------------------------------------*)
 (* Convert an array of variable coef into a linear term *)
 (*------------------------------------------------------------*)
-let linear_term_of_array (array_of_coef, constant) =
+let linear_term_of_array array_of_coef constant =
 	(* Create an empty list of members *)
 	let members = ref [] in
 	(* Iterate on the coef *)
@@ -151,7 +151,7 @@ let linear_term_of_array (array_of_coef, constant) =
 (*------------------------------------------------------------*)
 let linear_term_of_linear_expression index_of_variables constants linear_expression =
 	let array_of_coef, constant = array_of_coef_of_linear_expression index_of_variables constants linear_expression in
-	linear_term_of_array (array_of_coef, constant)
+	linear_term_of_array array_of_coef constant
 
 
 (*------------------------------------------------------------*)
@@ -185,7 +185,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (linexpr
 		(* Create the constant *)
 		let constant12 = NumConst.sub constant2 constant1 in
 		(* Create the linear_term *)
-		let linear_term = linear_term_of_array (array12, constant12) in
+		let linear_term = linear_term_of_array array12 constant12 in
 		(* Return the linear_inequality *)
 		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
 (* 	(Constraint.substract_linear_terms lt2 lt1), Constraint.Op_g *)
@@ -197,7 +197,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (linexpr
 		(* Create the constant *)
 		let constant12 = NumConst.sub constant2 constant1 in
 		(* Create the linear_term *)
-		let linear_term = linear_term_of_array (array12, constant12) in
+		let linear_term = linear_term_of_array array12 constant12 in
 		(* Return the linear_inequality *)
 		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_ge
 (* 	(Constraint.substract_linear_terms lt2 lt1), Constraint.Op_ge *)
@@ -209,7 +209,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (linexpr
 		(* Create the constant *)
 		let constant12 = NumConst.sub constant2 constant1 in
 		(* Create the linear_term *)
-		let linear_term = linear_term_of_array (array12, constant12) in
+		let linear_term = linear_term_of_array array12 constant12 in
 		(* Return the linear_inequality *)
 		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
 	
@@ -222,7 +222,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (linexpr
 		(* Create the constant *)
 		let constant12 = NumConst.sub constant1 constant2 in
 		(* Create the linear_term *)
-		let linear_term = linear_term_of_array (array12, constant12) in
+		let linear_term = linear_term_of_array array12 constant12 in
 		(* Return the linear_inequality *)
 		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_ge
 (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_ge *)
@@ -234,7 +234,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (linexpr
 		(* Create the constant *)
 		let constant12 = NumConst.sub constant1 constant2 in
 		(* Create the linear_term *)
-		let linear_term = linear_term_of_array (array12, constant12) in
+		let linear_term = linear_term_of_array array12 constant12 in
 		(* Return the linear_inequality *)
 		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
 (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_g *)
@@ -636,6 +636,7 @@ let check_variables_in_parsed_discrete_arithmetic_expression variable_names cons
 		) else true
 	)
 
+
 (*------------------------------------------------------------*)
 (* Check that only discrete variables are used in a discrete update *)
 (*------------------------------------------------------------*)
@@ -658,6 +659,43 @@ let check_only_discretes_in_parsed_discrete_arithmetic_expression index_of_varia
 			)
 		)
 	)
+
+
+(*------------------------------------------------------------*)
+(* Check that a parsed_discrete_arithmetic_expression contains non-constant at only selected parts *)
+(*------------------------------------------------------------*)
+let valuate_parsed_discrete_arithmetic_expression constants =
+
+	let rec check_constants_in_parsed_discrete_arithmetic_expression_rec = function
+		| Parsed_DAE_plus (parsed_discrete_arithmetic_expression, parsed_discrete_term)
+		| Parsed_DAE_minus (parsed_discrete_arithmetic_expression, parsed_discrete_term) ->
+			evaluate_and
+			(check_constants_in_parsed_discrete_arithmetic_expression_rec parsed_discrete_arithmetic_expression)
+			(check_constants_in_parsed_discrete_term parsed_discrete_term)
+		| Parsed_DAE_term parsed_discrete_term ->
+			check_constants_in_parsed_discrete_term parsed_discrete_term
+
+	and check_constants_in_parsed_discrete_term = function
+		| Parsed_DT_mul (parsed_discrete_term, parsed_discrete_factor) ->
+			(* Constants only forbidden in the parsed_discrete_term *)
+			check_constants_in_parsed_discrete_term parsed_discrete_term
+		| Parsed_DT_div (parsed_discrete_term, parsed_discrete_factor) ->
+			(* Constants only forbidden in the parsed_discrete_factor *)
+			check_constants_in_parsed_discrete_factor parsed_discrete_factor
+		| Parsed_DT_factor parsed_discrete_factor -> check_constants_in_parsed_discrete_factor parsed_discrete_factor
+
+	and check_constants_in_parsed_discrete_factor = function
+		| Parsed_DF_variable variable_name ->
+			if Hashtbl.mem constants variable_name then (
+				true
+			) else (
+				print_error ("Variable '" ^ variable_name ^ "' cannot be used at this place in an update.");
+				false
+			)
+		| Parsed_DF_constant var_value -> true
+		| Parsed_DF_expression parsed_discrete_arithmetic_expression -> check_constants_in_parsed_discrete_arithmetic_expression_rec parsed_discrete_arithmetic_expression
+	
+	in check_constants_in_parsed_discrete_arithmetic_expression_rec
 
 
 (*------------------------------------------------------------*)
@@ -1633,7 +1671,7 @@ let check_optimization parameters_names = function
 (*** TODO (though really not critical): try to do some simplifications… ***)
 
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
-let discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression index_of_variables constants z =
+let discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression index_of_variables constants =
 	let rec discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec = function
 		| Parsed_DAE_plus (parsed_discrete_arithmetic_expression, parsed_discrete_term) ->
 			DAE_plus ((discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec parsed_discrete_arithmetic_expression), (discrete_term_of_parsed_discrete_term parsed_discrete_term))
@@ -1664,7 +1702,7 @@ let discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression inde
 					(* Convert *)
 					DF_constant value
 				) else (
-					raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although it was checked before."))
+					raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although this should have been checked before."))
 				)
 			)
 		| Parsed_DF_constant var_value -> DF_constant var_value
@@ -1676,17 +1714,52 @@ let discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression inde
 (*------------------------------------------------------------*)
 (* Convert a parsed_discrete_arithmetic_expression into a linear_term *)
 (*------------------------------------------------------------*)
-(*** TODO (though really not critical): try to do some simplifications… ***)
 
-(*(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
-let linear_term_of_parsed_discrete_arithmetic_expression index_of_variables constants z =
+
+(*** TODO (though really not critical): try to do some simplifications… ***)
+(* First valuate a parsed_discrete_arithmetic_expression if requested; raises InternalError if some non-constant variable is met *)
+let rec valuate_parsed_discrete_arithmetic_expression constants = function
+	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression, parsed_discrete_term) ->
+		NumConst.add
+		(valuate_parsed_discrete_arithmetic_expression constants parsed_discrete_arithmetic_expression)
+		(valuate_parsed_discrete_term constants parsed_discrete_term)
+	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression, parsed_discrete_term) ->
+		NumConst.sub
+		(valuate_parsed_discrete_arithmetic_expression constants parsed_discrete_arithmetic_expression)
+		(valuate_parsed_discrete_term constants parsed_discrete_term)
+	| Parsed_DAE_term parsed_discrete_term ->
+		valuate_parsed_discrete_term constants parsed_discrete_term;
+
+and valuate_parsed_discrete_term constants = function
+	| Parsed_DT_mul (parsed_discrete_term, parsed_discrete_factor) ->
+		NumConst.mul
+		(valuate_parsed_discrete_term constants parsed_discrete_term)
+		(valuate_parsed_discrete_factor constants parsed_discrete_factor)
+	| Parsed_DT_div (parsed_discrete_term, parsed_discrete_factor) ->
+		NumConst.div
+		(valuate_parsed_discrete_term constants parsed_discrete_term)
+		(valuate_parsed_discrete_factor constants parsed_discrete_factor)
+	| Parsed_DT_factor parsed_discrete_factor -> valuate_parsed_discrete_factor constants parsed_discrete_factor
+
+and valuate_parsed_discrete_factor constants = function
+	| Parsed_DF_variable variable_name ->
+		if Hashtbl.mem constants variable_name then (
+			(* Retrieve the value of the global constant *)
+			Hashtbl.find constants variable_name
+		) else (
+			raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' in function 'valuate_parsed_discrete_arithmetic_expression' although it should have been checked before."))
+			)
+	| Parsed_DF_constant var_value -> var_value
+	| Parsed_DF_expression parsed_discrete_arithmetic_expression -> valuate_parsed_discrete_arithmetic_expression constants parsed_discrete_arithmetic_expression
+
+
+(*** TODO (though really not critical): try to do some simplifications… ***)
+(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
+let linear_term_of_parsed_discrete_arithmetic_expression index_of_variables constants pdae =
 	(* Create an array of coef *)
 	let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
 	(* Create a zero constant *)
 	let constant = ref NumConst.zero in
-
-(* Create the linear term *)
-(* 	LinearConstraint.make_pxd_linear_term !members constant *)
 
 	let rec update_coef_array_in_parsed_discrete_arithmetic_expression mult_factor = function
 		| Parsed_DAE_plus (parsed_discrete_arithmetic_expression, parsed_discrete_term) ->
@@ -1696,43 +1769,61 @@ let linear_term_of_parsed_discrete_arithmetic_expression index_of_variables cons
 			update_coef_array_in_parsed_discrete_term mult_factor parsed_discrete_term;
 		| Parsed_DAE_minus (parsed_discrete_arithmetic_expression, parsed_discrete_term) ->
 			(* Update coefficients in the arithmetic expression *)
-			update_coef_array_in_parsed_discrete_arithmetic_expression_rec mult_factor parsed_discrete_arithmetic_expression;
+			update_coef_array_in_parsed_discrete_arithmetic_expression mult_factor parsed_discrete_arithmetic_expression;
 			(* Update coefficients in the term: multiply by -1 for negation *)
 			update_coef_array_in_parsed_discrete_term (NumConst.neg mult_factor) parsed_discrete_term;
 		| Parsed_DAE_term parsed_discrete_term ->
 			update_coef_array_in_parsed_discrete_term mult_factor parsed_discrete_term;
 
 	and update_coef_array_in_parsed_discrete_term mult_factor = function
+		(* Multiplication is only allowed with a constant multiplier *)
 		| Parsed_DT_mul (parsed_discrete_term, parsed_discrete_factor) ->
-			DT_mul ((discrete_term_of_parsed_discrete_term parsed_discrete_term), (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor))
-		| Parsed_DT_div _ ->
-			(* No division outside discrete updates *)
-			raise (InternalError ("Division found in an update, although its absence should have been checked before."))
-		| Parsed_DT_factor parsed_discrete_factor -> DT_factor (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor)
+			(* Valuate the term *)
+			let valued_term = valuate_parsed_discrete_term constants parsed_discrete_term in
+			(* Update coefficients *)
+			update_coef_array_in_parsed_discrete_factor (NumConst.mul valued_term mult_factor) parsed_discrete_factor
+			
+		| Parsed_DT_div (parsed_discrete_term, parsed_discrete_factor) ->
+			(* Valuate the discrete factor *)
+			let valued_factor = valuate_parsed_discrete_factor constants parsed_discrete_factor in
+			(* Update coefficients *)
+			update_coef_array_in_parsed_discrete_term (NumConst.div mult_factor valued_factor) parsed_discrete_term
+			
+		| Parsed_DT_factor parsed_discrete_factor ->
+			update_coef_array_in_parsed_discrete_factor mult_factor parsed_discrete_factor
 
 	and update_coef_array_in_parsed_discrete_factor mult_factor = function
 		| Parsed_DF_variable variable_name ->
 			(* Try to find the variable_index *)
 			if Hashtbl.mem index_of_variables variable_name then (
 				let variable_index = Hashtbl.find index_of_variables variable_name in
-				(* Convert *)
-				DF_variable variable_index
+				(* Update the array *)
+				array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) (mult_factor);
 			(* Try to find a constant *)
 			) else (
 				if Hashtbl.mem constants variable_name then (
 					(* Retrieve the value of the global constant *)
 					let value = Hashtbl.find constants variable_name in
-					(* Convert *)
-					DF_constant value
+					(* Update the constant *)
+					constant := NumConst.add !constant (NumConst.mul mult_factor value)
 				) else (
-					raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although it was checked before."))
+					raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' in function 'linear_term_of_parsed_discrete_arithmetic_expression' although this should have been checked before."))
 				)
 			)
-		| Parsed_DF_constant var_value -> DF_constant var_value
-		| Parsed_DF_expression parsed_discrete_arithmetic_expression -> DF_expression (discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec parsed_discrete_arithmetic_expression)
+		| Parsed_DF_constant var_value ->
+			(* Update the constant *)
+			constant := NumConst.add !constant (NumConst.mul mult_factor var_value)
+		| Parsed_DF_expression parsed_discrete_arithmetic_expression ->
+			update_coef_array_in_parsed_discrete_arithmetic_expression mult_factor parsed_discrete_arithmetic_expression
 	in
 	
-	update_coef_array_in_parsed_discrete_arithmetic_expression mult_factor*)
+	(* Call the recursive function updating the coefficients *)
+	update_coef_array_in_parsed_discrete_arithmetic_expression NumConst.one pdae;
+
+	(* Create the linear term *)
+	linear_term_of_array array_of_coef !constant
+
+
 
 
 (*------------------------------------------------------------*)
