@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2017/06/08
+ * Last modified : 2017/06/21
 ***********************************************/
 
 %{
@@ -308,23 +308,23 @@ syn_label:
 /***********************************************/
 
 arithmetic_expression:
-	| arithmetic_term { Parsed_DAE_term $1 }
-	| arithmetic_expression OP_PLUS arithmetic_term { Parsed_DAE_plus ($1, $3) }
-	| arithmetic_expression OP_MINUS arithmetic_term { Parsed_DAE_minus ($1, $3) }
+	| arithmetic_term { Parsed_UAE_term $1 }
+	| arithmetic_expression OP_PLUS arithmetic_term { Parsed_UAE_plus ($1, $3) }
+	| arithmetic_expression OP_MINUS arithmetic_term { Parsed_UAE_minus ($1, $3) }
 ;
 
 /* Term over variables and rationals (includes recursivity with arithmetic_expression) */
 arithmetic_term:
-	| rational NAME { Parsed_DT_mul (Parsed_DT_factor (Parsed_DF_constant $1), Parsed_DF_variable $2) }
-	| arithmetic_term OP_MUL arithmetic_factor { Parsed_DT_mul ($1, $3) }
-	| arithmetic_term OP_DIV arithmetic_factor { Parsed_DT_div ($1, $3) }
-	| OP_MINUS arithmetic_term { Parsed_DT_mul($2, Parsed_DF_constant NumConst.minus_one) }
+	| rational NAME { Parsed_UT_mul (Parsed_UT_factor (Parsed_UF_constant $1), Parsed_UF_variable $2) }
+	| arithmetic_term OP_MUL arithmetic_factor { Parsed_UT_mul ($1, $3) }
+	| arithmetic_term OP_DIV arithmetic_factor { Parsed_UT_div ($1, $3) }
+	| OP_MINUS arithmetic_term { Parsed_UT_mul($2, Parsed_UF_constant NumConst.minus_one) }
 ;
 
 arithmetic_factor:
-	| rational { Parsed_DF_constant $1 }
-	| NAME { Parsed_DF_variable $1 }
-	| LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
+	| rational { Parsed_UF_constant $1 }
+	| NAME { Parsed_UF_variable $1 }
+	| LPAREN arithmetic_expression RPAREN { Parsed_UF_expression $2 }
 ;
 
 

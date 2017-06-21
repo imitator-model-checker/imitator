@@ -320,3 +320,5 @@ init := 	loc[PLC]=PLCinit
 
 
 ;
+
+property := unreachable loc[ENV] = ENV5;

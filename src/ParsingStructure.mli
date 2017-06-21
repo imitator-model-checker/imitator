@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  *
  * Created:       2009/09/08
- * Last modified: 2017/04/14
+ * Last modified: 2017/06/21
  *
  ****************************************************************)
 
@@ -42,22 +42,22 @@ type variable_declarations = variable_declaration list
 
 
 (****************************************************************)
-(** Arithmetic expressions for discrete variables *)
+(** Arithmetic expressions for updates *)
 (****************************************************************)
-type parsed_discrete_arithmetic_expression =
-	| Parsed_DAE_plus of parsed_discrete_arithmetic_expression * parsed_discrete_term
-	| Parsed_DAE_minus of parsed_discrete_arithmetic_expression * parsed_discrete_term
-	| Parsed_DAE_term of parsed_discrete_term
+type parsed_update_arithmetic_expression =
+	| Parsed_UAE_plus of parsed_update_arithmetic_expression * parsed_update_term
+	| Parsed_UAE_minus of parsed_update_arithmetic_expression * parsed_update_term
+	| Parsed_UAE_term of parsed_update_term
 
-and parsed_discrete_term =
-	| Parsed_DT_mul of parsed_discrete_term * parsed_discrete_factor
-	| Parsed_DT_div of parsed_discrete_term * parsed_discrete_factor
-	| Parsed_DT_factor of parsed_discrete_factor
+and parsed_update_term =
+	| Parsed_UT_mul of parsed_update_term * parsed_update_factor
+	| Parsed_UT_div of parsed_update_term * parsed_update_factor
+	| Parsed_UT_factor of parsed_update_factor
 
-and parsed_discrete_factor =
-	| Parsed_DF_variable of variable_name
-	| Parsed_DF_constant of var_value
-	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
+and parsed_update_factor =
+	| Parsed_UF_variable of variable_name
+	| Parsed_UF_constant of var_value
+	| Parsed_UF_expression of parsed_update_arithmetic_expression
 
 
 
@@ -104,7 +104,7 @@ type sync =
 	| Sync of sync_name
 	| NoSync
 
-type update = variable_name * linear_expression
+type update = variable_name * parsed_update_arithmetic_expression
 
 type guard = convex_predicate
 type invariant = convex_predicate
@@ -162,7 +162,7 @@ type discrete_value = NumConst.t
 
 type parsed_unreachable_location = automaton_name * location_name
 
-type parsed_discrete_constraint =
+type parsed_update_constraint =
 	| Parsed_discrete_l of variable_name * discrete_value
 	| Parsed_discrete_leq of variable_name * discrete_value
 	| Parsed_discrete_equal of variable_name * discrete_value
@@ -171,7 +171,7 @@ type parsed_discrete_constraint =
 	| Parsed_discrete_interval of variable_name * discrete_value * discrete_value
 
 type parsed_unreachable_predicate =
-	| Parsed_unreachable_discrete of parsed_discrete_constraint
+	| Parsed_unreachable_discrete of parsed_update_constraint
 	| Parsed_unreachable_loc of parsed_unreachable_location
 
 (* A global location is a list of locations (at most one per IPTA) and of simple atomic constraints on discrete variables (at most one constraint per discrete variable) *)
