@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/05/22
+ * Last modified     : 2017/06/25
  *
  ************************************************************)
 
@@ -17,6 +17,10 @@
 (****************************************************************)
 (** Exceptions *)
 (****************************************************************)
+
+(** Exception raised when a division by 0 is found *)
+exception Division_by_0
+
 exception Found
 
 (** Exception when interfacing with another program *)
