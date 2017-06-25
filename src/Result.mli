@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2017/01/18
+ * Last modified     : 2017/05/22
  *
  ************************************************************)
 
@@ -34,6 +34,10 @@ type bfs_algorithm_termination =
 	
 	(* Termination due to a number of explored states reached *)
 	| States_limit of nb_unexplored_successors
+	
+	(* Termination due to a target state found *)
+	(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
+	| Target_found
 
 
 (* Termination for cartography algorithms *)

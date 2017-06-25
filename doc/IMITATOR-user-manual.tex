@@ -129,7 +129,7 @@ This model contains two clocks: \styleIMI{x1} is process~1's clock, and \styleIM
 
 This model contains two parameters: \styleIMI{delta} is the parametric duration specifying how long a process is idle at most, whereas \styleIMI{gamma} is the parametric duration specifying the minimum duration between the time a process checks for the availability of the critical section and the time the same process indeed enters the critical section (if it is still available).
 
-Two discrete variables (\ie{} global, integer-valued variables, see \cref{section:discrete}) are used:
+Two discrete variables (\ie{} global, rational-valued variables, see \cref{section:discrete}) are used:
 	\styleIMI{turn} checks which process is attempting to enter the critical section;
 	\styleIMI{counter} records how many processes are in the critical section (this variable will not be used for the verification, but was used in the original \pat{} model, and we choose to keep it).
 	% TODO: use it for verification once IMITATOR supports global variables in properties
@@ -247,7 +247,7 @@ This chapter formally introduces the input model of \imitator{}.
 
 An \imitator{} parametric timed automaton (hereafter \IPTA{}) is a variant of parametric automata (as introduced in~\cite{AHV93}).
 A first difference between \IPTA{} and the PTA of \cite{AHV93} is that \IPTA{} have no accepting / final location;
-furthermore, \IPTA{} augment the expressiveness of PTA with several features such as invariants, discrete (integer) variables, complex guards and invariants (\ie{} not only comparing a single clock to a single parameter), stopwatches (\ie{} the ability to stop some clocks in some locations), and arbitrary clock updates (\ie{} not necessarily to~0).
+furthermore, \IPTA{} augment the expressiveness of PTA with several features such as invariants, discrete (rational) variables, complex guards and invariants (\ie{} not only comparing a single clock to a single parameter), stopwatches (\ie{} the ability to stop some clocks in some locations), and arbitrary clock updates (\ie{} not necessarily to~0).
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
@@ -266,7 +266,7 @@ A set of parameters is $\Param = \{ \param_1, \dots, \param_\ParamCard \} $;
 a parameter valuation is a function $\pval\colon \Param \rightarrow \grandr$.
 We will often identify a valuation~$\pval$ with the \emph{point} $(\pval(\param_1), \dots, \pval(\param_{\ParamCard}))$.
 
-\emph{Discrete variables} are integer-valued variables.
+\emph{Discrete variables} are rational-valued variables.
 A set of discrete variables is $\DVar = \{ \dvar_1, \dots, \dvar_\DVarCard \} $;
 a discrete variable valuation is a function $\dval \colon \DVar \rightarrow \grandn$.
 
@@ -316,7 +316,7 @@ Let $\unobs$ denote the unobservable action.
 		\item $\Action$ is a finite set of actions;
 		\item $\Loc$ is a finite set of locations;
 		\item $\locinit \in \Loc$ is the initial location;
-		\item $\DVar$ is a set of integer-valued variables;
+		\item $\DVar$ is a set of rational-valued variables;
 		\item $\Clock$ is a set of clocks;
 		\item $\Param$ is a set of parameters;
 		\item $\invariant : \Loc \rightarrow \LConstraintXPD$ assigns to every location~$\loc$ a constraint over all variables, called the \emph{invariant} of~$\loc$;
@@ -400,11 +400,11 @@ Finally, note that the number of \IPTA{}, locations, variables and actions that 
 Discrete variables\footnote{%
 	The name ``discrete variable'' comes from \hytech{}.
 }
-are global integer-valued variables.
+are global rational-valued variables.
 Their value is global, in the sense that they are shared by all \IPTA{} of the model.
 They can be seen as syntactic sugar to represent a possibly unbounded number of locations.
 
-In \imitator{}, integers are exact and unbounded, just as in maths (\ie{} they are \emph{not} represented using a limited number of bits, such as 32 or 64 bits).
+In \imitator{}, rationals are exact and unbounded, just as in maths (\ie{} they are \emph{not} represented using a limited number of bits, such as 32 or 64 bits).
 Hence, no overflow can occur, and the representation of the constraints is always exact.
 Note that floating-point numbers are totally absent from the \imitator{} implementation (except for the generation of graphical outputs).
 
@@ -433,7 +433,7 @@ That is, we can define initial constraints such as:
 \end{center}
 % TODO: style for sample piece of file
 
-However, discrete variables must be initialized to a \emph{constant integer}.
+However, discrete variables must be initialized to a \emph{constant rational}.
 Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i = ...} followed by a linear term in $\LTermXPD$, then \imitator{} will assume that \styleIMI{i} is initially set to~0, and will issue a warning.
 
 
@@ -466,7 +466,9 @@ The syntax is the following one:
 	\end{center}
 Then, any occurrence of \styleIMI{c} in the model is replaced with \styleIMI{1}.
 
-Constants are (unbounded, exact) integers.
+Constants are (unbounded, exact) rationals.
+
+Limited linear expressions over rationals can be used in the definition of a constant; however no other constant can be used in a definition, \ie{} one cannot (yet) write \styleIMI{c1 = c2 + 1: constant;}.
 
 
 % TODO : 'hint' box
@@ -540,6 +542,37 @@ The option \styleOption{-dynamic-elimination} can also be used to reduce the sta
 	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}),
 	or
 	output the result to a text file using a normalized syntax (option \styleOption{-output-result}), that can be then scripted from external programs.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{EF-minimization}\label{ss:mode:EFmin}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This algorithm synthesizes the minimum valuation for a given parameter for which a given location is reachable.
+The property must be specified as for \EFsynth{} (see \cref{ss:mode:EFsynth}).
+
+In addition, the parameter to be minimized must be specified at the end of the model as follows:
+
+\styleIMI{minimize(parameter\_name)}\\
+
+The standard command is:
+
+\styleCommand{\binimitator{} model.imi -mode EFmin -merge -incl -output-result}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{EF-maximization}\label{ss:mode:EFmax}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This algorithm is the dual of EF-minimization (see \cref{ss:mode:EFmin}).
+
+The parameter to be maximized must be specified at the end of the model as follows:
+
+\styleIMI{maximize(parameter\_name)}\\
+
+The standard command is:
+
+\styleCommand{\binimitator{} model.imi -mode EFmax -merge -incl -output-result}
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -853,6 +886,16 @@ The result file finally contains general statistics such as the global computati
 Finally, some statistics on specific operations (model parsing, graphics drawing, etc.) are given.
 More statistics are obtained with higher levels of verbosity, or with the \styleOption{-statistics} option.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Projection onto some parameters}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The result can be projected onto selected parameters, by using the following syntax at the end of the model file:
+
+\styleIMI{projectresult(param1, \dots, paramn);}
+
+In that case, all parameters not in that set are eliminated using variable elimination, and the result in the result file only contains the selected parameters.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -984,10 +1027,10 @@ However, \imitator{} does not perform what is referred to as \emph{symbolic mode
 In short, a symbolic state in \imitator{} is made of the following elements:
 \begin{itemize}
 	\item the current location (index) of each \IPTA{};
-	\item the current value of the (integer-valued) discrete variables;
+	\item the current value of the (rational-valued) discrete variables;
 	\item a constraint on $\Clock \cup \Param \cup \DVar$ representing the continuous information.
 \end{itemize}
-In \imitator{}, all integers (\ie{} the value of the discrete variables and the coefficients used in the constraints) are unbounded integers (implemented using GMP).
+In \imitator{}, all rationals (\ie{} the value of the discrete variables and the coefficients used in the constraints) are unbounded rationals (implemented using GMP).
 
 
 
@@ -1091,6 +1134,12 @@ Print the list of contributors and exits.
 
 
 %------------------------------------------------------------
+\paragraph{\styleOption{-counterexample}}
+%------------------------------------------------------------
+For algorithms \EFsynth{} and \PRP{}, stops the analysis as soon as one target state is found.
+
+
+%------------------------------------------------------------
 \paragraph{\styleOption{-depth-limit <limit>} (default: none)}
 %------------------------------------------------------------
 Limits the depth of the exploration of the state space.
@@ -1153,10 +1202,19 @@ uses a variant of the inverse method that returns the union of the constraints a
 %------------------------------------------------------------
 \paragraph{\styleOption{-incl} (default: false)}
 %------------------------------------------------------------
-Consider an inclusion of region instead of the equality when performing the $\textit{Post}$ operation.
+Consider an inclusion of parametric zone instead of the equality when performing the $\textit{Post}$ operation.
 In other terms, when encountering a new state, \imitator{} checks if the same state (same location and same constraint) has been encountered before and, if so, discards this ``new'' state.
-However, when the \code{-incl} option is activated, it suffices that a previous state with the same location and a constraint \emph{greater than or equal} to the constraint of the new state has been encountered to stop the analysis.
+However, when the \code{-incl} option is activated, it suffices that a previous state with the same location and a constraint \emph{greater than or equal} to the constraint of the new state has been encountered to discard the new state and stop exploring the current branch.
 This option corresponds to the way that, \eg{} \hytech{} works, and suffices when one wants to check the \emph{non-reachability} of a given bad state.
+
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-incl2} (default: false)}
+%------------------------------------------------------------
+Consider a bidirectional inclusion of parametric zone instead of the equality when performing the $\textit{Post}$ operation.
+When the \code{-incl2} option is activated, it suffices that a previous state with the same location and a constraint greater than or equal to (resp.\ \emph{smaller or equal} to) the constraint of the new state has been encountered to discard the new state (resp.\ the old state, which is replaced by the new one).
+
+It seems that, although less states are computed, this option is \emph{less} efficient than \styleOption{-incl} (in part due to the extra inclusion checks required by \styleOption{-incl2}).
 
 
 %------------------------------------------------------------
@@ -1178,8 +1236,14 @@ The mode for \imitator{}.
 	\styleOption{statespace} & Generation of the entire parametric state space \\
 	& (see \cref{ss:mode:statespace}) \\
 	
-	\styleOption{EF} & Parametric non-reachability analysis (\EFsynth{} \cite{JLR15}) \\
+	\styleOption{EF} & Parametric reachability synthesis (\EFsynth{} \cite{JLR15}) \\
 	& (see \cref{ss:mode:EFsynth}) \\
+	
+	\styleOption{EFmin} & Parametric minimization synthesis \\
+	& (see \cref{ss:mode:EFmin}) \\
+	
+	\styleOption{EFmax} & Parametric maximization synthesis \\
+	& (see \cref{ss:mode:EFmax}) \\
 	
 	\styleOption{PDFC} & Parametric deadlock-freeness checking (\PDFC{} \cite{Andre16}) \\
 	& (see \cref{ss:mode:PDFC}) \\
@@ -1285,6 +1349,11 @@ Set minimum value for the $y$ axis when plotting the cartography (not entirely f
 %------------------------------------------------------------
 Set maximum value for the $y$ axis when plotting the cartography (not entirely functional in all situations yet).
 
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-output-float} (default: false)}
+%------------------------------------------------------------
+Convert (exact-valued) discrete variables into (possibly approximated) floats in all outputs.
 
 
 %------------------------------------------------------------
@@ -1399,6 +1468,13 @@ Translates the input model to a graphical, human-readable form (in \texttt{.jpg}
 Translates the input model to a \LaTeX{} representation of the model (using the \texttt{tikz} package) without performing any analysis, and exits.
 Note that node positioning is not (much) supported, so may want to edit manually some positions.
 	% TODO refer to the graphics of the coffee machine
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-romeo} (default: false)}
+%------------------------------------------------------------
+April 1st, 2017 feature :-)
+Supposedly calls the Romeo model checker~\cite{LRST09} instead of \imitator{}.
+Just try!
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-states-limit} (default: none)}
@@ -2084,6 +2160,8 @@ The following words are reserved keywords and cannot be used as names for automa
 \styleIMI{initially},
 \styleIMI{loc},
 \styleIMI{locations},
+\styleIMI{maximize},
+\styleIMI{minimize},
 \styleIMI{next},
 \styleIMI{not},
 \styleIMI{once},
@@ -2184,7 +2262,7 @@ This can be easily simulated using dedicated discrete variables, that would be r
 \section{Initial intervals for discrete variables}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Discrete variables must be set to a constant integer in the \styleIMI{init} definition (\eg{} \styleIMI{i = 0}).
+Discrete variables must be set to a constant rational in the \styleIMI{init} definition (\eg{} \styleIMI{i = 0}).
 Setting a variable to an arbitrarily value (\eg{} \styleIMI{i in [0 .. 10]}) is currently not supported.
 This can be simulated using an initialization \IPTA{} that nondeterministically sets \styleIMI{i} to any of the values, in 0 time so as to not disturb the model.
 	% TODO: example

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2017/03/08
+ * Last modified     : 2017/03/21
  *
  ************************************************************)
 
@@ -81,9 +81,9 @@ class algoIMK =
 		(* Retrieve the pi0 (dynamic!) *)
 		let pi0 = Input.get_pi0 () in
 		
-		self#print_algo_message_newline Verbose_medium ("Sarting pi0-compatibility check...");
+		self#print_algo_message_newline Verbose_medium ("Sarting pi0-compatibility check…");
 		
-		self#print_algo_message_newline Verbose_high ("Hiding non parameters...");
+		self#print_algo_message_newline Verbose_high ("Hiding non parameters…");
 		
 		(* Hide non-parameters *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse constr in
@@ -211,17 +211,6 @@ class algoIMK =
 
 		(* Is the new state valid? *)
 		
-		(*** TODO: add back ***)
-(*		(* 1) Complete version of IM *)
-		if options#completeIM then(
-			let valid_new_state, bad_p_constraint = completeIM_check_constraint model state_space final_constraint in
-			(* Update the set of bad polyhedra *)
-			k_bad := bad_p_constraint :: !k_bad;
-			(* Return locally the result *)
-			valid_new_state
-		
-		(* 2) Regular IM *)
-		)else( *)
 		(*** NOTE: the addition of neg J to all reached states is performed as a side effect inside the following function ***)
 		(*** BADPROG: same reason ***)
 		let pi0_compatible = self#check_pi0compatibility final_constraint
@@ -270,13 +259,13 @@ class algoIMK =
 					);
 			end;*)
 			
-			(* Try to add this new state to the graph *)
-			let new_state_index, added = (
-				StateSpace.add_state state_space new_state
-			) in
-			(* If this is really a new state *)
-			if added then (
-
+		(* Try to add the new state to the state space *)
+		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
+		
+		begin
+		match addition_result with
+			(* If this is really a new state, or a state larger than a former state *)
+			| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
 			(*** TODO: add back later ***)
 			
 (*				(* Check if the new state contains an integer point *)
@@ -295,8 +284,8 @@ class algoIMK =
 				(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
 				new_states_indexes := new_state_index :: !new_states_indexes;
 				
-			) (* end if new state *)
-			else (
+			(* If the state was present: *)
+			| StateSpace.State_already_present new_state_index ->
 				(* This may be a loop *)
 				self#process_looping_state new_state_index;
 	
@@ -309,13 +298,13 @@ class algoIMK =
 					slast := new_state_index :: !slast;
 				);*)
 	
-			); (* end else if added *)
+			end; (* end else if added *)
 			
 			
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 
 			(* Update the transitions *)
-			self#add_transition_to_state_space (source_state_index, action_index, new_state_index) added;
+			self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
 		); (* end if valid new state *)
 		
 		(* Return true if the state is pi-compatible *)
@@ -398,7 +387,7 @@ class algoIMK =
 		(* Retrieve the constraint of the initial state *)
 		let (_ , px_constraint ) = initial_state in
 		
-		self#print_algo_message Verbose_total ("projecting the initial state constraint onto the parameters...");
+		self#print_algo_message Verbose_total ("projecting the initial state constraint onto the parameters…");
 		
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
 (* 		Convex_constraint (LinearConstraint.px_hide_nonparameters_and_collapse px_constraint , !tile_nature)  *)

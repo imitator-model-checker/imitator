@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/03/23
+ * Last modified     : 2017/04/13
  *
  ************************************************************)
 
@@ -22,7 +22,7 @@
 
 let program_name = "IMITATOR"
 
-let version_string = "2.9"
+let version_string = "2.9.2-working"
 
 let version_name = "Butter Incaberry"
 
@@ -67,6 +67,14 @@ let dot_image_extension = "jpg"
 let dot_file_extension = "dot"
 let states_file_extension = "states"
 let cartography_extension = "png"
+
+
+(************************************************************)
+(************************************************************)
+(* Hashtable initial size (just a guess) *)
+(************************************************************)
+(************************************************************)
+let guessed_nb_states_for_hashtable = 100
 
 
 (************************************************************)

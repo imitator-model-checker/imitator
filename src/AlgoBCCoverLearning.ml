@@ -106,9 +106,6 @@ class algoBCCoverLearning =
 	(* Call the algorithm on the current point: 1) run the abstraction 2) call either EFsynth or PRP depending on the result *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method call_point =
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
-		
 		(* Retrieve the current point *)
 		let current_point = self#get_current_point_option in
 

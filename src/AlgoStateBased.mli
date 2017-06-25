@@ -61,6 +61,36 @@ val compute_valuated_invariant : Location.global_location -> LinearConstraint.px
 val apply_time_past : Location.global_location -> LinearConstraint.pxd_linear_constraint -> unit
 
 
+
+(************************************************************)
+(************************************************************)
+(* Class definition for state_index waiting lists *)
+(************************************************************)
+(************************************************************)
+class waiting_list :
+	object
+
+		(************************************************************)
+		(* Class variables *)
+		(************************************************************)
+
+		(************************************************************)
+		(* Class methods *)
+		(************************************************************)
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Add a state to the waiting list *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method add : state_index -> unit
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
+
+
+
 (**************************************************************)
 (* Class definition *)
 (**************************************************************)
@@ -122,20 +152,27 @@ class virtual algoStateBased :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method update_statespace_nature : State.state -> unit
 		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Create a StateSpace.state_comparison from the options *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method state_comparison_operator_of_options : StateSpace.state_comparison
+
+		
 		(*------------------------------------------------------------*)
 		(* Add a new state to the reachability_graph (if indeed needed) *)
 		(* Side-effects: modify new_states_indexes *)
 		(*** TODO: move new_states_indexes to a variable of the class ***)
 		(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
+		(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 		(*------------------------------------------------------------*)
 		(*** TODO: simplify signature by removing the state_index list ref and the action_index, and by returning the list of actually added states ***)
 		method virtual add_a_new_state : state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
 		
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Add a transition to the state space (takes as a second argument a flag stating whether the state is new) *)
+		(* Add a transition to the state space *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method add_transition_to_state_space : (state_index * Automaton.action_index * state_index) -> bool -> unit
+		method add_transition_to_state_space : (state_index * Automaton.action_index * state_index) -> StateSpace.addition_result -> unit
 
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

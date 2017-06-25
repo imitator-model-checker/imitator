@@ -303,10 +303,6 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 	(* Generic algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run () =
-
-		(* Retrieve the input options *)
- 		let options = Input.get_options () in 
- 		
 		(* Initialize counters *)
 		tcounter_split_subdomains#reset;
 		tcounter_process_result#reset;
@@ -336,8 +332,6 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_low then(
-			(* Retrieve the model *)
-			let model = Input.get_model() in
 			self#print_algo_message_newline Verbose_low ("Computed the following " ^ (string_of_int (List.length subdomains)) ^ " initial subdomains:");
 			List.iteri (fun i subdomain -> 
 				self#print_algo_message_newline Verbose_low ("Subdomain #" ^ (string_of_int (i+1)) ^ ":");
@@ -401,9 +395,6 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 			| Tile (collaborator_rank , abstract_point_based_result) ->
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
-					(* Retrieve the model *)
-					let model = Input.get_model() in
-					
 					self#print_algo_message Verbose_low ("Received an abstract_point_based_result from collaborator " ^ (string_of_int collaborator_rank) ^ " computed in " ^ (string_of_seconds abstract_point_based_result.computation_time)
 						^ "\nConstraint:\n"
 						^ (ResultProcessor.string_of_good_or_bad_constraint model.variable_names abstract_point_based_result.result)

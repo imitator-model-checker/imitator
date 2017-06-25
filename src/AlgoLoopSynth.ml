@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2017/03/08
+ * Last modified     : 2017/03/19
  *
  ************************************************************)
 
@@ -97,41 +97,46 @@ class algoLoopSynth =
 		(* Build the state *)
 		let new_state = location, current_constraint in
 
-		let new_state_index, added = (
-			StateSpace.add_state state_space new_state
-		) in
+		(* Try to add the new state to the state space *)
+		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
 		
-		(* If this is really a new state *)
-		if added then (
+		begin
+		match addition_result with
+		(* If this is really a new state, or a state larger than a former state *)
+		| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
 
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
 			new_states_indexes := new_state_index :: !new_states_indexes;
-		) (* end if new state *)
-		else (
+		 (* end if new state *)
+		(* If the state was present:  *)
+		| StateSpace.State_already_present new_state_index ->
 			(* Not added: means this state was already present before *)
 			(* This state can either be a loop or just a state belonging to another branch of a tree *)
 			(* Print some information *)
 			self#print_algo_message Verbose_medium ("State " ^ (StateSpace.string_of_state_index new_state_index) ^ "already met: potential cycle found.");
-		) (* end if loop *)
+		end (* end if possible loop *)
 		;
 		
 		(* Update the transitions *)
-		self#add_transition_to_state_space (source_state_index, action_index, new_state_index) added;
+		self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
 		
 		let has_loop =
+			match addition_result with
 			(* New state: cannot be a loop *)
-			if added then No_loop
-			else (
+			| StateSpace.New_state _ -> No_loop
+			(* Old state (possibly updated) -> possible loop *)
+			| StateSpace.State_already_present _ | StateSpace.State_replacing _ ->
 				(* Now that the transitions were updated, try to look for a loop *)
 				self#print_algo_message Verbose_medium ("Computing SCC starting from s_" ^ (string_of_int source_state_index) ^ "…");
 				let scc_option = StateSpace.reconstruct_scc state_space source_state_index in
 		
+				let loop_result =
 				match scc_option with
 					(* No loop *)
 					| None -> No_loop
 					(* Some loop *)
 					| Some scc -> Loop scc
-			)
+				in loop_result
 		in
 		
 		(* If found a loop *)
@@ -141,7 +146,7 @@ class algoLoopSynth =
 			| Loop scc ->
 				self#print_algo_message Verbose_standard "Found a cycle.";
 				(*** NOTE: this method is called AFTER the transition table was updated ***)
-				self#process_loop_constraint new_state_index scc current_constraint;
+				self#process_loop_constraint ((*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) scc current_constraint;
 		end; (* end if found a loop *)
 		
 		(* The state is kept in any case *)

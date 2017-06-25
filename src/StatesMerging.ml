@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/27
- * Last modified     : 2015/11/27
+ * Last modified     : 2017/06/01
  *
  ************************************************************)
 
@@ -21,9 +21,18 @@ open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
- 
+open Statistics 
 
- 
+(**************************************************************)
+(* Counters *)
+(**************************************************************)
+
+(* Numbers of merging attempts (for states that have the same discrete location) *)
+let nb_merging_attempts = create_discrete_counter_and_register "StatesMerging.merging attempts" States_counter Verbose_standard
+
+(* Numbers of actual merges *)
+let nb_merged = create_discrete_counter_and_register "StatesMerging.merges" States_counter Verbose_standard
+
  
 (**************************************************************)
 (* Merging functions *)
@@ -44,6 +53,9 @@ let try_to_merge location1 constraint1 location2 constraint2 =
 	(* First check equality of locations *)
 	if location1 <> location2 then false
 	else(
+		(* Statistics *)
+		nb_merging_attempts#increment;
+		
 		(* Check convex union of constraints *)
 		LinearConstraint.px_hull_assign_if_exact constraint1 constraint2
 	)
@@ -93,15 +105,15 @@ let merge action_and_state_list =
 
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then (
-					print_message Verbose_total ("\nConstraint of the eated before merging attempt...\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eated_constraint));
-					print_message Verbose_total ("\nConstraint of the eater before merging attempt...\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eater_constraint));
+					print_message Verbose_total ("\nConstraint of the eated before merging attempt…\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eated_constraint));
+					print_message Verbose_total ("\nConstraint of the eater before merging attempt…\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eater_constraint));
 				);
 
 				
 				if try_to_merge eater_location eater_constraint eated_location eated_constraint then(
 					if verbose_mode_greater Verbose_total then (
 						(* Print some information *)
-						print_message Verbose_total ("\nConstraint of the eater after merging...\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eater_constraint));
+						print_message Verbose_total ("\nConstraint of the eater after merging…\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names eater_constraint));
 					);
 						
 					(* Due to side effects in try_to_merge, the merging is already performed at this point! *)
@@ -123,6 +135,9 @@ let merge action_and_state_list =
 					(* Update the counter *)
 					nb_eated := !nb_eated + 1;
 					
+					(* Statistics *)
+					nb_merged#increment;
+
 					(* Try again to eat from the beginning *)
 					eated_index := 0;
 				) (* end if mergeable *)

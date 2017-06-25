@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2017/03/08
+ * Last modified     : 2017/05/02
  *
  ************************************************************)
 

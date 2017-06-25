@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/02/20
+ * Last modified     : 2017/04/13
  *
  ************************************************************)
 
@@ -56,6 +56,13 @@ val dot_image_extension : string
 val dot_file_extension : string
 val states_file_extension : string
 val cartography_extension : string
+
+(************************************************************)
+(************************************************************)
+(* Hashtable initial size (just a guess) *)
+(************************************************************)
+(************************************************************)
+val guessed_nb_states_for_hashtable : int
 
 
 (************************************************************)

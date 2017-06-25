@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2017/03/23
+# Last modified: 2017/05/25
 #************************************************************
 
 
@@ -565,7 +565,7 @@ Number of computed states               : 0
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF (old version) with basic unreachability',
+		'purpose'    : 'Test EF (old version) with basic unreachability property for Fischer:3',
 		'input_files': ['F3.imi'],
 		'options'    : '-mode EFold -merge -incl -output-result',
 		'expectations' : [
@@ -586,7 +586,7 @@ END CONSTRAINT
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with basic unreachability',
+		'purpose'    : 'Test EF with basic unreachability property for Fischer:3',
 		'input_files': ['F3.imi'],
 		'options'    : '-mode EF -merge -incl -output-result',
 		'expectations' : [
@@ -595,6 +595,112 @@ BEGIN CONSTRAINT
 delta >= Delta
     & Delta >= 0
 END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (double-directional inclusion)',
+		'input_files': ['F3.imi'],
+		'options'    : '-mode EF -merge -incl2 -output-result',
+		'expectations' : [
+			{'file': 'F3.res' , 'content' : """
+BEGIN CONSTRAINT
+delta >= Delta
+    & Delta >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (queueBFS exploration order)',
+		'input_files': ['F3.imi'],
+		'options'    : '-mode EF -merge -incl -explOrder queueBFS -output-result',
+		'expectations' : [
+			{'file': 'F3.res' , 'content' : """
+BEGIN CONSTRAINT
+delta >= Delta
+    & Delta >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (layerBFS exploration order) with counterexample',
+		'input_files': ['F3.imi'],
+		'options'    : '-mode EF -merge -incl -explOrder layerBFS -counterexample -output-result',
+		'expectations' : [
+			{'file': 'F3.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2*delta >= Delta
+& Delta >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (queueBFS exploration order) with counterexample',
+		'input_files': ['F3.imi'],
+		'options'    : '-mode EF -merge -incl -explOrder queueBFS -counterexample -output-result',
+		'expectations' : [
+			{'file': 'F3.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2*delta >= Delta
+& Delta >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} #end result file
 		] # end expectations
@@ -744,6 +850,65 @@ END CONSTRAINT
 BEGIN CONSTRAINT
  False
 END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFmin on a toy example',
+		'input_files': ['testEFmin.imi'],
+		'options'    : '-mode EFmin -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFmin.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 10
+Number of transitions                   : 9
+Number of computed states               : 12
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFmax on a toy example',
+		'input_files': ['testEFmax.imi'],
+		'options'    : '-mode EFmax -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFmax.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 0
+& 11 >= p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 10
+Number of transitions                   : 9
+Number of computed states               : 20
 """
 			} # end result file
 			,
@@ -1994,6 +2159,46 @@ END CONSTRAINT
 			{'file': 'exVariantes.res' , 'content' : """
 		 5*p1 > p2 & p2 >= 3 OR 5*p1 > p2 & p2 > 2 & p2 >= 4*p1
 		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test IM on an incomplete example',
+		'input_files': ['exIMnoncomplete.imi', 'exIMnoncomplete.pi0'],
+		'options'    : '-output-result -no-random',
+		'expectations' : [
+			{'file': 'exIMnoncomplete.res' , 'content' : """
+BEGIN CONSTRAINT
+p1 >= 0
+& p2 >= 0
+& p3 > p1
+END CONSTRAINT		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test IMcomplete on an incomplete example',
+		'input_files': ['exIMnoncomplete.imi', 'exIMnoncomplete.pi0'],
+		'options'    : '-mode IMcomplete -output-result -no-random',
+		'expectations' : [
+			{'file': 'exIMnoncomplete.res' , 'content' : """
+BEGIN CONSTRAINT
+     p1 >= 0
+    & p2 > p1
+    & p3 >= 0
+    OR
+      p3 > p1
+    & p2 >= 0
+    & p1 >= p2
+END CONSTRAINT		  """
 			} # end result file
 			,
 		] # end expectations
@@ -7006,7 +7211,7 @@ init := True
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'FMTV challenge: Test EF with project-result',
+		'purpose'    : 'FMTV challenge: Test EF with project-result -verbose mute',
 		'input_files': ['fmtv1A1-v2.imi'],
 		'options'    : '-mode EF -merge -incl -output-result',
 		'expectations' : [
@@ -7017,6 +7222,57 @@ BEGIN CONSTRAINT
 OR
 125*e2e > 18126
 END CONSTRAINT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'FMTV challenge: Test EFmin',
+		'input_files': ['fmtv1A1-v2-min.imi'],
+		'options'    : '-mode EFmin -merge -incl -output-result -verbose mute',
+		'expectations' : [
+			{'file': 'fmtv1A1-v2-min.res' , 'content' : """
+BEGIN CONSTRAINT
+ e2e >= 63
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'FMTV challenge: Test EFmax',
+		'input_files': ['fmtv1A1-v2-max.imi'],
+		'options'    : '-mode EFmax -merge -incl -output-result -verbose mute',
+		'expectations' : [
+			{'file': 'fmtv1A1-v2-max.res' , 'content' : """
+BEGIN CONSTRAINT
+ e2e >= 0
+& 18126 >= 125*e2e
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} # end result file
 			,

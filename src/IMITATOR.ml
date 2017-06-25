@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2017/03/08
+ * Last modified     : 2017/06/25
  *
  ************************************************************)
 
@@ -162,6 +162,8 @@ match options#imitator_mode with
 	| State_space_exploration
 	| EF_synthesis
 	| EFunsafe_synthesis
+	| EF_min
+	| EF_max
 	| Loop_synthesis
 	| Parametric_NZ_CUBcheck
 	| Parametric_NZ_CUBtransform
@@ -172,6 +174,7 @@ match options#imitator_mode with
 	
 	(* Inverse method : pi0 *)
 	| Inverse_method
+	| Inverse_method_complete
 	| PRP
 	(* Case: pi0 *)
 	->
@@ -226,7 +229,7 @@ if options#pta2clp then(
 	terminate_program()
 );*)
 
-(* Translation to GrML (experimental) *)
+(*(* Translation to GrML *)
 if options#pta2gml then(
 	print_message Verbose_standard ("Translating model to GrML.");
 	let translated_model = PTA2GrML.string_of_model model in
@@ -238,7 +241,7 @@ if options#pta2gml then(
 	write_to_file grml_file translated_model;
 	print_message Verbose_standard ("File '" ^ grml_file ^ "' successfully created.");
 	terminate_program()
-);
+);*)
 
 (* Translation to HyTech *)
 if options#pta2hytech then(
@@ -325,13 +328,31 @@ if options#cartonly then(
 (* Preliminary checks *)
 (************************************************************)
 
-if options#imitator_mode = EF_synthesis then(
+if options#imitator_mode = EF_synthesis || options#imitator_mode = EFunsafe_synthesis || options#imitator_mode = EF_min  || options#imitator_mode = EF_max then(
 	match model.correctness_condition with
 		(* Synthesis only works w.r.t. (un)reachability *)
 		| Some (Unreachable _) -> ()
-		| _ -> print_error ("EF-synthesis can only be run if an unreachability property is defined in the model.");
+		| _ -> print_error ("Parametric reachability algorithms can only be run if an unreachability property is defined in the model.");
 			abort_program();
 );
+
+if options#imitator_mode = EF_min then(
+	match model.optimized_parameter with
+		| Minimize _ -> ()
+		| _ ->
+			print_error ("A minimized parameter must be defined in the model to run EFmin.");
+			abort_program();
+);
+
+if options#imitator_mode = EF_max then(
+	match model.optimized_parameter with
+		| Maximize _ -> ()
+		| _ ->
+			print_error ("A maximized parameter must be defined in the model to run EFmax.");
+			abort_program();
+);
+
+
 
 
 if (options#imitator_mode = Border_cartography && model.correctness_condition = None) then(
@@ -391,7 +412,7 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 
 (************************************************************)
 (************************************************************)
-(* Execute IMITATOR *)
+(* Run IMITATOR *)
 (************************************************************)
 (************************************************************)
 
@@ -433,6 +454,20 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFunsafeSynth.algoEFunsafeSynth in myalgo
 	
 	
+	(************************************************************)
+	(* EF-minimization *)
+	(************************************************************)
+	| EF_min ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFmin.algoEFmin in myalgo
+	
+
+	(************************************************************)
+	(* EF-minimization *)
+	(************************************************************)
+	| EF_max ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFmax.algoEFmax in myalgo
+	
+
 	(************************************************************)
 	(* Parametric loop synthesis *)
 	(************************************************************)
@@ -562,6 +597,11 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	| Inverse_method ->
 			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIM.algoIM in myalgo
 
+	(* Inverse Method *)
+	| Inverse_method_complete ->
+			let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMcomplete.algoIMcomplete in myalgo
+
+	
 	(************************************************************)
 	(* PRP *)
 	(************************************************************)
@@ -779,6 +819,7 @@ ResultProcessor.process_result result algorithm#algorithm_name None;
 	let error_message = match e with
 		| InternalError msg -> "Fatal internal error: " ^ msg ^ ""
 		| NotImplemented msg -> "A non-implemented feature has been called: " ^ msg ^ ""
+		| Division_by_0 msg -> "Division by 0! " ^ msg ^ ""
 		| Failure msg -> "'Failure' exception: '" ^ msg ^ "'"
 		| Invalid_argument msg -> "'Invalid_argument' exception: '" ^ msg ^ "'"
 		| SerializationError msg -> "Serialization error: " ^ msg ^ ""

@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13 (France)
  * 
  * Module description: ommon definitions for linear terms and constraints (interface to PPL)
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2017/03/23
+ * Last modified     : 2017/05/02
  *
  ************************************************************)
 
@@ -209,6 +209,9 @@ let ppl_nb_hull_assign_if_exact_false = ref 0
 	let ppl_nncc_remove_higher_space_dimensions = create_hybrid_counter_and_register "nncc_remove_higher_space_dimensions" PPL_counter Verbose_low
 
 
+(* Other counters *)
+	let tcounter_pi0_compatibility = create_hybrid_counter_and_register "pi0-compatibility" States_counter Verbose_low
+
 (************************************************************)
 (* TYPES *)
 (************************************************************)
@@ -262,8 +265,13 @@ type linear_constraint = Ppl.polyhedron
 
 (** Convex constraint (polyhedron) on the parameters *)
 type p_linear_constraint = linear_constraint
+
 (** Convex constraint (polyhedron) on the parameters and clocks *)
 type px_linear_constraint = linear_constraint
+
+(** Convex constraint (polyhedron) on the discrete variables *)
+type d_linear_constraint = linear_constraint
+
 (** Convex constraint (polyhedron) on the parameters, clocks and discrete *)
 type pxd_linear_constraint = linear_constraint
 
@@ -1031,6 +1039,16 @@ let negate_wrt_pi0 pi0 linear_inequality =
 			)
 
 
+(** Negate an inequality ('=' is disallowed); raises InternalError if "=" is used *)
+let negate_inequality = function
+	| Less_Than (lterm, rterm) -> Greater_Or_Equal (lterm, rterm)
+	| Less_Or_Equal (lterm, rterm) -> Greater_Than (lterm, rterm)
+	| Greater_Than (lterm, rterm) -> Less_Or_Equal (lterm, rterm)
+	| Greater_Or_Equal (lterm, rterm) -> Less_Than (lterm, rterm)
+	| Equal (lterm, rterm) -> raise (InternalError "Trying to negate an equality in negate_inequality")
+
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)				   	
@@ -1403,6 +1421,9 @@ let pxd_linear_constraint_of_clock_and_parameters x = linear_constraint_of_clock
 
 (** Create a constraint bounding all variables in the list to non-negative *)
 let constraint_of_nonnegative_variables nb_dimensions variables = 
+	(* First check that the variables are compatible with the dimensions *)
+	List.iter (fun variable -> if variable >= nb_dimensions then raise (InternalError ("In function LinearConstraint.constraint_of_nonnegative_variables, trying to create a variable of dimension " ^ (string_of_int variable) ^ " for a polyhedron in " ^ (string_of_int nb_dimensions) ^ " dimension" ^ (s_of_int nb_dimensions) ^ ".") )) variables;
+	
 	let inequalities =
 	List.map (fun variable ->
 		(* Create linear inequality "variable >= 0" *)
@@ -1484,6 +1505,7 @@ let p_nb_inequalities linear_constraint =
 (** Get the inequalities of a constraint *)
 let pxd_get_inequalities = ippl_get_inequalities
 let px_get_inequalities = ippl_get_inequalities
+let p_get_inequalities = ippl_get_inequalities
 
 
 (** Return true if the variable is constrained in a linear_constraint *)
@@ -1681,6 +1703,10 @@ let string_of_false = "False"
 let string_of_true = "True"
 
 
+(** String for the intersection symbol *)
+let string_of_intersection = "\n& "
+
+
 (** Convert a linear constraint into a string *)
 let string_of_linear_constraint names linear_constraint =
 
@@ -1708,12 +1734,13 @@ let string_of_linear_constraint names linear_constraint =
 	let list_of_inequalities = ippl_get_inequalities linear_constraint in
 	" " ^
 	(string_of_list_of_string_with_sep
-		"\n& "
+		string_of_intersection
 		(List.map (string_of_linear_inequality names) list_of_inequalities)
 	)
 
 let string_of_p_linear_constraint = string_of_linear_constraint
 let string_of_px_linear_constraint = string_of_linear_constraint
+let string_of_d_linear_constraint = string_of_linear_constraint
 let string_of_pxd_linear_constraint = string_of_linear_constraint
 
 
@@ -1729,6 +1756,7 @@ let copy = ippl_copy_linear_constraint
 let p_copy = ippl_copy_linear_constraint
 let px_copy = ippl_copy_linear_constraint
 let pxd_copy = ippl_copy_linear_constraint
+
 
 
 (*------------------------------------------------------------*)
@@ -1806,6 +1834,8 @@ let p_intersection l = intersection !p_dim l
 let px_intersection l = intersection !px_dim l
 let pxd_intersection l = intersection !pxd_dim l
 
+let pxd_intersection_with_d pxd_linear_constraint d_linear_constraint = intersection !pxd_dim [pxd_linear_constraint; d_linear_constraint]
+
 
 (*------------------------------------------------------------*)
 (* Difference *)
@@ -1827,17 +1857,77 @@ let px_hull_assign_if_exact = ippl_hull_assign_if_exact
 
 
 (*------------------------------------------------------------*)
+(* Convex negation *)
+(*------------------------------------------------------------*)
+(** Assuming p_linear_constraint contains a single inequality, this function returns the negation of this inequality (in the form of a p_constraint). Raises InternalError if more than one inequality. *)
+let negate_single_inequality_p_constraint p_linear_constraint =
+	(* Retrieve the inequalities *)
+	let inequalities = p_get_inequalities p_linear_constraint in
+	(* Check *)
+	if List.length inequalities <> 1 then(
+		raise (InternalError("Exactly one inequality should be contained in negate_single_inequality_p_constraint"))
+	);
+	(* Get the (only) inequality *)
+	let inequality = List.nth inequalities 0 in
+	(* Negate it *)
+	let negated_inequality = negate_inequality inequality in
+	(* Reconstruct a linear constraint *)
+	make_p_constraint [negated_inequality]
+
+
+(** Negates a constraint made either of a single inequality, or made of 2 inequalities, one of which is p >= 0, for a given p *)
+(*** HACK: a very ad-hoc function, needed for EFmax ***)
+(** NOTE: We kind of need to 'reimplement' the negate_single_inequality_p_constraint function, because there may be some p >= 0 inequality, that we do not need to negate ***)
+let negate_single_inequality_nonnegative_p_constraint parameter_index p_linear_constraint =
+	(* Retrieve the inequalities *)
+	let inequalities = p_get_inequalities p_linear_constraint in
+	
+	(* Count *)
+	let nb_inequalities = List.length inequalities in
+	
+	(* 2 or more inequality or 0 inequality: problem *)
+	if nb_inequalities < 1 || nb_inequalities > 2 then(
+		raise (InternalError("Exactly one or two inequalities should be contained in negate_inequality"))
+	);
+	
+	(* Easy case: only one inequality *)
+	if nb_inequalities = 1 then negate_single_inequality_p_constraint p_linear_constraint
+	(* At that point there must be two inequalities *)
+	else(
+		(* Let us try to see if the first equality is the form p >= 0 *)
+		let found_p_geq_0 = match List.nth inequalities 0 with
+		| Greater_Or_Equal (Variable p, Coefficient c)
+		| Less_Or_Equal (Coefficient c, Variable p)
+			when p = parameter_index && Gmp.Z.equal c Gmp.Z.zero
+			-> true
+		| Greater_Or_Equal (Times (one, Variable p), Coefficient zero)
+		| Less_Or_Equal (Coefficient zero, Times (one, Variable p))
+			when p = parameter_index && Gmp.Z.equal zero Gmp.Z.zero && Gmp.Z.equal one Gmp.Z.one
+			-> true
+
+		| _ -> false
+		in
+		
+		(* If the first inequality is p >= 0, negate the second one *)
+		if found_p_geq_0 then make_p_constraint [negate_inequality (List.nth inequalities 1)]
+		(* If the first inequality is not p >= 0, negate it *)
+		else make_p_constraint [negate_inequality (List.nth inequalities 0)]
+	)
+
+
+(*------------------------------------------------------------*)
 (* Variable elimination *)
 (*------------------------------------------------------------*)
 
 (** Eliminate a set of variables, side effects version *)
 let hide_assign nb_dimensions variables linear_constraint =
 	(* Print some information *)
-	if verbose_mode_greater Verbose_total then
+	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total (
 			"Function 'LinearConstraint.hide_assign': hiding variables "
 			^ (string_of_list_of_string_with_sep ", " (List.map string_of_int variables) )
 			^ ". Number of dimensions: " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ "."
+		);
 	);
 	
 	(* Only hide a non-empty list *)
@@ -1868,7 +1958,7 @@ let pxd_hide v l = hide !pxd_dim v l
 
 
 (** Eliminate (using existential quantification) all non-parameters (clocks only, as it is a PX constraint) in a px_linear constraint *)
-let px_hide_nonparameters_and_collapse linear_constraint = 
+let px_hide_nonparameters_and_collapse px_linear_constraint = 
 	let non_parameter_variables = clocks () in
 	
 	(* Print some information *)
@@ -1879,7 +1969,26 @@ let px_hide_nonparameters_and_collapse linear_constraint =
 			^ "."
 		);
 	(* First hide *)
-	let result = px_hide non_parameter_variables linear_constraint in
+	let result = px_hide non_parameter_variables px_linear_constraint in
+	(* Remove higher space dimensions *)
+	ippl_remove_higher_dimensions result !p_dim;
+	(* Return result *)
+	result
+
+
+(** Eliminate (using existential quantification) all non-parameters (clocks only, as it is a PX constraint) and some parameters in a px_linear constraint *)
+let px_hide_allclocks_and_someparameters_and_collapse parameters_to_hide px_linear_constraint = 
+	let variables_to_hide = List.rev_append (clocks ()) parameters_to_hide in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total (
+			"Function 'LinearConstraint.px_hide_allclocks_and_someparameters_and_collapse': hiding variables "
+			^ (string_of_list_of_string_with_sep ", " (List.map string_of_int variables_to_hide) )
+			^ "."
+		);
+	(* First hide *)
+	let result = px_hide variables_to_hide px_linear_constraint in
 	(* Remove higher space dimensions *)
 	ippl_remove_higher_dimensions result !p_dim;
 	(* Return result *)
@@ -2051,9 +2160,9 @@ let pxd_time_past_assign c = time_past_assign !pxd_dim c
 (* Extrapolation to zero/infinity *)
 (*------------------------------------------------------------*)
 
-(** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
-(*** TODO: describe better ***)
-(*** WARNING: this function is certainly not optimized at all! somehow we don't care considering it's not called "often" in IMITATOR ***)
+(** Remove all upper bounds on the first variable list; the second list will remain constant *)
+(*** WARNING: this function is certainly not optimized at all! ***)
+(*** WARNING: the behavior is unspecified if some variables belong to no list, or to both lists ***)
 let p_grow_to_infinity_assign variables_elapse variables_constant linear_constraint =
 	(* Compute all variables *)
 	let all_variables = List.rev_append variables_elapse variables_constant in
@@ -2065,9 +2174,9 @@ let p_grow_to_infinity_assign variables_elapse variables_constant linear_constra
 	()
 
 
-(** Perform an operation (?) on a set of variables: the first variable list will elapse, the second will remain constant *)
-(** TODO: describe better *)
-(** WARNING: this function is certainly not optimized at all! somehow we don't care considering it's not called "often" in IMITATOR *)
+(** Remove all lower bounds on the first variable list; the second list will remain constant *)
+(** WARNING: this function is certainly not optimized at all! *)
+(*** WARNING: the behavior is unspecified if some variables belong to no list, or to both lists ***)
 let p_grow_to_zero_assign variables_elapse variables_constant linear_constraint =
 	(* Compute all variables *)
 	let all_variables = List.rev_append variables_elapse variables_constant in
@@ -2152,12 +2261,31 @@ let pxd_is_bounded_from_above_in = px_is_bounded_from_above_in
 (** {3 Pi0-compatibility} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** Check if a linear constraint is pi0-compatible *)
+(** Check if a p_linear_constraint is pi0-compatible, i.e., whether the parameter valuation satisfies the linear constraint *)
 let is_pi0_compatible pi0 linear_constraint =
+	(* Increment discrete counter *)
+	tcounter_pi0_compatibility#increment;
+
+	(* Start continuous counter *)
+	tcounter_pi0_compatibility#start;
+
 	(* Get a list of linear inequalities *)
 	let list_of_inequalities = ippl_get_inequalities linear_constraint in
 	(* Check the pi0-compatibility for all *)
+	let result =
 	List.for_all (is_pi0_compatible_inequality pi0) list_of_inequalities
+	in
+
+	(* Stop continuous counter *)
+	tcounter_pi0_compatibility#start;
+	
+	(* Return *)
+	result
+
+
+(** Check if a d_linear_constraint is pi0-compatible, i.e., whether the discrete valuation satisfies the linear constraint *)
+let d_is_pi0_compatible = is_pi0_compatible
+
 
 
 (** Compute the pi0-compatible and pi0-incompatible inequalities within a constraint *)
@@ -2320,6 +2448,17 @@ let pxd_constraint_of_discrete_values (discrete_values : (variable * coef) list)
 
 
 (** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
+let px_of_p_constraint c =
+	(* First copy *)
+	let px_constraint = copy c in
+	(* Extend number of dimensions *)
+	ippl_add_dimensions (!px_dim - !p_dim) px_constraint;
+	(* Assert *)
+	assert_dimensions !px_dim px_constraint;
+	(* Return *)
+	px_constraint
+	
+(** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
 let pxd_of_p_constraint c =
 	(* First copy *)
 	let pxd_constraint = copy c in
@@ -2348,16 +2487,24 @@ let pxd_of_px_constraint c =
 
 (** "cast_p_of_pxd_linear_term p c" converts a PXD-constraint p to a P-constraint ; if c then a test if performed to check casting validity *)
 (*** WARNING: in fact, for now NO TEST IS EVER PERFORMED ***)
-let cast_p_of_pxd_linear_term p c = p (*** WARNING! should be copied here! *)
+let cast_p_of_pxd_linear_term p check = p (*** WARNING! should be copied here! ***)
 
 (*** WARNING: in fact, for now NO TEST IS EVER PERFORMED ***)
-let cast_p_of_pxd_linear_constraint p c =
+let cast_p_of_pxd_linear_constraint pxd_linear_constraint check =
 	(* First copy *)
-	let p_constraint = copy p in
-	(* Extend number of dimensions *)
+	let p_constraint = copy pxd_linear_constraint in
+	(* Decrease number of dimensions *)
 	ippl_remove_higher_dimensions p_constraint !p_dim;
 	(* Return *)
 	p_constraint
+
+
+(*** WARNING: in fact, for now NO TEST IS EVER PERFORMED ***)
+let cast_d_of_pxd_linear_constraint check pxd_linear_constraint =
+	(* Just copy *)
+	let d_constraint = copy pxd_linear_constraint in
+	(* Return *)
+	d_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

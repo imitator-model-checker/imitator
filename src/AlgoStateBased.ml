@@ -1,14 +1,14 @@
-(************************************************************
+	(************************************************************
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13 (France)
  * 
  * Module description: main virtual class to explore the state space: only defines post-related function, i.e., to compute the successor states of ONE state. That (still) represents a large list of functions.
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2017/03/19
+ * Last modified     : 2017/06/25
  *
  ************************************************************)
 
@@ -25,7 +25,6 @@ open AlgoGeneric
 open State
 
 
-
 (************************************************************)
 (************************************************************)
 (* Object-independent functions *)
@@ -34,9 +33,12 @@ open State
 
 (************************************************************)
 (* Exception *)
-(************************************************************)
+(************************************************************)	
 
 exception Unsat_exception
+
+(* Local exception to denote a division by 0 *)
+exception Division_by_0_while_evaluating_discrete
 
 
 
@@ -92,7 +94,7 @@ let instantiate_costs pi0 =
 (* Check whether at least one local location is urgent *)
 (*------------------------------------------------------------*)
 
-(*** TODO: move to Location.mli (but creates a dependency problem, as the model is needed...) ***)
+(*** TODO: move to Location.mli (but creates a dependency problem, as the model is needed…) ***)
 
 let is_location_urgent location =
 	(* Retrieve the model *)
@@ -128,7 +130,7 @@ let upd_hash clock_update =
 
 
 
-(*** TODO: move to the class! (otherwise, if several algorithms in the row, cache will not be reinitialized... ***)
+(*** TODO: move to the class! (otherwise, if several algorithms in the row, cache will not be reinitialized… ***)
 
 
 (* Cache for computed invariants *)
@@ -155,14 +157,20 @@ let print_stats _ =
 (* 	Cache.print_stats upd_cache *)*)
 	 
 
+(* Number of constraints checked unsatisfiable while looking for the actions (discrete guard unsatisfiable) *)
+let counter_nb_early_unsatisfiable_discrete = create_discrete_counter_and_register "early unsat states (local discrete guard)" States_counter Verbose_low
+
 (* Number of constraints checked unsatisfiable while looking for the actions *)
-let counter_nb_early_unsatisfiable = create_discrete_counter_and_register "early unsat states (guard)" States_counter Verbose_low
+let counter_nb_early_unsatisfiable = create_discrete_counter_and_register "early unsat states (local continuous guard)" States_counter Verbose_low
 
 (* Number of actions discarded *)
-let counter_nb_early_skip = create_discrete_counter_and_register "early skips" States_counter Verbose_low
+let counter_nb_early_skip = create_discrete_counter_and_register "skipped actions" States_counter Verbose_low
 
 (* Number of constraints computed but unsatisfiable *)
 let counter_nb_unsatisfiable = create_discrete_counter_and_register "unsatisfiable constraints" States_counter Verbose_low
+
+(* Number of discrete constraints unsatisfiable *)
+let counter_nb_unsatisfiable_discrete = create_discrete_counter_and_register "unsatisfiable global discrete constraints" States_counter Verbose_low
 
 (* Number of different combinations considered when computing post *)
 let counter_nb_combinations = create_discrete_counter_and_register "different combinations" States_counter Verbose_low
@@ -179,11 +187,46 @@ let tcounter_next_transitions = create_time_counter_and_register "next transitio
 
 
 
-
+	
+	
 (************************************************************)
 (* Main functions *)
 (************************************************************)
 
+
+
+(* Evaluate a discrete_arithmetic_expression using a discrete variable valuation *)
+(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
+let evaluate_discrete_arithmetic_expression v =
+	let rec evaluate_discrete_arithmetic_expression_rec = function
+		| DAE_plus (discrete_arithmetic_expression, discrete_term) -> NumConst.add (evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression) (evaluate_discrete_term discrete_term)
+		| DAE_minus (discrete_arithmetic_expression, discrete_term) -> NumConst.sub (evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression) (evaluate_discrete_term discrete_term)
+		| DAE_term discrete_term -> evaluate_discrete_term discrete_term
+
+	and evaluate_discrete_term = function
+		| DT_mul (discrete_term, discrete_factor) -> NumConst.mul (evaluate_discrete_term discrete_term) (evaluate_discrete_factor discrete_factor)
+		| DT_div (discrete_term, discrete_factor) ->
+			(*** NOTE: here comes the infamous division by 0 ***)
+			(* Compute the denominator *)
+			let denominator = evaluate_discrete_factor discrete_factor in
+			(* Check if 0 *)
+			if NumConst.equal denominator NumConst.zero then(
+				raise Division_by_0_while_evaluating_discrete
+			)
+			(* Else go on with division *)
+			else
+			NumConst.div (evaluate_discrete_term discrete_term) denominator
+		| DT_factor discrete_factor -> evaluate_discrete_factor discrete_factor
+
+	and evaluate_discrete_factor = function
+		| DF_variable discrete_index -> v discrete_index
+		| DF_constant discrete_value -> discrete_value
+		| DF_expression discrete_arithmetic_expression -> evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression
+	in
+	evaluate_discrete_arithmetic_expression_rec
+
+
+	
 (*------------------------------------------------------------*)
 (* Create a PXD constraint of the form D_i = d_i for the discrete variables *)
 (*------------------------------------------------------------*)
@@ -553,7 +596,7 @@ let apply_time_shift direction location the_constraint =
 		);
 		
 		(* Perform time elapsing *)
-		print_message Verbose_high ("Now applying time " ^ direction_str ^ "...");
+		print_message Verbose_high ("Now applying time " ^ direction_str ^ "…");
 		let time_shift_function = match direction with
 			| Forward -> LinearConstraint.pxd_time_elapse_assign
 			| Backward -> LinearConstraint.pxd_time_past_assign
@@ -594,7 +637,7 @@ let apply_time_elapsing location the_constraint = apply_time_shift Forward locat
 		);
 		
 		(* Perform time elapsing *)
-		print_message Verbose_high ("Now applying time elapsing...");
+		print_message Verbose_high ("Now applying time elapsing…");
 		(*** NOTE: the comment is to be changed in alternative TE mode ***)
 		LinearConstraint.pxd_time_elapse_assign
 			elapsing_clocks
@@ -818,10 +861,10 @@ let compute_possible_actions original_location =
 (* action_index      : index of current action                      *)
 (* original_location : the source location                          *)
 (*------------------------------------------------------------------*)
-(* returns the new location, the guards, the updates                *)
+(* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of pxd_linear_constraint), and the updates *)
 (*------------------------------------------------------------------*)
 (*** TODO: remove the model from the arguments, and retrieve it ***)
-let compute_new_location aut_table trans_table action_index original_location =
+let compute_new_location_guards_updates aut_table trans_table action_index original_location =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	
@@ -844,12 +887,18 @@ let compute_new_location aut_table trans_table action_index original_location =
 		(* Keep only the dest location *)
 		let guard, clock_updates, discrete_updates, dest_index = transition in			
 		(* Update discrete *)
-		List.iter (fun (discrete_index, linear_term) ->
+		List.iter (fun (discrete_index, arithmetic_expression) ->
 			(* Compute its new value *)
-
-			(*** TO OPTIMIZE (in terms of dimensions) ***)
+(* 			let new_value = LinearConstraint.evaluate_pxd_linear_term (Location.get_discrete_value original_location) linear_term in *)
+			let new_value = try(
+				evaluate_discrete_arithmetic_expression (Location.get_discrete_value original_location) arithmetic_expression)
+				with Division_by_0_while_evaluating_discrete -> (
+					(*** NOTE: we could still go on with the computation by setting the discrete to, e.g., 0 but this seems really not good for a model checker ***)
+					raise (Division_by_0 ("Division by 0 encountered when evaluating the successor of the discrete variables!"))
+					(*** TODO: give more info (i.e., "Value of the current variables: TODO Update: TODO ") ****)
+				)
+			in
 			
-			let new_value = LinearConstraint.evaluate_pxd_linear_term (Location.get_discrete_value original_location) linear_term in
 			(* Check if already updated *)
 			if Hashtbl.mem updated_discrete discrete_index then (
 				(* Find its value *)
@@ -883,10 +932,25 @@ let compute_new_location aut_table trans_table action_index original_location =
 	Hashtbl.iter (fun discrete_index discrete_value ->
 		updated_discrete_couples := (discrete_index, discrete_value) :: !updated_discrete_couples;
 	) updated_discrete;
+	
 	(* Update the global location *)
 	Location.update_location_with [] !updated_discrete_couples location;
-  (* return the new location, the guards, and the clock updates (if any!) *)
-	(location, guards, (if !has_updates then clock_updates else []))
+	
+	(* Split guards between discrete and continuous *)
+	let discrete_guards, continuous_guards = List.fold_left (fun (current_discrete_guards, current_continuous_guards) guard ->
+		match guard with
+		(* True guard: unchanged *)
+		| True_guard -> current_discrete_guards, current_continuous_guards
+		(* False guard: should have been tested before! *)
+		| False_guard -> raise (InternalError "Met a false guard while computing new location, although this should have been tested in a local automaton")
+		| Discrete_guard discrete_guard -> discrete_guard :: current_discrete_guards, current_continuous_guards
+		| Continuous_guard continuous_guard -> current_discrete_guards, continuous_guard :: current_continuous_guards
+		| Discrete_continuous_guard discrete_continuous_guard ->
+			discrete_continuous_guard.discrete_guard :: current_discrete_guards, discrete_continuous_guard.continuous_guard :: current_continuous_guards
+	) ([], []) guards in
+	
+	(* Return the new location, the guards, and the clock updates (if any!) *)
+	location, discrete_guards, continuous_guards, (if !has_updates then clock_updates else [])
 	
 	
 
@@ -1109,6 +1173,41 @@ let next_combination combination max_indexes =
 
 
 
+(** Check whether a d_linear_constraint is satisfied by the discrete values in a location *)
+let evaluate_d_linear_constraint_in_location location =
+	(* Directly call the build-in function *)
+	LinearConstraint.d_is_pi0_compatible (Location.get_discrete_value location)
+
+(** Check whether the discrete part of a guard is satisfied by the discrete values in a location *)
+let is_discrete_guard_satisfied location (guard : AbstractModel.guard) : bool =
+	match guard with
+	| True_guard -> true
+	| False_guard -> false
+	| Discrete_guard discrete_guard -> evaluate_d_linear_constraint_in_location location discrete_guard
+	| Continuous_guard _ -> true
+	| Discrete_continuous_guard discrete_continuous_guard -> evaluate_d_linear_constraint_in_location location discrete_continuous_guard.discrete_guard
+
+
+
+(** Check whether the intersection between a pxd_constraint with an AbstractModel.guard if satisfiable (both inputs remain unchanged) *)
+let is_constraint_and_continuous_guard_satisfiable pxd_linear_constraint = function
+	(* True: trivially satisfiable because we assume the original constraint was satisfiable *)
+	| True_guard -> true
+	
+	(* False: trivially unsatisfiable *)
+	| False_guard -> false
+	
+	(* Discrete guard: trivially satisfiable because no continuous part, and we assume the original constraint was satisfiable *)
+	| Discrete_guard _ -> true
+	
+	(* Continuous guard: we have to intersect and check satisfiability *)
+	| Continuous_guard continuous_guard ->
+		LinearConstraint.pxd_is_satisfiable (LinearConstraint.pxd_intersection [pxd_linear_constraint; continuous_guard])
+	
+	(* Discrete + continuous guard: we have to intersect and check satisfiability *)
+	| Discrete_continuous_guard discrete_continuous_guard ->
+		LinearConstraint.pxd_is_satisfiable (LinearConstraint.pxd_intersection [pxd_linear_constraint; discrete_continuous_guard.continuous_guard])
+
 
 (*-------------------------------------------------------*)
 (* Computes all possible transition combinations for the *)
@@ -1142,14 +1241,25 @@ let compute_transitions location constr action_index automata aut_table max_inde
 			(* Keep only possible transitions *)
 			let is_possible = fun trans -> (
 				let guard, _, _, _ = trans in
-				let constr_and_guard = LinearConstraint.pxd_intersection [constr; guard] in
- 				let is_possible = LinearConstraint.pxd_is_satisfiable constr_and_guard in 
-				if not is_possible then (
+				
+				(* First check whether the discrete part is possible *)
+				let discrete_part_possible = is_discrete_guard_satisfied location guard in
+				
+				if not discrete_part_possible then(
 					(* Statistics *)
-					counter_nb_early_unsatisfiable#increment;
-					print_message Verbose_medium "** early skip transition **"
-				);
-				is_possible(*true*)
+					counter_nb_early_unsatisfiable_discrete#increment;
+					print_message Verbose_medium "** early skip transition (discrete guard unsatisfiable) **";
+					false
+				)else(
+				(* Else: the discrete part is satisfiable; so now we check the continuous intersection between the current constraint and the discrete + continuous outgoing guard *)
+					let is_possible = is_constraint_and_continuous_guard_satisfiable constr guard in
+					if not is_possible then (
+						(* Statistics *)
+						counter_nb_early_unsatisfiable#increment;
+						print_message Verbose_medium "** early skip transition (constraint+guard unsatisfiable) **"
+					);
+					is_possible
+				)
 			) in
 			let legal_transitions = ref [] in
 			let trans_index = ref 0 in
@@ -1234,6 +1344,62 @@ type bfs_limit_reached =
 exception BFS_Limit_detected of bfs_limit_reached
 
 
+(*GIA**)
+type rank_value =
+    | Infinity
+    | Int of int
+
+
+
+type new_maximum =
+	| No_new_maximum
+	| New_maximum of int
+    
+
+exception FoundInfiniteRank of state_index
+
+exception FoundLargerZone 
+
+
+
+(************************************************************)
+(************************************************************)
+(* Class definition for state_index waiting lists *)
+(************************************************************)
+(************************************************************)
+class waiting_list =
+	object(self)
+
+	(************************************************************)
+	(* Class variables *)
+	(************************************************************)
+	val mutable waiting_list = []
+	
+
+	(************************************************************)
+	(* Class methods *)
+	(************************************************************)
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Add a state to the waiting list *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method add (state_index : State.state_index) =
+		waiting_list <- state_index :: waiting_list;
+		()
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Get all states from the waiting list (in the form of a list) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private to_list =
+		waiting_list
+
+
+(************************************************************)
+(************************************************************)
+end;;
+(************************************************************)
+(************************************************************)
+
 
 (************************************************************)
 (************************************************************)
@@ -1279,6 +1445,11 @@ class virtual algoStateBased =
 	(*** NOTE: private ***)
 	val mutable bfs_current_depth = 0
 	
+	(* Variable to remain of the termination *)
+	(*** NOTE: private ***)
+	(*** TODO: merge with termination_status… ***)
+	val mutable limit_reached = Keep_going
+	
 	
 	(************************************************************)
 	(* Class methods *)
@@ -1309,10 +1480,6 @@ class virtual algoStateBased =
 	(* Update the nature of the trace set *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method update_statespace_nature ((location : Location.global_location), (_ : LinearConstraint.px_linear_constraint)) =
-		(* Retrieve the model *)
-		let model = Input.get_model() in
-		(* Retrieve the input options *)
-(* 		let options = Input.get_options () in *)
 
 		match model.correctness_condition with
 		| None -> ()
@@ -1335,6 +1502,7 @@ class virtual algoStateBased =
 	(* Side-effects: modify new_states_indexes *)
 	(*** TODO: move new_states_indexes to a variable of the class ***)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
+	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** TODO: simplify signature by removing the source_state_index and returning the list of actually added states ***)
 	method virtual add_a_new_state : state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
@@ -1345,12 +1513,7 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** TODO: to get a more abstract method, and update the state space from another function ***)
 	method private post_from_one_state source_state_index =
-		(* Retrieve the model *)
-		let model = Input.get_model () in
 
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
-		
 		(* Original location: static *)
 		let original_location, _ = StateSpace.get_state state_space source_state_index in
 		(* Dynamic version of the original px_constraint (can change!) *)
@@ -1482,59 +1645,75 @@ class virtual algoStateBased =
 				tcounter_next_transitions#stop;
 				
 				(* Compute the new location for the current combination of transitions *)
-				let location, guards, clock_updates = compute_new_location real_indexes current_transitions action_index original_location in
+				let location, (discrete_guards : LinearConstraint.d_linear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates real_indexes current_transitions action_index original_location in
 				
-				(* Compute the new constraint for the current transition *)
-				let new_constraint = compute_new_constraint orig_constraint discrete_constr original_location location guards clock_updates in
+				(* Check if the discrete guards are satisfied *)
+				if not (List.for_all (evaluate_d_linear_constraint_in_location original_location) discrete_guards) then(
+					(* Statistics *)
+					counter_nb_unsatisfiable_discrete#increment;
+					(* Print some information *)
+					print_message Verbose_high ("\nThis combination of discrete guards is not satisfiable.");
 				
-				begin
-				(* Check the satisfiability *)
-				match new_constraint with
-					| None -> 
-						(* Statistics *)
-						counter_nb_unsatisfiable#increment;
-						print_message Verbose_high ("\nThis constraint is not satisfiable ('None').");
-					| Some (final_constraint : LinearConstraint.px_linear_constraint) -> (
-						if not (LinearConstraint.px_is_satisfiable final_constraint) then(
+				(* Else: the discrete part is satisfied *)
+				)else(
+					(* Compute the new constraint for the current transition *)
+					let new_constraint = compute_new_constraint orig_constraint discrete_constr original_location location continuous_guards clock_updates in
+					
+					begin
+					(* Check the satisfiability *)
+					match new_constraint with
+						| None -> 
 							(* Statistics *)
 							counter_nb_unsatisfiable#increment;
-							print_message Verbose_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
-						) else (
-						
-						(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding ...) *)
-						StateSpace.increment_nb_gen_states state_space;
-				
-						(************************************************************)
-						(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
-						(************************************************************)
-						(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
-						(*** NOTE: why not in mode state space??? ***)
-						if options#imitator_mode <> State_space_exploration && options#merge_before then(
-						
-							(* Only add to the local list of new states *)
-							new_action_and_state_list := ([action_index], location, final_constraint) :: !new_action_and_state_list;
-						
-						(* EXPERIMENTAL BRANCHING: END CASE MERGE AFTER *)
-						)else(
-						
-						(* EXPERIMENTAL BRANCHING: CASE MERGE BEFORE (classical version) *)
+							
 							(* Print some information *)
-							if verbose_mode_greater Verbose_total then(
-								(* Build the state *)
-								let new_state = location, final_constraint in
-								self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
-							);
+							print_message Verbose_high ("\nThis constraint is not satisfiable ('None').");
+							
+						| Some (final_constraint : LinearConstraint.px_linear_constraint) -> (
+							if not (LinearConstraint.px_is_satisfiable final_constraint) then(
+								(* Statistics *)
+								counter_nb_unsatisfiable#increment;
+								
+								(* Print some information *)
+								print_message Verbose_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
+							) else (
+							
+							(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding …) *)
+							StateSpace.increment_nb_gen_states state_space;
+					
+							(************************************************************)
+							(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
+							(************************************************************)
+							(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
+							(*** NOTE: why not in mode state space??? ***)
+							if options#imitator_mode <> State_space_exploration && options#merge_before then(
+							
+								(* Only add to the local list of new states *)
+								new_action_and_state_list := ([action_index], location, final_constraint) :: !new_action_and_state_list;
+							
+							(* EXPERIMENTAL BRANCHING: END CASE MERGE AFTER *)
+							)else(
+							
+							(* EXPERIMENTAL BRANCHING: CASE MERGE BEFORE (classical version) *)
+								(* Print some information *)
+								if verbose_mode_greater Verbose_total then(
+									(* Build the state *)
+									let new_state = location, final_constraint in
+									self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
+								);
 
-							let added = self#add_a_new_state source_state_index new_states_indexes action_index location final_constraint in
+								let added = self#add_a_new_state source_state_index new_states_indexes action_index location final_constraint in
+								
+								(* Update *)
+								has_successors := !has_successors || added;
+								
+							); (* EXPERIMENTAL BRANCHING: END CASE MERGE BEFORE (classical version) *)
 							
-							(* Update *)
-							has_successors := !has_successors || added;
-							
-						); (* EXPERIMENTAL BRANCHING: END CASE MERGE BEFORE (classical version) *)
-						
-					); (* end if satisfiable *)
-				); (* end if Some constraint *)
-				end; (* end match constraint *)
+						); (* end if satisfiable *)
+					); (* end if Some constraint *)
+					end; (* end match constraint *)
+					
+				); (* end discrete part of the guard is satisfied *)
 			
 				(* Update the next combination *)
 				more_combinations := next_combination current_indexes max_indexes;
@@ -1576,6 +1755,7 @@ class virtual algoStateBased =
 		(************************************************************)
 		(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
 		(*** NOTE: why not in mode state space ??? ***)
+		(*** NOTE/WARNING: this is the ONLY place where the StatesMerging module is called :/ Otherwise, the function used is the one in StateSpace ***)
 		if options#imitator_mode <> State_space_exploration && options#merge_before then(
 		
 			(* Merge *)
@@ -1619,7 +1799,7 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add a transition to the state space *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method add_transition_to_state_space transition is_new_state =
+	method add_transition_to_state_space transition addition_result =
 		(* Expand the transition *)
 		let source_state_index, action_index, target_state_index = transition in
 		
@@ -1628,13 +1808,14 @@ class virtual algoStateBased =
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then (
-			(* Retrieve the model *)
-			let model = Input.get_model() in
-			
 			(* Retrieve the target state *)
 			let new_target_state = StateSpace.get_state state_space target_state_index in
 		
-			let beginning_message = (if is_new_state then "NEW STATE" else "Old state") in
+			let beginning_message = match addition_result with 
+				| StateSpace.New_state _ -> "NEW STATE"
+				| StateSpace.State_already_present _ -> "Old state"
+				| StateSpace.State_replacing _ -> "BIGGER STATE than a former state"
+			 in
 			print_message Verbose_high ("\n" ^ beginning_message ^ " s_" ^ (string_of_int target_state_index) ^ " reachable from s_" ^ (string_of_int source_state_index) ^ " via action '" ^ (model.action_names action_index) ^ "': ");
 			print_message Verbose_high (ModelPrinter.string_of_state model new_target_state);
 		);
@@ -1664,10 +1845,7 @@ class virtual algoStateBased =
 	(* Check whether the limit of an BFS exploration has been reached, according to the analysis options *)
 	(*** NOTE: May raise an exception when used in PaTATOR mode (the exception will be caught by PaTATOR) ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private check_bfs_limit =
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
-		
+	method private check_and_update_layer_bfs_limit =
 		(* Check all limits *)
 		
 		(* Depth limit *)
@@ -1709,12 +1887,57 @@ class virtual algoStateBased =
 		end
 		;
 		(* If reached here, then everything is fine: keep going *)
-		Keep_going
+		()
+		)
+		(* If exception caught, then update termination status *)
+		with BFS_Limit_detected reason ->
+			limit_reached <- reason
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check whether the limit of an BFS exploration has been reached, according to the analysis options *)
+	(*** NOTE: May raise an exception when used in PaTATOR mode (the exception will be caught by PaTATOR) ***)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private check_and_update_queue_bfs_limit =
+		(* Check all limits *)
+		
+		(* Depth limit *)
+		try(
+		(* States limit *)
+		begin
+		match options#states_limit with
+			| None -> ()
+			| Some limit -> if StateSpace.nb_states state_space > limit then(
+(* 				termination_status <- States_limit; *)
+				raise (BFS_Limit_detected States_limit_reached)
+			)
+		end
+		;
+		(* Time limit *)
+		begin
+		match options#time_limit with
+			| None -> ()
+			| Some limit -> if time_from start_time > (float_of_int limit) then(
+(* 				termination_status <- Time_limit; *)
+				raise (BFS_Limit_detected Time_limit_reached)
+			)
+		end
+		;
+		(* External function for PaTATOR (would raise an exception in case of stop needed) *)
+		begin
+		match patator_termination_function with
+			| None -> ()
+			| Some f -> f (); () (*** NOTE/BADPROG: Does nothing but in fact will directly raise an exception in case of required termination, caught at a higher level (PaTATOR) ***)
+		end
+		;
+		(* If reached here, then everything is fine: keep going *)
+		()
 		)
 		(* If exception caught, then update termination status, and return the reason *)
-		with BFS_Limit_detected reason -> reason
+		with BFS_Limit_detected reason ->
+			limit_reached <- reason
 
-		
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Print warning(s) if the limit of an exploration has been reached, according to the analysis options *)
@@ -1736,43 +1959,595 @@ class virtual algoStateBased =
 					(* (" ^ (string_of_int limit) ^ " second" ^ (s_of_int limit) ^ ")*)
 			)
 			
+			| Some (Result.Target_found) -> print_warning (
+				"A target state has been found. The exploration now stops, although there are still some unexplored states."
+			)
+			
 			| None -> raise (InternalError "The termination status should be set when displaying warnings concerning early termination.")
 
-			
-	
-(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Create a State_space.state_comparison from the options *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method state_comparison_operator_of_options =
+		(* Mode tree: no comparison *)
+		if options#tree then StateSpace.No_check
+			else if options#inclusion then StateSpace.Inclusion_check
+			else if options#inclusion2 then StateSpace.Double_inclusion_check
+			else StateSpace.Equality_check
+
+
+		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the queue-based BFS algorithm  *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private explore_queue_bfs init_state_index =
-		
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
 
+		print_message Verbose_standard("Entering explore_queue_bfs!!!");
+
+
+
+
+
+
+(*		(* List of states computed before *)
+		let queueWaiting = ref [init_state_index] in
+		let queueVisited = ref [] in*)
+		
+		
 		(* List of states computed before *)
 		(*** NOTE: we encode the queue using a list, with the LAST element of the list being the first of the queue ***)
 		(*** NOTE: we don't use module Queue so as to filter easily the list when needed ***)
-		let queue = ref [init_state_index] in
+		
+		let queue = ref [] in 
 
-		(* Boolean to check whether the time limit / state limit is reached *)
-		let limit_reached = ref Keep_going in
+		(* Set the limit *)
+		limit_reached <- Keep_going;
 		
 		(* Flag modified by the algorithm to perhaps terminate earlier *)
 		let algorithm_keep_going = ref true in
 
 		(* Count the states for verbose purpose: *)
 		let num_state = ref 0 in
+
 		
-		(* Explore further until the limit is reached or the list of lastly computed states is empty *)
-		while !limit_reached = Keep_going && !queue <> [] && !algorithm_keep_going do
+		
+		(*** BEGIN: code for ranking system ***)
+		(*** TODO: move one day ***)
+
+
+
+			
+		(*****************************************************RANKING TBL******************************************************)	
+		(* Hashtable: state_index -> rank *)
+		let rank_hashtable = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
+
+
+		let initial_rank state_index state_space =
+			print_message Verbose_low ("Access Initial Ranking!");
+			if verbose_mode_greater Verbose_low then(
+			print_message Verbose_low ("Ranking State: " ^ (StateSpace.string_of_state_index state_index) ^"!");
+			);
+			(* popped state information *)
+			(* location: static , constraint*)
+			let loc, constr = StateSpace.get_state state_space state_index in
+
+			if verbose_mode_greater Verbose_low then(
+				print_message Verbose_low ( ModelPrinter.string_of_state model (loc, constr) );
+			);
+
+			let checkTrueConstr = LinearConstraint.px_is_equal constr model.px_clocks_non_negative_and_initial_p_constraint in
+			
+			let rank = if checkTrueConstr
+			then
+				(
+				print_message Verbose_low ("Rank: Infinity!");
+				Infinity
+				) 
+			else 
+				(
+				print_message Verbose_low ("Rank: 0!");
+				Int 0
+				)
+			in
+			print_message Verbose_low ("End Initial Ranking!");
+			rank
+		in
+
+		(*
+		let isRanked state_index = 
+			(* try to find in the hashtbl *)
+			try(
+				let rank = Hashtbl.find rank_hashtable state_index in
+				true
+			) with Not_found -> false;
+		in
+		*)
+
+		let printrank rank = match rank with
+							| Infinity -> ("Infinity")
+							| Int value -> (string_of_int value);
+		in
+		
+		(*****************************************************RANKING TBL END**************************************************)
+
+
+
+
+
+		(*****************************************************RANKINK**********************************************************)
+
+		let uncheckAgainStates = ref [] in
+
+		let checkLargerVisitedLocation state_index1 rank_hashtable = 
+			(* Print some information *)
+			print_message Verbose_total ("Entering checkLargerVisitedLocation(" ^ (string_of_int state_index1) ^ ")…");
+
+			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
+
+			(* Print some information *)
+			print_message Verbose_total ("Retrieved state information");
+			(
+				try(
+					Hashtbl.iter (fun state_index2 rank -> 
+					
+						(* Print some information *)
+						print_message Verbose_total ("Comparing with state " ^ (string_of_int state_index2) ^ "…");
+						
+						let loc2, constr2 = StateSpace.get_state state_space state_index2 in
+						if (loc1 == loc2) && not (LinearConstraint.px_is_leq constr2 constr1)
+						then  raise (FoundLargerZone);
+					) rank_hashtable;
+					false;
+				) with FoundLargerZone -> true;
+			);
+		in
+
+
+		let getSmallerVisitedLocations state_index1 rank_hashtable = 
+			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
+
+			let smallers = Hashtbl.fold (fun state_index2 rank smaller_state_index -> 
+				let loc2, constr2 = StateSpace.get_state state_space state_index2 in
+				(* if (loc1 == loc2) && not (LinearConstraint.px_is_leq constr1 constr2) *)
+				if (loc1 == loc2) && not (LinearConstraint.px_is_leq constr1 constr2) && not (List.mem state_index2 !uncheckAgainStates)
+				then  (state_index2)::smaller_state_index 
+				else smaller_state_index;
+			) rank_hashtable [];
+			in
+			smallers
+		in
+
+
+		let getMaxRank rank1 rank2 = match (rank1, rank2) with
+									| (Int x1, Int x2) ->  if x1 < x2 then Int x2 else Int x1
+									| (_, _) -> Infinity;
+		in
+
+
+		(*
+		let getMaxRankStateIndex state_index1 state_index2 = 
+			let rank1 = Hashtbl.find rank_hashtable state_index1 in
+			let rank2 = Hashtbl.find rank_hashtable state_index2 in
+			match (rank1, rank2) with
+			| (Int x1, Int x2) ->  if x1 < x2 then state_index2 else state_index1
+			| (Infinity, Infinity) -> state_index1
+			| (Infinity, Int x2) -> state_index1
+			| (Int x1, Infinity) -> state_index2;
+		in
+		*)
+
+		
+		
+		(* Small helpful function for getHighestRank: compare a rank with the current maximum; return a new_maximum result *)
+		let compare_index_with_max current_max state_index =
+			(* Get the rank from the hash table *)
+			(*** WARNING: is that safe?? ***)
+			let rank = Hashtbl.find rank_hashtable state_index in
+			(* Get the integer value (which cannot be infinity because it was tested before *)
+			let value = match rank with
+			| Int value -> value
+			| Infinity -> raise (InternalError("No state should have a rank Infinity in compare_index_with_max 2"))
+			in
+			(* Did we find a new maximum? *)
+			if value > current_max then New_maximum value else No_new_maximum
+		in
+
+		
+		let get_highest_rank_index queue = 
+
+			(*
+			let highestRank_state_index = ref (List.hd queue) in
+			
+			List.iter ( fun state_index ->
+							highestRank_state_index := (getMaxRankStateIndex state_index !highestRank_state_index);
+						) queue;
+			!highestRank_state_index;
+			*)
+
+			let init_state_index = List.hd queue in
+
+			let init_max_value = match (Hashtbl.find rank_hashtable init_state_index) with
+			| Int value -> value
+			| Infinity -> raise (InternalError("No state should have a rank Infinity in compare_index_with_max 1"))
+			in
+			
+			let max, max_index =
+			List.fold_left (fun (current_max, current_max_index) current_index -> 
+				(* If we found a new maximum *)
+				match compare_index_with_max current_max current_index with
+				(* We update the maximum *)
+				| New_maximum new_value -> new_value, current_index
+				(* Otherwise we do not change it *)
+				| No_new_maximum -> current_max, current_max_index
+			(* Initially, the maximum is 0 *)
+			(*** HACK: use -1 for index ***)
+			) (init_max_value, init_state_index) queue
+			in max_index
+		in
+
+		
+		(*
+		let getVisitedStates rank_hashtable = Hashtbl.fold ( fun state_index rank acc -> state_index::acc ) rank_hashtable [] in
+		*)
+
+
+		let getHighestRankSuccessor state_index = 
+			print_message Verbose_low ("Get the highest rank of successors");
+
+			let rank = ref (Hashtbl.find rank_hashtable state_index) in
+			(*if successor is in the waiting queue then return the rank*)
+			if (List.mem state_index !queue)
+			then (
+					!rank;
+				)
+			else
+				(
+				(*let successors = ref (StateSpace.get_successors state_space state_index ) in*)
+				let successors = ref [state_index] in
+				let count = ref (List.length !successors) in
+
+				let elem = ref 0 in
+
+				if (!count > 0) && verbose_mode_greater Verbose_low then(
+					print_message Verbose_low ("Found the subtree at State: " ^ (StateSpace.string_of_state_index state_index) ^"!");
+				);
+
+				while (!count > 0) do 
+					(
+					
+				 	let successor = List.nth !successors !elem in
+				 	
+				 	let nextSuccessors = (StateSpace.get_successors state_space successor) in
+				 	List.iter (fun successor2 ->
+
+				 		if not (List.mem successor2 (!successors)) && (Hashtbl.mem rank_hashtable successor2 ) (* && (successor2 <> state_index) *)
+				 		then (
+
+				 				if verbose_mode_greater Verbose_low then(
+								print_message Verbose_low ("Found the subtree State: " ^ (StateSpace.string_of_state_index successor2) 
+															^ " with rank value: " ^ printrank (Hashtbl.find rank_hashtable successor2)^ "!");
+															);
+
+				 				successors := !successors@[successor2];
+				 				count := !count + 1;
+				 			);
+				 	) nextSuccessors;
+				 	
+				 	(* successors := (List.tl !successors); *)
+
+				 	rank := getMaxRank !rank (Hashtbl.find rank_hashtable successor);
+				 	count := !count - 1;
+				 	elem := !elem + 1;
+				 	);
+				done;
+				!rank;
+				);
+		in
+
+
+		
+		let rankingSuccessors successors from_state_index= 
+
+			(* The Successors are always ranked before adding into queue and hastbl. Because after that we need exploring the highest rank one *)
+			List.iter (fun state_index ->	
+				(*** NOTE: here, we ALWAYS add (and compute) the rank; would it be smarter to add it on the fly, i.e., to only compute it when it is needed? ***)
+				let rank = ref (Int 0) in
+				(
+					if (Hashtbl.mem rank_hashtable state_index) 
+					then (
+							rank := Hashtbl.find rank_hashtable state_index; 
+						)
+					else (
+							rank := initial_rank state_index state_space;
+							
+							(* Print some information *)
+							print_message Verbose_total ("rankingSuccessors: Initial rank computed for state " ^ (string_of_int state_index));
+							
+							Hashtbl.add rank_hashtable state_index !rank;
+							
+							(* Print some information *)
+							print_message Verbose_total ("rankingSuccessors: Initial rank added to hashtable for state " ^ (string_of_int state_index));
+						);
+				);
+
+
+				if not (checkLargerVisitedLocation state_index rank_hashtable) then
+				(
+				
+
+					(* finding the previous smaller visited zone with the same location (exploring mistakes) *)
+					let smallers = getSmallerVisitedLocations state_index rank_hashtable in 
+					
+					if smallers = [] 
+					then
+						(
+							print_message Verbose_low ("There is no smaller zone with the same location");
+							(* If no state is smaller, we compute the initial rank *)
+							(*
+							let rank = initial_rank state_index state_space in
+							Hashtbl.add rank_hashtable state_index rank;
+							*)
+						)
+					else
+						(
+							print_message Verbose_low ("Found " ^ string_of_int (List.length smallers) ^ " smaller zone with the same location");
+							let rank = ref (Hashtbl.find rank_hashtable state_index) in
+							
+							let rerank = ref false in 
+
+							List.iter ( fun state_index_smaller -> 
+								(* to be sure not a leaf on the search tree*)
+								if not (List.mem state_index_smaller !queue)
+								then (
+
+									if verbose_mode_greater Verbose_low then(
+										print_message Verbose_low ("Smaller State: " ^ (StateSpace.string_of_state_index state_index_smaller) ^ " with rank value: " ^printrank (Hashtbl.find rank_hashtable state_index_smaller)^ "!");
+									);
+
+									rerank := true; 
+
+									(* This method is from the paper, it's not really efficient in practice *)
+									
+									let rank2 = (match (getHighestRankSuccessor state_index_smaller) with
+										| Infinity -> Infinity
+										| Int value -> Int (value + 1); 
+									)
+									in
+									
+									rank := getMaxRank !rank rank2; 
+																	
+									);
+
+								(* in order to adapt to IMITATOR, this code will be commented *)
+								(*reomove the state_index_smaller n the hastable*)
+								(* Hashtbl.remove rank_hashtable state_index_smaller; *) 
+								
+								(*Hashtbl.replace rank_hashtable state_index_smaller (Int 0);*)
+
+								(* remove smaller state in the waiting list: may be cause bugs *)
+								(* queue := list_remove_first_occurence state_index_smaller !queue; *)
+								
+								(*
+								(*Add transition*)
+								let lsTransitions = StateSpace.find_transitions_in state_space (state_index_smaller::(getVisitedStates rank_hashtable)) in
+
+								List.iter ( fun (pre, actions, smaller) -> 
+									if (state_index_smaller == smaller) then
+									StateSpace.add_transition state_space (pre, actions, state_index);
+
+									(* remove smaller state *)
+									(*
+									let abstract_state = Hashtbl.find (state_space.all_states) smaller in
+									Hashtbl.remove (state_space.all_states) (s,abstract_state);
+									*)
+
+								) lsTransitions;
+								*)
+								
+								(*
+								Hashtbl.remove rank_hashtable state_index_smaller;
+								queue := list_remove_first_occurence state_index_smaller !queue; 
+								*)
+
+								uncheckAgainStates := state_index_smaller::(!uncheckAgainStates);
+
+							) smallers;
+							
+							if !rerank = true 
+							then (
+							Hashtbl.replace rank_hashtable state_index !rank;
+							);
+							
+
+
+							if verbose_mode_greater Verbose_low then(
+								match !rank with
+								| Infinity -> print_message Verbose_low ("Return max rank: Infinity!");
+								| Int value -> print_message Verbose_low ("Return max rank: " ^ string_of_int value ^"!");
+							);
+						);
+				 );
+				
+
+				queue := list_append [state_index] !queue;
+				
+			) successors;
+			!queue; 
+		in
+		
+		(*****************************************************RANKINK END******************************************************)
+
+
+
+
+
+		(*****************************************************PRIOR**********************************************************)
+		(*It will sort the queue from largest to snmallest zone*)
+		(*
+		let addToPriorQueue state_index queue = 
+			[state_index]@queue
+		in
+		*)
+
+		let rec addInfinityToPriorQueue state_index queue = 
+			match queue with
+			  | [] -> [state_index]
+			  | x :: l -> (
+							let rank = Hashtbl.find rank_hashtable x in
+							if rank = Infinity
+							then 
+								x :: (addInfinityToPriorQueue state_index l)
+							else 
+								state_index :: x :: l
+							);
+		in
+		
+		let rec addNonInfinityToPriorQueue state_index queue = 
+			match queue with
+			  | [] -> [state_index]
+			  | x :: l -> (
+							let rank = Hashtbl.find rank_hashtable x in
+							match rank with 
+							| Infinity -> x :: (addNonInfinityToPriorQueue state_index l)
+							| Int r -> 	let loc1, constr1 = StateSpace.get_state state_space state_index in
+										let loc2, constr2 = StateSpace.get_state state_space x in
+										(
+										if not (LinearConstraint.px_is_leq constr2 constr1)
+										then
+											(
+											x :: (addNonInfinityToPriorQueue state_index l);
+											)
+										else
+											(
+											state_index :: x :: l
+											);
+										);
+							);
+		in
+
+		let addToPriorQueue successors queue= 
+			(* initial ranking and sorting *)
+			let q = ref queue in
+			List.iter (fun state_index ->	let rank = initial_rank state_index state_space in
+											(* Print some information *)
+											print_message Verbose_high ("addToPriorQueue: Initial rank computed for state " ^ (string_of_int state_index));
+											Hashtbl.add rank_hashtable state_index rank;
+
+
+											(*first version of prior*)
+											(*
+											match rank with 
+												| Infinity -> q := addInfinityToPriorQueue state_index !q
+												| Int _ -> q := addNonInfinityToPriorQueue state_index !q;
+											*)
+
+											(*Priority +: if a successor is visited before and has larger zone than the previous 
+												then it will be considered as mistake and sorted right after the infinity rank in the queue *)
+
+											match rank with 
+												| Infinity -> q := addInfinityToPriorQueue state_index !q
+												| Int _ -> q := 
+												(
+													if (Hashtbl.mem rank_hashtable state_index)
+													then
+														addInfinityToPriorQueue state_index !q
+														(* addToPriorQueue state_index !q *)
+													else
+														addNonInfinityToPriorQueue state_index !q;
+												);
+
+
+			) successors;
+			!q
+		in
+		(*****************************************************PRIOR END******************************************************)
+		
+
+		
+		(*** TODO Gia ***)
+		let select_from_queue () = match options#exploration_order with 
+			| Exploration_queue_BFS_RS -> 	(
+											try(
+												(* First look for infinite rank *)
+												List.iter (fun state_index -> 
+													(* Get the rank from the hashtable (or compute it if necessarily) *)
+													let rank = Hashtbl.find rank_hashtable state_index in
+													(* If infinite: found *)
+													if rank = Infinity then raise (FoundInfiniteRank state_index)
+												) !queue;
+												(* raise (NotImplemented("Gia")) *)
+												(* get the highest rank *)
+												
+												let state_index2 = get_highest_rank_index !queue in
+												state_index2;
+												(* List.hd !queue;*)
+											) with FoundInfiniteRank state_index -> state_index
+											);
+
+			| Exploration_queue_BFS_PRIOR -> List.hd !queue;
+			|  _ -> raise (InternalError ("Impossible situation: at that point, it should be a (variant of) queue BFS"));
+
+		in
+
+		
+
+
+		(*** END: code for ranking system ***)
+
+
+		queue := [init_state_index];
+		
+		(* for ranking algo *)
+		let rank = initial_rank init_state_index state_space in
+		(* Print some information *)
+		print_message Verbose_high ("Ranking algorithm: Initial rank computed for state " ^ (string_of_int init_state_index));
+		Hashtbl.add rank_hashtable init_state_index rank;
+
+		
+		
+
+
+
+
+		(* Explore further until the limit is reached or the queue is empty *)
+		while limit_reached = Keep_going && !queue <> [] && !algorithm_keep_going do
+			print_message Verbose_low ("I am here!!!!!!");
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then (
 				print_message Verbose_low ("\n");
-				print_message Verbose_low ("Computing successors (" ^ (string_of_int (List.length !queue)) ^ "state" ^ (s_of_int (List.length !queue)) ^ " in the queue).");
+				print_message Verbose_low ("Computing successors of state #" ^ (string_of_int !num_state) 
+											^ " (" ^ (string_of_int (List.length !queue)) ^ " state" ^ (s_of_int (List.length !queue)) 
+											^ " in the queue).");
 			);
 			
+			
+			
+			
+
 			(* Take the first element, i.e., last from the list *)
 			(*** NOTE: no test for emptiness, as it was performed just above in the while loop condition ***)
-			let new_queue, popped_from_queue = OCamlUtilities.list_split_last !queue in
+			let new_queue, popped_from_queue = match options#exploration_order with
+				(* Classical queue: just pop! *)
+				| Exploration_queue_BFS -> OCamlUtilities.list_split_last !queue
+				(* Ranking system: TODO *)
+				| Exploration_queue_BFS_RS -> 	(* Find the state to be selected *)
+												let state_index = select_from_queue () in
+												(* Remove from queue *)
+												let updated_queue = list_remove_first_occurence state_index !queue in
+												(* Return new queue, popped state *)
+												updated_queue, state_index
+				(* Priority: TODO *)
+				| Exploration_queue_BFS_PRIOR -> 	(* Find the state to be selected *)
+													let state_index = select_from_queue () in
+													(* Remove from queue *)
+													let updated_queue = list_remove_first_occurence state_index !queue in
+													(* Return new queue, popped state *)
+													updated_queue, state_index
+				(* Impossible *)
+				| _ -> raise (InternalError ("Impossible situation: at that point, it should be a (variant of) queue BFS"))
+			in
+			
+			
 			(* Remove from the queue *)
 			queue := new_queue;
 			
@@ -1780,20 +2555,140 @@ class virtual algoStateBased =
 			num_state := !num_state + 1;
 			
 			(* Compute successors *)
-			let successors = self#post_from_one_state popped_from_queue in
+			(* The concrete function post_from_one_state may raise exception TerminateAnalysis, and update termination_status *)
+			let successors =
+			try(
+				self#post_from_one_state popped_from_queue
+			)
+			with TerminateAnalysis ->
+				(*** HACK: empty the queue to force termination… ***)
+				(*** TODO: improve the termination mechanism (by unifying limit_reached and termination_status) ***)
+				queue := [];
+				
+				(* Return an empty list of successors *)
+				[]
+			in
+
+			if verbose_mode_greater Verbose_low then(
+					print_message Verbose_low ("Poped State: " ^ (StateSpace.string_of_state_index popped_from_queue) ^" from queue!");
+					print_message Verbose_low ("States in queue!");
+					List.iter ( fun state_index ->
+						print_message Verbose_low ("State: " ^ (StateSpace.string_of_state_index state_index) ^" \n");
+					) !queue;
+			);
+
+
+			(* Add to queue *)
+			queue := 
+				(match options#exploration_order with
+				| Exploration_queue_BFS -> list_append successors !queue
+				(* Ranking system: TODO *)
+				| Exploration_queue_BFS_RS -> 	rankingSuccessors successors popped_from_queue;
+												(* list_append successors !queue *)
+				(* Priority system: TODO *)
+				| Exploration_queue_BFS_PRIOR -> addToPriorQueue successors !queue
+				(* Impossible *)
+				| _ -> raise (InternalError ("Impossible situation: at that point, it should be a (variant of) queue BFS"))
+			);
 			
-			(* Add (or not) successors to state space and queue *)
-			List.iter (fun state_index ->
-				(* Check if existing in state space *)
-				
-				raise(NotImplemented "explore_queue_bfs not yet implemented")
-				
-			) successors;
 
 			
+
+			(* Merge states! *)
+			(*** Here, we merge only the queue ***)
+			(*** TODO: merge something else? ***)
+			let new_states_after_merging = ref (!queue) in
+			if options#merge || options#merge_before then (
+				(* New version *)
+				let eaten_states = StateSpace.merge state_space !new_states_after_merging in
+				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
+
+				(match options#exploration_order with
+					| Exploration_queue_BFS_RS ->
+													List.iter ( fun state_index -> 
+														Hashtbl.remove rank_hashtable state_index;
+
+													) eaten_states;
+					| _ -> ();
+				)
+
+
+			);
+			(* Copy back the merged queue *)
+			queue := !new_states_after_merging;
+
+			
+			(* Check if the limit has been reached *)
+			self#check_and_update_queue_bfs_limit;
+			
+			(* If still going, ask the concrete algorithm whether it wants to terminate for other reasons *)
+			if limit_reached = Keep_going then(
+				(* Print some information *)
+				(*** HACK: 'bfs_current_depth - 1' because bfs_current_depth was just incremented… ***)
+				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (bfs_current_depth - 1)) ^ "…");
+
+				if self#check_termination_at_post_n then(
+					algorithm_keep_going := false;
+				);
+			);
+			
 		done;
+
+		print_message Verbose_standard ("End of Ordering!!! \n");
+		
+		(* Were they any more states to explore? *)
+		let nb_unexplored_successors = List.length !queue in
+		
+		(* Set the list of states with unexplored successors, if any *)
+		if nb_unexplored_successors > 0 then(
+			unexplored_successors <- UnexSucc_some !queue;
+		);
+		
+		(* Update termination condition *)
+		begin
+		match limit_reached with
+			(*** NOTE: check None, as it may have been edited from outside, in which case it should not be Regular_termination ***)
+			| Keep_going when termination_status = None -> termination_status <- Some (Result.Regular_termination)
+			(*** NOTE: obliged to comment out the condition below, otherwise there is a compiling warning… ***)
+			| Keep_going (*when termination_status <> None*) -> ()
+			
+			(* Termination due to time limit reached *)
+			| Time_limit_reached -> termination_status <- Some (Result.Time_limit nb_unexplored_successors)
+			
+			(* Termination due to state space depth limit reached *)
+			| Depth_limit_reached -> raise (InternalError("A depth limit should not be met in Queue-based BFS"))
+			
+			(* Termination due to a number of explored states reached *)
+			| States_limit_reached -> termination_status <- Some (Result.States_limit nb_unexplored_successors)
+		end
+		;
+	
+		(* Print some information *)
+		(*** NOTE: must be done after setting the limit (above) ***)
+		self#bfs_print_warnings_limit ();
+		
+		if not !algorithm_keep_going && nb_unexplored_successors > 0 then(
+			self#print_algo_message Verbose_standard ("A sufficient condition to ensure termination was met although there were still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore");
+		);
+
+
+		print_message Verbose_standard (
+			let nb_states = StateSpace.nb_states state_space in
+			let nb_transitions = StateSpace.nb_transitions state_space in
+			let fixpoint_str = if nb_unexplored_successors > 0 then "State space exploration stopped" else "Fixpoint reached" in
+			"\n" ^ fixpoint_str ^ (*" at a depth of "
+			^ (string_of_int bfs_current_depth) ^ ""
+			^ *)": "
+			^ (string_of_int nb_states) ^ " state" ^ (s_of_int nb_states)
+			^ " with "
+			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " in the final state space.");
+			(*** NOTE: in fact, more states and transitions may have been explored (and deleted); here, these figures are the number of states in the state space. ***)
+
+
+
+		print_message Verbose_standard("Exiting explore_queue_bfs!!!");
 		(* The end *)
-		()*)
+		()
 
 	
 	
@@ -1801,11 +2696,6 @@ class virtual algoStateBased =
 	(* Main method to run the BFS algorithm  *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private explore_layer_bfs init_state_index =
-(*		(* Retrieve the model *)
-		let model = Input.get_model () in*)
-		
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
 		
 		(* Set the depth to 1 *)
 		bfs_current_depth <- 1;
@@ -1817,14 +2707,14 @@ class virtual algoStateBased =
 		(* Set of states computed at the previous depth *)
 		let post_n = ref [init_state_index] in
 		
-		(* Boolean to check whether the time limit / state limit is reached *)
-		let limit_reached = ref Keep_going in
+		(* To check whether the time limit / state limit is reached *)
+		limit_reached <- Keep_going;
 		
 		(* Flag modified by the algorithm to perhaps terminate earlier *)
 		let algorithm_keep_going = ref true in
 
-		(* Explore further until the limit is reached or the list of lastly computed states is empty *)
-		while !limit_reached = Keep_going && !post_n <> [] && !algorithm_keep_going do
+		(* Explore further until the limit is reached or the list of states computed at the previous depth is empty *)
+		while limit_reached = Keep_going && !post_n <> [] && !algorithm_keep_going do
 			(* Print some information *)
 			if verbose_mode_greater Verbose_standard then (
 				print_message Verbose_low ("\n");
@@ -1834,7 +2724,9 @@ class virtual algoStateBased =
 			(* Count the states for verbose purpose: *)
 			let num_state = ref 0 in
 
+			(* The concrete function post_from_one_state may raise exception TerminateAnalysis, and update termination_status *)
 			let post_n_plus_1 =
+			try(
 			(* For each newly found state: *)
 			List.fold_left (fun current_post_n_plus_1 orig_state_index ->
 				(* Count the states for verbose purpose: *)
@@ -1850,7 +2742,12 @@ class virtual algoStateBased =
 				(* Return the concatenation of the new states *)
 				(**** OPTIMIZED: do not care about order (else shoud consider 'list_append current_post_n_plus_1 (List.rev new_states)') *)
 				List.rev_append current_post_n_plus_1 new_states
-			) [] !post_n in
+			) [] !post_n
+			)
+			(* If analysis terminate: successors are just the empty list *)
+			with TerminateAnalysis -> []
+			
+			in
 			
 			self#process_post_n !post_n;
 			
@@ -1863,10 +2760,9 @@ class virtual algoStateBased =
 				let eaten_states = StateSpace.merge state_space !new_states_after_merging in
 				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
 			);
-
-
 			(* Update the post_n, i.e., at that point we replace the post^n by post^n+1 in our BFS algorithm, and go one step deeper in the state space *)
 			post_n := !new_states_after_merging;
+			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then (
 				let beginning_message = if !post_n = [] then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length !post_n)) ^ " new state" ^ (s_of_int (List.length !post_n)) ^ "") in
@@ -1941,10 +2837,10 @@ class virtual algoStateBased =
 			bfs_current_depth <- bfs_current_depth + 1;
 			
 			(* Check if the limit has been reached *)
-			limit_reached := self#check_bfs_limit;
+			self#check_and_update_layer_bfs_limit;
 			
 			(* If still going, ask the concrete algorithm whether it wants to terminate for other reasons *)
-			if !limit_reached = Keep_going then(
+			if limit_reached = Keep_going then(
 				(* Print some information *)
 				(*** HACK: 'bfs_current_depth - 1' because bfs_current_depth was just incremented… ***)
 				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (bfs_current_depth - 1)) ^ "…");
@@ -1961,14 +2857,19 @@ class virtual algoStateBased =
 		
 		(* Set the list of states with unexplored successors, if any *)
 		if nb_unexplored_successors > 0 then(
+			(*** NOTE: if an exception TerminateAnalysis was raised, this list is empty :( ***)
 			unexplored_successors <- UnexSucc_some !post_n;
 		);
 		
 		(* Update termination condition *)
 		begin
-		match !limit_reached with
+		match limit_reached with
 			(* No limit: regular termination *)
-			| Keep_going -> termination_status <- Some (Result.Regular_termination)
+			(*** NOTE: check None, as it may have been edited from outside, in which case it should not be Regular_termination ***)
+			| Keep_going when termination_status = None -> termination_status <- Some (Result.Regular_termination)
+			(*** NOTE: obliged to comment out the condition below, otherwise there is a compiling warning… ***)
+			| Keep_going (*when termination_status <> None*) -> ()
+			
 			(* Termination due to time limit reached *)
 			| Time_limit_reached -> termination_status <- Some (Result.Time_limit nb_unexplored_successors)
 			
@@ -2009,12 +2910,6 @@ class virtual algoStateBased =
 	(* Main method to run the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run () =
-		(* Retrieve the model *)
-		let model = Input.get_model () in
-		
-(*		(* Retrieve the input options *)
-		let options = Input.get_options () in*)
-		
 		(* Get some variables *)
 		let nb_actions = model.nb_actions in
 		let nb_variables = model.nb_variables in
@@ -2071,14 +2966,24 @@ class virtual algoStateBased =
 		(* Else: start the algorithm in a regular manner *)
 		)else(
 		
-		(* Add the initial state to the reachable states *)
-		let init_state_index, _ = StateSpace.add_state state_space init_state in
+		(* Add the initial state to the reachable states; no need to check whether the state is present since it is the first state anyway *)
+		let init_state_index = match StateSpace.add_state state_space StateSpace.No_check init_state with
+			(* The state is necessarily new as the state space was empty *)
+			| StateSpace.New_state state_index -> state_index
+			| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")
+		in
 		
 		(* Increment the number of computed states *)
 		StateSpace.increment_nb_gen_states state_space;
 
-		(* Generic method handling BFS *)
-		self#explore_layer_bfs init_state_index;
+		(* Call generic method handling BFS *)
+		begin
+		match options#exploration_order with
+			| Exploration_layer_BFS -> self#explore_layer_bfs init_state_index;
+			| Exploration_queue_BFS -> self#explore_queue_bfs init_state_index;
+			| Exploration_queue_BFS_RS -> self#explore_queue_bfs init_state_index;
+			| Exploration_queue_BFS_PRIOR -> self#explore_queue_bfs init_state_index;
+		end;
 
 		(* Return the algorithm-dependent result *)
 		self#compute_result

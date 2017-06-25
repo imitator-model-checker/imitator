@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13 (France)
  * 
  * Module description: Options definitions
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2017/02/15
+ * Last modified     : 2017/05/22
  *
  ************************************************************)
 
@@ -19,6 +19,7 @@
 (* External modules *)
 (************************************************************)
 open Arg
+open OCamlUtilities
 
 
 (************************************************************)
@@ -28,32 +29,8 @@ open Exceptions
 open ImitatorUtilities
 
 
-(*** WARNING: why is the distribition mode here, but the IMITATOR mode in ImitatorUtilities?? ***)
-type distribution_mode =
-	(** Normal mode *)
-	| Non_distributed
-	
-	(** Distributed mode: static distribution mode (each node has its own part with no communication) *)
-	| Distributed_static
-	
-	(** Distributed mode: Master slave with sequential pi0 *)
-	| Distributed_ms_sequential
-	(** Distributed mode: Master slave with sequential pi0 shuffled *)
-	| Distributed_ms_shuffle
-	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
-	| Distributed_ms_random of int	
-	(** Distributed mode: Master slave with subpart distribution *)
-	| Distributed_ms_subpart
-
-	(**  Distributed mode: Workers live their own lives and communicate results to the coordinator  **)
-	| Distributed_unsupervised
-	(**  Distributed mode: multi-threaded version of Distributed_unsupervised  **)
-	| Distributed_unsupervised_multi_threaded
-
-
-
-let do_unit something =
-	Unit (fun () -> something)
+(*let do_unit something =
+	Unit (fun () -> something)*)
 
 			
 
@@ -80,7 +57,7 @@ class imitator_options =
 (* 		val mutable forcePi0 = ref false *)
 		
 		(* GML syntax *)
-		val mutable fromGML = false
+(* 		val mutable fromGML = false *)
 		
 		
 	
@@ -110,6 +87,9 @@ class imitator_options =
 		val mutable output_cart_y_min = ref None
 		val mutable output_cart_y_max = ref None
 
+		(* Output the approximate float value of discrete variables *)
+		val output_float = ref false
+		
 		(* Output result to a file *)
 		val mutable output_result = ref false
 		
@@ -145,13 +125,16 @@ class imitator_options =
 		val mutable branch_and_bound = ref false
 		
 		(* Complete version of IM (experimental) *)
-		val mutable completeIM = ref false
+(* 		val mutable completeIM = ref false *)
 		
 		(* Property input via CosyVerif *)
-		val mutable cosyprop = ref ""
+(* 		val mutable cosyprop = ref "" *)
 		
 		(* imitator mode *)
 		val mutable imitator_mode = Inverse_method
+		
+		(* Exploration order *)
+		val mutable exploration_order = Exploration_layer_BFS
 		
 		(* experimental variant for EFsynth *)
 		val mutable new_ef_mode = false
@@ -170,7 +153,7 @@ class imitator_options =
 		val mutable carto_time_limit = None
 		
 		(* stop the analysis as soon as a counterexample is found *)
-(* 		val mutable counterex = ref false *)
+		val mutable counterex = ref false
 
 		(* Check whether each constraint contains an integer point *)
 		val mutable check_ippta = ref false
@@ -198,6 +181,9 @@ class imitator_options =
 		
 		(* inclusion mode *)
 		val mutable inclusion = ref false
+		
+		(* Double inclusion mode *)
+		val mutable inclusion2 = ref false
 		
 		(* do not use random values *)
 		val mutable no_random = ref false
@@ -240,7 +226,7 @@ class imitator_options =
 		val mutable pta2clp = ref false*)
 		
 		(* Translate PTA model into a GML model *)
-		val mutable pta2gml = ref false
+(* 		val mutable pta2gml = ref false *)
 		
 		(* Translate PTA model into a HyTech file *)
 		val mutable pta2hytech = ref false
@@ -281,21 +267,23 @@ class imitator_options =
 		method cartonly = cartonly
 		method check_ippta = !check_ippta
 		method check_point = !check_point
-		method completeIM = !completeIM
-		method cosyprop = !cosyprop
-(* 		method counterex = !counterex *)
+(* 		method completeIM = !completeIM *)
+(* 		method cosyprop = !cosyprop *)
+		method counterex = !counterex
 		method depth_limit = !depth_limit
 		method distribution_mode = !distribution_mode
 		method distributedKillIM = !distributedKillIM
 		(* method dynamic = !dynamic *)
 		method dynamic_clock_elimination = !dynamic_clock_elimination
 		method efim = !efim
+		method exploration_order = exploration_order
 		method fancy = !fancy
 		method files_prefix = !files_prefix
-		method fromGML = fromGML
+(* 		method fromGML = fromGML *)
 		method imitator_mode = imitator_mode
 		method new_ef_mode = new_ef_mode
 		method inclusion = !inclusion
+		method inclusion2 = !inclusion2
 		method merge = !merge
 		method merge_before = !merge_before
 		method model_input_file_name = model_input_file_name
@@ -309,12 +297,13 @@ class imitator_options =
 		method output_cart_x_max = !output_cart_x_max
 		method output_cart_y_min = !output_cart_y_min
 		method output_cart_y_max = !output_cart_y_max
+		method output_float = !output_float
 		method output_result = !output_result
 		method output_tiles_files = !output_tiles_files
 		method pi_compatible = !pi_compatible
 		method precomputepi0 = !precomputepi0
 (* 		method pta2clp = !pta2clp *)
-		method pta2gml = !pta2gml
+(* 		method pta2gml = !pta2gml *)
 		method pta2imi = !pta2imi
 		method pta2hytech = !pta2hytech
 		method pta2jpg = !pta2jpg
@@ -389,6 +378,14 @@ class imitator_options =
 					imitator_mode <- EFunsafe_synthesis
 				)
 					
+				(* Case: EF-minimization *)
+				else if mode = "EFmin" then 
+					imitator_mode <- EF_min
+					
+				(* Case: EF-maximization *)
+				else if mode = "EFmax" then 
+					imitator_mode <- EF_max
+					
 				(* Case: Parametric loop synthesis *)
 				else if mode = "LoopSynth" then 
 					imitator_mode <- Loop_synthesis
@@ -424,9 +421,13 @@ class imitator_options =
 				else if mode = "PDFC" then 
 					imitator_mode <- Parametric_deadlock_checking
 					
-				(* Case: inverse method *)
+				(* Case: Inverse method with convex, and therefore possibly incomplete result *)
 				else if mode = "inversemethod" then 
 					imitator_mode <- Inverse_method
+					
+				(* Case: Inverse method with full, non-convex result *)
+				else if mode = "IMcomplete" then 
+					imitator_mode <- Inverse_method_complete
 					
 				(* Case: PRP *)
 				else if mode = "PRP" then 
@@ -518,6 +519,84 @@ class imitator_options =
 					abort_program ();
 					exit(1);
 				)
+				
+			and set_exploration_order order =
+				(*  *)
+				if order = "layerBFS" then
+					exploration_order <- Exploration_layer_BFS
+				else if order = "queueBFS" then
+					exploration_order <- Exploration_queue_BFS
+				else if order = "queueBFSRS" then
+					exploration_order <- Exploration_queue_BFS_RS
+				else if order = "queueBFSPRIOR" then
+					exploration_order <- Exploration_queue_BFS_PRIOR
+				else(
+					(*** HACK: print header now ***)
+					print_header_string();
+					print_error ("The exploration order '" ^ order ^ "' is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
+			
+			(* Very useful option (April fool 2017) *)
+			and call_romeo () =
+				(*** HACK: print header now ***)
+				print_header_string();
+				print_message Verbose_standard "Calling the Romeo model-checker instead of the IMITATOR core engine.";
+				print_warning "option -romeo is still very experimental";
+				print_warning "Romeo is a very unreliable tool to be manipulated with the highest care.";
+				print_warning "The use of Romeo is highly unadvised in the presence of children.";
+				print_warning "Romeo is developed in a city where it rains too much.";
+				print_message Verbose_standard "Converting model into a parametric timed Petri net… OK";
+				Unix.sleep 2;
+				print_message Verbose_standard "Romeo currently checking the syntax… OK";
+				Unix.sleep 3;
+				print_message Verbose_standard "Romeo now running…";
+				Unix.sleep 5;
+				print_message Verbose_standard "Verification by Romeo in progress… Please wait…";
+				Unix.sleep 6;
+				print_message Verbose_standard "Romeo still running…";
+				Unix.sleep 6;
+				print_message Verbose_standard "Romeo still running and it might take a little more time…";
+				Unix.sleep 8;
+				print_message Verbose_standard "Romeo might soon output a result… (but might also not)";
+				(*Unix.sleep 8;
+				print_message Verbose_standard "Wait a little longer please…";*)
+				for i = 1 to 8 do
+					let messages = [
+						"Did you know? The first computation of Romeo started in 2004. We are still awaiting its result.";
+						"Did you know? A recent study showed that the Juliet model checker is by far more efficient in verifying concurrent systems.";
+						"Verification in progress. Please wait.";
+						"Romeo almost completed…";
+						"Romeo currently running verification…";
+						"Romeo just found a Petri net transition!";
+						"Romeo just found a Petri net place!";
+						"Romeo just computed a symbolic marking!";
+						"Romeo just computed a parametric firing time!";
+						"Would you seriously rely on a model-checker developed in a city that does not even know with full certainty whether it is or not part of Brittany?";
+						"The computation by Romeo will still last for a few more seconds. Consider having a beer (or two (or three (or four))).";
+						(*** NOTE: having the definition in the while loop ensures a new % at each iteration ***)
+						"The chance of termination of Romeo is now evaluated to about " ^ (string_of_int (random_element (list_of_interval 2 49))) ^ "%.";
+						"The expected time before getting a result from Romeo is now evaluated to about " ^ (string_of_int (random_element (list_of_interval 4 42))) ^ " seconds. (Maybe.)";
+						"Memory occupancy by Romeo is now " ^ (string_of_int (random_element (list_of_interval 82 99))) ^ "%.";
+					] in
+					Unix.sleep (random_element (list_of_interval 4 8));
+					(random_element[print_message Verbose_standard; print_message Verbose_standard; print_message Verbose_standard; print_warning]) (random_element messages);
+				done;
+				print_message Verbose_standard "Romeo just answered!";
+				Unix.sleep 2;
+				print_message Verbose_standard "Processing answer…";
+				Unix.sleep 2;
+				let answers = [
+					"Segmentation fault";
+					"I don't know";
+					"Maybe";
+					"42";
+				] in
+				print_message Verbose_standard ("Answer: '" ^ (random_element answers) ^ "'.");
+				terminate_program ();
+				()
 
 			(* Options *)
 			and speclist = [
@@ -538,10 +617,10 @@ class imitator_options =
 				
 				("-check-point", Set check_point, " For IM, check at each iteration whether the accumulated parameter constraint is restricted to pi0 (warning! very costly). Default: false.");
 				
-				("-completeIM", Set completeIM, " Experimental version of IM that outputs a complete (full) result. Default: false.");
+(* 				("-completeIM", Set completeIM, " Experimental version of IM that outputs a complete (full) result. Default: false."); *)
 				
 				(*** HACK: property input from CosyVerif ***)
-				("-cosyProp", Set_string cosyprop, " File name containing the property (for the CosyVerif input only! This option should not be called manually). Default: none.");
+(* 				("-cosyProp", Set_string cosyprop, " File name containing the property (for the CosyVerif input only! This option should not be called manually). Default: none."); *)
 		
 				("-contributors", Unit (fun _ ->
 					(*** HACK: print header now ***)
@@ -549,7 +628,7 @@ class imitator_options =
 					print_contributors();
 					exit 0), " Print contributors and exit.");
 				
-(* 				("-counterex", Set counterex, " Stop the analysis as soon as a bad state is discovered (work in progress). Default: false."); *)
+				("-counterexample", Set counterex, " For EF or PRP, stop the analysis as soon as a bad state is discovered. Default: false.");
 				
 				("-depth-limit", Int (fun i -> depth_limit := Some i), " Limits the depth of the exploration of the state space. Default: no limit.");
 
@@ -567,13 +646,23 @@ class imitator_options =
 				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 				
-				("-fromGrML", Unit (fun () -> fromGML <- true), "GrML syntax for input files (experimental). Defaut : 'false'");
+				("-explOrder", String set_exploration_order, " Exploration order.
+        Use 'layerBFS' for a layer-based breadth-first search.
+        Use 'queueBFS' for a queue-based breadth-first search. [EXPERIMENTAL]
+        Use 'queueBFSRS' for a queue-based breadth-first search with ranking system. [WORK IN PROGRES]
+        Use 'queueBFSPRIOR' for a priority-based BFS with ranking system. [WORK IN PROGRES]
+        Default: layerBFS.
+				");
+				
+(* 				("-fromGrML", Unit (fun () -> fromGML <- true), "GrML syntax for input files (experimental). Defaut : 'false'"); *)
 				
 				("-IMK", Set pi_compatible, " Algorithm IMoriginal (defined in [AS11]): return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
 				
 				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
 				
-				("-incl", Set inclusion, " Consider an inclusion of symbolic zones instead of the equality when checking for a fixpoint. Default: 'false'");
+				("-incl", Set inclusion, " Consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: 'false'");
+				
+				("-incl2", Set inclusion2, " Consider a bidirectional inclusion of symbolic zones (new <= old or old <= new) instead of the equality when checking for a fixpoint. Default: 'false'");
 				
 				("-merge", Set merge, " Use the merging technique of [AFS13]. Default: 'false' (disable)");
 				
@@ -581,15 +670,19 @@ class imitator_options =
 				
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
         Use 'statespace' for the generation of the entire parametric state space (no pi0 needed).
-        Use 'EF' for a parametric non-reachability analysis (no pi0 needed).
-        Use 'PDFC' for parametric non-deadlock checking (no pi0 needed).
-        Use 'LoopSynth' for cycle-synthesis (without non-Zeno assumption).
-        Use 'NZCUBcheck' for cycle-synthesis (with non-Zeno assumption, using a CUB-detection). [EXPERIMENTAL]
-        Use 'NZCUBtrans' for cycle-synthesis (with non-Zeno assumption, using a transformation into a CUB-PTA). [EXPERIMENTAL]
-        Use 'inversemethod' for the inverse method.
-        Use 'PRP' for parametric reachability preservation.
-        Use 'PRPC' for parametric reachability preservation cartography.
-        For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). Default: 'inversemethod'.");
+        Use 'EF' for a parametric non-reachability analysis (no pi0 needed). [AHV93,JLR15]
+        Use 'EFmin' for a parametric non-reachability analysis with parameter minimization (no pi0 needed).
+        Use 'EFmax' for a parametric non-reachability analysis with parameter maximization (no pi0 needed).
+        Use 'PDFC' for parametric non-deadlock checking (no pi0 needed). [Andre16]
+        Use 'LoopSynth' for cycle-synthesis (without non-Zeno assumption). [ANPS17]
+        Use 'NZCUBcheck' for cycle-synthesis (with non-Zeno assumption, using a CUB-detection). [EXPERIMENTAL] [ANPS17]
+        Use 'NZCUBtrans' for cycle-synthesis (with non-Zeno assumption, using a transformation into a CUB-PTA). [EXPERIMENTAL] [ANPS17]
+        Use 'inversemethod' for the inverse method with convex, and therefore potentially incomplete, result. [ACEF09]
+        Use 'IMcomplete' for the inverse method with complete, possibly non-convex result. [AM15]
+        Use 'PRP' for parametric reachability preservation. [ALNS15]
+        Use 'PRPC' for parametric reachability preservation cartography. [ALNS15]
+        For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). [AF10]
+        Default: 'inversemethod'.");
 				(*** NOTE: hidden option! 'shuffle' to cover all the points within v0 after shuffling the array. (Reason for hiding: only useful in the distributed cartography) ***)
 				(*** NOTE: hidden option! or 'randomseqXX' where XX is a number to iterate random calls to IM followed by a sequential check (e.g., randomseq5 or randomseq10000) (Reason for hiding: only useful in the distributed cartography) ***)
 				
@@ -615,6 +708,8 @@ class imitator_options =
 
 				("-output-prefix", Set_string files_prefix, " Set the prefix for output files. Default: [model].");
 				
+				("-output-float", Set output_float, " Approximates the value of discrete variables as floats. Default: false.");
+				
 				("-output-result", Set output_result, " Write the result to a file. Default: false.");
 				
 				("-output-states", Set with_log, " Generate the description of all reachable states in a file. Default: false.");
@@ -631,7 +726,7 @@ class imitator_options =
 
 				("-PRP", Set efim, " Reachability-preservation algorithm mixing IM and EFsynth [ALNS15]. Default: false. WARNING: deprecated option (use -mode PRP or -mode PRPC)");
 				
-				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode <- Translation), "Translate the model into a GrML model, and exit without performing any analysis. Defaut : 'false'");
+(* 				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode <- Translation), "Translate the model into a GrML model, and exit without performing any analysis. Defaut : 'false'"); *)
 				
 				("-PTA2HyTech", Unit (fun _ -> pta2hytech := true; imitator_mode <- Translation), "Translate the model into a HyTech model, and exit without performing any analysis. Defaut : 'false'");
 				
@@ -645,6 +740,10 @@ class imitator_options =
 				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : 'false'");
 				
 				("-PTA2TikZ", Unit (fun _ -> pta2tikz := true; imitator_mode <- Translation), "Translate the model into LaTeX TikZ code (no positioning yet), and exit without performing any analysis. Defaut : 'false'");
+				
+				(* Hidden option (April fool 2017) *)
+				(*** NOTE: "Beware: options that have an empty doc string will not be included in the list." ***)
+				("-romeo", Unit call_romeo, "");
 				
 				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
 				
@@ -700,14 +799,13 @@ class imitator_options =
 			);
 			
 			(* Case no pi0 file *)
-			if nb_args = 1 && (imitator_mode != State_space_exploration) && (imitator_mode != EF_synthesis)  && (imitator_mode != EFunsafe_synthesis) && (imitator_mode != Loop_synthesis) && (imitator_mode != Parametric_NZ_CUBtransform) && (imitator_mode != Parametric_NZ_CUBcheck) && (imitator_mode != Parametric_NZ_CUB) && (imitator_mode != Parametric_deadlock_checking) && (imitator_mode != Translation) then(
+			if nb_args = 1 && (imitator_mode != State_space_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != EFunsafe_synthesis) && (imitator_mode != EF_min) && (imitator_mode != EF_max) && (imitator_mode != Loop_synthesis) && (imitator_mode != Parametric_NZ_CUBtransform) && (imitator_mode != Parametric_NZ_CUBcheck) && (imitator_mode != Parametric_NZ_CUB) && (imitator_mode != Parametric_deadlock_checking) && (imitator_mode != Translation) then(
 				(*** HACK: print header now ***)
 				print_header_string();
 				print_error ("Please give a file name for the reference valuation.");
 				Arg.usage speclist usage_msg;
 				abort_program (); exit(1)
 			);
-			
 			
 			(* Set prefix for files *)
 			if !files_prefix = "" then
@@ -748,12 +846,15 @@ class imitator_options =
 				| State_space_exploration -> "parametric state space exploration"
 				| EF_synthesis -> "EF-synthesis"
 				| EFunsafe_synthesis -> "EFunsafe-synthesis"
+				| EF_min -> "EF-minimization"
+				| EF_max -> "EF-maximization"
 				| Loop_synthesis -> "loop-synthesis"
 				| Parametric_NZ_CUBcheck -> "parametric non-Zeno emptiness checking (CUB checking)"
 				| Parametric_NZ_CUBtransform -> "parametric non-Zeno emptiness checking (CUB transformation)"
 				| Parametric_NZ_CUB -> "parametric non-Zeno emptiness checking [testing mode without transformation]"
 				| Parametric_deadlock_checking -> "Parametric deadlock-checking"
 				| Inverse_method -> "inverse method"
+				| Inverse_method_complete -> "inverse method with complete result"
 				| PRP -> "parametric reachability preservation"
 				| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step)
 				| Learning_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step) ^ " and using learning-based abstractions"
@@ -774,7 +875,7 @@ class imitator_options =
 			(* Shortcut *)
 			let in_cartography_mode =
 				match imitator_mode with
-				| Translation | State_space_exploration | EF_synthesis| EFunsafe_synthesis | Loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUBcheck | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | PRP -> false
+				| Translation | State_space_exploration | EF_synthesis| EFunsafe_synthesis | EF_min | EF_max | Loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUBcheck | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP -> false
 				| Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _  | RandomSeq_cartography _ | PRPC -> true
 			in
 			
@@ -832,7 +933,7 @@ class imitator_options =
 				if imitator_mode = State_space_exploration then
 					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a state space exploration.")
 				;
-				if imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis then
+				if imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_max then
 					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a synthesis with respect to a property.")
 				;
 				if imitator_mode = Loop_synthesis then
@@ -869,9 +970,16 @@ class imitator_options =
 				print_warning (Constants.program_name ^ " is not run in cartography mode; the option regarding to the step of the cartography algorithm will thus be ignored.");
 			
 			(* Options for variants of IM, but not in IM mode *)
-			if (imitator_mode = State_space_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = Loop_synthesis || imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
+			if (imitator_mode = State_space_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_max || imitator_mode = Loop_synthesis || imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
 				print_warning (Constants.program_name ^ " is run in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
 
+				
+				
+				
+			(* No counterex if not EF *)
+			if !counterex && (imitator_mode <> EF_synthesis && imitator_mode <> EFunsafe_synthesis && imitator_mode <> PRP) then(
+				print_warning ("The option '-counterexample' is reserved for EF and PRP. It will thus be ignored.");
+			);
 			
 			(*** TODO: add warning if -cart but mode translation or statespace ***)
 
@@ -881,17 +989,38 @@ class imitator_options =
 			(* Recall modes *) 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+			(* Exploration order *)
+			begin
+			match exploration_order with
+				| Exploration_layer_BFS -> print_message Verbose_standard ("Exploration order: layer-based BFS.")
+				| Exploration_queue_BFS -> print_message Verbose_standard ("Exploration order: queue-based BFS [EXPERIMENTAL].")
+				| Exploration_queue_BFS_RS -> print_message Verbose_standard ("Exploration order: queue-based BFS with ranking system [WORK IN PROGRESS].")
+				| Exploration_queue_BFS_PRIOR -> print_message Verbose_standard ("Exploration order: queue-based BFS with priority [WORK IN PROGRESS].")
+			end;
+
 			(* Variant of the inverse method *)
 			if !inclusion then
 				(*** NOTE: why this test??? better to warn if this option is used in another context ***)
 				begin
 				match imitator_mode with
-				| Inverse_method | Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _ | RandomSeq_cartography _
+				| Inverse_method | Inverse_method_complete | Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _ | RandomSeq_cartography _
 					-> print_message Verbose_standard ("Considering variant of IM with inclusion in the fixpoint [AS11].")
-				| _ -> print_message Verbose_standard ("Considering fixpoint variant with inclusion of symbolic zones (instead of equality).")
+				| _ -> print_message Verbose_standard ("Considering fixpoint variant with monodirectional inclusion of symbolic zones (instead of equality).")
 				end
 			else
 				print_message Verbose_medium ("No fixpoint variant (default).");
+
+			(* Variant of the inverse method *)
+			if !inclusion2 then
+				(*** NOTE: why this test??? better to warn if this option is used in another context ***)
+				begin
+				match imitator_mode with
+				| Inverse_method | Inverse_method_complete | Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _ | RandomSeq_cartography _
+					-> print_message Verbose_standard ("Considering variant of IM with bidirectional inclusion in the fixpoint.")
+				| _ -> print_message Verbose_standard ("Considering fixpoint variant with bidirectional inclusion of symbolic zones (instead of equality).")
+				end
+			else
+				print_message Verbose_medium ("No bidirectional fixpoint variant (default).");
 
 			if !no_time_elapsing then
 				print_message Verbose_standard ("Time elapsing will be applied at the beginning of the computation of a new state.")
@@ -921,6 +1050,15 @@ class imitator_options =
 			;
 
 
+			if (imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = PRP) then(
+				if !counterex then(
+					print_message Verbose_standard ("Counterexample mode: the analysis will stop as soon as a target state is found.");
+				)else(
+					print_message Verbose_medium ("No counterexample mode (default).");
+				);
+			);
+
+			
 			begin
 			match !distribution_mode with
 			| Non_distributed -> 
@@ -996,9 +1134,9 @@ class imitator_options =
 
 
 
-			(* Syntax *)
+(*			(* Syntax *)
 			if fromGML then
-				print_message Verbose_standard ("GrML syntax used.");
+				print_message Verbose_standard ("GrML syntax used.");*)
 
 			(* Syntax *)
 			(*if !forcePi0 then
@@ -1008,11 +1146,11 @@ class imitator_options =
 			(* OPTIONS *)
 
 			(*** TODO: check that only in IM/BC mode ***)
-			if !completeIM then (
+(*			if !completeIM then (
 				print_message Verbose_standard ("IM will output a complete, possibly non-convex, constraint.");
 			) else
 				print_message Verbose_medium ("IM will output a possibly incomplete, but convex, constraint (default).")
-			;
+			;*)
 
 
 			if !merge then (
@@ -1070,7 +1208,7 @@ class imitator_options =
 			(*** TODO: check that only in IM/BC mode ***)
 			if !check_point then(
 				print_message Verbose_standard ("At each iteration, it will be checked whether the parameter constraint is restricted to the sole pi0 point (experimental and costly!).");
-				if imitator_mode <> Inverse_method then
+				if imitator_mode <> Inverse_method && imitator_mode <> Inverse_method_complete then
 					print_warning("The -check-point option is only valid for the inverse method. It will hence be ignored.");
 			)
 			else
@@ -1117,6 +1255,12 @@ class imitator_options =
 				| Some n -> print_message Verbose_low ("The maximum value for the y axis for the cartography will be " ^ (string_of_int n) ^ ".");
 			end;
 			
+			
+			if !output_float then
+				print_message Verbose_standard ("The approximate value of all discrete variables will be given.")
+			else
+				print_message Verbose_medium ("No approximate value of discrete variables will be given (default).")
+			;
 			
 			if !output_result then
 				print_message Verbose_standard ("The result will be written to a file.")

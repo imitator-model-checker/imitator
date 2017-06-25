@@ -1,4 +1,33 @@
 *******************************************************
+release XXX    (XXXX) FUTURE RELEASE
+
+Major feature:
+- New algorithms EFmin and EFmax synthesizing the min (resp. max) valuation of a single given parameter for which a given state is reachable
+- The GrML syntax (in and out) is now discontinued, as CosyVerif is not maintained anymore, and the next version will not support GrML.
+
+Minor feature:
+- New option to convert exact-valued discrete variables into (possibly approximated) floats in all outputs
+- Reintroduced the -counterexample option (stops the analysis as soon as a counterexample is found) for EF and PRP
+- New option -romeo (April 1st 2017 feature)… Try it ;-)
+
+Bug fixing
+- Fixed a bug in the parsing module that crashed IMITATOR when a discrete was assigned to an undeclared variable
+
+Internal
+- Better separation between the discrete variables and other variables in guards, so as to first check whether the discrete part is satisfiable (which is cheap) before checking the continuous part (which is expensive)
+
+
+*******************************************************
+release 2.9.1    (2017-04-01) MINOR RELEASE
+
+Major feature:
+- The GrML syntax (in and out) is now discontinued, as CosyVerif is not maintained anymore, and the next version will not support GrML.
+
+Minor feature:
+- New option -romeo (April 1st 2017 feature)… Try it ;-)
+
+
+*******************************************************
 release 2.9    (2017-03-23) MAJOR RELEASE
 
 Major

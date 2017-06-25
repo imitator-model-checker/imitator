@@ -1,15 +1,18 @@
-/***********************************************
+/************************************************************
  *
- *                     IMITATOR
+ *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13 (France)
  * 
- * Author:        Etienne Andre
+ * Module description: Parser for the input model
  * 
- * Created       : 2009/09/07
- * Last modified : 2016/10/08
-***********************************************/
+ * File contributors : Étienne André
+ * Created           : 2009/09/07
+ * Last modified     : 2017/06/25
+ *
+ ************************************************************/
+
 
 %{
 open ParsingStructure;;
@@ -49,6 +52,7 @@ let parse_error s =
 	CT_HAPPENED CT_HAS
 	CT_IF CT_IN CT_INIT CT_INITIALLY
 	CT_LOC CT_LOCATIONS
+	CT_MAXIMIZE CT_MINIMIZE
 	CT_NEXT CT_NOT
 	CT_ONCE CT_OR
 	CT_PARAMETER CT_PROJECTRESULT CT_PROPERTY
@@ -69,6 +73,9 @@ let parse_error s =
 %left DOUBLEDOT         /* high precedence */
 %nonassoc CT_NOT        /* highest precedence */
 
+%left OP_PLUS OP_MINUS  /* lowest precedence */
+%left OP_MUL OP_DIV     /* highest precedence */
+
 
 %start main             /* the entry point */
 %type <ParsingStructure.parsing_structure> main
@@ -79,8 +86,8 @@ main:
 	 automata_descriptions commands EOF
 	{
 		let decl, automata = $1 in
-		let init, bad, projection, carto = $2 in
-		decl, automata, init, bad, projection, carto
+		let init_definition, bad, projection_definition, optimization_definition, carto = $2 in
+		decl, automata, init_definition, bad, projection_definition, optimization_definition, carto
 	}
 ;
 
@@ -112,10 +119,10 @@ decl_var_lists:
 
 decl_var_list:
 	| NAME comma_opt { [($1, None)] }
-	| NAME OP_EQ rational comma_opt { [($1, Some $3)] }
+	| NAME OP_EQ rational_linear_expression comma_opt { [($1, Some $3)] }
 	
 	| NAME COMMA decl_var_list { ($1, None) :: $3 }
-	| NAME OP_EQ rational COMMA decl_var_list { ($1, Some $3) :: $5 }
+	| NAME OP_EQ rational_linear_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
 ;
 
 /**********************************************/
@@ -292,13 +299,40 @@ update_nonempty_list:
 /**********************************************/
 
 update:
-	NAME APOSTROPHE OP_EQ linear_expression { ($1, $4) }
+	NAME APOSTROPHE OP_EQ arithmetic_expression { ($1, $4) }
 ;
 
 /**********************************************/
 
 syn_label:
 	CT_SYNC NAME { $2 }
+;
+
+
+/**********************************************/
+/** ARITHMETIC EXPRESSIONS */
+/***********************************************/
+
+arithmetic_expression:
+	| arithmetic_term { Parsed_UAE_term $1 }
+	| arithmetic_expression OP_PLUS arithmetic_term { Parsed_UAE_plus ($1, $3) }
+	| arithmetic_expression OP_MINUS arithmetic_term { Parsed_UAE_minus ($1, $3) }
+;
+
+/* Term over variables and rationals (includes recursivity with arithmetic_expression) */
+arithmetic_term:
+	| arithmetic_factor { Parsed_UT_factor $1 }
+	/* Shortcut for syntax rational NAME without the multiplication operator */
+	| rational NAME { Parsed_UT_mul (Parsed_UT_factor (Parsed_UF_constant $1), Parsed_UF_variable $2) }
+	| arithmetic_term OP_MUL arithmetic_factor { Parsed_UT_mul ($1, $3) }
+	| arithmetic_term OP_DIV arithmetic_factor { Parsed_UT_div ($1, $3) }
+	| OP_MINUS arithmetic_term { Parsed_UT_mul($2, Parsed_UF_constant NumConst.minus_one) }
+;
+
+arithmetic_factor:
+	| rational { Parsed_UF_constant $1 }
+	| NAME { Parsed_UF_variable $1 }
+	| LPAREN arithmetic_expression RPAREN { Parsed_UF_expression $2 }
 ;
 
 
@@ -312,12 +346,12 @@ convex_predicate:
 ;
 
 convex_predicate_fol:
-	linear_constraint AMPERSAND convex_predicate { $1 :: $3 }
+	| linear_constraint AMPERSAND convex_predicate { $1 :: $3 }
 	| linear_constraint { [$1] }
 ;
 
 linear_constraint:
-	linear_expression relop linear_expression { Linear_constraint ($1, $2, $3) }
+	| linear_expression relop linear_expression { Linear_constraint ($1, $2, $3) }
 	| CT_TRUE { True_constraint }
 	| CT_FALSE { False_constraint }
 ;
@@ -330,12 +364,14 @@ relop:
 	| OP_G { OP_G }
 ;
 
+/* Linear expression over variables and rationals */
 linear_expression:
-	linear_term { Linear_term $1 }
+	| linear_term { Linear_term $1 }
 	| linear_expression OP_PLUS linear_term { Linear_plus_expression ($1, $3) }
 	| linear_expression OP_MINUS linear_term { Linear_minus_expression ($1, $3) } /* linear_term a la deuxieme place */
 ;
 
+/* Linear term over variables and rationals (no recursivity, no division) */
 linear_term:
 	rational { Constant $1 }
 	| rational NAME { Variable ($1, $2) }
@@ -344,6 +380,21 @@ linear_term:
 	| NAME { Variable (NumConst.one, $1) }
 // 	| LPAREN linear_expression RPAREN { $2 }
 	| LPAREN linear_term RPAREN { $2 }
+;
+
+/* Linear expression over rationals only */
+rational_linear_expression:
+	rational_linear_term { $1 }
+	| rational_linear_expression OP_PLUS rational_linear_term { NumConst.add $1 $3 }
+	| rational_linear_expression OP_MUL rational_linear_term { NumConst.mul $1 $3 }
+	| rational_linear_expression OP_MINUS rational_linear_term { NumConst.sub $1 $3 } /* linear_term a la deuxieme place */
+;
+
+/* Linear term over rationals only */
+rational_linear_term:
+	rational { $1 }
+	| OP_MINUS rational { NumConst.sub NumConst.zero $2 }
+	| LPAREN rational_linear_term RPAREN { $2 }
 ;
 
 rational:
@@ -405,7 +456,7 @@ pos_float:
 /***********************************************/
 
 commands:
-	| init_declaration_opt init_definition property_definition projection_definition carto_definition rest_of_commands_opt { ($2, $3, $4, $5) }
+	| init_declaration_opt init_definition property_definition projection_definition optimization_definition carto_definition rest_of_commands_opt { ($2, $3, $4, $5, $6) }
 // 	| init_declaration_opt init_definition bad_definition { ($2, $3, ([] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero))) }
 ;
 
@@ -527,11 +578,19 @@ property_definition:
 ;
 
 projection_definition:
-	// Pattern
 	| CT_PROJECTRESULT LPAREN name_nonempty_list RPAREN semicolon_opt { Some $3 }
 	
-	// Case: no property
+	// Case: no projection
 	|  { None }
+	
+;
+
+optimization_definition:
+	| CT_MINIMIZE LPAREN NAME RPAREN semicolon_opt { Parsed_minimize $3 }
+	| CT_MAXIMIZE LPAREN NAME RPAREN semicolon_opt { Parsed_maximize $3 }
+	
+	// Case: no min/max
+	|  { No_parsed_optimization }
 	
 ;
 

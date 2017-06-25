@@ -1,0 +1,22 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy example for which IM [ACEF09] does not output a complete result
+ *
+ * Description     : Toy example for which IM [ACEF09] does not output a complete result
+ * Correctness     : Same untimed language as pi0
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2017/03/21
+ * Last modified   : 2017/03/21
+ *
+ * IMITATOR version: 2.9
+ ************************************************************)
+
+p1 = 1
+p2 = 2
+p3 = 3

@@ -11,7 +11,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/26
- * Last modified     : 2016/10/08
+ * Last modified     : 2017/06/25
  *
  ************************************************************)
 
@@ -210,13 +210,15 @@ let string_of_clock_updates model = function
 	
 	
 (* Convert a list of updates into a string *)
-let string_of_updates model updates =
-	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, linear_term) ->
+(*** WARNING: calling string_of_arithmetic_expression might yield a syntax incompatible with HyTech for models more expressive than its input syntax! ***)
+(*** TODO: fix or print warning ***)
+let string_of_discrete_updates model updates =
+	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, arithmetic_expression) ->
 		(* Convert the variable name *)
 		(model.variable_names variable_index)
 		^ "' = "
-		(* Convert the linear_term *)
-		^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
+		(* Convert the arithmetic_expression *)
+		^ (ModelPrinter.string_of_arithmetic_expression model.variable_names arithmetic_expression)
 	) updates)
 
 
@@ -224,7 +226,7 @@ let string_of_updates model updates =
 let string_of_transition model automaton_index action_index (guard, clock_updates, discrete_updates, destination_location) =
 	"\n\t" ^ "when "
 	(* Convert the guard *)
-	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)
+	^ (ModelPrinter.string_of_guard model.variable_names guard)
 
 	(* Convert the updates *)
 	^ " do {"
@@ -233,7 +235,7 @@ let string_of_transition model automaton_index action_index (guard, clock_update
 	(* Add a coma in case of both clocks and discrete *)
 	^ (if clock_updates != No_update && discrete_updates != [] then ", " else "")
 	(* Discrete updates *)
-	^ (string_of_updates model discrete_updates)
+	^ (string_of_discrete_updates model discrete_updates)
 	^ "} "
 	
 	(* Convert the sync *)
@@ -477,6 +479,26 @@ let string_of_property model property =
 	| Noproperty -> "-- (no property)"
 
 
+
+(** Convert the projection to a string *)
+let string_of_projection model =
+	match model.projection with
+	| None -> ""
+	| Some parameter_index_list ->
+		"\n-- projectresult(" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names parameter_index_list)) ^ "); (NOT CONSIDERED BY HyTech)"
+
+
+(** Convert the optimization to a string *)
+let string_of_optimization model =
+	match model.optimized_parameter with
+	| No_optimization -> ""
+	| Minimize parameter_index ->
+		"-- minimize(" ^ (model.variable_names parameter_index) ^ "); (NOT CONSIDERED BY HyTech)"
+	| Maximize parameter_index ->
+		"-- maximize(" ^ (model.variable_names parameter_index) ^ "); (NOT CONSIDERED BY HyTech)"
+
+
+
 (************************************************************)
 (** Model *)
 (************************************************************)
@@ -493,13 +515,23 @@ let string_of_model model =
 	string_of_header model
 	(* The variable declarations *)
 	^  "\n" ^ string_of_declarations model stopwatches clocks
+	
 	(* All automata *)
 	^  "\n" ^ string_of_automata model stopwatches clocks
+	
 	(* The initial state *)
 	^ "\n" ^ string_of_initial_state ()
+	
 	(* The property *)
+	(*** TODO: encode reachability properties! ***)
 	^ property_header
 	^  "\n" ^ "--" ^ string_of_property model model.user_property ^ " (NOT CONSIDERED BY HYTECH)"
-	(*** TODO: encode reachability properties! ***)
+	
+	(* The projection *)
+	^  "\n" ^ string_of_projection model
+	
+	(* The optimization *)
+	^  "\n" ^ string_of_optimization model
+	
 	(* The footer *)
 	^  "\n" ^ footer

@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2016/10/08
+ * Last modified : 2017/04/14
 *****************************************************************)
 
 {
@@ -64,6 +64,8 @@ rule token = parse
 	| "initially"      { CT_INITIALLY }
 	| "loc"            { CT_LOC }
 	| "locations"      { CT_LOCATIONS }
+	| "maximize"       { CT_MAXIMIZE }
+	| "minimize"       { CT_MINIMIZE }
 	| "next"           { CT_NEXT }
 	| "not"            { CT_NOT }
  	| "once"           { CT_ONCE }

@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13
  * 
  * Module description: Convert a parsing structure into an abstract model
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/09
- * Last modified     : 2017/02/04
+ * Last modified     : 2017/06/25
  *
  ************************************************************)
 
@@ -104,7 +104,7 @@ let array_of_coef_of_linear_expression index_of_variables constants linear_expre
 					(* Update the NumConst *)
 					constant := NumConst.add !constant (NumConst.mul (NumConst.mul value coef) mul_coef);
 				) else (
-					raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although it was checked before."))
+					raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although this should have been checked before."))
 				)
 			);
 	in
@@ -132,7 +132,7 @@ let array_of_coef_of_linear_expression index_of_variables constants linear_expre
 (*------------------------------------------------------------*)
 (* Convert an array of variable coef into a linear term *)
 (*------------------------------------------------------------*)
-let linear_term_of_array (array_of_coef, constant) =
+let linear_term_of_array array_of_coef constant =
 	(* Create an empty list of members *)
 	let members = ref [] in
 	(* Iterate on the coef *)
@@ -151,7 +151,7 @@ let linear_term_of_array (array_of_coef, constant) =
 (*------------------------------------------------------------*)
 let linear_term_of_linear_expression index_of_variables constants linear_expression =
 	let array_of_coef, constant = array_of_coef_of_linear_expression index_of_variables constants linear_expression in
-	linear_term_of_array (array_of_coef, constant)
+	linear_term_of_array array_of_coef constant
 
 
 (*------------------------------------------------------------*)
@@ -172,10 +172,10 @@ let sub_array array1 array2 =
 (*------------------------------------------------------------*)
 (* Convert a ParsingStructure.linear_constraint into a Constraint.linear_inequality *)
 (*------------------------------------------------------------*)
-let linear_inequality_of_linear_constraint index_of_variables constants (le1, relop, le2) =
+let linear_inequality_of_linear_constraint index_of_variables constants (linexpr1, relop, linexpr2) =
 	(* Get the array of variables and constant associated to the linear terms *)
-	let array1, constant1 = array_of_coef_of_linear_expression index_of_variables constants le1 in
-	let array2, constant2 = array_of_coef_of_linear_expression index_of_variables constants le2 in
+	let array1, constant1 = array_of_coef_of_linear_expression index_of_variables constants linexpr1 in
+	let array2, constant2 = array_of_coef_of_linear_expression index_of_variables constants linexpr2 in
 	(* Consider the operator *)
 	match relop with
 	(* a < b <=> b - a > 0 *)
@@ -185,7 +185,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (le1, re
 		(* Create the constant *)
 		let constant12 = NumConst.sub constant2 constant1 in
 		(* Create the linear_term *)
-		let linear_term = linear_term_of_array (array12, constant12) in
+		let linear_term = linear_term_of_array array12 constant12 in
 		(* Return the linear_inequality *)
 		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
 (* 	(Constraint.substract_linear_terms lt2 lt1), Constraint.Op_g *)
@@ -197,7 +197,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (le1, re
 		(* Create the constant *)
 		let constant12 = NumConst.sub constant2 constant1 in
 		(* Create the linear_term *)
-		let linear_term = linear_term_of_array (array12, constant12) in
+		let linear_term = linear_term_of_array array12 constant12 in
 		(* Return the linear_inequality *)
 		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_ge
 (* 	(Constraint.substract_linear_terms lt2 lt1), Constraint.Op_ge *)
@@ -209,7 +209,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (le1, re
 		(* Create the constant *)
 		let constant12 = NumConst.sub constant2 constant1 in
 		(* Create the linear_term *)
-		let linear_term = linear_term_of_array (array12, constant12) in
+		let linear_term = linear_term_of_array array12 constant12 in
 		(* Return the linear_inequality *)
 		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
 	
@@ -222,7 +222,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (le1, re
 		(* Create the constant *)
 		let constant12 = NumConst.sub constant1 constant2 in
 		(* Create the linear_term *)
-		let linear_term = linear_term_of_array (array12, constant12) in
+		let linear_term = linear_term_of_array array12 constant12 in
 		(* Return the linear_inequality *)
 		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_ge
 (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_ge *)
@@ -234,7 +234,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (le1, re
 		(* Create the constant *)
 		let constant12 = NumConst.sub constant1 constant2 in
 		(* Create the linear_term *)
-		let linear_term = linear_term_of_array (array12, constant12) in
+		let linear_term = linear_term_of_array array12 constant12 in
 		(* Return the linear_inequality *)
 		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
 (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_g *)
@@ -243,7 +243,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (le1, re
 (*------------------------------------------------------------*)
 (* Convert a ParsingStructure.convex_predicate into a Constraint.linear_constraint *)
 (*------------------------------------------------------------*)
-let linear_constraint_of_convex_predicate index_of_variables constants convex_predicate =
+let linear_constraint_of_convex_predicate index_of_variables constants convex_predicate : LinearConstraint.pxd_linear_constraint =
 	try(
 	(* Compute a list of inequalities *)
 	let linear_inequalities = List.fold_left
@@ -251,7 +251,7 @@ let linear_constraint_of_convex_predicate index_of_variables constants convex_pr
 		match linear_inequality with
 		| True_constraint -> linear_inequalities
 		| False_constraint -> raise False_exception
-		| Linear_constraint (le1, relop, le2) -> (linear_inequality_of_linear_constraint index_of_variables constants (le1, relop, le2)) :: linear_inequalities
+		| Linear_constraint (linexpr1, relop, linexpr2) -> (linear_inequality_of_linear_constraint index_of_variables constants (linexpr1, relop, linexpr2)) :: linear_inequalities
 	) [] convex_predicate
 	in LinearConstraint.make_pxd_constraint linear_inequalities
 	(* Stop if any false constraint is found *)
@@ -313,6 +313,42 @@ let get_declared_synclabs_names =
 
 (* First define a string set structure *)
 module StringSet = Set.Make(String)
+
+
+(*------------------------------------------------------------*)
+(* Gather all variable names used in a parsed_update_arithmetic_expression *)
+(*------------------------------------------------------------*)
+let rec get_variables_in_parsed_update_factor variables_used_ref = function
+	| Parsed_UF_variable variable_name ->
+		(* Add the variable name to the set and update the reference *)
+		variables_used_ref := StringSet.add variable_name !variables_used_ref
+		
+	| Parsed_UF_constant _ -> ()
+	
+	| Parsed_UF_expression parsed_update_arithmetic_expression ->
+		get_variables_in_parsed_update_arithmetic_expression variables_used_ref parsed_update_arithmetic_expression
+
+	
+and get_variables_in_parsed_update_term variables_used_ref = function
+	| Parsed_UT_mul (parsed_update_term, parsed_update_factor)
+	| Parsed_UT_div (parsed_update_term, parsed_update_factor) ->
+		get_variables_in_parsed_update_term variables_used_ref parsed_update_term;
+		get_variables_in_parsed_update_factor variables_used_ref parsed_update_factor
+	
+	| Parsed_UT_factor parsed_update_factor ->
+		get_variables_in_parsed_update_factor variables_used_ref parsed_update_factor
+	
+
+and get_variables_in_parsed_update_arithmetic_expression variables_used_ref = function
+	| Parsed_UAE_plus (parsed_update_arithmetic_expression, parsed_update_term)
+	| Parsed_UAE_minus (parsed_update_arithmetic_expression , parsed_update_term) ->
+		get_variables_in_parsed_update_arithmetic_expression variables_used_ref parsed_update_arithmetic_expression;
+		get_variables_in_parsed_update_term variables_used_ref parsed_update_term
+
+	| Parsed_UAE_term parsed_update_term ->
+		get_variables_in_parsed_update_term variables_used_ref parsed_update_term
+
+
 
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a linear_term *)
@@ -403,6 +439,7 @@ let get_variables_in_property variables_used_ref = function
 	| Sequence_cyclic _
 		-> ()
 
+
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a convex predicate *)
 (*------------------------------------------------------------*)
@@ -453,12 +490,12 @@ let get_all_variables_used parsed_automata parsed_property_definition =
 
 				(* Gather in the updates *)
 				print_message Verbose_total ("            Gathering variables in updates");
-				List.iter (fun (variable_name, linear_expression) ->
+				List.iter (fun (variable_name, arithmetic_expression) ->
 					(*** NOTE: let us NOT consider that a reset is a 'use' of a variable; it must still be used in a guard, an invariant, in the right-hand side term of a reset, or a property, to be considered 'used' in the model ***)
 					(* First add the variable to be updated *)
 (* 					all_variables_used := StringSet.add variable_name !all_variables_used; *)
 					(* Second add the variable names in the update expression *)
-					get_variables_in_linear_expression all_variables_used linear_expression;
+					get_variables_in_parsed_update_arithmetic_expression all_variables_used arithmetic_expression;
 				) updates;
 			) location.transitions;
 		) locations;
@@ -554,45 +591,155 @@ let all_locations_different =
 
 
 (*------------------------------------------------------------*)
+(* Generic function to test something in discrete updates *)
+(*------------------------------------------------------------*)
+(*** NOTE: f : variable_name -> bool is the function to check *)
+let rec check_f_in_parsed_update_factor f = function
+	| Parsed_UF_variable variable_name ->
+		f variable_name
+		
+	| Parsed_UF_constant _ -> true
+	
+	| Parsed_UF_expression parsed_update_arithmetic_expression ->
+		check_f_in_parsed_update_arithmetic_expression f parsed_update_arithmetic_expression
+
+	
+and check_f_in_parsed_update_term f = function
+	| Parsed_UT_mul (parsed_update_term, parsed_update_factor)
+	| Parsed_UT_div (parsed_update_term, parsed_update_factor) ->
+		evaluate_and
+		(check_f_in_parsed_update_term f parsed_update_term)
+		(check_f_in_parsed_update_factor f parsed_update_factor)
+	
+	| Parsed_UT_factor parsed_update_factor ->
+		check_f_in_parsed_update_factor f parsed_update_factor
+	
+
+and check_f_in_parsed_update_arithmetic_expression f = function
+	| Parsed_UAE_plus (parsed_update_arithmetic_expression, parsed_update_term)
+	| Parsed_UAE_minus (parsed_update_arithmetic_expression , parsed_update_term) ->
+		evaluate_and
+		(check_f_in_parsed_update_arithmetic_expression f parsed_update_arithmetic_expression)
+		(check_f_in_parsed_update_term f parsed_update_term)
+
+	| Parsed_UAE_term parsed_update_term ->
+		check_f_in_parsed_update_term f parsed_update_term
+
+
+(*------------------------------------------------------------*)
+(* Check that all variables are defined in a discrete update *)
+(*------------------------------------------------------------*)
+let all_variables_defined_in_parsed_update_arithmetic_expression variable_names constants =
+	check_f_in_parsed_update_arithmetic_expression (fun variable_name -> 
+		if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
+		print_error ("The variable '" ^ variable_name ^ "' used in an arithmetic expression was not declared."); false
+		) else true
+	)
+
+
+(*------------------------------------------------------------*)
+(* Check that only discrete variables are used in a discrete update *)
+(*------------------------------------------------------------*)
+let check_only_discretes_in_parsed_update_arithmetic_expression index_of_variables type_of_variables constants =
+	check_f_in_parsed_update_arithmetic_expression (fun variable_name -> 
+		(* Case constant: no problem *)
+		if Hashtbl.mem constants variable_name then true
+		else (
+			(* Get the type of the variable *)
+			try(
+			let variable_index = 
+				Hashtbl.find index_of_variables variable_name
+			in
+			type_of_variables variable_index = Var_type_discrete
+			) with Not_found -> (
+				(* Variable not found! *)
+				(*** TODO: why is this checked here…? It should have been checked before ***)
+				print_error ("The variable '" ^ variable_name ^ "' used in an update was not declared.");
+				false
+			)
+		)
+	)
+
+
+(*------------------------------------------------------------*)
+(* Check that a parsed_update_arithmetic_expression contains non-constant at only selected parts *)
+(*------------------------------------------------------------*)
+let valuate_parsed_update_arithmetic_expression constants =
+
+	let rec check_constants_in_parsed_update_arithmetic_expression_rec = function
+		| Parsed_UAE_plus (parsed_update_arithmetic_expression, parsed_update_term)
+		| Parsed_UAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
+			evaluate_and
+			(check_constants_in_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression)
+			(check_constants_in_parsed_update_term parsed_update_term)
+		| Parsed_UAE_term parsed_update_term ->
+			check_constants_in_parsed_update_term parsed_update_term
+
+	and check_constants_in_parsed_update_term = function
+		| Parsed_UT_mul (parsed_update_term, parsed_update_factor) ->
+			(* Constants only forbidden in the parsed_update_term *)
+			check_constants_in_parsed_update_term parsed_update_term
+		| Parsed_UT_div (parsed_update_term, parsed_update_factor) ->
+			(* Constants only forbidden in the parsed_update_factor *)
+			check_constants_in_parsed_update_factor parsed_update_factor
+		| Parsed_UT_factor parsed_update_factor -> check_constants_in_parsed_update_factor parsed_update_factor
+
+	and check_constants_in_parsed_update_factor = function
+		| Parsed_UF_variable variable_name ->
+			if Hashtbl.mem constants variable_name then (
+				true
+			) else (
+				print_error ("Variable '" ^ variable_name ^ "' cannot be used at this place in an update.");
+				false
+			)
+		| Parsed_UF_constant var_value -> true
+		| Parsed_UF_expression parsed_update_arithmetic_expression -> check_constants_in_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression
+	
+	in check_constants_in_parsed_update_arithmetic_expression_rec
+
+
+(*------------------------------------------------------------*)
 (* Check that all variables are defined in a linear_term *)
 (*------------------------------------------------------------*)
-let check_linear_term variable_names constants = function
+let all_variables_defined_in_linear_term variable_names constants = function
 	| Constant _ -> true
 	| Variable (_, variable_name) -> if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
-		print_error ("The variable '" ^ variable_name ^ "' used in the model was not declared."); false
+		print_error ("The variable '" ^ variable_name ^ "' used in a linear constraint was not declared."); false
 		) else true
+
 
 (*------------------------------------------------------------*)
 (* Check that all variables are defined in a linear_expression *)
 (*------------------------------------------------------------*)
-let rec check_linear_expression variable_names constants = function
-	| Linear_term linear_term -> check_linear_term variable_names constants linear_term
+let rec all_variables_defined_in_linear_expression variable_names constants = function
+	| Linear_term linear_term -> all_variables_defined_in_linear_term variable_names constants linear_term
 	| Linear_plus_expression (linear_expression, linear_term)
-		-> evaluate_and (check_linear_expression variable_names constants linear_expression) (check_linear_term variable_names constants linear_term)
+		-> evaluate_and (all_variables_defined_in_linear_expression variable_names constants linear_expression) (all_variables_defined_in_linear_term variable_names constants linear_term)
 	| Linear_minus_expression (linear_expression, linear_term)
-		-> evaluate_and (check_linear_expression variable_names constants linear_expression) (check_linear_term variable_names constants linear_term)
+		-> evaluate_and (all_variables_defined_in_linear_expression variable_names constants linear_expression) (all_variables_defined_in_linear_term variable_names constants linear_term)
 
 
 (*------------------------------------------------------------*)
 (* Check that all variables are defined in a linear_constraint *)
 (*------------------------------------------------------------*)
-let check_linear_constraint variable_names constants = function
+let all_variables_defined_in_linear_constraint variable_names constants = function
 	| True_constraint -> true
 	| False_constraint -> true
 	| Linear_constraint (linear_expression1, relop, linear_expression2) ->
-		evaluate_and (check_linear_expression variable_names constants linear_expression1)
-		(check_linear_expression variable_names constants linear_expression2)
+		evaluate_and (all_variables_defined_in_linear_expression variable_names constants linear_expression1)
+		(all_variables_defined_in_linear_expression variable_names constants linear_expression2)
 
 
 (*------------------------------------------------------------*)
 (* Check that all variables are defined in a convex predicate *)
 (*------------------------------------------------------------*)
-let check_convex_predicate variable_names constants =
+let all_variables_defined_in_convex_predicate variable_names constants =
 	List.fold_left
 	(fun all_defined linear_constraint ->
-		evaluate_and all_defined (check_linear_constraint variable_names constants linear_constraint)
+		evaluate_and all_defined (all_variables_defined_in_linear_constraint variable_names constants linear_constraint)
 	)
 	true
+
 
 (*------------------------------------------------------------*)
 (* Generic function to test something in linear expressions *)
@@ -616,10 +763,20 @@ let only_discrete_in_linear_term index_of_variables type_of_variables constants 
 	| Variable (_, variable_name) ->
 		(* Constants are allowed *)
 		(Hashtbl.mem constants variable_name)
+		
 		(* Or discrete *)
 		||
-		let variable_index = Hashtbl.find index_of_variables variable_name in
-			type_of_variables variable_index = Var_type_discrete
+		try(
+		let variable_index = 
+			Hashtbl.find index_of_variables variable_name
+		in
+		type_of_variables variable_index = Var_type_discrete
+		) with Not_found -> (
+			(* Variable not found! *)
+			(*** TODO: why is this checked here…? It should have been checked before ***)
+			print_error ("The variable '" ^ variable_name ^ "' used in an update was not declared.");
+			false
+		)
 
 let only_discrete_in_linear_expression = check_f_in_linear_expression only_discrete_in_linear_term
 
@@ -643,7 +800,7 @@ let no_variables_in_linear_expression = check_f_in_linear_expression no_variable
 (*------------------------------------------------------------*)
 (* Check that an update is well formed *)
 (*------------------------------------------------------------*)
-let check_update index_of_variables type_of_variables variable_names removed_variable_names constants automaton_name (variable_name, linear_expression) =
+let check_update index_of_variables type_of_variables variable_names removed_variable_names constants automaton_name (variable_name, arithmetic_expression) =
 	(* Print some information *)
 	print_message Verbose_total ("              Checking one update");
 	
@@ -662,35 +819,30 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 		(* Only check the rest if the variable is not to be removed *)
 		if to_be_removed then true else(
 			(* Get the type of the variable *)
-			print_message Verbose_total ("                Getting the type of the variable");
+			print_message Verbose_total ("                Getting the type of the variable'" ^ variable_name ^ "'");
 			let type_of_variable = try (type_of_variables index)
 				with Invalid_argument comment -> (
 				raise (InternalError ("The variable '" ^ variable_name ^ "' was not found in '" ^ automaton_name ^ "', although this has been checked before. OCaml says: " ^ comment ^ "."))
 			) in
-			print_message Verbose_total ("                Checking the type of the variable");
+			print_message Verbose_total ("                Checking the type of the variable '" ^ variable_name ^ "'");
 			match type_of_variable with
-			(* Case of a clock: allow only 0 as an update *)
+			(* Type clock: allow any linear term in updates: so just check that variables have been declared *)
 			| AbstractModel.Var_type_clock ->
-				(* Now allow ANY linear term in updates: so just check that variables have been declared *)
 				print_message Verbose_total ("                A clock!");
-				check_linear_expression variable_names constants linear_expression
-	(*			let result =
-				match linear_expression with
-				| Linear_term (Constant constant) ->
-					if NumConst.equal constant NumConst.zero then true
-					else (print_error ("The variable '" ^ variable_name ^ "' is a clock and can only be reset to 0 in automaton '" ^ automaton_name ^ "'."); false)
-				| _ -> print_error ("The variable '" ^ variable_name ^ "' is a clock and can only be reset to 0 in automaton '" ^ automaton_name ^ "'."); false
-				in result*)
+				all_variables_defined_in_parsed_update_arithmetic_expression variable_names constants arithmetic_expression
 				
-			(* Case of a discrete var.: allow only a linear combinations of constants and discrete *)
+			(* Case of a discrete var.: allow only an arithmetic expression of constants and discrete *)
 			| AbstractModel.Var_type_discrete ->
 				print_message Verbose_total ("                A discrete!");
-				let result = only_discrete_in_linear_expression index_of_variables type_of_variables constants linear_expression in
+				let result = check_only_discretes_in_parsed_update_arithmetic_expression index_of_variables type_of_variables constants arithmetic_expression in
 				if not result then
-					(print_error ("The variable '" ^ variable_name ^ "' is a discrete and its update can only be a linear combination of constants and discrete variables in automaton '" ^ automaton_name ^ "'."); false)
-				else true
+					(print_error ("The variable '" ^ variable_name ^ "' is a discrete and its update can only be an arithmetic expression over constants and discrete variables in automaton '" ^ automaton_name ^ "'."); false)
+				else(
+					print_message Verbose_total ("                Check passed.");
+					true
+				)
 			(* Case of a parameter: forbidden! *)
-			| AbstractModel.Var_type_parameter -> print_error ("The variable '" ^ variable_name ^ "' is a parameter and can not be updated in automaton '" ^ automaton_name ^ "'."); false
+			| AbstractModel.Var_type_parameter -> print_error ("The variable '" ^ variable_name ^ "' is a parameter and cannot be updated in automaton '" ^ automaton_name ^ "'."); false
 		)
 	)
 
@@ -779,7 +931,7 @@ let check_automata index_of_variables type_of_variables variable_names removed_v
 			match location.cost with
 				| Some cost ->
 					print_message Verbose_total ("          Checking cost");
-					if not (check_linear_expression variable_names constants cost) then well_formed := false;
+					if not (all_variables_defined_in_linear_expression variable_names constants cost) then well_formed := false;
 				| None -> ()
 			end;
 			
@@ -793,7 +945,7 @@ let check_automata index_of_variables type_of_variables variable_names removed_v
 			(*** TODO: preciser quel automate et quelle location en cas d'erreur ***)
 			
 			print_message Verbose_total ("          Checking convex predicate");
-			if not (check_convex_predicate variable_names constants location.invariant) then well_formed := false;
+			if not (all_variables_defined_in_convex_predicate variable_names constants location.invariant) then well_formed := false;
 			
 			
 			(* Check transitions *)
@@ -801,7 +953,7 @@ let check_automata index_of_variables type_of_variables variable_names removed_v
 			List.iter (fun (convex_predicate, updates, sync, target_location_name) ->
 				(* Check the convex predicate *)
 				print_message Verbose_total ("            Checking convex predicate");
-				if not (check_convex_predicate variable_names constants convex_predicate) then well_formed := false;
+				if not (all_variables_defined_in_convex_predicate variable_names constants convex_predicate) then well_formed := false;
 				(* Check the updates *)
 				print_message Verbose_total ("            Checking updates");
 				List.iter (fun update -> if not (check_update index_of_variables type_of_variables variable_names removed_variable_names constants automaton_name update) then well_formed := false) updates;
@@ -842,9 +994,9 @@ let check_init discrete variable_names removed_variable_names constants index_of
 				| Linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) when List.mem variable_name removed_variable_names ->
 				print_message Verbose_total ("Variable '" ^ variable_name ^ "' is compared to a linear term, but will be removed: no check." );
 				(* Still check the second term *)
-				if not (check_linear_expression variable_names constants linear_expression) then well_formed := false;
+				if not (all_variables_defined_in_linear_expression variable_names constants linear_expression) then well_formed := false;
 			(* General case: check *)
-				| _ -> if not (check_linear_constraint variable_names constants linear_constraint) then well_formed := false;
+				| _ -> if not (all_variables_defined_in_linear_constraint variable_names constants linear_constraint) then well_formed := false;
 			end
 	) init_definition;
 
@@ -1329,7 +1481,7 @@ let check_and_convert_property index_of_variables type_of_variables discrete var
 		(* Check action names and deadline (perform 3 even if one fails) *)
 		let check1 = check_action_name index_of_actions a1 in
 		let check2 = check_action_name index_of_actions a2 in
-		let check3 = check_linear_expression variable_names constants d in
+		let check3 = all_variables_defined_in_linear_expression variable_names constants d in
 		let check4 = (if no_variables_in_linear_expression index_of_variables type_of_variables constants d
 						then true
 						else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
@@ -1422,8 +1574,8 @@ let check_and_convert_property index_of_variables type_of_variables discrete var
 			-> 
 			(* Check action name and deadline (perform 2 even if one fails) *)
 			let check1 = check_action_name index_of_actions a in
-			let check2 = check_linear_expression variable_names constants d in
-			let check3 = check_linear_expression variable_names constants d in
+			let check2 = all_variables_defined_in_linear_expression variable_names constants d in
+			let check3 = all_variables_defined_in_linear_expression variable_names constants d in
 			let check4 = (if no_variables_in_linear_expression index_of_variables type_of_variables constants d
 							then true
 							else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
@@ -1489,10 +1641,183 @@ let check_projection_definition parameters_names = function
 		!well_formed
 	)
 
+(*------------------------------------------------------------*)
+(** Check that the optimization definition is valid *)
+(*------------------------------------------------------------*)
+let check_optimization parameters_names = function
+	| No_parsed_optimization -> true
+	| Parsed_minimize parameter_name | Parsed_maximize parameter_name -> 
+		if not (List.mem parameter_name parameters_names) then(
+				print_error ("Parameter " ^ parameter_name  ^ " is not a valid parameter in the optimization definition.");
+				false
+		) else true
+
 
 (************************************************************)
 (** MODEL CONVERSION *)
 (************************************************************)
+
+(*------------------------------------------------------------*)
+(* Convert a parsed_update_arithmetic_expression into a discrete_arithmetic_expression*)
+(*------------------------------------------------------------*)
+
+(*** TODO (though really not critical): try to do some simplifications… ***)
+
+(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
+let discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants =
+	let rec discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec = function
+		| Parsed_UAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
+			DAE_plus ((discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (discrete_term_of_parsed_update_term parsed_update_term))
+		| Parsed_UAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
+			DAE_minus ((discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (discrete_term_of_parsed_update_term parsed_update_term))
+		| Parsed_UAE_term parsed_update_term ->
+			DAE_term (discrete_term_of_parsed_update_term parsed_update_term)
+
+	and discrete_term_of_parsed_update_term = function
+		| Parsed_UT_mul (parsed_update_term, parsed_update_factor) ->
+			DT_mul ((discrete_term_of_parsed_update_term parsed_update_term), (discrete_factor_of_parsed_update_factor parsed_update_factor))
+		| Parsed_UT_div (parsed_update_term, parsed_update_factor) ->
+			DT_div ((discrete_term_of_parsed_update_term parsed_update_term), (discrete_factor_of_parsed_update_factor parsed_update_factor))
+		| Parsed_UT_factor parsed_update_factor -> DT_factor (discrete_factor_of_parsed_update_factor parsed_update_factor)
+
+	and discrete_factor_of_parsed_update_factor = function
+		| Parsed_UF_variable variable_name ->
+			(* Try to find the variable_index *)
+			if Hashtbl.mem index_of_variables variable_name then (
+				let variable_index = Hashtbl.find index_of_variables variable_name in
+				(* Convert *)
+				DF_variable variable_index
+			(* Try to find a constant *)
+			) else (
+				if Hashtbl.mem constants variable_name then (
+					(* Retrieve the value of the global constant *)
+					let value = Hashtbl.find constants variable_name in
+					(* Convert *)
+					DF_constant value
+				) else (
+					raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although this should have been checked before."))
+				)
+			)
+		| Parsed_UF_constant var_value -> DF_constant var_value
+		| Parsed_UF_expression parsed_update_arithmetic_expression -> DF_expression (discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression)
+	in
+	discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec
+
+
+(*------------------------------------------------------------*)
+(* Convert a parsed_update_arithmetic_expression into a linear_term *)
+(*------------------------------------------------------------*)
+
+
+(*** TODO (though really not critical): try to do some simplifications… ***)
+(* First valuate a parsed_update_arithmetic_expression if requested; raises InternalError if some non-constant variable is met *)
+let rec valuate_parsed_update_arithmetic_expression constants = function
+	| Parsed_UAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		NumConst.add
+		(valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression)
+		(valuate_parsed_update_term constants parsed_update_term)
+	| Parsed_UAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		NumConst.sub
+		(valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression)
+		(valuate_parsed_update_term constants parsed_update_term)
+	| Parsed_UAE_term parsed_update_term ->
+		valuate_parsed_update_term constants parsed_update_term;
+
+and valuate_parsed_update_term constants = function
+	| Parsed_UT_mul (parsed_update_term, parsed_update_factor) ->
+		NumConst.mul
+		(valuate_parsed_update_term constants parsed_update_term)
+		(valuate_parsed_update_factor constants parsed_update_factor)
+	| Parsed_UT_div (parsed_update_term, parsed_update_factor) ->
+		NumConst.div
+		(valuate_parsed_update_term constants parsed_update_term)
+		(valuate_parsed_update_factor constants parsed_update_factor)
+	| Parsed_UT_factor parsed_update_factor -> valuate_parsed_update_factor constants parsed_update_factor
+
+and valuate_parsed_update_factor constants = function
+	| Parsed_UF_variable variable_name ->
+		if Hashtbl.mem constants variable_name then (
+			(* Retrieve the value of the global constant *)
+			Hashtbl.find constants variable_name
+		) else (
+			raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' in function 'valuate_parsed_update_arithmetic_expression' although it should have been checked before."))
+			)
+	| Parsed_UF_constant var_value -> var_value
+	| Parsed_UF_expression parsed_update_arithmetic_expression -> valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression
+
+
+(*** TODO (though really not critical): try to do some simplifications… ***)
+(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
+let linear_term_of_parsed_update_arithmetic_expression index_of_variables constants pdae =
+	(* Create an array of coef *)
+	let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
+	(* Create a zero constant *)
+	let constant = ref NumConst.zero in
+
+	let rec update_coef_array_in_parsed_update_arithmetic_expression mult_factor = function
+		| Parsed_UAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
+			(* Update coefficients in the arithmetic expression *)
+			update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
+			(* Update coefficients in the term *)
+			update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
+		| Parsed_UAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
+			(* Update coefficients in the arithmetic expression *)
+			update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
+			(* Update coefficients in the term: multiply by -1 for negation *)
+			update_coef_array_in_parsed_update_term (NumConst.neg mult_factor) parsed_update_term;
+		| Parsed_UAE_term parsed_update_term ->
+			update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
+
+	and update_coef_array_in_parsed_update_term mult_factor = function
+		(* Multiplication is only allowed with a constant multiplier *)
+		| Parsed_UT_mul (parsed_update_term, parsed_update_factor) ->
+			(* Valuate the term *)
+			let valued_term = valuate_parsed_update_term constants parsed_update_term in
+			(* Update coefficients *)
+			update_coef_array_in_parsed_update_factor (NumConst.mul valued_term mult_factor) parsed_update_factor
+			
+		| Parsed_UT_div (parsed_update_term, parsed_update_factor) ->
+			(* Valuate the discrete factor *)
+			let valued_factor = valuate_parsed_update_factor constants parsed_update_factor in
+			(* Update coefficients *)
+			update_coef_array_in_parsed_update_term (NumConst.div mult_factor valued_factor) parsed_update_term
+			
+		| Parsed_UT_factor parsed_update_factor ->
+			update_coef_array_in_parsed_update_factor mult_factor parsed_update_factor
+
+	and update_coef_array_in_parsed_update_factor mult_factor = function
+		| Parsed_UF_variable variable_name ->
+			(* Try to find the variable_index *)
+			if Hashtbl.mem index_of_variables variable_name then (
+				let variable_index = Hashtbl.find index_of_variables variable_name in
+				(* Update the array *)
+				array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) (mult_factor);
+			(* Try to find a constant *)
+			) else (
+				if Hashtbl.mem constants variable_name then (
+					(* Retrieve the value of the global constant *)
+					let value = Hashtbl.find constants variable_name in
+					(* Update the constant *)
+					constant := NumConst.add !constant (NumConst.mul mult_factor value)
+				) else (
+					raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' in function 'linear_term_of_parsed_update_arithmetic_expression' although this should have been checked before."))
+				)
+			)
+		| Parsed_UF_constant var_value ->
+			(* Update the constant *)
+			constant := NumConst.add !constant (NumConst.mul mult_factor var_value)
+		| Parsed_UF_expression parsed_update_arithmetic_expression ->
+			update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
+	in
+	
+	(* Call the recursive function updating the coefficients *)
+	update_coef_array_in_parsed_update_arithmetic_expression NumConst.one pdae;
+
+	(* Create the linear term *)
+	linear_term_of_array array_of_coef !constant
+
+
+
 
 (*------------------------------------------------------------*)
 (* Create the hash table of constants ; check on the fly the validity *)
@@ -1786,14 +2111,66 @@ let make_automata_per_action actions_per_automaton nb_automata nb_actions =
 	fun automaton_index -> automata_per_action.(automaton_index)
 	
 
+(*------------------------------------------------------------*)
+(** Split between the discrete and continuous inequalities of a convex predicate; raises False_exception if a false linear expression is found *)
+(*------------------------------------------------------------*)
+let split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants convex_predicate =
+	(* Compute a list of inequalities *)
+	List.partition
+		(fun linear_inequality -> 
+		match linear_inequality with
+		| True_constraint -> true (*** NOTE: we arbitrarily send "true" to the discrete part ***)
+		| False_constraint -> raise False_exception
+		| Linear_constraint (linexpr1, _, linexpr2) -> only_discrete_in_linear_expression index_of_variables type_of_variables constants linexpr1 && only_discrete_in_linear_expression index_of_variables type_of_variables constants linexpr2
+	) convex_predicate
+
+
+(*------------------------------------------------------------*)
+(* Convert a guard *)
+(*------------------------------------------------------------*)
+let convert_guard index_of_variables type_of_variables constants guard_convex_predicate =
+
+	try(
+	(* Separate the guard into a discrete guard (on discrete variables) and a continuous guard (on all variables) *)
+	let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants guard_convex_predicate in
+	
+	match discrete_guard_convex_predicate, continuous_guard_convex_predicate with
+		(* No inequalities: true *)
+		| [] , [] -> True_guard
+		(* Only discrete inequalities: discrete *)
+		| discrete_guard_convex_predicate , [] -> Discrete_guard (LinearConstraint.cast_d_of_pxd_linear_constraint (verbose_mode_greater Verbose_low) (linear_constraint_of_convex_predicate index_of_variables constants discrete_guard_convex_predicate))
+		(* Only continuous inequalities: continuous *)
+		| [] , continuous_guard_convex_predicate -> Continuous_guard (linear_constraint_of_convex_predicate index_of_variables constants continuous_guard_convex_predicate)
+		(* Otherwise: both *)
+		| discrete_guard_convex_predicate , continuous_guard_convex_predicate ->
+			(* Convert both parts *)
+			let discrete_guard = LinearConstraint.cast_d_of_pxd_linear_constraint (verbose_mode_greater Verbose_low) (linear_constraint_of_convex_predicate index_of_variables constants discrete_guard_convex_predicate) in
+			let continuous_guard = linear_constraint_of_convex_predicate index_of_variables constants continuous_guard_convex_predicate in
+			
+			(*** NOTE: try to simplify a bit if possible (costly, but would save a lot of time later if checks are successful) ***)
+			let intersection = LinearConstraint.pxd_intersection_with_d continuous_guard discrete_guard in
+			
+			if LinearConstraint.pxd_is_true intersection then True_guard
+			else if LinearConstraint.pxd_is_false intersection then False_guard
+			else
+			(* Else create mixed guard as planned *)
+			Discrete_continuous_guard
+			{
+				discrete_guard		= discrete_guard;
+				continuous_guard	= continuous_guard;
+			}
+	
+	(* If some false construct found: false guard *)
+	) with False_exception -> False_guard
+
 
 (*------------------------------------------------------------*)
 (* Convert the transitions *)
 (*------------------------------------------------------------*)
 (* Convert the structure: 'automaton_index -> location_index -> list of (action_index, guard, resets, target_state)' into a structure: 'automaton_index -> location_index -> action_index -> list of (guard, resets, target_state)' *)
-let convert_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions =
+let convert_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions : (((AbstractModel.transition list) array) array) array =
 	(* Create the empty array *)
-	let array_of_transitions = Array.make (Array.length transitions) (Array.make 0 (Array.make 0 [])) in
+	let array_of_transitions : (((AbstractModel.transition list) array) array) array = Array.make (Array.length transitions) (Array.make 0 (Array.make 0 [])) in
 	(* Iterate on automata *)
 	Array.iteri (fun automaton_index transitions_for_this_automaton ->
 		let nb_locations = Array.length transitions_for_this_automaton in 
@@ -1809,8 +2186,9 @@ let convert_transitions nb_actions index_of_variables constants removed_variable
 			array_of_transitions.(automaton_index).(location_index) <- Array.make nb_actions [];
 			(* Iterate on transitions *)
 			List.iter (fun (action_index, guard, updates, target_location_index) ->
+			
 				(* Convert the guard *)
-				let converted_guard = linear_constraint_of_convex_predicate index_of_variables constants guard in
+				let converted_guard = convert_guard index_of_variables type_of_variables constants guard in
 
 				(* Filter the updates that should assign some variable name to be removed to any expression *)
 				let filtered_updates = List.filter (fun (variable_name, (*linear_expression*)_) ->
@@ -1818,15 +2196,9 @@ let convert_transitions nb_actions index_of_variables constants removed_variable
 				) updates
 				in
 				
-				(* Convert the updates *)
-				let converted_updates = List.map (fun (variable_name, linear_expression) ->
-					let variable_index = Hashtbl.find index_of_variables variable_name in
-					let linear_term = linear_term_of_linear_expression index_of_variables constants linear_expression in
-					(variable_index, linear_term)
-				) filtered_updates in
 				(* Flag to check if there are clock resets only to 0 *)
 				let only_resets = ref true in
-				(* Split between the clock and discrete updates *)
+(*				(* Split between the clock and discrete updates *)
 				let clock_updates, discrete_updates = List.partition (fun (variable_index, linear_term) ->
 					if type_of_variables variable_index = Var_type_clock then(
 						(* Update flag *)
@@ -1837,20 +2209,56 @@ let convert_transitions nb_actions index_of_variables constants removed_variable
 					)else
 						false
 				) converted_updates
+				in*)
+				(* Split between the clock and discrete updates *)
+				let parsed_clock_updates, parsed_discrete_updates = List.partition (fun (variable_name, parsed_update_arithmetic_expression) ->
+					(* Retrieve variable type *)
+					if type_of_variables (Hashtbl.find index_of_variables variable_name) = Var_type_clock then(
+						(* Update flag *)
+						if parsed_update_arithmetic_expression <> Parsed_UAE_term (Parsed_UT_factor (Parsed_UF_constant NumConst.zero)) then(
+							only_resets := false;
+						);
+						true
+					)else
+						false
+				) filtered_updates
 				in
+			
+(*				(* Convert the updates *)
+				let converted_updates = List.map (fun (variable_name, parsed_update_arithmetic_expression) ->
+					let variable_index = Hashtbl.find index_of_variables variable_name in
+					let linear_term = linear_term_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
+					(variable_index, linear_term)
+				) filtered_updates in*)
+
+				(* Convert the clock updates *)
+				let converted_clock_updates = List.map (fun (variable_name, parsed_update_arithmetic_expression) ->
+					let variable_index = Hashtbl.find index_of_variables variable_name in
+					let linear_term = linear_term_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
+					(variable_index, linear_term)
+				) parsed_clock_updates in
+				
+				(* Convert the discrete updates *)
+				let discrete_updates : discrete_update list = List.map (fun (variable_name, parsed_update_arithmetic_expression) ->
+					let variable_index = Hashtbl.find index_of_variables variable_name in
+					let arithmetic_expression : discrete_arithmetic_expression = discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
+					(variable_index, arithmetic_expression)
+				) parsed_discrete_updates in
+
+				
 				(* Differentiate between different kinds of clock updates *)
 				let clock_updates =
 					(* Case 1: no update *)
-					if clock_updates = [] then No_update
+					if converted_clock_updates = [] then No_update
 					else (
 						(* Case 2: resets only *)
 						if !only_resets then (
 							(* Keep only the clock ids, not the linear terms *)
-							let clocks_to_reset, _ = List.split clock_updates in
+							let clocks_to_reset, _ = List.split converted_clock_updates in
 							Resets clocks_to_reset
 						)else
 						(* Case 3: complex with linear terms *)
-							Updates clock_updates
+							Updates converted_clock_updates
 					)
 				in
 				(* Update the transition *)
@@ -1963,6 +2371,19 @@ let convert_projection_definition index_of_variables = function
 	) parsed_parameters)
 
 
+(*------------------------------------------------------------*)
+(** Convert the optimization definition *)
+(*------------------------------------------------------------*)
+let convert_optimization_definition index_of_variables = function
+	| No_parsed_optimization -> No_optimization
+	| Parsed_minimize parameter_name -> Minimize (
+		(* No check because this was checked before *)
+		Hashtbl.find index_of_variables parameter_name
+		)
+	| Parsed_maximize parameter_name -> Maximize (
+		(* No check because this was checked before *)
+		Hashtbl.find index_of_variables parameter_name
+		)
 
 
 (*------------------------------------------------------------*)
@@ -1996,7 +2417,7 @@ let get_clocks_in_updates : clock_updates -> clock_index list = function
 (*------------------------------------------------------------*)
 (* Convert the parsing structure into an abstract model *)
 (*------------------------------------------------------------*)
-let abstract_model_of_parsing_structure options (with_special_reset_clock : bool) (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_property_definition, parsed_projection_definition, parsed_carto_definition) =
+let abstract_model_of_parsing_structure options (with_special_reset_clock : bool) (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_property_definition, parsed_projection_definition, parsed_optimization_definition, parsed_carto_definition) =
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2042,6 +2463,15 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* Make the array of constants *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let constants, constants_consistent = make_constants constants in
+
+	if verbose_mode_greater Verbose_high then(
+		(* Constants *)
+		print_message Verbose_high ("\n*** Constants:");
+		Hashtbl.iter (fun key value ->
+			print_message Verbose_total (key ^ " = " ^ (NumConst.string_of_numconst value) ^ "")
+		) constants;
+	);
+
 	
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2360,6 +2790,12 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	let well_formed_projection = check_projection_definition parameters_names parsed_projection_definition in
 	
 	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check optimization definition *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	let well_formed_optimization = check_optimization parameters_names parsed_optimization_definition in
+	
+	
 	
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2381,7 +2817,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 (*	let parsed_constraints , (p1_min , p1_max) , (p2_min , p2_max)  = parsed_carto_definition in
 	let carto_linear_constraints = List.map (fun (parsed_convex_predicate , tile_nature) ->
 		(* Check well-formedness *)
-		if check_convex_predicate variable_names constants parsed_convex_predicate then(
+		if all_variables_defined_in_convex_predicate variable_names constants parsed_convex_predicate then(
 			(* Convert to a AbstractModel.linear_constraint *)
 			LinearConstraint.cast_p_of_pxd_linear_constraint (linear_constraint_of_convex_predicate index_of_variables constants parsed_convex_predicate) true
 			,
@@ -2400,7 +2836,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* exit if not well formed *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	if not (check_no_unassigned_constants && well_formed_automata && well_formed_property && well_formed_projection && well_formed_init && !well_formed_carto)
+	if not (check_no_unassigned_constants && well_formed_automata && well_formed_property && well_formed_projection && well_formed_optimization && well_formed_init && !well_formed_carto)
 		then raise InvalidModel;
 	
 	print_message Verbose_medium ("Model syntax successfully checked.");
@@ -2560,6 +2996,15 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* Detect the L/U nature of the PTA *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	
+	(*** NOTE/HACK: duplicate function in StateSpace ***)
+	let continuous_part_of_guard (*: LinearConstraint.pxd_linear_constraint*) = function
+		| True_guard -> LinearConstraint.pxd_true_constraint()
+		| False_guard -> LinearConstraint.pxd_false_constraint()
+		| Discrete_guard discrete_guard -> LinearConstraint.pxd_true_constraint()
+		| Continuous_guard continuous_guard -> continuous_guard
+		| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard
+	in
+	
 	(* 1) Get ALL constraints of guards and invariants *)
 	print_message Verbose_total ("*** Retrieving all constraints to detect the L/U nature of the model…");
 	(*** BADPROG ***)
@@ -2582,7 +3027,8 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 				List.iter (fun (guard, _, _, _) ->
 				
 					(* Add guard *)
-					all_constraints := guard :: !all_constraints;
+					(*** NOTE: quite inefficient as we create a lot of pxd_true_constraint() although we just want to know whether they are L/U or not (but OK because prior to model analysis) ***)
+					all_constraints := (continuous_part_of_guard guard) :: !all_constraints;
 					
 				) transitions_for_this_location;
 			) actions_for_this_location;
@@ -2620,12 +3066,49 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	end;
 	
 	
+
+	(* Build the K0 constraint *)
+	let initial_p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse initial_constraint in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_low then(
+		print_message Verbose_low ("Initial parameter constraint:");
+		print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint variable_names initial_p_constraint);
+	);
+		
+
+	(* Build the X >= 0 constraint *)
+	let px_clocks_non_negative = LinearConstraint.px_constraint_of_nonnegative_variables clocks in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_medium then(
+		print_message Verbose_medium ("Constraint X >= 0:");
+		print_message Verbose_medium (LinearConstraint.string_of_px_linear_constraint variable_names px_clocks_non_negative);
+	);
+		
+	
+	(* Build the X >= 0 ^ K0 constraint *)
+	let px_clocks_non_negative_and_initial_p_constraint = LinearConstraint.px_intersection [px_clocks_non_negative; (LinearConstraint.px_of_p_constraint initial_p_constraint)] in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_medium then(
+		print_message Verbose_medium ("Constraint X >= 0 ^ K0:");
+		print_message Verbose_medium (LinearConstraint.string_of_px_linear_constraint variable_names px_clocks_non_negative_and_initial_p_constraint);
+	);
+		
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Convert the projection definition *) 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_total ("*** Building the projection definition…");
 	let projection = convert_projection_definition index_of_variables parsed_projection_definition in
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Convert the optimization definition *) 
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	print_message Verbose_total ("*** Building the optimization definition…");
+	let optimization = convert_optimization_definition index_of_variables parsed_optimization_definition in
+	
 	
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2821,10 +3304,17 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches = stopwatches;
 
-	(* Init : the initial state *)
+	(* All clocks non-negative *)
+	px_clocks_non_negative = px_clocks_non_negative;
+	(* Initial location of the model *)
 	initial_location = initial_location;
+	(* Initial constraint of the model *)
 	initial_constraint = initial_constraint;
-	initial_p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse initial_constraint;
+	(* Initial constraint of the model projected onto P *)
+	initial_p_constraint = initial_p_constraint;
+	(* Initial constraint of the model projected onto P and all clocks non-negative *)
+	px_clocks_non_negative_and_initial_p_constraint = px_clocks_non_negative_and_initial_p_constraint;
+	
 	
 	(* Property defined by the user *)
 	user_property = property;
@@ -2832,6 +3322,8 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	correctness_condition = correctness_condition;
 	(* List of parameters to project the result onto *)
 	projection = projection;
+	(* Parameter to be minimized or maximized *)
+	optimized_parameter = optimization;
 
 	(* Optional polyhedra *)
 (* 	carto = carto_linear_constraints , (p1_min , p1_max) , (p2_min , p2_max); *)

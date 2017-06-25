@@ -78,9 +78,6 @@ class algoBCShuffle =
 	(** Compute an array made of *all* points in V0 *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private compute_all_points =
-		(* Retrieve the input options *)
-		let options = Input.get_options () in
-
 		(*** WARNING: step not implemented here! ***)
 		if NumConst.neq options#step NumConst.one then(
 			raise (InternalError("The step must be equal to 1 to compute all pi0 in V0 (for now)."));

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
- * Last modified     : 2016/10/17
+ * Last modified     : 2017/06/25
  *
  ************************************************************)
 
@@ -77,6 +77,25 @@ let string_of_declarations model =
 	(if model.nb_parameters > 0 then
 		("\n\t" ^ (string_of_variables model.parameters) ^ "\n\t\t: parameter;\n") else "")
 
+(************************************************************)
+(** Guard *)
+(************************************************************)
+
+(*** NOTE: special handling as we have a discrete and a continuous guard that must be handled homogeneously ***)
+
+(** Convert a guard into a string *)
+let string_of_guard variable_names = function
+	| True_guard -> LinearConstraint.string_of_true
+	| False_guard -> LinearConstraint.string_of_false
+	| Discrete_guard discrete_guard -> LinearConstraint.string_of_d_linear_constraint variable_names discrete_guard
+	| Continuous_guard continuous_guard -> LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard
+	| Discrete_continuous_guard discrete_continuous_guard ->
+		(LinearConstraint.string_of_d_linear_constraint variable_names discrete_continuous_guard.discrete_guard)
+		^ LinearConstraint.string_of_intersection ^
+		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
+
+
+
 
 (************************************************************)
 (** Automata *)
@@ -112,7 +131,7 @@ let string_of_initially model automaton_index = ""
 
 (* Convert the invariant of a location into a string *)
 let string_of_invariant model automaton_index location_index =
-	print_message Verbose_high "Entering string_of_invariant...";
+(* 	print_message Verbose_high "Entering string_of_invariant…"; *)
 	let result = 
 	(* Invariant *)
 	"while "
@@ -129,7 +148,7 @@ let string_of_invariant model automaton_index location_index =
 	let stopped_str = string_of_list_of_string_with_sep "," (List.map model.variable_names stopped) in
 	" stop{" ^ stopped_str ^ "}" 
 	in
-	print_message Verbose_high "Entering string_of_invariant...End";
+(* 	print_message Verbose_high "Entering string_of_invariant…End"; *)
 	result
 
 
@@ -155,16 +174,67 @@ let string_of_clock_updates model = function
 			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
 		) list_of_clocks_lt)
 
+(* Convert an arithmetic expression into a string *)
+(*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
+let string_of_arithmetic_expression variable_names =
+	let rec string_of_arithmetic_expression = function
+		| DAE_plus (discrete_arithmetic_expression, discrete_term) ->
+			(string_of_arithmetic_expression discrete_arithmetic_expression)
+			^ " + "
+			^ (string_of_term discrete_term)
+			
+		| DAE_minus (discrete_arithmetic_expression, discrete_term) ->
+			(string_of_arithmetic_expression discrete_arithmetic_expression)
+			^ " + " 
+			^ (string_of_term discrete_term)
+			
+		| DAE_term discrete_term -> string_of_term discrete_term
+
+	and string_of_term = function
+		(* Eliminate the '1' coefficient *)
+		| DT_mul (DT_factor (DF_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
+			string_of_factor discrete_factor
+		(* No parentheses for constant * variable *)
+		| DT_mul (DT_factor (DF_constant c), DF_variable v) ->
+			(string_of_factor (DF_constant c))
+			^ " * "
+			^ (string_of_factor (DF_variable v))
+		(*** TODO: No parentheses on the left for constant or variable * something ***)
+		(* Otherwise: parentheses on the left *)
+		| DT_mul (discrete_term, discrete_factor) ->
+			"(" ^ (string_of_term discrete_term) ^ ")"
+			^ " * "
+			^ (string_of_factor discrete_factor)
+		
+		(*** TODO: No parentheses on the left for constant or variable / something ***)
+		(*** TODO: No parentheses on the left for something / constant or variable ***)
+		(* Otherwise: parentheses on the left *)
+		| DT_div (discrete_term, discrete_factor) ->
+			"(" ^ (string_of_term discrete_term) ^ ")"
+			^ " * "
+			^ (string_of_factor discrete_factor)
+		
+		| DT_factor discrete_factor -> string_of_factor discrete_factor
+
+	and string_of_factor = function
+		| DF_variable discrete_index -> variable_names discrete_index
+		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
+		| DF_expression discrete_arithmetic_expression ->
+			(*** TODO: simplify a bit? ***)
+			"(" ^ (string_of_arithmetic_expression discrete_arithmetic_expression) ^ ")"
+	(* Call top-level *)
+	in string_of_arithmetic_expression
+
 	
 	
 (* Convert a list of updates into a string *)
-let string_of_updates model updates =
-	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, linear_term) ->
+let string_of_discrete_updates model updates =
+	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, arithmetic_expression) ->
 		(* Convert the variable name *)
 		(model.variable_names variable_index)
 		^ "' = "
-		(* Convert the linear_term *)
-		^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
+		(* Convert the arithmetic_expression *)
+		^ (string_of_arithmetic_expression model.variable_names arithmetic_expression)
 	) updates)
 
 
@@ -181,7 +251,7 @@ let string_of_transition model automaton_index action_index (guard, clock_update
 	
 	"\n\t" ^ "when "
 	(* Convert the guard *)
-	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)
+	^ (string_of_guard model.variable_names guard)
 
 	(* Convert the updates *)
 	^ " do {"
@@ -190,7 +260,7 @@ let string_of_transition model automaton_index action_index (guard, clock_update
 	(* Add a coma in case of both clocks and discrete *)
 	^ separator_comma
 	(* Discrete updates *)
-	^ (string_of_updates model discrete_updates)
+	^ (string_of_discrete_updates model discrete_updates)
 	^ "} "
 	
 	(* Convert the sync *)
@@ -218,7 +288,7 @@ let string_of_transitions model automaton_index location_index =
 
 (* Convert a location of an automaton into a string *)
 let string_of_location model automaton_index location_index =
-	print_message Verbose_high "Entering string_of_location...";
+(* 	print_message Verbose_high "Entering string_of_location…"; *)
 	(* print_message Verbose_high ("Location index: " ^ string_of_int location_index);  *)
 	let result =
 	"\n"
@@ -232,29 +302,29 @@ let string_of_location model automaton_index location_index =
 	^ (string_of_invariant model automaton_index location_index) (* bug here! *)
 	^ (string_of_transitions model automaton_index location_index)
 	in
-	print_message Verbose_high "Entering string_of_location...End";
+(* 	print_message Verbose_high "Entering string_of_location…End"; *)
 	result
 
 
 (* Convert the locations of an automaton into a string *)
 let string_of_locations model automaton_index =
-	print_message Verbose_high "Entering string_of_locations...";
-	print_message Verbose_high ("Locations_per_automaton length : " ^ 
-		(string_of_int (List.length (model.locations_per_automaton automaton_index))));
+(* 	print_message Verbose_high "Entering string_of_locations…"; *)
+(*	print_message Verbose_high ("Locations_per_automaton length : " ^ 
+		(string_of_int (List.length (model.locations_per_automaton automaton_index))));*)
 
 	let result =
 	string_of_list_of_string_with_sep "\n " (List.map (fun location_index ->
-		print_message Verbose_high ("location_index : " ^ (string_of_int location_index));
+(* 		print_message Verbose_high ("location_index : " ^ (string_of_int location_index)); *)
 		string_of_location model automaton_index location_index
 	) (model.locations_per_automaton automaton_index))
 	in
-	print_message Verbose_high "Entering string_of_locations...End";
+(* 	print_message Verbose_high "Entering string_of_locations…End"; *)
 	result
 
 
 (* Convert an automaton into a string *)
 let string_of_automaton model automaton_index =
-	print_message Verbose_high "Entering string_of_automaton...";
+(* 	print_message Verbose_high "Entering string_of_automaton…"; *)
 	let result =
 	"\n(************************************************************)"
 	^ "\n automaton " ^ (model.automata_names automaton_index)
@@ -265,13 +335,13 @@ let string_of_automaton model automaton_index =
 	^ "\n end (* " ^ (model.automata_names automaton_index) ^ " *)"
 	^ "\n(************************************************************)"
 	in
-	print_message Verbose_high "Entering string_of_automaton...End";
+(* 	print_message Verbose_high "Entering string_of_automaton…End"; *)
 	result
 
 
 (* Convert the automata into a string *)
 let string_of_automata model =
-	print_message Verbose_high "Entering string_of_automata...";
+(* 	print_message Verbose_high "Entering string_of_automata…"; *)
 	(*** WARNING: Do not print the observer ***)
 	let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
 	in
@@ -283,7 +353,7 @@ let string_of_automata model =
 		List.map (fun automaton_index -> string_of_automaton model automaton_index
 	) pta_without_obs)
 	in
-	print_message Verbose_high "Entering string_of_automata...End";
+(* 	print_message Verbose_high "Entering string_of_automata…End"; *)
 	result
 
 
@@ -444,15 +514,32 @@ let string_of_property model property =
 	| TB_response_cyclicstrict (a1 , a2, d) ->
 		"property := if " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " once before next;"
 
-	(* sequence a1, ..., an *)
+	(* sequence a1, …, an *)
 	| Sequence_acyclic action_index_list ->
 		"property := sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
-	(* always sequence a1, ..., an *)
+	(* always sequence a1, …, an *)
 	| Sequence_cyclic action_index_list ->
 		"property := always sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
 	
 	(*** NOTE: Would be better to have an "option" type ***)
 	| Noproperty -> "(* no property *)"
+
+(** Convert the projection to a string *)
+let string_of_projection model =
+	match model.projection with
+	| None -> ""
+	| Some parameter_index_list ->
+		"\nprojectresult(" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names parameter_index_list)) ^ ");"
+
+
+(** Convert the optimization to a string *)
+let string_of_optimization model =
+	match model.optimized_parameter with
+	| No_optimization -> ""
+	| Minimize parameter_index ->
+		"minimize(" ^ (model.variable_names parameter_index) ^ ");"
+	| Maximize parameter_index ->
+		"maximize(" ^ (model.variable_names parameter_index) ^ ");"
 
 
 (************************************************************)
@@ -461,23 +548,27 @@ let string_of_property model property =
 
 (* Convert the model into a string *)
 let string_of_model model =
-	print_message Verbose_high "\n Entering string_of_model!...";
+(* 	print_message Verbose_high "\n Entering string_of_model!…"; *)
 	let result = 
 	(* The header *)
 	string_of_header model
 	(* The variable declarations *)
 	^  "\n" ^ string_of_declarations model
 	(* All automata *)
-	^  "\n" ^ string_of_automata model (* bug here! *)
+	^  "\n" ^ string_of_automata model
 	(* The initial state *)
 	^ "\n" ^ string_of_initial_state ()
 	(* The property *)
 	^ property_header
 	^  "\n" ^ string_of_property model model.user_property
+	(* The projection *)
+	^  "\n" ^ string_of_projection model
+	(* The optimization *)
+	^  "\n" ^ string_of_optimization model
 	(* The footer *)
 	^  "\n" ^ footer
 	in
-	print_message Verbose_high "\n Entering string_of_model!... End";
+(* 	print_message Verbose_high "\n Entering string_of_model!… End"; *)
 	result
 
 
@@ -495,7 +586,10 @@ let string_of_model model =
 
 (* Convert a state into a string *)
 let string_of_state model (global_location, linear_constraint) =
-	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names linear_constraint) ^ "" 
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names options#output_float global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names linear_constraint) ^ "" 
 
 
 (************************************************************)

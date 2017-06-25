@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/10/11
+ * Last modified     : 2017/06/08
  *
  ************************************************************)
 
@@ -40,6 +40,31 @@ type statespace_nature =
 	| Unknown
 
 
+(************************************************************)
+(** Check when adding a new state *)
+(************************************************************)
+type state_comparison =
+	(* Does not check whether the state is present, add directly *)
+	| No_check
+	(* Does not add the new state if another state is exactly equal to it *)
+	| Equality_check
+	(* Does not add the new state if it is included in another state *)
+	| Inclusion_check
+	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
+	| Double_inclusion_check
+
+
+(************************************************************)
+(** Result of the function adding a new state *)
+(************************************************************)
+type addition_result =
+	(* Completely new state *)
+	| New_state of state_index
+	(* State already present (possibly included depending on options), returns the old state index *)
+	| State_already_present of state_index
+	(* The new state replaced a former state (because the newer is larger), returns the old state index *)
+	| State_replacing of state_index
+
 
 
 (************************************************************)
@@ -64,7 +89,7 @@ type state_space = {
 	(** The number of generated states (even not added to the state space) *)
 	nb_generated_states : int ref;
 
-	(** An Array 'state_index' -> 'abstract_state'; contains ALL states *)
+	(** An Array 'state_index' -> 'State.abstract_state'; contains ALL states *)
 	all_states : (state_index, abstract_state) Hashtbl.t;
 	
 	(** The id of the initial state *)
@@ -93,19 +118,22 @@ type scc = state_index list
 
 
 (************************************************************)
-(** Constant *)
-(************************************************************)
-(** Initial size of the array of states (will be updated automatically *)
-let initial_size = 100
-
-
-(************************************************************)
 (** Statistics *)
 (************************************************************)
 (*let nb_state_comparisons = ref 0
 let nb_constraint_comparisons = ref 0*)
 let statespace_dcounter_nb_state_comparisons = create_discrete_counter_and_register "number of state comparisons" States_counter Verbose_standard
 let statespace_dcounter_nb_constraint_comparisons = create_discrete_counter_and_register "number of constraints comparisons" States_counter Verbose_standard
+
+(* Numbers of new states that were in fact included into an old state *)
+let statespace_dcounter_nb_states_included = create_discrete_counter_and_register "number of new states <= old" States_counter Verbose_standard
+(* Numbers of new states that were in fact larger than an old state *)
+let statespace_dcounter_nb_states_including = create_discrete_counter_and_register "number of new states >= old" States_counter Verbose_standard
+
+(* Numbers of merging attempts (for states that have the same discrete location) *)
+let nb_merging_attempts = create_discrete_counter_and_register "StateSpace.merging attempts" States_counter Verbose_standard
+(* Numbers of actual merges *)
+let nb_merged = create_discrete_counter_and_register "StateSpace.merges" States_counter Verbose_standard
 
 
 
@@ -128,13 +156,13 @@ let string_of_state_index state_index = "s_" ^ (string_of_int state_index)
 (** Create a fresh state space *)
 let make guessed_nb_transitions = 
 	(* Create a Hashtbl : state_index -> (location_index, linear_constraint) for the reachable states *)
-	let states = Hashtbl.create initial_size in
+	let states = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
 	(* Create a hashtable : location -> location_index for the locations *)
-	let index_of_locations = Hashtbl.create initial_size in
+	let index_of_locations = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
 	(* Create a DynArray : location_index -> location for the locations *)
-	let locations = DynArray.make initial_size in
+	let locations = DynArray.make Constants.guessed_nb_states_for_hashtable in
 	(* Create an empty lookup table : hash -> state_index *)
-	let states_for_comparison = Hashtbl.create initial_size in
+	let states_for_comparison = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
 	(* Create a hashtable for the state space *)
 	let transitions_table = Hashtbl.create guessed_nb_transitions in
 	
@@ -181,7 +209,7 @@ let get_state state_space state_index =
 		(* Exception just in case *)
 		try (
 			Hashtbl.find state_space.all_states state_index
-		) with Not_found -> raise (InternalError ("State of index '" ^ (string_of_int state_index) ^ "' was not found in state_space (function: get_state)."))
+		) with Not_found -> raise (InternalError ("State of index '" ^ (string_of_int state_index) ^ "' was not found in state_space (in function: StateSpace.get_state)."))
 	in
 	(* Find the location *)
 	let global_location = get_location state_space location_index in
@@ -392,6 +420,16 @@ let is_bad program state_space =
 (** Big hack: guard and resets reconstruction *)
 (*------------------------------------------------------------*)
 
+(*** NOTE: this function is defined here just because it was necessary here first; perhaps a better module would be more logical… ***)
+(*** NOTE/HACK: duplicate function in ModelConverter ***)
+let continuous_part_of_guard (*: LinearConstraint.pxd_linear_constraint*) = function
+	| True_guard -> LinearConstraint.pxd_true_constraint()
+	| False_guard -> LinearConstraint.pxd_false_constraint()
+	| Discrete_guard discrete_guard -> LinearConstraint.pxd_true_constraint()
+	| Continuous_guard continuous_guard -> continuous_guard
+	| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard
+
+
 (*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the guard ***)
 let get_guard state_space state_index action_index state_index' =
 	(* Retrieve the model *)
@@ -422,14 +460,14 @@ let get_guard state_space state_index action_index state_index' =
 			if List.length transitions = 0 then LinearConstraint.pxd_true_constraint()
 			
 			(* If exactly one: good situation: return the guard *)
-			else if List.length transitions = 1 then let g,_,_,_ = List.nth transitions 0 in g
+			else if List.length transitions = 1 then let g,_,_,_ = List.nth transitions 0 in continuous_part_of_guard g
 			(* If more than one: take the first one (*** HACK ***) and warn *)
 			else(
 				(* Warning *)
 				print_warning ("Non-deterministic PTA! Selecting a guard arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
 				
 				(* Take arbitrarily the first element *)
-				let g,_,_,_ = List.nth transitions 0 in g
+				let g,_,_,_ = List.nth transitions 0 in continuous_part_of_guard g
 			
 			)
 
@@ -442,19 +480,20 @@ let get_guard state_space state_index action_index state_index' =
 			if List.length transitions = 0 then raise (raise (InternalError("There cannot be no transition from '" ^ (model.location_names automaton_index l) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' with action to '" ^ (model.action_names action_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ ".")))
 			
 			(* If exactly one: good situation: return the guard *)
-			else if List.length transitions = 1 then let g,_,_,_ = List.nth transitions 0 in g
+			else if List.length transitions = 1 then let g,_,_,_ = List.nth transitions 0 in continuous_part_of_guard g
 			(* If more than one: take the first one (*** HACK ***) and warn *)
 			else(
 				(* Warning *)
 				print_warning ("Non-deterministic PTA! Selecting a guard arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
 				
 				(* Take arbitrarily the first element *)
-				let g,_,_,_ = List.nth transitions 0 in g
+				let g,_,_,_ = List.nth transitions 0 in continuous_part_of_guard g
 			)
 			
 		) in
 		
-		(* Add the guard *)
+		(* Add the guard *)	
+		(*** NOTE: VERY inefficient as we create a lot of pxd_true_constraint() (when the guards are true) although it would be better to just NOT add them to the list… ***)
 		local_guards := local_guard :: !local_guards;
 	
 	) model.automata;
@@ -590,7 +629,7 @@ let reconstruct_scc state_space source_state_index : scc option =
 	let current_index = ref 0 in
 
 	(* Hashtable state_index -> tarjan_node *)
-	let tarjan_nodes = Hashtbl.create initial_size in
+	let tarjan_nodes = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
 	
 	(* tarjan_node stack *)
 	let stack = Stack.create () in
@@ -821,7 +860,10 @@ let find_transitions_in state_space (scc : scc) : (state_index * action_index * 
 (************************************************************)
 (** Actions on a state space *)
 (************************************************************)
-exception Found of state_index
+(* Old state found *)
+exception Found_old of state_index
+(* State found that is smaller that the new one (in which case the old state will be replaced with the new one) *)
+exception Found_new of state_index
 
 (** Increment the number of generated states (even though not member of the state space) *)
 let increment_nb_gen_states state_space =
@@ -841,8 +883,8 @@ let states_equal state1 state2 =
 		(* Statistics *)
 		print_message Verbose_high ("About to compare equality between two constraints.");
 
+		(* Statistics *)
 		statespace_dcounter_nb_constraint_comparisons#increment;
-(* 		nb_constraint_comparisons := !nb_constraint_comparisons + 1; *)
 
 		if verbose_mode_greater Verbose_high then(
 			let nb_comparisons = statespace_dcounter_nb_constraint_comparisons#discrete_value in
@@ -859,8 +901,9 @@ let states_equal_dyn state1 state2 constr =
 	if not (Location.location_equal loc1 loc2) then false else (
 		(* Statistics *)
 		print_message Verbose_high ("About to compare (dynamic) equality between two constraints.");
+
+		(* Statistics *)
 		statespace_dcounter_nb_constraint_comparisons#increment;
-(* 		nb_constraint_comparisons := !nb_constraint_comparisons + 1; *)
 
 		if verbose_mode_greater Verbose_high then(
 			let nb_comparisons = statespace_dcounter_nb_constraint_comparisons#discrete_value in
@@ -880,9 +923,9 @@ let state_included state1 state2 =
 	let (loc1, constr1) = state1 in
 	let (loc2, constr2) = state2 in
 	if not (Location.location_equal loc1 loc2) then false else (
+
 		(* Statistics *)
 		statespace_dcounter_nb_constraint_comparisons#increment;
-(* 		nb_constraint_comparisons := !nb_constraint_comparisons + 1; *)
 
 		if verbose_mode_greater Verbose_high then(
 			let nb_comparisons = statespace_dcounter_nb_constraint_comparisons#discrete_value in
@@ -992,24 +1035,36 @@ let add_state_dyn program state_space new_state constr =
 	)*)
 
 
-(** Add a state to a state space, if it is not present yet *)
-let add_state state_space new_state =
+(** Replace the constraint of a state in a state space by another one (the constraint is copied to avoid side-effects later) *)
+let replace_constraint state_space state_index px_linear_constraint =
+	(* Copy to avoid side-effects *)
+	let linear_constraint_copy = LinearConstraint.px_copy px_linear_constraint in
+	try (
+		(* Get the location index *)
+		let location_index, _ = Hashtbl.find state_space.all_states state_index in
+		(* Replace with the new constraint *)
+		Hashtbl.replace state_space.all_states state_index (location_index, linear_constraint_copy);
+	) with Not_found -> raise (InternalError ("Error when replacing state '" ^ (string_of_int state_index) ^ "' in StateSpace.replace_constraint."))
+
+
+
+(** Add a state to a state space: takes as input the state space, a comparison instruction, the state to add, and returns whether the state was indeed added or not *)
+let add_state state_space state_comparison new_state =
 	(* Retrieve the input options *)
-	let options = Input.get_options () in
+(* 	let options = Input.get_options () in *)
+
 	(* compute hash value for the new state *)
 	let hash = hash_code new_state in
 	if verbose_mode_greater Verbose_total then (
 		print_message Verbose_total ("hash : " ^ (string_of_int hash));
 	); 
-	(* In tree mode: does not test anything *)
-	if options#tree then (
-		(* Since the state does NOT belong to the state space: find the state index *)
+	(* If no check requested: does not test anything *)
+	if state_comparison = No_check then (
+		(* Since the state does NOT belong to the state space: insert directly and find the state index *)
 		let new_state_index = insert_state state_space hash new_state in
-		(* Return state_index, true *)
-		new_state_index, true
+		(* Return state_index  *)
+		New_state new_state_index
 	) else (
-		(* The check used for equality *)
-		let check_states = if options#inclusion then state_included else states_equal in
 		try (
 			(* use hash table to find all states with same locations (modulo hash collisions) *)
 			let old_states = Hashtbl.find_all state_space.states_for_comparison hash in
@@ -1021,25 +1076,77 @@ let add_state state_space new_state =
 			(* Statistics *)
 			print_message Verbose_medium ("About to compare new state with " ^ (string_of_int (List.length old_states)) ^ " state" ^ (s_of_int (List.length old_states)) ^ ".");
 			
-			statespace_dcounter_nb_state_comparisons#increment_by (List.length old_states);
+(* 			statespace_dcounter_nb_state_comparisons#increment_by (List.length old_states); *)
 			
 (* 			nb_state_comparisons := !nb_state_comparisons + (List.length old_states); *)
 			if verbose_mode_greater Verbose_medium then(
 				let nb_comparisons = statespace_dcounter_nb_state_comparisons#discrete_value in
-				print_message Verbose_medium ("Already performed " ^ (string_of_int nb_comparisons) ^ " comparison" ^ (s_of_int nb_comparisons) ^ ".");
+				print_message Verbose_medium ("Already performed " ^ (string_of_int nb_comparisons) ^ " state comparison" ^ (s_of_int nb_comparisons) ^ ".");
 			);
 			
+			(* Iterate on each state *)
 			List.iter (fun index -> 
 				let state = get_state state_space index in
-				if check_states new_state state then raise (Found index)
+				
+				(* Branch depending on the check function used for state comparison *)
+				match state_comparison with
+				
+					(* No_check: case considered above already *)
+					| No_check -> raise (InternalError("Case 'No_check' should have been handled before, in function StateSpace.add_state"))
+				
+					(* Equality: check for equality *)
+					| Equality_check ->
+						statespace_dcounter_nb_state_comparisons#increment;
+						if states_equal new_state state then raise (Found_old index)
+					
+					(* Inclusion: check for new <= old *)
+					| Inclusion_check ->
+						statespace_dcounter_nb_state_comparisons#increment;
+						if state_included new_state state then(
+							(* Statistics *)
+							statespace_dcounter_nb_states_included#increment;
+							raise (Found_old index)
+						)
+					
+					(* Double inclusion: check for new <= old OR old <= new, in which case replace *)
+					| Double_inclusion_check ->
+						(* First check: new <= old *)
+						statespace_dcounter_nb_state_comparisons#increment;
+						if state_included new_state state then(
+							(* Statistics *)
+							statespace_dcounter_nb_states_included#increment;
+							raise (Found_old index)
+						)
+						(* Second check: old <= new *)
+						else(
+						statespace_dcounter_nb_state_comparisons#increment;
+						if state_included state new_state then (
+							(* Print some information *)
+							print_message Verbose_medium ("Found an old state <= the new state");
+							
+							(* Retrieve the constraint *)
+							let _, new_constraint = new_state in
+							
+							(* Replace old with new *)
+							replace_constraint state_space index new_constraint;
+							
+							(* Statistics *)
+							statespace_dcounter_nb_states_including#increment;
+
+							(* Stop looking for states *)
+							raise (Found_new index)
+						))
+						
 			) old_states;
+			
 			(* Not found -> insert state *)
 			let new_state_index = insert_state state_space hash new_state in
-			(* Return state_index, true *)
-			new_state_index, true
-		)	with Found state_index -> (
-				state_index, false
-		)
+			
+			(* Return *)
+			New_state new_state_index
+		)	with
+			| Found_old state_index -> State_already_present state_index
+			| Found_new state_index -> State_replacing state_index
 	)
 			
 
@@ -1076,18 +1183,6 @@ let add_p_constraint_to_states state_space p_constraint =
 	) state_space
 
 
-(*
-	CURRENTLY USELESS
-(** Replace the constraint of a state in a state space by another one (the constraint is copied to avoid side-effects later) *)
-let replace_constraint state_space linear_constraint state_index =
-	(* Copy to avoid side-effects *)
-	let linear_constraint_copy = LinearConstraint.copy linear_constraint in
-	try (
-		(* Get the location index *)
-		let location_index, _ = Hashtbl.find state_space.all_states state_index in
-		(* Replace with the new constraint *)
-		Hashtbl.replace state_space.all_states state_index (location_index, linear_constraint_copy);
-	) with Not_found -> raise (InternalError ("Error when handling state '" ^ (string_of_int state_index) ^ "' in Graph:replace_constraint."))*)
 
 (*
 (** Merge two states by replacing the second one with the first one, in the whole state_space structure (lists of states, and transitions) *)
@@ -1251,14 +1346,22 @@ let get_siblings state_space si =
 )*)
 
 
+(* Check if two states can be merged *)
+(*** NOTE: with side-effects! ***)
+let are_mergeable s s' =
+	(* Statistics *)
+	nb_merging_attempts#increment;
+	
+	(* Call dedicated function *)
+	LinearConstraint.px_hull_assign_if_exact s s'
+
 
 (* Try to merge new states with existing ones. Returns list of merged states (ULRICH) *)
 let merge state_space new_states =
-	let mergeable = LinearConstraint.px_hull_assign_if_exact in
 	
 	(* function for merging one state with its siblings *)
 	let merge_state si =
-		print_message Verbose_total ("try to merge state " ^ (string_of_int si));
+		print_message Verbose_total ("[merging] Try to merge state " ^ (string_of_int si));
 		let l, c = get_state state_space si in
 		(* get merge candidates as pairs (index, state) *)
 		let candidates = get_siblings state_space si in
@@ -1268,8 +1371,13 @@ let merge state_space new_states =
 				| [] -> [] (* here, we are really done *)
 				| m :: tail_mc -> begin
 					let sj, (_, c') = m in
-					if mergeable c c' then begin
-						print_message Verbose_high ("merged with state " ^ (string_of_int sj));
+					if are_mergeable c c' then begin
+						(* Statistics *)
+						nb_merged#increment;
+					
+						(* Print some information *)
+						print_message Verbose_high ("[merging] State " ^ (string_of_int si) ^ " merged with state " ^ (string_of_int sj));
+						
 						(* we ate sj, start over with new bigger state, removing sj *)
 						let all_mc' = List.filter (fun (sk, _) -> sk <> sj) all_mc in
 						sj :: eat all_mc' all_mc'

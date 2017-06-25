@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2017/03/08
+ * Last modified     : 2017/05/22
  *
  ************************************************************)
 
@@ -25,6 +25,8 @@ open AbstractModel
 open Result
 open AlgoStateBased
 open Statistics
+
+
 
 
 (************************************************************)
@@ -57,6 +59,16 @@ class virtual algoEFsynth =
 	val counter_found_bad = create_discrete_counter_and_register "found bad state" PPL_counter Verbose_low
 	(* The constraint of a new state is smaller than the bad constraint: cut branch *)
 	val counter_cut_branch = create_discrete_counter_and_register "cut branch (constraint <= bad)" PPL_counter Verbose_low
+	(* How many times the cache was useful *)
+	val counter_cache = create_discrete_counter_and_register "cache (EF)" PPL_counter Verbose_low
+	(* Number of cache misses *)
+	val counter_cache_miss = create_discrete_counter_and_register "cache miss (EF)" PPL_counter Verbose_low
+	
+	
+	(* Mini cache system: keep in memory the current p-constraint to save computation time *)
+	(*** WARNING: a bit dangerous, as its handling is not very very strictly controlled ***)
+	val mutable cached_p_constraint : LinearConstraint.p_linear_constraint option = None
+	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
@@ -82,12 +94,14 @@ class virtual algoEFsynth =
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Process a symbolic state *)
+	(** Process a symbolic state: returns false if the state is a target state (and should not be added to the next states to explore), true otherwise *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private process_state state =
-		(* Retrieve the model *)
-		let model = Input.get_model () in
-		
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message Verbose_medium "Entering process_state…";
+		);
+
 		let state_location, state_constraint = state in
 		
 		let to_be_added = match model.correctness_condition with
@@ -97,9 +111,15 @@ class virtual algoEFsynth =
 			(* Check whether the current location matches one of the unreachable global locations *)
 			if State.match_unreachable_global_locations unreachable_global_locations state_location then(
 			
+				(* Print some information *)
+				if verbose_mode_greater Verbose_medium then(
+					self#print_algo_message Verbose_medium "Projecting onto the parameters (using the cache)…";
+				);
+
 				(* Project onto the parameters *)
-				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state_constraint in
-				
+				(*** NOTE: here, we use the cache system ***)
+				let p_constraint = self#compute_p_constraint_with_cache state_constraint in
+
 				(* Projecting onto SOME parameters if required *)
 				(*** BADPROG: Duplicate code (AlgoLoopSynth / AlgoPRP) ***)
 				begin
@@ -111,7 +131,7 @@ class virtual algoEFsynth =
 					(* Print some information *)
 					self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
 
-					(*** TODO! do only once for all... ***)
+					(*** TODO! do only once for all… ***)
 					let all_but_projectparameters = list_diff model.parameters parameters in
 					
 					(* Eliminate other parameters *)
@@ -172,6 +192,37 @@ class virtual algoEFsynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_initial_state initial_state = self#process_state initial_state
 
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Compute the p-constraint only if it is not cached *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private compute_p_constraint_with_cache px_linear_constraint =
+		match cached_p_constraint with
+		(* Cache empty: *)
+		| None ->
+			(* Compute the p_constraint *)
+			let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_linear_constraint in
+			(* Statistics *)
+			counter_cache_miss#increment;
+			(* Print some information *)
+			if verbose_mode_greater Verbose_medium then(
+				self#print_algo_message Verbose_medium "\nCache miss!";
+			);
+			(* Update cache *)
+			cached_p_constraint <- Some p_constraint;
+			(* Return result *)
+			p_constraint
+		(* Cache not empty: directly use it *)
+		| Some p_constraint ->
+			(* Statistics *)
+			counter_cache#increment;
+			(* Print some information *)
+			if verbose_mode_greater Verbose_medium then(
+				self#print_algo_message Verbose_medium "\nCache hit!";
+			);
+			(* Return the value in cach *)
+			p_constraint
+	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add a new state to the state_space (if indeed needed) *)
@@ -181,15 +232,29 @@ class virtual algoEFsynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** WARNING/BADPROG: the following is partially copy/paste to AlgoPRP.ml ***)
 	method add_a_new_state source_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
-
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message Verbose_medium "Entering add_a_new_state (and reset cache)…";
+		);
+		
+		(* Reset the cached p-constraint *)
+		cached_p_constraint <- None;
+		
 		(* Build the state *)
 		let new_state = location, current_constraint in
-
-		let new_state_index, added = (
-			StateSpace.add_state state_space new_state
-		) in
-		(* If this is really a new state *)
-		if added then (
+		
+		(* Try to add the new state to the state space *)
+		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
+		
+		(* Boolean to check whether the analysis should be terminated immediately *)
+		let terminate_analysis_immediately = ref false in
+		
+		begin
+		match addition_result with
+		(* If the state was present: do nothing *)
+		| StateSpace.State_already_present _ -> ()
+		(* If this is really a new state, or a state larger than a former state *)
+		| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
 
 			(* First check whether this is a bad tile according to the property and the nature of the state *)
 			self#update_statespace_nature new_state;
@@ -198,14 +263,31 @@ class virtual algoEFsynth =
 			(*** BADPROG: ugly bool ref that may be updated in an IF condition below ***)
 			let to_be_added = ref (self#process_state new_state) in
 			
+			(* If the state is a target state (i.e., process_state returned false) AND the option to stop the analysis as soon as a counterexample is found is activated, then we will throw an exception *)
+			terminate_analysis_immediately := options#counterex && not !to_be_added;
+			
 			(* If to be added: if the state is included into the bad constraint, no need to explore further, and hence do not add *)
 			if !to_be_added then(
 			
-				(*** WARNING: this may have been computed above! ***)
-				(*** TODO: use a small ad-hoc cache system ***)
+				(* Print some information *)
+				if verbose_mode_greater Verbose_medium then(
+					self#print_algo_message Verbose_medium "Projecting onto the parameters…";
+				);
+
 				(* Project onto the parameters *)
-				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse current_constraint in
+				(*** NOTE: here, we use the cache system ***)
+				let p_constraint = self#compute_p_constraint_with_cache current_constraint in
 				
+				(* Print some information *)
+				self#print_algo_message Verbose_medium "Checking whether the new state is included into known bad valuations…";
+				if verbose_mode_greater Verbose_high then(
+					self#print_algo_message Verbose_high "\nNew constraint:";
+					print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+					
+					self#print_algo_message Verbose_high "\nCurrent bad constraint:";
+					print_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
+				);
+
 				(* if p_constraint <= bad_constraint *)
 				if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) bad_constraint then (
 					(* Statistics *)
@@ -223,17 +305,27 @@ class virtual algoEFsynth =
 			if !to_be_added then
 				new_states_indexes := new_state_index :: !new_states_indexes;
 			
-		) (* end if new state *)
+		end (* end if new state *)
 		;
 		
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 		
 		(* Add the transition to the state space *)
-		self#add_transition_to_state_space (source_state_index, action_index, new_state_index) added;
+		self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
+		
+		(* If an immediate termination is requested: raise exception! *)
+		if !terminate_analysis_immediately then(
+			(* Update termination status *)
+			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
+			self#print_algo_message Verbose_standard "Target state found! Terminating…";
+			termination_status <- Some Target_found;
+			
+			raise TerminateAnalysis;
+		);
 	
 		(* The state is kept in any case *)
 		true
-	(*** WARNING/BADPROG: what preceedes is partially copy/paste to AlgoPRP.ml ***)
+(*** WARNING/BADPROG: what preceedes is partially copy/paste to AlgoPRP.ml ***)
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

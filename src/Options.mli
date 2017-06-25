@@ -1,37 +1,21 @@
-(*****************************************************************
+(************************************************************
  *
- *                     IMITATOR
+ *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Author:        Etienne Andre
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13 (France)
+ * 
+ * Module description: Options definitions
+ * 
+ * File contributors : Étienne André
  * Created:       2012/05/10
- * Last modified: 2017/02/04
+ * Last modified: 2017/05/22
  *
- ****************************************************************)
+ ************************************************************)
  
+
 open ImitatorUtilities
 
-
-type distribution_mode =
-	(** Normal mode *)
-	| Non_distributed
-	
-	(** Distributed mode: static distribution mode (each node has its own part with no communication) *)
-	| Distributed_static
-	
-	(** Distributed mode: Master slave with sequential pi0 *)
-	| Distributed_ms_sequential
-	(** Distributed mode: Master slave with sequential pi0 shuffled *)
-	| Distributed_ms_shuffle
-	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
-	| Distributed_ms_random of int	
-	(** Distributed mode: Master slave with subpart distribution *)
-	| Distributed_ms_subpart
-
-	(**  Distributed mode: Workers live their own lives and communicate results to the coordinator  **)
-	| Distributed_unsupervised
-	(**  Distributed mode: multi-threaded version of Distributed_unsupervised  **)
-	| Distributed_unsupervised_multi_threaded
 
 
 
@@ -56,23 +40,25 @@ class imitator_options :
 		method carto_time_limit : int option
 		method check_ippta : bool
 		method check_point : bool
-		method completeIM : bool
+(* 		method completeIM : bool *)
 		(** HACK: property input from CosyVerif *)
-		method cosyprop : string
-(* 		method counterex : bool *)
+(* 		method cosyprop : string *)
+		method counterex : bool
 		method depth_limit : int option
 		method distribution_mode : distribution_mode
 		method distributedKillIM : bool
 (* 		method dynamic : bool *)
 		method dynamic_clock_elimination : bool
 		method efim : bool
+		method exploration_order : exploration_order
 		method fancy : bool
 		method files_prefix : string
-		method fromGML : bool
+(* 		method fromGML : bool *)
 		method imitator_mode : imitator_mode
 		(* experimental variant for EFsynth *)
 		method new_ef_mode : bool
 		method inclusion : bool
+		method inclusion2 : bool
 		method merge : bool
 		method merge_before : bool
 		method model_input_file_name : string
@@ -86,12 +72,13 @@ class imitator_options :
 		method output_cart_x_max : int option
 		method output_cart_y_min : int option
 		method output_cart_y_max : int option
+		method output_float : bool
 		method output_result : bool
 		method output_tiles_files : bool
 		method pi_compatible : bool
 		method precomputepi0 : bool
 (* 		method pta2clp : bool *)
-		method pta2gml : bool
+(* 		method pta2gml : bool *)
 		method pta2hytech : bool
 		method pta2imi : bool
 		method pta2jpg : bool

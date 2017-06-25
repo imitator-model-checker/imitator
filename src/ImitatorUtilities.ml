@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13 (France)
  * 
  * Module description: Useful and general functions for IMITATOR
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/03/21
+ * Last modified     : 2017/05/02
  *
  ************************************************************)
 
@@ -207,6 +207,12 @@ type imitator_mode =
 	(** EF-synthesis w.r.t. unsafe locations *)
 	| EFunsafe_synthesis
 	
+	(** EF-minimization *)
+	| EF_min
+	
+	(** EF-maximization *)
+	| EF_max
+	
 	(** Parametric loop synthesis *)
 	| Loop_synthesis
 	
@@ -222,8 +228,11 @@ type imitator_mode =
 	(** Parametric deadlock-checking *)
 	| Parametric_deadlock_checking
 	
-	(** Inverse method *)
+	(** Inverse method with convex, and therefore possibly incomplete result *)
 	| Inverse_method
+	
+	(** Inverse method with full, non-convex result*)
+	| Inverse_method_complete
 	
 	(** Parametric reachability preservation *)
 	| PRP
@@ -249,6 +258,46 @@ type imitator_mode =
 	(** Synthesis using iterative calls to PRP *)
 	| PRPC
 
+
+
+
+type distribution_mode =
+	(** Normal mode *)
+	| Non_distributed
+	
+	(** Distributed mode: static distribution mode (each node has its own part with no communication) *)
+	| Distributed_static
+	
+	(** Distributed mode: Master slave with sequential pi0 *)
+	| Distributed_ms_sequential
+	(** Distributed mode: Master slave with sequential pi0 shuffled *)
+	| Distributed_ms_shuffle
+	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
+	| Distributed_ms_random of int
+	(** Distributed mode: Master slave with subpart distribution *)
+	| Distributed_ms_subpart
+
+	(**  Distributed mode: Workers live their own lives and communicate results to the coordinator  **)
+	| Distributed_unsupervised
+	(**  Distributed mode: multi-threaded version of Distributed_unsupervised  **)
+	| Distributed_unsupervised_multi_threaded
+
+
+
+type exploration_order =
+	(** Layer-BFS: all states at depth i are computed, and then their successors at depth i+1 *)
+	| Exploration_layer_BFS
+	(** Queue-BFS: basic queue, independent of the depth *)
+	| Exploration_queue_BFS
+	(** Queue-BFS: queue-based, independent of the depth, with ranking system for the selection of the next state *)
+	| Exploration_queue_BFS_RS
+	(** Queue-BFS: queue-based, independent of the depth, with priority for the selection of the next state *)
+	| Exploration_queue_BFS_PRIOR
+	
+
+(************************************************************)
+(** Time functions *)
+(************************************************************)
 
 (** Get the value of the counter *)
 let get_time() =

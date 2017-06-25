@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/11
- * Last modified     : 2016/10/08
+ * Last modified     : 2017/06/21
  *
  ************************************************************)
 
@@ -21,7 +21,7 @@ open Automaton
 
 
 (************************************************************)
-(** Pi 0 *)
+(** Reference valuation *)
 (************************************************************)
 type pi0 = PVal.pval
 
@@ -44,6 +44,8 @@ type action_type =
 	| Action_type_nosync
 
 
+type discrete_value = NumConst.t
+
 
 (************************************************************)
 (** Locations *)
@@ -53,6 +55,25 @@ type location_urgency =
 	| Location_urgent
 	(* Non-urgent location *)
 	| Location_nonurgent
+
+
+(************************************************************)
+(** Arithmetic expressions (in updates) *)
+(************************************************************)
+type discrete_arithmetic_expression =
+	| DAE_plus of discrete_arithmetic_expression * discrete_term
+	| DAE_minus of discrete_arithmetic_expression * discrete_term
+	| DAE_term of discrete_term
+
+and discrete_term =
+	| DT_mul of discrete_term * discrete_factor
+	| DT_div of discrete_term * discrete_factor
+	| DT_factor of discrete_factor
+
+and discrete_factor =
+	| DF_variable of discrete_index
+	| DF_constant of discrete_value
+	| DF_expression of discrete_arithmetic_expression
 
 
 (************************************************************)
@@ -76,10 +97,24 @@ type clock_updates =
 
 (*** TO OPTIMIZE (in terms of dimensions!) ***)
 
-type discrete_update = discrete_index * LinearConstraint.pxd_linear_term
+type discrete_update = discrete_index * discrete_arithmetic_expression
 
-(** Guard: linear constraint *)
-type guard = LinearConstraint.pxd_linear_constraint
+(** Guard: a linear constraint on the sole discrete variables, and a linear constraint on (possibly) all variables *)
+
+type discrete_guard = LinearConstraint.d_linear_constraint
+type continuous_guard = LinearConstraint.pxd_linear_constraint
+
+type discrete_continuous_guard = {
+	discrete_guard		: discrete_guard;
+	continuous_guard	: continuous_guard;
+}
+type guard =
+	| True_guard
+	| False_guard
+	| Discrete_guard of discrete_guard
+	| Continuous_guard of continuous_guard
+	| Discrete_continuous_guard of discrete_continuous_guard
+
 
 (** Invariant: linear constraint *)
 type invariant = LinearConstraint.pxd_linear_constraint
@@ -96,8 +131,6 @@ type transition = guard * clock_updates * discrete_update list * location_index
 type duration = LinearConstraint.p_linear_term
 
 type unreachable_location = automaton_index * location_index
-
-type discrete_value = NumConst.t
 
 type discrete_constraint =
 	| Discrete_l of discrete_index * discrete_value
@@ -183,6 +216,11 @@ type reachability_property =
 type correctness_condition = reachability_property option
 
 type projection = (parameter_index list) option
+
+type optimization =
+	| No_optimization
+	| Minimize of parameter_index
+	| Maximize of parameter_index
 
 
 (************************************************************)
@@ -284,12 +322,16 @@ type abstract_model = {
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches : automaton_index -> location_index -> clock_index list;
 
+	(* All clocks non-negative *)
+	px_clocks_non_negative: LinearConstraint.px_linear_constraint;
 	(* Initial location of the model *)
 	initial_location : Location.global_location;
 	(* Initial constraint of the model *)
 	initial_constraint : LinearConstraint.px_linear_constraint;
 	(* Initial constraint of the model projected onto P *)
 	initial_p_constraint : LinearConstraint.p_linear_constraint;
+	(* Initial constraint of the model projected onto P and all clocks non-negative *)
+	px_clocks_non_negative_and_initial_p_constraint: LinearConstraint.px_linear_constraint;
 
 	(* Property defined by the user (not used in the analysis, only for printing purpose; at this stage, the user property is already transformed into the correctness_condition below) *)
 	user_property : property_definition;
@@ -297,6 +339,8 @@ type abstract_model = {
 	correctness_condition : correctness_condition;
 	(* List of parameters to project the result onto *)
 	projection : projection;
+	(* Parameter to be minimized or maximized *)
+	optimized_parameter : optimization;
 	
 	(* Set of polyhedra (only used for direct cartography without running the model) *)
 	(*** BADPROG ***)

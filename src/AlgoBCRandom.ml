@@ -96,9 +96,6 @@ class algoBCRandom (*max_tries*) =
 	(* Create the initial point for the analysis *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method get_initial_point =
-		(* Retrieve the model *)
-(* 		let model = Input.get_model() in *)
-
 		(* Return a random point *)
 		Some_pval (self#one_random_pi0)
 
