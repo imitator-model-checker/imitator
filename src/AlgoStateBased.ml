@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2017/06/09
+ * Last modified     : 2017/06/25
  *
  ************************************************************)
 
@@ -36,6 +36,9 @@ open State
 (************************************************************)	
 
 exception Unsat_exception
+
+(* Local exception to denote a division by 0 *)
+exception Division_by_0_while_evaluating_discrete
 
 
 
@@ -184,11 +187,46 @@ let tcounter_next_transitions = create_time_counter_and_register "next transitio
 
 
 
-
+	
+	
 (************************************************************)
 (* Main functions *)
 (************************************************************)
 
+
+
+(* Evaluate a discrete_arithmetic_expression using a discrete variable valuation *)
+(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
+let evaluate_discrete_arithmetic_expression v =
+	let rec evaluate_discrete_arithmetic_expression_rec = function
+		| DAE_plus (discrete_arithmetic_expression, discrete_term) -> NumConst.add (evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression) (evaluate_discrete_term discrete_term)
+		| DAE_minus (discrete_arithmetic_expression, discrete_term) -> NumConst.sub (evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression) (evaluate_discrete_term discrete_term)
+		| DAE_term discrete_term -> evaluate_discrete_term discrete_term
+
+	and evaluate_discrete_term = function
+		| DT_mul (discrete_term, discrete_factor) -> NumConst.mul (evaluate_discrete_term discrete_term) (evaluate_discrete_factor discrete_factor)
+		| DT_div (discrete_term, discrete_factor) ->
+			(*** NOTE: here comes the infamous division by 0 ***)
+			(* Compute the denominator *)
+			let denominator = evaluate_discrete_factor discrete_factor in
+			(* Check if 0 *)
+			if NumConst.equal denominator NumConst.zero then(
+				raise Division_by_0_while_evaluating_discrete
+			)
+			(* Else go on with division *)
+			else
+			NumConst.div (evaluate_discrete_term discrete_term) denominator
+		| DT_factor discrete_factor -> evaluate_discrete_factor discrete_factor
+
+	and evaluate_discrete_factor = function
+		| DF_variable discrete_index -> v discrete_index
+		| DF_constant discrete_value -> discrete_value
+		| DF_expression discrete_arithmetic_expression -> evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression
+	in
+	evaluate_discrete_arithmetic_expression_rec
+
+
+	
 (*------------------------------------------------------------*)
 (* Create a PXD constraint of the form D_i = d_i for the discrete variables *)
 (*------------------------------------------------------------*)
@@ -849,12 +887,18 @@ let compute_new_location_guards_updates aut_table trans_table action_index origi
 		(* Keep only the dest location *)
 		let guard, clock_updates, discrete_updates, dest_index = transition in			
 		(* Update discrete *)
-		List.iter (fun (discrete_index, linear_term) ->
+		List.iter (fun (discrete_index, arithmetic_expression) ->
 			(* Compute its new value *)
-
-			(*** TO OPTIMIZE (in terms of dimensions) ***)
+(* 			let new_value = LinearConstraint.evaluate_pxd_linear_term (Location.get_discrete_value original_location) linear_term in *)
+			let new_value = try(
+				evaluate_discrete_arithmetic_expression (Location.get_discrete_value original_location) arithmetic_expression)
+				with Division_by_0_while_evaluating_discrete -> (
+					(*** NOTE: we could still go on with the computation by setting the discrete to, e.g., 0 but this seems really not good for a model checker ***)
+					raise (Division_by_0 ("Division by 0 encountered when evaluating the successor of the discrete variables!"))
+					(*** TODO: give more info (i.e., "Value of the current variables: TODO Update: TODO ") ****)
+				)
+			in
 			
-			let new_value = LinearConstraint.evaluate_pxd_linear_term (Location.get_discrete_value original_location) linear_term in
 			(* Check if already updated *)
 			if Hashtbl.mem updated_discrete discrete_index then (
 				(* Find its value *)
@@ -1143,26 +1187,6 @@ let is_discrete_guard_satisfied location (guard : AbstractModel.guard) : bool =
 	| Continuous_guard _ -> true
 	| Discrete_continuous_guard discrete_continuous_guard -> evaluate_d_linear_constraint_in_location location discrete_continuous_guard.discrete_guard
 
-
-(* Evaluate a discrete_arithmetic_expression using a discrete variable valuation *)
-(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
-let evaluate_discrete_arithmetic_expression v =
-	let rec evaluate_discrete_arithmetic_expression_rec = function
-		| DAE_plus (discrete_arithmetic_expression, discrete_term) -> NumConst.add (evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression) (evaluate_discrete_term discrete_term)
-		| DAE_minus (discrete_arithmetic_expression, discrete_term) -> NumConst.sub (evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression) (evaluate_discrete_term discrete_term)
-		| DAE_term discrete_term -> evaluate_discrete_term discrete_term
-
-	and evaluate_discrete_term = function
-		| DT_mul (discrete_term, discrete_factor) -> NumConst.mul (evaluate_discrete_term discrete_term) (evaluate_discrete_factor discrete_factor)
-		| DT_div (discrete_term, discrete_factor) -> NumConst.div (evaluate_discrete_term discrete_term) (evaluate_discrete_factor discrete_factor)
-		| DT_factor discrete_factor -> evaluate_discrete_factor discrete_factor
-
-	and evaluate_discrete_factor = function
-		| DF_variable discrete_index -> v discrete_index
-		| DF_constant discrete_value -> discrete_value
-		| DF_expression discrete_arithmetic_expression -> evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression
-	in
-	evaluate_discrete_arithmetic_expression_rec
 
 
 (** Check whether the intersection between a pxd_constraint with an AbstractModel.guard if satisfiable (both inputs remain unchanged) *)

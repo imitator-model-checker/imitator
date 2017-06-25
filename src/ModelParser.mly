@@ -1,15 +1,18 @@
-/***********************************************
+/************************************************************
  *
- *                     IMITATOR
+ *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13 (France)
  * 
- * Author:        Etienne Andre
+ * Module description: Parser for the input model
  * 
- * Created       : 2009/09/07
- * Last modified : 2017/06/08
-***********************************************/
+ * File contributors : Étienne André
+ * Created           : 2009/09/07
+ * Last modified     : 2017/06/25
+ *
+ ************************************************************/
+
 
 %{
 open ParsingStructure;;
@@ -69,6 +72,9 @@ let parse_error s =
 %left AMPERSAND CT_AND  /* medium precedence */
 %left DOUBLEDOT         /* high precedence */
 %nonassoc CT_NOT        /* highest precedence */
+
+%left OP_PLUS OP_MINUS  /* lowest precedence */
+%left OP_MUL OP_DIV     /* highest precedence */
 
 
 %start main             /* the entry point */
@@ -293,7 +299,7 @@ update_nonempty_list:
 /**********************************************/
 
 update:
-	NAME APOSTROPHE OP_EQ linear_expression { ($1, $4) }
+	NAME APOSTROPHE OP_EQ arithmetic_expression { ($1, $4) }
 ;
 
 /**********************************************/
@@ -308,23 +314,25 @@ syn_label:
 /***********************************************/
 
 arithmetic_expression:
-	| arithmetic_term { Parsed_DAE_term $1 }
-	| arithmetic_expression OP_PLUS arithmetic_term { Parsed_DAE_plus ($1, $3) }
-	| arithmetic_expression OP_MINUS arithmetic_term { Parsed_DAE_minus ($1, $3) }
+	| arithmetic_term { Parsed_UAE_term $1 }
+	| arithmetic_expression OP_PLUS arithmetic_term { Parsed_UAE_plus ($1, $3) }
+	| arithmetic_expression OP_MINUS arithmetic_term { Parsed_UAE_minus ($1, $3) }
 ;
 
 /* Term over variables and rationals (includes recursivity with arithmetic_expression) */
 arithmetic_term:
-	| rational NAME { Parsed_DT_mul (Parsed_DT_factor (Parsed_DF_constant $1), Parsed_DF_variable $2) }
-	| arithmetic_term OP_MUL arithmetic_factor { Parsed_DT_mul ($1, $3) }
-	| arithmetic_term OP_DIV arithmetic_factor { Parsed_DT_div ($1, $3) }
-	| OP_MINUS arithmetic_term { Parsed_DT_mul($2, Parsed_DF_constant NumConst.minus_one) }
+	| arithmetic_factor { Parsed_UT_factor $1 }
+	/* Shortcut for syntax rational NAME without the multiplication operator */
+	| rational NAME { Parsed_UT_mul (Parsed_UT_factor (Parsed_UF_constant $1), Parsed_UF_variable $2) }
+	| arithmetic_term OP_MUL arithmetic_factor { Parsed_UT_mul ($1, $3) }
+	| arithmetic_term OP_DIV arithmetic_factor { Parsed_UT_div ($1, $3) }
+	| OP_MINUS arithmetic_term { Parsed_UT_mul($2, Parsed_UF_constant NumConst.minus_one) }
 ;
 
 arithmetic_factor:
-	| rational { Parsed_DF_constant $1 }
-	| NAME { Parsed_DF_variable $1 }
-	| LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
+	| rational { Parsed_UF_constant $1 }
+	| NAME { Parsed_UF_variable $1 }
+	| LPAREN arithmetic_expression RPAREN { Parsed_UF_expression $2 }
 ;
 
 

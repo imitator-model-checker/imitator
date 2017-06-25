@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
- * Last modified     : 2017/04/24
+ * Last modified     : 2017/06/25
  *
  ************************************************************)
  
@@ -21,6 +21,13 @@ open AbstractModel
 (****************************************************************)
 (* Convert a var_type into a string *)
 val string_of_var_type : var_type -> string
+
+
+(************************************************************)
+(** Arithmetic expression *)
+(************************************************************)
+(** Convert a AbstractModel.discrete_arithmetic_expression into a string *)
+val string_of_arithmetic_expression : (Automaton.variable_index -> Automaton.variable_name) -> discrete_arithmetic_expression -> string
 
 
 (************************************************************)

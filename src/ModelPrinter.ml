@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
- * Last modified     : 2017/04/24
+ * Last modified     : 2017/06/25
  *
  ************************************************************)
 
@@ -174,16 +174,67 @@ let string_of_clock_updates model = function
 			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
 		) list_of_clocks_lt)
 
+(* Convert an arithmetic expression into a string *)
+(*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
+let string_of_arithmetic_expression variable_names =
+	let rec string_of_arithmetic_expression = function
+		| DAE_plus (discrete_arithmetic_expression, discrete_term) ->
+			(string_of_arithmetic_expression discrete_arithmetic_expression)
+			^ " + "
+			^ (string_of_term discrete_term)
+			
+		| DAE_minus (discrete_arithmetic_expression, discrete_term) ->
+			(string_of_arithmetic_expression discrete_arithmetic_expression)
+			^ " + " 
+			^ (string_of_term discrete_term)
+			
+		| DAE_term discrete_term -> string_of_term discrete_term
+
+	and string_of_term = function
+		(* Eliminate the '1' coefficient *)
+		| DT_mul (DT_factor (DF_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
+			string_of_factor discrete_factor
+		(* No parentheses for constant * variable *)
+		| DT_mul (DT_factor (DF_constant c), DF_variable v) ->
+			(string_of_factor (DF_constant c))
+			^ " * "
+			^ (string_of_factor (DF_variable v))
+		(*** TODO: No parentheses on the left for constant or variable * something ***)
+		(* Otherwise: parentheses on the left *)
+		| DT_mul (discrete_term, discrete_factor) ->
+			"(" ^ (string_of_term discrete_term) ^ ")"
+			^ " * "
+			^ (string_of_factor discrete_factor)
+		
+		(*** TODO: No parentheses on the left for constant or variable / something ***)
+		(*** TODO: No parentheses on the left for something / constant or variable ***)
+		(* Otherwise: parentheses on the left *)
+		| DT_div (discrete_term, discrete_factor) ->
+			"(" ^ (string_of_term discrete_term) ^ ")"
+			^ " * "
+			^ (string_of_factor discrete_factor)
+		
+		| DT_factor discrete_factor -> string_of_factor discrete_factor
+
+	and string_of_factor = function
+		| DF_variable discrete_index -> variable_names discrete_index
+		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
+		| DF_expression discrete_arithmetic_expression ->
+			(*** TODO: simplify a bit? ***)
+			"(" ^ (string_of_arithmetic_expression discrete_arithmetic_expression) ^ ")"
+	(* Call top-level *)
+	in string_of_arithmetic_expression
+
 	
 	
 (* Convert a list of updates into a string *)
-let string_of_updates model updates =
-	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, linear_term) ->
+let string_of_discrete_updates model updates =
+	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, arithmetic_expression) ->
 		(* Convert the variable name *)
 		(model.variable_names variable_index)
 		^ "' = "
-		(* Convert the linear_term *)
-		^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
+		(* Convert the arithmetic_expression *)
+		^ (string_of_arithmetic_expression model.variable_names arithmetic_expression)
 	) updates)
 
 
@@ -209,7 +260,7 @@ let string_of_transition model automaton_index action_index (guard, clock_update
 	(* Add a coma in case of both clocks and discrete *)
 	^ separator_comma
 	(* Discrete updates *)
-	^ (string_of_updates model discrete_updates)
+	^ (string_of_discrete_updates model discrete_updates)
 	^ "} "
 	
 	(* Convert the sync *)

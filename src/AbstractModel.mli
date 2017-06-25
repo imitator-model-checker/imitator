@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/11
- * Last modified     : 2017/06/01
+ * Last modified     : 2017/06/21
  *
  ************************************************************)
 
@@ -97,7 +97,7 @@ type clock_updates =
 
 (*** TO OPTIMIZE (in terms of dimensions!) ***)
 
-type discrete_update = discrete_index * LinearConstraint.pxd_linear_term
+type discrete_update = discrete_index * discrete_arithmetic_expression
 
 (** Guard: a linear constraint on the sole discrete variables, and a linear constraint on (possibly) all variables *)
 
