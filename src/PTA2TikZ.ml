@@ -7,7 +7,7 @@
  * Author:        Etienne Andre
  * 
  * Created:       2015/03/24
- * Last modified: 2017/04/24
+ * Last modified: 2017/06/25
  *
  ****************************************************************)
 
@@ -103,14 +103,14 @@ let string_of_clock_updates model = function
 
 	
 (* Convert a list of updates into a string *)
-let string_of_updates model updates =
-	string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, linear_term) ->
+let string_of_discrete_updates model updates =
+	string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, arithmetic_expression) ->
 			"\n\t\t & $"
 			(* Convert the variable name *)
 			^ (variable_names_with_style variable_index)
 			^ ":="
-			(* Convert the linear_term *)
-			^ (LinearConstraint.string_of_pxd_linear_term variable_names_with_style linear_term)
+			(* Convert the arithmetic_expression *)
+			^ (ModelPrinter.string_of_arithmetic_expression variable_names_with_style arithmetic_expression)
 			(*** HACK!!! without the "%", a strange "\n" that occurs immediately after leads to a LaTeX compiling error when strictly >= 2 updates ***)
 			^ "$\\\\% "
 	) updates)
@@ -140,7 +140,7 @@ let string_of_transition model automaton_index source_location action_index (gua
 	(* Clock updates *)
 	^ (string_of_clock_updates model clock_updates)
 	(* Discrete updates *)
- 	^ (string_of_updates model discrete_updates)
+ 	^ (string_of_discrete_updates model discrete_updates)
 	
 	(* The end *)
 	^ "\n\t\t\\end{tabular}} (" ^ destination_location_name ^ ");"

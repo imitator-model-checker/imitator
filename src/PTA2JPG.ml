@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2012/08/24
- * Last modified     : 2017/04/24
+ * Last modified     : 2017/06/25
  *
  ************************************************************)
 
@@ -79,13 +79,13 @@ let string_of_clock_updates model = function
 
 	
 (* Convert a list of updates into a string *)
-let string_of_updates model updates =
-	string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, linear_term) ->
+let string_of_discrete_updates model updates =
+	string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, arithmetic_expression) ->
 		(* Convert the variable name *)
 		(model.variable_names variable_index)
 		^ ":="
-		(* Convert the linear_term *)
-		^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
+		(* Convert the arithmetic_expression *)
+		^ (ModelPrinter.string_of_arithmetic_expression model.variable_names arithmetic_expression)
 	) updates)
 
 
@@ -126,7 +126,7 @@ let string_of_transition model automaton_index source_location action_index (gua
 	(* Add a \n in case of both clocks and discrete *)
 	^ (if clock_updates != No_update && discrete_updates != [] then "\\n" else "")
 	(* Discrete updates *)
-	^ (string_of_updates model discrete_updates)
+	^ (string_of_discrete_updates model discrete_updates)
 	^ "\"];"
 	
 

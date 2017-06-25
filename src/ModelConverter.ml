@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/09
- * Last modified     : 2017/06/21
+ * Last modified     : 2017/06/25
  *
  ************************************************************)
 
@@ -490,12 +490,12 @@ let get_all_variables_used parsed_automata parsed_property_definition =
 
 				(* Gather in the updates *)
 				print_message Verbose_total ("            Gathering variables in updates");
-				List.iter (fun (variable_name, linear_expression) ->
+				List.iter (fun (variable_name, arithmetic_expression) ->
 					(*** NOTE: let us NOT consider that a reset is a 'use' of a variable; it must still be used in a guard, an invariant, in the right-hand side term of a reset, or a property, to be considered 'used' in the model ***)
 					(* First add the variable to be updated *)
 (* 					all_variables_used := StringSet.add variable_name !all_variables_used; *)
 					(* Second add the variable names in the update expression *)
-					get_variables_in_linear_expression all_variables_used linear_expression;
+					get_variables_in_parsed_update_arithmetic_expression all_variables_used arithmetic_expression;
 				) updates;
 			) location.transitions;
 		) locations;
@@ -740,7 +740,7 @@ let all_variables_defined_in_convex_predicate variable_names constants =
 	)
 	true
 
-(*
+
 (*------------------------------------------------------------*)
 (* Generic function to test something in linear expressions *)
 (*------------------------------------------------------------*)
@@ -778,7 +778,7 @@ let only_discrete_in_linear_term index_of_variables type_of_variables constants 
 			false
 		)
 
-let only_discrete_in_linear_expression = check_f_in_linear_expression only_discrete_in_linear_term*)
+let only_discrete_in_linear_expression = check_f_in_linear_expression only_discrete_in_linear_term
 
 (*------------------------------------------------------------*)
 (* Check that a linear expression contains no variables (neither discrete nor clock) *)
@@ -2168,9 +2168,9 @@ let convert_guard index_of_variables type_of_variables constants guard_convex_pr
 (* Convert the transitions *)
 (*------------------------------------------------------------*)
 (* Convert the structure: 'automaton_index -> location_index -> list of (action_index, guard, resets, target_state)' into a structure: 'automaton_index -> location_index -> action_index -> list of (guard, resets, target_state)' *)
-let convert_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions =
+let convert_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions : (((AbstractModel.transition list) array) array) array =
 	(* Create the empty array *)
-	let array_of_transitions = Array.make (Array.length transitions) (Array.make 0 (Array.make 0 [])) in
+	let array_of_transitions : (((AbstractModel.transition list) array) array) array = Array.make (Array.length transitions) (Array.make 0 (Array.make 0 [])) in
 	(* Iterate on automata *)
 	Array.iteri (fun automaton_index transitions_for_this_automaton ->
 		let nb_locations = Array.length transitions_for_this_automaton in 
@@ -2196,15 +2196,9 @@ let convert_transitions nb_actions index_of_variables constants removed_variable
 				) updates
 				in
 				
-				(* Convert the updates *)
-				let converted_updates = List.map (fun (variable_name, parsed_update_arithmetic_expression) ->
-					let variable_index = Hashtbl.find index_of_variables variable_name in
-					let linear_term = linear_term_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
-					(variable_index, linear_term)
-				) filtered_updates in
 				(* Flag to check if there are clock resets only to 0 *)
 				let only_resets = ref true in
-				(* Split between the clock and discrete updates *)
+(*				(* Split between the clock and discrete updates *)
 				let clock_updates, discrete_updates = List.partition (fun (variable_index, linear_term) ->
 					if type_of_variables variable_index = Var_type_clock then(
 						(* Update flag *)
@@ -2215,20 +2209,56 @@ let convert_transitions nb_actions index_of_variables constants removed_variable
 					)else
 						false
 				) converted_updates
+				in*)
+				(* Split between the clock and discrete updates *)
+				let parsed_clock_updates, parsed_discrete_updates = List.partition (fun (variable_name, parsed_update_arithmetic_expression) ->
+					(* Retrieve variable type *)
+					if type_of_variables (Hashtbl.find index_of_variables variable_name) = Var_type_clock then(
+						(* Update flag *)
+						if parsed_update_arithmetic_expression <> Parsed_UAE_term (Parsed_UT_factor (Parsed_UF_constant NumConst.zero)) then(
+							only_resets := false;
+						);
+						true
+					)else
+						false
+				) filtered_updates
 				in
+			
+(*				(* Convert the updates *)
+				let converted_updates = List.map (fun (variable_name, parsed_update_arithmetic_expression) ->
+					let variable_index = Hashtbl.find index_of_variables variable_name in
+					let linear_term = linear_term_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
+					(variable_index, linear_term)
+				) filtered_updates in*)
+
+				(* Convert the clock updates *)
+				let converted_clock_updates = List.map (fun (variable_name, parsed_update_arithmetic_expression) ->
+					let variable_index = Hashtbl.find index_of_variables variable_name in
+					let linear_term = linear_term_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
+					(variable_index, linear_term)
+				) parsed_clock_updates in
+				
+				(* Convert the discrete updates *)
+				let discrete_updates : discrete_update list = List.map (fun (variable_name, parsed_update_arithmetic_expression) ->
+					let variable_index = Hashtbl.find index_of_variables variable_name in
+					let arithmetic_expression : discrete_arithmetic_expression = discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
+					(variable_index, arithmetic_expression)
+				) parsed_discrete_updates in
+
+				
 				(* Differentiate between different kinds of clock updates *)
 				let clock_updates =
 					(* Case 1: no update *)
-					if clock_updates = [] then No_update
+					if converted_clock_updates = [] then No_update
 					else (
 						(* Case 2: resets only *)
 						if !only_resets then (
 							(* Keep only the clock ids, not the linear terms *)
-							let clocks_to_reset, _ = List.split clock_updates in
+							let clocks_to_reset, _ = List.split converted_clock_updates in
 							Resets clocks_to_reset
 						)else
 						(* Case 3: complex with linear terms *)
-							Updates clock_updates
+							Updates converted_clock_updates
 					)
 				in
 				(* Update the transition *)

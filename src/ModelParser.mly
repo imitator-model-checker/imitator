@@ -1,15 +1,18 @@
-/***********************************************
+/************************************************************
  *
- *                     IMITATOR
+ *                       IMITATOR
  * 
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
+ * LIPN, Université Paris 13 (France)
  * 
- * Author:        Etienne Andre
+ * Module description: Parser for the input model
  * 
- * Created       : 2009/09/07
- * Last modified : 2017/06/21
-***********************************************/
+ * File contributors : Étienne André
+ * Created           : 2009/09/07
+ * Last modified     : 2017/06/25
+ *
+ ************************************************************/
+
 
 %{
 open ParsingStructure;;
@@ -69,6 +72,9 @@ let parse_error s =
 %left AMPERSAND CT_AND  /* medium precedence */
 %left DOUBLEDOT         /* high precedence */
 %nonassoc CT_NOT        /* highest precedence */
+
+%left OP_PLUS OP_MINUS  /* lowest precedence */
+%left OP_MUL OP_DIV     /* highest precedence */
 
 
 %start main             /* the entry point */
@@ -293,7 +299,7 @@ update_nonempty_list:
 /**********************************************/
 
 update:
-	NAME APOSTROPHE OP_EQ linear_expression { ($1, $4) }
+	NAME APOSTROPHE OP_EQ arithmetic_expression { ($1, $4) }
 ;
 
 /**********************************************/
@@ -315,6 +321,8 @@ arithmetic_expression:
 
 /* Term over variables and rationals (includes recursivity with arithmetic_expression) */
 arithmetic_term:
+	| arithmetic_factor { Parsed_UT_factor $1 }
+	/* Shortcut for syntax rational NAME without the multiplication operator */
 	| rational NAME { Parsed_UT_mul (Parsed_UT_factor (Parsed_UF_constant $1), Parsed_UF_variable $2) }
 	| arithmetic_term OP_MUL arithmetic_factor { Parsed_UT_mul ($1, $3) }
 	| arithmetic_term OP_DIV arithmetic_factor { Parsed_UT_div ($1, $3) }
