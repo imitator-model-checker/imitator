@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2017/05/02
+ * Last modified     : 2017/06/25
  *
  ************************************************************)
 
@@ -819,6 +819,7 @@ ResultProcessor.process_result result algorithm#algorithm_name None;
 	let error_message = match e with
 		| InternalError msg -> "Fatal internal error: " ^ msg ^ ""
 		| NotImplemented msg -> "A non-implemented feature has been called: " ^ msg ^ ""
+		| Division_by_0 msg -> "Division by 0! " ^ msg ^ ""
 		| Failure msg -> "'Failure' exception: '" ^ msg ^ "'"
 		| Invalid_argument msg -> "'Invalid_argument' exception: '" ^ msg ^ "'"
 		| SerializationError msg -> "Serialization error: " ^ msg ^ ""
