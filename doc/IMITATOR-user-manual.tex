@@ -3,6 +3,12 @@
 % \def\DraftVersion {}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% TITLE TO BE PRINTED ON THE HEADERS
+\newcommand{\titleOnHeader}{\textsf{IMITATOR} user manual}
+
+% TITLE TO BE PRINTED ON THE FIRST PAGE
+\newcommand{\titleOnFirstPage}{IMITATOR User Manual}
+
 \input{commons.tex}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -17,8 +23,6 @@
 \title{IMITATOR User Manual}
 \author{Étienne André}
 
-% TITLE TO BE PRINTED ON THE FIRST PAGE
-\newcommand{\titleOnFirstPage}{IMITATOR User Manual}
 
 
 
@@ -251,11 +255,9 @@ furthermore, \IPTA{} augment the expressiveness of PTA with several features suc
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
-\subsection{Linear constraints}
+\subsection{Clocks, parameters, discrete variables}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
 
-
-\paragraph{Clocks, parameters, discrete variables}
 \emph{Clocks} are real-valued variables all evolving at the same rate (unless they are stopped, which is allowed in \imitator{}).
 A set of clocks is $\Clock = \{ \clock_1, \dots, \clock_\ClockCard \}$;
 a clock valuation is
@@ -271,7 +273,10 @@ A set of discrete variables is $\DVar = \{ \dvar_1, \dots, \dvar_\DVarCard \} $;
 a discrete variable valuation is a function $\dval \colon \DVar \rightarrow \grandn$.
 
 
-\paragraph{Linear constraints}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+\subsection{Linear constraints}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+
 Let us formalize the set of linear constraints allowed in \imitator{}.
 Given a set of variables~$\Var = \{ \var_1, \dots, \var_\VarCard \}$ (in the following, this set will be instantiated with $\Clock$ and/or $\Param$ and/or $\DVar$), a \emph{linear term} over $\Var$ is an expression of the form
 $$
@@ -297,6 +302,15 @@ $
 A~\emph{constraint} over $\Var$ is a conjunction of atomic constraints.
 We denote by $\LTerm(\Var)$ the set of linear terms over~$\Var$, and by $\LConstraint(\Var)$ the set of constraints over~$\Var$.
 In \imitator{}, we will consider constraints belonging to sets such as $\LConstraintXP$ (\ie{} the set of constraints over clocks and parameters), or $\LConstraintXPD$ (\ie{} the set of constraints over clocks, parameters and discrete variables).
+
+
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+\subsection{Arithmetic expressions}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
+
+Let $\ArithExprD$ denote the set of arithmetic expressions over the discrete variables, \ie{} made of addition, subtraction, multiplication, and division over rational (or integer) constants and discrete variables.
+
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
@@ -325,9 +339,9 @@ Let $\unobs$ denote the unobservable action.
 			$\loc, \loc' \in \Loc$ are the source and destination locations,
 			$\guard \in \LConstraintXPD$ is a constraint over all variables (called \emph{guard} of the transition),
 			$\action \in \Action \cup \{ \unobs \}$ is the action associated with the transition,
-			$\Cupdates : \Clock \rightarrow \LTermXPD$ is the update function for clocks, and % TODO: partial function!
+			$\Cupdates : \Clock \rightharpoonup \LTermXPD$ is the (possibly partial) update function for clocks, and
 			% TODO: sure that we can update to anything??
-			$\Dupdates : \DVar \rightarrow \LTermD$ is the update function for discrete variables. % TODO: partial function!
+			$\Dupdates : \DVar \rightharpoonup \ArithExprD$ is the (possibly partial) update function for discrete variables.
 	\end{itemize}
 \end{definition}
 %------------------------------------------------------------
@@ -347,9 +361,14 @@ For the semantics of the synchronization model between various \IPTA{}, refer to
 
 \paragraph{Clock updates}
 Observe that clocks can be updated to any value, \ie{} a clock can be assigned not only to~0, but to any linear term over the other clocks, the parameters and the discrete variables.
-However, discrete variables can only be assigned to a linear term over~$\DVar$ (including a constant).
-If clocks are always reset (\ie{} not assigned to more complex linear terms), \imitator{} will apply some optimizations that (may) increase the analysis speed.
-	% TODO: nice box with a ``tip'' title
+This considerably extends the traditional syntax of PTAs defined in~\cite{AHV93}.
+If clocks are always reset to constants (\ie{} not assigned to more complex linear terms), \imitator{} will apply some optimizations that (may) increase the analysis speed.
+% TODO: nice box with a ``tip'' title
+
+\paragraph{Discrete updates}
+Discrete variables can be assigned to arithmetic expressions over~$\DVar$.
+On the one hand, this is more restrictive than clock updates, because discrete variables cannot be assigned to a clock or to a parameter.
+On the other hand, arithmetic expressions are richer than linear constraints, as they allow multiplication or division of variables with each other.
 
 \paragraph{Stopwatches}
 There are no distinction between clocks and stopwatches.
@@ -414,6 +433,7 @@ if they are not, a warning is issued, and they are arbitrarily set to~0.
 Discrete variables can be tested in guards, and updated along transitions.
 They are first tested, then updated.
 If two \IPTA{} in parallel update the same variable on the same synchronized transition (\eg{} an \IPTA{} performs \styleIMI{i' = 2} while another one performs \styleIMI{i' = 3}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified (\ie{} \imitator{} will choose one or the other assignment in a non-deterministic manner).
+If a division by zero is encountered (\eg{} in an update \styleIMI{i' = 2 / i}, when the current value of~\styleIMI{i} is~0), an exception is raised and \imitator{} terminates with an error.
 
 
 
@@ -434,7 +454,7 @@ That is, we can define initial constraints such as:
 % TODO: style for sample piece of file
 
 However, discrete variables must be initialized to a \emph{constant rational}.
-Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i = ...} followed by a linear term in $\LTermXPD$, then \imitator{} will assume that \styleIMI{i} is initially set to~0, and will issue a warning.
+Given a discrete variable \styleIMI{i}, if the definition of the initial state does not contain an equality of the form \styleIMI{i = ...} followed by a linear term in $\LTermD$, then \imitator{} will assume that \styleIMI{i} is initially set to~0, and will issue a warning.
 
 
 
@@ -680,7 +700,7 @@ Two options are possible in \imitator{}:
 \end{enumerate}
 
 
-\warningbox{restrictions}{%
+\begin{warning}[restrictions]
 	In contrast to most other algorithms of \imitator{}, these two algorithms work on a slightly restricted syntax:
 	\begin{itemize}
 		\item in a guard or invariant, each clock must be used at most once;
@@ -688,7 +708,7 @@ Two options are possible in \imitator{}:
 		\item the use of coefficients on parameters (different from 0 or~1) was not tested;
 		\item the use of stopwatches was not tested (but should be no problem).
 	\end{itemize}
-}
+\end{warning}
 
 As usual, \imitator{} can also
 	output the trace set in a graphical form (option \styleOption{-output-trace-set})
@@ -1808,7 +1828,7 @@ We define each of those two components below.
 \regleGrammaire{update}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{<name>} \styleIMI{'} \styleIMI{=} \nt{linear\_expression} \\
+	\  & \styleIMI{<name>} \styleIMI{'} \styleIMI{=} \nt{arithmetic\_expression} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -1817,6 +1837,39 @@ We define each of those two components below.
 \begin{tabular}{l l}
 	\  & \styleIMI{sync} \styleIMI{<name>} \\
 \end{tabular}
+
+
+%------------------------------------------------------------
+\regleGrammaire{arithmetic\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{arithmetic\_term} \\
+	$|$ & \nt{arithmetic\_expression} \styleIMI{+} \nt{arithmetic\_term} \\
+	$|$ & \nt{arithmetic\_expression} \styleIMI{-} \nt{arithmetic\_term} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{arithmetic\_term}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{arithmetic\_factor} \\
+	$|$ & \nt{rational} \styleIMI{<name>} \\
+	$|$ & \nt{arithmetic\_term} \styleIMI{*} \nt{arithmetic\_factor} \\
+	$|$ & \nt{arithmetic\_term} \styleIMI{/} \nt{arithmetic\_factor} \\
+	$|$ & \styleIMI{-} \nt{arithmetic\_term} \\
+\end{tabular}
+
+
+
+%------------------------------------------------------------
+\regleGrammaire{arithmetic\_factor}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{rational}\\
+	$|$ & \styleIMI{<name>} \\
+	$|$ & \styleIMI{(} \nt{arithmetic\_expression} \styleIMI{)} \\
+\end{tabular}
+
 
 
 
@@ -2272,13 +2325,12 @@ This can be simulated using an initialization \IPTA{} that nondeterministically 
 \section{Complex updates for discrete variables}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-So far, discrete variables can only be set to linear terms in $\LTermD$;
+So far, discrete variables can only be set to arithmetic expressions in $\ArithExprD$;
 hence, assigning a discrete variable to a clock, or to a parameter, or to any more complex expression, is not allowed.
 A reason for this restriction is that the value of the discrete variables would not anymore be constant (recall that discrete variables are syntactic sugar for \emph{locations}).
 
-However, this can be (partially) simulated with stopwatches: we can replace a discrete variable with a clock that is stopped in all locations (\ie{} it does not evolve with time), and that is updated to the desired value (recall from \cref{definition:IPTA} that the clock updates are more permissive than the discrete variable updates).
-
-% TODO: so far, only d := L(D); impossible to have clocks and parameters due to the constant nature of discrete variables
+However, this can be (partially) simulated with stopwatches: we can replace a discrete variable with a clock that is stopped in all locations (\ie{} it does not evolve with time), and that is updated to the desired value (recall from \cref{definition:IPTA} that the clock updates allow assignments to linear expressions over clocks, discrete variables and parameters).
+However, in this latter case, the non-linear power of arithmetic expressions (multiplications and divisions between variables) cannot be used anymore.
 
 % TODO: only one PTA/location in the bad state definition
 
@@ -2289,7 +2341,7 @@ However, this can be (partially) simulated with stopwatches: we can replace a di
 
 \imitator{} does not implement specific algorithms for lower-bound / upper-bound PTA (L/U-PTA).
 This subclass of PTA, introduced in~\cite{HRSV02}, constrains parameters to appear either always as upper-bounds in inequalities comparing them with clocks, or always as lower-bounds.
-L/U-PTA benefit from some decidability results (see \eg{} \cite{HRSV02,BlT09,JLR15,AM15}); however, exact synthesis seems to be intractable in practice~\cite{JLR15}.
+L/U-PTA benefit from some decidability results (see \eg{} \cite{HRSV02,BlT09,JLR15,AM15,ALime17}); however, exact synthesis seems to be intractable in practice~\cite{JLR15,ALR16decision}.
 
 However, \imitator{} does detect whether an input model is an L/U-PTA, in which case a message is printed with the list of lower-bounds parameters and upper-bounds parameters.
 

@@ -1,8 +1,9 @@
 *******************************************************
 release XXX    (XXXX) FUTURE RELEASE
 
-Major feature:
+Major features:
 - New algorithms EFmin and EFmax synthesizing the min (resp. max) valuation of a single given parameter for which a given state is reachable
+- Arithmetic expressions are now supported in discrete updates; this includes in particular the use of divisions (clock updates are not impacted, and remain linear only)
 - The GrML syntax (in and out) is now discontinued, as CosyVerif is not maintained anymore, and the next version will not support GrML.
 
 Minor feature:

@@ -14,8 +14,6 @@
 
 \usepackage{pdflscape}
 
-% \usepackage{geometry} % to change margins
-
 \usepackage{amsmath,amssymb,amsthm,url}
 \usepackage{amsfonts}
 
@@ -41,6 +39,41 @@
 	\SetWatermarkColor[gray]{0.9}
 \fi
 % END Watermarking
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MARGINS, HEADERS AND FOOTERS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage[top=1cm,bottom=2.5cm,includeheadfoot,headheight=2.5cm,\ifdefined\DraftVersion showframe \else\fi]{geometry}
+
+% \setlength{\parskip}{1ex}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+% Reset headers and footers
+% \fancyhf{}
+
+% Reset header but not footer
+\fancyhead{}
+
+\fancyhead[l]{%
+	\titleOnHeader{}
+}
+
+\fancyhead[r]{%
+	\includegraphics[height=1em]{../logos/imitator-500.png}
+	\includegraphics[height=1em]{../logos/logo2-300.png}
+	\includegraphics[height=1em]{../logos/logo2-9-300.png}
+}
+
+\renewcommand{\headrulewidth}{.1pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% \fancyfoot[c]{}
+% \fancyfoot[R]{\footnotesize{\thepage}}
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -102,6 +135,8 @@
 \newcommand{\A}{\mathcal{A}}
 \newcommand{\Action}{\ensuremath{\Sigma}}
 \newcommand{\action}{a}
+\newcommand{\ArithExpr}{\mathcal{AE}} % (#1)% set of all constraints over some set
+\newcommand{\ArithExprD}{\ArithExpr(\DVar)}
 \newcommand{\C}{C}
 \newcommand{\Cinit}{\C_\init} % initial constraint
 \newcommand{\Clock}{X} % set of clocks
@@ -227,9 +262,44 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % THEOREMS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newtheorem{definition}{Definition}
-\newtheorem{remark}{Remark}
-\newtheorem{hint}{Hint}
+\usepackage[framemethod=TikZ]{mdframed}
+
+%------------------------------------------------------------
+\theoremstyle{plain}
+%------------------------------------------------------------
+
+
+%------------------------------------------------------------
+\theoremstyle{definition}
+%------------------------------------------------------------
+\newtheorem{mydefinition}{Definition}[chapter]
+\newenvironment{definition}%
+	{\begin{mdframed}[roundcorner=3pt,backgroundcolor=blue!7,linecolor=blue!70,linewidth=2]\begin{mydefinition}}
+	{\end{mydefinition}\end{mdframed}}
+
+\newtheorem{myexample}{Example}[chapter]
+\newenvironment{example}
+	{\begin{mdframed}[roundcorner=3pt,backgroundcolor=green!7,linecolor=green!70,linewidth=2]\begin{myexample}}
+	{\end{myexample}\end{mdframed}}
+
+%------------------------------------------------------------
+\theoremstyle{remark}
+%------------------------------------------------------------
+\newtheorem{myremark}{Remark}[chapter]
+\newenvironment{remark}
+	{\begin{mdframed}[roundcorner=3pt,backgroundcolor=pink!7,linecolor=pink!70,linewidth=2]\begin{myremark}}
+	{\end{myremark}\end{mdframed}}
+
+\newtheorem{myhint}{Hint}[chapter]
+\newenvironment{hint}
+	{\begin{mdframed}[roundcorner=3pt,backgroundcolor=green!7,linecolor=green!70!black,linewidth=2]\begin{myhint}}
+	{\end{myhint}\end{mdframed}}
+
+\newtheorem{mywarning}{Warning} %[chapter]
+\newenvironment{warning}
+	{\begin{mdframed}[roundcorner=3pt,backgroundcolor=red!20,linecolor=red!50!black,linewidth=2]\begin{mywarning}}
+	{\end{mywarning}\end{mdframed}}
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -262,19 +332,19 @@
 	\medskip
 }
 
-\newcommand{\warningbox}[2]{
-	\medskip
-	\noindent
-	\fcolorbox{red!50!black}{red!20}{
-		\begin{minipage}{0.95\textwidth}
-		\textbf{Warning: #1}
-		
-		#2
-		\end{minipage}
-	}
-	
-	\medskip
-}
+% \newcommand{\warningbox}[2]{
+% 	\medskip
+% 	\noindent
+% 	\fcolorbox{red!50!black}{red!20}{
+% 		\begin{minipage}{0.95\textwidth}
+% 		\textbf{Warning: #1}
+% 		
+% 		#2
+% 		\end{minipage}
+% 	}
+% 	
+% 	\medskip
+% }
 
 % \newcommand{\commentaire}[1]{\textcolor{red}{\textbf{$\Leftarrow$  #1 $\Rightarrow$}}} % commentaire dans un paragraphe
 % \newcommand{\commentaire}[1]{}
