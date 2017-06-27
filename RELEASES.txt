@@ -6,11 +6,15 @@ Major features:
 - Arithmetic expressions are now supported in discrete updates; this includes in particular the use of divisions (clock updates are not impacted, and remain linear only)
 - The GrML syntax (in and out) is now discontinued, as CosyVerif is not maintained anymore, and the next version will not support GrML.
 
-Minor feature:
+Minor features:
 - New option to convert exact-valued discrete variables into (possibly approximated) floats in all outputs
 - Reintroduced the -counterexample option (stops the analysis as soon as a counterexample is found) for EF and PRP
 - New options -PTA2PNG and -PTA2PDF, to convert the model as a graphics in PNG and PDF formats, respectively
+- New verbose mode 'experiments', displaying slightly more information than the standard verbosity
 - New option -romeo (April 1st 2017 feature)… Try it ;-)
+
+Display:
+- Simplified the terminal output by IMITATOR by removing most technical (states, memory, statistics) information. The former information can be retrieved using the new mode -verbose experiments.
 
 Bug fixing
 - Fixed a bug in the parsing module that crashed IMITATOR when a discrete was assigned to an undeclared variable

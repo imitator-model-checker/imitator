@@ -775,7 +775,7 @@ class imitator_options =
 				
 				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the reachability graph is a tree (otherwise analysis may loop). Default: 'false'");
 				
-				("-verbose", String set_verbose_mode_ref, " Print more or less information. Can be set to 'mute', 'warnings', 'standard', 'low', 'medium', 'high', 'total'. Default: 'standard'");
+				("-verbose", String set_verbose_mode_ref, " Print more or less information. Can be set to 'mute', 'warnings', 'standard', 'experiments', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 				
 				("-version", Unit (fun _ ->
 					(*** HACK: print header now ***)
@@ -1008,7 +1008,7 @@ class imitator_options =
 			(* Exploration order *)
 			begin
 			match exploration_order with
-				| Exploration_layer_BFS -> print_message Verbose_standard ("Exploration order: layer-based BFS.")
+				| Exploration_layer_BFS -> print_message Verbose_experiments ("Exploration order: layer-based BFS.")
 				| Exploration_queue_BFS -> print_message Verbose_standard ("Exploration order: queue-based BFS [EXPERIMENTAL].")
 				| Exploration_queue_BFS_RS -> print_message Verbose_standard ("Exploration order: queue-based BFS with ranking system [WORK IN PROGRESS].")
 				| Exploration_queue_BFS_PRIOR -> print_message Verbose_standard ("Exploration order: queue-based BFS with priority [WORK IN PROGRESS].")

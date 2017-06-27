@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2017/03/21
+ * Last modified     : 2017/06/27
  *
  ************************************************************)
 
@@ -190,11 +190,11 @@ let compile_model options (with_special_reset_clock : bool) =
 		in
 
 	(* Print some information *)
-	print_message Verbose_standard ("\nAbstract model built " ^ (after_seconds ()) ^ ".");
+	print_message Verbose_experiments ("\nAbstract model built " ^ (after_seconds ()) ^ ".");
 	let gc_stat = Gc.stat () in
 	let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
 	let nb_ko = nb_words *. 4.0 /. 1024.0 in
-	print_message Verbose_standard ("Memory for abstract model: " ^ (round3_float nb_ko) ^ " KiB (i.e., " ^ (string_of_int (int_of_float nb_words)) ^ " words)");
+	print_message Verbose_experiments ("Memory for abstract model: " ^ (round3_float nb_ko) ^ " KiB (i.e., " ^ (string_of_int (int_of_float nb_words)) ^ " words)");
 
 	(* With or without stopwatches *)
 	if model.has_stopwatches then
@@ -203,7 +203,7 @@ let compile_model options (with_special_reset_clock : bool) =
 		print_message Verbose_low ("The model is purely timed (no stopwatches).");
 
 	(* Ugly line break *)
-	print_message Verbose_standard "";
+	print_message Verbose_experiments "";
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

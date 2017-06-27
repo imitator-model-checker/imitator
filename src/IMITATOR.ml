@@ -111,7 +111,7 @@ if verbose_mode_greater Verbose_low then(
 print_header_string();
 
 (* Print date *)
-print_message Verbose_standard ("Analysis time: " ^ (now()) ^ "\n");
+print_message Verbose_experiments ("Analysis time: " ^ (now()) ^ "\n");
 
 (* Recall the arguments *)
 options#recall(); 
@@ -120,7 +120,7 @@ options#recall();
 (************************************************************)
 (* Get input *)
 (************************************************************)
-let parsing_counter = create_time_counter_and_register "model parsing" Parsing_counter Verbose_standard in
+let parsing_counter = create_time_counter_and_register "model parsing" Parsing_counter Verbose_experiments in
 parsing_counter#start;
 
 (*------------------------------------------------------------*)
@@ -853,7 +853,10 @@ end; (* try *)
 (* Handling statistics *)
 (************************************************************)
 global_counter#stop;
-print_message Verbose_standard (string_of_all_counters());
+
+(* Only print counters if statistics are required, or experiments verbose mode *)
+if (try (Input.get_options())#statistics with _ -> false) || verbose_mode_greater Verbose_experiments then
+	print_message Verbose_standard (string_of_all_counters());
 
 
 (************************************************************)

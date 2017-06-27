@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2017/05/22
+ * Last modified     : 2017/06/27
  *
  ************************************************************)
 
@@ -713,7 +713,7 @@ let print_state_space_statistics total_time state_space =
 	let average = (float_of_int nb_gen_states) /. total_time in
 	print_message Verbose_standard ("States computed per second: " ^ (string_of_average average) ^ " (" ^ (string_of_int nb_gen_states) ^ "/" ^ (string_of_seconds total_time) ^ ")");*)
 	
-	if verbose_mode_greater Verbose_standard then(
+	if options#statistics || verbose_mode_greater Verbose_experiments then(
 		print_message Verbose_standard "\n------------------------------------------------------------";
 		print_message Verbose_standard "Statistics: State space";
 		print_message Verbose_standard "------------------------------------------------------------";
@@ -762,6 +762,8 @@ let print_single_synthesis_or_point_based_result result computation_time =
 	if verbose_mode_greater Verbose_standard then(
 		(* Retrieve the model *)
 		let model = Input.get_model() in
+		(* Retrieve the input options *)
+		let options = Input.get_options () in
 		
 		(* Convert result to string *)
 		(*** NOTE: this conversion to string is duplicate, since it will again be converted in write_pdfc_result_to_file; but it not sure wether both operations are done, in addition they are not extremely time consuming, and they are not part of the computation time anyway *)
@@ -793,8 +795,10 @@ let print_single_synthesis_or_point_based_result result computation_time =
 		);
 
 		(* Print memory information *)
-		print_newline();
-		print_message Verbose_standard (memory_used ());
+		if options#statistics || verbose_mode_greater Verbose_experiments then(
+			print_newline();
+			print_message Verbose_standard (memory_used ());
+		);
 		
 	);
 	()
@@ -889,7 +893,7 @@ let process_result result algorithm_name prefix_option =
 		);
 
 		(* Print memory information *)
-		if verbose_mode_greater Verbose_standard then(
+		if options#statistics || verbose_mode_greater Verbose_experiments then(
 			print_newline();
 			print_message Verbose_standard (memory_used ());
 		);
@@ -973,7 +977,7 @@ let process_result result algorithm_name prefix_option =
 		);
 		
 		(* Print memory information *)
-		if verbose_mode_greater Verbose_standard then(
+		if options#statistics || verbose_mode_greater Verbose_experiments then(
 			print_newline();
 			print_message Verbose_standard (memory_used ());
 		);

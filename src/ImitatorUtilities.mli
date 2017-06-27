@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/05/02
+ * Last modified     : 2017/06/27
  *
  ************************************************************)
 
@@ -52,6 +52,7 @@ type verbose_mode =
 	| Verbose_mute
 	| Verbose_warnings
 	| Verbose_standard
+	| Verbose_experiments
 	| Verbose_low
 	| Verbose_medium
 	| Verbose_high

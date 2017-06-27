@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/05/02
+ * Last modified     : 2017/06/27
  *
  ************************************************************)
 
@@ -127,6 +127,7 @@ type verbose_mode =
 	| Verbose_mute
 	| Verbose_warnings
 	| Verbose_standard
+	| Verbose_experiments
 	| Verbose_low
 	| Verbose_medium
 	| Verbose_high
@@ -134,13 +135,14 @@ type verbose_mode =
 
 (* Associate an integer to each verbose mode *)
 let level_of_verbose = function
-	| Verbose_mute		-> 0
-	| Verbose_warnings	-> 1
-	| Verbose_standard	-> 2
-	| Verbose_low		-> 3
-	| Verbose_medium	-> 4
-	| Verbose_high		-> 5
-	| Verbose_total		-> 6
+	| Verbose_mute			-> 0
+	| Verbose_warnings		-> 1
+	| Verbose_standard		-> 2
+	| Verbose_experiments	-> 3
+	| Verbose_low			-> 4
+	| Verbose_medium		-> 5
+	| Verbose_high			-> 6
+	| Verbose_total			-> 7
 
 (* The global verbose mode *)
 type global_verbose_mode_type =
@@ -181,6 +183,7 @@ let verbose_mode_of_string verbose_mode =
 	if verbose_mode = "mute" then Verbose_mute
 	else if verbose_mode = "warnings" then Verbose_warnings
 	else if verbose_mode = "standard" then Verbose_standard
+	else if verbose_mode = "experiments" then Verbose_experiments
 	else if verbose_mode = "low" then Verbose_low
 	else if verbose_mode = "medium" then Verbose_medium
 	else if verbose_mode = "high" then Verbose_high
@@ -381,7 +384,7 @@ let print_highlighted_message shell_highlighting_type message_verbose_mode messa
 		(* Compute the verbose level *)
 		let verbose_level = level_of_verbose message_verbose_mode in
 		(* Find number of blanks for indentation *)
-		let nb_spaces = if verbose_level-1 > 0 then verbose_level-1 else 0 in
+		let nb_spaces = if verbose_level - 3 > 0 then verbose_level - 3 else 0 in
 		(* Create blanks proportionnally to the verbose_level (at least one space) *)
 		let spaces = " " ^ (string_n_times nb_spaces "   ") in
 		(* Add new lines and blanks everywhere *)
@@ -545,8 +548,8 @@ let terminate_program () =
 	print_newline();
 	print_message Verbose_standard ((shell_code_of_shell_highlighting_type Shell_bold) ^ Constants.program_name ^ " successfully terminated" ^ (shell_code_of_shell_highlighting_type Shell_normal) ^ " (" ^ (after_seconds ()) ^ ")");
 	(* Print memory info *)
-	if verbose_mode_greater Verbose_standard then(
-		print_message Verbose_standard ("Estimated memory used: " ^ (memory_used ()));
+	if verbose_mode_greater Verbose_experiments then(
+		print_message Verbose_experiments ("Estimated memory used: " ^ (memory_used ()));
 	);
 	(* The end *)
 	print_newline();
