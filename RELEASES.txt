@@ -9,6 +9,7 @@ Major features:
 Minor feature:
 - New option to convert exact-valued discrete variables into (possibly approximated) floats in all outputs
 - Reintroduced the -counterexample option (stops the analysis as soon as a counterexample is found) for EF and PRP
+- New options -PTA2PNG and -PTA2PDF, to convert the model as a graphics in PNG and PDF formats, respectively
 - New option -romeo (April 1st 2017 feature)… Try it ;-)
 
 Bug fixing

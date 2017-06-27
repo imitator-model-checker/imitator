@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2017/06/25
+ * Last modified     : 2017/06/27
  *
  ************************************************************)
 
@@ -271,14 +271,21 @@ if options#pta2imi then(
 	terminate_program()
 );
 
-(* Translation to JPG *)
-if options#pta2jpg then(
+(* Translation to a graphics *)
+if options#pta2jpg || options#pta2pdf || options#pta2png then(
 	print_message Verbose_standard ("Translating model to a graphics.");
 	let translated_model = PTA2JPG.string_of_model model in
 	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("\n" ^ translated_model ^ "\n");
 	);
-	Graphics.dot (options#files_prefix ^ "-pta") translated_model;
+	(*** NOTE: not so nice… ***)
+	let extension =
+		if options#pta2jpg then "jpg" else
+		if options#pta2pdf then "pdf" else
+		if options#pta2png then "png"
+		else raise (InternalError ("No graphic extension found"))
+	in
+	Graphics.dot extension (options#files_prefix ^ "-pta") translated_model;
 	print_message Verbose_standard ("File successfully created."); (*** TODO: add file name in a proper manner ***)
 	terminate_program()
 );
@@ -555,7 +562,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 				print_message Verbose_high ("\n" ^ translated_model ^ "\n");
 			);
 			
-			Graphics.dot (options#files_prefix ^ "-cubpta") translated_model;
+			Graphics.dot Constants.default_dot_image_extension (options#files_prefix ^ "-cubpta") translated_model;
 
 			print_message Verbose_low ("Graphic export successfully created."); (*** TODO: add file name in a proper manner ***)
 		); (* end export *)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/04/13
+ * Last modified     : 2017/06/27
  *
  ************************************************************)
 
@@ -52,7 +52,7 @@ val model_extension : string
 (** Extension for files output *)
 val result_file_extension : string
 
-val dot_image_extension : string
+val default_dot_image_extension : string
 val dot_file_extension : string
 val states_file_extension : string
 val cartography_extension : string

@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2017/05/22
+ * Last modified     : 2017/06/27
  *
  ************************************************************)
 
@@ -236,6 +236,8 @@ class imitator_options =
 
 		(* Translate PTA model into a graphics *)
 		val mutable pta2jpg = ref false
+		val mutable pta2pdf = ref false
+		val mutable pta2png = ref false
 
 		(* Translate PTA model into a TikZ LaTeX code *)
 		val mutable pta2tikz = ref false
@@ -307,6 +309,8 @@ class imitator_options =
 		method pta2imi = !pta2imi
 		method pta2hytech = !pta2hytech
 		method pta2jpg = !pta2jpg
+		method pta2pdf = !pta2pdf
+		method pta2png = !pta2png
 		method pta2tikz = !pta2tikz
 		method second_file_name = second_file_name
 		method states_limit = !states_limit
@@ -726,14 +730,26 @@ class imitator_options =
 
 				("-PRP", Set efim, " Reachability-preservation algorithm mixing IM and EFsynth [ALNS15]. Default: false. WARNING: deprecated option (use -mode PRP or -mode PRPC)");
 				
-(* 				("-PTA2GrML", Unit (fun _ -> pta2gml := true; imitator_mode <- Translation), "Translate the model into a GrML model, and exit without performing any analysis. Defaut : 'false'"); *)
-				
 				("-PTA2HyTech", Unit (fun _ -> pta2hytech := true; imitator_mode <- Translation), "Translate the model into a HyTech model, and exit without performing any analysis. Defaut : 'false'");
 				
 				("-PTA2IMI", Unit (fun _ -> pta2imi := true; imitator_mode <- Translation), "Regenerate the model into a IMITATOR model, and exit without performing any analysis. Defaut : 'false'");
 				
 				("-PTA2JPG", Unit (fun _ ->
 					pta2jpg := true;
+					(*** HACK ***)
+					output_trace_set := true;
+					imitator_mode <- Translation
+				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : 'false'");
+				
+				("-PTA2PDF", Unit (fun _ ->
+					pta2pdf := true;
+					(*** HACK ***)
+					output_trace_set := true;
+					imitator_mode <- Translation
+				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : 'false'");
+				
+				("-PTA2PNG", Unit (fun _ ->
+					pta2png := true;
 					(*** HACK ***)
 					output_trace_set := true;
 					imitator_mode <- Translation

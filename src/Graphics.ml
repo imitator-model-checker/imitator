@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2017/05/02
+ * Last modified     : 2017/06/27
  *
  ************************************************************)
  
@@ -895,8 +895,8 @@ Generation time: " ^ (now()) ^ "\"];"
 	header ^ states_description ^ transitions_description
 
 
-(** Execute the 'dot' with a source file name as argument *)
-let dot radical dot_source_file =
+(** Execute the 'dot' utility with as argument the image format, the radical, and the source file *)
+let dot dot_image_extension radical dot_source_file =
 	(* Retrieve the model *)
 (* 	let model = Input.get_model () in *)
 	(* Retrieve the input options *)
@@ -967,7 +967,7 @@ let draw_statespace state_space algorithm_name radical =
 	if options#output_trace_set || options#with_log then (
 		let dot_model, states = dot_of_statespace state_space algorithm_name ~fancy:options#fancy in
 		
-		dot radical dot_model;
+		dot default_dot_image_extension radical dot_model;
 		
 		(*(* Get the file names *)
 		let dot_file_name = (radical ^ "." ^ dot_file_extension) in

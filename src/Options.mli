@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created:       2012/05/10
- * Last modified: 2017/05/22
+ * Last modified: 2017/06/27
  *
  ************************************************************)
  
@@ -82,6 +82,8 @@ class imitator_options :
 		method pta2hytech : bool
 		method pta2imi : bool
 		method pta2jpg : bool
+		method pta2pdf : bool
+		method pta2png : bool
 		method pta2tikz : bool
 		method second_file_name : string
 		method states_limit : int option

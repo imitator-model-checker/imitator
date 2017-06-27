@@ -986,14 +986,18 @@ Note that translation of properties is not supported.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Export to JPEG}
+\section{Export to graphics}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 To generate a graphic representation of the \NIPTA{} model without performing any analysis, use:
 
 \styleCommand{\binimitator{} model.imi -PTA2JPG}
 
-\imitator{} will generate a file \stylePath{model-pta.jpg} (using the \gdot{} utility).
+\styleCommand{\binimitator{} model.imi -PTA2PDF}
+
+\styleCommand{\binimitator{} model.imi -PTA2PNG}
+
+\imitator{} will generate a file \stylePath{model-pta.jpg}, \stylePath{model-pta.pdf} and \stylePath{model-pta.png} respectively (using the \gdot{} utility).
 
 
 
@@ -1480,6 +1484,18 @@ Regenerates the model into an \imitator{} model, and exits.
 \paragraph{\styleOption{-PTA2JPG} (default: false)}
 %------------------------------------------------------------
 Translates the input model to a graphical, human-readable form (in \texttt{.jpg} format), and exits.
+	% TODO add the graphics of the coffee machine
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-PTA2PDF} (default: false)}
+%------------------------------------------------------------
+Translates the input model to a graphical, human-readable form (in \texttt{.pdf} format), and exits.
+	% TODO add the graphics of the coffee machine
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-PTA2PNG} (default: false)}
+%------------------------------------------------------------
+Translates the input model to a graphical, human-readable form (in \texttt{.png} format), and exits.
 	% TODO add the graphics of the coffee machine
 
 %------------------------------------------------------------
