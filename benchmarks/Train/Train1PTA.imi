@@ -11,9 +11,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2012/03/13
- * Last modified   : 2013/03/05
+ * Last modified   : 2018/06/29
  *
- * IMITATOR version: 2.6.1
+ * IMITATOR version: 2.9
  ************************************************************)
 
 var
@@ -23,9 +23,9 @@ var
 		: clock;
 
 (* Parameters *)
-	dApproach,  (*time between the approach and the passing*)
-	dStartDown, (*time between the approach and the gate starting to go down*)
-	dGetDown    (*time between the gate starts to lower, and the gate is closed*)
+	dApproach,  (* Time between the approach and the passing *)
+	dStartDown, (* Time between the approach and the gate starting to go down *)
+	dGetDown,   (* Time between the gate starts to lower, and the gate is closed *)
 		: parameter;
 
 
@@ -34,22 +34,21 @@ var
   automaton system
 (************************************************************)
 synclabs: approach, startDown, endDown, pass;
-initially Far;
 
-loc Far: while True wait {}
+loc Far: while True wait
 	when True sync approach do {x' = 0} goto Approaching;
 
-loc Approaching: while x <= dApproach & x <= dStartDown wait {}
+loc Approaching: while x <= dApproach & x <= dStartDown wait
 	when x = dStartDown sync startDown do {y' = 0} goto Lowering;
 	when x = dApproach sync pass do {} goto Crash;
 
 loc Crash: while True wait {}
 
-loc Lowering: while x <= dApproach & y <= dGetDown wait {}
+loc Lowering: while x <= dApproach & y <= dGetDown wait
 	when x = dApproach sync pass do {} goto Crash;
 	when y = dGetDown sync endDown do {} goto Safe;
 
-loc Safe: while x <= dApproach wait {}
+loc Safe: while x <= dApproach wait
 	when x = dApproach sync pass do {x' = 0, y' = 0} goto Far;
 end (* system *)
 
@@ -63,7 +62,7 @@ init :=
 	(*------------------------------------------------------------*)
 	(* Initial location *)
 	(*------------------------------------------------------------*)
-	& loc[system]      = Far
+	  loc[system]      = Far
 
 	(*------------------------------------------------------------*)
 	(* Initial clock constraints *)
@@ -77,7 +76,6 @@ init :=
 	& dApproach >= 0
 	& dStartDown >= 0
 	& dGetDown >= 0
-(* 	& dGetDown = 5 *)
 ;
 
 
