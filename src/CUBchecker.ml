@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2017/04/24
+ * Last modified     : 2017/08/01
  *
  ************************************************************)
 
@@ -444,7 +444,7 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 
 	List.iter (	fun clock_index -> 
 		let inequalities_need_to_solve = ref [] in
-		print_message Verbose_low ("   Checking CUB condtions at clock (" ^ (model.variable_names clock_index) ^ "):");
+		print_message Verbose_low ("   Checking CUB conditions at clock (" ^ (model.variable_names clock_index) ^ "):");
 
 		print_message Verbose_low ("\n 	**Beginning state/location** :");
 		let (_, op_s0, linear_term_s0) 	= filter_upperbound_by_clock clock_index tuple_inequalities_s0 in
@@ -718,11 +718,13 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 
 
 let tuple2pxd_constraint (clock_index, op, linear_term) = 
-	let clock_term = LinearConstraint.make_p_linear_term [NumConst.one, clock_index] NumConst.zero in
+	(* Call dedicated function from LinearConstraint; "true" means the operator direction is not reversed *)
+	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters clock_index op linear_term true
+(*	let clock_term = LinearConstraint.make_p_linear_term [NumConst.one, clock_index] NumConst.zero in
 	let linear_inequality = LinearConstraint.make_p_linear_inequality (LinearConstraint.sub_p_linear_terms clock_term linear_term) op in
 	let constr = LinearConstraint.make_p_constraint [linear_inequality] in
 	let constr = LinearConstraint.pxd_of_p_constraint constr in
-	constr
+	constr*)
 	
 
 let create_x_ge_zero clock_index = (clock_index, LinearConstraint.Op_ge, LinearConstraint.make_p_linear_term [] NumConst.zero)
@@ -1222,15 +1224,21 @@ let cub_tran model submodels count_m
 			(*for printing - not important*)
 			submodel = 
 
+	print_message Verbose_total ("Entering cub_tran; converting constraints…" ); 
+	
 	(*convert back to constraint for each inequality*)
 	(* print_message Verbose_low ("\n clock_term:" ^ (LinearConstraint.string_of_p_linear_term model.variable_names clock_term));  *)
+	print_message Verbose_total ("Converting s0…" );
 	let constraint_s0 = tuple2pxd_constraint (clock_index_s0 , op_s0, linear_term_s0) in
 	(* print_message Verbose_low ("\n constraint_s0:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s0));  *)
+	print_message Verbose_total ("Converting t…" );
 	let constraint_t = tuple2pxd_constraint (clock_index_t, op_t, linear_term_t) in
 	(* print_message Verbose_low ("\n constraint_t:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_t)); *)
+	print_message Verbose_total ("Converting s1…" );
 	let constraint_s1 = tuple2pxd_constraint (clock_index_s1, op_s1, linear_term_s1) in
 	(* print_message Verbose_low ("\n constraint_s1:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s1));   *)
 
+	print_message Verbose_total ("Starting matching cases…" );
 
 	(*
 	print_message Verbose_low ("\n");
@@ -2209,15 +2217,15 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 				print_message Verbose_low ("\n --------------------1st check start---------------------- ");
 				List.iter (	fun clock_index ->
-					(*** NOTE: unused code written by Gia, removed by ÉA (2017/02/08) ***)
-(* 				 	let inequalities_need_to_solve = ref [] in *)
 
-				 	print_message Verbose_low ("   Checking CUB condtions at clock (" ^ (model.variable_names clock_index) ^ "):"); 	
+				 	print_message Verbose_low ("   Checking CUB conditions at clock (" ^ (model.variable_names clock_index) ^ "):");
 					let (clock_index_s0 , op_s0, linear_term_s0) = filter_upperbound_by_clock clock_index tuple_inequalities_s0 in
 					let (clock_index_t, op_t, linear_term_t) = filter_upperbound_by_clock clock_index tuple_inequalities_t in
 					let (clock_index_s1, op_s1, linear_term_s1) = filter_upperbound_by_clock clock_index tuple_inequalities_s1 in
 
-					cub_tran model submodels count_m 
+				 	print_message Verbose_total ("About to call cub_tran…");
+
+				 	cub_tran model submodels count_m 
 							locations transitions
 							location_index clock_index clock_updates 
 							clocks_constraints parameters_constraints
@@ -2273,7 +2281,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 					let tuple_inequalities_s1 	= convert_inequality_list_2_tuple_list model inequalities_s1 in
 
 					List.iter (	fun clock_index -> 
-					 	print_message Verbose_low ("   Checking CUB condtions at clock (" ^ (model.variable_names clock_index) ^ "):");
+					 	print_message Verbose_low ("   Checking CUB conditions at clock (" ^ (model.variable_names clock_index) ^ "):");
 						let (clock_index_s0 , op_s0, linear_term_s0) 	= filter_upperbound_by_clock clock_index tuple_inequalities_s0 in
 						let (clock_index_t, op_t, linear_term_t) 	= filter_upperbound_by_clock clock_index tuple_inequalities_t in
 						
