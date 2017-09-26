@@ -41,11 +41,13 @@ let continuous_part_of_guard (*: LinearConstraint.pxd_linear_constraint*) = func
 	| Continuous_guard continuous_guard -> continuous_guard
 	| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard
 
+(* Alert 26-09-2017: All operators are negated, the new one "convert_inequality_list_2_tuple_list" created to adapt to the new current code *)
 (* 
 Simple funtion to covert from list of inequalities to list of tuple (clock; operator; linear expression) 
 Note that: if there are True constraints, it will return back a list of clock greater than Zero
 This only uses to indicate clock smaller than INFINITE, not for lower-bound
 *)
+(*
 let convert_inequality_list_2_tuple_list model inequalities =
 	let list_s0 = ref [] in 
 	match inequalities with 
@@ -55,18 +57,48 @@ let convert_inequality_list_2_tuple_list model inequalities =
 						) model.clocks_without_special_reset_clock; 
 			!list_s0
 
-	| _ ->	(* print_message Verbose_low (" Covert inequalities -> list(clock; operator; linear expression) Start:"); *)
+	| _ ->	print_message Verbose_low (" Covert inequalities -> list(clock; operator; linear expression) Start:"); 
 			List.iter 	(fun inequality -> (
+						print_message Verbose_low (" Inequality: " ^ (LinearConstraint.string_of_pxd_linear_inequality model.variable_names inequality ) );
+						
 						let (clock_index_2, operator, parametric_linear_term) = LinearConstraint.clock_guard_of_linear_inequality inequality in
+						
 						list_s0 := !list_s0@[(clock_index_2, operator, parametric_linear_term)]; 
-						(* print_message Verbose_low (" inequality: " ^ (model.variable_names clock_index_2) 
+						print_message Verbose_low (" inequality: " ^ (model.variable_names clock_index_2) 
 														^ " " ^ (LinearConstraint.operator2string operator) 
 														^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names parametric_linear_term) 
-														^ " added!"); *)
+														^ " added!"); 
 							) 
 						) inequalities; 
-			(* print_message Verbose_low (" Covert inequalities -> list(clock; operator; linear expression) End!");
-			print_message Verbose_low ("\n"); *)
+			print_message Verbose_low (" Covert inequalities -> list(clock; operator; linear expression) End!");
+			print_message Verbose_low ("\n"); 
+			!list_s0
+*)
+
+let convert_inequality_list_2_tuple_list model inequalities =
+	let list_s0 = ref [] in 
+	match inequalities with 
+	(*True constraints -> list of clocks >= 0*)
+		[] ->  List.iter 	(fun clock_index -> 
+						list_s0 := !list_s0@[(clock_index, LinearConstraint.Op_le, LinearConstraint.make_p_linear_term [] NumConst.zero)] 
+						) model.clocks_without_special_reset_clock; 
+			!list_s0
+
+	| _ ->	print_message Verbose_low (" Covert inequalities -> list(clock; operator; linear expression) Start:"); 
+			List.iter 	(fun inequality -> (
+						print_message Verbose_low (" Inequality: " ^ (LinearConstraint.string_of_pxd_linear_inequality model.variable_names inequality ) );
+						
+						let (clock_index_2, operator, parametric_linear_term) = LinearConstraint.clock_guard_of_linear_inequality inequality in
+						
+						list_s0 := !list_s0@[(clock_index_2, LinearConstraint.reverse_op operator, parametric_linear_term)]; 
+						print_message Verbose_low (" inequality: " ^ (model.variable_names clock_index_2) 
+														^ " " ^ (LinearConstraint.operator2string operator) 
+														^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names parametric_linear_term) 
+														^ " added!"); 
+							) 
+						) inequalities; 
+			print_message Verbose_low (" Covert inequalities -> list(clock; operator; linear expression) End!");
+			print_message Verbose_low ("\n"); 
 			!list_s0
 
 
@@ -1230,13 +1262,13 @@ let cub_tran model submodels count_m
 	(* print_message Verbose_low ("\n clock_term:" ^ (LinearConstraint.string_of_p_linear_term model.variable_names clock_term));  *)
 	print_message Verbose_total ("Converting s0…" );
 	let constraint_s0 = tuple2pxd_constraint (clock_index_s0 , op_s0, linear_term_s0) in
-	(* print_message Verbose_low ("\n constraint_s0:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s0));  *)
+	print_message Verbose_low ("\n constraint_s0:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s0));  
 	print_message Verbose_total ("Converting t…" );
 	let constraint_t = tuple2pxd_constraint (clock_index_t, op_t, linear_term_t) in
-	(* print_message Verbose_low ("\n constraint_t:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_t)); *)
+	print_message Verbose_low ("\n constraint_t:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_t)); 
 	print_message Verbose_total ("Converting s1…" );
 	let constraint_s1 = tuple2pxd_constraint (clock_index_s1, op_s1, linear_term_s1) in
-	(* print_message Verbose_low ("\n constraint_s1:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s1));   *)
+	print_message Verbose_low ("\n constraint_s1:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s1));   
 
 	print_message Verbose_total ("Starting matching cases…" );
 
@@ -1917,7 +1949,7 @@ let add_inf_2_missing_c_cons model cons =
 (* [CUB-PTA TRANSFORMATION] THIS IS A FUNCTION USED FOR CUB-PTA TRANSITIONS *)
 let clocks_constraints_process model adding clocks_constraints loc_clocks_constraints location_index invariant_s0 =
 
-	(*
+	
 	print_message Verbose_low ("\nCLOCKS CONSTRAINTS clocks_constraints_process 1: ");
 		DynArray.iter (fun (l_index, con) -> 
 
@@ -1930,7 +1962,7 @@ let clocks_constraints_process model adding clocks_constraints loc_clocks_constr
 			
 
 		) clocks_constraints;
-	*)
+	
 
 	let con = ref (LinearConstraint.pxd_true_constraint ()) in
 	for i = 1 to (DynArray.length clocks_constraints - 1) do
@@ -2258,27 +2290,38 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			print_message Verbose_low ("\n Transition No: " ^ (string_of_int !count_t) );
 			let (location_index, target_location_index, guard, clock_updates, action_index, discrete_update) = transition in
 			let invariant_s0 = Hashtbl.find locations location_index in
+			print_message Verbose_low ("   invariant_s0: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant_s0 ) ) ;
 			let guard_t = guard in
+			print_message Verbose_low ("   guard_t: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard_t ) ) ;
 			print_message Verbose_low (" CUB transformation, Start:");
 			print_message Verbose_low ("\n");
 			(*transform constraints into inequality lists*)
 			let inequalities_s0 = LinearConstraint.pxd_get_inequalities invariant_s0 in
+
 			let inequalities_t 	= LinearConstraint.pxd_get_inequalities guard_t in
+
+			
 			(*transform inequality list into tuple inequality list*)
 			let tuple_inequalities_s0 	= convert_inequality_list_2_tuple_list model inequalities_s0 in
 			let tuple_inequalities_t 	= convert_inequality_list_2_tuple_list model inequalities_t in
 			print_message Verbose_low ("\n --------------------2nd check start---------------------- ");
 			(* let constraints_s1 = find_all_clocks_constraints clocks_constraints target_location_index in *)
 			let constraints_s1 = find_all_clocks_constraints loc_clocks_constraints target_location_index in
+
+			
+
 			List.iter (fun c_s1 ->
 				if LinearConstraint.pxd_is_true c_s1 = false
 				then
 					(
-					(* print_message Verbose_low ("\n Founded constraint: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names c_s1)); *)
+					print_message Verbose_low ("\n Founded constraint: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names c_s1)); 
 					(*transform constraints into inequality lists*)
+					
 					let inequalities_s1 = LinearConstraint.pxd_get_inequalities c_s1 in
+					print_message Verbose_low ("\n --------------------bug detect!!!---------------------- ");
 					(*transform inequality list into tuple inequality list*)
 					let tuple_inequalities_s1 	= convert_inequality_list_2_tuple_list model inequalities_s1 in
+					print_message Verbose_low ("\n --------------------bug detect!!!---------------------- ");
 
 					List.iter (	fun clock_index -> 
 					 	print_message Verbose_low ("   Checking CUB conditions at clock (" ^ (model.variable_names clock_index) ^ "):");
@@ -2722,6 +2765,65 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 
 
+
+	(* DISTRIBUTED VERSION *)
+	(* [CUB-PTA TRANSFORMATION] FINAL STAGE - USE FOR DISTRIBUTED VESION *)
+	
+	let submodel_index_2 = ref 1 in
+
+	let distributedModels = ref [] in
+
+
+	DynArray.iter (fun (locations, transitions, c_constraints, p_constraints, index, init_locs) ->
+
+		(* FINAL MODEL LOCATIONS - Data structure: location_name -> invariant *)
+		let new_invariants_per_location_hashtbl_2 =  Hashtbl.create 0 in
+		(* Adding the initial state *)
+		Hashtbl.add new_invariants_per_location_hashtbl_2 new_initial_location_name (LinearConstraint.pxd_true_constraint ());
+		(* FINAL MODEL TRANSITIONS - Data structure: location_name -> invariant *)
+		let newtransitions_2 = DynArray.make 0 in
+		
+		Hashtbl.iter (fun location_index cons -> 
+			let newloc = location_name_of_location_index_and_submodel_index location_index !submodel_index_2 in
+			Hashtbl.add new_invariants_per_location_hashtbl_2 newloc cons;
+
+		) locations;
+
+		DynArray.iter (fun (location_index, target_location_index, guard, clock_updates, action_index, discrete_update) -> 
+			let newloc1 = location_name_of_location_index_and_submodel_index location_index !submodel_index_2 in
+			let newloc2 = location_name_of_location_index_and_submodel_index target_location_index !submodel_index_2 in
+			DynArray.add newtransitions_2 (newloc1, newloc2, guard, clock_updates, action_index, discrete_update);
+
+		) transitions;
+
+		(*adding parameter relation into the first transition*)
+		let listParaRelations = disjunction_constraints p_constraints in
+
+		List.iter( fun cons ->
+			let pxd_cons = LinearConstraint.pxd_of_p_constraint cons in
+			if (LinearConstraint.pxd_is_false pxd_cons = false)
+			then 
+				(
+				List.iter (fun loc -> 
+				
+					(* Add a transition from the initial location to all local initial locations into the dynamic array of locations *)
+					DynArray.add newtransitions_2 (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index_2, pxd_cons, [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ;
+
+				) init_locs;
+				);
+		) listParaRelations;
+
+		incr submodel_index_2;
+
+		distributedModels := !distributedModels@[(new_invariants_per_location_hashtbl_2, newtransitions_2)];
+
+	) newSubModels;
+
+	(* DISTRIBUTED VERSION -END *)
+
+
+
+
 	(* FINAL OUTPUT MODEL *)
 	(*** NOTE: unused code written by Gia, removed by ÉA (2017/02/08) ***)
 (* 	let finalModel = (new_invariants_per_location_hashtbl, newtransitions, loc_naming_tbl) in  *)
@@ -2761,6 +2863,22 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		) newstates;	 *)
 	print_message Verbose_low ("\nFINAL STAGE - MERGING SUB-MODELS - END ");
 *)
+
+
+
+
+
+	(* 
+	THE OUTPUTS: 
+	There are 3 variables:
+	1/ List of locations (with invariants) : new_invariants_per_location_hashtbl
+	2/ List of transition : newtransitions
+	3/ A table binding between the original location and new split locations : loc_naming_tbl
+	*)
+
+
+
+
 
 	
 	
