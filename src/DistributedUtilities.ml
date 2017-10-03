@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Camille Coti
  * Created           : 2014/03/24
- * Last modified     : 2017/02/08
+ * Last modified     : 2017/10/03
  *
  ************************************************************)
  
@@ -264,11 +264,15 @@ let serialize_bfs_algorithm_termination = function
 	| Result.Depth_limit nb -> "D" ^ (string_of_int nb)
 	(* Termination due to a number of explored states reached *)
 	| Result.States_limit nb -> "S" ^ (string_of_int nb)
+	(* Termination due to a target state found *)
+	| Result.Target_found -> "TF"
+
 
 (*** TODO ***)
 let unserialize_bfs_algorithm_termination = function
 	(* Fixpoint-like termination *)
 	| "R" -> Result.Regular_termination
+	| "TF" -> Result.Target_found
 	| other when other <> "" ->(
 		(* Get first character *)
 		let first_char = String.get other 0 in
