@@ -41,11 +41,13 @@ let continuous_part_of_guard (*: LinearConstraint.pxd_linear_constraint*) = func
 	| Continuous_guard continuous_guard -> continuous_guard
 	| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard
 
+(* Alert 26-09-2017: All operators are negated, the new one "convert_inequality_list_2_tuple_list" created to adapt to the new current code *)
 (* 
 Simple funtion to covert from list of inequalities to list of tuple (clock; operator; linear expression) 
 Note that: if there are True constraints, it will return back a list of clock greater than Zero
 This only uses to indicate clock smaller than INFINITE, not for lower-bound
 *)
+(*
 let convert_inequality_list_2_tuple_list model inequalities =
 	let list_s0 = ref [] in 
 	match inequalities with 
@@ -55,18 +57,55 @@ let convert_inequality_list_2_tuple_list model inequalities =
 						) model.clocks_without_special_reset_clock; 
 			!list_s0
 
-	| _ ->	(* print_message Verbose_low (" Covert inequalities -> list(clock; operator; linear expression) Start:"); *)
+	| _ ->	print_message Verbose_low (" Covert inequalities -> list(clock; operator; linear expression) Start:"); 
 			List.iter 	(fun inequality -> (
+						print_message Verbose_low (" Inequality: " ^ (LinearConstraint.string_of_pxd_linear_inequality model.variable_names inequality ) );
+						
 						let (clock_index_2, operator, parametric_linear_term) = LinearConstraint.clock_guard_of_linear_inequality inequality in
+						
 						list_s0 := !list_s0@[(clock_index_2, operator, parametric_linear_term)]; 
-						(* print_message Verbose_low (" inequality: " ^ (model.variable_names clock_index_2) 
+						print_message Verbose_low (" inequality: " ^ (model.variable_names clock_index_2) 
 														^ " " ^ (LinearConstraint.operator2string operator) 
 														^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names parametric_linear_term) 
-														^ " added!"); *)
+														^ " added!"); 
 							) 
 						) inequalities; 
-			(* print_message Verbose_low (" Covert inequalities -> list(clock; operator; linear expression) End!");
-			print_message Verbose_low ("\n"); *)
+			print_message Verbose_low (" Covert inequalities -> list(clock; operator; linear expression) End!");
+			print_message Verbose_low ("\n"); 
+			!list_s0
+*)
+
+let convert_inequality_list_2_tuple_list model inequalities =
+	let list_s0 = ref [] in 
+	match inequalities with 
+	(*True constraints -> list of clocks >= 0*)
+		[] ->  List.iter 	(fun clock_index -> 
+						list_s0 := !list_s0@[(clock_index, LinearConstraint.Op_le, LinearConstraint.make_p_linear_term [] NumConst.zero)] 
+						) model.clocks_without_special_reset_clock; 
+			!list_s0
+
+	| _ ->	(*
+			print_message Verbose_low (" Covert inequalities -> list(clock; operator; linear expression) Start:"); 
+			*)
+			List.iter 	(fun inequality -> (
+						(*
+						print_message Verbose_low (" Inequality: " ^ (LinearConstraint.string_of_pxd_linear_inequality model.variable_names inequality ) );
+						*)
+						let (clock_index_2, operator, parametric_linear_term) = LinearConstraint.clock_guard_of_linear_inequality inequality in
+						
+						list_s0 := !list_s0@[(clock_index_2, LinearConstraint.reverse_op operator, parametric_linear_term)]; 
+						(*
+						print_message Verbose_low (" inequality: " ^ (model.variable_names clock_index_2) 
+														^ " " ^ (LinearConstraint.operator2string operator) 
+														^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names parametric_linear_term) 
+														^ " added!"); 
+													*)
+							) 
+						) inequalities; 
+			(*
+			print_message Verbose_low (" Covert inequalities -> list(clock; operator; linear expression) End!");
+			print_message Verbose_low ("\n"); 
+			*)
 			!list_s0
 
 
