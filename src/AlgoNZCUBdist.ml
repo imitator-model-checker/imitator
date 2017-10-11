@@ -29,11 +29,14 @@ open AlgoNZCUB
 
 
 
+
 (************************************************************)
 (************************************************************)
 (* Useful functions *)
 (************************************************************)
 (************************************************************)
+
+
 
 
 (* Note: duplicate function *)
@@ -43,6 +46,64 @@ let continuous_part_of_guard (*: LinearConstraint.pxd_linear_constraint*) = func
 	| Discrete_guard discrete_guard -> LinearConstraint.pxd_true_constraint()
 	| Continuous_guard continuous_guard -> continuous_guard
 	| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard
+
+
+let increase current_setup_index max_index = 
+
+	let current_setup_index = ref current_setup_index in
+
+	let current_dimension = ref 0 in
+
+	let not_is_max = ref true in
+
+		while !not_is_max do
+
+			(* Try to increment the local dimension *)
+			let current_dimension_incremented = !current_setup_index.(!current_dimension) + 1 in
+
+			if current_dimension_incremented <= max_index.(!current_dimension) then (
+
+				(* Increment this dimension *)
+				!current_setup_index.(!current_dimension) <- current_dimension_incremented;
+
+				not_is_max := false;
+			)
+
+			else ( 
+				(*reset*)
+				!current_setup_index.(!current_dimension) <- 0;
+
+				current_dimension := !current_dimension + 1;
+
+				if !current_dimension > (Array.length max_index -1) then(
+
+					not_is_max := false;
+
+				)
+
+			);
+
+		done;
+
+!current_setup_index
+
+
+
+let compare current_setup_index max_index = 
+
+	let b = ref true in
+
+	for i = 0 to (Array.length max_index -1) do
+
+  		if ( current_setup_index.(i) != max_index.(i) ) 
+
+  		then 
+
+  			b := false;
+
+	done;
+
+!b
 
 
 let decentralized_initial_loc model initial_global_location =
@@ -55,6 +116,8 @@ let decentralized_initial_loc model initial_global_location =
 	
 
 	List.iter (fun automaton_index -> print_message Verbose_low ("Automaton: " ^ (model.automata_names automaton_index) );
+
+				let temp = ref [||] in
 
 					let location_index = Location.get_location initial_global_location automaton_index in
 
@@ -97,7 +160,8 @@ let decentralized_initial_loc model initial_global_location =
 													| Resets clock_update -> clock_update
 													| Updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); in
 
-								init_constr_loc := ( Array.append !init_constr_loc [|(guard, target_location_index)|] );
+								(* init_constr_loc := ( Array.append !init_constr_loc [|(automaton_index, target_location_index, guard)|] ); *)
+								temp := ( Array.append !temp [|(automaton_index, target_location_index, guard)|] );
 								
 
 								()
@@ -112,9 +176,119 @@ let decentralized_initial_loc model initial_global_location =
 
 	        print_message Verbose_low ("\n");
 
+	        init_constr_loc := ( Array.append !init_constr_loc [|!temp|] );
+
 	) model.automata;
 	print_message Verbose_low ("lenght!!!! " ^ string_of_int (Array.length !init_constr_loc) );
+
 !init_constr_loc
+
+
+
+
+let init_state_list model initial_loc_array = 
+
+	print_message Verbose_low (" init_state_list function ");
+
+	let max_index = ref [||] in
+
+	let number_of_setups = ref 0 in 
+
+	(* count from 0 *)
+	Array.iter ( fun sub_array -> 
+
+		let len = (Array.length sub_array) -1 in
+
+		print_message Verbose_low (" len sub array " ^ string_of_int (len) );
+
+		number_of_setups := !number_of_setups + (Array.length sub_array);
+
+		print_message Verbose_low (" Number of initial state setups " ^ string_of_int (!number_of_setups) );
+
+		max_index := ( Array.append !max_index [|len|] );
+
+	) initial_loc_array;
+
+	let current_setup_index = ref (Array.create (Array.length initial_loc_array) 0) in
+
+	
+
+	Array.iter ( fun element -> 
+
+		print_message Verbose_low (" element " ^ string_of_int (element) );
+
+	) !current_setup_index;
+
+
+
+	let setup_index_list = ref [|!current_setup_index|] in
+
+	print_message Verbose_low (" current increased " );
+	
+	while not (compare !current_setup_index !max_index) do
+		
+		current_setup_index := increase !current_setup_index !max_index;
+		
+		setup_index_list := Array.append !setup_index_list [|!current_setup_index|];
+		
+		for i = 0 to (Array.length !max_index -1) do
+  		
+  			print_message Verbose_low (string_of_int (!current_setup_index.(i)) );
+		
+		done;
+
+	done;
+	
+
+
+
+	let global_init_location_constr = ref [] in
+
+	Array.iter ( fun setup_index -> 
+
+		let init_constr = ref (LinearConstraint.pxd_true_constraint()) in  
+
+		let initial_locations_list = ref [] in 
+
+		for i = 0 to (Array.length setup_index -1) do
+
+			let j = !current_setup_index.(i) in 
+
+			let model_init_locs = initial_loc_array.(i) in 
+			
+			let (automaton_index, location_index, guard) = model_init_locs.(j) in 
+
+			initial_locations_list := (automaton_index, location_index)::!initial_locations_list;
+  			
+  			init_constr := LinearConstraint.pxd_intersection [!init_constr; continuous_part_of_guard guard]; 
+
+
+			()
+
+		done;
+
+		let former_initial_location = model.initial_location in
+
+  		let initial_PTA_locations = !initial_locations_list in
+
+  		let discrete_values = List.map (fun discrete_index -> discrete_index , (Location.get_discrete_value former_initial_location discrete_index)) model.discrete in
+
+  		let global_init_location = Location.make_location initial_PTA_locations discrete_values in
+
+  		global_init_location_constr := (global_init_location,!init_constr)::(!global_init_location_constr);
+
+	
+	) !setup_index_list;
+
+
+
+	for i = 0 to (Array.length initial_loc_array -1) do
+  		
+  		print_message Verbose_low (string_of_int (!current_setup_index.(i)) );
+
+	done;
+
+!global_init_location_constr
 
 
 
@@ -182,11 +356,29 @@ class algoNZCUBdist =
 		(*** NOTE: this operation appears to be here totally useless ***)
 		let init_loc, init_constr = init_state in
 
+
+		(*  *)
 		(* from 0 -> Array.lenght -1 *)
-		let init_constr_loc = decentralized_initial_loc model init_loc in
+		let init_constr_loc = decentralized_initial_loc model init_loc in 
+		let global_init_loc_constr = init_state_list model init_constr_loc in 
+
+
+
+		(* let a = StateSpace.get_location state_space (Array.get init_constr_loc 0) in *)
+
+		let locs_array = Location.get_locations init_loc in 
+		print_int locs_array.(0);
+
+		Array.iter ( fun loc -> print_message Verbose_low ("awdasdsads" ^ (string_of_int loc ));
+			()
+
+		) locs_array;
+
+
 
 
 		let init_state = (init_loc, LinearConstraint.px_copy init_constr) in
+
 
 		(* Set up the initial state constraint *)
 		initial_constraint <- Some init_constr;
@@ -212,7 +404,6 @@ class algoNZCUBdist =
 		(* Create the state space *)
 		state_space <- StateSpace.make guessed_nb_transitions;
 
-		(* let a = StateSpace.get_location state_space (Array.get init_constr_loc 0) in *) 
 		
 		(* Check if the initial state should be kept according to the algorithm *)
 		let initial_state_added = self#process_initial_state init_state in
