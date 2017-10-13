@@ -24,6 +24,7 @@ open Exceptions
 open AbstractModel
 open Result
 open AlgoNZCUB
+open DistributedUtilities
 
 
 
@@ -212,22 +213,9 @@ class algoNZCUBdist =
 		super#compute_result
 
 
-	method private run_master () = 
-		print_message Verbose_standard ("Hello, I am Master!!!!!!…\n")
+	method private run_master = 
+		print_message Verbose_standard ("Hello, I am Master!!!!!!…\n");
 
-
-	method private run_worker () = 
-		print_message Verbose_standard ("Hello, I am Worker!!!!!!…\n")
-
-
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Main method to run the algorithm *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method run () =
-
-		print_message Verbose_standard ("Hello, this is the main run method for switching between Master and Worker!!!!!!…\n");
-
-		
 		(* Get some variables *)
 		let nb_actions = model.nb_actions in
 		let nb_variables = model.nb_variables in
@@ -244,25 +232,35 @@ class algoNZCUBdist =
 		let init_loc, init_constr = init_state in
 
 
-		(*  *)
+		(* Get a list of global initial location and initial constraint *)
 		(* from 0 -> Array.lenght -1 *)
 		let init_constr_loc = decentralized_initial_loc model init_loc in 
 		let global_init_loc_constr = init_state_list model init_constr_loc in 
 
 
 
-		(* let a = StateSpace.get_location state_space (Array.get init_constr_loc 0) in *)
+		(* Get number of processes - index: from 0 -> no_nodes-1 *)
+		let no_nodes = DistributedUtilities.get_nb_nodes () in  
+		print_message Verbose_low (" number of nodes " ^ (string_of_int no_nodes) );
 
-		let locs_array = Location.get_locations init_loc in 
-		print_int locs_array.(0);
-
-		Array.iter ( fun loc -> print_message Verbose_low ("awdasdsads" ^ (string_of_int loc ));
-			()
-
-		) locs_array;
-
+		(* Get number of setup *)
+		let no_setups = List.length global_init_loc_constr in 
+		print_message Verbose_low (" number of setups " ^ (string_of_int no_setups) );
+		
+		let current_rank =  DistributedUtilities.get_rank () in 
+		print_message Verbose_low (" Current rank " ^ (string_of_int current_rank) ); 
 
 
+		(*
+		(* Early terminating - later *)
+		if no_nodes > no_setups 
+		then
+		(
+			for i = no_setups + 1  to no_nodes - 1 do
+				DistributedUtilities.send_terminate i;
+			done;
+		);
+		*)
 
 		let init_state = (init_loc, LinearConstraint.px_copy init_constr) in
 
@@ -304,43 +302,121 @@ class algoNZCUBdist =
 			termination_status <- Some (Result.Regular_termination);
 			
 			(* Return the algorithm-dependent result and terminate *)
+			
 			self#compute_result
+		
 		(* Else: start the algorithm in a regular manner *)
 		)else(
 		
-		(* Add the initial state to the reachable states; no need to check whether the state is present since it is the first state anyway *)
-		let init_state_index = match StateSpace.add_state state_space StateSpace.No_check init_state with
-			(* The state is necessarily new as the state space was empty *)
-			| StateSpace.New_state state_index -> state_index
-			| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")
-		in
-		
-		(* Increment the number of computed states *)
-		StateSpace.increment_nb_gen_states state_space;
+			(* Add the initial state to the reachable states; no need to check whether the state is present since it is the first state anyway *)
+			let init_state_index = match StateSpace.add_state state_space StateSpace.No_check init_state with
+				(* The state is necessarily new as the state space was empty *)
+				| StateSpace.New_state state_index -> state_index
+				| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")
+			in
+			
+			(* Increment the number of computed states *)
+			StateSpace.increment_nb_gen_states state_space;
 
-		(* Call generic method handling BFS *)
-		begin
-		match options#exploration_order with
-			| Exploration_layer_BFS -> super#explore_layer_bfs init_state_index;
-			| Exploration_queue_BFS -> super#explore_queue_bfs init_state_index;
-			| Exploration_queue_BFS_RS -> super#explore_queue_bfs init_state_index;
-			| Exploration_queue_BFS_PRIOR -> super#explore_queue_bfs init_state_index;
-		end;
+			(* Call generic method handling BFS *)
+			begin
+			match options#exploration_order with
+				| Exploration_layer_BFS -> super#explore_layer_bfs init_state_index;
+				| Exploration_queue_BFS -> super#explore_queue_bfs init_state_index;
+				| Exploration_queue_BFS_RS -> super#explore_queue_bfs init_state_index;
+				| Exploration_queue_BFS_PRIOR -> super#explore_queue_bfs init_state_index;
+			end;
 
-		(* Return the algorithm-dependent result *)
-		super#compute_result
+			(* Return the algorithm-dependent result *)
+			self#compute_result 
 		
 		(*** TODO: split between process result and return result; in between, add some info (algo_name finished after….., etc.) ***)
 		) (* end if initial state added *)
 
 	
+
+	(* super#run () *)
+
+
+
+
+
+	method private run_worker () = 
+		print_message Verbose_standard ("Hello, I am Worker!!!!!!…\n");
+
+		let current_rank =  DistributedUtilities.get_rank () in 
+		print_message Verbose_low (" Current rank " ^ (string_of_int current_rank) ); 
+
+		let finished = ref false in
+
+		while (not !finished) do
+
+			let work = receive_work () in
+
+			match work with
+	
+				
+			| Terminate -> 
+					print_message Verbose_medium (" Terminate ");
+					(* print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to terminate work."); *)
+					finished := true
+				
+			| _ -> 		print_message Verbose_medium ("error!!! not implemented.");
+					raise (InternalError("not implemented."));
+
+
+
+		done;
+
+		(* Result.Distributed_worker_result *)
+		
+	
+
+
+
+
+
+
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Main method to run the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method run () =
+
+		print_message Verbose_standard ("Hello, this is the main run method for switching between Master and Worker!!!!!!…\n");
+
+
+	
+		(* Branch between master and worker *)
+		if DistributedUtilities.is_master () 
+		then
+			(
+			self#run_master;
+			(* self#compute_result; *)
+			(* Result.Distributed_worker_result; *) 
+			)
+		else
+			(
+			self#run_worker;
+			(* self#compute_result; *)
+			Result.Distributed_worker_result;
+			);
+		
+	(* method virtual compute_result : Result.imitator_result *)
+	
+
+
+
+
+
+
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Packaging the result at the end of the exploration (to be defined in subclasses) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual compute_result : Result.imitator_result
-	
-
-	(* super#run () *)
+		
 
 (************************************************************)
 (************************************************************)
