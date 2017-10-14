@@ -172,7 +172,7 @@ let init_state_list model initial_loc_array =
   		let discrete_values = List.map (fun discrete_index -> discrete_index , (Location.get_discrete_value former_initial_location discrete_index)) model.discrete in
   		let global_init_location = Location.make_location initial_PTA_locations discrete_values in
   		
-  		global_init_location_constr := (global_init_location,!init_constr)::(!global_init_location_constr);
+  		global_init_location_constr := ((global_init_location, (LinearConstraint.pxd_hide_discrete_and_collapse !init_constr)))::(!global_init_location_constr);
 	
 	) !setup_index_list;
 
@@ -192,6 +192,23 @@ class algoNZCUBdist =
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
+
+	val mutable global_init_loc_constr : 'a list ref = ref []
+	
+	val mutable nb_actions : int ref = ref 0
+
+	val mutable nb_variables : int ref = ref 0
+
+	val mutable nb_automata : int ref = ref 0
+
+
+
+
+
+
+
+
+
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
@@ -213,42 +230,17 @@ class algoNZCUBdist =
 		super#compute_result
 
 
+
+
 	method private run_master = 
 		print_message Verbose_standard ("Hello, I am Master!!!!!!…\n");
-
-		(* Get some variables *)
-		let nb_actions = model.nb_actions in
-		let nb_variables = model.nb_variables in
-		let nb_automata = model.nb_automata in
-
-		(* Time counter for the algorithm *)
-		start_time <- Unix.gettimeofday();
-
-		(* Compute initial state *)
-		let init_state = AlgoStateBased.compute_initial_state_or_abort () in
-		
-		(* copy init state, as it might be destroyed later *)
-		(*** NOTE: this operation appears to be here totally useless ***)
-		let init_loc, init_constr = init_state in
-
-
-		(* Get a list of global initial location and initial constraint *)
-		(* from 0 -> Array.lenght -1 *)
-		let init_constr_loc = decentralized_initial_loc model init_loc in 
-		let global_init_loc_constr = init_state_list model init_constr_loc in 
-
-
 
 		(* Get number of processes - index: from 0 -> no_nodes-1 *)
 		let no_nodes = DistributedUtilities.get_nb_nodes () in  
 		print_message Verbose_low (" number of nodes " ^ (string_of_int no_nodes) );
-
 		(* Get number of setup *)
-		let no_setups = List.length global_init_loc_constr in 
+		let no_setups = List.length !global_init_loc_constr in 
 		print_message Verbose_low (" number of setups " ^ (string_of_int no_setups) );
-		
-		let current_rank =  DistributedUtilities.get_rank () in 
-		print_message Verbose_low (" Current rank " ^ (string_of_int current_rank) ); 
 
 
 		(*
@@ -257,118 +249,151 @@ class algoNZCUBdist =
 		then
 		(
 			for i = no_setups + 1  to no_nodes - 1 do
-				DistributedUtilities.send_terminate i;
+				send_terminate i;
 			done;
 		);
+		(* testing - ok *)
 		*)
 
-		let init_state = (init_loc, LinearConstraint.px_copy init_constr) in
 
+		let current = ref 0 in 
 
-		(* Set up the initial state constraint *)
-		initial_constraint <- Some init_constr;
+		let counter = ref 0 in
 
-(*		(*Initialization of slast : used in union mode only*)
-		slast := [];*)
-		
-		(* Print some information *)
-		print_message Verbose_standard ("Starting running algorithm " ^ self#algorithm_name ^ "…\n");
-		
-		(* Variable initialization *)
-		print_message Verbose_low ("Initializing the algorithm local variables…");
-		self#initialize_variables;
+		while !counter != no_nodes -1 do
 
-		(* Debut prints *)
-		print_message Verbose_low ("Starting exploring the parametric zone graph from the following initial state:");
-		print_message Verbose_low (ModelPrinter.string_of_state model init_state);
-		(* Guess the number of reachable states *)
-		let guessed_nb_states = 10 * (nb_actions + nb_automata + nb_variables) in 
-		let guessed_nb_transitions = guessed_nb_states * nb_actions in 
-		print_message Verbose_high ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
-		
-		(* Create the state space *)
-		state_space <- StateSpace.make guessed_nb_transitions;
+		let pull_request = (receive_pull_request_NZCUB ()) in
+		(
+		match pull_request with 
+		(*Pull Tag*)
+		| PullOnly source_rank ->
+			print_message Verbose_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
+			(* check to delete if the worker comeback *)
 
-		
-		(* Check if the initial state should be kept according to the algorithm *)
-		let initial_state_added = self#process_initial_state init_state in
-		
-		(* Degenerate case: initial state cannot be kept: terminate *)
-		if not initial_state_added then(
-			(* Output a warning because this situation is still a little strange *)
-			print_warning "The initial state is not kept. Analysis will now terminate.";
+			let current_rank =  DistributedUtilities.get_rank () in 
+			print_message Verbose_low (" Current rank " ^ (string_of_int current_rank) ); 
+
 			
-			(* Set the termination status *)
-			termination_status <- Some (Result.Regular_termination);
-			
-			(* Return the algorithm-dependent result and terminate *)
-			
-			self#compute_result
-		
-		(* Else: start the algorithm in a regular manner *)
-		)else(
-		
-			(* Add the initial state to the reachable states; no need to check whether the state is present since it is the first state anyway *)
-			let init_state_index = match StateSpace.add_state state_space StateSpace.No_check init_state with
-				(* The state is necessarily new as the state space was empty *)
-				| StateSpace.New_state state_index -> state_index
-				| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")
-			in
-			
-			(* Increment the number of computed states *)
-			StateSpace.increment_nb_gen_states state_space;
+			if !current <= no_setups -1 
+			then 
+				(
+				send_init_state !current source_rank;
+				print_message Verbose_low (" Send!!!!!! ");  
+				current := !current + 1;
+				)
+			else
+				(
+				send_terminate source_rank;
+				counter := !counter + 1; 
+				); 
 
-			(* Call generic method handling BFS *)
-			begin
-			match options#exploration_order with
-				| Exploration_layer_BFS -> super#explore_layer_bfs init_state_index;
-				| Exploration_queue_BFS -> super#explore_queue_bfs init_state_index;
-				| Exploration_queue_BFS_RS -> super#explore_queue_bfs init_state_index;
-				| Exploration_queue_BFS_PRIOR -> super#explore_queue_bfs init_state_index;
-			end;
+			 (* print_message Verbose_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "; end."); *)
 
-			(* Return the algorithm-dependent result *)
-			self#compute_result 
-		
-		(*** TODO: split between process result and return result; in between, add some info (algo_name finished after….., etc.) ***)
-		) (* end if initial state added *)
+		(*0ther cases*)
+		|_ -> raise (InternalError("not implemented."))
+	 	 
+	 	);
 
-	
+		done;
 
-	(* super#run () *)
+
+
+	Result.Distributed_worker_result 
 
 
 
 
 
-	method private run_worker () = 
+	method private run_worker = 
 		print_message Verbose_standard ("Hello, I am Worker!!!!!!…\n");
 
 		let current_rank =  DistributedUtilities.get_rank () in 
 		print_message Verbose_low (" Current rank " ^ (string_of_int current_rank) ); 
 
+
+		(*
+		send_work_request ();
+		print_message Verbose_low (" Send work request!!! ");
+		*)
+		
 		let finished = ref false in
 
-		while (not !finished) do
+		
+		while (not !finished) do 
 
-			let work = receive_work () in
+			send_work_request ();
+
+			print_message Verbose_low (" Send work request!!! ");
+
+
+			let work = receive_work_NZCUB () in
+			print_message Verbose_low (" received work!!! ");
 
 			match work with
-	
+
+			| Initial_state index -> 
+					print_message Verbose_low (" buggg!!! ");
+
+					
+					(* testing - global constraints *)
+					(* let (init_loc, init_constr) = List.nth !global_init_loc_constr index in *)
+					let (init_loc, init_constr) = List.hd !global_init_loc_constr in 
+					(* let init_state = (init_loc, LinearConstraint.px_copy init_constr) in *)
+					let init_state = (init_loc, init_constr) in
+					(* Set up the initial state constraint *)
+					initial_constraint <- Some init_constr;
+			(*		(*Initialization of slast : used in union mode only*)
+					slast := [];*)
+					(* Print some information *)
+					print_message Verbose_standard ("Starting running algorithm " ^ self#algorithm_name ^ "…\n");
+					(* Variable initialization *)
+					print_message Verbose_low ("Initializing the algorithm local variables…");
+					self#initialize_variables;
+					(* Debut prints *)
+					print_message Verbose_low ("Starting exploring the parametric zone graph from the following initial state:");
+					print_message Verbose_low (ModelPrinter.string_of_state model init_state);
+					(* Guess the number of reachable states *)
+					let guessed_nb_states = 10 * (!nb_actions + !nb_automata + !nb_variables) in 
+					let guessed_nb_transitions = guessed_nb_states * !nb_actions in 
+					print_message Verbose_high ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
+					(* Create the state space *)
+					state_space <- StateSpace.make guessed_nb_transitions;
+					
+
+					(* Check if the initial state should be kept according to the algorithm *)
+					let initial_state_added = self#process_initial_state init_state in
+
+
+					(* Run the NZ algo *)
+					let result = super#run () in 
+
+					(* let result = AlgoNZCUB#run () in *)
+
+					(* send back to master the result *)
+					(* finished := true; *) 
+					(* result; *) 
+					
 				
+					(* Result.Distributed_worker_result *) 
+					() 
+
+			
 			| Terminate -> 
-					print_message Verbose_medium (" Terminate ");
+					print_message Verbose_low (" Terminate ");
 					(* print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to terminate work."); *)
-					finished := true
+					finished := true;
+					(* Result.Distributed_worker_result *)
+			
+			
 				
-			| _ -> 		print_message Verbose_medium ("error!!! not implemented.");
+			| _ -> 		print_message Verbose_low ("error!!! not implemented.");
 					raise (InternalError("not implemented."));
 
+		done; 
+		
 
-
-		done;
-
-		(* Result.Distributed_worker_result *)
+		
+		Result.Distributed_worker_result
 		
 	
 
@@ -383,9 +408,31 @@ class algoNZCUBdist =
 	(* Main method to run the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run () =
-
 		print_message Verbose_standard ("Hello, this is the main run method for switching between Master and Worker!!!!!!…\n");
 
+		(* Get some variables *)
+		(* let nb_actions = model.nb_actions in *)
+		nb_actions := model.nb_actions;
+		(* let nb_variables = model.nb_variables in *)
+		nb_variables := model.nb_variables;
+		(* let nb_automata = model.nb_automata in *)
+		nb_automata := model.nb_automata;
+		(* Time counter for the algorithm *)
+		start_time <- Unix.gettimeofday();
+
+		(* Compute initial state *)
+		let init_state = AlgoStateBased.compute_initial_state_or_abort () in
+		
+		(* copy init state, as it might be destroyed later *)
+		(*** NOTE: this operation appears to be here totally useless ***)
+		let init_loc, init_constr = init_state in
+
+		(* Get a list of global initial location and initial constraint *)
+		(* from 0 -> Array.lenght -1 *)
+		let init_constr_loc = decentralized_initial_loc model init_loc in 
+		(* let global_init_loc_constr = init_state_list model init_constr_loc in *)
+
+		global_init_loc_constr := init_state_list model init_constr_loc;
 
 	
 		(* Branch between master and worker *)
@@ -393,23 +440,12 @@ class algoNZCUBdist =
 		then
 			(
 			self#run_master;
-			(* self#compute_result; *)
-			(* Result.Distributed_worker_result; *) 
 			)
 		else
 			(
 			self#run_worker;
-			(* self#compute_result; *)
-			Result.Distributed_worker_result;
 			);
-		
-	(* method virtual compute_result : Result.imitator_result *)
 	
-
-
-
-
-
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

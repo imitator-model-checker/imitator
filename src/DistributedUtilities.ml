@@ -45,6 +45,7 @@ type pull_request =
 (* 	| BC_result of rank * bc_result *)
 	| Pi0 of rank * PVal.pval
 	| UpdateRequest of rank
+	(* | Good_or_bad_constraint of good_or_bad_constraint *)
 
 
 (** Tags sent by the master *)
@@ -56,6 +57,7 @@ type work_assignment =
 	| TileUpdate of Result.abstract_point_based_result
 	| Terminate
 	| Continue
+	| Initial_state of int
 
 
 type pi0_list = (Automaton.variable_index * NumConst.t) list
@@ -86,6 +88,8 @@ type mpi_master_tag =
 	(*** NOTE: difference with Master_stop_tag ??? ***)
 	| Master_terminate_tag
 	| Master_continue_tag
+	| Master_Initial_state
+
 
 
 
@@ -804,6 +808,7 @@ let int_of_master_tag = function
 	| Master_subdomain_tag -> 20
 	| Master_terminate_tag -> 21
 	| Master_continue_tag -> 22
+	| Master_Initial_state -> 23
 	(*** NOTE: unused match case (but safer!) ***)
 (* 	| _ -> raise (InternalError ("Impossible match in int_of_master_tag.")) *)
 	
@@ -827,6 +832,7 @@ let master_tag_of_int = function
 	| 20 -> Master_subdomain_tag
 	| 21 -> Master_terminate_tag
 	| 22 -> Master_continue_tag
+	| 23 -> Master_Initial_state
 	| other -> raise (InternalError ("Impossible match '" ^ (string_of_int other) ^ "' in master_tag_of_int."))
 
 
@@ -1151,3 +1157,57 @@ let receive_cartography_result () : rank * Result.cartography_result =
 		source_rank , cartography_result
 	
 	| _ -> raise (InternalError("Unexpected tag received in receive_bcresult"))
+
+
+	(* NZCUB *)
+
+	
+(*Hoang Gia send initial_location_setup (int) tag*)
+(* Master *)
+let send_init_state value source_rank = 
+  	print_message Verbose_high( "[Master] Sending INT to [Worker " ^ (string_of_int source_rank ) ^"] with int = " ^ (string_of_int value ) ^ ".");
+  	Mpi.send (value) source_rank (int_of_master_tag Master_Initial_state) Mpi.comm_world 
+
+ 
+
+
+(* At Worker *)
+let receive_work_NZCUB () =
+	let ( w, _, tag ) =
+	Mpi.receive_status master_rank Mpi.any_tag Mpi.comm_world in
+	let tag = master_tag_of_int tag in
+	match tag with
+	(*Hoang Gia new tags*)
+	| Master_Initial_state -> 
+	  	print_message Verbose_high( " [Worker " ^ (string_of_int (get_rank ()) ) ^"] received initial state index = " ^ (string_of_int w ) ^ ".");
+		Initial_state w
+
+	| Master_terminate_tag -> Terminate
+	
+
+
+
+(* At Mater *)
+let receive_pull_request_NZCUB () =
+  (* First receive the length of the data we are about to receive *)
+  let (l, source_rank, tag) = Mpi.receive_status Mpi.any_source Mpi.any_tag Mpi.comm_world in
+  print_message Verbose_high ("\t[Master] MPI status received from [Worker " ^ ( string_of_int source_rank) ^"]");
+  print_message Verbose_high ("\t[Master] Tag decoded from [Worker " ^ ( string_of_int source_rank) ^"] : " ^ ( string_of_int tag ) );
+  let tag = worker_tag_of_int tag in  
+  match tag with
+		   
+  (* Case error *)
+  | Slave_outofbound_tag ->
+     print_message Verbose_high ("[Master] Received Slave_outofbound_tag");
+     OutOfBound source_rank
+
+  (* Case simple pull? *)
+  | Slave_work_tag ->
+     print_message Verbose_high ("[Master] Received Slave_work_tag from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
+     PullOnly (* source_rank *) l
+ 
+
+
+
+
+;;
