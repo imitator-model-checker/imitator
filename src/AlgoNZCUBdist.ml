@@ -367,22 +367,85 @@ class algoNZCUBdist =
 					(* Run the NZ algo *)
 					let result = super#run () in 
 
+					 print_message Verbose_low ("aaaaaa dfgdgkldfkkgld; ");
+
+					let result1 = 
+					( 
+					match result with 
+						(* Result for Post* *)
+						| PostStar_result poststar_result -> print_message Verbose_low ("The result is poststar_result "); None 
+
+						(* Result for old version of EFsynth *)
+						| Deprecated_efsynth_result deprecated_efsynth_result -> print_message Verbose_low ("The result is Deprecated_efsynth_result "); None 
+						
+						(* Result for EFsynth, PDFC PRP *)
+						| Single_synthesis_result single_synthesis_result -> print_message Verbose_low ("The result is Single_synthesis_result "); Some single_synthesis_result.result
+						
+						(* Result for IM, PRP *)
+						| Point_based_result point_based_result -> print_message Verbose_low ("The result is Point_based_result "); Some point_based_result.result
+						
+						(* Result for original cartography *)
+						| Cartography_result cartography_result -> print_message Verbose_low ("The result is Cartography_result "); (* Some cartography_result.result *) None
+						
+						(* Result for PRPC *)
+						| Multiple_synthesis_result multiple_synthesis_result -> print_message Verbose_low ("The result is Multiple_synthesis_result "); None
+						
+						(* No result for workers in distributed mode *)
+						| Distributed_worker_result -> print_message Verbose_low ("The result is Distributed_worker_result "); None
+
+						| _ -> raise (InternalError("not implemented."))
+					);
+					in
+
+					let result2 = 
+					( 
+					match result1 with 
+						(* Only good valuations *)
+						| Some Good_constraint constraint_and_soundness -> print_message Verbose_low ("The constraint is Good_constraint ");
+						(* Only bad valuations *)
+						| Some Bad_constraint constraint_and_soundness -> print_message Verbose_low ("The constraint is Bad_constraint ");
+						(* Both good and bad valuations *)
+						| Some Good_bad_constraint good_and_bad_constraint -> print_message Verbose_low ("The constraint is Good_bad_constraint ");
+						
+					);
+					in
+
+					let result2 = 
+					( 
+					match result1 with 
+						(* Only good valuations *)
+						| Some good_bad_constraint -> good_bad_constraint;
+						(* Only bad valuations *)
+						| None -> raise (InternalError("not implemented."));
+						
+					);
+					in
+
+					(* DistributedUtilities.send_good_or_bad_constraint result2; *)
+
+
+					(* print_message Verbose_high ("I guess I will reach about " ^ (string_of_int result) ); *)
+
+					(* let const = (List !result1.hd).result in *)
+
 					(* let result = AlgoNZCUB#run () in *)
 
 					(* send back to master the result *)
 					(* finished := true; *) 
 					(* result; *) 
+
+
 					
 				
-					(* Result.Distributed_worker_result *) 
-					() 
+					Result.Distributed_worker_result 
+					(* () *)
 
 			
 			| Terminate -> 
 					print_message Verbose_low (" Terminate ");
 					(* print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to terminate work."); *)
 					finished := true;
-					(* Result.Distributed_worker_result *)
+					Result.Distributed_worker_result 
 			
 			
 				

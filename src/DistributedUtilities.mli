@@ -29,7 +29,7 @@ type pull_request =
 (* 	| BC_result of rank * Result.cartography_result *)
 	| Pi0 of rank * PVal.pval
 	| UpdateRequest of rank
-	(* | Good_or_bad_constraint of good_or_bad_constraint *)
+	| Good_or_bad_constraint of Result.good_or_bad_constraint 
 
 
 (** Tags sent by the master *)
@@ -125,4 +125,6 @@ val send_init_state : int -> rank -> unit
 val receive_work_NZCUB : unit -> work_assignment
 
 val receive_pull_request_NZCUB : unit -> pull_request
+
+val send_good_or_bad_constraint : Result.good_or_bad_constraint -> unit
 

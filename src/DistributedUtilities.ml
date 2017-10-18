@@ -45,7 +45,7 @@ type pull_request =
 (* 	| BC_result of rank * bc_result *)
 	| Pi0 of rank * PVal.pval
 	| UpdateRequest of rank
-	(* | Good_or_bad_constraint of good_or_bad_constraint *)
+	| Good_or_bad_constraint of Result.good_or_bad_constraint 
 
 
 (** Tags sent by the master *)
@@ -77,6 +77,7 @@ type mpi_slave_tag =
 	| Slave_bcresult_tag
 	| Slave_pi0_tag
 	| Slave_updaterequest_tag
+	| Slave_good_or_bad_constraint
 
 (** Tags sent by master *)
 type mpi_master_tag =
@@ -796,6 +797,7 @@ let int_of_slave_tag = function
 	| Slave_bcresult_tag -> 5
 	| Slave_pi0_tag -> 6
 	| Slave_updaterequest_tag -> 7
+	| Slave_good_or_bad_constraint -> 8
 	(*** NOTE: unused match case (but safer!) ***)
 (* 	| _ -> raise (InternalError ("Impossible match in int_of_slave_tag.")) *)
 
@@ -822,6 +824,7 @@ let worker_tag_of_int = function
 	| 5 -> Slave_bcresult_tag
 	| 6 -> Slave_pi0_tag
 	| 7 -> Slave_updaterequest_tag
+	| 8 -> Slave_good_or_bad_constraint
 	| other -> raise (InternalError ("Impossible match '" ^ (string_of_int other) ^ "' in worker_tag_of_int."))
 
 let master_tag_of_int = function
@@ -1183,7 +1186,15 @@ let receive_work_NZCUB () =
 		Initial_state w
 
 	| Master_terminate_tag -> Terminate
+
 	
+
+(** Master sends a good bad constraint to a worker *)
+let send_good_or_bad_constraint good_or_bad_constraint =
+	let serialized_data = serialize_good_or_bad_constraint good_or_bad_constraint in
+	print_message Verbose_high ("[Master] Serialized good_or_bad_constraint '" ^ serialized_data ^ "'");
+	(* Call generic function *)
+	send_serialized_data master_rank (int_of_slave_tag Slave_good_or_bad_constraint) serialized_data
 
 
 
@@ -1205,6 +1216,27 @@ let receive_pull_request_NZCUB () =
   | Slave_work_tag ->
      print_message Verbose_high ("[Master] Received Slave_work_tag from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
      PullOnly (* source_rank *) l
+
+
+
+  |	 Slave_good_or_bad_constraint -> 
+  	 print_message Verbose_high ("[Master] Received Slave_good_or_bad_constraint from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
+
+  	 (*
+  	 let buff = String.create l in
+		let work = ref buff in
+
+		work := Mpi.receive master_rank (int_of_master_tag Master_data_tag) Mpi.comm_world;
+		
+		print_message Verbose_high ("Received " ^ (string_of_int l) ^ " bytes of work '" ^ !work ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_data_tag)));
+
+  	 	let good_or_bad_constraint = unserialize_good_or_bad_constraint work in
+  	 *)
+  	 	let good_or_bad_constraint = unserialize_good_or_bad_constraint l in
+
+  	 	Good_or_bad_constraint good_or_bad_constraint
+
+
  
 
 
