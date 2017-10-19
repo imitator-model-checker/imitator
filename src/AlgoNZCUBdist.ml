@@ -253,6 +253,9 @@ class algoNZCUBdist =
 		let counter = ref 0 in
 
 		while !counter != no_nodes -1 do
+		
+		(* Create the final good_or_bad_constraint *)
+		let good_or_bad_constraint = Good_constraint (LinearConstraint.true_p_nnconvex_constraint () , Result.Constraint_exact) in
 
 		let pull_request = (receive_pull_request_NZCUB ()) in
 		(
@@ -282,20 +285,23 @@ class algoNZCUBdist =
 			 (* print_message Verbose_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "; end."); *)
 
 
-		| Good_or_bad_constraint good_or_bad_constraint ->
-			let _ = (
-				match good_or_bad_constraint with
-				(* Only good valuations *)
-				| Good_constraint constraint_and_soundness -> print_message Verbose_low ("The constraint is Good_constraint ");
-				(* Only bad valuations *)
-				| Bad_constraint constraint_and_soundness -> print_message Verbose_low ("The constraint is Bad_constraint ");
-				(* Both good and bad valuations *)
-				| Good_bad_constraint good_and_bad_constraint -> print_message Verbose_low ("The constraint is Good_bad_constraint ");
+		| Good_or_bad_constraint worker_good_or_bad_constraint ->
+			begin
+				if verbose_mode_greater Verbose_low then(
+				match worker_good_or_bad_constraint with
+					(* Only good valuations *)
+					| Good_constraint constraint_and_soundness -> print_message Verbose_low ("The constraint is Good_constraint ");
+					(* Only bad valuations *)
+					| Bad_constraint constraint_and_soundness -> print_message Verbose_low ("The constraint is Bad_constraint ");
+					(* Both good and bad valuations *)
+					| Good_bad_constraint good_and_bad_constraint -> print_message Verbose_low ("The constraint is Good_bad_constraint ");
+					);
 				);
+				
+				(*** TODO: "merge" (union) the good_or_bad_constraint with worker_good_or_bad_constraint ***)
 
-			in
-
-			 (* print_message Verbose_medium ("[Master] Received a Good_or_bad_constraint from worker " ^ (string_of_int source_rank) ^ "; end."); *) ()
+			 (* print_message Verbose_medium ("[Master] Received a Good_or_bad_constraint from worker " ^ (string_of_int source_rank) ^ "; end."); *)
+			 end;
 
 		(*0ther cases*)
 		|_ -> raise (InternalError("not implemented."))
@@ -304,9 +310,25 @@ class algoNZCUBdist =
 
 		done;
 
+		(* Print some explanations for the result *)
+		print_warning "The returned state space and the returned algorithm termination are dummy values; please do not consider it.";
+		print_warning "The computation time is the local time on the master (NOT the sum of all workers computation times)";
 
-
-	Result.Distributed_worker_result 
+		(* Return the entire result *)
+		Result.Single_synthesis_result
+			{
+				(* Good and/or bad valuations *)
+				result				= good_or_bad_constraint;
+				
+				(* Explored state space *)
+				state_space			= StateSpace.make 0; (*** NOTE: dummy value! ***)
+				
+				(* Total computation time of the algorithm *)
+				computation_time	= time_from start_time;
+				
+				(* Termination *)
+				termination			= Result.Regular_termination; (*** NOTE: dummy value! ***)
+			}
 
 
 
