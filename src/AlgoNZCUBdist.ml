@@ -289,6 +289,22 @@ class algoNZCUBdist =
 
 			 (* print_message Verbose_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "; end."); *)
 
+
+		| Good_or_bad_constraint good_or_bad_constraint ->
+			let _ = (
+				match good_or_bad_constraint with
+				(* Only good valuations *)
+				| Good_constraint constraint_and_soundness -> print_message Verbose_low ("The constraint is Good_constraint ");
+				(* Only bad valuations *)
+				| Bad_constraint constraint_and_soundness -> print_message Verbose_low ("The constraint is Bad_constraint ");
+				(* Both good and bad valuations *)
+				| Good_bad_constraint good_and_bad_constraint -> print_message Verbose_low ("The constraint is Good_bad_constraint ");
+				);
+
+			in
+
+			 (* print_message Verbose_medium ("[Master] Received a Good_or_bad_constraint from worker " ^ (string_of_int source_rank) ^ "; end."); *) ()
+
 		(*0ther cases*)
 		|_ -> raise (InternalError("not implemented."))
 	 	 
@@ -332,7 +348,7 @@ class algoNZCUBdist =
 			match work with
 
 			| Initial_state index -> 
-					print_message Verbose_low (" buggg!!! ");
+					(* print_message Verbose_low (" buggg check!!! "); *)
 
 					
 					(* testing - global constraints *)
@@ -367,7 +383,6 @@ class algoNZCUBdist =
 					(* Run the NZ algo *)
 					let result = super#run () in 
 
-					 print_message Verbose_low ("aaaaaa dfgdgkldfkkgld; ");
 
 					let result1 = 
 					( 
@@ -379,7 +394,7 @@ class algoNZCUBdist =
 						| Deprecated_efsynth_result deprecated_efsynth_result -> print_message Verbose_low ("The result is Deprecated_efsynth_result "); None 
 						
 						(* Result for EFsynth, PDFC PRP *)
-						| Single_synthesis_result single_synthesis_result -> print_message Verbose_low ("The result is Single_synthesis_result "); Some single_synthesis_result.result
+						| Single_synthesis_result single_synthesis_result -> print_message Verbose_low ("The result is Single_synthesis_result "); Some single_synthesis_result.result (***** Detected!!!! *****)
 						
 						(* Result for IM, PRP *)
 						| Point_based_result point_based_result -> print_message Verbose_low ("The result is Point_based_result "); Some point_based_result.result
@@ -397,6 +412,7 @@ class algoNZCUBdist =
 					);
 					in
 
+					(* try to check what is inside - Good_constraint!!!!!! *)
 					let result2 = 
 					( 
 					match result1 with 
@@ -410,18 +426,20 @@ class algoNZCUBdist =
 					);
 					in
 
+
+
 					let result2 = 
 					( 
 					match result1 with 
 						(* Only good valuations *)
 						| Some good_bad_constraint -> good_bad_constraint;
 						(* Only bad valuations *)
-						| None -> raise (InternalError("not implemented."));
+						| None -> raise (InternalError("Found no constraint!!!!!! AlgoNZCUB - Worker side!!!!"));
 						
 					);
 					in
 
-					(* DistributedUtilities.send_good_or_bad_constraint result2; *)
+					DistributedUtilities.send_good_or_bad_constraint result2; 
 
 
 					(* print_message Verbose_high ("I guess I will reach about " ^ (string_of_int result) ); *)

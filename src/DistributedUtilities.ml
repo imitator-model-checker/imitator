@@ -1189,12 +1189,12 @@ let receive_work_NZCUB () =
 
 	
 
-(** Master sends a good bad constraint to a worker *)
-let send_good_or_bad_constraint good_or_bad_constraint =
+(** Worker sends a good bad constraint to a Master *)
+let send_good_or_bad_constraint good_or_bad_constraint  =
 	let serialized_data = serialize_good_or_bad_constraint good_or_bad_constraint in
 	print_message Verbose_high ("[Master] Serialized good_or_bad_constraint '" ^ serialized_data ^ "'");
 	(* Call generic function *)
-	send_serialized_data master_rank (int_of_slave_tag Slave_good_or_bad_constraint) serialized_data
+	send_serialized_data (get_rank()) (int_of_slave_tag Slave_good_or_bad_constraint) serialized_data
 
 
 
