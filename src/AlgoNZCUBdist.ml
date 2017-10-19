@@ -89,7 +89,7 @@ let decentralized_initial_loc model initial_global_location =
         	(*Checking bounded clocked in guards (Transition)*)
         	List.iter (fun action_index -> print_message Verbose_low (" Transition: " ^ (model.action_names action_index) );
             	List.iter (fun (guard, clock_updates, _, target_location_index) -> 
-            		print_message Verbose_low ("   Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (  continuous_part_of_guard guard ) ));	
+            		print_message Verbose_low ("   Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names ( CUBchecker.continuous_part_of_guard guard ) ));	
                 	let invariant2 = model.invariants automaton_index target_location_index in
 					print_message Verbose_low ("\n");
         			print_message Verbose_low (" Location(Target location): " ^ (model.location_names automaton_index target_location_index) ) ;
@@ -151,11 +151,11 @@ let init_state_list model initial_loc_array =
 			print_message Verbose_low (" Testing new initial location.....");
 			print_message Verbose_low (" Automaton name: " ^ (model.automata_names automaton_index) );
 			print_message Verbose_low (" Initial location name: " ^ (model.location_names automaton_index location_index));
-			print_message Verbose_low (" Constraint: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (continuous_part_of_guard guard)));
+			print_message Verbose_low (" Constraint: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (CUBchecker.continuous_part_of_guard guard)));
 			print_message Verbose_low ("\n");
 
 			initial_locations_list := (automaton_index, location_index)::!initial_locations_list;
-  			init_constr := LinearConstraint.pxd_intersection [!init_constr; continuous_part_of_guard guard]; 
+  			init_constr := LinearConstraint.pxd_intersection [!init_constr; CUBchecker.continuous_part_of_guard guard]; 
 		done;
 		
 		let former_initial_location = model.initial_location in
@@ -192,7 +192,7 @@ class algoNZCUBdist =
 
 	val mutable nb_automata : int ref = ref 0
 	
-	val nb_nodes : int = DistributedUtilities.get_nb_nodes ()
+	val no_nodes : int = DistributedUtilities.get_nb_nodes ()
 
 
 
