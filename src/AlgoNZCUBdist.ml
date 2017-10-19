@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/10/03
- * Last modified     : 2017/10/03
+ * Last modified     : 2017/10/19
  *
  ************************************************************)
 
@@ -38,15 +38,6 @@ open DistributedUtilities
 (************************************************************)
 
 
-
-
-(* Note: duplicate function *)
-let continuous_part_of_guard (*: LinearConstraint.pxd_linear_constraint*) = function
-	| True_guard -> LinearConstraint.pxd_true_constraint()
-	| False_guard -> LinearConstraint.pxd_false_constraint()
-	| Discrete_guard discrete_guard -> LinearConstraint.pxd_true_constraint()
-	| Continuous_guard continuous_guard -> continuous_guard
-	| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard
 
 
 let increase setup_index max_index = 
@@ -200,6 +191,8 @@ class algoNZCUBdist =
 	val mutable nb_variables : int ref = ref 0
 
 	val mutable nb_automata : int ref = ref 0
+	
+	val nb_nodes : int = DistributedUtilities.get_nb_nodes ()
 
 
 
@@ -233,10 +226,9 @@ class algoNZCUBdist =
 
 
 	method private run_master = 
-		print_message Verbose_standard ("Hello, I am Master!!!!!!…\n");
+		self#print_algo_message Verbose_standard ("Master algorithm starting…\n");
 
 		(* Get number of processes - index: from 0 -> no_nodes-1 *)
-		let no_nodes = DistributedUtilities.get_nb_nodes () in  
 		print_message Verbose_low (" number of nodes " ^ (string_of_int no_nodes) );
 		(* Get number of setup *)
 		let no_setups = List.length !global_init_loc_constr in 
