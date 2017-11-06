@@ -248,6 +248,9 @@ class algoNZCUBdist =
 		*)
 
 
+		(* Create the final good_or_bad_constraint *)
+		let good_or_bad_constraint = Good_constraint (LinearConstraint.true_p_nnconvex_constraint () , Result.Constraint_exact) in
+
 		let current = ref 0 in 
 
 		let counter = ref 0 in
@@ -255,7 +258,7 @@ class algoNZCUBdist =
 		while !counter != no_nodes -1 do
 		
 		(* Create the final good_or_bad_constraint *)
-		let good_or_bad_constraint = Good_constraint (LinearConstraint.true_p_nnconvex_constraint () , Result.Constraint_exact) in
+		(* let good_or_bad_constraint = Good_constraint (LinearConstraint.true_p_nnconvex_constraint () , Result.Constraint_exact) in *)
 
 		let pull_request = (receive_pull_request_NZCUB ()) in
 		(
@@ -296,7 +299,7 @@ class algoNZCUBdist =
 					(* Both good and bad valuations *)
 					| Good_bad_constraint good_and_bad_constraint -> print_message Verbose_low ("The constraint is Good_bad_constraint ");
 					);
-				);
+				(* ); *)
 				
 				(*** TODO: "merge" (union) the good_or_bad_constraint with worker_good_or_bad_constraint ***)
 
