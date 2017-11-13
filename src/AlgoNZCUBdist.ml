@@ -249,7 +249,10 @@ class algoNZCUBdist =
 
 
 		(* Create the final good_or_bad_constraint *)
-		let good_or_bad_constraint = Good_constraint (LinearConstraint.true_p_nnconvex_constraint () , Result.Constraint_exact) in
+
+		let final_good_or_bad_constraint = ref ( Good_constraint (LinearConstraint.true_p_nnconvex_constraint () , Result.Constraint_exact) ) in
+
+		(* let final_good_or_bad_constraint = ref ( Good_constraint (LinearConstraint.true_p_nnconvex_constraint () , Result.Constraint_exact) ) in *)
 
 		let current = ref 0 in 
 
@@ -297,25 +300,71 @@ class algoNZCUBdist =
 			 begin 
 			(* if verbose_mode_greater Verbose_low then( *) 
 			
-			
+				(* Get constraint from Worker's Good_or_bad_constraint *)
+				let worker_constraint = ref (LinearConstraint.true_p_nnconvex_constraint ()) in
+				(
 				match worker_good_or_bad_constraint with
 					(* Only good valuations *)
-					| Good_constraint constraint_and_soundness -> print_message Verbose_high ("The constraint is Good_constraint ");
+					| Good_constraint constraint_and_soundness -> print_message Verbose_high ("The constraint is Good_constraint "); 
+						let constr, soundness = constraint_and_soundness in worker_constraint := constr 
+					
 					(* Only bad valuations *)
-					| Bad_constraint constraint_and_soundness -> print_message Verbose_high ("The constraint is Bad_constraint ");
+					| Bad_constraint constraint_and_soundness -> print_message Verbose_high ("The constraint is Bad_constraint "); 
+						raise (InternalError("encountered an unexpected Bad_constraint result."))
+						(* let constr, soundness = constraint_and_soundness in worker_constraint := a *)
+					
 					(* Both good and bad valuations *)
 					| Good_bad_constraint good_and_bad_constraint -> print_message Verbose_high ("The constraint is Good_bad_constraint ");
-			
+						raise (InternalError("encountered an unexpected Good_bad_constraint result."))
+				);
 
-				(*)); *) 
 
-				(* ); *)
 				(*** TODO: "merge" (union) the good_or_bad_constraint with worker_good_or_bad_constraint ***)
+
+				
+				(
+				match !final_good_or_bad_constraint with
+					(* Only good valuations *)
+					| Good_constraint final_constraint_and_soundness -> print_message Verbose_high ("The constraint is Good_constraint "); 
+						let constr, soundness = final_constraint_and_soundness in 
+						
+						(* let final_constr = LinearConstraint.p_nnconvex_intersection constr !worker_constraint in *)
+
+
+						(* not good intersection process *)
+						let list_constr = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint constr in
+						let list_worker_constraint = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint !worker_constraint in
+
+						let final_constr = LinearConstraint.p_intersection (list_constr@list_worker_constraint) in
+
+						print_message Verbose_low (" Constraintadwdasdw: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names (final_constr)));
+
+						let final_constr1 = (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints [final_constr]) in
+
+						final_good_or_bad_constraint := ( Good_constraint (final_constr1 , soundness) ); 
+						()
+
+					
+					(* Other valuations *)
+					| _ -> raise (InternalError("encountered an unexpected constraint result."))
+
+				);
+				
+
+				(*
+				let final_constraint, constraint_exact_result  = final_good_or_bad_constraint in
+
+				let final_constraint = LinearConstraint.p_nnconvex_intersection final_constraint worker_good_or_bad_constraint in
+				*)
+				
+
+				()
+
 
 
 
 			 (* print_message Verbose_medium ("[Master] Received a Good_or_bad_constraint from worker " ^ (string_of_int source_rank) ^ "; end."); *)
-			  end; 
+			 end; 
 			 
 
 		(*0ther cases*)
@@ -336,7 +385,7 @@ class algoNZCUBdist =
 		Result.Single_synthesis_result
 			{
 				(* Good and/or bad valuations *)
-				result				= good_or_bad_constraint;
+				result				= !final_good_or_bad_constraint;
 				
 				(* Explored state space *)
 				state_space			= StateSpace.make 0; (*** NOTE: dummy value! ***)
@@ -413,6 +462,7 @@ class algoNZCUBdist =
 
 
 					(* Run the NZ algo *)
+
 					let result = super#run () in 
 
 
