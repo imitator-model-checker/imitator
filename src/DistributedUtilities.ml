@@ -1192,9 +1192,10 @@ let receive_work_NZCUB () =
 (** Worker sends a good bad constraint to a Master *)
 let send_good_or_bad_constraint good_or_bad_constraint  =
 	let serialized_data = serialize_good_or_bad_constraint good_or_bad_constraint in
-	print_message Verbose_high ("[Master] Serialized good_or_bad_constraint '" ^ serialized_data ^ "'");
+	print_message Verbose_high ("[Worker] Serialized good_or_bad_constraint '" ^ serialized_data ^ "'");
 	(* Call generic function *)
-	send_serialized_data (get_rank()) (int_of_slave_tag Slave_good_or_bad_constraint) serialized_data
+	send_serialized_data (master_rank) (int_of_slave_tag Slave_good_or_bad_constraint) serialized_data
+	
 
 
 
@@ -1206,11 +1207,13 @@ let receive_pull_request_NZCUB () =
   print_message Verbose_high ("\t[Master] Tag decoded from [Worker " ^ ( string_of_int source_rank) ^"] : " ^ ( string_of_int tag ) );
   let tag = worker_tag_of_int tag in  
   match tag with
-		   
+
+  
   (* Case error *)
   | Slave_outofbound_tag ->
      print_message Verbose_high ("[Master] Received Slave_outofbound_tag");
      OutOfBound source_rank
+	
 
   (* Case simple pull? *)
   | Slave_work_tag ->
@@ -1222,19 +1225,17 @@ let receive_pull_request_NZCUB () =
   |	 Slave_good_or_bad_constraint -> 
   	 print_message Verbose_high ("[Master] Received Slave_good_or_bad_constraint from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
 
-  	 (*
-  	 let buff = String.create l in
-		let work = ref buff in
+  	 (* receive the result itself *)
+     let buff = String.create l in
+     let res = ref buff in
+     print_message Verbose_high ("[Master] Buffer created with length " ^ (string_of_int l)^"");	
+     res := Mpi.receive source_rank (int_of_slave_tag Slave_good_or_bad_constraint) Mpi.comm_world ;
+     print_message Verbose_high("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int l) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
+			
+     (* Get the Good_or_bad_constraint *)
+     let good_or_bad_constraint = unserialize_good_or_bad_constraint !res in
 
-		work := Mpi.receive master_rank (int_of_master_tag Master_data_tag) Mpi.comm_world;
-		
-		print_message Verbose_high ("Received " ^ (string_of_int l) ^ " bytes of work '" ^ !work ^ "' with tag " ^ (string_of_int (int_of_master_tag Master_data_tag)));
-
-  	 	let good_or_bad_constraint = unserialize_good_or_bad_constraint work in
-  	 *)
-  	 	let good_or_bad_constraint = unserialize_good_or_bad_constraint l in
-
-  	 	Good_or_bad_constraint good_or_bad_constraint
+  	 Good_or_bad_constraint good_or_bad_constraint
 
 
  

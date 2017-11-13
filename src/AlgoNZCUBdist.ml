@@ -276,12 +276,15 @@ class algoNZCUBdist =
 			then 
 				(
 				send_init_state !current source_rank;
-				print_message Verbose_low (" Send!!!!!! ");  
+				(* print_message Verbose_low (" Send!!!!!! ");  *)
+				print_message Verbose_medium ("[Master] sent an initial state configuration to worker " ^ (string_of_int source_rank) ^ "");
 				current := !current + 1;
 				)
 			else
 				(
+				print_message Verbose_standard ("[Master] sent a termination to worker " ^ (string_of_int source_rank) ^ "");
 				send_terminate source_rank;
+				print_message Verbose_standard ("[Master] sent a termination to worker " ^ (string_of_int source_rank) ^ "");
 				counter := !counter + 1; 
 				); 
 
@@ -289,27 +292,39 @@ class algoNZCUBdist =
 
 
 		| Good_or_bad_constraint worker_good_or_bad_constraint ->
-			begin
-				if verbose_mode_greater Verbose_low then(
+
+			print_message Verbose_low ("[Master] Received a Good_or_bad_constraint from worker "); 
+			 begin 
+			(* if verbose_mode_greater Verbose_low then( *) 
+			
+			
 				match worker_good_or_bad_constraint with
 					(* Only good valuations *)
-					| Good_constraint constraint_and_soundness -> print_message Verbose_low ("The constraint is Good_constraint ");
+					| Good_constraint constraint_and_soundness -> print_message Verbose_high ("The constraint is Good_constraint ");
 					(* Only bad valuations *)
-					| Bad_constraint constraint_and_soundness -> print_message Verbose_low ("The constraint is Bad_constraint ");
+					| Bad_constraint constraint_and_soundness -> print_message Verbose_high ("The constraint is Bad_constraint ");
 					(* Both good and bad valuations *)
-					| Good_bad_constraint good_and_bad_constraint -> print_message Verbose_low ("The constraint is Good_bad_constraint ");
-					);
+					| Good_bad_constraint good_and_bad_constraint -> print_message Verbose_high ("The constraint is Good_bad_constraint ");
+			
+
+				(*)); *) 
+
 				(* ); *)
-				
 				(*** TODO: "merge" (union) the good_or_bad_constraint with worker_good_or_bad_constraint ***)
 
+
+
 			 (* print_message Verbose_medium ("[Master] Received a Good_or_bad_constraint from worker " ^ (string_of_int source_rank) ^ "; end."); *)
-			 end;
+			  end; 
+			 
 
 		(*0ther cases*)
 		|_ -> raise (InternalError("not implemented."))
 	 	 
 	 	);
+
+		print_message Verbose_low ("End While!!!!! ");
+
 
 		done;
 
@@ -429,19 +444,22 @@ class algoNZCUBdist =
 					);
 					in
 
+
+					(*
 					(* try to check what is inside - Good_constraint!!!!!! *)
 					let result2 = 
 					( 
 					match result1 with 
 						(* Only good valuations *)
-						| Some Good_constraint constraint_and_soundness -> print_message Verbose_low ("The constraint is Good_constraint ");
+						| Some Good_constraint constraint_and_soundness -> print_message Verbose_low ("The constraint is Good_constraint 11111111 ");
 						(* Only bad valuations *)
-						| Some Bad_constraint constraint_and_soundness -> print_message Verbose_low ("The constraint is Bad_constraint ");
+						| Some Bad_constraint constraint_and_soundness -> print_message Verbose_low ("The constraint is Bad_constraint 11111111 ");
 						(* Both good and bad valuations *)
-						| Some Good_bad_constraint good_and_bad_constraint -> print_message Verbose_low ("The constraint is Good_bad_constraint ");
+						| Some Good_bad_constraint good_and_bad_constraint -> print_message Verbose_low ("The constraint is Good_bad_constraint 11111111 ");
 						
 					);
 					in
+					*)
 
 
 
@@ -456,7 +474,9 @@ class algoNZCUBdist =
 					);
 					in
 
-					DistributedUtilities.send_good_or_bad_constraint result2; 
+					DistributedUtilities.send_good_or_bad_constraint result2;
+
+					print_message Verbose_low ("Sent The constraint 11111111 ");
 
 
 					(* print_message Verbose_high ("I guess I will reach about " ^ (string_of_int result) ); *)
@@ -472,15 +492,16 @@ class algoNZCUBdist =
 
 					
 				
-					Result.Distributed_worker_result 
+					(* Result.Distributed_worker_result *) 
 					(* () *)
 
 			
 			| Terminate -> 
 					print_message Verbose_low (" Terminate ");
+					print_message Verbose_standard ("Hello, I terminated!!!!!!…\n");
 					(* print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to terminate work."); *)
 					finished := true;
-					Result.Distributed_worker_result 
+					(* Result.Distributed_worker_result *) 
 			
 			
 				
