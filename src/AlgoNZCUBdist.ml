@@ -448,56 +448,18 @@ class algoNZCUBdist =
 
 					(* Run the NZ algo *)
 
-					let result = super#run () in 
+					let algo = new AlgoNZCUB.algoNZCUB in
+					let result = algo#run () in 
 
 
-					let result1 = 
-					( 
-					match result with 
-						(* Result for Post* *)
-						| PostStar_result poststar_result -> 
-
-							print_message Verbose_medium ("The result is poststar_result "); 
-							None 
-
-						(* Result for old version of EFsynth *)
-						| Deprecated_efsynth_result deprecated_efsynth_result -> 
-
-							print_message Verbose_medium ("The result is Deprecated_efsynth_result "); 
-							None 
-						
+					let good_or_bad_constraint = match result with 
 						(* Result for EFsynth, PDFC PRP *)
 						| Single_synthesis_result single_synthesis_result -> 
 
 							print_message Verbose_medium ("The result is Single_synthesis_result "); 
-							Some single_synthesis_result.result (***** Detected!!!! *****)
+							single_synthesis_result.result (***** Detected!!!! *****)
 						
-						(* Result for IM, PRP *)
-						| Point_based_result point_based_result -> 
-
-							print_message Verbose_low ("The result is Point_based_result "); 
-							Some point_based_result.result
-						
-						(* Result for original cartography *)
-						| Cartography_result cartography_result -> 
-
-							print_message Verbose_low ("The result is Cartography_result "); 
-							(* Some cartography_result.result *) None
-						
-						(* Result for PRPC *)
-						| Multiple_synthesis_result multiple_synthesis_result -> 
-
-							print_message Verbose_low ("The result is Multiple_synthesis_result "); 
-							None
-						
-						(* No result for workers in distributed mode *)
-						| Distributed_worker_result -> 
-
-							print_message Verbose_low ("The result is Distributed_worker_result "); 
-							None
-
-						| _ -> raise (InternalError("not implemented."))
-					);
+						| _ -> raise (InternalError("Expecting a single synthesis result, but received something else."))
 					in
 
 
@@ -517,8 +479,8 @@ class algoNZCUBdist =
 					in
 					*)
 
-
-
+(*
+TODO: remove
 					let result2 = 
 					( 
 					match result1 with 
@@ -528,9 +490,9 @@ class algoNZCUBdist =
 						| None -> raise (InternalError("Found no constraint!!!!!! AlgoNZCUB - Worker side!!!!"));
 						
 					);
-					in
+					in*)
 
-					DistributedUtilities.send_good_or_bad_constraint result2;
+					DistributedUtilities.send_good_or_bad_constraint good_or_bad_constraint;
 
 					print_message Verbose_low ("Sent The constraint ");
 
