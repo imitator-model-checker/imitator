@@ -39,7 +39,7 @@ open DistributedUtilities
 
 
 
-
+(* increase initial state list index *)
 let increase setup_index max_index = 
 	let current_setup_index = ref setup_index in
 	let current_dimension = ref 0 in
@@ -72,6 +72,7 @@ let compare current_setup_index max_index =
 !b
 
 
+(* Create 2 dimensional array, first d is model index, second d contains tupples (automaton_index, target_location_index, guard) - each cell is a initial state  *)
 (* Testing - OK *)
 let decentralized_initial_loc model initial_global_location =
 	print_message Verbose_low ("Decentralizing initial global location \n");
@@ -118,8 +119,11 @@ let decentralized_initial_loc model initial_global_location =
 
 (* Testing - OK *)
 
+
+(* Flattening the array above to a list *)
 let init_state_list model initial_loc_array = 
 	print_message Verbose_low (" init_state_list function ");
+	(* create array index *)
 	let max_index = ref [||] in
 	(* count from 0 *)
 	Array.iter ( fun sub_array -> 
@@ -127,7 +131,10 @@ let init_state_list model initial_loc_array =
 		(* print_message Verbose_low (" len sub array " ^ string_of_int (len) ); *)
 		max_index := ( Array.append !max_index [|len|] );
 	) initial_loc_array;
+
+	(* create the current index with 0(s) *)
 	let current_setup_index = ref (Array.make  (Array.length initial_loc_array) 0) in
+	(* create index list *)
 	let setup_index_list = ref [Array.copy !current_setup_index] in
 	(* let count = ref 0 in *)
 	while not (compare !current_setup_index !max_index) do 
@@ -136,6 +143,8 @@ let init_state_list model initial_loc_array =
 		setup_index_list := ([Array.copy !current_setup_index])@(!setup_index_list);	
 		(* count := !count + 1; *)
 	done;
+
+
 	(* Testing - OK *)
 	(*print_message Verbose_low (" len setup_index_list " ^ string_of_int (List.length !setup_index_list) );*)
 	let global_init_location_constr = ref [] in
@@ -226,13 +235,13 @@ class algoNZCUBdist =
 
 
 	method private run_master = 
-		self#print_algo_message Verbose_standard ("Master algorithm starting…\n");
+		self#print_algo_message Verbose_medium ("Master algorithm starting…\n");
 
 		(* Get number of processes - index: from 0 -> no_nodes-1 *)
-		print_message Verbose_low (" number of nodes " ^ (string_of_int no_nodes) );
+		print_message Verbose_medium (" number of nodes " ^ (string_of_int no_nodes) );
 		(* Get number of setup *)
 		let no_setups = List.length !global_init_loc_constr in 
-		print_message Verbose_low (" number of setups " ^ (string_of_int no_setups) );
+		print_message Verbose_medium (" number of setups " ^ (string_of_int no_setups) );
 
 
 		(*
@@ -272,7 +281,7 @@ class algoNZCUBdist =
 			(* check to delete if the worker comeback *)
 
 			let current_rank =  DistributedUtilities.get_rank () in 
-			print_message Verbose_low (" Current rank " ^ (string_of_int current_rank) ); 
+			print_message Verbose_medium (" Current rank " ^ (string_of_int current_rank) ); 
 
 			
 			if !current <= no_setups -1 
@@ -285,9 +294,9 @@ class algoNZCUBdist =
 				)
 			else
 				(
-				print_message Verbose_standard ("[Master] sent a termination to worker " ^ (string_of_int source_rank) ^ "");
+				(* print_message Verbose_standard ("[Master] sent a termination to worker " ^ (string_of_int source_rank) ^ ""); *)
 				send_terminate source_rank;
-				print_message Verbose_standard ("[Master] sent a termination to worker " ^ (string_of_int source_rank) ^ "");
+				print_message Verbose_medium ("[Master] sent a termination to worker " ^ (string_of_int source_rank) ^ "");
 				counter := !counter + 1; 
 				); 
 
@@ -296,72 +305,50 @@ class algoNZCUBdist =
 
 		| Good_or_bad_constraint worker_good_or_bad_constraint ->
 
-			print_message Verbose_low ("[Master] Received a Good_or_bad_constraint from worker "); 
+			print_message Verbose_medium ("[Master] Received a Good_or_bad_constraint from worker "); 
 			 begin 
 			(* if verbose_mode_greater Verbose_low then( *) 
 			
 				(* Get constraint from Worker's Good_or_bad_constraint *)
-				let worker_constraint = ref (LinearConstraint.true_p_nnconvex_constraint ()) in
-				(
-				match worker_good_or_bad_constraint with
-					(* Only good valuations *)
-					| Good_constraint constraint_and_soundness -> print_message Verbose_high ("The constraint is Good_constraint "); 
-						let constr, soundness = constraint_and_soundness in worker_constraint := constr 
-					
-					(* Only bad valuations *)
-					| Bad_constraint constraint_and_soundness -> print_message Verbose_high ("The constraint is Bad_constraint "); 
-						raise (InternalError("encountered an unexpected Bad_constraint result."))
-						(* let constr, soundness = constraint_and_soundness in worker_constraint := a *)
-					
-					(* Both good and bad valuations *)
-					| Good_bad_constraint good_and_bad_constraint -> print_message Verbose_high ("The constraint is Good_bad_constraint ");
-						raise (InternalError("encountered an unexpected Good_bad_constraint result."))
-				);
-
+				(* let worker_constraint = ref (LinearConstraint.true_p_nnconvex_constraint ()) in *)
 
 				(*** TODO: "merge" (union) the good_or_bad_constraint with worker_good_or_bad_constraint ***)
 
-				
-				(
-				match !final_good_or_bad_constraint with
-					(* Only good valuations *)
-					| Good_constraint final_constraint_and_soundness -> print_message Verbose_high ("The constraint is Good_constraint "); 
-						let constr, soundness = final_constraint_and_soundness in 
-						
-						(* let final_constr = LinearConstraint.p_nnconvex_intersection constr !worker_constraint in *)
 
+				(
+				match worker_good_or_bad_constraint, !final_good_or_bad_constraint with
+					(* Only good valuations *)
+					| Good_constraint constraint_and_soundness_1, Good_constraint constraint_and_soundness_2 -> 
+						
+						print_message Verbose_medium ("The constraint is Good_constraint "); 
+						
+						let constr_1, soundness_1 = constraint_and_soundness_1 in 
+						(* worker_constraint := constr_1; *)
+
+
+
+
+						let constr_2, soundness_2 = constraint_and_soundness_2 in 
 
 						(* not good intersection process *)
-						let list_constr = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint constr in
-						let list_worker_constraint = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint !worker_constraint in
+						let list_constr_2 = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint constr_2 in
+						let list_constr_1 = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint constr_1 in
+						print_message Verbose_medium (" worker constraint: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names (LinearConstraint.p_intersection list_constr_1)));
 
-						let final_constr = LinearConstraint.p_intersection (list_constr@list_worker_constraint) in
+						let final_constr = LinearConstraint.p_intersection (list_constr_1@list_constr_2) in
 
-						print_message Verbose_low (" Constraintadwdasdw: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names (final_constr)));
+						print_message Verbose_medium (" final constraint: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names (final_constr)));
 
 						let final_constr1 = (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints [final_constr]) in
 
-						final_good_or_bad_constraint := ( Good_constraint (final_constr1 , soundness) ); 
+						final_good_or_bad_constraint := ( Good_constraint (final_constr1 , soundness_2) ); 
 						()
-
 					
 					(* Other valuations *)
 					| _ -> raise (InternalError("encountered an unexpected constraint result."))
-
 				);
-				
-
-				(*
-				let final_constraint, constraint_exact_result  = final_good_or_bad_constraint in
-
-				let final_constraint = LinearConstraint.p_nnconvex_intersection final_constraint worker_good_or_bad_constraint in
-				*)
-				
 
 				()
-
-
-
 
 			 (* print_message Verbose_medium ("[Master] Received a Good_or_bad_constraint from worker " ^ (string_of_int source_rank) ^ "; end."); *)
 			 end; 
@@ -371,8 +358,6 @@ class algoNZCUBdist =
 		|_ -> raise (InternalError("not implemented."))
 	 	 
 	 	);
-
-		print_message Verbose_low ("End While!!!!! ");
 
 
 		done;
@@ -402,10 +387,10 @@ class algoNZCUBdist =
 
 
 	method private run_worker = 
-		print_message Verbose_standard ("Hello, I am Worker!!!!!!…\n");
+		print_message Verbose_medium ("Hello, I am Worker!!!!!!…\n");
 
 		let current_rank =  DistributedUtilities.get_rank () in 
-		print_message Verbose_low (" Current rank " ^ (string_of_int current_rank) ); 
+		print_message Verbose_medium (" Current rank " ^ (string_of_int current_rank) ); 
 
 
 		(*
@@ -420,11 +405,11 @@ class algoNZCUBdist =
 
 			send_work_request ();
 
-			print_message Verbose_low (" Send work request!!! ");
+			print_message Verbose_medium (" Send work request!!! ");
 
 
 			let work = receive_work_NZCUB () in
-			print_message Verbose_low (" received work!!! ");
+			print_message Verbose_medium (" received work!!! ");
 
 			match work with
 
@@ -442,17 +427,17 @@ class algoNZCUBdist =
 			(*		(*Initialization of slast : used in union mode only*)
 					slast := [];*)
 					(* Print some information *)
-					print_message Verbose_standard ("Starting running algorithm " ^ self#algorithm_name ^ "…\n");
+					print_message Verbose_medium ("Starting running algorithm " ^ self#algorithm_name ^ "…\n");
 					(* Variable initialization *)
-					print_message Verbose_low ("Initializing the algorithm local variables…");
+					print_message Verbose_medium ("Initializing the algorithm local variables…");
 					self#initialize_variables;
 					(* Debut prints *)
-					print_message Verbose_low ("Starting exploring the parametric zone graph from the following initial state:");
-					print_message Verbose_low (ModelPrinter.string_of_state model init_state);
+					print_message Verbose_medium ("Starting exploring the parametric zone graph from the following initial state:");
+					print_message Verbose_medium (ModelPrinter.string_of_state model init_state);
 					(* Guess the number of reachable states *)
 					let guessed_nb_states = 10 * (!nb_actions + !nb_automata + !nb_variables) in 
 					let guessed_nb_transitions = guessed_nb_states * !nb_actions in 
-					print_message Verbose_high ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
+					print_message Verbose_medium ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
 					(* Create the state space *)
 					state_space <- StateSpace.make guessed_nb_transitions;
 					
@@ -470,25 +455,46 @@ class algoNZCUBdist =
 					( 
 					match result with 
 						(* Result for Post* *)
-						| PostStar_result poststar_result -> print_message Verbose_low ("The result is poststar_result "); None 
+						| PostStar_result poststar_result -> 
+
+							print_message Verbose_medium ("The result is poststar_result "); 
+							None 
 
 						(* Result for old version of EFsynth *)
-						| Deprecated_efsynth_result deprecated_efsynth_result -> print_message Verbose_low ("The result is Deprecated_efsynth_result "); None 
+						| Deprecated_efsynth_result deprecated_efsynth_result -> 
+
+							print_message Verbose_medium ("The result is Deprecated_efsynth_result "); 
+							None 
 						
 						(* Result for EFsynth, PDFC PRP *)
-						| Single_synthesis_result single_synthesis_result -> print_message Verbose_low ("The result is Single_synthesis_result "); Some single_synthesis_result.result (***** Detected!!!! *****)
+						| Single_synthesis_result single_synthesis_result -> 
+
+							print_message Verbose_medium ("The result is Single_synthesis_result "); 
+							Some single_synthesis_result.result (***** Detected!!!! *****)
 						
 						(* Result for IM, PRP *)
-						| Point_based_result point_based_result -> print_message Verbose_low ("The result is Point_based_result "); Some point_based_result.result
+						| Point_based_result point_based_result -> 
+
+							print_message Verbose_low ("The result is Point_based_result "); 
+							Some point_based_result.result
 						
 						(* Result for original cartography *)
-						| Cartography_result cartography_result -> print_message Verbose_low ("The result is Cartography_result "); (* Some cartography_result.result *) None
+						| Cartography_result cartography_result -> 
+
+							print_message Verbose_low ("The result is Cartography_result "); 
+							(* Some cartography_result.result *) None
 						
 						(* Result for PRPC *)
-						| Multiple_synthesis_result multiple_synthesis_result -> print_message Verbose_low ("The result is Multiple_synthesis_result "); None
+						| Multiple_synthesis_result multiple_synthesis_result -> 
+
+							print_message Verbose_low ("The result is Multiple_synthesis_result "); 
+							None
 						
 						(* No result for workers in distributed mode *)
-						| Distributed_worker_result -> print_message Verbose_low ("The result is Distributed_worker_result "); None
+						| Distributed_worker_result -> 
+
+							print_message Verbose_low ("The result is Distributed_worker_result "); 
+							None
 
 						| _ -> raise (InternalError("not implemented."))
 					);
@@ -526,7 +532,7 @@ class algoNZCUBdist =
 
 					DistributedUtilities.send_good_or_bad_constraint result2;
 
-					print_message Verbose_low ("Sent The constraint 11111111 ");
+					print_message Verbose_low ("Sent The constraint ");
 
 
 					(* print_message Verbose_high ("I guess I will reach about " ^ (string_of_int result) ); *)
