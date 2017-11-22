@@ -259,7 +259,7 @@ class algoNZCUBdist =
 
 		(* Create the final good_or_bad_constraint *)
 
-		let final_good_or_bad_constraint = ref ( Good_constraint (LinearConstraint.true_p_nnconvex_constraint () , Result.Constraint_exact) ) in
+		let final_good_or_bad_constraint = ref ( Good_constraint (LinearConstraint.false_p_nnconvex_constraint () , Result.Constraint_exact) ) in
 
 		(* let final_good_or_bad_constraint = ref ( Good_constraint (LinearConstraint.true_p_nnconvex_constraint () , Result.Constraint_exact) ) in *)
 
@@ -319,29 +319,46 @@ class algoNZCUBdist =
 				match worker_good_or_bad_constraint, !final_good_or_bad_constraint with
 					(* Only good valuations *)
 					| Good_constraint constraint_and_soundness_1, Good_constraint constraint_and_soundness_2 -> 
+
+						print_message Verbose_low (" This is the constraint result received from worker : " 
+						^ ResultProcessor.string_of_good_or_bad_constraint model.variable_names worker_good_or_bad_constraint );
+						print_message Verbose_low (" This is the current constraint result : " 
+						^ ResultProcessor.string_of_good_or_bad_constraint model.variable_names worker_good_or_bad_constraint );
 						
-						print_message Verbose_medium ("The constraint is Good_constraint "); 
+						print_message Verbose_low ("The constraint is Good_constraint "); 
 						
 						let constr_1, soundness_1 = constraint_and_soundness_1 in 
 						(* worker_constraint := constr_1; *)
 
-
-
-
 						let constr_2, soundness_2 = constraint_and_soundness_2 in 
 
+						(*
 						(* not good intersection process *)
 						let list_constr_2 = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint constr_2 in
 						let list_constr_1 = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint constr_1 in
-						print_message Verbose_medium (" worker constraint: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names (LinearConstraint.p_intersection list_constr_1)));
+						print_message Verbose_low (" worker constraint: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names (LinearConstraint.p_intersection list_constr_1)));
 
 						let final_constr = LinearConstraint.p_intersection (list_constr_1@list_constr_2) in
+						*)
 
-						print_message Verbose_medium (" final constraint: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names (final_constr)));
+						let final_constr = constr_2 in
 
+
+						LinearConstraint.p_nnconvex_union final_constr constr_1;
+					
+						(*
+						print_message Verbose_low (" final constraint: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names (final_constr)));
+						*)
+						
+
+						(*
 						let final_constr1 = (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints [final_constr]) in
+						*)
 
-						final_good_or_bad_constraint := ( Good_constraint (final_constr1 , soundness_2) ); 
+						final_good_or_bad_constraint := ( Good_constraint (final_constr , soundness_2) ); 
+
+						print_message Verbose_low (" Final constraint: " ^ ResultProcessor.string_of_good_or_bad_constraint model.variable_names !final_good_or_bad_constraint );
+
 						()
 					
 					(* Other valuations *)
@@ -416,12 +433,18 @@ class algoNZCUBdist =
 			| Initial_state index -> 
 					(* print_message Verbose_low (" buggg check!!! "); *)
 
+
 					
 					(* testing - global constraints *)
-					(* let (init_loc, init_constr) = List.nth !global_init_loc_constr index in *)
-					let (init_loc, init_constr) = List.hd !global_init_loc_constr in 
+					let (init_loc, init_constr) = List.nth !global_init_loc_constr index in 
+					(* let (init_loc, init_constr) = List.hd !global_init_loc_constr in *)
 					(* let init_state = (init_loc, LinearConstraint.px_copy init_constr) in *)
-					let init_state = (init_loc, init_constr) in
+
+					(* Compute initial state *)
+					let init_state = AlgoStateBased.compute_initial_state_or_abort() in
+
+					(* let init_state = (init_loc, init_constr) in *)
+
 					(* Set up the initial state constraint *)
 					initial_constraint <- Some init_constr;
 			(*		(*Initialization of slast : used in union mode only*)
@@ -456,11 +479,14 @@ class algoNZCUBdist =
 						(* Result for EFsynth, PDFC PRP *)
 						| Single_synthesis_result single_synthesis_result -> 
 
-							print_message Verbose_medium ("The result is Single_synthesis_result "); 
+							print_message Verbose_low ("The result is Single_synthesis_result "); 
 							single_synthesis_result.result (***** Detected!!!! *****)
 						
 						| _ -> raise (InternalError("Expecting a single synthesis result, but received something else."))
 					in
+
+					print_message Verbose_low (" This is the constraint result of worker " ^ (string_of_int current_rank) 
+						^" : " ^ ResultProcessor.string_of_good_or_bad_constraint model.variable_names good_or_bad_constraint );
 
 
 					(*
