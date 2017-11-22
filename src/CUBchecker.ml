@@ -2660,9 +2660,101 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 *)
 
 
+	
+
+	
+	
+
+	(* [CUB-PTA TRANSFORMATION] FINAL STAGE - MERGING SUB-MODELS 
+		New final stage code - More convenient for distributed version and more 
+		Create more initial states, one for each CUB-PTA and one for all CUB-PTA (Disjunctive CUB-PTA).
+
+	*)
+	
+	(* First create a normalized location name *)
+	(*** BADPROG…… ***)
+
+	let location_name_of_location_index_and_submodel_index location_index submodel_index =
+		location_index ^ "_m" ^ (string_of_int submodel_index)
+	in
+	
+	(* Handle initial location *)
+	(*** BADPROG: give a string name to the new location (argh) ***)
+	let new_initial_location_name  = ("disjunctive_cub_pta_init_" ^ string_of_int (automaton_index + 1)) in
+
+	(* ADD new_initial_location_name INTO loc_naming_tbl *)
+	Hashtbl.add loc_naming_tbl new_initial_location_name (Hashtbl.length loc_naming_tbl);
+	
+	let submodel_index = ref 1 in
+	
+	(*** NOTE: unused code written by Gia, removed by ÉA (2017/02/08) ***)
+(* 	let numberOfAction = List.length model.actions in  *)
+
+	(* FINAL MODEL LOCATIONS - Data structure: location_name -> invariant *)
+	let new_invariants_per_location_hashtbl =  Hashtbl.create 0 in
+	(* Adding the initial state *)
+	Hashtbl.add new_invariants_per_location_hashtbl new_initial_location_name (LinearConstraint.pxd_true_constraint ());
+	(* FINAL MODEL TRANSITIONS - Data structure: location_name -> invariant *)
+	let newtransitions = DynArray.make 0 in
+
+	DynArray.iter (fun (locations, transitions, c_constraints, p_constraints, index, init_locs) ->
+
+		let new_sub_initial_location_name  = ("cub_pta_init_" ^ string_of_int (!submodel_index )) in
+		Hashtbl.add loc_naming_tbl new_sub_initial_location_name (Hashtbl.length loc_naming_tbl);
+		Hashtbl.add new_invariants_per_location_hashtbl new_sub_initial_location_name (LinearConstraint.pxd_true_constraint ());
+		DynArray.add newtransitions (new_initial_location_name, new_sub_initial_location_name, (LinearConstraint.pxd_true_constraint ()), [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ;
+		
+		Hashtbl.iter (fun location_index cons -> 
+			let newloc = location_name_of_location_index_and_submodel_index location_index !submodel_index in
+			Hashtbl.add new_invariants_per_location_hashtbl newloc cons;
+
+			(* ADD NEW LOCATIONS INTO THE LOCATION NAMING INDEX TABLE *)
+			let indx = Hashtbl.find loc_naming_tbl location_index in
+			Hashtbl.add loc_naming_tbl newloc indx;
+
+		) locations;
+
+		DynArray.iter (fun (location_index, target_location_index, guard, clock_updates, action_index, discrete_update) -> 
+			let newloc1 = location_name_of_location_index_and_submodel_index location_index !submodel_index in
+			let newloc2 = location_name_of_location_index_and_submodel_index target_location_index !submodel_index in
+			DynArray.add newtransitions (newloc1, newloc2, guard, clock_updates, action_index, discrete_update);
+
+		) transitions;
+
+		(*adding parameter relation into the first transition*)
+		let listParaRelations = disjunction_constraints p_constraints in
+
+		List.iter( fun cons ->
+			let pxd_cons = LinearConstraint.pxd_of_p_constraint cons in
+			if (LinearConstraint.pxd_is_false pxd_cons = false)
+			then 
+				(
+				List.iter (fun loc -> 
+				
+					(* Add a transition from the initial location to all local initial locations into the dynamic array of locations *)
+					(* DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ; *)
+					(* DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], 0, [] ) ; *)
+
+					(* Add a transition from the initial CUB-PTA location to all local initial locations into the dynamic array of locations *)
+					DynArray.add newtransitions (new_sub_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ;
+
+				) init_locs;
+				);
+		) listParaRelations;
+
+		(* List.iter (fun loc -> 
+			(* Add a transition from the initial location to all local initial locations into the dynamic array of locations *)
+			DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, LinearConstraint.pxd_true_constraint (), [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ;
+			(* DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], 0, [] ) ; *)
+		) init_locs *);
+
+		incr submodel_index;
+	) newSubModels;
 
 
 
+
+	(*
 	(* [CUB-PTA TRANSFORMATION] FINAL STAGE - MERGING SUB-MODELS *)
 	
 	(* First create a normalized location name *)
@@ -2736,7 +2828,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 		incr submodel_index;
 	) newSubModels;
-
+	*)
 
 
 
