@@ -431,19 +431,18 @@ class algoNZCUBdist =
 			match work with
 
 			| Initial_state index -> 
-					(* print_message Verbose_low (" buggg check!!! "); *)
-
 
 					
 					(* testing - global constraints *)
 					let (init_loc, init_constr) = List.nth !global_init_loc_constr index in 
 					(* let (init_loc, init_constr) = List.hd !global_init_loc_constr in *)
-					(* let init_state = (init_loc, LinearConstraint.px_copy init_constr) in *)
+					(* let init_state = (init_loc, LinearConstraint.px_copy init_constr) in *) 
 
 					(* Compute initial state *)
-					let init_state = AlgoStateBased.compute_initial_state_or_abort() in
-
-					(* let init_state = (init_loc, init_constr) in *)
+					(* 1/ Get the very first initial state - using for testing only *)
+					(* let init_state = AlgoStateBased.compute_initial_state_or_abort() in *)
+					(* 2/ Actual initial state *)
+					let init_state = (init_loc, init_constr) in 
 
 					(* Set up the initial state constraint *)
 					initial_constraint <- Some init_constr;
@@ -489,55 +488,12 @@ class algoNZCUBdist =
 						^" : " ^ ResultProcessor.string_of_good_or_bad_constraint model.variable_names good_or_bad_constraint );
 
 
-					(*
-					(* try to check what is inside - Good_constraint!!!!!! *)
-					let result2 = 
-					( 
-					match result1 with 
-						(* Only good valuations *)
-						| Some Good_constraint constraint_and_soundness -> print_message Verbose_low ("The constraint is Good_constraint 11111111 ");
-						(* Only bad valuations *)
-						| Some Bad_constraint constraint_and_soundness -> print_message Verbose_low ("The constraint is Bad_constraint 11111111 ");
-						(* Both good and bad valuations *)
-						| Some Good_bad_constraint good_and_bad_constraint -> print_message Verbose_low ("The constraint is Good_bad_constraint 11111111 ");
-						
-					);
-					in
-					*)
-
-(*
-TODO: remove
-					let result2 = 
-					( 
-					match result1 with 
-						(* Only good valuations *)
-						| Some good_bad_constraint -> good_bad_constraint;
-						(* Only bad valuations *)
-						| None -> raise (InternalError("Found no constraint!!!!!! AlgoNZCUB - Worker side!!!!"));
-						
-					);
-					in*)
 
 					DistributedUtilities.send_good_or_bad_constraint good_or_bad_constraint;
 
 					print_message Verbose_low ("Sent The constraint ");
 
 
-					(* print_message Verbose_high ("I guess I will reach about " ^ (string_of_int result) ); *)
-
-					(* let const = (List !result1.hd).result in *)
-
-					(* let result = AlgoNZCUB#run () in *)
-
-					(* send back to master the result *)
-					(* finished := true; *) 
-					(* result; *) 
-
-
-					
-				
-					(* Result.Distributed_worker_result *) 
-					(* () *)
 
 			
 			| Terminate -> 
