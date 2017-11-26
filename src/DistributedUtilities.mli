@@ -29,7 +29,7 @@ type pull_request =
 (* 	| BC_result of rank * Result.cartography_result *)
 	| Pi0 of rank * PVal.pval
 	| UpdateRequest of rank
-	| Good_or_bad_constraint of Result.good_or_bad_constraint 
+	| Good_or_bad_constraint of rank * Result.good_or_bad_constraint 
 
 
 (** Tags sent by the master *)

@@ -244,28 +244,70 @@ class algoNZCUBdist =
 		print_message Verbose_medium (" number of setups " ^ (string_of_int no_setups) );
 
 
-		(*
-		(* Early terminating - later *)
-		if no_nodes > no_setups 
-		then
-		(
-			for i = no_setups + 1  to no_nodes - 1 do
-				send_terminate i;
-			done;
-		);
-		(* testing - ok *)
-		*)
-
-
-		(* Create the final good_or_bad_constraint *)
-
-		let final_good_or_bad_constraint = ref ( Good_constraint (LinearConstraint.false_p_nnconvex_constraint () , Result.Constraint_exact) ) in
-
-		(* let final_good_or_bad_constraint = ref ( Good_constraint (LinearConstraint.true_p_nnconvex_constraint () , Result.Constraint_exact) ) in *)
+		let from_worker = ref 0 in
+		let to_worker = ref 0 in
 
 		let current = ref 0 in 
 
 		let counter = ref 0 in
+
+
+		
+		(* Early terminating - later *)
+		if no_nodes > no_setups 
+		then
+		(
+			from_worker := no_setups + 1;
+			to_worker := no_nodes - 1;
+
+			for i = !from_worker  to !to_worker do
+				send_terminate i;
+				counter := !counter + 1; 
+			done;
+
+			(*
+			for i = no_setups + 1  to no_nodes - 1 do
+				send_terminate i;
+			done;
+			*)
+
+			print_message Verbose_medium (" number of terminated workers " ^ (string_of_int (!to_worker - !from_worker + 1)) );
+
+			for source_rank = 1  to (!from_worker - 1) do
+				send_init_state !current source_rank;
+				current := !current + 1;
+			done;
+
+
+
+		)
+		else
+		(
+			(*
+			from_worker := no_setups + 1;
+			to_worker := no_nodes - 1;
+			*)
+
+			for source_rank = 1  to no_nodes - 1 do
+				send_init_state !current source_rank;
+				current := !current + 1;
+			done;
+		);
+		(* testing - ok *)
+		
+
+
+		(* Create the final good_or_bad_constraint *)
+		let final_good_or_bad_constraint = ref ( Good_constraint (LinearConstraint.false_p_nnconvex_constraint () , Result.Constraint_exact) ) in
+		(* let final_good_or_bad_constraint = ref ( Good_constraint (LinearConstraint.true_p_nnconvex_constraint () , Result.Constraint_exact) ) in *)
+
+
+
+		(* let current = ref 0 in *)
+
+
+
+		(* let counter = ref 0 in *)
 
 		while !counter != no_nodes -1 do
 		
@@ -275,44 +317,43 @@ class algoNZCUBdist =
 		let pull_request = (receive_pull_request_NZCUB ()) in
 		(
 		match pull_request with 
+		
+		(*
+		(* use for testing *)
 		(*Pull Tag*)
 		| PullOnly source_rank ->
-			print_message Verbose_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "");
+			print_message Verbose_low ("[Master] Received a pull request from Worker " ^ (string_of_int source_rank) ^ "");
 			(* check to delete if the worker comeback *)
 
 			let current_rank =  DistributedUtilities.get_rank () in 
-			print_message Verbose_medium (" Current rank " ^ (string_of_int current_rank) ); 
+			print_message Verbose_low (" Current rank " ^ (string_of_int current_rank) ); 
 
 			
-			if !current <= no_setups -1 
+			if !current < no_setups
 			then 
 				(
 				send_init_state !current source_rank;
 				(* print_message Verbose_low (" Send!!!!!! ");  *)
-				print_message Verbose_medium ("[Master] sent an initial state configuration to worker " ^ (string_of_int source_rank) ^ "");
+				print_message Verbose_low ("[Master] sent an initial state configuration to worker " ^ (string_of_int source_rank) ^ "");
 				current := !current + 1;
 				)
 			else
 				(
 				(* print_message Verbose_standard ("[Master] sent a termination to worker " ^ (string_of_int source_rank) ^ ""); *)
 				send_terminate source_rank;
-				print_message Verbose_medium ("[Master] sent a termination to worker " ^ (string_of_int source_rank) ^ "");
+				print_message Verbose_low ("[Master] sent a termination to worker " ^ (string_of_int source_rank) ^ "");
 				counter := !counter + 1; 
 				); 
 
 			 (* print_message Verbose_medium ("[Master] Received a pull request from worker " ^ (string_of_int source_rank) ^ "; end."); *)
+		*)
 
 
-		| Good_or_bad_constraint worker_good_or_bad_constraint ->
+		| Good_or_bad_constraint (source_rank, worker_good_or_bad_constraint) ->
 
-			print_message Verbose_medium ("[Master] Received a Good_or_bad_constraint from worker "); 
+			print_message Verbose_medium ("[Master] Received a Good_or_bad_constraint from worker " ^ (string_of_int source_rank) ^ ""); 
 			 begin 
 			(* if verbose_mode_greater Verbose_low then( *) 
-			
-				(* Get constraint from Worker's Good_or_bad_constraint *)
-				(* let worker_constraint = ref (LinearConstraint.true_p_nnconvex_constraint ()) in *)
-
-				(*** TODO: "merge" (union) the good_or_bad_constraint with worker_good_or_bad_constraint ***)
 
 
 				(
@@ -320,44 +361,49 @@ class algoNZCUBdist =
 					(* Only good valuations *)
 					| Good_constraint constraint_and_soundness_1, Good_constraint constraint_and_soundness_2 -> 
 
-						print_message Verbose_low (" This is the constraint result received from worker : " 
-						^ ResultProcessor.string_of_good_or_bad_constraint model.variable_names worker_good_or_bad_constraint );
-						print_message Verbose_low (" This is the current constraint result : " 
-						^ ResultProcessor.string_of_good_or_bad_constraint model.variable_names worker_good_or_bad_constraint );
-						
-						print_message Verbose_low ("The constraint is Good_constraint "); 
-						
-						let constr_1, soundness_1 = constraint_and_soundness_1 in 
-						(* worker_constraint := constr_1; *)
 
+						print_message Verbose_low (" [Master] The both constraints are Good_constraint ");
+
+						print_message Verbose_low (" [Master] This is the constraint result received from worker : " 
+						^ ResultProcessor.string_of_good_or_bad_constraint model.variable_names worker_good_or_bad_constraint );
+						
+						print_message Verbose_low (" [Master] This is the current constraint result : " 
+						^ ResultProcessor.string_of_good_or_bad_constraint model.variable_names worker_good_or_bad_constraint );
+						
+						(* Get constraint and soundness of worker_good_or_bad_constraint *)
+						let constr_1, soundness_1 = constraint_and_soundness_1 in 
+
+						(* Get constraint and soundness of final_good_or_bad_constraint *)
 						let constr_2, soundness_2 = constraint_and_soundness_2 in 
 
-						(*
-						(* not good intersection process *)
-						let list_constr_2 = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint constr_2 in
-						let list_constr_1 = LinearConstraint.p_linear_constraint_list_of_p_nnconvex_constraint constr_1 in
-						print_message Verbose_low (" worker constraint: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names (LinearConstraint.p_intersection list_constr_1)));
-
-						let final_constr = LinearConstraint.p_intersection (list_constr_1@list_constr_2) in
-						*)
-
+						(* Because of the next function, then this final_constr is created *)
 						let final_constr = constr_2 in
 
-
+						(* "merge" (union) the good_or_bad_constraint with worker_good_or_bad_constraint *)
 						LinearConstraint.p_nnconvex_union final_constr constr_1;
-					
-						(*
-						print_message Verbose_low (" final constraint: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names (final_constr)));
-						*)
-						
 
-						(*
-						let final_constr1 = (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints [final_constr]) in
-						*)
-
+						(* final constraint *)
 						final_good_or_bad_constraint := ( Good_constraint (final_constr , soundness_2) ); 
 
-						print_message Verbose_low (" Final constraint: " ^ ResultProcessor.string_of_good_or_bad_constraint model.variable_names !final_good_or_bad_constraint );
+						print_message Verbose_low (" [Master] This is the final constraint: " ^ ResultProcessor.string_of_good_or_bad_constraint model.variable_names !final_good_or_bad_constraint );
+
+
+						if !current < no_setups
+						then 
+							(
+							send_init_state !current source_rank;
+							(* print_message Verbose_low (" Send!!!!!! ");  *)
+							print_message Verbose_low ("[Master] sent an initial state configuration to worker " ^ (string_of_int source_rank) ^ "");
+							current := !current + 1;
+							)
+						else
+							(
+							(* print_message Verbose_standard ("[Master] sent a termination to worker " ^ (string_of_int source_rank) ^ ""); *)
+							send_terminate source_rank;
+							print_message Verbose_low ("[Master] sent a termination to worker " ^ (string_of_int source_rank) ^ "");
+							counter := !counter + 1; 
+							); 
+
 
 						()
 					
@@ -367,10 +413,8 @@ class algoNZCUBdist =
 
 				()
 
-			 (* print_message Verbose_medium ("[Master] Received a Good_or_bad_constraint from worker " ^ (string_of_int source_rank) ^ "; end."); *)
 			 end; 
 			 
-
 		(*0ther cases*)
 		|_ -> raise (InternalError("not implemented."))
 	 	 
@@ -411,6 +455,7 @@ class algoNZCUBdist =
 
 
 		(*
+		(* use for testing *)
 		send_work_request ();
 		print_message Verbose_low (" Send work request!!! ");
 		*)
@@ -420,12 +465,14 @@ class algoNZCUBdist =
 		
 		while (not !finished) do 
 
+			(*
+			(* use for testing *)
 			send_work_request ();
-
 			print_message Verbose_medium (" Send work request!!! ");
-
+			*)
 
 			let work = receive_work_NZCUB () in
+			(
 			print_message Verbose_medium (" received work!!! ");
 
 			match work with
@@ -445,9 +492,10 @@ class algoNZCUBdist =
 					let init_state = (init_loc, init_constr) in 
 
 					(* Set up the initial state constraint *)
-					initial_constraint <- Some init_constr;
+					(* initial_constraint <- Some init_constr; *)
 			(*		(*Initialization of slast : used in union mode only*)
 					slast := [];*)
+					
 					(* Print some information *)
 					print_message Verbose_medium ("Starting running algorithm " ^ self#algorithm_name ^ "…\n");
 					(* Variable initialization *)
@@ -507,6 +555,19 @@ class algoNZCUBdist =
 				
 			| _ -> 		print_message Verbose_low ("error!!! not implemented.");
 					raise (InternalError("not implemented."));
+
+			);
+
+
+			(*
+			(* use for testing *)
+			send_work_request ();
+
+			print_message Verbose_medium (" Send work request!!! ");
+			*)
+		
+
+
 
 		done; 
 		

@@ -2663,8 +2663,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 
 	
-	
 
+	
+	
+	
 	(* [CUB-PTA TRANSFORMATION] FINAL STAGE - MERGING SUB-MODELS 
 		New final stage code - More convenient for distributed version and more 
 		Create more initial states, one for each CUB-PTA and one for all CUB-PTA (Disjunctive CUB-PTA).
@@ -2829,6 +2831,13 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		incr submodel_index;
 	) newSubModels;
 	*)
+
+
+
+
+
+
+
 
 
 
