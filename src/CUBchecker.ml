@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2017/08/01
+ * Last modified     : 2017/11/27
  *
  ************************************************************)
 
@@ -1293,7 +1293,7 @@ let cub_tran model submodels count_m
 				(
 				(* reset zone *)
 
-				(*)
+				(* )
 				let _ = print_message Verbose_low (" 	 Detected " 
 														^ (model.variable_names clock_index) 
 														^ " was a reset clock!\n 	 skipping the process: (" 
@@ -1473,7 +1473,7 @@ let cub_tran model submodels count_m
 			then
 				(
 				(* reset zone *)
-				(*)
+				(* )
 				let _ = print_message Verbose_low (" 	 Detected " 
 												^ (model.variable_names clock_index) 
 												^ " was a reset clock!\n 	 skipping the process: (" 
@@ -1607,7 +1607,7 @@ let cub_tran model submodels count_m
 			then
 				(
 				(* reset zone *)
-				(*)
+				(* )
 				print_message Verbose_low (" 	 Detected " 
 												^ (model.variable_names clock_index) 
 												^ " was a reset clock!\n 	 skipping the process: (" 
@@ -2016,6 +2016,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	(* Location names per PTA: Array : automaton_index : -> (Array : location_index -> location_name) *)
 	let new_location_names_array = Array.make (model.nb_automata) (Array.make 0 "UNINITIALIZED") in
+	
+	(* Urgency in PTA: Array : automaton_index : -> (Array : location_index -> bool) *)
+	let new_urgency_array = Array.make (model.nb_automata) (Array.make 0 false) in
 	
 	(* Number of actions: add the epsilon (1 per PTA) *)
 	let new_nb_actions = model.nb_actions + model.nb_automata in
@@ -2921,6 +2924,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Create the structure location_index -> location_name *)
 	let location_name_of_location_index = Array.make new_nb_locations "UNINITIALIZED" in
 	
+	(* Create the structure location_index -> urgent (bool) *)
+	(*** NOTE: quite a hack, we set all locations to be urgent, and then all old locations will be erased to their former value; so new (initial) locations will automatically be urgent! ***)
+	let urgency_of_location_index = Array.make new_nb_locations true in
+	
 	(* Create the structure location_index -> action_index list *)
 	let actions_per_location_array = Array.make new_nb_locations [] in
 	
@@ -2944,7 +2951,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* Add the binding location_name , location_index to the new structure *)
 		Hashtbl.add location_index_of_location_name location_name !current_location_index;
 
-		(* ADD new_loc_index_tbl, USED FOR TRACING NEW LOACTION FROM THE OLD LOCATION *)
+		(* ADD new_loc_index_tbl, USED FOR TRACING NEW LOCATION FROM THE OLD LOCATION *)
 		let old_loc_index = Hashtbl.find loc_naming_tbl location_name in
 		(* ELIMINATE THE NEW CUB INITIAL LOCATION WHICH IS NOT IN OLD MODEL LOCATIONS *)
 		if ( List.mem old_loc_index (model.locations_per_automaton automaton_index) )
@@ -2960,6 +2967,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		
 		(* Add the binding location_index , location_name to the new structure *)
 		location_name_of_location_index.(!current_location_index) <- location_name;
+		(* Update the urgency *)
+		urgency_of_location_index.(!current_location_index) <- (model.is_urgent automaton_index old_loc_index);
 		
 		(* And we update the invariant as well *)
 		new_invariants_array.(automaton_index).(!current_location_index) <- location_invariant;
@@ -2978,6 +2987,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	(* 3) Handle location names *)
 	new_location_names_array.(automaton_index) <- location_name_of_location_index;
+
+	(* 3a) Handle urgency *)
+	new_urgency_array.(automaton_index) <- urgency_of_location_index;
 
 	(* 3b) Handle initial location *)
 	(* Update the array of new initial location *)
@@ -3128,6 +3140,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	
 	let new_location_names_function automaton_index location_index = new_location_names_array.(automaton_index).(location_index) in
+	
+	let new_urgency_function automaton_index location_index = new_urgency_array.(automaton_index).(location_index) in
 	
 
  	let new_initial_location =
@@ -3397,13 +3411,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* The location names for each automaton *)
 		location_names = new_location_names_function;
 		(* The urgency for each location *)
-			(*** TODO ***)
-		is_urgent = (*automaton_index -> location_index -> bool*)
-			(*** WARNING! dummy function to test ***)
-			(*** TODO ***)
-			(fun automaton_index location_index -> false)
-		;
-		(*** NOTE: all new initial locations shall be urgent! ***)
+		is_urgent = new_urgency_function;
+		(*** TODO: all new initial locations shall be urgent! ***)
 
 		(* All action indexes *)
 		actions = new_actions;
