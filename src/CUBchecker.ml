@@ -2960,16 +2960,25 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			print_message Verbose_low ("\nHashtbl.length: " ^string_of_int  (List.length (model.locations_per_automaton automaton_index)) ^ "\nNAME: " ^ location_name ^ "\n OLD LOCAION: " ^ string_of_int old_loc_index ^ " NEW LOCAION: " ^ string_of_int !current_location_index );
 			(* Hashtbl.add new_loc_index_tbl old_loc_index !current_location_index; *)
 			
+			(* Update the urgency *)
+			(* urgency_of_location_index.(!current_location_index) <- (model.is_urgent automaton_index old_loc_index); *)
 			old_locations_to_new_locations.(automaton_index).(old_loc_index) <- !current_location_index :: old_locations_to_new_locations.(automaton_index).(old_loc_index);
 			
 			(* TESTING INFORNATION IN new_loc_index_tbl *)
+
+			urgency_of_location_index.(!current_location_index) <- (model.is_urgent automaton_index old_loc_index);
 			);
 		
 		(* Add the binding location_index , location_name to the new structure *)
 		location_name_of_location_index.(!current_location_index) <- location_name;
+
+		(*
+		print_message Verbose_low ("\n Bug1!");
 		(* Update the urgency *)
-		urgency_of_location_index.(!current_location_index) <- (model.is_urgent automaton_index old_loc_index);
-		
+		(* urgency_of_location_index.(!current_location_index) <- (model.is_urgent automaton_index old_loc_index); *)
+		print_message Verbose_low ("\n Bug2!");
+		*)
+
 		(* And we update the invariant as well *)
 		new_invariants_array.(automaton_index).(!current_location_index) <- location_invariant;
 
