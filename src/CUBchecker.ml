@@ -1989,6 +1989,11 @@ let clocks_constraints_process model adding clocks_constraints loc_clocks_constr
 (************************************************************)
 (************************************************************)
 
+(* String result - Some additional information in result: name of sub-model and number of CUB-PTAs in Disjunctive CUB-PTA *)
+let additional_info = ref " "
+
+
+
 (* We create a new, silent action specifically for this automaton: its value is (nb of regular action) + automaton_index *)
 let local_silent_action_index_of_automaton_index model automaton_index =
 	model.nb_actions + automaton_index
@@ -1996,6 +2001,8 @@ let local_silent_action_index_of_automaton_index model automaton_index =
 
 (** Takes an abstract model as input, and convert it into an equivalent CUB-PTA *)
 let cubpta_of_pta model : AbstractModel.abstract_model =
+
+	
 	
 	(* Create and start counter *)
 	let cub_transformation_counter = create_time_counter_and_register "CUB transformation" Algorithm_counter Verbose_standard in
@@ -2069,15 +2076,17 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 	print_message Verbose_low ("\n \n \n \n ------------------ Converting input model into specific data stucture ---------------------------");
 	List.iter (fun automaton_index ->
-		print_message Verbose_low ("\nConverting automaton " ^ (model.automata_names automaton_index) ^ "…");
+		print_message Verbose_low ("\nConverting automaton " ^ (model.automata_names automaton_index));
+
+		additional_info := (!additional_info ^ ("Automaton name: " ^ (model.automata_names automaton_index)) );
 		
 		(* We create a new, silent action specifically for this automaton: its value is (nb of regular action) + automaton_index *)
 		(*** NOTE: unused code written by Gia, removed by ÉA (2017/02/08) ***)
 (* 		let local_silent_action_index = local_silent_action_index_of_automaton_index model automaton_index in *)
 
-		(* print_message Verbose_low ("Converting automaton: " 
+		print_message Verbose_low ("Converting automaton: " 
 										^ (model.automata_names automaton_index) 
-										^ "!!!!!!!"); *)
+										); 
 
 		(*elements of a submodels*)
 		(*initial*)
@@ -2675,6 +2684,12 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		Create more initial states, one for each CUB-PTA and one for all CUB-PTA (Disjunctive CUB-PTA).
 
 	*)
+
+	(* [CUB-PTA TRANSFORMATION] FINAL STAGE - MERGING SUB-MODELS  *)
+	print_message Verbose_low ("\nFINAL STAGE - MERGING SUB-MODELS ");
+	print_message Verbose_low ("\nNUMBER OF MODELS: " ^ (string_of_int (DynArray.length submodels) ) );
+
+	additional_info := ( !additional_info ^ (", Number of models: " ^ (string_of_int (DynArray.length submodels) ) ^ "\n" ) );
 	
 	(* First create a normalized location name *)
 	(*** BADPROG…… ***)
@@ -2755,6 +2770,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 		incr submodel_index;
 	) newSubModels;
+
+
 
 
 
@@ -3087,7 +3104,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	) model.automata; (* end List.iter on automata *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 	
-	
+
+	(* Print some additional information *)
+	print_message Verbose_standard !additional_info;
 
 
 
