@@ -146,7 +146,7 @@ let init_state_list model initial_loc_array =
 
 
 	(* Testing - OK *)
-	(*print_message Verbose_low (" len setup_index_list " ^ string_of_int (List.length !setup_index_list) );*)
+	print_message Verbose_low (" len setup_index_list " ^ string_of_int (List.length !setup_index_list) );
 	let global_init_location_constr = ref [] in
 	List.iter ( fun setup_index -> 
 		let init_constr = ref (LinearConstraint.pxd_true_constraint()) in  
@@ -275,6 +275,7 @@ class algoNZCUBdist =
 
 			for source_rank = 1  to (!from_worker - 1) do
 				send_init_state !current source_rank;
+				print_message Verbose_low ("[Master] sent an initial state configuration " ^ (string_of_int !current) ^ " to worker " ^ (string_of_int source_rank) ^ "");
 				current := !current + 1;
 			done;
 
@@ -290,6 +291,7 @@ class algoNZCUBdist =
 
 			for source_rank = 1  to no_nodes - 1 do
 				send_init_state !current source_rank;
+				print_message Verbose_low ("[Master] sent an initial state configuration " ^ (string_of_int !current) ^ " to worker " ^ (string_of_int source_rank) ^ "");
 				current := !current + 1;
 			done;
 		);
@@ -393,7 +395,7 @@ class algoNZCUBdist =
 							(
 							send_init_state !current source_rank;
 							(* print_message Verbose_low (" Send!!!!!! ");  *)
-							print_message Verbose_low ("[Master] sent an initial state configuration to worker " ^ (string_of_int source_rank) ^ "");
+							print_message Verbose_low ("[Master] sent an initial state configuration " ^ (string_of_int !current) ^ " to worker " ^ (string_of_int source_rank) ^ "");
 							current := !current + 1;
 							)
 						else
@@ -485,6 +487,19 @@ class algoNZCUBdist =
 					(* let (init_loc, init_constr) = List.hd !global_init_loc_constr in *)
 					(* let init_state = (init_loc, LinearConstraint.px_copy init_constr) in *) 
 
+
+
+					(* testing *)
+					(* print_message Verbose_medium ( Location.string_of_location model.automata_names model.location_names model.discrete_names false init_loc ); *)
+					let array_locs = Location.get_locations init_loc in
+					Array.iter ( fun location_index -> 
+						List.iter (fun automaton_index -> 
+										print_message Verbose_low (" location name dsafsefe: " ^ (model.location_names automaton_index location_index) ) ;
+									) model.automata;
+					) array_locs;
+					
+
+
 					(* Compute initial state *)
 					(* 1/ Get the very first initial state - using for testing only *)
 					(* let init_state = AlgoStateBased.compute_initial_state_or_abort() in *)
@@ -513,7 +528,22 @@ class algoNZCUBdist =
 					
 
 					(* Check if the initial state should be kept according to the algorithm *)
+					(* let initial_state_added = self#process_initial_state init_state in *)
+
 					let initial_state_added = self#process_initial_state init_state in
+
+
+
+					(* test *)
+					(* Degenerate case: initial state cannot be kept: terminate *)
+					if not initial_state_added then(
+						(* Output a warning because this situation is still a little strange *)
+						print_warning "The initial state is not kept.";
+
+					);
+
+
+
 
 
 					(* Run the NZ algo *)
@@ -540,6 +570,8 @@ class algoNZCUBdist =
 					DistributedUtilities.send_good_or_bad_constraint good_or_bad_constraint;
 
 					print_message Verbose_low ("Sent The constraint ");
+
+					
 
 
 
