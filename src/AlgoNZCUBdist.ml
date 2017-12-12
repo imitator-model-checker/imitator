@@ -146,7 +146,7 @@ let init_state_list model initial_loc_array =
 
 
 	(* Testing - OK *)
-	print_message Verbose_low (" len setup_index_list " ^ string_of_int (List.length !setup_index_list) );
+	(*print_message Verbose_low (" len setup_index_list " ^ string_of_int (List.length !setup_index_list) );*)
 	let global_init_location_constr = ref [] in
 	List.iter ( fun setup_index -> 
 		let init_constr = ref (LinearConstraint.pxd_true_constraint()) in  
@@ -275,7 +275,6 @@ class algoNZCUBdist =
 
 			for source_rank = 1  to (!from_worker - 1) do
 				send_init_state !current source_rank;
-				print_message Verbose_low ("[Master] sent an initial state configuration " ^ (string_of_int !current) ^ " to worker " ^ (string_of_int source_rank) ^ "");
 				current := !current + 1;
 			done;
 
@@ -291,7 +290,6 @@ class algoNZCUBdist =
 
 			for source_rank = 1  to no_nodes - 1 do
 				send_init_state !current source_rank;
-				print_message Verbose_low ("[Master] sent an initial state configuration " ^ (string_of_int !current) ^ " to worker " ^ (string_of_int source_rank) ^ "");
 				current := !current + 1;
 			done;
 		);
@@ -395,7 +393,7 @@ class algoNZCUBdist =
 							(
 							send_init_state !current source_rank;
 							(* print_message Verbose_low (" Send!!!!!! ");  *)
-							print_message Verbose_low ("[Master] sent an initial state configuration " ^ (string_of_int !current) ^ " to worker " ^ (string_of_int source_rank) ^ "");
+							print_message Verbose_low ("[Master] sent an initial state configuration to worker " ^ (string_of_int source_rank) ^ "");
 							current := !current + 1;
 							)
 						else
@@ -487,19 +485,6 @@ class algoNZCUBdist =
 					(* let (init_loc, init_constr) = List.hd !global_init_loc_constr in *)
 					(* let init_state = (init_loc, LinearConstraint.px_copy init_constr) in *) 
 
-
-
-					(* testing *)
-					(* print_message Verbose_medium ( Location.string_of_location model.automata_names model.location_names model.discrete_names false init_loc ); *)
-					let array_locs = Location.get_locations init_loc in
-					Array.iter ( fun location_index -> 
-						List.iter (fun automaton_index -> 
-										print_message Verbose_low (" location name dsafsefe: " ^ (model.location_names automaton_index location_index) ) ;
-									) model.automata;
-					) array_locs;
-					
-
-
 					(* Compute initial state *)
 					(* 1/ Get the very first initial state - using for testing only *)
 					(* let init_state = AlgoStateBased.compute_initial_state_or_abort() in *)
@@ -518,7 +503,7 @@ class algoNZCUBdist =
 					self#initialize_variables;
 					(* Debut prints *)
 					print_message Verbose_medium ("Starting exploring the parametric zone graph from the following initial state:");
-					print_message Verbose_medium (ModelPrinter.string_of_state model init_state);
+					print_message Verbose_medium ("Desired initial state" ^ ModelPrinter.string_of_state model init_state);
 					(* Guess the number of reachable states *)
 					let guessed_nb_states = 10 * (!nb_actions + !nb_automata + !nb_variables) in 
 					let guessed_nb_transitions = guessed_nb_states * !nb_actions in 
@@ -528,23 +513,133 @@ class algoNZCUBdist =
 					
 
 					(* Check if the initial state should be kept according to the algorithm *)
-					(* let initial_state_added = self#process_initial_state init_state in *)
-
 					let initial_state_added = self#process_initial_state init_state in
 
 
+					(************************************************************)
+					(** Recreate the abstract model *)
+					(************************************************************)
+					let new_model =
+					{
+						(** General information **)
+						(* Cardinality *)
+						nb_automata = model.nb_automata;
+						nb_actions = model.nb_actions;
+						nb_clocks = model.nb_clocks;
+						nb_discrete = model.nb_discrete;
+						nb_parameters = model.nb_parameters;
+						nb_variables = model.nb_variables;
+						
+						(* Is there any stopwatch in the model? *)
+						has_stopwatches = model.has_stopwatches;
+						(* Is the model an L/U-PTA? *)
+						(*** TODO (for now, we just assume that after transformation not an L/U anymore ***)
+						lu_status = PTA_notLU;
 
-					(* test *)
-					(* Degenerate case: initial state cannot be kept: terminate *)
-					if not initial_state_added then(
-						(* Output a warning because this situation is still a little strange *)
-						print_warning "The initial state is not kept.";
+						(** Content of the PTA **)
+						(* The observer *)
+					
+						(*** TODO ***)
+					
+						observer_pta = None;
+						is_observer = (fun _ -> false);
 
-					);
+						(* The list of clock indexes *)
+						clocks = model.clocks;
+						(* True for clocks, false otherwise *)
+						is_clock = model.is_clock;
+						(* Index of the special clock to be reset at each transition to measure time elapsing (only used in NZ checking) *)
+				 		special_reset_clock = model.special_reset_clock;
+				 		(* The list of clock indexes except the reset clock (used, e.g., to print the model *)
+				 		clocks_without_special_reset_clock = model.clocks_without_special_reset_clock;
+						(* The list of discrete indexes *)
+						discrete = model.discrete;
+						(* True for discrete, false otherwise *)
+						is_discrete = model.is_discrete;
+						(* The list of parameter indexes *)
+						parameters = model.parameters;
+						(* The non parameters (clocks and discrete) *)
+						clocks_and_discrete = model.clocks_and_discrete;
+						(* The non clocks (parameters and discrete) *)
+						parameters_and_discrete = model.parameters_and_discrete;
+						(* The function = variable_index -> variable name *)
+						variable_names = model.variable_names;
+						(* The type of variables *)
+						type_of_variables = model.type_of_variables;
+						
+						(* The automata *)
+						automata = model.automata;
+						(* The automata names *)
+						automata_names = model.automata_names;
+						
+						(* The locations for each automaton *)
+						locations_per_automaton = model.locations_per_automaton;
+						(* The location names for each automaton *)
+						location_names = model.location_names;
+						(* The urgency for each location *)
+						is_urgent = model.is_urgent;
+						(*** TODO: all new initial locations shall be urgent! ***)
 
+						(* All action indexes *)
+						actions = model.actions;
+						(* Action names *)
+						action_names = model.action_names;
+						(* The type of actions *)
+						action_types = model.action_types;
+						(* The list of actions for each automaton *)
+						actions_per_automaton = model.actions_per_automaton;
+						(* The list of automatons for each action *)
+						automata_per_action = model.automata_per_action;
+						(* The list of actions for each automaton for each location *)
+						actions_per_location = model.actions_per_location;
 
+						(* The cost for each automaton and each location *)
+						(*** TODO ***)
+						(*** NOTE: dummy function ***)
+						costs = (fun _ _ -> None);
+						
+						(* The invariant for each automaton and each location *)
+						invariants = model.invariants;
+						
+						(* The transitions for each automaton and each location and each action *)
+						transitions = model.transitions;
+						(* The list of clocks stopped for each automaton and each location *)
+						(*** TODO ***)
+						(*** NOTE: dummy function ***)
+						stopwatches = (fun _ _-> []);
 
+					
+						(* All clocks non-negative *)
+						px_clocks_non_negative = model.px_clocks_non_negative;
+						(* Initial location of the model *)
+							(*** TODO ***)
+						(* initial_location = new_initial_location; *)
+						initial_location = init_loc;
 
+						(* Initial constraint of the model *)
+						(* initial_constraint = model.initial_constraint; *)
+						initial_constraint = init_constr;
+
+						(* Initial constraint of the model projected onto P *)
+						initial_p_constraint = model.initial_p_constraint;
+						(* Initial constraint of the model projected onto P and all clocks non-negative *)
+						px_clocks_non_negative_and_initial_p_constraint = model.px_clocks_non_negative_and_initial_p_constraint;
+
+						(* Property defined by the user *)
+						(*** TODO ***)
+						(*** WARNING: any property will be turned into an (equivalent) reachability property, i.e., the original user property is lost ***)
+						user_property = model.user_property;
+						(* Property defined by the model *)
+						correctness_condition = model.correctness_condition;
+						(* List of parameters to project the result onto *)
+						projection = model.projection;
+						(* Parameter to be minimized or maximized *)
+						optimized_parameter = model.optimized_parameter;
+					}
+					in
+
+					(* Set back the model *)
+					Input.set_model new_model;
 
 					(* Run the NZ algo *)
 
@@ -570,8 +665,6 @@ class algoNZCUBdist =
 					DistributedUtilities.send_good_or_bad_constraint good_or_bad_constraint;
 
 					print_message Verbose_low ("Sent The constraint ");
-
-					
 
 
 
