@@ -238,17 +238,16 @@ class algoNZCUBdist =
 		self#print_algo_message Verbose_medium ("Master algorithm starting…\n");
 
 		(* Get number of processes - index: from 0 -> no_nodes-1 *)
-		print_message Verbose_medium (" number of nodes " ^ (string_of_int no_nodes) );
+		print_message Verbose_medium (" Number of nodes " ^ (string_of_int no_nodes) );
 		(* Get number of setup *)
 		let no_setups = List.length !global_init_loc_constr in 
-		print_message Verbose_medium (" number of setups " ^ (string_of_int no_setups) );
+		print_message Verbose_medium (" Number of setups " ^ (string_of_int no_setups) );
 
 
 		let from_worker = ref 0 in
 		let to_worker = ref 0 in
 
 		let current = ref 0 in 
-
 		let counter = ref 0 in
 
 
@@ -271,7 +270,7 @@ class algoNZCUBdist =
 			done;
 			*)
 
-			print_message Verbose_medium (" number of terminated workers " ^ (string_of_int (!to_worker - !from_worker + 1)) );
+			print_message Verbose_medium (" Number of terminated workers " ^ (string_of_int (!to_worker - !from_worker + 1)) );
 
 			for source_rank = 1  to (!from_worker - 1) do
 				send_init_state !current source_rank;
@@ -298,16 +297,9 @@ class algoNZCUBdist =
 
 
 		(* Create the final good_or_bad_constraint *)
-		let final_good_or_bad_constraint = ref ( Good_constraint (LinearConstraint.false_p_nnconvex_constraint () , Result.Constraint_exact) ) in
+		(* let final_good_or_bad_constraint = ref ( Good_constraint (LinearConstraint.false_p_nnconvex_constraint () , Result.Constraint_exact) ) in *)
 		(* let final_good_or_bad_constraint = ref ( Good_constraint (LinearConstraint.true_p_nnconvex_constraint () , Result.Constraint_exact) ) in *)
-
-
-
-		(* let current = ref 0 in *)
-
-
-
-		(* let counter = ref 0 in *)
+		let final_good_or_bad_constraint = ref ( Good_constraint ( LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint model.initial_p_constraint , Result.Constraint_exact) ) in
 
 		while !counter != no_nodes -1 do
 		
@@ -351,7 +343,7 @@ class algoNZCUBdist =
 
 		| Good_or_bad_constraint (source_rank, worker_good_or_bad_constraint) ->
 
-			print_message Verbose_medium ("[Master] Received a Good_or_bad_constraint from worker " ^ (string_of_int source_rank) ^ ""); 
+			print_message Verbose_low ("[Master] Received a Good_or_bad_constraint from worker " ^ (string_of_int source_rank) ^ ""); 
 			 begin 
 			(* if verbose_mode_greater Verbose_low then( *) 
 
@@ -408,7 +400,7 @@ class algoNZCUBdist =
 						()
 					
 					(* Other valuations *)
-					| _ -> raise (InternalError("encountered an unexpected constraint result."))
+					| _ -> raise (InternalError("[Master] encountered an unexpected constraint result."))
 				);
 
 				()
@@ -473,13 +465,12 @@ class algoNZCUBdist =
 
 			let work = receive_work_NZCUB () in
 			(
-			print_message Verbose_medium (" received work!!! ");
+			print_message Verbose_medium ("[Worker" ^ (string_of_int current_rank) ^ "] received work!!! ");
 
 			match work with
 
 			| Initial_state index -> 
 
-					
 					(* testing - global constraints *)
 					let (init_loc, init_constr) = List.nth !global_init_loc_constr index in 
 					(* let (init_loc, init_constr) = List.hd !global_init_loc_constr in *)
@@ -497,24 +488,22 @@ class algoNZCUBdist =
 					slast := [];*)
 					
 					(* Print some information *)
-					print_message Verbose_medium ("Starting running algorithm " ^ self#algorithm_name ^ "…\n");
+					print_message Verbose_medium ("[Worker" ^ (string_of_int current_rank) ^ "] is starting running algorithm " ^ self#algorithm_name ^ "…\n");
 					(* Variable initialization *)
-					print_message Verbose_medium ("Initializing the algorithm local variables…");
+					print_message Verbose_medium ("[Worker" ^ (string_of_int current_rank) ^ "] is initializing the algorithm local variables…");
 					self#initialize_variables;
 					(* Debut prints *)
-					print_message Verbose_medium ("Starting exploring the parametric zone graph from the following initial state:");
-					print_message Verbose_medium ("Desired initial state" ^ ModelPrinter.string_of_state model init_state);
+					print_message Verbose_medium ("[Worker" ^ (string_of_int current_rank) ^ "] is starting exploring the parametric zone graph from the following initial state:");
+					print_message Verbose_medium ("[Worker" ^ (string_of_int current_rank) ^ "] Desired initial state" ^ ModelPrinter.string_of_state model init_state);
 					(* Guess the number of reachable states *)
 					let guessed_nb_states = 10 * (!nb_actions + !nb_automata + !nb_variables) in 
 					let guessed_nb_transitions = guessed_nb_states * !nb_actions in 
-					print_message Verbose_medium ("I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
+					print_message Verbose_medium ("[Worker" ^ (string_of_int current_rank) ^ "] I guess I will reach about " ^ (string_of_int guessed_nb_states) ^ " states with " ^ (string_of_int guessed_nb_transitions) ^ " transitions.");
 					(* Create the state space *)
 					state_space <- StateSpace.make guessed_nb_transitions;
-					
 
 					(* Check if the initial state should be kept according to the algorithm *)
-					let initial_state_added = self#process_initial_state init_state in
-
+					(* let initial_state_added = self#process_initial_state init_state in *)
 
 					(************************************************************)
 					(** Recreate the abstract model *)
@@ -538,8 +527,6 @@ class algoNZCUBdist =
 
 						(** Content of the PTA **)
 						(* The observer *)
-					
-						(*** TODO ***)
 					
 						observer_pta = None;
 						is_observer = (fun _ -> false);
@@ -566,12 +553,10 @@ class algoNZCUBdist =
 						variable_names = model.variable_names;
 						(* The type of variables *)
 						type_of_variables = model.type_of_variables;
-						
 						(* The automata *)
 						automata = model.automata;
 						(* The automata names *)
 						automata_names = model.automata_names;
-						
 						(* The locations for each automaton *)
 						locations_per_automaton = model.locations_per_automaton;
 						(* The location names for each automaton *)
@@ -579,7 +564,6 @@ class algoNZCUBdist =
 						(* The urgency for each location *)
 						is_urgent = model.is_urgent;
 						(*** TODO: all new initial locations shall be urgent! ***)
-
 						(* All action indexes *)
 						actions = model.actions;
 						(* Action names *)
@@ -592,12 +576,10 @@ class algoNZCUBdist =
 						automata_per_action = model.automata_per_action;
 						(* The list of actions for each automaton for each location *)
 						actions_per_location = model.actions_per_location;
-
 						(* The cost for each automaton and each location *)
 						(*** TODO ***)
 						(*** NOTE: dummy function ***)
 						costs = (fun _ _ -> None);
-						
 						(* The invariant for each automaton and each location *)
 						invariants = model.invariants;
 						
@@ -607,24 +589,20 @@ class algoNZCUBdist =
 						(*** TODO ***)
 						(*** NOTE: dummy function ***)
 						stopwatches = (fun _ _-> []);
-
-					
 						(* All clocks non-negative *)
 						px_clocks_non_negative = model.px_clocks_non_negative;
 						(* Initial location of the model *)
 							(*** TODO ***)
 						(* initial_location = new_initial_location; *)
 						initial_location = init_loc;
-
 						(* Initial constraint of the model *)
 						(* initial_constraint = model.initial_constraint; *)
-						initial_constraint = init_constr;
-
+						(* initial_constraint = init_constr; *)
+						initial_constraint = LinearConstraint.px_intersection [model.initial_constraint; init_constr; (LinearConstraint.px_of_p_constraint model.initial_p_constraint)];
 						(* Initial constraint of the model projected onto P *)
 						initial_p_constraint = model.initial_p_constraint;
 						(* Initial constraint of the model projected onto P and all clocks non-negative *)
 						px_clocks_non_negative_and_initial_p_constraint = model.px_clocks_non_negative_and_initial_p_constraint;
-
 						(* Property defined by the user *)
 						(*** TODO ***)
 						(*** WARNING: any property will be turned into an (equivalent) reachability property, i.e., the original user property is lost ***)
@@ -644,6 +622,7 @@ class algoNZCUBdist =
 					(* Run the NZ algo *)
 
 					let algo = new AlgoNZCUB.algoNZCUB in
+					
 					let result = algo#run () in 
 
 
@@ -651,48 +630,43 @@ class algoNZCUBdist =
 						(* Result for EFsynth, PDFC PRP *)
 						| Single_synthesis_result single_synthesis_result -> 
 
-							print_message Verbose_low ("The result is Single_synthesis_result "); 
+							print_message Verbose_low ("[Worker" ^ (string_of_int current_rank) ^ "] The result is Single_synthesis_result "); 
 							single_synthesis_result.result (***** Detected!!!! *****)
 						
-						| _ -> raise (InternalError("Expecting a single synthesis result, but received something else."))
+						| _ -> raise (InternalError("[Worker" ^ (string_of_int current_rank) ^ "] is expecting a single synthesis result, but received something else."))
 					in
 
-					print_message Verbose_low (" This is the constraint result of worker " ^ (string_of_int current_rank) 
+					print_message Verbose_low ("[Worker" ^ (string_of_int current_rank) ^ "] This is the constraint result of worker " ^ (string_of_int current_rank) 
 						^" : " ^ ResultProcessor.string_of_good_or_bad_constraint model.variable_names good_or_bad_constraint );
 
 
 
 					DistributedUtilities.send_good_or_bad_constraint good_or_bad_constraint;
 
-					print_message Verbose_low ("Sent The constraint ");
+					print_message Verbose_low ("[Worker" ^ (string_of_int current_rank) ^ "] sent The constraint ");
 
 
 
-			
 			| Terminate -> 
-					print_message Verbose_low (" Terminate ");
-					print_message Verbose_standard ("Hello, I terminated!!!!!!…\n");
+					print_message Verbose_low ("[Worker" ^ (string_of_int current_rank) ^ "] Terminate ");
+					(* print_message Verbose_standard ("Hello, I terminated!!!!!!…\n"); *)
 					(* print_message Verbose_medium ("[Worker " ^ (string_of_int rank) ^ "] I was just told to terminate work."); *)
 					finished := true;
 					(* Result.Distributed_worker_result *) 
 			
 			
 				
-			| _ -> 		print_message Verbose_low ("error!!! not implemented.");
+			| _ -> 		
+					(* print_message Verbose_low ("[Worker" ^ (string_of_int current_rank) ^ "] Error! not implemented."); *)
 					raise (InternalError("not implemented."));
 
 			);
-
-
 			(*
 			(* use for testing *)
 			send_work_request ();
 
 			print_message Verbose_medium (" Send work request!!! ");
 			*)
-		
-
-
 
 		done; 
 		
@@ -713,7 +687,7 @@ class algoNZCUBdist =
 	(* Main method to run the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run () =
-		print_message Verbose_standard ("Hello, this is the main run method for switching between Master and Worker!!!!!!…\n");
+		(* print_message Verbose_standard ("This is the main run method for switching between Master and Worker!…\n"); *)
 
 		(* Get some variables *)
 		(* let nb_actions = model.nb_actions in *)
@@ -750,7 +724,6 @@ class algoNZCUBdist =
 			(
 			self#run_worker;
 			);
-	
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
