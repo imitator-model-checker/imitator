@@ -297,9 +297,11 @@ class algoNZCUBdist =
 
 
 		(* Create the final good_or_bad_constraint *)
-		(* let final_good_or_bad_constraint = ref ( Good_constraint (LinearConstraint.false_p_nnconvex_constraint () , Result.Constraint_exact) ) in *)
+		let final_good_or_bad_constraint = ref ( Good_constraint (LinearConstraint.false_p_nnconvex_constraint () , Result.Constraint_exact) ) in 
+		
 		(* let final_good_or_bad_constraint = ref ( Good_constraint (LinearConstraint.true_p_nnconvex_constraint () , Result.Constraint_exact) ) in *)
-		let final_good_or_bad_constraint = ref ( Good_constraint ( LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint model.initial_p_constraint , Result.Constraint_exact) ) in
+
+		(* let final_good_or_bad_constraint = ref ( Good_constraint ( LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint model.initial_p_constraint , Result.Constraint_exact) ) in *)
 
 		while !counter != no_nodes -1 do
 		
