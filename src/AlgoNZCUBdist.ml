@@ -250,7 +250,8 @@ class algoNZCUBdist =
 		let current = ref 0 in 
 		let counter = ref 0 in
 
-
+		if no_setups = 1  then raise (InternalError("[Master] Detected only 1 PTA in the input disjunctive CUB-PTA. Therefore, please use the the single mode for better performance."));
+		
 		
 		(* Early terminating - later *)
 		if no_nodes > no_setups 
@@ -264,11 +265,6 @@ class algoNZCUBdist =
 				counter := !counter + 1; 
 			done;
 
-			(*
-			for i = no_setups + 1  to no_nodes - 1 do
-				send_terminate i;
-			done;
-			*)
 
 			print_message Verbose_medium (" Number of terminated workers " ^ (string_of_int (!to_worker - !from_worker + 1)) );
 
@@ -282,10 +278,6 @@ class algoNZCUBdist =
 		)
 		else
 		(
-			(*
-			from_worker := no_setups + 1;
-			to_worker := no_nodes - 1;
-			*)
 
 			for source_rank = 1  to no_nodes - 1 do
 				send_init_state !current source_rank;
@@ -298,15 +290,10 @@ class algoNZCUBdist =
 
 		(* Create the final good_or_bad_constraint *)
 		let final_good_or_bad_constraint = ref ( Good_constraint (LinearConstraint.false_p_nnconvex_constraint () , Result.Constraint_exact) ) in 
-		
 		(* let final_good_or_bad_constraint = ref ( Good_constraint (LinearConstraint.true_p_nnconvex_constraint () , Result.Constraint_exact) ) in *)
-
 		(* let final_good_or_bad_constraint = ref ( Good_constraint ( LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint model.initial_p_constraint , Result.Constraint_exact) ) in *)
 
 		while !counter != no_nodes -1 do
-		
-		(* Create the final good_or_bad_constraint *)
-		(* let good_or_bad_constraint = Good_constraint (LinearConstraint.true_p_nnconvex_constraint () , Result.Constraint_exact) in *)
 
 		let pull_request = (receive_pull_request_NZCUB ()) in
 		(
@@ -446,24 +433,12 @@ class algoNZCUBdist =
 
 		let current_rank =  DistributedUtilities.get_rank () in 
 		print_message Verbose_medium (" Current rank " ^ (string_of_int current_rank) ); 
-
-
-		(*
-		(* use for testing *)
-		send_work_request ();
-		print_message Verbose_low (" Send work request!!! ");
-		*)
 		
 		let finished = ref false in
 
 		
 		while (not !finished) do 
 
-			(*
-			(* use for testing *)
-			send_work_request ();
-			print_message Verbose_medium (" Send work request!!! ");
-			*)
 
 			let work = receive_work_NZCUB () in
 			(
@@ -663,12 +638,6 @@ class algoNZCUBdist =
 					raise (InternalError("not implemented."));
 
 			);
-			(*
-			(* use for testing *)
-			send_work_request ();
-
-			print_message Verbose_medium (" Send work request!!! ");
-			*)
 
 		done; 
 		
