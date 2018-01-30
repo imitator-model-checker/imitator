@@ -250,7 +250,13 @@ class algoNZCUBdist =
 		let current = ref 0 in 
 		let counter = ref 0 in
 
-		if no_setups = 1  then raise (InternalError("[Master] Detected only 1 PTA in the input disjunctive CUB-PTA. Therefore, please use the the single mode for better performance."));
+		if no_setups = 1  then 
+		(
+			for source_rank = 1  to no_nodes - 1 do
+				send_terminate source_rank;
+			done;
+			raise (InternalError("[Master] Detected only 1 PTA in the input disjunctive CUB-PTA. Therefore, please use the the single mode for better performance."));
+		);
 		
 		
 		(* Early terminating - later *)
