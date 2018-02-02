@@ -39,7 +39,7 @@ output_file_path = '_oasis'
 header = """\
 ############################################################
 # WARNING! This file has been automatically generated; do not modify it!
-# Modify "{}" instead 
+# Modify {} instead 
 ############################################################
 
 """.format(input_file_path)
