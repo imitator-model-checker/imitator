@@ -16,11 +16,12 @@
 
 
 from __future__ import print_function
+
 import os
 
-#************************************************************
+# ************************************************************
 # CONSTANTS
-#************************************************************
+# ************************************************************
 # The file containing the build number
 build_number_file_name = "build_number.txt"
 
@@ -38,31 +39,24 @@ if not os.path.isfile(flag_file_name):
 
 
 # ************************************************************
-# GET CURRENT BUILD NUMBER
+# INCREMENTS BUILD NUMBER FOR NEXT TIME
 # ************************************************************
 print("Incrementing build number...")
 
 # Open file in read mode
-with open(build_number_file_name) as file_handler:
+with open(build_number_file_name, 'r+') as file_handler:
 
-    # Read content
+    # Get current build number content
     content = file_handler.read()
 
     # Convert to int
     current_build = int(content)
 
+    file_handler.seek(0)
 
-# ************************************************************
-# INCREMENTS BUILD NUMBER FOR NEXT TIME
-# ************************************************************
-
-# Open file in write mode
-with open(build_number_file_name, "w") as file_handler:
-
-    # Add + 1
+    # Increments build number for next time
     file_handler.write(str(current_build + 1))
 
-
-print("Current build number: %s" % content)
+    print("Current build number: %s" % content)
 
 exit(0)
