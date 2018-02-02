@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#************************************************************
+
+# ************************************************************
 #
 #                       IMITATOR
 #
@@ -13,57 +14,46 @@
 #
 # Created      : 2014/08/18
 # Last modified: 2014/08/18
-#************************************************************
+# ************************************************************
 
 
 # This script copies oasis-config into _oasis
 
 
-#************************************************************
+# ************************************************************
 # IMPORTS
-#************************************************************
-from os import close
+# ************************************************************
+from __future__ import print_function
 
 
-#************************************************************
+# ************************************************************
 # CONSTANTS
-#************************************************************
+# ************************************************************
 # Files
 input_file_path = 'oasis-config'
 output_file_path = '_oasis'
 
 
-# WARNING: the rest of this file is identical to gen_oasis_nondistr.py
+# WARNING: the rest of this file is identical to gen_oasis_distr.py
 
+header = """\
+############################################################
+# WARNING! This file has been automatically generated; do not modify it!
+# Modify "{}" instead 
+############################################################
 
-#************************************************************
+""".format(input_file_path)
+
+# ************************************************************
 # GO
-#************************************************************
+# ************************************************************
 # Open file
-old_file = open(input_file_path)
+with open(input_file_path) as old_file, open(output_file_path, 'w') as new_file:
 
-# Create new file
-new_file = open(output_file_path, 'w')
+    # Add header
+    new_file.write(header)
 
-# Add header
-new_file.write("\
-############################################################\n\
-# WARNING! This file has been automatically generated; do not modify it!\n\
-# Modify " + input_file_path + " instead \n\
-############################################################\n\n")
+    # Copy file
+    new_file.write(old_file.read())
 
-
-#************************************************************
-# Copy
-#************************************************************
-for line in old_file:
-	new_file.write(line)
-
-#************************************************************
-# Close
-#************************************************************
-new_file.close()
-old_file.close()
-
-print 'Successfully generated file ' + output_file_path + '.'
-
+    print('Successfully generated file %s.' % output_file_path)
