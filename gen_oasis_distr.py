@@ -23,8 +23,7 @@
 # ************************************************************
 # IMPORTS
 # ************************************************************
-from __future__ import print_function
-
+from gen_oasis import write_to_oasis
 
 # ************************************************************
 # CONSTANTS
@@ -34,26 +33,10 @@ input_file_path = 'oasis-config-distr'
 output_file_path = '_oasis'
 
 
-# WARNING: the rest of this file is identical to gen_oasis_distr.py
-
-header = """\
-############################################################
-# WARNING! This file has been automatically generated; do not modify it!
-# Modify "{}" instead 
-############################################################
-
-""".format(input_file_path)
+# WARNING: the rest of this file is identical to gen_oasis.py
 
 # ************************************************************
 # GO
 # ************************************************************
-# Open file
-with open(input_file_path) as old_file, open(output_file_path, 'w') as new_file:
-
-    # Add header
-    new_file.write(header)
-
-    # Copy file
-    new_file.write(old_file.read())
-
-    print('Successfully generated file %s.' % output_file_path)
+if __name__ == '__main__':
+    write_to_oasis(input_file_path, output_file_path)

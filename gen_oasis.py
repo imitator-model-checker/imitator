@@ -44,16 +44,22 @@ header = """\
 
 """.format(input_file_path)
 
+
+def write_to_oasis(input_file, output_file):
+    # Open file
+    with open(input_file) as old_file, open(output_file, 'w') as new_file:
+
+        # Add header
+        new_file.write(header)
+
+        # Copy file
+        new_file.write(old_file.read())
+
+        print('Successfully generated file %s.' % output_file_path)
+
+
 # ************************************************************
 # GO
 # ************************************************************
-# Open file
-with open(input_file_path) as old_file, open(output_file_path, 'w') as new_file:
-
-    # Add header
-    new_file.write(header)
-
-    # Copy file
-    new_file.write(old_file.read())
-
-    print('Successfully generated file %s.' % output_file_path)
+if __name__ == '__main__':
+    write_to_oasis(input_file_path, output_file_path)
