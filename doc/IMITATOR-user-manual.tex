@@ -222,10 +222,10 @@ In this command, \styleOption{-mode EF} calls the algorithm \EFsynth{} that synt
 The result of the call to \imitator{} is
 
 \styleTerminalOutput{
-  Final constraint such that the property is *violated* (1 constraint):\\
-     delta >= gamma\\
-    \& gamma >= 0\\
-    This constraint is exact (sound and complete)
+ Final constraint such that the system is correct:\\
+  delta >= 0\\
+ \& gamma > delta\\
+ This good constraint is exact (sound and complete)
 }
 
 That is, the system is safe if \styleIMI{O <= delta < gamma}, which is the well-known constraint ensuring mutual exclusion for this protocol.
@@ -1093,6 +1093,9 @@ If needed, more information can be obtained by contacting the \imitator{} team.
 	% -counterex
 	% distributedKillIM
 	% precomputepi0
+
+
+% TODO: add exploration orders!
 
 
 %------------------------------------------------------------

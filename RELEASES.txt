@@ -1,10 +1,14 @@
 *******************************************************
 release XXX    (XXXX) FUTURE RELEASE
 
+*******************************************************
+release 2.10    (2018-02-21) MAJOR RELEASE
+
 Major features:
 - New algorithms EFmin and EFmax synthesizing the min (resp. max) valuation of a single given parameter for which a given state is reachable
 - Arithmetic expressions are now supported in discrete updates; this includes in particular the use of divisions (clock updates are not impacted, and remain linear only)
-- The GrML syntax (in and out) is now discontinued, as CosyVerif is not maintained anymore, and the next version will not support GrML.
+- Distributed version of the non-Zeno cycle emptiness checking [still in an experimental phase]
+- The GrML syntax (in and out) is now discontinued, as CosyVerif is not maintained anymore, and the next version may not support GrML.
 
 Minor features:
 - New option to convert exact-valued discrete variables into (possibly approximated) floats in all outputs
