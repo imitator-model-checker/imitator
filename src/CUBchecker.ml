@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2017/08/01
+ * Last modified     : 2018/02/21
  *
  ************************************************************)
 
@@ -47,7 +47,6 @@ Simple funtion to covert from list of inequalities to list of tuple (clock; oper
 Note that: if there are True constraints, it will return back a list of clock greater than Zero
 This only uses to indicate clock smaller than INFINITE, not for lower-bound
 *)
-(*
 let convert_inequality_list_2_tuple_list model inequalities =
 	let list_s0 = ref [] in 
 	match inequalities with 
@@ -64,33 +63,6 @@ let convert_inequality_list_2_tuple_list model inequalities =
 						let (clock_index_2, operator, parametric_linear_term) = LinearConstraint.clock_guard_of_linear_inequality inequality in
 						
 						list_s0 := !list_s0@[(clock_index_2, operator, parametric_linear_term)]; 
-						print_message Verbose_low (" inequality: " ^ (model.variable_names clock_index_2) 
-														^ " " ^ (LinearConstraint.operator2string operator) 
-														^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names parametric_linear_term) 
-														^ " added!"); 
-							) 
-						) inequalities; 
-			print_message Verbose_low (" Covert inequalities -> list(clock; operator; linear expression) End!");
-			print_message Verbose_low ("\n"); 
-			!list_s0
-*)
-
-let convert_inequality_list_2_tuple_list model inequalities =
-	let list_s0 = ref [] in 
-	match inequalities with 
-	(*True constraints -> list of clocks >= 0*)
-		[] ->  List.iter 	(fun clock_index -> 
-						list_s0 := !list_s0@[(clock_index, LinearConstraint.Op_le, LinearConstraint.make_p_linear_term [] NumConst.zero)] 
-						) model.clocks_without_special_reset_clock; 
-			!list_s0
-
-	| _ ->	print_message Verbose_low (" Covert inequalities -> list(clock; operator; linear expression) Start:"); 
-			List.iter 	(fun inequality -> (
-						print_message Verbose_low (" Inequality: " ^ (LinearConstraint.string_of_pxd_linear_inequality model.variable_names inequality ) );
-						
-						let (clock_index_2, operator, parametric_linear_term) = LinearConstraint.clock_guard_of_linear_inequality inequality in
-						
-						list_s0 := !list_s0@[(clock_index_2, LinearConstraint.reverse_op operator, parametric_linear_term)]; 
 						print_message Verbose_low (" inequality: " ^ (model.variable_names clock_index_2) 
 														^ " " ^ (LinearConstraint.operator2string operator) 
 														^ " " ^ (LinearConstraint.string_of_p_linear_term model.variable_names parametric_linear_term) 
@@ -748,10 +720,10 @@ let cub_check_2 model invariant_s0 guard_t invariant_s1 clock_updates =
 	(!isCUB_PTA, !inequalities)
 
 
-
+(* Fixed 20-11-17 - Need to rewrite the function - Wrong operator here!!!!!! BUG!!!!! -- LinearConstraint.pxd_linear_constraint_of_clock_and_parameters *)
 let tuple2pxd_constraint (clock_index, op, linear_term) = 
 	(* Call dedicated function from LinearConstraint; "true" means the operator direction is not reversed *)
-	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters clock_index op linear_term true
+	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters clock_index (LinearConstraint.reverse_op op) linear_term true
 (*	let clock_term = LinearConstraint.make_p_linear_term [NumConst.one, clock_index] NumConst.zero in
 	let linear_inequality = LinearConstraint.make_p_linear_inequality (LinearConstraint.sub_p_linear_terms clock_term linear_term) op in
 	let constr = LinearConstraint.make_p_constraint [linear_inequality] in
@@ -1262,6 +1234,7 @@ let cub_tran model submodels count_m
 	(* print_message Verbose_low ("\n clock_term:" ^ (LinearConstraint.string_of_p_linear_term model.variable_names clock_term));  *)
 	print_message Verbose_total ("Converting s0…" );
 	let constraint_s0 = tuple2pxd_constraint (clock_index_s0 , op_s0, linear_term_s0) in
+
 	print_message Verbose_low ("\n constraint_s0:" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names constraint_s0));  
 	print_message Verbose_total ("Converting t…" );
 	let constraint_t = tuple2pxd_constraint (clock_index_t, op_t, linear_term_t) in
@@ -1320,7 +1293,7 @@ let cub_tran model submodels count_m
 				(
 				(* reset zone *)
 
-				(*
+				(* )
 				let _ = print_message Verbose_low (" 	 Detected " 
 														^ (model.variable_names clock_index) 
 														^ " was a reset clock!\n 	 skipping the process: (" 
@@ -1365,12 +1338,12 @@ let cub_tran model submodels count_m
 			then *)
 				(
 				DynArray.add clocks_constraints (location_index, !clock_cons);
-				(*
+				
 				print_message Verbose_low (" Added constraints: " 
 															^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names !clock_cons)  
 															^ "\n at state: " 
 															^ location_index );
-				*)
+				
 				);
 			()
 			(*Case 4 - end*)
@@ -1384,11 +1357,11 @@ let cub_tran model submodels count_m
 			(* none reset zone *)
 			print_message Verbose_low (" 	 Case 6 " );
 			let (nop, ineq) = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
-			(*
+			
 			print_message Verbose_low (" Forming inequality: " 
 											^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq 
 											^ "!!!\n");
-			*)
+			
 			let constr = make_CUB_constraint [ineq] in
 
 			if LinearConstraint.p_is_true constr
@@ -1434,12 +1407,12 @@ let cub_tran model submodels count_m
 							print_message Verbose_low ("\n Cub constraints conflicted with parameters constraints!!! " );
 							print_message Verbose_low (" Adding new clocks constraints" );
 							DynArray.add clocks_constraints (location_index, clock_cons);
-							(*
+							
 							print_message Verbose_low (" Added constraints: " 
 															^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names clock_cons)  
 															^ "\n at state: " 
 															^ location_index );
-							*)
+							
 							);
 						)
 					else
@@ -1451,12 +1424,12 @@ let cub_tran model submodels count_m
 							(*Add First parameter constraints in the current submodel*)
 							let new_parameters_constraints = DynArray.copy parameters_constraints in
 
-							(*
+							
 							print_message Verbose_low ("\n Add constraint " 
 															^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr) 
 															^ " into submodel ((parameters_constraints)) " 
 															^ string_of_int (!count_m)  );
-							*)
+							
 
 							DynArray.add parameters_constraints (true, [constr]);
 							(*Create new submodel with Second constraint*)
@@ -1465,12 +1438,12 @@ let cub_tran model submodels count_m
 							let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 nop in
 							let constr1 = LinearConstraint.make_p_constraint ([linear_inequality_1]) in
 
-							(*
+							
 							print_message Verbose_low ("\n Add constraint " 
 															^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1) 
 															^ " into submodel (parameters_constraints) " 
 															^ string_of_int ((DynArray.length submodels) +1) );
-							*)
+							
 
 							DynArray.add new_parameters_constraints (false, [constr1]);
 							if is_parameters_constraints_false new_parameters_constraints
@@ -1500,7 +1473,7 @@ let cub_tran model submodels count_m
 			then
 				(
 				(* reset zone *)
-				(*
+				(* )
 				let _ = print_message Verbose_low (" 	 Detected " 
 												^ (model.variable_names clock_index) 
 												^ " was a reset clock!\n 	 skipping the process: (" 
@@ -1564,12 +1537,12 @@ let cub_tran model submodels count_m
 								print_message Verbose_low (" Adding new clocks constraints" );
 								DynArray.add clocks_constraints (location_index, clock_cons);
 
-								(*
+								
 								print_message Verbose_low (" Added constraints: " 
 																^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names clock_cons)  
 																^ "\n at state: " 
 																^ location_index );
-								*)
+								
 
 								);
 							)
@@ -1582,12 +1555,12 @@ let cub_tran model submodels count_m
 								(*Add First parameter constraints in the current submodel*)
 								let new_parameters_constraints = DynArray.copy parameters_constraints in
 
-								(*
+								
 								print_message Verbose_low ("\n Add constraint " 
 																^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr) 
 																^ " into submodel ((parameters_constraints)) " 
 																^ string_of_int (!count_m)  );
-								*)
+								
 
 								DynArray.add parameters_constraints (true, [constr]);
 
@@ -1597,12 +1570,12 @@ let cub_tran model submodels count_m
 								let linear_inequality_2 = LinearConstraint.make_p_linear_inequality linear_term_2 nop in
 								let constr2 = LinearConstraint.make_p_constraint ([linear_inequality_2]) in
 
-								(*
+								
 								print_message Verbose_low (" Add constraint " 
 																^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr2) 
 																^ " into submodel (parameters_constraints) " 
 																^ string_of_int ((DynArray.length submodels) +1) );
-								*)
+								
 
 								DynArray.add new_parameters_constraints (false, [constr2]);
 
@@ -1634,20 +1607,20 @@ let cub_tran model submodels count_m
 			then
 				(
 				(* reset zone *)
-				(*
+				(* )
 				print_message Verbose_low (" 	 Detected " 
 												^ (model.variable_names clock_index) 
 												^ " was a reset clock!\n 	 skipping the process: (" 
 												^ t_upperbound_str ^ ") /\\ (" ^ s1_upperbound_str ^ ")!" ); 
-				
 				*)
+				
 
 				let (nop, ineq) = make_CUB_inequality (op_s0, linear_term_s0) (op_t, linear_term_t) in
 
-				(*
+				
 				print_message Verbose_low (" Forming inequality: " 
 												^ LinearConstraint.string_of_p_linear_inequality model.variable_names ineq ^ "!!!\n");
-				*)
+				
 
 				let constr = make_CUB_constraint [ineq] in
 
@@ -1692,12 +1665,12 @@ let cub_tran model submodels count_m
 								print_message Verbose_low ("\n Cub constraints conflicted with parameters constraints!!! " );
 								print_message Verbose_low (" Adding new clocks constraints" );
 								DynArray.add clocks_constraints (location_index, clock_cons);
-								(*
+								
 								print_message Verbose_low (" Added constraints: " 
 																^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names clock_cons)  
 																^ "\n at state: " 
 																^ location_index );
-								*)
+								
 
 								);
 							)
@@ -1710,12 +1683,12 @@ let cub_tran model submodels count_m
 								(*Add First parameter constraints in the current submodel*)
 								let new_parameters_constraints = DynArray.copy parameters_constraints in
 
-								(*
+								
 								print_message Verbose_low ("\n Add constraint " 
 																^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr) 
 																^ " into submodel ((parameters_constraints)) " 
 																^ string_of_int (!count_m)  );
-								*)
+								
 
 								DynArray.add parameters_constraints (true, [constr]);
 								(*Create new submodel with Second constraint*)
@@ -1724,12 +1697,12 @@ let cub_tran model submodels count_m
 								let linear_inequality_1 = LinearConstraint.make_p_linear_inequality linear_term_1 nop in
 								let constr1 = LinearConstraint.make_p_constraint ([linear_inequality_1]) in
 
-								(*
+								
 								print_message Verbose_low ("\n Add constraint " 
 																^ (LinearConstraint.string_of_p_linear_constraint model.variable_names constr1) 
 																^ " into submodel (parameters_constraints) " 
 																^ string_of_int ((DynArray.length submodels) +1) );
-								*)
+								
 
 								DynArray.add new_parameters_constraints (false, [constr1]);
 								if is_parameters_constraints_false new_parameters_constraints
@@ -1818,12 +1791,12 @@ let cub_tran model submodels count_m
 								print_message Verbose_low (" Adding new clocks constraints" );
 								DynArray.add clocks_constraints (location_index, clock_cons);
 
-								(*
+								
 								print_message Verbose_low (" Added constraints: " 
 																^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names clock_cons)  
 																^ "\n at state: " 
 																^ location_index );
-								*)
+								
 
 								); 
 							)
@@ -2016,6 +1989,11 @@ let clocks_constraints_process model adding clocks_constraints loc_clocks_constr
 (************************************************************)
 (************************************************************)
 
+(* String result - Some additional information in result: name of sub-model and number of CUB-PTAs in Disjunctive CUB-PTA *)
+let additional_info = ref " "
+
+
+
 (* We create a new, silent action specifically for this automaton: its value is (nb of regular action) + automaton_index *)
 let local_silent_action_index_of_automaton_index model automaton_index =
 	model.nb_actions + automaton_index
@@ -2023,6 +2001,8 @@ let local_silent_action_index_of_automaton_index model automaton_index =
 
 (** Takes an abstract model as input, and convert it into an equivalent CUB-PTA *)
 let cubpta_of_pta model : AbstractModel.abstract_model =
+
+	
 	
 	(* Create and start counter *)
 	let cub_transformation_counter = create_time_counter_and_register "CUB transformation" Algorithm_counter Verbose_standard in
@@ -2043,6 +2023,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	(* Location names per PTA: Array : automaton_index : -> (Array : location_index -> location_name) *)
 	let new_location_names_array = Array.make (model.nb_automata) (Array.make 0 "UNINITIALIZED") in
+	
+	(* Urgency in PTA: Array : automaton_index : -> (Array : location_index -> bool) *)
+	let new_urgency_array = Array.make (model.nb_automata) (Array.make 0 false) in
 	
 	(* Number of actions: add the epsilon (1 per PTA) *)
 	let new_nb_actions = model.nb_actions + model.nb_automata in
@@ -2091,16 +2074,19 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 	(*covert input model into specific data stucture*)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+	print_message Verbose_low ("\n \n \n \n ------------------ Converting input model into specific data stucture ---------------------------");
 	List.iter (fun automaton_index ->
-		print_message Verbose_low ("\nConverting automaton " ^ (model.automata_names automaton_index) ^ "…");
+		print_message Verbose_low ("\nConverting automaton " ^ (model.automata_names automaton_index));
+
+		additional_info := (!additional_info ^ ("Automaton name: " ^ (model.automata_names automaton_index)) );
 		
 		(* We create a new, silent action specifically for this automaton: its value is (nb of regular action) + automaton_index *)
 		(*** NOTE: unused code written by Gia, removed by ÉA (2017/02/08) ***)
 (* 		let local_silent_action_index = local_silent_action_index_of_automaton_index model automaton_index in *)
 
-		(* print_message Verbose_low ("Converting automaton: " 
+		print_message Verbose_low ("Converting automaton: " 
 										^ (model.automata_names automaton_index) 
-										^ "!!!!!!!"); *)
+										); 
 
 		(*elements of a submodels*)
 		(*initial*)
@@ -2177,17 +2163,18 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		) (model.locations_per_automaton automaton_index);
 		(* print_message Verbose_low ("\n"); *)
 	(* ) model.automata; *)
+	print_message Verbose_low ("\n ------------------ End converting input model into specific data stucture --------------------------- \n \n \n \n \n \n");
 	(*covert input model into specific data stucture - end*)
 
 
 
 
-
+	(* This submodels will be the Disjunctive CUB-PTA *)
 	let submodels = DynArray.make 0 in
 	(*Adding the first sub-model*)
 	DynArray.add submodels (locations_ini, transitions_ini, clocks_constraints_ini, parameters_constraints_ini);
 	let submodels_length = DynArray.length submodels in
-	print_message Verbose_low ("\n Check lenth of submodels: " ^ (string_of_int submodels_length) );
+	print_message Verbose_low ("\n Check lenth of submodels: " ^ (string_of_int submodels_length) ^ "\n \n" );
 
 
 
@@ -2196,13 +2183,17 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	let count_m = ref 1 in
 	while (!count_m) <= (DynArray.length submodels) do
 		
+
+		(* print_message Verbose_low ("\n \n \n \n \n \n  ----------------Sub-model No: " ^ (string_of_int !count_m) ^ "---------------------------"); *)
 		let submodel = DynArray.get submodels (!count_m - 1) in
-		print_message Verbose_low ("\n Sub-model no: " ^ (string_of_int !count_m) );
+		(* print_message Verbose_low ("\n Sub-model no: " ^ (string_of_int !count_m) ); *)
+		print_message Verbose_low ("\n \n \n \n \n \n  ----------------Sub-model No: " ^ (string_of_int !count_m) ^ "---------------------------");
+		print_message Verbose_low ("\n -----------------------------------------------------------------------------------");
 		let (locations, transitions, clocks_constraints, parameters_constraints) = submodel in
 		print_message Verbose_low ("\n Number of locations: " ^ (string_of_int (Hashtbl.length locations)) );
 		print_message Verbose_low ("\n Number of transitions: " ^ (string_of_int (DynArray.length transitions)) );
 		
-		print_message Verbose_low ("\n ----------------Sub-model No: " ^ (string_of_int !count_m) ^ "---------------------------");
+		(*print_message Verbose_low ("\n ----------------Sub-model No: " ^ (string_of_int !count_m) ^ "---------------------------");*)
 		let adding = ref true in
 
 		let loc_clocks_constraints = DynArray.make 0 in
@@ -2212,6 +2203,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		while !adding = true do
 		(
 		adding := false;
+
+		print_message Verbose_low ("\n \n Looping through each submodel to transform -- Loop# : " ^ (string_of_int !count_loop) );
 
 		if !count_loop = 1 
 		then
@@ -2227,6 +2220,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				let invariant_s0 = Hashtbl.find locations location_index in
 				let guard_t = guard in
 				let invariant_s1 = Hashtbl.find locations target_location_index in
+
+
 
 				(*ppl*)
 				
@@ -2292,7 +2287,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			let invariant_s0 = Hashtbl.find locations location_index in
 			print_message Verbose_low ("   invariant_s0: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant_s0 ) ) ;
 			let guard_t = guard in
+			
 			print_message Verbose_low ("   guard_t: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard_t ) ) ;
+
 			print_message Verbose_low (" CUB transformation, Start:");
 			print_message Verbose_low ("\n");
 			(*transform constraints into inequality lists*)
@@ -2378,9 +2375,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* DynArray.clear loc_clocks_constraints; *)
 
 		(* model count *)
-		print_message Verbose_low ("\n ----------------Sub-model No: " ^ (string_of_int !count_m) ^ " end-----------------------");
 		count_m := !count_m+1;
 		();
+
+
 	(* end - for each model *)
 	done;
 
@@ -2685,9 +2683,111 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 *)
 
 
+	
+
+	
+
+	
+	
+	
+	(* [CUB-PTA TRANSFORMATION] FINAL STAGE - MERGING SUB-MODELS 
+		New final stage code - More convenient for distributed version and more 
+		Create more initial states, one for each CUB-PTA and one for all CUB-PTA (Disjunctive CUB-PTA).
+
+	*)
+
+	(* [CUB-PTA TRANSFORMATION] FINAL STAGE - MERGING SUB-MODELS  *)
+	print_message Verbose_low ("\nFINAL STAGE - MERGING SUB-MODELS ");
+	print_message Verbose_low ("\nNUMBER OF MODELS: " ^ (string_of_int (DynArray.length submodels) ) );
+
+	additional_info := ( !additional_info ^ (", Number of models: " ^ (string_of_int (DynArray.length submodels) ) ^ "\n" ) );
+	
+	(* First create a normalized location name *)
+	(*** BADPROG…… ***)
+
+	let location_name_of_location_index_and_submodel_index location_index submodel_index =
+		location_index ^ "_m" ^ (string_of_int submodel_index)
+	in
+	
+	(* Handle initial location *)
+	(*** BADPROG: give a string name to the new location (argh) ***)
+	let new_initial_location_name  = ("disjunctive_cub_pta_init_" ^ string_of_int (automaton_index + 1)) in
+
+	(* ADD new_initial_location_name INTO loc_naming_tbl *)
+	Hashtbl.add loc_naming_tbl new_initial_location_name (Hashtbl.length loc_naming_tbl);
+	
+	let submodel_index = ref 1 in
+	
+	(*** NOTE: unused code written by Gia, removed by ÉA (2017/02/08) ***)
+(* 	let numberOfAction = List.length model.actions in  *)
+
+	(* FINAL MODEL LOCATIONS - Data structure: location_name -> invariant *)
+	let new_invariants_per_location_hashtbl =  Hashtbl.create 0 in
+	(* Adding the initial state *)
+	Hashtbl.add new_invariants_per_location_hashtbl new_initial_location_name (LinearConstraint.pxd_true_constraint ());
+	(* FINAL MODEL TRANSITIONS - Data structure: location_name -> invariant *)
+	let newtransitions = DynArray.make 0 in
+
+	DynArray.iter (fun (locations, transitions, c_constraints, p_constraints, index, init_locs) ->
+
+		let new_sub_initial_location_name  = ("cub_pta_init_" ^ string_of_int (!submodel_index )) in
+		Hashtbl.add loc_naming_tbl new_sub_initial_location_name (Hashtbl.length loc_naming_tbl);
+		Hashtbl.add new_invariants_per_location_hashtbl new_sub_initial_location_name (LinearConstraint.pxd_true_constraint ());
+		DynArray.add newtransitions (new_initial_location_name, new_sub_initial_location_name, (LinearConstraint.pxd_true_constraint ()), [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ;
+		
+		Hashtbl.iter (fun location_index cons -> 
+			let newloc = location_name_of_location_index_and_submodel_index location_index !submodel_index in
+			Hashtbl.add new_invariants_per_location_hashtbl newloc cons;
+
+			(* ADD NEW LOCATIONS INTO THE LOCATION NAMING INDEX TABLE *)
+			let indx = Hashtbl.find loc_naming_tbl location_index in
+			Hashtbl.add loc_naming_tbl newloc indx;
+
+		) locations;
+
+		DynArray.iter (fun (location_index, target_location_index, guard, clock_updates, action_index, discrete_update) -> 
+			let newloc1 = location_name_of_location_index_and_submodel_index location_index !submodel_index in
+			let newloc2 = location_name_of_location_index_and_submodel_index target_location_index !submodel_index in
+			DynArray.add newtransitions (newloc1, newloc2, guard, clock_updates, action_index, discrete_update);
+
+		) transitions;
+
+		(*adding parameter relation into the first transition*)
+		let listParaRelations = disjunction_constraints p_constraints in
+
+		List.iter( fun cons ->
+			let pxd_cons = LinearConstraint.pxd_of_p_constraint cons in
+			if (LinearConstraint.pxd_is_false pxd_cons = false)
+			then 
+				(
+				List.iter (fun loc -> 
+				
+					(* Add a transition from the initial location to all local initial locations into the dynamic array of locations *)
+					(* DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ; *)
+					(* DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], 0, [] ) ; *)
+
+					(* Add a transition from the initial CUB-PTA location to all local initial locations into the dynamic array of locations *)
+					DynArray.add newtransitions (new_sub_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ;
+
+				) init_locs;
+				);
+		) listParaRelations;
+
+		(* List.iter (fun loc -> 
+			(* Add a transition from the initial location to all local initial locations into the dynamic array of locations *)
+			DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, LinearConstraint.pxd_true_constraint (), [], local_silent_action_index_of_automaton_index model automaton_index, [] ) ;
+			(* DynArray.add newtransitions (new_initial_location_name, location_name_of_location_index_and_submodel_index loc !submodel_index, pxd_cons, [], 0, [] ) ; *)
+		) init_locs *);
+
+		incr submodel_index;
+	) newSubModels;
 
 
 
+
+
+
+	(*
 	(* [CUB-PTA TRANSFORMATION] FINAL STAGE - MERGING SUB-MODELS *)
 	
 	(* First create a normalized location name *)
@@ -2761,6 +2861,13 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 		incr submodel_index;
 	) newSubModels;
+	*)
+
+
+
+
+
+
 
 
 
@@ -2920,6 +3027,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Create the structure location_index -> location_name *)
 	let location_name_of_location_index = Array.make new_nb_locations "UNINITIALIZED" in
 	
+	(* Create the structure location_index -> urgent (bool) *)
+	(*** NOTE: quite a hack, we set all locations to be urgent, and then all old locations will be erased to their former value; so new (initial) locations will automatically be urgent! ***)
+	let urgency_of_location_index = Array.make new_nb_locations true in
+	
 	(* Create the structure location_index -> action_index list *)
 	let actions_per_location_array = Array.make new_nb_locations [] in
 	
@@ -2943,7 +3054,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* Add the binding location_name , location_index to the new structure *)
 		Hashtbl.add location_index_of_location_name location_name !current_location_index;
 
-		(* ADD new_loc_index_tbl, USED FOR TRACING NEW LOACTION FROM THE OLD LOCATION *)
+		(* ADD new_loc_index_tbl, USED FOR TRACING NEW LOCATION FROM THE OLD LOCATION *)
 		let old_loc_index = Hashtbl.find loc_naming_tbl location_name in
 		(* ELIMINATE THE NEW CUB INITIAL LOCATION WHICH IS NOT IN OLD MODEL LOCATIONS *)
 		if ( List.mem old_loc_index (model.locations_per_automaton automaton_index) )
@@ -2952,14 +3063,25 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			print_message Verbose_low ("\nHashtbl.length: " ^string_of_int  (List.length (model.locations_per_automaton automaton_index)) ^ "\nNAME: " ^ location_name ^ "\n OLD LOCAION: " ^ string_of_int old_loc_index ^ " NEW LOCAION: " ^ string_of_int !current_location_index );
 			(* Hashtbl.add new_loc_index_tbl old_loc_index !current_location_index; *)
 			
+			(* Update the urgency *)
+			(* urgency_of_location_index.(!current_location_index) <- (model.is_urgent automaton_index old_loc_index); *)
 			old_locations_to_new_locations.(automaton_index).(old_loc_index) <- !current_location_index :: old_locations_to_new_locations.(automaton_index).(old_loc_index);
 			
 			(* TESTING INFORNATION IN new_loc_index_tbl *)
+
+			urgency_of_location_index.(!current_location_index) <- (model.is_urgent automaton_index old_loc_index);
 			);
 		
 		(* Add the binding location_index , location_name to the new structure *)
 		location_name_of_location_index.(!current_location_index) <- location_name;
-		
+
+		(*
+		print_message Verbose_low ("\n Bug1!");
+		(* Update the urgency *)
+		(* urgency_of_location_index.(!current_location_index) <- (model.is_urgent automaton_index old_loc_index); *)
+		print_message Verbose_low ("\n Bug2!");
+		*)
+
 		(* And we update the invariant as well *)
 		new_invariants_array.(automaton_index).(!current_location_index) <- location_invariant;
 
@@ -2977,6 +3099,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	(* 3) Handle location names *)
 	new_location_names_array.(automaton_index) <- location_name_of_location_index;
+
+	(* 3a) Handle urgency *)
+	new_urgency_array.(automaton_index) <- urgency_of_location_index;
 
 	(* 3b) Handle initial location *)
 	(* Update the array of new initial location *)
@@ -3065,7 +3190,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	) model.automata; (* end List.iter on automata *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 	
-	
+
+	(* Print some additional information *)
+	print_message Verbose_standard !additional_info;
 
 
 
@@ -3127,6 +3254,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	
 	let new_location_names_function automaton_index location_index = new_location_names_array.(automaton_index).(location_index) in
+	
+	let new_urgency_function automaton_index location_index = new_urgency_array.(automaton_index).(location_index) in
 	
 
  	let new_initial_location =
@@ -3396,13 +3525,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* The location names for each automaton *)
 		location_names = new_location_names_function;
 		(* The urgency for each location *)
-			(*** TODO ***)
-		is_urgent = (*automaton_index -> location_index -> bool*)
-			(*** WARNING! dummy function to test ***)
-			(*** TODO ***)
-			(fun automaton_index location_index -> false)
-		;
-		(*** NOTE: all new initial locations shall be urgent! ***)
+		is_urgent = new_urgency_function;
+		(*** TODO: all new initial locations shall be urgent! ***)
 
 		(* All action indexes *)
 		actions = new_actions;

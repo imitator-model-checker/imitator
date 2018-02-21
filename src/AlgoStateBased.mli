@@ -218,6 +218,10 @@ class virtual algoStateBased :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method virtual compute_result : Result.imitator_result
 
+		method explore_layer_bfs : state_index -> unit
+
+		method explore_queue_bfs : state_index -> unit
+
 (************************************************************)
 (************************************************************)
 end

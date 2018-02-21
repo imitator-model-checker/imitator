@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Camille Coti
  * Created           : 2014/03/24
- * Last modified     : 2017/02/08
+ * Last modified     : 2017/10/03
  *
  ************************************************************)
  
@@ -45,6 +45,7 @@ type pull_request =
 (* 	| BC_result of rank * bc_result *)
 	| Pi0 of rank * PVal.pval
 	| UpdateRequest of rank
+	| Good_or_bad_constraint of rank * Result.good_or_bad_constraint 
 
 
 (** Tags sent by the master *)
@@ -56,6 +57,7 @@ type work_assignment =
 	| TileUpdate of Result.abstract_point_based_result
 	| Terminate
 	| Continue
+	| Initial_state of int
 
 
 type pi0_list = (Automaton.variable_index * NumConst.t) list
@@ -75,6 +77,7 @@ type mpi_slave_tag =
 	| Slave_bcresult_tag
 	| Slave_pi0_tag
 	| Slave_updaterequest_tag
+	| Slave_good_or_bad_constraint
 
 (** Tags sent by master *)
 type mpi_master_tag =
@@ -86,6 +89,8 @@ type mpi_master_tag =
 	(*** NOTE: difference with Master_stop_tag ??? ***)
 	| Master_terminate_tag
 	| Master_continue_tag
+	| Master_Initial_state
+
 
 
 
@@ -264,11 +269,15 @@ let serialize_bfs_algorithm_termination = function
 	| Result.Depth_limit nb -> "D" ^ (string_of_int nb)
 	(* Termination due to a number of explored states reached *)
 	| Result.States_limit nb -> "S" ^ (string_of_int nb)
+	(* Termination due to a target state found *)
+	| Result.Target_found -> "TF"
+
 
 (*** TODO ***)
 let unserialize_bfs_algorithm_termination = function
 	(* Fixpoint-like termination *)
 	| "R" -> Result.Regular_termination
+	| "TF" -> Result.Target_found
 	| other when other <> "" ->(
 		(* Get first character *)
 		let first_char = String.get other 0 in
@@ -788,6 +797,7 @@ let int_of_slave_tag = function
 	| Slave_bcresult_tag -> 5
 	| Slave_pi0_tag -> 6
 	| Slave_updaterequest_tag -> 7
+	| Slave_good_or_bad_constraint -> 8
 	(*** NOTE: unused match case (but safer!) ***)
 (* 	| _ -> raise (InternalError ("Impossible match in int_of_slave_tag.")) *)
 
@@ -800,6 +810,7 @@ let int_of_master_tag = function
 	| Master_subdomain_tag -> 20
 	| Master_terminate_tag -> 21
 	| Master_continue_tag -> 22
+	| Master_Initial_state -> 23
 	(*** NOTE: unused match case (but safer!) ***)
 (* 	| _ -> raise (InternalError ("Impossible match in int_of_master_tag.")) *)
 	
@@ -813,6 +824,7 @@ let worker_tag_of_int = function
 	| 5 -> Slave_bcresult_tag
 	| 6 -> Slave_pi0_tag
 	| 7 -> Slave_updaterequest_tag
+	| 8 -> Slave_good_or_bad_constraint
 	| other -> raise (InternalError ("Impossible match '" ^ (string_of_int other) ^ "' in worker_tag_of_int."))
 
 let master_tag_of_int = function
@@ -823,6 +835,7 @@ let master_tag_of_int = function
 	| 20 -> Master_subdomain_tag
 	| 21 -> Master_terminate_tag
 	| 22 -> Master_continue_tag
+	| 23 -> Master_Initial_state
 	| other -> raise (InternalError ("Impossible match '" ^ (string_of_int other) ^ "' in master_tag_of_int."))
 
 
@@ -1147,3 +1160,86 @@ let receive_cartography_result () : rank * Result.cartography_result =
 		source_rank , cartography_result
 	
 	| _ -> raise (InternalError("Unexpected tag received in receive_bcresult"))
+
+
+
+
+
+(**************************** Distributed NZCUB ***********************************)
+	
+(* Master *)
+let send_init_state value source_rank = 
+  	print_message Verbose_high( "[Master] Sending INT to [Worker " ^ (string_of_int source_rank ) ^"] with int = " ^ (string_of_int value ) ^ ".");
+  	Mpi.send (value) source_rank (int_of_master_tag Master_Initial_state) Mpi.comm_world 
+
+
+let receive_pull_request_NZCUB () =
+  	(* First receive the length of the data we are about to receive *)
+  	let (l, source_rank, tag) = Mpi.receive_status Mpi.any_source Mpi.any_tag Mpi.comm_world in
+  	print_message Verbose_high ("\t[Master] MPI status received from [Worker " ^ ( string_of_int source_rank) ^"]");
+  	print_message Verbose_high ("\t[Master] Tag decoded from [Worker " ^ ( string_of_int source_rank) ^"] : " ^ ( string_of_int tag ) );
+  	let tag = worker_tag_of_int tag in  
+  	match tag with
+
+	(* Case simple pull? *)
+	| Slave_work_tag ->
+	     print_message Verbose_high ("[Master] Received Slave_work_tag from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
+	     PullOnly (* source_rank *) l
+
+	| Slave_good_or_bad_constraint -> 
+	  	 print_message Verbose_high ("[Master] Received Slave_good_or_bad_constraint from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
+
+	  	(* receive the result itself *)
+	    let buff = String.create l in
+	    let res = ref buff in
+	    print_message Verbose_high ("[Master] Buffer created with length " ^ (string_of_int l)^"");	
+	    res := Mpi.receive source_rank (int_of_slave_tag Slave_good_or_bad_constraint) Mpi.comm_world ;
+	    print_message Verbose_high("[Master] received buffer " ^ !res ^ " of size " ^ ( string_of_int l) ^ " from [Worker "  ^ (string_of_int source_rank) ^ "]");	
+				
+	    (* Get the Good_or_bad_constraint *)
+	    let good_or_bad_constraint = unserialize_good_or_bad_constraint !res in
+
+	  	Good_or_bad_constraint (source_rank, good_or_bad_constraint) 
+
+	  	(* Case error *)
+	| Slave_outofbound_tag ->
+	    print_message Verbose_high ("[Master] Received Slave_outofbound_tag");
+	    OutOfBound source_rank
+
+(* Master - End *)
+
+ 
+
+(* Worker *)
+(** Worker sends a good bad constraint to a Master *)
+let send_good_or_bad_constraint good_or_bad_constraint  =
+	let serialized_data = serialize_good_or_bad_constraint good_or_bad_constraint in
+	print_message Verbose_high ("[Worker] Serialized good_or_bad_constraint '" ^ serialized_data ^ "'");
+	(* Call generic function *)
+	send_serialized_data (master_rank) (int_of_slave_tag Slave_good_or_bad_constraint) serialized_data
+
+
+let receive_work_NZCUB () =
+	let ( w, _, tag ) =
+	Mpi.receive_status master_rank Mpi.any_tag Mpi.comm_world in
+	let tag = master_tag_of_int tag in
+	match tag with
+
+	(*Hoang Gia new tags*)
+	| Master_Initial_state -> 
+	  	print_message Verbose_high( " [Worker " ^ (string_of_int (get_rank ()) ) ^"] received initial state index = " ^ (string_of_int w ) ^ ".");
+		Initial_state w
+
+	| Master_terminate_tag -> Terminate
+
+
+
+(* Worker - End *)
+
+
+(**************************** Distributed NZCUB - End ***********************************)
+
+
+
+
+;;

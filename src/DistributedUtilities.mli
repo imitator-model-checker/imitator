@@ -29,6 +29,7 @@ type pull_request =
 (* 	| BC_result of rank * Result.cartography_result *)
 	| Pi0 of rank * PVal.pval
 	| UpdateRequest of rank
+	| Good_or_bad_constraint of rank * Result.good_or_bad_constraint 
 
 
 (** Tags sent by the master *)
@@ -40,6 +41,7 @@ type work_assignment =
 	| TileUpdate of Result.abstract_point_based_result
 	| Terminate
 	| Continue
+	| Initial_state of int
 
 
 
@@ -111,4 +113,18 @@ val receive_work : unit -> work_assignment
 
 (* Function used for collaborator - coordinator static distribution scheme *)
 val receive_cartography_result : unit -> rank * Result.cartography_result
+
+
+
+
+
+
+(**********NZCUB************)
+val send_init_state : int -> rank -> unit
+
+val receive_work_NZCUB : unit -> work_assignment
+
+val receive_pull_request_NZCUB : unit -> pull_request
+
+val send_good_or_bad_constraint : Result.good_or_bad_constraint -> unit
 

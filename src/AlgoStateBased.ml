@@ -1980,7 +1980,9 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the queue-based BFS algorithm  *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private explore_queue_bfs init_state_index =
+	(* method private explore_queue_bfs init_state_index = *)
+	(* 09-10-2017: Changed to public for didtributed version - Files related: AlgoNZCUBdist *)
+	method explore_queue_bfs init_state_index =
 
 		print_message Verbose_standard("Entering explore_queue_bfs!!!");
 
@@ -2695,7 +2697,9 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the BFS algorithm  *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private explore_layer_bfs init_state_index =
+	(* 09-10-2017: Changed to public for didtributed version - Files related: AlgoNZCUBdist *)
+	(* method private explore_layer_bfs init_state_index = *)
+	method explore_layer_bfs init_state_index =
 		
 		(* Set the depth to 1 *)
 		bfs_current_depth <- 1;
