@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2017/06/27
+ * Last modified     : 2017/10/03
  *
  ************************************************************)
 
@@ -130,7 +130,7 @@ parsing_counter#start;
 (* Should we add a special clock reset at each transition? *)
 let with_special_reset_clock =
 match options#imitator_mode with
-	| Parametric_NZ_CUB | Parametric_NZ_CUBcheck | Parametric_NZ_CUBtransform -> true
+	| Parametric_NZ_CUB | Parametric_NZ_CUBcheck | Parametric_NZ_CUBtransform | Parametric_NZ_CUBtransformDistributed -> true
 	| _ -> false
 in
 
@@ -167,6 +167,7 @@ match options#imitator_mode with
 	| Loop_synthesis
 	| Parametric_NZ_CUBcheck
 	| Parametric_NZ_CUBtransform
+	| Parametric_NZ_CUBtransformDistributed
 	| Parametric_NZ_CUB
 	| Parametric_deadlock_checking
 	(* Case: no additional file *)
@@ -622,6 +623,49 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	
 	(*** WARNING:  Do not modify the following lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
 	(*(* ** *** **** ***** ******    BEGIN FORK PaTATOR    ****** ***** **** *** ** *)
+
+	| Parametric_NZ_CUBtransformDistributed ->
+		print_message Verbose_standard ("Generating the transformed model…");
+
+		let cub_model = CUBchecker.cubpta_of_pta model in
+		(*** HACK: set the model in the input module too ***)
+		Input.set_model cub_model;
+		
+		print_message Verbose_standard ("Transformation completed");
+
+		(* Only export to file in graphics for >= Verbose_low *)
+		if verbose_mode_greater Verbose_low then(
+			(* Export the model to a file *)
+			(*** TODO: not necessary? (but so far useful to test) ***)
+			
+			let translated_model = ModelPrinter.string_of_model cub_model in
+
+			let imi_file = options#files_prefix ^ "-cub.imi" in
+			if verbose_mode_greater Verbose_total then(
+				print_message Verbose_total ("\n" ^ translated_model ^ "\n");
+			);
+			
+			(* Write *)
+			write_to_file imi_file translated_model;
+			print_message Verbose_low ("File '" ^ imi_file ^ "' successfully created.");
+			
+			
+			(* Then transform to a graphics *)
+			(*** TODO: not necessary? (but so far useful to test) ***)
+
+			let translated_model = PTA2JPG.string_of_model cub_model in
+			if verbose_mode_greater Verbose_high then(
+				print_message Verbose_high ("\n" ^ translated_model ^ "\n");
+			);
+			
+			Graphics.dot Constants.default_dot_image_extension (options#files_prefix ^ "-cubpta") translated_model;
+
+			print_message Verbose_low ("Graphic export successfully created."); (*** TODO: add file name in a proper manner ***)
+		); (* end export *)
+		
+		(* Call the NZ emptiness check *)
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUBdist.algoNZCUBdist in myalgo
+		
 
 	(*** NOTE: only one distribution mode so far ***)
 	| Cover_cartography when options#distribution_mode <> Non_distributed ->

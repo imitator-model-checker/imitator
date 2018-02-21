@@ -95,4 +95,5 @@ class algoLoopSynth :
 
 		
 		method compute_result : Result.imitator_result
+
 end

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/06/27
+ * Last modified     : 2017/10/03
  *
  ************************************************************)
 
@@ -105,6 +105,9 @@ type imitator_mode =
 	(** Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
 	| Parametric_NZ_CUBtransform
 	
+	(** Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA, distributed version) *)
+	| Parametric_NZ_CUBtransformDistributed
+	
 	(** Parametric Büchi-emptiness checking with non-Zenoness on a CUB-PTA: hidden option (mainly for testing) *)
 	| Parametric_NZ_CUB
 	
@@ -154,7 +157,7 @@ type distribution_mode =
 	(** Distributed mode: Master slave with sequential pi0 shuffled *)
 	| Distributed_ms_shuffle
 	(** Distributed mode: Master slave with random pi0 and n retries before switching to sequential mode *)
-	| Distributed_ms_random of int	
+	| Distributed_ms_random of int
 	(** Distributed mode: Master slave with subpart distribution *)
 	| Distributed_ms_subpart
 
