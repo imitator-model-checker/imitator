@@ -446,7 +446,7 @@ let print_header_string () =
 	"************************************************************\n"
 	^ "*  " ^ (shell_code_of_shell_highlighting_type Shell_bold) ^ imi_name ^ (shell_code_of_shell_highlighting_type Shell_normal) ^  (string_n_times (length_header - (String.length imi_name)) " ") ^ "  *\n"
 	^ "*                                                          *\n"
-	^ "*                     Etienne Andre, Ulrich Kuehne et al.  *\n"
+	^ "*                                    Etienne Andre et al.  *\n"
 	^ "*                                             2009 - " ^ (BuildInfo.build_year) ^ "  *\n"
 	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
 	^ "*                       LIPN, Universite Paris 13, France  *\n"
@@ -462,7 +462,7 @@ let print_header_string () =
 (* Print the name of the contributors *)
 let print_contributors()  = 
 	print_string ("    " ^ Constants.program_name ^ " has been developed by:\n");
-	print_string ("    * Etienne Andre       (2008 - " ^ (BuildInfo.build_year) ^ ")\n");
+	print_string ("    * Etienne Andre       (2008 - " ^ (BuildInfo.build_year) ^ "), lead developer\n");
 	print_string "    * Camille Coti        (2014)\n";
 	print_string "    * Daphne Dussaud      (2010)\n";
 	print_string "    * Sami Evangelista    (2014)\n";
@@ -471,13 +471,14 @@ let print_contributors()  =
 	print_string "    * Romain Soulat       (2010 - 2013)\n";
 	print_string "\n";
 	print_string "    Compiling, testing and packaging:\n";
+	print_string ("    * Jaime Arias         (2018 - " ^ (BuildInfo.build_year) ^ ")\n");
 	print_string "    * Corentin Guillevic  (2015)\n";
 	print_string "    * Sarah Hadbi         (2015)\n";
 	print_string "    * Fabrice Kordon      (2015)\n";
 	print_string "    * Alban Linard        (2014 - 2015)\n";
 	print_string "    * Stéphane Rosse      (2017)\n";
 	print_string "\n";
-	print_string "    Moral support and suggestions by:\n";
+	print_string "    Suggestions by:\n";
 	print_string "    * Emmanuelle Encrenaz\n";
 	print_string "    * Laurent Fribourg\n";
 	print_string "    * Giuseppe Lipari\n";
