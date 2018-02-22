@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
- * Last modified     : 2017/06/25
+ * Last modified     : 2018/02/22
  *
  ************************************************************)
 
@@ -134,7 +134,7 @@ let string_of_invariant model automaton_index location_index =
 (* 	print_message Verbose_high "Entering string_of_invariant…"; *)
 	let result = 
 	(* Invariant *)
-	"while "
+	"invariant "
 	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index))
 	
 	
@@ -142,7 +142,7 @@ let string_of_invariant model automaton_index location_index =
 	^
 	let stopped = model.stopwatches automaton_index location_index in 
 	(* Case 1: no stopwatches *)
-	if stopped = [] then " wait"
+	if stopped = [] then " "
 	(* Case 2: some clocks stopped *)
 	else
 	let stopped_str = string_of_list_of_string_with_sep "," (List.map model.variable_names stopped) in
@@ -165,12 +165,12 @@ let string_of_clock_updates model = function
 	| Resets list_of_clocks -> 
 		string_of_list_of_string_with_sep ", " (List.map (fun variable_index ->
 			(model.variable_names variable_index)
-			^ "' = 0"
+			^ " := 0"
 		) list_of_clocks)
 	| Updates list_of_clocks_lt -> 
 		string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, linear_term) ->
 			(model.variable_names variable_index)
-			^ "' = "
+			^ " := "
 			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
 		) list_of_clocks_lt)
 
@@ -232,7 +232,7 @@ let string_of_discrete_updates model updates =
 	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, arithmetic_expression) ->
 		(* Convert the variable name *)
 		(model.variable_names variable_index)
-		^ "' = "
+		^ " := "
 		(* Convert the arithmetic_expression *)
 		^ (string_of_arithmetic_expression model.variable_names arithmetic_expression)
 	) updates)
