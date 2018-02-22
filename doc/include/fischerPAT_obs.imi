@@ -36,23 +36,23 @@ automaton proc1
 (************************************************************)
 synclabs: access_1, enter_1, exit_1, no_access_1, try_1, update_1;
 
-loc idle1: while True wait {}
-	when turn = IDLE sync try_1 do {x1' = 0} goto active1;
+loc idle1: invariant True
+	when turn = IDLE sync try_1 do {x1 := 0} goto active1;
 
-loc active1: while x1 <= delta wait {}
-	when True sync update_1 do {turn' = 1, x1' = 0} goto check1;
+loc active1: invariant x1 <= delta
+	when True sync update_1 do {turn := 1, x1 := 0} goto check1;
 
-loc check1: while True wait {}
-	when x1 >= gamma & turn = 1 sync access_1 do {x1' = 0} goto access1;
+loc check1: invariant True
+	when x1 >= gamma & turn = 1 sync access_1 do {x1 := 0} goto access1;
 	(* No "<>" operator: hence we use both '>' and '<' *)
-	when x1 >= gamma & turn < 1 sync no_access_1 do {x1' = 0}  goto idle1;
-	when x1 >= gamma & turn > 1 sync no_access_1 do {x1' = 0}  goto idle1; 
+	when x1 >= gamma & turn < 1 sync no_access_1 do {x1 := 0}  goto idle1;
+	when x1 >= gamma & turn > 1 sync no_access_1 do {x1 := 0}  goto idle1; 
 
-loc access1: while True wait {}
-	when True sync enter_1 do {counter' = counter + 1} goto CS1;
+loc access1: invariant True
+	when True sync enter_1 do {counter := counter + 1} goto CS1;
 
-loc CS1: while True wait {}
-	when True sync exit_1 do {counter' = counter - 1, turn' = IDLE, x1' = 0} goto idle1;
+loc CS1: invariant True
+	when True sync exit_1 do {counter := counter - 1, turn := IDLE, x1 := 0} goto idle1;
 
 end (* proc1 *)
 
@@ -62,23 +62,23 @@ automaton proc2
 (************************************************************)
 synclabs: access_2, enter_2, exit_2, no_access_2, try_2, update_2;
 
-loc idle2: while True wait {}
-	when turn = IDLE sync try_2 do {x2' = 0} goto active2;
+loc idle2: invariant True
+	when turn = IDLE sync try_2 do {x2 := 0} goto active2;
 
-loc active2: while x2 <= delta wait {}
-	when True sync update_2 do {turn' = 2, x2' = 0} goto check2;
+loc active2: invariant x2 <= delta
+	when True sync update_2 do {turn := 2, x2 := 0} goto check2;
 
-loc check2: while True wait {}
-	when x2 >= gamma & turn = 2 sync access_2 do {x2' = 0} goto access2;
+loc check2: invariant True
+	when x2 >= gamma & turn = 2 sync access_2 do {x2 := 0} goto access2;
 	(* No "<>" operator: hence we use both '>' and '<' *)
-	when x2 >= gamma & turn < 2 sync no_access_2 do {x2' = 0} goto idle2;
-	when x2 >= gamma & turn > 2 sync no_access_2 do {x2' = 0} goto idle2;
+	when x2 >= gamma & turn < 2 sync no_access_2 do {x2 := 0} goto idle2;
+	when x2 >= gamma & turn > 2 sync no_access_2 do {x2 := 0} goto idle2;
 
-loc access2: while True wait {}
-	when True sync enter_2 do {counter' = counter + 1} goto CS2;
+loc access2: invariant True
+	when True sync enter_2 do {counter := counter + 1} goto CS2;
 
-loc CS2: while True wait {}
-	when True sync exit_2 do {counter' = counter - 1, turn' = IDLE, x2' = 0} goto idle2;
+loc CS2: invariant True
+	when True sync exit_2 do {counter := counter - 1, turn := IDLE, x2 := 0} goto idle2;
 
 end (* proc2 *)
 
@@ -88,20 +88,20 @@ automaton observer
 (************************************************************)
 synclabs : enter_1, enter_2, exit_1, exit_2;
 
-loc obs_waiting: while True wait {}
+loc obs_waiting: invariant True
 	when True sync enter_1 goto obs_1;
 	when True sync enter_2 goto obs_2;
 
-loc obs_1: while True wait {}
+loc obs_1: invariant True
 	when True sync exit_1 goto obs_waiting;
 	when True sync enter_2 goto obs_violation;
 
-loc obs_2: while True wait {}
+loc obs_2: invariant True
 	when True sync exit_2 goto obs_waiting;
 	when True sync enter_1 goto obs_violation;
 
 (* NOTE: no outgoing action to reduce state space *)
-loc obs_violation: while True wait {}
+loc obs_violation: invariant True
 
 end (* observer *)
 
