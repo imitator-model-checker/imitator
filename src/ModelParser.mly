@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2017/06/25
+ * Last modified     : 2018/02/22
  *
  ************************************************************/
 
@@ -50,7 +50,7 @@ let parse_error s =
 	CT_FALSE
 	CT_GOTO
 	CT_HAPPENED CT_HAS
-	CT_IF CT_IN CT_INIT CT_INITIALLY
+	CT_IF CT_IN CT_INIT CT_INITIALLY CT_INVARIANT
 	CT_LOC CT_LOCATIONS
 	CT_MAXIMIZE CT_MINIMIZE
 	CT_NEXT CT_NOT
@@ -204,8 +204,15 @@ locations:
 
 /**********************************************/
 
+while_or_invariant_or_nothing:
+	/* From 2018/02/22, "while" can be replaced with invariant */
+	| CT_WHILE {}
+	| CT_INVARIANT {}
+	| {}
+;
+
 location:
-	| loc_urgency_type location_name_and_costs COLON CT_WHILE convex_predicate stopwatches wait_opt transitions {
+	| loc_urgency_type location_name_and_costs COLON while_or_invariant_or_nothing convex_predicate stopwatches wait_opt transitions {
 		let name, cost = $2 in
 		{
 			(* Name *)
@@ -299,7 +306,13 @@ update_nonempty_list:
 /**********************************************/
 
 update:
-	NAME APOSTROPHE OP_EQ arithmetic_expression { ($1, $4) }
+	| NAME APOSTROPHE OP_EQ arithmetic_expression { ($1, $4) }
+	/** NOTE: from 2018/02/22: assign becomes recommended */
+	| NAME APOSTROPHE OP_ASSIGN arithmetic_expression { ($1, $4) }
+	/** NOTE: from 2018/02/22: apostrophe becomes optional */
+	| NAME OP_EQ arithmetic_expression { ($1, $3) }
+	/** NOTE: from 2018/02/22: assign becomes recommended */
+	| NAME OP_ASSIGN arithmetic_expression { ($1, $3) }
 ;
 
 /**********************************************/

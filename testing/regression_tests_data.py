@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, Sorbonne Paris Cite, France
 # Created      : 2015/10/23
-# Last modified: 2017/05/25
+# Last modified: 2018/02/22
 #************************************************************
 
 
@@ -555,6 +555,31 @@ Constraint nature                       : good
 Number of states                        : 0
 Number of transitions                   : 0
 Number of computed states               : 0
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with the new syntax from 2.10.1',
+		'input_files': ['fischer_2.imi'],
+		'options'    : '-mode EF -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'fischer_2.res' , 'content' : """
+BEGIN CONSTRAINT
+ a >= 0
+& b > a
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} #end result file
 		] # end expectations
