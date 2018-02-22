@@ -154,7 +154,7 @@ the first and second ones (\styleIMI{proc1} and \styleIMI{proc2}) model the firs
 Let us first describe the \IPTA{} \styleIMI{proc1} (a graphical representation is given in \cref{pta:proc1}).
 This \IPTA{} uses six actions, given in the \styleIMI{synclabs} declaration.
 
-\styleIMI{proc1} is initially in location \styleIMI{idle1}, with no invariant (depicted by \styleIMI{while True wait \{\}}).
+\styleIMI{proc1} is initially in location \styleIMI{idle1}, with no invariant (depicted by \styleIMI{invariant True}).
 At any time, when the discrete variable \styleIMI{turn} is equal to \styleIMI{IDLE}, then this \IPTA{} may synchronize on action \styleIMI{try\_1}, reset its clock \styleIMI{x1}, and enter location \styleIMI{active1}.
 
 The invariant of this location is \styleIMI{x1 <= delta}, \ie{} \styleIMI{proc1} can only remain in \styleIMI{active1} as long as the value of \styleIMI{x1} does not exceed \styleIMI{delta}.
@@ -432,8 +432,8 @@ if they are not, a warning is issued, and they are arbitrarily set to~0.
 
 Discrete variables can be tested in guards, and updated along transitions.
 They are first tested, then updated.
-If two \IPTA{} in parallel update the same variable on the same synchronized transition (\eg{} an \IPTA{} performs \styleIMI{i' = 2} while another one performs \styleIMI{i' = 3}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified (\ie{} \imitator{} will choose one or the other assignment in a non-deterministic manner).
-If a division by zero is encountered (\eg{} in an update \styleIMI{i' = 2 / i}, when the current value of~\styleIMI{i} is~0), an exception is raised and \imitator{} terminates with an error.
+If two \IPTA{} in parallel update the same variable on the same synchronized transition (\eg{} an \IPTA{} performs \styleIMI{i := 2} while another one performs \styleIMI{i := 3}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified (\ie{} \imitator{} will choose one or the other assignment in a non-deterministic manner).
+If a division by zero is encountered (\eg{} in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0), an exception is raised and \imitator{} terminates with an error.
 
 
 
@@ -1772,10 +1772,16 @@ We define each of those two components below.
 \regleGrammaire{locations}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{while} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
-	$|$ & \styleIMI{urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{while} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
+	\  & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
+	$|$ & \styleIMI{urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
 % 	$|$ & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{while} \nt{convex\_predicate} \nt{transitions} \\
 \end{tabular}
+
+\smallskip
+
+(for backward compatibility with versions $< 2.10.1$, replacing ``\styleIMI{invariant}'' with ``\styleIMI{while}'' is still allowed, although it is deprecated)
+
+\smallskip
 
 %------------------------------------------------------------
 \regleGrammaire{\npec{wait\_opt}}
@@ -1848,8 +1854,15 @@ We define each of those two components below.
 \regleGrammaire{update}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{<name>} \styleIMI{'} \styleIMI{=} \nt{arithmetic\_expression} \\
+	\  & \styleIMI{<name>} \styleIMI{:=} \nt{arithmetic\_expression} \\
 \end{tabular}
+
+\smallskip
+
+(for backward compatibility with versions $< 2.10.1$, replacing ``\styleIMI{<name>} \styleIMI{:=}'' with ``\styleIMI{<name>} \styleIMI{'} \styleIMI{=}'' is still allowed, although it is deprecated)
+
+\smallskip
+
 
 %------------------------------------------------------------
 \regleGrammaire{syn\_label}
@@ -2431,6 +2444,7 @@ The following people contributed to the development of \imitator{}.
 The following people contributed to the compiling, testing and packaging facilities.
 
 \begin{tabular}{l l @{ } c @{ } l}
+	Jaime Arias & 2018 & & \\
 	Corentin Guillevic & 2015 & & \\
 	Sarah Hadbi & 2015 & & \\
 	Fabrice Kordon & 2015 & & \\
