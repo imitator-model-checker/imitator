@@ -1,5 +1,5 @@
 *******************************************************
-# release XXX (XXXX) FUTURE RELEASE
+# release XXX (XXXX) FUTURE MAJOR RELEASE
 
 ### Syntax improvement
 * The prime (`'`) in transition updates becomes optional; the `=` in transition updates becomes `:=` (backward-compatibility remains ensured until further notices) That is, an update `x' = 0` becomes `x := 0`
