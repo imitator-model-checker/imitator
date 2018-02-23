@@ -11,10 +11,10 @@
  * Input by        : ME
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
- * Created         : 2017/01/01
- * Last modified   : 2017/01/01
+ * Created         : 2018/01/01
+ * Last modified   : 2018/01/01
  *
- * IMITATOR version: 2.9
+ * IMITATOR version: 2.10.1
  ************************************************************)
 
 var
@@ -38,8 +38,8 @@ var
 (************************************************************)
 synclabs: a;
 
-loc l1: while True wait {}
-	when x = 1 sync a do {x' = 0} goto l1;
+loc l1: invariant True
+	when x = 1 sync a do {x := 0} goto l1;
 
 end (* pta *)
 
