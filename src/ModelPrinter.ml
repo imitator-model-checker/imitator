@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
- * Last modified     : 2018/02/22
+ * Last modified     : 2018/02/23
  *
  ************************************************************)
 
@@ -452,6 +452,8 @@ let string_of_unreachable_location model unreachable_global_location =
 			-> (model.variable_names discrete_index) ^ " <= " ^ (NumConst.string_of_numconst discrete_value)
 		| Discrete_equal (discrete_index , discrete_value)
 			-> (model.variable_names discrete_index) ^ " = " ^ (NumConst.string_of_numconst discrete_value)
+		| Discrete_neq (discrete_index , discrete_value)
+			-> (model.variable_names discrete_index) ^ " <> " ^ (NumConst.string_of_numconst discrete_value)
 		| Discrete_geq (discrete_index , discrete_value)
 			-> (model.variable_names discrete_index) ^ " >= " ^ (NumConst.string_of_numconst discrete_value)
 		| Discrete_g (discrete_index , discrete_value)

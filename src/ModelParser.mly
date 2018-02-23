@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2018/02/22
+ * Last modified     : 2018/02/23
  *
  ************************************************************/
 
@@ -34,7 +34,7 @@ let parse_error s =
 %token <string> STRING
 
 %token OP_PLUS OP_MINUS OP_MUL OP_DIV
-%token OP_L OP_LEQ OP_EQ OP_GEQ OP_G OP_ASSIGN
+%token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
 
 %token LPAREN RPAREN LBRACE RBRACE LSQBRA RSQBRA
 %token AMPERSAND APOSTROPHE COLON COMMA DOUBLEDOT PIPE SEMICOLON
@@ -373,6 +373,7 @@ relop:
 	  OP_L { OP_L }
 	| OP_LEQ { OP_LEQ }
 	| OP_EQ { OP_EQ }
+	| OP_NEQ { OP_NEQ }
 	| OP_GEQ { OP_GEQ }
 	| OP_G { OP_G }
 ;

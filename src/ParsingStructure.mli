@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  *
  * Created:       2009/09/08
- * Last modified: 2017/06/21
+ * Last modified: 2018/02/23
  *
  ****************************************************************)
 
@@ -67,7 +67,7 @@ and parsed_update_factor =
 
 (** Operators *)
 
-type relop = OP_L | OP_LEQ | OP_EQ | OP_GEQ | OP_G
+type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 
 
 (** Linear expressions *)

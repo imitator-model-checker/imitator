@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/05/04
- * Last modified     : 2016/05/09
+ * Last modified     : 2018/02/23
  *
  ************************************************************)
 
@@ -54,6 +54,7 @@ let get_discrete_index_from_discrete_constraint = function
 	| Discrete_l (discrete_index , _)
 	| Discrete_leq (discrete_index , _)
 	| Discrete_equal (discrete_index , _)
+	| Discrete_neq (discrete_index , _)
 	| Discrete_geq (discrete_index , _)
 	| Discrete_g (discrete_index , _)
 		-> discrete_index
@@ -71,6 +72,8 @@ let match_discrete_constraint current_value = function
 		-> NumConst.le current_value constrained_value
 	| Discrete_equal (_, constrained_value )
 		-> NumConst.equal current_value constrained_value
+	| Discrete_neq (_, constrained_value )
+		-> NumConst.neq current_value constrained_value
 	| Discrete_geq (_, constrained_value )
 		-> NumConst.ge current_value constrained_value
 	| Discrete_g (_, constrained_value )

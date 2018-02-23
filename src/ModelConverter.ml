@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/09
- * Last modified     : 2017/06/25
+ * Last modified     : 2018/02/23
  *
  ************************************************************)
 
@@ -237,7 +237,10 @@ let linear_inequality_of_linear_constraint index_of_variables constants (linexpr
 		let linear_term = linear_term_of_array array12 constant12 in
 		(* Return the linear_inequality *)
 		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
-(* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_g *)
+	(* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_g *)
+
+	| OP_NEQ ->
+		raise (InternalError("Inequality <> not yet supported"))
 
 
 (*------------------------------------------------------------*)

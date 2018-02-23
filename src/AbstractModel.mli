@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/11
- * Last modified     : 2017/06/21
+ * Last modified     : 2018/02/23
  *
  ************************************************************)
 
@@ -136,6 +136,7 @@ type discrete_constraint =
 	| Discrete_l of discrete_index * discrete_value
 	| Discrete_leq of discrete_index * discrete_value
 	| Discrete_equal of discrete_index * discrete_value
+	| Discrete_neq of discrete_index * discrete_value
 	| Discrete_geq of discrete_index * discrete_value
 	| Discrete_g of discrete_index * discrete_value
 	| Discrete_interval of discrete_index * discrete_value * discrete_value

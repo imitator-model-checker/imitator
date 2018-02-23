@@ -8,7 +8,7 @@
  * Author:        Etienne Andre
  * 
  * Created       : 2009/09/07
- * Last modified : 2018/02/22
+ * Last modified : 2018/02/23
 *****************************************************************)
 
 {
@@ -100,6 +100,7 @@ rule token = parse
 	| ">="             { OP_GEQ }
 	| '<'              { OP_L }
 	| '='              { OP_EQ }
+	| "<>"             { OP_NEQ }
 	| '>'              { OP_G }
 	| ":="             { OP_ASSIGN }
 

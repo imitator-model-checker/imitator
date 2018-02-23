@@ -11,7 +11,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/26
- * Last modified     : 2017/06/25
+ * Last modified     : 2018/02/23
  *
  ************************************************************)
 
@@ -406,6 +406,10 @@ let string_of_unreachable_location model unreachable_global_location =
 			-> (model.variable_names discrete_index) ^ " <= " ^ (NumConst.string_of_numconst discrete_value)
 		| Discrete_equal (discrete_index , discrete_value)
 			-> (model.variable_names discrete_index) ^ " = " ^ (NumConst.string_of_numconst discrete_value)
+		| Discrete_neq (discrete_index , discrete_value)
+			->
+				print_warning "Inequality <> may be disallowed by HyTech";
+				(model.variable_names discrete_index) ^ " <> " ^ (NumConst.string_of_numconst discrete_value)
 		| Discrete_geq (discrete_index , discrete_value)
 			-> (model.variable_names discrete_index) ^ " >= " ^ (NumConst.string_of_numconst discrete_value)
 		| Discrete_g (discrete_index , discrete_value)
