@@ -6,6 +6,14 @@ Syntax improvement
 
 
 *******************************************************
+release 2.10.1    (2018-02-23) MINOR RELEASE
+
+Syntax improvement
+- The prime (`'`) in transition updates becomes optional; the `=` in transition updates becomes `:=` (backward-compatibility remains ensured until further notices) That is, an update `x' = 0` becomes `x := 0`
+- `while [invariant condition] wait{}` becomes `invariant [invariant condition]` (backward-compatibility remains ensured until further notices)
+
+
+*******************************************************
 release 2.10    (2018-02-21) MAJOR RELEASE
 
 Major features:
