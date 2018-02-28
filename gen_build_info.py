@@ -10,10 +10,10 @@
 # Etienne Andre
 #
 # Laboratoire d'Informatique de Paris Nord
-# Universite Paris 13, Sorbonne Paris Cite, France
+# Universite Paris 13, France
 #
 # Created      : 2013/09/26
-# Last modified: 2016/04/19
+# Last modified: 2018/02/28
 # ************************************************************
 
 from __future__ import print_function
@@ -29,7 +29,7 @@ ml_file_name = "src/BuildInfo.ml"
 mli_file_name = "src/BuildInfo.mli"
 
 
-print("Python is now handling build information...")
+print("Python is now handling build information…")
 
 
 # ************************************************************
@@ -110,7 +110,7 @@ ml_fmt = """
  *                       IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Universite Paris 13, LIPN (France)
  * 
  * Author:        python script
  * 
@@ -141,7 +141,7 @@ mli_fmt = """
  *                       IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Universite Paris 13, LIPN (France)
  * 
  * Author:        python script
  * 
