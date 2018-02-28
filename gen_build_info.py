@@ -61,28 +61,29 @@ git_fmt = 'Retrieved git {}: {}'
 
 
 def get_ocaml_info(info):
-    """Method that gets specific information from git and returns a typed value for Ocaml"""
-    if info == 'hash':  # NOTE: command is 'git rev-parse HEAD'
-        git_command = ["git", "rev-parse", "HEAD"]
-    elif info == 'branch':
-        git_command = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
-    else:
-        raise NotImplemented
+	"""Method that gets specific information from git and returns a typed value for Ocaml"""
+	if info == 'hash':  # NOTE: command is 'git rev-parse HEAD'
+		git_command = ["git", "rev-parse", "HEAD"]
+	elif info == 'branch':
+		git_command = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
+	else:
+		raise NotImplemented
 
-    try:
-        git_info = (subprocess.check_output(git_command)).rstrip().decode('utf-8')
-    except subprocess.CalledProcessError:  # Case: exception with problem (typically return code <> 1)
-        # nothing
-        git_info = ""
+	try:
+		git_info = (subprocess.check_output(git_command)).rstrip().decode('utf-8')
+	except:  # Case: exception with problem (typically return code <> 1)
+		print ("Error with git: give up git information")
+		# nothing
+		git_info = "?????"
 
-    print(git_fmt.format(info, git_info))
+	print(git_fmt.format(info, git_info))
 
-    # Handle what to print in Ocaml
-    git_ocaml = ocaml_fmt.format(git_info)
-    if git_info == "":
-        git_ocaml = "None"
+	# Handle what to print in Ocaml
+	git_ocaml = ocaml_fmt.format(git_info)
+	if git_info == "":
+		git_ocaml = "None"
 
-    return git_ocaml
+	return git_ocaml
 
 
 # 1) Retrieve the git hash number
