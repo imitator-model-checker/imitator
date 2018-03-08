@@ -1,0 +1,33 @@
+language: c
+sudo: required
+
+matrix:
+  include:
+    - os: linux
+      env: DISTRIBUTED=False
+    - os: linux
+      env: DISTRIBUTED=True
+
+script:
+- "./.travis/build.sh"
+
+after_success:
+- "./.travis/deploy.sh"
+
+deploy:
+  - provider: releases
+    api_key:
+      secure: 6KeQf+iktGF8w4jFgeU0OpJUw6m37GrvJIlQzZLyK3AaPZU1MamgYMMM2Bjp9kng1E2j6dDBrb+qS6xt3UVZHdFrrKU1s1hH7pZd7T2/va4XQcoAkDkzePX5AxL5w10ueMuDVQTbvUjZOwUKSE0TWspoM6odwLlDGGGgFB0PZKWkzSjgG54s2L6fY094iwLsLCVmPPnGa07BIeH3h/gZFG0tb0E0COuPSutK2TqznssLyrKB7qFzXJCRvqkMdotyn5bonlm+n40Jy/1PI1ZwLECwe4pbFfxwlyfbQQefe4psVGpsYduTJFlgLgrQZ+LHbS5xTNWuPsuRKV8YjVHBlTK/Lm76P0ZNFJu25uq1m5ptf7FATBEIsQkZm1RQQAiy0nI2RoPsURZ0fAyR5/SpKVTm9Ni2yrdfbiVI7pp56RENtFxP8OrhT5elGkVdaFkjZbeZHvrAjQaqlcRntIoQp9NkJgeJpetjPK3P5TmCZav8PAgBpVqiCOxfRb6To7M2ibKFOGd0D/9dGLybHJj5HCe/cGYvqn2qnArH6+C+mLeiwbqgLZo8WTOsdt41EW4vq63icjv6Wez2/cqdQR7zrn5kXJ8TMF0XHgQLatu3qC+E8PZ+3yhRIhMQA7wPOwVFg9YR7+hp/3kqM1/0rrnO5Q5F64CpCCHPL/6Fbo1NIQU=
+    file: 'bin/imitator-$TRAVIS_TAG-amd64'
+    skip_cleanup: true
+    on:
+      tags: false
+      condition: $TRAVIS_OS_NAME = linux && $DISTRIBUTED = False
+  - provider: releases
+    api_key:
+      secure: 6KeQf+iktGF8w4jFgeU0OpJUw6m37GrvJIlQzZLyK3AaPZU1MamgYMMM2Bjp9kng1E2j6dDBrb+qS6xt3UVZHdFrrKU1s1hH7pZd7T2/va4XQcoAkDkzePX5AxL5w10ueMuDVQTbvUjZOwUKSE0TWspoM6odwLlDGGGgFB0PZKWkzSjgG54s2L6fY094iwLsLCVmPPnGa07BIeH3h/gZFG0tb0E0COuPSutK2TqznssLyrKB7qFzXJCRvqkMdotyn5bonlm+n40Jy/1PI1ZwLECwe4pbFfxwlyfbQQefe4psVGpsYduTJFlgLgrQZ+LHbS5xTNWuPsuRKV8YjVHBlTK/Lm76P0ZNFJu25uq1m5ptf7FATBEIsQkZm1RQQAiy0nI2RoPsURZ0fAyR5/SpKVTm9Ni2yrdfbiVI7pp56RENtFxP8OrhT5elGkVdaFkjZbeZHvrAjQaqlcRntIoQp9NkJgeJpetjPK3P5TmCZav8PAgBpVqiCOxfRb6To7M2ibKFOGd0D/9dGLybHJj5HCe/cGYvqn2qnArH6+C+mLeiwbqgLZo8WTOsdt41EW4vq63icjv6Wez2/cqdQR7zrn5kXJ8TMF0XHgQLatu3qC+E8PZ+3yhRIhMQA7wPOwVFg9YR7+hp/3kqM1/0rrnO5Q5F64CpCCHPL/6Fbo1NIQU=
+    file: 'bin/patator-$TRAVIS_TAG-amd64'
+    skip_cleanup: true
+    on:
+      tags: false
+      condition: $TRAVIS_OS_NAME = linux && $DISTRIBUTED = True
