@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2018/03/06
+ * Last modified     : 2018/03/08
  *
  ************************************************************)
 
@@ -181,6 +181,9 @@ let counter_nb_unsat1 = create_discrete_counter_and_register "early unsat (D ^ g
 (* Counter measuring the time spent on the computation of successor (discrete) transitions *)
 (*** NOTE: if this is correct, this counter should not measure any PPL-based computation! ***)
 let tcounter_next_transitions = create_time_counter_and_register "next transitions" States_counter Verbose_low
+
+(* Counter measuring the time spent on exhibiting which transitions can effectively be taken (this DOES include some PPL time) *)
+let tcounter_legal_transitions_exist = create_time_counter_and_register "legal transitions exist" States_counter Verbose_low
 
 (* let nb_unsat2 = ref 0 *)
 
@@ -1608,9 +1611,15 @@ class virtual algoStateBased =
 			(* Statistics *)
 			tcounter_next_transitions#stop;
 
+			(* Statistics *)
+			tcounter_legal_transitions_exist#start;
+
 			(* compute the possible combinations of transitions *)
 			let legal_transitions_exist = compute_transitions original_location orig_plus_discrete action_index automata_for_this_action real_indexes max_indexes possible_transitions in 
 		
+			(* Statistics *)
+			tcounter_legal_transitions_exist#stop;
+
 			(* Print some information: compute the number of combinations *)
 			if verbose_mode_greater Verbose_medium || options#statistics then(
 				let new_nb_combinations = Array.fold_left (fun sum max -> sum * (max + 1)) 1 max_indexes in

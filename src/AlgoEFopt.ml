@@ -182,6 +182,7 @@ class virtual algoEFopt =
 			not is_goal_state
 
 		| Some current_optimum_constraint ->
+			(*** NOTE: this is an expensive test, as ALL states will be projected to the goal parameters and compared to the current optimum ***)
 			let projected_constraint = self#project_constraint px_constraint in
 
 			(* Test if the current optimum is already larger *)
