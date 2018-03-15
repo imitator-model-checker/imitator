@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2017/06/27
+ * Last modified     : 2018/03/09
  *
  ************************************************************)
 
@@ -27,8 +27,12 @@ open Exceptions
 open AbstractModel
 open OCamlUtilities
 open ImitatorUtilities
+open Statistics
 
 
+let parsing_counter = create_time_counter_and_register "model parsing" Parsing_counter Verbose_experiments
+
+let converting_counter = create_time_counter_and_register "model converting" Parsing_counter Verbose_experiments
 
 (************************************************************)
 (* Local parsing function *)
@@ -113,6 +117,9 @@ let compile_model options (with_special_reset_clock : bool) =
 	(* Parsing *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+	(* Statistics *)
+	parsing_counter#start;
+	
 	(* Parsing the main model *)
 	print_message Verbose_low ("Parsing file " ^ options#model_input_file_name ^ "...");
 	let parsing_structure = 
@@ -172,6 +179,9 @@ let compile_model options (with_special_reset_clock : bool) =
 		else*) parser_lexer_from_file ModelParser.main ModelLexer.token options#model_input_file_name
 	in
 
+	(* Statistics *)
+	parsing_counter#stop;
+	
 	print_message Verbose_low ("\nParsing completed " ^ (after_seconds ()) ^ ".");
 	(** USELESS, even increases memory x-( **)
 	(* Gc.major (); *)
@@ -181,6 +191,9 @@ let compile_model options (with_special_reset_clock : bool) =
 	(* Conversion to an abstract model *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+	(* Statistics *)
+	converting_counter#start;
+	
 	let model = 
 	try (
 		ModelConverter.abstract_model_of_parsing_structure options with_special_reset_clock parsing_structure
@@ -188,6 +201,9 @@ let compile_model options (with_special_reset_clock : bool) =
 		| InvalidModel -> (print_error ("The input model contains errors. Please check it again."); abort_program (); exit 1)
 		| InternalError e -> (print_error ("Internal error while parsing the input model: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
 		in
+
+	(* Statistics *)
+	converting_counter#stop;
 
 	(* Print some information *)
 	print_message Verbose_experiments ("\nAbstract model built " ^ (after_seconds ()) ^ ".");
