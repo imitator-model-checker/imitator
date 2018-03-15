@@ -1,0 +1,33 @@
+language: c
+sudo: required
+
+matrix:
+  include:
+    - os: linux
+      env: DISTRIBUTED=False
+    - os: linux
+      env: DISTRIBUTED=True
+
+script:
+- "./.travis/build.sh"
+
+after_success:
+- "./.travis/deploy.sh"
+
+deploy:
+  - provider: releases
+    api_key:
+      secure: FhmayYantgnVp+5ZLwLxc1P/AsltIIlr9ssmuzVmNDNhixQUuAUnXlsYGcCUc+8zKYdeujn/EVpiTQaQU4monlXbe8+Jtex5J/+OSkFGUSFS7AHfBg32RlOHU9h7fph8rVloRsg1hl2BkQ38eBZt84EuxkihuKoKW1dZgyuuRfyZkuQXSwKBc4aXeGtfKSdr3HbEndNqwcr03WxjJVUvSuxF/6ZVpWp2O5Z0uv35WNdu3fj4FrU0OqIYjQ0+Mu9+uz0KQvOi0gxm5OMGhUmg7RqbBVTYFkD+WDhbtrzSzxzX6aG8Vx2eNztl26E3wyL0MMBdCCK443K/en86zkBjDlWZIyruqVsuUr7j1gnM//WyaxF/rMZVh7sNmH4bI/qfFAp+LVs0vKxN3aYPYXETL/GwLy/c5vEIrZWeCvQN+DLdzPqjEqqwr4cF8TUvFH4ym3/sfxigJ8DAZIunVqKrycHM9vb04s9zl13DFmB9H4Y6O88I0xy8X6vtYUyv8UdGzvDyBppVPGJqR7YpTxquvwQK7iAli4a+AmExRhz5v7U+y9hlopc7MJc1XJcjR9hU0WFiKDoAuIns77hSfkZbvb0nDs7aGX1E0j74OG6M8PvqWyTu+lbAXapmsIFR02maBaQutJ0yhFwjWFEFoVcWh3LCPWH/UYnBwVG4ZJyt1Rs=
+    file: 'bin/imitator-$TRAVIS_TAG-amd64'
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: $TRAVIS_OS_NAME = linux && $DISTRIBUTED = False
+  - provider: releases
+    api_key:
+      secure: FhmayYantgnVp+5ZLwLxc1P/AsltIIlr9ssmuzVmNDNhixQUuAUnXlsYGcCUc+8zKYdeujn/EVpiTQaQU4monlXbe8+Jtex5J/+OSkFGUSFS7AHfBg32RlOHU9h7fph8rVloRsg1hl2BkQ38eBZt84EuxkihuKoKW1dZgyuuRfyZkuQXSwKBc4aXeGtfKSdr3HbEndNqwcr03WxjJVUvSuxF/6ZVpWp2O5Z0uv35WNdu3fj4FrU0OqIYjQ0+Mu9+uz0KQvOi0gxm5OMGhUmg7RqbBVTYFkD+WDhbtrzSzxzX6aG8Vx2eNztl26E3wyL0MMBdCCK443K/en86zkBjDlWZIyruqVsuUr7j1gnM//WyaxF/rMZVh7sNmH4bI/qfFAp+LVs0vKxN3aYPYXETL/GwLy/c5vEIrZWeCvQN+DLdzPqjEqqwr4cF8TUvFH4ym3/sfxigJ8DAZIunVqKrycHM9vb04s9zl13DFmB9H4Y6O88I0xy8X6vtYUyv8UdGzvDyBppVPGJqR7YpTxquvwQK7iAli4a+AmExRhz5v7U+y9hlopc7MJc1XJcjR9hU0WFiKDoAuIns77hSfkZbvb0nDs7aGX1E0j74OG6M8PvqWyTu+lbAXapmsIFR02maBaQutJ0yhFwjWFEFoVcWh3LCPWH/UYnBwVG4ZJyt1Rs=
+    file: 'bin/patator-$TRAVIS_TAG-amd64'
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: $TRAVIS_OS_NAME = linux && $DISTRIBUTED = True
