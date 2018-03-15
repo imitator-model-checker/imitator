@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2018/03/09
+ * Last modified     : 2018/03/15
  *
  ************************************************************)
 
@@ -164,6 +164,7 @@ match options#imitator_mode with
 	| EFunsafe_synthesis
 	| EF_min
 	| EF_max
+	| AF_synthesis
 	| Loop_synthesis
 	| Parametric_NZ_CUBcheck
 	| Parametric_NZ_CUBtransform
@@ -336,7 +337,7 @@ if options#cartonly then(
 (* Preliminary checks *)
 (************************************************************)
 
-if options#imitator_mode = EF_synthesis || options#imitator_mode = EFunsafe_synthesis || options#imitator_mode = EF_min  || options#imitator_mode = EF_max then(
+if options#imitator_mode = EF_synthesis || options#imitator_mode = EFunsafe_synthesis || options#imitator_mode = EF_min  || options#imitator_mode = EF_max || options#imitator_mode = AF_synthesis then(
 	match model.correctness_condition with
 		(* Synthesis only works w.r.t. (un)reachability *)
 		| Some (Unreachable _) -> ()
@@ -476,6 +477,12 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFmax.algoEFmax in myalgo
 	
 
+	(************************************************************)
+	(* AF-synthesis *)
+	(************************************************************)
+	| AF_synthesis ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoAF.algoAFsynth in myalgo
+	
 	(************************************************************)
 	(* Parametric loop synthesis *)
 	(************************************************************)

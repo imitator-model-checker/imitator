@@ -43,7 +43,7 @@ let debug_string_of_state state_index =
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoAF =
+class algoAFsynth =
 	object (self) inherit algoPostStar as super
 	
 	(************************************************************)
@@ -306,7 +306,7 @@ class algoAF =
 		
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
-			| None -> raise (InternalError "Termination status not set in EFsynth.compute_result")
+			| None -> raise (InternalError "Termination status not set in AFsynth.compute_result")
 			| Some status -> status
 		in
 		
@@ -320,7 +320,7 @@ class algoAF =
 		)
 		(* Else: compute backward under-approximation *)
 		else(
-			raise Not_implemented
+			raise (NotImplemented "AF still in progress")
 			
 		) (* end if not regular termination *)
 		in

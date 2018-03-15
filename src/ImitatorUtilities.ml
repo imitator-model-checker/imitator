@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/10/03
+ * Last modified     : 2018/03/15
  *
  ************************************************************)
 
@@ -215,6 +215,9 @@ type imitator_mode =
 	
 	(** EF-maximization *)
 	| EF_max
+	
+	(** AF-synthesis *)
+	| AF_synthesis
 	
 	(** Parametric loop synthesis *)
 	| Loop_synthesis

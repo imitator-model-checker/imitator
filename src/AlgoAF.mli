@@ -21,7 +21,7 @@ open AlgoPostStar
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoAF :
+class algoAFsynth :
 	object inherit algoPostStar
 		(************************************************************)
 		(* Class variables *)
