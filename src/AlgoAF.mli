@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13 (France)
  * 
- * Module description: Parametric deadlock-freeness
+ * Module description: AF synthesis [JLR15]
  * 
  * File contributors : Étienne André
- * Created           : 2016/02/08
- * Last modified     : 2016/10/18
+ * Created           : 2018/03/15
+ * Last modified     : 2018/03/15
  *
  ************************************************************)
 
@@ -21,7 +21,7 @@ open AlgoPostStar
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoDeadlockFree :
+class algoAF :
 	object inherit algoPostStar
 		(************************************************************)
 		(* Class variables *)
@@ -34,12 +34,7 @@ class algoDeadlockFree :
 		(* Class methods *)
 		(************************************************************)
 		
-(* 		method run : unit -> Result.imitator_result *)
-		
 		method initialize_variables : unit
-		
-		(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
-(* 		method process_deadlock_state : StateSpace.state_index -> unit *)
 		
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

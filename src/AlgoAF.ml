@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13 (France)
  * 
- * Module description: Parametric deadlock-freeness
+ * Module description: AF synthesis [JLR15]
  * 
  * File contributors : Étienne André
- * Created           : 2016/02/08
- * Last modified     : 2017/05/02
+ * Created           : 2018/03/15
+ * Last modified     : 2018/03/15
  *
  ************************************************************)
 
@@ -43,18 +43,16 @@ let debug_string_of_state state_index =
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoDeadlockFree =
+class algoAF =
 	object (self) inherit algoPostStar as super
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
 	
-	(* Non-necessarily convex parameter constraint for which deadlocks may arise *)
-	val mutable bad_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
+	(* Non-necessarily convex parameter constraint for which AF holds *)
+	val mutable af_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
 
-	(* Convex parameter constraint ensuring all clocks and parameters are non-negative (constant object used as a shortcut, as it is often used in the algorithm) *)
-	
 	(*** NOTE/TODO: technically, clocks should be non-negative, but parameters should just be conform to the initial p_constraint ***)
 	
 	val all_clocks_and_parameters_nonnegative : LinearConstraint.px_linear_constraint =
@@ -63,9 +61,7 @@ class algoDeadlockFree =
 		(* Find clocks and parameters *)
 		let clocks_and_parameters = list_union model.clocks model.parameters in
 		(* Constrain non-negative *)
-		(*let px_linear_constraint = *)LinearConstraint.px_constraint_of_nonnegative_variables clocks_and_parameters (*in
-		(* Convert to px_nnconvex_constraint *)
-		LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint px_linear_constraint*)
+		LinearConstraint.px_constraint_of_nonnegative_variables clocks_and_parameters
 
 	(* Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is often used in the algorithm) *)
 	val init_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint =
@@ -77,7 +73,7 @@ class algoDeadlockFree =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "Parametric deadlock-freeness checking"
+	method algorithm_name = "AFsynth"
 	
 	
 	
@@ -93,11 +89,11 @@ class algoDeadlockFree =
 		
 		self#print_algo_message Verbose_low "Initializing variables…";
 		
-		bad_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
+		af_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_low then(
-			self#print_algo_message Verbose_low ("The global bad constraint is now:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint));
+			self#print_algo_message Verbose_low ("The global bad constraint is now:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names af_constraint));
 		);
 		
 		(* The end *)
@@ -168,18 +164,18 @@ class algoDeadlockFree =
 (*			(* Compute the difference True^+ \ good_constraint_s *)
 		(*** TODO: add a field clocks_and_parameters to abstract_model ***)
 		let trueplus = LinearConstraint.px_constraint_of_nonnegative_variables (list_union model.clocks model.parameters) in
-		let px_bad_constraint_s = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint trueplus in
+		let px_af_constraint_s = LinearConstraint.px_nnconvex_constraint_of_px_linear_constraint trueplus in
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
-			self#print_algo_message Verbose_medium ("px_bad_constraint_s ('trueplus') is now: " ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names px_bad_constraint_s));
+			self#print_algo_message Verbose_medium ("px_af_constraint_s ('trueplus') is now: " ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names px_af_constraint_s));
 		);
 
-		LinearConstraint.px_nnconvex_difference px_bad_constraint_s good_constraint_s;
+		LinearConstraint.px_nnconvex_difference px_af_constraint_s good_constraint_s;
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_low then(
-			self#print_algo_message Verbose_low ("px_bad_constraint_s (True \ good, not allowing exit) is now: " ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names px_bad_constraint_s));
+			self#print_algo_message Verbose_low ("px_af_constraint_s (True \ good, not allowing exit) is now: " ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names px_af_constraint_s));
 		);
 		
 		*)
@@ -209,29 +205,22 @@ class algoDeadlockFree =
 		);
 		
 		(* Project onto the parameters *)
-		let p_bad_constraint_s = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse nnconvex_s in
+		let p_af_constraint_s = LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse nnconvex_s in
 			
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
-			self#print_algo_message Verbose_medium ("p_bad_constraint_s (True - good, not allowing exit, projected onto P) is:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_bad_constraint_s));
+			self#print_algo_message Verbose_medium ("p_af_constraint_s (True - good, not allowing exit, projected onto P) is:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names p_af_constraint_s));
 		);
 		
 		(* Return the p_constraint *)
-		p_bad_constraint_s
+		p_af_constraint_s
 
 
-(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_deadlock_state state_index = ()*)
-	
-	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_initial_state _ =
 		(* Always keep the initial state *)
-		(*** NOTE: if the initial state is deadlocked, this will be processed in process_post_n anyway ***)
 		true
 
 	
@@ -247,20 +236,20 @@ class algoDeadlockFree =
 			(* Retrieve all successors of this state with their action *)
 			let succs_of_s = StateSpace.get_successors_with_actions state_space state_index in
 			
-			let p_bad_constraint_s = self#compute_deadlock_p_constraint state_index succs_of_s in
+			let p_af_constraint_s = self#compute_deadlock_p_constraint state_index succs_of_s in
 			
 			(* Update the bad constraint using the local constraint *)
-			LinearConstraint.p_nnconvex_union bad_constraint p_bad_constraint_s;
+			LinearConstraint.p_nnconvex_union af_constraint p_af_constraint_s;
 		
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
-				self#print_algo_message Verbose_medium ("The global bad constraint is now:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint));
+				self#print_algo_message Verbose_medium ("The global bad constraint is now:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names af_constraint));
 			);
 		) post_n;
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_low then(
-			self#print_algo_message Verbose_low ("After processing post^n, the global bad constraint is now: " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint));
+			self#print_algo_message Verbose_low ("After processing post^n, the global bad constraint is now: " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names af_constraint));
 		);
 		
 		print_message Verbose_low ("");
@@ -268,42 +257,6 @@ class algoDeadlockFree =
 		(* The end *)
 		()
 
-	
-(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Actions to perform when meeting a state with no successors: in that case add the entire state to the bad constraint *)
-	(*** NOTE: this step is in fact necessary only for the deadlocked states at the deepest position in the state space; for other deadlock states, they are already taken into account by process_post_n when computing n+1 ***)
-	(*** TO OPTIMIZE ***)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_deadlock_state state_index =
-		
-		self#print_algo_message Verbose_standard ("Entering process_deadlock_state " ^ (string_of_int state_index) ^ "…");
-		
-		(* Get the constraint of the state *)
-		let _, s_constraint = StateSpace.get_state state_space state_index in
-		
-		(* Project onto P *)
-		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse s_constraint in
-		
-		(* Print some information *)
-		if verbose_mode_greater Verbose_low then(
-			self#print_algo_message Verbose_low ("Found a deadlock state! Adding " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint) ^ ".");
-		);
-		
-		(* Add union to bad_constraint *)
-		LinearConstraint.p_nnconvex_p_union bad_constraint p_constraint;
-		
-		(* Print some information *)
-		if verbose_mode_greater Verbose_low then(
-			self#print_algo_message Verbose_low ("The global bad constraint is now: " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint));
-		);
-
-		print_message Verbose_low ("");
-
-		(* The end *)
-		()
-		*)
-
-	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Check whether the algorithm should terminate at the end of some post, independently of the number of states to be processed (e.g., if the constraint is already true or false) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -312,12 +265,12 @@ class algoDeadlockFree =
 		self#print_algo_message Verbose_high ("Entering check_termination_at_post_n…");
 		
 		(* True if the computed bad constraint is exactly equal to (or larger than) the initial parametric constraint *)
-		let stop = LinearConstraint.p_nnconvex_constraint_is_leq init_p_nnconvex_constraint bad_constraint in
+		let stop = LinearConstraint.p_nnconvex_constraint_is_leq init_p_nnconvex_constraint af_constraint in
 		
 		(* Print some information *)
 		if (stop && verbose_mode_greater Verbose_medium) || verbose_mode_greater Verbose_medium then(
 			self#print_algo_message Verbose_medium ("Initial constraint:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names init_p_nnconvex_constraint));
-			self#print_algo_message Verbose_medium ("Current bad constraint:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint));
+			self#print_algo_message Verbose_medium ("Current bad constraint:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names af_constraint));
 		);
 		
 		(* Print some information *)
@@ -332,224 +285,6 @@ class algoDeadlockFree =
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Method to compute an under-approximation in a backward manner, when the analysis stopped prematurely *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private backward_underapproximation =
-		self#print_algo_message_newline Verbose_low "Retrieving successors…";
-
-		(* Retrieve predecessors *)
-		let predecessors = StateSpace.compute_predecessors_with_actions state_space in
-		
-		(* Retrieve all state indexes *)
-		let all_state_indexes = StateSpace.all_state_indexes state_space in
-		
-		(*------------------------------------------------------------*)
-		(* Print successors and predecessors *)
-		if verbose_mode_greater Verbose_high then(
-			(* Successors *)
-			self#print_algo_message_newline Verbose_high ("SUCCESSORS");
-			(* Iterate on all states in the state space *)
-			List.iter (fun state_index ->
-				self#print_algo_message_newline Verbose_high ("State " ^ (string_of_int state_index) ^ ":");
-				(* Retrieve successors *)
-				let successors = StateSpace.get_successors_with_actions state_space state_index in
-				(* Print each of them *)
-				List.iter (fun (state_index' , action_index) -> 
-					self#print_algo_message Verbose_high ("- " ^ (string_of_int state_index') ^ " (via action " ^ (model.action_names action_index) ^ ")");
-				) successors;
-			) all_state_indexes;
-
-			(* Predecessors *)
-			self#print_algo_message_newline Verbose_high ("PREDECESSORS");
-			(* Iterate on all states in the state space *)
-			List.iter(fun state_index ->
-				self#print_algo_message_newline Verbose_high ("State " ^ (string_of_int state_index) ^ ":");
-				(* Retrieve predecessors *)
-				let predecessors = if Hashtbl.mem predecessors state_index then Hashtbl.find predecessors state_index else [] in
-				(* Print each of them *)
-				List.iter (fun (state_index' , action_index) -> 
-					self#print_algo_message Verbose_high ("- " ^ (string_of_int state_index') ^ " (via action " ^ (model.action_names action_index) ^ ")");
-				) predecessors;
-			) all_state_indexes;
-		); (* end if verbose_mode >= high *)
-		(*------------------------------------------------------------*)
-		
-		(* Retrieve states with unexplored successors *)
-		let unexplored_successors =
-		match unexplored_successors with
-			| UnexSucc_undef -> raise (InternalError "Impossible situation: unexplored_successors should not be undefined at that point (method backward_underapproximation)")
-			| UnexSucc_some l -> l
-		in
-
-		(* Define a set of (currently) marked state_index *)
-		let marked = new State.stateIndexSet in
-
-		(* Define a set of state_index, that were marked once, and hence are disabled forever *)
-		let disabled = new State.stateIndexSet in
-
-		(* Mark all states with potential successors *)
-		List.iter marked#add unexplored_successors;
-		
-		(* Initialize variables before backward exploration *)
-		let current_marked_states = ref (marked#all_elements) in
-		
-		(* Only for debug and pretty-printing purpose *)
-		let iteration = ref 1 in
-		
-		(* While there are some marked states *)
-		while List.length !current_marked_states > 0 do
-		
-			(* Print some information *)
-			if verbose_mode_greater Verbose_low then(
-				print_message Verbose_medium ("\n------------------------------------------------------------");
-				self#print_algo_message Verbose_low ("Backward underapproximation: iteration " ^ (string_of_int !iteration) ^ " (" ^ (string_of_int (List.length !current_marked_states)) ^ " marked state" ^ (s_of_int (List.length !current_marked_states)) ^ ")");
-				
-				self#print_algo_message_newline Verbose_medium ("List of marked states: ");
-				self#print_algo_message Verbose_medium (string_of_list_of_string_with_sep " - " (List.map debug_string_of_state !current_marked_states));
-			);
-
-			(*------------------------------------------------------------*)
-			(* Step 1: Negate the constraint associated with marked states *)
-
-			(* Print some information *)
-			self#print_algo_message_newline Verbose_low ("Negating constraints assocated with marked states…");
-
-			List.iter (fun state_index -> 
-				(* Only consider this state if it is not already disabled *)
-				if not (disabled#mem state_index) then(
-					
-					(* Retrieve the state constraint *)
-					let _, s_constraint = StateSpace.get_state state_space state_index in
-					
-					(* Project onto the parameters *)
-					let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse s_constraint in
-					
-					(* Remove its constraint, i.e., add not C to bad *)
-					LinearConstraint.p_nnconvex_p_union bad_constraint p_constraint;
-					
-					(* Print some information *)
-					if verbose_mode_greater Verbose_medium then(
-						self#print_algo_message Verbose_medium ("Negating the constraint associated with state " ^ (debug_string_of_state state_index) ^ ":");
-						
-						self#print_algo_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-						
-						self#print_algo_message Verbose_medium ("The global bad constraint is now:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint));
-					);
-
-				) (* end if not a member of marked *)
-				else(
-					(* Print some information *)
-					self#print_algo_message Verbose_medium ("State " ^ (debug_string_of_state state_index) ^ " already disabled: skip");
-				);
-			) !current_marked_states;
-			
-			
-			(*------------------------------------------------------------*)
-			(* Step 2: Compute predecessors of marked states *)
-
-			(* Print some information *)
-			self#print_algo_message_newline Verbose_low ("Computing predecessors of marked states…");
-
-			let predecessors_of_marked = new State.stateIndexSet in
-			List.iter (fun state_index -> 
-				(* Only consider this state if it is not already disabled *)
-				if not (disabled#mem state_index) then(
-					(* Find its predecessors *)
-					let local_predecessors = try Hashtbl.find predecessors state_index with Not_found -> [] in
-					(* Add them *)
-					List.iter (fun (state_index , _ ) -> predecessors_of_marked#add state_index) local_predecessors;
-				) (* end if not a member of marked *)
-			) !current_marked_states;
-			
-			(* Get disabled in the form of a list (useful in the loop below) *)
-			let disabled_list = disabled#all_elements in
-			
-			(* Create the set of newly marked states (for the next iteration) *)
-			let newly_marked = new State.stateIndexSet in
-			
-
-			(*------------------------------------------------------------*)
-			(* Step 3: Update the deadlock-freeness constraint for all predecessors of marked states *)
-			
-			(* Print some information *)
-			self#print_algo_message_newline Verbose_low ("Updating the deadlock-freeness constraint for all predecessors of marked states…");
-
-			List.iter (fun state_index ->
-				(* Find its successors *)
-				let successors = StateSpace.get_successors_with_actions state_space state_index in
-				(* Remove the disabled successors *)
-				let not_disabled_successors = List.filter (fun (state_index, _) -> not (List.mem state_index disabled_list)) successors in
-				
-				(* Compute the deadlock constraint *)
-				let p_bad_constraint_s = self#compute_deadlock_p_constraint state_index not_disabled_successors in
-			
-				(* Update the bad constraint using the local constraint *)
-				LinearConstraint.p_nnconvex_union bad_constraint p_bad_constraint_s;
-			
-				(* Print some information *)
-				if verbose_mode_greater Verbose_medium then(
-					self#print_algo_message Verbose_medium ("The global bad constraint is now:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint));
-				);
-				
-				
-				(* If the state has now an empty constraint (and is not yet marked), then mark it for the next iteration *)
-				if not (newly_marked#mem state_index) then(
-					
-					(* Retrieve the state constraint *)
-					let _, s_constraint = StateSpace.get_state state_space state_index in
-					(* Project onto the parameters *)
-					(*** TO OPTIMIZE: this projection was (maybe) already computed earlier; use a cache??? ***)
-					let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse s_constraint in
-					
-					(*** NOTE: p_constraint \leq bad <=> p_constraint \ bad = false ***)
-					(*** WARNING: certainly very expensive conversion and test ***)
-					(*** WARNING: is this test enough? can't the state be "false" while not being included into bad_constraint? (e.g., if the initial p_constraint is not true) ***)
-					if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) bad_constraint then(
-						(* Mark it *)
-						newly_marked#add state_index
-					);
-				);
-				
-			) predecessors_of_marked#all_elements;
-			
-
-			(*------------------------------------------------------------*)
-			(* Step 4: Disable marked states *)
-
-			(* Print some information *)
-			self#print_algo_message_newline Verbose_low ("Disabling marked states…");
-
-			List.iter disabled#add !current_marked_states;
-			
-			
-			(*------------------------------------------------------------*)
-			(* Step 5: Update marked states: newly marked = {predecessors of marked} \ {marked} *)
-			(*** NOTE: no need to mark states already marked, as they have been processed (and disabled) ***)
-			marked#empty;
-			List.iter marked#add newly_marked#all_elements;
-			List.iter marked#remove_or_do_nothing !current_marked_states;
-			
-			(* Update variable *)
-			current_marked_states := marked#all_elements;
-			
-			(* Update iteration *)
-			iteration := !iteration + 1;
-			
-		done; (* end while there are marked states *)
-		
-		(* Print some information *)
-		if verbose_mode_greater Verbose_low then(
-			self#print_algo_message_newline Verbose_low ("No marked state anymore. The end.");
-			let nb_disabled = disabled#cardinal in
-			self#print_algo_message Verbose_low ((string_of_int nb_disabled) ^ " state" ^ (s_of_int nb_disabled) ^ " disabled.");
-		);
-		
-		(* The end *)
-		()
-		
-			
-
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
@@ -561,9 +296,9 @@ class algoDeadlockFree =
 			"Performing negation of final constraint…"
 		);
 		
-		(* Perform result = initial_state|P \ bad_constraint *)
+		(* Perform result = initial_state|P \ af_constraint *)
 		let result = LinearConstraint.p_nnconvex_copy init_p_nnconvex_constraint in
-		LinearConstraint.p_nnconvex_difference result bad_constraint;
+		LinearConstraint.p_nnconvex_difference result af_constraint;
 		
 		self#print_algo_message_newline Verbose_medium (
 			"Negation of final constraint completed."
@@ -575,14 +310,6 @@ class algoDeadlockFree =
 			| Some status -> status
 		in
 		
-		(*** NOTE: unused variable ***)
-(*		(* The tile nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
-		let statespace_nature =
-			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
-			(* Otherwise: unchanged *)
-			else statespace_nature
-		in*)
-		
 		(* Constraint is exact if termination is normal, possibly over-approximated otherwise (since we compute the negation) *)
 		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_over in
 
@@ -593,57 +320,10 @@ class algoDeadlockFree =
 		)
 		(* Else: compute backward under-approximation *)
 		else(
-			(* Print some information *)
-			if verbose_mode_greater Verbose_low then(
-				self#print_algo_message_newline Verbose_low "Over-approximated constraint:";
-				self#print_algo_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names result);
-			);
-			
-			self#print_algo_message_newline Verbose_standard "Starting backward under-approximation…";
-			
-			(* Update the constraint so as to obtain an under-approximation in addition to the over-approximation *)
-			self#backward_underapproximation;
-			
-			self#print_algo_message Verbose_standard (
-				"Backward under-approximation completed " ^ (after_seconds ()) ^ "."
-			);
-			
-			self#print_algo_message_newline Verbose_low (
-				"Performing negation of final under-approximated constraint…"
-			);
-			
-			(* Perform result = initial_state|P \ bad_constraint *)
-			let good_under_result = LinearConstraint.p_nnconvex_copy init_p_nnconvex_constraint in
-			LinearConstraint.p_nnconvex_difference good_under_result bad_constraint;
-			
-			self#print_algo_message_newline Verbose_medium (
-				"Negation of final under-approximated constraint completed."
-			);
-			
-			(* Test if under=over (in which case the result is exact *)
-			if LinearConstraint.p_nnconvex_constraint_is_equal good_under_result result then(
-				(* Print some information *)
-				self#print_algo_message_newline Verbose_standard (
-					"Under-approximation is equal to over-approximation: result is exact."
-				);
-			
-				(* Then the constraint is exact *)
-				Good_constraint (result, Constraint_exact)
-			
-			)else(
-				(* A possibly under-approximated good constraint, and a possibly under-approximated bad constraint *)
-				Good_bad_constraint {
-					good	= (good_under_result, Constraint_maybe_under);
-					bad		= (bad_constraint, Constraint_maybe_under);
-				}
-			)
+			raise Not_implemented
 			
 		) (* end if not regular termination *)
 		in
-
-		(*** NOTE: unused variable ***)
-(*		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
-		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in*)
 
 		(* Return the result *)
 		Single_synthesis_result
