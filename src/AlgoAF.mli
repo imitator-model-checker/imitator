@@ -17,6 +17,7 @@
 (* Modules *)
 (************************************************************)
 open AlgoPostStar
+open State
 
 (************************************************************)
 (* Class definition *)
@@ -36,6 +37,15 @@ class algoAFsynth :
 		
 		method initialize_variables : unit
 		
+		
+		(*------------------------------------------------------------*)
+		(* Add a new state to the reachability_graph (if indeed needed) *)
+		(* Also update tile_nature and slast (*** TODO: remove these operations, and move them back to their algorithms ***) *)
+		(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
+		(*------------------------------------------------------------*)
+		(*** TODO: simplify signature by removing the orig_state_index and returning the list of actually added states ***)
+		method add_a_new_state : state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
+
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)

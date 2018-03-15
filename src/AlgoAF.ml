@@ -25,6 +25,7 @@ open AbstractModel
 open Result
 open AlgoStateBased (* for type UnexSucc_some *)
 open AlgoPostStar
+open Statistics
 
 
 (************************************************************)
@@ -69,6 +70,21 @@ class algoAFsynth =
 		let model = Input.get_model() in
 		LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint model.initial_p_constraint
 	
+	(* Counters *)
+	(*** NOTE: if EF is called several times, then each call will create a counter ***)
+	
+	(* The target state has been found *)
+	val counter_found_target = create_discrete_counter_and_register "found bad state" PPL_counter Verbose_low
+	(* How many times the cache was useful *)
+	val counter_cache = create_discrete_counter_and_register "cache (AF)" PPL_counter Verbose_low
+	(* Number of cache misses *)
+	val counter_cache_miss = create_discrete_counter_and_register "cache miss (AF)" PPL_counter Verbose_low
+	
+	
+	(* Mini cache system: keep in memory the current p-constraint to save computation time *)
+	(*** WARNING: a bit dangerous, as its handling is not very very strictly controlled ***)
+	val mutable cached_p_constraint : LinearConstraint.p_linear_constraint option = None
+
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
@@ -81,6 +97,37 @@ class algoAFsynth =
 	(* Class methods *)
 	(************************************************************)
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Compute the p-constraint only if it is not cached *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private compute_p_constraint_with_cache px_linear_constraint =
+		match cached_p_constraint with
+		(* Cache empty: *)
+		| None ->
+			(* Compute the p_constraint *)
+			let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_linear_constraint in
+			(* Statistics *)
+			counter_cache_miss#increment;
+			(* Print some information *)
+			if verbose_mode_greater Verbose_medium then(
+				self#print_algo_message Verbose_medium "\nCache miss!";
+			);
+			(* Update cache *)
+			cached_p_constraint <- Some p_constraint;
+			(* Return result *)
+			p_constraint
+		(* Cache not empty: directly use it *)
+		| Some p_constraint ->
+			(* Statistics *)
+			counter_cache#increment;
+			(* Print some information *)
+			if verbose_mode_greater Verbose_medium then(
+				self#print_algo_message Verbose_medium "\nCache hit!";
+			);
+			(* Return the value in cache *)
+			p_constraint
+	
+	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -217,6 +264,144 @@ class algoAFsynth =
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Add a new state to the state_space (if indeed needed) *)
+	(* Side-effects: modify new_states_indexes *)
+	(*** TODO: move new_states_indexes to a variable of the class ***)
+	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*** WARNING/BADPROG: the following is partially copy/paste to AlgoPRP.ml/EFsynth ***)
+	method add_a_new_state source_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message Verbose_medium "Entering add_a_new_state (and reset cache)…";
+		);
+		
+		(* Build the state *)
+		let new_state = location, current_constraint in
+		
+		(* Try to add the new state to the state space *)
+		(*** WARNING: AF is probably not safe with state inclusion ***)
+		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
+		
+		begin
+		match addition_result with
+		(* If the state was present: do nothing *)
+		| StateSpace.State_already_present _ -> ()
+		(* If this is really a new state, or a state larger than a former state *)
+		| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
+
+			(* First check whether this is a bad tile according to the property and the nature of the state *)
+			self#update_statespace_nature new_state;
+			
+			(* Will the state be added to the list of new states (the successors of which will be computed)? *)
+			let to_be_added = self#process_state new_state in
+			
+			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
+			if to_be_added then
+				new_states_indexes := new_state_index :: !new_states_indexes;
+			
+		end (* end if new state *)
+		;
+		
+		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
+		
+		(* Add the transition to the state space *)
+		self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
+		
+		(* The state is kept in any case *)
+		true
+(*** WARNING/BADPROG: what preceedes is partially copy/paste to AlgoPRP.ml/EFsynth ***)
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Process a symbolic state: returns false if the state is a target state (and should not be added to the next states to explore), true otherwise *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*** WARNING/ BADPROG: originally copied from EFsynth ***)
+	method private process_state state =
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message Verbose_medium "Entering process_state…";
+		);
+
+		let state_location, state_constraint = state in
+		
+		let to_be_added = match model.correctness_condition with
+		| None -> raise (InternalError("A correctness property must be defined to perform AF-synthesis. This should have been checked before."))
+		| Some (Unreachable unreachable_global_locations) ->
+			
+			(* Check whether the current location matches one of the unreachable global locations *)
+			if State.match_unreachable_global_locations unreachable_global_locations state_location then(
+			
+				(* Print some information *)
+				if verbose_mode_greater Verbose_medium then(
+					self#print_algo_message Verbose_medium "Projecting onto the parameters…";
+				);
+
+				(* Project onto the parameters *)
+				(*** NOTE: here, we use the cache system ***)
+				let p_constraint = self#compute_p_constraint_with_cache state_constraint in
+
+				(* Projecting onto SOME parameters if required *)
+				(*** BADPROG: Duplicate code (AlgoLoopSynth / AlgoPRP / AlgoEFsynth) ***)
+				begin
+				match model.projection with
+				(* Unchanged *)
+				| None -> ()
+				(* Project *)
+				| Some parameters ->
+					(* Print some information *)
+					self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
+
+					(*** TODO! do only once for all… ***)
+					let all_but_projectparameters = list_diff model.parameters parameters in
+					
+					(* Eliminate other parameters *)
+					LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
+
+					(* Print some information *)
+					if verbose_mode_greater Verbose_medium then(
+						print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+					);
+				end;
+
+				(* Statistics *)
+				counter_found_target#increment;
+				
+				(* Print some information *)
+				self#print_algo_message Verbose_standard "Found a new target state.";
+					
+				(* Update the target constraint using the current constraint *)
+				(*** TODO: not the right operation here ***)
+				LinearConstraint.p_nnconvex_intersection af_constraint p_constraint;
+				
+				(* Print some information *)
+				if verbose_mode_greater Verbose_low then(
+					self#print_algo_message Verbose_medium "Adding the following constraint to the target constraint:";
+					print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+					
+					self#print_algo_message Verbose_low "The constraint is now:";
+					print_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names af_constraint);
+				);
+				
+				(* Do NOT compute its successors; cut the branch *)
+				false
+				
+			)else(
+				self#print_algo_message Verbose_medium "State not corresponding to the one wanted.";
+				
+				(* Keep the state as it is not a target state *)
+				true
+			)
+		| _ -> raise (InternalError("[EFsynth/PRP] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
+		
+		in
+		(* Return result *)
+		to_be_added
+	(*** END WARNING/ BADPROG: originally copied from EFsynth ***)
+	
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_initial_state _ =
@@ -238,18 +423,18 @@ class algoAFsynth =
 			
 			let p_af_constraint_s = self#compute_deadlock_p_constraint state_index succs_of_s in
 			
-			(* Update the bad constraint using the local constraint *)
+			(* Update the constraint using the local constraint *)
 			LinearConstraint.p_nnconvex_union af_constraint p_af_constraint_s;
 		
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
-				self#print_algo_message Verbose_medium ("The global bad constraint is now:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names af_constraint));
+				self#print_algo_message Verbose_medium ("The global onstraint is now:\n" ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names af_constraint));
 			);
 		) post_n;
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_low then(
-			self#print_algo_message Verbose_low ("After processing post^n, the global bad constraint is now: " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names af_constraint));
+			self#print_algo_message Verbose_low ("After processing post^n, the global constraint is now: " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names af_constraint));
 		);
 		
 		print_message Verbose_low ("");
@@ -264,7 +449,7 @@ class algoAFsynth =
 		(* Print some information *)
 		self#print_algo_message Verbose_high ("Entering check_termination_at_post_n…");
 		
-		(* True if the computed bad constraint is exactly equal to (or larger than) the initial parametric constraint *)
+(*		(* True if the computed bad constraint is exactly equal to (or larger than) the initial parametric constraint *)
 		let stop = LinearConstraint.p_nnconvex_constraint_is_leq init_p_nnconvex_constraint af_constraint in
 		
 		(* Print some information *)
@@ -276,12 +461,16 @@ class algoAFsynth =
 		(* Print some information *)
 		if stop then(
 			self#print_algo_message Verbose_standard ("None of the parameter valuations compatible with the initial state is deadlock-free: terminate.");
-		)else(
+		)else( 
 			self#print_algo_message Verbose_medium ("The bad constraint is not greater than or equal to the initial state: no termination required for now.");
-		);
+ 		);
 		
 		(* Return result *)
 		stop
+		*)
+		
+		(*** TODO: check if the constraint is False ? ***)
+		false
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

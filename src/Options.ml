@@ -1013,6 +1013,13 @@ class imitator_options =
 				print_warning ("The option '-counterexample' is reserved for EF and PRP. It will thus be ignored.");
 			);
 			
+			
+			(* AF is not safe with incl or merging *)
+			if imitator_mode = AF_synthesis then(
+				if !inclusion then print_warning "The state inclusion option may not preserve the correctness of AFsynth.";
+				if !merge then print_warning "The merging option may not preserve the correctness of AFsynth.";
+			);
+			
 			(*** TODO: add warning if -cart but mode translation or statespace ***)
 
 

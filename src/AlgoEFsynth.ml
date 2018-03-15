@@ -220,7 +220,7 @@ class virtual algoEFsynth =
 			if verbose_mode_greater Verbose_medium then(
 				self#print_algo_message Verbose_medium "\nCache hit!";
 			);
-			(* Return the value in cach *)
+			(* Return the value in cache *)
 			p_constraint
 	
 	
