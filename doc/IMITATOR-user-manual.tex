@@ -290,14 +290,15 @@ for some $n \in \grandn$,
 	$d \in \grandq$.
 
 An~\emph{atomic constraint} over $\Var$ is an expression of the form
-% An \emph{inequality} over $\Clock$ and~$\Param$ is $e \prec 0$, where , and $e$ is a linear term %of the form
+% An \emph{inequality} over $\Clock$ and~$\Param$ is $e \bowtie 0$, where , and $e$ is a linear term %of the form
 $
-\lterm \prec 0
+\lterm \bowtie 0
 $
 	where
 	$\lterm$ is a linear term over~$\Var$,
 	and
-	$\prec \in \{<, \leq, \geq, >\}$.
+	${\bowtie} \in \{ <, \leq, =, \geq, > \}$.
+		% TODO: problem < > don't print
 
 A~\emph{constraint} over $\Var$ is a conjunction of atomic constraints.
 We denote by $\LTerm(\Var)$ the set of linear terms over~$\Var$, and by $\LConstraint(\Var)$ the set of constraints over~$\Var$.
