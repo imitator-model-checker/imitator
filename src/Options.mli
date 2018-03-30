@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created:       2012/05/10
- * Last modified: 2017/06/27
+ * Last modified: 2018/03/30
  *
  ************************************************************)
  
@@ -63,9 +63,10 @@ class imitator_options :
 		method merge_before : bool
 		method model_input_file_name : string
 		method nb_args : int
-		method no_variable_autoremove : bool
+		method no_leq_test_in_ef : bool
 		method no_random : bool
 		method no_time_elapsing : bool
+		method no_variable_autoremove : bool
 		method output_bc_cart : bool
 		method output_bc_result : bool
 		method output_cart_x_min : int option

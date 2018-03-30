@@ -1308,6 +1308,14 @@ The mode for \imitator{}.
 
 
 %------------------------------------------------------------
+\paragraph{\styleOption{-no-inclusion-test-in-EF} (default: false)}
+%------------------------------------------------------------
+In \EFsynth{}, no inclusion test of the new states constraints in the already computed constraint is performed when this option is enabled.
+Otherwise, in normal mode, the algorithm checks whether a new state parameter constraint is included into the already computed parameter constraint and, if so, cuts the branch.
+This can save time by cutting branches, but can also slow down the analysis for complex constraints.
+
+
+%------------------------------------------------------------
 \paragraph{\styleOption{-no-random} (default: false)}
 %------------------------------------------------------------
 In the inverse method, no random selection of the $\pio$-incompatible inequality (select the first found).

@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2018/03/15
+ * Last modified     : 2018/03/30
  *
  ************************************************************)
 
@@ -185,6 +185,9 @@ class imitator_options =
 		(* Double inclusion mode *)
 		val mutable inclusion2 = ref false
 		
+		(* No leq test of the new states wrt the computed constraint in EFsynth *)
+		val mutable no_leq_test_in_ef = false
+
 		(* do not use random values *)
 		val mutable no_random = ref false
 		
@@ -290,6 +293,7 @@ class imitator_options =
 		method merge_before = !merge_before
 		method model_input_file_name = model_input_file_name
 		method nb_args = nb_args
+		method no_leq_test_in_ef = no_leq_test_in_ef
 		method no_time_elapsing = !no_time_elapsing
 		method no_random = !no_random
 		method no_variable_autoremove = !no_variable_autoremove
@@ -701,7 +705,9 @@ class imitator_options =
         Default: 'inversemethod'.");
 				(*** NOTE: hidden option! 'shuffle' to cover all the points within v0 after shuffling the array. (Reason for hiding: only useful in the distributed cartography) ***)
 				(*** NOTE: hidden option! or 'randomseqXX' where XX is a number to iterate random calls to IM followed by a sequential check (e.g., randomseq5 or randomseq10000) (Reason for hiding: only useful in the distributed cartography) ***)
-				
+		
+				("-no-inclusion-test-in-EF", Unit (fun () -> no_leq_test_in_ef <- true), " In EFsynth, no inclusion test of the new states constraints in the already computed constraint. Default: false.");
+
 				("-no-random", Set no_random, " In IM, no random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 
 				("-no-time-elapsing", Set no_time_elapsing, " No time elapsing in zone computation (i.e., time elapsing is performed before taking a transition, not after). Default: false.");
@@ -1005,8 +1011,11 @@ class imitator_options =
 			if (imitator_mode = State_space_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_max || imitator_mode = AF_synthesis || imitator_mode = Loop_synthesis || imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUBtransformDistributed || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
 				print_warning (Constants.program_name ^ " is run in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
 
-				
-				
+			
+			(* No no_leq_test_in_ef if not EF *)
+			if no_leq_test_in_ef && (imitator_mode <> EF_synthesis && imitator_mode <> EFunsafe_synthesis && imitator_mode <> PRP) then(
+				print_warning ("The option '-no-inclusion-test-in-EF' is reserved for EF and PRP. It will thus be ignored.");
+			);
 				
 			(* No counterex if not EF *)
 			if !counterex && (imitator_mode <> EF_synthesis && imitator_mode <> EFunsafe_synthesis && imitator_mode <> PRP) then(

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2017/05/22
+ * Last modified     : 2018/03/30
  *
  ************************************************************)
 
@@ -289,15 +289,18 @@ class virtual algoEFsynth =
 				);
 
 				(* if p_constraint <= bad_constraint *)
-				if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) bad_constraint then (
-					(* Statistics *)
-					counter_cut_branch#increment;
-					
-					(* Print some information *)
-					self#print_algo_message Verbose_low "Found a state included in bad valuations; cut branch.";
+				(*** NOTE: don't perform this test if the associated option is enabled ***)
+				if not options#no_leq_test_in_ef then(
+					if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) bad_constraint then (
+						(* Statistics *)
+						counter_cut_branch#increment;
+						
+						(* Print some information *)
+						self#print_algo_message Verbose_low "Found a state included in bad valuations; cut branch.";
 
-					(* Do NOT compute its successors; cut the branch *)
-					to_be_added := false;
+						(* Do NOT compute its successors; cut the branch *)
+						to_be_added := false;
+					);
 				);
 			);
 
