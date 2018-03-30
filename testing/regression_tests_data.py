@@ -8,9 +8,9 @@
 #
 # Etienne ANDRE
 # Laboratoire d'Informatique de Paris Nord
-# Universite Paris 13, Sorbonne Paris Cite, France
+# Universite Paris 13, France
 # Created      : 2015/10/23
-# Last modified: 2018/02/22
+# Last modified: 2018/03/30
 #************************************************************
 
 
@@ -2136,7 +2136,7 @@ END CONSTRAINT
 		'options'    : '-IMunion -output-result',
 		'expectations' : [
 			{'file': 'testIM-IMK-IMunion.res' , 'content' : """
-		p > 1 & 4 >= p
+		4 >= p & p > 1
 		"""
 			} # end result file
 			,
@@ -7242,10 +7242,11 @@ init := True
 		'expectations' : [
 			{'file': 'fmtv1A1-v2.res' , 'content' : """
 BEGIN CONSTRAINT
-63 > e2e
-& e2e >= 0
-OR
 125*e2e > 18126
+OR
+e2e >= 0
+&
+63 > e2e
 END CONSTRAINT
 """
 			} # end result file

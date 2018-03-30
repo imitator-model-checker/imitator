@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2017/05/02
+ * Last modified     : 2018/03/30
  *
  ************************************************************)
 
@@ -3267,7 +3267,7 @@ let p_nnconvex_constraint_is_equal = ippl_nncc_geometrically_equals
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Simplification} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-let simplify p_nnconvex_constraint =
+let p_nn_simplify p_nnconvex_constraint =
 	ippl_nncc_pairwise_reduce p_nnconvex_constraint;
 	ippl_nncc_omega_reduce p_nnconvex_constraint;
 	()
@@ -3280,7 +3280,7 @@ let simplify p_nnconvex_constraint =
 (** Convert a p_nnconvex_constraint into a string *)
 let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
 	(* First reduce (avoids identical disjuncts) *)
-	simplify p_nnconvex_constraint;
+	p_nn_simplify p_nnconvex_constraint;
 	
 	(* Get the disjuncts *)
 	let disjuncts = get_disjuncts p_nnconvex_constraint in
@@ -3320,7 +3320,7 @@ let nnconvex_intersection nb_dimensions nnconvex_constraint linear_constraint =
 	ippl_nncc_add_constraints nnconvex_constraint constraint_system;
 
 	(* Simplify the constraint (avoids identical disjuncts) *)
-	simplify nnconvex_constraint;
+	p_nn_simplify nnconvex_constraint;
 	
 	(* The end *)
 	()
@@ -3345,7 +3345,7 @@ let nnconvex_union nb_dimensions nnconvex_constraint linear_constraint =
 	ippl_nncc_add_disjunct nnconvex_constraint linear_constraint;
 
 	(* Simplify the constraint (avoids identical disjuncts) *)
-(* 	simplify nnconvex_constraint; *)
+(* 	p_nn_simplify nnconvex_constraint; *)
 	
 	(* The end *)
 	()
@@ -3384,7 +3384,7 @@ let p_nnconvex_difference p_nnconvex_constraint p_nnconvex_constraint' =
 	ippl_nncc_difference_assign p_nnconvex_constraint p_nnconvex_constraint';
 
 	(* Simplify the constraint (avoids identical disjuncts) *)
-	simplify p_nnconvex_constraint;
+	p_nn_simplify p_nnconvex_constraint;
 	
 	(* The end *)
 	()
