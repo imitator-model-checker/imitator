@@ -3345,7 +3345,7 @@ let nnconvex_union nb_dimensions nnconvex_constraint linear_constraint =
 	ippl_nncc_add_disjunct nnconvex_constraint linear_constraint;
 
 	(* Simplify the constraint (avoids identical disjuncts) *)
-	simplify nnconvex_constraint;
+(* 	simplify nnconvex_constraint; *)
 	
 	(* The end *)
 	()
