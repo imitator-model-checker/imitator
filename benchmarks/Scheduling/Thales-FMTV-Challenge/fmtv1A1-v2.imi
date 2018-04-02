@@ -90,7 +90,7 @@ synclabs: start, T2done, init_buffer_empty, init_buffer_nonempty;
 loc camera0: while ckT1T2 = 0 wait {}
 	(* No frame in buffer *)
 	when True sync init_buffer_empty do {buffer34' = FRAME_EMPTY, buffer34_highest' = FRAME_EMPTY} goto camera1;
-	when True sync init_buffer_empty do {} goto camera1;
+	when True sync init_buffer_nonempty do {} goto camera1;
 
 loc camera1: while ckT1T2 = 0 wait {}
 	when True do {} goto camera2;
