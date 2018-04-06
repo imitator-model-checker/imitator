@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2018/03/30
+ * Last modified     : 2018/04/06
  *
  ************************************************************)
 
@@ -1013,7 +1013,7 @@ class imitator_options =
 
 			
 			(* No no_leq_test_in_ef if not EF *)
-			if no_leq_test_in_ef && (imitator_mode <> EF_synthesis && imitator_mode <> EFunsafe_synthesis && imitator_mode <> PRP) then(
+			if no_leq_test_in_ef && (imitator_mode <> EF_synthesis && imitator_mode <> EF_min && imitator_mode <> EF_max && imitator_mode <> EFunsafe_synthesis && imitator_mode <> PRP) then(
 				print_warning ("The option '-no-inclusion-test-in-EF' is reserved for EF and PRP. It will thus be ignored.");
 			);
 				
