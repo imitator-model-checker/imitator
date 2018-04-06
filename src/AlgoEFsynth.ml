@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2018/03/30
+ * Last modified     : 2018/04/06
  *
  ************************************************************)
 
@@ -149,7 +149,9 @@ class virtual algoEFsynth =
 				(*** TODO: test if these two operations are more or less expensive than just adding without testing ***)
 				(*** NOTE: advantage of doing it twice: print less information :-) ***)
 				
-				if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) bad_constraint then(
+				(*** NOTE: do NOT do it in mode no_leq_test_in_ef ***)
+				
+				if (not options#no_leq_test_in_ef) && LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) bad_constraint then(
 					self#print_algo_message Verbose_low "Found a state violating the property (but the constraint was already known).";
 				)else(
 					(* The constraint is new! *)
