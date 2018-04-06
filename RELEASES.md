@@ -5,6 +5,17 @@
 * The prime (`'`) in transition updates becomes optional; the `=` in transition updates becomes `:=` (backward-compatibility remains ensured until further notices) That is, an update `x' = 0` becomes `x := 0`
 * `while [invariant condition] wait{}` becomes `invariant [invariant condition]` (backward-compatibility remains ensured until further notices)
 
+### Minor features:
+* New option to avoid the inclusion check in EFsynth: useful when very large parameter constraints are manipulated
+
+
+*******************************************************
+# release 2.10.2 (2018-04-06)
+minor release
+
+### Minor features:
+* New option to avoid the inclusion check in EFsynth: useful when very large parameter constraints are manipulated
+
 
 *******************************************************
 # release 2.10.1 (2018-02-23)

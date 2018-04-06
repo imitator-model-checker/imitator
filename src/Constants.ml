@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2018/02/22
+ * Last modified     : 2018/04/06
  *
  ************************************************************)
 
@@ -22,7 +22,7 @@
 
 let program_name = "IMITATOR"
 
-let version_string = "2.10.1"
+let version_string = "2.10.2"
 
 let version_name = "Butter Jellyfish"
 
