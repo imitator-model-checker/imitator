@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2018/03/15
+ * Last modified     : 2018/04/06
  *
  ************************************************************)
 
@@ -120,7 +120,7 @@ options#recall();
 (************************************************************)
 (* Get input *)
 (************************************************************)
-let parsing_counter = create_time_counter_and_register "model parsing and converting" Parsing_counter Verbose_experiments in
+let parsing_counter = create_time_counter_and_register "model parsing and converting" Parsing_counter Verbose_standard in
 parsing_counter#start;
 
 (*------------------------------------------------------------*)

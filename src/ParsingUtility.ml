@@ -30,9 +30,9 @@ open ImitatorUtilities
 open Statistics
 
 
-let parsing_counter = create_time_counter_and_register "model parsing" Parsing_counter Verbose_standard
+let parsing_counter = create_time_counter_and_register "model parsing" Parsing_counter Verbose_experiments
 
-let converting_counter = create_time_counter_and_register "model converting" Parsing_counter Verbose_standard
+let converting_counter = create_time_counter_and_register "model converting" Parsing_counter Verbose_experiments
 
 (************************************************************)
 (* Local parsing function *)
