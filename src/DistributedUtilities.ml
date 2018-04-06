@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Camille Coti
  * Created           : 2014/03/24
- * Last modified     : 2017/10/03
+ * Last modified     : 2018/04/06
  *
  ************************************************************)
  
@@ -154,7 +154,7 @@ let serialize_pi0_pair (variable_index , value) =
 let serialize_pi0 (pi0:PVal.pval) =
 	let nb_parameters = PVal.get_dimensions () in
 	(* Create an array *)
-	let pi0_array = Array.create nb_parameters (0, NumConst.zero) in
+	let pi0_array = Array.make nb_parameters (0, NumConst.zero) in
 	for parameter_index = 0 to nb_parameters - 1 do
 		pi0_array.(parameter_index) <- parameter_index (*** WARNING: USELESS ***), pi0#get_value parameter_index;
 	done;
@@ -207,7 +207,7 @@ let serialize_hyper_rectangle_pair (min, max) =
 let serialize_hyper_rectangle hyper_rectangle =
 	let nb_parameters = HyperRectangle.get_dimensions () in
 	(* Create an array of pairs *)
-	let hyper_rectangle_array = Array.create nb_parameters (NumConst.zero, NumConst.zero) in
+	let hyper_rectangle_array = Array.make nb_parameters (NumConst.zero, NumConst.zero) in
 	for parameter_index = 0 to nb_parameters - 1 do
 		hyper_rectangle_array.(parameter_index) <- (hyper_rectangle#get_min parameter_index, hyper_rectangle#get_max parameter_index);
 	done;
@@ -977,7 +977,7 @@ let receive_pull_request () =
      print_message Verbose_high ("[Master] Expecting a result of size " ^ ( string_of_int l) ^ " from [Worker " ^ (string_of_int source_rank) ^ "]" );
 
      (* receive the result itself *)
-     let buff = String.create l in
+     let buff = Bytes.create l in
      let res = ref buff in
      print_message Verbose_high ("[Master] Buffer created with length " ^ (string_of_int l)^"");	
      res := Mpi.receive source_rank (int_of_slave_tag Slave_tile_tag) Mpi.comm_world ;
@@ -997,7 +997,7 @@ let receive_pull_request () =
      print_message Verbose_high ("[Master] Expecting a result of size " ^ ( string_of_int l) ^ " from [Worker " ^ (string_of_int source_rank) ^ "]" );
 
      (* receive the result itself *)
-     let buff = String.create l in
+     let buff = Bytes.create l in
      let res = ref buff in
      print_message Verbose_high ("[Master] Buffer created with length " ^ (string_of_int l)^"");	
      res := Mpi.receive source_rank (int_of_slave_tag Slave_tiles_tag) Mpi.comm_world ;
@@ -1031,7 +1031,7 @@ let receive_pull_request () =
     print_message Verbose_high ("[Master] Received Slave_pi0_tag from " ^ ( string_of_int source_rank) );
     print_message Verbose_high ("[Master] Expecting a result of size " ^ ( string_of_int l) ^ " from [Worker " ^ (string_of_int source_rank) ^ "]" );
      (* Receive the data itself *)
-    let buff = String.create l in
+    let buff = Bytes.create l in
     let res = ref buff in
     print_message Verbose_high ("[Master] Buffer created with length " ^ (string_of_int l)^"");	
     res := Mpi.receive source_rank (int_of_slave_tag Slave_pi0_tag) Mpi.comm_world ;
@@ -1073,7 +1073,7 @@ let receive_work () =
 	match tag with
 	| Master_data_tag -> 
 		(* Receive the data itself *)
-		let buff = String.create w in
+		let buff = Bytes.create w in
 		let work = ref buff in
 
 		work := Mpi.receive master_rank (int_of_master_tag Master_data_tag) Mpi.comm_world;
@@ -1098,7 +1098,7 @@ let receive_work () =
 	(*Hoang Gia new tags*)
 	| Master_tileupdate_tag -> 
 		(* Receive the data itself *)
-		let buff1 = String.create w in
+		let buff1 = Bytes.create w in
 		let work1 = ref buff1 in
 
 		work1 := Mpi.receive master_rank (int_of_master_tag Master_tileupdate_tag) Mpi.comm_world;
@@ -1111,7 +1111,7 @@ let receive_work () =
 		
 	| Master_subdomain_tag -> 
 	  	(* Receive the data itself *)
-		let buff2 = String.create w in
+		let buff2 = Bytes.create w in
 		let work2 = ref buff2 in
 
 		work2 := Mpi.receive master_rank (int_of_master_tag Master_subdomain_tag) Mpi.comm_world;
@@ -1147,7 +1147,7 @@ let receive_cartography_result () : rank * Result.cartography_result =
 		print_message Verbose_high ("[Coordinator] Expecting a result of size " ^ ( string_of_int l) ^ " from [Worker " ^ (string_of_int source_rank) ^ "]" );
 
 		(* receive the result itself *)
-		let buff = String.create l in
+		let buff = Bytes.create l in
 		let res = ref buff in
 		print_message Verbose_high ("[Coordinator] Buffer created with length " ^ (string_of_int l)^"");	
 		res := Mpi.receive source_rank (int_of_slave_tag Slave_bcresult_tag) Mpi.comm_world ;
@@ -1190,7 +1190,7 @@ let receive_pull_request_NZCUB () =
 	  	 print_message Verbose_high ("[Master] Received Slave_good_or_bad_constraint from [Worker " ^ ( string_of_int source_rank) ^ "] : " ^  ( string_of_int l ));
 
 	  	(* receive the result itself *)
-	    let buff = String.create l in
+	    let buff = Bytes.create l in
 	    let res = ref buff in
 	    print_message Verbose_high ("[Master] Buffer created with length " ^ (string_of_int l)^"");	
 	    res := Mpi.receive source_rank (int_of_slave_tag Slave_good_or_bad_constraint) Mpi.comm_world ;
