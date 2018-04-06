@@ -6,9 +6,9 @@
  * 
  * Module description: Non-zenoness emptiness check using CUB transformation (synthesizes valuations for which there exists a non-zeno loop in the PTA). Distributed version.
  * 
- * File contributors : Étienne André
+ * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2017/10/03
- * Last modified     : 2017/10/19
+ * Last modified     : 2018/04/06
  *
  ************************************************************)
 
@@ -101,10 +101,12 @@ let decentralized_initial_loc model initial_global_location =
         											^ (model.location_names automaton_index target_location_index) 
         											^ ") ----" );
         			print_message Verbose_low ("\n");
-                	let clock_updates = match clock_updates with
-                						  No_update -> []
-										| Resets clock_update -> clock_update
-										| Updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); in
+(*                	begin match clock_updates with
+						(*** WARNING (ÉA, 06/04/2018): this expression should have type unit! In fact, I just remove it all… ***)
+						| No_update -> []
+						| Resets clock_update -> clock_update
+						| Updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! "));
+					end;*)
 					(* init_constr_loc := ( Array.append !init_constr_loc [|(automaton_index, target_location_index, guard)|] ); *)
 					temp := ( Array.append !temp [|(automaton_index, target_location_index, guard)|] );
 					()
