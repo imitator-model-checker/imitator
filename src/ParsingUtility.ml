@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2018/03/09
+ * Last modified     : 2018/04/06
  *
  ************************************************************)
 
@@ -30,9 +30,9 @@ open ImitatorUtilities
 open Statistics
 
 
-let parsing_counter = create_time_counter_and_register "model parsing" Parsing_counter Verbose_experiments
+let parsing_counter = create_time_counter_and_register "model parsing" Parsing_counter Verbose_standard
 
-let converting_counter = create_time_counter_and_register "model converting" Parsing_counter Verbose_experiments
+let converting_counter = create_time_counter_and_register "model converting" Parsing_counter Verbose_standard
 
 (************************************************************)
 (* Local parsing function *)
