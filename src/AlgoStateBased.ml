@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2018/03/08
+ * Last modified     : 2018/04/06
  *
  ************************************************************)
 
@@ -158,32 +158,32 @@ let print_stats _ =
 	 
 
 (* Number of constraints checked unsatisfiable while looking for the actions (discrete guard unsatisfiable) *)
-let counter_nb_early_unsatisfiable_discrete = create_discrete_counter_and_register "early unsat states (local discrete guard)" States_counter Verbose_low
+let counter_nb_early_unsatisfiable_discrete = create_discrete_counter_and_register "early unsat states (local discrete guard)" States_counter Verbose_experiments
 
 (* Number of constraints checked unsatisfiable while looking for the actions *)
-let counter_nb_early_unsatisfiable = create_discrete_counter_and_register "early unsat states (local continuous guard)" States_counter Verbose_low
+let counter_nb_early_unsatisfiable = create_discrete_counter_and_register "early unsat states (local continuous guard)" States_counter Verbose_experiments
 
 (* Number of actions discarded *)
-let counter_nb_early_skip = create_discrete_counter_and_register "skipped actions" States_counter Verbose_low
+let counter_nb_early_skip = create_discrete_counter_and_register "skipped actions" States_counter Verbose_experiments
 
 (* Number of constraints computed but unsatisfiable *)
-let counter_nb_unsatisfiable = create_discrete_counter_and_register "unsatisfiable constraints" States_counter Verbose_low
+let counter_nb_unsatisfiable = create_discrete_counter_and_register "unsatisfiable constraints" States_counter Verbose_experiments
 
 (* Number of discrete constraints unsatisfiable *)
-let counter_nb_unsatisfiable_discrete = create_discrete_counter_and_register "unsatisfiable global discrete constraints" States_counter Verbose_low
+let counter_nb_unsatisfiable_discrete = create_discrete_counter_and_register "unsatisfiable global discrete constraints" States_counter Verbose_experiments
 
 (* Number of different combinations considered when computing post *)
-let counter_nb_combinations = create_discrete_counter_and_register "different combinations" States_counter Verbose_low
+let counter_nb_combinations = create_discrete_counter_and_register "different combinations" States_counter Verbose_experiments
 
 (* Early unsatisfiability when computing new states, after performing intersection of Di = di and C(X) and g(X) *)
-let counter_nb_unsat1 = create_discrete_counter_and_register "early unsat (D ^ g)" States_counter Verbose_low
+let counter_nb_unsat1 = create_discrete_counter_and_register "early unsat (D ^ g)" States_counter Verbose_experiments
 
 (* Counter measuring the time spent on the computation of successor (discrete) transitions *)
 (*** NOTE: if this is correct, this counter should not measure any PPL-based computation! ***)
-let tcounter_next_transitions = create_time_counter_and_register "next transitions" States_counter Verbose_low
+let tcounter_next_transitions = create_time_counter_and_register "next transitions" States_counter Verbose_experiments
 
 (* Counter measuring the time spent on exhibiting which transitions can effectively be taken (this DOES include some PPL time) *)
-let tcounter_legal_transitions_exist = create_time_counter_and_register "legal transitions exist" States_counter Verbose_low
+let tcounter_legal_transitions_exist = create_time_counter_and_register "legal transitions exist" States_counter Verbose_experiments
 
 (* let nb_unsat2 = ref 0 *)
 
