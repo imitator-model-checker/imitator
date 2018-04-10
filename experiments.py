@@ -9,7 +9,7 @@
 # Nguyen Hoang Gia
 #
 # Laboratoire d'Informatique de Paris Nord
-# Universite Paris 13, Sorbonne Paris Cite, France
+# Université Paris 13, Sorbonne Paris Cite, France
 #
 # Created      : 2014/08/25
 # Last modified: 2014/08/25
