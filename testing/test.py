@@ -18,27 +18,28 @@
 # MODULES
 # ************************************************************
 from __future__ import print_function
+
 import datetime
 import os
-import sys
 import subprocess
-
+import sys
+from collections import namedtuple
 
 # To output colored text
-class bcolors:
-    ERROR = '\033[1;37;41m'
-    BOLD = '\033[1m'
-    GOOD = '\033[1;32;40m'
-    NORMAL = '\033[0m'
-    WARNING = '\033[93;40m'
+Colors = namedtuple('Colors', 'ERROR, BOLD, GOOD, NORMAL, WARNING')
 
+bcolors = Colors(ERROR='\033[1;37;41m',
+                 BOLD='\033[1m',
+                 GOOD='\033[1;32;40m',
+                 NORMAL='\033[0m',
+                 WARNING='\033[93;40m')
 
 # ************************************************************
 # GENERAL CONFIGURATION
 # ************************************************************
 
 # Root path to the main IMITATOR root directory
-IMITATOR_PATH = ''
+IMITATOR_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Path to the example directory
 EXAMPLE_PATH = os.path.join(IMITATOR_PATH, 'testing/testcases/')
 # Path to the binary directory
@@ -70,7 +71,7 @@ def make_binary(binary):
 
 
 def make_file(file_name):
-    return EXAMPLE_PATH + file_name
+    return os.path.join(EXAMPLE_PATH, file_name)
 
 
 def fail_with(text):
@@ -80,11 +81,11 @@ def fail_with(text):
 
 
 def print_warning(text):
-    print_to_log(' *** Warning: ' + text)
+    print_to_log(' *** Warning: %s' % text)
 
 
 def print_error(text):
-    print_to_log(' *** Error: ' + text)
+    print_to_log(' *** Error: %s' % text)
 
 
 # Print text to log file
@@ -121,9 +122,8 @@ def test(binary_name, tests, logfile, logfile_name):
     binary = make_binary(binary_name)
     if not os.path.exists(binary):
         fail_with('Binary %s  does not exist' % binary)
-        # all_files_ok = False
 
-    print_to_screen('{c.BOLD}# TESTING BINARY {name}{c.NORMAL}'.format(c=bcolors, name=binary_name))
+    print_to_screen('\n{c.BOLD}# TESTING BINARY {name}{c.NORMAL}'.format(c=bcolors, name=binary_name))
 
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
     # TEST CASES
@@ -143,39 +143,27 @@ def test(binary_name, tests, logfile, logfile_name):
         passed = True
 
         # Print something
-        print_to_log('')
-        print_to_log('')
-        print_to_log('############################################################')
-        print_to_log(' BENCHMARK ' + str(benchmark_id))
-        print_to_log(' purpose: ' + test_case['purpose'])
-        print_to_log('')
+        print_to_log('\n\n############################################################')
+        print_to_log(' BENCHMARK %d' % benchmark_id)
+        print_to_log(' purpose: %s\n' % test_case['purpose'])
         print_to_screen(' Benchmark {}: {}..'.format(benchmark_id, test_case['purpose']))
 
         # Add the path to all input files
-        cmd_inputs = []
-        for each_file in test_case['input_files']:
-            cmd_inputs += [make_file(each_file)]
-            # TODO: test for existence of files (just in case)
+        # TODO: test for existence of files (just in case)
+        cmd_inputs = [make_file(each_file) for each_file in test_case['input_files']]
 
         # ------------------------------------------------------------
-        # NOTE: complicated 'if' in case of distributed…
-        cmd = ''
+        # NOTE: complicated 'if' in case of distributed. Non-distributed: binary = IMITATOR, options = all the rest
+        cmd = [binary] + cmd_inputs + (test_case['options']).split()
 
-        # Case 1: distributed: binary = mpiexec, options = all the rest including IMITATOR binary
+        # Distributed: binary = mpiexec, options = all the rest including IMITATOR binary
         if 'nb_nodes'in test_case and test_case['nb_nodes'] > 1:
-            # Add the mpiexecc if distributed
-            cmd = ['mpiexec', '-n', str(test_case['nb_nodes'])] + [binary] + cmd_inputs + (
-                test_case['options']).split()
-        else:  # Case 2: non-distributed: binary = IMITATOR, options = all the rest
-            # Prepare the command (using a list form)
-            cmd = [binary] + cmd_inputs + (test_case['options']).split()
-        # ------------------------------------------------------------
+            cmd = ['mpiexec', '-n', str(test_case['nb_nodes'])] + cmd
 
         # Print the command
         print_to_log(' command : ' + ' '.join(cmd))
 
         # Launch!
-        # os.system(cmd)
         # NOTE: flushing avoids to mix between results of IMITATOR, and text printed by this script
         logfile.flush()
         subprocess.call(cmd, stdout=logfile, stderr=logfile)
@@ -190,7 +178,7 @@ def test(binary_name, tests, logfile, logfile_name):
             # Build file
             output_file = make_file(expectation['file'])
 
-            test_expectation_id = str(benchmark_id) + '.' + str(expectation_id)
+            test_expectation_id = '{}.{}'.format(benchmark_id, expectation_id)
 
             # Check existence of the output file
             if not os.path.exists(output_file):
@@ -215,7 +203,7 @@ def test(binary_name, tests, logfile, logfile_name):
                         passed_test_cases += 1
                     else:
                         passed = False
-                        print_to_log(' Test ' + test_expectation_id + ' failed!')
+                        print_to_log(' Test %s failed!' % test_expectation_id)
                         print_to_log('\n*** Expected content for this test:')
                         print_to_log("\n%s\n\n" % expectation['content'])
                         print_to_log('*** Content found:')
@@ -324,14 +312,9 @@ print_to_screen_and_log(now.strftime("%A %d. %B %Y %H:%M:%S %z"))
 # ************************************************************
 
 # IMPORTING THE TESTS CONTENT
-import regression_tests_data
-
-tests = regression_tests_data.tests
-
-print_to_screen('')
+from regression_tests_data import tests
 
 test(BINARY_NAME, tests, logfile, LOGFILE)
-
 
 # ************************************************************
 # 2. TESTING PATATOR
@@ -341,11 +324,7 @@ test(BINARY_NAME, tests, logfile, LOGFILE)
 logfile = open(DISTRIBUTED_LOGFILE, 'w')
 
 # IMPORTING THE TESTS CONTENT
-import regression_tests_data_distr
-
-tests_distr = regression_tests_data_distr.tests_distr
-
-print_to_screen('')
+from regression_tests_data_distr import tests_distr
 
 test(DISTRIBUTED_BINARY_NAME, tests_distr + tests, logfile, DISTRIBUTED_LOGFILE)
 
@@ -353,7 +332,6 @@ test(DISTRIBUTED_BINARY_NAME, tests_distr + tests, logfile, DISTRIBUTED_LOGFILE)
 # THE END
 # ************************************************************
 
-print_to_screen_and_log('')
-print_to_screen_and_log('…The end of TESTATOR!')
+print_to_screen_and_log('\n…The end of TESTATOR!')
 
 sys.exit(0)

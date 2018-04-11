@@ -18,18 +18,19 @@ _oasis
 _tags
 setup.data
 setup.ml
+setup.log
 myocamlbuild.ml
 src/BuildInfo.ml*
 src/PaTATOR.ml
 
 
 # testing logs
-*.log
 benchmarks/**/*.res
 benchmarks/**/*.png
 benchmarks/**/*.jpg
 benchmarks/**/*.states
 
+testing/**/*.log
 testing/**/*.jpg
 testing/**/*.png
 testing/**/*.txt
