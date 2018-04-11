@@ -7,6 +7,35 @@
 *.cmx
 *.cmxs
 *.cmxa
+*.pyc
 
 # PyCharm configuration
 .idea
+
+# build files and folders
+_build
+_oasis
+_tags
+setup.data
+setup.ml
+myocamlbuild.ml
+src/BuildInfo.ml*
+src/PaTATOR.ml
+
+
+# testing logs
+*.log
+benchmarks/**/*.res
+benchmarks/**/*.png
+benchmarks/**/*.jpg
+benchmarks/**/*.states
+
+testing/**/*.jpg
+testing/**/*.png
+testing/**/*.txt
+testing/**/*.sh
+
+# binaries
+*.native
+bin/imitator
+bin/patator
