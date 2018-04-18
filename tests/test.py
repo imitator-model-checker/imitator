@@ -38,22 +38,24 @@ bcolors = Colors(ERROR='\033[1;37;41m',
 # GENERAL CONFIGURATION
 # ************************************************************
 
+# Path to the tests directory
+TEST_PATH = os.path.dirname(os.path.abspath(__file__))
 # Root path to the main IMITATOR root directory
-IMITATOR_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+IMITATOR_PATH = os.path.dirname(TEST_PATH)
 # Path to the example directory
-EXAMPLE_PATH = os.path.join(IMITATOR_PATH, 'testing/testcases/')
+EXAMPLE_PATH = os.path.join(TEST_PATH, 'testcases/')
 # Path to the binary directory
 BINARY_PATH = os.path.join(IMITATOR_PATH, 'bin/')
 
 # Name for the non-distributed binary to test
 BINARY_NAME = 'imitator'
 # Log file for the non-distributed binary
-LOGFILE = os.path.join(IMITATOR_PATH, 'testing/tests.log')
+LOGFILE = os.path.join(TEST_PATH, 'tests.log')
 
 # Name for the distributed binary to test
 DISTRIBUTED_BINARY_NAME = 'patator'
 # Log file for the distributed binary
-DISTRIBUTED_LOGFILE = os.path.join(IMITATOR_PATH, 'testing/testsdistr.log')
+DISTRIBUTED_LOGFILE = os.path.join(TEST_PATH, 'testsdistr.log')
 
 # ************************************************************
 # BY DEFAULT: ALL TO LOG FILE
@@ -112,6 +114,33 @@ def print_to_screen_and_log(content):
 
 
 # ************************************************************
+# FORMATS
+# ************************************************************
+header_benchmark = """
+ 
+############################################################
+ BENCHMARK {benchmark_id}
+ purpose: {purpose}
+
+
+"""
+
+test_fmt = """\
+  Test {expectation_id} failed!
+
+*** Expected content for this test:
+
+{expected_content}
+
+*** Content found:
+
+{original_content}
+
+
+"""
+
+
+# ************************************************************
 # MAIN TESTING FUNCTION
 # ************************************************************
 
@@ -143,9 +172,8 @@ def test(binary_name, tests, logfile, logfile_name):
         passed = True
 
         # Print something
-        print_to_log('\n\n############################################################')
-        print_to_log(' BENCHMARK %d' % benchmark_id)
-        print_to_log(' purpose: %s\n' % test_case['purpose'])
+        print_to_log(header_benchmark.format(benchmark_id=benchmark_id,
+                                             purpose=test_case['purpose']))
         print_to_screen(' Benchmark {}: {}..'.format(benchmark_id, test_case['purpose']))
 
         # Add the path to all input files
@@ -170,11 +198,10 @@ def test(binary_name, tests, logfile, logfile_name):
         logfile.flush()
 
         # Files to remove
-        files_to_remove = []
+        files_to_remove = set()
 
         # Check the expectations
-        expectation_id = 1
-        for expectation in test_case['expectations']:
+        for expectation_id, expectation in enumerate(test_case['expectations']):
             # Build file
             output_file = make_file(expectation['file'])
 
@@ -186,9 +213,9 @@ def test(binary_name, tests, logfile, logfile_name):
                 passed = False
             else:
                 # Read file
-                with open(output_file, "r") as myfile:
+                with open(output_file, "r") as my_file:
                     # Get the content
-                    original_content = myfile.read()
+                    original_content = my_file.read()
                     # Replace all whitespace characters (space, tab, newline, and so on) with a single space
                     content = ' '.join(original_content.split())
 
@@ -199,25 +226,19 @@ def test(binary_name, tests, logfile, logfile_name):
                     position = content.find(expected_content)
 
                     if position >= 0:
-                        print_to_log(' Test ' + test_expectation_id + ' passed.')
+                        print_to_log(' Test %s passed.' % test_expectation_id)
                         passed_test_cases += 1
                     else:
                         passed = False
-                        print_to_log(' Test %s failed!' % test_expectation_id)
-                        print_to_log('\n*** Expected content for this test:')
-                        print_to_log("\n%s\n\n" % expectation['content'])
-                        print_to_log('*** Content found:')
-                        print_to_log("\n%s\n\n" % original_content)
+                        print_to_log(test_fmt.format(expectation_id=test_expectation_id,
+                                                     expected_content=expectation['content'],
+                                                     original_content=original_content))
 
-                # Add file to list of files to remove if not already present
-                if output_file not in files_to_remove:
-                    files_to_remove.append(output_file)
+                # Add file to list of files to remove
+                files_to_remove.add(output_file)
 
-            # Increment the expectation id
-            expectation_id += 1
-
-            # One more test case
-            test_case_id += 1
+        # Update number of test cases
+        test_case_id += len(test_case['expectations'])
 
         # Remove all output files
         for my_file in files_to_remove:

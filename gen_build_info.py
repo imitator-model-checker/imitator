@@ -106,7 +106,7 @@ ml_fmt = """
  *                       IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, LIPN (France)
+ * Université Paris 13, LIPN (France)
  * 
  * Author:        python script
  * 
@@ -136,7 +136,7 @@ mli_fmt = """
  *                       IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, LIPN (France)
+ * Université Paris 13, LIPN (France)
  * 
  * Author:        python script
  * 
