@@ -30,11 +30,11 @@ benchmarks/**/*.png
 benchmarks/**/*.jpg
 benchmarks/**/*.states
 
-testing/**/*.log
-testing/**/*.jpg
-testing/**/*.png
-testing/**/*.txt
-testing/**/*.sh
+tests/**/*.log
+tests/**/*.jpg
+tests/**/*.png
+tests/**/*.txt
+tests/**/*.sh
 
 # binaries
 *.native
