@@ -117,12 +117,10 @@ def print_to_screen_and_log(content):
 # FORMATS
 # ************************************************************
 header_benchmark = """
- 
+
 ############################################################
  BENCHMARK {benchmark_id}
  purpose: {purpose}
-
-
 """
 
 test_fmt = """\
@@ -150,7 +148,7 @@ def test(binary_name, tests, logfile, logfile_name):
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
     binary = make_binary(binary_name)
     if not os.path.exists(binary):
-        fail_with('Binary %s  does not exist' % binary)
+        fail_with('Binary %s does not exist' % binary)
 
     print_to_screen('\n{c.BOLD}# TESTING BINARY {name}{c.NORMAL}'.format(c=bcolors, name=binary_name))
 
