@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#************************************************************
+# ************************************************************
 #
 #                       IMITATOR
 #
@@ -9,100 +9,75 @@
 # Etienne Andre
 #
 # Laboratoire d'Informatique de Paris Nord
-# Universite Paris 13, Sorbonne Paris Cite, France
+# Université Paris 13, Sorbonne Paris Cite, France
 #
 # Created      : 2014/08/18
 # Last modified: 2016/03/17
-#************************************************************
+# ************************************************************
 
 
-# This script copies IMITATOR.ml into IMITATORdistr.ml and uncomments out the call to PaTATOR
+# This script copies IMITATOR.ml into IMITATORdistr.ml and comments out the call to PaTATOR
 
 
-#************************************************************
+# ************************************************************
 # IMPORTS
-#************************************************************
-from os import close
+# ************************************************************
+from __future__ import print_function
+import re
 
 
-#************************************************************
+# ************************************************************
 # CONSTANTS
-#************************************************************
+# ************************************************************
 # Files
 input_file_path = 'src/IMITATOR.ml'
 output_file_path = 'src/PaTATOR.ml'
 
 # Patterns in IMITATOR.ml
-pattern_begin = '(*(* ** *** **** ***** ******    BEGIN FORK PaTATOR    ****** ***** **** *** ** *)'
-pattern_end = '(* ** *** **** ***** ******    END FORK PaTATOR    ****** ***** **** *** ** *)*)'
+pattern_begin = r'(\(\*\(\* \*\* \*\*\* \*\*\*\* \*\*\*\*\* \*\*\*\*\*\*    BEGIN FORK PaTATOR    \*\*\*\*\*\* \*\*\*\*\* \*\*\*\* \*\*\* \*\* \*\))'
+pattern_end = r'(\(\* \*\* \*\*\* \*\*\*\* \*\*\*\*\* \*\*\*\*\*\*    END FORK PaTATOR    \*\*\*\*\*\* \*\*\*\*\* \*\*\*\* \*\*\* \*\* \*\)\*\))'
 
+# Header of the resulting file
+header = """
+(*****************************************************************
+ WARNING! This file has been automatically generated; do not modify it!
+ ****************************************************************)
+ 
+ 
+"""
 
-#************************************************************
+# ************************************************************
 # GO
-#************************************************************
-print "\nGenerating file '" + output_file_path + "'..."
+# ************************************************************
+print("\nGenerating file '%s'..." % output_file_path)
 
-# Open file
-old_file = open(input_file_path)
 
-# Create new file
-#print 'Creating file ' + output_file_path + '.'
-new_file = open(output_file_path, 'w')
+with open(input_file_path, 'r') as old_file, open(output_file_path, 'w') as new_file:
 
-# Add header
-new_file.write("\
-(*****************************************************************\n\
- WARNING! This file has been automatically generated; do not modify it!\n\
- ****************************************************************)\n\n")
+    # Read imitator.ml
+    old_text = old_file.read()
 
-#************************************************************
-# Look for begin pattern
-#************************************************************
-found_begin_pattern = False
-for line in old_file:
-	if pattern_begin in line:
-		#print 'Begin pattern found in ' + input_file_path + '.'
-		new_file.write(line.replace(pattern_begin, pattern_begin + '*)'))
-		found_begin_pattern = True
-		break
-	else:
-		new_file.write(line)
+    # Add header
+    new_file.write(header)
 
-# Check if pattern was found
-if not found_begin_pattern:
-	print "Begin pattern not found in '" + input_file_path + "'! Aborting."
-	exit(1)
+    # ************************************************************
+    # Look for begin pattern
+    # ************************************************************
+    new_text, found_pattern = re.subn(pattern_begin, r"\1*)", old_text)
+    if not found_pattern:
+        print("Begin pattern not found in '%s'! Aborting." % input_file_path)
+        exit(1)
 
-#************************************************************
-# Look for end pattern
-#************************************************************
-found_end_pattern = False
-for line in old_file:
-	if pattern_end in line:
-		#print 'End pattern found in ' + input_file_path + '.'
-		new_file.write(line.replace(pattern_end, '(*' + pattern_end))
-		found_end_pattern = True
-		break
-	else:
-		new_file.write(line)
+    # ************************************************************
+    # Look for end pattern
+    # ************************************************************
+    text, found_pattern = re.subn(pattern_end, r"(*\1", new_text)
+    if not found_pattern:
+        print('End pattern not found in %s! Aborting.' % input_file_path)
+        exit(1)
 
-# Check if pattern was found
-if not found_end_pattern:
-	print 'End pattern not found in ' + input_file_path + '! Aborting.'
-	exit(1)
+    new_file.write(text)
 
-#************************************************************
-# Copy the remaining lines
-#************************************************************
-for line in old_file:
-	new_file.write(line)
-
-#************************************************************
-# Close
-#************************************************************
-new_file.close()
-old_file.close()
-
-print 'Successfully generated file ' + output_file_path + '.'
+    print('Successfully generated file %s' % output_file_path)
 
 

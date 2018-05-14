@@ -363,6 +363,7 @@ For the semantics of the synchronization model between various \IPTA{}, refer to
 \paragraph{Clock updates}
 Observe that clocks can be updated to any value, \ie{} a clock can be assigned not only to~0, but to any linear term over the other clocks, the parameters and the discrete variables.
 This considerably extends the traditional syntax of PTAs defined in~\cite{AHV93}.
+In fact, the \imitator{} includes (more than just) the updatable timed automata of~\cite{BDFP04}, as well as the reset-to-parameter (parametric) timed automata of~\cite{ALR18PresetTA}.
 If clocks are always reset to constants (\ie{} not assigned to more complex linear terms), \imitator{} will apply some optimizations that (may) increase the analysis speed.
 % TODO: nice box with a ``tip'' title
 
