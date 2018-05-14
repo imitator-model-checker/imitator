@@ -9,7 +9,7 @@
 #
 # Etienne ANDRE
 # Laboratoire d'Informatique de Paris Nord
-# Universite Paris 13, Sorbonne Paris Cite, France
+# Université Paris 13, Sorbonne Paris Cite, France
 # Created      : 2013/05/22
 # Last modified: 2016/03/14
 # ************************************************************

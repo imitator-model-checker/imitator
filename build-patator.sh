@@ -6,7 +6,7 @@
  # 
  # Script to build the non-distributed version of IMITATOR
  #
- # Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ # Université Paris 13, Sorbonne Paris Cite, LIPN (France)
  # 
  # Author:        Etienne Andre
  # 
