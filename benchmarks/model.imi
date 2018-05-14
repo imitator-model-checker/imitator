@@ -14,21 +14,21 @@
  * Created         : 2018/01/01
  * Last modified   : 2018/01/01
  *
- * IMITATOR version: 2.10.1
+ * IMITATOR version: 2.10.2
  ************************************************************)
 
 var
 
 (* Clocks *)
- 	x
+ 	x,
 		: clock;
 
 (* Discrete *)
-	i
+	i,
 		: discrete;
 
 (* Parameters *)
-	p
+	p,
 		: parameter;
 
 
