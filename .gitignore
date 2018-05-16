@@ -8,33 +8,35 @@
 *.cmxs
 *.cmxa
 *.pyc
-benchmarks/**/*.dot
-benchmarks/**/*.jpg
-benchmarks/**/*.log
-benchmarks/**/*.png
-benchmarks/**/*.states
-benchmarks/**/*.txt
-benchmarks/**/*.res
-
-testing/**/*.dot
-testing/**/*.jpg
-testing/**/*.log
-testing/**/*.png
-testing/**/*.txt
-testing/**/*.res
-
-src/BuildInfo.ml
-src/BuildInfo.mli
-src/PaTATOR.ml
-
-doc/IMITATOR-not-developer-manual.brf
-doc/IMITATOR-not-developer-manual.pdf
-doc/IMITATOR-user-manual.brf
-doc/IMITATOR-user-manual.pdf
-doc/classDiagramFull.dot
-doc/classDiagramFull.png
-doc/classDiagramSimplified.dot
-doc/classDiagramSimplified.png
 
 # PyCharm configuration
 .idea
+
+# build files and folders
+_build
+_oasis
+_tags
+setup.data
+setup.ml
+setup.log
+myocamlbuild.ml
+src/BuildInfo.ml*
+src/PaTATOR.ml
+
+
+# testing logs
+benchmarks/**/*.res
+benchmarks/**/*.png
+benchmarks/**/*.jpg
+benchmarks/**/*.states
+
+tests/**/*.log
+tests/**/*.jpg
+tests/**/*.png
+tests/**/*.txt
+tests/**/*.sh
+
+# binaries
+*.native
+bin/imitator
+bin/patator
