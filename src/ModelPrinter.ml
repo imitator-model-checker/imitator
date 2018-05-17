@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
- * Last modified     : 2018/02/23
+ * Last modified     : 2018/05/17
  *
  ************************************************************)
 
@@ -185,7 +185,7 @@ let string_of_arithmetic_expression variable_names =
 			
 		| DAE_minus (discrete_arithmetic_expression, discrete_term) ->
 			(string_of_arithmetic_expression discrete_arithmetic_expression)
-			^ " + " 
+			^ " - " 
 			^ (string_of_term discrete_term)
 			
 		| DAE_term discrete_term -> string_of_term discrete_term
@@ -211,7 +211,7 @@ let string_of_arithmetic_expression variable_names =
 		(* Otherwise: parentheses on the left *)
 		| DT_div (discrete_term, discrete_factor) ->
 			"(" ^ (string_of_term discrete_term) ^ ")"
-			^ " * "
+			^ " / "
 			^ (string_of_factor discrete_factor)
 		
 		| DT_factor discrete_factor -> string_of_factor discrete_factor
