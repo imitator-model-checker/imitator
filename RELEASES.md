@@ -1,12 +1,22 @@
 *******************************************************
 # release XXX (XXXX) FUTURE MAJOR RELEASE
 
+### Bug fixing:
+* Correct errors in displaying PTA (graphics in PDF, PNG, etc.): arithmetic expressions on discrete variables did not print correctly
+
 ### Syntax improvement
 * The prime (`'`) in transition updates becomes optional; the `=` in transition updates becomes `:=` (backward-compatibility remains ensured until further notices) That is, an update `x' = 0` becomes `x := 0`
 * `while [invariant condition] wait{}` becomes `invariant [invariant condition]` (backward-compatibility remains ensured until further notices)
 
 ### Minor features:
 * New option to avoid the inclusion check in EFsynth: useful when very large parameter constraints are manipulated
+
+*******************************************************
+# release 2.10.3 (2018-05-22)
+minor release
+
+### Bug fixing:
+* Correct errors in displaying PTA (graphics in PDF, PNG, etc.): arithmetic expressions on discrete variables did not print correctly
 
 
 *******************************************************

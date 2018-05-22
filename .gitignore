@@ -40,3 +40,15 @@ tests/**/*.sh
 *.native
 bin/imitator
 bin/patator
+
+# documentation
+doc/*.aux
+doc/*.bbl
+doc/*.blg
+doc/*.brf
+doc/*.log
+doc/*.toc
+doc/IMITATOR-not-developer-manual.out
+doc/IMITATOR-not-developer-manual.pdf
+doc/classDiagramFull.png
+doc/classDiagramSimplified.png

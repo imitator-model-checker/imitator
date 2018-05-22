@@ -35,21 +35,21 @@ var
 (************************************************************)
 synclabs: approach, startDown, endDown, pass;
 
-loc Far: while True wait
-	when True sync approach do {x' = 0} goto Approaching;
+loc Far: invariant True
+	when True sync approach do {x := 0} goto Approaching;
 
-loc Approaching: while x <= dApproach & x <= dStartDown wait
-	when x = dStartDown sync startDown do {y' = 0} goto Lowering;
+loc Approaching: invariant x <= dApproach & x <= dStartDown
+	when x = dStartDown sync startDown do {y := 0} goto Lowering;
 	when x = dApproach sync pass do {} goto Crash;
 
-loc Crash: while True wait {}
+loc Crash: invariant True
 
-loc Lowering: while x <= dApproach & y <= dGetDown wait
+loc Lowering: invariant x <= dApproach & y <= dGetDown
 	when x = dApproach sync pass do {} goto Crash;
 	when y = dGetDown sync endDown do {} goto Safe;
 
-loc Safe: while x <= dApproach wait
-	when x = dApproach sync pass do {x' = 0, y' = 0} goto Far;
+loc Safe: invariant x <= dApproach
+	when x = dApproach sync pass do {x := 0, y := 0} goto Far;
 end (* system *)
 
 

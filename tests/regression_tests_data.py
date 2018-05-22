@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, France
 # Created      : 2015/10/23
-# Last modified: 2018/03/30
+# Last modified: 2018/05/17
 #************************************************************
 
 
@@ -414,7 +414,84 @@ tests = [
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+
 	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test updates (printing)',
+		'input_files': ['testUpdates.imi'],
+		'options'    : '-PTA2IMI',
+		'expectations' : [
+			{'file': 'testUpdates-regenerated.imi' , 'content' : """
+  urgent loc idle: invariant True 
+	when True do {x := 1/2*p + x + -7*i + -1, y := y + 1, i := ((3 * i - 1)) / ((5 * i) * i)}  sync a goto idle;
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test updates (state space)',
+		'input_files': ['testUpdates.imi'],
+		'options'    : '-mode statespace -depth-limit 4 -output-states',
+		'expectations' : [
+			{'file': 'testUpdates-statespace.states' , 'content' : """
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  autom: idle, i = 1 ==> 
+& p >= 0
+& x = 0
+& y = 0
+
+  Projection onto the parameters:
+   p >= 0
+
+  /************************************************************/
+  STATE 1:
+  autom: idle, i = 2/5 ==> 
+& p >= 0
+& 5*p = 38 + 10*x
+& y = 1
+
+  Projection onto the parameters:
+   p >= 0
+
+  /************************************************************/
+  STATE 2:
+  autom: idle, i = 1/4 ==> 
+& p >= 0
+& 20*p = 131 + 20*x
+& y = 2
+
+  Projection onto the parameters:
+   p >= 0
+
+  /************************************************************/
+  STATE 3:
+  autom: idle, i = -4/5 ==> 
+& p >= 0
+& 30*p = 39 + 20*x
+& y = 3
+
+  Projection onto the parameters:
+   p >= 0
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test clock elimination',

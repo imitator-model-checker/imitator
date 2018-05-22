@@ -7,13 +7,18 @@ if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
         libextlib-ocaml libextlib-ocaml-dev \
         libgmp-dev libgmp-ocaml libgmp-ocaml-dev libmpfr-dev \
         libppl-dev \
-        graphviz plotutils
+        graphviz plotutils texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra latexmk
 
     if [[ "$DISTRIBUTED" = "True" ]]; then
         sudo apt-get install -qq openmpi-bin openmpi-common libopenmpi-dev
-        git clone https://github.com/coti/ocamlmpi.git
-        (cd ocamlmpi/src; make clean; make MPIINCDIR=/usr/lib/openmpi/include; sudo make install)
+        git clone https://github.com/xavierleroy/ocamlmpi
+        (cd ocamlmpi; make clean; make MPIINCDIR=/usr/lib/openmpi/include; make opt; sudo make install)
         rm -rf ocamlmpi
+
+        # Installting Bytes Package
+        git clone https://github.com/chambart/ocaml-bytes.git
+        (cd ocaml-bytes; ./configure --prefix=/usr --libdir=/usr/lib/ocaml/; make; sudo make install)
+        rm -rf ocaml-bytes
     fi
 fi
 
@@ -31,3 +36,10 @@ if [[ "$DISTRIBUTED" = "False" ]]; then
 else
     sh build-patator.sh
 fi
+
+# Build documentation
+cd doc
+m4 classDiagramSimplified.m4 | dot -Tpng -o classDiagramSimplified.png
+m4 classDiagramFull.m4 | dot -Tpng -o classDiagramFull.png
+latexmk -pdf IMITATOR-not-developer-manual.tex
+latexmk -pdf IMITATOR-user-manual.tex
