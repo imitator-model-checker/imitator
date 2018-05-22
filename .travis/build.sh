@@ -11,8 +11,8 @@ if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
 
     if [[ "$DISTRIBUTED" = "True" ]]; then
         sudo apt-get install -qq openmpi-bin openmpi-common libopenmpi-dev
-        git clone https://github.com/coti/ocamlmpi.git
-        (cd ocamlmpi/src; make clean; make MPIINCDIR=/usr/lib/openmpi/include; sudo make install)
+        git clone https://github.com/xavierleroy/ocamlmpi
+        (cd ocamlmpi; make clean; make MPIINCDIR=/usr/lib/openmpi/include; make opt; sudo make install)
         rm -rf ocamlmpi
     fi
 fi
