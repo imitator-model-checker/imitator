@@ -1,0 +1,8 @@
+# Source path
+S src/*
+
+# Build path
+B _build/*
+
+# Packages
+PKG io, gmp
