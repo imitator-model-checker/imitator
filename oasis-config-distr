@@ -26,7 +26,7 @@ Executable patator
   Path:       .
   BuildTools: ocamlbuild
   MainIs:     src/PaTATOR.ml
-  BuildDepends: gmp, extlib, mpi, ppl, str, unix, threads
+  BuildDepends: gmp, extlib, mpi, ppl, str, unix, threads, bytes
   CCLib: -lstdc++
   # -ltinfo
 #  CCLib: -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx -lmpi'
