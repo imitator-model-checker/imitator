@@ -14,6 +14,11 @@ if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
         git clone https://github.com/xavierleroy/ocamlmpi
         (cd ocamlmpi; make clean; make MPIINCDIR=/usr/lib/openmpi/include; make opt; sudo make install)
         rm -rf ocamlmpi
+
+        # Installting Bytes Package
+        git clone https://github.com/chambart/ocaml-bytes.git
+        (cd ocaml-bytes; ./configure --prefix=/usr --libdir=/usr/lib/ocaml/; make; sudo make install)
+        rm -rf ocaml-bytes
     fi
 fi
 
