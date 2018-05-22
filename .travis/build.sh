@@ -7,7 +7,7 @@ if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
         libextlib-ocaml libextlib-ocaml-dev \
         libgmp-dev libgmp-ocaml libgmp-ocaml-dev libmpfr-dev \
         libppl-dev \
-        graphviz plotutils texlive-latex-recommended texlive-latex-extra texlive-fonts-extra latexmk
+        graphviz plotutils texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra latexmk
 
     if [[ "$DISTRIBUTED" = "True" ]]; then
         sudo apt-get install -qq openmpi-bin openmpi-common libopenmpi-dev
