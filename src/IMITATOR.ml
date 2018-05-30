@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2018/04/06
+ * Last modified     : 2018/05/30
  *
  ************************************************************)
 
@@ -64,8 +64,12 @@ let global_counter = create_time_counter_and_register "total" Global_counter Ver
 global_counter#start;
 
 (* Counter counting everything except the final processing (graphics, external files generation, etc.) *)
-let algorithm_counter = create_time_counter_and_register "main algorithm" Algorithm_counter Verbose_standard in
-algorithm_counter#start;
+let counter_algorithm_and_parsing = create_time_counter_and_register "main algorithm + parsing" Algorithm_counter Verbose_standard in
+counter_algorithm_and_parsing#start;
+
+(* Counter counting everything except the final processing (graphics, external files generation, etc.) and the parsing *)
+let counter_main_algorithm = create_time_counter_and_register "main algorithm" Algorithm_counter Verbose_standard in
+
 
 
 (************************************************************)
@@ -218,6 +222,8 @@ if verbose_mode_greater Verbose_low then(
 	print_message Verbose_low ("\nThe property is the following one:\n" ^ (ModelPrinter.string_of_property model model.user_property) ^ "\n");
 );
 
+(* Statistics *)
+counter_main_algorithm#start;
 
 (************************************************************)
 (* Case translation *)
@@ -862,8 +868,9 @@ in
 (* Run! *)
 let result = algorithm#run() in
 
-(* Stop the main algorithm counter *)
-algorithm_counter#stop;
+(* Stop the main algorithm counters *)
+counter_algorithm_and_parsing#stop;
+counter_main_algorithm#stop;
 
 (* Process *)
 ResultProcessor.process_result result algorithm#algorithm_name None;
