@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2017/06/08
+ * Last modified     : 2018/05/30
  *
  ************************************************************)
 
@@ -135,6 +135,26 @@ let nb_merging_attempts = create_discrete_counter_and_register "StateSpace.mergi
 (* Numbers of actual merges *)
 let nb_merged = create_discrete_counter_and_register "StateSpace.merges" States_counter Verbose_standard
 
+(* Functions *)
+let counter_add_state = create_hybrid_counter_and_register "StateSpace.add_state" States_counter Verbose_experiments
+let counter_compute_predecessors_with_actions = create_hybrid_counter_and_register "StateSpace.compute_predecessors" States_counter Verbose_experiments
+let counter_get_location = create_hybrid_counter_and_register "StateSpace.counter_get_location" States_counter Verbose_experiments
+let counter_get_state = create_hybrid_counter_and_register "StateSpace.get_state" States_counter Verbose_experiments
+
+let counter_add_transition = create_hybrid_counter_and_register "StateSpace.add_transition" States_counter Verbose_experiments
+let counter_get_successors = create_hybrid_counter_and_register "StateSpace.get_successors" States_counter Verbose_experiments
+let counter_get_transitions = create_hybrid_counter_and_register "StateSpace.get_transitions" States_counter Verbose_experiments
+let counter_nb_states = create_hybrid_counter_and_register "StateSpace.nb_states" States_counter Verbose_experiments
+let counter_nb_transitions = create_hybrid_counter_and_register "StateSpace.nb_transitions" States_counter Verbose_experiments
+let counter_empty_states_for_comparison = create_hybrid_counter_and_register "StateSpace.empty_states_for_comparison" States_counter Verbose_experiments
+
+(*
+	(* Statistics *)
+	counter_xx#increment;
+	counter_xx#start;
+	(* Statistics *)
+	counter_xx#stop;
+*)
 
 
 (************************************************************)
@@ -189,21 +209,60 @@ let get_nb_gen_states state_space =
 
 (** Return the number of states in a state space *)
 let nb_states state_space =
-	Hashtbl.length state_space.all_states
+
+	(* Statistics *)
+	counter_nb_states#increment;
+	counter_nb_states#start;
+	
+	let result =
+		Hashtbl.length state_space.all_states
+	in
+	
+	(* Statistics *)
+	counter_nb_states#stop;
+	
+	result
+
 
 
 (** Return the number of transitions in a state space *)
 let nb_transitions state_space =
-	Hashtbl.length state_space.transitions_table
+	(* Statistics *)
+	counter_nb_transitions#increment;
+	counter_nb_transitions#start;
+	
+	let result =	
+		Hashtbl.length state_space.transitions_table
+	in	
+	
+	(* Statistics *)
+	counter_nb_transitions#stop;
+	
+	result
 
 
 (* Return the global_location corresponding to a location_index *)
 let get_location state_space location_index =
-	DynArray.get state_space.locations location_index
+	(* Statistics *)
+	counter_get_location#increment;
+	counter_get_location#start;
+	
+	let result =
+		DynArray.get state_space.locations location_index
+	in
+	
+	(* Statistics *)
+	counter_get_location#stop;
+
+	result
 
 
 (** Return the state of a state_index *)
 let get_state state_space state_index =
+	(* Statistics *)
+	counter_get_state#increment;
+	counter_get_state#start;
+	
 	(* Find the couple (location_index, constraint) *)
 	let location_index, linear_constraint =
 		(* Exception just in case *)
@@ -213,6 +272,10 @@ let get_state state_space state_index =
 	in
 	(* Find the location *)
 	let global_location = get_location state_space location_index in
+	
+	(* Statistics *)
+	counter_get_state#stop;
+	
 	(* Return the state *)
 	(global_location, linear_constraint)
 
@@ -231,20 +294,43 @@ let get_initial_state state_space =
 
 (** Return the table of transitions *)
 let get_transitions state_space =
-	state_space.transitions_table
+
+	(* Statistics *)
+	counter_get_transitions#increment;
+	counter_get_transitions#start;
+	
+	let result =
+		state_space.transitions_table
+	in
+	
+	(* Statistics *)
+	counter_get_transitions#stop;
+	
+	result
 
 
 (** Compte and return the list of index successors of a state *)
 let get_successors state_space state_index =
+	(* Statistics *)
+	counter_get_successors#increment;
+	counter_get_successors#start;
+	
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	
+	let result =
 	List.fold_left (fun succs action_index -> 
 		try (
 			let succ = Hashtbl.find_all state_space.transitions_table (state_index, action_index) in
 			List.rev_append succ succs 
 		) with Not_found -> succs
 	) [] model.actions
+	in
+	
+	(* Statistics *)
+	counter_get_successors#stop;
+	
+	result
 
 
 (** Compte and return the list of pairs (index successor of a state, corresponding action) *)
@@ -265,6 +351,11 @@ let get_successors_with_actions state_space state_index =
 (** Compute and return a predecessor table state_index -> (state_index, action_index) list *)
 (*------------------------------------------------------------*)
 let compute_predecessors_with_actions state_space =
+	
+	(* Statistics *)
+	counter_compute_predecessors_with_actions#increment;
+	counter_compute_predecessors_with_actions#start;
+
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -295,6 +386,9 @@ let compute_predecessors_with_actions state_space =
 		) model.actions;
 	) state_space.all_states;
 	
+	(* Statistics *)
+	counter_compute_predecessors_with_actions#stop;
+
 	(* Return structure *)
 	predecessors
 
@@ -1050,9 +1144,15 @@ let replace_constraint state_space state_index px_linear_constraint =
 
 (** Add a state to a state space: takes as input the state space, a comparison instruction, the state to add, and returns whether the state was indeed added or not *)
 let add_state state_space state_comparison new_state =
+	(* Statistics *)
+	counter_add_state#increment;
+	counter_add_state#start;
+
 	(* Retrieve the input options *)
 (* 	let options = Input.get_options () in *)
 
+	let result =
+	
 	(* compute hash value for the new state *)
 	let hash = hash_code new_state in
 	if verbose_mode_greater Verbose_total then (
@@ -1148,7 +1248,11 @@ let add_state state_space state_comparison new_state =
 			| Found_old state_index -> State_already_present state_index
 			| Found_new state_index -> State_replacing state_index
 	)
-			
+	
+	in
+	(* Statistics *)
+	counter_add_state#stop;
+	result
 
 			
 let get_transitions_of_state state_space source_state_index action_index =
@@ -1161,10 +1265,18 @@ let get_transitions_of_state state_space source_state_index action_index =
     function will refuse to add two transitions with the same source and
 		target index and the same label. *)
 let add_transition state_space (source_state_index, action_index, target_state_index) =
+	(* Statistics *)
+	counter_add_transition#increment;
+	counter_add_transition#start;
+
 	(* check if it already exists *)
 	let transitions = get_transitions_of_state state_space source_state_index action_index in
 	if not (List.mem target_state_index transitions) then
 		Hashtbl.add state_space.transitions_table (source_state_index, action_index) target_state_index
+	;
+	(* Statistics *)
+	counter_add_transition#stop;
+	()
 
 
 (*		
@@ -1427,7 +1539,16 @@ let merge state_space new_states =
 
 (** Empties the hash table giving the set of states for a given location; optimization for the jobshop example, where one is not interested in comparing  a state of iteration n with states of iterations < n *)
 let empty_states_for_comparison state_space =
-	Hashtbl.clear state_space.states_for_comparison
+	(* Statistics *)
+	counter_empty_states_for_comparison#increment;
+	counter_empty_states_for_comparison#start;
+	
+	Hashtbl.clear state_space.states_for_comparison;
+
+	(* Statistics *)
+	counter_empty_states_for_comparison#stop;
+	
+	()
 
 
 
