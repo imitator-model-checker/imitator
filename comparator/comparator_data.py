@@ -10,7 +10,7 @@
 # 
 # File contributors : Étienne André
 # Created           : 2016/08/08
-# Last modified     : 2017/02/10
+# Last modified     : 2018/06/01
 #************************************************************
 
 
@@ -19,13 +19,16 @@
 #------------------------------------------------------------
 # HACK: copied these constants from comparator.py
 # NOTE: really ugly to manually assign a value…
-V_2_5		= 1
-V_2_6_1		= 2
-V_2_6_2_825	= 3
-V_2_7_3		= 4
-V_2_8		= 5
-V_2_8_2146	= 6
-V_current	= 7
+V_2_5			= 1
+V_2_6_1			= 2
+V_2_6_2_825		= 3
+V_2_7_3			= 4
+V_2_8			= 5
+V_2_8_2146		= 6
+V_2_9			= 7
+V_2_10_3		= 8
+V_2_10_3_2463	= 9
+V_current		= 99
 
 #------------------------------------------------------------
 # Options
@@ -42,7 +45,12 @@ OPT_OUTPUT_PREFIX		= 7
 OPT_OUTPUT_RES			= 8
 OPT_OUTPUT_TRACE_SET	= 9
 OPT_PRP					= 10
+OPT_NO_VAR_AUTOREMOVE	= 11
 
+#------------------------------------------------------------
+# Distributed?
+#------------------------------------------------------------
+with_distributed = False
 
 #************************************************************
 # THE BENCHMARKS TO BE COMPARED
@@ -52,7 +60,7 @@ data = [
 	#------------------------------------------------------------
 	# BEGIN benchmark
 	{
-		'benchmark_name'	: 'Flip-flop circuit',
+		'benchmark_name'	: 'Flip-flop circuit (IM)',
 		'log_prefix'		: 'flipflop_im',
 		'input_files'		: ['Flipflop/flipflop.imi', 'Flipflop/flipflop.pi0'],
 		'input_files_v'		: {V_2_5 : ['Flipflop/flipflop_v_2_5.imi', 'Flipflop/flipflop.pi0'] },
@@ -64,7 +72,7 @@ data = [
 	#------------------------------------------------------------
 	# BEGIN benchmark
 	{
-		'benchmark_name'	: 'LA02_2',
+		'benchmark_name'	: 'LA02_2 (IM)',
 		'log_prefix'		: 'LA02_2_im',
 		'input_files'		: ['Scheduling/LA02_2.imi', 'Scheduling/LA02_2.pi0'],
 		'options'			: [OPT_MERGING, OPT_OUTPUT_RES, OPT_OUTPUT_TRACE_SET],
@@ -75,10 +83,10 @@ data = [
 	#------------------------------------------------------------
 	# BEGIN benchmark
 	{
-		'benchmark_name'	: 'concurent_tasks_chain',
+		'benchmark_name'	: 'concurent_tasks_chain (IM)',
 		'log_prefix'		: 'concurent_tasks_chain_im',
 		'input_files'		: ['Scheduling/concurent_tasks_chain.imi', 'Scheduling/concurent_tasks_chain.pi0'],
-		'options'			: [OPT_MERGING, OPT_OUTPUT_RES, OPT_OUTPUT_TRACE_SET],
+		'options'			: [OPT_MERGING, OPT_OUTPUT_RES, OPT_OUTPUT_TRACE_SET, OPT_NO_VAR_AUTOREMOVE],
 	}
 	# END benchmark
 	#------------------------------------------------------------
@@ -86,7 +94,7 @@ data = [
 	#------------------------------------------------------------
 	# BEGIN benchmark
 	{
-		'benchmark_name'	: 'generic_fp',
+		'benchmark_name'	: 'generic_fp (IM)',
 		'log_prefix'		: 'generic_fp_im',
 		'input_files'		: ['Scheduling/generic_fp.imi', 'Scheduling/generic_fp.pi0'],
 		'options'			: [OPT_MERGING, OPT_OUTPUT_RES, OPT_OUTPUT_TRACE_SET],
@@ -109,7 +117,7 @@ data = [
 	#------------------------------------------------------------
 	# BEGIN benchmark
 	{
-		'benchmark_name'	: 'hppr10_audio',
+		'benchmark_name'	: 'hppr10_audio (IM)',
 		'log_prefix'		: 'hppr10_audio_im',
 		'input_files'		: ['Scheduling/hppr10_audio.imi', 'Scheduling/hppr10_audio.pi0'],
 		'options'			: [OPT_MERGING, OPT_OUTPUT_RES, OPT_OUTPUT_TRACE_SET],
@@ -120,7 +128,7 @@ data = [
 	#------------------------------------------------------------
 	# BEGIN benchmark
 	{
-		'benchmark_name'	: 'astrium_basic_thermal_fp',
+		'benchmark_name'	: 'astrium_basic_thermal_fp (IM)',
 		'log_prefix'		: 'astrium_basic_thermal_fp_im',
 		'input_files'		: ['Scheduling/astrium_basic_thermal_fp.imi', 'Scheduling/astrium_basic_thermal_fp.pi0'],
 		'options'			: [OPT_MERGING, OPT_OUTPUT_RES, OPT_OUTPUT_TRACE_SET],
@@ -131,7 +139,7 @@ data = [
 	#------------------------------------------------------------
 	# BEGIN benchmark
 	{
-		'benchmark_name'	: 'am02',
+		'benchmark_name'	: 'am02 (IM)',
 		'log_prefix'		: 'am02_im',
 		'input_files'		: ['Scheduling/am02.imi', 'Scheduling/am02.pi0'],
 		'input_files_v'		: {
@@ -145,7 +153,7 @@ data = [
 	#------------------------------------------------------------
 	# BEGIN benchmark
 	{
-		'benchmark_name'	: 'Bounded retransmission protocol',
+		'benchmark_name'	: 'Bounded retransmission protocol (IM)',
 		'log_prefix'		: 'BRP_im',
 		'input_files'		: ['BRP/brp.imi', 'BRP/brp.pi0'],
 		'input_files_v'		: {
@@ -161,13 +169,27 @@ data = [
 	#------------------------------------------------------------
 	# BEGIN benchmark
 	{
-		'benchmark_name'	: 'Root contention protocol',
+		'benchmark_name'	: 'Root contention protocol (IM)',
 		'log_prefix'		: 'RCP_im',
 		'input_files'		: ['RCP/RCP.imi', 'RCP/RCP.pi0'],
 		'input_files_v'		: {
 				V_2_5 : ['RCP/RCP_v_2_5.imi', 'RCP/RCP.pi0'],
 		},
 		'options'			: [OPT_MERGING, OPT_OUTPUT_RES, OPT_OUTPUT_TRACE_SET],
+	}
+	# END benchmark
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	# BEGIN benchmark
+	{
+		'benchmark_name'	: 'Root contention protocol (EF)',
+		'log_prefix'		: 'RCP_ef',
+		'input_files'		: ['RCP/RCP.imi'],
+		'input_files_v'		: {
+				V_2_5 : ['RCP/RCP_v_2_5.imi'],
+		},
+		'options'			: [OPT_MODE_EF, OPT_MERGING, OPT_INCLUSION, OPT_OUTPUT_RES], # , OPT_OUTPUT_TRACE_SET
 	}
 	# END benchmark
 	#------------------------------------------------------------
@@ -182,8 +204,10 @@ data = [
 	}
 	# END benchmark
 	#------------------------------------------------------------
-	,	
-	
+	,
+]
+
+data_distributed = [
 	#------------------------------------------------------------
 	# BEGIN benchmark
 	{
@@ -245,3 +269,7 @@ data = [
 	##------------------------------------------------------------
 	#,
 ]
+
+# Add distributed benchmarks only if required
+if with_distributed:
+	data = data + data_distributed
