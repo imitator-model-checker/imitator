@@ -10,6 +10,7 @@
 
 ### Minor features:
 * New option to avoid the inclusion check in EFsynth: useful when very large parameter constraints are manipulated
+* Removed the Gc.major() instruction, that used to require a huge time for large models, while not bringing any benefit for smaller models
 
 *******************************************************
 # release 2.10.3 (2018-05-22)

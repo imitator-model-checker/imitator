@@ -2871,7 +2871,7 @@ class virtual algoStateBased =
 
 			(* Clean up a little *)
 			(*** NOTE: LOOKS LIKE COMPLETELY USELESS !!! it even increases memory x-( ***)
-			Gc.major ();
+(* 			Gc.major (); *)
 
 			(* Statistics *)
 			counter_gcmajor#stop;
