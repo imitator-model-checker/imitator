@@ -71,7 +71,7 @@ In this document, we present the input syntax, we formally define the input mode
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{A brief introduction to the syntax}
+\chapter{A brief introduction to the syntax}\label{chapter:syntax-introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1001,6 +1001,21 @@ To generate a graphic representation of the \NIPTA{} model without performing an
 
 \imitator{} will generate a file \stylePath{model-pta.jpg}, \stylePath{model-pta.pdf} and \stylePath{model-pta.png} respectively (using the \gdot{} utility).
 
+Colored transitions are synchronized transitions (\ie{} shared by at least two \IPTA{}), black transitions are local transitions, while dotted transitions are unnamed local transitions (often referred to as $\epsilon$-transitions in the literature).
+
+\begin{example}
+	Consider again the case study given in \cref{chapter:syntax-introduction} (and of which a TikZ export was given in \cref{figure:fischer}).
+	Then the result of the \styleOption{-PTA2PDF} command is given in \cref{figure:PDF-export}.
+\end{example}
+
+\begin{figure}
+	\includegraphics[width=\textwidth]{include/fischerPAT_obs-pta.pdf}
+
+	\caption{Example of PDF export}
+	\label{figure:PDF-export}
+\end{figure}
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1015,6 +1030,10 @@ To generate a \LaTeX{} representation of the \NIPTA{} model (using the \texttt{t
 This file is a standalone \LaTeX{} file containing a single figure, which contains the different \IPTA{} in ``\texttt{subfigure}'' environments.
 The node positioning is not yet supported (locations are depicted vertically), so you may need to manually position all nodes, and bend some transitions if needed.
 
+
+\begin{example}
+	Consider again the case study given in \cref{chapter:syntax-introduction}: a TikZ export was given in \cref{figure:fischer}, with some manual positioning.
+\end{example}
 
 
 
