@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created:       2012/05/10
- * Last modified: 2018/03/30
+ * Last modified: 2018/06/05
  *
  ************************************************************)
  
@@ -51,7 +51,7 @@ class imitator_options :
 		method dynamic_clock_elimination : bool
 		method efim : bool
 		method exploration_order : exploration_order
-		method fancy : bool
+(* 		method fancy : bool *)
 		method files_prefix : string
 (* 		method fromGML : bool *)
 		method imitator_mode : imitator_mode
@@ -95,8 +95,8 @@ class imitator_options :
 		method timed_mode : bool
 		method tree : bool
 		method union : bool
-		method output_trace_set : bool
-		method output_trace_set_verbose: bool
+		method graphical_state_space : graphical_state_space
+(* 		method graphical_state_space_verbose: bool *)
 		method with_graphics_source : bool
 		method with_log : bool
 (* 		method with_parametric_log : bool *)

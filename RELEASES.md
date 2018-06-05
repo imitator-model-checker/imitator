@@ -3,6 +3,7 @@
 
 ### Bug fixing:
 * Correct errors in displaying PTA (graphics in PDF, PNG, etc.): arithmetic expressions on discrete variables did not print correctly
+* Fix a bug (or an unclarity) in the options for trace set generation
 
 ### Syntax improvement
 * The prime (`'`) in transition updates becomes optional; the `=` in transition updates becomes `:=` (backward-compatibility remains ensured until further notices) That is, an update `x' = 0` becomes `x := 0`
