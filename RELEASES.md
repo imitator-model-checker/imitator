@@ -9,6 +9,9 @@
 * The prime (`'`) in transition updates becomes optional; the `=` in transition updates becomes `:=` (backward-compatibility remains ensured until further notices) That is, an update `x' = 0` becomes `x := 0`
 * `while [invariant condition] wait{}` becomes `invariant [invariant condition]` (backward-compatibility remains ensured until further notices)
 
+### Export
+* The graphical state space now comes in .png instead of .jpg for better readability
+
 ### Minor features:
 * New option to avoid the inclusion check in EFsynth: useful when very large parameter constraints are manipulated
 * Removed the Gc.major() instruction, that used to require a huge time for large models, while not bringing any benefit for smaller models

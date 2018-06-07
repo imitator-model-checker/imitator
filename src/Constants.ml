@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2018/05/22
+ * Last modified     : 2018/06/07
  *
  ************************************************************)
 
@@ -63,7 +63,8 @@ let model_extension = ".imi"
 (** Extension for files output *)
 let result_file_extension = ".res"
 
-let default_dot_image_extension = "jpg"
+let state_space_image_format = "png"
+let pta_default_image_format = "jpg"
 let dot_file_extension = "dot"
 let states_file_extension = "states"
 let cartography_extension = "png"

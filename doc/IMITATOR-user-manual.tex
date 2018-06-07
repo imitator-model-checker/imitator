@@ -937,7 +937,7 @@ To generate the trace set (\ie{} the discretized state space) of a given computa
 
 \styleCommand{\binimitator{} model.imi [options] -output-trace-set}
 
-\imitator{} will generate a file \stylePath{model-statespace.jpg}.
+\imitator{} will generate a file \stylePath{model-statespace.png}.
 Note that, beyond about 1,000 states or 1,000 transitions, the \gdot{} utility (responsible to generate the trace set) may crash.
 
 Using \styleOption{-output-trace-set-nodetails} makes a more compact representation (but is also less informative).
@@ -1454,7 +1454,7 @@ In cartography, generates the required files for each tile (works together with 
 \paragraph{\styleOption{-output-trace-set} (default: false)}
 %------------------------------------------------------------
 Graphical output using \gdot{}.
-In this case, \imitator{} outputs a file \stylePath{<input\_file>.jpg}, which is a graphical output in the jpg format, generated using \gdot{}, corresponding to the trace set.
+In this case, \imitator{} outputs a file \stylePath{<input\_file>.png}, which is a graphical output in the PNG format, generated using \gdot{}, corresponding to the trace set.
 
 Note that the path and the name of those two files can be changed using the \stylePath{-log-prefix} option.
 

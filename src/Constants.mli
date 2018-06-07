@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/06/27
+ * Last modified     : 2018/06/07
  *
  ************************************************************)
 
@@ -47,15 +47,16 @@ val dot_command : string
 
 
 (** Extension for input model files *)
-val model_extension : string
+val model_extension          : string
 
 (** Extension for files output *)
-val result_file_extension : string
+val result_file_extension    : string
 
-val default_dot_image_extension : string
-val dot_file_extension : string
-val states_file_extension : string
-val cartography_extension : string
+val state_space_image_format : string
+val pta_default_image_format : string
+val dot_file_extension       : string
+val states_file_extension    : string
+val cartography_extension    : string
 
 (************************************************************)
 (************************************************************)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2018/06/05
+ * Last modified     : 2018/06/07
  *
  ************************************************************)
  
@@ -967,7 +967,7 @@ let draw_statespace state_space algorithm_name radical =
 	if options#graphical_state_space <> Graphical_state_space_none || options#with_log then (
 		let dot_model, states = dot_of_statespace state_space algorithm_name (*~fancy:options#fancy*) in
 		
-		dot default_dot_image_extension radical dot_model;
+		dot state_space_image_format radical dot_model;
 		
 		(*(* Get the file names *)
 		let dot_file_name = (radical ^ "." ^ dot_file_extension) in
