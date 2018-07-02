@@ -945,6 +945,8 @@ Consider state \texttt{s\_1} in \cref{figure:traceset:normal} (and originating f
 	while
 	the current location of IPTA \styleFileContent{observer} is \styleFileContent{obs\_waiting}.
 In addition, the current value of variable \styleFileContent{turn} is $-1$ while the current value of \styleFileContent{counter} is~0.
+The color is chosen according to \imitator{} internal choice: however, two symbolic states with the same color have the same discrete part (location and values of the discrete variables).
+For example, this is the case of \styleFileContent{s\_4} and \styleFileContent{s\_5} in \cref{figure:traceset:normal}.
 
 Note that, beyond about 1,000 states or 1,000 transitions, the \gdot{} utility (responsible to generate the state space) may crash.
 
