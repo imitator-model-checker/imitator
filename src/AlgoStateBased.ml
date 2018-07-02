@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2018/04/06
+ * Last modified     : 2018/05/30
  *
  ************************************************************)
 
@@ -176,7 +176,7 @@ let counter_nb_unsatisfiable_discrete = create_discrete_counter_and_register "un
 let counter_nb_combinations = create_discrete_counter_and_register "different combinations" States_counter Verbose_experiments
 
 (* Early unsatisfiability when computing new states, after performing intersection of Di = di and C(X) and g(X) *)
-let counter_nb_unsat1 = create_discrete_counter_and_register "early unsat (D ^ g)" States_counter Verbose_experiments
+let counter_nb_unsat1 = create_discrete_counter_and_register "early unsat (D^g)" States_counter Verbose_experiments
 
 (* Counter measuring the time spent on the computation of successor (discrete) transitions *)
 (*** NOTE: if this is correct, this counter should not measure any PPL-based computation! ***)
@@ -185,13 +185,24 @@ let tcounter_next_transitions = create_time_counter_and_register "next transitio
 (* Counter measuring the time spent on exhibiting which transitions can effectively be taken (this DOES include some PPL time) *)
 let tcounter_legal_transitions_exist = create_time_counter_and_register "legal transitions exist" States_counter Verbose_experiments
 
+(* Counter measuring the time spent in function compute_new_location_guards_updates *)
+let tcounter_compute_location_guards_discrete = create_time_counter_and_register "compute locations,guards,updates" States_counter Verbose_experiments
+
 (* let nb_unsat2 = ref 0 *)
 
+(* Functions counters *)
+let counter_add_transition_to_state_space = create_hybrid_counter_and_register "StateBased.add_transition_to_state_space" States_counter Verbose_experiments
+let counter_explore_layer_bfs = create_hybrid_counter_and_register "StateBased.explore_layer_bfs" States_counter Verbose_experiments
+let counter_post_from_one_state = create_hybrid_counter_and_register "StateBased.post_from_one_state" States_counter Verbose_experiments
+let counter_process_post_n = create_hybrid_counter_and_register "StateBased.process_post_n" States_counter Verbose_experiments
+
+(* Misc counters *)
+let counter_nplus1 = create_hybrid_counter_and_register "StateBased.computation of post_n+1" States_counter Verbose_medium
+
+let counter_gcmajor = create_hybrid_counter_and_register "StateBased.gcmajor" States_counter Verbose_experiments
 
 
 
-	
-	
 (************************************************************)
 (* Main functions *)
 (************************************************************)
@@ -1516,6 +1527,10 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** TODO: to get a more abstract method, and update the state space from another function ***)
 	method private post_from_one_state source_state_index =
+	
+		(* Statistics *)
+		counter_post_from_one_state#increment;
+		counter_post_from_one_state#start;
 
 		(* Original location: static *)
 		let original_location, _ = StateSpace.get_state state_space source_state_index in
@@ -1653,8 +1668,14 @@ class virtual algoStateBased =
 				(* Statistics *)
 				tcounter_next_transitions#stop;
 				
+				(* Statistics *)
+				tcounter_compute_location_guards_discrete#start;
+				
 				(* Compute the new location for the current combination of transitions *)
 				let location, (discrete_guards : LinearConstraint.d_linear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates real_indexes current_transitions action_index original_location in
+				
+				(* Statistics *)
+				tcounter_compute_location_guards_discrete#stop;
 				
 				(* Check if the discrete guards are satisfied *)
 				if not (List.for_all (evaluate_d_linear_constraint_in_location original_location) discrete_guards) then(
@@ -1768,6 +1789,8 @@ class virtual algoStateBased =
 			self#process_deadlock_state source_state_index;
 		);
 		
+		(* Statistics *)
+		counter_post_from_one_state#stop;
 
 		(* Return the list of (really) new states *)
 		(*** NOTE: List.rev really useful??!!!! ***)
@@ -1780,6 +1803,11 @@ class virtual algoStateBased =
 	(* Add a transition to the state space *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method add_transition_to_state_space transition addition_result =
+	
+		(* Statistics *)
+		counter_add_transition_to_state_space#increment;
+		counter_add_transition_to_state_space#start;
+	
 		(* Expand the transition *)
 		let source_state_index, action_index, target_state_index = transition in
 		
@@ -1799,6 +1827,10 @@ class virtual algoStateBased =
 			print_message Verbose_high ("\n" ^ beginning_message ^ " s_" ^ (string_of_int target_state_index) ^ " reachable from s_" ^ (string_of_int source_state_index) ^ " via action '" ^ (model.action_names action_index) ^ "': ");
 			print_message Verbose_high (ModelPrinter.string_of_state model new_target_state);
 		);
+		
+		(* Statistics *)
+		counter_add_transition_to_state_space#stop;
+
 		(* The end *)
 		()
 
@@ -1961,10 +1993,10 @@ class virtual algoStateBased =
 	(* Main method to run the queue-based BFS algorithm  *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* method private explore_queue_bfs init_state_index = *)
-	(* 09-10-2017: Changed to public for didtributed version - Files related: AlgoNZCUBdist *)
+	(* 09-10-2017: Changed to public for distributed version - Files related: AlgoNZCUBdist *)
 	method explore_queue_bfs init_state_index =
 
-		print_message Verbose_standard("Entering explore_queue_bfs!!!");
+		print_message Verbose_medium("Entering explore_queue_bfs!!!");
 
 
 
@@ -2616,7 +2648,7 @@ class virtual algoStateBased =
 			
 		done;
 
-		print_message Verbose_standard ("End of Ordering!!! \n");
+		print_message Verbose_medium ("End of Ordering!!! \n");
 		
 		(* Were they any more states to explore? *)
 		let nb_unexplored_successors = List.length !queue in
@@ -2668,7 +2700,7 @@ class virtual algoStateBased =
 
 
 
-		print_message Verbose_standard("Exiting explore_queue_bfs!!!");
+		print_message Verbose_medium("Exiting explore_queue_bfs!!!");
 		(* The end *)
 		()
 
@@ -2677,9 +2709,13 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the BFS algorithm  *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* 09-10-2017: Changed to public for didtributed version - Files related: AlgoNZCUBdist *)
+	(* 09-10-2017: Changed to public for distributed version - Files related: AlgoNZCUBdist *)
 	(* method private explore_layer_bfs init_state_index = *)
 	method explore_layer_bfs init_state_index =
+	
+		(* Statistics *)
+		counter_explore_layer_bfs#increment;
+		counter_explore_layer_bfs#start;
 		
 		(* Set the depth to 1 *)
 		bfs_current_depth <- 1;
@@ -2708,6 +2744,10 @@ class virtual algoStateBased =
 			(* Count the states for verbose purpose: *)
 			let num_state = ref 0 in
 
+			(* Statistics *)
+			counter_nplus1#increment;
+			counter_nplus1#start;
+			
 			(* The concrete function post_from_one_state may raise exception TerminateAnalysis, and update termination_status *)
 			let post_n_plus_1 =
 			try(
@@ -2715,8 +2755,10 @@ class virtual algoStateBased =
 			List.fold_left (fun current_post_n_plus_1 orig_state_index ->
 				(* Count the states for verbose purpose: *)
 				num_state := !num_state + 1;
+				
 				(* Perform the post *)
 				let new_states = self#post_from_one_state orig_state_index in
+				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then (
 					let beginning_message = if new_states = [] then "Found no new state" else ("Found " ^ (string_of_int (List.length new_states)) ^ " new state" ^ (s_of_int (List.length new_states)) ^ "") in
@@ -2733,8 +2775,18 @@ class virtual algoStateBased =
 			
 			in
 			
+			(* Statistics *)
+			counter_nplus1#stop;
+
+			(* Statistics *)
+			counter_process_post_n#increment;
+			counter_process_post_n#start;
+			
 			self#process_post_n !post_n;
 			
+			(* Statistics *)
+			counter_process_post_n#stop;
+
 			(* Merge states! *)
 			let new_states_after_merging = ref post_n_plus_1 in
 			(*** HACK here! For #merge_before, we should ONLY merge here; but, in order not to change the full structure of the post computation, we first merge locally before the pi0-compatibility test, then again here ***)
@@ -2813,10 +2865,18 @@ class virtual algoStateBased =
 				(*** TODO ***)
 			);
 			
+			(* Statistics *)
+			counter_gcmajor#increment;
+			counter_gcmajor#start;
+
 			(* Clean up a little *)
 			(*** NOTE: LOOKS LIKE COMPLETELY USELESS !!! it even increases memory x-( ***)
-			Gc.major ();
-			
+(* 			Gc.major (); *)
+
+			(* Statistics *)
+			counter_gcmajor#stop;
+
+
 			(* Go one step deeper *)
 			bfs_current_depth <- bfs_current_depth + 1;
 			
@@ -2883,8 +2943,12 @@ class virtual algoStateBased =
 			^ ": "
 			^ (string_of_int nb_states) ^ " state" ^ (s_of_int nb_states)
 			^ " with "
-			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " in the final state space.");
-			(*** NOTE: in fact, more states and transitions may have been explored (and deleted); here, these figures are the number of states in the state space. ***)
+			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " in the final state space."
+		);
+		(*** NOTE: in fact, more states and transitions may have been explored (and deleted); here, these figures are the number of states in the state space. ***)
+
+		(* Statistics *)
+		counter_explore_layer_bfs#stop;
 
 		(* The end *)
 		()

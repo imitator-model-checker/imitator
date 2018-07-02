@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, France
 # Created      : 2015/10/23
-# Last modified: 2018/05/17
+# Last modified: 2018/06/05
 #************************************************************
 
 
@@ -6953,6 +6953,94 @@ property := unreachable loc[OBS_dline] = dline_loc_miss
 end
 		"""
 			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test the graphical state space generation (no details)',
+		'input_files': ['CUBPTA1.imi'],
+		'options'    : '-mode statespace -output-trace-set-nodetails -output-graphics-source',
+		'expectations' : [
+			{'file': 'CUBPTA1-statespace.dot' , 'content' : """
+  s_3 -> s_2 [label="a"];
+  s_0 -> s_1 [label="a"];
+  s_2 -> s_3 [label="a"];
+  s_1 -> s_2 [label="a"];
+
+/* Initial state */
+  s_init [shape=none, label="init"];
+  s_init -> s_0;
+
+/* Colors */
+
+  s_2 [color=blue, style=filled];
+  s_0 [color=blue, style=filled];
+  s_3 [color=yellow, style=filled];
+  s_1 [color=yellow, style=filled];
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test the graphical state space generation (normal)',
+		'input_files': ['CUBPTA1.imi'],
+		'options'    : '-mode statespace -output-trace-set -output-graphics-source',
+		'expectations' : [
+			{'file': 'CUBPTA1-statespace.dot' , 'content' : """
+  s_3 -> s_2 [label="a"];
+  s_0 -> s_1 [label="a"];
+  s_2 -> s_3 [label="a"];
+  s_1 -> s_2 [label="a"];
+
+/* Initial state */
+  s_init [shape=none, label="init"];
+  s_init -> s_0;
+
+/* Colors */
+
+  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{l1}"];
+  s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{l1}"];
+  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{l2}"];
+  s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{l2}"];
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test the graphical state space generation (verbose)',
+		'input_files': ['CUBPTA1.imi'],
+		'options'    : '-mode statespace -output-trace-set-verbose -output-graphics-source',
+		'expectations' : [
+			{'file': 'CUBPTA1-statespace.dot' , 'content' : """
+  s_3 -> s_2 [label="a"];
+  s_0 -> s_1 [label="a"];
+  s_2 -> s_3 [label="a"];
+  s_1 -> s_2 [label="a"];
+
+/* Initial state */
+  s_init [shape=none, label="init"];
+  s_init -> s_0;
+
+/* Colors */
+
+  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{l1}|{ p1 \>= x \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& x = y| p2 \>= 1 \\n \& p1 \>= 0}"];
+  s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{l1}|{ p1 \>= x \\n \& p2 \>= 0 \\n \& x \>= 0 \\n \& x = y| p2 \>= 0 \\n \& p1 \>= 0}"];
+  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1}"];
+  s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& x \>= 0 \\n \& y \>= x| p2 \>= 0 \\n \& p1 \>= 0}"];
+		"""
+			} # end result file
+			# NOTE (ÉA, 18/06/05): I had to manually replace '\n' with '\\n' to make this test pass
 			,
 		] # end expectations
 	} # end test case

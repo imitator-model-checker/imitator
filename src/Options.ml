@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2018/04/06
+ * Last modified     : 2018/06/05
  *
  ************************************************************)
 
@@ -70,7 +70,7 @@ class imitator_options =
 		val mutable cartonly = false
 		
 		(* Give location detais in dot *)
-		val mutable fancy = ref true
+(* 		val mutable fancy = ref true *)
 		
 		(* prefix for output files *)
 		val mutable files_prefix = ref ""
@@ -103,10 +103,10 @@ class imitator_options =
 		val mutable timed_mode = ref false
 		
 		(* Print graph of reachable states *)
-		val mutable output_trace_set = ref false
+		val mutable graphical_state_space = Graphical_state_space_none
 		
 		(* Print graph of reachable states in verbose mode *)
-		val mutable output_trace_set_verbose = ref false
+(* 		val mutable output_trace_set_verbose = ref false *)
 		
 		(* Keep the source file used for dot *)
 		val mutable with_graphics_source = ref false
@@ -282,7 +282,7 @@ class imitator_options =
 		method dynamic_clock_elimination = !dynamic_clock_elimination
 		method efim = !efim
 		method exploration_order = exploration_order
-		method fancy = !fancy
+(* 		method fancy = !fancy *)
 		method files_prefix = !files_prefix
 (* 		method fromGML = fromGML *)
 		method imitator_mode = imitator_mode
@@ -325,8 +325,8 @@ class imitator_options =
 		method timed_mode = !timed_mode
 		method tree = !tree
 		method union = !union
-		method output_trace_set = !output_trace_set
-		method output_trace_set_verbose = !output_trace_set_verbose
+		method graphical_state_space = graphical_state_space
+(* 		method output_trace_set_verbose = !output_trace_set_verbose *)
 		method with_graphics_source = !with_graphics_source
 		method with_log = !with_log
 (* 		method with_parametric_log = !with_parametric_log *)
@@ -434,7 +434,7 @@ class imitator_options =
 					no_time_elapsing := true;
 					
 					(*** HACK!!! otherwise Graphics won't generate the .jpg file to test...) ***)
-					output_trace_set := true;
+					graphical_state_space <- Graphical_state_space_normal;
 				)
 					
 				(* Case: Parametric deadlock checking *)
@@ -738,11 +738,13 @@ class imitator_options =
 				
 				("-output-tiles-files", Set output_tiles_files, " In cartography, generate the required files for each tile (works together with -output-cart, -output-result). Default: false.");
 				
-				("-output-trace-set", Set output_trace_set, " Output trace set under a graphical form (using 'dot'). Default: false.");
+				(*** TODO: merge these 3 options using "-output-trace-set nodetails", "-output-trace-set normal", "-output-trace-set verbose" ***)
+				("-output-trace-set", Unit (fun _ -> graphical_state_space <- Graphical_state_space_normal), " Output trace set under a graphical form (using 'dot') with location names. Default: none.");
 				
-				("-output-trace-set-nodetails", Clear fancy, " No detailed location information in graphical trace set. Default: false (i.e., with details).");
+				("-output-trace-set-nodetails", Unit (fun _ -> graphical_state_space <- Graphical_state_space_nodetails), " Output trace set under a graphical form (using 'dot') without location names. Default: none.");
 
-				("-output-trace-set-verbose", Unit (fun _ -> output_trace_set := true; output_trace_set_verbose := true), " Output trace set under a graphical form (using 'dot') in verbose mode (print constraints). Default: false.");
+				("-output-trace-set-verbose", Unit (fun _ -> graphical_state_space <- Graphical_state_space_verbose), " Output trace set under a graphical form (using 'dot') with location names and constraints. Default: none.");
+				
 				
 				("-precomputepi0", Set precomputepi0, " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode only). Default: false.");
 
@@ -755,21 +757,21 @@ class imitator_options =
 				("-PTA2JPG", Unit (fun _ ->
 					pta2jpg := true;
 					(*** HACK ***)
-					output_trace_set := true;
+					graphical_state_space <- Graphical_state_space_normal;
 					imitator_mode <- Translation
 				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : 'false'");
 				
 				("-PTA2PDF", Unit (fun _ ->
 					pta2pdf := true;
 					(*** HACK ***)
-					output_trace_set := true;
+					graphical_state_space <- Graphical_state_space_normal;
 					imitator_mode <- Translation
 				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : 'false'");
 				
 				("-PTA2PNG", Unit (fun _ ->
 					pta2png := true;
 					(*** HACK ***)
-					output_trace_set := true;
+					graphical_state_space <- Graphical_state_space_normal;
 					imitator_mode <- Translation
 				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : 'false'");
 				
@@ -1316,24 +1318,24 @@ class imitator_options =
 				print_message Verbose_medium ("No result written into a file (default).")
 			;
 			
-			if !output_trace_set then
+			if graphical_state_space <> Graphical_state_space_none then
 				print_message Verbose_standard ("The trace set(s) will be generated in a graphical mode.")
 			else
 				print_message Verbose_medium ("No graphical output for trace set(s) (default).")
 			;
 			
-			if !output_trace_set_verbose then
+(*			if !output_trace_set_verbose then
 				print_message Verbose_standard ("The trace set(s) will be generated in a graphical mode with verbose information (with all constraints).")
 			else
 				print_message Verbose_medium ("No verbose graphical output for trace set(s) (default).")
-			;
+			;*)
 			
-			if !fancy then
+(*			if !fancy then
 				print_message Verbose_medium ("Locations will be detailed in the graphical trace set (default).")
 			else
 				print_message Verbose_standard ("No location details in the graphical trace set.")
 			;
-			
+			*)
 			
 			if !with_log then
 				print_message Verbose_standard ("Description of states will be output.")

@@ -63,6 +63,11 @@ class virtual algoEFsynth =
 	val counter_cache = create_discrete_counter_and_register "cache (EF)" PPL_counter Verbose_low
 	(* Number of cache misses *)
 	val counter_cache_miss = create_discrete_counter_and_register "cache miss (EF)" PPL_counter Verbose_low
+	(* Methods counters *)
+	val counter_process_state = create_hybrid_counter_and_register "EFsynth.process_state" States_counter Verbose_experiments
+	val counter_compute_p_constraint_with_cache = create_hybrid_counter_and_register "EFsynth.compute_p_constraint_with_cache" States_counter Verbose_experiments
+	val counter_add_a_new_state = create_hybrid_counter_and_register "EFsynth.add_a_new_state" States_counter Verbose_experiments
+
 	
 	
 	(* Mini cache system: keep in memory the current p-constraint to save computation time *)
@@ -97,6 +102,11 @@ class virtual algoEFsynth =
 	(** Process a symbolic state: returns false if the state is a target state (and should not be added to the next states to explore), true otherwise *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private process_state state =
+	
+		(* Statistics *)
+		counter_process_state#increment;
+		counter_process_state#start;
+	
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
 			self#print_algo_message Verbose_medium "Entering process_state…";
@@ -185,6 +195,10 @@ class virtual algoEFsynth =
 		| _ -> raise (InternalError("[EFsynth/PRP] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
 		
 		in
+		
+		(* Statistics *)
+		counter_process_state#stop;
+
 		(* Return result *)
 		to_be_added
 	
@@ -199,6 +213,12 @@ class virtual algoEFsynth =
 	(** Compute the p-constraint only if it is not cached *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private compute_p_constraint_with_cache px_linear_constraint =
+
+		(* Statistics *)
+		counter_compute_p_constraint_with_cache#increment;
+		counter_compute_p_constraint_with_cache#start;
+		
+		let result =
 		match cached_p_constraint with
 		(* Cache empty: *)
 		| None ->
@@ -224,7 +244,13 @@ class virtual algoEFsynth =
 			);
 			(* Return the value in cache *)
 			p_constraint
-	
+		in
+		
+		(* Statistics *)
+		counter_compute_p_constraint_with_cache#stop;
+
+		result
+		
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add a new state to the state_space (if indeed needed) *)
@@ -234,6 +260,10 @@ class virtual algoEFsynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** WARNING/BADPROG: the following is partially copy/paste to AlgoPRP.ml ***)
 	method add_a_new_state source_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
+		(* Statistics *)
+		counter_add_a_new_state#increment;
+		counter_add_a_new_state#start;
+		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
 			self#print_algo_message Verbose_medium "Entering add_a_new_state (and reset cache)…";
@@ -328,6 +358,9 @@ class virtual algoEFsynth =
 			raise TerminateAnalysis;
 		);
 	
+		(* Statistics *)
+		counter_add_a_new_state#stop;
+
 		(* The state is kept in any case *)
 		true
 (*** WARNING/BADPROG: what preceedes is partially copy/paste to AlgoPRP.ml ***)

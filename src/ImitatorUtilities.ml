@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2018/03/15
+ * Last modified     : 2018/06/05
  *
  ************************************************************)
 
@@ -303,6 +303,18 @@ type exploration_order =
 	(** Queue-BFS: queue-based, independent of the depth, with priority for the selection of the next state *)
 	| Exploration_queue_BFS_PRIOR
 	
+
+(** Style of graphical state space to output *)
+type graphical_state_space =
+	(* No graphical state space *)
+	| Graphical_state_space_none
+	(* State space with state numbers only*)
+	| Graphical_state_space_nodetails
+	(* State space with state numbers and locations *)
+	| Graphical_state_space_normal
+	(* State space with state numbers, locations, constraints and parameter constraints *)
+	| Graphical_state_space_verbose
+
 
 (************************************************************)
 (** Time functions *)

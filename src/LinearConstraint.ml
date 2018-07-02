@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2018/03/30
+ * Last modified     : 2018/05/30
  *
  ************************************************************)
 
@@ -2277,7 +2277,7 @@ let is_pi0_compatible pi0 linear_constraint =
 	in
 
 	(* Stop continuous counter *)
-	tcounter_pi0_compatibility#start;
+	tcounter_pi0_compatibility#stop;
 	
 	(* Return *)
 	result

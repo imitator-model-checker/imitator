@@ -71,7 +71,7 @@ In this document, we present the input syntax, we formally define the input mode
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{A brief introduction to the syntax}
+\chapter{A brief introduction to the syntax}\label{chapter:syntax-introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -937,7 +937,7 @@ To generate the trace set (\ie{} the discretized state space) of a given computa
 
 \styleCommand{\binimitator{} model.imi [options] -output-trace-set}
 
-\imitator{} will generate a file \stylePath{model-statespace.jpg}.
+\imitator{} will generate a file \stylePath{model-statespace.pdf}.
 Note that, beyond about 1,000 states or 1,000 transitions, the \gdot{} utility (responsible to generate the trace set) may crash.
 
 Using \styleOption{-output-trace-set-nodetails} makes a more compact representation (but is also less informative).
@@ -1001,6 +1001,21 @@ To generate a graphic representation of the \NIPTA{} model without performing an
 
 \imitator{} will generate a file \stylePath{model-pta.jpg}, \stylePath{model-pta.pdf} and \stylePath{model-pta.png} respectively (using the \gdot{} utility).
 
+Colored transitions are synchronized transitions (\ie{} shared by at least two \IPTA{}), black transitions are local transitions, while dotted transitions are unnamed local transitions (often referred to as $\epsilon$-transitions in the literature).
+
+\begin{example}
+	Consider again the case study given in \cref{chapter:syntax-introduction} (and of which a TikZ export was given in \cref{figure:fischer}).
+	Then the result of the \styleOption{-PTA2PDF} command is given in \cref{figure:PDF-export}.
+\end{example}
+
+\begin{figure}
+	\includegraphics[width=\textwidth]{include/fischerPAT_obs-pta.pdf}
+
+	\caption{Example of PDF export}
+	\label{figure:PDF-export}
+\end{figure}
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1015,6 +1030,10 @@ To generate a \LaTeX{} representation of the \NIPTA{} model (using the \texttt{t
 This file is a standalone \LaTeX{} file containing a single figure, which contains the different \IPTA{} in ``\texttt{subfigure}'' environments.
 The node positioning is not yet supported (locations are depicted vertically), so you may need to manually position all nodes, and bend some transitions if needed.
 
+
+\begin{example}
+	Consider again the case study given in \cref{chapter:syntax-introduction}: a TikZ export was given in \cref{figure:fischer}, with some manual positioning.
+\end{example}
 
 
 
@@ -1435,7 +1454,7 @@ In cartography, generates the required files for each tile (works together with 
 \paragraph{\styleOption{-output-trace-set} (default: false)}
 %------------------------------------------------------------
 Graphical output using \gdot{}.
-In this case, \imitator{} outputs a file \stylePath{<input\_file>.jpg}, which is a graphical output in the jpg format, generated using \gdot{}, corresponding to the trace set.
+In this case, \imitator{} outputs a file \stylePath{<input\_file>.pdf}, which is a graphical output in the PDF format, generated using \gdot{}, corresponding to the trace set.
 
 Note that the path and the name of those two files can be changed using the \stylePath{-log-prefix} option.
 
@@ -1446,7 +1465,7 @@ Note that the path and the name of those two files can be changed using the \sty
 
 In the graphical output of the trace set (see option \styleOption{-output-trace-set}),
 does \emph{not} provide detailed information on the local locations of the composed \IPTA{}, and instead only outputs the state id.
-Enabling this option may yield a smaller graph, which is useful when generating large trace sets.
+Enabling this option instead of \styleOption{-output-trace-set} may yield a smaller graph, which is useful when generating large trace sets.
 
 
 %------------------------------------------------------------
@@ -1456,7 +1475,7 @@ Enabling this option may yield a smaller graph, which is useful when generating 
 In the graphical output of the trace set (see option \styleOption{-output-trace-set}),
 provides very detailed information, by adding to the right of the local locations of the composed \IPTA{} the associated constraint as well.
 In addition, the parametric constraint is printed too.
-Enabling this option will yield a very large graph, and it is useful (and readable) mostly for very small trace sets.
+Enabling this option instead of \styleOption{-output-trace-set} will yield a very large graph, and it is useful (and readable) mostly for very small trace sets.
 	% TODO: show examples in the manual
 
 

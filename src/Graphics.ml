@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2018/03/15
+ * Last modified     : 2018/06/07
  *
  ************************************************************)
  
@@ -612,7 +612,7 @@ let dot_colors = [
 ]
 
 (* Convert a graph to a dot file *)
-let dot_of_statespace state_space algorithm_name ~fancy =
+let dot_of_statespace state_space algorithm_name (*~fancy*) =
 	(* Retrieve the model *)
 	let model = Input.get_model () in
 	(* Retrieve the input options *)
@@ -820,7 +820,7 @@ let dot_of_statespace state_space algorithm_name ~fancy =
 			(* create node index *)
 			let node_index = "s_" ^ (string_of_int state_index) in
 
-			if fancy || options#output_trace_set_verbose then (
+			if options#graphical_state_space = Graphical_state_space_normal || options#graphical_state_space = Graphical_state_space_verbose then (
 				(* create record label with location names *)
 				let loc_names = List.map (fun aut_index -> 
 					let loc_index = Location.get_location global_location aut_index in
@@ -846,10 +846,10 @@ let dot_of_statespace state_space algorithm_name ~fancy =
 				
 				(* Print constraint if requested *)
 				let pxd_constraint =
-					if options#output_trace_set_verbose then "|{" ^ (escape_string_for_dot (LinearConstraint.string_of_px_linear_constraint model.variable_names linear_constraint)) else ""
+					if options#graphical_state_space = Graphical_state_space_verbose then "|{" ^ (escape_string_for_dot (LinearConstraint.string_of_px_linear_constraint model.variable_names linear_constraint)) else ""
 				in
 				let p_constraint =
-					if options#output_trace_set_verbose then (
+					if options#graphical_state_space = Graphical_state_space_verbose then (
 					(* Eliminate clocks *)
 					(*** WARNING: already done earlier; hence loss of efficiency ***)
 					let parametric_constraint = LinearConstraint.px_hide_nonparameters_and_collapse linear_constraint in
@@ -906,7 +906,7 @@ let dot dot_image_extension radical dot_source_file =
 	
 	(*** WARNING! that's bad programming… it shouldn't be the role of this function to test options ***)
 	
-	if options#output_trace_set || options#with_log then (
+	if options#graphical_state_space <> Graphical_state_space_none || options#with_log then (
 		(* Get the file names *)
 		let dot_file_name = (radical ^ "." ^ dot_file_extension) in
 		let image_file_name = (radical ^ "." ^ dot_image_extension) in
@@ -917,7 +917,7 @@ let dot dot_image_extension radical dot_source_file =
 		(* Create the input file *)
 		print_message Verbose_medium ("Creating input file for dot…");
 
-		if options#output_trace_set then (
+		if options#graphical_state_space <> Graphical_state_space_none then (
 			(* Write dot file *)
 			if options#with_graphics_source then(
 				print_message Verbose_standard ("Creating source file for dot…");
@@ -946,7 +946,7 @@ let dot dot_image_extension radical dot_source_file =
 				print_message Verbose_medium ("Removing dot file…");
 				delete_file dot_file_name;
 			);
-		); (* end if output_trace_set *)
+		); (* end if graphical_state_space *)
 	)
 	
 
@@ -964,10 +964,10 @@ let draw_statespace state_space algorithm_name radical =
 	let options = Input.get_options () in
 	
 	(* Do not write if no dot AND no log *)
-	if options#output_trace_set || options#with_log then (
-		let dot_model, states = dot_of_statespace state_space algorithm_name ~fancy:options#fancy in
+	if options#graphical_state_space <> Graphical_state_space_none || options#with_log then (
+		let dot_model, states = dot_of_statespace state_space algorithm_name (*~fancy:options#fancy*) in
 		
-		dot default_dot_image_extension radical dot_model;
+		dot state_space_image_format radical dot_model;
 		
 		(*(* Get the file names *)
 		let dot_file_name = (radical ^ "." ^ dot_file_extension) in
@@ -980,9 +980,9 @@ let draw_statespace state_space algorithm_name radical =
 		(* Create the input file *)
 		print_message Verbose_medium ("Creating input file for dot…");
 
-		if options#output_trace_set then (
+		if options#graphical_state_space then (
 			(* Write dot file *)
-			if options#output_trace_set_source then(
+			if options#graphical_state_space_source then(
 				print_message Verbose_standard ("Creating source file for dot…");
 			)else(
 				print_message Verbose_medium ("Writing to dot file…");
@@ -996,7 +996,7 @@ let draw_statespace state_space algorithm_name radical =
 			print_message Verbose_medium ("Result of the 'dot' command: " ^ (string_of_int command_result));
 			
 			(* Removing dot file (except if option) *)
-			if not options#output_trace_set_source then(
+			if not options#graphical_state_space_source then(
 				print_message Verbose_medium ("Removing dot file…");
 				delete_file dot_file_name;
 			);

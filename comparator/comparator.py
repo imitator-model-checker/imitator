@@ -6,11 +6,11 @@
 # 
 # LIPN, Université Paris 13 (France)
 # 
-# Script description: COMPARATOR (script for non-regression tests)
+# Script description: COMPARATOR (script for comparing execution times of various versions with various options)
 # 
 # File contributors : Étienne André
 # Created           : 2016/08/08
-# Last modified     : 2017/02/10
+# Last modified     : 2018/06/01
 #************************************************************
 
 
@@ -23,7 +23,7 @@ import datetime
 import os
 import sys
 import subprocess
-import webbrowser 
+import webbrowser
 
 # To output colored text
 class bcolors:
@@ -55,6 +55,8 @@ BINARY_NAME = 'imitator'
 # Result files prefix
 RESULT_FILES_PATH = IMITATOR_PATH + 'comparator/results/'
 
+LOG_EXTENSION = '.benchlog'
+
 #ADDED
 #Path to webgen directory
 WEBGEN_PATH= IMITATOR_PATH + 'comparator/webgen/'
@@ -74,13 +76,16 @@ orig_stdout = sys.stdout
 # Versions
 #------------------------------------------------------------
 # NOTE: really ugly to manually assign a value…
-V_2_5		= 1
-V_2_6_1		= 2
-V_2_6_2_825	= 3
-V_2_7_3		= 4
-V_2_8		= 5
-V_2_8_2146	= 6
-V_current	= 7
+V_2_5			= 1
+V_2_6_1			= 2
+V_2_6_2_825		= 3
+V_2_7_3			= 4
+V_2_8			= 5
+V_2_8_2146		= 6
+V_2_9			= 7
+V_2_10_3		= 8
+V_2_10_3_2463	= 9
+V_current		= 99
 
 #------------------------------------------------------------
 # Options
@@ -96,6 +101,7 @@ OPT_OUTPUT_PREFIX		= 7
 OPT_OUTPUT_RES			= 8
 OPT_OUTPUT_TRACE_SET	= 9
 OPT_PRP					= 10
+OPT_NO_VAR_AUTOREMOVE	= 11
 
 
 UNDEFINED_SYNTAX = -1
@@ -114,7 +120,8 @@ option_names = {
 	OPT_OUTPUT_PREFIX		: 'output-prefix',
 	OPT_OUTPUT_RES			: 'output-result',
 	OPT_OUTPUT_TRACE_SET	: 'output-trace-set',
-	OPT_PRP					: 'PRP',
+	OPT_PRP					: 'PRP', # TODO: this should be an independent option, as from 2.9 -mode EF -PRP became -mode PRP (and similarly for PRPC)
+	OPT_NO_VAR_AUTOREMOVE	: 'no var autoremove'
 }
 
 #------------------------------------------------------------
@@ -138,6 +145,7 @@ versions = {
 			OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
 			OPT_OUTPUT_TRACE_SET	: '-with-dot',
 			OPT_PRP					: UNDEFINED_SYNTAX,
+			OPT_NO_VAR_AUTOREMOVE	: UNDEFINED_SYNTAX,
 			},
 		'files_suffix'			: '_2_5',
 	},
@@ -157,6 +165,7 @@ versions = {
 			OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
 			OPT_OUTPUT_TRACE_SET	: '-with-dot',
 			OPT_PRP					: UNDEFINED_SYNTAX,
+			OPT_NO_VAR_AUTOREMOVE	: UNDEFINED_SYNTAX,
 			},
 		'files_suffix'			: '_2_6_1',
 	},
@@ -177,6 +186,7 @@ versions = {
 			OPT_OUTPUT_RES			: UNDEFINED_SYNTAX,
 			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
 			OPT_PRP					: '-EFIM',
+			OPT_NO_VAR_AUTOREMOVE	: UNDEFINED_SYNTAX,
 			},
 		'files_suffix'			: '_2_6_2_825',
 	},
@@ -197,6 +207,7 @@ versions = {
 			OPT_OUTPUT_RES			: '-output-result',
 			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
 			OPT_PRP					: '-PRP',
+			OPT_NO_VAR_AUTOREMOVE	: UNDEFINED_SYNTAX,
 			},
 		'files_suffix'			: '_2_7_3',
 	},
@@ -217,6 +228,7 @@ versions = {
 			OPT_OUTPUT_RES			: '-output-result',
 			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
 			OPT_PRP					: '-PRP',
+			OPT_NO_VAR_AUTOREMOVE	: UNDEFINED_SYNTAX,
 			},
 		'files_suffix'			: '_2_8',
 	},
@@ -224,7 +236,7 @@ versions = {
 	V_2_8_2146 : {
 		'version_name'		: '2.8-2146',
 		'binary'			: 'imitator2146',
-		'binary_dist'		: 'patator',
+		#'binary_dist'		: 'patator',# TODO
 		'syntax':
 			{
 			OPT_DISTR_SUBDOMAIN		: '-distributed dynamic',
@@ -237,8 +249,72 @@ versions = {
 			OPT_OUTPUT_RES			: '-output-result',
 			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
 			OPT_PRP					: '-PRP',
+			OPT_NO_VAR_AUTOREMOVE	: UNDEFINED_SYNTAX,
 			},
 		'files_suffix'			: '_2_8_2146',
+	},
+	#------------------------------------------------------------
+	V_2_9 : {
+		'version_name'		: '2.9',
+		'binary'			: 'imitator-v2.9',
+		#'binary_dist'		: 'patator', # TODO
+		'syntax':
+			{
+			OPT_DISTR_SUBDOMAIN		: '-distributed dynamic',
+			OPT_INCLUSION			: '-incl',
+			OPT_MERGING				: '-merge',
+			OPT_MODE_COVER			: '-mode cover',
+			OPT_MODE_EF				: '-mode EFunsafe',
+			OPT_OUTPUT_CART			: '-output-cart',
+			OPT_OUTPUT_PREFIX		: '-output-prefix',
+			OPT_OUTPUT_RES			: '-output-result',
+			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
+			OPT_PRP					: '-PRP',
+			OPT_NO_VAR_AUTOREMOVE	: '-no-var-autoremove',
+			},
+		'files_suffix'			: '_2_9',
+	},
+	#------------------------------------------------------------
+	V_2_10_3 : {
+		'version_name'		: '2.10.3',
+		'binary'			: 'imitator-v.2.10.3-amd64',
+		#'binary_dist'		: 'patator',# TODO
+		'syntax':
+			{
+			OPT_DISTR_SUBDOMAIN		: '-distributed dynamic',
+			OPT_INCLUSION			: '-incl',
+			OPT_MERGING				: '-merge',
+			OPT_MODE_COVER			: '-mode cover',
+			OPT_MODE_EF				: '-mode EFunsafe',
+			OPT_OUTPUT_CART			: '-output-cart',
+			OPT_OUTPUT_PREFIX		: '-output-prefix',
+			OPT_OUTPUT_RES			: '-output-result',
+			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
+			OPT_PRP					: '-PRP',
+			OPT_NO_VAR_AUTOREMOVE	: '-no-var-autoremove',
+			},
+		'files_suffix'			: '_2_10_3',
+	},
+	#------------------------------------------------------------
+	V_2_10_3_2463 : {
+		'version_name'		: '2.10.3-2463',
+		'binary'			: 'imitator-2_10_3_2463',
+		#'binary_dist'		: 'patator',# TODO
+		'syntax':
+			{
+			OPT_DISTR_SUBDOMAIN		: '-distributed dynamic',
+			OPT_INCLUSION			: '-incl',
+			OPT_MERGING				: '-merge',
+			OPT_MODE_COVER			: '-mode cover',
+			OPT_MODE_EF				: '-mode EFunsafe',
+			OPT_OUTPUT_CART			: '-output-cart',
+			OPT_OUTPUT_PREFIX		: '-output-prefix',
+			OPT_OUTPUT_RES			: '-output-result',
+			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
+			OPT_PRP					: '-PRP',
+			OPT_NO_VAR_AUTOREMOVE	: '-no-var-autoremove',
+			},
+		'files_suffix'			: '_2_10_3_2463',
 	},
 	#------------------------------------------------------------
 	V_current : {
@@ -251,12 +327,13 @@ versions = {
 			OPT_INCLUSION			: '-incl',
 			OPT_MERGING				: '-merge',
 			OPT_MODE_COVER			: '-mode cover',
-			OPT_MODE_EF				: '-mode EFold',
+			OPT_MODE_EF				: '-mode EFunsafe',
 			OPT_OUTPUT_CART			: '-output-cart',
 			OPT_OUTPUT_PREFIX		: '-output-prefix',
 			OPT_OUTPUT_RES			: '-output-result',
 			OPT_OUTPUT_TRACE_SET	: '-output-trace-set',
 			OPT_PRP					: '-PRP',
+			OPT_NO_VAR_AUTOREMOVE	: '-no-var-autoremove',
 			},
 		'files_suffix'			: '_current',
 	},
@@ -278,7 +355,7 @@ def make_file(file_name) :
 	return BENCHMARKS_PATH + file_name
 
 def make_log_file(benchmark, version):
-	return RESULT_FILES_PATH + benchmark['log_prefix'] +  versions[version]['files_suffix'] + ".benchlog"
+	return RESULT_FILES_PATH + benchmark['log_prefix'] +  versions[version]['files_suffix'] + LOG_EXTENSION
 
 def fail_with(text) :
 	print_to_screen(bcolors.FAIL + 'Fatal error!' + bcolors.ENDC)
@@ -337,7 +414,8 @@ def get_computation_time(benchmark, version, cartography_mode):
 		print_error("Time not found for benchmark " + benchmark['benchmark_name'] + " with version " + versions[version]['version_name'])
 		return ANALYSIS_FAILED
 	
-	if version == V_2_8 or version == V_2_8_2146 or version == V_current:
+	# NOTE: very ugly…
+	if version == V_2_8 or version == V_2_8_2146 or version == V_2_9 or version == V_2_10_3 or version == V_2_10_3_2463 or version == V_current:
 		# Open res file
 		res_file = RESULT_FILES_PATH + benchmark['log_prefix'] +  versions[version]['files_suffix'] + ".res"
 		if not os.path.isfile(res_file):
@@ -397,6 +475,11 @@ def run(benchmark, versions_to_test):
 				print_warning('Distributed binary not defined for version ' + versions[version]['version_name'] + '!')
 				to_run = False
 		
+		# Check for existence of the binary
+		if not os.path.isfile(binary):
+			print_error('Binary ' + binary + ' not found')
+			# Stop the current analysis but do not abord the script
+			return 1
 		
 		# Check that all options are defined
 		
@@ -534,18 +617,18 @@ def write_line(PATH_FILE, versions_to_test, benchmark_name, result):
 	
 	for version in versions_to_test:
 		# Normal case
-		result_str = bcolors.OKBLUE + str(result[version]) + bcolors.ENDC
+		result_str = str(result[version])
 		# Case: not run
 		if result[version] == ANALYSIS_NOT_RUN:
-			result_str = bcolors.WARNING + 'not run' + bcolors.ENDC
+			result_str = 'not run'
 		# Case: could not get the result (analys failed)
 		else:
 			if result[version] == ANALYSIS_FAILED:
-				result_str = bcolors.FAIL + 'failed' + bcolors.ENDC
+				result_str = 'failed'
 		line = line + result_str + "; "
 	
 	write_to_file(PATH_FILE, line + "\n")
-	
+
 def reset_data_file(PATH_FILE):
 	file2reset = open(PATH_FILE, "w")
 	file2reset.write("")
@@ -556,11 +639,17 @@ def reset_data_file(PATH_FILE):
 #************************************************************
 
 #all_versions = [V_2_5, V_2_6_1, V_2_6_2_825, V_2_7_3, V_2_8, V_current]
-all_versions = [V_2_8_2146, V_current]
+all_versions = [V_2_5, V_2_6_1, V_2_7_3, V_2_8, V_2_9, V_2_10_3, V_2_10_3_2463, V_current]
 
 # IMPORTING THE BENCHMARKS CONTENT
 import comparator_data
 tests = comparator_data.data
+
+# CHECK THAT THE RESULT DIRECTORY EXISTS
+if not os.path.exists(RESULT_FILES_PATH):
+	print_to_screen('Oops! Directory ' + RESULT_FILES_PATH + ' does not exist. Creating it…')
+	# Create dir
+	os.makedirs(RESULT_FILES_PATH)
 
 print_to_screen('')
 
@@ -579,7 +668,7 @@ print_results(all_versions)
 
 print_to_screen('')
 print_to_screen('Browser will open soon with result if not already opened')
-print_to_screen('...The end of COMPARATOR!')
+print_to_screen('…The end of COMPARATOR!')
 
 webbrowser.open(WEBGEN_PATH + HTML_FILE)
 

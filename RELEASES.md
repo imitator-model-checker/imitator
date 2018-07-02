@@ -3,13 +3,34 @@
 
 ### Bug fixing:
 * Correct errors in displaying PTA (graphics in PDF, PNG, etc.): arithmetic expressions on discrete variables did not print correctly
+* Fix a bug (or an unclarity) in the options for trace set generation
+
+### Major feature
+* Removed the Gc.major() instruction, that used to require a huge time for large models, while not bringing any benefit for smaller models
 
 ### Syntax improvement
 * The prime (`'`) in transition updates becomes optional; the `=` in transition updates becomes `:=` (backward-compatibility remains ensured until further notices) That is, an update `x' = 0` becomes `x := 0`
 * `while [invariant condition] wait{}` becomes `invariant [invariant condition]` (backward-compatibility remains ensured until further notices)
 
+### Export
+* The graphical state space now comes in .pdf instead of .jpg for better readability
+
 ### Minor features:
 * New option to avoid the inclusion check in EFsynth: useful when very large parameter constraints are manipulated
+
+*******************************************************
+# release 2.10.4 (2018-07-02)
+minor release
+
+### Bug fixing:
+* Fix a bug (or an unclarity) in the options for trace set generation
+
+### Major feature
+* Removed the Gc.major() instruction, that used to require a huge time for large models, while not bringing any benefit for smaller models
+
+### Export
+* The graphical state space now comes in .pdf instead of .jpg for better readability
+
 
 *******************************************************
 # release 2.10.3 (2018-05-22)
