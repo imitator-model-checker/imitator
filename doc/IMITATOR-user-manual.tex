@@ -938,12 +938,55 @@ To generate the trace set (\ie{} the discretized state space) of a given computa
 \styleCommand{\binimitator{} model.imi [options] -output-trace-set}
 
 \imitator{} will generate a file \stylePath{model-statespace.pdf}.
-Note that, beyond about 1,000 states or 1,000 transitions, the \gdot{} utility (responsible to generate the trace set) may crash.
+States are made of two part: the left-hand number (\eg{} \styleFileContent{s\_0}) is the number of the symbolic state, which comes from \imitator{} internal representation (\styleFileContent{s\_0} is the first one to be generated, and so on); the right-hand part displays all the discrete part of the symbolic state vertically, that is the current location in each of the NIPTA in parallel, and the value of possible discrete variables (if any).
+Consider state \texttt{s\_1} in \cref{figure:traceset:normal} (and originating from the example in \cref{chapter:syntax-introduction}):
+	the current location of IPTA \styleFileContent{proc\_1} is \styleFileContent{active1}, 
+	the current location of IPTA \styleFileContent{proc\_2} is \styleFileContent{idle2},
+	while
+	the current location of IPTA \styleFileContent{observer} is \styleFileContent{obs\_waiting}.
+In addition, the current value of variable \styleFileContent{turn} is $-1$ while the current value of \styleFileContent{counter} is~0.
 
-Using \styleOption{-output-trace-set-nodetails} makes a more compact representation (but is also less informative).
+Note that, beyond about 1,000 states or 1,000 transitions, the \gdot{} utility (responsible to generate the state space) may crash.
 
-Conversely, \styleOption{-output-trace-set-verbose} makes an even more detailed representation, by also adding to the trace set all constraints (the clock and parameter constraints, and below their projection onto the parameters).
+Using \styleOption{-output-trace-set-nodetails} makes a more compact representation, but is also less informative as only the state number and the transition labels are shown.
+
+Conversely, \styleOption{-output-trace-set-verbose} makes a more detailed representation, by also adding to the state space all constraints (the clock and parameter constraints, and below their projection onto the parameters).
 This option is mostly suitable for small trace sets.
+
+\begin{example}
+	An example of state space with no details (output using \styleOption{-output-trace-set-nodetails}), with normal details (using \styleOption{-output-trace-set}), and in verbose mode (using \styleOption{-output-trace-set-verbose}) are given in \cref{figure:traceset:nodetail,figure:traceset:normal,figure:traceset:verbose}.
+	
+	These graphics were generated using the example in \cref{chapter:syntax-introduction} with the following command:
+	
+	\styleCommand{imitator fischer.imi -mode EF -depth-limit 4 -output-trace-set}
+	
+	(where \styleOption{-output-trace-set} should be replaced with the proper option)
+\end{example}
+
+\begin{figure}
+\centering
+	\begin{subfigure}[b]{.48\textwidth}
+		\includegraphics[width=\textwidth]{images/fischerPAT_obs-statespace-nodetails.pdf}
+
+		\caption{No details}
+		\label{figure:traceset:nodetail}
+	\end{subfigure}
+	\begin{subfigure}[b]{.48\textwidth}
+		\includegraphics[width=\textwidth]{images/fischerPAT_obs-statespace-normal.pdf}
+
+		\caption{Normal}
+		\label{figure:traceset:normal}
+	\end{subfigure}
+
+	\begin{subfigure}[b]{.75\textwidth}
+		\includegraphics[width=\textwidth]{images/fischerPAT_obs-statespace-verbose.pdf}
+
+		\caption{Verbose}
+		\label{figure:traceset:verbose}
+	\end{subfigure}
+	
+	\caption{Examples of graphical state space}
+\end{figure}
 
 
 
