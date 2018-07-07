@@ -1360,6 +1360,15 @@ exception FoundInfiniteRank of state_index
 
 exception FoundLargerZone 
 
+exception FoundALoop 
+
+exception Pruning
+
+exception RedBreak
+
+exception FoundAFalseState 
+
+
 
 
 (************************************************************)
@@ -1982,7 +1991,7 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private explore_queue_bfs init_state_index =
 
-		print_message Verbose_standard("Entering explore_queue_bfs!!!");
+		(* print_message Verbose_standard("Entering explore_queue_bfs!!!"); *)
 
 
 
@@ -2461,6 +2470,753 @@ class virtual algoStateBased =
 			!q
 		in
 		(*****************************************************PRIOR END******************************************************)
+
+
+
+
+
+
+
+
+		(*****************************************************NestedDFS**********************************************************) 
+
+
+		(* Three basic sets of the algorithms, cyan can be replaced by the queue - worth to consider *)
+		let cyan = ref [] in
+		let blue = ref [] in
+		let red = ref [] in
+
+		(* backWard flag *)
+		let backWard = ref false in
+
+		(* This function is used to check terminating location - marking as prefix 'accepting_*' *)
+		let contains s1 s2 =
+	    let re = Str.regexp_string s2
+	    in
+	        try ignore (Str.search_forward re s1 0); true
+	        with Not_found -> false
+	    in
+	    (* accepting location prefix *)
+	    let accLocPref = "accepting" in
+
+
+
+		let dfsRed state_index = 
+
+	    	red := [state_index]@(!red);
+
+			let successors = ref [state_index] in
+			
+			let count = ref (List.length !successors) in
+
+			let elem = ref 0 in
+
+
+			print_message Verbose_low ("Found the accepting location: " ^ (StateSpace.string_of_state_index state_index) ^"!");
+			
+
+			(
+			try(
+			while (!count > 0) do 
+				(
+				
+			 	let successor = List.nth !successors !elem in
+			 	
+			 	let nextSuccessors = (StateSpace.get_successors state_space successor) in
+			 	List.iter (fun successor2 ->
+
+			 		print_message Verbose_low (" Start dfsRed debuging! " );
+
+			 		print_message Verbose_low (" Successor state " ^ (string_of_int successor2) ^ "…");
+
+			 		print_message Verbose_low (" State information " ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space successor2) );
+
+			 		if (List.mem successor2 !cyan) then print_message Verbose_low (" Mem of cyan!!!!! " ) else print_message Verbose_low (" Not mem of cyan!!!!! " );
+			 		if (List.mem successor2 !blue) then print_message Verbose_low (" Mem of blue!!!!! " ) else print_message Verbose_low (" Not mem of blue!!!!! " );
+			 		if (List.mem successor2 !red) then print_message Verbose_low (" Mem of red!!!!! " ) else print_message Verbose_low (" Not mem of red!!!!! " );
+
+	 				if (List.mem successor2 !cyan) then (
+
+	 				(* let loc, constr = StateSpace.get_state state_space successor2 in *)
+
+	 				print_message Verbose_low (" Cyan detected: " ^ (string_of_int successor2) ^ "…");
+	 				
+	 				raise (FoundALoop); 
+
+	 				);
+	 				
+	 				if not (List.mem successor2 !red) then 
+	 				(
+	 					red := [successor2]@(!red);
+		 				successors := !successors@[successor2];
+		 				count := !count + 1;
+	 				);
+
+			 	) nextSuccessors;
+
+			 	count := !count - 1;
+			 	elem := !elem + 1;
+			 	);
+			done;
+			false;
+			) with FoundALoop -> true;
+			);
+		in
+
+
+		(*****************************************************NestedDFS END**********************************************************)
+
+
+
+
+
+		(*****************************************************NestedDFS with subsumption on red, cycle detection, and red prune**********************************************************) 
+
+		(* Prunning flag *)
+		let isPrune = ref false in
+
+		(* Compare 2 zones projected on parameters - eliminating clocks *)
+		let checkZoneProjectedOnP state_index1 state_index2 = 
+			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
+			let loc2, constr2 = StateSpace.get_state state_space state_index2 in
+			let constr11 = LinearConstraint.px_hide_nonparameters_and_collapse constr1 in
+			let constr22 = LinearConstraint.px_hide_nonparameters_and_collapse constr2 in
+			if LinearConstraint.p_is_equal constr11 constr22 then true else false;
+		in
+
+
+		(** Check if a state is included in another one *)
+		let state_included state_index1 state_index2 =
+			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
+			let loc2, constr2 = StateSpace.get_state state_space state_index2 in
+			if not (Location.location_equal loc1 loc2) then false else (
+
+				LinearConstraint.px_is_leq constr1 constr2
+			)
+		in
+
+
+		(*
+		(** Check if a zone is included in another one, only zones not the locations *)
+		let zone_included state_index1 state_index2 =
+			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
+			let loc2, constr2 = StateSpace.get_state state_space state_index2 in
+
+			LinearConstraint.px_is_leq constr1 constr2
+		in
+		*)
+
+
+	    (* Check if a given location zone is trictly larger than the one in the list, if one case is found, returns true, otherwise returns false *)
+	    let checkZoneNotIncludeInList state_index1 state_index_list= 
+			(* Print some information *)
+			print_message Verbose_total ("Entering checkZoneNotIncludeInList(" ^ (string_of_int state_index1) ^ ")…");
+
+			(* Print some information *)
+			print_message Verbose_total ("Retrieved state information");
+			(
+				try(
+					List.iter (fun state_index2 -> 
+						(* Print some information *)
+						print_message Verbose_total ("Comparing with state " ^ (string_of_int state_index2) ^ "…");
+						if (state_included state_index1 state_index2)
+						then  raise (FoundLargerZone);
+					) state_index_list;
+					true;
+				) with FoundLargerZone -> false;
+			);
+		in
+
+
+		let checkZoneNotIncludeInList2 state_index1 state_index_list= 
+			(* Print some information *)
+			print_message Verbose_total ("Entering checkZoneNotIncludeInList(" ^ (string_of_int state_index1) ^ ")…");
+
+			(* Print some information *)
+			print_message Verbose_total ("Retrieved state information");
+			(
+				try(
+					List.iter (fun state_index2 -> 
+						(* Print some information *)
+						print_message Verbose_total ("Comparing with state " ^ (string_of_int state_index2) ^ "…");
+						if (state_included state_index1 state_index2 && checkZoneProjectedOnP state_index1 state_index2)
+						then  raise (FoundLargerZone);
+					) state_index_list;
+					true;
+				) with FoundLargerZone -> false;
+			);
+		in
+
+
+		(* Check if a state in the list is  *)
+		let checkListIncludeInZone state_index1 state_index_list= 
+			(* Print some information *)
+			print_message Verbose_total ("Entering checkZoneIncludeInList(" ^ (string_of_int state_index1) ^ ")…");
+
+			(* Print some information *)
+			print_message Verbose_total ("Retrieved state information");
+			(
+				try(
+					List.iter (fun state_index2 -> 
+						(* Print some information *)
+						print_message Verbose_total ("Comparing with state " ^ (string_of_int state_index2) ^ "…");
+						if (state_included state_index2 state_index1)
+						then  raise (FoundLargerZone);
+					) state_index_list;
+					false;
+				) with FoundLargerZone -> true;
+			);
+		in
+
+
+	    let dfsRedWithSubsumption state_index = 
+	    	
+
+	    	red := [state_index]@(!red);
+
+			let successors = ref [state_index] in
+			
+			let count = ref (List.length !successors) in
+
+			let elem = ref 0 in
+
+			print_message Verbose_low ("Found the accepting location: " ^ (StateSpace.string_of_state_index state_index) ^"!");
+
+			(
+			try(
+			while (!count > 0) do 
+				(
+				
+			 	let successor = List.nth !successors !elem in
+			 	
+			 	let nextSuccessors = (StateSpace.get_successors state_space successor) in
+			 	List.iter (fun successor2 ->
+
+			 		print_message Verbose_low (" Start dfsRed debuging! " );
+
+			 		print_message Verbose_low (" Successor state " ^ (string_of_int successor2) ^ "…");
+
+			 		print_message Verbose_low (" State information " ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space successor2) );
+
+			 		if (List.mem successor2 !cyan) then print_message Verbose_low (" Mem of cyan!!!!! " ) else print_message Verbose_low (" Not mem of cyan!!!!! " );
+			 		if (List.mem successor2 !blue) then print_message Verbose_low (" Mem of blue!!!!! " ) else print_message Verbose_low (" Not mem of blue!!!!! " );
+			 		if (List.mem successor2 !red) then print_message Verbose_low (" Mem of red!!!!! " ) else print_message Verbose_low (" Not mem of red!!!!! " );
+
+			 		if  checkZoneProjectedOnP state_index successor2
+			 		then (
+
+			 				
+			 				print_message Verbose_low (" CheckZoneProjectedOnP is True! " );
+					 		
+
+			 				if (checkListIncludeInZone successor2 !cyan) then (
+			 				
+			 				print_message Verbose_low (" CheckZoneIncludeInList is True! " );
+			 				raise (FoundALoop); 
+			 				);
+
+			 				if (checkZoneNotIncludeInList successor2 !red) then 
+			 				(
+			 				print_message Verbose_low (" CheckZoneNotIncludeInList is True! " );
+			 					red := [successor2]@(!red);
+				 				successors := !successors@[successor2];
+				 				count := !count + 1;
+			 				);
+			 			);
+			 	) nextSuccessors;
+
+			 	count := !count - 1;
+			 	elem := !elem + 1;
+			 	);
+			done;
+			false;
+			) with FoundALoop -> true;
+			);
+		in
+
+		(*Do prunning - modify the queue - return updated_queue *)
+		let prunning state_index queue =  (* print_message Verbose_low (" Prunning states! " ); *)
+						isPrune := true;
+						backWard := true;
+						let updated_queue = list_remove_first_occurence state_index queue in
+						updated_queue;
+		in
+
+		
+		(*****************************************************NestedDFS with subsumption on red, cycle detection, and red prune END**********************************************************)
+
+
+
+
+
+
+		(*****************************************************LayerNestedDFS with subsumption on red, cycle detection, and red prune**********************************************************) 
+		(*
+		let checkSmallerZoneProjectedOnP state_index1 state_index2 = 
+			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
+			let loc2, constr2 = StateSpace.get_state state_space state_index2 in
+			let constr11 = LinearConstraint.px_hide_nonparameters_and_collapse constr1 in
+			let constr22 = LinearConstraint.px_hide_nonparameters_and_collapse constr2 in
+			if not (LinearConstraint.p_is_leq constr22 constr11) then true else false;
+		in
+		*)
+
+		(* Same with the prior, used to improve the performance of state insertion *)
+		let rec addInfinityToPendingQueue state_index queue = 
+			match queue with
+			  | [] -> [state_index]
+			  | x :: l -> (
+							let rank = Hashtbl.find rank_hashtable x in
+							if rank = Infinity
+							then 
+								x :: (addInfinityToPriorQueue state_index l)
+							else 
+								state_index :: x :: l
+							);
+		in
+		
+		(* Same with the prior, used to improve the performance of state insertion *)
+		let rec addNonInfinityToPendingQueue state_index queue = 
+			match queue with
+			  | [] -> [state_index]
+			  | x :: l -> (
+							let rank = Hashtbl.find rank_hashtable x in
+							match rank with 
+							| Infinity -> x :: (addNonInfinityToPriorQueue state_index l)
+							| Int r -> 	let loc1, constr1 = StateSpace.get_state state_space state_index in
+										let loc2, constr2 = StateSpace.get_state state_space x in
+										(
+										if not (LinearConstraint.p_is_leq (LinearConstraint.px_hide_nonparameters_and_collapse constr2) (LinearConstraint.px_hide_nonparameters_and_collapse constr1) )
+										then
+											(
+											x :: (addNonInfinityToPriorQueue state_index l);
+											)
+										else
+											(
+											state_index :: x :: l
+											);
+										);
+							);
+		in
+
+		
+		(* Pending queue inserting *)
+		let addPendingQueue popped_from_queue successors queue= 
+			let pendingTmp = ref [] in
+			(* initial ranking and sorting *)
+			let q = ref queue in
+			List.iter (fun state_index ->	let rank = initial_rank state_index state_space in
+											(* Print some information *)
+											print_message Verbose_high ("AddPendingQueue: Initial rank computed for state " ^ (string_of_int state_index));
+											Hashtbl.add rank_hashtable state_index rank;
+
+
+
+											match rank with 
+												| Infinity -> pendingTmp := addInfinityToPriorQueue state_index !pendingTmp
+												| Int _ -> pendingTmp := 
+												(
+													if (Hashtbl.mem rank_hashtable state_index)
+													then
+														addInfinityToPendingQueue state_index !pendingTmp
+													else
+														addNonInfinityToPendingQueue state_index !pendingTmp;
+												);
+
+
+			) successors;
+			!pendingTmp@(!q)
+		in
+
+
+		(*****************************************************LayerNestedDFS with subsumption on red, cycle detection, and red prune END**********************************************************) 
+
+
+
+
+		(*****************************************************Parameter synthesis-LayerNestedDFS with subsumption on red, cycle detection, and red prune**********************************************************) 
+		let pink = ref [] in 
+
+		let pending = ref [] in
+
+		let assocPre = ref [] in
+
+		let level = ref 0 in
+
+		(* let exploredS = ref [] in  *)
+
+		(* let his = ref [] in *)
+
+		let preTbl = Hashtbl.create 1 in
+
+		let findLevel state_index level pending =	let found = ref false in
+													let count = ref 0 in
+													let updatedLevel = ref level in
+
+													while not !found do 
+
+														 	let ls = List.nth pending !count in
+
+														 	
+														 	if List.mem state_index ls then (
+														 		found := true;
+														 		if !count >= level then ( updatedLevel := !count; ); 
+														 	);
+
+														    count := !count + 1;
+
+														    if ( !count == ( List.length pending ) -1 )  then (
+														    	 found := true;
+														    );
+													
+													done;
+
+													!updatedLevel;
+												in
+
+		let replace l pos a  = List.mapi (fun i x -> if i = pos then a else x) l in
+
+
+		let deltePending state_index pending =	let found = ref false in
+												let count = ref 0 in
+												
+												let newpending = ref [] in
+
+												while not !found do 
+
+													 	let ls = List.nth pending !count in
+
+													 	if List.mem state_index ls then (
+													 		let newls = List.filter (fun inner -> inner != state_index ) ls in
+													 		newpending := replace pending !count newls;
+													 		found := true;
+													 	);
+
+													    count := !count + 1;
+												
+												done;
+
+												if not !found then ( newpending := pending );
+
+												!newpending;
+											in
+
+		(*
+		let deltePendingBackward state_index pending level =	let newpending = ref [] in
+																
+																if level != 0 then (
+																
+
+																for i = 0 to level - 1 do
+
+																	 newpending := replace pending i [];
+																
+																done;
+
+																) else (
+																	newpending := pending;
+																);
+
+
+																!newpending;
+															in
+		*)
+
+
+		let flattenPending level pending =	let ls = ref [] in
+
+											for i = 0 to level do
+											  ls := !ls@(List.nth pending i);
+											done;
+
+											!ls;
+										in
+
+		let memPending state_index level pending =	let found = ref false in
+
+												(* for i = 0 to (List.length pending) - 1 do *)
+
+												for i = 0 to level do
+
+													 	let ls = List.nth pending i in
+
+													 	if List.mem state_index ls then (
+													 		found := true;
+													 	);
+												done;
+
+												!found;
+											in
+
+		let memPending2 state_index pending =	let found = ref false in
+
+												for i = 0 to (List.length pending) - 1 do 
+
+													 	let ls = List.nth pending i in
+
+													 	if List.mem state_index ls then (
+													 		found := true;
+													 	);
+												done;
+
+												!found;
+											in	
+
+		(*
+		let falseStateDetect state_index  =	let check = ref false in
+											try (
+											List.iter ( fun (pre, succList) ->  
+												if List.mem state_index succList then (
+
+													let loc1, constr1 = StateSpace.get_state state_space pre in
+													
+													if (LinearConstraint.px_is_false constr1) then (
+														
+														(* check := true; *)
+														raise FoundAFalseState;
+
+													);
+
+													List.iter ( fun (pre2, succList2) ->
+														
+														if List.mem pre succList2 then (
+															
+															let loc2, constr2 = StateSpace.get_state state_space pre2 in
+																								
+															if (LinearConstraint.px_is_false constr2) then (
+																
+																(* check := true; *)
+																raise FoundAFalseState;
+
+															);
+
+														);
+
+													) !his;
+
+												);
+											) !his;
+											!check;
+											) with FoundAFalseState -> check := true; 
+											!check;
+										in	
+		*)
+
+		
+		let falseStateDetect2 state_index  = let check = ref false in
+
+											 try (
+
+											 if Hashtbl.mem preTbl state_index then (
+											 	
+											 	let pres = Hashtbl.find_all preTbl state_index in
+
+											 	List.iter ( fun pre -> 
+
+											 		let loc1, constr1 = StateSpace.get_state state_space pre in
+													
+													if (LinearConstraint.px_is_false constr1) then (
+														
+														(* check := true; *)
+														raise FoundAFalseState;
+
+													);
+
+
+													if Hashtbl.mem preTbl pre then (
+
+														let presPre = Hashtbl.find_all preTbl state_index in
+
+														List.iter ( fun pre2 ->
+																
+															let loc2, constr2 = StateSpace.get_state state_space pre2 in
+																								
+															if (LinearConstraint.px_is_false constr2) then (
+																
+																(* check := true; *)
+																raise FoundAFalseState;
+
+															);
+
+
+														) presPre;
+
+													);
+
+
+
+
+											 	) pres;
+
+
+											 );	
+
+											 !check;
+
+											) with FoundAFalseState -> check := true; 
+											!check;
+											 
+											 in	
+			
+
+
+
+		(* let breakBlue = ref false in  *)
+
+
+		let dfsRedWithSubsumptionSyn state_index = 
+	    	
+
+	    	(* red := [state_index]@(!red); *)
+
+	    	pink := [state_index]@(!pink);
+
+			let successors = ref [state_index] in
+			
+			let count = ref (List.length !successors) in
+
+			let elem = ref 0 in
+
+			print_message Verbose_low ("Found the accepting location: " ^ (StateSpace.string_of_state_index state_index) ^"!");
+
+			(
+
+			while (!count > 0) do 
+				(
+				
+			 	let successor = List.nth !successors !elem in
+			 	
+			 
+			 	let nextSuccessors = (StateSpace.get_successors state_space successor) in
+			 	List.iter (fun successor2 ->
+
+			 		print_message Verbose_low (" Start dfsRed debuging! " );
+
+			 		print_message Verbose_low (" Successor state " ^ (string_of_int successor2) ^ "…");
+
+			 		print_message Verbose_low (" State information " ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space successor2) );
+
+			 		if (List.mem successor2 !cyan) then print_message Verbose_low (" Mem of cyan!!!!! " ) else print_message Verbose_low (" Not mem of cyan!!!!! " );
+			 		if (List.mem successor2 !blue) then print_message Verbose_low (" Mem of blue!!!!! " ) else print_message Verbose_low (" Not mem of blue!!!!! " );
+			 		if (List.mem successor2 !red) then print_message Verbose_low (" Mem of red!!!!! " ) else print_message Verbose_low (" Not mem of red!!!!! " );
+			 		if (List.mem successor2 !pink) then print_message Verbose_low (" Mem of pink!!!!! " ) else print_message Verbose_low (" Not mem of pink!!!!! " );
+
+			 		if  checkZoneProjectedOnP state_index successor2
+			 		then (
+			 				print_message Verbose_low (" checkZoneProjectedOnP is True! " );
+			 				if (checkListIncludeInZone successor2 !cyan) then (
+			 				
+				 				print_message Verbose_low (" checkZoneIncludeInList is True! " );
+				 				(* raise (FoundALoop); *)
+
+				 				print_message Verbose_standard ("Report! Found the loop at accepting state: " ^ (StateSpace.string_of_state_index state_index) ^"!");
+				 				print_message Verbose_standard (" Location information " ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space state_index) ); 
+
+
+				 				(* let loc, constr = StateSpace.get_state state_space successor in *)
+
+				 				let loc2, constr2 = StateSpace.get_state state_space successor2 in
+
+				 				let colapsedConstr2 = (LinearConstraint.px_hide_nonparameters_and_collapse constr2) in
+
+
+				 				
+				 				let negInequalities = ref [] in
+
+				 				if LinearConstraint.p_is_true colapsedConstr2 then (
+				 					
+				 					negInequalities := [(LinearConstraint.px_of_p_constraint (LinearConstraint.p_false_constraint () ))];
+
+				 				)
+				 				else (
+					 				let inequalities = (LinearConstraint.p_get_inequalities colapsedConstr2) in
+					 				List.iter (fun inequality -> 
+					 					
+						 					let negated_inequality = LinearConstraint.px_of_p_constraint (LinearConstraint.make_p_constraint (LinearConstraint.negate_inequality2 inequality)) in 
+						 					negInequalities := !negInequalities@[negated_inequality]
+
+					 				) inequalities;
+				 				);
+
+				 				
+				 				let pd = flattenPending !level !pending in
+				 				print_message Verbose_low (" level pending  " ^ (string_of_int !level) ^ "…");
+				 				List.iter ( fun e ->
+				 					print_message Verbose_low (" pending state " ^ (string_of_int e) ^ "…");
+				 				) pd;
+				 				
+
+				 				let newList = (flattenPending !level !pending)@(!cyan)@(!pink)  in
+				 				
+				 				List.iter (fun state_index2 ->
+
+				 						let loc, constr = StateSpace.get_state state_space successor2 in
+
+				 						negInequalities := [constr]@(!negInequalities);
+
+				 						let new_constraint = LinearConstraint.px_intersection ( !negInequalities )  in
+
+
+				 						(* if (* not (  ( List.mem state_index2 !red) || ( List.mem state_index2 !pink ) ||  ( List.mem state_index2 !blue) ) *) checkZoneProjectedOnP state_index2 state_index then ( *)
+
+				 						StateSpace.replace_constraint state_space state_index2 new_constraint;
+				 						
+				 						(* )); *)
+
+
+				 						print_message Verbose_low (" Changed Zone!!!! State " ^ (string_of_int state_index2) ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space state_index2) ^" ! " );
+				 						
+				 						if (LinearConstraint.px_is_false new_constraint) (* && List.mem state_index2 !queue *) && List.mem state_index2 pd (* && List.mem state_index2 !queue *)
+				 						then (
+
+				 							 queue := list_remove_first_occurence successor2 !queue; 
+
+				 							 if memPending successor2 !level !pending then (
+
+					 							 pending := deltePending successor2 !pending; 
+
+				 								);
+
+				 							 print_message Verbose_low (" Removed!!!! State " ^ (string_of_int successor2) ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space successor2) ^" ! " );
+				 						
+				 						);
+				 						
+										
+				 				) newList;
+				 				
+								()
+			 				);
+
+			 				if (checkZoneNotIncludeInList successor2 !red) && (checkZoneNotIncludeInList successor2 !pink) (* && not (checkZoneNotIncludeInList successor2 !blue) *) then 
+			 				(
+			 				print_message Verbose_low (" checkZoneNotIncludeInList is True! " );
+			 					(*red := [successor2]@(!red); *)
+			 					pink := [successor2]@(!pink);
+			 					print_message Verbose_low (" checkZoneNotIncludeInList is True! 1" );
+			 					let loc, constr = StateSpace.get_state state_space successor in
+			 					print_message Verbose_low (" checkZoneNotIncludeInList is True! 2" );
+				 				successors := if (LinearConstraint.px_is_false constr) then ( count := !count; !successors; ) else ( count := !count + 1; !successors@[successor2];  ); 
+				 				print_message Verbose_low (" checkZoneNotIncludeInList is True! 3" );
+				 				(* successors := !successors@[successor2]; *)
+				 				(* count := !count + 1; *)
+			 				);
+			 			);
+			 	) nextSuccessors;
+			 
+			 	count := !count - 1;
+			 	elem := !elem + 1;
+			 	);
+			done;
+
+			red := (List.tl !pink)@(!red); 
+			pink := [];
+
+			);
+		in
+
+
+
+		(*****************************************************Parameter synthesis-LayerNestedDFS with subsumption on red, cycle detection, and red prune - Parameter synthesis END**********************************************************) 
 		
 
 		
@@ -2485,6 +3241,15 @@ class virtual algoStateBased =
 											);
 
 			| Exploration_queue_BFS_PRIOR -> List.hd !queue;
+
+			| Exploration_queue_NestedDFS -> List.hd !queue;
+
+			| Exploration_queue_NestedDFS_with_Subsumption -> List.hd !queue;
+
+			| Exploration_layer_NestedDFS_with_Subsumption -> List.hd !queue;
+
+			| Exploration_layer_NestedDFS_with_Subsumption_Synthesis -> List.hd !queue;
+
 			|  _ -> raise (InternalError ("Impossible situation: at that point, it should be a (variant of) queue BFS"));
 
 		in
@@ -2496,6 +3261,8 @@ class virtual algoStateBased =
 
 
 		queue := [init_state_index];
+
+		pending := [[init_state_index]];
 		
 		(* for ranking algo *)
 		let rank = initial_rank init_state_index state_space in
@@ -2511,7 +3278,10 @@ class virtual algoStateBased =
 
 		(* Explore further until the limit is reached or the queue is empty *)
 		while limit_reached = Keep_going && !queue <> [] && !algorithm_keep_going do
-			print_message Verbose_low ("I am here!!!!!!");
+
+			let nQueueStart = List.length !queue in 
+
+			(* print_message Verbose_low ("I am here!!!!!!"); *)
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then (
 				print_message Verbose_low ("\n");
@@ -2543,6 +3313,266 @@ class virtual algoStateBased =
 													let updated_queue = list_remove_first_occurence state_index !queue in
 													(* Return new queue, popped state *)
 													updated_queue, state_index
+
+				(* TODO *)
+				| Exploration_queue_NestedDFS -> 	(* Find the state to be selected *)
+													let state_index = select_from_queue () in
+													(* Remove from queue *)
+													let updated_queue = ref [] in
+													if !backWard = false then (
+														cyan := [state_index]@(!cyan);
+														updated_queue := !queue; 
+													 ) else (
+
+														if not (List.mem state_index !cyan) && not (List.mem state_index !blue) then (
+															cyan := [state_index]@(!cyan);
+															updated_queue := !queue; 
+															backWard := false;
+														
+														); 
+
+														(* Check accepting states *)
+														let loc, constr = StateSpace.get_state state_space state_index in
+														let terminatingLocationString = ModelPrinter.string_of_location model (loc) in
+														let foundALoop = ref false in
+														if contains terminatingLocationString accLocPref then(
+															print_message Verbose_low ("Found the accepting location: " ^ (terminatingLocationString) ^"!");
+															foundALoop := dfsRed state_index; 
+														);
+														cyan := list_remove_first_occurence state_index !cyan;
+												 		blue := [state_index]@(!blue);
+														if !foundALoop then (
+												 			updated_queue := []; 
+												 			print_message Verbose_standard ("Report! Found the loop at "^terminatingLocationString ^ "!");
+												 			print_message Verbose_standard ("Report! Found the loop at accepting state: " ^ (StateSpace.string_of_state_index state_index) ^"!");
+				 											print_message Verbose_standard (" Location information " ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space state_index) ); 
+														) else (
+												 			updated_queue := list_remove_first_occurence state_index !queue;
+														)
+
+														(* ); *)
+ 
+													); 
+
+													(* Return new queue, popped state *)
+													!updated_queue, state_index
+
+
+				| Exploration_queue_NestedDFS_with_Subsumption ->   (* Find the state to be selected *)
+																	let state_index = select_from_queue () in
+																	(* Remove from queue *)
+																	
+																	(* let updated_queue = list_remove_first_occurence state_index !queue in *)
+																	let updated_queue = ref [] in
+																	if !backWard = false then (
+																	 	if not (List.mem state_index !cyan) && not (List.mem state_index !blue) && (checkZoneNotIncludeInList state_index !red) then (
+																			cyan := [state_index]@(!cyan);
+																			updated_queue := !queue;
+																			) else (
+																				if not (checkZoneNotIncludeInList state_index !red) then (
+																				print_message Verbose_low ("Pruning 1 !");
+																				updated_queue := prunning state_index !queue;
+																				);
+																			);
+
+																	 ) else (
+																		
+																		if not (List.mem state_index !cyan) && not (List.mem state_index !blue) && (checkZoneNotIncludeInList state_index !red) then (
+																			cyan := [state_index]@(!cyan);
+																			updated_queue := !queue;
+																			backWard := false;
+																		) else (
+
+																			if not (checkZoneNotIncludeInList state_index !red) then (
+																				print_message Verbose_low ("Pruning 2 !");
+																				updated_queue := prunning state_index !queue;
+																			);
+																			
+																		(* ); *)
+
+																			(* Check accepting states *)
+																			let loc, constr = StateSpace.get_state state_space state_index in
+																			let terminatingLocationString = ModelPrinter.string_of_location model (loc) in
+																			let foundALoop = ref false in
+																			if contains terminatingLocationString accLocPref then(
+																				print_message Verbose_low ("Found terminating location: " ^terminatingLocationString ^ "!"); 
+																				foundALoop := dfsRedWithSubsumption state_index; 
+																			);
+																			cyan := list_remove_first_occurence state_index !cyan;
+																	 		blue := [state_index]@(!blue);
+																			if !foundALoop then (
+																	 			updated_queue := [];
+																	 			print_message Verbose_standard ("Report! Found the loop at "^terminatingLocationString ^ "!");
+																	 			print_message Verbose_standard ("Report! Found the loop at accepting state: " ^ (StateSpace.string_of_state_index state_index) ^"!");
+				 																print_message Verbose_standard (" Location information " ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space state_index) ); 
+																			) else (
+																	 			updated_queue := list_remove_first_occurence state_index !queue;
+																			)
+
+																		);
+
+																	 ); 
+																	
+																	(* Return new queue, popped state *)
+																	(* if isPrune then !updated_queue, state_index; else *)
+
+																	!updated_queue, state_index
+
+				| Exploration_layer_NestedDFS_with_Subsumption -> 	(* Find the state to be selected *)
+																	let state_index = select_from_queue () in
+																	(* Remove from queue *)
+																	
+																	(* let updated_queue = list_remove_first_occurence state_index !queue in *)
+																	let updated_queue = ref [] in
+																	if !backWard = false then (
+
+																		if not (List.mem state_index !cyan) && not (List.mem state_index !blue) && (checkZoneNotIncludeInList2 state_index !red) then (
+																			cyan := [state_index]@(!cyan);
+																			updated_queue := !queue;
+																			) else (
+																				if not (checkZoneNotIncludeInList state_index !red) then (
+																				print_message Verbose_low ("Pruning 1 !");
+																				updated_queue := prunning state_index !queue;
+																				);
+																			);
+
+																	 ) else (
+																		
+																		if not (List.mem state_index !cyan) && not (List.mem state_index !blue) && (checkZoneNotIncludeInList2 state_index !red) then (
+																			cyan := [state_index]@(!cyan);
+																			updated_queue := !queue; 
+																			(* updated_queue := list_remove_first_occurence state_index !queue; *)
+																			backWard := false;
+																		) else (
+
+																			if not (checkZoneNotIncludeInList state_index !red) then (
+																				print_message Verbose_low ("Pruning 2 !");
+																				updated_queue := prunning state_index !queue;
+																			);
+																			
+
+																			(* Check accepting states *)
+																			let loc, constr = StateSpace.get_state state_space state_index in
+																			let terminatingLocationString = ModelPrinter.string_of_location model (loc) in
+																			let foundALoop = ref false in
+
+																			if ( contains terminatingLocationString accLocPref ) then(
+																				print_message Verbose_low ("Found terminating location: " ^terminatingLocationString ^ "!");
+																				foundALoop := dfsRedWithSubsumption state_index; 
+																			
+																			); 
+																			
+																			cyan := list_remove_first_occurence state_index !cyan;
+																	 		blue := [state_index]@(!blue);
+																			if !foundALoop then (
+																	 			updated_queue := [];
+																	 			print_message Verbose_standard ("Report! Found the loop at "^terminatingLocationString ^ "!");
+																	 			print_message Verbose_standard ("Report! Found the loop at accepting state: " ^ (StateSpace.string_of_state_index state_index) ^"!");
+				 																print_message Verbose_standard (" Location information " ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space state_index) ); 
+																			(* ); *) 
+																			
+																			) else (
+																	 			updated_queue := list_remove_first_occurence state_index !queue;
+																			)
+																		
+
+																		);
+
+																	 ); 
+																	
+																	(* Return new queue, popped state *)
+																	!updated_queue, state_index
+
+
+																	
+				(* Might be better in memory consumption but could be slower than the recursive implementation *)
+				| Exploration_layer_NestedDFS_with_Subsumption_Synthesis ->	(* Find the state to be selected *)
+
+																			let state_index = select_from_queue () in
+
+																			(* level := findLevel state_index !level !pending; *)
+
+																			(* Remove from queue *)
+																			let loc, constr = StateSpace.get_state state_space state_index in
+																			
+																			(* let updated_queue = list_remove_first_occurence state_index !queue in *)
+																			let updated_queue = ref [] in
+
+
+																			if !backWard = false then (
+
+																				if not (List.mem state_index !cyan) && not (List.mem state_index !blue) && (checkZoneNotIncludeInList2 state_index !red) then (
+																					cyan := [state_index]@(!cyan);
+																					updated_queue := !queue;
+																					
+																					if (LinearConstraint.px_is_false constr) then (
+																						print_message Verbose_low ("Pruning 1 !");
+																						updated_queue := prunning state_index !queue;
+																						);
+
+
+																					) else (
+																						if not (checkZoneNotIncludeInList state_index !red) then (
+																						print_message Verbose_low ("Pruning 2 !");
+																						updated_queue := prunning state_index !queue;
+
+																						);
+																					);
+
+
+																			 ) else (
+																				if not (List.mem state_index !cyan) && not (List.mem state_index !blue) && (checkZoneNotIncludeInList2 state_index !red) then (
+																					cyan := [state_index]@(!cyan);
+																					updated_queue := !queue; 
+																					(* updated_queue := list_remove_first_occurence state_index !queue; *)
+																					backWard := false;
+
+																					if memPending2 state_index !pending then (
+														 								level := findLevel state_index !level !pending;
+													 								);
+
+	
+																					if (falseStateDetect2 state_index) || (LinearConstraint.px_is_false constr) then (
+																							updated_queue := prunning state_index !queue;
+																						);
+
+
+
+																				) else (
+
+																					if not (checkZoneNotIncludeInList state_index !red) then (
+																						print_message Verbose_low ("Pruning 4 !");
+																						updated_queue := prunning state_index !queue;
+																					);
+
+																				let terminatingLocationString = ModelPrinter.string_of_location model (loc) in
+																				(* let foundALoop = ref false in *)
+
+																				if ( contains terminatingLocationString accLocPref && not ( LinearConstraint.px_is_false constr ) ) then(
+																					print_message Verbose_low ("Found terminating location: " ^terminatingLocationString ^ "!");
+																					(* foundALoop := *)
+																					dfsRedWithSubsumptionSyn state_index; 
+																				);
+																				cyan := list_remove_first_occurence state_index !cyan;
+																		 		blue := [state_index]@(!blue);
+
+																		 		
+																		 		if memPending state_index !level !pending then (
+
+													 							 pending := deltePending state_index !pending; 
+
+												 								);
+
+																				updated_queue := list_remove_first_occurence state_index !queue;
+																				);
+
+																			 ); 
+
+
+																			
+																			(* Return new queue, popped state *)
+																			!updated_queue, state_index
+
 				(* Impossible *)
 				| _ -> raise (InternalError ("Impossible situation: at that point, it should be a (variant of) queue BFS"))
 			in
@@ -2554,26 +3584,174 @@ class virtual algoStateBased =
 			(* Count the states for verbose purpose: *)
 			num_state := !num_state + 1;
 			
+
+			(* )
 			(* Compute successors *)
 			(* The concrete function post_from_one_state may raise exception TerminateAnalysis, and update termination_status *)
-			let successors =
-			try(
-				self#post_from_one_state popped_from_queue
-			)
-			with TerminateAnalysis ->
-				(*** HACK: empty the queue to force termination… ***)
-				(*** TODO: improve the termination mechanism (by unifying limit_reached and termination_status) ***)
-				queue := [];
-				
-				(* Return an empty list of successors *)
-				[]
+			let successors = if !isPrune  then (
+					isPrune := false;
+					[]
+				) else (
+					try(
+						self#post_from_one_state popped_from_queue
+					)
+					with TerminateAnalysis ->
+						(*** HACK: empty the queue to force termination… ***)
+						(*** TODO: improve the termination mechanism (by unifying limit_reached and termination_status) ***)
+						queue := [];
+						
+						(* Return an empty list of successors *)
+						[]
+				);
 			in
+			*)
+			
+
+
+			(* Compute successors *)
+			(* The concrete function post_from_one_state may raise exception TerminateAnalysis, and update termination_status *)
+			let successors = (match options#exploration_order with
+				| Exploration_queue_BFS -> (
+												try(
+													self#post_from_one_state popped_from_queue
+												)
+												with TerminateAnalysis ->
+													(*** HACK: empty the queue to force termination… ***)
+													(*** TODO: improve the termination mechanism (by unifying limit_reached and termination_status) ***)
+													queue := [];
+													
+													(* Return an empty list of successors *)
+													[]
+											)
+				(* Ranking system: TODO *)
+				| Exploration_queue_BFS_RS -> 	(
+													try(
+														self#post_from_one_state popped_from_queue
+													)
+													with TerminateAnalysis ->
+														(*** HACK: empty the queue to force termination… ***)
+														(*** TODO: improve the termination mechanism (by unifying limit_reached and termination_status) ***)
+														queue := [];
+														
+														(* Return an empty list of successors *)
+														[]
+												)
+												(* list_append successors !queue *)
+				(* Priority system: TODO *)
+				| Exploration_queue_BFS_PRIOR -> (
+													try(
+														self#post_from_one_state popped_from_queue
+													)
+													with TerminateAnalysis ->
+														(*** HACK: empty the queue to force termination… ***)
+														(*** TODO: improve the termination mechanism (by unifying limit_reached and termination_status) ***)
+														queue := [];
+														
+														(* Return an empty list of successors *)
+														[]
+												)
+				(* TODO *)
+				| Exploration_queue_NestedDFS -> (
+													try(
+														self#post_from_one_state popped_from_queue
+													)
+													with TerminateAnalysis ->
+														(*** HACK: empty the queue to force termination… ***)
+														(*** TODO: improve the termination mechanism (by unifying limit_reached and termination_status) ***)
+														queue := [];
+														
+														(* Return an empty list of successors *)
+														[]
+												)
+				| Exploration_queue_NestedDFS_with_Subsumption -> if !isPrune  then (
+																		isPrune := false;
+																		[]
+																	) else (
+																		try(
+																			self#post_from_one_state popped_from_queue
+																		)
+																		with TerminateAnalysis ->
+																			(*** HACK: empty the queue to force termination… ***)
+																			(*** TODO: improve the termination mechanism (by unifying limit_reached and termination_status) ***)
+																			queue := [];
+																			
+																			(* Return an empty list of successors *)
+																			[]
+																	)
+
+				| Exploration_layer_NestedDFS_with_Subsumption -> if !isPrune  then (
+																		isPrune := false;
+																		[]
+																	) else (
+																		try(
+																			self#post_from_one_state popped_from_queue
+																		)
+																		with TerminateAnalysis ->
+																			(*** HACK: empty the queue to force termination… ***)
+																			(*** TODO: improve the termination mechanism (by unifying limit_reached and termination_status) ***)
+																			queue := [];
+																			
+																			(* Return an empty list of successors *)
+																			[]
+																	)
+																	
+
+				| Exploration_layer_NestedDFS_with_Subsumption_Synthesis -> if !isPrune  then (
+																				isPrune := false;
+																				[]
+																			) else (
+																				try(
+																					(* if not (List.mem popped_from_queue !cyan) then (  *)
+																					if  !backWard = false then ( 
+																					(* if  not (List.mem popped_from_queue !exploredS) then (  *)
+																						
+																						(* exploredS := (!exploredS)@[popped_from_queue]; *)
+																						let succ_ls = self#post_from_one_state popped_from_queue in
+																						
+																						(* his := (!his)@[(popped_from_queue,succ_ls)]; *)
+
+																						List.iter ( fun succ -> 
+																							Hashtbl.add preTbl succ popped_from_queue;
+																						) succ_ls;
+
+
+																						succ_ls;
+
+
+																					) else ( 
+																						
+																						[] 
+																					);
+																					(*  ) else ( [] ); *)
+																				)
+																				with TerminateAnalysis -> 
+																					(
+																					(*** HACK: empty the queue to force termination… ***)
+																					(*** TODO: improve the termination mechanism (by unifying limit_reached and termination_status) ***)
+																					queue := [];
+																					
+																					(* Return an empty list of successors *)
+																					[];
+																					);
+																			)
+
+																				
+				(* Impossible *)
+				| _ -> raise (InternalError ("Impossible situation: at that point, it should be a (variant of) queue BFS"))
+			);
+			in
+
+
+
+
+			(* if successors = [] then ( backWard := true; ); *)
 
 			if verbose_mode_greater Verbose_low then(
 					print_message Verbose_low ("Poped State: " ^ (StateSpace.string_of_state_index popped_from_queue) ^" from queue!");
 					print_message Verbose_low ("States in queue!");
 					List.iter ( fun state_index ->
 						print_message Verbose_low ("State: " ^ (StateSpace.string_of_state_index state_index) ^" \n");
+						(* print_message Verbose_low (" Location information " ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space state_index) ); *)
 					) !queue;
 			);
 
@@ -2587,6 +3765,51 @@ class virtual algoStateBased =
 												(* list_append successors !queue *)
 				(* Priority system: TODO *)
 				| Exploration_queue_BFS_PRIOR -> addToPriorQueue successors !queue
+				(* TODO *)
+				| Exploration_queue_NestedDFS -> successors@(!queue)
+				| Exploration_queue_NestedDFS_with_Subsumption -> successors@(!queue) 
+
+				| Exploration_layer_NestedDFS_with_Subsumption -> addPendingQueue popped_from_queue successors !queue 
+																	
+
+				| Exploration_layer_NestedDFS_with_Subsumption_Synthesis -> 
+																			
+
+																			let ls = ref [] in
+
+																			let continue = ref false in
+
+																			List.iter ( fun successor -> 
+																				if not ( checkZoneProjectedOnP successor  popped_from_queue)  then ( 
+																					
+																						ls := [successor]@(!ls);
+																					
+																				) else (
+																					continue := true;
+																				);
+																			 ) successors;
+
+																			if !ls != [] then (
+																				pending := !pending@[(!ls)];
+																				assocPre := !assocPre@[popped_from_queue];
+																			 
+
+																				if not !continue && memPending popped_from_queue !level !pending then (
+																					pending := deltePending popped_from_queue !pending; 
+
+																					print_message Verbose_low ("Removed pending State: " ^ (StateSpace.string_of_state_index popped_from_queue) ^" from queue!");
+
+																					queue := list_remove_first_occurence popped_from_queue !queue; 
+
+																					cyan := list_remove_first_occurence popped_from_queue !cyan;
+																				 	blue := [popped_from_queue]@(!blue);
+																				);
+
+																			);
+
+																			addPendingQueue popped_from_queue successors !queue; 
+
+																				
 				(* Impossible *)
 				| _ -> raise (InternalError ("Impossible situation: at that point, it should be a (variant of) queue BFS"))
 			);
@@ -2618,9 +3841,21 @@ class virtual algoStateBased =
 			queue := !new_states_after_merging;
 
 			
+			let nQueueEnd = List.length !queue in
+			(* used for NDFS *)
+			if nQueueStart != nQueueEnd then( 
+				print_message Verbose_low(" Queue chaged ");
+				)
+			else (
+				print_message Verbose_low(" Queue did not change ");
+				backWard := true;
+				);
+			
+
 			(* Check if the limit has been reached *)
 			self#check_and_update_queue_bfs_limit;
-			
+
+
 			(* If still going, ask the concrete algorithm whether it wants to terminate for other reasons *)
 			if limit_reached = Keep_going then(
 				(* Print some information *)
@@ -2631,7 +3866,7 @@ class virtual algoStateBased =
 					algorithm_keep_going := false;
 				);
 			);
-			
+
 		done;
 
 		print_message Verbose_standard ("End of Ordering!!! \n");
@@ -2686,7 +3921,7 @@ class virtual algoStateBased =
 
 
 
-		print_message Verbose_standard("Exiting explore_queue_bfs!!!");
+		(* print_message Verbose_standard("Exiting explore_queue_bfs!!!"); *)
 		(* The end *)
 		()
 
@@ -2983,6 +4218,10 @@ class virtual algoStateBased =
 			| Exploration_queue_BFS -> self#explore_queue_bfs init_state_index;
 			| Exploration_queue_BFS_RS -> self#explore_queue_bfs init_state_index;
 			| Exploration_queue_BFS_PRIOR -> self#explore_queue_bfs init_state_index;
+			| Exploration_queue_NestedDFS  -> self#explore_queue_bfs init_state_index;
+			| Exploration_queue_NestedDFS_with_Subsumption -> self#explore_queue_bfs init_state_index;
+			| Exploration_layer_NestedDFS_with_Subsumption -> self#explore_queue_bfs init_state_index;
+			| Exploration_layer_NestedDFS_with_Subsumption_Synthesis -> self#explore_queue_bfs init_state_index;
 		end;
 
 		(* Return the algorithm-dependent result *)

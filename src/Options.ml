@@ -534,6 +534,14 @@ class imitator_options =
 					exploration_order <- Exploration_queue_BFS_RS
 				else if order = "queueBFSPRIOR" then
 					exploration_order <- Exploration_queue_BFS_PRIOR
+				else if order = "queueNestedDFS" then
+					exploration_order <- Exploration_queue_NestedDFS
+				else if order = "queueNestedDFSsub" then
+					exploration_order <- Exploration_queue_NestedDFS_with_Subsumption
+				else if order = "layerNestedDFSsub" then
+					exploration_order <- Exploration_layer_NestedDFS_with_Subsumption
+				else if order = "synlayerNestedDFSsub" then
+					exploration_order <- Exploration_layer_NestedDFS_with_Subsumption_Synthesis
 				else(
 					(*** HACK: print header now ***)
 					print_header_string();
@@ -1012,6 +1020,12 @@ class imitator_options =
 				| Exploration_queue_BFS -> print_message Verbose_standard ("Exploration order: queue-based BFS [EXPERIMENTAL].")
 				| Exploration_queue_BFS_RS -> print_message Verbose_standard ("Exploration order: queue-based BFS with ranking system [WORK IN PROGRESS].")
 				| Exploration_queue_BFS_PRIOR -> print_message Verbose_standard ("Exploration order: queue-based BFS with priority [WORK IN PROGRESS].")
+				| Exploration_queue_NestedDFS -> print_message Verbose_standard ("Exploration order: queue-based Nested-DFS [WORK IN PROGRESS WITH LAURE].")
+				| Exploration_queue_NestedDFS_with_Subsumption -> print_message Verbose_standard ("Exploration order: queue-based Nested-DFS with Subsumption [WORK IN PROGRESS WITH LAURE].")
+				| Exploration_layer_NestedDFS_with_Subsumption -> print_message Verbose_standard ("Exploration order: layer-based Nested-DFS [WORK IN PROGRESS WITH LAURE].")
+				| Exploration_layer_NestedDFS_with_Subsumption_Synthesis -> print_message Verbose_standard ("Exploration order: layer-based Nested-DFS parameter synthesis [WORK IN PROGRESS WITH LAURE].")
+
+				
 			end;
 
 			(* Variant of the inverse method *)

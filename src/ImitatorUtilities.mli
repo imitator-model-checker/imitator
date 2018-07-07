@@ -173,6 +173,14 @@ type exploration_order =
 	| Exploration_queue_BFS_RS
 	(** Queue-BFS: queue-based, independent of the depth, with prior for the selection of the next state *)
 	| Exploration_queue_BFS_PRIOR
+	(** Queue-Nested-dFS: queue-based, working with Laure *)
+	| Exploration_queue_NestedDFS
+	(** Queue-Nested-dFS-with-Subsumption: queue-based, working with Laure *)
+	| Exploration_queue_NestedDFS_with_Subsumption
+	(** Layer-Nested-dFS-with-Subsumption: queue-based, working with Laure *)
+	| Exploration_layer_NestedDFS_with_Subsumption
+	(** Syn-Layer-Nested-dFS-with-Subsumption: queue-based, working with Laure *)
+	| Exploration_layer_NestedDFS_with_Subsumption_Synthesis
 	
 
 (************************************************************)

@@ -213,7 +213,7 @@ val add_p_constraint_to_states : state_space -> LinearConstraint.p_linear_constr
 
 
 (** Replace the constraint of a state in a state space by another one (the constraint is copied to avoid side-effects later) *)
-(* val replace_constraint : state_space -> LinearConstraint.linear_constraint -> state_index -> unit *)
+val replace_constraint : state_space -> state_index -> LinearConstraint.px_linear_constraint -> unit 
 
 (** Merge two states by replacing the second one by the first one, in the whole state space structure (lists of states, and transitions) *)
 (* val merge_2_states : state_space -> state_index -> state_index -> unit *)

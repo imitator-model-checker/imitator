@@ -143,6 +143,8 @@ val negate_wrt_pi0 : (variable -> coef) -> p_linear_inequality -> p_linear_inequ
 (** Negate an inequality ('=' is disallowed); raises InternalError if "=" is used *)
 val negate_inequality : p_linear_inequality -> p_linear_inequality
 
+val negate_inequality2 : p_linear_inequality -> p_linear_inequality list
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion} *)
@@ -258,6 +260,7 @@ val partition_lu : variable list -> pxd_linear_constraint list -> (variable list
 (** Check if a constraint is false *)
 (* val is_false : linear_constraint -> bool *)
 val p_is_false : p_linear_constraint -> bool
+val px_is_false : px_linear_constraint -> bool
 val pxd_is_false : pxd_linear_constraint -> bool
 
 (** Check if a constraint is true *)

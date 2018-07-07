@@ -37,6 +37,9 @@ val string_of_arithmetic_expression : (Automaton.variable_index -> Automaton.var
 (** Convert a state into a string *)
 val string_of_state : abstract_model -> (Location.global_location * LinearConstraint.px_linear_constraint) -> string
 
+(** Convert a state into a string *)
+val string_of_location : abstract_model -> Location.global_location -> string
+
 
 (************************************************************)
 (** Guard *)

@@ -1048,6 +1048,14 @@ let negate_inequality = function
 	| Equal (lterm, rterm) -> raise (InternalError "Trying to negate an equality in negate_inequality")
 
 
+let negate_inequality2 = function
+	| Less_Than (lterm, rterm) -> [Greater_Or_Equal (lterm, rterm)]
+	| Less_Or_Equal (lterm, rterm) -> [Greater_Than (lterm, rterm)]
+	| Greater_Than (lterm, rterm) -> [Less_Or_Equal (lterm, rterm)]
+	| Greater_Or_Equal (lterm, rterm) -> [Less_Than (lterm, rterm)]
+	| Equal (lterm, rterm) -> [Greater_Than (lterm, rterm); Less_Than (lterm, rterm)]
+
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion} *)
