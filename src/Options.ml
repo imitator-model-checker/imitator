@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2018/06/05
+ * Last modified     : 2018/07/19
  *
  ************************************************************)
 
@@ -550,6 +550,8 @@ class imitator_options =
 					exploration_order <- Exploration_queue_BFS_RS
 				else if order = "queueBFSPRIOR" then
 					exploration_order <- Exploration_queue_BFS_PRIOR
+				else if order = "optTimeQueue" then
+					exploration_order <- Exploration_OptReach_priority_queue
 				else(
 					(*** HACK: print header now ***)
 					print_header_string();
@@ -1043,9 +1045,10 @@ class imitator_options =
 			begin
 			match exploration_order with
 				| Exploration_layer_BFS -> print_message Verbose_experiments ("Exploration order: layer-based BFS.")
-				| Exploration_queue_BFS -> print_message Verbose_standard ("Exploration order: queue-based BFS [EXPERIMENTAL].")
-				| Exploration_queue_BFS_RS -> print_message Verbose_standard ("Exploration order: queue-based BFS with ranking system [WORK IN PROGRESS].")
-				| Exploration_queue_BFS_PRIOR -> print_message Verbose_standard ("Exploration order: queue-based BFS with priority [WORK IN PROGRESS].")
+				| Exploration_queue_BFS -> print_message Verbose_standard ("Exploration order: queue-based BFS [ACN17].")
+				| Exploration_queue_BFS_RS -> print_message Verbose_standard ("Exploration order: queue-based BFS with ranking system [ACN17].")
+				| Exploration_queue_BFS_PRIOR -> print_message Verbose_standard ("Exploration order: queue-based BFS with priority [ACN17].")
+				| Exploration_OptReach_priority_queue -> print_message Verbose_standard ("Exploration order: ptimal reachability with priority queue [WORK IN PROGRESS].")
 			end;
 
 			(* Variant of the inverse method *)

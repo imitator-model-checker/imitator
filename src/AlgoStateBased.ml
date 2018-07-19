@@ -1,4 +1,4 @@
-	(************************************************************
+(************************************************************
  *
  *                       IMITATOR
  * 
@@ -6,9 +6,9 @@
  * 
  * Module description: main virtual class to explore the state space: only defines post-related function, i.e., to compute the successor states of ONE state. That (still) represents a large list of functions.
  * 
- * File contributors : Étienne André
+ * File contributors : Étienne André, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2018/05/30
+ * Last modified     : 2018/07/17
  *
  ************************************************************)
 
@@ -3031,6 +3031,7 @@ class virtual algoStateBased =
 			| Exploration_queue_BFS -> self#explore_queue_bfs init_state_index;
 			| Exploration_queue_BFS_RS -> self#explore_queue_bfs init_state_index;
 			| Exploration_queue_BFS_PRIOR -> self#explore_queue_bfs init_state_index;
+			| Exploration_OptReach_priority_queue -> raise (NotImplemented "Exploration_OptReach_priority_queue");
 		end;
 
 		(* Return the algorithm-dependent result *)
