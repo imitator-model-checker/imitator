@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2018/06/05
+ * Last modified     : 2018/07/19
  *
  ************************************************************)
 
@@ -294,14 +294,16 @@ type distribution_mode =
 
 
 type exploration_order =
-	(** Layer-BFS: all states at depth i are computed, and then their successors at depth i+1 *)
+	(** Layer-BFS: all states at depth i are computed, and then their successors at depth i+1 [original version] *)
 	| Exploration_layer_BFS
-	(** Queue-BFS: basic queue, independent of the depth *)
+	(** Queue-BFS: basic queue, independent of the depth [ANP17] *)
 	| Exploration_queue_BFS
-	(** Queue-BFS: queue-based, independent of the depth, with ranking system for the selection of the next state *)
+	(** Queue-BFS: queue-based, independent of the depth, with ranking system for the selection of the next state [ANP17] *)
 	| Exploration_queue_BFS_RS
-	(** Queue-BFS: queue-based, independent of the depth, with priority for the selection of the next state *)
+	(** Queue-BFS: queue-based, independent of the depth, with prior for the selection of the next state [ANP17] *)
 	| Exploration_queue_BFS_PRIOR
+	(** Optimal reachability with priority queue: queue-based, with priority to the earliest successor for the selection of the next state [work in progress André, Bloemen, Petrucci] *)
+	| Exploration_OptReach_priority_queue
 	
 
 (** Style of graphical state space to output *)
