@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/11
- * Last modified     : 2018/02/23
+ * Last modified     : 2018/07/19
  *
  ************************************************************)
 
@@ -272,6 +272,8 @@ type abstract_model = {
 	special_reset_clock : clock_index option;
 	(* The list of clock indexes except the reset clock (used, e.g., to print the model *)
 	clocks_without_special_reset_clock : clock_index list;
+	(* Index of a special clock meant to measure the global time (how this clock is actually used is up to the model designer *)
+	global_time_clock : clock_index option;
 	(* The list of discrete indexes *)
 	discrete : discrete_index list;
 	(* True for discrete, false otherwise *)
