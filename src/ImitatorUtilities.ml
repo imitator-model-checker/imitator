@@ -216,6 +216,12 @@ type imitator_mode =
 	(** EF-maximization *)
 	| EF_max
 	
+	(** EF-synthesis with minimization *)
+	| EF_synth_min
+	
+	(** EF-synthesis with maximization *)
+	| EF_synth_max
+
 	(** AF-synthesis *)
 	| AF_synthesis
 	

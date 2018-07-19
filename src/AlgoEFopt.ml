@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2017/05/02
+ * Last modified     : 2018/07/19
  *
  ************************************************************)
 
@@ -39,9 +39,21 @@ class virtual algoEFopt =
 	(* Class variables *)
 	(************************************************************)
 	
+	(*------------------------------------------------------------*)
+	(* Class "parameters" to be initialized *)
+	(*------------------------------------------------------------*)
+	val mutable synthesize_valuations : bool option = None
+
+	(*------------------------------------------------------------*)
+	(* Variables *)
+	(*------------------------------------------------------------*)
+	
 	val mutable current_optimum : LinearConstraint.p_linear_constraint option = None
 	
 	val mutable negated_optimum  : LinearConstraint.p_linear_constraint option = None
+	
+	(* Parameter valuations in all |P| dimensions for which the optimum is reached *)
+	val mutable current_optimum_valuations : LinearConstraint.p_nnconvex_constraint option = None
 	
 	
 	(*------------------------------------------------------------*)
@@ -96,6 +108,21 @@ class virtual algoEFopt =
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Set the 'synthesize_valuations' flag (must be done right after creating the algorithm object!) *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method set_synthesize_valuations flag =
+		synthesize_valuations <- Some flag
+
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Shortcuts methods *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private get_synthesize_valuations =
+		match synthesize_valuations with
+		| Some flag -> flag
+		| None -> raise (InternalError "Variable 'synthesize_valuations' not initialized in AlgoEFopt although it should have been at this point")
+	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Compute the p-constraint of a state, projected onto the parameter to be optimized *)
@@ -155,7 +182,60 @@ class virtual algoEFopt =
 		negated_optimum <- Some new_negated_optimum
 	
 	
-	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Update the current optimum by updating it by union *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private update_optimum_valuations px_constraint =
+		(* Get the updated optimum constraint *)
+		let current_optimum_constraint = match current_optimum with
+			| Some optimum -> optimum
+			| None -> raise (InternalError "Variable 'current_optimum_constraint' not initialized in AlgoEFopt although it should have been at this point")
+		in
+		
+		(* Compute the projection onto all parameters *)
+		let projected_constraint_onto_P = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
+		(* Intersect with the optimum *)
+		LinearConstraint.p_intersection_assign projected_constraint_onto_P [current_optimum_constraint];
+		
+		(* Add to the collected current_optimum_constraint *)
+		match current_optimum_valuations with
+		| Some current_optimum_valuations ->
+			LinearConstraint.p_nnconvex_p_union current_optimum_valuations projected_constraint_onto_P;
+			(* Print some information *)
+			if verbose_mode_greater Verbose_low then(
+				self#print_algo_message_newline Verbose_low ("New " ^ self#str_optimum ^ " constraint after addition: " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names current_optimum_valuations));
+			);
+		| None -> raise (InternalError "Variable 'current_optimum_valuations' not initialized in AlgoEFopt although it should have been at this point")
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Update the current optimum by replacing it *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private replace_optimum_valuations px_constraint =
+		(* Replace the current synthesized valuations with the new ones *)
+						
+		(* Get the updated optimum constraint *)
+		let current_optimum_constraint = match current_optimum with
+			| Some optimum -> optimum
+			| None -> raise (InternalError "Variable 'current_optimum_constraint' not initialized in AlgoEFopt although it should have been at this point")
+		in
+
+		(* Compute the projection onto all parameters *)
+		let projected_constraint_onto_P = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
+		(* Intersect with the optimum *)
+		LinearConstraint.p_intersection_assign projected_constraint_onto_P [current_optimum_constraint];
+		
+		(* Replace *)
+		current_optimum_valuations <- Some (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint projected_constraint_onto_P);
+
+		(* Print some information *)
+		if verbose_mode_greater Verbose_low then(
+			self#print_algo_message_newline Verbose_low ("New " ^ self#str_optimum ^ " constraint after replacement: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names projected_constraint_onto_P));
+		);
+		
+		(* The end *)
+		()
+		
+		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform when trying to minimize/maximize a parameter. Returns true if the same should be kept, false if discarded. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -175,6 +255,12 @@ class virtual algoEFopt =
 				self#print_algo_message Verbose_standard ("Found a first " ^ self#str_optimum);
 				
 				self#update_optimum projected_constraint;
+				
+				(* Case synthesis *)
+				if self#get_synthesize_valuations then(
+					self#replace_optimum_valuations px_constraint;
+				);
+				
 			);
 
 			(* Keep the state only if not a goal state *)
@@ -189,8 +275,17 @@ class virtual algoEFopt =
 			if LinearConstraint.p_is_leq projected_constraint current_optimum_constraint then(
 				(* Statistics *)
 				counter_discarded_state#increment;
-				(* Discard state, i.e., do not keep it *)
-				false
+				
+				(* Case synthesis *)
+				if self#get_synthesize_valuations then(
+					(* If optimum is equal: still add the p-constraint *)
+					if LinearConstraint.p_is_equal projected_constraint current_optimum_constraint then(
+						self#update_optimum_valuations px_constraint
+					);
+				);
+				
+				(* Discard state, i.e., do not keep it; EXCEPT if synthesis, because we can find more constraints in that direction! *)
+				(self#get_synthesize_valuations)
 			(* Otherwise: keep it *)
 			)else(
 				(* If goal state, update the constraint *)
@@ -206,22 +301,31 @@ class virtual algoEFopt =
 				
 					self#update_optimum projected_constraint;
 
+					(* Case synthesis *)
+					if self#get_synthesize_valuations then(
+						self#replace_optimum_valuations px_constraint;
+					);
+					
 					(* Hack: discard the state! Since no better successor can be found *)
 					false
 				)else(
 					(* Keep the state, but add the negation of the optimum to squeeze the state space! (no need to explore the part with parameters smaller/larger than the optimum) *)
-					let negated_optimum = match negated_optimum with
-						| Some negated_optimum -> negated_optimum
-						| None -> raise (InternalError("A negated optimum should be defined at that point"))
-					in
-					
-					(* Print some information *)
-					if verbose_mode_greater Verbose_high then(
-						self#print_algo_message_newline Verbose_high ("Intersecting state with: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names negated_optimum));
+					(*** NOTE: not in synthesis mode ***)
+					if not self#get_synthesize_valuations then(
+						let negated_optimum = match negated_optimum with
+							| Some negated_optimum -> negated_optimum
+							| None -> raise (InternalError("A negated optimum should be defined at that point"))
+						in
+						
+						(* Print some information *)
+						if verbose_mode_greater Verbose_high then(
+							self#print_algo_message_newline Verbose_high ("Intersecting state with: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names negated_optimum));
+						);
+						
+						(* Intersect with side-effects *)
+						LinearConstraint.px_intersection_assign_p px_constraint [negated_optimum];
 					);
 					
-					(* Intersect with side-effects *)
-					LinearConstraint.px_intersection_assign_p px_constraint [negated_optimum];
 					(* Keep the state *)
 					(*** NOTE: what if it becomes unsatisfiable? ***)
 					true
@@ -318,10 +422,23 @@ class virtual algoEFopt =
 		);
 		
 		
-		(* Get the constraint *)
-		let result = match current_optimum with
-			| None -> LinearConstraint.false_p_nnconvex_constraint()
-			| Some current_optimum -> LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint current_optimum
+		let result =
+		(* Case synthesis: get the synthesized multidimensional constraint *)
+		if self#get_synthesize_valuations then (
+			
+			(* Get the constraint *)
+			match current_optimum_valuations with
+				| None -> LinearConstraint.false_p_nnconvex_constraint()
+				| Some current_optimum_valuations -> current_optimum_valuations
+		
+		)else(
+		(* Otherwise get the optimum *)
+		
+			(* Get the constraint *)
+			match current_optimum with
+				| None -> LinearConstraint.false_p_nnconvex_constraint()
+				| Some current_optimum -> LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint current_optimum
+		)
 		in
 		
 		(* Get the termination status *)
