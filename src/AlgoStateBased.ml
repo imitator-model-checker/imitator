@@ -2719,10 +2719,105 @@ class virtual algoStateBased =
 		()
 
 
-(*	method get_optimum_parameter =
-		raise (NotImplemented("Only in dedicated subclasses"))
-	*)
-		
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*                                                       *-*)
+	(*-*                  Opt Time Reach code                  *-*)
+	(*-*                                                       *-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+
+
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Returns a list that contain all variable indices, except for the *)
+    (* global_time index. This will be used by time_constr_to_val for *)
+    (* filtering the constraints *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+    method private variables_without_global_time =
+        let rec filter_clocks suclist = match suclist with
+            | [] ->  [];
+            | head::body ->
+            begin
+                if model.variable_names head = Constants.global_time_clock_name then filter_clocks body
+                else List.append (filter_clocks body) [head]
+            end
+        in
+        List.append model.parameters_and_discrete (filter_clocks model.clocks)
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Turns a global_time constraint into a minimum time value *)
+	(* Note that all other parameters are filtered out, so the resulting *)
+    (* value must be a float *)
+    (* The method assumes that there is a single lower bound value in the *)
+    (* constraint, though an upper bound is allowed *)
+    (* e.g. "global_time >= 5 & 10 <= global_time" -> 5. *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+    method private time_constr_to_val time_constraint =
+		(* TODOV: also copy the constraint here? *)
+		LinearConstraint.px_hide_assign self#variables_without_global_time time_constraint;
+		let time_str = LinearConstraint.string_of_px_linear_constraint model.variable_names time_constraint in
+		let time_array = Str.split (Str.regexp "&\\|[ \t\n]+") time_str in
+		(* temporary variables *)
+		let min_time = ref max_float in (* lower time bound *)
+		let epsilon = 0.0001 in (* Epsilon value for "global_time > 0" *)
+        let is_float s =
+            try ignore (float_of_string s); true
+            with _ -> false in
+        (* Somehow, Constants.global_time_clock_name may not be used for *)
+        (* matching expressions, so just do this hardcoded.. *)
+	 	let rec parse_time_constraint time_list = match time_list with
+            | [] -> ();
+            | ""::body -> parse_time_constraint body;
+            | "global_time"::comp::timeval::body -> ( (* "global_time >= 5" *)
+                match comp with
+                    | ">" | ">=" | "=" -> (
+                        if is_float timeval then min_time := float_of_string timeval
+                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        if comp = ">" then min_time := !min_time +. epsilon
+                    )
+                    | _ -> ();
+                ;
+                parse_time_constraint body;
+            )
+            | timeval::comp::"global_time"::body -> ( (* "5 <= global_time" *)
+                match comp with
+                    | "<" | "<=" | "=" -> (
+                        if is_float timeval then min_time := float_of_string timeval
+                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        if comp = "<" then min_time := !min_time +. epsilon
+                    )
+                    | _ -> ();
+                ;
+                parse_time_constraint body;
+            )
+            | _::body -> raise (InternalError ("Unable to parse constraint"));
+        in
+        parse_time_constraint time_array;
+		!min_time
+
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Helper method to print state information*)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+    method private print_state_info state_index =
+        let source_state = StateSpace.get_state state_space state_index in
+        let _, source_constraint = source_state in
+        print_message Verbose_standard ("----------\nstate:" ^ (string_of_int state_index) ^ "\n");
+        print_message Verbose_standard (ModelPrinter.string_of_state model source_state);
+        let time_constraint = LinearConstraint.px_copy source_constraint in
+		let min_time = self#time_constr_to_val time_constraint in
+        print_message Verbose_standard ("\n[min time: " ^ (string_of_float min_time) ^ "]");
+        print_message Verbose_standard ("----------\n");
+        ()
+
+
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the minimal reachability algorithm [WORK IN PROGRESS] *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2732,14 +2827,239 @@ class virtual algoStateBased =
 		(* Statistics *)
 		counter_explore_using_strategy#increment;
 		counter_explore_using_strategy#start;
+
+		
+		print_message Verbose_standard("---------------- Starting exploration ----------------");
+
+
+        (* Print the initial state *)
+        self#print_state_info init_state_index;
+		
+
+
+
+
+(*		
+
+        (* Compute the successors of the initial state *)
+        let tmp = self#post_from_one_state init_state_index in
+
+        (* Print the number of successors *)
+        print_message Verbose_standard("Successor count: " ^ (string_of_int
+        (List.length tmp))) ;
+
+        (* Use functional programming to show all elements of the successor
+         * list *)
+        let rec process_sucs suclist = match suclist with
+            |  [] ->  print_message Verbose_standard("End of list");
+            | head::body ->
+                begin
+                    self#print_state_info head;
+                    process_sucs body 
+                end
+        in
+        process_sucs tmp;
+
+        let tmp2 = self#post_from_one_state (List.hd tmp) in
+
+        (* Print the number of successors *)
+        print_message Verbose_standard("Successor count: " ^ (string_of_int
+        (List.length tmp2))) ;
+        process_sucs tmp2;
+
+*)
+        (* 2 successors from initial state, now try to compute the time*) 
+
+        (* intersect constraint with global_time_clock? and get minimum value
+         * of this constraint? *) 
+        
+
+        (*
+
+		print_message Verbose_standard("---------------- Starting old exploration ----------------");
+
+		(* Set the depth to 1 *)
+		bfs_current_depth <- 1;
 		
 		
+		(*------------------------------------------------------------*)
+		(* Perform the post^* *)
+		(*------------------------------------------------------------*)
+		(* Set of states computed at the previous depth *)
+		let post_n = ref [init_state_index] in
 		
+		(* To check whether the time limit / state limit is reached *)
+		limit_reached <- Keep_going;
+		
+		(* Flag modified by the algorithm to perhaps terminate earlier *)
+		let algorithm_keep_going = ref true in
+
+		(* Explore further until the limit is reached or the list of states computed at the previous depth is empty *)
+		while limit_reached = Keep_going && !post_n <> [] && !algorithm_keep_going do
+			(* Print some information *)
+			if verbose_mode_greater Verbose_standard then (
+				print_message Verbose_low ("\n");
+				print_message Verbose_standard ("Computing post^" ^ (string_of_int bfs_current_depth) ^ " from "  ^ (string_of_int (List.length !post_n)) ^ " state" ^ (s_of_int (List.length !post_n)) ^ ".");
+			);
+			
+			(* Count the states for verbose purpose: *)
+			let num_state = ref 0 in
+
+			(* Statistics *)
+			counter_nplus1#increment;
+			counter_nplus1#start;
+			
+			(* The concrete function post_from_one_state may raise exception TerminateAnalysis, and update termination_status *)
+			let post_n_plus_1 =
+			try(
+			(* For each newly found state: *)
+			List.fold_left (fun current_post_n_plus_1 source_state_index ->
+				(* Count the states for verbose purpose: *)
+				num_state := !num_state + 1;
+				
+				(* Perform the post *)
+				let new_states = self#post_from_one_state source_state_index in
+				
+				(* Print some information *)
+				if verbose_mode_greater Verbose_medium then (
+					let beginning_message = if new_states = [] then "Found no new state" else ("Found " ^ (string_of_int (List.length new_states)) ^ " new state" ^ (s_of_int (List.length new_states)) ^ "") in
+					print_message Verbose_medium (beginning_message ^ " for the post of state " ^ (string_of_int !num_state) ^ " / " ^ (string_of_int (List.length !post_n)) ^ " in post^" ^ (string_of_int bfs_current_depth) ^ ".\n");
+				);
+				
+				(* Return the concatenation of the new states *)
+				(**** OPTIMIZED: do not care about order (else shoud consider 'list_append current_post_n_plus_1 (List.rev new_states)') *)
+				List.rev_append current_post_n_plus_1 new_states
+			) [] !post_n
+			)
+			(* If analysis terminate: successors are just the empty list *)
+			with TerminateAnalysis -> []
+			
+			in
+			
+			(* Statistics *)
+			counter_nplus1#stop;
+
+			(* Statistics *)
+			counter_process_post_n#increment;
+			counter_process_post_n#start;
+			
+			self#process_post_n !post_n;
+			
+			(* Statistics *)
+			counter_process_post_n#stop;
+
+			(* Merge states! *)
+			let new_states_after_merging = ref post_n_plus_1 in
+			(*** HACK here! For #merge_before, we should ONLY merge here; but, in order not to change the full structure of the post computation, we first merge locally before the pi0-compatibility test, then again here ***)
+			if options#merge || options#merge_before then (
+	(* 			new_states_after_merging := try_to_merge_states state_space !new_states_after_merging; *)
+				(* New version *)
+				let eaten_states = StateSpace.merge state_space !new_states_after_merging in
+				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
+			);
+			(* Update the post_n, i.e., at that point we replace the post^n by post^n+1 in our BFS algorithm, and go one step deeper in the state space *)
+			post_n := !new_states_after_merging;
+			
+			(* Print some information *)
+			if verbose_mode_greater Verbose_medium then (
+				let beginning_message = if !post_n = [] then "\nFound no new state" else ("\nFound " ^ (string_of_int (List.length !post_n)) ^ " new state" ^ (s_of_int (List.length !post_n)) ^ "") in
+				print_message Verbose_medium (beginning_message ^ " for post^" ^ (string_of_int bfs_current_depth) ^ ".\n");
+			);
+			
+			(* If acyclic option: empty the list of already reached states for comparison with former states *)
+			if options#acyclic then(
+				print_message Verbose_low ("\nMode acyclic: empty the list of states to be compared.");
+				StateSpace.empty_states_for_comparison state_space;
+			);
+			
+			
+			(* Statistics *)
+			counter_gcmajor#increment;
+			counter_gcmajor#start;
+
+			(* Statistics *)
+			counter_gcmajor#stop;
+
+			(* Go one step deeper *)
+			bfs_current_depth <- bfs_current_depth + 1;
+			
+			(* Check if the limit has been reached *)
+			self#check_and_update_layer_bfs_limit;
+			
+			(* If still going, ask the concrete algorithm whether it wants to terminate for other reasons *)
+			if limit_reached = Keep_going then(
+				(* Print some information *)
+				(*** HACK: 'bfs_current_depth - 1' because bfs_current_depth was just incremented… ***)
+				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (bfs_current_depth - 1)) ^ "…");
+
+				if self#check_termination_at_post_n then(
+					algorithm_keep_going := false;
+				);
+			);
+			
+		done; (* END WHILE *)
+		
+		(* Were they any more states to explore? *)
+		let nb_unexplored_successors = List.length !post_n in
+		
+		(* Set the list of states with unexplored successors, if any *)
+		if nb_unexplored_successors > 0 then(
+			(*** NOTE: if an exception TerminateAnalysis was raised, this list is empty :( ***)
+			unexplored_successors <- UnexSucc_some !post_n;
+		);
+		
+		(* Update termination condition *)
+		begin
+		match limit_reached with
+			(* No limit: regular termination *)
+			(*** NOTE: check None, as it may have been edited from outside, in which case it should not be Regular_termination ***)
+			| Keep_going when termination_status = None -> termination_status <- Some (Result.Regular_termination)
+			(*** NOTE: obliged to comment out the condition below, otherwise there is a compiling warning… ***)
+			| Keep_going (*when termination_status <> None*) -> ()
+			
+			(* Termination due to time limit reached *)
+			| Time_limit_reached -> termination_status <- Some (Result.Time_limit nb_unexplored_successors)
+			
+			(* Termination due to state space depth limit reached *)
+			| Depth_limit_reached -> termination_status <- Some (Result.Depth_limit nb_unexplored_successors)
+			
+			(* Termination due to a number of explored states reached *)
+			| States_limit_reached -> termination_status <- Some (Result.States_limit nb_unexplored_successors)
+		end
+		;
+	
+		(* Print some information *)
+		(*** NOTE: must be done after setting the limit (above) ***)
+		self#bfs_print_warnings_limit ();
+		
+		if not !algorithm_keep_going && nb_unexplored_successors > 0 then(
+			self#print_algo_message Verbose_standard ("A sufficient condition to ensure termination was met although there were still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore");
+		);
+
+
+		print_message Verbose_standard (
+			let nb_states = StateSpace.nb_states state_space in
+			let nb_transitions = StateSpace.nb_transitions state_space in
+			let fixpoint_str = if nb_unexplored_successors > 0 then "State space exploration stopped" else "Fixpoint reached" in
+			"\n" ^ fixpoint_str ^ " at a depth of "
+			^ (string_of_int bfs_current_depth) ^ ""
+			^ ": "
+			^ (string_of_int nb_states) ^ " state" ^ (s_of_int nb_states)
+			^ " with "
+			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " in the final state space."
+		);
+		(*** NOTE: in fact, more states and transitions may have been explored (and deleted); here, these figures are the number of states in the state space. ***)
+
+
+
+
 		
 		(*** TODO ***)
-(* 		let _ = self#get_optimum_parameter; *)
+		(* 		let _ = self#get_optimum_parameter; *)
 		
-		
+		*)
+
+		print_message Verbose_standard("---------------- Ending exploration ----------------");
 	
 		(* Statistics *)
 		counter_explore_using_strategy#stop;
