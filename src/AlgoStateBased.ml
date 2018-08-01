@@ -2743,7 +2743,7 @@ class virtual algoStateBased =
             | head::body ->
             begin
                 if model.variable_names head = Constants.global_time_clock_name then filter_clocks body
-                else List.append (filter_clocks body) [head]
+                else List.append [head] (filter_clocks body)
             end
         in
         List.append model.parameters_and_discrete (filter_clocks model.clocks)
@@ -2758,7 +2758,6 @@ class virtual algoStateBased =
     (* e.g. "global_time >= 5 & 10 <= global_time" -> 5. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
     method private time_constr_to_val time_constraint =
-		(* TODOV: also copy the constraint here? *)
 		LinearConstraint.px_hide_assign self#variables_without_global_time time_constraint;
 		let time_str = LinearConstraint.string_of_px_linear_constraint model.variable_names time_constraint in
 		let time_array = Str.split (Str.regexp "&\\|[ \t\n]+") time_str in
@@ -2801,9 +2800,16 @@ class virtual algoStateBased =
 		!min_time
 
 
+	(* Obtain the minimum time from a state index *)
+	method private state_index_to_min_time state_index =
+        let source_state = StateSpace.get_state state_space state_index in
+        let _, source_constraint = source_state in
+        let time_constraint = LinearConstraint.px_copy source_constraint in
+		self#time_constr_to_val time_constraint
+		
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Helper method to print state information*)
+	(* Helper method to print state information *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
     method private print_state_info state_index =
         let source_state = StateSpace.get_state state_space state_index in
@@ -2817,29 +2823,112 @@ class virtual algoStateBased =
         ()
 
 
-
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the minimal reachability algorithm [WORK IN PROGRESS] *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
 	method private explore_optreach_queue init_state_index =
 	
 		(* Statistics *)
 		counter_explore_using_strategy#increment;
 		counter_explore_using_strategy#start;
 
+		print_message Verbose_standard("---------------- Setting up Priority Queue ----------------");
 		
+        (* Simple way: have a list of tuples, with (PRIOR, STATE) and return (and remove) the smallest *)
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(*                     Priority Queue functions                      *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+        (* Printing function for the priority queue *)
+        let pq_to_string pq =
+            let rec r_pq_to_string pq = match pq with
+                | [] -> "";
+                | (p,s)::body  -> (
+                    "(" ^ (string_of_float p) ^ "," ^ (string_of_int s) ^ ") " ^ (r_pq_to_string body)
+                );
+            in "[ " ^ r_pq_to_string pq ^ "]"
+        in
+
+        (* Checking for containment in the priority queue *)
+        let rec pq_contains pq state_id = match pq with
+            | [] -> false; (* At the end of the queue, so we have not found the state *)
+            | (_,s)::body  -> (
+				(* State found in the pq *)
+                if s = state_id then true
+				else pq_contains body state_id
+            );
+        in
+
+        (* Add state at first possible position, such that the list is *)
+        (* and return the new queue *)
+        (* Assumes that the list does not already contain the element! *)
+        let rec pq_add_state pq prior state_id = match pq with
+            | [] -> [(prior, state_id)]; (* Add it at the end, if prior is worse than the rest *)
+            | (p,s)::body  -> (
+				(* State already present in the pq, just ignore it *)
+                if s = state_id then (
+		            print_message Verbose_standard("State " ^ (pq_to_string [(p,s)]) ^ " already present in the queue");
+					List.append [(p,s)] body
+                )
+				(* Insert the state when all succeeding entries have a higher priority *)
+				else if prior < p then (
+					List.append [(prior,state_id); (p,s)] body
+				)
+				(* Continue iterating over the list otherwise *)
+				else List.append [(p,s)] (pq_add_state body prior state_id)
+            );
+        in
+
+        (* Returns True if the queue is empty *)
+        let pq_is_empty pq = match pq with
+            | [] -> true;
+            | _ -> false;
+        in
+
+        (* Returns the first state (so with the lowest priority) from the PQ and also returns the rest of the pq *)
+		(* (without the first element) *)
+        let pq_pick_state pq = match pq with
+            | [] -> raise (InternalError ("Cannot pick a state from an empty queue"));
+            | (p,s)::body  -> p,s,body;
+        in
+
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(*                 End of Priority Queue functions                   *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+		(* Add initial state to the queue with the corresponding time constraint*)
+		let pq = ref [(self#state_index_to_min_time init_state_index, init_state_index)] in
+
+		(* Small tests
+		print_message Verbose_standard("PQ: " ^ (pq_to_string !pq));
+        pq := pq_add_state !pq 2.3 5;
+        print_message Verbose_standard("PQ: " ^ (pq_to_string !pq));
+        pq := pq_add_state !pq 7. 5;
+        print_message Verbose_standard("PQ: " ^ (pq_to_string !pq));
+		let _, s, pqr = pq_pick_state !pq in
+		pq := pqr;
+		print_message Verbose_standard("PQ: " ^ (pq_to_string !pq));
+			(* output:
+				PQ: [ (0.,0) ]
+				PQ: [ (0.,0) (2.3,5) ]
+				State [ (2.3,5) ] already present in the queue
+				PQ: [ (0.,0) (2.3,5) ]
+				PQ: [ (2.3,5) ]
+			*)
+		*)
+
 		print_message Verbose_standard("---------------- Starting exploration ----------------");
 
-
-        (* Print the initial state *)
-        self#print_state_info init_state_index;
-		
+                (* Print the initial state *)
+        self#print_state_info s; (*init_state_index;*)
 
 
 
 
-(*		
+
+(*
 
         (* Compute the successors of the initial state *)
         let tmp = self#post_from_one_state init_state_index in
@@ -2873,8 +2962,7 @@ class virtual algoStateBased =
         (* intersect constraint with global_time_clock? and get minimum value
          * of this constraint? *) 
         
-
-        (*
+(*
 
 		print_message Verbose_standard("---------------- Starting old exploration ----------------");
 
@@ -2916,7 +3004,10 @@ class virtual algoStateBased =
 			List.fold_left (fun current_post_n_plus_1 source_state_index ->
 				(* Count the states for verbose purpose: *)
 				num_state := !num_state + 1;
-				
+    				
+                (* Print state info *)
+                self#print_state_info source_state_index;
+
 				(* Perform the post *)
 				let new_states = self#post_from_one_state source_state_index in
 				
@@ -3057,10 +3148,13 @@ class virtual algoStateBased =
 		(*** TODO ***)
 		(* 		let _ = self#get_optimum_parameter; *)
 		
-		*)
 
 		print_message Verbose_standard("---------------- Ending exploration ----------------");
 	
+
+
+*)
+
 		(* Statistics *)
 		counter_explore_using_strategy#stop;
 	
