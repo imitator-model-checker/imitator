@@ -2918,7 +2918,7 @@ class virtual algoStateBased =
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
  
         (* Printing function for the visited set *)
-        let vis_to_string vis =
+        let _vis_to_string vis =
             let rec r_vis_to_string vis = match vis with
                 | [] -> "";
                 | s::[]  -> (string_of_int s)
@@ -2948,9 +2948,6 @@ class virtual algoStateBased =
 		(*                     State Space Exploration                       *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-
-		print_message Verbose_standard("---------------- Starting exploration ----------------");
-
 		(* Add initial state to the queue and visited set with the corresponding time constraint *)
 		let init_time = (self#state_index_to_min_time init_state_index) in
 		let pq = ref [(init_time, init_state_index)] in (* Priority queue *)
@@ -2961,45 +2958,88 @@ class virtual algoStateBased =
 		let find_all_min_vals = true in (* false: stop at first time at target loc, otherwise collect all constraints with min time *)
 		let upper_time_bound = ref max_float in (* prevent exploring states that exceed minimum time *)
 		let algorithm_keep_going = ref true in (* terminate when we found target loc *)
+        let target_found = ref false in (* indicates whether we have already found the target state *)
+        let constraint_list = ref [] in (* List of constraints that reach the target location (in minimal time) *)
+
+		print_message Verbose_standard("---------------- Starting exploration ----------------");
 
 		while limit_reached == Keep_going && not (pq_is_empty !pq) && !algorithm_keep_going do
         	(*print_message Verbose_standard("PQ:  " ^ (pq_to_string !pq));*)
           	(*print_message Verbose_standard("Vis: " ^ (vis_to_string !vis));*)
-        	print_message Verbose_standard("|PQ| = " ^ (string_of_int (List.length !pq)) ^ " \t |Vis| = " ^
-                (string_of_int (List.length !vis)));
+        	(*print_message Verbose_standard("|PQ| = " ^ (string_of_int (List.length !pq))
+                ^ " \t |Vis| = " ^ (string_of_int (List.length !vis)));*)
 			let time, source_id, pqr = pq_pick_state !pq in
 			pq := pqr; (* there doesn't seem to be an (easy) direct way to update PQ *)
         	(*self#print_state_info source_id;*)
 			(*print_message Verbose_standard("Exploring " ^ (string_of_int source_id));*)
 
-			(* Check time constraint *)
+			(* Check time constraint and stop when we reached the limit *)
 			if time > !upper_time_bound then (
 				print_message Verbose_standard("All states visited up to time bound");
+                algorithm_keep_going := false;
+                termination_status <- Some (Result.Regular_termination);
 			)
-			else (
-				(* Compute successors *)
-				let successors = self#post_from_one_state source_id in
-				print_message Verbose_standard("Iteration " ^ (string_of_int !iteration) ^ ":\t State "^ (string_of_int source_id) ^
-					" has " ^ (string_of_int (List.length successors)) ^ " successors");
-				
-				let rec process_sucs suclist = match suclist with
-					|  [] ->  ();
-					| target_id::body -> (
-						if not (vis_contains !vis target_id) then (
-							let target_time = (self#state_index_to_min_time target_id) in
-							(* We could prevent adding states to PQ with target_time > upper_time_bound, but this shouldn't make *)
-							(* much difference, as it's already checked when picking states from the PQ *)
-							pq := pq_add_state !pq target_time target_id;
-							vis := vis_add_state !vis target_id;
-						)
-						else print_message Verbose_standard("Already visited state " ^ (string_of_int target_id));
-						process_sucs body
-					);
-				in
-				process_sucs successors;
-			);
+            else (
+                (* Check if this is the target location *)
+                let source_location, source_constraint = StateSpace.get_state state_space source_id in
+                (match model.correctness_condition with
+                | None -> raise (InternalError("A correctness property must be defined to perform optTimeQueue"))
+                | Some (Unreachable unreachable_global_locations) ->
+                    (* Check whether the current location matches one of the unreachable global locations *)
+                    if State.match_unreachable_global_locations unreachable_global_locations source_location then(
+                        (* Target state found ! (NB: assert time <= upper_bound) *)
+                        print_message Verbose_standard("Iteration " ^ (string_of_int !iteration)
+							^ ": Target reached in time: " ^ (string_of_float time));
+                        (* Possibly update upper_time_bound *)
+                        if !upper_time_bound > time then (
+							upper_time_bound := time;
+							constraint_list := []; (* Empty the constraint list *)
+						);
+                        (* self#print_state_info source_id; *)
+                        target_found := true;
+                        (* Collect constraints that reach target in min time *)
+                        let copy_source_constraint = LinearConstraint.px_copy source_constraint in
+                       	constraint_list := [copy_source_constraint]::!constraint_list
+                    )
+                | _ -> raise (InternalError("We only allow (un)reachability properties in optTimeQueue"));
+                );
 
-            (* Update termination condition *)
+                (* Don't compute successors when target is found *)
+                if !target_found then (
+                    (* Possibly terminate when target state is found *)
+                    if (not find_all_min_vals) then (
+                        print_message Verbose_standard("Found target!");
+                        algorithm_keep_going := false;
+                        termination_status <- Some (Result.Regular_termination);
+                    );
+                    target_found := false; (* reset target_found for future iterations *)
+                )
+                (* Otherwise, compute successors *)
+                else (
+                    let successors = self#post_from_one_state source_id in
+
+                    (*print_message Verbose_standard("Iteration " ^ (string_of_int !iteration) ^ ":\t State "^ (string_of_int source_id) ^
+                        " has " ^ (string_of_int (List.length successors)) ^ " successors"); *)
+                    
+                    let rec process_sucs suclist = match suclist with
+                        |  [] ->  ();
+                        | target_id::body -> (
+                            if not (vis_contains !vis target_id) then (
+                                let target_time = (self#state_index_to_min_time target_id) in
+                                (* We could prevent adding states to PQ with target_time > upper_time_bound, but this shouldn't make *)
+                                (* much difference, as it's already checked when picking states from the PQ *)
+                                pq := pq_add_state !pq target_time target_id;
+                                vis := vis_add_state !vis target_id;
+                            )
+                            else print_message Verbose_standard("Already visited state " ^ (string_of_int target_id));
+                            process_sucs body
+                        );
+                    in
+                    process_sucs successors;
+                );
+            );
+
+            (* Update termination condition (NOTE: Is this used correctly?) *)
             (match limit_reached with
                 (* No limit: regular termination *)
                 (*** NOTE: check None, as it may have been edited from outside, in which case it should not be Regular_termination ***)
@@ -3013,25 +3053,35 @@ class virtual algoStateBased =
                 (* Termination due to a number of explored states reached *)
                 | States_limit_reached -> termination_status <- Some (Result.States_limit (List.length !pq))
             );
+
             iteration := !iteration + 1;
 		done; (* END WHILE *)
+		print_message Verbose_standard("---------------- Ending exploration ------------------");
 
+        print_message Verbose_standard("Completed after " ^ (string_of_int !iteration) ^ " iterations.");
+        print_message Verbose_standard("States remaining in priority queue: " ^ (string_of_int (List.length !pq)));
+
+		(* TODO: Combine constraints that reach the final state with the upper_time_bound *)
+		let _ = !constraint_list in
+		let _ = !upper_time_bound in
+		print_message Verbose_standard ("We found " ^ (string_of_int (List.length !constraint_list))
+			^ " constraints that reach target in min time " ^ (string_of_float !upper_time_bound));
+	
         (* TODOV *)
-		(* TODO: Update the upper_time_bound when target location is reached *)
-		(* TODO: End algorithm when target location is reached OR when all min time constraints to the target location have been found *)
 		(* TODO: Include the subsumption mechanism (as an option!) to prevent subsumed states from being added *)
         (* TODO: Once at final state, intersect minimum time with constraint to reach final *)
 		(*       state to obtain the exact parameter constraints to reach it *)
 		(* MAYBE: Find/construct better examples *)
+        (* TODO: Use the StateSpace functions to do useful things (i.e., remove duplicate work) *)
 
-		print_message Verbose_standard("---------------- Ending exploration ----------------");
+		print_message Verbose_standard("---------------- Ending algorithm --------------------");
 
-		(* Statistics *)
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(*                 End of State Space Exploration                    *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+		(* Statistics *)
 		counter_explore_using_strategy#stop;
 	
 		(* The end *)
