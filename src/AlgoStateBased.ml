@@ -2730,6 +2730,18 @@ class virtual algoStateBased =
 
 
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Returns the variable index for global_time *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+    method private get_global_time =
+        let rec find_global_time clocks = match clocks with
+            | [] ->  raise (InternalError ("Unable to locate global_time"));
+            | head::body -> (
+                if model.variable_names head = Constants.global_time_clock_name then head
+                else find_global_time body
+            )
+        in
+        find_global_time model.clocks
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2738,7 +2750,7 @@ class virtual algoStateBased =
     (* filtering the constraints *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
     method private variables_without_global_time =
-        let rec filter_clocks suclist = match suclist with
+        let rec filter_clocks clocks = match clocks with
             | [] ->  [];
             | head::body -> (
                 if model.variable_names head = Constants.global_time_clock_name then filter_clocks body
@@ -2762,6 +2774,7 @@ class virtual algoStateBased =
 		let time_array = Str.split (Str.regexp "&\\|[ \t\n]+") time_str in
 		(* temporary variables *)
 		let min_time = ref max_float in (* lower time bound *)
+		(* TODO: Perhaps provide a warning message if we use the epsilon value *)
 		let epsilon = 0.0001 in (* Epsilon value for "global_time > 0" *)
         let is_float s =
             try ignore (float_of_string s); true
@@ -2820,6 +2833,22 @@ class virtual algoStateBased =
         print_message Verbose_standard ("\n[min time: " ^ (string_of_float min_time) ^ "]");
         print_message Verbose_standard ("----------\n");
         ()
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Creates a constraint from a float, i.e., global_time_constraint_from_float 5. -> global_time = 5. *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private global_time_constraint_from_float float_time =
+		let time_term = LinearConstraint.make_pxd_linear_term
+			[(NumConst.minus_one, self#get_global_time) ] (NumConst.numconst_of_float float_time) in
+		let time_ineq = LinearConstraint.make_pxd_linear_inequality time_term LinearConstraint.Op_eq in
+		let time_constr = LinearConstraint.make_pxd_constraint [time_ineq] in
+		(*
+		print_message Verbose_standard ("term:   " ^ LinearConstraint.string_of_pxd_linear_term model.variable_names time_term);
+		print_message Verbose_standard ("ineq:   " ^ LinearConstraint.string_of_pxd_linear_inequality model.variable_names time_ineq);
+		print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constr);
+		*)
+		LinearConstraint.pxd_hide_discrete_and_collapse time_constr
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2997,9 +3026,26 @@ class virtual algoStateBased =
 						);
                         (* self#print_state_info source_id; *)
                         target_found := true;
-                        (* Collect constraints that reach target in min time *)
-                        let copy_source_constraint = LinearConstraint.px_copy source_constraint in
-                       	constraint_list := [copy_source_constraint]::!constraint_list
+
+                        (* Intersect constraint with minimum time  *)
+						let time_constr = self#global_time_constraint_from_float !upper_time_bound in
+						let target_constraint = LinearConstraint.px_intersection (time_constr::[source_constraint]) in
+						(* NOTE: Code below doesn't seem to help much.. still equal constraints get added
+						(* Only add constraint if it is not <= than an already stored one *)
+						let rec check_subsumption_in_list new_constr list_constr = match list_constr with
+							| [] -> true;
+							| head::body -> (
+								if LinearConstraint.px_is_leq new_constr head then false
+								else check_subsumption_in_list new_constr body;
+							); 
+						in
+						if check_subsumption_in_list target_constraint !constraint_list then (
+                        	print_message Verbose_standard("Adding new target constraint");
+                       		constraint_list := target_constraint::!constraint_list
+						)
+						else print_message Verbose_standard("Target constraint already present in constraint_list!");
+						*)
+                       	constraint_list := target_constraint::!constraint_list
                     )
                 | _ -> raise (InternalError("We only allow (un)reachability properties in optTimeQueue"));
                 );
@@ -3061,21 +3107,20 @@ class virtual algoStateBased =
         print_message Verbose_standard("Completed after " ^ (string_of_int !iteration) ^ " iterations.");
         print_message Verbose_standard("States remaining in priority queue: " ^ (string_of_int (List.length !pq)));
 
-		(* TODO: Combine constraints that reach the final state with the upper_time_bound *)
-		let _ = !constraint_list in
-		let _ = !upper_time_bound in
+		(* Combine constraints that reach the final state with the upper_time_bound *)
 		print_message Verbose_standard ("We found " ^ (string_of_int (List.length !constraint_list))
-			^ " constraints that reach target in min time " ^ (string_of_float !upper_time_bound));
-	
-        (* TODOV *)
-		(* TODO: Include the subsumption mechanism (as an option!) to prevent subsumed states from being added *)
-        (* TODO: Once at final state, intersect minimum time with constraint to reach final *)
-		(*       state to obtain the exact parameter constraints to reach it *)
-		(* MAYBE: Find/construct better examples *)
-        (* TODO: Use the StateSpace functions to do useful things (i.e., remove duplicate work) *)
+			^ " constraints that reach the target in min time " ^ (string_of_float !upper_time_bound));
+		print_message Verbose_standard("The resulting parameter valuations is given by the union of the following constraint(s)");
+		let rec output_target_constraints constr_list = match constr_list with
+			| [] -> ();
+			| head::body -> (
+				print_message Verbose_standard ("\n"
+					^ LinearConstraint.string_of_px_linear_constraint model.variable_names head);
+				output_target_constraints body;
+			);
+		in output_target_constraints !constraint_list;
 
 		print_message Verbose_standard("---------------- Ending algorithm --------------------");
-
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(*                 End of State Space Exploration                    *)
