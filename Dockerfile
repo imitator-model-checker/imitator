@@ -7,7 +7,8 @@ LABEL maintainer="Jaime Arias <arias@lipn.univ-paris13.fr"
 ENV PPL_VERSION=1.2
 
 # Installing dependencies
-RUN apt-get update -qq && apt-get install -qq \
+RUN apt-get update -qq && \
+  apt-get install -qq \
   build-essential g++ m4 \
   unzip curl \
   python \
@@ -17,6 +18,7 @@ RUN apt-get update -qq && apt-get install -qq \
   libgmp-dev libgmp-ocaml libgmp-ocaml-dev \
   libmpfr-dev \
   libppl-dev && \
+  rm -rf /var/lib/apt/lists/* && \
   curl -sLO http://www.bugseng.com/products/ppl/download/ftp/releases/${PPL_VERSION}/ppl-${PPL_VERSION}.zip && \
   unzip -qq ppl-${PPL_VERSION}.zip && \
   (cd ppl-${PPL_VERSION}; ./configure --prefix=/usr; cd interfaces/OCaml; make -j 4; make install) && \
