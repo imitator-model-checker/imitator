@@ -1,0 +1,15 @@
+.travis
+_oasis
+bin
+comparator
+scripts
+.gitignore
+.merlin
+.travis.yml
+Dockerfile
+INSTALL.txt
+interfaceCV.py
+LICENSE
+paquito.yml
+README.md
+RELEASES.md
