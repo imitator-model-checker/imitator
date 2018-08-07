@@ -1,4 +1,6 @@
 .travis
+.dockerignore
+.git
 _oasis
 bin
 comparator
