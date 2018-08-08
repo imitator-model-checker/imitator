@@ -3032,32 +3032,23 @@ class virtual algoStateBased =
 				print_message Verbose_standard("All states visited up to time bound");
                 algorithm_keep_going := false;
                 termination_status <- Some (Result.Regular_termination);
-
-                (* Head of the PQ has higher time than min time, so we now found all valuations *)
-                t_all := time_from t_start;
-                print_message Verbose_standard ("t_all: " ^ (string_of_seconds !t_all) ^ " seconds");
 			)
             else (
                 (* Check if this is the target location *)
                 let source_location, source_constraint = StateSpace.get_state state_space source_id in
                 if self#is_target_state source_location then (
-                    (* Target state found ! (NB: assert time <= upper_bound) *)
-                    (* Possibly update upper_time_bound *)
-                    if !upper_time_bound > time then (
-                        if !target_found then raise (InternalError ("Should not update time after first target found"));
-                        upper_time_bound := time;
-                        constraint_list := []; (* Empty the constraint list *)
-                    );
+                    (* Target state found ! (NB: assert time = upper_bound) *)
+                    (* NB: We update upper_time_bound in the successor part, so we should never see time < upper_time_bound *)
+                    if !upper_time_bound != time then raise (InternalError
+                        ("Should not find better upper_time_bound while exploring the source state"));
 
                     if not !target_found then (
                         print_message Verbose_standard("Iteration " ^ (string_of_int !iteration)
                             ^ ": Target reached in time: " ^ (string_of_float time));
-                                               (* self#print_state_info source_id; *)
+                        (* self#print_state_info source_id; *)
                         target_found := true;
 
                         (* If target state is at the head of the PQ, we can ensure that it is the optimal one *)
-                        t_found := time_from t_start; (* TODO: do this check while checking successors *)
-                        t_opt := time_from t_start; (* TODO: do this check while checking successors *)
                         t_prov := time_from t_start;
                         print_message Verbose_standard ("t_prov: " ^ (string_of_seconds !t_prov));
                     );
@@ -3092,10 +3083,22 @@ class virtual algoStateBased =
                         | target_id::body -> (
                             if not (vis_contains !vis target_id) then (
                                 let target_time = (self#state_index_to_min_time target_id) in
-                                (* We could prevent adding states to PQ with target_time > upper_time_bound, but this shouldn't make *)
-                                (* much difference, as it's already checked when picking states from the PQ *)
-                                pq := pq_add_state !pq target_time target_id;
-                                vis := vis_add_state !vis target_id;
+                                
+                                (* Only add states if the time to reach does not exceed the minimum time *)
+                                if target_time <= !upper_time_bound then (
+                                    (* Check if the target state is the goal location, and possibly update minimum time *)
+                                    let target_location, _ = StateSpace.get_state state_space target_id in
+                                    if self#is_target_state target_location then (
+                                        if !t_found = max_float then t_found := time_from t_start;
+                                        if target_time < !upper_time_bound then (
+                                            upper_time_bound := target_time;
+                                            t_opt := time_from t_start; (* might update several times *)
+                                            constraint_list := []; (* Empty the constraint list *)
+                                        );
+                                    );
+                                    pq := pq_add_state !pq target_time target_id;
+                                    vis := vis_add_state !vis target_id;
+                                );
                             )
                             else print_message Verbose_standard("Already visited state " ^ (string_of_int target_id));
                             process_sucs body
@@ -3122,6 +3125,10 @@ class virtual algoStateBased =
 
             iteration := !iteration + 1;
 		done; (* END WHILE *)
+
+        (* Algorithm done, so all valuations found *)
+        if find_all_min_vals then t_all := time_from t_start;
+
 		print_message Verbose_standard("---------------- Ending exploration ------------------");
 
         print_message Verbose_standard("Completed after " ^ (string_of_int !iteration) ^ " iterations.");
@@ -3132,7 +3139,7 @@ class virtual algoStateBased =
 			^ " constraints that reach the target in min time " ^ (string_of_float !upper_time_bound));
 		
         print_message Verbose_standard ("");
-        print_message Verbose_standard ("t_found: " ^ (string_of_seconds !t_prov));
+        print_message Verbose_standard ("t_found: " ^ (string_of_seconds !t_found));
         print_message Verbose_standard ("t_opt:   " ^ (string_of_seconds !t_opt));
         print_message Verbose_standard ("t_prov:  " ^ (string_of_seconds !t_prov));
         print_message Verbose_standard ("t_all:   " ^ (string_of_seconds !t_all));
