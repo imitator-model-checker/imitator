@@ -3039,8 +3039,9 @@ class virtual algoStateBased =
                 if self#is_target_state source_location then (
                     (* Target state found ! (NB: assert time = upper_bound) *)
                     (* NB: We update upper_time_bound in the successor part, so we should never see time < upper_time_bound *)
-                    if !upper_time_bound != time then raise (InternalError
-                        ("Should not find better upper_time_bound while exploring the source state"));
+                    if !upper_time_bound <> time then raise (InternalError ("Should not find better upper_time_bound while "
+                        ^ " exploring the source state (assuming init is not target), time: " ^ (string_of_float time)
+                        ^ " min_time: " ^ (string_of_float !upper_time_bound )));
 
                     if not !target_found then (
                         print_message Verbose_standard("Iteration " ^ (string_of_int !iteration)
@@ -3049,8 +3050,7 @@ class virtual algoStateBased =
                         target_found := true;
 
                         (* If target state is at the head of the PQ, we can ensure that it is the optimal one *)
-                        t_prov := time_from t_start;
-                        print_message Verbose_standard ("t_prov: " ^ (string_of_seconds !t_prov));
+                        if !t_prov == max_float then t_prov := time_from t_start;
                     );
                     explore_successors := false;
 
@@ -3095,7 +3095,10 @@ class virtual algoStateBased =
                                             t_opt := time_from t_start; (* might update several times *)
                                             constraint_list := []; (* Empty the constraint list *)
                                         );
+                                        (* We ensure optimal time if target time <= PQ.hd *)
+                                        if !t_prov == max_float && target_time <= time then t_prov := time_from t_start;
                                     );
+                                    (* Add the target state to the queue *)
                                     pq := pq_add_state !pq target_time target_id;
                                     vis := vis_add_state !vis target_id;
                                 );
