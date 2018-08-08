@@ -2850,6 +2850,23 @@ class virtual algoStateBased =
 		*)
 		LinearConstraint.pxd_hide_discrete_and_collapse time_constr
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Returns whether the given state is a target state *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private is_target_state state_location =
+        match model.correctness_condition with
+            | None -> raise (InternalError("A correctness property must be defined to perform optTimeQueue"))
+            | Some (Unreachable unreachable_global_locations) ->
+                (* Check whether the current location matches one of the unreachable global locations *)
+                if State.match_unreachable_global_locations unreachable_global_locations state_location then true
+                else false;
+            | _ -> raise (InternalError("We only allow (un)reachability properties in optTimeQueue"));
+   
+
+
+
+
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the minimal reachability algorithm [WORK IN PROGRESS] *)
@@ -2859,6 +2876,13 @@ class virtual algoStateBased =
 		(* Statistics *)
 		counter_explore_using_strategy#increment;
 		counter_explore_using_strategy#start;
+
+        (* Timing info for measuring algorithm performance *)
+        let t_start = Unix.gettimeofday() in (* Start time for t_found, t_opt, t_prov, and t_all *)
+        let t_found = ref max_float in (* Time to first solution found (i.e., reachability) for one parameter valuation *)
+        let t_opt   = ref max_float in (* Time to find optimal time (akin to UPPAAL-CORA) for single parameter valuation *)
+        let t_prov  = ref max_float in (* Time to ensure that found t_opt is optimal (akin to UPAAL-CORA) *)
+        let t_all   = ref max_float in (* Time to find all parameter valuations that reach target in t_opt *)
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2988,6 +3012,7 @@ class virtual algoStateBased =
 		let upper_time_bound = ref max_float in (* prevent exploring states that exceed minimum time *)
 		let algorithm_keep_going = ref true in (* terminate when we found target loc *)
         let target_found = ref false in (* indicates whether we have already found the target state *)
+        let explore_successors = ref true in (* indicates whether we should explore successors *)
         let constraint_list = ref [] in (* List of constraints that reach the target location (in minimal time) *)
 
 		print_message Verbose_standard("---------------- Starting exploration ----------------");
@@ -3007,58 +3032,53 @@ class virtual algoStateBased =
 				print_message Verbose_standard("All states visited up to time bound");
                 algorithm_keep_going := false;
                 termination_status <- Some (Result.Regular_termination);
+
+                (* Head of the PQ has higher time than min time, so we now found all valuations *)
+                t_all := time_from t_start;
+                print_message Verbose_standard ("t_all: " ^ (string_of_seconds !t_all) ^ " seconds");
 			)
             else (
                 (* Check if this is the target location *)
                 let source_location, source_constraint = StateSpace.get_state state_space source_id in
-                (match model.correctness_condition with
-                | None -> raise (InternalError("A correctness property must be defined to perform optTimeQueue"))
-                | Some (Unreachable unreachable_global_locations) ->
-                    (* Check whether the current location matches one of the unreachable global locations *)
-                    if State.match_unreachable_global_locations unreachable_global_locations source_location then(
-                        (* Target state found ! (NB: assert time <= upper_bound) *)
+                if self#is_target_state source_location then (
+                    (* Target state found ! (NB: assert time <= upper_bound) *)
+                    (* Possibly update upper_time_bound *)
+                    if !upper_time_bound > time then (
+                        if !target_found then raise (InternalError ("Should not update time after first target found"));
+                        upper_time_bound := time;
+                        constraint_list := []; (* Empty the constraint list *)
+                    );
+
+                    if not !target_found then (
                         print_message Verbose_standard("Iteration " ^ (string_of_int !iteration)
-							^ ": Target reached in time: " ^ (string_of_float time));
-                        (* Possibly update upper_time_bound *)
-                        if !upper_time_bound > time then (
-							upper_time_bound := time;
-							constraint_list := []; (* Empty the constraint list *)
-						);
-                        (* self#print_state_info source_id; *)
+                            ^ ": Target reached in time: " ^ (string_of_float time));
+                                               (* self#print_state_info source_id; *)
                         target_found := true;
 
-                        (* Intersect constraint with minimum time  *)
-						let time_constr = self#global_time_constraint_from_float !upper_time_bound in
-						let target_constraint = LinearConstraint.px_intersection (time_constr::[source_constraint]) in
-						(* NOTE: Code below doesn't seem to help much.. still equal constraints get added
-						(* Only add constraint if it is not <= than an already stored one *)
-						let rec check_subsumption_in_list new_constr list_constr = match list_constr with
-							| [] -> true;
-							| head::body -> (
-								if LinearConstraint.px_is_leq new_constr head then false
-								else check_subsumption_in_list new_constr body;
-							); 
-						in
-						if check_subsumption_in_list target_constraint !constraint_list then (
-                        	print_message Verbose_standard("Adding new target constraint");
-                       		constraint_list := target_constraint::!constraint_list
-						)
-						else print_message Verbose_standard("Target constraint already present in constraint_list!");
-						*)
-                       	constraint_list := target_constraint::!constraint_list
-                    )
-                | _ -> raise (InternalError("We only allow (un)reachability properties in optTimeQueue"));
+                        (* If target state is at the head of the PQ, we can ensure that it is the optimal one *)
+                        t_found := time_from t_start; (* TODO: do this check while checking successors *)
+                        t_opt := time_from t_start; (* TODO: do this check while checking successors *)
+                        t_prov := time_from t_start;
+                        print_message Verbose_standard ("t_prov: " ^ (string_of_seconds !t_prov));
+                    );
+                    explore_successors := false;
+
+                    (* Intersect constraint with minimum time  *)
+                    let time_constr = self#global_time_constraint_from_float !upper_time_bound in
+                    let target_constraint = LinearConstraint.px_intersection (time_constr::[source_constraint]) in
+                    constraint_list := target_constraint::!constraint_list
                 );
+    
 
                 (* Don't compute successors when target is found *)
-                if !target_found then (
+                if not !explore_successors then (
                     (* Possibly terminate when target state is found *)
                     if (not find_all_min_vals) then (
                         print_message Verbose_standard("Found target!");
                         algorithm_keep_going := false;
                         termination_status <- Some (Result.Regular_termination);
                     );
-                    target_found := false; (* reset target_found for future iterations *)
+                    explore_successors := true; (* do explore successors in future iterations *)
                 )
                 (* Otherwise, compute successors *)
                 else (
@@ -3110,7 +3130,14 @@ class virtual algoStateBased =
 		(* Combine constraints that reach the final state with the upper_time_bound *)
 		print_message Verbose_standard ("We found " ^ (string_of_int (List.length !constraint_list))
 			^ " constraints that reach the target in min time " ^ (string_of_float !upper_time_bound));
-		print_message Verbose_standard("The resulting parameter valuations is given by the union of the following constraint(s)");
+		
+        print_message Verbose_standard ("");
+        print_message Verbose_standard ("t_found: " ^ (string_of_seconds !t_prov));
+        print_message Verbose_standard ("t_opt:   " ^ (string_of_seconds !t_opt));
+        print_message Verbose_standard ("t_prov:  " ^ (string_of_seconds !t_prov));
+        print_message Verbose_standard ("t_all:   " ^ (string_of_seconds !t_all));
+(*
+        print_message Verbose_standard("The resulting parameter valuations is given by the union of the following constraint(s)");
 		let rec output_target_constraints constr_list = match constr_list with
 			| [] -> ();
 			| head::body -> (
@@ -3119,7 +3146,7 @@ class virtual algoStateBased =
 				output_target_constraints body;
 			);
 		in output_target_constraints !constraint_list;
-
+*)
 		print_message Verbose_standard("---------------- Ending algorithm --------------------");
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
