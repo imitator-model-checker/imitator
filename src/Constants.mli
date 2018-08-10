@@ -64,6 +64,7 @@ val result_file_extension    : string
 val state_space_image_format : string
 val pta_default_image_format : string
 val dot_file_extension       : string
+val default_dot_image_extension  : string
 val states_file_extension    : string
 val cartography_extension    : string
 

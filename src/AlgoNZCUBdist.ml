@@ -516,6 +516,9 @@ class algoNZCUBdist =
 						observer_pta = None;
 						is_observer = (fun _ -> false);
 
+						(* The global time clock *)
+						global_time_clock = model.global_time_clock;
+
 						(* The list of clock indexes *)
 						clocks = model.clocks;
 						(* True for clocks, false otherwise *)

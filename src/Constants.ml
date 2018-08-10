@@ -76,6 +76,7 @@ let result_file_extension = ".res"
 let state_space_image_format = "pdf"
 let pta_default_image_format = "jpg"
 let dot_file_extension = "dot"
+let default_dot_image_extension = "dot"
 let states_file_extension = "states"
 let cartography_extension = "png"
 
