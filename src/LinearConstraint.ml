@@ -1406,7 +1406,7 @@ let constraint_of_point nb_dimensions (thepoint : (variable * coef) list) =
 	in
 	make nb_dimensions inequalities
 
-(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+(*** NOTE: must provide the argument to be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
 let p_constraint_of_point v_c_list = constraint_of_point !p_dim v_c_list
 let pxd_constraint_of_point v_c_list = constraint_of_point !pxd_dim v_c_list
 
@@ -2497,15 +2497,42 @@ let parameter_constraint_of_p_linear_constraint parameter_index p_linear_constra
 	(* First get inequalities *)
 	let inequalities = p_get_inequalities p_linear_constraint in
 	
-	(* If <> 1 inequality: problem *)
-	if List.length inequalities <> 1 then(
+	(* If < 1 or > 2 inequality: problem *)
+	if List.length inequalities < 1 or List.length inequalities > 2 then(
 		raise Not_a_1d_parameter_constraint
 	);
 	
-	let linear_inequality = List.nth inequalities 0 in
-	
-	(*** NOTE: strongly relies on the fact that parameters indexes are from 0 to M-1, and clock indexes from M to M+H-1 ***)
+	(* Get the inequality; now the problem is that it may be of the form p >= 0 & p <= n, so in that case we must discard the >= 0 *)
+	let linear_inequality =
+		(* Size 1: easy *)
+		if List.length inequalities = 1 then List.nth inequalities 0
+		else(
+		(* Size 2: less easy *)
+			let inequality1 = List.nth inequalities 0 in
+			let inequality2 = List.nth inequalities 1 in
+			
+			(*** BADPROG: duplicate code (just below) ***)
+			
+			(* First check 1: *)
 
+			(* get both linear terms *)
+			let lterm, rterm =
+			match inequality1 with
+			| Less_Than (lterm, rterm) | Less_Or_Equal (lterm, rterm)  | Greater_Than (lterm, rterm)  | Greater_Or_Equal (lterm, rterm) | Equal (lterm, rterm) ->
+				lterm, rterm
+			in
+			
+			(* Compute lterm - rterm *)
+			let linear_term = Minus (lterm, rterm) in
+
+			(* Get the constant coefficient *)
+			let constant_coefficient = get_coefficient_in_linear_term linear_term in
+			
+			(* Decide which of the two inequalities is good depending on the coefficient *)
+			if NumConst.equal constant_coefficient NumConst.zero then inequality2 else inequality1
+		)
+	 in
+	
 	(* First get both linear terms *)
 	let lterm, rterm =
 	match linear_inequality with
