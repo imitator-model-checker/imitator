@@ -2498,7 +2498,7 @@ let parameter_constraint_of_p_linear_constraint parameter_index p_linear_constra
 	let inequalities = p_get_inequalities p_linear_constraint in
 	
 	(* If < 1 or > 2 inequality: problem *)
-	if List.length inequalities < 1 or List.length inequalities > 2 then(
+	if List.length inequalities < 1 || List.length inequalities > 2 then(
 		raise Not_a_1d_parameter_constraint
 	);
 	
