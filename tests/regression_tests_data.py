@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, France
 # Created      : 2015/10/23
-# Last modified: 2018/06/05
+# Last modified: 2018/08/16
 #************************************************************
 
 
@@ -1011,6 +1011,428 @@ Constraint nature                       : good
 Number of states                        : 10
 Number of transitions                   : 9
 Number of computed states               : 20
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFsynthmin on a clock-free toy example 1',
+		'input_files': ['testEFsynthminParams1.imi'],
+		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFsynthminParams1.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 = 1
+& p2 = 2
+OR
+  p1 = 1
+& p2 = 3
+OR
+  p1 = 1
+& p2 = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFsynthmin on a clock-free toy example 2',
+		'input_files': ['testEFsynthminParams2.imi'],
+		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFsynthminParams2.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 = 1
+& p2 = 2
+OR
+  p1 = 1
+& p2 = 3
+OR
+  p1 = 1
+& p2 = 4
+OR
+  p1 = 1
+& p2 = 5
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFsynthmin on a clock-free toy example 3',
+		'input_files': ['testEFsynthminParams3.imi'],
+		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFsynthminParams3.res' , 'content' : """
+BEGIN CONSTRAINT
+ 3*p1 > 1
+& 1 > p1
+& p2 = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFsynthmin on a clock-free toy example 4',
+		'input_files': ['testEFsynthminParams4.imi'],
+		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFsynthminParams4.res' , 'content' : """
+BEGIN CONSTRAINT
+ 3*p1 > 1
+& 1 > p1
+& 2*p1 = p2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFsynthmin on a clock-free toy example 5',
+		'input_files': ['testEFsynthminParams5.imi'],
+		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFsynthminParams5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 = 0
+& p2 = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFsynthmin on a clock-free toy example 6',
+		'input_files': ['testEFsynthminParams6.imi'],
+		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFsynthminParams6.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 > 0
+& p1 + 1 = p2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFsynthmin on a toy example',
+		'input_files': ['testEFsynthmin.imi'],
+		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFsynthmin.res' , 'content' : """
+BEGIN CONSTRAINT
+ 3 >= p2
+& p2 >= 2
+& p1 = 3
+OR
+  p1 = 3
+& p2 = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFsynthmax on a clock-free toy example 1',
+		'input_files': ['testEFsynthmaxParams1.imi'],
+		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFsynthmaxParams1.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 = 1
+& p2 = 2
+OR
+  p1 = 1
+& p2 = 3
+OR
+  p1 = 1
+& p2 = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFsynthmax on a clock-free toy example 2',
+		'input_files': ['testEFsynthmaxParams2.imi'],
+		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFsynthmaxParams2.res' , 'content' : """
+
+BEGIN CONSTRAINT
+ p1 = 1
+& p2 = 2
+OR
+  p1 = 1
+& p2 = 3
+OR
+  p1 = 1
+& p2 = 4
+OR
+  p1 = 1
+& p2 = 5
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFsynthmax on a clock-free toy example 3',
+		'input_files': ['testEFsynthmaxParams3.imi'],
+		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFsynthmaxParams3.res' , 'content' : """
+BEGIN CONSTRAINT
+ 3*p1 > 4
+& 2 > p1
+& p2 = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFsynthmax on a clock-free toy example 4',
+		'input_files': ['testEFsynthmaxParams4.imi'],
+		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFsynthmaxParams4.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& 5 > 3*p1
+& 2*p1 = p2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFsynthmax on a clock-free toy example 5',
+		'input_files': ['testEFsynthmaxParams5.imi'],
+		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFsynthmaxParams5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 1
+& p2 = 3
+OR
+  p1 >= 2
+& p2 = 5
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFsynthmax on a clock-free toy example 6',
+		'input_files': ['testEFsynthmaxParams6.imi'],
+		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFsynthmaxParams6.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= p2
+& p1 > 0
+& p2 >= 0
+OR
+  p1 >= 1
+& p2 = 3
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFsynthmax on a toy example',
+		'input_files': ['testEFsynthmax.imi'],
+		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFsynthmax.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 10
+& p2 >= 0
+OR
+  p1 >= 3
+& p2 = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} # end result file
 			,
