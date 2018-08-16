@@ -19,7 +19,7 @@ RUN apt-get update -qq && \
   libppl-dev && \
   curl -sLO http://www.bugseng.com/products/ppl/download/ftp/releases/${PPL_VERSION}/ppl-${PPL_VERSION}.zip && \
   unzip -qq ppl-${PPL_VERSION}.zip && \
-  (cd ppl-${PPL_VERSION}; ./configure --prefix=/usr; cd interfaces/OCaml; make -j 4; make install && \
+  (cd ppl-${PPL_VERSION}; ./configure --prefix=/usr; cd interfaces/OCaml; make -j 4; make install) && \
   rm -rf ppl-${PPL_VERSION}* && \
   apt-get remove -y curl unzip && \
   apt-get autoremove -y && \
