@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2018/07/19
+ * Last modified     : 2018/08/16
  *
  ************************************************************)
 
@@ -56,6 +56,9 @@ class virtual algoEFopt :
 		(* Function to negate an inequality (to be defined in subclasses) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method virtual negate_inequality : LinearConstraint.p_linear_constraint -> LinearConstraint.p_linear_constraint
+
+		(* The closed operator (>= for minimization, and <= for maximization) *)
+		method virtual closed_op : LinearConstraint.op
 
 		(* Various strings *)
 		method virtual str_optimum : string

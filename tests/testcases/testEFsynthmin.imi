@@ -38,9 +38,10 @@ loc l1: invariant True
 	when x = 10 & x = p1 sync a do {x := 0} goto lbad;
 	when x = 2 & x = p2 sync a do {x := 0} goto l2;
 	when x = 1 & x = p2 sync a do {x := 0} goto l3;
+	when x > 2 & x <= 3 & x = p2 sync a do {x := 0} goto l3;
 
 loc l2: invariant True
-	when x = 3 & x = p1 sync a do {x := 0} goto lbad;
+	when x >= 3 & x = p1 sync a do {x := 0} goto lbad;
 
 loc l3: invariant True
 	when x = 3 & x = p1 sync a do {x := 0} goto lbad;

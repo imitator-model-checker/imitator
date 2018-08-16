@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2018/07/17
+ * Last modified     : 2018/08/16
  *
  ************************************************************)
 
@@ -1652,12 +1652,18 @@ class virtual algoStateBased =
 
 				debug_i := !debug_i +1;
 				(* Print some information *)
+				if verbose_mode_greater Verbose_high then (
+					print_message Verbose_high ("------------------------------------------------------------");
+					self#print_algo_message_newline Verbose_high ("Consider the combination #" ^ (string_of_int !debug_i) ^ "");
+					print_message Verbose_high ("------------------------------------------------------------");
+				);
 				if verbose_mode_greater Verbose_total then (
 					let local_indexes = string_of_array_of_string_with_sep "\n\t" (
 					Array.mapi (fun local_index real_index ->
 						(string_of_int local_index) ^ " -> " ^ (string_of_int real_index) ^ " : " ^ (string_of_int current_indexes.(local_index)) ^ "; ";
 					) real_indexes) in
-					print_message Verbose_total ("\n\n\n--- Consider the combination " ^ (string_of_int !debug_i) ^ " \n\t" ^ local_indexes);
+					print_message Verbose_high ("\n--- This combination is:\n\t" ^ local_indexes);
+					print_message Verbose_high ("\n------------------------------------------------------------");
 				);
 		
 				(* build the current combination of transitions *)
@@ -2924,7 +2930,7 @@ class virtual algoStateBased =
 			if limit_reached = Keep_going then(
 				(* Print some information *)
 				(*** HACK: 'bfs_current_depth - 1' because bfs_current_depth was just incremented… ***)
-				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (bfs_current_depth - 1)) ^ "…");
+				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (bfs_current_depth - 1)) ^ " with a queue of " ^ (string_of_int (List.length !post_n)) ^ " unexplored state" ^ (s_of_int (List.length !post_n)) ^ "…");
 
 				if self#check_termination_at_post_n then(
 					algorithm_keep_going := false;

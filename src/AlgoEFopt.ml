@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2018/07/19
+ * Last modified     : 2018/08/16
  *
  ************************************************************)
 
@@ -99,6 +99,8 @@ class virtual algoEFopt =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual negate_inequality : LinearConstraint.p_linear_constraint -> LinearConstraint.p_linear_constraint
 
+	(* The closed operator (>= for minimization, and <= for maximization) *)
+	method virtual closed_op : LinearConstraint.op
 
 	(* Various strings *)
 	method virtual str_optimum : string
@@ -122,6 +124,11 @@ class virtual algoEFopt =
 		match synthesize_valuations with
 		| Some flag -> flag
 		| None -> raise (InternalError "Variable 'synthesize_valuations' not initialized in AlgoEFopt although it should have been at this point")
+		
+	method private get_current_optimum =
+		match current_optimum with
+		| Some optimum -> optimum
+		| None -> raise (InternalError "Variable 'current_optimum' not initialized in AlgoEFopt although it should have been at this point")
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -139,6 +146,10 @@ class virtual algoEFopt =
 	(** Compute the p-constraint of a state, projected onto the parameter to be optimized *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private is_goal_state state_location =
+		
+		(* Print some information *)
+		self#print_algo_message Verbose_total "Entering AlgoEFopt:is_goal_state…";
+		
 		(* Retrieve the correctness condition *)
 		match model.correctness_condition with
 		| Some (Unreachable unreachable_global_locations) ->
@@ -187,15 +198,23 @@ class virtual algoEFopt =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private update_optimum_valuations px_constraint =
 		(* Get the updated optimum constraint *)
-		let current_optimum_constraint = match current_optimum with
-			| Some optimum -> optimum
-			| None -> raise (InternalError "Variable 'current_optimum_constraint' not initialized in AlgoEFopt although it should have been at this point")
-		in
+		let current_optimum_constraint = self#get_current_optimum in
 		
 		(* Compute the projection onto all parameters *)
 		let projected_constraint_onto_P = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
+
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			self#print_algo_message_newline Verbose_high ("Considering the following constraint: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names projected_constraint_onto_P));
+		);
+		
 		(* Intersect with the optimum *)
 		LinearConstraint.p_intersection_assign projected_constraint_onto_P [current_optimum_constraint];
+		
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			self#print_algo_message_newline Verbose_high ("After intersection with the optimum, about to add to the optimum valuations: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names projected_constraint_onto_P));
+		);
 		
 		(* Add to the collected current_optimum_constraint *)
 		match current_optimum_valuations with
@@ -214,10 +233,7 @@ class virtual algoEFopt =
 		(* Replace the current synthesized valuations with the new ones *)
 						
 		(* Get the updated optimum constraint *)
-		let current_optimum_constraint = match current_optimum with
-			| Some optimum -> optimum
-			| None -> raise (InternalError "Variable 'current_optimum_constraint' not initialized in AlgoEFopt although it should have been at this point")
-		in
+		let current_optimum_constraint = self#get_current_optimum in
 
 		(* Compute the projection onto all parameters *)
 		let projected_constraint_onto_P = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
@@ -240,12 +256,22 @@ class virtual algoEFopt =
 	(** Actions to perform when trying to minimize/maximize a parameter. Returns true if the same should be kept, false if discarded. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private process_state state = 
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			self#print_algo_message Verbose_high "Entering AlgoEFopt:process_state…";
+		);
+
 		(* Retrieve the constraint *)
 		let state_location, px_constraint = state in
 		
 		(* Check if an optimum constraint was defined *)
 		match current_optimum with
 		| None ->
+			(* Print some information *)
+			if verbose_mode_greater Verbose_high then(
+				self#print_algo_message Verbose_high "No optimum known for now";
+			);
+			
 			(* If goal state, update the constraint *)
 			let is_goal_state = self#is_goal_state state_location in
 			if is_goal_state then(
@@ -261,6 +287,10 @@ class virtual algoEFopt =
 					self#replace_optimum_valuations px_constraint;
 				);
 				
+			)else(
+				(* Print some information *)
+				self#print_algo_message Verbose_medium ("Not yet a goal state");
+			
 			);
 
 			(* Keep the state only if not a goal state *)
@@ -268,31 +298,96 @@ class virtual algoEFopt =
 			not is_goal_state
 
 		| Some current_optimum_constraint ->
+			(* Print some information *)
+			if verbose_mode_greater Verbose_high then(
+				self#print_algo_message Verbose_high "An optimum already exists";
+			);
+
 			(*** NOTE: this is an expensive test, as ALL states will be projected to the goal parameters and compared to the current optimum ***)
+			(*** TODO: try with emptiness of intersection? ***)
 			let projected_constraint = self#project_constraint px_constraint in
 
 			(* Test if the current optimum is already larger *)
 			if LinearConstraint.p_is_leq projected_constraint current_optimum_constraint then(
+				(* Print some information *)
+				if verbose_mode_greater Verbose_high then(
+					self#print_algo_message Verbose_high "The known optimum is already better than the new state: discard";
+				);
+
 				(* Statistics *)
 				counter_discarded_state#increment;
 				
-				(* Case synthesis *)
+				(* Flag that might be set to false in the following if condition *)
+				let discard = ref true in
+				
+				(* Case synthesis AND goal location *)
 				if self#get_synthesize_valuations then(
+					(* Print some information *)
+					if verbose_mode_greater Verbose_high then(
+						self#print_algo_message Verbose_high "…but since we want synthesis, still checks whether the optimum is *equal*";
+	
+						self#print_algo_message Verbose_total ("About to compare:\n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names projected_constraint) ^ "\n=?=\n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names current_optimum_constraint) ^ "…");
+					);
+					
 					(* If optimum is equal: still add the p-constraint *)
-					if LinearConstraint.p_is_equal projected_constraint current_optimum_constraint then(
-						self#update_optimum_valuations px_constraint
+					
+					(*** NOTE: this part is a bit technical: the current_optimum_constraint is necessarily of the form p >= n or p > n (for EFmin), while the projected_constraint might be of the form p = i, or i <= p <= i'; if i=n then and large inequalities are used, then the projected_constraint is still as good as the current_optimum_constraint. We therefore use the remove_bounds function for projected_constraint. ***)
+					
+					(* Apply extrapolation *)
+					(*** WARNING: do not copy only because this object is not used anymore afterwards ***)
+					let projected_constraint_extrapolated = (*LinearConstraint.p_copy*) projected_constraint in
+					self#remove_bounds [parameter_index] [] projected_constraint_extrapolated;
+					
+					(* Print some information *)
+					if verbose_mode_greater Verbose_high then(
+						self#print_algo_message Verbose_high ("Extrapolation of the new state optimum:\n" ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names projected_constraint_extrapolated) ^ "");
+					);
+					
+					if LinearConstraint.p_is_equal projected_constraint_extrapolated current_optimum_constraint then(
+						(* Print some information *)
+						if verbose_mode_greater Verbose_high then(
+							self#print_algo_message Verbose_high "Known optimum equal to that of the new state";
+						);
+						
+						(* Don't discard because the optimum is exactly equivalent to the known optimum, so there may be interesting successors *)
+						discard := false;
+						
+						(* If goal location: update optimum! *)
+						if self#is_goal_state state_location then(
+							(* Print some information *)
+							self#print_algo_message Verbose_medium ("This is a goal state: Update the optimum");
+							
+							self#update_optimum_valuations px_constraint;
+							
+							(* Discard as nothing more interesting can be found that way *)
+							discard := true;
+						);
+					)else(
+						(* Print some information *)
+						if verbose_mode_greater Verbose_high then(
+							self#print_algo_message Verbose_high "Known optimum strictly better than that of the new state: really discard";
+						);
+						(* Redundant assignment (safety) *)
+						discard := true;
 					);
 				);
 				
-				(* Discard state, i.e., do not keep it; EXCEPT if synthesis, because we can find more constraints in that direction! *)
-				(self#get_synthesize_valuations)
-			(* Otherwise: keep it *)
+				(* Print some information *)
+				if verbose_mode_greater Verbose_total then(
+					self#print_algo_message Verbose_total ("Discard? " ^ (string_of_bool !discard));
+				);
+				
+				(* Discard state, i.e., do not keep it; EXCEPT if synthesis AND equivalent optimum, because we can find more constraints in that direction! *)
+				not !discard
+			(* Otherwise: keep the state *)
 			)else(
 				(* If goal state, update the constraint *)
 				if self#is_goal_state state_location then(
 				
 					(* Print some information *)
 					if verbose_mode_greater Verbose_medium then(
+						self#print_algo_message Verbose_medium ("Goal state found!");
+					
 						self#print_algo_message_newline Verbose_medium ("Current " ^ self#str_optimum ^ ": " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names current_optimum_constraint));
 						self#print_algo_message_newline Verbose_medium ("New state projected constraint: " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names projected_constraint));
 					);
@@ -309,6 +404,10 @@ class virtual algoEFopt =
 					(* Hack: discard the state! Since no better successor can be found *)
 					false
 				)else(
+				
+					(* Print some information *)
+					self#print_algo_message Verbose_medium ("Not a goal state");
+
 					(* Keep the state, but add the negation of the optimum to squeeze the state space! (no need to explore the part with parameters smaller/larger than the optimum) *)
 					(*** NOTE: not in synthesis mode ***)
 					if not self#get_synthesize_valuations then(
@@ -341,7 +440,7 @@ class virtual algoEFopt =
 	method add_a_new_state source_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
-			self#print_algo_message Verbose_medium "Entering add_a_new_state…";
+			self#print_algo_message Verbose_medium "Entering AlgoEFopt:add_a_new_state…";
 		);
 		
 		(* Build the state *)
@@ -350,6 +449,11 @@ class virtual algoEFopt =
 		(* If we have to optimize a parameter, do that now *)
 		let keep_processing = self#process_state new_state in
 
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			self#print_algo_message Verbose_high ("New state to be kept? " ^ (string_of_bool keep_processing) ^ "");
+		);
+		
 		(* Only process if we have to *)
 		if keep_processing then(
 			(* Try to add the new state to the state space *)
@@ -429,7 +533,42 @@ class virtual algoEFopt =
 			(* Get the constraint *)
 			match current_optimum_valuations with
 				| None -> LinearConstraint.false_p_nnconvex_constraint()
-				| Some current_optimum_valuations -> current_optimum_valuations
+				| Some current_optimum_valuations ->
+					(*** NOTE: Here, if the optimum is of the form p >= c, we need to impose p = c, as the minimization is requested ***)
+					
+					(* First get the optimum (necessarily defined) *)
+					let current_optimum = self#get_current_optimum in
+					
+					(* Get its operator and coefficient *)
+					let (_, op, coefficient) = try(
+						LinearConstraint.parameter_constraint_of_p_linear_constraint parameter_index current_optimum
+					) with
+						LinearConstraint.Not_a_1d_parameter_constraint -> raise (InternalError ("Problem when looking for a strict or non-strict optimum in AlgoEFopt:compute_result: the constraint " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names current_optimum) ^  " is not of the expected form."))
+					in
+					
+					(* Print some information *)
+					if verbose_mode_greater Verbose_low then(
+						self#print_algo_message Verbose_low ("The almost final optimum is: " ^ (model.variable_names parameter_index) ^ " " ^ (LinearConstraint.string_of_op op) ^ " " ^ (NumConst.string_of_numconst coefficient) ^ "");
+					);
+					
+					(* If the optimum is a >=, then convert to equality *)
+					if op = self#closed_op then(
+						(* If closed op, we need to force equality *)
+						
+						(* Print some information *)
+						if verbose_mode_greater Verbose_low then(
+							self#print_algo_message Verbose_low ("Non-necessarily punctual optimum detected: restrains to equality");
+						);
+						
+						(* Reconstruct a linear constraint param = coefficient *)
+						let equality_constraint = LinearConstraint.p_constraint_of_point [(parameter_index, coefficient)] in
+						
+						(* Intersect with the optimum valuations *)
+						LinearConstraint.p_nnconvex_intersection current_optimum_valuations equality_constraint;
+					);
+					
+					(* Return the constraint *)
+					current_optimum_valuations
 		
 		)else(
 		(* Otherwise get the optimum *)
