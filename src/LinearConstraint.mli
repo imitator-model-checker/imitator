@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2017/05/02
+ * Last modified     : 2018/08/16
  *
  ************************************************************)
 
@@ -22,6 +22,9 @@
 (************************************************************)
 (* Raised when a linear_term is not a clock guard, i.e., of the form x ~ plterm *)
 exception Not_a_clock_guard
+
+(* Raised when a linear_term is not a one-dimensional single parameter constraint, i.e., of the form p ~ c *)
+exception Not_a_1d_parameter_constraint
 
 
 (************************************************************)
@@ -153,6 +156,7 @@ val negate_inequality : p_linear_inequality -> p_linear_inequality
 (** Convert a linear inequality into a clock guard (i.e. a triple clock, operator, parametric linear term); raises Not_a_clock_guard if the linear_inequality is not a proper clock guard x ~ plterm *)
 (*------------------------------------------------------------*)
 val clock_guard_of_linear_inequality : pxd_linear_inequality -> (Automaton.clock_index * op * p_linear_term)
+
 
 
 (** Convert a linear inequality into a string *)
@@ -308,6 +312,12 @@ val clock_upper_bound_in : Automaton.clock_index -> px_linear_constraint -> p_li
 
 (** Check if a constraint contains an integer point *)
 val px_contains_integer_point : px_linear_constraint -> bool
+
+(*------------------------------------------------------------*)
+(** Convert a one-dimensional single parameter linear constraint into a single parameter constraint (i.e. a triple parameter_index, operator, constant); raises Not_a_1d_parameter_constraint if the constraint is not a proper constraint *)
+(*------------------------------------------------------------*)
+val parameter_constraint_of_p_linear_constraint : Automaton.parameter_index -> p_linear_constraint -> (Automaton.parameter_index * op * coef)
+
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
