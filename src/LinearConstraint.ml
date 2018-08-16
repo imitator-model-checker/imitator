@@ -257,6 +257,15 @@ let reverse_op = function
 	| Op_l		-> Op_g
 
 
+(* Convert an op to string *)
+let string_of_op = function
+	| Op_g  -> ">"
+	| Op_ge -> ">="
+	| Op_eq -> "="
+	| Op_le -> "<="
+	| Op_l  -> "<"
+
+
 type linear_inequality = Ppl.linear_constraint
 type p_linear_inequality = linear_inequality
 type px_linear_inequality = linear_inequality

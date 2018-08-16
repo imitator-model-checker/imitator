@@ -113,6 +113,9 @@ type op =
 (** Reverse an operator: <= becomes >= and conversely. < becomes > and conversely. = remains =. *)
 val reverse_op : op -> op
 
+(* Convert an op to string *)
+val string_of_op : op -> string
+
 (* type linear_inequality *)
 type p_linear_inequality
 type px_linear_inequality
