@@ -3,13 +3,13 @@
 #################################################################
  #
  #                       BUILDATOR
- # 
+ #
  # Script to build IMITATOR
  #
  # Université Paris 13, Sorbonne Paris Cite, LIPN (France)
- # 
+ #
  # Author:        Etienne Andre
- # 
+ #
  # Created:       2014/01/13
  # Last modified: 2014/08/18
  #
@@ -20,8 +20,12 @@ then
   ocaml setup.ml -distclean
 fi
 
+if [ ! -d "bin" ]
+then
+  mkdir bin
+fi
+
 python gen_oasis.py \
 && oasis setup \
 && ocaml setup.ml -configure --enable-tests \
 && ocaml setup.ml -all
-
