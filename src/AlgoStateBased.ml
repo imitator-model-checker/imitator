@@ -2751,15 +2751,16 @@ class virtual algoStateBased =
 
 
 		(*****************************************************LayerNestedDFS with subsumption on red, cycle detection, and red prune**********************************************************) 
-		(*
+		
 		let checkSmallerZoneProjectedOnP state_index1 state_index2 = 
 			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
 			let loc2, constr2 = StateSpace.get_state state_space state_index2 in
 			let constr11 = LinearConstraint.px_hide_nonparameters_and_collapse constr1 in
 			let constr22 = LinearConstraint.px_hide_nonparameters_and_collapse constr2 in
-			if not (LinearConstraint.p_is_leq constr22 constr11) then true else false;
+			(*if not (LinearConstraint.p_is_leq constr22 constr11) then true else false;*)
+			if (LinearConstraint.p_is_leq constr11 constr22) then true else false;
 		in
-		*)
+		
 
 		(* Same with the prior, used to improve the performance of state insertion *)
 		let rec addInfinityToPendingQueue state_index queue = 
@@ -3150,6 +3151,9 @@ class virtual algoStateBased =
 				 				
 				 				List.iter (fun state_index2 ->
 
+				 						if ( ( List.mem state_index2 !pink ) ||  ( List.mem state_index2 !blue) ) &&  checkSmallerZoneProjectedOnP state_index2 state_index then ( 
+
+
 				 						let loc, constr = StateSpace.get_state state_space successor2 in
 
 				 						negInequalities := [constr]@(!negInequalities);
@@ -3158,6 +3162,7 @@ class virtual algoStateBased =
 
 
 				 						(* if (* not (  ( List.mem state_index2 !red) || ( List.mem state_index2 !pink ) ||  ( List.mem state_index2 !blue) ) *) checkZoneProjectedOnP state_index2 state_index then ( *)
+				 						(* if ( ( List.mem state_index2 !pink ) ||  ( List.mem state_index2 !blue) ) &&  checkZoneProjectedOnP state_index2 state_index then ( *)
 
 				 						StateSpace.replace_constraint state_space state_index2 new_constraint;
 				 						
@@ -3179,6 +3184,8 @@ class virtual algoStateBased =
 
 				 							 print_message Verbose_low (" Removed!!!! State " ^ (string_of_int successor2) ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space successor2) ^" ! " );
 				 						
+				 						);
+
 				 						);
 				 						
 										
