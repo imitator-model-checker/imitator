@@ -539,6 +539,10 @@ The option \styleOption{-output-states} generates a file with a textual descript
 \section{EF-synthesis}\label{ss:mode:EFsynth}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Reachability}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
 A main problem in parametric timed automata is to compute the set of parameter valuations for which some location (for instance, an error location) is reachable.
 
 The property must be specified as follows, at the end of the model (after the initial state definition):
@@ -551,7 +555,7 @@ Of course, the EF-emptiness problem being undecidable~\cite{AHV93}, the analysis
 
 The standard command is:
 
-\styleCommand{\binimitator{} model.imi -mode EFsynth -merge -incl -output-result}
+\styleCommand{\binimitator{} model.imi -mode EFunsafe -merge -incl -output-result}
 
 
 The option \styleOption{-output-result} is not compulsory, but allows one to obtain a result in an external text file (\stylePath{model.res}) formatted using a standardized manner (see \cref{chapter:result}), and therefore easier to parse using an external tool than the terminal output.
@@ -564,6 +568,20 @@ The option \styleOption{-dynamic-elimination} can also be used to reduce the sta
 	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}),
 	or
 	output the result to a text file using a normalized syntax (option \styleOption{-output-result}), that can be then scripted from external programs.
+
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Safety}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+Often, we are rather interested in \emph{safety} synthesis, \ie{} the set of valuations for which the target location is unreachable.
+
+The standard command is:
+
+\styleCommand{\binimitator{} model.imi -mode EFsynth -merge -incl -output-result}
+
+
+Internally, this algorithm works exactly the same as the reachability-synthesis, and at the end the obtained constraint is \emph{negated} (with parameters being constrained to be included in the initial state valuations).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
