@@ -3066,6 +3066,8 @@ class virtual algoStateBased =
 
 
 		let dfsRedWithSubsumptionSyn state_index = 
+
+			let final_constr_red = ref (LinearConstraint.p_true_constraint ()) in
 	    	
 
 	    	(* red := [state_index]@(!red); *)
@@ -3120,6 +3122,8 @@ class virtual algoStateBased =
 
 				 				let colapsedConstr2 = (LinearConstraint.px_hide_nonparameters_and_collapse constr2) in
 
+				 				(* let ls = [(!final_constr_red); colapsedConstr2] in *)
+				 				final_constr_red := (LinearConstraint.p_intersection [!final_constr_red; colapsedConstr2]); 
 
 				 				
 				 				let negInequalities = ref [] in
@@ -3151,7 +3155,7 @@ class virtual algoStateBased =
 				 				
 				 				List.iter (fun state_index2 ->
 
-				 						if ( ( List.mem state_index2 !pink ) ||  ( List.mem state_index2 !blue) ) &&  checkSmallerZoneProjectedOnP state_index2 state_index then ( 
+				 						if ( ( List.mem state_index2 !pink ) ||  ( List.mem state_index2 !cyan) ) &&  checkSmallerZoneProjectedOnP state_index2 state_index then ( 
 
 
 				 						let loc, constr = StateSpace.get_state state_space successor2 in
@@ -3219,8 +3223,10 @@ class virtual algoStateBased =
 			pink := [];
 
 			);
+		!final_constr_red
 		in
 
+		
 
 
 		(*****************************************************Parameter synthesis-LayerNestedDFS with subsumption on red, cycle detection, and red prune - Parameter synthesis END**********************************************************) 
@@ -3285,6 +3291,8 @@ class virtual algoStateBased =
 
 		(* Explore further until the limit is reached or the queue is empty *)
 		while limit_reached = Keep_going && !queue <> [] && !algorithm_keep_going do
+
+			let final_constr = ref (LinearConstraint.p_true_constraint () ) in
 
 			let nQueueStart = List.length !queue in 
 
@@ -3476,6 +3484,7 @@ class virtual algoStateBased =
 																	 			print_message Verbose_standard ("Report! Found the loop at "^terminatingLocationString ^ "!");
 																	 			print_message Verbose_standard ("Report! Found the loop at accepting state: " ^ (StateSpace.string_of_state_index state_index) ^"!");
 				 																print_message Verbose_standard (" Location information " ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space state_index) ); 
+
 																			(* ); *) 
 																			
 																			) else (
@@ -3558,7 +3567,8 @@ class virtual algoStateBased =
 																				if ( contains terminatingLocationString accLocPref && not ( LinearConstraint.px_is_false constr ) ) then(
 																					print_message Verbose_low ("Found terminating location: " ^terminatingLocationString ^ "!");
 																					(* foundALoop := *)
-																					dfsRedWithSubsumptionSyn state_index; 
+																					final_constr := (LinearConstraint.p_intersection [(dfsRedWithSubsumptionSyn state_index); !final_constr] ); 
+																					print_message Verbose_standard ("Collected contraint: \n" ^ LinearConstraint.string_of_p_linear_constraint model.variable_names !final_constr);
 																				);
 																				cyan := list_remove_first_occurence state_index !cyan;
 																		 		blue := [state_index]@(!blue);
