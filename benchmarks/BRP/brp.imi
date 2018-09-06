@@ -64,8 +64,6 @@ var     x,ys, yr,z,u,v
 --****************************************************--
 synclabs: Sin, B, F, Sout_DK, Sout_NOK, Sout_OK;
 
-initially idleS;
-
 
 loc idleS: invariant x>=0
 	when True sync Sin do {b1 := 1,i := 1,x := 0} goto next_frame; 
@@ -110,8 +108,6 @@ end --sender
   automaton receiver	
 --****************************************************--
 synclabs: G, A, Rout_NOK, Rout_OK, Rout_FST, Rout_INC;
-
-initially new_file;
 
 
 loc new_file: invariant z>=0
@@ -175,7 +171,6 @@ end --receiver
 automaton channelK
 --****************************************************--
 synclabs: F,G;
-initially startK;
 
 loc startK: invariant u>=0
 
@@ -223,7 +218,6 @@ end -- channelK
 automaton channelL
 --****************************************************--
 synclabs: A,B;
-initially startL;
 
 loc startL: invariant v>=0
 
@@ -247,7 +241,6 @@ end -- channelL
 automaton Sclient	
 --****************************************************--
 synclabs: Sin, Sout_OK, Sout_DK, Sout_NOK;
-initially startSC;
 
 loc startSC: invariant ys<=SYNC 		 -- invariant ys>=0
 
