@@ -260,7 +260,6 @@ end --Sclient
 automaton Rclient	
 --****************************************************--
 synclabs: Rout_FST, Rout_OK, Rout_INC, Rout_NOK;
-initially startRC;
 
 loc startRC: invariant yr>=0
 

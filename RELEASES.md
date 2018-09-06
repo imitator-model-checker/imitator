@@ -8,6 +8,9 @@
 ### Major feature
 * Removed the Gc.major() instruction, that used to require a huge time for large models, while not bringing any benefit for smaller models
 
+### Minor feature
+* Using the syntax 'initially <loc name>' in the beginning of a PTA (which is not taken into account) now raises a warning.
+
 ### Syntax improvement
 * The prime (`'`) in transition updates becomes optional; the `=` in transition updates becomes `:=` (backward-compatibility remains ensured until further notices) That is, an update `x' = 0` becomes `x := 0`
 * `while [invariant condition] wait{}` becomes `invariant [invariant condition]` (backward-compatibility remains ensured until further notices)
