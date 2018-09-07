@@ -2580,8 +2580,28 @@ class virtual algoStateBased =
 			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
 			let loc2, constr2 = StateSpace.get_state state_space state_index2 in
 			let constr11 = LinearConstraint.px_hide_nonparameters_and_collapse constr1 in
+
 			let constr22 = LinearConstraint.px_hide_nonparameters_and_collapse constr2 in
-			if LinearConstraint.p_is_equal constr11 constr22 then true else false;
+
+			print_message Verbose_low ("projected contraint 1: \n" ^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr11);
+			print_message Verbose_low ("projected contraint 2: \n" ^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr22);
+
+			LinearConstraint.p_is_equal constr11 constr22;
+		in
+
+
+
+		let checkZoneProjectedOnP2 state_index1 constr2 = 
+			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
+
+			let constr11 = LinearConstraint.px_hide_nonparameters_and_collapse constr1 in
+
+			let constr22 = LinearConstraint.px_hide_nonparameters_and_collapse constr2 in
+
+			print_message Verbose_low ("projected contraint 1: \n" ^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr11);
+			print_message Verbose_low ("projected contraint 2: \n" ^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr22);
+
+			LinearConstraint.p_is_equal constr11 constr22;
 		in
 
 
@@ -2760,6 +2780,16 @@ class virtual algoStateBased =
 			(*if not (LinearConstraint.p_is_leq constr22 constr11) then true else false;*)
 			if (LinearConstraint.p_is_leq constr11 constr22) then true else false;
 		in
+
+
+		let checkSmallerZoneProjectedOnP2 state_index1 constr2 = 
+			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
+
+			let constr11 = LinearConstraint.px_hide_nonparameters_and_collapse constr1 in
+			let constr22 = LinearConstraint.px_hide_nonparameters_and_collapse constr2 in
+			(*if not (LinearConstraint.p_is_leq constr22 constr11) then true else false;*)
+			if (LinearConstraint.p_is_leq constr11 constr22) then true else false;
+		in
 		
 
 		(* Same with the prior, used to improve the performance of state insertion *)
@@ -2843,6 +2873,8 @@ class virtual algoStateBased =
 		let assocPre = ref [] in
 
 		let level = ref 0 in
+
+		let false_states = ref [] in
 
 		(* let exploredS = ref [] in  *)
 
@@ -3014,9 +3046,10 @@ class virtual algoStateBased =
 
 											 	List.iter ( fun pre -> 
 
-											 		let loc1, constr1 = StateSpace.get_state state_space pre in
+											 		(*let loc1, constr1 = StateSpace.get_state state_space pre in *)
 													
-													if (LinearConstraint.px_is_false constr1) then (
+													(* if (LinearConstraint.px_is_false constr1) then ( *)
+													if (List.mem pre !false_states) then (
 														
 														(* check := true; *)
 														raise FoundAFalseState;
@@ -3030,9 +3063,10 @@ class virtual algoStateBased =
 
 														List.iter ( fun pre2 ->
 																
-															let loc2, constr2 = StateSpace.get_state state_space pre2 in
+															(* let loc2, constr2 = StateSpace.get_state state_space pre2 in *)
 																								
-															if (LinearConstraint.px_is_false constr2) then (
+															(* if (LinearConstraint.px_is_false constr2) then ( *)
+															if (List.mem pre2 !false_states) then (
 																
 																(* check := true; *)
 																raise FoundAFalseState;
@@ -3152,10 +3186,16 @@ class virtual algoStateBased =
 				 				
 
 				 				let newList = (flattenPending !level !pending)@(!cyan)@(!pink)  in
-				 				
+
+				 				let state_copy, state_index_constr_copy = StateSpace.get_state state_space state_index in
+
 				 				List.iter (fun state_index2 ->
 
-				 						if ( ( List.mem state_index2 !pink ) ||  ( List.mem state_index2 !cyan) ) &&  checkSmallerZoneProjectedOnP state_index2 state_index then ( 
+				 						(* blabla *)
+
+				 						print_message Verbose_low (" BEFORE Changed Zone!!!! State " ^ (string_of_int state_index2) ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space state_index2) ^" ! " );
+
+				 						if (* ( List.mem state_index2 !pink ) ||  ( List.mem state_index2 !cyan) *) ((checkSmallerZoneProjectedOnP2 state_index2 state_index_constr_copy) || checkZoneProjectedOnP2 state_index2 state_index_constr_copy) (* && not (List.mem successor !false_states) *) then ( 
 
 
 
@@ -3169,14 +3209,16 @@ class virtual algoStateBased =
 				 						(* if (* not (  ( List.mem state_index2 !red) || ( List.mem state_index2 !pink ) ||  ( List.mem state_index2 !blue) ) *) checkZoneProjectedOnP state_index2 state_index then ( *)
 				 						(* if ( ( List.mem state_index2 !pink ) ||  ( List.mem state_index2 !blue) ) &&  checkZoneProjectedOnP state_index2 state_index then ( *)
 
-				 						StateSpace.replace_constraint state_space state_index2 new_constraint;
+				 						(* StateSpace.replace_constraint state_space state_index2 new_constraint; *)
+
+				 						false_states := [state_index2]@(!false_states);
 				 						
 				 						(* )); *)
 
 
 				 						print_message Verbose_low (" Changed Zone!!!! State " ^ (string_of_int state_index2) ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space state_index2) ^" ! " );
 				 						
-				 						if (LinearConstraint.px_is_false new_constraint) (* && List.mem state_index2 !queue *) && List.mem state_index2 pd (* && List.mem state_index2 !queue *)
+				 						if (LinearConstraint.px_is_false new_constraint)  (* && List.mem state_index2 !queue *) && List.mem state_index2 pd (* && List.mem state_index2 !queue *)
 				 						then (
 
 				 							 queue := list_remove_first_occurence successor2 !queue; 
@@ -3207,7 +3249,11 @@ class virtual algoStateBased =
 			 					print_message Verbose_low (" checkZoneNotIncludeInList is True! 1" );
 			 					let loc, constr = StateSpace.get_state state_space successor in
 			 					print_message Verbose_low (" checkZoneNotIncludeInList is True! 2" );
-				 				successors := if (LinearConstraint.px_is_false constr) then ( count := !count; !successors; ) else ( count := !count + 1; !successors@[successor2];  ); 
+				 				successors := 
+				 					(* if (LinearConstraint.px_is_false constr) *)
+				 					if (List.mem successor !false_states)
+				 					then ( count := !count; !successors; ) 
+				 					else ( count := !count + 1; !successors@[successor2];  ); 
 				 				print_message Verbose_low (" checkZoneNotIncludeInList is True! 3" );
 				 				(* successors := !successors@[successor2]; *)
 				 				(* count := !count + 1; *)
@@ -3522,7 +3568,8 @@ class virtual algoStateBased =
 																					cyan := [state_index]@(!cyan);
 																					updated_queue := !queue;
 																					
-																					if (LinearConstraint.px_is_false constr) then (
+																					(* if (LinearConstraint.px_is_false constr) then ( *)
+																					if (List.mem state_index !false_states) then (
 																						print_message Verbose_low ("Pruning 1 !");
 																						updated_queue := prunning state_index !queue;
 																						);
@@ -3549,7 +3596,8 @@ class virtual algoStateBased =
 													 								);
 
 	
-																					if (falseStateDetect2 state_index) || (LinearConstraint.px_is_false constr) then (
+																					(* if (falseStateDetect2 state_index) || (LinearConstraint.px_is_false constr) then ( *)
+																					if (falseStateDetect2 state_index) || (List.mem state_index !false_states) then (
 																							updated_queue := prunning state_index !queue;
 																						);
 
@@ -3565,7 +3613,8 @@ class virtual algoStateBased =
 																				let terminatingLocationString = ModelPrinter.string_of_location model (loc) in
 																				(* let foundALoop = ref false in *)
 
-																				if ( contains terminatingLocationString accLocPref && not ( LinearConstraint.px_is_false constr ) ) then(
+																				(* if ( contains terminatingLocationString accLocPref && not ( LinearConstraint.px_is_false constr ) ) then( *)
+																				if ( contains terminatingLocationString accLocPref && not (List.mem state_index !false_states) ) then(
 																					print_message Verbose_low ("Found terminating location: " ^terminatingLocationString ^ "!");
 																					(* foundALoop := *)
 																					
