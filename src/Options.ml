@@ -542,6 +542,8 @@ class imitator_options =
 					exploration_order <- Exploration_layer_NestedDFS_with_Subsumption
 				else if order = "synlayerNestedDFSsub" then
 					exploration_order <- Exploration_layer_NestedDFS_with_Subsumption_Synthesis
+				else if order = "synlayerNestedDFSsub2" then
+					exploration_order <- Exploration_layer_NestedDFS_with_Subsumption_Synthesis2
 				else(
 					(*** HACK: print header now ***)
 					print_header_string();
@@ -1024,6 +1026,7 @@ class imitator_options =
 				| Exploration_queue_NestedDFS_with_Subsumption -> print_message Verbose_standard ("Exploration order: queue-based Nested-DFS with Subsumption [WORK IN PROGRESS WITH LAURE].")
 				| Exploration_layer_NestedDFS_with_Subsumption -> print_message Verbose_standard ("Exploration order: layer-based Nested-DFS [WORK IN PROGRESS WITH LAURE].")
 				| Exploration_layer_NestedDFS_with_Subsumption_Synthesis -> print_message Verbose_standard ("Exploration order: layer-based Nested-DFS parameter synthesis [WORK IN PROGRESS WITH LAURE].")
+				| Exploration_layer_NestedDFS_with_Subsumption_Synthesis2 -> print_message Verbose_standard ("Exploration order: layer-based Nested-DFS parameter synthesis 2 [WORK IN PROGRESS WITH LAURE].")
 
 				
 			end;
