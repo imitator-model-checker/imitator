@@ -2921,7 +2921,7 @@ class virtual algoStateBased =
 			*)
 			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
 			let loc2, constr2 = StateSpace.get_state state_space state_index2 in
-			if (Location.location_equal loc1 loc2 && LinearConstraint.px_is_leq constr1 constr2) then 
+			if (Location.location_equal loc1 loc2 && LinearConstraint.px_is_leq constr1 constr2) && checkZoneProjectedOnP state_index1 state_index2 then 
 				(
 				let _ = print_message Verbose_low (" 2 locs are equal") in
 				true ;
@@ -3078,6 +3078,7 @@ class virtual algoStateBased =
 			 				);
 
 			 				if (checkZoneNotIncludeInList successor2 !red) then 
+			 				(* if (checkZoneNotEqualInList successor2 !red) then  *)
 			 				(
 			 				print_message Verbose_low (" CheckZoneNotIncludeInList is True! " );
 			 					red := [successor2]@(!red);
@@ -3708,7 +3709,7 @@ class virtual algoStateBased =
 								()
 			 				);
 
-			 				if 	(* (checkZoneNotIncludeInList successor2 !red)  && *) 
+			 				if 	(checkZoneNotIncludeInList successor2 !red)  && 
 			 					(checkZoneNotIncludeInList successor2 !pink)  
 			 					(* && not (checkZoneNotIncludeInList successor2 !blue) *) 
 			 					(* not (checkSmallerZoneProjectedOnP3 successor2 !final_constr) *) then 
