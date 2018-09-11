@@ -1989,9 +1989,11 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the queue-based BFS algorithm  *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* method private explore_queue_bfs init_state_index = *)
+	(* 09-10-2017: Changed to public for distributed version - Files related: AlgoNZCUBdist *)
 	method private explore_queue_bfs init_state_index =
 
-		(* print_message Verbose_standard("Entering explore_queue_bfs!!!"); *)
+		print_message Verbose_medium("Entering explore_queue_bfs!!!");
 
 
 
@@ -2434,42 +2436,10 @@ class virtual algoStateBased =
 							);
 		in
 
-		let initial_rank2 state_index state_space =
-			print_message Verbose_low ("Access Initial Ranking 2!");
-			if verbose_mode_greater Verbose_low then(
-			print_message Verbose_low ("Ranking State: " ^ (StateSpace.string_of_state_index state_index) ^"!");
-			);
-			(* popped state information *)
-			(* location: static , constraint*)
-			let loc, constr = StateSpace.get_state state_space state_index in
-
-			if verbose_mode_greater Verbose_low then(
-				print_message Verbose_low ( ModelPrinter.string_of_state model (loc, constr) );
-			);
-
-			
-			let checkTrueConstr = (LinearConstraint.p_is_equal (LinearConstraint.px_hide_nonparameters_and_collapse constr) (model.initial_p_constraint) ) in
-			
-			let rank = if checkTrueConstr
-			then
-				(
-				print_message Verbose_low ("Rank: Infinity!");
-				Infinity
-				) 
-			else 
-				(
-				print_message Verbose_low ("Rank: 0!");
-				Int 0
-				)
-			in
-			print_message Verbose_low ("End Initial Ranking!");
-			rank
-		in
-
 		let addToPriorQueue successors queue= 
 			(* initial ranking and sorting *)
 			let q = ref queue in
-			List.iter (fun state_index ->	let rank = initial_rank2 state_index state_space in
+			List.iter (fun state_index ->	let rank = initial_rank state_index state_space in
 											(* Print some information *)
 											print_message Verbose_high ("addToPriorQueue: Initial rank computed for state " ^ (string_of_int state_index));
 											Hashtbl.add rank_hashtable state_index rank;
@@ -2502,11 +2472,313 @@ class virtual algoStateBased =
 			!q
 		in
 		(*****************************************************PRIOR END******************************************************)
+		
+
+		
+		(*** TODO Gia ***)
+		let select_from_queue () = match options#exploration_order with 
+			| Exploration_queue_BFS_RS -> 	(
+											try(
+												(* First look for infinite rank *)
+												List.iter (fun state_index -> 
+													(* Get the rank from the hashtable (or compute it if necessarily) *)
+													let rank = Hashtbl.find rank_hashtable state_index in
+													(* If infinite: found *)
+													if rank = Infinity then raise (FoundInfiniteRank state_index)
+												) !queue;
+												(* raise (NotImplemented("Gia")) *)
+												(* get the highest rank *)
+												
+												let state_index2 = get_highest_rank_index !queue in
+												state_index2;
+												(* List.hd !queue;*)
+											) with FoundInfiniteRank state_index -> state_index
+											);
+
+			| Exploration_queue_BFS_PRIOR -> List.hd !queue;
+			|  _ -> raise (InternalError ("Impossible situation: at that point, it should be a (variant of) queue BFS"));
+
+		in
+
+		
+
+
+		(*** END: code for ranking system ***)
+
+
+		queue := [init_state_index];
+		
+		(* for ranking algo *)
+		let rank = initial_rank init_state_index state_space in
+		(* Print some information *)
+		print_message Verbose_high ("Ranking algorithm: Initial rank computed for state " ^ (string_of_int init_state_index));
+		Hashtbl.add rank_hashtable init_state_index rank;
+
+		
+		
 
 
 
 
+		(* Explore further until the limit is reached or the queue is empty *)
+		while limit_reached = Keep_going && !queue <> [] && !algorithm_keep_going do
+			print_message Verbose_low ("I am here!!!!!!");
+			(* Print some information *)
+			if verbose_mode_greater Verbose_low then (
+				print_message Verbose_low ("\n");
+				print_message Verbose_low ("Computing successors of state #" ^ (string_of_int !num_state) 
+											^ " (" ^ (string_of_int (List.length !queue)) ^ " state" ^ (s_of_int (List.length !queue)) 
+											^ " in the queue).");
+			);
+			
+			
+			
+			
 
+			(* Take the first element, i.e., last from the list *)
+			(*** NOTE: no test for emptiness, as it was performed just above in the while loop condition ***)
+			let new_queue, popped_from_queue = match options#exploration_order with
+				(* Classical queue: just pop! *)
+				| Exploration_queue_BFS -> OCamlUtilities.list_split_last !queue
+				(* Ranking system: TODO *)
+				| Exploration_queue_BFS_RS -> 	(* Find the state to be selected *)
+												let state_index = select_from_queue () in
+												(* Remove from queue *)
+												let updated_queue = list_remove_first_occurence state_index !queue in
+												(* Return new queue, popped state *)
+												updated_queue, state_index
+				(* Priority: TODO *)
+				| Exploration_queue_BFS_PRIOR -> 	(* Find the state to be selected *)
+													let state_index = select_from_queue () in
+													(* Remove from queue *)
+													let updated_queue = list_remove_first_occurence state_index !queue in
+													(* Return new queue, popped state *)
+													updated_queue, state_index
+				(* Impossible *)
+				| _ -> raise (InternalError ("Impossible situation: at that point, it should be a (variant of) queue BFS"))
+			in
+			
+			
+			(* Remove from the queue *)
+			queue := new_queue;
+			
+			(* Count the states for verbose purpose: *)
+			num_state := !num_state + 1;
+			
+			(* Compute successors *)
+			(* The concrete function post_from_one_state may raise exception TerminateAnalysis, and update termination_status *)
+			let successors =
+			try(
+				self#post_from_one_state popped_from_queue
+			)
+			with TerminateAnalysis ->
+				(*** HACK: empty the queue to force termination… ***)
+				(*** TODO: improve the termination mechanism (by unifying limit_reached and termination_status) ***)
+				queue := [];
+				
+				(* Return an empty list of successors *)
+				[]
+			in
+
+			if verbose_mode_greater Verbose_low then(
+					print_message Verbose_low ("Poped State: " ^ (StateSpace.string_of_state_index popped_from_queue) ^" from queue!");
+					print_message Verbose_low ("States in queue!");
+					List.iter ( fun state_index ->
+						print_message Verbose_low ("State: " ^ (StateSpace.string_of_state_index state_index) ^" \n");
+					) !queue;
+			);
+
+
+			(* Add to queue *)
+			queue := 
+				(match options#exploration_order with
+				| Exploration_queue_BFS -> list_append successors !queue
+				(* Ranking system: TODO *)
+				| Exploration_queue_BFS_RS -> 	rankingSuccessors successors popped_from_queue;
+												(* list_append successors !queue *)
+				(* Priority system: TODO *)
+				| Exploration_queue_BFS_PRIOR -> addToPriorQueue successors !queue
+				(* Impossible *)
+				| _ -> raise (InternalError ("Impossible situation: at that point, it should be a (variant of) queue BFS"))
+			);
+			
+
+			
+
+			(* Merge states! *)
+			(*** Here, we merge only the queue ***)
+			(*** TODO: merge something else? ***)
+			let new_states_after_merging = ref (!queue) in
+			if options#merge || options#merge_before then (
+				(* New version *)
+				let eaten_states = StateSpace.merge state_space !new_states_after_merging in
+				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
+
+				(match options#exploration_order with
+					| Exploration_queue_BFS_RS ->
+													List.iter ( fun state_index -> 
+														Hashtbl.remove rank_hashtable state_index;
+
+													) eaten_states;
+					| _ -> ();
+				)
+
+
+			);
+			(* Copy back the merged queue *)
+			queue := !new_states_after_merging;
+
+			
+			(* Check if the limit has been reached *)
+			self#check_and_update_queue_bfs_limit;
+			
+			(* If still going, ask the concrete algorithm whether it wants to terminate for other reasons *)
+			if limit_reached = Keep_going then(
+				(* Print some information *)
+				(*** HACK: 'bfs_current_depth - 1' because bfs_current_depth was just incremented… ***)
+				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (bfs_current_depth - 1)) ^ "…");
+
+				if self#check_termination_at_post_n then(
+					algorithm_keep_going := false;
+				);
+			);
+			
+		done;
+
+		print_message Verbose_medium ("End of Ordering!!! \n");
+		
+		(* Were they any more states to explore? *)
+		let nb_unexplored_successors = List.length !queue in
+		
+		(* Set the list of states with unexplored successors, if any *)
+		if nb_unexplored_successors > 0 then(
+			unexplored_successors <- UnexSucc_some !queue;
+		);
+		
+		(* Update termination condition *)
+		begin
+		match limit_reached with
+			(*** NOTE: check None, as it may have been edited from outside, in which case it should not be Regular_termination ***)
+			| Keep_going when termination_status = None -> termination_status <- Some (Result.Regular_termination)
+			(*** NOTE: obliged to comment out the condition below, otherwise there is a compiling warning… ***)
+			| Keep_going (*when termination_status <> None*) -> ()
+			
+			(* Termination due to time limit reached *)
+			| Time_limit_reached -> termination_status <- Some (Result.Time_limit nb_unexplored_successors)
+			
+			(* Termination due to state space depth limit reached *)
+			| Depth_limit_reached -> raise (InternalError("A depth limit should not be met in Queue-based BFS"))
+			
+			(* Termination due to a number of explored states reached *)
+			| States_limit_reached -> termination_status <- Some (Result.States_limit nb_unexplored_successors)
+		end
+		;
+	
+		(* Print some information *)
+		(*** NOTE: must be done after setting the limit (above) ***)
+		self#bfs_print_warnings_limit ();
+		
+		if not !algorithm_keep_going && nb_unexplored_successors > 0 then(
+			self#print_algo_message Verbose_standard ("A sufficient condition to ensure termination was met although there were still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore");
+		);
+
+
+		print_message Verbose_standard (
+			let nb_states = StateSpace.nb_states state_space in
+			let nb_transitions = StateSpace.nb_transitions state_space in
+			let fixpoint_str = if nb_unexplored_successors > 0 then "State space exploration stopped" else "Fixpoint reached" in
+			"\n" ^ fixpoint_str ^ (*" at a depth of "
+			^ (string_of_int bfs_current_depth) ^ ""
+			^ *)": "
+			^ (string_of_int nb_states) ^ " state" ^ (s_of_int nb_states)
+			^ " with "
+			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ " in the final state space.");
+			(*** NOTE: in fact, more states and transitions may have been explored (and deleted); here, these figures are the number of states in the state space. ***)
+
+
+
+		print_message Verbose_medium("Exiting explore_queue_bfs!!!");
+		(* The end *)
+		()
+
+	
+	
+
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Main method to run the queue-based BFS algorithm  *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private explore_stack_dfs init_state_index =
+
+		
+		let queue = ref [] in 
+
+		(* Set the limit *)
+		limit_reached <- Keep_going;
+		
+		(* Flag modified by the algorithm to perhaps terminate earlier *)
+		let algorithm_keep_going = ref true in
+
+		(* Count the states for verbose purpose: *)
+		let num_state = ref 0 in
+
+
+		(*****************************************************RANKING TBL******************************************************)	
+		(* Hashtable: state_index -> rank *)
+		let rank_hashtable = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
+
+
+		let initial_rank state_index state_space =
+			print_message Verbose_low ("Access Initial Ranking!");
+			if verbose_mode_greater Verbose_low then(
+			print_message Verbose_low ("Ranking State: " ^ (StateSpace.string_of_state_index state_index) ^"!");
+			);
+			(* popped state information *)
+			(* location: static , constraint*)
+			let loc, constr = StateSpace.get_state state_space state_index in
+
+			if verbose_mode_greater Verbose_low then(
+				print_message Verbose_low ( ModelPrinter.string_of_state model (loc, constr) );
+			);
+
+			let checkTrueConstr = LinearConstraint.px_is_equal constr model.px_clocks_non_negative_and_initial_p_constraint in
+			
+			let rank = if checkTrueConstr
+			then
+				(
+				print_message Verbose_low ("Rank: Infinity!");
+				Infinity
+				) 
+			else 
+				(
+				print_message Verbose_low ("Rank: 0!");
+				Int 0
+				)
+			in
+			print_message Verbose_low ("End Initial Ranking!");
+			rank
+		in
+
+		(*
+		let isRanked state_index = 
+			(* try to find in the hashtbl *)
+			try(
+				let rank = Hashtbl.find rank_hashtable state_index in
+				true
+			) with Not_found -> false;
+		in
+		*)
+
+		(*
+		let printrank rank = match rank with
+							| Infinity -> ("Infinity")
+							| Int value -> (string_of_int value);
+		in
+
+		*)
+		
+		(*****************************************************RANKING TBL END**************************************************)
 
 
 
@@ -2872,6 +3144,41 @@ class virtual algoStateBased =
 			if (LinearConstraint.p_nnconvex_constraint_is_leq constr11 constr22) then true else false;
 		in
 		
+		let rec addInfinityToPriorQueue state_index queue = 
+			match queue with
+			  | [] -> [state_index]
+			  | x :: l -> (
+							let rank = Hashtbl.find rank_hashtable x in
+							if rank = Infinity
+							then 
+								x :: (addInfinityToPriorQueue state_index l)
+							else 
+								state_index :: x :: l
+							);
+		in
+
+		let rec addNonInfinityToPriorQueue state_index queue = 
+			match queue with
+			  | [] -> [state_index]
+			  | x :: l -> (
+							let rank = Hashtbl.find rank_hashtable x in
+							match rank with 
+							| Infinity -> x :: (addNonInfinityToPriorQueue state_index l)
+							| Int r -> 	let loc1, constr1 = StateSpace.get_state state_space state_index in
+										let loc2, constr2 = StateSpace.get_state state_space x in
+										(
+										if not (LinearConstraint.px_is_leq constr2 constr1)
+										then
+											(
+											x :: (addNonInfinityToPriorQueue state_index l);
+											)
+										else
+											(
+											state_index :: x :: l
+											);
+										);
+							);
+		in
 
 		(* Same with the prior, used to improve the performance of state insertion *)
 		let rec addInfinityToPendingQueue state_index queue = 
@@ -2926,7 +3233,37 @@ class virtual algoStateBased =
 		in
 
 
+		let initial_rank2 state_index state_space =
+			print_message Verbose_low ("Access Initial Ranking 2!");
+			if verbose_mode_greater Verbose_low then(
+			print_message Verbose_low ("Ranking State: " ^ (StateSpace.string_of_state_index state_index) ^"!");
+			);
+			(* popped state information *)
+			(* location: static , constraint*)
+			let loc, constr = StateSpace.get_state state_space state_index in
 
+			if verbose_mode_greater Verbose_low then(
+				print_message Verbose_low ( ModelPrinter.string_of_state model (loc, constr) );
+			);
+
+			
+			let checkTrueConstr = (LinearConstraint.p_is_equal (LinearConstraint.px_hide_nonparameters_and_collapse constr) (model.initial_p_constraint) ) in
+			
+			let rank = if checkTrueConstr
+			then
+				(
+				print_message Verbose_low ("Rank: Infinity!");
+				Infinity
+				) 
+			else 
+				(
+				print_message Verbose_low ("Rank: 0!");
+				Int 0
+				)
+			in
+			print_message Verbose_low ("End Initial Ranking!");
+			rank
+		in
 		
 		(* Pending queue inserting *)
 		let addPendingQueue popped_from_queue successors queue= 
@@ -3524,25 +3861,6 @@ class virtual algoStateBased =
 		
 		(*** TODO Gia ***)
 		let select_from_queue () = match options#exploration_order with 
-			| Exploration_queue_BFS_RS -> 	(
-											try(
-												(* First look for infinite rank *)
-												List.iter (fun state_index -> 
-													(* Get the rank from the hashtable (or compute it if necessarily) *)
-													let rank = Hashtbl.find rank_hashtable state_index in
-													(* If infinite: found *)
-													if rank = Infinity then raise (FoundInfiniteRank state_index)
-												) !queue;
-												(* raise (NotImplemented("Gia")) *)
-												(* get the highest rank *)
-												
-												let state_index2 = get_highest_rank_index !queue in
-												state_index2;
-												(* List.hd !queue;*)
-											) with FoundInfiniteRank state_index -> state_index
-											);
-
-			| Exploration_queue_BFS_PRIOR -> List.hd !queue;
 
 			| Exploration_queue_NestedDFS -> List.hd !queue;
 
@@ -3604,21 +3922,6 @@ class virtual algoStateBased =
 			(*** NOTE: no test for emptiness, as it was performed just above in the while loop condition ***)
 			let new_queue, popped_from_queue = match options#exploration_order with
 				(* Classical queue: just pop! *)
-				| Exploration_queue_BFS -> OCamlUtilities.list_split_last !queue
-				(* Ranking system: TODO *)
-				| Exploration_queue_BFS_RS -> 	(* Find the state to be selected *)
-												let state_index = select_from_queue () in
-												(* Remove from queue *)
-												let updated_queue = list_remove_first_occurence state_index !queue in
-												(* Return new queue, popped state *)
-												updated_queue, state_index
-				(* Priority: TODO *)
-				| Exploration_queue_BFS_PRIOR -> 	(* Find the state to be selected *)
-													let state_index = select_from_queue () in
-													(* Remove from queue *)
-													let updated_queue = list_remove_first_occurence state_index !queue in
-													(* Return new queue, popped state *)
-													updated_queue, state_index
 
 				(* TODO *)
 				| Exploration_queue_NestedDFS -> 	(* Find the state to be selected *)
@@ -4119,71 +4422,12 @@ class virtual algoStateBased =
 			num_state := !num_state + 1;
 			
 
-			(* )
-			(* Compute successors *)
-			(* The concrete function post_from_one_state may raise exception TerminateAnalysis, and update termination_status *)
-			let successors = if !isPrune  then (
-					isPrune := false;
-					[]
-				) else (
-					try(
-						self#post_from_one_state popped_from_queue
-					)
-					with TerminateAnalysis ->
-						(*** HACK: empty the queue to force termination… ***)
-						(*** TODO: improve the termination mechanism (by unifying limit_reached and termination_status) ***)
-						queue := [];
-						
-						(* Return an empty list of successors *)
-						[]
-				);
-			in
-			*)
 			
 
 
 			(* Compute successors *)
 			(* The concrete function post_from_one_state may raise exception TerminateAnalysis, and update termination_status *)
 			let successors = (match options#exploration_order with
-				| Exploration_queue_BFS -> (
-												try(
-													self#post_from_one_state popped_from_queue
-												)
-												with TerminateAnalysis ->
-													(*** HACK: empty the queue to force termination… ***)
-													(*** TODO: improve the termination mechanism (by unifying limit_reached and termination_status) ***)
-													queue := [];
-													
-													(* Return an empty list of successors *)
-													[]
-											)
-				(* Ranking system: TODO *)
-				| Exploration_queue_BFS_RS -> 	(
-													try(
-														self#post_from_one_state popped_from_queue
-													)
-													with TerminateAnalysis ->
-														(*** HACK: empty the queue to force termination… ***)
-														(*** TODO: improve the termination mechanism (by unifying limit_reached and termination_status) ***)
-														queue := [];
-														
-														(* Return an empty list of successors *)
-														[]
-												)
-												(* list_append successors !queue *)
-				(* Priority system: TODO *)
-				| Exploration_queue_BFS_PRIOR -> (
-													try(
-														self#post_from_one_state popped_from_queue
-													)
-													with TerminateAnalysis ->
-														(*** HACK: empty the queue to force termination… ***)
-														(*** TODO: improve the termination mechanism (by unifying limit_reached and termination_status) ***)
-														queue := [];
-														
-														(* Return an empty list of successors *)
-														[]
-												)
 				(* TODO *)
 				| Exploration_queue_NestedDFS -> (
 													try(
@@ -4342,12 +4586,6 @@ class virtual algoStateBased =
 			(* Add to queue *)
 			queue := 
 				(match options#exploration_order with
-				| Exploration_queue_BFS -> list_append successors !queue
-				(* Ranking system: TODO *)
-				| Exploration_queue_BFS_RS -> 	rankingSuccessors successors popped_from_queue;
-												(* list_append successors !queue *)
-				(* Priority system: TODO *)
-				| Exploration_queue_BFS_PRIOR -> addToPriorQueue successors !queue
 				(* TODO *)
 				| Exploration_queue_NestedDFS -> successors@(!queue)
 				| Exploration_queue_NestedDFS_with_Subsumption -> successors@(!queue) 
@@ -4850,11 +5088,12 @@ class virtual algoStateBased =
 			| Exploration_queue_BFS -> self#explore_queue_bfs init_state_index;
 			| Exploration_queue_BFS_RS -> self#explore_queue_bfs init_state_index;
 			| Exploration_queue_BFS_PRIOR -> self#explore_queue_bfs init_state_index;
-			| Exploration_queue_NestedDFS  -> self#explore_queue_bfs init_state_index;
-			| Exploration_queue_NestedDFS_with_Subsumption -> self#explore_queue_bfs init_state_index;
-			| Exploration_layer_NestedDFS_with_Subsumption -> self#explore_queue_bfs init_state_index;
-			| Exploration_layer_NestedDFS_with_Subsumption_Synthesis -> self#explore_queue_bfs init_state_index;
-			| Exploration_layer_NestedDFS_with_Subsumption_Synthesis2 -> self#explore_queue_bfs init_state_index;
+			(* Stack-based DFS *)
+			| Exploration_queue_NestedDFS  -> self#explore_stack_dfs init_state_index;
+			| Exploration_queue_NestedDFS_with_Subsumption -> self#explore_stack_dfs init_state_index;
+			| Exploration_layer_NestedDFS_with_Subsumption -> self#explore_stack_dfs init_state_index;
+			| Exploration_layer_NestedDFS_with_Subsumption_Synthesis -> self#explore_stack_dfs init_state_index;
+			| Exploration_layer_NestedDFS_with_Subsumption_Synthesis2 -> self#explore_stack_dfs init_state_index;
 		end;
 
 		(* Return the algorithm-dependent result *)
