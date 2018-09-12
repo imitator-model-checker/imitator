@@ -4168,7 +4168,7 @@ class virtual algoStateBased =
 
 																							updated_queue := list_remove_first_occurence state_index !queue;
 
-																							(*
+																							
 																							let terminatingLocationString = ModelPrinter.string_of_location model (loc) in
 																							if ( contains terminatingLocationString accLocPref && not (List.mem state_index !false_states) ) || checkSmallerZoneProjectedOnP3 state_index !final_constr then(
 																								print_message Verbose_low ("Found terminating location: " ^terminatingLocationString ^ "!");
@@ -4179,7 +4179,7 @@ class virtual algoStateBased =
 																									print_message Verbose_standard ("Collected contraint: \n" ^ LinearConstraint.string_of_p_nnconvex_constraint model.variable_names !final_constr);
 																								(* )); *)
 																							);
-																							*)
+																							
 																							(*
 																							cyan := list_remove_first_occurence state_index !cyan;
 																					 		blue := [state_index]@(!blue);
@@ -4305,7 +4305,7 @@ class virtual algoStateBased =
 
 																							updated_queue := list_remove_first_occurence state_index !queue;
 
-																							(*
+																							
 																							let terminatingLocationString = ModelPrinter.string_of_location model (loc) in
 																							if ( contains terminatingLocationString accLocPref && not (List.mem state_index !false_states) ) || checkSmallerZoneProjectedOnP3 state_index !final_constr then(
 																								print_message Verbose_low ("Found terminating location: " ^terminatingLocationString ^ "!");
@@ -4316,7 +4316,7 @@ class virtual algoStateBased =
 																									print_message Verbose_standard ("Collected contraint: \n" ^ LinearConstraint.string_of_p_nnconvex_constraint model.variable_names !final_constr);
 																								(* )); *)
 																							);
-																							*)
+																							
 																							(*
 																							cyan := list_remove_first_occurence state_index !cyan;
 																					 		blue := [state_index]@(!blue);
