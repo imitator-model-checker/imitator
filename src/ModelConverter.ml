@@ -3000,7 +3000,8 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* Print metrics if verbose low or in any case in mode translation *)
 	if verbose_mode_greater Verbose_low || options#imitator_mode = Translation then(
 		print_message Verbose_standard (
-			(string_of_int nb_automata) ^ " automata, "
+			(string_of_int nb_automata) ^ " automat" ^ (if nb_automata > 1 then "a" else "on")
+			^ ", "
 			(*** NOTE: compute number of locations here as not used elsewhere ***)
 			^ (let nb_locations = List.fold_left (fun current_nb automaton -> current_nb + (List.length (locations_per_automaton automaton))) 0 automata in (string_of_int nb_locations) ^ " location" ^ (s_of_int nb_locations) ^ ", ")
 			(*** NOTE: compute number of transitions here as not used elsewhere ***)
