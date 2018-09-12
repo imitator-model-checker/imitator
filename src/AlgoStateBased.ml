@@ -4031,6 +4031,8 @@ class virtual algoStateBased =
 				| Exploration_layer_NestedDFS_with_Subsumption -> 	(* Find the state to be selected *)
 																	let state_index = select_from_queue () in
 																	(* Remove from queue *)
+
+																	let loc, constr = StateSpace.get_state state_space state_index in
 																	
 																	(* let updated_queue = list_remove_first_occurence state_index !queue in *)
 																	let updated_queue = ref [] in
@@ -4048,22 +4050,31 @@ class virtual algoStateBased =
 
 																							updated_queue := list_remove_first_occurence state_index !queue;
 
-																							(*
+																							
 																							let terminatingLocationString = ModelPrinter.string_of_location model (loc) in
-																							if ( contains terminatingLocationString accLocPref && not (List.mem state_index !false_states) ) || checkSmallerZoneProjectedOnP3 state_index !final_constr then(
+																							let foundALoop = ref false in
+
+																							if ( contains terminatingLocationString accLocPref ) then(
 																								print_message Verbose_low ("Found terminating location: " ^terminatingLocationString ^ "!");
-																								(* foundALoop := *)
-																								
-																								(LinearConstraint.p_nnconvex_union (!final_constr) (dfsRedWithSubsumptionSyn state_index) ); 
-																								(* if not (LinearConstraint.p_nnconvex_constraint_is_true !final_constr) then ( *)
-																									print_message Verbose_standard ("Collected contraint: \n" ^ LinearConstraint.string_of_p_nnconvex_constraint model.variable_names !final_constr);
-																								(* )); *)
+																								foundALoop := dfsRedWithSubsumption state_index; 
+																							
+																							); 
+
+																							if !foundALoop then (
+																					 			updated_queue := [];
+																					 			print_message Verbose_standard ("Report! Found the loop at "^terminatingLocationString ^ "!");
+																					 			print_message Verbose_standard ("Report! Found the loop at accepting state: " ^ (StateSpace.string_of_state_index state_index) ^"!");
+								 																print_message Verbose_standard (" Location information " ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space state_index) ); 
+
+																							(* ); *) 
+																							
 																							);
-																							*)
+																							
 																							(*
 																							cyan := list_remove_first_occurence state_index !cyan;
 																					 		blue := [state_index]@(!blue);
 																							*)
+
 																							if (List.mem state_index !cyan) then (
 																								cyan := list_remove_first_occurence state_index !cyan;
 																					 			blue := [state_index]@(!blue);
@@ -4090,7 +4101,7 @@ class virtual algoStateBased =
 																			
 
 																			(* Check accepting states *)
-																			let loc, constr = StateSpace.get_state state_space state_index in
+																			(* let loc, constr = StateSpace.get_state state_space state_index in *)
 																			let terminatingLocationString = ModelPrinter.string_of_location model (loc) in
 																			let foundALoop = ref false in
 
