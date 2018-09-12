@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/09
- * Last modified     : 2018/07/19
+ * Last modified     : 2018/09/12
  *
  ************************************************************)
 
@@ -2695,24 +2695,13 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug prints *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Numbers *)
-	print_message Verbose_low (
-		(string_of_int nb_automata) ^ " automata, "
-		^ (string_of_int nb_labels) ^ " declared label" ^ (s_of_int nb_labels) ^ ", "
-		^ (string_of_int nb_clocks) ^ " clock variable" ^ (s_of_int nb_clocks) ^ ", "
-		^ (string_of_int nb_discrete) ^ " discrete variable" ^ (s_of_int nb_discrete) ^ ", "
-		^ (string_of_int nb_parameters) ^ " parameter" ^ (s_of_int nb_parameters) ^ ", "
-		^ (string_of_int nb_variables) ^ " variable" ^ (s_of_int nb_variables) ^ ", "
-		^ (string_of_int (Hashtbl.length constants)) ^ " constant" ^ (s_of_int (Hashtbl.length constants)) ^ "."
-	);
-	
 	(* Automata *)
 	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("\n*** Array of automata names:");
 		debug_print_array Verbose_high array_of_automata_names;
 
 		(* Labels *)
-		print_message Verbose_high ("\n*** Array of declared label names:");
+		print_message Verbose_high ("\n*** Array of declared synchronization action names:");
 		debug_print_array Verbose_high labels;
 
 		(* Variables *)
@@ -2875,7 +2864,6 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	print_message Verbose_total ("*** Building transitions…");
 	let transitions = convert_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions in
 	
-	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Handle the observer here *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3009,6 +2997,24 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 		| Some clock_index -> list_remove_first_occurence clock_index clocks
 	in
 
+	(* Print metrics if verbose low or in any case in mode translation *)
+	if verbose_mode_greater Verbose_low || options#imitator_mode = Translation then(
+		print_message Verbose_standard (
+			(string_of_int nb_automata) ^ " automata, "
+			(*** NOTE: compute number of locations here as not used elsewhere ***)
+			^ (let nb_locations = List.fold_left (fun current_nb automaton -> current_nb + (List.length (locations_per_automaton automaton))) 0 automata in (string_of_int nb_locations) ^ " location" ^ (s_of_int nb_locations) ^ ", ")
+			(*** NOTE: compute number of transitions here as not used elsewhere ***)
+(* 			^ (let nb_transitions = List.fold_left (fun current_nb, automaton -> current_nb +  ) 0 transitions in (string_of_int nb_locations) ^ " location" ^ (s_of_int nb_locations) ^ ", " *)
+			^ (string_of_int nb_labels) ^ " declared synchronization action" ^ (s_of_int nb_labels) ^ ", "
+			^ (string_of_int nb_clocks) ^ " clock variable" ^ (s_of_int nb_clocks) ^ ", "
+			^ (string_of_int nb_discrete) ^ " discrete variable" ^ (s_of_int nb_discrete) ^ ", "
+			^ (string_of_int nb_parameters) ^ " parameter" ^ (s_of_int nb_parameters) ^ ", "
+			^ (string_of_int nb_variables) ^ " variable" ^ (s_of_int nb_variables) ^ ", "
+			^ (string_of_int (Hashtbl.length constants)) ^ " constant" ^ (s_of_int (Hashtbl.length constants)) ^ "."
+		);
+	);
+	
+	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Detect the L/U nature of the PTA *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

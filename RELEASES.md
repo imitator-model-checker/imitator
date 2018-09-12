@@ -10,6 +10,7 @@
 
 ### Minor feature
 * Using the syntax 'initially <loc name>' in the beginning of a PTA (which is not taken into account) now raises a warning.
+* In translation mode, some metrics (numbers of automata, actions, variables, locations…) are printed on the terminal.
 
 ### Syntax improvement
 * The prime (`'`) in transition updates becomes optional; the `=` in transition updates becomes `:=` (backward-compatibility remains ensured until further notices) That is, an update `x' = 0` becomes `x := 0`
@@ -17,6 +18,7 @@
 
 ### Export
 * The graphical state space now comes in .pdf instead of .jpg for better readability
+* Some metrics are printed in the PTA graphical exports (PTA2PDF, PTA2PNG, PTA2JPG)
 
 ### Minor features:
 * New option to avoid the inclusion check in EFsynth: useful when very large parameter constraints are manipulated
