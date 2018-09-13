@@ -12,7 +12,7 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2018/03/07
- * Last modified   : 2018/08/23
+ * Last modified   : 2018/09/13
  *
  * IMITATOR version: 2.10.1
  ************************************************************)
@@ -35,9 +35,18 @@ var
 synclabs: a, b, dollar, start;
 
 loc pre_s0: invariant True
-	when True sync a goto pre_s0;
-	when True sync b goto pre_s0;
-	when t = xabs do {x := 0, y:=0} sync start goto s0;
+	(* First try immediately the pattern in 0-time *)
+	when xabs = 0 & xabs = t sync start goto s0;
+	(* Otherwise: first skip some letter and wait *)
+	when True sync a do {x := 0, y := 0} goto pre_s0_prime;
+	when True sync b do {x := 0, y := 0} goto pre_s0_prime;
+
+loc pre_s0_prime: invariant True
+	(* Skip some more letter and wait *)
+	when True sync a do {x := 0, y := 0} goto pre_s0_prime;
+	when True sync b do {x := 0, y := 0} goto pre_s0_prime;
+	(* Or decide to start the pattern *)
+	when t = xabs & x > 0 do {x := 0, y := 0} sync start goto s0;
 
 loc s0: invariant True
 	when True sync a do {y := 0} goto s1;
@@ -46,10 +55,13 @@ loc s1: invariant True
 	when x < p1 sync b goto s2;
 
 loc s2: invariant True
-	when x = p1 & xabs = tprime sync dollar goto s3;
+	when x = p1 & xabs = tprime do {x := 0} sync dollar goto soon_end;
 	when p3 <= y & y < p2 do {y := 0} sync a goto s1;
 
-loc s3: invariant True
+loc soon_end: invariant True
+	when x > 0 goto s3;
+
+urgent loc s3: invariant True
 
 end (* pta *)
 
