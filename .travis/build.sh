@@ -7,7 +7,7 @@ if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
         libextlib-ocaml libextlib-ocaml-dev \
         libgmp-dev libgmp-ocaml libgmp-ocaml-dev libmpfr-dev \
         libppl-dev \
-        graphviz plotutils texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra latexmk
+        graphviz plotutils
 
     if [[ "$DISTRIBUTED" = "True" ]]; then
         sudo apt-get install -qq openmpi-bin openmpi-common libopenmpi-dev
@@ -36,10 +36,3 @@ if [[ "$DISTRIBUTED" = "False" ]]; then
 else
     sh build-patator.sh
 fi
-
-# Build documentation
-cd doc
-m4 classDiagramSimplified.m4 | dot -Tpng -o classDiagramSimplified.png
-m4 classDiagramFull.m4 | dot -Tpng -o classDiagramFull.png
-latexmk -pdf IMITATOR-not-developer-manual.tex
-latexmk -pdf IMITATOR-user-manual.tex
