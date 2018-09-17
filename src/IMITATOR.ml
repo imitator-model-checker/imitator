@@ -671,7 +671,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 				print_message Verbose_high ("\n" ^ translated_model ^ "\n");
 			);
 			
-			Graphics.dot Constants.default_dot_image_extension (options#files_prefix ^ "-cubpta") translated_model;
+			Graphics.dot Constants.pta_default_image_format (options#files_prefix ^ "-cubpta") translated_model;
 
 			print_message Verbose_low ("Graphic export successfully created."); (*** TODO: add file name in a proper manner ***)
 		); (* end export *)
