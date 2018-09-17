@@ -29,7 +29,7 @@ unzip -qq ppl-${PPL_VERSION}.zip
 rm -rf ppl-${PPL_VERSION}*
 
 # Build IMITATOR
-sudo cp METAS/* /usr/lib/ocaml/METAS/
+sudo cp METAS/META.ppl /usr/lib/ocaml/METAS/
 
 if [[ "$DISTRIBUTED" = "False" ]]; then
     sh build.sh
