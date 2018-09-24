@@ -540,9 +540,9 @@ class imitator_options =
 					exploration_order <- Exploration_queue_NestedDFS_with_Subsumption
 				else if order = "layerNestedDFSsub" then
 					exploration_order <- Exploration_layer_NestedDFS_with_Subsumption
-				else if order = "collectLayerNestedDFSsub" then
+				else if order = "layerCollectNestedDFSsub" then
 					exploration_order <- Exploration_layer_NestedDFS_with_Subsumption_Synthesis
-				else if order = "collectLayerNestedDFSsub2" then
+				else if order = "layerCollectNestedDFSsub2" then
 					exploration_order <- Exploration_layer_NestedDFS_with_Subsumption_Synthesis2
 				else if order = "collectNestedDFSsub2" then
 					exploration_order <- Exploration_NestedDFS_with_Subsumption_Synthesis2
