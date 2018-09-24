@@ -306,6 +306,7 @@ type exploration_order =
 	| Exploration_layer_NestedDFS_with_Subsumption_Synthesis
 	(** Syn-Layer-Nested-dFS-with-Subsumption: queue-based, working with Laure *)
 	| Exploration_layer_NestedDFS_with_Subsumption_Synthesis2
+	| Exploration_NestedDFS_with_Subsumption_Synthesis2
 	
 
 (************************************************************)
