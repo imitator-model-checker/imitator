@@ -534,17 +534,17 @@ class imitator_options =
 					exploration_order <- Exploration_queue_BFS_RS
 				else if order = "queueBFSPRIOR" then
 					exploration_order <- Exploration_queue_BFS_PRIOR
-				else if order = "queueNestedDFS" then
+				else if order = "stackNestedDFS" then
 					exploration_order <- Exploration_queue_NestedDFS
-				else if order = "queueNestedDFSsub" then
+				else if order = "stackNestedDFSsub" then
 					exploration_order <- Exploration_queue_NestedDFS_with_Subsumption
 				else if order = "layerNestedDFSsub" then
 					exploration_order <- Exploration_layer_NestedDFS_with_Subsumption
-				else if order = "synlayerNestedDFSsub" then
+				else if order = "collectLayerNestedDFSsub" then
 					exploration_order <- Exploration_layer_NestedDFS_with_Subsumption_Synthesis
-				else if order = "synlayerNestedDFSsub2" then
+				else if order = "collectLayerNestedDFSsub2" then
 					exploration_order <- Exploration_layer_NestedDFS_with_Subsumption_Synthesis2
-				else if order = "synNestedDFSsub2" then
+				else if order = "collectNestedDFSsub2" then
 					exploration_order <- Exploration_NestedDFS_with_Subsumption_Synthesis2
 				else(
 					(*** HACK: print header now ***)
