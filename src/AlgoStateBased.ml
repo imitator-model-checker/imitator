@@ -3129,12 +3129,12 @@ class virtual algoStateBased =
 
 		let checkSmallerZoneProjectedOnP2 state_index1 constr2 = 
 			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
-
 			let constr11 = LinearConstraint.px_hide_nonparameters_and_collapse constr1 in
 			let constr22 = LinearConstraint.px_hide_nonparameters_and_collapse constr2 in
 			(*if not (LinearConstraint.p_is_leq constr22 constr11) then true else false;*)
 			if (LinearConstraint.p_is_leq constr11 constr22) then true else false;
 		in
+
 
 		let checkSmallerZoneProjectedOnP3 state_index1 constr22 = 
 			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
@@ -3145,6 +3145,7 @@ class virtual algoStateBased =
 			if (LinearConstraint.p_nnconvex_constraint_is_leq constr11 constr22) then true else false;
 		in
 		
+
 		let rec addInfinityToPriorQueue state_index queue = 
 			match queue with
 			  | [] -> [state_index]
@@ -3157,6 +3158,7 @@ class virtual algoStateBased =
 								state_index :: x :: l
 							);
 		in
+
 
 		let rec addNonInfinityToPriorQueue state_index queue = 
 			match queue with
@@ -3203,6 +3205,7 @@ class virtual algoStateBased =
 							);
 		in
 		
+
 		(* Same with the prior, used to improve the performance of state insertion *)
 		let rec addNonInfinityToPendingQueue state_index queue = 
 			match queue with
@@ -3236,36 +3239,33 @@ class virtual algoStateBased =
 
 		let initial_rank2 state_index state_space =
 			print_message Verbose_low ("Access Initial Ranking 2!");
-			if verbose_mode_greater Verbose_low then(
-			print_message Verbose_low ("Ranking State: " ^ (StateSpace.string_of_state_index state_index) ^"!");
+			if verbose_mode_greater Verbose_low then (
+				print_message Verbose_low ("Ranking State: " ^ (StateSpace.string_of_state_index state_index) ^"!");
 			);
 			(* popped state information *)
 			(* location: static , constraint*)
 			let loc, constr = StateSpace.get_state state_space state_index in
 
-			if verbose_mode_greater Verbose_low then(
+			if verbose_mode_greater Verbose_low then (
 				print_message Verbose_low ( ModelPrinter.string_of_state model (loc, constr) );
 			);
-
 			
 			let checkTrueConstr = (LinearConstraint.p_is_equal (LinearConstraint.px_hide_nonparameters_and_collapse constr) (model.initial_p_constraint) ) in
 			
-			let rank = if checkTrueConstr
-			then
-				(
+			let rank = if checkTrueConstr then (
 				print_message Verbose_low ("Rank: Infinity!");
 				Infinity
-				) 
-			else 
-				(
+			) else (
 				print_message Verbose_low ("Rank: 0!");
 				Int 0
 				)
 			in
+
 			print_message Verbose_low ("End Initial Ranking!");
 			rank
 		in
 		
+
 		(* Pending queue inserting *)
 		let addPendingQueue popped_from_queue successors queue= 
 			(* let pendingTmp = ref [] in *)
@@ -3415,6 +3415,7 @@ class virtual algoStateBased =
 											!ls;
 										in
 
+
 		let memPending state_index level pending =	let found = ref false in
 
 												(* for i = 0 to (List.length pending) - 1 do *)
@@ -3430,6 +3431,7 @@ class virtual algoStateBased =
 
 												!found;
 											in
+
 
 		let memPending2 state_index pending =	let found = ref false in
 
@@ -3549,8 +3551,6 @@ class virtual algoStateBased =
 		(* let breakBlue = ref false in  *)
 
 
-
-
 		let dfsRedWithSubsumptionSyn state_index = 
 
 			let found = ref false in
@@ -3610,8 +3610,10 @@ class virtual algoStateBased =
 				 				print_message Verbose_low (" checkZoneIncludeInList is True! " );
 				 				(* raise (FoundALoop); *)
 
+				 				(*
 				 				print_message Verbose_standard ("Report! Found the loop at accepting state: " ^ (StateSpace.string_of_state_index state_index) ^"!");
 				 				print_message Verbose_standard (" Location information " ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space state_index) ); 
+								*)
 
 				 				found := true;
 
@@ -3620,6 +3622,11 @@ class virtual algoStateBased =
 				 				let loc2, constr2 = StateSpace.get_state state_space successor2 in
 
 				 				let colapsedConstr2 = (LinearConstraint.px_hide_nonparameters_and_collapse constr2) in
+
+				 				if not ( LinearConstraint.p_nnconvex_constraint_is_leq ( LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint colapsedConstr2) !final_constr ) then (
+				 					print_message Verbose_standard ("Report! Found the loop at accepting state: " ^ (StateSpace.string_of_state_index state_index) ^"!");
+				 					print_message Verbose_standard (" Location information " ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space state_index) ); 
+				 				);
 
 				 				(* let ls = [(!final_constr_red); colapsedConstr2] in *)
 				 				(LinearConstraint.p_nnconvex_p_union (!final_constr_red) colapsedConstr2); 
@@ -3804,14 +3811,21 @@ class virtual algoStateBased =
 				 				print_message Verbose_low (" checkZoneIncludeInList is True! " );
 				 				(* raise (FoundALoop); *)
 
+				 				(*
 				 				print_message Verbose_standard ("Report! Found the loop at accepting state: " ^ (StateSpace.string_of_state_index state_index) ^"!");
 				 				print_message Verbose_standard (" Location information " ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space state_index) ); 
+								*)
 
 				 				found := true;
 
 				 				let loc2, constr2 = StateSpace.get_state state_space successor2 in
 
 				 				let colapsedConstr2 = (LinearConstraint.px_hide_nonparameters_and_collapse constr2) in
+
+				 				if not ( LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint colapsedConstr2) !final_constr ) then (
+				 					print_message Verbose_standard ("Report! Found the loop at accepting state: " ^ (StateSpace.string_of_state_index state_index) ^"!");
+				 					print_message Verbose_standard (" Location information " ^ ModelPrinter.string_of_state model (StateSpace.get_state state_space state_index) ); 
+				 				);
 
 				 				(LinearConstraint.p_nnconvex_p_union (!final_constr_red) colapsedConstr2); 
 
@@ -4188,9 +4202,9 @@ class virtual algoStateBased =
 																								(* foundALoop := *)
 																								
 																								(LinearConstraint.p_nnconvex_union (!final_constr) (dfsRedWithSubsumptionSyn state_index) ); 
-																								(* if not (LinearConstraint.p_nnconvex_constraint_is_true !final_constr) then ( *)
+																								if not (LinearConstraint.p_nnconvex_constraint_is_false !final_constr) then ( 
 																									print_message Verbose_standard ("Collected contraint: \n" ^ LinearConstraint.string_of_p_nnconvex_constraint model.variable_names !final_constr);
-																								(* )); *)
+																								); 
 																							);
 																							
 																							(*
@@ -4252,9 +4266,9 @@ class virtual algoStateBased =
 																					(* foundALoop := *)
 																					
 																					(LinearConstraint.p_nnconvex_union (!final_constr) (dfsRedWithSubsumptionSyn state_index) ); 
-																					(* if not (LinearConstraint.p_nnconvex_constraint_is_true !final_constr) then ( *)
+																					if not (LinearConstraint.p_nnconvex_constraint_is_false !final_constr) then ( 
 																						print_message Verbose_standard ("Collected contraint: \n" ^ LinearConstraint.string_of_p_nnconvex_constraint model.variable_names !final_constr);
-																					(* )); *)
+																					); 
 																				);
 																				cyan := list_remove_first_occurence state_index !cyan;
 																		 		blue := [state_index]@(!blue);
@@ -4325,9 +4339,9 @@ class virtual algoStateBased =
 																								(* foundALoop := *)
 																								
 																								(LinearConstraint.p_nnconvex_union (!final_constr) (dfsRedWithSubsumptionSyn state_index) ); 
-																								(* if not (LinearConstraint.p_nnconvex_constraint_is_true !final_constr) then ( *)
+																								if not (LinearConstraint.p_nnconvex_constraint_is_false !final_constr) then ( 
 																									print_message Verbose_standard ("Collected contraint: \n" ^ LinearConstraint.string_of_p_nnconvex_constraint model.variable_names !final_constr);
-																								(* )); *)
+																								); 
 																							);
 																							
 																							(*
@@ -4391,9 +4405,9 @@ class virtual algoStateBased =
 																					(* foundALoop := *)
 																					
 																					(LinearConstraint.p_nnconvex_union (!final_constr) (dfsRedWithSubsumptionSyn2 state_index) ); 
-																					(* if not (LinearConstraint.p_nnconvex_constraint_is_true !final_constr) then ( *)
+																					if not (LinearConstraint.p_nnconvex_constraint_is_false !final_constr) then ( 
 																						print_message Verbose_standard ("Collected contraint: \n" ^ LinearConstraint.string_of_p_nnconvex_constraint model.variable_names !final_constr);
-																					(* )); *)
+																					); 
 																				);
 																				cyan := list_remove_first_occurence state_index !cyan;
 																		 		blue := [state_index]@(!blue);
@@ -4461,9 +4475,9 @@ class virtual algoStateBased =
 																								(* foundALoop := *)
 																								
 																								(LinearConstraint.p_nnconvex_union (!final_constr) (dfsRedWithSubsumptionSyn state_index) ); 
-																								(* if not (LinearConstraint.p_nnconvex_constraint_is_true !final_constr) then ( *)
+																								if not (LinearConstraint.p_nnconvex_constraint_is_false !final_constr) then ( 
 																									print_message Verbose_standard ("Collected contraint: \n" ^ LinearConstraint.string_of_p_nnconvex_constraint model.variable_names !final_constr);
-																								(* )); *)
+																								); 
 																							);
 																							
 																							(*
@@ -4527,9 +4541,9 @@ class virtual algoStateBased =
 																					(* foundALoop := *)
 																					
 																					(LinearConstraint.p_nnconvex_union (!final_constr) (dfsRedWithSubsumptionSyn2 state_index) ); 
-																					(* if not (LinearConstraint.p_nnconvex_constraint_is_true !final_constr) then ( *)
+																					if not (LinearConstraint.p_nnconvex_constraint_is_false !final_constr) then ( 
 																						print_message Verbose_standard ("Collected contraint: \n" ^ LinearConstraint.string_of_p_nnconvex_constraint model.variable_names !final_constr);
-																					(* )); *)
+																					); 
 																				);
 																				cyan := list_remove_first_occurence state_index !cyan;
 																		 		blue := [state_index]@(!blue);
