@@ -2767,11 +2767,14 @@ class virtual algoStateBased =
     (* The method assumes that there is a single lower bound value in the *)
     (* constraint, though an upper bound is allowed *)
     (* e.g. "global_time >= 5 & 10 <= global_time" -> 5. *)
+    (* *)
+    (* New case: "& 2 >= 5*global_time" *)
+    (* *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
     method private time_constr_to_val time_constraint =
 		LinearConstraint.px_hide_assign self#variables_without_global_time time_constraint;
 		let time_str = LinearConstraint.string_of_px_linear_constraint model.variable_names time_constraint in
-		let time_array = Str.split (Str.regexp "&\\|[ \t\n]+") time_str in
+		let time_array = Str.split (Str.regexp "&\\|[ \t\n]+\\|\\*") time_str in
 		(* temporary variables *)
 		let min_time = ref max_float in (* lower time bound *)
 		(* TODO: Perhaps provide a warning message if we use the epsilon value *)
@@ -2779,6 +2782,17 @@ class virtual algoStateBased =
         let is_float s =
             try ignore (float_of_string s); true
             with _ -> false in
+    
+        (*(* debug *)
+		print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names time_constraint);
+        let rec print_constr_arr arr = match arr with
+            | [] -> print_message Verbose_standard ("]\n");
+            | a::body -> (
+                print_message Verbose_standard ("(" ^ a ^ ")");
+                print_constr_arr body;
+            );
+        in print_constr_arr time_array;*)
+
         (* Somehow, Constants.global_time_clock_name may not be used for *)
         (* matching expressions, so just do this hardcoded.. *)
 	 	let rec parse_time_constraint time_list = match time_list with
@@ -2788,7 +2802,7 @@ class virtual algoStateBased =
                 match comp with
                     | ">" | ">=" | "=" -> (
                         if is_float timeval then min_time := float_of_string timeval
-                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        else raise (InternalError ("Unable to parse constraint a: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
                         if comp = ">" then min_time := !min_time +. epsilon
                     )
                     | _ -> ();
@@ -2799,16 +2813,44 @@ class virtual algoStateBased =
                 match comp with
                     | "<" | "<=" | "=" -> (
                         if is_float timeval then min_time := float_of_string timeval
-                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        else raise (InternalError ("Unable to parse constraint b: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
                         if comp = "<" then min_time := !min_time +. epsilon
                     )
                     | _ -> ();
                 ;
                 parse_time_constraint body;
             )
-            | _::body -> raise (InternalError ("Unable to parse constraint"));
+            (* In case there is a multiplicative factor *)
+            | factor::"global_time"::comp::timeval::body -> ( (* "2*global_time >= 5" *)
+                match comp with
+                    | ">" | ">=" | "=" -> (
+                        if (is_float timeval) && (is_float factor) then min_time := (float_of_string timeval) /. (float_of_string factor)
+                        else raise (InternalError ("Unable to appel constraint c: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        if comp = ">" then min_time := !min_time +. epsilon
+                    )
+                    | _ -> ();
+                ;
+                parse_time_constraint body;
+            )
+            | timeval::comp::factor::"global_time"::body -> ( (* "5 <= 2*global_time" *)
+                match comp with
+                    | "<" | "<=" | "=" -> (
+                        if is_float timeval && is_float factor then min_time := (float_of_string timeval) /. (float_of_string factor)
+                        else raise (InternalError ("Unable to parse constraint a: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        if comp = "<" then min_time := !min_time +. epsilon
+                    )
+                    | _ -> ();
+                ;
+                parse_time_constraint body;
+            )
+
+            | _::body -> (
+		        print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names time_constraint);
+                raise (InternalError ("Unable to parse constraint d"));
+            );
         in
         parse_time_constraint time_array;
+        (*print_message Verbose_standard ("result: " ^ (string_of_float !min_time));*)
 		!min_time
 
 
