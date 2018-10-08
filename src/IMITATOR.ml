@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2018/07/19
+ * Last modified     : 2018/10/08
  *
  ************************************************************)
 
@@ -170,6 +170,7 @@ match options#imitator_mode with
 	| EF_max
 	| EF_synth_min
 	| EF_synth_max
+	| EF_synth_min_priority_queue
 	| AF_synthesis
 	| Loop_synthesis
 	| Parametric_NZ_CUBcheck
@@ -345,7 +346,7 @@ if options#cartonly then(
 (* Preliminary checks *)
 (************************************************************)
 
-if options#imitator_mode = EF_synthesis || options#imitator_mode = EFunsafe_synthesis || options#imitator_mode = EF_min  || options#imitator_mode = EF_max || options#imitator_mode = EF_synth_min  || options#imitator_mode = EF_synth_max || options#imitator_mode = AF_synthesis then(
+if options#imitator_mode = EF_synthesis || options#imitator_mode = EFunsafe_synthesis || options#imitator_mode = EF_min  || options#imitator_mode = EF_max || options#imitator_mode = EF_synth_min  || options#imitator_mode = EF_synth_max || options#imitator_mode = EF_synth_min_priority_queue || options#imitator_mode = AF_synthesis then(
 	match model.correctness_condition with
 		(* Synthesis only works w.r.t. (un)reachability *)
 		| Some (Unreachable _) -> ()
@@ -517,6 +518,9 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		efopt_algo#set_synthesize_valuations true; (* synthesis of valuations out of the desired parameter *)
 		let myalgo :> AlgoGeneric.algoGeneric = efopt_algo in
 		myalgo
+		
+	| EF_synth_min_priority_queue ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFoptQueue.algoEFoptQueue in myalgo
 		
 	
 

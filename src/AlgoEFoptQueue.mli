@@ -23,49 +23,24 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoEFoptQueue :
+class algoEFoptQueue :
 	object inherit algoStateBased
+
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
+		method algorithm_name : string
 
+		
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
-		
-		(*------------------------------------------------------------*)
-		(* Shortcuts *)
-		(*------------------------------------------------------------*)
-		
-		(* Retrieve the parameter to be projected onto *)
-		val parameter_index : Automaton.parameter_index
-
-		
-		(*------------------------------------------------------------*)
-		(* Instantiating min/max *)
-		(*------------------------------------------------------------*)
-		(* Function to remove upper bounds (if minimum) or lower bounds (if maximum) *)
-		method virtual remove_bounds : Automaton.parameter_index list -> Automaton.parameter_index list -> LinearConstraint.p_linear_constraint -> unit
-		
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Function to negate an inequality (to be defined in subclasses) *)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method virtual negate_inequality : LinearConstraint.p_linear_constraint -> LinearConstraint.p_linear_constraint
-
-		(* The closed operator (>= for minimization, and <= for maximization) *)
-		method virtual closed_op : LinearConstraint.op
-
-		(* Various strings *)
-		method virtual str_optimum : string
-		method virtual str_upper_lower : string
-		
-		
-		(*------------------------------------------------------------*)
-		(* Algorithmic methods *)
-		(*------------------------------------------------------------*)
 		method run : unit -> Result.imitator_result
 		
 
+		method initialize_variables : unit
+		
+		
 		(*------------------------------------------------------------*)
 		(* Add a new state to the reachability_graph (if indeed needed) *)
 		(* Also update tile_nature and slast (*** TODO: remove these operations, and move them back to their algorithms ***) *)
@@ -85,6 +60,7 @@ class virtual algoEFoptQueue :
 		(* Actions to perform when meeting a state with no successors: nothing to do for this algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method process_deadlock_state : state_index -> unit
+		
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed). Nothing to do for this algorithm. *)
