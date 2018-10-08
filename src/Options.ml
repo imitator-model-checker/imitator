@@ -681,6 +681,7 @@ class imitator_options =
         Use 'queueBFS' for a queue-based breadth-first search. [EXPERIMENTAL]
         Use 'queueBFSRS' for a queue-based breadth-first search with ranking system. [WORK IN PROGRES]
         Use 'queueBFSPRIOR' for a priority-based BFS with ranking system. [WORK IN PROGRES]
+        Use 'optTimeQueue' for optimal reachability with priority queue [WORK IN PROGRESS]
         Default: layerBFS.
 				");
 				
@@ -1058,7 +1059,7 @@ class imitator_options =
 				| Exploration_queue_BFS -> print_message Verbose_standard ("Exploration order: queue-based BFS [ACN17].")
 				| Exploration_queue_BFS_RS -> print_message Verbose_standard ("Exploration order: queue-based BFS with ranking system [ACN17].")
 				| Exploration_queue_BFS_PRIOR -> print_message Verbose_standard ("Exploration order: queue-based BFS with priority [ACN17].")
-				| Exploration_OptReach_priority_queue -> print_message Verbose_standard ("Exploration order: ptimal reachability with priority queue [WORK IN PROGRESS].")
+				| Exploration_OptReach_priority_queue -> print_message Verbose_standard ("Exploration order: optimal reachability with priority queue [WORK IN PROGRESS].")
 			end;
 
 			(* Variant of the inverse method *)
