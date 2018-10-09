@@ -8,7 +8,7 @@
  * 
  * File contributors : Vincent Bloemen, Étienne André
  * Created           : 2018/0?/??
- * Last modified     : 2018/10/08
+ * Last modified     : 2018/10/09
  *
  ************************************************************)
 
@@ -266,7 +266,7 @@ class algoEFoptQueue =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the minimal reachability algorithm [WORK IN PROGRESS] *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private explore_optreach_queue init_state_index =
+	method explore_layer_bfs init_state_index =
 	
 		(* Statistics *)
 		counter_explore_using_strategy#increment;
