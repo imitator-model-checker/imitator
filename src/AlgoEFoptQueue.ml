@@ -448,6 +448,8 @@ class algoEFoptQueue =
 
                         (* If target state is at the head of the PQ, we can ensure that it is the optimal one *)
                         if !t_prov == max_float then t_prov := time_from t_start;
+				        print_message Verbose_standard ("t_opt:   " ^ (string_of_seconds !t_opt));
+				        print_message Verbose_standard ("t_prov:  " ^ (string_of_seconds !t_prov));
                     );
                     explore_successors := false;
 
@@ -486,7 +488,10 @@ class algoEFoptQueue =
                                     (* Check if the target state is the goal location, and possibly update minimum time *)
                                     let target_location, _ = StateSpace.get_state state_space target_id in
                                     if self#is_target_state target_location then (
-                                        if !t_found = max_float then t_found := time_from t_start;
+                                        if !t_found = max_float then (
+											t_found := time_from t_start;
+											print_message Verbose_standard ("t_found: " ^ (string_of_seconds !t_found));
+										);
                                         if target_time < !upper_time_bound then (
                                             upper_time_bound := target_time;
                                             t_opt := time_from t_start; (* might update several times *)
@@ -539,9 +544,9 @@ class algoEFoptQueue =
 			^ " constraints that reach the target in min time " ^ (string_of_float !upper_time_bound));
 		
         print_message Verbose_standard ("");
-        print_message Verbose_standard ("t_found: " ^ (string_of_seconds !t_found));
-        print_message Verbose_standard ("t_opt:   " ^ (string_of_seconds !t_opt));
-        print_message Verbose_standard ("t_prov:  " ^ (string_of_seconds !t_prov));
+(*        print_message Verbose_standard ("t_found: " ^ (string_of_seconds !t_found)); *)
+(*        print_message Verbose_standard ("t_opt:   " ^ (string_of_seconds !t_opt)); *)
+(*        print_message Verbose_standard ("t_prov:  " ^ (string_of_seconds !t_prov));*)
         print_message Verbose_standard ("t_all:   " ^ (string_of_seconds !t_all));
 (*
         print_message Verbose_standard("The resulting parameter valuations is given by the union of the following constraint(s)");
