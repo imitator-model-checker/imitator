@@ -125,8 +125,9 @@ class algoEFoptQueue =
     (* *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
     method private time_constr_to_val time_constraint =
-		LinearConstraint.px_hide_assign self#variables_without_global_time time_constraint;
-		let time_str = LinearConstraint.string_of_px_linear_constraint model.variable_names time_constraint in
+		LinearConstraint.pxd_hide_assign self#variables_without_global_time time_constraint;
+		let time_str = LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constraint in
+		(*print_message Verbose_standard("Constraint: #" ^ time_str ^ "#");*)
 		let time_array = Str.split (Str.regexp "&\\|[ \t\n]+\\|\\*") time_str in
 		(* temporary variables *)
 		let min_time = ref max_float in (* lower time bound *)
@@ -198,7 +199,7 @@ class algoEFoptQueue =
             )
 
             | _::body -> (
-		        print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names time_constraint);
+		        print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constraint);
                 raise (InternalError ("Unable to parse constraint d"));
             );
         in
@@ -212,9 +213,9 @@ class algoEFoptQueue =
         let source_state = StateSpace.get_state state_space state_index in
         let _, source_constraint = source_state in
         let time_constraint = LinearConstraint.px_copy source_constraint in
-		self#time_constr_to_val time_constraint
+        let pxd_constr = LinearConstraint.pxd_of_px_constraint time_constraint in
+		self#time_constr_to_val pxd_constr
 		
-
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Helper method to print state information *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -224,7 +225,8 @@ class algoEFoptQueue =
         print_message Verbose_standard ("----------\nstate:" ^ (string_of_int state_index) ^ "\n");
         print_message Verbose_standard (ModelPrinter.string_of_state model source_state);
         let time_constraint = LinearConstraint.px_copy source_constraint in
-		let min_time = self#time_constr_to_val time_constraint in
+        let pxd_constr = LinearConstraint.pxd_of_px_constraint time_constraint in
+		let min_time = self#time_constr_to_val pxd_constr in
         print_message Verbose_standard ("\n[min time: " ^ (string_of_float min_time) ^ "]");
         print_message Verbose_standard ("----------\n");
         ()
