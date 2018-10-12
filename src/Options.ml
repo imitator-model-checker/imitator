@@ -139,6 +139,11 @@ class imitator_options =
 		(* experimental variant for EFsynth *)
 		val mutable new_ef_mode = false
 
+		(* Best worst-case clock value for EFsynthminpq *)
+		val mutable best_worst_case = ref false
+
+		(* Terminate once a single valuation is found for EFsynthminpq *)
+		val mutable early_terminate = ref false
 		
 		
 		(* ANALYSIS OPTIONS *)
@@ -264,6 +269,7 @@ class imitator_options =
 		
 		method acyclic = !acyclic
 (* 		method acyclic_unset = (acyclic := false) *)
+		method best_worst_case = !best_worst_case
 		method branch_and_bound = !branch_and_bound
 (* 		method branch_and_bound_unset = (branch_and_bound := false) *)
 		method cart = cart
@@ -280,6 +286,7 @@ class imitator_options =
 		method distributedKillIM = !distributedKillIM
 		(* method dynamic = !dynamic *)
 		method dynamic_clock_elimination = !dynamic_clock_elimination
+		method early_terminate = !early_terminate
 		method efim = !efim
 		method exploration_order = exploration_order
 (* 		method fancy = !fancy *)
@@ -634,6 +641,8 @@ class imitator_options =
 			and speclist = [
 				("-acyclic", Set acyclic, " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: 'false'");
 				
+				("-best-worst-case", Set best_worst_case, " Instead of the minimum global time, compute the best worst-case time bound in the EFsynthminpq mode. Default: false.");
+
 (* 				Temporarily disabled (March 2014) *)
 (* 				("-bab", Set branch_and_bound, " Experimental new feature of IMITATOR, based on cost optimization (WORK IN PROGRESS). Default: 'false'"); *)
 				
@@ -678,6 +687,8 @@ class imitator_options =
 				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 				
+				("-early-terminate", Set early_terminate, " Provide a single valuation that minimizes global time, instead of all valuations in the EFsynthminpq mode. Default: false.");
+
 				("-explOrder", String set_exploration_order, " Exploration order.
         Use 'layerBFS' for a layer-based breadth-first search.
         Use 'queueBFS' for a queue-based breadth-first search. [EXPERIMENTAL]
@@ -1256,6 +1267,11 @@ class imitator_options =
 			else
 				print_message Verbose_medium ("No acyclic mode (default).");
 
+			if !best_worst_case then
+				print_message Verbose_standard ("Computing the best worst-case bound for EFsynthminpq.")
+			else
+				print_message Verbose_medium ("No best-worst case bound for EFsynthminpq (default).");
+
 			if !tree then
 				print_message Verbose_standard ("Tree mode: will never check inclusion or equality of a new state into a former state.")
 			else
@@ -1280,7 +1296,10 @@ class imitator_options =
 			else
 				print_message Verbose_medium ("No check of the constraint equality with pi0 (default).");
 
-				
+			if !early_terminate then
+				print_message Verbose_standard ("Early termination chosen for EFsynthminpq, the algorithm will stop once a single valuation is found that minimizes global_time.")
+			else
+				print_message Verbose_medium ("No early termination, computing all valuations for EFsynthminpq (default).");
 
 			
 			(************************************************************)

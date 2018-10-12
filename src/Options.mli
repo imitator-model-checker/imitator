@@ -32,6 +32,7 @@ class imitator_options :
 		
 		method acyclic : bool
 (* 		method acyclic_unset : unit *)
+		method best_worst_case : bool
 		method branch_and_bound : bool
 (* 		method branch_and_bound_unset : unit *)
 		method cart : bool
@@ -49,6 +50,7 @@ class imitator_options :
 		method distributedKillIM : bool
 (* 		method dynamic : bool *)
 		method dynamic_clock_elimination : bool
+		method early_terminate : bool
 		method efim : bool
 		method exploration_order : exploration_order
 (* 		method fancy : bool *)

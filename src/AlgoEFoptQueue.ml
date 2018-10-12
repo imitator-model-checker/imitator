@@ -138,7 +138,7 @@ class algoEFoptQueue =
             with _ -> false in
     
         (*(* debug *)
-		print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names time_constraint);
+		print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constraint);
         let rec print_constr_arr arr = match arr with
             | [] -> print_message Verbose_standard ("]\n");
             | a::body -> (
@@ -156,7 +156,7 @@ class algoEFoptQueue =
                 match comp with
                     | ">" | ">=" | "=" -> (
                         if is_float timeval then min_time := float_of_string timeval
-                        else raise (InternalError ("Unable to parse constraint a: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
                         if comp = ">" then min_time := !min_time +. epsilon
                     )
                     | _ -> ();
@@ -167,7 +167,7 @@ class algoEFoptQueue =
                 match comp with
                     | "<" | "<=" | "=" -> (
                         if is_float timeval then min_time := float_of_string timeval
-                        else raise (InternalError ("Unable to parse constraint b: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
                         if comp = "<" then min_time := !min_time +. epsilon
                     )
                     | _ -> ();
@@ -179,7 +179,7 @@ class algoEFoptQueue =
                 match comp with
                     | ">" | ">=" | "=" -> (
                         if (is_float timeval) && (is_float factor) then min_time := (float_of_string timeval) /. (float_of_string factor)
-                        else raise (InternalError ("Unable to appel constraint c: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
                         if comp = ">" then min_time := !min_time +. epsilon
                     )
                     | _ -> ();
@@ -190,7 +190,7 @@ class algoEFoptQueue =
                 match comp with
                     | "<" | "<=" | "=" -> (
                         if is_float timeval && is_float factor then min_time := (float_of_string timeval) /. (float_of_string factor)
-                        else raise (InternalError ("Unable to parse constraint a: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
                         if comp = "<" then min_time := !min_time +. epsilon
                     )
                     | _ -> ();
@@ -208,13 +208,103 @@ class algoEFoptQueue =
 		!min_time
 
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Turns a global_time constraint into a maximum time value *)
+    (* Similar to time_constr_to_val but now using the maximum bounds instead *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+    method private time_constr_to_max_val time_constraint =
+		LinearConstraint.pxd_hide_assign self#variables_without_global_time time_constraint;
+		let time_str = LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constraint in
+		print_message Verbose_standard("Constraint: #" ^ time_str ^ "#");
+		let time_array = Str.split (Str.regexp "&\\|[ \t\n]+\\|\\*") time_str in
+		(* temporary variables *)
+		let max_time = ref max_float in (* upper time bound *)
+		(* TODO: Perhaps provide a warning message if we use the epsilon value *)
+		let epsilon = 0.0001 in (* Epsilon value for "global_time > 0" *)
+        let is_float s =
+            try ignore (float_of_string s); true
+            with _ -> false in
+    
+        (*(* debug *)
+		print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constraint);
+        let rec print_constr_arr arr = match arr with
+            | [] -> print_message Verbose_standard ("]\n");
+            | a::body -> (
+                print_message Verbose_standard ("(" ^ a ^ ")");
+                print_constr_arr body;
+            );
+        in print_constr_arr time_array;*)
+
+        (* Somehow, Constants.global_time_clock_name may not be used for *)
+        (* matching expressions, so just do this hardcoded.. *)
+	 	let rec parse_time_constraint time_list = match time_list with
+            | [] -> ();
+            | ""::body -> parse_time_constraint body;
+            | "global_time"::comp::timeval::body -> ( (* "global_time <= 5" *)
+                match comp with
+                    | "<" | "<=" | "=" -> (
+                        if is_float timeval then max_time := float_of_string timeval
+                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        if comp = "<" then max_time := !max_time -. epsilon
+                    )
+                    | _ -> ();
+                ;
+                parse_time_constraint body;
+            )
+            | timeval::comp::"global_time"::body -> ( (* "5 >= global_time" *)
+                match comp with
+                    | ">" | ">=" | "=" -> (
+                        if is_float timeval then max_time := float_of_string timeval
+                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        if comp = ">" then max_time := !max_time -. epsilon
+                    )
+                    | _ -> ();
+                ;
+                parse_time_constraint body;
+            )
+            (* In case there is a multiplicative factor *)
+            | factor::"global_time"::comp::timeval::body -> ( (* "2*global_time <= 5" *)
+                match comp with
+                    | "<" | "<=" | "=" -> (
+                        if (is_float timeval) && (is_float factor) then max_time := (float_of_string timeval) /. (float_of_string factor)
+                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        if comp = "<" then max_time := !max_time -. epsilon
+                    )
+                    | _ -> ();
+                ;
+                parse_time_constraint body;
+            )
+            | timeval::comp::factor::"global_time"::body -> ( (* "5 >= 2*global_time" *)
+                match comp with
+                    | ">" | ">=" | "=" -> (
+                        if is_float timeval && is_float factor then max_time := (float_of_string timeval) /. (float_of_string factor)
+                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        if comp = ">" then max_time := !max_time -. epsilon
+                    )
+                    | _ -> ();
+                ;
+                parse_time_constraint body;
+            )
+
+            | _::body -> (
+		        print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constraint);
+                raise (InternalError ("Unable to parse constraint d"));
+            );
+        in
+        parse_time_constraint time_array;
+        print_message Verbose_standard ("result: " ^ (string_of_float !max_time));
+		!max_time
+
+
+
 	(* Obtain the minimum time from a state index *)
 	method private state_index_to_min_time state_index =
         let source_state = StateSpace.get_state state_space state_index in
         let _, source_constraint = source_state in
         let time_constraint = LinearConstraint.px_copy source_constraint in
         let pxd_constr = LinearConstraint.pxd_of_px_constraint time_constraint in
-		self#time_constr_to_val pxd_constr
+		if options#best_worst_case then self#time_constr_to_max_val pxd_constr
+		else self#time_constr_to_val pxd_constr
 		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Helper method to print state information *)
@@ -270,9 +360,14 @@ class algoEFoptQueue =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method explore_layer_bfs init_state_index =
 	
+
 		(* Statistics *)
 		counter_explore_using_strategy#increment;
 		counter_explore_using_strategy#start;
+
+		let options = Input.get_options() in
+		
+		if options#best_worst_case then print_message Verbose_standard("NOTE: some models with nonstandard target locations (e.g. a combination of multiple targets) may have to be updated for correctness sake.");
 
         (* Timing info for measuring algorithm performance *)
         let t_start = Unix.gettimeofday() in (* Start time for t_found, t_opt, t_prov, and t_all *)
@@ -404,8 +499,7 @@ class algoEFoptQueue =
 		let vis = ref [init_state_index] in	(* Visited set *)
 		limit_reached <- Keep_going; (* To check whether the time limit / state limit is reached *)
         let iteration = ref 1 in (* number of iterations in the algorithm (= number of states explored) *)
-		(* NOTE: find_all_min_val should be an option *)
-		let find_all_min_vals = true in (* false: stop at first time at target loc, otherwise collect all constraints with min time *)
+		(*let find_all_min_vals = true in (* false: stop at first time at target loc, otherwise collect all constraints with min time *)*)
 		let upper_time_bound = ref max_float in (* prevent exploring states that exceed minimum time *)
 		let algorithm_keep_going = ref true in (* terminate when we found target loc *)
         let target_found = ref false in (* indicates whether we have already found the target state *)
@@ -463,7 +557,7 @@ class algoEFoptQueue =
                 (* Don't compute successors when target is found *)
                 if not !explore_successors then (
                     (* Possibly terminate when target state is found *)
-                    if (not find_all_min_vals) then (
+                    if (options#early_terminate) then (
                         print_message Verbose_standard("Found target!");
                         algorithm_keep_going := false;
                         termination_status <- Some (Result.Regular_termination);
@@ -532,7 +626,7 @@ class algoEFoptQueue =
 		done; (* END WHILE *)
 
         (* Algorithm done, so all valuations found *)
-        if find_all_min_vals then t_all := time_from t_start;
+        t_all := time_from t_start;
 
 		print_message Verbose_standard("---------------- Ending exploration ------------------");
 
