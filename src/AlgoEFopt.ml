@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2018/08/16
+ * Last modified     : 2018/10/18
  *
  ************************************************************)
 
@@ -349,17 +349,17 @@ class virtual algoEFopt =
 							self#print_algo_message Verbose_high "Known optimum equal to that of the new state";
 						);
 						
-						(* Don't discard because the optimum is exactly equivalent to the known optimum, so there may be interesting successors *)
+						(* Don't discard because the optimum is exactly equivalent to the known optimum, so there may be interesting successors (recall that the state is not necessarily a target state!) *)
 						discard := false;
 						
 						(* If goal location: update optimum! *)
 						if self#is_goal_state state_location then(
 							(* Print some information *)
-							self#print_algo_message Verbose_medium ("This is a goal state: Update the optimum");
+							self#print_algo_message Verbose_medium ("This is a goal state: Update the optimum valuations");
 							
 							self#update_optimum_valuations px_constraint;
 							
-							(* Discard as nothing more interesting can be found that way *)
+							(* Discard as nothing more interesting can be found that way because the state is already a target state *)
 							discard := true;
 						);
 					)else(
