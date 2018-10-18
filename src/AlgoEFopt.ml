@@ -55,6 +55,13 @@ class virtual algoEFopt =
 	(* Parameter valuations in all |P| dimensions for which the optimum is reached *)
 	val mutable current_optimum_valuations : LinearConstraint.p_nnconvex_constraint option = None
 	
+	(*------------------------------------------------------------*)
+	(* Timing info *)
+	(*------------------------------------------------------------*)
+	
+    val mutable t_start = ref max_float; (* Start time for t_found and t_done *)
+    val mutable t_found = ref max_float; (* Time to the first time that the target location is reached *)
+    val mutable t_done = ref max_float; (* Time to the end of the algorithm *)
 	
 	(*------------------------------------------------------------*)
 	(* Shortcuts *)
@@ -287,6 +294,12 @@ class virtual algoEFopt =
 					self#replace_optimum_valuations px_constraint;
 				);
 				
+				(* Timing info *)
+				if !t_found = max_float then (
+					t_found := time_from !t_start;
+					print_message Verbose_standard ("t_found: " ^ (string_of_seconds !t_found));
+				);
+				
 			)else(
 				(* Print some information *)
 				self#print_algo_message Verbose_medium ("Not yet a goal state");
@@ -494,7 +507,11 @@ class virtual algoEFopt =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_initial_state initial_state = self#process_state initial_state
+	method process_initial_state initial_state = (
+        (* Timing info *)
+        t_start := Unix.gettimeofday();
+		self#process_state initial_state
+	)
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -524,7 +541,10 @@ class virtual algoEFopt =
 		self#print_algo_message_newline Verbose_standard (
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);
-		
+	
+        (* Timing info *)
+        t_done := time_from !t_start;
+        print_message Verbose_standard ("t_done:  " ^ (string_of_seconds !t_done));
 		
 		let result =
 		(* Case synthesis: get the synthesized multidimensional constraint *)

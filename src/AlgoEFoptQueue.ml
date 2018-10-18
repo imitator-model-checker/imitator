@@ -125,8 +125,9 @@ class algoEFoptQueue =
     (* *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
     method private time_constr_to_val time_constraint =
-		LinearConstraint.px_hide_assign self#variables_without_global_time time_constraint;
-		let time_str = LinearConstraint.string_of_px_linear_constraint model.variable_names time_constraint in
+		LinearConstraint.pxd_hide_assign self#variables_without_global_time time_constraint;
+		let time_str = LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constraint in
+		(*print_message Verbose_standard("Constraint: #" ^ time_str ^ "#");*)
 		let time_array = Str.split (Str.regexp "&\\|[ \t\n]+\\|\\*") time_str in
 		(* temporary variables *)
 		let min_time = ref max_float in (* lower time bound *)
@@ -137,7 +138,7 @@ class algoEFoptQueue =
             with _ -> false in
     
         (*(* debug *)
-		print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names time_constraint);
+		print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constraint);
         let rec print_constr_arr arr = match arr with
             | [] -> print_message Verbose_standard ("]\n");
             | a::body -> (
@@ -155,7 +156,7 @@ class algoEFoptQueue =
                 match comp with
                     | ">" | ">=" | "=" -> (
                         if is_float timeval then min_time := float_of_string timeval
-                        else raise (InternalError ("Unable to parse constraint a: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
                         if comp = ">" then min_time := !min_time +. epsilon
                     )
                     | _ -> ();
@@ -166,7 +167,7 @@ class algoEFoptQueue =
                 match comp with
                     | "<" | "<=" | "=" -> (
                         if is_float timeval then min_time := float_of_string timeval
-                        else raise (InternalError ("Unable to parse constraint b: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
                         if comp = "<" then min_time := !min_time +. epsilon
                     )
                     | _ -> ();
@@ -178,7 +179,7 @@ class algoEFoptQueue =
                 match comp with
                     | ">" | ">=" | "=" -> (
                         if (is_float timeval) && (is_float factor) then min_time := (float_of_string timeval) /. (float_of_string factor)
-                        else raise (InternalError ("Unable to appel constraint c: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
                         if comp = ">" then min_time := !min_time +. epsilon
                     )
                     | _ -> ();
@@ -189,7 +190,7 @@ class algoEFoptQueue =
                 match comp with
                     | "<" | "<=" | "=" -> (
                         if is_float timeval && is_float factor then min_time := (float_of_string timeval) /. (float_of_string factor)
-                        else raise (InternalError ("Unable to parse constraint a: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
                         if comp = "<" then min_time := !min_time +. epsilon
                     )
                     | _ -> ();
@@ -198,7 +199,7 @@ class algoEFoptQueue =
             )
 
             | _::body -> (
-		        print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names time_constraint);
+		        print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constraint);
                 raise (InternalError ("Unable to parse constraint d"));
             );
         in
@@ -207,13 +208,112 @@ class algoEFoptQueue =
 		!min_time
 
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Turns a global_time constraint into a maximum time value *)
+    (* Similar to time_constr_to_val but now using the maximum bounds instead *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+    method private time_constr_to_max_val time_constraint =
+		LinearConstraint.pxd_hide_assign self#variables_without_global_time time_constraint;
+		let time_str = LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constraint in
+		(* print_message Verbose_standard("Constraint: #" ^ time_str ^ "#"); *)
+		let time_array = Str.split (Str.regexp "&\\|[ \t\n]+\\|\\*") time_str in
+		(* temporary variables *)
+		let max_time = ref max_float in (* upper time bound *)
+		(* TODO: Perhaps provide a warning message if we use the epsilon value *)
+		let epsilon = 0.0001 in (* Epsilon value for "global_time > 0" *)
+        let is_float s =
+            try ignore (float_of_string s); true
+            with _ -> false in
+    
+        (*(* debug *)
+		print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constraint);
+        let rec print_constr_arr arr = match arr with
+            | [] -> print_message Verbose_standard ("]\n");
+            | a::body -> (
+                print_message Verbose_standard ("(" ^ a ^ ")");
+                print_constr_arr body;
+            );
+        in print_constr_arr time_array;*)
+
+        (* Somehow, Constants.global_time_clock_name may not be used for *)
+        (* matching expressions, so just do this hardcoded.. *)
+	 	let rec parse_time_constraint time_list = match time_list with
+            | [] -> ();
+            | ""::body -> parse_time_constraint body;
+            | "global_time"::comp::timeval::body -> ( (* "global_time <= 5" *)
+                match comp with
+                    | "<" | "<=" | "=" -> (
+                        if is_float timeval then max_time := float_of_string timeval
+                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        if comp = "<" then max_time := !max_time -. epsilon
+                    )
+                    | _ -> ();
+                ;
+                parse_time_constraint body;
+            )
+            | timeval::comp::"global_time"::body -> ( (* "5 >= global_time" *)
+                match comp with
+                    | ">" | ">=" | "=" -> (
+                        if is_float timeval then max_time := float_of_string timeval
+                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        if comp = ">" then max_time := !max_time -. epsilon
+                    )
+                    | _ -> ();
+                ;
+                parse_time_constraint body;
+            )
+            (* In case there is a multiplicative factor *)
+            | factor::"global_time"::comp::timeval::body -> ( (* "2*global_time <= 5" *)
+                match comp with
+                    | "<" | "<=" | "=" -> (
+                        if (is_float timeval) && (is_float factor) then max_time := (float_of_string timeval) /. (float_of_string factor)
+                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        if comp = "<" then max_time := !max_time -. epsilon
+                    )
+                    | _ -> ();
+                ;
+                parse_time_constraint body;
+            )
+            | timeval::comp::factor::"global_time"::body -> ( (* "5 >= 2*global_time" *)
+                match comp with
+                    | ">" | ">=" | "=" -> (
+                        if is_float timeval && is_float factor then max_time := (float_of_string timeval) /. (float_of_string factor)
+                        else raise (InternalError ("Unable to parse constraint: " ^ Constants.global_time_clock_name ^ comp ^ timeval));
+                        if comp = ">" then max_time := !max_time -. epsilon
+                    )
+                    | _ -> ();
+                ;
+                parse_time_constraint body;
+            )
+
+            | _::body -> (
+		        print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constraint);
+                raise (InternalError ("Unable to parse constraint d"));
+            );
+        in
+        parse_time_constraint time_array;
+        (* print_message Verbose_standard ("result: " ^ (string_of_float !max_time)); *)
+		!max_time
+
+
+
 	(* Obtain the minimum time from a state index *)
 	method private state_index_to_min_time state_index =
         let source_state = StateSpace.get_state state_space state_index in
         let _, source_constraint = source_state in
         let time_constraint = LinearConstraint.px_copy source_constraint in
-		self#time_constr_to_val time_constraint
+        let pxd_constr = LinearConstraint.pxd_of_px_constraint time_constraint in
+		self#time_constr_to_val pxd_constr
+
 		
+	(* Obtain the maximum time from a state index *)
+	method private state_index_to_max_time state_index =
+        let source_state = StateSpace.get_state state_space state_index in
+        let _, source_constraint = source_state in
+        let time_constraint = LinearConstraint.px_copy source_constraint in
+        let pxd_constr = LinearConstraint.pxd_of_px_constraint time_constraint in
+		self#time_constr_to_max_val pxd_constr
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Helper method to print state information *)
@@ -224,7 +324,8 @@ class algoEFoptQueue =
         print_message Verbose_standard ("----------\nstate:" ^ (string_of_int state_index) ^ "\n");
         print_message Verbose_standard (ModelPrinter.string_of_state model source_state);
         let time_constraint = LinearConstraint.px_copy source_constraint in
-		let min_time = self#time_constr_to_val time_constraint in
+        let pxd_constr = LinearConstraint.pxd_of_px_constraint time_constraint in
+		let min_time = self#time_constr_to_val pxd_constr in
         print_message Verbose_standard ("\n[min time: " ^ (string_of_float min_time) ^ "]");
         print_message Verbose_standard ("----------\n");
         ()
@@ -268,9 +369,14 @@ class algoEFoptQueue =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method explore_layer_bfs init_state_index =
 	
+
 		(* Statistics *)
 		counter_explore_using_strategy#increment;
 		counter_explore_using_strategy#start;
+
+		let options = Input.get_options() in
+		
+		if options#best_worst_case then print_message Verbose_standard("NOTE: some models with nonstandard target locations (e.g. a combination of multiple targets) may have to be updated for correctness sake.");
 
         (* Timing info for measuring algorithm performance *)
         let t_start = Unix.gettimeofday() in (* Start time for t_found, t_opt, t_prov, and t_all *)
@@ -402,9 +508,8 @@ class algoEFoptQueue =
 		let vis = ref [init_state_index] in	(* Visited set *)
 		limit_reached <- Keep_going; (* To check whether the time limit / state limit is reached *)
         let iteration = ref 1 in (* number of iterations in the algorithm (= number of states explored) *)
-		(* NOTE: find_all_min_val should be an option *)
-		let find_all_min_vals = true in (* false: stop at first time at target loc, otherwise collect all constraints with min time *)
-		let upper_time_bound = ref max_float in (* prevent exploring states that exceed minimum time *)
+		(*let find_all_min_vals = true in (* false: stop at first time at target loc, otherwise collect all constraints with min time *)*)
+		let best_time_bound = ref max_float in (* prevent exploring states that exceed minimum time *)
 		let algorithm_keep_going = ref true in (* terminate when we found target loc *)
         let target_found = ref false in (* indicates whether we have already found the target state *)
         let explore_successors = ref true in (* indicates whether we should explore successors *)
@@ -423,7 +528,7 @@ class algoEFoptQueue =
 			(*print_message Verbose_standard("Exploring " ^ (string_of_int source_id));*)
 
 			(* Check time constraint and stop when we reached the limit *)
-			if time > !upper_time_bound then (
+			if time > !best_time_bound then (
 				print_message Verbose_standard("All states visited up to time bound");
                 algorithm_keep_going := false;
                 termination_status <- Some (Result.Regular_termination);
@@ -433,33 +538,58 @@ class algoEFoptQueue =
                 let source_location, source_constraint = StateSpace.get_state state_space source_id in
                 if self#is_target_state source_location then (
                     (* Target state found ! (NB: assert time = upper_bound) *)
-                    (* NB: We update upper_time_bound in the successor part, so we should never see time < upper_time_bound *)
-                    if !upper_time_bound <> time then raise (InternalError ("Should not find better upper_time_bound while "
-                        ^ " exploring the source state (assuming init is not target), time: " ^ (string_of_float time)
-                        ^ " min_time: " ^ (string_of_float !upper_time_bound )));
+                    (* NB: We update best_time_bound in the successor part, so we should never see time < best_time_bound *)
+                    if options#best_worst_case then (
+                        let worst_time = self#state_index_to_max_time source_id in
+                        if !best_time_bound > worst_time then raise (InternalError ("Should not find better best_time_bound while "
+                            ^ " exploring the source state (assuming init is not target), time: " ^ (string_of_float worst_time)
+                            ^ " best_time: " ^ (string_of_float !best_time_bound )));
 
-                    if not !target_found then (
-                        print_message Verbose_standard("Iteration " ^ (string_of_int !iteration)
-                            ^ ": Target reached in time: " ^ (string_of_float time));
-                        (* self#print_state_info source_id; *)
-                        target_found := true;
+                        if not !target_found then (
+                            (*print_message Verbose_standard("Iteration " ^ (string_of_int !iteration)
+                                ^ ": Target reached in time: " ^ (string_of_float worst_time));*)
+                            (* self#print_state_info source_id; *)
+                            target_found := true;
+                        );
+                        explore_successors := false;
 
-                        (* If target state is at the head of the PQ, we can ensure that it is the optimal one *)
-                        if !t_prov == max_float then t_prov := time_from t_start;
+                        if !best_time_bound = worst_time then (
+                            (* Intersect constraint with minimum time  *)
+                            let time_constr = self#global_time_constraint_from_float !best_time_bound in
+                            let target_constraint = LinearConstraint.px_intersection (time_constr::[source_constraint]) in
+                            constraint_list := target_constraint::!constraint_list
+                        );
+                    )
+                    else (
+                        if !best_time_bound <> time then raise (InternalError ("Should not find better best_time_bound while "
+                            ^ " exploring the source state (assuming init is not target), time: " ^ (string_of_float time)
+                            ^ " best_time: " ^ (string_of_float !best_time_bound )));
+
+                        if not !target_found then (
+                            print_message Verbose_standard("Iteration " ^ (string_of_int !iteration)
+                                ^ ": Target reached in time: " ^ (string_of_float time));
+                            (* self#print_state_info source_id; *)
+                            target_found := true;
+
+                            (* If target state is at the head of the PQ, we can ensure that it is the optimal one *)
+                            if !t_prov == max_float then t_prov := time_from t_start;
+                            print_message Verbose_standard ("t_opt:   " ^ (string_of_seconds !t_opt));
+                            print_message Verbose_standard ("t_prov:  " ^ (string_of_seconds !t_prov));
+                        );
+                        explore_successors := false;
+
+                        (* Intersect constraint with minimum time *)
+                        let time_constr = self#global_time_constraint_from_float !best_time_bound in
+                        let target_constraint = LinearConstraint.px_intersection (time_constr::[source_constraint]) in
+                        constraint_list := target_constraint::!constraint_list
                     );
-                    explore_successors := false;
-
-                    (* Intersect constraint with minimum time  *)
-                    let time_constr = self#global_time_constraint_from_float !upper_time_bound in
-                    let target_constraint = LinearConstraint.px_intersection (time_constr::[source_constraint]) in
-                    constraint_list := target_constraint::!constraint_list
                 );
     
 
                 (* Don't compute successors when target is found *)
                 if not !explore_successors then (
                     (* Possibly terminate when target state is found *)
-                    if (not find_all_min_vals) then (
+                    if (options#early_terminate) then (
                         print_message Verbose_standard("Found target!");
                         algorithm_keep_going := false;
                         termination_status <- Some (Result.Regular_termination);
@@ -475,30 +605,37 @@ class algoEFoptQueue =
                     
                     let rec process_sucs suclist = match suclist with
                         |  [] ->  ();
-                        | target_id::body -> (
-                            if not (vis_contains !vis target_id) then (
-                                let target_time = (self#state_index_to_min_time target_id) in
-                                
+                        | suc_id::body -> (
+                            if not (vis_contains !vis suc_id) then (
+                                let suc_time = self#state_index_to_min_time suc_id in
+                                let goal_suc_time = (* only used for best_worst_case *)
+                                    if options#best_worst_case then (self#state_index_to_max_time suc_id) else suc_time in
+
                                 (* Only add states if the time to reach does not exceed the minimum time *)
-                                if target_time <= !upper_time_bound then (
-                                    (* Check if the target state is the goal location, and possibly update minimum time *)
-                                    let target_location, _ = StateSpace.get_state state_space target_id in
-                                    if self#is_target_state target_location then (
-                                        if !t_found = max_float then t_found := time_from t_start;
-                                        if target_time < !upper_time_bound then (
-                                            upper_time_bound := target_time;
+                                if suc_time <= !best_time_bound then (
+                                    (* Check if the suc state is the target location, and possibly update minimum time *)
+                                    let suc_location, _ = StateSpace.get_state state_space suc_id in
+                                    if self#is_target_state suc_location then (
+                                        if !t_found = max_float then (
+											t_found := time_from t_start;
+											print_message Verbose_standard ("t_found: " ^ (string_of_seconds !t_found));
+										);
+                                        if goal_suc_time < !best_time_bound then (
+											print_message Verbose_standard ("Best time to target location: " ^ (string_of_float goal_suc_time));
+                                            best_time_bound := goal_suc_time;
                                             t_opt := time_from t_start; (* might update several times *)
                                             constraint_list := []; (* Empty the constraint list *)
                                         );
-                                        (* We ensure optimal time if target time <= PQ.hd *)
-                                        if !t_prov == max_float && target_time <= time then t_prov := time_from t_start;
+                                        (* We ensure optimal time if suc time <= PQ.hd *)
+                                        if (not options#best_worst_case) && !t_prov == max_float && suc_time <= time then
+                                            t_prov := time_from t_start;
                                     );
-                                    (* Add the target state to the queue *)
-                                    pq := pq_add_state !pq target_time target_id;
-                                    vis := vis_add_state !vis target_id;
+                                    (* Add the suc state to the queue *)
+                                    pq := pq_add_state !pq suc_time suc_id;
+                                    vis := vis_add_state !vis suc_id;
                                 );
                             )
-                            else print_message Verbose_standard("Already visited state " ^ (string_of_int target_id));
+                            else print_message Verbose_standard("Already visited state " ^ (string_of_int suc_id));
                             process_sucs body
                         );
                     in
@@ -525,21 +662,21 @@ class algoEFoptQueue =
 		done; (* END WHILE *)
 
         (* Algorithm done, so all valuations found *)
-        if find_all_min_vals then t_all := time_from t_start;
+        t_all := time_from t_start;
 
 		print_message Verbose_standard("---------------- Ending exploration ------------------");
 
         print_message Verbose_standard("Completed after " ^ (string_of_int !iteration) ^ " iterations.");
         print_message Verbose_standard("States remaining in priority queue: " ^ (string_of_int (List.length !pq)));
 
-		(* Combine constraints that reach the final state with the upper_time_bound *)
+		(* Combine constraints that reach the final state with the best_time_bound *)
 		print_message Verbose_standard ("We found " ^ (string_of_int (List.length !constraint_list))
-			^ " constraints that reach the target in min time " ^ (string_of_float !upper_time_bound));
+			^ " constraints that reach the target in min time " ^ (string_of_float !best_time_bound));
 		
         print_message Verbose_standard ("");
-        print_message Verbose_standard ("t_found: " ^ (string_of_seconds !t_found));
-        print_message Verbose_standard ("t_opt:   " ^ (string_of_seconds !t_opt));
-        print_message Verbose_standard ("t_prov:  " ^ (string_of_seconds !t_prov));
+(*        print_message Verbose_standard ("t_found: " ^ (string_of_seconds !t_found)); *)
+(*        print_message Verbose_standard ("t_opt:   " ^ (string_of_seconds !t_opt)); *)
+(*        print_message Verbose_standard ("t_prov:  " ^ (string_of_seconds !t_prov));*)
         print_message Verbose_standard ("t_all:   " ^ (string_of_seconds !t_all));
 (*
         print_message Verbose_standard("The resulting parameter valuations is given by the union of the following constraint(s)");
