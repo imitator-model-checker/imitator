@@ -34,26 +34,26 @@ var
 (************************************************************)
   automaton pta
 (************************************************************)
-synclabs: gotoStart, gotoIdle, gotoLogin, gotoWithdrawals, gotoCheck ;
+synclabs: ;
 
 loc Idle: invariant True
-	when True sync gotoStart do {x := 0 , y := 0 , z := 0} goto Start;
+	when True do {x := 0 , y := 0 , z := 0} goto Start;
 	
 loc Start: invariant z <= p1
-	when z > p1 sync gotoIdle goto Idle;
-	when z <= p1 sync gotoLogin do { y := 0 } goto Login;
+	when z > p1 goto Idle;
+	when z <= p1 do { y := 0 } goto Login;
 
 loc Login: invariant y <= p2 && z <= p1
-	when z > p1 sync gotoIdle goto Idle;
-	when True sync gotoWithdrawals do {x := 0} goto Withdrawals;
-	when y > p2 sync gotoStart goto Start;
-	when True sync gotoCheck do {x := 0} goto Check;
+	when z > p1 goto Idle;
+	when True do {x := 0} goto Withdrawals;
+	when y > p2 goto Start;
+	when True do {x := 0} goto Check;
 
 loc Withdrawals: invariant x <= p3
-	when True sync gotoLogin goto Login;
+	when True goto Login;
 
 loc Check: invariant x <= p3
-	when True sync gotoLogin goto Login;
+	when True goto Login;
 
 end (* pta *)
 
