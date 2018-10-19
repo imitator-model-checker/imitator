@@ -60,7 +60,8 @@ class algoEFoptQueue =
 	
     (* Epsilon value for "global_time > 0" and to subtract from best-worst-case time, since a small value gets added to floats *)
     (* NB: For best-worst-case, epsilon gets subtracted twice in the case global_time < 5 *)
-	val epsilon = 0.000001
+    (* NB: Don't make epsilon too small, because that causes weird behavior... *)
+	val epsilon = 0.0001
 	
 	(*------------------------------------------------------------*)
 	(* Shortcuts *)
@@ -342,15 +343,15 @@ class algoEFoptQueue =
 	(* Creates a constraint from a float, i.e., global_time_constraint_from_float 5. -> global_time = 5. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private global_time_constraint_from_float float_time =
+		(*print_message Verbose_standard ("float time:   " ^ (string_of_float float_time) );
+		print_message Verbose_standard ("float time ep:   " ^ (string_of_float ( float_time +. epsilon ) ) );*)
 		let time_term = LinearConstraint.make_pxd_linear_term
-			[(NumConst.minus_one, self#get_global_time) ] (NumConst.numconst_of_float float_time) in
-		let time_ineq = LinearConstraint.make_pxd_linear_inequality time_term LinearConstraint.Op_eq in
+			[(NumConst.minus_one, self#get_global_time) ] (NumConst.numconst_of_float (float_time +. epsilon)) in
+		let time_ineq = LinearConstraint.make_pxd_linear_inequality time_term LinearConstraint.Op_ge in
 		let time_constr = LinearConstraint.make_pxd_constraint [time_ineq] in
-		(*
-		print_message Verbose_standard ("term:   " ^ LinearConstraint.string_of_pxd_linear_term model.variable_names time_term);
+(*		print_message Verbose_standard ("term:   " ^ LinearConstraint.string_of_pxd_linear_term model.variable_names time_term);
 		print_message Verbose_standard ("ineq:   " ^ LinearConstraint.string_of_pxd_linear_inequality model.variable_names time_ineq);
-		print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constr);
-		*)
+		print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constr);*)
 		LinearConstraint.pxd_hide_discrete_and_collapse time_constr
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -358,14 +359,12 @@ class algoEFoptQueue =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private global_time_constraint_bounded_below_from_float float_time =
 		let time_term = LinearConstraint.make_pxd_linear_term
-			[(NumConst.minus_one, self#get_global_time) ] (NumConst.numconst_of_float float_time) in
+			[(NumConst.minus_one, self#get_global_time) ] (NumConst.numconst_of_float (float_time -. epsilon)) in
 		let time_ineq = LinearConstraint.make_pxd_linear_inequality time_term LinearConstraint.Op_le in
 		let time_constr = LinearConstraint.make_pxd_constraint [time_ineq] in
-		(*
-		print_message Verbose_standard ("term:   " ^ LinearConstraint.string_of_pxd_linear_term model.variable_names time_term);
+(*		print_message Verbose_standard ("term:   " ^ LinearConstraint.string_of_pxd_linear_term model.variable_names time_term);
 		print_message Verbose_standard ("ineq:   " ^ LinearConstraint.string_of_pxd_linear_inequality model.variable_names time_ineq);
-		print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constr);
-		*)
+		print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constr);*)
 		LinearConstraint.pxd_hide_discrete_and_collapse time_constr
 
 
@@ -578,11 +577,14 @@ class algoEFoptQueue =
 
                         if !best_time_bound = worst_time then (
                             (* Intersect constraint with minimum time  *)
-                            let best_time_bound_minus_epsilon = !best_time_bound -. epsilon in 
-                            let time_constr = self#global_time_constraint_bounded_below_from_float best_time_bound_minus_epsilon in
+                            let time_constr = self#global_time_constraint_bounded_below_from_float !best_time_bound in
                             let target_constraint = LinearConstraint.px_intersection (time_constr::[source_constraint]) in
                             let p_constraint  = LinearConstraint.px_hide_nonparameters_and_collapse target_constraint in
                             constraint_list := p_constraint::!constraint_list
+(*                            print_message Verbose_standard ("source constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names source_constraint);
+                            print_message Verbose_standard ("time constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names time_constr);
+                            print_message Verbose_standard ("target constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names target_constraint);
+                            print_message Verbose_standard ("p constr: " ^ LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint)*)
                         )
                     )
                     else (
@@ -608,6 +610,10 @@ class algoEFoptQueue =
                         let target_constraint = LinearConstraint.px_intersection (time_constr::[source_constraint]) in
                         let p_constraint  = LinearConstraint.px_hide_nonparameters_and_collapse target_constraint in
                         constraint_list := p_constraint::!constraint_list
+(*		                print_message Verbose_standard ("source constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names source_constraint);
+		                print_message Verbose_standard ("time constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names time_constr);
+		                print_message Verbose_standard ("target constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names target_constraint);
+		                print_message Verbose_standard ("p constr: " ^ LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint)*)
                     );
                 );
     
@@ -704,9 +710,9 @@ class algoEFoptQueue =
 (*        print_message Verbose_standard ("t_opt:   " ^ (string_of_seconds !t_opt)); *)
 (*        print_message Verbose_standard ("t_prov:  " ^ (string_of_seconds !t_prov));*)
         print_message Verbose_standard ("t_all:   " ^ (string_of_seconds !t_all));
-
+(*
         print_message Verbose_standard("The resulting parameter valuations is given by the union of the following constraint(s)");
-(*		let rec output_target_constraints constr_list = match constr_list with
+		let rec output_target_constraints constr_list = match constr_list with
 			| [] -> ();
 			| head::body -> (
 				print_message Verbose_standard ("\n"
