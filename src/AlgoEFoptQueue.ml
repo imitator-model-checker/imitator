@@ -8,7 +8,7 @@
  * 
  * File contributors : Vincent Bloemen, Étienne André
  * Created           : 2018/0?/??
- * Last modified     : 2018/10/09
+ * Last modified     : 2018/10/18
  *
  ************************************************************)
 
@@ -46,6 +46,8 @@ class algoEFoptQueue =
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
+	(* Parameter valuations in all |P| dimensions for which the target is reached *)
+	val mutable constraint_valuations : LinearConstraint.p_nnconvex_constraint option = None
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
@@ -56,6 +58,9 @@ class algoEFoptQueue =
 	(* Variables *)
 	(*------------------------------------------------------------*)
 	
+    (* Epsilon value for "global_time > 0" and to subtract from best-worst-case time, since a small value gets added to floats *)
+    (* NB: For best-worst-case, epsilon gets subtracted twice in the case global_time < 5 *)
+	val epsilon = 0.000001
 	
 	(*------------------------------------------------------------*)
 	(* Shortcuts *)
@@ -71,7 +76,13 @@ class algoEFoptQueue =
 	(************************************************************)
 	(* Class methods *)
 	(************************************************************)
+		
+	method private get_constraint_valuations =
+		match constraint_valuations with
+		| Some constr -> constr
+		| None -> raise (InternalError "Variable 'constraint_valuations' not initialized in AlgoEFoptQueue although it should have been at this point")
 	
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -131,8 +142,6 @@ class algoEFoptQueue =
 		let time_array = Str.split (Str.regexp "&\\|[ \t\n]+\\|\\*") time_str in
 		(* temporary variables *)
 		let min_time = ref max_float in (* lower time bound *)
-		(* TODO: Perhaps provide a warning message if we use the epsilon value *)
-		let epsilon = 0.0001 in (* Epsilon value for "global_time > 0" *)
         let is_float s =
             try ignore (float_of_string s); true
             with _ -> false in
@@ -219,8 +228,6 @@ class algoEFoptQueue =
 		let time_array = Str.split (Str.regexp "&\\|[ \t\n]+\\|\\*") time_str in
 		(* temporary variables *)
 		let max_time = ref max_float in (* upper time bound *)
-		(* TODO: Perhaps provide a warning message if we use the epsilon value *)
-		let epsilon = 0.0001 in (* Epsilon value for "global_time > 0" *)
         let is_float s =
             try ignore (float_of_string s); true
             with _ -> false in
@@ -345,6 +352,22 @@ class algoEFoptQueue =
 		print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constr);
 		*)
 		LinearConstraint.pxd_hide_discrete_and_collapse time_constr
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Creates a constraint from a float bounded from below, i.e., global_time_constraint_bounded_below_from_float 5. -> global_time >= 5. *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private global_time_constraint_bounded_below_from_float float_time =
+		let time_term = LinearConstraint.make_pxd_linear_term
+			[(NumConst.minus_one, self#get_global_time) ] (NumConst.numconst_of_float float_time) in
+		let time_ineq = LinearConstraint.make_pxd_linear_inequality time_term LinearConstraint.Op_le in
+		let time_constr = LinearConstraint.make_pxd_constraint [time_ineq] in
+		(*
+		print_message Verbose_standard ("term:   " ^ LinearConstraint.string_of_pxd_linear_term model.variable_names time_term);
+		print_message Verbose_standard ("ineq:   " ^ LinearConstraint.string_of_pxd_linear_inequality model.variable_names time_ineq);
+		print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constr);
+		*)
+		LinearConstraint.pxd_hide_discrete_and_collapse time_constr
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Returns whether the given state is a target state *)
@@ -555,10 +578,12 @@ class algoEFoptQueue =
 
                         if !best_time_bound = worst_time then (
                             (* Intersect constraint with minimum time  *)
-                            let time_constr = self#global_time_constraint_from_float !best_time_bound in
+                            let best_time_bound_minus_epsilon = !best_time_bound -. epsilon in 
+                            let time_constr = self#global_time_constraint_bounded_below_from_float best_time_bound_minus_epsilon in
                             let target_constraint = LinearConstraint.px_intersection (time_constr::[source_constraint]) in
-                            constraint_list := target_constraint::!constraint_list
-                        );
+                            let p_constraint  = LinearConstraint.px_hide_nonparameters_and_collapse target_constraint in
+                            constraint_list := p_constraint::!constraint_list
+                        )
                     )
                     else (
                         if !best_time_bound <> time then raise (InternalError ("Should not find better best_time_bound while "
@@ -581,7 +606,8 @@ class algoEFoptQueue =
                         (* Intersect constraint with minimum time *)
                         let time_constr = self#global_time_constraint_from_float !best_time_bound in
                         let target_constraint = LinearConstraint.px_intersection (time_constr::[source_constraint]) in
-                        constraint_list := target_constraint::!constraint_list
+                        let p_constraint  = LinearConstraint.px_hide_nonparameters_and_collapse target_constraint in
+                        constraint_list := p_constraint::!constraint_list
                     );
                 );
     
@@ -671,24 +697,28 @@ class algoEFoptQueue =
 
 		(* Combine constraints that reach the final state with the best_time_bound *)
 		print_message Verbose_standard ("We found " ^ (string_of_int (List.length !constraint_list))
-			^ " constraints that reach the target in min time " ^ (string_of_float !best_time_bound));
+			^ " constraint(s) that reach the target in min time " ^ (string_of_float !best_time_bound));
 		
         print_message Verbose_standard ("");
 (*        print_message Verbose_standard ("t_found: " ^ (string_of_seconds !t_found)); *)
 (*        print_message Verbose_standard ("t_opt:   " ^ (string_of_seconds !t_opt)); *)
 (*        print_message Verbose_standard ("t_prov:  " ^ (string_of_seconds !t_prov));*)
         print_message Verbose_standard ("t_all:   " ^ (string_of_seconds !t_all));
-(*
+
         print_message Verbose_standard("The resulting parameter valuations is given by the union of the following constraint(s)");
-		let rec output_target_constraints constr_list = match constr_list with
+(*		let rec output_target_constraints constr_list = match constr_list with
 			| [] -> ();
 			| head::body -> (
 				print_message Verbose_standard ("\n"
-					^ LinearConstraint.string_of_px_linear_constraint model.variable_names head);
+					^ LinearConstraint.string_of_p_linear_constraint model.variable_names head);
 				output_target_constraints body;
 			);
 		in output_target_constraints !constraint_list;
 *)
+
+        (* combine the linear constraints *)
+		constraint_valuations <- Some (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list);
+		
 		print_message Verbose_standard("---------------- Ending algorithm --------------------");
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -794,21 +824,21 @@ class algoEFoptQueue =
 			| Some status -> status
 		in
 
-		(* The state space nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
-		let statespace_nature =
-			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
-			(* Otherwise: unchanged *)
-			else statespace_nature
+		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
+
+		let constr_result = match constraint_valuations with
+				| None -> LinearConstraint.false_p_nnconvex_constraint()
+				| Some constr -> constr
 		in
 
 		(* Return result *)
-		PostStar_result
+		Single_synthesis_result
 		{
+			result = Good_constraint (constr_result, soundness);
+			(*result = Good_constraint (LinearConstraint.false_p_nnconvex_constraint(), soundness);*)
+
 			(* Explored state space *)
 			state_space			= state_space;
-			
-			(* Nature of the state space *)
-			statespace_nature	= statespace_nature;
 			
 			(* Total computation time of the algorithm *)
 			computation_time	= time_from start_time;
