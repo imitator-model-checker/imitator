@@ -576,6 +576,8 @@ class algoEFoptQueue =
         let target_found = ref false in (* indicates whether we have already found the target state *)
         let explore_successors = ref true in (* indicates whether we should explore successors *)
         let constraint_list = ref [] in (* List of constraints that reach the target location (in minimal time) *)
+		let can_merge = ref false in
+		let pq_add = ref 1 in
 
 		print_message Verbose_standard("---------------- Starting exploration ----------------");
 
@@ -675,6 +677,8 @@ class algoEFoptQueue =
                     (*print_message Verbose_standard("Iteration " ^ (string_of_int !iteration) ^ ":\t State "^ (string_of_int source_id) ^
                         " has " ^ (string_of_int (List.length successors)) ^ " successors"); *)
                     
+					if options#merge then can_merge := false;
+
                     let rec process_sucs suclist = match suclist with
                         |  [] ->  ();
                         | suc_id::body -> (
@@ -688,6 +692,8 @@ class algoEFoptQueue =
                                     (* Check if the suc state is the target location, and possibly update minimum time *)
                                     let suc_location, _ = StateSpace.get_state state_space suc_id in
                                     if self#is_target_state suc_location then (
+										
+										if options#merge && (options#merge_heuristic = Merge_targetseen) then can_merge := true;
 
                                         if !t_found = max_float then (
 											t_found := time_from t_start;
@@ -705,6 +711,7 @@ class algoEFoptQueue =
                                     );
                                     (* Add the suc state to the queue *)
                                     pq := pq_add_state !pq suc_time suc_id;
+                                    pq_add := !pq_add + 1;
                                     vis := vis_add_state !vis suc_id;
                                 );
                             )
@@ -714,8 +721,21 @@ class algoEFoptQueue =
                     in
                     process_sucs successors;
 					(* Only call merging after processing all successors *)
+
 					if options#merge then (
+						can_merge := match options#merge_heuristic with
+						| Merge_always -> true;
+						| Merge_targetseen -> !can_merge; (* already set *)
+						| Merge_pq10 -> ((!pq_add mod 10) = 0);
+						| Merge_pq100 -> ((!pq_add mod 100) = 0);
+						| Merge_iter10 -> ((!iteration mod 10) = 0);
+						| Merge_iter100 -> ((!iteration mod 100) = 0);
+					);
+
+					if options#merge && !can_merge then (
+                        let old_pq_size = List.length !pq in
 						pq := pq_merge !pq;
+                        print_message Verbose_standard("Merging, iteration: " ^ (string_of_int !iteration) ^ ", |PQ|: " ^ (string_of_int old_pq_size) ^ " -> " ^ (string_of_int (List.length !pq)));
 					);
                 );
             );

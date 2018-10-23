@@ -63,6 +63,7 @@ class imitator_options :
 		method inclusion2 : bool
 		method merge : bool
 		method merge_before : bool
+		method merge_heuristic : merge_heuristic
 		method model_input_file_name : string
 		method nb_args : int
 		method no_leq_test_in_ef : bool

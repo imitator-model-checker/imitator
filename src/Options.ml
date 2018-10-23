@@ -257,6 +257,10 @@ class imitator_options =
 		val mutable merge = ref false
 		(* Merging states on the fly (after pi0-compatibility check) *)
 		val mutable merge_before = ref false
+	
+		(* Merging heuristic *)
+		val mutable merge_heuristic = Merge_always
+		
 
 
 		(************************************************************)
@@ -298,6 +302,7 @@ class imitator_options =
 		method inclusion2 = !inclusion2
 		method merge = !merge
 		method merge_before = !merge_before
+		method merge_heuristic = merge_heuristic
 		method model_input_file_name = model_input_file_name
 		method nb_args = nb_args
 		method no_leq_test_in_ef = no_leq_test_in_ef
@@ -577,7 +582,31 @@ class imitator_options =
 					abort_program ();
 					exit(1);
 				)
+
+			and set_merge_heuristic heuristic =
+				(*  *)
+				if heuristic = "always" then
+					merge_heuristic <- Merge_always
+				else if heuristic = "targetseen" then
+					merge_heuristic <- Merge_targetseen
+				else if heuristic = "pq10" then
+					merge_heuristic <- Merge_pq10
+				else if heuristic = "pq100" then
+					merge_heuristic <- Merge_pq100
+				else if heuristic = "iter10" then
+					merge_heuristic <- Merge_iter10
+				else if heuristic = "iter100" then
+					merge_heuristic <- Merge_iter100
+				else(
+					(*** HACK: print header now ***)
+					print_header_string();
+					print_error ("The merge heuristic '" ^ heuristic ^ "' is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
 			
+
 			(* Very useful option (April fool 2017) *)
 			and call_romeo () =
 				(*** HACK: print header now ***)
@@ -712,11 +741,14 @@ class imitator_options =
 				
 				("-merge-before", Set merge_before , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");
 				
+				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Options are 'always', 'targetseen', 'pq10', 'pq100', 'iter10', 'iter100'. Default: always.");
+
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
         Use 'statespace' for the generation of the entire parametric state space (no pi0 needed).
         Use 'EF' for a parametric non-reachability analysis (no pi0 needed). [AHV93,JLR15]
         Use 'EFmin' for a parametric non-reachability analysis with parameter minimization (no pi0 needed).
         Use 'EFmax' for a parametric non-reachability analysis with parameter maximization (no pi0 needed).
+        Use 'EFsynthminpq' for a parametric non-reachability analysis with global time minimization (no pi0 needed).
         Use 'PDFC' for parametric non-deadlock checking (no pi0 needed). [Andre16]
         Use 'LoopSynth' for cycle-synthesis (without non-Zeno assumption). [ANPS17]
         Use 'NZCUBcheck' for cycle-synthesis (with non-Zeno assumption, using a CUB-detection). [EXPERIMENTAL] [ANPS17]
@@ -1074,6 +1106,19 @@ class imitator_options =
 				| Exploration_queue_BFS_RS -> print_message Verbose_standard ("Exploration order: queue-based BFS with ranking system [ACN17].")
 				| Exploration_queue_BFS_PRIOR -> print_message Verbose_standard ("Exploration order: queue-based BFS with priority [ACN17].")
 			end;
+
+            (* Merge heuristic *)
+            begin
+			match merge_heuristic with
+				| Merge_always -> print_message Verbose_experiments ("Merge heuristic: always.")
+				| Merge_targetseen -> print_message Verbose_experiments ("Merge heuristic: targetseen.")
+				| Merge_pq10 -> print_message Verbose_experiments ("Merge heuristic: pq10.")
+				| Merge_pq100 -> print_message Verbose_experiments ("Merge heuristic: pq100.")
+				| Merge_iter10 -> print_message Verbose_experiments ("Merge heuristic: iter10.")
+				| Merge_iter100 -> print_message Verbose_experiments ("Merge heuristic: iter100.")
+			end;
+
+
 
 			(* Variant of the inverse method *)
 			if !inclusion then
