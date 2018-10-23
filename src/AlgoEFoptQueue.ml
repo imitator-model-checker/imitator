@@ -468,6 +468,46 @@ class algoEFoptQueue =
             | (p,s)::body  -> p,s,body;
         in
 
+
+		let rec pq_list_of_states pq = match pq with
+            | [] -> [];
+            | (p,s)::body  -> List.append [s] (pq_list_of_states body);
+        in
+
+
+		let pq_merge pq = (
+			(* Turn pq into a list of state IDs *)
+			let list_pq = pq_list_of_states pq in
+			(* Merge the list_pq states *)
+			let eaten_states = StateSpace.merge state_space list_pq in
+			let new_states_after_merging = list_diff list_pq eaten_states in
+
+			let rec list_to_pq pq list_pq = match pq with
+				| [] -> [];
+				| (p,s)::body -> (
+                    (* Add in the same order *)
+                    if List.mem s list_pq then List.append [(p,s)] (list_to_pq body list_pq)
+                    else list_to_pq body list_pq
+				);
+			in
+			let result = list_to_pq pq new_states_after_merging in
+
+			(*
+			let rec print_intlist intlist = match intlist with
+				| [] -> "";
+				| intval::body -> (string_of_int intval) ^ " " ^ (print_intlist body);
+			in
+
+			print_message Verbose_standard("old PQ: " ^ (pq_to_string pq));
+			print_message Verbose_standard("original size:   " ^ (string_of_int (List.length pq)));
+			print_message Verbose_standard("eaten size:      " ^ (string_of_int (List.length eaten_states) ^ " : [" ^ (print_intlist eaten_states) ^ "]"));
+			print_message Verbose_standard("new states size: " ^ (string_of_int (List.length new_states_after_merging)));
+			print_message Verbose_standard("result size:     " ^ (string_of_int (List.length result)));
+
+			print_message Verbose_standard("new PQ: " ^ (pq_to_string result));*)
+			result
+		) in
+
 		(* Small tests
 		let tpq = ref [(self#state_index_to_min_time init_state_index, init_state_index)] in
 		print_message Verbose_standard("PQ: " ^ (pq_to_string !tpq));
@@ -547,7 +587,7 @@ class algoEFoptQueue =
 			let time, source_id, pqr = pq_pick_state !pq in
 			pq := pqr; (* there doesn't seem to be an (easy) direct way to update PQ *)
         	(*self#print_state_info source_id;*)
-			(*print_message Verbose_standard("Exploring " ^ (string_of_int source_id));*)
+			(*print_message Verbose_standard("Exploring " ^ (string_of_int source_id)); *)
 
 			(* Check time constraint and stop when we reached the limit *)
 			if time > !best_time_bound then (
@@ -648,6 +688,7 @@ class algoEFoptQueue =
                                     (* Check if the suc state is the target location, and possibly update minimum time *)
                                     let suc_location, _ = StateSpace.get_state state_space suc_id in
                                     if self#is_target_state suc_location then (
+
                                         if !t_found = max_float then (
 											t_found := time_from t_start;
 											print_message Verbose_standard ("t_found: " ^ (string_of_seconds !t_found));
@@ -672,6 +713,10 @@ class algoEFoptQueue =
                         );
                     in
                     process_sucs successors;
+					(* Only call merging after processing all successors *)
+					if options#merge then (
+						pq := pq_merge !pq;
+					);
                 );
             );
 
