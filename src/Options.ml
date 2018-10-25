@@ -259,7 +259,7 @@ class imitator_options =
 		val mutable merge_before = ref false
 	
 		(* Merging heuristic *)
-		val mutable merge_heuristic = Merge_always
+		val mutable merge_heuristic = Merge_iter10
 		
 
 
@@ -741,7 +741,7 @@ class imitator_options =
 				
 				("-merge-before", Set merge_before , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");
 				
-				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Options are 'always', 'targetseen', 'pq10', 'pq100', 'iter10', 'iter100'. Default: always.");
+				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Options are 'always', 'targetseen', 'pq10', 'pq100', 'iter10', 'iter100'. Default: iter10.");
 
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
         Use 'statespace' for the generation of the entire parametric state space (no pi0 needed).
