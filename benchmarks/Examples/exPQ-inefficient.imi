@@ -3,8 +3,8 @@
  *
  * Toy PTA to act as a counterexample for the efficiency of SynthMinReach-PQ (minimal time reachability synthesis with priority queue)
  *
- * Description     : Toy PTA to act as a counterexample for the efficiency of SynthMinReach-PQ (minimal time reachability synthesis with priority queue)
- * Correctness     : N/A
+ * Description     : Toy PTA to act as a counterexample for the efficiency of SynthMinReach-PQ (minimal time reachability synthesis with priority queue). Note that EFsynth (in BFS) terminates on this example
+ * Correctness     : ltarget (un)reachable
  * Source          : Own work
  * Author          : Étienne André
  * Modeling        : Étienne André
@@ -88,6 +88,7 @@ init :=
 (************************************************************)
 
 property := unreachable loc[pta] = ltarget;
+
 
 
 (************************************************************)
