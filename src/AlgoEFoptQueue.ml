@@ -60,7 +60,8 @@ class algoEFoptQueue =
 	
     (* Epsilon value for "global_time > 0" and to subtract from best-worst-case time, since a small value gets added to floats *)
     (* NB: For best-worst-case, epsilon gets subtracted twice in the case global_time < 5 *)
-	val epsilon = 0.000001
+    (* NB: Don't make epsilon too small, because that causes weird behavior... *)
+	val epsilon = 0.0001
 	
 	(*------------------------------------------------------------*)
 	(* Shortcuts *)
@@ -342,15 +343,15 @@ class algoEFoptQueue =
 	(* Creates a constraint from a float, i.e., global_time_constraint_from_float 5. -> global_time = 5. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private global_time_constraint_from_float float_time =
+		(*print_message Verbose_standard ("float time:   " ^ (string_of_float float_time) );
+		print_message Verbose_standard ("float time ep:   " ^ (string_of_float ( float_time +. epsilon ) ) );*)
 		let time_term = LinearConstraint.make_pxd_linear_term
-			[(NumConst.minus_one, self#get_global_time) ] (NumConst.numconst_of_float float_time) in
-		let time_ineq = LinearConstraint.make_pxd_linear_inequality time_term LinearConstraint.Op_eq in
+			[(NumConst.minus_one, self#get_global_time) ] (NumConst.numconst_of_float (float_time +. epsilon)) in
+		let time_ineq = LinearConstraint.make_pxd_linear_inequality time_term LinearConstraint.Op_ge in
 		let time_constr = LinearConstraint.make_pxd_constraint [time_ineq] in
-		(*
-		print_message Verbose_standard ("term:   " ^ LinearConstraint.string_of_pxd_linear_term model.variable_names time_term);
+(*		print_message Verbose_standard ("term:   " ^ LinearConstraint.string_of_pxd_linear_term model.variable_names time_term);
 		print_message Verbose_standard ("ineq:   " ^ LinearConstraint.string_of_pxd_linear_inequality model.variable_names time_ineq);
-		print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constr);
-		*)
+		print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constr);*)
 		LinearConstraint.pxd_hide_discrete_and_collapse time_constr
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -358,14 +359,12 @@ class algoEFoptQueue =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private global_time_constraint_bounded_below_from_float float_time =
 		let time_term = LinearConstraint.make_pxd_linear_term
-			[(NumConst.minus_one, self#get_global_time) ] (NumConst.numconst_of_float float_time) in
+			[(NumConst.minus_one, self#get_global_time) ] (NumConst.numconst_of_float (float_time -. epsilon)) in
 		let time_ineq = LinearConstraint.make_pxd_linear_inequality time_term LinearConstraint.Op_le in
 		let time_constr = LinearConstraint.make_pxd_constraint [time_ineq] in
-		(*
-		print_message Verbose_standard ("term:   " ^ LinearConstraint.string_of_pxd_linear_term model.variable_names time_term);
+(*		print_message Verbose_standard ("term:   " ^ LinearConstraint.string_of_pxd_linear_term model.variable_names time_term);
 		print_message Verbose_standard ("ineq:   " ^ LinearConstraint.string_of_pxd_linear_inequality model.variable_names time_ineq);
-		print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constr);
-		*)
+		print_message Verbose_standard ("constr: " ^ LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_constr);*)
 		LinearConstraint.pxd_hide_discrete_and_collapse time_constr
 
 
@@ -469,6 +468,46 @@ class algoEFoptQueue =
             | (p,s)::body  -> p,s,body;
         in
 
+
+		let rec pq_list_of_states pq = match pq with
+            | [] -> [];
+            | (p,s)::body  -> List.append [s] (pq_list_of_states body);
+        in
+
+
+		let pq_merge pq = (
+			(* Turn pq into a list of state IDs *)
+			let list_pq = pq_list_of_states pq in
+			(* Merge the list_pq states *)
+			let eaten_states = StateSpace.merge state_space list_pq in
+			let new_states_after_merging = list_diff list_pq eaten_states in
+
+			let rec list_to_pq pq list_pq = match pq with
+				| [] -> [];
+				| (p,s)::body -> (
+                    (* Add in the same order *)
+                    if List.mem s list_pq then List.append [(p,s)] (list_to_pq body list_pq)
+                    else list_to_pq body list_pq
+				);
+			in
+			let result = list_to_pq pq new_states_after_merging in
+
+			(*
+			let rec print_intlist intlist = match intlist with
+				| [] -> "";
+				| intval::body -> (string_of_int intval) ^ " " ^ (print_intlist body);
+			in
+
+			print_message Verbose_standard("old PQ: " ^ (pq_to_string pq));
+			print_message Verbose_standard("original size:   " ^ (string_of_int (List.length pq)));
+			print_message Verbose_standard("eaten size:      " ^ (string_of_int (List.length eaten_states) ^ " : [" ^ (print_intlist eaten_states) ^ "]"));
+			print_message Verbose_standard("new states size: " ^ (string_of_int (List.length new_states_after_merging)));
+			print_message Verbose_standard("result size:     " ^ (string_of_int (List.length result)));
+
+			print_message Verbose_standard("new PQ: " ^ (pq_to_string result));*)
+			result
+		) in
+
 		(* Small tests
 		let tpq = ref [(self#state_index_to_min_time init_state_index, init_state_index)] in
 		print_message Verbose_standard("PQ: " ^ (pq_to_string !tpq));
@@ -537,6 +576,8 @@ class algoEFoptQueue =
         let target_found = ref false in (* indicates whether we have already found the target state *)
         let explore_successors = ref true in (* indicates whether we should explore successors *)
         let constraint_list = ref [] in (* List of constraints that reach the target location (in minimal time) *)
+		let can_merge = ref false in
+		let pq_add = ref 1 in
 
 		print_message Verbose_standard("---------------- Starting exploration ----------------");
 
@@ -548,7 +589,7 @@ class algoEFoptQueue =
 			let time, source_id, pqr = pq_pick_state !pq in
 			pq := pqr; (* there doesn't seem to be an (easy) direct way to update PQ *)
         	(*self#print_state_info source_id;*)
-			(*print_message Verbose_standard("Exploring " ^ (string_of_int source_id));*)
+			(*print_message Verbose_standard("Exploring " ^ (string_of_int source_id)); *)
 
 			(* Check time constraint and stop when we reached the limit *)
 			if time > !best_time_bound then (
@@ -578,11 +619,14 @@ class algoEFoptQueue =
 
                         if !best_time_bound = worst_time then (
                             (* Intersect constraint with minimum time  *)
-                            let best_time_bound_minus_epsilon = !best_time_bound -. epsilon in 
-                            let time_constr = self#global_time_constraint_bounded_below_from_float best_time_bound_minus_epsilon in
+                            let time_constr = self#global_time_constraint_bounded_below_from_float !best_time_bound in
                             let target_constraint = LinearConstraint.px_intersection (time_constr::[source_constraint]) in
                             let p_constraint  = LinearConstraint.px_hide_nonparameters_and_collapse target_constraint in
                             constraint_list := p_constraint::!constraint_list
+(*                            print_message Verbose_standard ("source constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names source_constraint);
+                            print_message Verbose_standard ("time constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names time_constr);
+                            print_message Verbose_standard ("target constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names target_constraint);
+                            print_message Verbose_standard ("p constr: " ^ LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint)*)
                         )
                     )
                     else (
@@ -608,6 +652,10 @@ class algoEFoptQueue =
                         let target_constraint = LinearConstraint.px_intersection (time_constr::[source_constraint]) in
                         let p_constraint  = LinearConstraint.px_hide_nonparameters_and_collapse target_constraint in
                         constraint_list := p_constraint::!constraint_list
+(*		                print_message Verbose_standard ("source constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names source_constraint);
+		                print_message Verbose_standard ("time constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names time_constr);
+		                print_message Verbose_standard ("target constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names target_constraint);
+		                print_message Verbose_standard ("p constr: " ^ LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint)*)
                     );
                 );
     
@@ -629,6 +677,8 @@ class algoEFoptQueue =
                     (*print_message Verbose_standard("Iteration " ^ (string_of_int !iteration) ^ ":\t State "^ (string_of_int source_id) ^
                         " has " ^ (string_of_int (List.length successors)) ^ " successors"); *)
                     
+					if options#merge then can_merge := false;
+
                     let rec process_sucs suclist = match suclist with
                         |  [] ->  ();
                         | suc_id::body -> (
@@ -642,6 +692,9 @@ class algoEFoptQueue =
                                     (* Check if the suc state is the target location, and possibly update minimum time *)
                                     let suc_location, _ = StateSpace.get_state state_space suc_id in
                                     if self#is_target_state suc_location then (
+										
+										if options#merge && (options#merge_heuristic = Merge_targetseen) then can_merge := true;
+
                                         if !t_found = max_float then (
 											t_found := time_from t_start;
 											print_message Verbose_standard ("t_found: " ^ (string_of_seconds !t_found));
@@ -658,6 +711,7 @@ class algoEFoptQueue =
                                     );
                                     (* Add the suc state to the queue *)
                                     pq := pq_add_state !pq suc_time suc_id;
+                                    pq_add := !pq_add + 1;
                                     vis := vis_add_state !vis suc_id;
                                 );
                             )
@@ -666,6 +720,23 @@ class algoEFoptQueue =
                         );
                     in
                     process_sucs successors;
+					(* Only call merging after processing all successors *)
+
+					if options#merge then (
+						can_merge := match options#merge_heuristic with
+						| Merge_always -> true;
+						| Merge_targetseen -> !can_merge; (* already set *)
+						| Merge_pq10 -> ((!pq_add mod 10) = 0);
+						| Merge_pq100 -> ((!pq_add mod 100) = 0);
+						| Merge_iter10 -> ((!iteration mod 10) = 0);
+						| Merge_iter100 -> ((!iteration mod 100) = 0);
+					);
+
+					if options#merge && !can_merge then (
+                        let old_pq_size = List.length !pq in
+						pq := pq_merge !pq;
+                        print_message Verbose_standard("Merging, iteration: " ^ (string_of_int !iteration) ^ ", |PQ|: " ^ (string_of_int old_pq_size) ^ " -> " ^ (string_of_int (List.length !pq)));
+					);
                 );
             );
 
@@ -704,9 +775,9 @@ class algoEFoptQueue =
 (*        print_message Verbose_standard ("t_opt:   " ^ (string_of_seconds !t_opt)); *)
 (*        print_message Verbose_standard ("t_prov:  " ^ (string_of_seconds !t_prov));*)
         print_message Verbose_standard ("t_all:   " ^ (string_of_seconds !t_all));
-
+(*
         print_message Verbose_standard("The resulting parameter valuations is given by the union of the following constraint(s)");
-(*		let rec output_target_constraints constr_list = match constr_list with
+		let rec output_target_constraints constr_list = match constr_list with
 			| [] -> ();
 			| head::body -> (
 				print_message Verbose_standard ("\n"
