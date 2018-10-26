@@ -1,0 +1,80 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy PTA to act as a discrimination between considering an infimum or a minimum execution time (version: minimization of time)
+ *
+ * Description     : Toy PTA to act as a discrimination between considering an infimum or a minimum execution time
+ * Correctness     : ltarget (un)reachable
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2018/10/26
+ * Last modified   : 2018/10/26
+ *
+ * IMITATOR version: 2.10.4
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, xabs,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l1: invariant xabs >= 0
+	when x > 1 & p = 1 goto ltarget;
+	when x >= 1 & p = 2 goto ltarget;
+
+loc ltarget: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& xabs = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& 0 <= p
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[pta] = ltarget;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
