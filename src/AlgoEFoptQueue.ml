@@ -588,7 +588,12 @@ class algoEFoptQueue =
                 ^ " \t |Vis| = " ^ (string_of_int (List.length !vis)));*)
 			let time, source_id, pqr = pq_pick_state !pq in
 			pq := pqr; (* there doesn't seem to be an (easy) direct way to update PQ *)
-        	(*self#print_state_info source_id;*)
+
+            (*
+			print_message Verbose_standard("Time: " ^ (string_of_float time)   ^ " of state " ^  (string_of_int source_id));
+        	self#print_state_info source_id;*)
+
+
 			(*print_message Verbose_standard("Exploring " ^ (string_of_int source_id)); *)
 
 			(* Check time constraint and stop when we reached the limit *)
