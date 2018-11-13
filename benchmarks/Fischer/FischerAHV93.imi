@@ -31,7 +31,6 @@ var
 synclabs: is_0, is_0_prime, is_1, is_1_prime, is_2, is_2_prime,
 	set_0, set_0_prime, set_1, set_2_prime
 ;
-initially lock0;
 
 loc lock0: invariant True
 	when True sync is_0 goto lock0;
@@ -61,7 +60,6 @@ end -- lock
   automaton P1
 (************************************************************)
 synclabs: is_0, is_1, is_2, set_0, set_1;
-initially P1_0;
 
 loc P1_0: invariant True
 	when True goto P1_0;
@@ -90,7 +88,6 @@ end -- P1
   automaton P2
 (************************************************************)
 synclabs: is_0_prime, is_1_prime, is_2_prime, set_0_prime, set_2_prime;
-initially P2_0;
 
 loc P2_0: invariant True
 	when True goto P2_0;
