@@ -11,5 +11,4 @@ if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
   m4 classDiagramFull.m4 | dot -Tpng -o classDiagramFull.png
   latexmk -pdf IMITATOR-not-developer-manual.tex
   latexmk -pdf IMITATOR-user-manual.tex
-
 fi
