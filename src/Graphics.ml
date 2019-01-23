@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2018/10/08
+ * Last modified     : 2019/01/23
  *
  ************************************************************)
  
@@ -823,8 +823,11 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 			if options#graphical_state_space = Graphical_state_space_normal || options#graphical_state_space = Graphical_state_space_verbose then (
 				(* create record label with location names *)
 				let loc_names = List.map (fun aut_index -> 
+					(* Print a structure of the form "automaton_name : location_name" *)
 					let loc_index = Location.get_location global_location aut_index in
-					model.location_names aut_index loc_index
+					let automaton_name = model.automata_names aut_index in
+					let location_name = model.location_names aut_index loc_index in
+					automaton_name ^ " : " ^ location_name
 				) model.automata in
 				let label = string_of_list_of_string_with_sep "|" loc_names in
 				let label_discrete = 

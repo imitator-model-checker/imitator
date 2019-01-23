@@ -19,6 +19,7 @@
 ### Export
 * The graphical state space now comes in .pdf instead of .jpg for better readability
 * Some metrics are printed in the PTA graphical exports (PTA2PDF, PTA2PNG, PTA2JPG)
+* The trace set now depicts the automaton name in addition to the location name (for example: `automaton: location` instead of `location`)
 
 ### Minor features:
 * New option to avoid the inclusion check in EFsynth: useful when very large parameter constraints are manipulated

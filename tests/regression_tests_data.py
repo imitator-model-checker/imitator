@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, France
 # Created      : 2015/10/23
-# Last modified: 2018/08/16
+# Last modified: 2019/01/23
 #************************************************************
 
 
@@ -7427,10 +7427,10 @@ end
 
 /* Colors */
 
-  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{l1}"];
-  s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{l1}"];
-  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{l2}"];
-  s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{l2}"];
+  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}"];
+  s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{pta : l1}"];
+  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}"];
+  s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{pta : l2}"];
 		"""
 			} # end result file
 			,
@@ -7456,13 +7456,13 @@ end
 
 /* Colors */
 
-  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{l1}|{ p1 \>= x \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& x = y| p2 \>= 1 \\n \& p1 \>= 0}"];
-  s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{l1}|{ p1 \>= x \\n \& p2 \>= 0 \\n \& x \>= 0 \\n \& x = y| p2 \>= 0 \\n \& p1 \>= 0}"];
-  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1}"];
-  s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& x \>= 0 \\n \& y \>= x| p2 \>= 0 \\n \& p1 \>= 0}"];
+  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& x = y| p2 \>= 1 \\n \& p1 \>= 0}"];
+  s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 0 \\n \& x \>= 0 \\n \& x = y| p2 \>= 0 \\n \& p1 \>= 0}"];
+  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1}"];
+  s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& x \>= 0 \\n \& y \>= x| p2 \>= 0 \\n \& p1 \>= 0}"];
 		"""
 			} # end result file
-			# NOTE (ÉA, 18/06/05): I had to manually replace '\n' with '\\n' to make this test pass
+			# NOTE (ÉA, 2018/06/05): I had to manually replace '\n' with '\\n' to make this test pass
 			,
 		] # end expectations
 	} # end test case
