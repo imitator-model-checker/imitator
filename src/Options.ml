@@ -414,7 +414,7 @@ class imitator_options =
 				else if mode = "EFsynthmax" then 
 					imitator_mode <- EF_synth_max
 					
-				(** Optimal reachability with priority queue: queue-based, with priority to the earliest successor for the selection of the next state [work in progress André, Bloemen, Petrucci] *)
+				(** Optimal reachability with priority queue: queue-based, with priority to the earliest successor for the selection of the next state [ABPP19] *)
 				else if mode = "EFsynthminpq" then 
 					imitator_mode <- EF_synth_min_priority_queue
 					
@@ -702,7 +702,7 @@ class imitator_options =
 				
 				("-depth-limit", Int (fun i -> depth_limit := Some i), " Limits the depth of the exploration of the state space. Default: no limit.");
 
-				("-distributed", String set_distributed, " Distributed version of the behavioral cartography.
+				("-distributed", String set_distributed, " Distributed version of the behavioral cartography and PRPC.
         Use 'no' for the non-distributed mode (default).
         Use 'static' for a static domain partitioning [ACN15].
         Use 'sequential' for a master-worker scheme with sequential point distribution [ACE14].
@@ -718,12 +718,12 @@ class imitator_options =
 				
 				("-early-terminate", Set early_terminate, " Provide a single valuation that minimizes global time, instead of all valuations in the EFsynthminpq mode. Default: false.");
 
-				("-explOrder", String set_exploration_order, " Exploration order.
+				("-explOrder", String set_exploration_order, " Exploration order [EXPERIMENTAL].
         Use 'layerBFS' for a layer-based breadth-first search.
-        Use 'queueBFS' for a queue-based breadth-first search. [EXPERIMENTAL]
-        Use 'queueBFSRS' for a queue-based breadth-first search with ranking system. [WORK IN PROGRES]
-        Use 'queueBFSPRIOR' for a priority-based BFS with ranking system. [WORK IN PROGRES]
-        Use 'optTimeQueue' for optimal reachability with priority queue [WORK IN PROGRESS]
+        Use 'queueBFS' for a queue-based breadth-first search. [ANP17]
+        Use 'queueBFSRS' for a queue-based breadth-first search with ranking system. [ANP17]
+        Use 'queueBFSPRIOR' for a priority-based BFS with ranking system. [ANP17]
+        Use 'optTimeQueue' for optimal reachability with priority queue [ANP17]
         Default: layerBFS.
 				");
 				
@@ -744,17 +744,20 @@ class imitator_options =
 				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Options are 'always', 'targetseen', 'pq10', 'pq100', 'iter10', 'iter100'. Default: iter10.");
 
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
-        Use 'statespace' for the generation of the entire parametric state space (no pi0 needed).
-        Use 'EF' for a parametric non-reachability analysis (no pi0 needed). [AHV93,JLR15]
-        Use 'EFmin' for a parametric non-reachability analysis with parameter minimization (no pi0 needed).
-        Use 'EFmax' for a parametric non-reachability analysis with parameter maximization (no pi0 needed).
-        Use 'EFsynthminpq' for a parametric non-reachability analysis with global time minimization (no pi0 needed).
-        Use 'PDFC' for parametric non-deadlock checking (no pi0 needed). [Andre16]
+        Use 'statespace' for the generation of the entire parametric state space.
+        
+        Use 'EF' for a parametric non-reachability analysis. [AHV93,JLR15]
+        Use 'EFmin' for a parametric non-reachability analysis with parameter minimization. [ABPP19]
+        Use 'EFmax' for a parametric non-reachability analysis with parameter maximization. [ABPP19]
+        Use 'EFsynthminpq' for a parametric non-reachability analysis with global time minimization. [ABPP19]
+        Use 'PDFC' for parametric non-deadlock checking. [Andre16]
         Use 'LoopSynth' for cycle-synthesis (without non-Zeno assumption). [ANPS17]
         Use 'NZCUBcheck' for cycle-synthesis (with non-Zeno assumption, using a CUB-detection). [EXPERIMENTAL] [ANPS17]
         Use 'NZCUBtrans' for cycle-synthesis (with non-Zeno assumption, using a transformation into a CUB-PTA). [EXPERIMENTAL] [ANPS17]
+        
         Use 'inversemethod' for the inverse method with convex, and therefore potentially incomplete, result. [ACEF09]
         Use 'IMcomplete' for the inverse method with complete, possibly non-convex result. [AM15]
+        
         Use 'PRP' for parametric reachability preservation. [ALNS15]
         Use 'PRPC' for parametric reachability preservation cartography. [ALNS15]
         For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). [AF10]
