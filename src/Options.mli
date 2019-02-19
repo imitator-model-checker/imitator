@@ -32,7 +32,7 @@ class imitator_options :
 		
 		method acyclic : bool
 (* 		method acyclic_unset : unit *)
-		method best_worst_case : bool
+(* 		method best_worst_case : bool *)
 		method branch_and_bound : bool
 (* 		method branch_and_bound_unset : unit *)
 		method cart : bool

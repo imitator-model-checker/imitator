@@ -8,7 +8,7 @@
  * 
  * File contributors : Vincent Bloemen, Étienne André
  * Created           : 2018/0?/??
- * Last modified     : 2018/10/18
+ * Last modified     : 2019/02/19
  *
  ************************************************************)
 
@@ -398,7 +398,10 @@ class algoEFoptQueue =
 
 		let options = Input.get_options() in
 		
+		(* (temporarily?) Removed best-worst case algorithm *)
+		(*
 		if options#best_worst_case then print_message Verbose_standard("NOTE: some models with nonstandard target locations (e.g. a combination of multiple targets) may have to be updated for correctness sake.");
+		*)
 
         (* Timing info for measuring algorithm performance *)
         let t_start = Unix.gettimeofday() in (* Start time for t_found, t_opt, t_prov, and t_all *)
@@ -608,6 +611,9 @@ class algoEFoptQueue =
                 if self#is_target_state source_location then (
                     (* Target state found ! (NB: assert time = upper_bound) *)
                     (* NB: We update best_time_bound in the successor part, so we should never see time < best_time_bound *)
+                    		(* (temporarily?) Removed best-worst case algorithm *)
+		(*
+
                     if options#best_worst_case then (
                         let worst_time = self#state_index_to_max_time source_id in
                         if !best_time_bound > worst_time then raise (InternalError ("Should not find better best_time_bound while "
@@ -634,7 +640,7 @@ class algoEFoptQueue =
                             print_message Verbose_standard ("p constr: " ^ LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint)*)
                         )
                     )
-                    else (
+                    else ( *)
                         if !best_time_bound <> time then raise (InternalError ("Should not find better best_time_bound while "
                             ^ " exploring the source state (assuming init is not target), time: " ^ (string_of_float time)
                             ^ " best_time: " ^ (string_of_float !best_time_bound )));
@@ -661,7 +667,7 @@ class algoEFoptQueue =
 		                print_message Verbose_standard ("time constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names time_constr);
 		                print_message Verbose_standard ("target constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names target_constraint);
 		                print_message Verbose_standard ("p constr: " ^ LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint)*)
-                    );
+                    (*);*)
                 );
     
 
@@ -690,7 +696,10 @@ class algoEFoptQueue =
                             if not (vis_contains !vis suc_id) then (
                                 let suc_time = self#state_index_to_min_time suc_id in
                                 let goal_suc_time = (* only used for best_worst_case *)
-                                    if options#best_worst_case then (self#state_index_to_max_time suc_id) else suc_time in
+                                    		(* (temporarily?) Removed best-worst case algorithm *)
+		(*
+if options#best_worst_case then (self#state_index_to_max_time suc_id) else
+	*) suc_time in
 
                                 (* Only add states if the time to reach does not exceed the minimum time *)
                                 if suc_time <= !best_time_bound then (
@@ -711,8 +720,12 @@ class algoEFoptQueue =
                                             constraint_list := []; (* Empty the constraint list *)
                                         );
                                         (* We ensure optimal time if suc time <= PQ.hd *)
+                                        		(* (temporarily?) Removed best-worst case algorithm *)
+		(*
+
                                         if (not options#best_worst_case) && !t_prov == max_float && suc_time <= time then
                                             t_prov := time_from t_start;
+                                            *)
                                     );
                                     (* Add the suc state to the queue *)
                                     pq := pq_add_state !pq suc_time suc_id;
