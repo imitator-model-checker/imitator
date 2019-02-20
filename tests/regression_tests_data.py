@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, France
 # Created      : 2015/10/23
-# Last modified: 2019/01/23
+# Last modified: 2019/02/20
 #************************************************************
 
 
@@ -521,6 +521,44 @@ tests = [
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1
   s_1 -> s_1 via "a"
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test discrete variable automatic elimination',
+		'input_files': ['testVarElim.imi'],
+		'options'    : '-mode statespace -output-states',
+		'expectations' : [
+			# NOTE: we just parse the beginning of state 1 to check that the variables are properly removed
+			{'file': 'testVarElim-statespace.states' , 'content' : """
+  STATE 1:
+  pta: l1, i = 0, j = 0 ==> 
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test absence of discrete variable automatic elimination',
+		'input_files': ['testVarElim.imi'],
+		'options'    : '-mode statespace -output-states -no-var-autoremove',
+		'expectations' : [
+			# NOTE: we just parse the beginning of state 1 to check that the variables are properly removed
+			{'file': 'testVarElim-statespace.states' , 'content' : """
+  STATE 1:
+  pta: l1, i = 0, j = 0, k = 0, l = 0 ==> 
 		"""
 			} # end result file
 			,
