@@ -21,7 +21,6 @@ Numerous analysis options are available.
 IMITATOR is able to run in a distributed fashion on a cluster (using the PRPC algorithm).
 
 IMITATOR is mainly a command-line tool, but that can output results in graphical form.
-Furthermore, a graphical user interface is available in the [CosyVerif](http://cosyverif.org/) platform.
 
 IMITATOR was able to verify numerous case studies from the literature and from the industry, such as communication protocols, hardware asynchronous circuits, schedulability problems with uncertain periods and various other systems such as coffee machines (probably the most critical systems from a researcher point of view).
 Numerous benchmarks are available at the [IMITATOR Web page](https://www.imitator.fr), or on github.
