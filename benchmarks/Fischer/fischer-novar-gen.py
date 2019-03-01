@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding=utf8
 
  ############################################################
  #                      IMITATOR MODEL                      
@@ -6,15 +7,15 @@
  # Fischer mutual exclusion protocol (parametric timed version with n processes)
  #
  # Description     : Generator for Fischer with n processes. This model has no variable (the global variable is simulated with an untimed PTA); however, the reachability condition is expressed by a global variable that counts the number of processes in the critical sections. If more than n, the observer is going to a special location.
- # Correctness     : No more than 'n' (3, but can be changed) processes in critical section
+ # Correctness     : No more than 'n' (2, but can be changed) processes in critical section
  # Source          : "SAT-based Unbounded Model Checking of Timed Automata", Fundamatica Informatica 85(1-4): 425-440 (2008), Figure 1.
  # Authors         : Wojciech Penczek, Maciej Szreter
- # Script authors  : Michal Knapick, Etienne Andre
+ # Script authors  : Michal Knapick, Étienne André
  #
  # Created         : 2015/05/15
- # Last modified   : 2017/02/16
+ # Last modified   : 2018/08/14
  #
- # IMITATOR version: 2.7-beta2
+ # IMITATOR version: 2.10
  ############################################################
 
 import sys
@@ -33,17 +34,17 @@ def getProcess(i):
     autStr = """automaton process{0}
 \tsynclabs: Start{0}, SetX{0}, Enter{0}, SetX0{0};
 
-\tloc idle{0}: while True wait {{ }}
-	\twhen True sync Start{0} do {{x{0}' = 0}} goto trying{0};
+\tloc idle{0}: invariant True
+	\twhen True sync Start{0} do {{x{0} := 0}} goto trying{0};
 
-\tloc trying{0}: while True wait {{ }}
-	\twhen x{0} < delta sync SetX{0} do {{x{0}' = 0}} goto waiting{0};
+\tloc trying{0}: invariant True
+	\twhen x{0} < delta sync SetX{0} do {{x{0} := 0}} goto waiting{0};
 
-\tloc waiting{0}: while True wait {{ }}
-	\twhen x{0} > Delta sync Enter{0} do {{nb' = nb + 1}} goto critical{0};
+\tloc waiting{0}: invariant True
+	\twhen x{0} > Delta sync Enter{0} do {{nb := nb + 1}} goto critical{0};
 
-\tloc critical{0}: while True wait {{ }}
-	\twhen True sync SetX0{0} do {{nb' = nb - 1}} goto idle{0};
+\tloc critical{0}: invariant True
+	\twhen True sync SetX0{0} do {{nb := nb - 1}} goto idle{0};
 
 end\n"""
 
@@ -58,7 +59,7 @@ def getVar(n):
     sets = "\t"+"\n\t".join([templ.format("SetX", j, j) for j in range(1, n+1)])
 
     def getloc(i):
-        lstt = "\n\tloc Val{}: while True wait {{}}\n".format(i)
+        lstt = "\n\tloc Val{}: invariant True\n".format(i)
         if i == 0:
             lstt += starts + "\n"
         else:
@@ -82,11 +83,11 @@ def getVar(n):
 def getInit(n):
     print("\nautomaton observer")
 
-    print("\n\tloc obs_OK: while True wait {}")
-    print("\t	(* Change '3' with any number of processes in CS *)")
-    print("\t	when nb = 3 do {} goto obs_BAD;")
+    print("\n\tloc obs_OK: invariant True wait {}")
+    print("\t	(* Change '2' with any number of processes in CS *)")
+    print("\t	when nb = 2 do {} goto obs_BAD;")
 
-    print("\n\tloc obs_BAD: while True wait {}")
+    print("\n\tloc obs_BAD: invariant True wait {}")
     print("end (* observer *)")
 
     print("\n\n\tinit := True")

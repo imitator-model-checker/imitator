@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2017/03/19
+ * Last modified     : 2018/10/08
  *
  ************************************************************)
 
@@ -35,6 +35,28 @@ type unexplored_successors =
 	(* A list of states with unexplored successors *)
 	| UnexSucc_some of state_index list
 	
+
+(*** NOTE: made public only because used in AlgoEFOptQueue ***)
+type bfs_limit_reached =
+	(* No limit *)
+	| Keep_going
+
+	(* Termination due to time limit reached *)
+	| Time_limit_reached
+	
+	(* Termination due to state space depth limit reached *)
+	| Depth_limit_reached
+	
+	(* Termination due to a number of explored states reached *)
+	| States_limit_reached
+
+(************************************************************)
+(** Statistics *)
+(************************************************************)
+
+(*** NOTE: made public only because used in AlgoEFOptQueue ***)
+val counter_explore_using_strategy : Statistics.hybridCounter
+
 
 (**************************************************************)
 (* Class-independent functions *)
@@ -122,6 +144,10 @@ class virtual algoStateBased :
 		(* List of state_index that have unexplored successors in case of premature termination *)
 		val mutable unexplored_successors : unexplored_successors
 		
+		(* Variable to remain of the termination *)
+		(*** NOTE: public only for AlgoEFoptQueue ***)
+		val mutable limit_reached : bfs_limit_reached
+		
 		
 		(************************************************************)
 		(* Class methods *)
@@ -169,6 +195,14 @@ class virtual algoStateBased :
 		method virtual add_a_new_state : state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
 		
 		
+
+			
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(*** NOTE: made public only for EFoptQueue ***)
+		method post_from_one_state : state_index -> state_index list
+	
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Add a transition to the state space *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

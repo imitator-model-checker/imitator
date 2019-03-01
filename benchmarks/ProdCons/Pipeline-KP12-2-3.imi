@@ -5,21 +5,22 @@
  *
  * Description     : The network presented in Figure 2 models the system consisting of the Producer feeding the Consumer with data sent through a sequence of nodes with additional processing capabilities. The model is scalable with respect to the number n of the processing nodes and the length m of each processing node and it contains three lower (a,c,e) and three upper (b,d,f) parameters. Note: the clocks were renamed (w.r.t. to [KP12]) for sake of simplicity.
  * Correctness     : φ2 = ConsWaiting ∧ ProdReady ∧ xtotal ≥ 5
- * Source          : SMT-based Parameter Synthesis for L/U Automata, Michal Knapik and Wojciech Penczek
- * Author          : Michal Knapik and Wojciech Penczek
- * Modeling        : Michal Knapik and Wojciech Penczek
+ * Source          : SMT-based Parameter Synthesis for L/U Automata, Michał Knapik and Wojciech Penczek
+ * Author          : Michał Knapik and Wojciech Penczek
+ * Modeling        : Michał Knapik and Wojciech Penczek
  * Input by        : Étienne André
  *
  * Created         : 2015/09/18
- * Last modified   : 2015/09/23
+ * Last modified   : 2018/08/20
  *
- * IMITATOR version: 2.7.2
+ * IMITATOR version: 2.10.4
  ************************************************************)
 
 var
 
 (* Clocks *)
- 	xprod, xnode1, xnode2, xcons
+ 	xprod, xnode1, xnode2, xcons,
+		xtotal,
 		: clock;
 
 (* Parameters *)
@@ -33,11 +34,11 @@ var
 (************************************************************)
 synclabs: ProdReset, Feed2;
 
-loc prodReady: while xprod <= d wait {}
-	when xprod >= c sync Feed2 do {xprod' = 0} goto prodWaiting;
+loc prodReady: invariant xprod <= d wait
+	when xprod >= c sync Feed2 do {xprod := 0} goto prodWaiting;
 
-loc prodWaiting: while xprod <= b wait {}
-	when xprod >= a sync ProdReset do {xprod' = 0} goto prodReady;
+loc prodWaiting: invariant xprod <= b wait
+	when xprod >= a sync ProdReset do {xprod := 0} goto prodReady;
 
 end (* Producer *)
 
@@ -48,11 +49,11 @@ end (* Producer *)
 (************************************************************)
 synclabs: ConsReset, Feed4;
 
-loc consReady: while xcons <= d wait {}
-	when xcons >= c sync Feed4 do {xcons' = 0} goto consWaiting;
+loc consReady: invariant xcons <= d wait
+	when xcons >= c sync Feed4 do {xcons := 0} goto consWaiting;
 
-loc consWaiting: while xcons <= b wait {}
-	when xcons >= a sync ConsReset do {xcons' = 0} goto consReady;
+loc consWaiting: invariant xcons <= b wait
+	when xcons >= a sync ConsReset do {xcons := 0} goto consReady;
 
 end (* Consumer *)
 
@@ -63,20 +64,20 @@ end (* Consumer *)
 (************************************************************)
 synclabs: Node1Process1, Node1Process2, Node1Process3, Feed2, Feed3;
 
-loc node1Ready: while xnode1 <= d wait {}
-	when xnode1 >= c sync Feed2 do {xnode1' = 0} goto intermediate1;
+loc node1Ready: invariant xnode1 <= d wait
+	when xnode1 >= c sync Feed2 do {xnode1 := 0} goto intermediate1;
 
-loc intermediate1: while xnode1 <= f wait {}
-	when xnode1 >= e sync Node1Process1 do {xnode1' = 0} goto intermediate2;
+loc intermediate1: invariant xnode1 <= f wait
+	when xnode1 >= e sync Node1Process1 do {xnode1 := 0} goto intermediate2;
 
-loc intermediate2: while xnode1 <= f wait {}
-	when xnode1 >= e sync Node1Process2 do {xnode1' = 0} goto intermediate3;
+loc intermediate2: invariant xnode1 <= f wait
+	when xnode1 >= e sync Node1Process2 do {xnode1 := 0} goto intermediate3;
 
-loc intermediate3: while xnode1 <= f wait {}
-	when xnode1 >= e sync Node1Process3 do {xnode1' = 0} goto send;
+loc intermediate3: invariant xnode1 <= f wait
+	when xnode1 >= e sync Node1Process3 do {xnode1 := 0} goto send;
 
-loc send: while xnode1 <= d wait {}
-	when xnode1 >= c sync Feed3 do {xnode1' = 0} goto node1Ready;
+loc send: invariant xnode1 <= d wait
+	when xnode1 >= c sync Feed3 do {xnode1 := 0} goto node1Ready;
 
 end (* Node1 *)
 
@@ -86,24 +87,35 @@ end (* Node1 *)
 (************************************************************)
 synclabs: Node2Process1, Node2Process2, Node2Process3, Feed3, Feed4;
 
-loc node2Ready: while xnode2 <= d wait {}
-	when xnode2 >= c sync Feed3 do {xnode2' = 0} goto intermediate1;
+loc node2Ready: invariant xnode2 <= d wait
+	when xnode2 >= c sync Feed3 do {xnode2 := 0} goto intermediate1;
 
-loc intermediate1: while xnode2 <= f wait {}
-	when xnode2 >= e sync Node2Process1 do {xnode2' = 0} goto intermediate2;
+loc intermediate1: invariant xnode2 <= f wait
+	when xnode2 >= e sync Node2Process1 do {xnode2 := 0} goto intermediate2;
 
-loc intermediate2: while xnode2 <= f wait {}
-	when xnode2 >= e sync Node2Process2 do {xnode2' = 0} goto intermediate3;
+loc intermediate2: invariant xnode2 <= f wait
+	when xnode2 >= e sync Node2Process2 do {xnode2 := 0} goto intermediate3;
 
-loc intermediate3: while xnode2 <= f wait {}
-	when xnode2 >= e sync Node2Process3 do {xnode2' = 0} goto send;
+loc intermediate3: invariant xnode2 <= f wait
+	when xnode2 >= e sync Node2Process3 do {xnode2 := 0} goto send;
 
-loc send: while xnode2 <= d wait {}
-	when xnode2 >= c sync Feed4 do {xnode2' = 0} goto node2Ready;
+loc send: invariant xnode2 <= d wait
+	when xnode2 >= c sync Feed4 do {xnode2 := 0} goto node2Ready;
 
 end (* Node2 *)
 
 
+(************************************************************)
+  automaton observer
+(************************************************************)
+
+(*** NOTE: as of version 2.10, IMITATOR cannot use clocks in the property; therefore we use an observer to encode the x >= 5 part of the property ***)
+loc waiting: invariant xtotal <= 5
+	when xtotal = 5 goto finished;
+
+loc finished: invariant True
+
+end (* observer *)
 
 (************************************************************)
 (* Initial state *)
@@ -117,6 +129,7 @@ init :=
 	& loc[Consumer]	= consReady
 	& loc[Node1]	= node1Ready
 	& loc[Node2]	= node2Ready
+	& loc[observer]	= waiting
 
 	(*------------------------------------------------------------*)
 	(* Initial clock constraints *)
@@ -125,6 +138,7 @@ init :=
 	& xnode1 = 0
 	& xnode2 = 0
 	& xcons = 0
+	& xtotal = 0
 
 	(*------------------------------------------------------------*)
 	(* Parameter constraints *)
@@ -142,7 +156,8 @@ init :=
 (* Property specification *)
 (************************************************************)
 
-property := unreachable loc[Consumer] = consWaiting & loc[Producer] = prodReady;
+(* φ2 = ConsWaiting ∧ ProdReady ∧ xtotal ≥ 5 *)
+property := unreachable loc[Consumer] = consWaiting & loc[Producer] = prodReady (*& xtotal >= 5*) & loc[observer] = finished;
 
 
 (************************************************************)

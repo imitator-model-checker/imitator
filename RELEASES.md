@@ -1,12 +1,22 @@
 *******************************************************
 # release XXX (XXXX) FUTURE MAJOR RELEASE
 
+
+*******************************************************
+# release 2.11 (2019-03-01)
+MAJOR RELEASE
+
+### Major features
+* New algorithm for optimal reachability with priority queue (queue-based, with priority to the earliest successor for the selection of the next state)
+* Removed the Gc.major() instruction, that used to require a huge time for large models, while not bringing any benefit for smaller models
+
+### Minor features
+* Using the syntax 'initially <loc name>' in the beginning of a PTA (which is not taken into account) now raises a warning.
+* In translation mode, some metrics (numbers of automata, actions, variables, locations…) are printed on the terminal.
+
 ### Bug fixing:
 * Correct errors in displaying PTA (graphics in PDF, PNG, etc.): arithmetic expressions on discrete variables did not print correctly
 * Fix a bug (or an unclarity) in the options for trace set generation
-
-### Major feature
-* Removed the Gc.major() instruction, that used to require a huge time for large models, while not bringing any benefit for smaller models
 
 ### Syntax improvement
 * The prime (`'`) in transition updates becomes optional; the `=` in transition updates becomes `:=` (backward-compatibility remains ensured until further notices) That is, an update `x' = 0` becomes `x := 0`
@@ -14,9 +24,12 @@
 
 ### Export
 * The graphical state space now comes in .pdf instead of .jpg for better readability
+* Some metrics are printed in the PTA graphical exports (PTA2PDF, PTA2PNG, PTA2JPG)
+* The trace set now depicts the automaton name in addition to the location name (for example: `automaton: location` instead of `location`)
 
 ### Minor features:
 * New option to avoid the inclusion check in EFsynth: useful when very large parameter constraints are manipulated
+
 
 *******************************************************
 # release 2.10.4 (2018-07-02)

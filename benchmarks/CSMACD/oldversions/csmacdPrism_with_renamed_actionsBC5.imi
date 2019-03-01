@@ -1,0 +1,1434 @@
+--****************************************************--
+--****************************************************--
+--   CSMA/CD Protocol
+--
+--   Non-probabilistic model deduced from the probabilistic model in
+--   "Symbolic Model Checking for Probabilistic Timed Automata"
+--   (M. Kwiatkowska, G. Norman, J. Sproston and F. Wang., FORMATS/FTRTFT'2004)
+--
+--   See figures on http://www.prismmodelchecker.org/casestudies/csma.php
+--
+--   Modeling by Laurent Fribourg and Etienne Andre (LSV)
+--   Renamed actions (May 2012) for taking probabilities into account
+--
+--   Created       : 2007
+--   Last modified : 2012/05/23
+--****************************************************--
+--****************************************************--
+
+-- CLOCKS
+var
+	x1,
+	x2,
+	y
+		: clock;
+
+-- PARAMETERS
+	lambda,    --length of a message
+	sigma,     --propagation time of a message
+	timeslot
+		: parameter;
+
+
+
+--****************************************************--
+--****************************************************--
+-- AUTOMATA
+--****************************************************--
+--****************************************************--
+
+
+--****************************************************--
+  automaton medium
+--****************************************************--
+synclabs: send1, send2, end1, end2, busy1, busy2, cd;
+
+initially Init;
+
+loc Init: while True wait {}
+		when True sync send1 do {y' = 0} goto Transmit;
+		when True sync send2 do {y' = 0} goto Transmit;
+
+loc Transmit: while True wait {}
+		when y <= sigma sync send1 do {y' = 0} goto Collide;
+		when y <= sigma sync send2 do {y' = 0} goto Collide;
+
+		when y >= sigma sync busy1 do {} goto Transmit;
+		when y >= sigma sync busy2 do {} goto Transmit;
+
+		when True sync end1 do {y' = 0} goto Init;
+		when True sync end2 do {y' = 0} goto Init;
+
+loc Collide: while y <= sigma wait {}
+		when y <= sigma sync cd do {y' = 0} goto Init;
+
+end
+
+
+
+--****************************************************--
+  automaton sender1
+--****************************************************--
+
+synclabs: send1, end1, busy1, cd, prob1;
+
+initially Init1;
+
+
+loc Init1: while x1 = 0 wait {}
+	when x1 = 0 sync send1 do {} goto Transmit1;
+
+loc Transmit1: while x1 <= lambda wait {}
+	when x1 = lambda sync end1 do {x1' = 0} goto Done1;
+	when True sync cd do {x1' = 0} goto Collide1_1;
+
+(* STARTING AUTOMATED PROGRAM FOR CSMA/CD FOR STATION 1 *)
+
+(* Considering case with bc = 1, hence from 0 to 3 (i.e., 2^(bc+1) - 1) *)
+loc Collide1_1: while x1 <= 0 wait {}
+	when True sync prob1 goto Wait1_1_0;
+	when True sync prob1 goto Wait1_1_1;
+	when True sync prob1 goto Wait1_1_2;
+	when True sync prob1 goto Wait1_1_3;
+
+loc Wait1_1_0: while x1 <= 0 timeslot wait {}
+	when x1 = 0 timeslot sync busy1 do {x1' = 0} goto Collide1_2;
+	when x1 = 0 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_1_1: while x1 <= 1 timeslot wait {}
+	when x1 = 1 timeslot sync busy1 do {x1' = 0} goto Collide1_2;
+	when x1 = 1 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_1_2: while x1 <= 2 timeslot wait {}
+	when x1 = 2 timeslot sync busy1 do {x1' = 0} goto Collide1_2;
+	when x1 = 2 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_1_3: while x1 <= 3 timeslot wait {}
+	when x1 = 3 timeslot sync busy1 do {x1' = 0} goto Collide1_2;
+	when x1 = 3 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+(* Considering case with bc = 2, hence from 0 to 7 (i.e., 2^(bc+1) - 1) *)
+loc Collide1_2: while x1 <= 0 wait {}
+	when True sync prob1 goto Wait1_2_0;
+	when True sync prob1 goto Wait1_2_1;
+	when True sync prob1 goto Wait1_2_2;
+	when True sync prob1 goto Wait1_2_3;
+	when True sync prob1 goto Wait1_2_4;
+	when True sync prob1 goto Wait1_2_5;
+	when True sync prob1 goto Wait1_2_6;
+	when True sync prob1 goto Wait1_2_7;
+
+loc Wait1_2_0: while x1 <= 0 timeslot wait {}
+	when x1 = 0 timeslot sync busy1 do {x1' = 0} goto Collide1_3;
+	when x1 = 0 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_2_1: while x1 <= 1 timeslot wait {}
+	when x1 = 1 timeslot sync busy1 do {x1' = 0} goto Collide1_3;
+	when x1 = 1 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_2_2: while x1 <= 2 timeslot wait {}
+	when x1 = 2 timeslot sync busy1 do {x1' = 0} goto Collide1_3;
+	when x1 = 2 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_2_3: while x1 <= 3 timeslot wait {}
+	when x1 = 3 timeslot sync busy1 do {x1' = 0} goto Collide1_3;
+	when x1 = 3 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_2_4: while x1 <= 4 timeslot wait {}
+	when x1 = 4 timeslot sync busy1 do {x1' = 0} goto Collide1_3;
+	when x1 = 4 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_2_5: while x1 <= 5 timeslot wait {}
+	when x1 = 5 timeslot sync busy1 do {x1' = 0} goto Collide1_3;
+	when x1 = 5 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_2_6: while x1 <= 6 timeslot wait {}
+	when x1 = 6 timeslot sync busy1 do {x1' = 0} goto Collide1_3;
+	when x1 = 6 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_2_7: while x1 <= 7 timeslot wait {}
+	when x1 = 7 timeslot sync busy1 do {x1' = 0} goto Collide1_3;
+	when x1 = 7 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+(* Considering case with bc = 3, hence from 0 to 15 (i.e., 2^(bc+1) - 1) *)
+loc Collide1_3: while x1 <= 0 wait {}
+	when True sync prob1 goto Wait1_3_0;
+	when True sync prob1 goto Wait1_3_1;
+	when True sync prob1 goto Wait1_3_2;
+	when True sync prob1 goto Wait1_3_3;
+	when True sync prob1 goto Wait1_3_4;
+	when True sync prob1 goto Wait1_3_5;
+	when True sync prob1 goto Wait1_3_6;
+	when True sync prob1 goto Wait1_3_7;
+	when True sync prob1 goto Wait1_3_8;
+	when True sync prob1 goto Wait1_3_9;
+	when True sync prob1 goto Wait1_3_10;
+	when True sync prob1 goto Wait1_3_11;
+	when True sync prob1 goto Wait1_3_12;
+	when True sync prob1 goto Wait1_3_13;
+	when True sync prob1 goto Wait1_3_14;
+	when True sync prob1 goto Wait1_3_15;
+
+loc Wait1_3_0: while x1 <= 0 timeslot wait {}
+	when x1 = 0 timeslot sync busy1 do {x1' = 0} goto Collide1_4;
+	when x1 = 0 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_3_1: while x1 <= 1 timeslot wait {}
+	when x1 = 1 timeslot sync busy1 do {x1' = 0} goto Collide1_4;
+	when x1 = 1 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_3_2: while x1 <= 2 timeslot wait {}
+	when x1 = 2 timeslot sync busy1 do {x1' = 0} goto Collide1_4;
+	when x1 = 2 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_3_3: while x1 <= 3 timeslot wait {}
+	when x1 = 3 timeslot sync busy1 do {x1' = 0} goto Collide1_4;
+	when x1 = 3 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_3_4: while x1 <= 4 timeslot wait {}
+	when x1 = 4 timeslot sync busy1 do {x1' = 0} goto Collide1_4;
+	when x1 = 4 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_3_5: while x1 <= 5 timeslot wait {}
+	when x1 = 5 timeslot sync busy1 do {x1' = 0} goto Collide1_4;
+	when x1 = 5 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_3_6: while x1 <= 6 timeslot wait {}
+	when x1 = 6 timeslot sync busy1 do {x1' = 0} goto Collide1_4;
+	when x1 = 6 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_3_7: while x1 <= 7 timeslot wait {}
+	when x1 = 7 timeslot sync busy1 do {x1' = 0} goto Collide1_4;
+	when x1 = 7 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_3_8: while x1 <= 8 timeslot wait {}
+	when x1 = 8 timeslot sync busy1 do {x1' = 0} goto Collide1_4;
+	when x1 = 8 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_3_9: while x1 <= 9 timeslot wait {}
+	when x1 = 9 timeslot sync busy1 do {x1' = 0} goto Collide1_4;
+	when x1 = 9 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_3_10: while x1 <= 10 timeslot wait {}
+	when x1 = 10 timeslot sync busy1 do {x1' = 0} goto Collide1_4;
+	when x1 = 10 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_3_11: while x1 <= 11 timeslot wait {}
+	when x1 = 11 timeslot sync busy1 do {x1' = 0} goto Collide1_4;
+	when x1 = 11 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_3_12: while x1 <= 12 timeslot wait {}
+	when x1 = 12 timeslot sync busy1 do {x1' = 0} goto Collide1_4;
+	when x1 = 12 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_3_13: while x1 <= 13 timeslot wait {}
+	when x1 = 13 timeslot sync busy1 do {x1' = 0} goto Collide1_4;
+	when x1 = 13 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_3_14: while x1 <= 14 timeslot wait {}
+	when x1 = 14 timeslot sync busy1 do {x1' = 0} goto Collide1_4;
+	when x1 = 14 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_3_15: while x1 <= 15 timeslot wait {}
+	when x1 = 15 timeslot sync busy1 do {x1' = 0} goto Collide1_4;
+	when x1 = 15 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+(* Considering case with bc = 4, hence from 0 to 31 (i.e., 2^(bc+1) - 1) *)
+loc Collide1_4: while x1 <= 0 wait {}
+	when True sync prob1 goto Wait1_4_0;
+	when True sync prob1 goto Wait1_4_1;
+	when True sync prob1 goto Wait1_4_2;
+	when True sync prob1 goto Wait1_4_3;
+	when True sync prob1 goto Wait1_4_4;
+	when True sync prob1 goto Wait1_4_5;
+	when True sync prob1 goto Wait1_4_6;
+	when True sync prob1 goto Wait1_4_7;
+	when True sync prob1 goto Wait1_4_8;
+	when True sync prob1 goto Wait1_4_9;
+	when True sync prob1 goto Wait1_4_10;
+	when True sync prob1 goto Wait1_4_11;
+	when True sync prob1 goto Wait1_4_12;
+	when True sync prob1 goto Wait1_4_13;
+	when True sync prob1 goto Wait1_4_14;
+	when True sync prob1 goto Wait1_4_15;
+	when True sync prob1 goto Wait1_4_16;
+	when True sync prob1 goto Wait1_4_17;
+	when True sync prob1 goto Wait1_4_18;
+	when True sync prob1 goto Wait1_4_19;
+	when True sync prob1 goto Wait1_4_20;
+	when True sync prob1 goto Wait1_4_21;
+	when True sync prob1 goto Wait1_4_22;
+	when True sync prob1 goto Wait1_4_23;
+	when True sync prob1 goto Wait1_4_24;
+	when True sync prob1 goto Wait1_4_25;
+	when True sync prob1 goto Wait1_4_26;
+	when True sync prob1 goto Wait1_4_27;
+	when True sync prob1 goto Wait1_4_28;
+	when True sync prob1 goto Wait1_4_29;
+	when True sync prob1 goto Wait1_4_30;
+	when True sync prob1 goto Wait1_4_31;
+
+loc Wait1_4_0: while x1 <= 0 timeslot wait {}
+	when x1 = 0 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 0 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_1: while x1 <= 1 timeslot wait {}
+	when x1 = 1 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 1 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_2: while x1 <= 2 timeslot wait {}
+	when x1 = 2 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 2 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_3: while x1 <= 3 timeslot wait {}
+	when x1 = 3 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 3 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_4: while x1 <= 4 timeslot wait {}
+	when x1 = 4 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 4 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_5: while x1 <= 5 timeslot wait {}
+	when x1 = 5 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 5 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_6: while x1 <= 6 timeslot wait {}
+	when x1 = 6 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 6 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_7: while x1 <= 7 timeslot wait {}
+	when x1 = 7 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 7 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_8: while x1 <= 8 timeslot wait {}
+	when x1 = 8 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 8 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_9: while x1 <= 9 timeslot wait {}
+	when x1 = 9 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 9 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_10: while x1 <= 10 timeslot wait {}
+	when x1 = 10 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 10 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_11: while x1 <= 11 timeslot wait {}
+	when x1 = 11 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 11 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_12: while x1 <= 12 timeslot wait {}
+	when x1 = 12 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 12 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_13: while x1 <= 13 timeslot wait {}
+	when x1 = 13 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 13 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_14: while x1 <= 14 timeslot wait {}
+	when x1 = 14 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 14 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_15: while x1 <= 15 timeslot wait {}
+	when x1 = 15 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 15 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_16: while x1 <= 16 timeslot wait {}
+	when x1 = 16 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 16 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_17: while x1 <= 17 timeslot wait {}
+	when x1 = 17 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 17 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_18: while x1 <= 18 timeslot wait {}
+	when x1 = 18 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 18 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_19: while x1 <= 19 timeslot wait {}
+	when x1 = 19 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 19 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_20: while x1 <= 20 timeslot wait {}
+	when x1 = 20 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 20 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_21: while x1 <= 21 timeslot wait {}
+	when x1 = 21 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 21 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_22: while x1 <= 22 timeslot wait {}
+	when x1 = 22 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 22 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_23: while x1 <= 23 timeslot wait {}
+	when x1 = 23 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 23 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_24: while x1 <= 24 timeslot wait {}
+	when x1 = 24 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 24 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_25: while x1 <= 25 timeslot wait {}
+	when x1 = 25 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 25 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_26: while x1 <= 26 timeslot wait {}
+	when x1 = 26 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 26 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_27: while x1 <= 27 timeslot wait {}
+	when x1 = 27 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 27 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_28: while x1 <= 28 timeslot wait {}
+	when x1 = 28 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 28 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_29: while x1 <= 29 timeslot wait {}
+	when x1 = 29 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 29 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_30: while x1 <= 30 timeslot wait {}
+	when x1 = 30 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 30 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_4_31: while x1 <= 31 timeslot wait {}
+	when x1 = 31 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 31 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+(* Considering case with bc = 5, hence from 0 to 63 (i.e., 2^(bc+1) - 1) *)
+loc Collide1_5: while x1 <= 0 wait {}
+	when True sync prob1 goto Wait1_5_0;
+	when True sync prob1 goto Wait1_5_1;
+	when True sync prob1 goto Wait1_5_2;
+	when True sync prob1 goto Wait1_5_3;
+	when True sync prob1 goto Wait1_5_4;
+	when True sync prob1 goto Wait1_5_5;
+	when True sync prob1 goto Wait1_5_6;
+	when True sync prob1 goto Wait1_5_7;
+	when True sync prob1 goto Wait1_5_8;
+	when True sync prob1 goto Wait1_5_9;
+	when True sync prob1 goto Wait1_5_10;
+	when True sync prob1 goto Wait1_5_11;
+	when True sync prob1 goto Wait1_5_12;
+	when True sync prob1 goto Wait1_5_13;
+	when True sync prob1 goto Wait1_5_14;
+	when True sync prob1 goto Wait1_5_15;
+	when True sync prob1 goto Wait1_5_16;
+	when True sync prob1 goto Wait1_5_17;
+	when True sync prob1 goto Wait1_5_18;
+	when True sync prob1 goto Wait1_5_19;
+	when True sync prob1 goto Wait1_5_20;
+	when True sync prob1 goto Wait1_5_21;
+	when True sync prob1 goto Wait1_5_22;
+	when True sync prob1 goto Wait1_5_23;
+	when True sync prob1 goto Wait1_5_24;
+	when True sync prob1 goto Wait1_5_25;
+	when True sync prob1 goto Wait1_5_26;
+	when True sync prob1 goto Wait1_5_27;
+	when True sync prob1 goto Wait1_5_28;
+	when True sync prob1 goto Wait1_5_29;
+	when True sync prob1 goto Wait1_5_30;
+	when True sync prob1 goto Wait1_5_31;
+	when True sync prob1 goto Wait1_5_32;
+	when True sync prob1 goto Wait1_5_33;
+	when True sync prob1 goto Wait1_5_34;
+	when True sync prob1 goto Wait1_5_35;
+	when True sync prob1 goto Wait1_5_36;
+	when True sync prob1 goto Wait1_5_37;
+	when True sync prob1 goto Wait1_5_38;
+	when True sync prob1 goto Wait1_5_39;
+	when True sync prob1 goto Wait1_5_40;
+	when True sync prob1 goto Wait1_5_41;
+	when True sync prob1 goto Wait1_5_42;
+	when True sync prob1 goto Wait1_5_43;
+	when True sync prob1 goto Wait1_5_44;
+	when True sync prob1 goto Wait1_5_45;
+	when True sync prob1 goto Wait1_5_46;
+	when True sync prob1 goto Wait1_5_47;
+	when True sync prob1 goto Wait1_5_48;
+	when True sync prob1 goto Wait1_5_49;
+	when True sync prob1 goto Wait1_5_50;
+	when True sync prob1 goto Wait1_5_51;
+	when True sync prob1 goto Wait1_5_52;
+	when True sync prob1 goto Wait1_5_53;
+	when True sync prob1 goto Wait1_5_54;
+	when True sync prob1 goto Wait1_5_55;
+	when True sync prob1 goto Wait1_5_56;
+	when True sync prob1 goto Wait1_5_57;
+	when True sync prob1 goto Wait1_5_58;
+	when True sync prob1 goto Wait1_5_59;
+	when True sync prob1 goto Wait1_5_60;
+	when True sync prob1 goto Wait1_5_61;
+	when True sync prob1 goto Wait1_5_62;
+	when True sync prob1 goto Wait1_5_63;
+
+loc Wait1_5_0: while x1 <= 0 timeslot wait {}
+	when x1 = 0 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 0 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_1: while x1 <= 1 timeslot wait {}
+	when x1 = 1 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 1 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_2: while x1 <= 2 timeslot wait {}
+	when x1 = 2 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 2 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_3: while x1 <= 3 timeslot wait {}
+	when x1 = 3 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 3 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_4: while x1 <= 4 timeslot wait {}
+	when x1 = 4 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 4 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_5: while x1 <= 5 timeslot wait {}
+	when x1 = 5 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 5 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_6: while x1 <= 6 timeslot wait {}
+	when x1 = 6 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 6 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_7: while x1 <= 7 timeslot wait {}
+	when x1 = 7 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 7 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_8: while x1 <= 8 timeslot wait {}
+	when x1 = 8 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 8 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_9: while x1 <= 9 timeslot wait {}
+	when x1 = 9 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 9 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_10: while x1 <= 10 timeslot wait {}
+	when x1 = 10 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 10 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_11: while x1 <= 11 timeslot wait {}
+	when x1 = 11 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 11 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_12: while x1 <= 12 timeslot wait {}
+	when x1 = 12 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 12 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_13: while x1 <= 13 timeslot wait {}
+	when x1 = 13 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 13 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_14: while x1 <= 14 timeslot wait {}
+	when x1 = 14 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 14 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_15: while x1 <= 15 timeslot wait {}
+	when x1 = 15 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 15 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_16: while x1 <= 16 timeslot wait {}
+	when x1 = 16 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 16 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_17: while x1 <= 17 timeslot wait {}
+	when x1 = 17 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 17 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_18: while x1 <= 18 timeslot wait {}
+	when x1 = 18 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 18 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_19: while x1 <= 19 timeslot wait {}
+	when x1 = 19 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 19 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_20: while x1 <= 20 timeslot wait {}
+	when x1 = 20 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 20 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_21: while x1 <= 21 timeslot wait {}
+	when x1 = 21 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 21 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_22: while x1 <= 22 timeslot wait {}
+	when x1 = 22 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 22 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_23: while x1 <= 23 timeslot wait {}
+	when x1 = 23 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 23 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_24: while x1 <= 24 timeslot wait {}
+	when x1 = 24 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 24 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_25: while x1 <= 25 timeslot wait {}
+	when x1 = 25 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 25 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_26: while x1 <= 26 timeslot wait {}
+	when x1 = 26 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 26 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_27: while x1 <= 27 timeslot wait {}
+	when x1 = 27 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 27 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_28: while x1 <= 28 timeslot wait {}
+	when x1 = 28 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 28 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_29: while x1 <= 29 timeslot wait {}
+	when x1 = 29 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 29 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_30: while x1 <= 30 timeslot wait {}
+	when x1 = 30 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 30 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_31: while x1 <= 31 timeslot wait {}
+	when x1 = 31 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 31 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_32: while x1 <= 32 timeslot wait {}
+	when x1 = 32 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 32 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_33: while x1 <= 33 timeslot wait {}
+	when x1 = 33 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 33 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_34: while x1 <= 34 timeslot wait {}
+	when x1 = 34 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 34 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_35: while x1 <= 35 timeslot wait {}
+	when x1 = 35 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 35 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_36: while x1 <= 36 timeslot wait {}
+	when x1 = 36 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 36 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_37: while x1 <= 37 timeslot wait {}
+	when x1 = 37 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 37 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_38: while x1 <= 38 timeslot wait {}
+	when x1 = 38 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 38 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_39: while x1 <= 39 timeslot wait {}
+	when x1 = 39 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 39 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_40: while x1 <= 40 timeslot wait {}
+	when x1 = 40 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 40 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_41: while x1 <= 41 timeslot wait {}
+	when x1 = 41 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 41 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_42: while x1 <= 42 timeslot wait {}
+	when x1 = 42 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 42 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_43: while x1 <= 43 timeslot wait {}
+	when x1 = 43 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 43 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_44: while x1 <= 44 timeslot wait {}
+	when x1 = 44 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 44 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_45: while x1 <= 45 timeslot wait {}
+	when x1 = 45 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 45 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_46: while x1 <= 46 timeslot wait {}
+	when x1 = 46 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 46 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_47: while x1 <= 47 timeslot wait {}
+	when x1 = 47 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 47 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_48: while x1 <= 48 timeslot wait {}
+	when x1 = 48 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 48 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_49: while x1 <= 49 timeslot wait {}
+	when x1 = 49 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 49 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_50: while x1 <= 50 timeslot wait {}
+	when x1 = 50 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 50 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_51: while x1 <= 51 timeslot wait {}
+	when x1 = 51 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 51 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_52: while x1 <= 52 timeslot wait {}
+	when x1 = 52 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 52 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_53: while x1 <= 53 timeslot wait {}
+	when x1 = 53 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 53 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_54: while x1 <= 54 timeslot wait {}
+	when x1 = 54 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 54 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_55: while x1 <= 55 timeslot wait {}
+	when x1 = 55 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 55 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_56: while x1 <= 56 timeslot wait {}
+	when x1 = 56 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 56 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_57: while x1 <= 57 timeslot wait {}
+	when x1 = 57 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 57 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_58: while x1 <= 58 timeslot wait {}
+	when x1 = 58 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 58 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_59: while x1 <= 59 timeslot wait {}
+	when x1 = 59 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 59 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_60: while x1 <= 60 timeslot wait {}
+	when x1 = 60 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 60 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_61: while x1 <= 61 timeslot wait {}
+	when x1 = 61 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 61 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_62: while x1 <= 62 timeslot wait {}
+	when x1 = 62 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 62 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+loc Wait1_5_63: while x1 <= 63 timeslot wait {}
+	when x1 = 63 timeslot sync busy1 do {x1' = 0} goto Collide1_5;
+	when x1 = 63 timeslot sync send1 do {x1' = 0} goto Transmit1;
+
+(* END OF AUTOMATED PROGRAM FOR CSMA/CD *)
+
+
+loc Done1: while x1 <= 0 wait {}
+-- 	when True goto Done1;
+end
+
+
+
+
+--****************************************************--
+  automaton sender2
+--****************************************************--
+
+synclabs: send2, end2, busy2, cd, prob2;
+
+initially Init2;
+
+
+loc Init2: while x2 = 0 wait {}
+	when x2 = 0 sync send2 do {} goto Transmit2;
+
+loc Transmit2: while x2 <= lambda wait {}
+	when x2 = lambda sync end2 do {x2' = 0} goto Done2;
+	when True sync cd do {x2' = 0} goto Collide2_1;
+
+(* STARTING AUTOMATED PROGRAM FOR CSMA/CD FOR STATION 2 *)
+
+(* Considering case with bc = 1, hence from 0 to 3 (i.e., 2^(bc+1) - 1) *)
+loc Collide2_1: while x2 <= 0 wait {}
+	when True sync prob2 goto Wait2_1_0;
+	when True sync prob2 goto Wait2_1_1;
+	when True sync prob2 goto Wait2_1_2;
+	when True sync prob2 goto Wait2_1_3;
+
+loc Wait2_1_0: while x2 <= 0 timeslot wait {}
+	when x2 = 0 timeslot sync busy2 do {x2' = 0} goto Collide2_2;
+	when x2 = 0 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_1_1: while x2 <= 1 timeslot wait {}
+	when x2 = 1 timeslot sync busy2 do {x2' = 0} goto Collide2_2;
+	when x2 = 1 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_1_2: while x2 <= 2 timeslot wait {}
+	when x2 = 2 timeslot sync busy2 do {x2' = 0} goto Collide2_2;
+	when x2 = 2 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_1_3: while x2 <= 3 timeslot wait {}
+	when x2 = 3 timeslot sync busy2 do {x2' = 0} goto Collide2_2;
+	when x2 = 3 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+(* Considering case with bc = 2, hence from 0 to 7 (i.e., 2^(bc+1) - 1) *)
+loc Collide2_2: while x2 <= 0 wait {}
+	when True sync prob2 goto Wait2_2_0;
+	when True sync prob2 goto Wait2_2_1;
+	when True sync prob2 goto Wait2_2_2;
+	when True sync prob2 goto Wait2_2_3;
+	when True sync prob2 goto Wait2_2_4;
+	when True sync prob2 goto Wait2_2_5;
+	when True sync prob2 goto Wait2_2_6;
+	when True sync prob2 goto Wait2_2_7;
+
+loc Wait2_2_0: while x2 <= 0 timeslot wait {}
+	when x2 = 0 timeslot sync busy2 do {x2' = 0} goto Collide2_3;
+	when x2 = 0 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_2_1: while x2 <= 1 timeslot wait {}
+	when x2 = 1 timeslot sync busy2 do {x2' = 0} goto Collide2_3;
+	when x2 = 1 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_2_2: while x2 <= 2 timeslot wait {}
+	when x2 = 2 timeslot sync busy2 do {x2' = 0} goto Collide2_3;
+	when x2 = 2 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_2_3: while x2 <= 3 timeslot wait {}
+	when x2 = 3 timeslot sync busy2 do {x2' = 0} goto Collide2_3;
+	when x2 = 3 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_2_4: while x2 <= 4 timeslot wait {}
+	when x2 = 4 timeslot sync busy2 do {x2' = 0} goto Collide2_3;
+	when x2 = 4 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_2_5: while x2 <= 5 timeslot wait {}
+	when x2 = 5 timeslot sync busy2 do {x2' = 0} goto Collide2_3;
+	when x2 = 5 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_2_6: while x2 <= 6 timeslot wait {}
+	when x2 = 6 timeslot sync busy2 do {x2' = 0} goto Collide2_3;
+	when x2 = 6 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_2_7: while x2 <= 7 timeslot wait {}
+	when x2 = 7 timeslot sync busy2 do {x2' = 0} goto Collide2_3;
+	when x2 = 7 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+(* Considering case with bc = 3, hence from 0 to 15 (i.e., 2^(bc+1) - 1) *)
+loc Collide2_3: while x2 <= 0 wait {}
+	when True sync prob2 goto Wait2_3_0;
+	when True sync prob2 goto Wait2_3_1;
+	when True sync prob2 goto Wait2_3_2;
+	when True sync prob2 goto Wait2_3_3;
+	when True sync prob2 goto Wait2_3_4;
+	when True sync prob2 goto Wait2_3_5;
+	when True sync prob2 goto Wait2_3_6;
+	when True sync prob2 goto Wait2_3_7;
+	when True sync prob2 goto Wait2_3_8;
+	when True sync prob2 goto Wait2_3_9;
+	when True sync prob2 goto Wait2_3_10;
+	when True sync prob2 goto Wait2_3_11;
+	when True sync prob2 goto Wait2_3_12;
+	when True sync prob2 goto Wait2_3_13;
+	when True sync prob2 goto Wait2_3_14;
+	when True sync prob2 goto Wait2_3_15;
+
+loc Wait2_3_0: while x2 <= 0 timeslot wait {}
+	when x2 = 0 timeslot sync busy2 do {x2' = 0} goto Collide2_4;
+	when x2 = 0 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_3_1: while x2 <= 1 timeslot wait {}
+	when x2 = 1 timeslot sync busy2 do {x2' = 0} goto Collide2_4;
+	when x2 = 1 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_3_2: while x2 <= 2 timeslot wait {}
+	when x2 = 2 timeslot sync busy2 do {x2' = 0} goto Collide2_4;
+	when x2 = 2 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_3_3: while x2 <= 3 timeslot wait {}
+	when x2 = 3 timeslot sync busy2 do {x2' = 0} goto Collide2_4;
+	when x2 = 3 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_3_4: while x2 <= 4 timeslot wait {}
+	when x2 = 4 timeslot sync busy2 do {x2' = 0} goto Collide2_4;
+	when x2 = 4 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_3_5: while x2 <= 5 timeslot wait {}
+	when x2 = 5 timeslot sync busy2 do {x2' = 0} goto Collide2_4;
+	when x2 = 5 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_3_6: while x2 <= 6 timeslot wait {}
+	when x2 = 6 timeslot sync busy2 do {x2' = 0} goto Collide2_4;
+	when x2 = 6 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_3_7: while x2 <= 7 timeslot wait {}
+	when x2 = 7 timeslot sync busy2 do {x2' = 0} goto Collide2_4;
+	when x2 = 7 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_3_8: while x2 <= 8 timeslot wait {}
+	when x2 = 8 timeslot sync busy2 do {x2' = 0} goto Collide2_4;
+	when x2 = 8 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_3_9: while x2 <= 9 timeslot wait {}
+	when x2 = 9 timeslot sync busy2 do {x2' = 0} goto Collide2_4;
+	when x2 = 9 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_3_10: while x2 <= 10 timeslot wait {}
+	when x2 = 10 timeslot sync busy2 do {x2' = 0} goto Collide2_4;
+	when x2 = 10 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_3_11: while x2 <= 11 timeslot wait {}
+	when x2 = 11 timeslot sync busy2 do {x2' = 0} goto Collide2_4;
+	when x2 = 11 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_3_12: while x2 <= 12 timeslot wait {}
+	when x2 = 12 timeslot sync busy2 do {x2' = 0} goto Collide2_4;
+	when x2 = 12 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_3_13: while x2 <= 13 timeslot wait {}
+	when x2 = 13 timeslot sync busy2 do {x2' = 0} goto Collide2_4;
+	when x2 = 13 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_3_14: while x2 <= 14 timeslot wait {}
+	when x2 = 14 timeslot sync busy2 do {x2' = 0} goto Collide2_4;
+	when x2 = 14 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_3_15: while x2 <= 15 timeslot wait {}
+	when x2 = 15 timeslot sync busy2 do {x2' = 0} goto Collide2_4;
+	when x2 = 15 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+(* Considering case with bc = 4, hence from 0 to 31 (i.e., 2^(bc+1) - 1) *)
+loc Collide2_4: while x2 <= 0 wait {}
+	when True sync prob2 goto Wait2_4_0;
+	when True sync prob2 goto Wait2_4_1;
+	when True sync prob2 goto Wait2_4_2;
+	when True sync prob2 goto Wait2_4_3;
+	when True sync prob2 goto Wait2_4_4;
+	when True sync prob2 goto Wait2_4_5;
+	when True sync prob2 goto Wait2_4_6;
+	when True sync prob2 goto Wait2_4_7;
+	when True sync prob2 goto Wait2_4_8;
+	when True sync prob2 goto Wait2_4_9;
+	when True sync prob2 goto Wait2_4_10;
+	when True sync prob2 goto Wait2_4_11;
+	when True sync prob2 goto Wait2_4_12;
+	when True sync prob2 goto Wait2_4_13;
+	when True sync prob2 goto Wait2_4_14;
+	when True sync prob2 goto Wait2_4_15;
+	when True sync prob2 goto Wait2_4_16;
+	when True sync prob2 goto Wait2_4_17;
+	when True sync prob2 goto Wait2_4_18;
+	when True sync prob2 goto Wait2_4_19;
+	when True sync prob2 goto Wait2_4_20;
+	when True sync prob2 goto Wait2_4_21;
+	when True sync prob2 goto Wait2_4_22;
+	when True sync prob2 goto Wait2_4_23;
+	when True sync prob2 goto Wait2_4_24;
+	when True sync prob2 goto Wait2_4_25;
+	when True sync prob2 goto Wait2_4_26;
+	when True sync prob2 goto Wait2_4_27;
+	when True sync prob2 goto Wait2_4_28;
+	when True sync prob2 goto Wait2_4_29;
+	when True sync prob2 goto Wait2_4_30;
+	when True sync prob2 goto Wait2_4_31;
+
+loc Wait2_4_0: while x2 <= 0 timeslot wait {}
+	when x2 = 0 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 0 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_1: while x2 <= 1 timeslot wait {}
+	when x2 = 1 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 1 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_2: while x2 <= 2 timeslot wait {}
+	when x2 = 2 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 2 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_3: while x2 <= 3 timeslot wait {}
+	when x2 = 3 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 3 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_4: while x2 <= 4 timeslot wait {}
+	when x2 = 4 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 4 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_5: while x2 <= 5 timeslot wait {}
+	when x2 = 5 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 5 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_6: while x2 <= 6 timeslot wait {}
+	when x2 = 6 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 6 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_7: while x2 <= 7 timeslot wait {}
+	when x2 = 7 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 7 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_8: while x2 <= 8 timeslot wait {}
+	when x2 = 8 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 8 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_9: while x2 <= 9 timeslot wait {}
+	when x2 = 9 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 9 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_10: while x2 <= 10 timeslot wait {}
+	when x2 = 10 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 10 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_11: while x2 <= 11 timeslot wait {}
+	when x2 = 11 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 11 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_12: while x2 <= 12 timeslot wait {}
+	when x2 = 12 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 12 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_13: while x2 <= 13 timeslot wait {}
+	when x2 = 13 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 13 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_14: while x2 <= 14 timeslot wait {}
+	when x2 = 14 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 14 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_15: while x2 <= 15 timeslot wait {}
+	when x2 = 15 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 15 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_16: while x2 <= 16 timeslot wait {}
+	when x2 = 16 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 16 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_17: while x2 <= 17 timeslot wait {}
+	when x2 = 17 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 17 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_18: while x2 <= 18 timeslot wait {}
+	when x2 = 18 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 18 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_19: while x2 <= 19 timeslot wait {}
+	when x2 = 19 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 19 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_20: while x2 <= 20 timeslot wait {}
+	when x2 = 20 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 20 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_21: while x2 <= 21 timeslot wait {}
+	when x2 = 21 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 21 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_22: while x2 <= 22 timeslot wait {}
+	when x2 = 22 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 22 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_23: while x2 <= 23 timeslot wait {}
+	when x2 = 23 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 23 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_24: while x2 <= 24 timeslot wait {}
+	when x2 = 24 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 24 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_25: while x2 <= 25 timeslot wait {}
+	when x2 = 25 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 25 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_26: while x2 <= 26 timeslot wait {}
+	when x2 = 26 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 26 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_27: while x2 <= 27 timeslot wait {}
+	when x2 = 27 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 27 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_28: while x2 <= 28 timeslot wait {}
+	when x2 = 28 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 28 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_29: while x2 <= 29 timeslot wait {}
+	when x2 = 29 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 29 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_30: while x2 <= 30 timeslot wait {}
+	when x2 = 30 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 30 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_4_31: while x2 <= 31 timeslot wait {}
+	when x2 = 31 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 31 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+(* Considering case with bc = 5, hence from 0 to 63 (i.e., 2^(bc+1) - 1) *)
+loc Collide2_5: while x2 <= 0 wait {}
+	when True sync prob2 goto Wait2_5_0;
+	when True sync prob2 goto Wait2_5_1;
+	when True sync prob2 goto Wait2_5_2;
+	when True sync prob2 goto Wait2_5_3;
+	when True sync prob2 goto Wait2_5_4;
+	when True sync prob2 goto Wait2_5_5;
+	when True sync prob2 goto Wait2_5_6;
+	when True sync prob2 goto Wait2_5_7;
+	when True sync prob2 goto Wait2_5_8;
+	when True sync prob2 goto Wait2_5_9;
+	when True sync prob2 goto Wait2_5_10;
+	when True sync prob2 goto Wait2_5_11;
+	when True sync prob2 goto Wait2_5_12;
+	when True sync prob2 goto Wait2_5_13;
+	when True sync prob2 goto Wait2_5_14;
+	when True sync prob2 goto Wait2_5_15;
+	when True sync prob2 goto Wait2_5_16;
+	when True sync prob2 goto Wait2_5_17;
+	when True sync prob2 goto Wait2_5_18;
+	when True sync prob2 goto Wait2_5_19;
+	when True sync prob2 goto Wait2_5_20;
+	when True sync prob2 goto Wait2_5_21;
+	when True sync prob2 goto Wait2_5_22;
+	when True sync prob2 goto Wait2_5_23;
+	when True sync prob2 goto Wait2_5_24;
+	when True sync prob2 goto Wait2_5_25;
+	when True sync prob2 goto Wait2_5_26;
+	when True sync prob2 goto Wait2_5_27;
+	when True sync prob2 goto Wait2_5_28;
+	when True sync prob2 goto Wait2_5_29;
+	when True sync prob2 goto Wait2_5_30;
+	when True sync prob2 goto Wait2_5_31;
+	when True sync prob2 goto Wait2_5_32;
+	when True sync prob2 goto Wait2_5_33;
+	when True sync prob2 goto Wait2_5_34;
+	when True sync prob2 goto Wait2_5_35;
+	when True sync prob2 goto Wait2_5_36;
+	when True sync prob2 goto Wait2_5_37;
+	when True sync prob2 goto Wait2_5_38;
+	when True sync prob2 goto Wait2_5_39;
+	when True sync prob2 goto Wait2_5_40;
+	when True sync prob2 goto Wait2_5_41;
+	when True sync prob2 goto Wait2_5_42;
+	when True sync prob2 goto Wait2_5_43;
+	when True sync prob2 goto Wait2_5_44;
+	when True sync prob2 goto Wait2_5_45;
+	when True sync prob2 goto Wait2_5_46;
+	when True sync prob2 goto Wait2_5_47;
+	when True sync prob2 goto Wait2_5_48;
+	when True sync prob2 goto Wait2_5_49;
+	when True sync prob2 goto Wait2_5_50;
+	when True sync prob2 goto Wait2_5_51;
+	when True sync prob2 goto Wait2_5_52;
+	when True sync prob2 goto Wait2_5_53;
+	when True sync prob2 goto Wait2_5_54;
+	when True sync prob2 goto Wait2_5_55;
+	when True sync prob2 goto Wait2_5_56;
+	when True sync prob2 goto Wait2_5_57;
+	when True sync prob2 goto Wait2_5_58;
+	when True sync prob2 goto Wait2_5_59;
+	when True sync prob2 goto Wait2_5_60;
+	when True sync prob2 goto Wait2_5_61;
+	when True sync prob2 goto Wait2_5_62;
+	when True sync prob2 goto Wait2_5_63;
+
+loc Wait2_5_0: while x2 <= 0 timeslot wait {}
+	when x2 = 0 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 0 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_1: while x2 <= 1 timeslot wait {}
+	when x2 = 1 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 1 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_2: while x2 <= 2 timeslot wait {}
+	when x2 = 2 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 2 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_3: while x2 <= 3 timeslot wait {}
+	when x2 = 3 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 3 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_4: while x2 <= 4 timeslot wait {}
+	when x2 = 4 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 4 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_5: while x2 <= 5 timeslot wait {}
+	when x2 = 5 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 5 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_6: while x2 <= 6 timeslot wait {}
+	when x2 = 6 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 6 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_7: while x2 <= 7 timeslot wait {}
+	when x2 = 7 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 7 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_8: while x2 <= 8 timeslot wait {}
+	when x2 = 8 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 8 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_9: while x2 <= 9 timeslot wait {}
+	when x2 = 9 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 9 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_10: while x2 <= 10 timeslot wait {}
+	when x2 = 10 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 10 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_11: while x2 <= 11 timeslot wait {}
+	when x2 = 11 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 11 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_12: while x2 <= 12 timeslot wait {}
+	when x2 = 12 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 12 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_13: while x2 <= 13 timeslot wait {}
+	when x2 = 13 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 13 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_14: while x2 <= 14 timeslot wait {}
+	when x2 = 14 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 14 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_15: while x2 <= 15 timeslot wait {}
+	when x2 = 15 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 15 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_16: while x2 <= 16 timeslot wait {}
+	when x2 = 16 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 16 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_17: while x2 <= 17 timeslot wait {}
+	when x2 = 17 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 17 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_18: while x2 <= 18 timeslot wait {}
+	when x2 = 18 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 18 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_19: while x2 <= 19 timeslot wait {}
+	when x2 = 19 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 19 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_20: while x2 <= 20 timeslot wait {}
+	when x2 = 20 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 20 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_21: while x2 <= 21 timeslot wait {}
+	when x2 = 21 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 21 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_22: while x2 <= 22 timeslot wait {}
+	when x2 = 22 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 22 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_23: while x2 <= 23 timeslot wait {}
+	when x2 = 23 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 23 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_24: while x2 <= 24 timeslot wait {}
+	when x2 = 24 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 24 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_25: while x2 <= 25 timeslot wait {}
+	when x2 = 25 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 25 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_26: while x2 <= 26 timeslot wait {}
+	when x2 = 26 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 26 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_27: while x2 <= 27 timeslot wait {}
+	when x2 = 27 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 27 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_28: while x2 <= 28 timeslot wait {}
+	when x2 = 28 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 28 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_29: while x2 <= 29 timeslot wait {}
+	when x2 = 29 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 29 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_30: while x2 <= 30 timeslot wait {}
+	when x2 = 30 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 30 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_31: while x2 <= 31 timeslot wait {}
+	when x2 = 31 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 31 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_32: while x2 <= 32 timeslot wait {}
+	when x2 = 32 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 32 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_33: while x2 <= 33 timeslot wait {}
+	when x2 = 33 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 33 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_34: while x2 <= 34 timeslot wait {}
+	when x2 = 34 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 34 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_35: while x2 <= 35 timeslot wait {}
+	when x2 = 35 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 35 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_36: while x2 <= 36 timeslot wait {}
+	when x2 = 36 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 36 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_37: while x2 <= 37 timeslot wait {}
+	when x2 = 37 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 37 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_38: while x2 <= 38 timeslot wait {}
+	when x2 = 38 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 38 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_39: while x2 <= 39 timeslot wait {}
+	when x2 = 39 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 39 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_40: while x2 <= 40 timeslot wait {}
+	when x2 = 40 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 40 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_41: while x2 <= 41 timeslot wait {}
+	when x2 = 41 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 41 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_42: while x2 <= 42 timeslot wait {}
+	when x2 = 42 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 42 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_43: while x2 <= 43 timeslot wait {}
+	when x2 = 43 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 43 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_44: while x2 <= 44 timeslot wait {}
+	when x2 = 44 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 44 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_45: while x2 <= 45 timeslot wait {}
+	when x2 = 45 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 45 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_46: while x2 <= 46 timeslot wait {}
+	when x2 = 46 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 46 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_47: while x2 <= 47 timeslot wait {}
+	when x2 = 47 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 47 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_48: while x2 <= 48 timeslot wait {}
+	when x2 = 48 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 48 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_49: while x2 <= 49 timeslot wait {}
+	when x2 = 49 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 49 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_50: while x2 <= 50 timeslot wait {}
+	when x2 = 50 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 50 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_51: while x2 <= 51 timeslot wait {}
+	when x2 = 51 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 51 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_52: while x2 <= 52 timeslot wait {}
+	when x2 = 52 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 52 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_53: while x2 <= 53 timeslot wait {}
+	when x2 = 53 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 53 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_54: while x2 <= 54 timeslot wait {}
+	when x2 = 54 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 54 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_55: while x2 <= 55 timeslot wait {}
+	when x2 = 55 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 55 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_56: while x2 <= 56 timeslot wait {}
+	when x2 = 56 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 56 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_57: while x2 <= 57 timeslot wait {}
+	when x2 = 57 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 57 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_58: while x2 <= 58 timeslot wait {}
+	when x2 = 58 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 58 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_59: while x2 <= 59 timeslot wait {}
+	when x2 = 59 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 59 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_60: while x2 <= 60 timeslot wait {}
+	when x2 = 60 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 60 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_61: while x2 <= 61 timeslot wait {}
+	when x2 = 61 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 61 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_62: while x2 <= 62 timeslot wait {}
+	when x2 = 62 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 62 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+loc Wait2_5_63: while x2 <= 63 timeslot wait {}
+	when x2 = 63 timeslot sync busy2 do {x2' = 0} goto Collide2_5;
+	when x2 = 63 timeslot sync send2 do {x2' = 0} goto Transmit2;
+
+(* END OF AUTOMATED PROGRAM FOR CSMA/CD *)
+
+loc Done2: while x2 <= 0 wait {}
+-- 	when True goto Done2;
+end
+
+
+--****************************************************--
+--****************************************************--
+-- ANALYSIS
+--****************************************************--
+--****************************************************--
+
+var init : region;
+
+init := True
+	----------------------
+	-- Locations
+	----------------------
+	& loc[medium]  = Init
+	& loc[sender1] = Init1
+	& loc[sender2] = Init2
+
+	----------------------
+	-- Clocks
+	----------------------
+	& x1 = 0
+	& x2 = 0
+	& y  = 0
+
+	----------------------
+	-- Constraints
+	----------------------
+	& lambda >=0
+	& sigma >= 0
+	& timeslot >= 0
+-- 	& timeslot = 2 sigma
+
+	----------------------
+	-- Instantiations
+	----------------------
+-- 	& lambda   = 808
+--	& sigma    = 26
+-- 	& timeslot = 52
+	---END PI0---
+
+--	& lambda=96
+--	& sigma=3
+--	& timeslot=6
+;

@@ -58,7 +58,7 @@ Some algorithms can also run distributed on a cluster.
 Numerous analysis options are available.
 
 \imitator{} is a command-line only tool, but that can output results in graphical form.
-Furthermore, a graphical user interface is available in the \CosyVerif{} platform~\cite{AHHKLLP13}.
+% Furthermore, a graphical user interface is available in the \CosyVerif{} platform~\cite{AHHKLLP13}.
 
 \imitator{} was able to verify numerous case studies from the literature and from the industry, such as communication protocols, hardware asynchronous circuits, schedulability problems and various other systems such as coffee machines (probably the most critical systems from a researcher point of view).
 Numerous benchmarks are available at \imitator{} Web page~\cite{imitator}.
@@ -539,6 +539,10 @@ The option \styleOption{-output-states} generates a file with a textual descript
 \section{EF-synthesis}\label{ss:mode:EFsynth}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Reachability}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
 A main problem in parametric timed automata is to compute the set of parameter valuations for which some location (for instance, an error location) is reachable.
 
 The property must be specified as follows, at the end of the model (after the initial state definition):
@@ -551,7 +555,7 @@ Of course, the EF-emptiness problem being undecidable~\cite{AHV93}, the analysis
 
 The standard command is:
 
-\styleCommand{\binimitator{} model.imi -mode EFsynth -merge -incl -output-result}
+\styleCommand{\binimitator{} model.imi -mode EFunsafe -merge -incl -output-result}
 
 
 The option \styleOption{-output-result} is not compulsory, but allows one to obtain a result in an external text file (\stylePath{model.res}) formatted using a standardized manner (see \cref{chapter:result}), and therefore easier to parse using an external tool than the terminal output.
@@ -566,12 +570,27 @@ The option \styleOption{-dynamic-elimination} can also be used to reduce the sta
 	output the result to a text file using a normalized syntax (option \styleOption{-output-result}), that can be then scripted from external programs.
 
 
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Safety}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+Often, we are rather interested in \emph{safety} synthesis, \ie{} the set of valuations for which the target location is unreachable.
+
+The standard command is:
+
+\styleCommand{\binimitator{} model.imi -mode EFsynth -merge -incl -output-result}
+
+
+Internally, this algorithm works exactly the same as the reachability-synthesis, and at the end the obtained constraint is \emph{negated} (with parameters being constrained to be included in the initial state valuations).
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{EF-minimization}\label{ss:mode:EFmin}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 This algorithm synthesizes the minimum valuation for a given parameter for which a given location is reachable.
 The property must be specified as for \EFsynth{} (see \cref{ss:mode:EFsynth}).
+This algorithm is briefly mentioned in~\cite{ABPV19}.
 
 In addition, the parameter to be minimized must be specified at the end of the model as follows:
 
@@ -580,6 +599,7 @@ In addition, the parameter to be minimized must be specified at the end of the m
 The standard command is:
 
 \styleCommand{\binimitator{} model.imi -mode EFmin -merge -incl -output-result}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{EF-maximization}\label{ss:mode:EFmax}
@@ -596,13 +616,26 @@ The standard command is:
 \styleCommand{\binimitator{} model.imi -mode EFmax -merge -incl -output-result}
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{EF with optimal time reachability}\label{ss:mode:EFopt}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This algorithm synthesizes the parameter valuations for which a given location is reachable in minimal time~\cite{ABPV19}.
+The property must be specified as for \EFsynth{} (see \cref{ss:mode:EFsynth}).
+
+Our algorithm uses a priority queue, with priority to the earliest successor for the selection of the next state.
+
+The standard command is:
+
+\styleCommand{\binimitator{} model.imi -mode EFsynthminpq -merge -incl -output-result}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Parameter synthesis using properties}\label{ss:mode:prop}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \imitator{} basically only supports bad state reachability synthesis on the one hand, and algorithms such as the inverse method and the cartography on the other hand.
-However, many correctness properties can be encoded using reachability using \emph{observers} (see \cite{ABL98,ABBL98,Andre13ICECCS}).
+However, many correctness properties can be encoded using reachability using \emph{observers} (see \cite{ABL98,ABBL98,ABBL03,Andre13ICECCS}).
 
 Encoding observers can be done manually (using \adhoc{} \IPTA{}), or using predefined correctness properties commonly met in the literature.
 
@@ -938,12 +971,57 @@ To generate the trace set (\ie{} the discretized state space) of a given computa
 \styleCommand{\binimitator{} model.imi [options] -output-trace-set}
 
 \imitator{} will generate a file \stylePath{model-statespace.pdf}.
-Note that, beyond about 1,000 states or 1,000 transitions, the \gdot{} utility (responsible to generate the trace set) may crash.
+States are made of two part: the left-hand number (\eg{} \styleFileContent{s\_0}) is the number of the symbolic state, which comes from \imitator{} internal representation (\styleFileContent{s\_0} is the first one to be generated, and so on); the right-hand part displays all the discrete part of the symbolic state vertically, that is the current location in each of the NIPTA in parallel, and the value of possible discrete variables (if any).
+Consider state \texttt{s\_1} in \cref{figure:traceset:normal} (and originating from the example in \cref{chapter:syntax-introduction}):
+	the current location of IPTA \styleFileContent{proc\_1} is \styleFileContent{active1}, 
+	the current location of IPTA \styleFileContent{proc\_2} is \styleFileContent{idle2},
+	while
+	the current location of IPTA \styleFileContent{observer} is \styleFileContent{obs\_waiting}.
+In addition, the current value of variable \styleFileContent{turn} is $-1$ while the current value of \styleFileContent{counter} is~0.
+The color is chosen according to \imitator{} internal choice: however, two symbolic states with the same color have the same discrete part (location and values of the discrete variables).
+For example, this is the case of \styleFileContent{s\_4} and \styleFileContent{s\_5} in \cref{figure:traceset:normal}.
 
-Using \styleOption{-output-trace-set-nodetails} makes a more compact representation (but is also less informative).
+Note that, beyond about 1,000 states or 1,000 transitions, the \gdot{} utility (responsible to generate the state space) may crash.
 
-Conversely, \styleOption{-output-trace-set-verbose} makes an even more detailed representation, by also adding to the trace set all constraints (the clock and parameter constraints, and below their projection onto the parameters).
+Using \styleOption{-output-trace-set-nodetails} makes a more compact representation, but is also less informative as only the state number and the transition labels are shown.
+
+Conversely, \styleOption{-output-trace-set-verbose} makes a more detailed representation, by also adding to the state space all constraints (the clock and parameter constraints, and below their projection onto the parameters).
 This option is mostly suitable for small trace sets.
+
+\begin{example}
+	An example of state space with no details (output using \styleOption{-output-trace-set-nodetails}), with normal details (using \styleOption{-output-trace-set}), and in verbose mode (using \styleOption{-output-trace-set-verbose}) are given in \cref{figure:traceset:nodetail,figure:traceset:normal,figure:traceset:verbose}.
+	
+	These graphics were generated using the example in \cref{chapter:syntax-introduction} with the following command:
+	
+	\styleCommand{imitator fischer.imi -mode EF -depth-limit 4 -output-trace-set}
+	
+	(where \styleOption{-output-trace-set} should be replaced with the proper option)
+\end{example}
+
+\begin{figure}
+\centering
+	\begin{subfigure}[b]{.48\textwidth}
+		\includegraphics[width=\textwidth]{images/fischerPAT_obs-statespace-nodetails.pdf}
+
+		\caption{No details}
+		\label{figure:traceset:nodetail}
+	\end{subfigure}
+	\begin{subfigure}[b]{.48\textwidth}
+		\includegraphics[width=\textwidth]{images/fischerPAT_obs-statespace-normal.pdf}
+
+		\caption{Normal}
+		\label{figure:traceset:normal}
+	\end{subfigure}
+
+	\begin{subfigure}[b]{.75\textwidth}
+		\includegraphics[width=\textwidth]{images/fischerPAT_obs-statespace-verbose.pdf}
+
+		\caption{Verbose}
+		\label{figure:traceset:verbose}
+	\end{subfigure}
+	
+	\caption{Examples of graphical state space}
+\end{figure}
 
 
 
@@ -1293,6 +1371,9 @@ The mode for \imitator{}.
 	\styleOption{EFmax} & Parametric maximization synthesis \\
 	& (see \cref{ss:mode:EFmax}) \\
 	
+	\styleOption{EFsynthminpq} & Minimal-time reachability synthesis~\cite{ABPV19} \\
+	& (see \cref{ss:mode:EFopt}) \\
+	
 	\styleOption{PDFC} & Parametric deadlock-freeness checking (\PDFC{} \cite{Andre16}) \\
 	& (see \cref{ss:mode:PDFC}) \\
 	
@@ -1352,8 +1433,8 @@ When computing a new symbolic state, compute the time elapsing before taking the
 %------------------------------------------------------------
 \paragraph{\styleOption{-no-var-autoremove} (default: false)}
 %------------------------------------------------------------
-Usually, \imitator{} automatically removes from the analysis the variables declared in the header, but used no where in the \IPTA{}s nor in the correctness property.
-Note that a variable reset (to~0 or to any other value) is \emph{not} considered used, as long as it is not used elsewhere (\ie{} in a guard, an invariant, a value to be updated to, a property…).
+Usually, \imitator{} automatically removes from the analysis the variables declared in the header, but used nowhere in the \IPTA{}s nor in the correctness property.
+Note that a variable updated (to~0 or to any other value) is \emph{not} considered used, as long as it is not used elsewhere (\ie{} in a guard, an invariant, a value to be updated to, a property…).
 Using \styleOption{-no-var-autoremove} prevents \imitator{} from automatically remove these variables.
 
 
@@ -2432,6 +2513,10 @@ Camille~Coti, Sami~Evangelista and Nguy\~{ê}n~Hoàng~Gia worked on the distribu
 Nguy\~{ê}n~Hoàng~Gia worked on the non-Zeno synthesis algorithms.
 %
 Stéphane Rosse improved a script for comparing results and speeds of various versions of \imitator{}.
+%
+Vincent~Bloemen implemented the optimal-time reachability synthesis.
+%
+Jaime~Arias simplified a lot the source code management and implemented new features.
 
 We acknowledge the help of the PPL~\cite{bhz08} developers for their help with solving several issues over the years, and more generally for making this very useful library available.
 
@@ -2460,11 +2545,13 @@ The following people contributed to the development of \imitator{}.
 
 \begin{tabular}{l l @{ } c @{ } l}
 	Étienne André & 2008 & -- & \\
+	Jaime Arias & 2018 & -- & \\
+	Vincent Bloemen & 2018 & & \\
 	Camille Coti & 2014 & & \\
 	Daphne Dussaud & 2010 & & \\
 	Sami Evangelista & 2014 & & \\
 	Ulrich Kühne & 2010 & -- & 2011 \\
-	Nguy\~{ê}n~Hoàng~Gia & 2014 & -- & \\
+	Nguy\~{ê}n~Hoàng~Gia & 2014 & -- & 2018 \\
 	Romain Soulat & 2010 & -- & 2013 \\
 \end{tabular}
 
@@ -2473,7 +2560,6 @@ The following people contributed to the development of \imitator{}.
 The following people contributed to the compiling, testing and packaging facilities.
 
 \begin{tabular}{l l @{ } c @{ } l}
-	Jaime Arias & 2018 & & \\
 	Corentin Guillevic & 2015 & & \\
 	Sarah Hadbi & 2015 & & \\
 	Fabrice Kordon & 2015 & & \\
@@ -2498,6 +2584,23 @@ This user manual is available under the Creative Commons CC-BY-SA license.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
+
+\newcommand{\CCIS}{Communications in Computer and Information Science}
+\newcommand{\ENTCS}{Electronic Notes in Theoretical Computer Science}
+\newcommand{\FI}{Fundamenta Informormaticae}
+\newcommand{\FMSD}{Formal Methods in System Design}
+\newcommand{\IJFCS}{International Journal of Foundations of Computer Science}
+\newcommand{\IJSSE}{International Journal of Secure Software Engineering}
+\newcommand{\JLAP}{Journal of Logic and Algebraic Programming}
+\newcommand{\JLC}{Journal of Logic and Computation}
+\newcommand{\LMCS}{Logical Methods in Computer Science}
+\newcommand{\LNCS}{Lecture Notes in Computer Science}
+\newcommand{\RESS}{Reliability Engineering \& System Safety}
+\newcommand{\STTT}{International Journal on Software Tools for Technology Transfer}
+\newcommand{\TCS}{Theoretical Computer Science}
+\newcommand{\ToPNoC}{Transactions on Petri Nets and Other Models of Concurrency}
+\newcommand{\TSE}{IEEE Transactions on Software Engineering}
+
 \bibliographystyle{alpha}
 \addcontentsline{toc}{chapter}{References}
 \bibliography{biblio}

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2018/06/07
+ * Last modified     : 2018/07/19
  *
  ************************************************************)
 
@@ -38,6 +38,15 @@ val path_to_program : string
 
 val dot_command : string
 
+(************************************************************)
+(************************************************************)
+(* PARSING / MODEL SYNTAX *)
+(************************************************************)
+(************************************************************)
+
+(* Name for the global time clock in the input model *)
+val global_time_clock_name : string
+
 
 (************************************************************)
 (************************************************************)
@@ -55,6 +64,7 @@ val result_file_extension    : string
 val state_space_image_format : string
 val pta_default_image_format : string
 val dot_file_extension       : string
+val default_dot_image_extension  : string
 val states_file_extension    : string
 val cartography_extension    : string
 

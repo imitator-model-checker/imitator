@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2017/05/02
+ * Last modified     : 2018/08/16
  *
  ************************************************************)
 
@@ -47,6 +47,9 @@ class algoEFmax =
 	(* Function to remove upper bounds (if minimum) or lower bounds (if maximum) *)
 	method remove_bounds = LinearConstraint.p_grow_to_zero_assign
 	
+	(* The closed operator (>= for minimization, and <= for maximization) *)
+	method closed_op = LinearConstraint.Op_le
+
 
 	(*** NOTE: we kind of need to 'reimplement' the negate_single_inequality_p_constraint function, because there may be some p >= 0 inequality, that we do not need to negate ***)
 	method negate_inequality p_linear_constraint =

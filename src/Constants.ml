@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2018/07/02
+ * Last modified     : 2019/03/01
  *
  ************************************************************)
 
@@ -22,9 +22,9 @@
 
 let program_name = "IMITATOR"
 
-let version_string = "2.10.4"
+let version_string = "2.11"
 
-let version_name = "Butter Jellyfish"
+let version_name = "Butter Kouign-amann"
 
 (* Path ending with "/" *)
 let path_to_program =
@@ -52,6 +52,16 @@ let dot_command = "dot"
 
 (************************************************************)
 (************************************************************)
+(* PARSING / MODEL SYNTAX *)
+(************************************************************)
+(************************************************************)
+
+(* Name for the global time clock in the input model *)
+let global_time_clock_name = "global_time"
+
+
+(************************************************************)
+(************************************************************)
 (* FILE EXTENSIONS *)
 (************************************************************)
 (************************************************************)
@@ -66,6 +76,7 @@ let result_file_extension = ".res"
 let state_space_image_format = "pdf"
 let pta_default_image_format = "jpg"
 let dot_file_extension = "dot"
+let default_dot_image_extension = "dot"
 let states_file_extension = "states"
 let cartography_extension = "png"
 

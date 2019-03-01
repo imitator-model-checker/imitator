@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2018/02/23
+ * Last modified     : 2018/09/06
  *
  ************************************************************/
 
@@ -18,6 +18,7 @@
 open ParsingStructure;;
 open Exceptions;;
 open NumConst;;
+open ImitatorUtilities;;
   
   
 let parse_error s =
@@ -164,8 +165,13 @@ prolog:
 
 /**********************************************/
 
+/* WARNING: deprecated syntax */
 initialization:
-	| CT_INITIALLY NAME state_initialization SEMICOLON {}
+	| CT_INITIALLY NAME state_initialization SEMICOLON {
+		(* Print a warning because this syntax is deprecated and not taken into account! *)
+		print_warning ("The syntax 'initially " ^ $2 ^ "' is deprecated and is NOT taken into account. Initial locations must be defined in the initial state definition.");
+		()
+	}
 ;
 
 /**********************************************/

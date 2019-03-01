@@ -1,0 +1,106 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * A Web privacy problem
+ *
+ * Description     : A Web privacy problem described in [BCLR15]
+ * Correctness     : Not deducible whether the user A has visited Web site C
+ * Source          : Fig.12, "Control and synthesis of non-interferent timed systems", Gilles Benattar, Franck Cassez, Didier Lime & Olivier H. Roux. International Journal of Control, 88:2, 217-236, DOI: 10.1080/00207179.2014.944356
+ * Author          : Gilles Benattar, Franck Cassez, Didier Lime & Olivier H. Roux
+ * Modeling        : Gilles Benattar, Franck Cassez, Didier Lime & Olivier H. Roux
+ * Input by        : Étienne André
+ * License         : unclear
+ *
+ * Created         : 2018/11/14
+ * Last modified   : 2018/11/14
+ *
+ * IMITATOR version: 2.10.4
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+ 	y,
+		: clock;
+
+(* Parameters *)
+(*	p,
+		: parameter;*)
+
+
+
+(************************************************************)
+  automaton W
+(************************************************************)
+synclabs: VisitAB, VisitAC, LoadLogoBC, AppletBA, LoadLogoAC;
+
+loc q0: invariant True
+	when True sync VisitAB do {x := 0} goto q1;
+	when True sync VisitAC goto q4;
+
+loc q1: invariant x <= 5
+	when x >= 3 sync LoadLogoBC goto q2;
+	when True sync VisitAC goto q5;
+
+loc q2: invariant True
+	when True sync AppletBA do {y := 0} goto q3;
+	when True sync VisitAC goto q6;
+
+loc q3: invariant y <= 5
+	when y >= 3 sync LoadLogoAC goto q0;
+
+loc q4: invariant True
+	when True sync VisitAB do {x := 0} goto q5;
+
+loc q5: invariant x <= 5
+	when x >= 3 sync LoadLogoBC goto q6;
+
+loc q6: True
+	when True sync AppletBA do {y := 0} goto q7;
+
+loc q7: y <= 4
+	when y >= 1 sync LoadLogoAC goto q4;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[W] = q0
+
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+(* 	& p >= 0 *)
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* property := unreachable loc[pta] = l1; *)
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

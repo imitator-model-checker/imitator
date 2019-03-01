@@ -12,43 +12,44 @@
 var 
 	t_asap_1:clock;
 	t_pipeline_1:clock;
-	T_pipeline_1=31250:parameter;
-	D_pipeline_1=200000:parameter;
 	t_task_11:clock;
-	C_task_11:parameter;
 	Token_11:discrete;
 	t_task_12:clock;
-	C_task_12=445:parameter;
 	Token_12:discrete;
 	t_task_13:clock;
-	C_task_13=9091:parameter;
 	Token_13:discrete;
 	t_task_14:clock;
-	C_task_14=445:parameter;
 	Token_14:discrete;
 	t_task_15:clock;
-	C_task_15:parameter;
 	Token_15:discrete;
 	t_asap_2:clock;
 	t_pipeline_2:clock;
-	T_pipeline_2=3000000:parameter;
-	D_pipeline_2=1000000:parameter;
 	t_task_21:clock;
-	C_task_21=90910:parameter;
 	Token_21:discrete;
 	t_task_22:clock;
-	C_task_22=889:parameter;
 	Token_22:discrete;
 	t_task_23:clock;
-	C_task_23=44248:parameter;
 	Token_23:discrete;
 	t_task_24:clock;
-	C_task_24=889:parameter;
 	Token_24:discrete;
 	t_task_25:clock;
-	C_task_25=22728:parameter;
 	Token_25:discrete;
 
+	T_pipeline_1=31250,
+	D_pipeline_1=200000,
+	C_task_11,
+	C_task_12=445,
+	C_task_13=9091,
+	C_task_14=445,
+	C_task_15,
+	T_pipeline_2=3000000,
+	D_pipeline_2=1000000,
+	C_task_21=90910,
+	C_task_22=889,
+	C_task_23=44248,
+	C_task_24=889,
+	C_task_25=22728,
+		: parameter;
 
 automaton pipeline_1
 	synclabs:pipeline_restart_1,task_11_act,task_11_done,task_12_act,task_12_done,task_13_act,task_13_done,task_14_act,task_14_done,task_15_act,task_15_done;
@@ -312,7 +313,23 @@ init:= True &
 	Token_23 = 0 & 
 	Token_24 = 0 & 
 	Token_25 = 0 & 
-	True;
+	True
+	
+	& T_pipeline_1 >= 0
+	& D_pipeline_1 >= 0
+	& C_task_11 >= 0
+	& C_task_12>= 0
+	& C_task_13 >= 0
+	& C_task_14 >= 0
+	& C_task_15 >= 0
+	& T_pipeline_2 >= 0
+	& D_pipeline_2 >= 0
+	& C_task_21 >= 0
+	& C_task_22 >= 0
+	& C_task_23 >= 0
+	& C_task_24 >= 0
+	& C_task_25 >= 0
+;
 
 property := unreachable(loc[proc_1] = DEADLINE_MISS)
 	or
