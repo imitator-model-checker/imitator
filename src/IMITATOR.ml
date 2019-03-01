@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2018/10/08
+ * Last modified     : 2019/03/01
  *
  ************************************************************)
 
@@ -314,6 +314,24 @@ if options#pta2tikz then(
 	print_message Verbose_standard ("File '" ^ latex_file ^ "' successfully created.");
 	terminate_program()
 );
+
+(* Translation to Uppaal *)
+if options#pta2uppaal then(
+	print_message Verbose_standard ("Translating model to an Uppaal input model.");
+	let translated_model = PTA2Uppaal.string_of_model model in
+	let output_file = options#files_prefix ^ "-uppaal.xml" in
+		(*** NOTE: for testing purpose ***)
+	if verbose_mode_greater (*Verbose_total*)Verbose_standard then(
+		print_message Verbose_standard ("\n" ^ translated_model ^ "\n");
+	);
+	(* Write *)
+	write_to_file output_file translated_model;
+	print_message Verbose_standard ("File '" ^ output_file ^ "' successfully created.");
+	terminate_program()
+);
+
+
+
 (* Direct cartography output *)
 if options#cartonly then(
 	raise (NotImplemented("Direct cartography output (#cartonly) is disabled"))
