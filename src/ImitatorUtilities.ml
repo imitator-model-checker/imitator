@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2018/10/08
+ * Last modified     : 2019/03/01
  *
  ************************************************************)
 
@@ -502,6 +502,8 @@ let print_header_string () =
 let print_contributors()  = 
 	print_string ("    " ^ Constants.program_name ^ " has been developed by:\n");
 	print_string ("    * Etienne Andre       (2008 - " ^ (BuildInfo.build_year) ^ "), lead developer\n");
+	print_string ("    * Jaime Arias         (2018 - " ^ (BuildInfo.build_year) ^ ")\n");
+	print_string "    * Vincent Bloemen     (2018)\n";
 	print_string "    * Camille Coti        (2014)\n";
 	print_string "    * Daphne Dussaud      (2010)\n";
 	print_string "    * Sami Evangelista    (2014)\n";
@@ -510,7 +512,6 @@ let print_contributors()  =
 	print_string "    * Romain Soulat       (2010 - 2013)\n";
 	print_string "\n";
 	print_string "    Compiling, testing and packaging:\n";
-	print_string ("    * Jaime Arias         (2018 - " ^ (BuildInfo.build_year) ^ ")\n");
 	print_string "    * Corentin Guillevic  (2015)\n";
 	print_string "    * Sarah Hadbi         (2015)\n";
 	print_string "    * Fabrice Kordon      (2015)\n";
