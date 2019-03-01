@@ -222,7 +222,7 @@ type imitator_mode =
 	(** EF-synthesis with maximization *)
 	| EF_synth_max
 
-	(** Optimal reachability with priority queue: queue-based, with priority to the earliest successor for the selection of the next state [work in progress André, Bloemen, Petrucci] *)
+	(** Optimal reachability with priority queue: queue-based, with priority to the earliest successor for the selection of the next state [ABPP19] *)
 	| EF_synth_min_priority_queue
 
 	(** AF-synthesis *)
