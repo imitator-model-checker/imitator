@@ -600,6 +600,7 @@ The standard command is:
 
 \styleCommand{\binimitator{} model.imi -mode EFmin -merge -incl -output-result}
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{EF-maximization}\label{ss:mode:EFmax}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -614,6 +615,19 @@ The standard command is:
 
 \styleCommand{\binimitator{} model.imi -mode EFmax -merge -incl -output-result}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{EF with optimal time reachability}\label{ss:mode:EFopt}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+This algorithm synthesizes the parameter valuations for which a given location is reachable in minimal time~\cite{ABPV19}.
+The property must be specified as for \EFsynth{} (see \cref{ss:mode:EFsynth}).
+
+Our algorithm uses a priority queue, with priority to the earliest successor for the selection of the next state.
+
+The standard command is:
+
+\styleCommand{\binimitator{} model.imi -mode EFsynthminpq -merge -incl -output-result}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1356,6 +1370,9 @@ The mode for \imitator{}.
 	
 	\styleOption{EFmax} & Parametric maximization synthesis \\
 	& (see \cref{ss:mode:EFmax}) \\
+	
+	\styleOption{EFsynthminpq} & Minimal-time reachability synthesis~\cite{ABPV19} \\
+	& (see \cref{ss:mode:EFopt}) \\
 	
 	\styleOption{PDFC} & Parametric deadlock-freeness checking (\PDFC{} \cite{Andre16}) \\
 	& (see \cref{ss:mode:PDFC}) \\
