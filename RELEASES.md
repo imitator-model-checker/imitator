@@ -1,5 +1,9 @@
 *******************************************************
 # release XXX (XXXX) FUTURE MAJOR RELEASE
+
+
+*******************************************************
+# release 2.11 (2019-XXXX)
 MAJOR RELEASE
 
 ### Major features
@@ -25,6 +29,7 @@ MAJOR RELEASE
 
 ### Minor features:
 * New option to avoid the inclusion check in EFsynth: useful when very large parameter constraints are manipulated
+
 
 *******************************************************
 # release 2.10.4 (2018-07-02)
