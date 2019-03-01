@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
- * Last modified     : 2018/05/17
+ * Last modified     : 2019/03/01
  *
  ************************************************************)
 
@@ -119,20 +119,8 @@ let string_of_synclabs model automaton_index =
 	^ ";"
 
 
-(* Convert the initially of an automaton into a string *)
-let string_of_initially model automaton_index = ""
-(*** NOTE: deprecated ***)
-(*	let inital_global_location  = model.initial_location in
-	let initial_location = Location.get_location inital_global_location automaton_index in
-	"initially "
-	^ (model.location_names automaton_index initial_location)
-	^ ";"*)
-
-
 (* Convert the invariant of a location into a string *)
 let string_of_invariant model automaton_index location_index =
-(* 	print_message Verbose_high "Entering string_of_invariant…"; *)
-	let result = 
 	(* Invariant *)
 	"invariant "
 	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index))
@@ -147,9 +135,6 @@ let string_of_invariant model automaton_index location_index =
 	else
 	let stopped_str = string_of_list_of_string_with_sep "," (List.map model.variable_names stopped) in
 	" stop{" ^ stopped_str ^ "}" 
-	in
-(* 	print_message Verbose_high "Entering string_of_invariant…End"; *)
-	result
 
 
 (* Convert a sync into a string *)
@@ -239,7 +224,7 @@ let string_of_discrete_updates model updates =
 
 
 (* Convert a transition of a location into a string *)
-let string_of_transition model automaton_index action_index (guard, clock_updates, discrete_updates, destination_location) =
+let string_of_transition model automaton_index action_index (guard, clock_updates, discrete_updates, target_location) =
 	(* Should we add a separating comma between clock updates and discrete updaes? *)
 	let separator_comma =
 		let no_clock_updates =
@@ -266,7 +251,7 @@ let string_of_transition model automaton_index action_index (guard, clock_update
 	(* Convert the sync *)
 	^ (string_of_sync model action_index)
 	(* Convert the destination location *)
-	^ " goto " ^ (model.location_names automaton_index destination_location)
+	^ " goto " ^ (model.location_names automaton_index target_location)
 	^ ";"
 
 
@@ -288,9 +273,6 @@ let string_of_transitions model automaton_index location_index =
 
 (* Convert a location of an automaton into a string *)
 let string_of_location model automaton_index location_index =
-(* 	print_message Verbose_high "Entering string_of_location…"; *)
-	(* print_message Verbose_high ("Location index: " ^ string_of_int location_index);  *)
-	let result =
 	"\n"
 	^ (if model.is_urgent automaton_index location_index then "urgent loc " else "loc ")
 	^ (model.location_names automaton_index location_index)
@@ -301,60 +283,37 @@ let string_of_location model automaton_index location_index =
 	^ ": "
 	^ (string_of_invariant model automaton_index location_index) (* bug here! *)
 	^ (string_of_transitions model automaton_index location_index)
-	in
-(* 	print_message Verbose_high "Entering string_of_location…End"; *)
-	result
 
 
 (* Convert the locations of an automaton into a string *)
 let string_of_locations model automaton_index =
-(* 	print_message Verbose_high "Entering string_of_locations…"; *)
-(*	print_message Verbose_high ("Locations_per_automaton length : " ^ 
-		(string_of_int (List.length (model.locations_per_automaton automaton_index))));*)
-
-	let result =
 	string_of_list_of_string_with_sep "\n " (List.map (fun location_index ->
 (* 		print_message Verbose_high ("location_index : " ^ (string_of_int location_index)); *)
 		string_of_location model automaton_index location_index
 	) (model.locations_per_automaton automaton_index))
-	in
-(* 	print_message Verbose_high "Entering string_of_locations…End"; *)
-	result
 
 
 (* Convert an automaton into a string *)
 let string_of_automaton model automaton_index =
-(* 	print_message Verbose_high "Entering string_of_automaton…"; *)
-	let result =
 	"\n(************************************************************)"
 	^ "\n automaton " ^ (model.automata_names automaton_index)
 	^ "\n(************************************************************)"
 	^ "\n " ^ (string_of_synclabs model automaton_index)
-	^ "\n " ^ (string_of_initially model automaton_index)
-	^ "\n " ^ (string_of_locations model automaton_index) (* bug here! *)
+	^ "\n " ^ (string_of_locations model automaton_index)
 	^ "\n end (* " ^ (model.automata_names automaton_index) ^ " *)"
 	^ "\n(************************************************************)"
-	in
-(* 	print_message Verbose_high "Entering string_of_automaton…End"; *)
-	result
 
 
 (* Convert the automata into a string *)
 let string_of_automata model =
-(* 	print_message Verbose_high "Entering string_of_automata…"; *)
 	(*** WARNING: Do not print the observer ***)
 	let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
 	in
 
-	(* bug here! *)
-	let result =
 	(* Print all (other) PTA *)
 	string_of_list_of_string_with_sep "\n\n" (
 		List.map (fun automaton_index -> string_of_automaton model automaton_index
 	) pta_without_obs)
-	in
-(* 	print_message Verbose_high "Entering string_of_automata…End"; *)
-	result
 
 
 
@@ -550,8 +509,6 @@ let string_of_optimization model =
 
 (* Convert the model into a string *)
 let string_of_model model =
-(* 	print_message Verbose_high "\n Entering string_of_model!…"; *)
-	let result = 
 	(* The header *)
 	string_of_header model
 	(* The variable declarations *)
@@ -569,9 +526,6 @@ let string_of_model model =
 	^  "\n" ^ string_of_optimization model
 	(* The footer *)
 	^  "\n" ^ footer
-	in
-(* 	print_message Verbose_high "\n Entering string_of_model!… End"; *)
-	result
 
 
 
