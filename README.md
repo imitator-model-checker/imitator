@@ -1,7 +1,11 @@
 imitator
 ========
 
+![Travis (.org) branch](https://img.shields.io/travis/imitator-model-checker/imitator/master.svg)
+![GitHub](https://img.shields.io/github/license/imitator-model-checker/imitator.svg)
+
 [IMITATOR](https://www.imitator.fr) is an open source software tool to perform automated parameter synthesis for concurrent timed systems.
+
 IMITATOR takes as input a network of IMITATOR parametric timed automata (NIPTA): NIPTA are an extension of parametric timed automata [AHV93], a well-known formalism to specify and verify models of systems where timing constants can be replaced with parameters, i.e., unknown constants.
 
 IMITATOR addresses several variants of the following problem:
