@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
- * Last modified     : 2019/03/01
+ * Last modified     : 2019/03/04
  *
  ************************************************************)
 
@@ -17,6 +17,7 @@ open OCamlUtilities
 open Result
 open AbstractModel
 open ImitatorUtilities
+
 
 
 (************************************************************)
@@ -91,7 +92,7 @@ let string_of_guard variable_names = function
 	| Continuous_guard continuous_guard -> LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard
 	| Discrete_continuous_guard discrete_continuous_guard ->
 		(LinearConstraint.string_of_d_linear_constraint variable_names discrete_continuous_guard.discrete_guard)
-		^ LinearConstraint.string_of_intersection ^
+		^ LinearConstraint.string_of_and ^
 		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
 
 
