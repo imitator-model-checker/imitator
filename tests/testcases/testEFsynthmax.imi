@@ -1,0 +1,90 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Very basic model to test EFmax
+ *
+ * Description     : Very basic model to test EFmax
+ * Correctness     : lbad unreachable
+ * Source          : own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2018/01/01
+ * Last modified   : 2018/01/01
+ *
+ * IMITATOR version: 2.10.2
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p1, p2,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant True
+	when x >= 10 & x = p1 sync a do {x := 0} goto lbad;
+	when x = 2 & x = p2 sync a do {x := 0} goto l2;
+	when x = 1 & x = p2 sync a do {x := 0} goto l3;
+	when x > 2 & x <= 3 & x = p2 sync a do {x := 0} goto l3;
+
+loc l2: invariant True
+	when x >= 3 & x = p1 sync a do {x := 0} goto lbad;
+
+loc l3: invariant True
+	when x = 3 & x = p1 sync a do {x := 0} goto lbad;
+
+loc lbad: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p1 >= 0
+	& p2 >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[pta] = lbad;
+
+maximize(p1);
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

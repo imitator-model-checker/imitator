@@ -4,13 +4,15 @@ imitator
 ![Travis (.org) branch](https://img.shields.io/travis/imitator-model-checker/imitator/master.svg)
 ![GitHub](https://img.shields.io/github/license/imitator-model-checker/imitator.svg)
 
-[IMITATOR](http://www.imitator.fr) is an open source software tool to perform automated parameter synthesis for concurrent timed systems.
+[IMITATOR](https://www.imitator.fr) is an open source software tool to perform automated parameter synthesis for concurrent timed systems.
+
 IMITATOR takes as input a network of IMITATOR parametric timed automata (NIPTA): NIPTA are an extension of parametric timed automata [AHV93], a well-known formalism to specify and verify models of systems where timing constants can be replaced with parameters, i.e., unknown constants.
 
 IMITATOR addresses several variants of the following problem:
 _given a concurrent timed system, what are the values of the timing constants that guarantee that the model of the system satisfies some property?_
 Specifically, IMITATOR implements:
-* parametric safety and parametric reachability analysis [AHV93,JLR15],
+* parametric safety and parametric reachability synthesis [AHV93,JLR15],
+* minimal-time and minimal-parameter reachability synthesis [ABPP19],
 * parametric deadlock-freeness checking [Andre16],
 * cycle-existence synthesis,
 * cycle-existence synthesis under the non-Zenoness assumption [ANPS17],
@@ -23,10 +25,9 @@ Numerous analysis options are available.
 IMITATOR is able to run in a distributed fashion on a cluster (using the PRPC algorithm).
 
 IMITATOR is mainly a command-line tool, but that can output results in graphical form.
-Furthermore, a graphical user interface is available in the [CosyVerif](http://cosyverif.org/) platform.
 
 IMITATOR was able to verify numerous case studies from the literature and from the industry, such as communication protocols, hardware asynchronous circuits, schedulability problems with uncertain periods and various other systems such as coffee machines (probably the most critical systems from a researcher point of view).
-Numerous benchmarks are available at the [IMITATOR Web page](http://www.imitator.fr), or on github.
+Numerous benchmarks are available at the [IMITATOR Web page](https://www.imitator.fr), or on github.
 
 For more info, please visit www.imitator.fr
 
@@ -36,6 +37,8 @@ formal verification, model checking, software verification, parameter synthesis,
 
 
 ### References
+
+[ABPP19] Étienne André, Vincent Bloemen, Laure Petrucci and Jaco Van de Pol. **Minimal-Time Synthesis for Parametric Timed Automata**. In Tomas Vojnar and Lijun Zhang (eds.), TACAS’19, Springer LNCS, April 2019.
 
 [ACEF09] Étienne André, Thomas Chatain, Emmanuelle Encrenaz and Laurent Fribourg. **An Inverse Method for Parametric Timed Automata**. International Journal of Foundations of Computer Science 20(5), pages 819–836, 2009.
 

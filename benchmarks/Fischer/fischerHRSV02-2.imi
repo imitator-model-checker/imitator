@@ -11,9 +11,9 @@
  * Input by        : Etienne Andre
  *
  * Created         : 2013/12/10
- * Last modified   : 2015/09/30
+ * Last modified   : 2018/11/13
  *
- * IMITATOR version: 2.7.2
+ * IMITATOR version: 2.10.4
  ************************************************************)
 
 var 
@@ -36,25 +36,25 @@ automaton process_1
 (************************************************************)
 synclabs: ;
 
-loc start_1: while x_1 <= max_rw wait {}
+loc start_1: invariant x_1 <= max_rw
 	(* Actually lock <> 0 (but no <> in IMITATOR, and <> 0 is equivalent to > 0 *)
-	when lock > 0 & x_1 > min_rw do {x_1' = 0} goto start_1;
+	when lock > 0 & x_1 > min_rw do {x_1 := 0} goto start_1;
 
-	when lock = 0 & x_1 > min_rw do {x_1' = 0} goto set_1;
+	when lock = 0 & x_1 > min_rw do {x_1 := 0} goto set_1;
 
-loc set_1: while x_1 <= max_rw wait {}
+loc set_1: invariant x_1 <= max_rw
 	(* Actually lock := i *)
-	when x_1 > min_rw do {lock' = 1, x_1' = 0} goto tryenter_1;
+	when x_1 > min_rw do {lock := 1, x_1 := 0} goto tryenter_1;
 
-loc tryenter_1: while x_1 <= max_delay wait {}
+loc tryenter_1: invariant x_1 <= max_delay
 	(* Actually lock := i *)
 	when x_1 > min_delay & lock = 1 goto cs_1;
 	(* Actually lock <> i *)
-	when x_1 > min_delay & lock > 1 do {x_1' = 0} goto start_1;
-	when x_1 > min_delay & lock < 1 do {x_1' = 0} goto start_1;
+	when x_1 > min_delay & lock > 1 do {x_1 := 0} goto start_1;
+	when x_1 > min_delay & lock < 1 do {x_1 := 0} goto start_1;
 
-loc cs_1: while True wait {}
-	when True do {x_1' = 0, lock' = 0} goto start_1;
+loc cs_1: invariant True
+	when True do {x_1 := 0, lock := 0} goto start_1;
 
 end (*process_1*)
 
@@ -65,25 +65,25 @@ automaton process_2
 (************************************************************)
 synclabs: ;
 
-loc start_2: while x_2 <= max_rw wait {}
+loc start_2: invariant x_2 <= max_rw
 	(* Actually lock <> 0 (but no <> in IMITATOR, and <> 0 is equivalent to > 0 *)
-	when lock > 0 & x_2 > min_rw do {x_2' = 0} goto start_2;
+	when lock > 0 & x_2 > min_rw do {x_2 := 0} goto start_2;
 
-	when lock = 0 & x_2 > min_rw do {x_2' = 0} goto set_2;
+	when lock = 0 & x_2 > min_rw do {x_2 := 0} goto set_2;
 
-loc set_2: while x_2 <= max_rw wait {}
+loc set_2: invariant x_2 <= max_rw
 	(* Actually lock := i *)
-	when x_2 > min_rw do {lock' = 2, x_2' = 0} goto tryenter_2;
+	when x_2 > min_rw do {lock := 2, x_2 := 0} goto tryenter_2;
 
-loc tryenter_2: while x_2 <= max_delay wait {}
+loc tryenter_2: invariant x_2 <= max_delay
 	(* Actually lock = i *)
 	when x_2 > min_delay & lock = 2 goto cs_2;
 	(* Actually lock <> i *)
-	when x_2 > min_delay & lock > 2 do {x_2' = 0} goto start_2;
-	when x_2 > min_delay & lock < 2 do {x_2' = 0} goto start_2;
+	when x_2 > min_delay & lock > 2 do {x_2 := 0} goto start_2;
+	when x_2 > min_delay & lock < 2 do {x_2 := 0} goto start_2;
 
-loc cs_2: while True wait {}
-	when True do {x_2' = 0, lock' = 0} goto start_2;
+loc cs_2: invariant True
+	when True do {x_2 := 0, lock := 0} goto start_2;
 
 end (*process_2*)
 

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2018/05/30
+ * Last modified     : 2018/08/16
  *
  ************************************************************)
 
@@ -42,6 +42,8 @@ open Statistics
 (* Raised when a linear_term is not a clock guard, i.e., of the form x ~ plterm *)
 exception Not_a_clock_guard
 
+(* Raised when a linear_term is not a one-dimensional single parameter constraint, i.e., of the form p ~ c *)
+exception Not_a_1d_parameter_constraint
 
 
 (************************************************************)
@@ -253,6 +255,15 @@ let reverse_op = function
 	| Op_eq		-> Op_eq
 	| Op_le		-> Op_ge
 	| Op_l		-> Op_g
+
+
+(* Convert an op to string *)
+let string_of_op = function
+	| Op_g  -> ">"
+	| Op_ge -> ">="
+	| Op_eq -> "="
+	| Op_le -> "<="
+	| Op_l  -> "<"
 
 
 type linear_inequality = Ppl.linear_constraint
@@ -1273,7 +1284,6 @@ let clock_guard_of_linear_inequality linear_inequality =
 	(clock_index, operator, parametric_linear_term)
 
 
-
 	
 (*(** substitutes all variables in a linear term.
 		The substitution is given as a function sub: var -> linear_term *)
@@ -1396,7 +1406,7 @@ let constraint_of_point nb_dimensions (thepoint : (variable * coef) list) =
 	in
 	make nb_dimensions inequalities
 
-(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+(*** NOTE: must provide the argument to be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
 let p_constraint_of_point v_c_list = constraint_of_point !p_dim v_c_list
 let pxd_constraint_of_point v_c_list = constraint_of_point !pxd_dim v_c_list
 
@@ -2479,6 +2489,93 @@ let pxd_of_px_constraint c =
 	(* Return *)
 	pxd_constraint
 
+
+(*------------------------------------------------------------*)
+(** Convert a one-dimensional single parameter linear constraint into a single parameter constraint (i.e. a triple parameter_index, operator, constant); raises Not_a_1d_parameter_constraint if the constraint is not a proper constraint *)
+(*------------------------------------------------------------*)
+let parameter_constraint_of_p_linear_constraint parameter_index p_linear_constraint =
+	(* First get inequalities *)
+	let inequalities = p_get_inequalities p_linear_constraint in
+	
+	(* If < 1 or > 2 inequality: problem *)
+	if List.length inequalities < 1 || List.length inequalities > 2 then(
+		raise Not_a_1d_parameter_constraint
+	);
+	
+	(* Get the inequality; now the problem is that it may be of the form p >= 0 & p <= n, so in that case we must discard the >= 0 *)
+	let linear_inequality =
+		(* Size 1: easy *)
+		if List.length inequalities = 1 then List.nth inequalities 0
+		else(
+		(* Size 2: less easy *)
+			let inequality1 = List.nth inequalities 0 in
+			let inequality2 = List.nth inequalities 1 in
+			
+			(*** BADPROG: duplicate code (just below) ***)
+			
+			(* First check 1: *)
+
+			(* get both linear terms *)
+			let lterm, rterm =
+			match inequality1 with
+			| Less_Than (lterm, rterm) | Less_Or_Equal (lterm, rterm)  | Greater_Than (lterm, rterm)  | Greater_Or_Equal (lterm, rterm) | Equal (lterm, rterm) ->
+				lterm, rterm
+			in
+			
+			(* Compute lterm - rterm *)
+			let linear_term = Minus (lterm, rterm) in
+
+			(* Get the constant coefficient *)
+			let constant_coefficient = get_coefficient_in_linear_term linear_term in
+			
+			(* Decide which of the two inequalities is good depending on the coefficient *)
+			if NumConst.equal constant_coefficient NumConst.zero then inequality2 else inequality1
+		)
+	 in
+	
+	(* First get both linear terms *)
+	let lterm, rterm =
+	match linear_inequality with
+	| Less_Than (lterm, rterm) | Less_Or_Equal (lterm, rterm)  | Greater_Than (lterm, rterm)  | Greater_Or_Equal (lterm, rterm) | Equal (lterm, rterm) ->
+		lterm, rterm
+	in
+	
+	(* Compute lterm - rterm *)
+	let linear_term = Minus (lterm, rterm) in
+	
+	(* Get the parameter coefficient *)
+	let coeff_option = get_variable_coef_in_linear_term parameter_index linear_term in
+	
+	let parameter_coeff, positive_parameter = match coeff_option with
+		| None ->
+			print_error "Parameter coefficient not found in parameter_constraint_of_p_linear_constraint";
+			raise Not_a_1d_parameter_constraint
+		| Some parameter_coeff ->
+			(* Check that the coeff is not 0 *)
+			if NumConst.equal parameter_coeff NumConst.zero then(
+				print_error "Zero coefficient found in parameter_constraint_of_p_linear_constraint";
+				raise Not_a_1d_parameter_constraint
+			);
+			parameter_coeff, NumConst.ge parameter_coeff NumConst.zero
+	in
+	
+	(* Get the constant coefficient *)
+	let constant_coefficient = get_coefficient_in_linear_term linear_term in
+	
+	(* Compute the coefficient to transform c * p ~ n into p ~ n/c *)
+	let updated_coefficient = NumConst.neg (NumConst.div constant_coefficient parameter_coeff) in
+	
+	(* Retrieve the operator *)
+	let operator = match linear_inequality with
+		| Less_Than _ -> if positive_parameter then Op_l else Op_g
+		| Less_Or_Equal _ -> if positive_parameter then Op_le else Op_ge
+		| Greater_Than _ -> if positive_parameter then Op_g else Op_l
+		| Greater_Or_Equal _ -> if positive_parameter then Op_ge else Op_le
+		| Equal _ -> Op_eq
+	in
+
+	(* Return the result *)
+	(parameter_index, operator, updated_coefficient)
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

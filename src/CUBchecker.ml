@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2018/02/21
+ * Last modified     : 2018/07/19
  *
  ************************************************************)
 
@@ -3500,6 +3500,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
  		special_reset_clock = model.special_reset_clock;
  		(* The list of clock indexes except the reset clock (used, e.g., to print the model *)
  		clocks_without_special_reset_clock = model.clocks_without_special_reset_clock;
+		(* Index of a special clock meant to measure the global time (how this clock is actually used is up to the model designer *)
+		global_time_clock = model.global_time_clock;
 		(* The list of discrete indexes *)
 		discrete = model.discrete;
 		(* True for discrete, false otherwise *)

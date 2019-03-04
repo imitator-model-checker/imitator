@@ -1,0 +1,38 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * CSMA/CD Protocol
+ *
+ * Description     : CSMA/CD Protocol
+ * Correctness     : TODO
+ * Source          : Non-probabilistic model deduced from the probabilistic model in "Symbolic Model Checking for Probabilistic Timed Automata" (M. Kwiatkowska, G. Norman, J. Sproston and F. Wang., FORMATS/FTRTFT'2004). See figures on http://www.prismmodelchecker.org/casestudies/csma.php
+ * Author          : M. Kwiatkowska, G. Norman, J. Sproston and F. Wang. 
+ * Modeling        : M. Kwiatkowska, G. Norman, J. Sproston and F. Wang. 
+ * Input by        : Laurent Fribourg and Etienne Andre
+ *
+ * Created         : 2007
+ * Last modified   : 2010/04/19
+ *
+ * IMITATOR version: 2.7.1
+ ************************************************************)
+
+-- 	& lambda   = 1 .. 20
+-- 	& sigma    = 1 .. 2
+-- 	& timeslot = 1 .. 2
+
+	& lambda   = 1 .. 20
+	& sigma    = 1 .. 10
+	& timeslot = 1 .. 10
+
+-- 	& lambda   = 1 .. 1000 -- 808
+-- 	& sigma    = 0 .. 10 -- 0 .. 5 -- 26
+-- 	& timeslot = 52 -- 1 .. 5 -- 20 .. 50 -- 52
+
+
+-- 	& lambda   = 808
+-- 	& sigma    = 26
+-- 	& timeslot = 52
+
+--	& lambda=96
+--	& sigma=3
+--	& timeslot=6

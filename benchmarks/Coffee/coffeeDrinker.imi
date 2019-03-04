@@ -4,16 +4,16 @@
  * Coffee vending machine with drinker
  *
  * Description     : Coffee vending machine; a single button is used to wake the machine up, and to add sugar. Then a cup, and coffee are delivered after a (parametric) time.
-	Drinker: [ongoing work]
- * Correctness     : Many possibilities (e.g., "it is possible to get a coffee")
+	Drinker: Work for some parametric time [p_work_min, p_work_max], then needs coffee. Asks for a coffee with a non-deterministic number of sugars in [0, MAX_SUGAR]. If does not get its coffee within p_patience_max, then gets mad.
+ * Correctness     : The scientist never gets mad
  * Source          : Own work
- * Author          : Etienne Andre
- * Input by        : Etienne Andre
+ * Author          : Étienne André
+ * Input by        : Étienne André
  *
  * Created         : 2011/01/21
- * Last modified   : 2015/07/08
+ * Last modified   : 2018/08/13
  *
- * IMITATOR version: 2.7-beta3
+ * IMITATOR version: 2.10
  ************************************************************)
 
 var
@@ -31,11 +31,12 @@ var
 	p_coffee,
 
 	(* interval of work without need for coffee *)
-	p_work_min, p_work_max,
-	(* interval of time between 2 consecutive pressures by the user *)
-	p_press,
+	p_work_min,
+	p_work_max,
+	(* Minimum interval of time between 2 consecutive pressures by the user *)
+	p_press_min,
 	(* time after which the drinker gets mad *)
-	p_patience_max
+	p_patience_max,
 		: parameter;
 
 (* Discrete variables *)
@@ -43,8 +44,8 @@ var
 		: discrete;
 
 (* Constants *)
-	MAX_SUGAR = 2
-		: parameter;
+	MAX_SUGAR = 3,
+		: constant;
 
 
 (************************************************************)
@@ -52,20 +53,20 @@ var
 (************************************************************)
 synclabs: press, cup, coffee, sleep;
 
-loc idle: while True wait {}
-	when True sync press do {x1' = 0, x2' = 0} goto add_sugar;
+loc idle: invariant True
+	when True sync press do {x1 := 0, x2 := 0} goto add_sugar;
 
-loc add_sugar: while x2 <= p_add_sugar & x2 <= p_coffee wait {}
-	when (*x1 >= p_block_button*)True sync press do {x1' = 0} goto add_sugar;
+loc add_sugar: invariant x2 <= p_add_sugar & x2 <= p_coffee
+	when (*x1 >= p_block_button*)True sync press do {x1 := 0} goto add_sugar;
 	when x2 = p_add_sugar sync cup do {} goto preparing_coffee;
 
-loc preparing_coffee: while x2 <= p_coffee wait {}
+loc preparing_coffee: invariant x2 <= p_coffee
 (* 	when x2 = p_coffee sync coffee goto idle; *)
 	when True sync press goto preparing_coffee;
-	when x2 = p_coffee sync coffee do {x1' = 0} goto cdone;
+	when x2 = p_coffee sync coffee do {x1 := 0} goto cdone;
 
-loc cdone: while x1 <= 10 wait {}
-	when True sync press do {x1' = 0, x2' = 0} goto add_sugar;
+loc cdone: invariant x1 <= 10
+	when True sync press do {x1 := 0, x2 := 0} goto add_sugar;
 	when x1 = 10 sync sleep goto idle;
 
 end (* machine *)
@@ -76,19 +77,22 @@ end (* machine *)
 (************************************************************)
 synclabs: press, coffee;
 
-loc researching: while y1 <= p_work_max wait {}
-	when y1 >= p_work_min sync press do {y1' = 0, y2' = 0, nb_sugar' = 0} goto add_sugar;
+loc researching: invariant y1 <= p_work_max
+	when y1 >= p_work_min sync press do {y1 := 0, y2 := 0, nb_sugar := 0} goto add_sugar;
 
-loc add_sugar: while y1 <= p_press & y2 <= p_patience_max & nb_sugar <= MAX_SUGAR wait {}
-	when y1 = p_press & nb_sugar < MAX_SUGAR - 1 sync press do {y1' = 0, nb_sugar' = nb_sugar + 1} goto add_sugar;
-	when y1 = p_press & nb_sugar = MAX_SUGAR - 1 sync press do {y1' = 0, nb_sugar' = nb_sugar + 1} goto wait_coffee;
+(*** TODO: an improvement would be to first nonderministically chose the number of sugars to add, and then to indeed add it (and get mad if it is impossible to get a coffee with this number); otherwise, the scientist may not get the desired number of sugards depending on the relationship between p_press_min and p_add_sugar ***)
+loc add_sugar: invariant y2 <= p_patience_max & nb_sugar <= MAX_SUGAR
+	when y1 >= p_press_min & nb_sugar < MAX_SUGAR - 1 sync press do {y1 := 0, nb_sugar := nb_sugar + 1} goto add_sugar;
+	when y1 >= p_press_min & nb_sugar = MAX_SUGAR - 1 sync press do {y1 := 0, nb_sugar := nb_sugar + 1} goto wait_coffee;
+	(* Can also non-deterministically stop adding sugar and wait for coffee *)
+	when True goto wait_coffee;
 	when y2 = p_patience_max goto mad;
 
-loc wait_coffee: while y2 <= p_patience_max wait {}
-	when y2 < p_patience_max sync coffee do {y1' = 0} goto researching;
+loc wait_coffee: invariant y2 <= p_patience_max
+	when y2 < p_patience_max sync coffee do {y1 := 0, y2 := 0} goto researching;
 	when y2 = p_patience_max goto mad;
 
-loc mad: while True wait {}
+loc mad: invariant True
 
 end (* researcher *)
 
@@ -122,7 +126,7 @@ init :=
 (* 	& p_block_button >= 0 *)
 	& p_add_sugar >= 0
 	& p_coffee >= 0
-	& p_press >= 0
+	& p_press_min >= 0
 	& p_work_min >= 0
 	& p_work_min <= p_work_max
 	& p_patience_max >= 0
@@ -134,7 +138,7 @@ init :=
 (************************************************************)
 
 property := unreachable loc[researcher] = mad;
-projectresult(p_patience_max, p_press, p_coffee);
+projectresult(p_patience_max, p_press_min, p_coffee);
 
 
 (************************************************************)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/09/09
- * Last modified     : 2018/02/23
+ * Last modified     : 2018/09/12
  *
  ************************************************************)
 
@@ -1823,7 +1823,7 @@ let linear_term_of_parsed_update_arithmetic_expression index_of_variables consta
 
 
 (*------------------------------------------------------------*)
-(* Create the hash table of constants ; check on the fly the validity *)
+(* Create the hash table of constants ; check the validity on-the-fly *)
 (*------------------------------------------------------------*)
 let make_constants constants =
 	(* Create hash table *)
@@ -2557,7 +2557,14 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 		
 		(* Remove variable unused *)
 		let remove_unused_variables_gen variable_type_name = List.partition (fun variable_name ->
-			if StringSet.mem variable_name all_variable_used then true
+			(* The variable is kept if… *)
+			if
+				(* Either it is used somewhere *)
+				(StringSet.mem variable_name all_variable_used)
+				(* Or it is a clock with the special global_time name *)
+				||
+				(variable_name = Constants.global_time_clock_name && List.mem variable_name single_clock_names)
+			then true
 			else (
 				(* First print a warning *)
 				print_warning ("The " ^ variable_type_name ^ " '" ^ variable_name ^ "' is declared but never used in the model; it is therefore removed from the model. Use option -no-var-autoremove to keep it.");
@@ -2678,27 +2685,23 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	let is_discrete = (fun variable_index -> try (type_of_variables variable_index = Var_type_discrete) with Invalid_argument _ ->  false) in
 	
 	
+	(* Detect the clock with a special global time name, if any *)
+	let global_time_clock =
+		if List.mem Constants.global_time_clock_name clock_names then Some (Hashtbl.find index_of_variables Constants.global_time_clock_name)
+		else None
+	in
+	
+	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug prints *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Numbers *)
-	print_message Verbose_low (
-		(string_of_int nb_automata) ^ " automata, "
-		^ (string_of_int nb_labels) ^ " declared label" ^ (s_of_int nb_labels) ^ ", "
-		^ (string_of_int nb_clocks) ^ " clock variable" ^ (s_of_int nb_clocks) ^ ", "
-		^ (string_of_int nb_discrete) ^ " discrete variable" ^ (s_of_int nb_discrete) ^ ", "
-		^ (string_of_int nb_parameters) ^ " parameter" ^ (s_of_int nb_parameters) ^ ", "
-		^ (string_of_int nb_variables) ^ " variable" ^ (s_of_int nb_variables) ^ ", "
-		^ (string_of_int (Hashtbl.length constants)) ^ " constant" ^ (s_of_int (Hashtbl.length constants)) ^ "."
-	);
-	
 	(* Automata *)
 	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("\n*** Array of automata names:");
 		debug_print_array Verbose_high array_of_automata_names;
 
 		(* Labels *)
-		print_message Verbose_high ("\n*** Array of declared label names:");
+		print_message Verbose_high ("\n*** Array of declared synchronization action names:");
 		debug_print_array Verbose_high labels;
 
 		(* Variables *)
@@ -2861,7 +2864,6 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	print_message Verbose_total ("*** Building transitions…");
 	let transitions = convert_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions in
 	
-	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Handle the observer here *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2995,6 +2997,25 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 		| Some clock_index -> list_remove_first_occurence clock_index clocks
 	in
 
+	(* Print metrics if verbose low or in any case in mode translation *)
+	if verbose_mode_greater Verbose_low || options#imitator_mode = Translation then(
+		print_message Verbose_standard (
+			(string_of_int nb_automata) ^ " automat" ^ (if nb_automata > 1 then "a" else "on")
+			^ ", "
+			(*** NOTE: compute number of locations here as not used elsewhere ***)
+			^ (let nb_locations = List.fold_left (fun current_nb automaton -> current_nb + (List.length (locations_per_automaton automaton))) 0 automata in (string_of_int nb_locations) ^ " location" ^ (s_of_int nb_locations) ^ ", ")
+			(*** NOTE: compute number of transitions here as not used elsewhere ***)
+(* 			^ (let nb_transitions = List.fold_left (fun current_nb, automaton -> current_nb +  ) 0 transitions in (string_of_int nb_locations) ^ " location" ^ (s_of_int nb_locations) ^ ", " *)
+			^ (string_of_int nb_labels) ^ " declared synchronization action" ^ (s_of_int nb_labels) ^ ", "
+			^ (string_of_int nb_clocks) ^ " clock variable" ^ (s_of_int nb_clocks) ^ ", "
+			^ (string_of_int nb_discrete) ^ " discrete variable" ^ (s_of_int nb_discrete) ^ ", "
+			^ (string_of_int nb_parameters) ^ " parameter" ^ (s_of_int nb_parameters) ^ ", "
+			^ (string_of_int nb_variables) ^ " variable" ^ (s_of_int nb_variables) ^ ", "
+			^ (string_of_int (Hashtbl.length constants)) ^ " constant" ^ (s_of_int (Hashtbl.length constants)) ^ "."
+		);
+	);
+	
+	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Detect the L/U nature of the PTA *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3211,6 +3232,13 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 		
 	end;
 	
+	(* Debug print: special global clock *)
+	begin
+	match global_time_clock with
+		| Some name -> print_message Verbose_standard ("A global time clock '" ^ Constants.global_time_clock_name ^ "' has been detected.");
+		| None -> print_message Verbose_medium ("No global time clock '" ^ Constants.global_time_clock_name ^ "' detected.");
+	end;
+	
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** HACK (big big hack): save some data structures to be used by the parsing and checking of additional file (pi0 or v0), if any ***)
@@ -3254,6 +3282,8 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	is_clock = is_clock;
 	(* Index of the special clock to be reset at each transition to measure time elapsing (only used in NZ checking) *)
 	special_reset_clock = special_reset_clock;
+	(* Index of a special clock meant to measure the global time (how this clock is actually used is up to the model designer *)
+	global_time_clock = global_time_clock;
 	(* The list of clock indexes except the reset clock (used, e.g., to print the model *)
 	clocks_without_special_reset_clock = clocks_without_special_reset_clock;
 	(* The list of discrete indexes *)

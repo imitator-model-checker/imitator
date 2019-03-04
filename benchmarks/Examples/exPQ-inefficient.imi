@@ -1,0 +1,97 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy PTA to act as a counterexample for the efficiency of SynthMinReach-PQ (minimal time reachability synthesis with priority queue)
+ *
+ * Description     : Toy PTA to act as a counterexample for the efficiency of SynthMinReach-PQ (minimal time reachability synthesis with priority queue). Note that EFsynth (in BFS) terminates on this example
+ * Correctness     : ltarget (un)reachable
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2018/10/26
+ * Last modified   : 2018/10/26
+ *
+ * IMITATOR version: 2.10.4
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y, xabs,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+urgent loc l0: invariant True
+	when True goto l1;
+	when True goto l2;
+
+loc l1: invariant xabs >= 0 & y <= 1
+	(* Principle: more and more self-loop allow to decrease p, and reach quicker ltarget (in 1001+p time units, with p decreasing) *)
+	when x = p do {x := 0} goto l1;
+	when x = 0 & y = 1 do {y := 0} goto l3;
+
+loc l2: invariant xabs >= 0 & y <= 10
+	(* …but in fact that'd be much smarter to take this transition first! Higher cost at the beginning, but none from l3 to ltarget *)
+	when x = 10 & y = 10 do {x := 0, y := 0} goto l4;
+
+loc l3: invariant y <= 1000 + p
+	when y = 1000 + p do {y := 0, x := 0} goto ltarget;
+
+urgent loc l4: invariant True
+	when True goto ltarget;
+
+loc ltarget: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l0
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+	& xabs = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& 0 <= p & p <= 1
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[pta] = ltarget;
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

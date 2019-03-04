@@ -32,6 +32,7 @@ class imitator_options :
 		
 		method acyclic : bool
 (* 		method acyclic_unset : unit *)
+(* 		method best_worst_case : bool *)
 		method branch_and_bound : bool
 (* 		method branch_and_bound_unset : unit *)
 		method cart : bool
@@ -49,6 +50,7 @@ class imitator_options :
 		method distributedKillIM : bool
 (* 		method dynamic : bool *)
 		method dynamic_clock_elimination : bool
+		method early_terminate : bool
 		method efim : bool
 		method exploration_order : exploration_order
 (* 		method fancy : bool *)
@@ -61,6 +63,7 @@ class imitator_options :
 		method inclusion2 : bool
 		method merge : bool
 		method merge_before : bool
+		method merge_heuristic : merge_heuristic
 		method model_input_file_name : string
 		method nb_args : int
 		method no_leq_test_in_ef : bool

@@ -29,19 +29,18 @@ var
   automaton train
 (************************************************************)
 synclabs: approach, inn, out, exit;
-initially train0;
 
-loc train0: while True wait {}
-	when True sync approach do {x' = 0} goto train1;
+loc train0: invariant True
+	when True sync approach do {x := 0} goto train1;
 
-loc train1: while True wait {}
-	when x > a sync inn do {} goto train2;
+loc train1: invariant True
+	when x > a sync inn goto train2;
 
-loc train2: while True wait {}
-	when True sync out do {} goto train3;
+loc train2: invariant True
+	when True sync out goto train3;
 
-loc train3: while True wait {}
-	when x < b sync exit do {} goto train0;
+loc train3: invariant True
+	when x < b sync exit goto train0;
 
 end (*train*)
 
@@ -50,21 +49,20 @@ end (*train*)
   automaton gate
 (************************************************************)
 synclabs: lower, up, down, raise;
-initially gate0;
 
 (* Gate is open *)
-loc gate0: while True wait {}
-	when True sync lower do {y' = 0} goto gate1;
+loc gate0: invariant True
+	when True sync lower do {y := 0} goto gate1;
 
-loc gate1: while True wait {}
-	when c < y & y < d sync down do {} goto gate2;
+loc gate1: invariant True
+	when c < y & y < d sync down goto gate2;
 
 (* Gate is closed *)
-loc gate2: while True wait {}
-	when True sync raise do {y' = 0} goto gate3;
+loc gate2: invariant True
+	when True sync raise do {y := 0} goto gate3;
 
-loc gate3: while True wait {}
-	when c < y & y < d sync up do {} goto gate0;
+loc gate3: invariant True
+	when c < y & y < d sync up goto gate0;
 
 end (*gate*)
 
@@ -74,19 +72,18 @@ end (*gate*)
   automaton controller
 (************************************************************)
 synclabs: approach, lower, exit, raise;
-initially controller0;
 
-loc controller0: while True wait {}
-	when True sync approach do {z' = 0} goto controller1;
+loc controller0: invariant True
+	when True sync approach do {z := 0} goto controller1;
 
-loc controller1: while True wait {}
-	when e < z & z < f sync lower do {} goto controller2;
+loc controller1: invariant True
+	when e < z & z < f sync lower goto controller2;
 
-loc controller2: while True wait {}
-	when True sync exit do {z' = 0} goto controller3;
+loc controller2: invariant True
+	when True sync exit do {z := 0} goto controller3;
 
-loc controller3: while True wait {}
-	when e < z & z < f sync raise do {} goto controller0;
+loc controller3: invariant True
+	when e < z & z < f sync raise goto controller0;
 
 end (*controller*)
 

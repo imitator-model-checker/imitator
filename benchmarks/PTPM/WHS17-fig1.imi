@@ -1,0 +1,140 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Parameterized version of [WHS17, fig.1], appearing in [AHW18]
+ *
+ * Description     : Empty template for the accel pattern matching
+ * Correctness     : N/A
+ * Source          : "Efficient Online Timed Pattern Matching by Automata-Based Skipping" by Waga, Hasuo and Suenaga, FORMATS 2017
+ * Author          : Waga, Hasuo and Suenaga
+ * Modeling        : Waga, Hasuo and Suenaga, André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2018/03/30
+ * Last modified   : 2018/08/23
+ *
+ * IMITATOR version: 2.10.3
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, xabs
+		: clock;
+
+(* Parameters *)
+	t, tprime, p1, p2
+		: parameter;
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a, b, dollar, start;
+
+loc pre_s0: invariant True
+	when True sync a do {x := 0} goto pre_s0_prime;
+	when True sync b do {x := 0} goto pre_s0_prime;
+	when xabs = 0 && t = xabs sync start goto s0;
+
+loc pre_s0_prime: invariant True
+	when True sync a do {x := 0} goto pre_s0_prime;
+	when True sync b do {x := 0} goto pre_s0_prime;
+	when x > 0 && t = xabs do {x := 0} sync start goto s0;
+
+loc s0: invariant True
+	when x > p1 sync a do{x := 0} goto s1;
+
+loc s1: invariant True
+	when x < p2 sync a do {x := 0} goto s2;
+
+loc s2: invariant True
+	when x < p2 sync a do {x := 0} goto s3;
+
+loc s3: invariant True
+	when xabs = tprime do {x := 0} goto s4;
+
+loc s4: invariant True
+	when x > 0 sync dollar goto s_end;
+
+loc s_end: invariant True
+
+end (* pta *)
+
+
+(************************************************************)
+  automaton word
+(************************************************************)
+synclabs: a, b;
+
+loc w0: invariant xabs <= 0.5
+	when xabs = 0.5 sync a goto w1;
+
+loc w1: invariant xabs <= 0.9
+	when xabs = 0.9 sync a goto w2;
+
+loc w2: invariant xabs <= 1.3
+	when xabs = 1.3 sync b goto w3;
+
+loc w3: invariant xabs <= 1.7
+	when xabs = 1.7 sync b goto w4;
+
+loc w4: invariant xabs <= 2.8
+	when xabs = 2.8 sync a goto w5;
+
+loc w5: invariant xabs <= 3.7
+	when xabs = 3.7 sync a goto w6;
+
+loc w6: invariant xabs <= 4.9
+	when xabs = 4.9 sync a goto w7;
+
+loc w7: invariant xabs <= 5.3
+	when xabs = 5.3 sync a goto w8;
+
+loc w8: invariant xabs <= 6.0
+	when xabs = 6.0 sync a goto w_final;
+
+loc w_final: invariant True
+end (* word *)
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = pre_s0
+	& loc[word] = w0
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& xabs = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p1 >= 0
+	& p2 >= 0
+	& t >= 0
+	& tprime >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[pta] = s_end;
+
+maximize(p1)
+(* minimize(p2) *)
+(* projectresult(t,tprime) *)
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

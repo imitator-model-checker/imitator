@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2018/06/05
+ * Last modified     : 2019/02/19
  *
  ************************************************************)
 
@@ -139,6 +139,11 @@ class imitator_options =
 		(* experimental variant for EFsynth *)
 		val mutable new_ef_mode = false
 
+		(* Best worst-case clock value for EFsynthminpq *)
+(* 		val mutable best_worst_case = ref false *)
+
+		(* Terminate once a single valuation is found for EFsynthminpq *)
+		val mutable early_terminate = ref false
 		
 		
 		(* ANALYSIS OPTIONS *)
@@ -252,6 +257,10 @@ class imitator_options =
 		val mutable merge = ref false
 		(* Merging states on the fly (after pi0-compatibility check) *)
 		val mutable merge_before = ref false
+	
+		(* Merging heuristic *)
+		val mutable merge_heuristic = Merge_iter10
+		
 
 
 		(************************************************************)
@@ -264,6 +273,7 @@ class imitator_options =
 		
 		method acyclic = !acyclic
 (* 		method acyclic_unset = (acyclic := false) *)
+(* 		method best_worst_case = !best_worst_case *)
 		method branch_and_bound = !branch_and_bound
 (* 		method branch_and_bound_unset = (branch_and_bound := false) *)
 		method cart = cart
@@ -280,6 +290,7 @@ class imitator_options =
 		method distributedKillIM = !distributedKillIM
 		(* method dynamic = !dynamic *)
 		method dynamic_clock_elimination = !dynamic_clock_elimination
+		method early_terminate = !early_terminate
 		method efim = !efim
 		method exploration_order = exploration_order
 (* 		method fancy = !fancy *)
@@ -291,6 +302,7 @@ class imitator_options =
 		method inclusion2 = !inclusion2
 		method merge = !merge
 		method merge_before = !merge_before
+		method merge_heuristic = merge_heuristic
 		method model_input_file_name = model_input_file_name
 		method nb_args = nb_args
 		method no_leq_test_in_ef = no_leq_test_in_ef
@@ -393,6 +405,18 @@ class imitator_options =
 				(* Case: EF-maximization *)
 				else if mode = "EFmax" then 
 					imitator_mode <- EF_max
+					
+				(* Case: EF-synthesis with minimization *)
+				else if mode = "EFsynthmin" then 
+					imitator_mode <- EF_synth_min
+					
+				(* Case: EF-maximization *)
+				else if mode = "EFsynthmax" then 
+					imitator_mode <- EF_synth_max
+					
+				(** Optimal reachability with priority queue: queue-based, with priority to the earliest successor for the selection of the next state [ABPP19] *)
+				else if mode = "EFsynthminpq" then 
+					imitator_mode <- EF_synth_min_priority_queue
 					
 				(* Case: AF-synthesis *)
 				else if mode = "AF" then 
@@ -558,7 +582,31 @@ class imitator_options =
 					abort_program ();
 					exit(1);
 				)
+
+			and set_merge_heuristic heuristic =
+				(*  *)
+				if heuristic = "always" then
+					merge_heuristic <- Merge_always
+				else if heuristic = "targetseen" then
+					merge_heuristic <- Merge_targetseen
+				else if heuristic = "pq10" then
+					merge_heuristic <- Merge_pq10
+				else if heuristic = "pq100" then
+					merge_heuristic <- Merge_pq100
+				else if heuristic = "iter10" then
+					merge_heuristic <- Merge_iter10
+				else if heuristic = "iter100" then
+					merge_heuristic <- Merge_iter100
+				else(
+					(*** HACK: print header now ***)
+					print_header_string();
+					print_error ("The merge heuristic '" ^ heuristic ^ "' is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
 			
+
 			(* Very useful option (April fool 2017) *)
 			and call_romeo () =
 				(*** HACK: print header now ***)
@@ -622,6 +670,8 @@ class imitator_options =
 			and speclist = [
 				("-acyclic", Set acyclic, " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: 'false'");
 				
+(* 				("-best-worst-case", Set best_worst_case, " Instead of the minimum global time, compute the best worst-case time bound in the EFsynthminpq mode. Default: false."); *)
+
 (* 				Temporarily disabled (March 2014) *)
 (* 				("-bab", Set branch_and_bound, " Experimental new feature of IMITATOR, based on cost optimization (WORK IN PROGRESS). Default: 'false'"); *)
 				
@@ -652,7 +702,7 @@ class imitator_options =
 				
 				("-depth-limit", Int (fun i -> depth_limit := Some i), " Limits the depth of the exploration of the state space. Default: no limit.");
 
-				("-distributed", String set_distributed, " Distributed version of the behavioral cartography.
+				("-distributed", String set_distributed, " Distributed version of the behavioral cartography and PRPC.
         Use 'no' for the non-distributed mode (default).
         Use 'static' for a static domain partitioning [ACN15].
         Use 'sequential' for a master-worker scheme with sequential point distribution [ACE14].
@@ -666,11 +716,14 @@ class imitator_options =
 				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 				
-				("-explOrder", String set_exploration_order, " Exploration order.
+				("-early-terminate", Set early_terminate, " Provide a single valuation that minimizes global time, instead of all valuations in the EFsynthminpq mode. Default: false.");
+
+				("-explOrder", String set_exploration_order, " Exploration order [EXPERIMENTAL].
         Use 'layerBFS' for a layer-based breadth-first search.
-        Use 'queueBFS' for a queue-based breadth-first search. [EXPERIMENTAL]
-        Use 'queueBFSRS' for a queue-based breadth-first search with ranking system. [WORK IN PROGRES]
-        Use 'queueBFSPRIOR' for a priority-based BFS with ranking system. [WORK IN PROGRES]
+        Use 'queueBFS' for a queue-based breadth-first search. [ANP17]
+        Use 'queueBFSRS' for a queue-based breadth-first search with ranking system. [ANP17]
+        Use 'queueBFSPRIOR' for a priority-based BFS with ranking system. [ANP17]
+        Use 'optTimeQueue' for optimal reachability with priority queue [ANP17]
         Default: layerBFS.
 				");
 				
@@ -688,17 +741,23 @@ class imitator_options =
 				
 				("-merge-before", Set merge_before , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");
 				
+				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Options are 'always', 'targetseen', 'pq10', 'pq100', 'iter10', 'iter100'. Default: iter10.");
+
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
-        Use 'statespace' for the generation of the entire parametric state space (no pi0 needed).
-        Use 'EF' for a parametric non-reachability analysis (no pi0 needed). [AHV93,JLR15]
-        Use 'EFmin' for a parametric non-reachability analysis with parameter minimization (no pi0 needed).
-        Use 'EFmax' for a parametric non-reachability analysis with parameter maximization (no pi0 needed).
-        Use 'PDFC' for parametric non-deadlock checking (no pi0 needed). [Andre16]
+        Use 'statespace' for the generation of the entire parametric state space.
+        
+        Use 'EF' for a parametric non-reachability analysis. [AHV93,JLR15]
+        Use 'EFmin' for a parametric non-reachability analysis with parameter minimization. [ABPP19]
+        Use 'EFmax' for a parametric non-reachability analysis with parameter maximization. [ABPP19]
+        Use 'EFsynthminpq' for a parametric non-reachability analysis with global time minimization. [ABPP19]
+        Use 'PDFC' for parametric non-deadlock checking. [Andre16]
         Use 'LoopSynth' for cycle-synthesis (without non-Zeno assumption). [ANPS17]
         Use 'NZCUBcheck' for cycle-synthesis (with non-Zeno assumption, using a CUB-detection). [EXPERIMENTAL] [ANPS17]
         Use 'NZCUBtrans' for cycle-synthesis (with non-Zeno assumption, using a transformation into a CUB-PTA). [EXPERIMENTAL] [ANPS17]
+        
         Use 'inversemethod' for the inverse method with convex, and therefore potentially incomplete, result. [ACEF09]
         Use 'IMcomplete' for the inverse method with complete, possibly non-convex result. [AM15]
+        
         Use 'PRP' for parametric reachability preservation. [ALNS15]
         Use 'PRPC' for parametric reachability preservation cartography. [ALNS15]
         For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). [AF10]
@@ -836,7 +895,7 @@ class imitator_options =
 			
 			(* Case no pi0 file *)
 			(*** TODO: do something less horrible here! ***)
-			if nb_args = 1 && (imitator_mode != State_space_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != AF_synthesis) && (imitator_mode != EFunsafe_synthesis) && (imitator_mode != EF_min) && (imitator_mode != EF_max) && (imitator_mode != Loop_synthesis) && (imitator_mode != Parametric_NZ_CUBtransform) && (imitator_mode != Parametric_NZ_CUBtransformDistributed) && (imitator_mode != Parametric_NZ_CUBcheck) && (imitator_mode != Parametric_NZ_CUB) && (imitator_mode != Parametric_deadlock_checking) && (imitator_mode != Translation) then(
+			if nb_args = 1 && (imitator_mode != State_space_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != AF_synthesis) && (imitator_mode != EFunsafe_synthesis) && (imitator_mode != EF_min) && (imitator_mode != EF_max) && (imitator_mode != EF_synth_min) && (imitator_mode != EF_synth_max) && (imitator_mode != EF_synth_min_priority_queue) && (imitator_mode != Loop_synthesis) && (imitator_mode != Parametric_NZ_CUBtransform) && (imitator_mode != Parametric_NZ_CUBtransformDistributed) && (imitator_mode != Parametric_NZ_CUBcheck) && (imitator_mode != Parametric_NZ_CUB) && (imitator_mode != Parametric_deadlock_checking) && (imitator_mode != Translation) then(
 				(*** HACK: print header now ***)
 				print_header_string();
 				print_error ("Please give a file name for the reference valuation.");
@@ -885,6 +944,9 @@ class imitator_options =
 				| EFunsafe_synthesis -> "EFunsafe-synthesis"
 				| EF_min -> "EF-minimization"
 				| EF_max -> "EF-maximization"
+				| EF_synth_min -> "EF-synth with minimization"
+				| EF_synth_max -> "EF-synth with maximization"
+				| EF_synth_min_priority_queue -> "EF-synth with minimal reachability"
 				| AF_synthesis -> "AF-synthesis"
 				| Loop_synthesis -> "loop-synthesis"
 				| Parametric_NZ_CUBcheck -> "parametric non-Zeno emptiness checking (CUB checking)"
@@ -914,7 +976,7 @@ class imitator_options =
 			(* Shortcut *)
 			let in_cartography_mode =
 				match imitator_mode with
-				| Translation | State_space_exploration | EF_synthesis| EFunsafe_synthesis | EF_min | EF_max | AF_synthesis | Loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUBtransformDistributed | Parametric_NZ_CUBcheck | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP -> false
+				| Translation | State_space_exploration | EF_synthesis| EFunsafe_synthesis | EF_min | EF_max | EF_synth_min | EF_synth_max | EF_synth_min_priority_queue | AF_synthesis | Loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUBtransformDistributed | Parametric_NZ_CUBcheck | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP -> false
 				| Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _  | RandomSeq_cartography _ | PRPC -> true
 			in
 			
@@ -972,7 +1034,7 @@ class imitator_options =
 				if imitator_mode = State_space_exploration then
 					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a state space exploration.")
 				;
-				if imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_max|| imitator_mode = AF_synthesis then
+				if imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_synth_min || imitator_mode = EF_synth_max || imitator_mode = EF_synth_min_priority_queue || imitator_mode = EF_max|| imitator_mode = AF_synthesis then
 					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a synthesis with respect to a property.")
 				;
 				if imitator_mode = Loop_synthesis then
@@ -1010,12 +1072,12 @@ class imitator_options =
 			
 			(* Options for variants of IM, but not in IM mode *)
 			(*** TODO: do something less horrible here! ***)
-			if (imitator_mode = State_space_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_max || imitator_mode = AF_synthesis || imitator_mode = Loop_synthesis || imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUBtransformDistributed || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
+			if (imitator_mode = State_space_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_max || imitator_mode = EF_synth_min || imitator_mode = EF_synth_max || imitator_mode = EF_synth_min_priority_queue || imitator_mode = AF_synthesis || imitator_mode = Loop_synthesis || imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUBtransformDistributed || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
 				print_warning (Constants.program_name ^ " is run in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
 
 			
 			(* No no_leq_test_in_ef if not EF *)
-			if no_leq_test_in_ef && (imitator_mode <> EF_synthesis && imitator_mode <> EF_min && imitator_mode <> EF_max && imitator_mode <> EFunsafe_synthesis && imitator_mode <> PRP) then(
+			if no_leq_test_in_ef && (imitator_mode <> EF_synthesis && imitator_mode <> EF_min && imitator_mode <> EF_max && imitator_mode <> EF_synth_min && imitator_mode <> EF_synth_max && imitator_mode <> EF_synth_min_priority_queue && imitator_mode <> EFunsafe_synthesis && imitator_mode <> PRP) then(
 				print_warning ("The option '-no-inclusion-test-in-EF' is reserved for EF and PRP. It will thus be ignored.");
 			);
 				
@@ -1043,10 +1105,23 @@ class imitator_options =
 			begin
 			match exploration_order with
 				| Exploration_layer_BFS -> print_message Verbose_experiments ("Exploration order: layer-based BFS.")
-				| Exploration_queue_BFS -> print_message Verbose_standard ("Exploration order: queue-based BFS [EXPERIMENTAL].")
-				| Exploration_queue_BFS_RS -> print_message Verbose_standard ("Exploration order: queue-based BFS with ranking system [WORK IN PROGRESS].")
-				| Exploration_queue_BFS_PRIOR -> print_message Verbose_standard ("Exploration order: queue-based BFS with priority [WORK IN PROGRESS].")
+				| Exploration_queue_BFS -> print_message Verbose_standard ("Exploration order: queue-based BFS [ACN17].")
+				| Exploration_queue_BFS_RS -> print_message Verbose_standard ("Exploration order: queue-based BFS with ranking system [ACN17].")
+				| Exploration_queue_BFS_PRIOR -> print_message Verbose_standard ("Exploration order: queue-based BFS with priority [ACN17].")
 			end;
+
+            (* Merge heuristic *)
+            begin
+			match merge_heuristic with
+				| Merge_always -> print_message Verbose_experiments ("Merge heuristic: always.")
+				| Merge_targetseen -> print_message Verbose_experiments ("Merge heuristic: targetseen.")
+				| Merge_pq10 -> print_message Verbose_experiments ("Merge heuristic: pq10.")
+				| Merge_pq100 -> print_message Verbose_experiments ("Merge heuristic: pq100.")
+				| Merge_iter10 -> print_message Verbose_experiments ("Merge heuristic: iter10.")
+				| Merge_iter100 -> print_message Verbose_experiments ("Merge heuristic: iter100.")
+			end;
+
+
 
 			(* Variant of the inverse method *)
 			if !inclusion then
@@ -1240,6 +1315,11 @@ class imitator_options =
 			else
 				print_message Verbose_medium ("No acyclic mode (default).");
 
+(*			if !best_worst_case then
+				print_message Verbose_standard ("Computing the best worst-case bound for EFsynthminpq.")
+			else
+				print_message Verbose_medium ("No best-worst case bound for EFsynthminpq (default).");*)
+
 			if !tree then
 				print_message Verbose_standard ("Tree mode: will never check inclusion or equality of a new state into a former state.")
 			else
@@ -1264,7 +1344,10 @@ class imitator_options =
 			else
 				print_message Verbose_medium ("No check of the constraint equality with pi0 (default).");
 
-				
+			if !early_terminate then
+				print_message Verbose_standard ("Early termination chosen for EFsynthminpq, the algorithm will stop once a single valuation is found that minimizes global_time.")
+			else
+				print_message Verbose_medium ("No early termination, computing all valuations for EFsynthminpq (default).");
 
 			
 			(************************************************************)

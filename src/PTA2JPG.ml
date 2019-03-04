@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2012/08/24
- * Last modified     : 2017/06/25
+ * Last modified     : 2018/08/20
  *
  ************************************************************)
 
@@ -293,10 +293,10 @@ let string_of_automata model =
 (* 	s_0[fillcolor=red, style=filled, shape=Mrecord, label="s_0|{InputInit|And111|Or111}"]; *)
 ^ "\nname[shape=none, style=bold, fontsize=24, label=\"" ^ options#model_input_file_name ^ "\"];"
 	^ "\ngeneral_info[shape=record, label=\"" (*Model|{*)
-	^ "{Clocks|" ^ (vertical_string_of_list_of_variables model.clocks_without_special_reset_clock) ^ "}"
-	^ "|{Parameters|" ^ (vertical_string_of_list_of_variables model.parameters) ^ "}"
+	^ "{" ^ (string_of_int (List.length model.clocks_without_special_reset_clock)) ^ " clock" ^ (s_of_int (List.length model.clocks_without_special_reset_clock)) ^ "|" ^ (vertical_string_of_list_of_variables model.clocks_without_special_reset_clock) ^ "}"
+		^ "|{" ^ (string_of_int (List.length model.parameters)) ^ " parameter" ^ (s_of_int (List.length model.parameters)) ^ "|" ^ (vertical_string_of_list_of_variables model.parameters) ^ "}"
 	^ (if model.discrete != [] then
-		"|{Discrete|" ^ (vertical_string_of_list_of_variables model.discrete) ^ "}"
+		"|{" ^ (string_of_int (List.length model.discrete)) ^ " discrete|" ^ (vertical_string_of_list_of_variables model.discrete) ^ "}"
 		else "")
 	^ "|{Initial|" ^ (escape_string_for_dot (LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint)) ^ "}"
 	^ "\"];" (*}*)

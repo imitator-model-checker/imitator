@@ -10,9 +10,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2011/01/21
- * Last modified   : 2017/06/29
+ * Last modified   : 2018/11/13
  *
- * IMITATOR version: 2.9.1
+ * IMITATOR version: 2.10.4
  ************************************************************)
 
 var
@@ -34,19 +34,19 @@ var
 (************************************************************)
 synclabs: press, cup, coffee, sleep;
 
-loc idle: while True wait
-	when True sync press do {x' = 0, y' = 0} goto add_sugar;
+loc idle: invariant True
+	when True sync press do {x := 0, y := 0} goto add_sugar;
 
-loc add_sugar: while y <= p2 wait
-	when x >= p1 sync press do {x' = 0} goto add_sugar;
+loc add_sugar: invariant y <= p2
+	when x >= p1 sync press do {x := 0} goto add_sugar;
 	when y = p2 sync cup do {} goto preparing_coffee;
 
-loc preparing_coffee: while y <= p3 wait
+loc preparing_coffee: invariant y <= p3
 (* 	when y = p3 sync coffee goto idle; *)
-	when y = p3 sync coffee do {x' = 0} goto cdone;
+	when y = p3 sync coffee do {x := 0} goto cdone;
 
-loc cdone: while x <= 10 wait
-	when True sync press do {x' = 0, y' = 0} goto add_sugar;
+loc cdone: invariant x <= 10
+	when True sync press do {x := 0, y := 0} goto add_sugar;
 	when x = 10 sync sleep goto idle;
 
 end (* machine *)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2018/06/05
+ * Last modified     : 2019/03/01
  *
  ************************************************************)
 
@@ -216,6 +216,15 @@ type imitator_mode =
 	(** EF-maximization *)
 	| EF_max
 	
+	(** EF-synthesis with minimization *)
+	| EF_synth_min
+	
+	(** EF-synthesis with maximization *)
+	| EF_synth_max
+
+	(** Optimal reachability with priority queue: queue-based, with priority to the earliest successor for the selection of the next state [ABPP19] *)
+	| EF_synth_min_priority_queue
+
 	(** AF-synthesis *)
 	| AF_synthesis
 	
@@ -294,15 +303,30 @@ type distribution_mode =
 
 
 type exploration_order =
-	(** Layer-BFS: all states at depth i are computed, and then their successors at depth i+1 *)
+	(** Layer-BFS: all states at depth i are computed, and then their successors at depth i+1 [original version] *)
 	| Exploration_layer_BFS
-	(** Queue-BFS: basic queue, independent of the depth *)
+	(** Queue-BFS: basic queue, independent of the depth [ANP17] *)
 	| Exploration_queue_BFS
-	(** Queue-BFS: queue-based, independent of the depth, with ranking system for the selection of the next state *)
+	(** Queue-BFS: queue-based, independent of the depth, with ranking system for the selection of the next state [ANP17] *)
 	| Exploration_queue_BFS_RS
-	(** Queue-BFS: queue-based, independent of the depth, with priority for the selection of the next state *)
+	(** Queue-BFS: queue-based, independent of the depth, with prior for the selection of the next state [ANP17] *)
 	| Exploration_queue_BFS_PRIOR
-	
+
+
+type merge_heuristic =
+	(** Merge_always: merge after every processed state *)
+	| Merge_always
+	(** Merge_always: merge after every processed state for which the target state is a successor of the current state *)
+	| Merge_targetseen
+	(** Merge_always: merge after every processed state, for every 10th state added to PQ *)
+	| Merge_pq10
+	(** Merge_always: merge after every processed state, for every 100th state added to PQ *)
+	| Merge_pq100
+	(** Merge_always: merge after every 10th processed state *)
+	| Merge_iter10
+	(** Merge_always: merge after every 100th processed state *)
+	| Merge_iter100
+
 
 (** Style of graphical state space to output *)
 type graphical_state_space =
@@ -478,6 +502,8 @@ let print_header_string () =
 let print_contributors()  = 
 	print_string ("    " ^ Constants.program_name ^ " has been developed by:\n");
 	print_string ("    * Etienne Andre       (2008 - " ^ (BuildInfo.build_year) ^ "), lead developer\n");
+	print_string ("    * Jaime Arias         (2018 - " ^ (BuildInfo.build_year) ^ ")\n");
+	print_string "    * Vincent Bloemen     (2018)\n";
 	print_string "    * Camille Coti        (2014)\n";
 	print_string "    * Daphne Dussaud      (2010)\n";
 	print_string "    * Sami Evangelista    (2014)\n";
@@ -486,7 +512,6 @@ let print_contributors()  =
 	print_string "    * Romain Soulat       (2010 - 2013)\n";
 	print_string "\n";
 	print_string "    Compiling, testing and packaging:\n";
-	print_string ("    * Jaime Arias         (2018 - " ^ (BuildInfo.build_year) ^ ")\n");
 	print_string "    * Corentin Guillevic  (2015)\n";
 	print_string "    * Sarah Hadbi         (2015)\n";
 	print_string "    * Fabrice Kordon      (2015)\n";

@@ -1,4 +1,4 @@
-	(************************************************************
+(************************************************************
  *
  *                       IMITATOR
  * 
@@ -6,9 +6,9 @@
  * 
  * Module description: main virtual class to explore the state space: only defines post-related function, i.e., to compute the successor states of ONE state. That (still) represents a large list of functions.
  * 
- * File contributors : Étienne André
+ * File contributors : Étienne André, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2018/05/30
+ * Last modified     : 2018/10/08
  *
  ************************************************************)
 
@@ -192,7 +192,7 @@ let tcounter_compute_location_guards_discrete = create_time_counter_and_register
 
 (* Functions counters *)
 let counter_add_transition_to_state_space = create_hybrid_counter_and_register "StateBased.add_transition_to_state_space" States_counter Verbose_experiments
-let counter_explore_layer_bfs = create_hybrid_counter_and_register "StateBased.explore_layer_bfs" States_counter Verbose_experiments
+let counter_explore_using_strategy = create_hybrid_counter_and_register "StateBased.explore_using_strategy" States_counter Verbose_experiments
 let counter_post_from_one_state = create_hybrid_counter_and_register "StateBased.post_from_one_state" States_counter Verbose_experiments
 let counter_process_post_n = create_hybrid_counter_and_register "StateBased.process_post_n" States_counter Verbose_experiments
 
@@ -971,7 +971,7 @@ let compute_new_location_guards_updates aut_table trans_table action_index origi
 
 (*------------------------------------------------------------*)
 (* Compute the new constraint for a transition      *)
-(* orig_constraint : contraint in source location   *)
+(* source_constraint : contraint in source location   *)
 (* discrete_constr_src : contraint D_i = d_i in source location (discrete variables) *)
 (* orig_location   : source location                *)
 (* target_location : target location                *)
@@ -979,7 +979,7 @@ let compute_new_location_guards_updates aut_table trans_table action_index origi
 (* clock_updates   : updated clock variables        *)
 (*------------------------------------------------------------*)
 (*** TODO: remove the model from the arguments, and retrieve it ***)
-let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstraint.pxd_linear_constraint) orig_location target_location guards clock_updates =
+let compute_new_constraint source_constraint (discrete_constr_src : LinearConstraint.pxd_linear_constraint) orig_location target_location guards clock_updates =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
@@ -989,13 +989,13 @@ let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstrai
 		print_message Verbose_total ("\n***********************************");
 		print_message Verbose_total ("Entering compute_new_constraint");	
 		print_message Verbose_total ("***********************************");
-		print_message Verbose_total ("C = " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names (orig_constraint ())));
+		print_message Verbose_total ("C = " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names (source_constraint ())));
 	);
 	(* The constraint is checked on the fly for satisfiability -> exception mechanism *)
 	try (
 		(* Retrieve the original constraint *)
 		(*** WARNING / VERY IMPORTANT: copy!!! (in fact convert, which is also a copy) ***)
-		let orig_constraint_with_maybe_time_elapsing = LinearConstraint.pxd_of_px_constraint  (orig_constraint ()) in
+		let source_constraint_with_maybe_time_elapsing = LinearConstraint.pxd_of_px_constraint  (source_constraint ()) in
 
 		(* Alternative IMITATOR semantics for time-elapsing: apply time-elapsing NOW, and intersect with invariant *)
 		if options#no_time_elapsing then(
@@ -1007,11 +1007,11 @@ let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstrai
 				| Some clock_index ->
 				(* Reset it *)
 					print_message Verbose_medium "Resetting the special reset clock…";
-					rho_assign orig_constraint_with_maybe_time_elapsing [Resets [clock_index]];
+					rho_assign source_constraint_with_maybe_time_elapsing [Resets [clock_index]];
 			end;
 			
 			print_message Verbose_total ("\nAlternative time elapsing: Applying time elapsing NOW");
-			apply_time_elapsing orig_location orig_constraint_with_maybe_time_elapsing;
+			apply_time_elapsing orig_location source_constraint_with_maybe_time_elapsing;
 			
 			(* Compute the invariant in the source location I_l(X) *)
 			(*** TO OPTIMIZE!!! This should be done only once in the function calling this function!! ***)
@@ -1024,7 +1024,7 @@ let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstrai
 
 			(* Perform the intersection *)
 			print_message Verbose_total ("\nAlternative time elapsing: performing intersection of C(X)time and I_l(X)");
-			LinearConstraint.pxd_intersection_assign orig_constraint_with_maybe_time_elapsing [invariant];
+			LinearConstraint.pxd_intersection_assign source_constraint_with_maybe_time_elapsing [invariant];
 		);
 
 		
@@ -1040,7 +1040,7 @@ let compute_new_constraint orig_constraint (discrete_constr_src : LinearConstrai
 
 		print_message Verbose_total ("\nPerforming intersection of Di = di and C(X) and g(X)");
 		(* Add the (old) value for discrete to the guards D_i = d_i and g(X) *)
-		LinearConstraint.pxd_intersection_assign current_constraint (orig_constraint_with_maybe_time_elapsing :: guards);
+		LinearConstraint.pxd_intersection_assign current_constraint (source_constraint_with_maybe_time_elapsing :: guards);
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names current_constraint);
@@ -1460,7 +1460,7 @@ class virtual algoStateBased =
 	val mutable bfs_current_depth = 0
 	
 	(* Variable to remain of the termination *)
-	(*** NOTE: private ***)
+	(*** NOTE: public only for AlgoEFoptQueue ***)
 	(*** TODO: merge with termination_status… ***)
 	val mutable limit_reached = Keep_going
 	
@@ -1526,7 +1526,8 @@ class virtual algoStateBased =
 	(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** TODO: to get a more abstract method, and update the state space from another function ***)
-	method private post_from_one_state source_state_index =
+	(*** NOTE: made public only for EFoptQueue ***)
+	method post_from_one_state source_state_index =
 	
 		(* Statistics *)
 		counter_post_from_one_state#increment;
@@ -1536,20 +1537,20 @@ class virtual algoStateBased =
 		let original_location, _ = StateSpace.get_state state_space source_state_index in
 		(* Dynamic version of the original px_constraint (can change!) *)
 		(*** NOTE / TO OPTIMIZE: OK but not in all algorithms !! ***)
-		let orig_constraint () =
-			let _, orig_constraint = StateSpace.get_state state_space source_state_index in
-			orig_constraint
+		let source_constraint () =
+			let _, source_constraint = StateSpace.get_state state_space source_state_index in
+			source_constraint
 		in
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
-			let orig_state = StateSpace.get_state state_space source_state_index in
-			let _, orig_constraint = orig_state in
-			let orig_constraint_projection = LinearConstraint.px_hide_nonparameters_and_collapse orig_constraint in
+			let source_state = StateSpace.get_state state_space source_state_index in
+			let _, source_constraint = source_state in
+			let source_constraint_projection = LinearConstraint.px_hide_nonparameters_and_collapse source_constraint in
 			print_message Verbose_high ("Performing post from state:");
-			print_message Verbose_high (ModelPrinter.string_of_state model orig_state);
+			print_message Verbose_high (ModelPrinter.string_of_state model source_state);
 			print_message Verbose_high ("\nThe projection of this constraint onto the parameters is:");
-			print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names orig_constraint_projection);
+			print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names source_constraint_projection);
 		);
 
 		(* Statistics *)
@@ -1600,7 +1601,7 @@ class virtual algoStateBased =
 			
 			(* Compute conjunction with current constraint *)
 			(*** To optimize: it seems intersection_assign could be used instead ***)
-			let orig_plus_discrete = LinearConstraint.pxd_intersection [LinearConstraint.pxd_of_px_constraint (orig_constraint ()); discrete_constr] in
+			let orig_plus_discrete = LinearConstraint.pxd_intersection [LinearConstraint.pxd_of_px_constraint (source_constraint ()); discrete_constr] in
 			
 			(* In alternative semantics, apply time elapsing NOW, so as to factor this operation once for all *)
 			(*** WARNING: time elapsing is AGAIN performed in compute_new_constraint, which is a loss of efficiency ***)
@@ -1652,12 +1653,18 @@ class virtual algoStateBased =
 
 				debug_i := !debug_i +1;
 				(* Print some information *)
+				if verbose_mode_greater Verbose_high then (
+					print_message Verbose_high ("------------------------------------------------------------");
+					self#print_algo_message_newline Verbose_high ("Consider the combination #" ^ (string_of_int !debug_i) ^ "");
+					print_message Verbose_high ("------------------------------------------------------------");
+				);
 				if verbose_mode_greater Verbose_total then (
 					let local_indexes = string_of_array_of_string_with_sep "\n\t" (
 					Array.mapi (fun local_index real_index ->
 						(string_of_int local_index) ^ " -> " ^ (string_of_int real_index) ^ " : " ^ (string_of_int current_indexes.(local_index)) ^ "; ";
 					) real_indexes) in
-					print_message Verbose_total ("\n\n\n--- Consider the combination " ^ (string_of_int !debug_i) ^ " \n\t" ^ local_indexes);
+					print_message Verbose_high ("\n--- This combination is:\n\t" ^ local_indexes);
+					print_message Verbose_high ("\n------------------------------------------------------------");
 				);
 		
 				(* build the current combination of transitions *)
@@ -1687,7 +1694,7 @@ class virtual algoStateBased =
 				(* Else: the discrete part is satisfied *)
 				)else(
 					(* Compute the new constraint for the current transition *)
-					let new_constraint = compute_new_constraint orig_constraint discrete_constr original_location location continuous_guards clock_updates in
+					let new_constraint = compute_new_constraint source_constraint discrete_constr original_location location continuous_guards clock_updates in
 					
 					begin
 					(* Check the satisfiability *)
@@ -1996,6 +2003,10 @@ class virtual algoStateBased =
 	(* 09-10-2017: Changed to public for distributed version - Files related: AlgoNZCUBdist *)
 	method explore_queue_bfs init_state_index =
 
+		(* Statistics *)
+		counter_explore_using_strategy#increment;
+		counter_explore_using_strategy#start;
+		
 		print_message Verbose_medium("Entering explore_queue_bfs!!!");
 
 
@@ -2701,10 +2712,14 @@ class virtual algoStateBased =
 
 
 		print_message Verbose_medium("Exiting explore_queue_bfs!!!");
+
+		(* Statistics *)
+		counter_explore_using_strategy#stop;
+		
 		(* The end *)
 		()
 
-	
+
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the BFS algorithm  *)
@@ -2714,8 +2729,8 @@ class virtual algoStateBased =
 	method explore_layer_bfs init_state_index =
 	
 		(* Statistics *)
-		counter_explore_layer_bfs#increment;
-		counter_explore_layer_bfs#start;
+		counter_explore_using_strategy#increment;
+		counter_explore_using_strategy#start;
 		
 		(* Set the depth to 1 *)
 		bfs_current_depth <- 1;
@@ -2752,12 +2767,12 @@ class virtual algoStateBased =
 			let post_n_plus_1 =
 			try(
 			(* For each newly found state: *)
-			List.fold_left (fun current_post_n_plus_1 orig_state_index ->
+			List.fold_left (fun current_post_n_plus_1 source_state_index ->
 				(* Count the states for verbose purpose: *)
 				num_state := !num_state + 1;
 				
 				(* Perform the post *)
-				let new_states = self#post_from_one_state orig_state_index in
+				let new_states = self#post_from_one_state source_state_index in
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then (
@@ -2887,14 +2902,14 @@ class virtual algoStateBased =
 			if limit_reached = Keep_going then(
 				(* Print some information *)
 				(*** HACK: 'bfs_current_depth - 1' because bfs_current_depth was just incremented… ***)
-				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (bfs_current_depth - 1)) ^ "…");
+				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (bfs_current_depth - 1)) ^ " with a queue of " ^ (string_of_int (List.length !post_n)) ^ " unexplored state" ^ (s_of_int (List.length !post_n)) ^ "…");
 
 				if self#check_termination_at_post_n then(
 					algorithm_keep_going := false;
 				);
 			);
 			
-		done;
+		done; (* END WHILE *)
 		
 		(* Were they any more states to explore? *)
 		let nb_unexplored_successors = List.length !post_n in
@@ -2948,7 +2963,7 @@ class virtual algoStateBased =
 		(*** NOTE: in fact, more states and transitions may have been explored (and deleted); here, these figures are the number of states in the state space. ***)
 
 		(* Statistics *)
-		counter_explore_layer_bfs#stop;
+		counter_explore_using_strategy#stop;
 
 		(* The end *)
 		()

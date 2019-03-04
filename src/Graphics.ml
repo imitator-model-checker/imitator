@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2018/06/07
+ * Last modified     : 2019/01/23
  *
  ************************************************************)
  
@@ -158,7 +158,7 @@ try(
 	begin
 	match options#imitator_mode with
 		(*** TODO: better use an option "is_cartography" ***)
-		| EF_synthesis | EFunsafe_synthesis | EF_min | EF_max | AF_synthesis | Loop_synthesis | Parametric_NZ_CUBcheck | Parametric_NZ_CUBtransform | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP ->
+		| EF_synthesis | EFunsafe_synthesis | EF_min | EF_max | EF_synth_min | EF_synth_max | EF_synth_min_priority_queue | AF_synthesis | Loop_synthesis | Parametric_NZ_CUBcheck | Parametric_NZ_CUBtransform | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP ->
 			print_message Verbose_low "Pick up the first 2 parameters to draw the cartography";
 			(* First check that there are at least 2 parameters *)
 			if model.nb_parameters < 2 then(
@@ -823,8 +823,11 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 			if options#graphical_state_space = Graphical_state_space_normal || options#graphical_state_space = Graphical_state_space_verbose then (
 				(* create record label with location names *)
 				let loc_names = List.map (fun aut_index -> 
+					(* Print a structure of the form "automaton_name : location_name" *)
 					let loc_index = Location.get_location global_location aut_index in
-					model.location_names aut_index loc_index
+					let automaton_name = model.automata_names aut_index in
+					let location_name = model.location_names aut_index loc_index in
+					automaton_name ^ " : " ^ location_name
 				) model.automata in
 				let label = string_of_list_of_string_with_sep "|" loc_names in
 				let label_discrete = 
