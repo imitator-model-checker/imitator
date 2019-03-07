@@ -37,6 +37,11 @@ let uppaal_strings : LinearConstraint.customized_string = {
 
 
 
+(* Positining *)
+let scaling_factor = 200
+
+
+
 (************************************************************)
 (** Header *)
 (************************************************************)
@@ -270,8 +275,8 @@ let string_of_invariant model automaton_index location_index =
 	(*** TODO: check well formed with constraints x <= … ***)
 
 	(* Invariant *)
-	(*** NOTE: arbitrary positioning (location_id * 10, +2) ***)
-	"\n\t<label kind=\"invariant\" x=\"" ^ (string_of_int (location_index * 10)) ^ "\" y=\"+2\">"
+	(*** NOTE: arbitrary positioning (location_id * scaling_factor, +20%) ***)
+	"\n\t<label kind=\"invariant\" x=\"" ^ (string_of_int (location_index * scaling_factor)) ^ "\" y=\"" ^ (string_of_int (scaling_factor / 5)) ^ "\">"
 	^ (LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings model.variable_names (model.invariants automaton_index location_index))
 	
 	(* The end *)
@@ -387,6 +392,10 @@ let string_of_updates model x_coord_str y_coord_str clock_updates discrete_updat
 
 (* Convert a transition of a location into a string *)
 let string_of_transition model automaton_index action_index source_location (guard, clock_updates, discrete_updates, target_location) =
+	(* Arbitrary positioning: x = between source_location and target_location *)
+	(*** NOTE: integer division here, so first multiplication, then division (otherwise result can be 0) ***)
+	let x_coord_str = (string_of_int ((source_location + target_location) * scaling_factor / 2)) in
+	
 	(* Header *)
 	"\n\t<transition>"
 	
@@ -394,8 +403,7 @@ let string_of_transition model automaton_index action_index source_location (gua
 	^ "\n\t\t<source ref=\"" ^ (id_of_location model automaton_index source_location) ^ "\"/>"
 	
 	(* Target *)
-	^ "\n\t\t<target ref=\"" ^ (id_of_location model automaton_index source_location) ^ "\"/>"
-	
+	^ "\n\t\t<target ref=\"" ^ (id_of_location model automaton_index target_location) ^ "\"/>"
 	
 	(* Synchronisation label *)
 	^ (
@@ -403,23 +411,23 @@ let string_of_transition model automaton_index action_index source_location (gua
 			
 			(*** TODO ***)
 			
-			(*** NOTE: arbitrary positioning at (source_location * 10 + 5, +2) ***)
-			| Action_type_sync -> "\n\t\t<label kind=\"synchronisation\" x=\"" ^ (string_of_int (source_location * 10 + 5)) ^ "\" y=\"+2\">" ^ (model.action_names action_index) ^ "</label>"
+			(*** NOTE: temporarily set all actions are sending "!" ***)
+			| Action_type_sync -> "\n\t\t<label kind=\"synchronisation\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ (string_of_int (scaling_factor * 2 / 5)) ^ "\">" ^ (model.action_names action_index) ^ "!</label>"
 			| Action_type_nosync -> ""
 	)
 	
 	(* Guard *)
 	^ (
-		(*** TODO : arbitrary coordinates ***)
-		let x_coord_str, y_coord_str = "0" , "0" in
-		string_of_guard model.variable_names x_coord_str y_coord_str guard
+		(* Quite arbitrary positioning *)
+		let y_coord_str = (string_of_int (scaling_factor / 5)) in
+		"\n\t\t" ^ (string_of_guard model.variable_names x_coord_str y_coord_str guard)
 	)
 
 	(* Updates *)
 	^ (
-		(*** TODO : arbitrary coordinates ***)
-		let x_coord_str, y_coord_str = "0" , "0" in
-		string_of_updates model x_coord_str y_coord_str clock_updates discrete_updates
+		(* Quite arbitrary positioning *)
+		let y_coord_str = (string_of_int (- scaling_factor / 5)) in
+		"\n\t\t" ^ (string_of_updates model x_coord_str y_coord_str clock_updates discrete_updates)
 	)
 
 	(* Footer *)
@@ -454,15 +462,15 @@ let string_of_location model automaton_index location_index =
 	
 	(* Header *)
 	^ "<location id=\"" ^ (id_of_location model automaton_index location_index) ^ "\" "
-	(*** NOTE: arbitrary positioning at (location_id * 10, 0) ***)
-	^ "x=\"" ^ (string_of_int (location_index * 10)) ^ "\" y=\"0\""
+	(*** NOTE: arbitrary positioning at (location_id * scaling_factor, 0) ***)
+	^ "x=\"" ^ (string_of_int (location_index * scaling_factor)) ^ "\" y=\"0\""
 	(* Add yellow color if urgent :-) *)
 	^ (if model.is_urgent automaton_index location_index then " color=\"#ffff00\"" else "")
 	^ ">"
 	
 	(* Name *)
-	(*** NOTE: arbitrary positioning at (location_id * 10, -2) ***)
-	^ "\n\t<name x=\"" ^ (string_of_int (location_index * 10)) ^ "\" y=\"-2\">" ^ (model.location_names automaton_index location_index) ^ "</name>"
+	(*** NOTE: arbitrary positioning at (location_id * scaling_factor, -20%) ***)
+	^ "\n\t<name x=\"" ^ (string_of_int (location_index * scaling_factor)) ^ "\" y=\"" ^ (string_of_int (- scaling_factor / 5)) ^ "\">" ^ (model.location_names automaton_index location_index) ^ "</name>"
 
 	(* Invariant *)
 	^ (string_of_invariant model automaton_index location_index)
@@ -525,6 +533,23 @@ let string_of_automata model =
 	) pta_without_obs)
 
 
+
+(************************************************************)
+(** System *)
+(************************************************************)
+(* Create the system definition *)
+let string_of_system model =
+	(*** WARNING: Do not print the observer ***)
+	let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
+	in
+	(* Open *)
+	"<system>"
+	(* Comment *)
+	^ "\n// List one or more processes to be composed into a system."
+	(* System definition *)
+	^ "\n\nsystem " ^ (string_of_list_of_string_with_sep ", " (List.map model.automata_names pta_without_obs)) ^ ";"
+	(* Close *)
+	^ "\n</system>"
 
 
 
@@ -662,10 +687,13 @@ let string_of_model model =
 	string_of_header model
 	
 	(* The variable declarations *)
-	^  "\n" ^ string_of_declarations model
+	^  "\n" ^ (string_of_declarations model)
 	
 	(* All automata *)
-	^  "\n" ^ string_of_automata model
+	^  "\n" ^ (string_of_automata model)
+
+	(* The system definition *)
+	^  "\n" ^ (string_of_system model)
 
 	(*** TODO ***)
 	(* The property *)
