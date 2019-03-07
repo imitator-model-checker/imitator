@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2019/01/23
+ * Last modified     : 2019/03/07
  *
  ************************************************************)
  
@@ -708,6 +708,9 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 
 			print_message Verbose_high ("[dot_of_statespace] Converting state " ^ (string_of_int state_index) ^ "");
 
+			(* Eliminate clocks *)
+			let parametric_constraint = LinearConstraint.px_hide_nonparameters_and_collapse linear_constraint in
+			
 			(* Construct the string *)
 			string_states := !string_states
 				(* Add the state *)
@@ -717,11 +720,25 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 				^ "\n  " ^ (ModelPrinter.string_of_state model (global_location, linear_constraint))
 				(* Add the projection of the constraint onto the parameters *)
 				^ (
-					(* Eliminate clocks *)
-					let parametric_constraint = LinearConstraint.px_hide_nonparameters_and_collapse linear_constraint in
 					"\n\n  Projection onto the parameters:"
 					^ "\n  " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names parametric_constraint);
-				);
+				)
+				^
+				(* Add the projection onto selected parameters, if any *)
+				(
+				match model.projection with
+					| None -> ""
+					| Some parameters ->
+						(* Compute variables to eliminate *)
+						(*** TODO: do only once for all… ***)
+						let all_but_projectparameters = list_diff model.parameters parameters in
+						(* Project *)
+						let projected_constraint = LinearConstraint.p_hide all_but_projectparameters parametric_constraint in
+						(* Print *)
+						"\n\n  Projection onto selected parameters {" ^ (string_of_list_of_string_with_sep "," (List.map model.variable_names parameters)) ^ "}:"
+						^ "\n  " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names projected_constraint);
+				)
+				;
 			) state_indexes;
 		!string_states)
 		^ "\n"
