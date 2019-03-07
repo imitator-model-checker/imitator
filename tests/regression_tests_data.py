@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, France
 # Created      : 2015/10/23
-# Last modified: 2019/02/20
+# Last modified: 2019/03/07
 #************************************************************
 
 
@@ -390,6 +390,191 @@ tests = [
 			} #end statespace file
 		] # end expectations
 	} # end test case
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test state space with projection',
+		'input_files': ['testProjectP.imi'],
+		'options'    : '-mode statespace -output-states',
+		'expectations' : [
+			{'file': 'testProjectP-statespace.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1 ==> 
+& pabs >= 0
+& p1 >= x
+& p3 >= 0
+& x >= 0
+& x = xabs
+
+  Projection onto the parameters:
+   p3 >= 0
+& p1 >= 0
+& pabs >= 0
+
+  Projection onto selected parameters {pabs}:
+   pabs >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: l2 ==> 
+& pabs >= 0
+& p1 >= 0
+& p3 >= x
+& x >= 0
+& p1 + x = xabs
+
+  Projection onto the parameters:
+   p3 >= 0
+& p1 >= 0
+& pabs >= 0
+
+  Projection onto selected parameters {pabs}:
+   pabs >= 0
+
+  /************************************************************/
+  STATE 2:
+  pta: lfinal ==> 
+& pabs >= 0
+& p3 >= 0
+& pabs = p1
+& x = 0
+& pabs = xabs
+
+  Projection onto the parameters:
+   p3 >= 0
+& p1 >= 0
+& pabs = p1
+
+  Projection onto selected parameters {pabs}:
+   pabs >= 0
+
+  /************************************************************/
+  STATE 3:
+  pta: l3 ==> 
+& 2 >= x
+& pabs >= 0
+& p1 >= 0
+& p3 >= 0
+& x >= 0
+& p1 + p3 + x = xabs
+
+  Projection onto the parameters:
+   p3 >= 0
+& p1 >= 0
+& pabs >= 0
+
+  Projection onto selected parameters {pabs}:
+   pabs >= 0
+
+  /************************************************************/
+  STATE 4:
+  pta: lfinal ==> 
+& pabs >= p1
+& p1 >= 0
+& pabs = p1 + p3
+& x = 0
+& pabs = xabs
+
+  Projection onto the parameters:
+   p3 >= 0
+& p1 >= 0
+& pabs = p1 + p3
+
+  Projection onto selected parameters {pabs}:
+   pabs >= 0
+
+  /************************************************************/
+  STATE 5:
+  pta: l4 ==> 
+& 2 >= x
+& pabs >= 0
+& p1 >= 0
+& p3 >= 2
+& x >= 0
+& p1 + x + 2 = xabs
+
+  Projection onto the parameters:
+   p3 >= 2
+& p1 >= 0
+& pabs >= 0
+
+  Projection onto selected parameters {pabs}:
+   pabs >= 0
+
+  /************************************************************/
+  STATE 6:
+  pta: lfinal ==> 
+& pabs >= 2
+& p3 >= 2
+& pabs = 2 + p1
+& x = 0
+& pabs = xabs
+
+  Projection onto the parameters:
+   p3 >= 2
+& pabs >= 2
+& pabs = 2 + p1
+
+  Projection onto selected parameters {pabs}:
+   pabs >= 2
+
+  /************************************************************/
+  STATE 7:
+  pta: l4 ==> 
+& 2 >= x
+& pabs >= 0
+& p1 + p3 + x + 2 >= xabs
+& p1 >= 0
+& p3 >= 0
+& x >= 0
+& xabs >= p1 + p3 + x
+
+  Projection onto the parameters:
+   p3 >= 0
+& p1 >= 0
+& pabs >= 0
+
+  Projection onto selected parameters {pabs}:
+   pabs >= 0
+
+  /************************************************************/
+  STATE 8:
+  pta: lfinal ==> 
+& p1 + p3 + 2 >= pabs
+& pabs >= p1 + p3
+& p1 >= 0
+& p3 >= 0
+& x = 0
+& pabs = xabs
+
+  Projection onto the parameters:
+   p1 + p3 + 2 >= pabs
+& pabs >= p1 + p3
+& p3 >= 0
+& p1 >= 0
+
+  Projection onto selected parameters {pabs}:
+   pabs >= 0
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_1 -> s_6 via "b"
+  s_1 -> s_5 via "b"
+  s_1 -> s_4 via "a"
+  s_1 -> s_3 via "a"
+  s_3 -> s_8 via "a"
+  s_3 -> s_7 via "a"
+  s_0 -> s_2 via "a"
+  s_0 -> s_1 via "a"
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
 	,
 	#------------------------------------------------------------
 	{
