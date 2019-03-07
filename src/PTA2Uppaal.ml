@@ -57,11 +57,11 @@ let string_of_header model =
 (************************************************************)
 
 (* End of the file *)
-let footer = "\n"
+let footer = ""
 (*	^ "\n" ^ "/*************************************************************"
 	^ "\n" ^ " * The end *"
 	^ "\n" ^ " ************************************************************/"*)
-	^ "\n" ^ "</nta>"
+	^ "</nta>"
 	^ "\n" ^ ""
 
 
@@ -389,6 +389,37 @@ let string_of_updates model x_coord_str y_coord_str clock_updates discrete_updat
 	)
 	
 
+(* Convert an action_index in automaton_index into a string; the automaton_index is important for "!" / "?" issues *)
+let string_of_sync model automaton_index action_index =
+	let action_name = model.action_names action_index in
+	
+	(* Different models of synchronization depending on the number of synchronizations *)
+	
+	(* Get number of automata *)
+	let automata_for_this_action = model.automata_per_action action_index in
+	let nb_automata = List.length automata_for_this_action in
+	
+	(* Case action unused: should not happen (but keep just in case) *)
+	if nb_automata = 0 then(
+		print_warning ("Action '" ^ action_name ^ "' seems to be unused in the model, so this transition is strange. This may be an error of the translator, in which case you may want to contact us.");
+		(* Arbitrarily use it sending *)
+		action_name ^ "!"
+	)
+	
+	(* For action in a single automaton, we use Uppaal "broadcast chan" system => action "!" *)
+	else if nb_automata = 1 then action_name ^ "!"
+	
+	(* For action in exactly two automata, we use Uppaal standard "chan" system *)
+	else if nb_automata = 2 then(
+		action_name
+		^
+		(* Arbitrarily, the first automaton index in the list is "!", and the other one is "?" *)
+		if automaton_index = List.nth automata_for_this_action 0 then "!" else "?"
+	)
+	
+	(*** TODO > 2 automata ***)
+	else (raise (Exceptions.NotImplemented "Case synchronization with > 2 automata"))
+
 
 (* Convert a transition of a location into a string *)
 let string_of_transition model automaton_index action_index source_location (guard, clock_updates, discrete_updates, target_location) =
@@ -408,11 +439,7 @@ let string_of_transition model automaton_index action_index source_location (gua
 	(* Synchronisation label *)
 	^ (
 		match model.action_types action_index with
-			
-			(*** TODO ***)
-			
-			(*** NOTE: temporarily set all actions are sending "!" ***)
-			| Action_type_sync -> "\n\t\t<label kind=\"synchronisation\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ (string_of_int (scaling_factor * 2 / 5)) ^ "\">" ^ (model.action_names action_index) ^ "!</label>"
+			| Action_type_sync -> "\n\t\t<label kind=\"synchronisation\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ (string_of_int (scaling_factor * 2 / 5)) ^ "\">" ^ (string_of_sync model automaton_index action_index) ^ "</label>"
 			| Action_type_nosync -> ""
 	)
 	
@@ -709,6 +736,6 @@ let string_of_model model =
 (* 	^  "\n" ^ string_of_optimization model *)
 	
 	(* The footer *)
-	^  "\n" ^ footer
+	^  footer
 
 
