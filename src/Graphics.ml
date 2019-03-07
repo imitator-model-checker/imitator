@@ -875,6 +875,21 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 					let parametric_constraint = LinearConstraint.px_hide_nonparameters_and_collapse linear_constraint in
 					"|"
 					^ (escape_string_for_dot (LinearConstraint.string_of_p_linear_constraint model.variable_names parametric_constraint))
+					^
+					(* Add the projection onto selected parameters, if any *)
+					(
+					match model.projection with
+						| None -> ""
+						| Some parameters ->
+							(* Compute variables to eliminate *)
+							(*** TODO: do only once for all… ***)
+							let all_but_projectparameters = list_diff model.parameters parameters in
+							(* Project *)
+							(*** WARNING: already done earlier; hence loss of efficiency ***)
+							let projected_constraint = LinearConstraint.p_hide all_but_projectparameters parametric_constraint in
+							(* Print *)
+							"|" ^ (escape_string_for_dot (LinearConstraint.string_of_p_linear_constraint model.variable_names projected_constraint));
+					)
 					^ "}"
 					) else ""
 				in
