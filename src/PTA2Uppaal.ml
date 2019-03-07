@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/03/01
- * Last modified     : 2019/03/04
+ * Last modified     : 2019/03/07
  *
  ************************************************************)
 
@@ -30,7 +30,7 @@ let uppaal_strings : LinearConstraint.customized_string = {
 	or_operator   = " or "; (* useless *)
 	l_operator    = " &lt; ";
 	le_operator   = " &lt;= ";
-	eq_operator   = " = ";
+	eq_operator   = " == ";
 	ge_operator   = " &gt;= ";
 	g_operator    = " &gt; ";
 }
@@ -78,7 +78,7 @@ let string_of_clocks model =
 		string_of_list_of_string_with_sep ", " (List.map model.variable_names list_of_variables)
 	in
 	if model.nb_clocks > 0 then
-		("\n/* Clocks declarations */\nclocks: " ^ (string_of_variables model.clocks_without_special_reset_clock) ^ ";")
+		("\n/* Clocks declarations */\nclock " ^ (string_of_variables model.clocks_without_special_reset_clock) ^ ";")
 		else ""
 
 (* Convert the initial discrete declarations into a string *)
@@ -221,7 +221,7 @@ let string_of_guard variable_names x_coord_str y_coord_str = function
 	
 	(* False *)
 	| False_guard ->
-		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">false</guard>"
+		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">false</label>"
 	
 	
 	(*** TODO: use the proper Uppaal syntax here ***)
@@ -230,13 +230,13 @@ let string_of_guard variable_names x_coord_str y_coord_str = function
 	
 		(*** NOTE/BUG: remove the true discrete guard! (not accepted by Uppaal) ***)
 		
-		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ (LinearConstraint.customized_string_of_d_linear_constraint uppaal_strings variable_names discrete_guard) ^ "</guard>"
+		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ (LinearConstraint.customized_string_of_d_linear_constraint uppaal_strings variable_names discrete_guard) ^ "</label>"
 	
 	| Continuous_guard continuous_guard ->
 		(* Remove true guard *)
 		
 		if LinearConstraint.pxd_is_true continuous_guard then "" else
-		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ (LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings variable_names continuous_guard) ^ "</guard>"
+		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ (LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings variable_names continuous_guard) ^ "</label>"
 	
 	| Discrete_continuous_guard discrete_continuous_guard ->
 		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ (
