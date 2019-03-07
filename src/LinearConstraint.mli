@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/03/04
+ * Last modified     : 2019/03/07
  *
  ************************************************************)
 
@@ -358,10 +358,6 @@ val px_intersection_assign_p : px_linear_constraint -> p_linear_constraint list 
 (* val hull_assign_if_exact : linear_constraint -> linear_constraint -> bool *)
 val px_hull_assign_if_exact : px_linear_constraint -> px_linear_constraint -> bool
 
-(** Eliminate (using existential quantification) a set of variables in a linear constraint *)
-(* val hide : variable list -> linear_constraint -> linear_constraint *)
-(* val px_hide : variable list -> px_linear_constraint -> px_linear_constraint *)
-
 (** Eliminate (using existential quantification) all non-parameters (clocks) in a px_linear constraint *)
 val px_hide_nonparameters_and_collapse : px_linear_constraint -> p_linear_constraint
 
@@ -389,6 +385,9 @@ val negate_single_inequality_nonnegative_p_constraint : Automaton.parameter_inde
 val p_hide_assign : variable list -> p_linear_constraint -> unit
 val px_hide_assign : variable list -> px_linear_constraint -> unit
 val pxd_hide_assign : variable list -> pxd_linear_constraint -> unit
+
+(** Eliminate (using existential quantification) a set of variables in a linear constraint, without side effects *)
+val p_hide : variable list -> p_linear_constraint -> p_linear_constraint
 
 (** Add nb_dimensions to a linear_constraint *)
 (* val add_dimensions : int -> linear_constraint -> unit *)

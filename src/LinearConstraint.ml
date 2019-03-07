@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/03/04
+ * Last modified     : 2019/03/07
  *
  ************************************************************)
 
@@ -1987,6 +1987,7 @@ let hide nb_dimensions variables linear_constraint =
 	poly
 
 (*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+let p_hide v l = hide !p_dim v l
 let px_hide v l = hide !px_dim v l
 let pxd_hide v l = hide !pxd_dim v l
 
