@@ -1,6 +1,8 @@
 *******************************************************
 # release XXX (XXXX) FUTURE MAJOR RELEASE
 
+### Export
+* In the graphical state space and states description, the projection onto a selected set of parameters is added if the model contains `projectresult(…)`
 
 *******************************************************
 # release 2.11 (2019-03-01)

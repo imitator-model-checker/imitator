@@ -531,6 +531,7 @@ The standard command is:
 \styleCommand{\binimitator{} model.imi -mode statespace -output-states}
 
 The option \styleOption{-output-states} generates a file with a textual description of all states (without this option, \imitator{} will not output anything).
+Each state is represented with its discrete part (location and values of the discrete variables), the clock and parameter constraints, and below their projection onto the parameters; in addition, if \styleFileContent{projectresult} is defined in the model (see \cref{section:projection}), the projection onto a specific set of parameters is also added.
 
 \imitator{} can also output the trace set in a graphical form using option \styleOption{-output-trace-set}.
 
@@ -942,13 +943,15 @@ Finally, some statistics on specific operations (model parsing, graphics drawing
 More statistics are obtained with higher levels of verbosity, or with the \styleOption{-statistics} option.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Projection onto some parameters}
+\section{Projection onto some parameters}\label{section:projection}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The result can be projected onto selected parameters, by using the following syntax at the end of the model file:
 
 \styleIMI{projectresult(param1, \dots, paramn);}
 
 In that case, all parameters not in that set are eliminated using variable elimination, and the result in the result file only contains the selected parameters.
+
+This projection is also added to the states description (see option \styleOption{-output-states}) and to the graphical state space output (see option \styleOption{-output-trace-set-verbose}).
 
 
 
@@ -985,7 +988,8 @@ Note that, beyond about 1,000 states or 1,000 transitions, the \gdot{} utility (
 
 Using \styleOption{-output-trace-set-nodetails} makes a more compact representation, but is also less informative as only the state number and the transition labels are shown.
 
-Conversely, \styleOption{-output-trace-set-verbose} makes a more detailed representation, by also adding to the state space all constraints (the clock and parameter constraints, and below their projection onto the parameters).
+Conversely, \styleOption{-output-trace-set-verbose} makes a more detailed representation, by also adding to the state space all constraints:
+	the clock and parameter constraints, and below their projection onto the parameters; in addition, if \styleFileContent{projectresult} is defined in the model (see \cref{section:projection}), the projection onto a specific set of parameters is also added.
 This option is mostly suitable for small trace sets.
 
 \begin{example}
