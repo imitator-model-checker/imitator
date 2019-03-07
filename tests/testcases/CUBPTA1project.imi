@@ -1,0 +1,83 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Very simple CUB-PTA to test CUB-PTA emptiness check
+ *
+ * Description     : Very simple CUB-PTA to test CUB-PTA emptiness check
+ * Correctness     : The system has a loop for p2 >= 1
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+ *
+ * Created         : 2016/10/10
+ * Last modified   : 2019/03/07
+ *
+ * IMITATOR version: 2.11
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y
+		: clock;
+
+(* Parameters *)
+	p1, p2
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: while x <= p1 {}
+	when True sync a do {x' = 0} goto l2;
+
+loc l2: while y <= p2 wait {}
+	when y >= 1 sync a do {x' = 0 , y' = 0} goto l1;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p1 >= 0
+	& p2 >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* property := unreachable loc[pta] = l1; *)
+projectresult(p2)
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
