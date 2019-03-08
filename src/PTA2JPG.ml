@@ -173,6 +173,9 @@ let string_of_location model automaton_index location_index =
 	^ (id_of_location automaton_index location_index) ^ "["
 	(* Color *)
 	^ "fillcolor=" ^ (if model.is_urgent automaton_index location_index then "yellow" else "paleturquoise2") (*(color location_index)*) ^ ", style=filled, fontsize=16"
+	(* Double *)
+	(* LP: shape MRecord inhibits the peripheries display *)
+	^ (if model.is_accepting automaton_index location_index then ", peripheries=2" else "")
 	
 	(* Label: start *)
 	^ ", label=\""
