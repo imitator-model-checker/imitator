@@ -25,7 +25,7 @@ if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
 fi
 
 # installing PPL
-wget http://www.bugseng.com/products/ppl/download/ftp/releases/${PPL_VERSION}/ppl-${PPL_VERSION}.zip
+wget -q --no-check-certificate https://www.bugseng.com/products/ppl/download/ftp/releases/${PPL_VERSION}/ppl-${PPL_VERSION}.zip
 unzip -qq ppl-${PPL_VERSION}.zip
 (cd ppl-${PPL_VERSION}; ./configure --prefix=/usr; cd interfaces/OCaml; make -j 4; sudo make install)
 rm -rf ppl-${PPL_VERSION}*
