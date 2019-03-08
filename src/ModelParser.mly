@@ -10,6 +10,8 @@
  * File contributors : Étienne André
  * Created           : 2009/09/07
  * Last modified     : 2018/09/06
+ * Modified by Laure Petrucci: 2019/03/08
+ * Added accepting locations
  *
  ************************************************************/
 
@@ -43,7 +45,7 @@ let parse_error s =
 /* CT_ALL CT_ANALOG CT_ASAP CT_BACKWARD CT_CLDIFF CT_D  CT_ELSE CT_EMPTY  CT_ENDHIDE CT_ENDIF CT_ENDREACH CT_ENDWHILE CT_FORWARD CT_FREE CT_FROM  CT_HIDE CT_HULL CT_INTEGRATOR CT_ITERATE CT_NON_PARAMETERS CT_OMIT CT_POST CT_PRE CT_PRINT CT_PRINTS CT_PRINTSIZE CT_REACH  CT_STOPWATCH CT_THEN CT_TO CT_TRACE CT_USING  CT_WEAKDIFF CT_WEAKEQ CT_WEAKGE CT_WEAKLE  */
 
 %token
-	CT_ALWAYS CT_AND CT_AUTOMATON
+	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BAD CT_BEFORE
 	CT_CARTO CT_CLOCK CT_CONSTANT
 	CT_DISCRETE CT_DO
@@ -218,12 +220,12 @@ while_or_invariant_or_nothing:
 ;
 
 location:
-	| loc_urgency_type location_name_and_costs COLON while_or_invariant_or_nothing convex_predicate stopwatches wait_opt transitions {
+	| loc_urgency_accepting_type location_name_and_costs COLON while_or_invariant_or_nothing convex_predicate stopwatches wait_opt transitions {
 		let name, cost = $2 in
 		{
 			(* Name *)
 			name = name;
-			(* Urgent or not? *)
+			(* Urgent or not? ; Accepting or not? *)
 			loc_type = $1;
 			(* Cost *)
 			cost = cost;
@@ -237,9 +239,11 @@ location:
 	}
 ;
 
-loc_urgency_type:
-	| CT_LOC { Parsed_location_nonurgent }
-	| CT_URGENT CT_LOC { Parsed_location_urgent }
+loc_urgency_accepting_type:
+	| CT_LOC { Parsed_location_nonurgent_nonaccepting }
+	| CT_URGENT CT_LOC { Parsed_location_urgent_nonaccepting }
+	| CT_ACCEPTING CT_LOC { Parsed_location_nonurgent_accepting }
+	| CT_URGENT CT_ACCEPTING CT_LOC { Parsed_location_urgent_accepting }
 ;
 
 location_name_and_costs:

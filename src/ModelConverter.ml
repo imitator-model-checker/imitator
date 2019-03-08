@@ -1942,6 +1942,8 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 	(* Create an empty array for the actions of every location of every automaton *)
 	let actions_per_location = Array.make nb_automata (Array.make 0 []) in
 	(* Create an empty array for the actions of every location of every automaton *)
+	let location_accepting = Array.make nb_automata (Array.make 0 Location_nonaccepting) in
+	(* Create an empty array for the actions of every location of every automaton *)
 	let location_urgency = Array.make nb_automata (Array.make 0 Location_nonurgent) in
 	(* Create an empty array for the costs *)
 	let costs = Array.make nb_automata (Array.make 0 None) in
@@ -1966,6 +1968,8 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 		let nb_locations = List.length locations in 
 		(* Create the array of lists of actions for this automaton *)
 		actions_per_location.(automaton_index) <- Array.make nb_locations [];
+		(* Create the array of accepting locations for this automaton (default: non-accepting) *)
+		location_accepting.(automaton_index) <- Array.make nb_locations Location_nonaccepting;
 		(* Create the array of urgent locations for this automaton (default: non-urgent) *)
 		location_urgency.(automaton_index) <- Array.make nb_locations Location_nonurgent;
 		(* Create the array of costs for this automaton *)
@@ -2032,11 +2036,23 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 				| None -> ()
 			end;
 			
+			(* Update the array of accepting locations *)
+			let acceptLoc =
+			match location.loc_type with
+			| Parsed_location_urgent_accepting -> Location_accepting
+			| Parsed_location_nonurgent_accepting -> Location_accepting
+			| Parsed_location_urgent_nonaccepting -> Location_nonaccepting
+			| Parsed_location_nonurgent_nonaccepting -> Location_nonaccepting
+			in
+			location_accepting.(automaton_index).(location_index) <- acceptLoc;
+
 			(* Update the array of urgency *)
 			let urgency =
 			match location.loc_type with
-			| Parsed_location_urgent -> Location_urgent
-			| Parsed_location_nonurgent -> Location_nonurgent
+			| Parsed_location_urgent_accepting -> Location_urgent
+			| Parsed_location_urgent_nonaccepting -> Location_urgent
+			| Parsed_location_nonurgent_accepting -> Location_nonurgent
+			| Parsed_location_nonurgent_nonaccepting -> Location_nonurgent
 			in
 			location_urgency.(automaton_index).(location_index) <- urgency;
 
@@ -2090,7 +2106,7 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 	let actions = list_of_interval 0 (nb_actions - 1) in
 		
 	(* Return all the structures in a functional representation *)
-	actions, array_of_action_names, array_of_action_types, actions_per_automaton, actions_per_location, location_urgency, costs, invariants, stopwatches_array, !has_stopwatches, transitions, (if with_observer_action then Some (nb_actions - 1) else None)
+	actions, array_of_action_names, array_of_action_types, actions_per_automaton, actions_per_location, location_accepting, location_urgency, costs, invariants, stopwatches_array, !has_stopwatches, transitions, (if with_observer_action then Some (nb_actions - 1) else None)
 
 
 
@@ -2853,7 +2869,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_total ("*** Building automata…");
 	(* Get all the possible actions for every location of every automaton *)
-	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_urgency, costs, invariants, stopwatches_array, has_stopwatches, transitions, nosync_obs =
+	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_accepting, location_urgency, costs, invariants, stopwatches_array, has_stopwatches, transitions, nosync_obs =
 		make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions (*removed_variable_names *)removed_synclab_names parsed_automata (observer_automaton != None) in
 	let nb_actions = List.length actions in
 	
@@ -2938,6 +2954,8 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	let actions_per_location = fun automaton_index location_index -> actions_per_location.(automaton_index).(location_index) in
 	(* Invariants *)
 	let invariants = fun automaton_index location_index -> invariants.(automaton_index).(location_index) in
+	(* Accepting locations *)
+	let is_accepting = fun automaton_index location_index -> location_accepting.(automaton_index).(location_index) = Location_accepting in
 	(* Urgency *)
 	let is_urgent = fun automaton_index location_index -> location_urgency.(automaton_index).(location_index) = Location_urgent in
 	(* Costs *)
@@ -3196,6 +3214,22 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 			) (locations_per_automaton automaton_index);
 		) automata;
 		
+		(* Accepting locations *)
+		print_message Verbose_total ("\n*** Accepting locations:");
+		(* For each automaton *)
+		List.iter (fun automaton_index ->
+			(* Print the automaton name *)
+			print_message Verbose_total ("" ^ (automata_names automaton_index) ^ " :");
+			(* For each location *)
+			List.iter (fun location_index ->
+				(* Get the accepting status *)
+				let my_string =
+					if is_accepting automaton_index location_index then "ACCEPTING" else "non-accepting"
+				in
+				print_message Verbose_total (" - " ^ (location_names automaton_index location_index) ^ " :" ^ my_string);
+			) (locations_per_automaton automaton_index);
+		) automata;
+
 		(* Urgency of locations *)
 		print_message Verbose_total ("\n*** Urgency of locations:");
 		(* For each automaton *)
@@ -3312,6 +3346,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	location_names = location_names;
 	(* The location names for each automaton *)
 	(*** HACK ***)
+	is_accepting = is_accepting; (* LP: did the same hack *)
 	is_urgent = is_urgent;
 
 	(* All action indexes *)

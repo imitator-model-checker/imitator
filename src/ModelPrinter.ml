@@ -292,7 +292,9 @@ let string_of_location model automaton_index location_index =
 	(* print_message Verbose_high ("Location index: " ^ string_of_int location_index);  *)
 	let result =
 	"\n"
-	^ (if model.is_urgent automaton_index location_index then "urgent loc " else "loc ")
+	^ (if model.is_urgent automaton_index location_index then "urgent " else "")
+	^ (if model.is_accepting automaton_index location_index then "accepting " else "")
+	^ "loc "
 	^ (model.location_names automaton_index location_index)
 	 ^ (match model.costs automaton_index location_index with
 		| None -> ""

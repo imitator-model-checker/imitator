@@ -50,6 +50,12 @@ type discrete_value = NumConst.t
 (************************************************************)
 (** Locations *)
 (************************************************************)
+type location_accepting =
+	(* accepting location *)
+	| Location_accepting
+	(* Non-accepting location *)
+	| Location_nonaccepting
+
 type location_urgency =
 	(* Urgent location *)
 	| Location_urgent
@@ -298,6 +304,8 @@ type abstract_model = {
 	locations_per_automaton : automaton_index -> location_index list;
 	(* The location names for each automaton *)
 	location_names : automaton_index -> location_index -> location_name;
+	(* The acceptance for each location *)
+	is_accepting : automaton_index -> location_index -> bool;
 	(* The urgency for each location *)
 	is_urgent : automaton_index -> location_index -> bool;
 

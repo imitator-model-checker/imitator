@@ -97,8 +97,10 @@ type convex_predicate = linear_constraint list
 (****************************************************************)
 (* Type of locations *)
 type loc_type =
-	| Parsed_location_urgent
-	| Parsed_location_nonurgent
+	| Parsed_location_urgent_accepting
+	| Parsed_location_nonurgent_accepting
+	| Parsed_location_urgent_nonaccepting
+	| Parsed_location_nonurgent_nonaccepting
 
 type sync =
 	| Sync of sync_name
@@ -116,7 +118,7 @@ type transition = guard * update list * sync * location_name
 type parsed_location = {
 	(* Name *)
 	name : location_name;
-	(* Urgent or not? *)
+	(* Urgent or not? Accepting or not?*)
 	loc_type : loc_type;
 	(* Cost *)
 	cost : linear_expression option;

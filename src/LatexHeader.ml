@@ -42,6 +42,7 @@ let latex_header = "
 \\tikzstyle{location}=[rectangle, rounded corners, minimum size=12pt, draw=black, inner sep=1.5pt]
 \\tikzstyle{invariant}=[draw=black, xshift=1em, inner sep=1pt]
 \\tikzstyle{urgent}=[dotted, draw=red, very thick]
+\\tikzstyle{accepting}=[double]
 
 
 \\definecolor{coloract}{rgb}{0.50, 0.70, 0.30}
