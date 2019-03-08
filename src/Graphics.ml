@@ -10,6 +10,7 @@
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
  * Last modified     : 2019/01/23
+ * Modified by Laure Petrucci on 2019/03/08 for the querying script
  *
  ************************************************************)
  
@@ -732,7 +733,8 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 	
 	let transitions_description =
 		(* Convert the transitions for humans *)
-		"\n  DESCRIPTION OF THE TRANSITIONS"
+		"\n\n  /************************************************************/"
+		^ "\n  DESCRIPTION OF THE TRANSITIONS"
 		^ (Hashtbl.fold (fun (orig_state_index, action_index) dest_state_index my_string ->
 			let is_nosync action =
 				String.length action >= 7 &&
