@@ -1,5 +1,13 @@
 #!/bin/bash
 
+####################################
+# Script for querying a statespace #
+# in the .states format            #
+# Author: Laure Petrucci           #
+# Version: 1.0                     #
+# Date: 08/03/2019                 #
+####################################
+
 function usage {
 	if [ $1 -ne 1 ] 
 	then echo -e "\033[1;31musage\033[0m: $0 filename"
