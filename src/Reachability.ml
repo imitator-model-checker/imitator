@@ -1688,7 +1688,8 @@ let post_from_one_state model reachability_graph orig_state_index =
 		let orig_state = StateSpace.get_state reachability_graph orig_state_index in
 		let _, orig_constraint = orig_state in
 		let orig_constraint_projection = LinearConstraint.px_hide_nonparameters_and_collapse orig_constraint in
-		print_message Verbose_high ("Performing post from state:");
+		print_message Verbose_high ("Performing post from " ^ (if is_accepting orig_state then "accepting ")
+			^ "state:");
 		print_message Verbose_high (string_of_state model orig_state);
 		print_message Verbose_high ("\nThe projection of this constraint onto the parameters is:");
 		print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names orig_constraint_projection);

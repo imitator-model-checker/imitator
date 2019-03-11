@@ -41,7 +41,7 @@ type abstract_state = Location.global_location_index * LinearConstraint.px_linea
 
 val match_unreachable_global_locations : AbstractModel.unreachable_global_location list -> Location.global_location -> bool
 
-
+val is_accepting : state -> bool
 
 (************************************************************)
 (************************************************************)
