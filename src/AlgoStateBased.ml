@@ -1547,7 +1547,9 @@ class virtual algoStateBased =
 			let source_state = StateSpace.get_state state_space source_state_index in
 			let _, source_constraint = source_state in
 			let source_constraint_projection = LinearConstraint.px_hide_nonparameters_and_collapse source_constraint in
-			print_message Verbose_high ("Performing post from state:");
+			print_message Verbose_high ("Performing post from "
+				^ (if State.is_accepting source_state then "accepting " else "")
+				^ "state:");
 			print_message Verbose_high (ModelPrinter.string_of_state model source_state);
 			print_message Verbose_high ("\nThe projection of this constraint onto the parameters is:");
 			print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names source_constraint_projection);

@@ -120,6 +120,20 @@ let match_unreachable_global_locations unreachable_global_locations location =
 	) unreachable_global_locations
 
 
+(*------------------------------------------------*)
+(* Check whether the global location is accepting *)
+(*------------------------------------------------*)
+let is_accepting state =
+	
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	(* Retrieve the locations *)
+	let loc, constr = state in
+	let locations = Location.get_locations loc in
+	let result = ref false in
+	(* Check whether a local location is accepting *)
+	Array.iteri (fun automaton_index location_index ->
+		result := !result || model.is_accepting automaton_index location_index) locations
 
 
 (************************************************************)
