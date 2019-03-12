@@ -84,6 +84,9 @@ type imitator_mode =
 	(** Classical state space exploration *)
 	| State_space_exploration
 	
+	(** NDFS exploration *)
+	| NDFS_exploration
+
 	(** EF-synthesis *)
 	| EF_synthesis
 	
@@ -188,6 +191,18 @@ type exploration_order =
 	| Exploration_queue_BFS_RS
 	(** Queue-BFS: queue-based, independent of the depth, with prior for the selection of the next state [ANP17] *)
 	| Exploration_queue_BFS_PRIOR
+	(** NDFS: standard Nested Depth-First Search **)
+	| Exploration_NDFS
+	(** NDFSsub: NDFS with subsumption [NPvdP18] **)
+	| Exploration_NDFS_sub
+	(** layerNDFSsub: NDFS with subsumption  and layers [NPvdP18] **)
+	| Exploration_layer_NDFS_sub
+	(** synNDFSsub: NDFS synthesis with subsumption **)
+	| Exploration_syn_NDFS_sub
+	(** synlayerNDFSsub: NDFS synthesis with subsumption and layers [NPvdP18] **)
+	| Exploration_syn_layer_NDFS_sub
+	(** synMixedNDFS: NDFS synthesis with a mix of subsumption and layers **)
+	| Exploration_syn_mixed_NDFS
 
 
 type merge_heuristic =

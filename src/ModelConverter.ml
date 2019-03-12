@@ -3625,7 +3625,7 @@ let check_and_make_v0 parsed_v0 =
 		match options#imitator_mode with
 		(* No pi0 / v0 *)
 		(*** BADPROG : should be an option !!! ***)
-		| Translation | State_space_exploration | EF_synthesis | Parametric_deadlock_checking ->
+		| Translation | State_space_exploration | NDFS_exploration | EF_synthesis | Parametric_deadlock_checking ->
 			(* Return blank values *)
 			(new PVal.pval)
 			,

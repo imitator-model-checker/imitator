@@ -1997,7 +1997,6 @@ class virtual algoStateBased =
 			else StateSpace.Equality_check
 
 
-		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the queue-based BFS algorithm  *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3048,6 +3047,12 @@ class virtual algoStateBased =
 			| Exploration_queue_BFS -> self#explore_queue_bfs init_state_index;
 			| Exploration_queue_BFS_RS -> self#explore_queue_bfs init_state_index;
 			| Exploration_queue_BFS_PRIOR -> self#explore_queue_bfs init_state_index;
+			| Exploration_NDFS -> self#explore_layer_bfs init_state_index;
+            | Exploration_NDFS_sub -> self#explore_layer_bfs init_state_index;
+            | Exploration_layer_NDFS_sub -> self#explore_layer_bfs init_state_index;
+            | Exploration_syn_NDFS_sub -> self#explore_layer_bfs init_state_index;
+            | Exploration_syn_layer_NDFS_sub -> self#explore_layer_bfs init_state_index;
+            | Exploration_syn_mixed_NDFS -> self#explore_layer_bfs init_state_index;
 		end;
 
 		(* Return the algorithm-dependent result *)

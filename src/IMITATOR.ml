@@ -164,6 +164,7 @@ match options#imitator_mode with
 	(*** BADPROG!!! This should be defined elsewhere... ***)
 	| Translation
 	| State_space_exploration
+	| NDFS_exploration
 	| EF_synthesis
 	| EFunsafe_synthesis
 	| EF_min
@@ -471,6 +472,8 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 			(*** NOTE: this is static subclass coercition; see https://ocaml.org/learn/tutorials/objects.html ***)
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoPostStar.algoPostStar in myalgo
 		
+	| NDFS_exploration ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS in myalgo
 		
 	(************************************************************)
 	(* EF-synthesis *)
