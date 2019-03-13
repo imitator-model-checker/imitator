@@ -74,7 +74,8 @@ class algoNDFS =
 	(*-*                                                       *-*)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
+	method private rundfs predfs filterdfs alternativedfs postdfs =
+		print_message Verbose_standard("Executing rundfs")
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run NDFS exploration [WORK IN PROGRESS] *)
@@ -96,7 +97,14 @@ class algoNDFS =
 		print_message Verbose_standard("---------------- Starting exploration ----------------");
 
         match options#exploration_order with
-            | Exploration_NDFS -> print_message Verbose_standard("Using the option NDFS")
+            | Exploration_NDFS -> 
+				print_message Verbose_standard("Using the option NDFS");
+				let predfs = fun _ -> () in
+				let filterdfs = fun _ -> () in
+				let alternativedfs = fun _ -> () in
+				let postdfs = fun _ -> () in
+				self#rundfs predfs filterdfs alternativedfs postdfs;
+				print_message Verbose_standard("Finished the calls");
             | Exploration_NDFS_sub -> print_message Verbose_standard("Using the option NDFSsub")
             | Exploration_layer_NDFS_sub -> print_message Verbose_standard("Using the option layerNDFSsub")
             | Exploration_syn_NDFS_sub -> print_message Verbose_standard("Using the option synNDFSsub")
