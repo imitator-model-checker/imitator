@@ -1055,7 +1055,59 @@ and \styleOption{-output-graphics-source} to keep the plot source.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Translation to \hytech{}}
+\section{Translation to \uppaal{}}\label{section:uppaal}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% TODO: 2.12?
+Since version 2.11, \imitator{} supports a translation of the model to the \uppaal{} syntax~\cite{LPY97}.
+To generate an equivalent \uppaal{} model without performing any analysis, use:
+
+\styleCommand{\binimitator{} model.imi -PTA2Uppaal}
+
+\imitator{} will generate a file \stylePath{model-uppaal.xml}.
+Note that translation of properties is not supported.
+
+Due to the different semantics and features between \imitator{} and \uppaal{}, the translation is done in a ``best effort'' manner, but the semantics may differ.
+We review some points in the following.
+
+\paragraph{Parameters}
+A fundamental difference \imitator{} and \uppaal{} is that \uppaal{} does not support timing parameters.
+Parameters are therefore translated to constants, the value of which can be manually changed by the user.
+
+\paragraph{Discrete variables}
+Discrete variables in \imitator{} are rational-valued with an exact value.
+In \uppaal{}, they are interpreted as (bounded) integers: overflows may occur and, if their value becomes non-integer, it seems \uppaal{} will just round them to the nearest integer, thus creating a difference in semantics.
+
+\paragraph{Strong broadcast synchronization}
+\imitator{} uses a single communication model: strong broadcast (see \cref{sect:synchronization}), while \uppaal{} uses both channel binary synchronization, and broadcast synchronization.
+None of them match \imitator{}'s semantics.
+Our translation preserves \imitator{} semantics, using the following scheme:
+\begin{itemize}
+	\item Unnamed actions (necessarily used in a single \IPTA{}) remain unnamed in \uppaal{}.
+	\item An action \styleFileContent{a} used in a single \IPTA{} is implemented in \uppaal{} using a broadcast action \styleFileContent{a!}.
+	\item An action \styleFileContent{a} used in exactly two \IPTA{} is implemented in \uppaal{} using a binary action \styleFileContent{a}, where the first (\ie{} declared first in the \imitator{} file) uses \styleFileContent{a!} while the second uses \styleFileContent{a?}.
+	\item An action \styleFileContent{a} used in $n$ \IPTA{} with $n \geq 3$ is implemented in \uppaal{} using a broadcast action \styleFileContent{a} and an additional variable \styleFileContent{nb\_\_a} initially set to~$n$, and that will be responsible to check that all automata can indeed synchronize, as follows:
+		\begin{itemize}
+			\item all invariants contain \styleFileContent{nb\_\_a = n}
+			\item the first automaton (\ie{} declared first in the \imitator{} file) involved in the synchronization synchronizes on \styleFileContent{a!} and performs \styleFileContent{nb\_\_a := 1};
+			\item all other automata involved in the synchronization perform \styleFileContent{nb\_\_a := nb\_\_a + 1}.
+		\end{itemize}
+		From the \uppaal{} official semantics, the discrete variables are updated by first executing the update label given on the \styleFileContent{a!} transition, and then the update labels given on the \styleFileContent{a?} for increasing, which guarantees the correctness of this construction.
+		(This construction was suggested by Jiří~Srba.)
+\end{itemize}
+
+\paragraph{Initial constraint}
+The initial constraint is \emph{not} translated, except for the initial value of the discrete variables.
+Notably, the clocks are initially~0 in \uppaal{}, which is not necessarily the case in \imitator{}.
+
+\paragraph{Properties}
+Properties are so far not translated to \uppaal{}.
+
+
+% TODO: stopwatches
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Translation to \hytech{}}\label{section:hytech}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Since version 2.8, \imitator{} supports a translation of the model to the \hytech{} syntax~\cite{HHW95} (that is quite close to that of \imitator{} anyway).
@@ -1066,7 +1118,6 @@ To generate an equivalent \hytech{} model without performing any analysis, use:
 \imitator{} will generate a file \stylePath{model.hy}.
 Note that translation of properties is not supported.
 	% TODO
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1591,6 +1642,7 @@ Since version 2.9, it is advised to use instead \styleOption{-mode PRP} and \sty
 \paragraph{\styleOption{-PTA2HyTech} (default: false)}
 %------------------------------------------------------------
 Translates the input model to a \hytech{} model, and exits.
+See \cref{section:hytech} for details.
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-PTA2IMI} (default: false)}
@@ -1621,6 +1673,12 @@ Translates the input model to a graphical, human-readable form (in \texttt{.png}
 Translates the input model to a \LaTeX{} representation of the model (using the \texttt{tikz} package) without performing any analysis, and exits.
 Note that node positioning is not (much) supported, so may want to edit manually some positions.
 	% TODO refer to the graphics of the coffee machine
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-PTA2Uppaal} (default: false)}
+%------------------------------------------------------------
+Translates the input model to a \uppaal{} model, and exits.
+See \cref{section:uppaal} for details.
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-romeo} (default: false)}
@@ -2521,6 +2579,8 @@ Stéphane Rosse improved a script for comparing results and speeds of various ve
 Vincent~Bloemen implemented the optimal-time reachability synthesis.
 %
 Jaime~Arias simplified a lot the source code management and implemented new features.
+%
+Jiří~Srba suggested the translation of \imitator{}'s strong broadcast into \uppaal{}.
 
 We acknowledge the help of the PPL~\cite{bhz08} developers for their help with solving several issues over the years, and more generally for making this very useful library available.
 
