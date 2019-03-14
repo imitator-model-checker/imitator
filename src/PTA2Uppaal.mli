@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/03/01
- * Last modified     : 2019/03/01
+ * Last modified     : 2019/03/14
  *
  ************************************************************)
  
@@ -19,6 +19,3 @@ open AbstractModel
 
 (* Convert a model into a string *)
 val string_of_model : abstract_model -> string
-
-(** Convert the correctness property to a string *)
-val string_of_property : abstract_model -> property_definition -> string

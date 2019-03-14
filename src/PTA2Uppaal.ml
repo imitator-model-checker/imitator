@@ -35,6 +35,9 @@ let uppaal_strings : LinearConstraint.customized_string = {
 	g_operator    = " &gt; ";
 }
 
+let uppaal_update_separator = ", "
+
+let uppaal_assignment = " = "
 
 
 (* Positining *)
@@ -85,21 +88,9 @@ let string_of_nb_strongbroadcast model action_index =
 
 
 (* Create initial discrete declarations to encode strong broadcast *)
-let string_of_discrete_nb_strongbroadcast model =
-	(* Create a list (action_index , nb_automata for this action) *)
-	let actions_and_nb_automata = List.map (fun action_index ->
-		(* Get number of automata *)
-		let nb_automata = List.length (model.automata_per_action action_index) in
-		(* Make it a pair *)
-		action_index , nb_automata
-	) model.actions
-	in
-	
-	(* Strong broadcast is encoded to this scheme if the number of automata is >= 3, so filter *)
-	let encoding_needed = List.filter (fun (_ , nb_automata) -> nb_automata >= 3) actions_and_nb_automata in
-
+let string_of_discrete_nb_strongbroadcast model actions_and_nb_automata =
 	(* Do not generate anything for empty list *)
-	if encoding_needed = [] then ""
+	if actions_and_nb_automata = [] then ""
 	else
 		(* Comment *)
 		"\n\n/* Discrete variable declarations needed to encode IMITATOR's strong broadcast into Uppaal */\n"
@@ -108,7 +99,7 @@ let string_of_discrete_nb_strongbroadcast model =
 		(string_of_list_of_string_with_sep "\n" (List.map (fun (action_index , nb_automata) ->
 			let discrete_name = string_of_nb_strongbroadcast model action_index in
 			"int " ^ discrete_name ^ " = " ^ (string_of_int nb_automata) ^ ";"
-		) encoding_needed))
+		) actions_and_nb_automata))
 	
 	
 
@@ -194,8 +185,7 @@ let string_of_declared_actions model =
 			else (
 				(* Issue a warning *)
 				print_warning ("Action '" ^ action_name ^ "' is used in " ^ (string_of_int nb_automata) ^ " automata: IMITATOR uses strong broadcast semantics, while Uppaal uses broadcast semantics; the behavior may differ!");
-				(*** TODO: remove the warning once the encoding is correct ***)
-				"broadcast chan " ^ action_name ^ "; /* WARNING! This action is used in " ^ (string_of_int nb_automata) ^ " automata: IMITATOR uses strong broadcast semantics, while Uppaal uses broadcast semantics; the behavior may therefore differ */"
+				"broadcast chan " ^ action_name ^ ";"  (* /* WARNING! This action is used in " ^ (string_of_int nb_automata) ^ " automata: IMITATOR uses strong broadcast semantics, while Uppaal uses broadcast semantics; the behavior may therefore differ */ *)
 			)
 		
 		) model.actions
@@ -205,7 +195,7 @@ let string_of_declared_actions model =
 
 
 (* Convert the initial variable declarations into a string *)
-let string_of_declarations model =
+let string_of_declarations model actions_and_nb_automata =
 	(* Header *)
 	"<declaration>"
 
@@ -227,7 +217,7 @@ let string_of_declarations model =
 	^ (string_of_discrete model)
 	
 	(* Declare discrete needed to encode strong broadcast *)
-	^ (string_of_discrete_nb_strongbroadcast model)
+	^ (string_of_discrete_nb_strongbroadcast model actions_and_nb_automata)
 	
 	(* Declare parameters *)
 	^ (string_of_parameters model)
@@ -259,7 +249,7 @@ let string_of_declarations model =
 (*** NOTE: special handling as we have a discrete and a continuous guard that must be handled homogeneously ***)
 
 (** Convert a guard into a string *)
-let string_of_guard variable_names x_coord_str y_coord_str = function
+let string_of_guard actions_and_nb_automata variable_names x_coord_str y_coord_str = function
 	(* True guard = no guard *)
 	| True_guard -> ""
 	
@@ -308,15 +298,33 @@ let id_of_location model automaton_index location_index =
 	"id_pta" ^ (string_of_int automaton_index) ^ "_loc" ^ (string_of_int location_index ^ "")
 
 
-
 (* Convert the invariant of a location into a string *)
-let string_of_invariant model automaton_index location_index =
-	(*** TODO: check well formed with constraints x <= … ***)
+let string_of_invariant model actions_and_nb_automata automaton_index location_index =
+	(* In addition to the "real" invariant, we also constrain the variables corresponding to the strong broadcast actions to be equal to the number of automata that declare them *)
+	(*** NOTE: of course, it would be better to only add these invariants to the locations target of such an action ***)
+	(*** TODO: simplify some day ***)
+	let strong_broadcast_invariant =
+		(string_of_list_of_string_with_sep uppaal_strings.and_operator (List.map (fun (action_index , nb_automata) ->
+			let discrete_name = string_of_nb_strongbroadcast model action_index in
+			discrete_name ^ uppaal_strings.eq_operator ^ (string_of_int nb_automata)
+		) actions_and_nb_automata))
+	in
+
+	(*** TODO: check well formed with constraints x <= … as requested by Uppaal, and issue a warning otherwise ***)
+	
+	let invariant = LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings model.variable_names (model.invariants automaton_index location_index) in
+	
+	(* Avoid "true and …" *)
+	let invariant_and_strong_broadcast_invariant =
+		if invariant = uppaal_strings.true_string then strong_broadcast_invariant
+		else if actions_and_nb_automata = [] then invariant
+		else invariant ^ uppaal_strings.and_operator ^ strong_broadcast_invariant
+	in
 
 	(* Invariant *)
 	(*** NOTE: arbitrary positioning (location_id * scaling_factor, +20%) ***)
 	"\n\t<label kind=\"invariant\" x=\"" ^ (string_of_int (location_index * scaling_factor)) ^ "\" y=\"" ^ (string_of_int (scaling_factor / 5)) ^ "\">"
-	^ (LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings model.variable_names (model.invariants automaton_index location_index))
+	^ invariant_and_strong_broadcast_invariant
 	
 	(* The end *)
 	^ "</label>"
@@ -394,39 +402,73 @@ let string_of_arithmetic_expression variable_names =
 	
 (* Convert a list of updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, arithmetic_expression) ->
+	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (variable_index, arithmetic_expression) ->
 		(* Convert the variable name *)
 		(model.variable_names variable_index)
-		^ " = "
+		^ uppaal_assignment
 		(* Convert the arithmetic_expression *)
 		^ (string_of_arithmetic_expression model.variable_names arithmetic_expression)
 	) updates)
 
 
-let string_of_updates model x_coord_str y_coord_str clock_updates discrete_updates =
-	(* Should we add a separating comma between clock updates and discrete updaes? *)
+let string_of_updates model automaton_index action_index x_coord_str y_coord_str clock_updates discrete_updates =
+
+	(* First add the update for the strong broadcast encoding *)
+	
+	(* Get number of automata *)
+	let automata_for_this_action = model.automata_per_action action_index in
+	let nb_automata = List.length automata_for_this_action in
+	(* If strong broadcast encoding (i.e. >= 3) *)
+	let update_strong_broadcast =
+	if nb_automata >= 3 then
+		(* Get discrete name *)
+		let discrete_name = string_of_nb_strongbroadcast model action_index in
+			discrete_name
+			^
+			(* Arbitrarily, the first automaton index in the list is "!" and therefore responsible for resetting the number, and the others are "?", and therefore they increment *)
+			if automaton_index = List.nth automata_for_this_action 0
+				(* := 1 *)
+				then uppaal_assignment ^ (string_of_int 1)
+				(* ++ *)
+				else uppaal_assignment ^ discrete_name ^ " + 1"
+	(* Otherwise, no update *)
+	else ""
+	in
+	
+	(* Check for emptiness of some updates *)
 	let no_clock_updates =
 		clock_updates = No_update || clock_updates = Resets [] || clock_updates = Updates []
 	in
 	let no_discrete_updates = discrete_updates = [] in
-	let separator_comma =
-		if no_clock_updates || no_discrete_updates then "" else ", "
-	in
 
-	(* Convert the updates *)
-	if no_clock_updates && no_discrete_updates then ""
+	(* If no update at all: empty string *)
+	if no_clock_updates && no_discrete_updates && update_strong_broadcast = "" then ""
+	
 	else(
-		(*** TODO ***)
-		  "<label kind=\"assignment\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">"
+		(* Manage separator between clock updates and discrete updates *)
+		let separator_clock_discrete =
+			if no_clock_updates || no_discrete_updates then "" else uppaal_update_separator
+		in
+		
+		(* Manage separator between the normal updates (clocks and discrete), and the strong broadcast updates *)
+		let separator_clockdiscrete_strongbroadcast =
+			if no_clock_updates && no_discrete_updates || update_strong_broadcast = "" then "" else uppaal_update_separator
+		in
+
+		"<label kind=\"assignment\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">"
 		(* Clock updates *)
 		^ (string_of_clock_updates model clock_updates)
-		(* Add a coma in case of both clocks and discrete *)
-		^ separator_comma
+		(* Add a separator in case of both clocks and discrete *)
+		^ separator_clock_discrete
 		(* Discrete updates *)
 		^ (string_of_discrete_updates model discrete_updates)
+		(* Add separator *)
+		^ separator_clockdiscrete_strongbroadcast
+		(* Special strong broadcast update *)
+		^ update_strong_broadcast
 		^ "</label>"
 	)
-	
+
 
 (* Convert an action_index in automaton_index into a string; the automaton_index is important for "!" / "?" issues *)
 let string_of_sync model automaton_index action_index =
@@ -462,13 +504,13 @@ let string_of_sync model automaton_index action_index =
 	else
 		action_name
 		^
-		(* Again, arbitrarily, the first automaton index in the list is "!", and the other one is "?" *)
+		(* Again, arbitrarily, the first automaton index in the list is "!", and the others are "?" *)
 		if automaton_index = List.nth automata_for_this_action 0 then "!" else "?"
 
 
 
 (* Convert a transition of a location into a string *)
-let string_of_transition model automaton_index action_index source_location (guard, clock_updates, discrete_updates, target_location) =
+let string_of_transition model actions_and_nb_automata automaton_index action_index source_location (guard, clock_updates, discrete_updates, target_location) =
 	(* Arbitrary positioning: x = between source_location and target_location *)
 	(*** NOTE: integer division here, so first multiplication, then division (otherwise result can be 0) ***)
 	let x_coord_str = (string_of_int ((source_location + target_location) * scaling_factor / 2)) in
@@ -493,14 +535,14 @@ let string_of_transition model automaton_index action_index source_location (gua
 	^ (
 		(* Quite arbitrary positioning *)
 		let y_coord_str = (string_of_int (scaling_factor / 5)) in
-		"\n\t\t" ^ (string_of_guard model.variable_names x_coord_str y_coord_str guard)
+		"\n\t\t" ^ (string_of_guard actions_and_nb_automata model.variable_names x_coord_str y_coord_str guard)
 	)
 
 	(* Updates *)
 	^ (
 		(* Quite arbitrary positioning *)
 		let y_coord_str = (string_of_int (- scaling_factor / 5)) in
-		"\n\t\t" ^ (string_of_updates model x_coord_str y_coord_str clock_updates discrete_updates)
+		"\n\t\t" ^ (string_of_updates model automaton_index action_index x_coord_str y_coord_str clock_updates discrete_updates)
 	)
 
 	(* Footer *)
@@ -509,7 +551,7 @@ let string_of_transition model automaton_index action_index source_location (gua
 
 
 (* Convert the transitions of an automaton into a string *)
-let string_of_transitions model automaton_index =
+let string_of_transitions model actions_and_nb_automata automaton_index =
 	string_of_list_of_string (
 	(* For each location *)
 	List.map (fun location_index -> 
@@ -521,7 +563,7 @@ let string_of_transitions model automaton_index =
 			(* Convert to string *)
 			string_of_list_of_string (
 				(* For each transition *)
-				List.map (string_of_transition model automaton_index action_index location_index) transitions
+				List.map (string_of_transition model actions_and_nb_automata automaton_index action_index location_index) transitions
 				)
 			) (model.actions_per_location automaton_index location_index)
 		)
@@ -530,7 +572,7 @@ let string_of_transitions model automaton_index =
 
 
 (* Convert a location of an automaton into a string *)
-let string_of_location model automaton_index location_index =
+let string_of_location model actions_and_nb_automata automaton_index location_index =
 	"\n"
 	
 	(* Header *)
@@ -546,7 +588,7 @@ let string_of_location model automaton_index location_index =
 	^ "\n\t<name x=\"" ^ (string_of_int (location_index * scaling_factor)) ^ "\" y=\"" ^ (string_of_int (- scaling_factor / 5)) ^ "\">" ^ (model.location_names automaton_index location_index) ^ "</name>"
 
 	(* Invariant *)
-	^ (string_of_invariant model automaton_index location_index)
+	^ (string_of_invariant model actions_and_nb_automata automaton_index location_index)
 	
 	(* Urgency *)
 	^ (if model.is_urgent automaton_index location_index then "<urgent/>" else "")
@@ -569,9 +611,9 @@ let string_of_location model automaton_index location_index =
 
 
 (* Convert the locations of an automaton into a string *)
-let string_of_locations model automaton_index =
+let string_of_locations model actions_and_nb_automata automaton_index =
 	string_of_list_of_string_with_sep "\n " (List.map (fun location_index ->
-		string_of_location model automaton_index location_index
+		string_of_location model actions_and_nb_automata automaton_index location_index
 	) (model.locations_per_automaton automaton_index))
 
 (* Convert the initial location of an automaton *)
@@ -582,27 +624,27 @@ let string_of_initial_location model automaton_index =
 	"<init ref=\"" ^ (id_of_location model automaton_index initial_location) ^ "\"/>"
 
 (* Convert an automaton into a string *)
-let string_of_automaton model automaton_index =
+let string_of_automaton model actions_and_nb_automata automaton_index =
 		(*** NOTE: arbitrary positioning at (automaton_index, automaton_index) ***)
 (* 	"\n/************************************************************/" *)
 	(*^*) "\n<template><name x=\"" ^ (string_of_int automaton_index) ^ "\" y=\"" ^ (string_of_int automaton_index) ^ "\">" ^ (model.automata_names automaton_index) ^ "</name><declaration>// No local declaration for automaton '" ^ (model.automata_names automaton_index) ^ "'
 </declaration>"
-	^ "\n " ^ (string_of_locations model automaton_index)
+	^ "\n " ^ (string_of_locations model actions_and_nb_automata automaton_index)
 	^ "\n " ^ (string_of_initial_location model automaton_index)
-	^ "\n " ^ (string_of_transitions model automaton_index)
+	^ "\n " ^ (string_of_transitions model actions_and_nb_automata automaton_index)
 	^ "\n </template>" (*/ * end " ^ (model.automata_names automaton_index) ^ " */ *)
 (* 	^ "\n/************************************************************/" *)
 
 
 (* Convert the automata into a string *)
-let string_of_automata model =
+let string_of_automata model actions_and_nb_automata =
 	(*** WARNING: Do not print the observer ***)
 	let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
 	in
 
 	(* Print all (other) PTA *)
 	string_of_list_of_string_with_sep "\n\n" (
-		List.map (fun automaton_index -> string_of_automaton model automaton_index
+		List.map (fun automaton_index -> string_of_automaton model actions_and_nb_automata automaton_index
 	) pta_without_obs)
 
 
@@ -626,128 +668,8 @@ let string_of_system model =
 
 
 
+(*** TODO: add properties, projection… as comments ***)
 
-
-(************************************************************)
-(** Property *)
-(************************************************************)
-let property_header =
-	"\n"
-	^ "\n" ^ "(************************************************************)"
-	^ "\n" ^ "(* Property specification *)"
-	^ "\n" ^ "(************************************************************)"
-	^ "\n" ^ ""
-
-
-
-let string_of_unreachable_location model unreachable_global_location =
-	(* Convert locations *)
-	string_of_list_of_string_with_sep " & " (List.map (fun (automaton_index, location_index) ->
-			"loc[" ^ (model.automata_names automaton_index) ^ "]" ^ " = " ^ (model.location_names automaton_index location_index)
-		) unreachable_global_location.unreachable_locations
-	)
-	^
-	(* Separator *)
-	(if unreachable_global_location.unreachable_locations <> [] && unreachable_global_location.discrete_constraints <> [] then " & " else "")
-	^
-	(* Convert discrete *)
-	string_of_list_of_string_with_sep " & " (List.map (function
-		| Discrete_l (discrete_index , discrete_value)
-			-> (model.variable_names discrete_index) ^ " < " ^ (NumConst.string_of_numconst discrete_value)
-		| Discrete_leq (discrete_index , discrete_value)
-			-> (model.variable_names discrete_index) ^ " <= " ^ (NumConst.string_of_numconst discrete_value)
-		| Discrete_equal (discrete_index , discrete_value)
-			-> (model.variable_names discrete_index) ^ " = " ^ (NumConst.string_of_numconst discrete_value)
-		| Discrete_neq (discrete_index , discrete_value)
-			-> (model.variable_names discrete_index) ^ " <> " ^ (NumConst.string_of_numconst discrete_value)
-		| Discrete_geq (discrete_index , discrete_value)
-			-> (model.variable_names discrete_index) ^ " >= " ^ (NumConst.string_of_numconst discrete_value)
-		| Discrete_g (discrete_index , discrete_value)
-			-> (model.variable_names discrete_index) ^ " > " ^ (NumConst.string_of_numconst discrete_value)
-		| Discrete_interval (discrete_index , min_discrete_value, max_discrete_value)
-			-> (model.variable_names discrete_index) ^ " in [" ^ (NumConst.string_of_numconst min_discrete_value) ^ " , " ^ (NumConst.string_of_numconst max_discrete_value) ^ "]"
-		) unreachable_global_location.discrete_constraints
-	)
-
-
-(** Convert the correctness property to a string *)
-let string_of_property model property = 
-	match property with
-	(* An "OR" list of global locations *)
-	| Unreachable_locations unreachable_global_location_list ->
-		"property := unreachable " ^ (
-			string_of_list_of_string_with_sep "\n or \n " (List.map (string_of_unreachable_location model) unreachable_global_location_list)
-		)
-
-	(* if a2 then a1 has happened before *)
-	| Action_precedence_acyclic (a1 , a2) ->
-		"property := if " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened before;"
-	(* everytime a2 then a1 has happened before *)
-	| Action_precedence_cyclic (a1 , a2) ->
-		"property := everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened before;"
-	(* everytime a2 then a1 has happened exactly once before *)
-	| Action_precedence_cyclicstrict (a1 , a2) ->
-		"property := everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened exactly once before;"
-
-	(*** NOTE: not implemented ***)
-(*	(* if a1 then eventually a2 *)
-	| Eventual_response_acyclic (a1 , a2) -> ""
-	(* everytime a1 then eventually a2 *)
-	| Eventual_response_cyclic (a1 , a2) -> ""
-	(* everytime a1 then eventually a2 once before next *)
-	| Eventual_response_cyclicstrict (a1 , a2) -> ""
-	*)
-
-	(* a no later than d *)
-	| Action_deadline (a, d) ->
-		"property := " ^ (model.action_names a) ^ " no later than " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ ";"
-
-	(* if a2 then a1 happened within d before *)
-	| TB_Action_precedence_acyclic (a1 , a2, d) ->
-		"property := if " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " before;"
-	(* everytime a2 then a1 happened within d before *)
-	| TB_Action_precedence_cyclic (a1 , a2, d) ->
-		"property := everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " before;"
-	(* everytime a2 then a1 happened once within d before *)
-	| TB_Action_precedence_cyclicstrict (a1 , a2, d) ->
-		"property := everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened once within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " before;"
-	
-	(* if a1 then eventually a2 within d *)
-	| TB_response_acyclic (a1 , a2, d) ->
-		"property := if " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ ";"
-	(* everytime a1 then eventually a2 within d *)
-	| TB_response_cyclic (a1 , a2, d) ->
-		"property := everytime " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ ";"
-	(* everytime a1 then eventually a2 within d once before next *)
-	| TB_response_cyclicstrict (a1 , a2, d) ->
-		"property := if " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " once before next;"
-
-	(* sequence a1, …, an *)
-	| Sequence_acyclic action_index_list ->
-		"property := sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
-	(* always sequence a1, …, an *)
-	| Sequence_cyclic action_index_list ->
-		"property := always sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
-	
-	(*** NOTE: Would be better to have an "option" type ***)
-	| Noproperty -> "(* no property *)"
-
-(** Convert the projection to a string *)
-let string_of_projection model =
-	match model.projection with
-	| None -> ""
-	| Some parameter_index_list ->
-		"\nprojectresult(" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names parameter_index_list)) ^ ");"
-
-
-(** Convert the optimization to a string *)
-let string_of_optimization model =
-	match model.optimized_parameter with
-	| No_optimization -> ""
-	| Minimize parameter_index ->
-		"minimize(" ^ (model.variable_names parameter_index) ^ ");"
-	| Maximize parameter_index ->
-		"maximize(" ^ (model.variable_names parameter_index) ^ ");"
 
 
 (************************************************************)
@@ -756,14 +678,25 @@ let string_of_optimization model =
 
 (* Convert the model into a string *)
 let string_of_model model =
+	(* Create a list (action_index , nb_automata for this action), needed for strong broadcast encoding *)
+	let actions_and_nb_automata = List.map (fun action_index ->
+		(* Get number of automata *)
+		let nb_automata = List.length (model.automata_per_action action_index) in
+		(* Make it a pair *)
+		action_index , nb_automata
+	) model.actions
+	in
+	(* Strong broadcast is encoded to this scheme if the number of automata is >= 3, so filter *)
+	let encoding_needed = List.filter (fun (_ , nb_automata) -> nb_automata >= 3) actions_and_nb_automata in
+
 	(* The header *)
 	string_of_header model
 	
 	(* The variable declarations *)
-	^  "\n" ^ (string_of_declarations model)
+	^  "\n" ^ (string_of_declarations model encoding_needed)
 	
 	(* All automata *)
-	^  "\n" ^ (string_of_automata model)
+	^  "\n" ^ (string_of_automata model encoding_needed)
 
 	(* The system definition *)
 	^  "\n" ^ (string_of_system model)
