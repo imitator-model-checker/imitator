@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2019/03/01
+ * Last modified     : 2019/03/14
  *
  ************************************************************)
 
@@ -321,8 +321,8 @@ if options#pta2uppaal then(
 	let translated_model = PTA2Uppaal.string_of_model model in
 	let output_file = options#files_prefix ^ "-uppaal.xml" in
 		(*** NOTE: for testing purpose ***)
-	if verbose_mode_greater (*Verbose_total*)Verbose_standard then(
-		print_message Verbose_standard ("\n" ^ translated_model ^ "\n");
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("\n" ^ translated_model ^ "\n");
 	);
 	(* Write *)
 	write_to_file output_file translated_model;
