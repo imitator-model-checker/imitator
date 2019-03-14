@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/03/07
+ * Last modified     : 2019/03/14
  *
  ************************************************************)
 
@@ -910,15 +910,25 @@ let string_of_constant = NumConst.string_of_numconst
 let rec string_of_linear_term names linear_term =
 	match linear_term with
 		| Coef c -> string_of_coef c
+		
 		| Var v -> names v
+		
+		(* Some simplification *)
+		| Pl (lterm, Coef z)
+		| Mi (lterm, Coef z)
+			when NumConst.equal z (NumConst.zero) ->
+			  string_of_linear_term names lterm
+
 		| Pl (lterm, rterm) -> (
 			  let lstr = string_of_linear_term names lterm in
 				let rstr = string_of_linear_term names rterm in
 				lstr ^ " + " ^ rstr )
+		
 		| Mi (lterm, rterm) -> (
 			  let lstr = string_of_linear_term names lterm in
 				let rstr = string_of_linear_term names rterm in
 				lstr ^ " - (" ^ rstr ^ ")" )
+		
 		| Ti (fac, rterm) -> (
 				let fstr = string_of_coef fac in
 				let tstr = string_of_linear_term names rterm in
@@ -934,25 +944,37 @@ let string_of_pxd_linear_term = string_of_linear_term
 let rec string_of_linear_term_ppl names linear_term =
 	match linear_term with
 		| Coefficient z -> Gmp.Z.string_from z
+		
 		| Variable v -> names v
+		
 		| Unary_Plus t -> string_of_linear_term_ppl names t
+		
 		| Unary_Minus t -> (
 				let str = string_of_linear_term_ppl names t in
 				"-(" ^ str ^ ")")
+				
+		(* Some simplification *)
+		| Plus (lterm, Coefficient z)
+		| Minus (lterm, Coefficient z)
+			when Gmp.Z.equal z (Gmp.Z.zero) ->
+			  string_of_linear_term_ppl names lterm
+
 		| Plus (lterm, rterm) -> (
 			  let lstr = string_of_linear_term_ppl names lterm in
 				let rstr = string_of_linear_term_ppl names rterm in
 				lstr ^ " + " ^ rstr )
+				
 		| Minus (lterm, rterm) -> (
 			  let lstr = string_of_linear_term_ppl names lterm in
 				let rstr = string_of_linear_term_ppl names rterm in
 				lstr ^ " - (" ^ rstr ^ ")" )
+				
 		| Times (z, rterm) -> (
-				let fstr = Gmp.Z.string_from z in
 				let tstr = string_of_linear_term_ppl names rterm in
 				if (Gmp.Z.equal z (Gmp.Z.one)) then
 					tstr
 				else 
+					let fstr = Gmp.Z.string_from z in
 					match rterm with
 						| Coefficient _ -> fstr ^ "*" ^ tstr
 						| Variable    _ -> fstr ^ "*" ^ tstr

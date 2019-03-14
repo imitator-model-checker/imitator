@@ -1,6 +1,9 @@
 *******************************************************
 # release XXX (XXXX) FUTURE MAJOR RELEASE
 
+### Bug fixing:
+* Fixed a "+ 0" that appeared in some of the text and graphical outputs
+
 ### Export
 * In the graphical state space and states description, the projection onto a selected set of parameters is added if the model contains `projectresult(…)`
 

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/02
- * Last modified     : 2019/03/04
+ * Last modified     : 2019/03/14
  *
  ************************************************************)
 
@@ -164,6 +164,11 @@ let string_of_clock_updates model = function
 (*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
 let string_of_arithmetic_expression variable_names =
 	let rec string_of_arithmetic_expression = function
+		(* Shortcut: Remove the "+0" / -"0" cases *)
+		| DAE_plus (discrete_arithmetic_expression, DT_factor (DF_constant c))
+		| DAE_minus (discrete_arithmetic_expression, DT_factor (DF_constant c)) when NumConst.equal c NumConst.zero ->
+			string_of_arithmetic_expression discrete_arithmetic_expression
+			
 		| DAE_plus (discrete_arithmetic_expression, discrete_term) ->
 			(string_of_arithmetic_expression discrete_arithmetic_expression)
 			^ " + "
