@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/03/01
- * Last modified     : 2019/03/07
+ * Last modified     : 2019/03/14
  *
  ************************************************************)
 
@@ -76,6 +76,41 @@ let string_of_var_type = function
 	| Var_type_parameter -> "parameter"
 
 
+(* Naming the discrete variables checking for strong broadcast *)
+let string_of_nb_strongbroadcast model action_index =
+	(* Get name *)
+	let action_name = model.action_names action_index in
+	(* Name it *)
+	"nb__" ^ action_name
+
+
+(* Create initial discrete declarations to encode strong broadcast *)
+let string_of_discrete_nb_strongbroadcast model =
+	(* Create a list (action_index , nb_automata for this action) *)
+	let actions_and_nb_automata = List.map (fun action_index ->
+		(* Get number of automata *)
+		let nb_automata = List.length (model.automata_per_action action_index) in
+		(* Make it a pair *)
+		action_index , nb_automata
+	) model.actions
+	in
+	
+	(* Strong broadcast is encoded to this scheme if the number of automata is >= 3, so filter *)
+	let encoding_needed = List.filter (fun (_ , nb_automata) -> nb_automata >= 3) actions_and_nb_automata in
+
+	(* Do not generate anything for empty list *)
+	if encoding_needed = [] then ""
+	else
+		(* Comment *)
+		"\n\n/* Discrete variable declarations needed to encode IMITATOR's strong broadcast into Uppaal */\n"
+		^
+		(* Initialize *)
+		(string_of_list_of_string_with_sep "\n" (List.map (fun (action_index , nb_automata) ->
+			let discrete_name = string_of_nb_strongbroadcast model action_index in
+			"int " ^ discrete_name ^ " = " ^ (string_of_int nb_automata) ^ ";"
+		) encoding_needed))
+	
+	
 
 (* Convert the initial clocks declarations into a string *)
 let string_of_clocks model =
@@ -159,6 +194,7 @@ let string_of_declared_actions model =
 			else (
 				(* Issue a warning *)
 				print_warning ("Action '" ^ action_name ^ "' is used in " ^ (string_of_int nb_automata) ^ " automata: IMITATOR uses strong broadcast semantics, while Uppaal uses broadcast semantics; the behavior may differ!");
+				(*** TODO: remove the warning once the encoding is correct ***)
 				"broadcast chan " ^ action_name ^ "; /* WARNING! This action is used in " ^ (string_of_int nb_automata) ^ " automata: IMITATOR uses strong broadcast semantics, while Uppaal uses broadcast semantics; the behavior may therefore differ */"
 			)
 		
@@ -189,6 +225,9 @@ let string_of_declarations model =
 	
 	(* Declare discrete *)
 	^ (string_of_discrete model)
+	
+	(* Declare discrete needed to encode strong broadcast *)
+	^ (string_of_discrete_nb_strongbroadcast model)
 	
 	(* Declare parameters *)
 	^ (string_of_parameters model)
@@ -409,6 +448,8 @@ let string_of_sync model automaton_index action_index =
 	(* For action in a single automaton, we use Uppaal "broadcast chan" system => action "!" *)
 	else if nb_automata = 1 then action_name ^ "!"
 	
+	(*** NOTE: duplicate code below; but since it is a bit a different framework, let us keep so, so far ***)
+	
 	(* For action in exactly two automata, we use Uppaal standard "chan" system *)
 	else if nb_automata = 2 then(
 		action_name
@@ -417,8 +458,13 @@ let string_of_sync model automaton_index action_index =
 		if automaton_index = List.nth automata_for_this_action 0 then "!" else "?"
 	)
 	
-	(*** TODO > 2 automata ***)
-	else (raise (Exceptions.NotImplemented "Case synchronization with > 2 automata"))
+	(* For action in >= 3 automata, we again use Uppaal "broadcast chan" system => action "!", with additional variables on updates/guard to ensure good behavior *)
+	else
+		action_name
+		^
+		(* Again, arbitrarily, the first automaton index in the list is "!", and the other one is "?" *)
+		if automaton_index = List.nth automata_for_this_action 0 then "!" else "?"
+
 
 
 (* Convert a transition of a location into a string *)
