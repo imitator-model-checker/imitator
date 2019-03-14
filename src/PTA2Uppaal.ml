@@ -181,11 +181,11 @@ let string_of_declared_actions model =
 			(* For action in exactly two automata, we use Uppaal standard "chan" system *)
 			else if nb_automata = 2 then "chan " ^ action_name ^ ";"
 		
-			(* For action in exactly > 2 automata, then it seems Uppaal cannot encode this situation: we use broadcast and issue a warning (semantics may be broken) *)
+			(* For action in exactly > 2 automata, we use broadcast with a special encoding *)
 			else (
-				(* Issue a warning *)
-				print_warning ("Action '" ^ action_name ^ "' is used in " ^ (string_of_int nb_automata) ^ " automata: IMITATOR uses strong broadcast semantics, while Uppaal uses broadcast semantics; the behavior may differ!");
-				"broadcast chan " ^ action_name ^ ";"  (* /* WARNING! This action is used in " ^ (string_of_int nb_automata) ^ " automata: IMITATOR uses strong broadcast semantics, while Uppaal uses broadcast semantics; the behavior may therefore differ */ *)
+(*				(* Issue a warning *)
+				print_warning ("Action '" ^ action_name ^ "' is used in " ^ (string_of_int nb_automata) ^ " automata: IMITATOR uses strong broadcast semantics, while Uppaal uses broadcast semantics; the behavior may differ!");*)
+				"broadcast chan " ^ action_name ^ "; /* This action is used in " ^ (string_of_int nb_automata) ^ " automata: IMITATOR uses strong broadcast semantics, while Uppaal uses broadcast semantics; the correctness is ensured thanks to variable '" ^ (string_of_nb_strongbroadcast model action_index) ^ "' */"
 			)
 		
 		) model.actions
@@ -279,10 +279,9 @@ let string_of_guard actions_and_nb_automata variable_names x_coord_str y_coord_s
 			(
 				(* Remove true guard *)
 				if LinearConstraint.pxd_is_true discrete_continuous_guard.continuous_guard then ""
-				else "&&" ^ (LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings variable_names discrete_continuous_guard.continuous_guard)
+				else uppaal_strings.and_operator ^ (LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings variable_names discrete_continuous_guard.continuous_guard)
 			)
-		) ^ "</guard>"
-		
+		) ^ "</label>"
 
 
 
