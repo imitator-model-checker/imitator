@@ -226,7 +226,7 @@ let string_of_discrete_updates model updates =
 
 (* Convert a transition of a location into a string *)
 let string_of_transition model automaton_index action_index (guard, clock_updates, discrete_updates, target_location) =
-	(* Should we add a separating comma between clock updates and discrete updaes? *)
+	(* Should we add a separating comma between clock updates and discrete updates? *)
 	let separator_comma =
 		let no_clock_updates =
 			clock_updates = No_update || clock_updates = Resets [] || clock_updates = Updates []
