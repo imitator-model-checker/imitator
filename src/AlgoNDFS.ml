@@ -28,6 +28,15 @@ open Statistics
 
 (************************************************************)
 (************************************************************)
+(* Types and exceptions for NDFS *)
+(************************************************************)
+(************************************************************)
+
+
+exception DFS_Limit_detected of bfs_limit_reached
+
+(************************************************************)
+(************************************************************)
 (* Class definition *)
 (************************************************************)
 (************************************************************)
@@ -45,15 +54,37 @@ class algoNDFS =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method algorithm_name = "NDFS"	
 
+	method private check_and_update_queue_dfs_limit =
+	(* Check all limits *)
 	
-	(************************************************************)
-	(* Class methods *)
-	(************************************************************)
-		
-	method private get_constraint_valuations =
-		match constraint_valuations with
-		| Some constr -> constr
-		| None -> raise (InternalError "Variable 'constraint_valuations' not initialized in AlgoNDFS although it should have been at this point")
+	(* Depth limit *)
+	try(
+	(* States limit *)
+	begin
+	match options#states_limit with
+		| None -> ()
+		| Some limit -> if StateSpace.nb_states state_space > limit then(
+(* 				termination_status <- States_limit; *)
+			raise (DFS_Limit_detected States_limit_reached)
+		)
+	end
+	;
+	(* Time limit *)
+	begin
+	match options#time_limit with
+		| None -> ()
+		| Some limit -> if time_from start_time > (float_of_int limit) then(
+(* 				termination_status <- Time_limit; *)
+			raise (DFS_Limit_detected Time_limit_reached)
+		)
+	end
+	;
+	(* If reached here, then everything is fine: keep going *)
+	()
+	)
+	(* If exception caught, then update termination status, and return the reason *)
+	with DFS_Limit_detected reason ->
+		limit_reached <- reason
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -74,6 +105,7 @@ class algoNDFS =
 		counter_explore_using_strategy#start;
 
 		let options = Input.get_options() in
+		limit_reached <- Keep_going;
 
 		(************************************)
 		(* basic queues for NDFS algorithms *)
@@ -110,6 +142,24 @@ class algoNDFS =
 
 		let rec rundfs enterdfs predfs filterdfs testaltdfs alternativedfs
 			testrecursivedfs postdfs thestate =
+            (* Check the termination condition *)
+            self#check_and_update_queue_dfs_limit;
+			(* Update termination condition *)
+			begin
+            match limit_reached with
+			(*** NOTE: check None, as it may have been edited from outside, in which case it should not be Regular_termination ***)
+			| Keep_going when termination_status = None -> termination_status <- Some (Result.Regular_termination)
+			(*** NOTE: obliged to comment out the condition below, otherwise there is a compiling warning… ***)
+			| Keep_going (*when termination_status <> None*) -> ()
+			
+			(* Termination due to time limit reached *)
+			| Time_limit_reached -> termination_status <- Some (Result.Time_limit (List.length !cyan))
+						
+			(* Termination due to a number of explored states reached *)
+			| States_limit_reached -> termination_status <- Some (Result.States_limit (List.length !cyan))
+			end;
+			if (limit_reached <> Keep_going) then raise (TerminateAnalysis)
+			else(
 			print_message Verbose_low("Executing rundfs with "
 				^ (if State.is_accepting (StateSpace.get_state state_space thestate)
 					then "accepting " else "")
@@ -137,7 +187,7 @@ class algoNDFS =
                 in
                 process_sucs successors;
  				postdfs thestate
-			)
+			))
 		in
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -146,6 +196,7 @@ class algoNDFS =
 
 		print_message Verbose_standard("---------------- Starting exploration ----------------");
  
+        begin
         match options#exploration_order with
             | Exploration_NDFS -> 
 				print_message Verbose_standard("Using the option NDFS");
@@ -185,17 +236,22 @@ class algoNDFS =
 									if (List.mem astate !cyan) then true else false in
 							let alternativedfs : State.state_index -> unit =
 								fun (astate : State.state_index) ->
-									print_message Verbose_standard ("Cycle found at state "
-										^ (ModelPrinter.string_of_state model
-											(StateSpace.get_state state_space astate))) in
+									print_highlighted_message Shell_bold Verbose_standard "Cycle found at state ";
+									print_message Verbose_standard
+										(ModelPrinter.string_of_state model
+											(StateSpace.get_state state_space astate));
+									raise TerminateAnalysis
+							in
 							let testrecursivedfs : State.state_index -> bool =
 								fun (astate : State.state_index) ->
 									if (not (List.mem astate !red)) then true else false in
 							let postdfs : State.state_index -> unit =
 								fun (astate : State.state_index) -> () in					
 						rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate);
-						() in
-				rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index;
+						()
+				in
+				(try (rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index;)
+								with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls");
             | Exploration_NDFS_sub -> print_message Verbose_standard("Using the option NDFSsub")
             | Exploration_layer_NDFS_sub -> print_message Verbose_standard("Using the option layerNDFSsub")
@@ -203,12 +259,9 @@ class algoNDFS =
             | Exploration_syn_layer_NDFS_sub -> print_message Verbose_standard("Using the option synlayerNDFSsub")
             | Exploration_syn_mixed_NDFS -> print_message Verbose_standard("Using the option synMixedNDFS")
             | _ -> raise (InternalError ("Unknown variant of NDFS"))
-
+        end;
 		print_message Verbose_standard("---------------- Ending exploration ------------------");
 
-		
-		print_message Verbose_standard("---------------- Ending algorithm --------------------");
-		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(*                 End of State Space Exploration                    *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
