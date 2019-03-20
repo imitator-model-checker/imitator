@@ -740,12 +740,12 @@ class imitator_options =
         Use 'queueBFSRS' for a queue-based breadth-first search with ranking system. [ANP17]
         Use 'queueBFSPRIOR' for a priority-based BFS with ranking system. [ANP17]
         Use 'optTimeQueue' for optimal reachability with priority queue [ANP17]
-		Use 'NDFS' for standard NDFS. [NPvdP18]
-		Use 'NDFSsub' for standard NDFS with subsumption. [NPvdP18]
-		Use 'layerNDFSsub' for layered NDFS with subsumption. [NPvdP18]
-		Use 'synNDFSsub' for NDFS synthesis with subsumption.
-		Use 'synlayerNDFSsub' for NDFS synthesis with subsumption and layers. [NPvdP18]
-		Use 'synMixedNDFS' for mixed NDFS synthesis with inclusion and layers.
+        Use 'NDFS' for standard NDFS. [NPvdP18]
+        Use 'NDFSsub' for standard NDFS with subsumption. [NPvdP18]
+        Use 'layerNDFSsub' for layered NDFS with subsumption. [NPvdP18]
+        Use 'synNDFSsub' for NDFS synthesis with subsumption.
+        Use 'synlayerNDFSsub' for NDFS synthesis with subsumption and layers. [NPvdP18]
+        Use 'synMixedNDFS' for mixed NDFS synthesis with inclusion and layers.
         Default: layerBFS for statespace mode, NDFS orders for ndfs mode.
 				");
 				
@@ -767,7 +767,7 @@ class imitator_options =
 
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
         Use 'statespace' for the generation of the entire parametric state space.
-		Use 'ndfs' for Nested Depth First Search of the state space. [NPvdP18]
+        Use 'ndfs' for Nested Depth First Search of the state space. [NPvdP18]
         
         Use 'EF' for a parametric non-reachability analysis. [AHV93,JLR15]
         Use 'EFmin' for a parametric non-reachability analysis with parameter minimization. [ABPP19]

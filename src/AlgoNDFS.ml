@@ -26,16 +26,6 @@ open Result
 open AlgoStateBased
 open Statistics
 
-
-(************************************************************)
-(** Statistics *)
-(************************************************************)
-
-
-(*** NOTE: defined OUTSIDE the class, as many instances of this class can be created (for BC),
-and we want a single counter *)
-
-
 (************************************************************)
 (************************************************************)
 (* Class definition *)
@@ -65,8 +55,6 @@ class algoNDFS =
 		| Some constr -> constr
 		| None -> raise (InternalError "Variable 'constraint_valuations' not initialized in AlgoNDFS although it should have been at this point")
 	
-
-
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*-*                                                       *-*)
@@ -74,8 +62,6 @@ class algoNDFS =
 	(*-*                                                       *-*)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private rundfs predfs filterdfs alternativedfs postdfs =
-		print_message Verbose_standard("Executing rundfs")
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run NDFS exploration [WORK IN PROGRESS] *)
@@ -88,23 +74,129 @@ class algoNDFS =
 		counter_explore_using_strategy#start;
 
 		let options = Input.get_options() in
-		
+
+		(************************************)
+		(* basic queues for NDFS algorithms *)
+		(************************************)
+		let cyan = ref [] in
+		let blue = ref [] in
+		let pink = ref [] in 	(* Used only in some of the algorithms *)
+		let red = ref [] in
+
+		(***********************)
+		(* printing the queues *)
+		(***********************)
+	    let printqueue colour thequeue =
+	            let rec r_printqueue thequeue = match thequeue with
+	                | [] -> "";
+	                | state_index::body  ->
+	                	(string_of_int state_index) ^ " " ^ (r_printqueue body);
+	            in print_message Verbose_low("Queue " ^ colour ^ " : [ "
+	            		^ r_printqueue thequeue ^ "]")
+	    in
+
+		(***************************************)
+		(* put accepting states first in queue *)
+		(***************************************)
+	    let reorderqueue thequeue =
+	    	let newqueue = ref [] in
+	    	List.iter (fun astate ->
+	    		if (State.is_accepting (StateSpace.get_state state_space astate)) then (
+	    			newqueue := astate::(!newqueue);
+	    		) else (newqueue := (!newqueue)@[astate];)
+            ) thequeue;
+            (!newqueue)
+	    in
+
+		let rec rundfs enterdfs predfs filterdfs testaltdfs alternativedfs
+			testrecursivedfs postdfs thestate =
+			print_message Verbose_low("Executing rundfs with "
+				^ (if State.is_accepting (StateSpace.get_state state_space thestate)
+					then "accepting " else "")
+				^ "state "
+				^ (ModelPrinter.string_of_state model
+					(StateSpace.get_state state_space thestate)));
+			if (enterdfs thestate) then (
+				predfs thestate;
+				let successors = reorderqueue (StateSpace.get_successors state_space thestate) in
+				let rec process_sucs suclist = match suclist with
+					| [] ->  ();
+					| suc_id::body -> 
+						print_message Verbose_low("Handling "
+							^ (if State.is_accepting (StateSpace.get_state state_space suc_id)
+								then "accepting " else "")
+							^ "successor "
+							^ (ModelPrinter.string_of_state model
+								(StateSpace.get_state state_space suc_id)));				
+						if (filterdfs suc_id) then (
+							if (testaltdfs suc_id) then (alternativedfs suc_id);
+							if (testrecursivedfs suc_id) then (
+								rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs suc_id)
+						);
+						process_sucs body;
+                in
+                process_sucs successors;
+ 				postdfs thestate
+			)
+		in
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(*                     State Space Exploration                       *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 		print_message Verbose_standard("---------------- Starting exploration ----------------");
-
+ 
         match options#exploration_order with
             | Exploration_NDFS -> 
 				print_message Verbose_standard("Using the option NDFS");
-				let predfs = fun _ -> () in
-				let filterdfs = fun _ -> () in
-				let alternativedfs = fun _ -> () in
-				let postdfs = fun _ -> () in
-				self#rundfs predfs filterdfs alternativedfs postdfs;
-				print_message Verbose_standard("Finished the calls");
+				(* set up the dfs blue calls *)
+				let enterdfs : State.state_index -> bool =
+					fun (astate : State.state_index) -> true in
+				let predfs : State.state_index -> unit =
+					fun (astate : State.state_index) ->
+						cyan := astate::(!cyan);
+						printqueue "Cyan" !cyan;
+						self#post_from_one_state astate;
+						() in
+				let filterdfs : State.state_index -> bool =
+					fun (astate : State.state_index) ->
+						if (not (List.mem astate !blue) &&
+							not (List.mem astate !cyan)) then true else false in
+				let testaltdfs : State.state_index -> bool =
+					fun (astate : State.state_index) -> false in
+				let alternativedfs : State.state_index -> unit =
+					fun (astate: State.state_index) -> () in
+				let testrecursivedfs : State.state_index -> bool =
+					fun (astate : State.state_index) -> true in
+				let postdfs : State.state_index -> unit =
+					fun (astate: State.state_index) -> 
+						if (State.is_accepting (StateSpace.get_state state_space astate)) then (
+							(* set up the dfs red calls *)
+							let enterdfs : State.state_index -> bool =
+								fun (astate : State.state_index) -> true in
+							let predfs : State.state_index -> unit =
+								fun (astate : State.state_index) ->
+									red := astate::(!red);
+									printqueue "Red" !red in
+							let filterdfs : State.state_index -> bool =
+								fun (astate : State.state_index) -> true in
+							let testaltdfs : State.state_index -> bool =
+								fun (astate : State.state_index) ->
+									if (List.mem astate !cyan) then true else false in
+							let alternativedfs : State.state_index -> unit =
+								fun (astate : State.state_index) ->
+									print_message Verbose_standard ("Cycle found at state "
+										^ (ModelPrinter.string_of_state model
+											(StateSpace.get_state state_space astate))) in
+							let testrecursivedfs : State.state_index -> bool =
+								fun (astate : State.state_index) ->
+									if (not (List.mem astate !red)) then true else false in
+							let postdfs : State.state_index -> unit =
+								fun (astate : State.state_index) -> () in					
+						rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate);
+						() in
+				rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index;
+				print_message Verbose_low("Finished the calls");
             | Exploration_NDFS_sub -> print_message Verbose_standard("Using the option NDFSsub")
             | Exploration_layer_NDFS_sub -> print_message Verbose_standard("Using the option layerNDFSsub")
             | Exploration_syn_NDFS_sub -> print_message Verbose_standard("Using the option synNDFSsub")

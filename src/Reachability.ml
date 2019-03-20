@@ -1398,6 +1398,7 @@ let add_a_new_state model reachability_graph orig_state_index new_states_indexes
 	match options#imitator_mode with
 	(* Pure state space exploration *)
 	| State_space_exploration -> true
+	| NDFS_exploration -> true
 	(* Synthesis *)
 	| EF_synthesis -> true
 		
@@ -1808,7 +1809,8 @@ let post_from_one_state model reachability_graph orig_state_index =
 					(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
 					(************************************************************)
 					(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
-					if options#imitator_mode <> State_space_exploration && options#merge_before then(
+					if options#imitator_mode <> State_space_exploration &&
+						options#imitator_mode <> NDFS_exploration && options#merge_before then(
 					
 						(* Only add to the local list of new states *)
 						new_action_and_state_list := ([action_index], location, final_constraint) :: !new_action_and_state_list;
@@ -1863,7 +1865,8 @@ let post_from_one_state model reachability_graph orig_state_index =
 	(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
 	(************************************************************)
 	(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
-	if options#imitator_mode <> State_space_exploration && options#merge_before then(
+	if options#imitator_mode <> State_space_exploration &&
+		options#imitator_mode <> NDFS_exploration && options#merge_before then(
 	
 		(* Merge *)
 		StatesMerging.merge new_action_and_state_list;

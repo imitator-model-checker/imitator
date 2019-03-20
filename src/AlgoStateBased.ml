@@ -1725,7 +1725,8 @@ class virtual algoStateBased =
 							(************************************************************)
 							(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
 							(*** NOTE: why not in mode state space??? ***)
-							if options#imitator_mode <> State_space_exploration && options#merge_before then(
+							if options#imitator_mode <> State_space_exploration &&
+								options#imitator_mode <> NDFS_exploration && options#merge_before then(
 							
 								(* Only add to the local list of new states *)
 								new_action_and_state_list := ([action_index], location, final_constraint) :: !new_action_and_state_list;
@@ -1766,7 +1767,8 @@ class virtual algoStateBased =
 		(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
 		(*** NOTE: why not in mode state space ??? ***)
 		(*** NOTE/WARNING: this is the ONLY place where the StatesMerging module is called :/ Otherwise, the function used is the one in StateSpace ***)
-		if options#imitator_mode <> State_space_exploration && options#merge_before then(
+		if options#imitator_mode <> State_space_exploration &&
+			options#imitator_mode <> NDFS_exploration && options#merge_before then(
 		
 			(* Merge *)
 			StatesMerging.merge new_action_and_state_list;
