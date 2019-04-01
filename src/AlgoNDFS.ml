@@ -116,6 +116,7 @@ class algoNDFS =
 		let blue = ref [] in
 		let pink = ref [] in 	(* Used only in some of the algorithms *)
 		let red = ref [] in
+		let pending = ref [] in (* used in the layered algorithms *)
 
 		(***********************)
 		(* printing the queues *)
@@ -142,6 +143,25 @@ class algoNDFS =
             (!newqueue)
 	    in
 
+		(***************************************)
+		(* Check zone projection on parameters *)
+		(***************************************)
+		let same_parameter_projection state1 state2 =
+			let state1_loc, state1_constr = StateSpace.get_state state_space state1 in
+			let constr1 = LinearConstraint.px_hide_nonparameters_and_collapse state1_constr in
+			let state2_loc, state2_constr = StateSpace.get_state state_space state2 in
+			let constr2 = LinearConstraint.px_hide_nonparameters_and_collapse state2_constr in
+			print_message Verbose_low ("Projected contraint 1: \n"
+				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
+				^ " state: "
+				^ (StateSpace.string_of_state_index state1));
+			print_message Verbose_low ("Projected contraint 2: \n"
+				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr2
+				^ " state: "
+				^ (StateSpace.string_of_state_index state2));
+			LinearConstraint.p_is_equal constr1 constr2
+		in
+
 		(**********************************)
 		(* Check the subsumption relation *)
 		(**********************************)
@@ -164,13 +184,21 @@ class algoNDFS =
 		let setsubsumes setbig smallstate = 
 			let res = ref false in
 			List.iter (fun bigstate -> res := !res || (subsumes bigstate smallstate)) setbig;
-			res
+			!res
 		in
 
 		let subsumesset bigstate setsmall = 
 			let res = ref false in
 			List.iter (fun smallstate -> res := !res || (subsumes bigstate smallstate)) setsmall;
-			res
+			!res
+		in
+
+		let layersetsubsumes setbig smallstate = 
+			let res = ref false in
+			List.iter (fun bigstate -> res := !res ||
+				((same_parameter_projection bigstate smallstate) && (subsumes bigstate smallstate))
+			) setbig;
+			!res
 		in
 
 		(******************************************)
@@ -182,25 +210,6 @@ class algoNDFS =
 			print_message verbose_level ("Projected contraint : \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr)
 	    in
-
-		(***************************************)
-		(* Check zone projection on parameters *)
-		(***************************************)
-		let same_parameter_projection state1 state2 =
-			let state1_loc, state1_constr = StateSpace.get_state state_space state1 in
-			let constr1 = LinearConstraint.px_hide_nonparameters_and_collapse state1_constr in
-			let state2_loc, state2_constr = StateSpace.get_state state_space state2 in
-			let constr2 = LinearConstraint.px_hide_nonparameters_and_collapse state2_constr in
-			print_message Verbose_low ("Projected contraint 1: \n"
-				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
-				^ " state: "
-				^ (StateSpace.string_of_state_index state1));
-			print_message Verbose_low ("Projected contraint 2: \n"
-				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr2
-				^ " state: "
-				^ (StateSpace.string_of_state_index state2));
-			LinearConstraint.p_is_equal constr1 constr2
-		in
 
 		(***************************)
 		(* General Scheme of a DFS *)
@@ -244,7 +253,8 @@ class algoNDFS =
 							^ (ModelPrinter.string_of_state model
 								(StateSpace.get_state state_space suc_id)));				
 						if (filterdfs thestate suc_id) then (
-							if (testaltdfs suc_id) then (alternativedfs suc_id);
+							if (testaltdfs thestate suc_id) then (alternativedfs suc_id)
+							else 
 							if (testrecursivedfs suc_id) then (
 								rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs suc_id)
 						);
@@ -279,8 +289,9 @@ class algoNDFS =
 						fun (astate : State.state_index) ->
 						if (not (List.mem astate !blue) &&
 							not (List.mem astate !cyan)) then true else false in
-				let testaltdfs : State.state_index -> bool =
-					fun (astate : State.state_index) -> false in
+				let testaltdfs : State.state_index -> State.state_index -> bool =
+					fun (thestate : State.state_index) ->
+						fun (astate : State.state_index) -> false in
 				let alternativedfs : State.state_index -> unit =
 					fun (astate: State.state_index) -> () in
 				let testrecursivedfs : State.state_index -> bool =
@@ -298,9 +309,10 @@ class algoNDFS =
 							let filterdfs : State.state_index -> State.state_index -> bool =
 								fun (thestate : State.state_index) ->
 									fun (astate : State.state_index) -> true in
-							let testaltdfs : State.state_index -> bool =
-								fun (astate : State.state_index) ->
-									if (List.mem astate !cyan) then true else false in
+							let testaltdfs : State.state_index -> State.state_index -> bool =
+								fun (thestate : State.state_index) ->
+									fun (astate : State.state_index) ->
+										if (List.mem astate !cyan) then true else false in
 							let alternativedfs : State.state_index -> unit =
 								fun (astate : State.state_index) ->
 									print_highlighted_message Shell_bold Verbose_standard "Cycle found at state ";
@@ -338,9 +350,10 @@ class algoNDFS =
 						fun (astate : State.state_index) ->
 						if (not (List.mem astate !blue) &&
 							not (List.mem astate !cyan) &&
-							not !(setsubsumes !red astate)) then true else false in
-				let testaltdfs : State.state_index -> bool =
-					fun (astate : State.state_index) -> false in
+							not (setsubsumes !red astate)) then true else false in
+				let testaltdfs : State.state_index -> State.state_index -> bool =
+					fun (thestate : State.state_index) ->
+						fun (astate : State.state_index) -> false in
 				let alternativedfs : State.state_index -> unit =
 					fun (astate: State.state_index) -> () in
 				let testrecursivedfs : State.state_index -> bool =
@@ -360,9 +373,10 @@ class algoNDFS =
 									fun (astate : State.state_index) ->
 										if (same_parameter_projection thestate astate) then true
 										else false in
-							let testaltdfs : State.state_index -> bool =
-								fun (astate : State.state_index) ->
-									if !(subsumesset astate !cyan) then true else false in
+							let testaltdfs : State.state_index -> State.state_index -> bool =
+								fun (thestate : State.state_index) ->
+									fun (astate : State.state_index) ->
+										if (subsumesset astate !cyan) then true else false in
 							let alternativedfs : State.state_index -> unit =
 								fun (astate : State.state_index) ->
 									print_highlighted_message Shell_bold Verbose_standard "Cycle found at state ";
@@ -375,7 +389,7 @@ class algoNDFS =
 							in
 							let testrecursivedfs : State.state_index -> bool =
 								fun (astate : State.state_index) ->
-									if (not !(setsubsumes !red astate)) then true else false in
+									if (not (setsubsumes !red astate)) then true else false in
 							let postdfs : State.state_index -> unit =
 								fun (astate : State.state_index) -> () in					
 						rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate);
@@ -384,7 +398,83 @@ class algoNDFS =
 				(try (rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index;)
 								with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
-            | Exploration_layer_NDFS_sub -> print_message Verbose_standard("Using the option layerNDFSsub")
+            | Exploration_layer_NDFS_sub -> print_message Verbose_standard("Using the option layerNDFSsub");
+				(* set up the dfs blue calls *)
+				pending := [init_state_index];
+				while !pending != [] do
+					match !pending with
+					| [] -> print_message Verbose_standard ("Impossible case");
+					| thestate::body ->
+						pending := body;
+						if (not (List.mem thestate !blue)) then
+						begin 
+						let enterdfs : State.state_index -> bool =
+							fun (astate : State.state_index) -> true in
+						let predfs : State.state_index -> unit =
+							fun (astate : State.state_index) ->
+								cyan := astate::(!cyan);
+								printqueue "Cyan" !cyan;
+								self#post_from_one_state astate;
+								() in
+						let filterdfs : State.state_index -> State.state_index -> bool =
+							fun (thestate : State.state_index) ->
+								fun (astate : State.state_index) ->
+								if (not (List.mem astate !blue) &&
+									not (List.mem astate !cyan) &&
+									not (layersetsubsumes !red astate)) then true else false in
+						let testaltdfs : State.state_index -> State.state_index -> bool =
+							fun (thestate : State.state_index) ->
+								fun (astate : State.state_index) -> 
+								if (not (same_parameter_projection thestate astate)) then true else false in
+						let alternativedfs : State.state_index -> unit =
+							fun (astate: State.state_index) -> 
+								pending := astate::!pending;
+								() in
+						let testrecursivedfs : State.state_index -> bool =
+							fun (astate : State.state_index) -> true in
+						let postdfs : State.state_index -> unit =
+							fun (astate: State.state_index) ->
+								if (State.is_accepting (StateSpace.get_state state_space astate)) then (
+									(* set up the dfs red calls *)
+									let enterdfs : State.state_index -> bool =
+										fun (astate : State.state_index) -> true in
+									let predfs : State.state_index -> unit =
+										fun (astate : State.state_index) ->
+											red := astate::(!red);
+											printqueue "Red" !red in
+									let filterdfs : State.state_index -> State.state_index -> bool =
+										fun (thestate : State.state_index) ->
+											fun (astate : State.state_index) ->
+												if (same_parameter_projection thestate astate) then true
+												else false in
+									let testaltdfs : State.state_index -> State.state_index -> bool =
+										fun (thestate : State.state_index) ->
+											fun (astate : State.state_index) ->
+												if (subsumesset astate !cyan) then true
+												else false in
+									let alternativedfs : State.state_index -> unit =
+										fun (astate : State.state_index) ->
+											print_highlighted_message Shell_bold Verbose_standard "Cycle found at state ";
+											print_message Verbose_standard
+												(ModelPrinter.string_of_state model
+													(StateSpace.get_state state_space astate));
+											termination_status <- Some Target_found;
+											print_projection Verbose_standard astate;
+											raise TerminateAnalysis
+									in
+									let testrecursivedfs : State.state_index -> bool =
+										fun (astate : State.state_index) ->
+											if (not (layersetsubsumes !red astate)) then true else false in
+									let postdfs : State.state_index -> unit =
+										fun (astate : State.state_index) -> () in					
+								rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate);
+								()
+						in
+						(try (rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate;)
+										with TerminateAnalysis -> ());
+						end;
+				done;
+				print_message Verbose_low("Finished the calls")
             | Exploration_syn_NDFS_sub -> print_message Verbose_standard("Using the option synNDFSsub")
             | Exploration_syn_layer_NDFS_sub -> print_message Verbose_standard("Using the option synlayerNDFSsub")
             | Exploration_syn_mixed_NDFS -> print_message Verbose_standard("Using the option synMixedNDFS")
