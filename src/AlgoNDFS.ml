@@ -276,127 +276,104 @@ class algoNDFS =
             | Exploration_NDFS -> 
 				print_message Verbose_standard("Using the option NDFS");
 				(* set up the dfs blue calls *)
-				let enterdfs : State.state_index -> bool =
-					fun (astate : State.state_index) -> true in
-				let predfs : State.state_index -> unit =
-					fun (astate : State.state_index) ->
-						cyan := astate::(!cyan);
-						printqueue "Cyan" !cyan;
-						self#post_from_one_state astate;
-						() in
-				let filterdfs : State.state_index -> State.state_index -> bool =
-					fun (thestate : State.state_index) ->
-						fun (astate : State.state_index) ->
-						if (not (List.mem astate !blue) &&
-							not (List.mem astate !cyan)) then true else false in
-				let testaltdfs : State.state_index -> State.state_index -> bool =
-					fun (thestate : State.state_index) ->
-						fun (astate : State.state_index) -> false in
-				let alternativedfs : State.state_index -> unit =
-					fun (astate: State.state_index) -> () in
-				let testrecursivedfs : State.state_index -> bool =
-					fun (astate : State.state_index) -> true in
-				let postdfs : State.state_index -> unit =
-					fun (astate: State.state_index) -> 
-						if (State.is_accepting (StateSpace.get_state state_space astate)) then (
-							(* set up the dfs red calls *)
-							let enterdfs : State.state_index -> bool =
-								fun (astate : State.state_index) -> true in
-							let predfs : State.state_index -> unit =
-								fun (astate : State.state_index) ->
-									red := astate::(!red);
-									printqueue "Red" !red in
-							let filterdfs : State.state_index -> State.state_index -> bool =
-								fun (thestate : State.state_index) ->
-									fun (astate : State.state_index) -> true in
-							let testaltdfs : State.state_index -> State.state_index -> bool =
-								fun (thestate : State.state_index) ->
-									fun (astate : State.state_index) ->
-										if (List.mem astate !cyan) then true else false in
-							let alternativedfs : State.state_index -> unit =
-								fun (astate : State.state_index) ->
-									print_highlighted_message Shell_bold Verbose_standard "Cycle found at state ";
-									print_message Verbose_standard
-										(ModelPrinter.string_of_state model
-											(StateSpace.get_state state_space astate));
-									termination_status <- Some Target_found;
-									print_projection Verbose_standard astate;
-									raise TerminateAnalysis
-							in
-							let testrecursivedfs : State.state_index -> bool =
-								fun (astate : State.state_index) ->
-									if (not (List.mem astate !red)) then true else false in
-							let postdfs : State.state_index -> unit =
-								fun (astate : State.state_index) -> () in					
-						rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate);
-						()
-				in
+				let enterdfs (astate : State.state_index) : bool =
+					true in
+				let predfs (astate : State.state_index) : unit =
+					cyan := astate::(!cyan);
+					printqueue "Cyan" !cyan;
+					self#post_from_one_state astate;
+					() in
+				let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+					if (not (List.mem astate !blue) &&
+						not (List.mem astate !cyan)) then true else false in
+				let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+					false in
+				let alternativedfs (astate : State.state_index) : unit =
+					() in
+				let testrecursivedfs (astate : State.state_index) : bool =
+					true in
+				let postdfs (astate : State.state_index) : unit =
+					if (State.is_accepting (StateSpace.get_state state_space astate)) then (
+						(* set up the dfs red calls *)
+						let enterdfs (astate : State.state_index) : bool =
+							true in
+						let predfs (astate : State.state_index) : unit =
+							red := astate::(!red);
+							printqueue "Red" !red in
+						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+							true in
+						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+							if (List.mem astate !cyan) then true else false in
+						let alternativedfs (astate : State.state_index) : unit =
+							print_highlighted_message Shell_bold Verbose_standard "Cycle found at state ";
+							print_message Verbose_standard
+								(ModelPrinter.string_of_state model
+									(StateSpace.get_state state_space astate));
+							termination_status <- Some Target_found;
+							print_projection Verbose_standard astate;
+							raise TerminateAnalysis
+						in
+						let testrecursivedfs (astate : State.state_index) : bool =
+							if (not (List.mem astate !red)) then true else false in
+						let postdfs (astate : State.state_index) : unit =
+							() in					
+						rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
+					);
+					() in
 				(try (rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index;)
-								with TerminateAnalysis -> ());
+					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
             | Exploration_NDFS_sub ->
             	print_message Verbose_standard("Using the option NDFSsub");
 				(* set up the dfs blue calls *)
-				let enterdfs : State.state_index -> bool =
-					fun (astate : State.state_index) -> true in
-				let predfs : State.state_index -> unit =
-					fun (astate : State.state_index) ->
-						cyan := astate::(!cyan);
-						printqueue "Cyan" !cyan;
-						self#post_from_one_state astate;
-						() in
-				let filterdfs : State.state_index -> State.state_index -> bool =
-					fun (thestate : State.state_index) ->
-						fun (astate : State.state_index) ->
-						if (not (List.mem astate !blue) &&
-							not (List.mem astate !cyan) &&
-							not (setsubsumes !red astate)) then true else false in
-				let testaltdfs : State.state_index -> State.state_index -> bool =
-					fun (thestate : State.state_index) ->
-						fun (astate : State.state_index) -> false in
-				let alternativedfs : State.state_index -> unit =
-					fun (astate: State.state_index) -> () in
-				let testrecursivedfs : State.state_index -> bool =
-					fun (astate : State.state_index) -> true in
-				let postdfs : State.state_index -> unit =
-					fun (astate: State.state_index) -> 
-						if (State.is_accepting (StateSpace.get_state state_space astate)) then (
-							(* set up the dfs red calls *)
-							let enterdfs : State.state_index -> bool =
-								fun (astate : State.state_index) -> true in
-							let predfs : State.state_index -> unit =
-								fun (astate : State.state_index) ->
-									red := astate::(!red);
-									printqueue "Red" !red in
-							let filterdfs : State.state_index -> State.state_index -> bool =
-								fun (thestate : State.state_index) ->
-									fun (astate : State.state_index) ->
-										if (same_parameter_projection thestate astate) then true
-										else false in
-							let testaltdfs : State.state_index -> State.state_index -> bool =
-								fun (thestate : State.state_index) ->
-									fun (astate : State.state_index) ->
-										if (subsumesset astate !cyan) then true else false in
-							let alternativedfs : State.state_index -> unit =
-								fun (astate : State.state_index) ->
-									print_highlighted_message Shell_bold Verbose_standard "Cycle found at state ";
-									print_message Verbose_standard
-										(ModelPrinter.string_of_state model
-											(StateSpace.get_state state_space astate));
-									termination_status <- Some Target_found;
-									print_projection Verbose_standard astate;
-									raise TerminateAnalysis
-							in
-							let testrecursivedfs : State.state_index -> bool =
-								fun (astate : State.state_index) ->
-									if (not (setsubsumes !red astate)) then true else false in
-							let postdfs : State.state_index -> unit =
-								fun (astate : State.state_index) -> () in					
-						rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate);
-						()
-				in
+				let enterdfs (astate : State.state_index) : bool =
+					true in
+				let predfs (astate : State.state_index) : unit =
+					cyan := astate::(!cyan);
+					printqueue "Cyan" !cyan;
+					self#post_from_one_state astate;
+					() in
+				let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+					if (not (List.mem astate !blue) &&
+						not (List.mem astate !cyan) &&
+						not (setsubsumes !red astate)) then true else false in
+				let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+					false in
+				let alternativedfs (astate: State.state_index) : unit =
+					() in
+				let testrecursivedfs (astate: State.state_index) : bool =
+					true in
+				let postdfs (astate: State.state_index) : unit =
+					if (State.is_accepting (StateSpace.get_state state_space astate)) then (
+						(* set up the dfs red calls *)
+						let enterdfs (astate: State.state_index) : bool =
+							true in
+						let predfs (astate: State.state_index) : unit =
+							red := astate::(!red);
+							printqueue "Red" !red in
+						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+							if (same_parameter_projection thestate astate) then true
+							else false in
+						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+							if (subsumesset astate !cyan) then true else false in
+						let alternativedfs (astate : State.state_index) : unit =
+							print_highlighted_message Shell_bold Verbose_standard "Cycle found at state ";
+							print_message Verbose_standard
+								(ModelPrinter.string_of_state model
+									(StateSpace.get_state state_space astate));
+							termination_status <- Some Target_found;
+							print_projection Verbose_standard astate;
+							raise TerminateAnalysis
+						in
+						let testrecursivedfs (astate : State.state_index) : bool =
+							if (not (setsubsumes !red astate)) then true else false in
+						let postdfs (astate : State.state_index) : unit =
+							() in					
+						rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
+					);
+					()in
 				(try (rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index;)
-								with TerminateAnalysis -> ());
+					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
             | Exploration_layer_NDFS_sub -> print_message Verbose_standard("Using the option layerNDFSsub");
 				(* set up the dfs blue calls *)
@@ -408,70 +385,58 @@ class algoNDFS =
 						pending := body;
 						if (not (List.mem thestate !blue)) then
 						begin 
-						let enterdfs : State.state_index -> bool =
-							fun (astate : State.state_index) -> true in
-						let predfs : State.state_index -> unit =
-							fun (astate : State.state_index) ->
-								cyan := astate::(!cyan);
-								printqueue "Cyan" !cyan;
-								self#post_from_one_state astate;
-								() in
-						let filterdfs : State.state_index -> State.state_index -> bool =
-							fun (thestate : State.state_index) ->
-								fun (astate : State.state_index) ->
-								if (not (List.mem astate !blue) &&
-									not (List.mem astate !cyan) &&
-									not (layersetsubsumes !red astate)) then true else false in
-						let testaltdfs : State.state_index -> State.state_index -> bool =
-							fun (thestate : State.state_index) ->
-								fun (astate : State.state_index) -> 
-								if (not (same_parameter_projection thestate astate)) then true else false in
-						let alternativedfs : State.state_index -> unit =
-							fun (astate: State.state_index) -> 
-								pending := astate::!pending;
-								() in
-						let testrecursivedfs : State.state_index -> bool =
-							fun (astate : State.state_index) -> true in
-						let postdfs : State.state_index -> unit =
-							fun (astate: State.state_index) ->
-								if (State.is_accepting (StateSpace.get_state state_space astate)) then (
-									(* set up the dfs red calls *)
-									let enterdfs : State.state_index -> bool =
-										fun (astate : State.state_index) -> true in
-									let predfs : State.state_index -> unit =
-										fun (astate : State.state_index) ->
-											red := astate::(!red);
-											printqueue "Red" !red in
-									let filterdfs : State.state_index -> State.state_index -> bool =
-										fun (thestate : State.state_index) ->
-											fun (astate : State.state_index) ->
-												if (same_parameter_projection thestate astate) then true
-												else false in
-									let testaltdfs : State.state_index -> State.state_index -> bool =
-										fun (thestate : State.state_index) ->
-											fun (astate : State.state_index) ->
-												if (subsumesset astate !cyan) then true
-												else false in
-									let alternativedfs : State.state_index -> unit =
-										fun (astate : State.state_index) ->
-											print_highlighted_message Shell_bold Verbose_standard "Cycle found at state ";
-											print_message Verbose_standard
-												(ModelPrinter.string_of_state model
-													(StateSpace.get_state state_space astate));
-											termination_status <- Some Target_found;
-											print_projection Verbose_standard astate;
-											raise TerminateAnalysis
-									in
-									let testrecursivedfs : State.state_index -> bool =
-										fun (astate : State.state_index) ->
-											if (not (layersetsubsumes !red astate)) then true else false in
-									let postdfs : State.state_index -> unit =
-										fun (astate : State.state_index) -> () in					
-								rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate);
-								()
-						in
+						let enterdfs (astate : State.state_index) : bool =
+							true in
+						let predfs (astate : State.state_index) : unit =
+							cyan := astate::(!cyan);
+							printqueue "Cyan" !cyan;
+							self#post_from_one_state astate;
+							() in
+						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+							if (not (List.mem astate !blue) &&
+								not (List.mem astate !cyan) &&
+								not (layersetsubsumes !red astate)) then true else false in
+						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+							if (not (same_parameter_projection thestate astate)) then true
+							else false in
+						let alternativedfs (astate: State.state_index) : unit =
+							pending := astate::!pending;
+							() in
+						let testrecursivedfs (astate: State.state_index) : bool =
+							true in
+						let postdfs (astate: State.state_index) : unit =
+							if (State.is_accepting (StateSpace.get_state state_space astate)) then (
+								(* set up the dfs red calls *)
+								let enterdfs (astate: State.state_index) : bool =
+									true in
+								let predfs (astate: State.state_index) : unit =
+									red := astate::(!red);
+									printqueue "Red" !red in
+								let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+									if (same_parameter_projection thestate astate) then true
+									else false in
+								let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+									if (subsumesset astate !cyan) then true
+									else false in
+								let alternativedfs (astate : State.state_index) : unit =
+									print_highlighted_message Shell_bold Verbose_standard "Cycle found at state ";
+									print_message Verbose_standard
+										(ModelPrinter.string_of_state model
+											(StateSpace.get_state state_space astate));
+									termination_status <- Some Target_found;
+									print_projection Verbose_standard astate;
+									raise TerminateAnalysis
+								in
+								let testrecursivedfs (astate : State.state_index) : bool =
+									if (not (layersetsubsumes !red astate)) then true
+									else false in
+								let postdfs (astate : State.state_index) : unit =
+									() in					
+								rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
+							);
+							() in
 						(try (rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate;)
-										with TerminateAnalysis -> ());
+							with TerminateAnalysis -> ());
 						end;
 				done;
 				print_message Verbose_low("Finished the calls")
