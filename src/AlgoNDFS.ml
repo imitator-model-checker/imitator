@@ -143,9 +143,9 @@ class algoNDFS =
             (!newqueue)
 	    in
 
-		(***************************************)
-		(* Check zone projection on parameters *)
-		(***************************************)
+		(***************************************************)
+		(* Check equality of zone projection on parameters *)
+		(***************************************************)
 		let same_parameter_projection state1 state2 =
 			let state1_loc, state1_constr = StateSpace.get_state state_space state1 in
 			let constr1 = LinearConstraint.px_hide_nonparameters_and_collapse state1_constr in
@@ -166,6 +166,7 @@ class algoNDFS =
 		(* Check the subsumption relation *)
 		(**********************************)
 		let subsumes bigstate smallstate =
+			(* Does bigstate subsume smallstate? *)
 			print_message Verbose_low "Compare (big?) state:";
 			print_message Verbose_low (ModelPrinter.string_of_state model
 						(StateSpace.get_state state_space bigstate));
@@ -182,18 +183,21 @@ class algoNDFS =
 		in
 
 		let setsubsumes setbig smallstate = 
+			(* Does an element of the set subsume smallstate? *)
 			let res = ref false in
 			List.iter (fun bigstate -> res := !res || (subsumes bigstate smallstate)) setbig;
 			!res
 		in
 
 		let subsumesset bigstate setsmall = 
+			(* Does bigstate subsume some element of the set? *)
 			let res = ref false in
 			List.iter (fun smallstate -> res := !res || (subsumes bigstate smallstate)) setsmall;
 			!res
 		in
 
 		let layersetsubsumes setbig smallstate = 
+			(* Does an element of the set subsume smallstate and is in the same layer? *)
 			let res = ref false in
 			List.iter (fun bigstate -> res := !res ||
 				((same_parameter_projection bigstate smallstate) && (subsumes bigstate smallstate))
@@ -274,6 +278,7 @@ class algoNDFS =
         begin
         match options#exploration_order with
             | Exploration_NDFS -> 
+(* Classical NDFS exploration *)
 				print_message Verbose_standard("Using the option NDFS");
 				(* set up the dfs blue calls *)
 				let enterdfs (astate : State.state_index) : bool =
@@ -305,7 +310,8 @@ class algoNDFS =
 						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 							if (List.mem astate !cyan) then true else false in
 						let alternativedfs (astate : State.state_index) : unit =
-							print_highlighted_message Shell_bold Verbose_standard "Cycle found at state ";
+							print_highlighted_message Shell_bold Verbose_standard
+								("Cycle found at state " ^ (string_of_int astate));
 							print_message Verbose_standard
 								(ModelPrinter.string_of_state model
 									(StateSpace.get_state state_space astate));
@@ -324,6 +330,7 @@ class algoNDFS =
 					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
             | Exploration_NDFS_sub ->
+(* NDFS with subsumption *)
             	print_message Verbose_standard("Using the option NDFSsub");
 				(* set up the dfs blue calls *)
 				let enterdfs (astate : State.state_index) : bool =
@@ -357,7 +364,8 @@ class algoNDFS =
 						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 							if (subsumesset astate !cyan) then true else false in
 						let alternativedfs (astate : State.state_index) : unit =
-							print_highlighted_message Shell_bold Verbose_standard "Cycle found at state ";
+							print_highlighted_message Shell_bold Verbose_standard
+								("Cycle found at state " ^ (string_of_int astate));
 							print_message Verbose_standard
 								(ModelPrinter.string_of_state model
 									(StateSpace.get_state state_space astate));
@@ -375,14 +383,20 @@ class algoNDFS =
 				(try (rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index;)
 					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
-            | Exploration_layer_NDFS_sub -> print_message Verbose_standard("Using the option layerNDFSsub");
+            | Exploration_layer_NDFS_sub ->
+(* NDFS with subsumption and layers *)
+            	print_message Verbose_standard("Using the option layerNDFSsub");
 				(* set up the dfs blue calls *)
 				pending := [init_state_index];
+				printqueue "Pending" !pending;
 				while !pending != [] do
 					match !pending with
 					| [] -> print_message Verbose_standard ("Impossible case");
 					| thestate::body ->
 						pending := body;
+						print_message Verbose_low ("Popped state "
+							^ (string_of_int thestate));
+						printqueue "Pending" !pending;
 						if (not (List.mem thestate !blue)) then
 						begin 
 						let enterdfs (astate : State.state_index) : bool =
@@ -401,6 +415,7 @@ class algoNDFS =
 							else false in
 						let alternativedfs (astate: State.state_index) : unit =
 							pending := astate::!pending;
+							printqueue "Pending (state added)" !pending;
 							() in
 						let testrecursivedfs (astate: State.state_index) : bool =
 							true in
@@ -419,7 +434,8 @@ class algoNDFS =
 									if (subsumesset astate !cyan) then true
 									else false in
 								let alternativedfs (astate : State.state_index) : unit =
-									print_highlighted_message Shell_bold Verbose_standard "Cycle found at state ";
+									print_highlighted_message Shell_bold Verbose_standard
+										("Cycle found at state " ^ (string_of_int astate));
 									print_message Verbose_standard
 										(ModelPrinter.string_of_state model
 											(StateSpace.get_state state_space astate));
@@ -547,9 +563,9 @@ class algoNDFS =
 				| None -> LinearConstraint.false_p_nnconvex_constraint()
 				| Some constr -> constr
 		in
-		Distributed_worker_result
+		(* Distributed_worker_result *)
 
-(* 		(* Get the termination status *)
+		(* Get the termination status *)
 		 let termination_status = match termination_status with
 			| None -> raise (InternalError "Termination status not set in NDFS exploration")
 			| Some status -> status
@@ -577,7 +593,7 @@ class algoNDFS =
 			(* Termination *)
 			termination			= termination_status;
 		}
- *)	
+	
 (************************************************************)
 (************************************************************)
 end;;
