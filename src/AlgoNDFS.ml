@@ -325,6 +325,13 @@ class algoNDFS =
 							() in					
 						rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
 					);
+					blue := astate::(!blue);
+					printqueue "Blue" !blue;
+					match !cyan with
+					| astate::body ->
+						cyan := body;
+						printqueue "Cyan" !cyan;
+					| _ -> print_message Verbose_standard "Error popping from cyan";
 					() in
 				(try (rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index;)
 					with TerminateAnalysis -> ());
@@ -379,7 +386,14 @@ class algoNDFS =
 							() in					
 						rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
 					);
-					()in
+					blue := astate::(!blue);
+					printqueue "Blue" !blue;
+					match !cyan with
+					| astate::body ->
+						cyan := body;
+						printqueue "Cyan" !cyan;
+					| _ -> print_message Verbose_standard "Error popping from cyan";
+					() in
 				(try (rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index;)
 					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
@@ -450,6 +464,13 @@ class algoNDFS =
 									() in					
 								rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
 							);
+					blue := astate::(!blue);
+					printqueue "Blue" !blue;
+					match !cyan with
+					| astate::body ->
+						cyan := body;
+						printqueue "Cyan" !cyan;
+					| _ -> print_message Verbose_standard "Error popping from cyan";
 							() in
 						(try (rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate;)
 							with TerminateAnalysis -> ());
