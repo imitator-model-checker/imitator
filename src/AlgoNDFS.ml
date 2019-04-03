@@ -151,11 +151,11 @@ class algoNDFS =
 			let constr1 = LinearConstraint.px_hide_nonparameters_and_collapse state1_constr in
 			let state2_loc, state2_constr = StateSpace.get_state state_space state2 in
 			let constr2 = LinearConstraint.px_hide_nonparameters_and_collapse state2_constr in
-			print_message Verbose_low ("Projected contraint 1: \n"
+			print_message Verbose_high ("Projected contraint 1: \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
 				^ " state: "
 				^ (StateSpace.string_of_state_index state1));
-			print_message Verbose_low ("Projected contraint 2: \n"
+			print_message Verbose_high ("Projected contraint 2: \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr2
 				^ " state: "
 				^ (StateSpace.string_of_state_index state2));
@@ -167,11 +167,11 @@ class algoNDFS =
 		(**********************************)
 		let subsumes bigstate smallstate =
 			(* Does bigstate subsume smallstate? *)
-			print_message Verbose_low "Compare (big?) state:";
-			print_message Verbose_low (ModelPrinter.string_of_state model
+			print_message Verbose_high "Compare (big?) state:";
+			print_message Verbose_high (ModelPrinter.string_of_state model
 						(StateSpace.get_state state_space bigstate));
-			print_message Verbose_low "with (small?) state:";
-			print_message Verbose_low (ModelPrinter.string_of_state model
+			print_message Verbose_high "with (small?) state:";
+			print_message Verbose_high (ModelPrinter.string_of_state model
 						(StateSpace.get_state state_space smallstate));
 			(* get the big state *)
 			let stateb_loc, stateb_constr = StateSpace.get_state state_space bigstate in
@@ -403,7 +403,7 @@ class algoNDFS =
 				(* set up the dfs blue calls *)
 				pending := [init_state_index];
 				printqueue "Pending" !pending;
-				while !pending != [] do
+				(try (while !pending != [] do
 					match !pending with
 					| [] -> print_message Verbose_standard ("Impossible case");
 					| thestate::body ->
@@ -464,18 +464,18 @@ class algoNDFS =
 									() in					
 								rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
 							);
-					blue := astate::(!blue);
-					printqueue "Blue" !blue;
-					match !cyan with
-					| astate::body ->
-						cyan := body;
-						printqueue "Cyan" !cyan;
-					| _ -> print_message Verbose_standard "Error popping from cyan";
+							blue := astate::(!blue);
+							printqueue "Blue" !blue;
+							match !cyan with
+							| astate::body ->
+								cyan := body;
+								printqueue "Cyan" !cyan;
+							| _ -> print_message Verbose_standard "Error popping from cyan";
 							() in
-						(try (rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate;)
-							with TerminateAnalysis -> ());
+						rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate;
 						end;
-				done;
+				done;)
+							with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
             | Exploration_syn_NDFS_sub -> print_message Verbose_standard("Using the option synNDFSsub")
             | Exploration_syn_layer_NDFS_sub -> print_message Verbose_standard("Using the option synlayerNDFSsub")
