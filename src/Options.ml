@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2019/02/19
+ * Last modified     : 2019/04/08
  *
  ************************************************************)
 
@@ -250,6 +250,9 @@ class imitator_options =
 		(* Translate PTA model into a TikZ LaTeX code *)
 		val mutable pta2tikz = ref false
 		
+		(* Translate PTA model into an Uppaal file *)
+		val mutable pta2uppaal = ref false
+
 		
 		(* SPECIALIZED OPTIONS*)
 		
@@ -328,6 +331,7 @@ class imitator_options =
 		method pta2pdf = !pta2pdf
 		method pta2png = !pta2png
 		method pta2tikz = !pta2tikz
+		method pta2uppaal = !pta2uppaal
 		method second_file_name = second_file_name
 		method states_limit = !states_limit
 		method statistics = !statistics
@@ -835,6 +839,8 @@ class imitator_options =
 				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : 'false'");
 				
 				("-PTA2TikZ", Unit (fun _ -> pta2tikz := true; imitator_mode <- Translation), "Translate the model into LaTeX TikZ code (no positioning yet), and exit without performing any analysis. Defaut : 'false'");
+				
+				("-PTA2Uppaal", Unit (fun _ -> pta2uppaal := true; imitator_mode <- Translation), "Translate the model into an Uppaal model, and exit without performing any analysis. Some features may not be translated, see user manual. Defaut : 'false'");
 				
 				(* Hidden option (April fool 2017) *)
 				(*** NOTE: "Beware: options that have an empty doc string will not be included in the list." ***)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2018/08/16
+ * Last modified     : 2019/03/07
  *
  ************************************************************)
 
@@ -358,10 +358,6 @@ val px_intersection_assign_p : px_linear_constraint -> p_linear_constraint list 
 (* val hull_assign_if_exact : linear_constraint -> linear_constraint -> bool *)
 val px_hull_assign_if_exact : px_linear_constraint -> px_linear_constraint -> bool
 
-(** Eliminate (using existential quantification) a set of variables in a linear constraint *)
-(* val hide : variable list -> linear_constraint -> linear_constraint *)
-(* val px_hide : variable list -> px_linear_constraint -> px_linear_constraint *)
-
 (** Eliminate (using existential quantification) all non-parameters (clocks) in a px_linear constraint *)
 val px_hide_nonparameters_and_collapse : px_linear_constraint -> p_linear_constraint
 
@@ -389,6 +385,9 @@ val negate_single_inequality_nonnegative_p_constraint : Automaton.parameter_inde
 val p_hide_assign : variable list -> p_linear_constraint -> unit
 val px_hide_assign : variable list -> px_linear_constraint -> unit
 val pxd_hide_assign : variable list -> pxd_linear_constraint -> unit
+
+(** Eliminate (using existential quantification) a set of variables in a linear constraint, without side effects *)
+val p_hide : variable list -> p_linear_constraint -> p_linear_constraint
 
 (** Add nb_dimensions to a linear_constraint *)
 (* val add_dimensions : int -> linear_constraint -> unit *)
@@ -473,12 +472,30 @@ val cast_d_of_pxd_linear_constraint : bool -> pxd_linear_constraint -> d_linear_
 (** {3 Conversion to string} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** Convert a linear constraint into a string *)
-(* val string_of_linear_constraint : (variable -> string) -> linear_constraint -> string *)
+(** Convert a linear constraint into a string using default values *)
 val string_of_p_linear_constraint : (variable -> string) -> p_linear_constraint -> string
 val string_of_px_linear_constraint : (variable -> string) -> px_linear_constraint -> string
 val string_of_d_linear_constraint : (variable -> string) -> d_linear_constraint -> string
 val string_of_pxd_linear_constraint : (variable -> string) -> pxd_linear_constraint -> string
+
+(** Data structure allowing for customizing string conversions *)
+type customized_string = {
+	true_string  : string;
+	false_string : string;
+	and_operator : string;
+	or_operator  : string;
+	l_operator   : string;
+	le_operator  : string;
+	eq_operator  : string;
+	ge_operator  : string;
+	g_operator   : string;
+}
+
+(** Convert a linear constraint into a string using personalized values *)
+val customized_string_of_p_linear_constraint : customized_string -> (variable -> string) -> p_linear_constraint -> string
+val customized_string_of_px_linear_constraint : customized_string -> (variable -> string) -> px_linear_constraint -> string
+val customized_string_of_d_linear_constraint : customized_string -> (variable -> string) -> d_linear_constraint -> string
+val customized_string_of_pxd_linear_constraint : customized_string -> (variable -> string) -> pxd_linear_constraint -> string
 
 (** String for the false constraint *)
 val string_of_false : string
@@ -487,7 +504,7 @@ val string_of_false : string
 val string_of_true : string
 
 (** String for the intersection symbol *)
-val string_of_intersection : string
+val string_of_and : string
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

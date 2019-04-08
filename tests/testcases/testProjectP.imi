@@ -1,34 +1,30 @@
 (************************************************************
  *                      IMITATOR MODEL                      
  *
- * Empty template of a case study
+ * Very toy PTA
  *
- * Description     : TODO
- * Correctness     : TODO
- * Source          : TODO
- * Author          : ME
- * Modeling        : ME
- * Input by        : ME
+ * Description     : Toy PTA, used to test projection
+ * Correctness     : N/A
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
- * Created         : 2019/01/01
- * Last modified   : 2019/01/01
+ * Created         : 2019/03/06
+ * Last modified   : 2019/03/06
  *
- * IMITATOR version: 2.11
+ * IMITATOR version: 2.11.1
  ************************************************************)
 
 var
 
 (* Clocks *)
- 	x,
+ 	x, xabs,
 		: clock;
 
-(* Discrete *)
-	i,
-		: discrete;
-
 (* Parameters *)
-	p,
+	pabs, p1, p2, p3, p4 = 2
 		: parameter;
 
 
@@ -36,10 +32,27 @@ var
 (************************************************************)
   automaton pta
 (************************************************************)
-synclabs: a;
+synclabs: a, b;
 
-loc l1: invariant True
-	when x = 1 sync a do {x := 0} goto l1;
+loc l1: invariant x <= p1
+	when x = p1 sync a do {x := 0} goto l2;
+
+	when x = p1 & xabs = pabs sync a do {x := 0} goto lfinal;
+
+loc l2: invariant x <= p3
+	when x = p3 & xabs >= 0 sync a do {x := 0} goto l3;
+	when x = p4 & xabs >= 0 sync b do {x := 0} goto l4;
+
+	when x = p3 & xabs >= 0 & xabs = pabs sync a do {x := 0} goto lfinal;
+	when x = p4 & xabs >= 0 & xabs = pabs sync b do {x := 0} goto lfinal;
+
+loc l3: invariant x <= 2
+	when True sync a do {x := 0} goto l4;
+	when True & xabs = pabs sync a do {x := 0} goto lfinal;
+
+loc l4: invariant x <= 2
+
+urgent loc lfinal: invariant True
 
 end (* pta *)
 
@@ -56,19 +69,19 @@ init :=
 	& loc[pta] = l1
 
 	(*------------------------------------------------------------*)
-	(* Initial discrete assignments *)
-	(*------------------------------------------------------------*)
-	& i = 0
-
-	(*------------------------------------------------------------*)
 	(* Initial clock constraints *)
 	(*------------------------------------------------------------*)
 	& x = 0
+	& xabs = 0
 
 	(*------------------------------------------------------------*)
 	(* Parameter constraints *)
 	(*------------------------------------------------------------*)
-	& p >= 0
+	& pabs >= 0
+	& p1 >= 0
+	& p2 >= 0
+	& p3 >= 0
+	& p4 >= 0
 ;
 
 
@@ -77,7 +90,7 @@ init :=
 (************************************************************)
 
 (* property := unreachable loc[pta] = l1; *)
-
+projectresult(pabs)
 
 (************************************************************)
 (* The end *)

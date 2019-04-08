@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, France
 # Created      : 2015/10/23
-# Last modified: 2019/02/20
+# Last modified: 2019/04/08
 #************************************************************
 
 
@@ -21,6 +21,8 @@
 tests = [
 	#------------------------------------------------------------
 	{
+		# Test version: TODO
+		# Test since  : TODO
 		'purpose'    : 'Test the state space',
 		'input_files': ['flipflop.imi'],
 		'options'    : '-mode statespace -output-states -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
@@ -393,6 +395,195 @@ tests = [
 	,
 	#------------------------------------------------------------
 	{
+		# Test version: 2.11
+		# Test since  : 2019/03/07
+		'purpose'    : 'Test state space with projection',
+		'input_files': ['testProjectP.imi'],
+		'options'    : '-mode statespace -output-states',
+		'expectations' : [
+			{'file': 'testProjectP-statespace.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: l1 ==> 
+& pabs >= 0
+& p1 >= x
+& p3 >= 0
+& x >= 0
+& x = xabs
+
+  Projection onto the parameters:
+   p3 >= 0
+& p1 >= 0
+& pabs >= 0
+
+  Projection onto selected parameters {pabs}:
+   pabs >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: l2 ==> 
+& pabs >= 0
+& p1 >= 0
+& p3 >= x
+& x >= 0
+& p1 + x = xabs
+
+  Projection onto the parameters:
+   p3 >= 0
+& p1 >= 0
+& pabs >= 0
+
+  Projection onto selected parameters {pabs}:
+   pabs >= 0
+
+  /************************************************************/
+  STATE 2:
+  pta: lfinal ==> 
+& pabs >= 0
+& p3 >= 0
+& pabs = p1
+& x = 0
+& pabs = xabs
+
+  Projection onto the parameters:
+   p3 >= 0
+& p1 >= 0
+& pabs = p1
+
+  Projection onto selected parameters {pabs}:
+   pabs >= 0
+
+  /************************************************************/
+  STATE 3:
+  pta: l3 ==> 
+& 2 >= x
+& pabs >= 0
+& p1 >= 0
+& p3 >= 0
+& x >= 0
+& p1 + p3 + x = xabs
+
+  Projection onto the parameters:
+   p3 >= 0
+& p1 >= 0
+& pabs >= 0
+
+  Projection onto selected parameters {pabs}:
+   pabs >= 0
+
+  /************************************************************/
+  STATE 4:
+  pta: lfinal ==> 
+& pabs >= p1
+& p1 >= 0
+& pabs = p1 + p3
+& x = 0
+& pabs = xabs
+
+  Projection onto the parameters:
+   p3 >= 0
+& p1 >= 0
+& pabs = p1 + p3
+
+  Projection onto selected parameters {pabs}:
+   pabs >= 0
+
+  /************************************************************/
+  STATE 5:
+  pta: l4 ==> 
+& 2 >= x
+& pabs >= 0
+& p1 >= 0
+& p3 >= 2
+& x >= 0
+& p1 + x + 2 = xabs
+
+  Projection onto the parameters:
+   p3 >= 2
+& p1 >= 0
+& pabs >= 0
+
+  Projection onto selected parameters {pabs}:
+   pabs >= 0
+
+  /************************************************************/
+  STATE 6:
+  pta: lfinal ==> 
+& pabs >= 2
+& p3 >= 2
+& pabs = 2 + p1
+& x = 0
+& pabs = xabs
+
+  Projection onto the parameters:
+   p3 >= 2
+& pabs >= 2
+& pabs = 2 + p1
+
+  Projection onto selected parameters {pabs}:
+   pabs >= 2
+
+  /************************************************************/
+  STATE 7:
+  pta: l4 ==> 
+& 2 >= x
+& pabs >= 0
+& p1 + p3 + x + 2 >= xabs
+& p1 >= 0
+& p3 >= 0
+& x >= 0
+& xabs >= p1 + p3 + x
+
+  Projection onto the parameters:
+   p3 >= 0
+& p1 >= 0
+& pabs >= 0
+
+  Projection onto selected parameters {pabs}:
+   pabs >= 0
+
+  /************************************************************/
+  STATE 8:
+  pta: lfinal ==> 
+& p1 + p3 + 2 >= pabs
+& pabs >= p1 + p3
+& p1 >= 0
+& p3 >= 0
+& x = 0
+& pabs = xabs
+
+  Projection onto the parameters:
+   p1 + p3 + 2 >= pabs
+& pabs >= p1 + p3
+& p3 >= 0
+& p1 >= 0
+
+  Projection onto selected parameters {pabs}:
+   pabs >= 0
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_1 -> s_6 via "b"
+  s_1 -> s_5 via "b"
+  s_1 -> s_4 via "a"
+  s_1 -> s_3 via "a"
+  s_3 -> s_8 via "a"
+  s_3 -> s_7 via "a"
+  s_0 -> s_2 via "a"
+  s_0 -> s_1 via "a"
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test urgency',
 		'input_files': ['testUrgency.imi'],
 		'options'    : '-mode statespace -output-states',
@@ -408,6 +599,63 @@ tests = [
   s_3 -> s_1 via "b"
   s_0 -> s_0 via "a"
   s_1 -> s_3 via "c"
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test synchronization model',
+		'input_files': ['testSynchro.imi'],
+		'options'    : '-mode statespace -output-states',
+		'expectations' : [
+			{'file': 'testSynchro-statespace.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta1: l1, pta2: l1, pta3: l1 ==> 
+& 3 >= x
+& x >= 0
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  pta1: l1, pta2: l1, pta3: l2 ==> 
+& 3 >= x
+& x >= 0
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 2:
+  pta1: l1, pta2: l1, pta3: l3 ==> 
+& x >= 0
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 3:
+  pta1: l2, pta2: l2, pta3: l3 ==> 
+& x >= 4
+
+  Projection onto the parameters:
+  True
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_1 -> s_2 via "a"
+  s_2 -> s_3 via "b"
+  s_0 -> s_1 via "c"
 		"""
 			} # end result file
 			,
@@ -7508,7 +7756,41 @@ end
 	,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test conversion to HyTech',
+		# Test version: 2.11
+		# Test since  : 2019/03/07
+		'purpose'    : 'Test the graphical state space generation (verbose with projection)',
+		'input_files': ['CUBPTA1project.imi'],
+		'options'    : '-mode statespace -output-trace-set-verbose -output-graphics-source',
+		'expectations' : [
+			{'file': 'CUBPTA1project-statespace.dot' , 'content' : """
+  s_3 -> s_2 [label="a"];
+  s_0 -> s_1 [label="a"];
+  s_2 -> s_3 [label="a"];
+  s_1 -> s_2 [label="a"];
+
+/* Initial state */
+  s_init [shape=none, label="init"];
+  s_init -> s_0;
+
+/* Colors */
+
+  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& x = y| p2 \>= 1 \\n \& p1 \>= 0| p2 \>= 1}"];
+  s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 0 \\n \& x \>= 0 \\n \& x = y| p2 \>= 0 \\n \& p1 \>= 0| p2 \>= 0}"];
+  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1| p2 \>= 1}"];
+  s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& x \>= 0 \\n \& y \>= x| p2 \>= 0 \\n \& p1 \>= 0| p2 \>= 0}"];
+		"""
+			} # end result file
+			# NOTE (ÉA, 2019/03/07): I had to manually replace '\n' with '\\n' to make this test pass
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test translation to HyTech',
 		'input_files': ['flipflop.imi'],
 		'options'    : '-PTA2HyTech -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
@@ -7859,6 +8141,133 @@ init := True
 	
 	,
 	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test translation to Uppaal with synchronization model',
+		'input_files': ['testSynchroUppaal.imi'],
+		'options'    : '-PTA2Uppaal',
+		'expectations' : [
+			{'file': 'testSynchroUppaal-uppaal.xml' , 'content' : """
+/* Clocks declarations */
+clock x;
+
+/* Discrete variable declarations needed to encode IMITATOR's strong broadcast into Uppaal */
+int nb__a = 3;
+
+/* Action declarations */
+broadcast chan a; /* This action is used in 3 automata: IMITATOR uses strong broadcast semantics, while Uppaal uses broadcast semantics; the correctness is ensured thanks to variable 'nb__a' */
+chan b;
+broadcast chan c;
+
+	/*------------------------------------------------------------*/
+	/* Initial constraint (not interpreted by Uppaal)             */
+	/*------------------------------------------------------------*/
+	 /*  x == 0 */
+</declaration>
+
+<template><name x="0" y="0">pta1</name><declaration>// No local declaration for automaton 'pta1'
+</declaration>
+ 
+<location id="id_pta0_loc0" x="0" y="0">
+	<name x="0" y="-40">l1</name>
+	<label kind="invariant" x="0" y="40">nb__a == 3</label></location>
+ 
+<location id="id_pta0_loc1" x="200" y="0">
+	<name x="200" y="-40">l2</name>
+	<label kind="invariant" x="200" y="40">nb__a == 3</label></location>
+ <init ref="id_pta0_loc0"/>
+ 
+	<transition>
+		<source ref="id_pta0_loc0"/>
+		<target ref="id_pta0_loc0"/>
+		<label kind="synchronisation" x="0" y="80">a!</label>
+		<label kind="guard" x="0" y="40"> x == 3</label>
+		<label kind="assignment" x="0" y="-40">x = 0, nb__a = 1</label>
+	</transition>
+	<transition>
+		<source ref="id_pta0_loc0"/>
+		<target ref="id_pta0_loc1"/>
+		<label kind="synchronisation" x="100" y="80">b!</label>
+		<label kind="guard" x="100" y="40"> x == 4</label>
+		
+	</transition>
+ </template>
+
+
+<template><name x="1" y="1">pta2</name><declaration>// No local declaration for automaton 'pta2'
+</declaration>
+ 
+<location id="id_pta1_loc0" x="0" y="0">
+	<name x="0" y="-40">l1</name>
+	<label kind="invariant" x="0" y="40">nb__a == 3</label></location>
+ 
+<location id="id_pta1_loc1" x="200" y="0">
+	<name x="200" y="-40">l2</name>
+	<label kind="invariant" x="200" y="40">nb__a == 3</label></location>
+ <init ref="id_pta1_loc0"/>
+ 
+	<transition>
+		<source ref="id_pta1_loc0"/>
+		<target ref="id_pta1_loc0"/>
+		<label kind="synchronisation" x="0" y="80">a?</label>
+		<label kind="guard" x="0" y="40">true</label>
+		<label kind="assignment" x="0" y="-40">x = 0, nb__a = nb__a + 1</label>
+	</transition>
+	<transition>
+		<source ref="id_pta1_loc0"/>
+		<target ref="id_pta1_loc1"/>
+		<label kind="synchronisation" x="100" y="80">b?</label>
+		<label kind="guard" x="100" y="40">true</label>
+		
+	</transition>
+ </template>
+
+
+<template><name x="2" y="2">pta3</name><declaration>// No local declaration for automaton 'pta3'
+</declaration>
+ 
+<location id="id_pta2_loc0" x="0" y="0">
+	<name x="0" y="-40">l1</name>
+	<label kind="invariant" x="0" y="40"> 3 &gt;= x &amp;&amp; nb__a == 3</label></location>
+ 
+<location id="id_pta2_loc1" x="200" y="0">
+	<name x="200" y="-40">l2</name>
+	<label kind="invariant" x="200" y="40"> 3 &gt;= x &amp;&amp; nb__a == 3</label></location>
+ 
+<location id="id_pta2_loc2" x="400" y="0">
+	<name x="400" y="-40">l3</name>
+	<label kind="invariant" x="400" y="40">nb__a == 3</label></location>
+ <init ref="id_pta2_loc0"/>
+ 
+	<transition>
+		<source ref="id_pta2_loc0"/>
+		<target ref="id_pta2_loc1"/>
+		<label kind="synchronisation" x="100" y="80">c!</label>
+		<label kind="guard" x="100" y="40"> x == 3</label>
+		<label kind="assignment" x="100" y="-40">x = 0</label>
+	</transition>
+	<transition>
+		<source ref="id_pta2_loc1"/>
+		<target ref="id_pta2_loc2"/>
+		<label kind="synchronisation" x="300" y="80">a?</label>
+		<label kind="guard" x="300" y="40">true</label>
+		<label kind="assignment" x="300" y="-40">x = 0, nb__a = nb__a + 1</label>
+	</transition>
+ </template>
+<system>
+// List one or more processes to be composed into a system.
+
+system pta1, pta2, pta3;
+</system></nta>
+	"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'FMTV challenge: Test EF with project-result -verbose mute',

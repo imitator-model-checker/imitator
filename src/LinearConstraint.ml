@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2018/08/16
+ * Last modified     : 2019/03/14
  *
  ************************************************************)
 
@@ -213,6 +213,38 @@ let ppl_nb_hull_assign_if_exact_false = ref 0
 
 (* Other counters *)
 	let tcounter_pi0_compatibility = create_hybrid_counter_and_register "pi0-compatibility" States_counter Verbose_low
+
+
+(************************************************************)
+(* String constants *)
+(************************************************************)
+
+(** Data structure allowing for customizing string conversions *)
+type customized_string = {
+	true_string  : string;
+	false_string : string;
+	and_operator : string;
+	or_operator  : string;
+	l_operator   : string;
+	le_operator  : string;
+	eq_operator  : string;
+	ge_operator  : string;
+	g_operator   : string;
+}
+
+
+(** Default values *)
+let default_string = {
+	true_string   = "True";
+	false_string  = "False";
+	and_operator  = "\n& ";
+	or_operator   = " or ";
+	l_operator    = " < ";
+	le_operator   = " <= ";
+	eq_operator   = " = ";
+	ge_operator   = " >= ";
+	g_operator    = " > ";
+}
 
 (************************************************************)
 (* TYPES *)
@@ -878,15 +910,25 @@ let string_of_constant = NumConst.string_of_numconst
 let rec string_of_linear_term names linear_term =
 	match linear_term with
 		| Coef c -> string_of_coef c
+		
 		| Var v -> names v
+		
+		(* Some simplification *)
+		| Pl (lterm, Coef z)
+		| Mi (lterm, Coef z)
+			when NumConst.equal z (NumConst.zero) ->
+			  string_of_linear_term names lterm
+
 		| Pl (lterm, rterm) -> (
 			  let lstr = string_of_linear_term names lterm in
 				let rstr = string_of_linear_term names rterm in
 				lstr ^ " + " ^ rstr )
+		
 		| Mi (lterm, rterm) -> (
 			  let lstr = string_of_linear_term names lterm in
 				let rstr = string_of_linear_term names rterm in
 				lstr ^ " - (" ^ rstr ^ ")" )
+		
 		| Ti (fac, rterm) -> (
 				let fstr = string_of_coef fac in
 				let tstr = string_of_linear_term names rterm in
@@ -902,25 +944,37 @@ let string_of_pxd_linear_term = string_of_linear_term
 let rec string_of_linear_term_ppl names linear_term =
 	match linear_term with
 		| Coefficient z -> Gmp.Z.string_from z
+		
 		| Variable v -> names v
+		
 		| Unary_Plus t -> string_of_linear_term_ppl names t
+		
 		| Unary_Minus t -> (
 				let str = string_of_linear_term_ppl names t in
 				"-(" ^ str ^ ")")
+				
+		(* Some simplification *)
+		| Plus (lterm, Coefficient z)
+		| Minus (lterm, Coefficient z)
+			when Gmp.Z.equal z (Gmp.Z.zero) ->
+			  string_of_linear_term_ppl names lterm
+
 		| Plus (lterm, rterm) -> (
 			  let lstr = string_of_linear_term_ppl names lterm in
 				let rstr = string_of_linear_term_ppl names rterm in
 				lstr ^ " + " ^ rstr )
+				
 		| Minus (lterm, rterm) -> (
 			  let lstr = string_of_linear_term_ppl names lterm in
 				let rstr = string_of_linear_term_ppl names rterm in
 				lstr ^ " - (" ^ rstr ^ ")" )
+				
 		| Times (z, rterm) -> (
-				let fstr = Gmp.Z.string_from z in
 				let tstr = string_of_linear_term_ppl names rterm in
 				if (Gmp.Z.equal z (Gmp.Z.one)) then
 					tstr
 				else 
+					let fstr = Gmp.Z.string_from z in
 					match rterm with
 						| Coefficient _ -> fstr ^ "*" ^ tstr
 						| Variable    _ -> fstr ^ "*" ^ tstr
@@ -1129,22 +1183,25 @@ let normalize_inequality ineq =
 
 
 (** Convert a linear inequality into a string *)
-let string_of_linear_inequality names linear_inequality =
+let string_of_linear_inequality customized_string names linear_inequality =
 	let normal_ineq = normalize_inequality linear_inequality in
 	let lterm, rterm, op = split_linear_inequality normal_ineq in
 	let lstr = string_of_linear_term_ppl names lterm in
 	let rstr = string_of_linear_term_ppl names rterm in	
 	let opstr = match op with
-		| Less_Than_RS -> " < "
-		| Less_Or_Equal_RS -> " <= "
-		| Equal_RS -> " = "
-		| Greater_Or_Equal_RS -> " >= "
-		| Greater_Than_RS -> " > "
+		| Less_Than_RS        -> customized_string.l_operator
+		| Less_Or_Equal_RS    -> customized_string.le_operator
+		| Equal_RS            -> customized_string.eq_operator
+		| Greater_Or_Equal_RS -> customized_string.ge_operator
+		| Greater_Than_RS     -> customized_string.g_operator
 	in
 	lstr ^ opstr ^ rstr
 
-let string_of_pxd_linear_inequality = string_of_linear_inequality
-let string_of_p_linear_inequality = string_of_linear_inequality
+let string_of_pxd_linear_inequality = string_of_linear_inequality default_string
+let string_of_p_linear_inequality = string_of_linear_inequality default_string
+
+(*let customized_string_of_pxd_linear_inequality = string_of_linear_inequality
+let customized_string_of_p_linear_inequality = string_of_linear_inequality*)
 
 
 (*------------------------------------------------------------*)
@@ -1705,53 +1762,43 @@ let clock_upper_bound_in clock_index px_linear_constraint =
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** String for the false constraint *)
-let string_of_false = "False"
 
+(** String for the false constraint *)
+let string_of_false = default_string.false_string
 
 (** String for the true constraint *)
-let string_of_true = "True"
-
+let string_of_true = default_string.true_string
 
 (** String for the intersection symbol *)
-let string_of_intersection = "\n& "
-
+let string_of_and = default_string.and_operator
 
 (** Convert a linear constraint into a string *)
-let string_of_linear_constraint names linear_constraint =
-
-
-(*** 	TODO DEBUG HACK WARNING ***)
-(*	let serialized = serialize_linear_constraint linear_constraint in
-	print_warning(serialized);
-	let unserialized = 
-		try
-			unserialize_linear_constraint serialized
-		with Failure f -> raise (SerializationError("Failure while unserializing linear inequality '" ^ serialized ^ "'. Error: " ^ f))
-	in
-	print_string(string_of_bool( is_equal linear_constraint unserialized ));*)
-(*** 	TODO DEBUG HACK WARNING ***)
-	
-	
-	
-	
+let string_of_linear_constraint customized_string names linear_constraint =
 	(* First check if true *)
-	if is_true linear_constraint then string_of_true
+	if is_true linear_constraint then customized_string.true_string
+	
 	(* Then check if false *)
-	else if is_false linear_constraint then string_of_false
+	else if is_false linear_constraint then customized_string.false_string
 	else
+	
 	(* Get a list of linear inequalities *)
 	let list_of_inequalities = ippl_get_inequalities linear_constraint in
 	" " ^
 	(string_of_list_of_string_with_sep
-		string_of_intersection
-		(List.map (string_of_linear_inequality names) list_of_inequalities)
+		customized_string.and_operator
+		(List.map (string_of_linear_inequality customized_string names) list_of_inequalities)
 	)
 
-let string_of_p_linear_constraint = string_of_linear_constraint
-let string_of_px_linear_constraint = string_of_linear_constraint
-let string_of_d_linear_constraint = string_of_linear_constraint
-let string_of_pxd_linear_constraint = string_of_linear_constraint
+
+let string_of_p_linear_constraint = string_of_linear_constraint default_string
+let string_of_px_linear_constraint = string_of_linear_constraint default_string
+let string_of_d_linear_constraint = string_of_linear_constraint default_string
+let string_of_pxd_linear_constraint = string_of_linear_constraint default_string
+
+let customized_string_of_p_linear_constraint = string_of_linear_constraint
+let customized_string_of_px_linear_constraint = string_of_linear_constraint
+let customized_string_of_d_linear_constraint = string_of_linear_constraint
+let customized_string_of_pxd_linear_constraint = string_of_linear_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1962,6 +2009,7 @@ let hide nb_dimensions variables linear_constraint =
 	poly
 
 (*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+let p_hide v l = hide !p_dim v l
 let px_hide v l = hide !px_dim v l
 let pxd_hide v l = hide !pxd_dim v l
 
@@ -2226,12 +2274,12 @@ let px_is_positive_in v c =
 	let v_l_zero = make !px_dim [make_px_linear_inequality v_lt Op_g] in
 (* 	let variable_names variable_index ="v" ^ (string_of_int variable_index) in *)
 	(* Intersect with c *)
-	(*				print_string (string_of_linear_constraint variable_names v_l_zero);
+	(*				print_string (string_of_linear_constraint default_string variable_names v_l_zero);
 					print_newline();
-					print_string (string_of_linear_constraint variable_names c);
+					print_string (string_of_linear_constraint default_string variable_names c);
 					print_newline();*)
 	px_intersection_assign v_l_zero [c];
-(*					print_string (string_of_linear_constraint variable_names v_l_zero);
+(*					print_string (string_of_linear_constraint default_string variable_names v_l_zero);
 					print_newline();*)
 	(* Check *)
 	not (is_satisfiable v_l_zero)
@@ -2726,7 +2774,7 @@ let generate_points x y linear_constraint min_abs min_ord max_abs max_ord =
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then (
 		print_message Verbose_total ("Entering generate_points");
-		print_message Verbose_total ("Constraint: " ^ (string_of_linear_constraint (fun i->"v" ^ (string_of_int i)) linear_constraint));
+		print_message Verbose_total ("Constraint: " ^ (string_of_linear_constraint default_string (fun i->"v" ^ (string_of_int i)) linear_constraint));
 	);
 
 	let (points,ray) = shape_of_poly x y linear_constraint in
@@ -3383,7 +3431,7 @@ let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
 	let disjuncts = get_disjuncts p_nnconvex_constraint in
 	
 	(* Case false *)
-	if disjuncts = [] then string_of_false else(
+	if disjuncts = [] then default_string.false_string else(
 	
 		(* Convert each disjunct into a string *)
 		let disjuncts_string = List.map (string_of_p_linear_constraint names) disjuncts in
