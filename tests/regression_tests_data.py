@@ -7785,10 +7785,12 @@ end
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+
 	,
+
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test conversion to HyTech',
+		'purpose'    : 'Test translation to HyTech',
 		'input_files': ['flipflop.imi'],
 		'options'    : '-PTA2HyTech -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
@@ -8139,6 +8141,133 @@ init := True
 	
 	,
 	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test translation to Uppaal with synchronization model',
+		'input_files': ['testSynchroUppaal.imi'],
+		'options'    : '-PTA2Uppaal',
+		'expectations' : [
+			{'file': 'testSynchroUppaal-uppaal.xml' , 'content' : """
+/* Clocks declarations */
+clock x;
+
+/* Discrete variable declarations needed to encode IMITATOR's strong broadcast into Uppaal */
+int nb__a = 3;
+
+/* Action declarations */
+broadcast chan a; /* This action is used in 3 automata: IMITATOR uses strong broadcast semantics, while Uppaal uses broadcast semantics; the correctness is ensured thanks to variable 'nb__a' */
+chan b;
+broadcast chan c;
+
+	/*------------------------------------------------------------*/
+	/* Initial constraint (not interpreted by Uppaal)             */
+	/*------------------------------------------------------------*/
+	 /*  x == 0 */
+</declaration>
+
+<template><name x="0" y="0">pta1</name><declaration>// No local declaration for automaton 'pta1'
+</declaration>
+ 
+<location id="id_pta0_loc0" x="0" y="0">
+	<name x="0" y="-40">l1</name>
+	<label kind="invariant" x="0" y="40">nb__a == 3</label></location>
+ 
+<location id="id_pta0_loc1" x="200" y="0">
+	<name x="200" y="-40">l2</name>
+	<label kind="invariant" x="200" y="40">nb__a == 3</label></location>
+ <init ref="id_pta0_loc0"/>
+ 
+	<transition>
+		<source ref="id_pta0_loc0"/>
+		<target ref="id_pta0_loc0"/>
+		<label kind="synchronisation" x="0" y="80">a!</label>
+		<label kind="guard" x="0" y="40"> x == 3</label>
+		<label kind="assignment" x="0" y="-40">x = 0, nb__a = 1</label>
+	</transition>
+	<transition>
+		<source ref="id_pta0_loc0"/>
+		<target ref="id_pta0_loc1"/>
+		<label kind="synchronisation" x="100" y="80">b!</label>
+		<label kind="guard" x="100" y="40"> x == 4</label>
+		
+	</transition>
+ </template>
+
+
+<template><name x="1" y="1">pta2</name><declaration>// No local declaration for automaton 'pta2'
+</declaration>
+ 
+<location id="id_pta1_loc0" x="0" y="0">
+	<name x="0" y="-40">l1</name>
+	<label kind="invariant" x="0" y="40">nb__a == 3</label></location>
+ 
+<location id="id_pta1_loc1" x="200" y="0">
+	<name x="200" y="-40">l2</name>
+	<label kind="invariant" x="200" y="40">nb__a == 3</label></location>
+ <init ref="id_pta1_loc0"/>
+ 
+	<transition>
+		<source ref="id_pta1_loc0"/>
+		<target ref="id_pta1_loc0"/>
+		<label kind="synchronisation" x="0" y="80">a?</label>
+		<label kind="guard" x="0" y="40">true</label>
+		<label kind="assignment" x="0" y="-40">x = 0, nb__a = nb__a + 1</label>
+	</transition>
+	<transition>
+		<source ref="id_pta1_loc0"/>
+		<target ref="id_pta1_loc1"/>
+		<label kind="synchronisation" x="100" y="80">b?</label>
+		<label kind="guard" x="100" y="40">true</label>
+		
+	</transition>
+ </template>
+
+
+<template><name x="2" y="2">pta3</name><declaration>// No local declaration for automaton 'pta3'
+</declaration>
+ 
+<location id="id_pta2_loc0" x="0" y="0">
+	<name x="0" y="-40">l1</name>
+	<label kind="invariant" x="0" y="40"> 3 &gt;= x &amp;&amp; nb__a == 3</label></location>
+ 
+<location id="id_pta2_loc1" x="200" y="0">
+	<name x="200" y="-40">l2</name>
+	<label kind="invariant" x="200" y="40"> 3 &gt;= x &amp;&amp; nb__a == 3</label></location>
+ 
+<location id="id_pta2_loc2" x="400" y="0">
+	<name x="400" y="-40">l3</name>
+	<label kind="invariant" x="400" y="40">nb__a == 3</label></location>
+ <init ref="id_pta2_loc0"/>
+ 
+	<transition>
+		<source ref="id_pta2_loc0"/>
+		<target ref="id_pta2_loc1"/>
+		<label kind="synchronisation" x="100" y="80">c!</label>
+		<label kind="guard" x="100" y="40"> x == 3</label>
+		<label kind="assignment" x="100" y="-40">x = 0</label>
+	</transition>
+	<transition>
+		<source ref="id_pta2_loc1"/>
+		<target ref="id_pta2_loc2"/>
+		<label kind="synchronisation" x="300" y="80">a?</label>
+		<label kind="guard" x="300" y="40">true</label>
+		<label kind="assignment" x="300" y="-40">x = 0, nb__a = nb__a + 1</label>
+	</transition>
+ </template>
+<system>
+// List one or more processes to be composed into a system.
+
+system pta1, pta2, pta3;
+</system></nta>
+	"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'FMTV challenge: Test EF with project-result -verbose mute',
