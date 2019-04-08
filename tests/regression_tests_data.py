@@ -10,7 +10,7 @@
 # Laboratoire d'Informatique de Paris Nord
 # Universite Paris 13, France
 # Created      : 2015/10/23
-# Last modified: 2019/03/07
+# Last modified: 2019/04/08
 #************************************************************
 
 
@@ -579,7 +579,9 @@ tests = [
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	
 	,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test urgency',
@@ -597,6 +599,63 @@ tests = [
   s_3 -> s_1 via "b"
   s_0 -> s_0 via "a"
   s_1 -> s_3 via "c"
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test synchronization model',
+		'input_files': ['testSynchro.imi'],
+		'options'    : '-mode statespace -output-states',
+		'expectations' : [
+			{'file': 'testSynchro-statespace.states' , 'content' : """
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta1: l1, pta2: l1, pta3: l1 ==> 
+& 3 >= x
+& x >= 0
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 1:
+  pta1: l1, pta2: l1, pta3: l2 ==> 
+& 3 >= x
+& x >= 0
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 2:
+  pta1: l1, pta2: l1, pta3: l3 ==> 
+& x >= 0
+
+  Projection onto the parameters:
+  True
+
+  /************************************************************/
+  STATE 3:
+  pta1: l2, pta2: l2, pta3: l3 ==> 
+& x >= 4
+
+  Projection onto the parameters:
+  True
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_1 -> s_2 via "a"
+  s_2 -> s_3 via "b"
+  s_0 -> s_1 via "c"
 		"""
 			} # end result file
 			,

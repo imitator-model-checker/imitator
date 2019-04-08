@@ -1,0 +1,104 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Test for the synchronization model of IMITATOR
+ *
+ * Description     : Test for the synchronization model of IMITATOR: transitions that can be taken, and transitions that cannot. a is shared by pta1,pta2,pta3. b is shared by pta1, pta2. c is local to pta3. d cannot be taken as it is declared in 3 pta but used in 2. The only run must be (c,3) (a,3) (b, 4)
+ * Correctness     : N/A
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2019/04/08
+ * Last modified   : 2019/04/08
+ *
+ * IMITATOR version: 2.11
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+
+
+		
+
+(************************************************************)
+  automaton pta1
+(************************************************************)
+synclabs: a, b, d;
+
+loc l1: invariant True
+	when x = 3 sync a do {x := 0} goto l1;
+	when True sync d goto l1;
+	when x = 4 sync b goto l2;
+
+loc l2: invariant True
+
+end (* pta *)
+
+
+(************************************************************)
+  automaton pta2
+(************************************************************)
+synclabs: a, b, d;
+
+loc l1: invariant True
+	when x = 3 sync a do {x := 0} goto l1;
+	when True sync d goto l1;
+	when x > 0 sync b goto l2;
+
+loc l2: invariant True
+
+end (* pta *)
+
+
+(************************************************************)
+  automaton pta3
+(************************************************************)
+synclabs: a, c, d;
+
+loc l1: invariant x <= 3
+	when x = 1 sync a do {x := 0} goto l1;
+	when x = 3 sync c do {x := 0} goto l2;
+
+loc l2: invariant x <= 3
+	when x = 3 sync a do {x := 0} goto l3;
+
+loc l3: invariant True
+
+end (* pta *)
+
+
+
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta1] = l1
+	& loc[pta2] = l1
+	& loc[pta3] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+;
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
