@@ -1087,7 +1087,7 @@ In \uppaal{}, they are interpreted as (bounded) integers: overflows may occur an
 \paragraph{Strong broadcast synchronization}
 \imitator{} uses a single communication model: strong broadcast (see \cref{sect:synchronization}), while \uppaal{} uses both channel binary synchronization, and broadcast synchronization.
 None of them match \imitator{}'s semantics.
-Our translation preserves \imitator{} semantics, using the following scheme:
+Our translation tries to preserve \imitator{} semantics, using the following scheme:
 \begin{itemize}
 	\item Unnamed actions (necessarily used in a single \IPTA{}) remain unnamed in \uppaal{}.
 	\item An action \styleFileContent{a} used in a single \IPTA{} is implemented in \uppaal{} using a broadcast action \styleFileContent{a!}.
@@ -1101,6 +1101,9 @@ Our translation preserves \imitator{} semantics, using the following scheme:
 		From the \uppaal{} official semantics, the discrete variables are updated by first executing the update label given on the \styleFileContent{a!} transition, and then the update labels given on the \styleFileContent{a?} for increasing, which guarantees the correctness of this construction.
 		(This construction was suggested by Jiří~Srba.)
 \end{itemize}
+However, a major difference (which may prevent \uppaal{} to interpret the translated models) is that \uppaal{} forbids guard on receiving actions (of the form \styleFileContent{a?}).
+Therefore, translating an \imitator{} model where an action \styleFileContent{a} is used in two automata (or more) with guards on more than one transition will lead \uppaal{} to not accept the model.
+A manual editing will be needed.
 
 \paragraph{Initial constraint}
 The initial constraint is \emph{not} translated, except for the initial value of the discrete variables.

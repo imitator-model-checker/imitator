@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2019/03/01
+ * Last modified     : 2019/04/08
  *
  ************************************************************)
 
@@ -840,7 +840,7 @@ class imitator_options =
 				
 				("-PTA2TikZ", Unit (fun _ -> pta2tikz := true; imitator_mode <- Translation), "Translate the model into LaTeX TikZ code (no positioning yet), and exit without performing any analysis. Defaut : 'false'");
 				
-				("-PTA2Uppaal", Unit (fun _ -> pta2uppaal := true; imitator_mode <- Translation), "Translate the model into an Uppaal model, and exit without performing any analysis. Defaut : 'false'");
+				("-PTA2Uppaal", Unit (fun _ -> pta2uppaal := true; imitator_mode <- Translation), "Translate the model into an Uppaal model, and exit without performing any analysis. Some features may not be translated, see user manual. Defaut : 'false'");
 				
 				(* Hidden option (April fool 2017) *)
 				(*** NOTE: "Beware: options that have an empty doc string will not be included in the list." ***)

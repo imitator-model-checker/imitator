@@ -5,7 +5,9 @@
 * Fixed a "+ 0" that appeared in some of the text and graphical outputs
 
 ### Export
+* Added a (tentative) translation to Uppaal (option `-PTA2Uppaal`)
 * In the graphical state space and states description, the projection onto a selected set of parameters is added if the model contains `projectresult(…)`
+
 
 *******************************************************
 # release 2.11 (2019-03-01)
