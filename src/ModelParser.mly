@@ -1,12 +1,12 @@
 /************************************************************
  *
  *                       IMITATOR
- * 
+ *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * LIPN, Université Paris 13 (France)
- * 
+ *
  * Module description: Parser for the input model
- * 
+ *
  * File contributors : Étienne André
  * Created           : 2009/09/07
  * Last modified     : 2018/09/06
@@ -19,14 +19,14 @@ open ParsingStructure;;
 open Exceptions;;
 open NumConst;;
 open ImitatorUtilities;;
-  
-  
+
+
 let parse_error s =
 	let symbol_start = symbol_start () in
 	let symbol_end = symbol_end () in
 	raise (ParsingError (symbol_start, symbol_end))
 ;;
- 
+
 %}
 
 %token <NumConst.t> INT
@@ -39,6 +39,7 @@ let parse_error s =
 
 %token LPAREN RPAREN LBRACE RBRACE LSQBRA RSQBRA
 %token AMPERSAND APOSTROPHE COLON COMMA DOUBLEDOT PIPE SEMICOLON
+%token CT_IF CT_THEN CT_ELSE CT_END /* tokens for conditions on transitions*/
 
 /* CT_ALL CT_ANALOG CT_ASAP CT_BACKWARD CT_CLDIFF CT_D  CT_ELSE CT_EMPTY  CT_ENDHIDE CT_ENDIF CT_ENDREACH CT_ENDWHILE CT_FORWARD CT_FREE CT_FROM  CT_HIDE CT_HULL CT_INTEGRATOR CT_ITERATE CT_NON_PARAMETERS CT_OMIT CT_POST CT_PRE CT_PRINT CT_PRINTS CT_PRINTSIZE CT_REACH  CT_STOPWATCH CT_THEN CT_TO CT_TRACE CT_USING  CT_WEAKDIFF CT_WEAKEQ CT_WEAKGE CT_WEAKLE  */
 
@@ -121,7 +122,7 @@ decl_var_lists:
 decl_var_list:
 	| NAME comma_opt { [($1, None)] }
 	| NAME OP_EQ rational_linear_expression comma_opt { [($1, Some $3)] }
-	
+
 	| NAME COMMA decl_var_list { ($1, None) :: $3 }
 	| NAME OP_EQ rational_linear_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
 ;
@@ -134,8 +135,6 @@ var_type:
 	| CT_DISCRETE { Var_type_discrete }
 	| CT_PARAMETER { Var_type_parameter }
 ;
-
-/**********************************************/
 
 /**********************************************/
 
@@ -305,12 +304,14 @@ update_list:
 /**********************************************/
 
 update_nonempty_list:
-	update COMMA update_nonempty_list { $1 :: $3}
-	| update { [$1] }
-;
+	update COMMA update_list { Normal $1 :: $3}
+	| update { [Normal $1] }
+	| condition_update COMMA update_list { Condition $1 :: $3}
+	| condition_update { [Condition $1] }
 
 /**********************************************/
 
+/** Normal updates */
 update:
 	| NAME APOSTROPHE OP_EQ arithmetic_expression { ($1, $4) }
 	/** NOTE: from 2018/02/22: assign becomes recommended */
@@ -321,12 +322,22 @@ update:
 	| NAME OP_ASSIGN arithmetic_expression { ($1, $3) }
 ;
 
+normal_update_list:
+	update COMMA normal_update_list { $1 :: $3}
+	| update { [$1]}
+	| { [] }
+
+/** Condition updates **/
+condition_update:
+	| CT_IF LPAREN boolean_expression RPAREN CT_THEN normal_update_list CT_END { ($3, $6, []) }
+	| CT_IF LPAREN boolean_expression RPAREN CT_THEN normal_update_list CT_ELSE normal_update_list CT_END { ($3, $6,  $8) }
+;
+
 /**********************************************/
 
 syn_label:
 	CT_SYNC NAME { $2 }
 ;
-
 
 /**********************************************/
 /** ARITHMETIC EXPRESSIONS */
@@ -338,7 +349,7 @@ arithmetic_expression:
 	| arithmetic_expression OP_MINUS arithmetic_term { Parsed_UAE_minus ($1, $3) }
 ;
 
-/* Term over variables and rationals (includes recursivity with arithmetic_expression) */
+/* Term over variables and rationals (includes recursion with arithmetic_expression) */
 arithmetic_term:
 	| arithmetic_factor { Parsed_UT_factor $1 }
 	/* Shortcut for syntax rational NAME without the multiplication operator */
@@ -391,7 +402,7 @@ linear_expression:
 	| linear_expression OP_MINUS linear_term { Linear_minus_expression ($1, $3) } /* linear_term a la deuxieme place */
 ;
 
-/* Linear term over variables and rationals (no recursivity, no division) */
+/* Linear term over variables and rationals (no recursion, no division) */
 linear_term:
 	rational { Constant $1 }
 	| rational NAME { Variable ($1, $2) }
@@ -434,18 +445,18 @@ pos_integer:
 
 float:
   pos_float { $1 }
-	| OP_MINUS pos_float { NumConst.neg $2 }  
+	| OP_MINUS pos_float { NumConst.neg $2 }
 ;
 
 pos_float:
-  FLOAT { 
+  FLOAT {
 		let fstr = $1 in
 		let point = String.index fstr '.' in
 		(* get integer part *)
 		let f = if point = 0 then ref NumConst.zero else (
 			let istr = String.sub fstr 0 point in
 		  ref (NumConst.numconst_of_int (int_of_string istr))
-		) in		
+		) in
 		(* add decimal fraction part *)
 		let numconst_of_char = function
 			| '0' -> NumConst.zero
@@ -465,11 +476,22 @@ pos_float:
 			let c = fstr.[i] in
 			let d = numconst_of_char c in
 			f := NumConst.add !f (NumConst.mul !dec d);
-			dec := NumConst.div !dec ten 
-		done;		
+			dec := NumConst.div !dec ten
+		done;
 		!f
-	} 
+	}
 ;
+
+/**********************************************/
+/** BOOLEAN EXPRESSIONS */
+/***********************************************/
+boolean_expression:
+	| CT_TRUE { True }
+	| CT_FALSE { False }
+	| OP_NEQ LPAREN boolean_expression RPAREN { Not $3 }
+	| boolean_expression AMPERSAND boolean_expression { And ($1, $3) }
+	| boolean_expression PIPE boolean_expression { Or ($1, $3) }
+	| arithmetic_expression relop arithmetic_expression { Expression ($1, $2, $3) }
 
 /***********************************************/
 /** ANALYSIS COMMANDS */
@@ -553,7 +575,7 @@ region_expression_fol:
 
 // Used in the init definition
 init_state_predicate:
-	| loc_predicate { let a,b = $1 in (Loc_assignment (a,b)) } 
+	| loc_predicate { let a,b = $1 in (Loc_assignment (a,b)) }
 	| linear_constraint { Linear_predicate $1 }
 ;
 
@@ -588,30 +610,30 @@ property_definition:
 	// NOTE: only one allowed before version 2.6 and ICECCS paper
 	// Case: location
 	// | CT_BAD OP_ASSIGN CT_EXISTS_LOCATION loc_predicate SEMICOLON { let a,b = $4 in [(Exists_location (a , b))] }
-	
+
 	// Pattern
 	| CT_PROPERTY OP_ASSIGN pattern semicolon_opt { Some $3 }
-	
+
 	// Case: no property
 	|  { None }
-	
+
 ;
 
 projection_definition:
 	| CT_PROJECTRESULT LPAREN name_nonempty_list RPAREN semicolon_opt { Some $3 }
-	
+
 	// Case: no projection
 	|  { None }
-	
+
 ;
 
 optimization_definition:
 	| CT_MINIMIZE LPAREN NAME RPAREN semicolon_opt { Parsed_minimize $3 }
 	| CT_MAXIMIZE LPAREN NAME RPAREN semicolon_opt { Parsed_maximize $3 }
-	
+
 	// Case: no min/max
 	|  { No_parsed_optimization }
-	
+
 ;
 
 
@@ -619,14 +641,14 @@ optimization_definition:
 pattern:
 	// Unreachability
 	| CT_UNREACHABLE bad_global_predicates { Parsed_unreachable_locations ($2) }
-	
+
 	/* if a2 then a1 has happened before */
 	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Action_precedence_acyclic ($4, $2) }
 	/* everytime a2 then a1 has happened before */
 	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Action_precedence_cyclic ($4, $2) }
 	/* everytime a2 then a1 has happened once before */
 	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_BEFORE { Action_precedence_cyclicstrict ($4, $2) }
-	
+
 	// PATTERNS NOT IMPLEMENTED
 // 	/* if a1 then eventually a2 */
 // 	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_acyclic ($2, $5) }
@@ -634,24 +656,24 @@ pattern:
 // 	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_cyclic ($2, $5) }
 // 	/* everytime a1 then eventually a2 once before next */
 // 	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_ONCE CT_BEFORE CT_NEXT { Eventual_response_cyclicstrict ($2, $5) }
-	
+
 	/* a within d */
 	| NAME CT_WITHIN linear_expression { Action_deadline ($1, $3) }
-	
+
 	/* if a2 then a1 happened within d before */
 	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_acyclic ($4, $2, $8) }
 	/* everytime a2 then a1 happened within d before */
 	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_cyclic ($4, $2, $8) }
 	/* everytime a2 then a1 happened once within d before */
 	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_cyclicstrict ($4, $2, $9) }
-	
+
 	/* if a1 then eventually a2 within d */
 	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { TB_response_acyclic ($2, $5, $7) }
 	/* everytime a1 then eventually a2 within d */
 	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { TB_response_cyclic ($2, $5, $7) }
 	/* everytime a1 then eventually a2 within d once before next */
 	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression CT_ONCE CT_BEFORE CT_NEXT { TB_response_cyclicstrict ($2, $5, $7) }
-	
+
 	/* sequence a1, ..., an */
 	| CT_SEQUENCE name_nonempty_list { Sequence_acyclic ($2) }
 	| CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Sequence_acyclic ($3) } /* with parentheses */
