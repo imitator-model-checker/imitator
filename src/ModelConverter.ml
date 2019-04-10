@@ -3217,7 +3217,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 			List.iter (fun action_index ->
 				let transitions_for_this_location = transitions automaton_index location_index action_index in
 				(* For all transitions *)
-				List.iter (fun (guard, _, _, _) ->
+				List.iter (fun (guard, _, _) ->
 
 					(* Add guard *)
 					(*** NOTE: quite inefficient as we create a lot of pxd_true_constraint() although we just want to know whether they are L/U or not (but OK because prior to model analysis) ***)
