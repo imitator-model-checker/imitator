@@ -1,12 +1,12 @@
 (************************************************************
  *
  *                       IMITATOR
- * 
+ *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
- * 
+ *
  * Module description: Convert an abstract model to the input syntax of IMITATOR
- * 
+ *
  * File contributors : Étienne André
  * Created           : 2009/12/02
  * Last modified     : 2019/03/14
@@ -125,17 +125,17 @@ let string_of_invariant model automaton_index location_index =
 	(* Invariant *)
 	"invariant "
 	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index))
-	
-	
+
+
 	(* Handle stopwatches *)
 	^
-	let stopped = model.stopwatches automaton_index location_index in 
+	let stopped = model.stopwatches automaton_index location_index in
 	(* Case 1: no stopwatches *)
 	if stopped = [] then " "
 	(* Case 2: some clocks stopped *)
 	else
 	let stopped_str = string_of_list_of_string_with_sep "," (List.map model.variable_names stopped) in
-	" stop{" ^ stopped_str ^ "}" 
+	" stop{" ^ stopped_str ^ "}"
 
 
 (* Convert a sync into a string *)
@@ -146,19 +146,27 @@ let string_of_sync model action_index =
 
 
 
-let string_of_clock_updates model = function
-	| No_update -> ""
-	| Resets list_of_clocks -> 
-		string_of_list_of_string_with_sep ", " (List.map (fun variable_index ->
-			(model.variable_names variable_index)
-			^ " := 0"
-		) list_of_clocks)
-	| Updates list_of_clocks_lt -> 
-		string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, linear_term) ->
-			(model.variable_names variable_index)
+
+
+let string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep =
+	match clock_updates with
+		| No_update -> ""
+		| Resets list_of_clocks ->
+			string_of_list_of_string_with_sep sep (List.map (fun variable_index ->
+				wrap_reset variable_index
+			) list_of_clocks)
+		| Updates list_of_clocks_lt ->
+			string_of_list_of_string_with_sep sep (List.map (fun (variable_index, linear_term) ->
+				wrap_expr variable_index linear_term
+			) list_of_clocks_lt)
+
+let string_of_clock_updates model clock_updates =
+	let sep = ", " in
+	let wrap_reset variable_index =  (model.variable_names variable_index) ^ " := 0" in
+	let wrap_expr variable_index linear_term = (model.variable_names variable_index)
 			^ " := "
-			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
-		) list_of_clocks_lt)
+			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term) in
+	string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
 
 (* Convert an arithmetic expression into a string *)
 (*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
@@ -168,17 +176,17 @@ let string_of_arithmetic_expression variable_names =
 		| DAE_plus (discrete_arithmetic_expression, DT_factor (DF_constant c))
 		| DAE_minus (discrete_arithmetic_expression, DT_factor (DF_constant c)) when NumConst.equal c NumConst.zero ->
 			string_of_arithmetic_expression discrete_arithmetic_expression
-			
+
 		| DAE_plus (discrete_arithmetic_expression, discrete_term) ->
 			(string_of_arithmetic_expression discrete_arithmetic_expression)
 			^ " + "
 			^ (string_of_term discrete_term)
-			
+
 		| DAE_minus (discrete_arithmetic_expression, discrete_term) ->
 			(string_of_arithmetic_expression discrete_arithmetic_expression)
-			^ " - " 
+			^ " - "
 			^ (string_of_term discrete_term)
-			
+
 		| DAE_term discrete_term -> string_of_term discrete_term
 
 	and string_of_term = function
@@ -196,7 +204,7 @@ let string_of_arithmetic_expression variable_names =
 			"(" ^ (string_of_term discrete_term) ^ ")"
 			^ " * "
 			^ (string_of_factor discrete_factor)
-		
+
 		(*** TODO: No parentheses on the left for constant or variable / something ***)
 		(*** TODO: No parentheses on the left for something / constant or variable ***)
 		(* Otherwise: parentheses on the left *)
@@ -204,7 +212,7 @@ let string_of_arithmetic_expression variable_names =
 			"(" ^ (string_of_term discrete_term) ^ ")"
 			^ " / "
 			^ (string_of_factor discrete_factor)
-		
+
 		| DT_factor discrete_factor -> string_of_factor discrete_factor
 
 	and string_of_factor = function
@@ -216,11 +224,11 @@ let string_of_arithmetic_expression variable_names =
 	(* Call top-level *)
 	in string_of_arithmetic_expression
 
-	
-	
+
+
 (* Convert a list of updates into a string *)
-let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, arithmetic_expression) ->
+let string_of_discrete_updates ?(sep=", ") model updates =
+	string_of_list_of_string_with_sep sep (List.map (fun (variable_index, arithmetic_expression) ->
 		(* Convert the variable name *)
 		(model.variable_names variable_index)
 		^ " := "
@@ -229,17 +237,93 @@ let string_of_discrete_updates model updates =
 	) updates)
 
 
-(* Convert a transition of a location into a string *)
-let string_of_transition model automaton_index action_index (guard, clock_updates, discrete_updates, target_location) =
-	(* Should we add a separating comma between clock updates and discrete updates? *)
-	let separator_comma =
-		let no_clock_updates =
-			clock_updates = No_update || clock_updates = Resets [] || clock_updates = Updates []
-		in
-		let no_discrete_updates = discrete_updates = [] in
-		if no_clock_updates || no_discrete_updates then "" else ", "
+(** Convert a boolean operation into a string*)
+let string_of_logical_operators lop =
+	let string_of_boolean_operations op =
+		match op with
+		| BOOL_L -> "<"
+		| BOOL_LEQ -> "<="
+		| BOOL_EQ -> "="
+		| BOOL_NEQ -> "<>"
+		| BOOL_GEQ -> ">="
+		| BOOL_G -> ">"
 	in
-	
+	match lop with
+	| True_bool -> "True"
+	| False_bool -> "False"
+	| Not_bool _ -> "<>"
+	| And_bool _ -> " & "
+	| Or_bool _ -> " | "
+	| Expression_bool (_, op, _) -> " " ^ (string_of_boolean_operations op) ^ " "
+
+(** Convert a boolean expression into a string *)
+let rec string_of_boolean_template variable_names boolean_expr str_lop=
+	let symbol = str_lop boolean_expr in
+	match boolean_expr with
+		| True_bool -> "True"
+		| False_bool -> "False"
+		| Not_bool b -> symbol ^ "(" ^ (string_of_boolean_template variable_names b str_lop) ^ ")"
+		| And_bool (b1, b2) -> (string_of_boolean_template variable_names b1 str_lop)
+													^ symbol ^ (string_of_boolean_template variable_names b2 str_lop)
+		| Or_bool (b1, b2) -> (string_of_boolean_template variable_names b1 str_lop)
+												^ symbol ^ (string_of_boolean_template variable_names b2 str_lop)
+		| Expression_bool (expr1, op, expr2) -> (string_of_arithmetic_expression variable_names expr1)
+																					^ symbol
+																					^ (string_of_arithmetic_expression variable_names expr2)
+
+let string_of_boolean variable_names boolean_expr =
+	string_of_boolean_template variable_names boolean_expr string_of_logical_operators
+
+(** Return if there is no clock updates *)
+let no_clock_updates clock_updates =
+	clock_updates = No_update || clock_updates = Resets [] || clock_updates = Updates []
+
+(** Returns when add comma separators between clock and discrete updates and
+between discrete and conditional updates *)
+let separator_comma updates =
+	let no_clock_updates_ = no_clock_updates updates.clock in
+	let no_discrete_updates = updates.discrete = [] in
+	let no_conditional_updates = updates.conditional = [] in
+
+	let first_separator = not (no_clock_updates_ || no_discrete_updates) in
+	let second_separator = not (no_conditional_updates || (no_clock_updates_ && no_discrete_updates)) in
+	(first_separator, second_separator)
+
+(** Convert a list of conditional updates into a string *)
+let string_of_conditional_updates_template model conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep =
+	string_of_list_of_string_with_sep sep (List.map (fun (boolean_expr, if_updates, else_updates) ->
+		let if_separator, _ = separator_comma if_updates in
+		let empty_else = no_clock_updates else_updates.clock && else_updates.discrete = [] && else_updates.conditional = [] in
+		(** Convert the boolean expression *)
+		(wrap_if boolean_expr)
+		(** Convert the if updates *)
+		^ (string_of_clock_updates model if_updates.clock)
+		^ (if if_separator then sep else "")
+		^ (string_of_discrete_updates model if_updates.discrete)
+		(** Convert the else updates *)
+		^ (if empty_else then "" else
+			let else_separator, _ = separator_comma else_updates in
+			wrap_else
+			^ (string_of_clock_updates model else_updates.clock)
+			^ (if else_separator then sep else "")
+			^ (string_of_discrete_updates model else_updates.discrete))
+		^ wrap_end
+	) conditional_updates)
+
+let string_of_conditional_updates model conditional_updates =
+	let wrap_if boolean_expr  = "if (" ^ (string_of_boolean model.variable_names boolean_expr) ^  ") then " in
+	let wrap_else = " else " in
+	let wrap_end = " end" in
+	let sep = ", " in
+	string_of_conditional_updates_template model conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep
+
+(* Convert a transition of a location into a string *)
+let string_of_transition model automaton_index action_index (guard, updates, destination_location) =
+	let clock_updates = updates.clock in
+	let discrete_updates = updates.discrete in
+	let conditional_updates = updates.conditional in
+	let first_separator, second_separator = separator_comma updates in
+
 	"\n\t" ^ "when "
 	(* Convert the guard *)
 	^ (string_of_guard model.variable_names guard)
@@ -249,15 +333,19 @@ let string_of_transition model automaton_index action_index (guard, clock_update
 	(* Clock updates *)
 	^ (string_of_clock_updates model clock_updates)
 	(* Add a coma in case of both clocks and discrete *)
-	^ separator_comma
+	^ (if first_separator then ", " else "")
 	(* Discrete updates *)
 	^ (string_of_discrete_updates model discrete_updates)
+	(* Add a coma in case of both clocks and discrete and conditions *)
+	^ (if second_separator then ", " else "")
+	(* Conditional updates *)
+	^ (string_of_conditional_updates model conditional_updates)
 	^ "} "
-	
+
 	(* Convert the sync *)
 	^ (string_of_sync model action_index)
 	(* Convert the destination location *)
-	^ " goto " ^ (model.location_names automaton_index target_location)
+	^ " goto " ^ (model.location_names automaton_index destination_location)
 	^ ";"
 
 
@@ -265,7 +353,7 @@ let string_of_transition model automaton_index action_index (guard, clock_update
 let string_of_transitions model automaton_index location_index =
 	string_of_list_of_string (
 	(* For each action *)
-	List.map (fun action_index -> 
+	List.map (fun action_index ->
 		(* Get the list of transitions *)
 		let transitions = model.transitions automaton_index location_index action_index in
 		(* Convert to string *)
@@ -285,7 +373,7 @@ let string_of_location model automaton_index location_index =
 	 ^ (match model.costs automaton_index location_index with
 		| None -> ""
 		| Some cost -> "[" ^ (LinearConstraint.string_of_p_linear_term model.variable_names cost) ^ "]"
-	) 
+	)
 	^ ": "
 	^ (string_of_invariant model automaton_index location_index) (* bug here! *)
 	^ (string_of_transitions model automaton_index location_index)
@@ -330,7 +418,7 @@ let string_of_automata model =
 let string_of_initial_state ()=
 	(* Retrieve the model *)
 	let model = Input.get_model () in
-	
+
 	(* Header of initial state *)
 	"\n"
 	^ "\n" ^ "(************************************************************)"
@@ -338,7 +426,7 @@ let string_of_initial_state ()=
 	^ "\n" ^ "(************************************************************)"
 	^ "\n" ^ ""
 	^ "\n" ^ "init := True"
-	
+
 	(* Initial location *)
 	^ "\n" ^ "\t(*------------------------------------------------------------*)"
 	^ "\n" ^ "\t(* Initial location *)"
@@ -350,7 +438,7 @@ let string_of_initial_state ()=
 
 	(* Handle all (other) PTA *)
 	let inital_global_location  = model.initial_location in
-	let initial_automata = List.map 
+	let initial_automata = List.map
 	(fun automaton_index ->
 		(* Finding the initial location for this automaton *)
 		let initial_location = Location.get_location inital_global_location automaton_index in
@@ -358,14 +446,14 @@ let string_of_initial_state ()=
 		"\n\t& loc[" ^ (model.automata_names automaton_index) ^ "] = " ^ (model.location_names automaton_index initial_location)
 	) pta_without_obs
 	in string_of_list_of_string initial_automata
-	
+
 	(* Initial discrete assignments *)
 	^ "\n" ^ ""
 	^ "\n" ^ "\t(*------------------------------------------------------------*)"
 	^ "\n" ^ "\t(* Initial discrete assignments *)"
 	^ "\n" ^ "\t(*------------------------------------------------------------*)"
 	^
-	let initial_discrete = List.map 
+	let initial_discrete = List.map
 	(fun discrete_index ->
 		(* Finding the initial value for this discrete *)
 		let initial_value = Location.get_discrete_value inital_global_location discrete_index in
@@ -373,7 +461,7 @@ let string_of_initial_state ()=
 		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (NumConst.string_of_numconst initial_value)
 	) model.discrete
 	in string_of_list_of_string initial_discrete
-	
+
 	(* Initial constraint *)
 	^ "\n" ^ ""
 	^ "\n" ^ "\t(*------------------------------------------------------------*)"
@@ -430,7 +518,7 @@ let string_of_unreachable_location model unreachable_global_location =
 
 
 (** Convert the correctness property to a string *)
-let string_of_property model property = 
+let string_of_property model property =
 	match property with
 	(* An "OR" list of global locations *)
 	| Unreachable_locations unreachable_global_location_list ->
@@ -470,7 +558,7 @@ let string_of_property model property =
 	(* everytime a2 then a1 happened once within d before *)
 	| TB_Action_precedence_cyclicstrict (a1 , a2, d) ->
 		"property := everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened once within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " before;"
-	
+
 	(* if a1 then eventually a2 within d *)
 	| TB_response_acyclic (a1 , a2, d) ->
 		"property := if " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ ";"
@@ -487,7 +575,7 @@ let string_of_property model property =
 	(* always sequence a1, …, an *)
 	| Sequence_cyclic action_index_list ->
 		"property := always sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
-	
+
 	(*** NOTE: Would be better to have an "option" type ***)
 	| Noproperty -> "(* no property *)"
 
@@ -551,7 +639,7 @@ let string_of_state model (global_location, linear_constraint) =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names options#output_float global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names linear_constraint) ^ "" 
+	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names options#output_float global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names linear_constraint) ^ ""
 
 
 (************************************************************)
@@ -591,4 +679,3 @@ let string_of_v0 model v0 =
 		) model.parameters
 	)
 	)
-
