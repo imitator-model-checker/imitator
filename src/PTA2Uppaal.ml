@@ -1,12 +1,12 @@
 (************************************************************
  *
  *                       IMITATOR
- * 
+ *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * LIPN, Université Paris 13 (France)
- * 
+ *
  * Module description: Translater to Uppaal
- * 
+ *
  * File contributors : Étienne André
  * Created           : 2019/03/01
  * Last modified     : 2019/03/14
@@ -100,8 +100,8 @@ let string_of_discrete_nb_strongbroadcast model actions_and_nb_automata =
 			let discrete_name = string_of_nb_strongbroadcast model action_index in
 			"int " ^ discrete_name ^ " = " ^ (string_of_int nb_automata) ^ ";"
 		) actions_and_nb_automata))
-	
-	
+
+
 
 (* Convert the initial clocks declarations into a string *)
 let string_of_clocks model =
@@ -122,11 +122,11 @@ let string_of_discrete model =
 			(List.map (fun discrete_index ->
 				(* Get the name *)
 				let discrete_name = model.variable_names discrete_index in
-				
+
 				(* Get the initial value *)
 				let inital_global_location  = model.initial_location in
 				let initial_value = Location.get_discrete_value inital_global_location discrete_index in
-				
+
 				(* Assign *)
 				"\nint " ^ discrete_name ^ " = " ^ (NumConst.string_of_numconst initial_value) ^ ";"
 			) model.discrete
@@ -134,7 +134,7 @@ let string_of_discrete model =
 		)
 
 	) else ""
-	
+
 
 (* Convert the parameter declarations into a string *)
 let string_of_parameters model =
@@ -146,7 +146,7 @@ let string_of_parameters model =
 			(List.map (fun parameter_index ->
 				(* Get the name *)
 				let parameter_name = model.variable_names parameter_index in
-				
+
 				(* Assign *)
 				(*** NOTE: assign arbitrarily to 0 to allow Uppaal compiling ***)
 				"const int " ^ parameter_name ^ " = 0 /* TODO: add your favorite value here */;"
@@ -165,29 +165,29 @@ let string_of_declared_actions model =
 			(* Do not declare silent actions *)
 			match model.action_types action_index with
 			| Action_type_nosync -> ""
-			| Action_type_sync -> 
+			| Action_type_sync ->
 			(* Get name *)
 			let action_name = model.action_names action_index in
-			
+
 			(* Get number of automata *)
 			let nb_automata = List.length (model.automata_per_action action_index) in
-			
+
 			(* Case action unused: drop *)
 			if nb_automata = 0 then "/* action " ^ action_name ^ " is unused in the model */"
-			
+
 			(* For action in a single automaton, we use Uppaal "broadcast chan" system *)
 			else if nb_automata = 1 then "broadcast chan " ^ action_name ^ ";"
-			
+
 			(* For action in exactly two automata, we use Uppaal standard "chan" system *)
 			else if nb_automata = 2 then "chan " ^ action_name ^ ";"
-		
+
 			(* For action in exactly > 2 automata, we use broadcast with a special encoding *)
 			else (
 (*				(* Issue a warning *)
 				print_warning ("Action '" ^ action_name ^ "' is used in " ^ (string_of_int nb_automata) ^ " automata: IMITATOR uses strong broadcast semantics, while Uppaal uses broadcast semantics; the behavior may differ!");*)
 				"broadcast chan " ^ action_name ^ "; /* This action is used in " ^ (string_of_int nb_automata) ^ " automata: IMITATOR uses strong broadcast semantics, while Uppaal uses broadcast semantics; the correctness is ensured thanks to variable '" ^ (string_of_nb_strongbroadcast model action_index) ^ "' */"
 			)
-		
+
 		) model.actions
 		)
 	)
@@ -212,22 +212,22 @@ let string_of_declarations model actions_and_nb_automata =
 
 	(* Declare clocks *)
 	^ (string_of_clocks model)
-	
+
 	(* Declare discrete *)
 	^ (string_of_discrete model)
-	
+
 	(* Declare discrete needed to encode strong broadcast *)
 	^ (string_of_discrete_nb_strongbroadcast model actions_and_nb_automata)
-	
+
 	(* Declare parameters *)
 	^ (string_of_parameters model)
-	
+
 	(* Declare actions *)
 	^ (string_of_declared_actions model)
-	
-	
+
+
 	(*** TODO: get the initial value of clocks from the initial constraint and, if not 0, then issue a warning ***)
-	
+
 
 	(* The initial constraint (in comment only) *)
 	^ "\n" ^ ""
@@ -252,26 +252,26 @@ let string_of_declarations model actions_and_nb_automata =
 let string_of_guard actions_and_nb_automata variable_names x_coord_str y_coord_str = function
 	(* True guard = no guard *)
 	| True_guard -> ""
-	
+
 	(* False *)
 	| False_guard ->
 		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">false</label>"
-	
-	
+
+
 	(*** TODO: use the proper Uppaal syntax here ***)
-	
+
 	| Discrete_guard discrete_guard ->
-	
+
 		(*** NOTE/BUG: remove the true discrete guard! (not accepted by Uppaal) ***)
-		
+
 		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ (LinearConstraint.customized_string_of_d_linear_constraint uppaal_strings variable_names discrete_guard) ^ "</label>"
-	
+
 	| Continuous_guard continuous_guard ->
 		(* Remove true guard *)
-		
+
 		if LinearConstraint.pxd_is_true continuous_guard then "" else
 		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ (LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings variable_names continuous_guard) ^ "</label>"
-	
+
 	| Discrete_continuous_guard discrete_continuous_guard ->
 		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ (
 			(LinearConstraint.customized_string_of_d_linear_constraint uppaal_strings variable_names discrete_continuous_guard.discrete_guard)
@@ -310,9 +310,9 @@ let string_of_invariant model actions_and_nb_automata automaton_index location_i
 	in
 
 	(*** TODO: check well formed with constraints x <= … as requested by Uppaal, and issue a warning otherwise ***)
-	
+
 	let invariant = LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings model.variable_names (model.invariants automaton_index location_index) in
-	
+
 	(* Avoid "true and …" *)
 	let invariant_and_strong_broadcast_invariant =
 		if invariant = uppaal_strings.true_string then strong_broadcast_invariant
@@ -324,22 +324,22 @@ let string_of_invariant model actions_and_nb_automata automaton_index location_i
 	(*** NOTE: arbitrary positioning (location_id * scaling_factor, +20%) ***)
 	"\n\t<label kind=\"invariant\" x=\"" ^ (string_of_int (location_index * scaling_factor)) ^ "\" y=\"" ^ (string_of_int (scaling_factor / 5)) ^ "\">"
 	^ invariant_and_strong_broadcast_invariant
-	
+
 	(* The end *)
 	^ "</label>"
 
-	
+
 
 
 
 let string_of_clock_updates model = function
 	| No_update -> ""
-	| Resets list_of_clocks -> 
+	| Resets list_of_clocks ->
 		string_of_list_of_string_with_sep ", " (List.map (fun variable_index ->
 			(model.variable_names variable_index)
 			^ " = 0"
 		) list_of_clocks)
-	| Updates list_of_clocks_lt -> 
+	| Updates list_of_clocks_lt ->
 		string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, linear_term) ->
 			(model.variable_names variable_index)
 			^ " = "
@@ -354,17 +354,17 @@ let string_of_arithmetic_expression variable_names =
 		| DAE_plus (discrete_arithmetic_expression, DT_factor (DF_constant c))
 		| DAE_minus (discrete_arithmetic_expression, DT_factor (DF_constant c)) when NumConst.equal c NumConst.zero ->
 			string_of_arithmetic_expression discrete_arithmetic_expression
-			
+
 		| DAE_plus (discrete_arithmetic_expression, discrete_term) ->
 			(string_of_arithmetic_expression discrete_arithmetic_expression)
 			^ " + "
 			^ (string_of_term discrete_term)
-			
+
 		| DAE_minus (discrete_arithmetic_expression, discrete_term) ->
 			(string_of_arithmetic_expression discrete_arithmetic_expression)
-			^ " - " 
+			^ " - "
 			^ (string_of_term discrete_term)
-			
+
 		| DAE_term discrete_term -> string_of_term discrete_term
 
 	and string_of_term = function
@@ -382,7 +382,7 @@ let string_of_arithmetic_expression variable_names =
 			"(" ^ (string_of_term discrete_term) ^ ")"
 			^ " * "
 			^ (string_of_factor discrete_factor)
-		
+
 		(*** TODO: No parentheses on the left for constant or variable / something ***)
 		(*** TODO: No parentheses on the left for something / constant or variable ***)
 		(* Otherwise: parentheses on the left *)
@@ -390,7 +390,7 @@ let string_of_arithmetic_expression variable_names =
 			"(" ^ (string_of_term discrete_term) ^ ")"
 			^ " / "
 			^ (string_of_factor discrete_factor)
-		
+
 		| DT_factor discrete_factor -> string_of_factor discrete_factor
 
 	and string_of_factor = function
@@ -402,8 +402,8 @@ let string_of_arithmetic_expression variable_names =
 	(* Call top-level *)
 	in string_of_arithmetic_expression
 
-	
-	
+
+
 (* Convert a list of updates into a string *)
 let string_of_discrete_updates model updates =
 	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (variable_index, arithmetic_expression) ->
@@ -418,7 +418,7 @@ let string_of_discrete_updates model updates =
 let string_of_updates model automaton_index action_index x_coord_str y_coord_str clock_updates discrete_updates =
 
 	(* First add the update for the strong broadcast encoding *)
-	
+
 	(* Get number of automata *)
 	let automata_for_this_action = model.automata_per_action action_index in
 	let nb_automata = List.length automata_for_this_action in
@@ -438,7 +438,7 @@ let string_of_updates model automaton_index action_index x_coord_str y_coord_str
 	(* Otherwise, no update *)
 	else ""
 	in
-	
+
 	(* Check for emptiness of some updates *)
 	let no_clock_updates =
 		clock_updates = No_update || clock_updates = Resets [] || clock_updates = Updates []
@@ -447,13 +447,13 @@ let string_of_updates model automaton_index action_index x_coord_str y_coord_str
 
 	(* If no update at all: empty string *)
 	if no_clock_updates && no_discrete_updates && update_strong_broadcast = "" then ""
-	
+
 	else(
 		(* Manage separator between clock updates and discrete updates *)
 		let separator_clock_discrete =
 			if no_clock_updates || no_discrete_updates then "" else uppaal_update_separator
 		in
-		
+
 		(* Manage separator between the normal updates (clocks and discrete), and the strong broadcast updates *)
 		let separator_clockdiscrete_strongbroadcast =
 			if no_clock_updates && no_discrete_updates || update_strong_broadcast = "" then "" else uppaal_update_separator
@@ -477,25 +477,25 @@ let string_of_updates model automaton_index action_index x_coord_str y_coord_str
 (* Convert an action_index in automaton_index into a string; the automaton_index is important for "!" / "?" issues *)
 let string_of_sync model automaton_index action_index =
 	let action_name = model.action_names action_index in
-	
+
 	(* Different models of synchronization depending on the number of synchronizations *)
-	
+
 	(* Get number of automata *)
 	let automata_for_this_action = model.automata_per_action action_index in
 	let nb_automata = List.length automata_for_this_action in
-	
+
 	(* Case action unused: should not happen (but keep just in case) *)
 	if nb_automata = 0 then(
 		print_warning ("Action '" ^ action_name ^ "' seems to be unused in the model, so this transition is strange. This may be an error of the translator, in which case you may want to contact us.");
 		(* Arbitrarily use it sending *)
 		action_name ^ "!"
 	)
-	
+
 	(* For action in a single automaton, we use Uppaal "broadcast chan" system => action "!" *)
 	else if nb_automata = 1 then action_name ^ "!"
-	
+
 	(*** NOTE: duplicate code below; but since it is a bit a different framework, let us keep so, so far ***)
-	
+
 	(* For action in exactly two automata, we use Uppaal standard "chan" system *)
 	else if nb_automata = 2 then(
 		action_name
@@ -503,7 +503,7 @@ let string_of_sync model automaton_index action_index =
 		(* Arbitrarily, the first automaton index in the list is "!", and the other one is "?" *)
 		if automaton_index = List.nth automata_for_this_action 0 then "!" else "?"
 	)
-	
+
 	(* For action in >= 3 automata, we again use Uppaal "broadcast chan" system => action "!", with additional variables on updates/guard to ensure good behavior *)
 	else
 		action_name
@@ -514,27 +514,30 @@ let string_of_sync model automaton_index action_index =
 
 
 (* Convert a transition of a location into a string *)
-let string_of_transition model actions_and_nb_automata automaton_index action_index source_location (guard, clock_updates, discrete_updates, target_location) =
+(** TODO: Add conditions to the translation *)
+let string_of_transition model actions_and_nb_automata automaton_index action_index source_location (guard, updates, target_location) =
+	let clock_updates =  updates.clock in
+	let discrete_updates = updates.discrete in
 	(* Arbitrary positioning: x = between source_location and target_location *)
 	(*** NOTE: integer division here, so first multiplication, then division (otherwise result can be 0) ***)
 	let x_coord_str = (string_of_int ((source_location + target_location) * scaling_factor / 2)) in
-	
+
 	(* Header *)
 	"\n\t<transition>"
-	
+
 	(* Source *)
 	^ "\n\t\t<source ref=\"" ^ (id_of_location model automaton_index source_location) ^ "\"/>"
-	
+
 	(* Target *)
 	^ "\n\t\t<target ref=\"" ^ (id_of_location model automaton_index target_location) ^ "\"/>"
-	
+
 	(* Synchronisation label *)
 	^ (
 		match model.action_types action_index with
 			| Action_type_sync -> "\n\t\t<label kind=\"synchronisation\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ (string_of_int (scaling_factor * 2 / 5)) ^ "\">" ^ (string_of_sync model automaton_index action_index) ^ "</label>"
 			| Action_type_nosync -> ""
 	)
-	
+
 	(* Guard *)
 	^ (
 		(* Quite arbitrary positioning *)
@@ -558,7 +561,7 @@ let string_of_transition model actions_and_nb_automata automaton_index action_in
 let string_of_transitions model actions_and_nb_automata automaton_index =
 	string_of_list_of_string (
 	(* For each location *)
-	List.map (fun location_index -> 
+	List.map (fun location_index ->
 		string_of_list_of_string (
 		(* For each action *)
 		List.map (fun action_index ->
@@ -578,7 +581,7 @@ let string_of_transitions model actions_and_nb_automata automaton_index =
 (* Convert a location of an automaton into a string *)
 let string_of_location model actions_and_nb_automata automaton_index location_index =
 	"\n"
-	
+
 	(* Header *)
 	^ "<location id=\"" ^ (id_of_location model automaton_index location_index) ^ "\" "
 	(*** NOTE: arbitrary positioning at (location_id * scaling_factor, 0) ***)
@@ -586,17 +589,17 @@ let string_of_location model actions_and_nb_automata automaton_index location_in
 	(* Add yellow color if urgent :-) *)
 	^ (if model.is_urgent automaton_index location_index then " color=\"#ffff00\"" else "")
 	^ ">"
-	
+
 	(* Name *)
 	(*** NOTE: arbitrary positioning at (location_id * scaling_factor, -20%) ***)
 	^ "\n\t<name x=\"" ^ (string_of_int (location_index * scaling_factor)) ^ "\" y=\"" ^ (string_of_int (- scaling_factor / 5)) ^ "\">" ^ (model.location_names automaton_index location_index) ^ "</name>"
 
 	(* Invariant *)
 	^ (string_of_invariant model actions_and_nb_automata automaton_index location_index)
-	
+
 	(* Urgency *)
 	^ (if model.is_urgent automaton_index location_index then "<urgent/>" else "")
-	
+
 	(* Stopwatches *)
 	(*** TODO ***)
 
@@ -608,8 +611,8 @@ let string_of_location model actions_and_nb_automata automaton_index location_in
 			(* Issue warning *)
 			print_warning ("Cost '" ^ (LinearConstraint.string_of_p_linear_term model.variable_names cost) ^ "' is not supported in the translation to Uppaal.");
 			"\n/* Cost '" ^ (LinearConstraint.string_of_p_linear_term model.variable_names cost) ^ "' is not supported in the translation to Uppaal. */\n"
-	) 
-	
+	)
+
 	(* Footer *)
 	^ "</location>"
 
@@ -695,10 +698,10 @@ let string_of_model model =
 
 	(* The header *)
 	string_of_header model
-	
+
 	(* The variable declarations *)
 	^  "\n" ^ (string_of_declarations model encoding_needed)
-	
+
 	(* All automata *)
 	^  "\n" ^ (string_of_automata model encoding_needed)
 
@@ -709,16 +712,14 @@ let string_of_model model =
 	(* The property *)
 (*	^ property_header
 	^  "\n" ^ string_of_property model model.user_property*)
-	
+
 	(*** TODO ***)
 	(* The projection *)
 (* 	^  "\n" ^ string_of_projection model *)
-	
+
 	(*** TODO ***)
 	(* The optimization *)
 (* 	^  "\n" ^ string_of_optimization model *)
-	
+
 	(* The footer *)
 	^  footer
-
-
