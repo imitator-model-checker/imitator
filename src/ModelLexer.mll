@@ -1,12 +1,12 @@
 (*****************************************************************
  *
  *                       IMITATOR
- * 
+ *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
- * 
+ *
  * Author:        Etienne Andre
- * 
+ *
  * Created       : 2009/09/07
  * Last modified : 2018/02/23
 *****************************************************************)
@@ -51,6 +51,7 @@ rule token = parse
 	| "constant"       { CT_CONSTANT }
 	| "discrete"       { CT_DISCRETE }
 	| "do"             { CT_DO }
+	| "else"           { CT_ELSE }
 	| "end"            { CT_END }
  	| "eventually"     { CT_EVENTUALLY }
  	| "everytime"      { CT_EVERYTIME }
@@ -88,11 +89,11 @@ rule token = parse
 	| "when"           { CT_WHEN }
 	| "while"          { CT_WHILE }
 	| "within"         { CT_WITHIN }
-	
+
 
 
 	| ['a'-'z''A'-'Z']['a'-'z''A'-'Z''_''0'-'9']* as lxm { NAME lxm }
-	| ['0'-'9']*'.'['0'-'9']+ as lxm { FLOAT lxm } 
+	| ['0'-'9']*'.'['0'-'9']+ as lxm { FLOAT lxm }
 	| ['0'-'9']+ as lxm { INT(NumConst.numconst_of_string lxm) }
 	| '"' [^'"']* '"' as lxm { STRING lxm } (* a string between double quotes *)
 
@@ -136,10 +137,10 @@ and comment_c = parse
             if !comment_depth == 0 then () else comment_c lexbuf }
   | eof
     { failwith "End of file inside a comment." }
-	
+
   | '\n'  { line := !line + 1 ; comment_c lexbuf }
   | _     { comment_c lexbuf }
-  
+
 (* OCaml style comments *)
 and comment_ocaml = parse
     "(*"  { incr comment_depth; comment_ocaml lexbuf }

@@ -1,14 +1,14 @@
 (*****************************************************************
  *
  *                       IMITATOR
- * 
+ *
  * File containing the operations linked to the observer patterns
  *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
- * 
+ *
  * Author:        Etienne Andre
- * 
+ *
  * Created:       2013/02/04
  * Last modified: 2017/04/24
  *
@@ -42,7 +42,14 @@ let truec = LinearConstraint.pxd_true_constraint
 (****************************************************************)
 (** Useful (parameterized) constants *)
 (****************************************************************)
-let untimedt destination_index = [True_guard, No_update, [], destination_index]
+
+(** Creates a new update *)
+let create_update clock_updates discrete_updates conditional_updates =
+	{clock = clock_updates;
+	 discrete = discrete_updates;
+	 conditional = conditional_updates}
+
+let untimedt destination_index = [True_guard, create_update No_update [] [], destination_index]
 
 (* Constraint x <= d, with 'd' a LinearConstraint.p_linear_term : d - x >= 0 *)
 let ct_x_leq_d x d =
@@ -97,7 +104,7 @@ let new_elements = function
 		match property with
 		(* Not a real observer: does not build anything *)
 		| ParsingStructure.Parsed_unreachable_locations _ -> (None , None)
-		
+
 		(* Untimed observers: add automaton, does not add clock *)
 		| ParsingStructure.Action_precedence_acyclic _
 		| ParsingStructure.Action_precedence_cyclic _
@@ -109,7 +116,7 @@ let new_elements = function
 		| ParsingStructure.Sequence_acyclic _
 		| ParsingStructure.Sequence_cyclic _
 			-> (Some automaton_name, None)
-		
+
 		(* Timed observers: add automaton, add clock *)
 		| ParsingStructure.Action_deadline _
 		| ParsingStructure.TB_Action_precedence_acyclic _
@@ -119,7 +126,7 @@ let new_elements = function
 		| ParsingStructure.TB_response_cyclic _
 		| ParsingStructure.TB_response_cyclicstrict _
 			-> (Some automaton_name, Some clock_name)
-	
+
 	end
 
 (* Get the number of locations for this observer *)
@@ -130,7 +137,7 @@ let get_nb_locations = function
 		match property with
 		(* Not a real observer: does not build anything *)
 		| ParsingStructure.Parsed_unreachable_locations _ -> 0
-		
+
 		| ParsingStructure.Action_precedence_acyclic _
 		| ParsingStructure.Action_precedence_cyclic _
 		| ParsingStructure.Action_precedence_cyclicstrict _
@@ -162,7 +169,7 @@ let get_locations property =
 	)
 
 (*------------------------------------------------------------*)
-(* Create the observer; 
+(* Create the observer;
 	Takes as parameters the number of actions, the automaton_index, the nosync index for the observer, the local clock id for the observer
 	Returns:
 	- Actions per automaton
@@ -171,7 +178,7 @@ let get_locations property =
 	- Invariants
 *)
 (*------------------------------------------------------------*)
-let get_automaton nb_actions automaton_index nosync_index x_obs property = 
+let get_automaton nb_actions automaton_index nosync_index x_obs property =
 	(* Create the common structures *)
 	let initialize_structures nb_locations all_actions =
 		(* Array for actions for location *)
@@ -203,20 +210,20 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 			List.iter (fun action_index -> allow_all.(action_index) <- untimedt location_index) all_actions;
 			allow_all
 	in
-	
+
 	match property with
 	| Noproperty -> raise (InternalError("The function 'get_automaton' should not be called in case of no observer."))
 	(* Not a real observer: does not build anything *)
 	| Unreachable_locations _ -> raise (InternalError("The function 'get_automaton' should not be called in case of a degenerate observer."))
-	
-	
-	| Action_precedence_acyclic (a1, a2) -> 
+
+
+	| Action_precedence_acyclic (a1, a2) ->
 		let nb_locations = 3 in
 		let all_actions = [a1;a2] in
 		(* Initialize *)
 		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no nosync action here) *)
-		
+
 		(* Compute transitions *)
 		transitions.(0).(a1) <- untimedt 1;
 		transitions.(0).(a2) <- untimedt 2;
@@ -228,9 +235,9 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		None,
 		(* Reduce to reachability property *)
 		single_unreachable_location automaton_index 2
-	
-	
-	| Action_precedence_cyclic (a1, a2) -> 
+
+
+	| Action_precedence_cyclic (a1, a2) ->
 		let nb_locations = 3 in
 		let all_actions = [a1;a2] in
 		(* Initialize *)
@@ -259,15 +266,15 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		None,
 		(* Reduce to reachability property *)
 		single_unreachable_location automaton_index 2
-	
-	
-	| Action_precedence_cyclicstrict (a1, a2) -> 
+
+
+	| Action_precedence_cyclicstrict (a1, a2) ->
 		let nb_locations = 3 in
 		let all_actions = [a1;a2] in
 		(* Initialize *)
 		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no nosync action here) *)
-		
+
 		(* Compute transitions *)
 		transitions.(0).(a1) <- untimedt 1;
 		transitions.(0).(a2) <- untimedt 2;
@@ -280,16 +287,16 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		None,
 		(* Reduce to reachability property *)
 		single_unreachable_location automaton_index 2
-		
-	
+
+
 		(*** NOT IMPLEMENTED ***)
 (*	| Eventual_response_acyclic (a1, a2)
 	| Eventual_response_cyclic (a1, a2)
 	| Eventual_response_cyclicstrict (a1, a2)
 		-> raise (InternalError("Observer not implemented."))*)
-	
-	
-	| Action_deadline (a, d) -> 
+
+
+	| Action_deadline (a, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a] in
 		(* Initialize *)
@@ -300,7 +307,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		invariants.(0) <- ct_x_leq_d x_obs d ;
 		(* Compute transitions *)
 		transitions.(0).(a) <- untimedt 1;
-		transitions.(0).(nosync_index) <- [Continuous_guard (ct_x_eq_d x_obs d), No_update, [], 2];
+		transitions.(0).(nosync_index) <- [Continuous_guard (ct_x_eq_d x_obs d), create_update No_update [] [], 2];
 		transitions.(1) <- allow_all 1;
 		transitions.(2) <- allow_all 2;
 		(* Return structure (and add silent action) *)
@@ -309,21 +316,21 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		Some (lc_x_eq_0 x_obs),
 		(* Reduce to reachability property *)
 		single_unreachable_location automaton_index 2
-		
-	
-	| TB_Action_precedence_acyclic (a1, a2, d) -> 
+
+
+	| TB_Action_precedence_acyclic (a1, a2, d) ->
 		let nb_locations = 4 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
 		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no silent action here) *)
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [True_guard, Resets [x_obs], [], 1];
+		transitions.(0).(a1) <- [True_guard, create_update (Resets [x_obs]) [] [], 1];
 		transitions.(0).(a2) <- untimedt 3;
-		transitions.(1).(a1) <- [True_guard, Resets [x_obs], [], 1];
+		transitions.(1).(a1) <- [True_guard, create_update (Resets [x_obs]) [] [], 1];
 		transitions.(1).(a2) <- [
-			Continuous_guard (ct_x_leq_d x_obs d), No_update, [], 2;
-			Continuous_guard (ct_x_geq_d x_obs d), No_update, [], 3
+			Continuous_guard (ct_x_leq_d x_obs d), create_update No_update [] [], 2;
+			Continuous_guard (ct_x_geq_d x_obs d), create_update No_update [] [], 3
 			];
 		transitions.(2) <- allow_all 2;
 		transitions.(3) <- allow_all 3;
@@ -333,21 +340,21 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		None,
 		(* Reduce to reachability property *)
 		single_unreachable_location automaton_index 3
-	
-	
-	| TB_Action_precedence_cyclic (a1, a2, d) -> 
+
+
+	| TB_Action_precedence_cyclic (a1, a2, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
 		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no silent action here) *)
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [True_guard, Resets [x_obs], [], 1];
+		transitions.(0).(a1) <- [True_guard, create_update (Resets [x_obs]) [] [], 1];
 		transitions.(0).(a2) <- untimedt 2;
-		transitions.(1).(a1) <- [True_guard, Resets [x_obs], [], 1];
+		transitions.(1).(a1) <- [True_guard, create_update (Resets [x_obs]) [] [], 1];
 		transitions.(1).(a2) <- [
-			Continuous_guard (ct_x_leq_d x_obs d), No_update, [], 0;
-			Continuous_guard (ct_x_geq_d x_obs d), No_update, [], 2
+			Continuous_guard (ct_x_leq_d x_obs d), create_update No_update [] [], 0;
+			Continuous_guard (ct_x_geq_d x_obs d), create_update No_update [] [], 2
 			];
 		transitions.(2) <- allow_all 2;
 		(* Return structure *)
@@ -356,21 +363,21 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		None,
 		(* Reduce to reachability property *)
 		single_unreachable_location automaton_index 2
-		
-		
-	| TB_Action_precedence_cyclicstrict (a1, a2, d) -> 
+
+
+	| TB_Action_precedence_cyclicstrict (a1, a2, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
 		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no silent action here) *)
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [True_guard, Resets [x_obs], [], 1];
+		transitions.(0).(a1) <- [True_guard, create_update (Resets [x_obs]) [] [], 1];
 		transitions.(0).(a2) <- untimedt 2;
 		transitions.(1).(a1) <- untimedt 2;
 		transitions.(1).(a2) <- [
-			Continuous_guard (ct_x_leq_d x_obs d), No_update, [], 0;
-			Continuous_guard (ct_x_geq_d x_obs d), No_update, [], 2
+			Continuous_guard (ct_x_leq_d x_obs d), create_update No_update [] [], 0;
+			Continuous_guard (ct_x_geq_d x_obs d), create_update No_update [] [], 2
 			];
 		transitions.(2) <- allow_all 2;
 		(* Return structure *)
@@ -379,9 +386,9 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		None,
 		(* Reduce to reachability property *)
 		single_unreachable_location automaton_index 2
-		
 
-	| TB_response_acyclic (a1, a2, d) -> 
+
+	| TB_response_acyclic (a1, a2, d) ->
 		let nb_locations = 4 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
@@ -391,11 +398,11 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* Update invariants *)
 		invariants.(1) <- ct_x_leq_d x_obs d;
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [True_guard, Resets [x_obs], [], 1];
+		transitions.(0).(a1) <- [True_guard, create_update (Resets [x_obs]) [] [], 1];
 		transitions.(0).(a2) <- untimedt 0;
 		transitions.(1).(a1) <- untimedt 1;
 		transitions.(1).(a2) <- untimedt 2;
-		transitions.(1).(nosync_index) <- [Continuous_guard (ct_x_eq_d x_obs d), No_update, [], 3];
+		transitions.(1).(nosync_index) <- [Continuous_guard (ct_x_eq_d x_obs d), create_update No_update [] [], 3];
 		transitions.(2) <- allow_all 2;
 		transitions.(3) <- allow_all 3;
 		(* Return structure (and add silent action) *)
@@ -404,8 +411,8 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		None,
 		(* Reduce to reachability property *)
 		single_unreachable_location automaton_index 3
-		
-	| TB_response_cyclic (a1, a2, d) -> 
+
+	| TB_response_cyclic (a1, a2, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
@@ -415,11 +422,11 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* Update invariants *)
 		invariants.(1) <- ct_x_leq_d x_obs d;
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [True_guard, Resets [x_obs], [], 1];
+		transitions.(0).(a1) <- [True_guard, create_update (Resets [x_obs]) [] [], 1];
 		transitions.(0).(a2) <- untimedt 0;
 		transitions.(1).(a1) <- untimedt 1;
 		transitions.(1).(a2) <- untimedt 0;
-		transitions.(1).(nosync_index) <- [Continuous_guard (ct_x_eq_d x_obs d), No_update, [], 2];
+		transitions.(1).(nosync_index) <- [Continuous_guard (ct_x_eq_d x_obs d), create_update No_update [] [], 2];
 		transitions.(2) <- allow_all 2;
 		(* Return structure (and add silent action) *)
 		nosync_index :: all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
@@ -427,9 +434,9 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		None,
 		(* Reduce to reachability property *)
 		single_unreachable_location automaton_index 2
-	
-	
-	| TB_response_cyclicstrict (a1, a2, d) -> 
+
+
+	| TB_response_cyclicstrict (a1, a2, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
@@ -439,11 +446,11 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* Update invariants *)
 		invariants.(1) <- ct_x_leq_d x_obs d;
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [True_guard, Resets [x_obs], [], 1];
+		transitions.(0).(a1) <- [True_guard, create_update (Resets [x_obs]) [] [], 1];
 		transitions.(0).(a2) <- untimedt 2;
 		transitions.(1).(a1) <- untimedt 2;
 		transitions.(1).(a2) <- untimedt 0;
-		transitions.(1).(nosync_index) <- [Continuous_guard (ct_x_eq_d x_obs d), No_update, [], 2];
+		transitions.(1).(nosync_index) <- [Continuous_guard (ct_x_eq_d x_obs d), create_update No_update [] [], 2];
 		transitions.(2) <- allow_all 2;
 		(* Return structure (and add silent action) *)
 		nosync_index :: all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
@@ -453,20 +460,20 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		single_unreachable_location automaton_index 2
 
 
-	| Sequence_acyclic list_of_actions -> 
+	| Sequence_acyclic list_of_actions ->
 		let nb_locations = (List.length list_of_actions) + 2 in
 		let all_actions = list_of_actions in
 		(* Initialize *)
 		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
-		
+
 		(* Define 2 useful location indexes *)
 		let lf = nb_locations - 2 in
 		let lbad = nb_locations - 1 in
 
 		(* No need to update actions per location (no silent action here) *)
-		
+
 		(* No need to update invariants *)
-		
+
 		(* Compute transitions *)
 		for i = 0 to lf-1 do
 			(* Add the action l_i --{a_i}--> l_i+1 *)
@@ -482,28 +489,28 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* Add self-loops *)
 		transitions.(lf) <- allow_all lf;
 		transitions.(lbad) <- allow_all lbad;
-		
+
 		(* Return structure *)
 		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)
 		single_unreachable_location automaton_index lbad
-	
-	
-	| Sequence_cyclic list_of_actions -> 
+
+
+	| Sequence_cyclic list_of_actions ->
 		let nb_locations = (List.length list_of_actions) + 1 in
 		let all_actions = list_of_actions in
 		(* Initialize *)
 		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
-		
+
 		(* Define 2 useful location indexes *)
 		let lbad = nb_locations - 1 in
 
 		(* No need to update actions per location (no silent action here) *)
-		
+
 		(* No need to update invariants *)
-		
+
 		(* Compute transitions *)
 		(* Locations 0 to n-2 *)
 		for i = 0 to lbad-1 do
@@ -524,14 +531,13 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		transitions.(lbad-1).(a_n) <- untimedt (0);
 		(* Add self-loops *)
 		transitions.(lbad) <- allow_all lbad;
-		
+
 		(* Return structure *)
 		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)
 		single_unreachable_location automaton_index lbad
-	
-	
-(* 	| _ -> raise (InternalError("Not implemented")) *)
 
+
+(* 	| _ -> raise (InternalError("Not implemented")) *)

@@ -29,12 +29,14 @@ benchmarks/**/*.res
 benchmarks/**/*.png
 benchmarks/**/*.jpg
 benchmarks/**/*.states
+benchmarks/**/*.pdf
 
 tests/**/*.log
 tests/**/*.jpg
 tests/**/*.png
 tests/**/*.txt
 tests/**/*.sh
+tests/**/*.pdf
 
 # binaries
 *.native
@@ -52,3 +54,6 @@ doc/IMITATOR-not-developer-manual.out
 doc/IMITATOR-not-developer-manual.pdf
 doc/classDiagramFull.png
 doc/classDiagramSimplified.png
+
+# IDE
+.vscode
