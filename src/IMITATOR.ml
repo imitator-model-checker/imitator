@@ -558,7 +558,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(************************************************************)
 	(* Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
 	(************************************************************)
-	(**
+	(** TODO: add conditions to CUB
 	| Parametric_NZ_CUBcheck ->
 		(* Computing a constraint for which the PTA is CUB *)
 		print_message Verbose_standard ("Checking whether the PTA is CUB for some parameter valuations…");
@@ -698,6 +698,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(*** WARNING:  Do not modify the following lines! (used by an external script to compile the non-distributed version of IMITATOR) ***)
 	(*(* ** *** **** ***** ******    BEGIN FORK PaTATOR    ****** ***** **** *** ** *)
 
+	(** TODO: add conditions to CUB
 	| Parametric_NZ_CUBtransformDistributed ->
 		print_message Verbose_standard ("Generating the transformed model…");
 
@@ -739,7 +740,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 
 		(* Call the NZ emptiness check *)
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUBdist.algoNZCUBdist in myalgo
-
+	*)
 
 	(*** NOTE: only one distribution mode so far ***)
 	| Cover_cartography when options#distribution_mode <> Non_distributed ->
