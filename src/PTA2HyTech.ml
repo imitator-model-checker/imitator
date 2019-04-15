@@ -9,9 +9,9 @@
  *
  * Remark            : extensively copied from ModelPrinter as IMITATOR and HyTech syntax are very similar
  *
- * File contributors : Étienne André
+ * File contributors : Étienne André, Jaime Arias
  * Created           : 2016/01/26
- * Last modified     : 2018/02/23
+ * Last modified     : 2019/04/15
  *
  ************************************************************)
 
@@ -223,7 +223,7 @@ let string_of_discrete_updates model updates =
 
 
 (* Convert a transition of a location into a string *)
-(** TODO: it's missing the recursive printing *)
+(** NOTE: currently HyTech does not support conditional *)
 let string_of_transition model automaton_index action_index (guard, updates, destination_location) =
 	let clock_updates = updates.clock in
 	let discrete_updates = updates.discrete in

@@ -7,9 +7,9 @@
  *
  * Module description: Abstract description of the input model
  *
- * File contributors : Étienne André
+ * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/09/11
- * Last modified     : 2018/07/19
+ * Last modified     : 2019/04/15
  *
  ************************************************************)
 
@@ -124,23 +124,23 @@ type op_bool = BOOL_L | BOOL_LEQ | BOOL_EQ | BOOL_NEQ | BOOL_GEQ | BOOL_G
 
 (** Boolean expression *)
 type boolean_expression =
-  | True_bool
-  | False_bool
-  | Not_bool of boolean_expression
-  | And_bool of boolean_expression * boolean_expression
-  | Or_bool of boolean_expression * boolean_expression
-  | Expression_bool of discrete_arithmetic_expression * op_bool * discrete_arithmetic_expression
+  | True_bool (** True *)
+  | False_bool (** False *)
+  | Not_bool of boolean_expression (** Negation *)
+  | And_bool of boolean_expression * boolean_expression (** Conjunction *)
+  | Or_bool of boolean_expression * boolean_expression (** Disjunction *)
+  | Expression_bool of discrete_arithmetic_expression * op_bool * discrete_arithmetic_expression (** Discrete Arithmentic Expression *)
 
 (** Updates *)
 type updates = {
-  clock: clock_updates;
-  discrete: discrete_update list;
-  conditional: conditional_update list;
+  clock: clock_updates; (** Clock updates *)
+  discrete: discrete_update list; (** List of discrete updates *)
+  conditional: conditional_update list; (** List of conditional updates *)
 }
 (** Conditional updates *)
 and conditional_update = boolean_expression * updates * updates
 
-(** Transition: guard, clock/discrete updates, conditional updates, destination location *)
+(** Transition: guard, list of updates, destination location *)
 type transition = guard * updates * location_index
 
 

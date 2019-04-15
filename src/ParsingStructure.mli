@@ -5,10 +5,11 @@
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
  *
- * Author:        Etienne Andre
+ * Author: Etienne Andre
  *
- * Created:       2009/09/08
- * Last modified: 2018/02/23
+ * File contributors : Jaime Arias
+ * Created           : 2009/09/08
+ * Last modified     : 2019/04/15
  *
  ****************************************************************)
 
@@ -96,10 +97,10 @@ type convex_predicate = linear_constraint list
 type boolean_expression =
   | True (** True *)
   | False (** False *)
-  | Not of boolean_expression
-  | And of boolean_expression * boolean_expression
-  | Or of boolean_expression * boolean_expression
-  | Expression of parsed_update_arithmetic_expression * relop * parsed_update_arithmetic_expression
+  | Not of boolean_expression (** Negation *)
+  | And of boolean_expression * boolean_expression (** Conjunction *)
+  | Or of boolean_expression * boolean_expression (** Disjunction *)
+  | Expression of parsed_update_arithmetic_expression * relop * parsed_update_arithmetic_expression (** Arithmetic Expression *)
 
 
 (****************************************************************)
@@ -120,14 +121,14 @@ type invariant = convex_predicate
 
 (** Updates on transitions *)
 type update =
-  | Normal of normal_update
-  | Condition of condition_update
-  (** basic updating *)
+  | Normal of normal_update (** Updates withput conditions *)
+  | Condition of condition_update (** Updates with conditions *)
+(** basic updating *)
 and normal_update = variable_name * parsed_update_arithmetic_expression
-(** conditional updating *)
+(** conditional updating - NOTE: it does not support nested conditions *)
 and condition_update = boolean_expression * normal_update list * normal_update list
 
-(* Transition = Guard * update * sync label * destination location *)
+(* Transition = Guard * update list * sync label * destination location *)
 type transition = guard * update list * sync * location_name
 
 (* Location = Name * Urgent type * Cost * Invariant * list of stopped clocks * transitions *)

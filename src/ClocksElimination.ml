@@ -7,9 +7,9 @@
  *
  * Module description: Dynamic elimination of clocks not used in the future [Andre13, FSFMA]
  *
- * File contributors : Étienne André
+ * File contributors : Étienne André, Jaime Arias
  * Created           : 2015/11/27
- * Last modified     : 2017/04/24
+ * Last modified     : 2019/04/15
  *
  ************************************************************)
 
@@ -44,7 +44,7 @@ let counter_elimination = ref None
 (* Functions *)
 (**************************************************************)
 
-(** WARNING: duplicate function in ModelConverter *)
+(** Alias to the function defined in ModelConverter *)
 let get_clocks_in_updates = ModelConverter.get_clocks_in_updates
 
 let get_clocks_in_guard clocks : guard -> Automaton.clock_index list = function

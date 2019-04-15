@@ -4,11 +4,13 @@
  *
  * LIPN, Université Paris 13 (France)
  *
- * Module description: main virtual class to explore the state space: only defines post-related function, i.e., to compute the successor states of ONE state. That (still) represents a large list of functions.
+ * Module description: main virtual class to explore the state space: only
+ * defines post-related function, i.e., to compute the successor states of ONE
+ * state. That (still) represents a large list of functions.
  *
- * File contributors : Étienne André, Nguyễn Hoàng Gia
+ * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2018/10/08
+ * Last modified     : 2019/04/15
  *
  ************************************************************)
 
@@ -891,8 +893,7 @@ let is_boolean_expression_satisfied location (boolean_expr : AbstractModel.boole
   in
   is_boolean_expression_satisfied_rec boolean_expr
 
-(** Concatenates two clock_updates *)
-(** conflict resolution by rho_assign *)
+(** Merge two clock_updates - NOTE: conflict resolution done by rho_assign *)
 let merge_clock_updates first_update second_update : clock_updates =
   match first_update, second_update with
   | No_update, _ -> second_update
@@ -903,7 +904,6 @@ let merge_clock_updates first_update second_update : clock_updates =
   | Resets r, Updates u
   | Updates u, Resets r -> let members = List.map (fun i -> (i, LinearConstraint.make_pxd_linear_term [(NumConst.one, i)] NumConst.zero)) r in
     Updates (members@u)
-
 
 
 (*------------------------------------------------------------------*)

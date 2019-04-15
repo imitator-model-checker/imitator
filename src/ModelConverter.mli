@@ -7,9 +7,9 @@
  *
  * Module description: Convert a parsing structure into an abstract model
  *
- * File contributors : Étienne André
+ * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/09/09
- * Last modified     : 2016/10/08
+ * Last modified     : 2019/04/15
  *
  ************************************************************)
 

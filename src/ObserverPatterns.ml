@@ -9,8 +9,9 @@
  *
  * Author:        Etienne Andre
  *
- * Created:       2013/02/04
- * Last modified: 2017/04/24
+ * File contributors : Jaime Arias
+ * Created           : 2013/02/04
+ * Last modified     : 2019/04/15
  *
  ****************************************************************)
 
@@ -49,6 +50,7 @@ let create_update clock_updates discrete_updates conditional_updates =
 	 discrete = discrete_updates;
 	 conditional = conditional_updates}
 
+(** Creates a transition without guards and updates *)
 let untimedt destination_index = [True_guard, create_update No_update [] [], destination_index]
 
 (* Constraint x <= d, with 'd' a LinearConstraint.p_linear_term : d - x >= 0 *)
