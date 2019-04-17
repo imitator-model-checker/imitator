@@ -117,6 +117,7 @@ class algoNDFS =
 		let pink = ref [] in 	(* Used only in some of the algorithms *)
 		let red = ref [] in
 		let pending = ref [] in (* used in the layered algorithms *)
+		let constraint_list = ref [] in (* list of results found *)
 
 		(***********************)
 		(* printing the queues *)
@@ -317,6 +318,8 @@ class algoNDFS =
 									(StateSpace.get_state state_space astate));
 							termination_status <- Some Target_found;
 							print_projection Verbose_standard astate;
+							let state_loc, state_constr = StateSpace.get_state state_space astate in
+							constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
 							raise TerminateAnalysis
 						in
 						let testrecursivedfs (astate : State.state_index) : bool =
@@ -378,6 +381,8 @@ class algoNDFS =
 									(StateSpace.get_state state_space astate));
 							termination_status <- Some Target_found;
 							print_projection Verbose_standard astate;
+							let state_loc, state_constr = StateSpace.get_state state_space astate in
+							constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
 							raise TerminateAnalysis
 						in
 						let testrecursivedfs (astate : State.state_index) : bool =
@@ -455,6 +460,8 @@ class algoNDFS =
 											(StateSpace.get_state state_space astate));
 									termination_status <- Some Target_found;
 									print_projection Verbose_standard astate;
+									let state_loc, state_constr = StateSpace.get_state state_space astate in
+										constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
 									raise TerminateAnalysis
 								in
 								let testrecursivedfs (astate : State.state_index) : bool =
@@ -477,11 +484,75 @@ class algoNDFS =
 				done;)
 							with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
-            | Exploration_syn_NDFS_sub -> print_message Verbose_standard("Using the option synNDFSsub")
+            | Exploration_syn_NDFS_sub ->
+(* collecting NDFS with subsumption *)
+            	print_message Verbose_standard("Using the option synNDFSsub");
+				(* set up the dfs blue calls *)
+				let enterdfs (astate : State.state_index) : bool =
+					true in
+				let predfs (astate : State.state_index) : unit =
+					cyan := astate::(!cyan);
+					printqueue "Cyan" !cyan;
+					self#post_from_one_state astate;
+					() in
+				let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+					if (not (List.mem astate !blue) &&
+						not (List.mem astate !cyan) &&
+						not (setsubsumes !red astate)) then true else false in
+				let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+					false in
+				let alternativedfs (astate: State.state_index) : unit =
+					() in
+				let testrecursivedfs (astate: State.state_index) : bool =
+					true in
+				let postdfs (astate: State.state_index) : unit =
+					if (State.is_accepting (StateSpace.get_state state_space astate)) then (
+						(* set up the dfs red calls *)
+						let enterdfs (astate: State.state_index) : bool =
+							true in
+						let predfs (astate: State.state_index) : unit =
+							red := astate::(!red);
+							printqueue "Red" !red in
+						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+							if (same_parameter_projection thestate astate) then true
+							else false in
+						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+							if (subsumesset astate !cyan) then true else false in
+						let alternativedfs (astate : State.state_index) : unit =
+							print_highlighted_message Shell_bold Verbose_standard
+								("Cycle found at state " ^ (string_of_int astate));
+							print_message Verbose_standard
+								(ModelPrinter.string_of_state model
+									(StateSpace.get_state state_space astate));
+							termination_status <- Some Target_found;
+							print_projection Verbose_standard astate;
+							raise TerminateAnalysis
+						in
+						let testrecursivedfs (astate : State.state_index) : bool =
+							if (not (setsubsumes !red astate)) then true else false in
+						let postdfs (astate : State.state_index) : unit =
+							() in					
+						rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
+					);
+					blue := astate::(!blue);
+					printqueue "Blue" !blue;
+					match !cyan with
+					| astate::body ->
+						cyan := body;
+						printqueue "Cyan" !cyan;
+					| _ -> print_message Verbose_standard "Error popping from cyan";
+					() in
+				(try (rundfs enterdfs predfs filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index;)
+					with TerminateAnalysis -> ());
+				print_message Verbose_low("Finished the calls")
             | Exploration_syn_layer_NDFS_sub -> print_message Verbose_standard("Using the option synlayerNDFSsub")
             | Exploration_syn_mixed_NDFS -> print_message Verbose_standard("Using the option synMixedNDFS")
             | _ -> raise (InternalError ("Unknown variant of NDFS"))
         end;
+
+        (* combine the linear constraints *)
+		constraint_valuations <- Some (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list);
+
 		print_message Verbose_standard("---------------- Ending exploration ------------------");
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
