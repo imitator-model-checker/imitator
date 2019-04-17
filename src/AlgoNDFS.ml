@@ -352,15 +352,12 @@ class algoNDFS =
 					printqueue "Cyan" !cyan;
 					self#post_from_one_state astate;
 					() in
-				let rec lookahead (thesuccessors : State.state_index list) :
+				let lookahead (thesuccessors : State.state_index list) :
 					State.state_index * bool = 
-					match thesuccessors with
-						| [] -> init_state_index, false
-						| suc_id::body ->
-							if ((State.is_accepting (StateSpace.get_state state_space suc_id)) &&
-								(List.mem suc_id !cyan))
-								then suc_id, true
-							else lookahead body
+					try ((List.find (fun suc_id ->
+							(State.is_accepting (StateSpace.get_state state_space suc_id)) &&
+								(List.mem suc_id !cyan)) thesuccessors), true)
+					with Not_found -> init_state_index, false
 				in
 				let cyclefound (astate : State.state_index) : unit =
 					print_highlighted_message Shell_bold Verbose_standard
@@ -441,15 +438,12 @@ class algoNDFS =
 					printqueue "Cyan" !cyan;
 					self#post_from_one_state astate;
 					() in
-				let rec lookahead (thesuccessors : State.state_index list) :
+				let lookahead (thesuccessors : State.state_index list) :
 					State.state_index * bool = 
-					match thesuccessors with
-						| [] -> init_state_index, false
-						| suc_id::body ->
-							if ((State.is_accepting (StateSpace.get_state state_space suc_id)) &&
-								(List.mem suc_id !cyan))
-								then suc_id, true
-							else lookahead body
+					try ((List.find (fun suc_id ->
+							(State.is_accepting (StateSpace.get_state state_space suc_id)) &&
+								(List.mem suc_id !cyan)) thesuccessors), true)
+					with Not_found -> init_state_index, false
 				in
 				let cyclefound (astate : State.state_index) : unit =
 					print_highlighted_message Shell_bold Verbose_standard
@@ -543,15 +537,12 @@ class algoNDFS =
 							printqueue "Cyan" !cyan;
 							self#post_from_one_state astate;
 							() in
-						let rec lookahead (thesuccessors : State.state_index list) :
+						let lookahead (thesuccessors : State.state_index list) :
 							State.state_index * bool = 
-							match thesuccessors with
-								| [] -> init_state_index, false
-								| suc_id::body ->
-									if ((State.is_accepting (StateSpace.get_state state_space suc_id)) &&
-										(List.mem suc_id !cyan))
-										then suc_id, true
-									else lookahead body
+							try ((List.find (fun suc_id ->
+									(State.is_accepting (StateSpace.get_state state_space suc_id)) &&
+										(List.mem suc_id !cyan)) thesuccessors), true)
+							with Not_found -> init_state_index, false
 						in
 						let cyclefound (astate : State.state_index) : unit =
 							print_highlighted_message Shell_bold Verbose_standard
