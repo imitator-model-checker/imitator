@@ -123,12 +123,12 @@ class algoNDFS =
 		(* printing the queues *)
 		(***********************)
 	    let printqueue colour thequeue =
-	            let rec r_printqueue thequeue = match thequeue with
-	                | [] -> "";
-	                | state_index::body  ->
-	                	(string_of_int state_index) ^ " " ^ (r_printqueue body);
-	            in print_message Verbose_low("Queue " ^ colour ^ " : [ "
-	            		^ r_printqueue thequeue ^ "]")
+			let rec r_printqueue thequeue = match thequeue with
+				| [] -> "";
+				| state_index::body  ->
+					(string_of_int state_index) ^ " " ^ (r_printqueue body);
+			in print_message Verbose_low("Queue " ^ colour ^ " : [ "
+					^ r_printqueue thequeue ^ "]")
 	    in
 
 		(***************************************)
@@ -161,6 +161,66 @@ class algoNDFS =
 				^ " state: "
 				^ (StateSpace.string_of_state_index state2));
 			LinearConstraint.p_is_equal constr1 constr2
+		in
+
+		(****************************************************)
+		(* Check inclusion of zone projection on parameters *)
+		(****************************************************)
+		let smaller_parameter_projection state1 state2 =
+			let state1_loc, state1_constr = StateSpace.get_state state_space state1 in
+			let constr1 = LinearConstraint.px_hide_nonparameters_and_collapse state1_constr in
+			let state2_loc, state2_constr = StateSpace.get_state state_space state2 in
+			let constr2 = LinearConstraint.px_hide_nonparameters_and_collapse state2_constr in
+			print_message Verbose_high ("Projected contraint 1: \n"
+				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
+				^ " state: "
+				^ (StateSpace.string_of_state_index state1));
+			print_message Verbose_high ("Projected contraint 2: \n"
+				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr2
+				^ " state: "
+				^ (StateSpace.string_of_state_index state2));
+			LinearConstraint.p_is_leq constr1 constr2
+		in
+
+		(*************************************)
+        (* Returns True if thequeue is empty *)
+		(*************************************)
+        let queue_is_empty thequeue = match thequeue with
+            | [] -> true;
+            | _ -> false;
+        in
+
+		(************************************)
+		(* add a state to the pending queue *)
+		(************************************)
+		let add_pending astate =
+			(* standard queuing *)
+			(* pending := astate::(!pending); *)
+			(* add the state in the right place in the queue:
+				larger zones first *)
+			if (queue_is_empty !pending) then
+				pending := [astate]
+			else (
+				let newpending = ref [] in
+				while not (queue_is_empty !pending) do
+					match (!pending) with
+						| first_state::body ->
+							if (smaller_parameter_projection first_state astate) then (
+								(* insert a state before the current state *)
+								newpending := (!newpending)@[astate];
+								newpending := (!newpending)@(!pending);
+								pending := [];
+							) else (
+								newpending := (!newpending)@[first_state];
+								pending := body;
+								if (queue_is_empty !pending) then
+									(* no more states to compare with *)
+									newpending := (!newpending)@[astate];
+							)
+				done;
+				pending := !newpending;
+			);
+			printqueue "Pending (state added)" !pending
 		in
 
 		(**********************************)
@@ -465,8 +525,7 @@ class algoNDFS =
 (* NDFS with subsumption and layers *)
             	print_message Verbose_standard("Using the option layerNDFSsub");
 				(* set up the dfs blue calls *)
-				pending := [init_state_index];
-				printqueue "Pending" !pending;
+				add_pending init_state_index;
 				(try (while !pending != [] do
 					match !pending with
 					| [] -> print_message Verbose_standard ("Impossible case");
@@ -514,9 +573,7 @@ class algoNDFS =
 							if (not (same_parameter_projection thestate astate)) then true
 							else false in
 						let alternativedfs (astate: State.state_index) : unit =
-							pending := astate::!pending;
-							printqueue "Pending (state added)" !pending;
-							() in
+							add_pending astate in
 						let testrecursivedfs (astate: State.state_index) : bool =
 							true in
 						let postdfs (astate: State.state_index) : unit =
