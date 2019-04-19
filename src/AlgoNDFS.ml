@@ -114,7 +114,6 @@ class algoNDFS =
 		(************************************)
 		let cyan = ref [] in
 		let blue = ref [] in
-		let pink = ref [] in 	(* Used only in some of the algorithms *)
 		let red = ref [] in
 		let pending = ref [] in (* used in the layered algorithms *)
 		let constraint_list = ref [] in (* list of results found *)
@@ -180,6 +179,19 @@ class algoNDFS =
 				^ " state: "
 				^ (StateSpace.string_of_state_index state2));
 			LinearConstraint.p_is_leq constr1 constr2
+		in
+
+		(*********************************************************************)
+		(* Check inclusion of zone projection on parameters wrt a constraint *)
+		(*********************************************************************)
+		let smaller_parameter_constraint astate aconstraint =
+			let astate_loc, astate_constr = StateSpace.get_state state_space astate in
+			let aconstr = LinearConstraint.px_hide_nonparameters_and_collapse astate_constr in
+			print_message Verbose_high ("Projected contraint : \n"
+				^ LinearConstraint.string_of_p_linear_constraint model.variable_names aconstr
+				^ " state: "
+				^ (StateSpace.string_of_state_index astate));
+			LinearConstraint.p_is_leq aconstr aconstraint
 		in
 
 		(*************************************)
@@ -622,8 +634,198 @@ class algoNDFS =
             | Exploration_syn_NDFS_sub ->
 (* collecting NDFS with subsumption *)
             	print_message Verbose_standard("Using the option synNDFSsub");
+				(* set up the dfs blue calls *)
+				let enterdfs (astate : State.state_index) : bool =
+					if (List.exists (fun aconstraint ->
+							smaller_parameter_constraint astate aconstraint) !constraint_list) then
+					false
+					else true
+				in
+				let predfs (astate : State.state_index) : unit =
+					cyan := astate::(!cyan);
+					printqueue "Cyan" !cyan;
+					self#post_from_one_state astate;
+					() in
+				let lookahead (thesuccessors : State.state_index list) :
+					State.state_index * bool = 
+					try ((List.find (fun suc_id ->
+							(State.is_accepting (StateSpace.get_state state_space suc_id)) &&
+								(List.mem suc_id !cyan)) thesuccessors), true)
+					with Not_found -> init_state_index, false
+				in
+				let cyclefound (astate : State.state_index) : unit =
+					print_highlighted_message Shell_bold Verbose_standard
+						("Cycle found at state " ^ (string_of_int astate));
+					print_message Verbose_standard
+						(ModelPrinter.string_of_state model
+							(StateSpace.get_state state_space astate));
+					termination_status <- Some Target_found;
+					print_projection Verbose_standard astate;
+					let state_loc, state_constr = StateSpace.get_state state_space astate in
+					constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
+				in
+				let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+					if (not (List.mem astate !blue) &&
+						not (List.mem astate !cyan) &&
+						not (setsubsumes !red astate)) then true else false in
+				let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+					false in
+				let alternativedfs (astate: State.state_index) : unit =
+					() in
+				let testrecursivedfs (astate: State.state_index) : bool =
+					true in
+				let postdfs (astate: State.state_index) : unit =
+					if (State.is_accepting (StateSpace.get_state state_space astate)) then (
+						(* set up the dfs red calls *)
+						let enterdfs (astate: State.state_index) : bool =
+							true in
+						let predfs (astate: State.state_index) : unit =
+							red := astate::(!red);
+							printqueue "Red" !red in
+						let lookahead (thesuccessors : State.state_index list) :
+							State.state_index * bool = 
+							init_state_index, false in
+						let cyclefound (astate : State.state_index) : unit =
+							print_highlighted_message Shell_bold Verbose_standard
+								("Cycle found at state " ^ (string_of_int astate));
+							print_message Verbose_standard
+								(ModelPrinter.string_of_state model
+									(StateSpace.get_state state_space astate));
+							termination_status <- Some Target_found;
+							print_projection Verbose_standard astate;
+							let state_loc, state_constr = StateSpace.get_state state_space astate in
+							constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
+						in
+						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+							if (same_parameter_projection thestate astate) then true
+							else false in
+						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+							if (subsumesset astate !cyan) then true else false in
+						let alternativedfs (astate : State.state_index) : unit =
+							cyclefound astate
+						in
+						let testrecursivedfs (astate : State.state_index) : bool =
+							if (not (setsubsumes !red astate)) then true else false in
+						let postdfs (astate : State.state_index) : unit =
+							() in					
+						rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
+					);
+					blue := astate::(!blue);
+					printqueue "Blue" !blue;
+					match !cyan with
+					| astate::body ->
+						cyan := body;
+						printqueue "Cyan" !cyan;
+					| _ -> print_message Verbose_standard "Error popping from cyan";
+					() in
+				(try (rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index;)
+					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
-            | Exploration_syn_layer_NDFS_sub -> print_message Verbose_standard("Using the option synlayerNDFSsub")
+            | Exploration_syn_layer_NDFS_sub ->
+            	print_message Verbose_standard("Using the option synlayerNDFSsub");
+				(* set up the dfs blue calls *)
+				add_pending init_state_index;
+				(try (while !pending != [] do
+					match !pending with
+					| [] -> print_message Verbose_standard ("Impossible case");
+					| thestate::body ->
+						pending := body;
+						print_message Verbose_low ("Popped state "
+							^ (string_of_int thestate));
+						printqueue "Pending" !pending;
+						if (not (List.mem thestate !blue)) then
+						begin 
+						let enterdfs (astate : State.state_index) : bool =
+							if (List.exists (fun aconstraint ->
+									smaller_parameter_constraint astate aconstraint) !constraint_list) then
+							false
+							else true
+						in
+						let predfs (astate : State.state_index) : unit =
+							cyan := astate::(!cyan);
+							printqueue "Cyan" !cyan;
+							self#post_from_one_state astate;
+							() in
+						let lookahead (thesuccessors : State.state_index list) :
+							State.state_index * bool = 
+							try ((List.find (fun suc_id ->
+									(State.is_accepting (StateSpace.get_state state_space suc_id)) &&
+										(List.mem suc_id !cyan)) thesuccessors), true)
+							with Not_found -> init_state_index, false
+						in
+						let cyclefound (astate : State.state_index) : unit =
+							print_highlighted_message Shell_bold Verbose_standard
+								("Cycle found at state " ^ (string_of_int astate));
+							print_message Verbose_standard
+								(ModelPrinter.string_of_state model
+									(StateSpace.get_state state_space astate));
+							termination_status <- Some Target_found;
+							print_projection Verbose_standard astate;
+							let state_loc, state_constr = StateSpace.get_state state_space astate in
+							constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
+						in
+						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+							if (not (List.mem astate !blue) &&
+								not (List.mem astate !cyan) &&
+								not (layersetsubsumes !red astate)) then true else false in
+						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+							if (not (same_parameter_projection thestate astate)) then true
+							else false in
+						let alternativedfs (astate: State.state_index) : unit =
+							add_pending astate in
+						let testrecursivedfs (astate: State.state_index) : bool =
+							true in
+						let postdfs (astate: State.state_index) : unit =
+							if (State.is_accepting (StateSpace.get_state state_space astate)) then (
+								(* set up the dfs red calls *)
+								let enterdfs (astate: State.state_index) : bool =
+									true in
+								let predfs (astate: State.state_index) : unit =
+									red := astate::(!red);
+									printqueue "Red" !red in
+								let lookahead (thesuccessors : State.state_index list) :
+									State.state_index * bool = 
+									init_state_index, false in
+								let cyclefound (astate : State.state_index) : unit =
+									print_highlighted_message Shell_bold Verbose_standard
+										("Cycle found at state " ^ (string_of_int astate));
+									print_message Verbose_standard
+										(ModelPrinter.string_of_state model
+											(StateSpace.get_state state_space astate));
+									termination_status <- Some Target_found;
+									print_projection Verbose_standard astate;
+									let state_loc, state_constr = StateSpace.get_state state_space astate in
+									constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
+								in
+								let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+									if (same_parameter_projection thestate astate) then true
+									else false in
+								let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+									if (subsumesset astate !cyan) then true
+									else false in
+								let alternativedfs (astate : State.state_index) : unit =
+									cyclefound astate
+								in
+								let testrecursivedfs (astate : State.state_index) : bool =
+									if (not (layersetsubsumes !red astate)) then true
+									else false in
+								let postdfs (astate : State.state_index) : unit =
+									() in					
+								rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
+							);
+							blue := astate::(!blue);
+							printqueue "Blue" !blue;
+							match !cyan with
+							| astate::body ->
+								cyan := body;
+								printqueue "Cyan" !cyan;
+							| _ -> print_message Verbose_standard "Error popping from cyan";
+							() in
+						rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate;
+						end;
+				done;)
+							with TerminateAnalysis -> ());
+				print_message Verbose_low("Finished the calls")
             | Exploration_syn_mixed_NDFS -> print_message Verbose_standard("Using the option synMixedNDFS")
             | _ -> raise (InternalError ("Unknown variant of NDFS"))
         end;

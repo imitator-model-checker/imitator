@@ -1139,7 +1139,7 @@ class imitator_options =
 				| Exploration_NDFS_sub -> print_message Verbose_standard ("Exploration order: NDFS with subsumption [NPvdP18].")
 				| Exploration_layer_NDFS_sub -> print_message Verbose_standard ("Exploration order: layerd NDFS with subsumption [NPvdP18].")
 				| Exploration_syn_NDFS_sub -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption.")
-				| Exploration_syn_layer_NDFS_sub -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumtion and layers [NPvdP18].")
+				| Exploration_syn_layer_NDFS_sub -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption and layers [NPvdP18].")
 				| Exploration_syn_mixed_NDFS -> print_message Verbose_standard ("Exploration order: NDFS with mix of subsumption and layers.")
 end;
 
