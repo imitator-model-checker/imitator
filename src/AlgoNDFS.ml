@@ -338,10 +338,15 @@ class algoNDFS =
 						process_sucs body;
                 in
                 let cyclestate, found = lookahead successors in
+                (* if the cycle is found:
+                	- in the standard version, an exception is raised and the algorithm terminates
+                	- in the collecting version, the other sucessors cannot lead to a better zone,
+                		so there is no need to process them.
+                		However, the state must be marked blue and removed from cyan in the blue dfs *)
                 if (found) then 
-                	cyclefound cyclestate;
-                process_sucs successors;
- 				postdfs thestate
+                	cyclefound cyclestate
+                else (process_sucs successors;
+ 					postdfs thestate)
 			))
 		in
 
@@ -637,9 +642,12 @@ class algoNDFS =
 				(* set up the dfs blue calls *)
 				let enterdfs (astate : State.state_index) : bool =
 					if (List.exists (fun aconstraint ->
-							smaller_parameter_constraint astate aconstraint) !constraint_list) then
-					false
-					else true
+							smaller_parameter_constraint astate aconstraint) !constraint_list) then (
+						(* State astate has been handled and must now become blue *)
+						blue := astate::(!blue);
+						printqueue "Blue" !blue;
+						false
+					) else true
 				in
 				let predfs (astate : State.state_index) : unit =
 					cyan := astate::(!cyan);
@@ -663,6 +671,13 @@ class algoNDFS =
 					print_projection Verbose_standard astate;
 					let state_loc, state_constr = StateSpace.get_state state_space astate in
 					constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
+					blue := astate::(!blue);
+					printqueue "Blue" !blue;
+					match !cyan with
+					| astate::body ->
+						cyan := body;
+						printqueue "Cyan" !cyan;
+					| _ -> print_message Verbose_standard "Error popping from cyan";
 				in
 				let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 					if (not (List.mem astate !blue) &&
@@ -737,9 +752,12 @@ class algoNDFS =
 						begin 
 						let enterdfs (astate : State.state_index) : bool =
 							if (List.exists (fun aconstraint ->
-									smaller_parameter_constraint astate aconstraint) !constraint_list) then
-							false
-							else true
+									smaller_parameter_constraint astate aconstraint) !constraint_list) then (
+								(* State astate has been handled and must now become blue *)
+								blue := astate::(!blue);
+								printqueue "Blue" !blue;
+								false
+							) else true
 						in
 						let predfs (astate : State.state_index) : unit =
 							cyan := astate::(!cyan);
@@ -763,6 +781,13 @@ class algoNDFS =
 							print_projection Verbose_standard astate;
 							let state_loc, state_constr = StateSpace.get_state state_space astate in
 							constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
+							blue := astate::(!blue);
+							printqueue "Blue" !blue;
+							match !cyan with
+							| astate::body ->
+								cyan := body;
+								printqueue "Cyan" !cyan;
+							| _ -> print_message Verbose_standard "Error popping from cyan";
 						in
 						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 							if (not (List.mem astate !blue) &&

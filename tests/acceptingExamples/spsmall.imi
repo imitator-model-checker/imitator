@@ -97,7 +97,6 @@
 synclabs: down_wela, up_wela,
 	    down_d_inta, up_d_inta,
 		qUp;
-initially init_abs_net27;
 
 loc  init_abs_net27 : while True wait {}
 	 when True sync up_d_inta goto A_abs_net27;
@@ -133,9 +132,6 @@ automaton f2_wela		-- wela <= net45a or net13a
 synclabs: up_net45a, down_net45a,
       up_net13a, down_net13a,
       up_wela, down_wela;
-
-
-initially e_01_1_wela;
 
 loc  e_00_0_wela : while True wait {}
 	 when True sync up_net45a  do {x_wela'=0} goto e_01_X_wela;
@@ -193,7 +189,6 @@ automaton not_net13a
 --****************************************************--
 synclabs: down_ck, up_ck,
  down_net13a, up_net13a;
-initially init_not_net13a;
 
 loc  init_not_net13a : while True wait {}
 	 when True sync up_ck do {x_net13a'=0} goto A_not_net13a;
@@ -219,7 +214,6 @@ automaton reg_net45
 synclabs: down_wen_h, up_wen_h,			-- inputs  (data)
 	  down_en_latchwen, up_en_latchwen,	-- inputs (enable)
 	  down_net45a, up_net45a ;		-- outputs
-initially e0d1_U_reg_net45;
 
 loc e0d0_U_reg_net45: while True wait {}
    		     	when True sync down_en_latchwen do {} goto e0d0_U_reg_net45;
@@ -269,7 +263,6 @@ automaton reg_d_int
 synclabs: down_d_h, up_d_h,			-- inputs  (data)
 	  down_en_latchd, up_en_latchd,		-- inputs (enable)
 	  down_d_inta, up_d_inta ;		-- outputs
-initially e0d0_U_reg_d_int;
 
 loc e0d0_U_reg_d_int: while True wait {}
     		     	when True sync down_en_latchd do {} goto e0d0_U_reg_d_int;
@@ -316,7 +309,6 @@ automaton not_en_latchd
 --****************************************************--
 synclabs: down_ck, up_ck,
  down_en_latchd, up_en_latchd;
-initially init_not_en_latchd;
 
 loc  init_not_en_latchd : while True wait {}
 	 when True sync up_ck do {x_en_latchd'=0} goto A_not_en_latchd;
@@ -339,7 +331,6 @@ automaton not_en_latchwen
 --****************************************************--
 synclabs: down_ck, up_ck,
  down_en_latchwen, up_en_latchwen;
-initially init_not_en_latchwen;
 
 loc  init_not_en_latchwen : while True wait {}
 	 when True sync up_ck do {x_en_latchwen'=0} goto A_not_en_latchwen;
@@ -361,7 +352,6 @@ automaton retard_wen_h
 --****************************************************--
 synclabs: down_wen, up_wen,
  down_wen_h, up_wen_h;
-initially init_ret_wen_h;
 
 loc  init_ret_wen_h : while True wait {}
 	 when True sync up_wen do {x_wen_h'=0} goto A_ret_wen_h;
@@ -385,9 +375,6 @@ automaton retard_d_h
 synclabs: down_d_0, up_d_0,
  down_d_h, up_d_h;
 
-
-initially init_ret_d_h;
-
 loc  init_ret_d_h : while True wait {}
 	 when True sync up_d_0 do {x_d_h'=0} goto A_ret_d_h;
 	 when True sync down_d_0 do {x_d_h'=0} goto B_ret_d_h;
@@ -407,7 +394,6 @@ automaton env
 --****************************************************--
 synclabs: up_d_0, down_d_0, up_wen, down_wen,
 	  down_ck, up_ck;
-initially init_env;
 
 loc init_env : while s <= tHI + tLO - tsetupd wait {}
 	 when s = tHI + tLO - tsetupd sync up_d_0 goto env1;
@@ -440,7 +426,6 @@ end -- env
 automaton observer
 --****************************************************--
 synclabs: qUp, CHECKED_______GOOD, CHECKED_______BAD, CHECKED_______TOO_LATE ;
-initially waiting;
 
 loc waiting : while True wait {}
 -- 	when s < 2 tHI + tLO sync up_d_inta do {} goto waiting;

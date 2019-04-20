@@ -160,11 +160,5 @@ init := True
 	& T >= 0
 ;
 
-(* property := unreachable loc[obs] = violation; *)
-
-(* property := unreachable loc[researcher] = mad or loc[machine] = cdone & nb_sugar < 3; *)
-
-property := unreachable loc[proc1] = L6 & count > 1 or loc[proc2] = L6 & count > 1 or loc[proc1] = CS7 & count > 1 or loc[proc2] = CS7 & count > 1;
-
 
 end
