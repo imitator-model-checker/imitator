@@ -191,6 +191,8 @@ class algoNDFS =
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names aconstr
 				^ " state: "
 				^ (StateSpace.string_of_state_index astate));
+			print_message Verbose_high ("Compared (bigger?) contraint : \n"
+				^ LinearConstraint.string_of_p_linear_constraint model.variable_names aconstraint);
 			LinearConstraint.p_is_leq aconstr aconstraint
 		in
 
