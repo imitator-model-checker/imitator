@@ -338,7 +338,7 @@ class algoNDFS =
                 		so there is no need to process them.
                 		However, the state must be marked blue and removed from cyan in the blue dfs *)
                 if (found) then 
-                	cyclefound cyclestate
+                	cyclefound thestate cyclestate
                 else (process_sucs successors;
  					postdfs thestate)
 			))
@@ -370,7 +370,7 @@ class algoNDFS =
 								(List.mem suc_id !cyan)) thesuccessors), true)
 					with Not_found -> init_state_index, false
 				in
-				let cyclefound (astate : State.state_index) : unit =
+				let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 					print_highlighted_message Shell_bold Verbose_standard
 						("Cycle found at state " ^ (string_of_int astate));
 					print_message Verbose_standard
@@ -402,7 +402,7 @@ class algoNDFS =
 						let lookahead (thesuccessors : State.state_index list) :
 							State.state_index * bool = 
 							init_state_index, false in
-						let cyclefound (astate : State.state_index) : unit =
+						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 							print_highlighted_message Shell_bold Verbose_standard
 								("Cycle found at state " ^ (string_of_int astate));
 							print_message Verbose_standard
@@ -419,7 +419,7 @@ class algoNDFS =
 						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 							if (List.mem astate !cyan) then true else false in
 						let alternativedfs (astate : State.state_index) : unit =
-							cyclefound astate
+							cyclefound astate astate
 						in
 						let testrecursivedfs (astate : State.state_index) : bool =
 							if (not (List.mem astate !red)) then true else false in
@@ -456,7 +456,7 @@ class algoNDFS =
 								(List.mem suc_id !cyan)) thesuccessors), true)
 					with Not_found -> init_state_index, false
 				in
-				let cyclefound (astate : State.state_index) : unit =
+				let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 					print_highlighted_message Shell_bold Verbose_standard
 						("Cycle found at state " ^ (string_of_int astate));
 					print_message Verbose_standard
@@ -489,7 +489,7 @@ class algoNDFS =
 						let lookahead (thesuccessors : State.state_index list) :
 							State.state_index * bool = 
 							init_state_index, false in
-						let cyclefound (astate : State.state_index) : unit =
+						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 							print_highlighted_message Shell_bold Verbose_standard
 								("Cycle found at state " ^ (string_of_int astate));
 							print_message Verbose_standard
@@ -507,7 +507,7 @@ class algoNDFS =
 						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 							if (subsumesset astate !cyan) then true else false in
 						let alternativedfs (astate : State.state_index) : unit =
-							cyclefound astate
+							cyclefound astate astate
 						in
 						let testrecursivedfs (astate : State.state_index) : bool =
 							if (not (setsubsumes !red astate)) then true else false in
@@ -555,7 +555,7 @@ class algoNDFS =
 										(List.mem suc_id !cyan)) thesuccessors), true)
 							with Not_found -> init_state_index, false
 						in
-						let cyclefound (astate : State.state_index) : unit =
+						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 							print_highlighted_message Shell_bold Verbose_standard
 								("Cycle found at state " ^ (string_of_int astate));
 							print_message Verbose_standard
@@ -589,7 +589,7 @@ class algoNDFS =
 								let lookahead (thesuccessors : State.state_index list) :
 									State.state_index * bool = 
 									init_state_index, false in
-								let cyclefound (astate : State.state_index) : unit =
+								let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 									print_highlighted_message Shell_bold Verbose_standard
 										("Cycle found at state " ^ (string_of_int astate));
 									print_message Verbose_standard
@@ -608,7 +608,7 @@ class algoNDFS =
 									if (subsumesset astate !cyan) then true
 									else false in
 								let alternativedfs (astate : State.state_index) : unit =
-									cyclefound astate
+									cyclefound astate astate
 								in
 								let testrecursivedfs (astate : State.state_index) : bool =
 									if (not (layersetsubsumes !red astate)) then true
@@ -655,7 +655,7 @@ class algoNDFS =
 								(List.mem suc_id !cyan)) thesuccessors), true)
 					with Not_found -> init_state_index, false
 				in
-				let cyclefound (astate : State.state_index) : unit =
+				let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 					print_highlighted_message Shell_bold Verbose_standard
 						("Cycle found at state " ^ (string_of_int astate));
 					print_message Verbose_standard
@@ -665,10 +665,12 @@ class algoNDFS =
 					print_projection Verbose_standard astate;
 					let state_loc, state_constr = StateSpace.get_state state_space astate in
 					constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
+					(* the state where the lookahead has found a cycle is now set blue *)
 					blue := astate::(!blue);
 					printqueue "Blue" !blue;
+					(* and the current state is popped from the cyan list *)
 					match !cyan with
-					| astate::body ->
+					| thestate::body ->
 						cyan := body;
 						printqueue "Cyan" !cyan;
 					| _ -> print_message Verbose_standard "Error popping from cyan";
@@ -684,7 +686,9 @@ class algoNDFS =
 				let testrecursivedfs (astate: State.state_index) : bool =
 					true in
 				let postdfs (astate: State.state_index) : unit =
-					if (State.is_accepting (StateSpace.get_state state_space astate)) then (
+					(* launch red dfs only if not backtracking on a state marked blue by a lookahead *)
+					if (not (List.mem astate !blue) &&
+							(State.is_accepting (StateSpace.get_state state_space astate))) then (
 						(* set up the dfs red calls *)
 						let enterdfs (astate: State.state_index) : bool =
 							true in
@@ -694,7 +698,7 @@ class algoNDFS =
 						let lookahead (thesuccessors : State.state_index list) :
 							State.state_index * bool = 
 							init_state_index, false in
-						let cyclefound (astate : State.state_index) : unit =
+						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 							print_highlighted_message Shell_bold Verbose_standard
 								("Cycle found at state " ^ (string_of_int astate));
 							print_message Verbose_standard
@@ -711,7 +715,7 @@ class algoNDFS =
 						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 							if (subsumesset astate !cyan) then true else false in
 						let alternativedfs (astate : State.state_index) : unit =
-							cyclefound astate
+							cyclefound astate astate
 						in
 						let testrecursivedfs (astate : State.state_index) : bool =
 							if (not (setsubsumes !red astate)) then true else false in
@@ -719,7 +723,7 @@ class algoNDFS =
 							() in					
 						rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
 					);
-					blue := astate::(!blue);
+					if (not (List.mem astate !blue)) then blue := astate::(!blue);
 					printqueue "Blue" !blue;
 					match !cyan with
 					| astate::body ->
@@ -731,6 +735,7 @@ class algoNDFS =
 					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
             | Exploration_syn_layer_NDFS_sub ->
+(* collecting NDFS with layers and subsumption *)
             	print_message Verbose_standard("Using the option synlayerNDFSsub");
 				(* set up the dfs blue calls *)
 				add_pending init_state_index;
@@ -765,7 +770,7 @@ class algoNDFS =
 										(List.mem suc_id !cyan)) thesuccessors), true)
 							with Not_found -> init_state_index, false
 						in
-						let cyclefound (astate : State.state_index) : unit =
+						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 							print_highlighted_message Shell_bold Verbose_standard
 								("Cycle found at state " ^ (string_of_int astate));
 							print_message Verbose_standard
@@ -775,10 +780,12 @@ class algoNDFS =
 							print_projection Verbose_standard astate;
 							let state_loc, state_constr = StateSpace.get_state state_space astate in
 							constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
+							(* the state where the lookahead has found a cycle is now set blue *)
 							blue := astate::(!blue);
 							printqueue "Blue" !blue;
+							(* and the current state is popped from the cyan list *)
 							match !cyan with
-							| astate::body ->
+							| thestate::body ->
 								cyan := body;
 								printqueue "Cyan" !cyan;
 							| _ -> print_message Verbose_standard "Error popping from cyan";
@@ -795,7 +802,9 @@ class algoNDFS =
 						let testrecursivedfs (astate: State.state_index) : bool =
 							true in
 						let postdfs (astate: State.state_index) : unit =
-							if (State.is_accepting (StateSpace.get_state state_space astate)) then (
+							(* launch red dfs only if not backtracking on a state marked blue by a lookahead *)
+							if (not (List.mem astate !blue) &&
+									(State.is_accepting (StateSpace.get_state state_space astate))) then (
 								(* set up the dfs red calls *)
 								let enterdfs (astate: State.state_index) : bool =
 									true in
@@ -805,7 +814,7 @@ class algoNDFS =
 								let lookahead (thesuccessors : State.state_index list) :
 									State.state_index * bool = 
 									init_state_index, false in
-								let cyclefound (astate : State.state_index) : unit =
+								let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 									print_highlighted_message Shell_bold Verbose_standard
 										("Cycle found at state " ^ (string_of_int astate));
 									print_message Verbose_standard
@@ -823,7 +832,7 @@ class algoNDFS =
 									if (subsumesset astate !cyan) then true
 									else false in
 								let alternativedfs (astate : State.state_index) : unit =
-									cyclefound astate
+									cyclefound astate astate
 								in
 								let testrecursivedfs (astate : State.state_index) : bool =
 									if (not (layersetsubsumes !red astate)) then true
@@ -832,7 +841,7 @@ class algoNDFS =
 									() in					
 								rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
 							);
-							blue := astate::(!blue);
+							if (not (List.mem astate !blue)) then blue := astate::(!blue);
 							printqueue "Blue" !blue;
 							match !cyan with
 							| astate::body ->
