@@ -257,25 +257,19 @@ class algoNDFS =
 
 		let setsubsumes setbig smallstate = 
 			(* Does an element of the set subsume smallstate? *)
-			let res = ref false in
-			List.iter (fun bigstate -> res := !res || (subsumes bigstate smallstate)) setbig;
-			!res
+			List.exists (fun bigstate -> (subsumes bigstate smallstate)) setbig
 		in
 
 		let subsumesset bigstate setsmall = 
 			(* Does bigstate subsume some element of the set? *)
-			let res = ref false in
-			List.iter (fun smallstate -> res := !res || (subsumes bigstate smallstate)) setsmall;
-			!res
+			List.exists (fun smallstate -> (subsumes bigstate smallstate)) setsmall
 		in
 
 		let layersetsubsumes setbig smallstate = 
 			(* Does an element of the set subsume smallstate and is in the same layer? *)
-			let res = ref false in
-			List.iter (fun bigstate -> res := !res ||
+			List.exists (fun bigstate -> 
 				((same_parameter_projection bigstate smallstate) && (subsumes bigstate smallstate))
-			) setbig;
-			!res
+			) setbig
 		in
 
 		(******************************************)
