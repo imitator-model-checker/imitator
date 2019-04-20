@@ -48,6 +48,7 @@ class algoNDFS =
 	(************************************************************)
 	(* Parameter valuations in all |P| dimensions for which the target is reached *)
 	val mutable constraint_valuations : LinearConstraint.p_nnconvex_constraint option = None
+	val mutable cyclecount = 0
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
@@ -658,8 +659,9 @@ class algoNDFS =
 					with Not_found -> init_state_index, false
 				in
 				let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
+					cyclecount <- cyclecount + 1;
 					print_highlighted_message Shell_bold Verbose_standard
-						("Cycle found at state " ^ (string_of_int astate));
+						("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
 					print_message Verbose_standard
 						(ModelPrinter.string_of_state model
 							(StateSpace.get_state state_space astate));
@@ -702,8 +704,9 @@ class algoNDFS =
 							State.state_index * bool = 
 							init_state_index, false in
 						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
+							cyclecount <- cyclecount + 1;
 							print_highlighted_message Shell_bold Verbose_standard
-								("Cycle found at state " ^ (string_of_int astate));
+								("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
 							print_message Verbose_standard
 								(ModelPrinter.string_of_state model
 									(StateSpace.get_state state_space astate));
@@ -774,8 +777,9 @@ class algoNDFS =
 							with Not_found -> init_state_index, false
 						in
 						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
+							cyclecount <- cyclecount + 1;
 							print_highlighted_message Shell_bold Verbose_standard
-								("Cycle found at state " ^ (string_of_int astate));
+								("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
 							print_message Verbose_standard
 								(ModelPrinter.string_of_state model
 									(StateSpace.get_state state_space astate));
@@ -819,8 +823,9 @@ class algoNDFS =
 									State.state_index * bool = 
 									init_state_index, false in
 								let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
+									cyclecount <- cyclecount + 1;
 									print_highlighted_message Shell_bold Verbose_standard
-										("Cycle found at state " ^ (string_of_int astate));
+										("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
 									print_message Verbose_standard
 										(ModelPrinter.string_of_state model
 											(StateSpace.get_state state_space astate));
