@@ -686,8 +686,9 @@ class algoNDFS =
 				let testrecursivedfs (astate: State.state_index) : bool =
 					true in
 				let postdfs (astate: State.state_index) : unit =
-					(* launch red dfs only if not backtracking on a state marked blue by a lookahead *)
-					if (not (List.mem astate !blue) &&
+					(* launch red dfs only if not with a smmaller constraint than a state marked by a lookahead*)
+					if ((not (List.exists (fun aconstraint ->
+								smaller_parameter_constraint astate aconstraint) !constraint_list)) &&
 							(State.is_accepting (StateSpace.get_state state_space astate))) then (
 						(* set up the dfs red calls *)
 						let enterdfs (astate: State.state_index) : bool =
@@ -802,8 +803,9 @@ class algoNDFS =
 						let testrecursivedfs (astate: State.state_index) : bool =
 							true in
 						let postdfs (astate: State.state_index) : unit =
-							(* launch red dfs only if not backtracking on a state marked blue by a lookahead *)
-							if (not (List.mem astate !blue) &&
+							(* launch red dfs only if not with a smmaller constraint than a state marked by a lookahead*)
+							if ((not (List.exists (fun aconstraint ->
+										smaller_parameter_constraint astate aconstraint) !constraint_list)) &&
 									(State.is_accepting (StateSpace.get_state state_space astate))) then (
 								(* set up the dfs red calls *)
 								let enterdfs (astate: State.state_index) : bool =
