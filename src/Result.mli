@@ -101,6 +101,8 @@ type good_or_bad_constraint =
 	| Bad_constraint of constraint_and_soundness
 	(* Both good and bad valuations *)
 	| Good_bad_constraint of good_and_bad_constraint
+	(* result of NDFS *)
+	| Accepting_cycle_constraint of constraint_and_soundness
 
 
 (************************************************************)

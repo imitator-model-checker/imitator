@@ -46,9 +46,10 @@ class algoNDFS =
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	(* Parameter valuations in all |P| dimensions for which the target is reached *)
 	val mutable constraint_valuations : LinearConstraint.p_nnconvex_constraint option = None
-	val mutable cyclecount = 0
+		(* for the evaluation of the synthesis result *)
+	val mutable cyclecount = 0 (* counter for the cycles found *)
+	val mutable processed_blue = 0 (* number of states processed by a blue dfs *)
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
@@ -117,6 +118,10 @@ class algoNDFS =
 		let blue = ref [] in
 		let red = ref [] in
 		let pending = ref [] in (* used in the layered algorithms *)
+
+		(**************************************)
+		(* variable for the synthesis results *)
+		(**************************************)
 		let constraint_list = ref [] in (* list of results found *)
 
 		(***********************)
@@ -383,6 +388,7 @@ class algoNDFS =
 				let enterdfs (astate : State.state_index) : bool =
 					true in
 				let predfs (astate : State.state_index) : unit =
+					processed_blue <- processed_blue + 1;
 					cyan := astate::(!cyan);
 					printqueue "Cyan" !cyan;
 					self#post_from_one_state astate;
@@ -459,6 +465,7 @@ class algoNDFS =
 				let enterdfs (astate : State.state_index) : bool =
 					true in
 				let predfs (astate : State.state_index) : unit =
+					processed_blue <- processed_blue + 1;
 					cyan := astate::(!cyan);
 					printqueue "Cyan" !cyan;
 					self#post_from_one_state astate;
@@ -548,6 +555,7 @@ class algoNDFS =
 						let enterdfs (astate : State.state_index) : bool =
 							true in
 						let predfs (astate : State.state_index) : unit =
+							processed_blue <- processed_blue + 1;
 							cyan := astate::(!cyan);
 							printqueue "Cyan" !cyan;
 							self#post_from_one_state astate;
@@ -638,6 +646,7 @@ class algoNDFS =
 					) else true
 				in
 				let predfs (astate : State.state_index) : unit =
+					processed_blue <- processed_blue + 1;
 					cyan := astate::(!cyan);
 					printqueue "Cyan" !cyan;
 					self#post_from_one_state astate;
@@ -746,6 +755,7 @@ class algoNDFS =
 							) else true
 						in
 						let predfs (astate : State.state_index) : unit =
+							processed_blue <- processed_blue + 1;
 							cyan := astate::(!cyan);
 							printqueue "Cyan" !cyan;
 							self#post_from_one_state astate;
@@ -939,11 +949,14 @@ class algoNDFS =
 			"State space exploration completed " ^ (after_seconds ()) ^ "."
 		);
 
+		let nb_states = StateSpace.nb_states state_space in
+		print_message Verbose_standard ("Number of computed states: " ^ (string_of_int nb_states));
+		print_message Verbose_standard ("Number of processed states: " ^ (string_of_int processed_blue));
+
 		let constr_result = match constraint_valuations with
 				| None -> LinearConstraint.false_p_nnconvex_constraint()
 				| Some constr -> constr
 		in
-		(* Distributed_worker_result *)
 
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
@@ -951,7 +964,7 @@ class algoNDFS =
 			| Some status -> status
 		in
 
-		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
+		let soundness = if termination_status = Target_found then Constraint_exact else Constraint_maybe_under in
 
 		let constr_result = match constraint_valuations with
 				| None -> LinearConstraint.false_p_nnconvex_constraint()
@@ -961,7 +974,7 @@ class algoNDFS =
 		(* Return result *)
 		Single_synthesis_result
 		{
-			result = Good_constraint (constr_result, soundness);
+			result = Accepting_cycle_constraint (constr_result, soundness);
 			(*result = Good_constraint (LinearConstraint.false_p_nnconvex_constraint(), soundness);*)
 
 			(* Explored state space *)
