@@ -29,7 +29,6 @@ var
   automaton train
 (************************************************************)
 synclabs: approach, inn, out, exit;
-initially train0;
 
 loc train0: while True wait {}
 	when True sync approach do {x' = 0} goto train1;
@@ -50,7 +49,6 @@ end (*train*)
   automaton gate
 (************************************************************)
 synclabs: lower, up, down, raise;
-initially gate0;
 
 (* Gate is open *)
 loc gate0: while True wait {}
@@ -74,7 +72,6 @@ end (*gate*)
   automaton controller
 (************************************************************)
 synclabs: approach, lower, exit, raise;
-initially controller0;
 
 loc controller0: while True wait {}
 	when True sync approach do {z' = 0} goto controller1;

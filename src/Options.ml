@@ -190,8 +190,17 @@ class imitator_options =
 		(* Double inclusion mode *)
 		val mutable inclusion2 = ref false
 		
+		(* do not put accepting states at the head of successors list in NDFS *)
+		val mutable no_acceptfirst = ref false
+
 		(* No leq test of the new states wrt the computed constraint in EFsynth *)
 		val mutable no_leq_test_in_ef = false
+
+		(* do not use lookahead in NDFS *)
+		val mutable no_lookahead = ref false
+		
+		(* do not order the pending list with bigger zones first in NDFS synthesis *)
+		val mutable no_pending_ordered = ref false
 
 		(* do not use random values *)
 		val mutable no_random = ref false
@@ -305,7 +314,10 @@ class imitator_options =
 		method merge_heuristic = merge_heuristic
 		method model_input_file_name = model_input_file_name
 		method nb_args = nb_args
+		method no_acceptfirst = !no_acceptfirst
 		method no_leq_test_in_ef = no_leq_test_in_ef
+		method no_lookahead = !no_lookahead
+		method no_pending_ordered = !no_pending_ordered
 		method no_time_elapsing = !no_time_elapsing
 		method no_random = !no_random
 		method no_variable_autoremove = !no_variable_autoremove
@@ -787,8 +799,13 @@ class imitator_options =
         Default: 'inversemethod'.");
 				(*** NOTE: hidden option! 'shuffle' to cover all the points within v0 after shuffling the array. (Reason for hiding: only useful in the distributed cartography) ***)
 				(*** NOTE: hidden option! or 'randomseqXX' where XX is a number to iterate random calls to IM followed by a sequential check (e.g., randomseq5 or randomseq10000) (Reason for hiding: only useful in the distributed cartography) ***)
-		
+				("-no-acceptfirst", Set no_acceptfirst, "In NDFS, do not put accepting states at the head of the successors list. Default: false.");
+
 				("-no-inclusion-test-in-EF", Unit (fun () -> no_leq_test_in_ef <- true), " In EFsynth, no inclusion test of the new states constraints in the already computed constraint. Default: false.");
+
+				("-no-lookahead", Set no_lookahead, " In NDFS, no lookahead for finding successors closing an accepting cycle. Default: false.");
+
+				("-no-pending-ordered", Set no_pending_ordered, " In NDFS synthesis, do not order the pending queue with larger zones first. Default: false.");
 
 				("-no-random", Set no_random, " In IM, no random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 
@@ -1331,6 +1348,23 @@ end;
 				print_message Verbose_standard ("Auto-detection mode for sync actions.")
 			else
 				print_message Verbose_medium ("No auto-detection mode for sync actions (default).");
+
+			(*** TODO: check that only in NDFS mode ***)
+			if !no_acceptfirst then
+				print_message Verbose_standard ("Not reordering successors (accepting states first) in NDFS search.")
+			else
+				print_message Verbose_medium ("Reordering successors (accepting states first) in NDFS (default).");
+
+			if !no_lookahead then
+				print_message Verbose_standard ("No lookahead in NDFS search.")
+			else
+				print_message Verbose_medium ("Lookahead for succesors closing accepting cycles in NDFS (default).");
+
+			if !no_pending_ordered then
+				print_message Verbose_standard ("No ordering of pending list with larger zones first in NDFS synthesis.")
+			else
+				print_message Verbose_medium ("Ordering pending list with larger zones first in NDFS synthesis (default).");
+
 
 			(*** TODO: check that only in IM/BC mode ***)
 			if !no_random then

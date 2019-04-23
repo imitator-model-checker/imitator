@@ -122,27 +122,29 @@ class algoNDFS =
 		(***********************)
 		(* printing the queues *)
 		(***********************)
-	    let printqueue colour thequeue =
+		let printqueue colour thequeue =
 			let rec r_printqueue thequeue = match thequeue with
 				| [] -> "";
 				| state_index::body  ->
 					(string_of_int state_index) ^ " " ^ (r_printqueue body);
 			in print_message Verbose_low("Queue " ^ colour ^ " : [ "
 					^ r_printqueue thequeue ^ "]")
-	    in
+		in
 
 		(***************************************)
 		(* put accepting states first in queue *)
 		(***************************************)
-	    let reorderqueue thequeue =
-	    	let newqueue = ref [] in
-	    	List.iter (fun astate ->
-	    		if (State.is_accepting (StateSpace.get_state state_space astate)) then (
-	    			newqueue := astate::(!newqueue);
-	    		) else (newqueue := (!newqueue)@[astate];)
-            ) thequeue;
-            (!newqueue)
-	    in
+		let reorderqueue thequeue =
+			if not options#no_acceptfirst then (
+				let newqueue = ref [] in
+				List.iter (fun astate ->
+					if (State.is_accepting (StateSpace.get_state state_space astate)) then (
+						newqueue := astate::(!newqueue);
+					) else (newqueue := (!newqueue)@[astate];)
+				) thequeue;
+				(!newqueue)
+			) else thequeue
+		in
 
 		(***************************************************)
 		(* Check equality of zone projection on parameters *)
@@ -198,42 +200,44 @@ class algoNDFS =
 		in
 
 		(*************************************)
-        (* Returns True if thequeue is empty *)
+		(* Returns True if thequeue is empty *)
 		(*************************************)
-        let queue_is_empty thequeue = match thequeue with
-            | [] -> true;
-            | _ -> false;
-        in
+		let queue_is_empty thequeue = match thequeue with
+			| [] -> true;
+			| _ -> false;
+		in
 
 		(************************************)
 		(* add a state to the pending queue *)
 		(************************************)
 		let add_pending astate =
-			(* standard queuing *)
-			(* pending := astate::(!pending); *)
-			(* add the state in the right place in the queue:
-				larger zones first *)
-			if (queue_is_empty !pending) then
-				pending := [astate]
+			if options#no_pending_ordered then
+				(* standard queuing *)
+				pending := astate::(!pending)
 			else (
-				let newpending = ref [] in
-				while not (queue_is_empty !pending) do
-					match (!pending) with
-						| first_state::body ->
-							if (smaller_parameter_projection first_state astate) then (
-								(* insert a state before the current state *)
-								newpending := (!newpending)@[astate];
-								newpending := (!newpending)@(!pending);
-								pending := [];
-							) else (
-								newpending := (!newpending)@[first_state];
-								pending := body;
-								if (queue_is_empty !pending) then
-									(* no more states to compare with *)
+				(* add the state in the right place in the queue:	larger zones first *)
+				if (queue_is_empty !pending) then
+					pending := [astate]
+				else (
+					let newpending = ref [] in
+					while not (queue_is_empty !pending) do
+						match (!pending) with
+							| first_state::body ->
+								if (smaller_parameter_projection first_state astate) then (
+									(* insert a state before the current state *)
 									newpending := (!newpending)@[astate];
-							)
-				done;
-				pending := !newpending;
+									newpending := (!newpending)@(!pending);
+									pending := [];
+								) else (
+									newpending := (!newpending)@[first_state];
+									pending := body;
+									if (queue_is_empty !pending) then
+										(* no more states to compare with *)
+										newpending := (!newpending)@[astate];
+								)
+					done;
+					pending := !newpending;
+				)
 			);
 			printqueue "Pending (state added)" !pending
 		in
@@ -278,23 +282,40 @@ class algoNDFS =
 		(******************************************)
 		(* printing zone projection on parameters *)
 		(******************************************)
-	    let print_projection verbose_level thestate =
+		let print_projection verbose_level thestate =
 			let state_loc, state_constr = StateSpace.get_state state_space thestate in
 			let constr = LinearConstraint.px_hide_nonparameters_and_collapse state_constr in
 			print_message verbose_level ("Projected contraint : \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr)
-	    in
+		in
+
+		(***********************************)
+		(* Function to perform a lookahead *)
+		(***********************************)
+		let withLookahead thesuccessors = 
+			if not options#no_lookahead then (
+				try ((List.find (fun suc_id ->
+					(State.is_accepting (StateSpace.get_state state_space suc_id)) &&
+				(List.mem suc_id !cyan)) thesuccessors), true)
+				with Not_found -> init_state_index, false
+			) else init_state_index, false
+		in
+
+		(*****************************)
+		(* Function for no lookahead *)
+		(*****************************)
+		let noLookahead thesuccessors = init_state_index, false in
 
 		(***************************)
 		(* General Scheme of a DFS *)
 		(***************************)
 		let rec rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs
 			testrecursivedfs postdfs thestate =
-            (* Check the termination condition *)
-            self#check_and_update_queue_dfs_limit;
+			(* Check the termination condition *)
+			self#check_and_update_queue_dfs_limit;
 			(* Update termination condition *)
 			begin
-            match limit_reached with
+			match limit_reached with
 			(*** NOTE: check None, as it may have been edited from outside, in which case it should not be Regular_termination ***)
 			| Keep_going when termination_status = None -> termination_status <- Some (Result.Regular_termination)
 			(*** NOTE: obliged to comment out the condition below, otherwise there is a compiling warning… ***)
@@ -333,17 +354,17 @@ class algoNDFS =
 								rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs suc_id)
 						);
 						process_sucs body;
-                in
-                let cyclestate, found = lookahead successors in
-                (* if the cycle is found:
-                	- in the standard version, an exception is raised and the algorithm terminates
-                	- in the collecting version, the other sucessors cannot lead to a better zone,
-                		so there is no need to process them.
-                		However, the state must be marked blue and removed from cyan in the blue dfs *)
-                if (found) then 
-                	cyclefound thestate cyclestate
-                else (process_sucs successors;
- 					postdfs thestate)
+				in
+				let cyclestate, found = lookahead successors in
+				(* if the cycle is found:
+					- in the standard version, an exception is raised and the algorithm terminates
+					- in the collecting version, the other sucessors cannot lead to a better zone,
+						so there is no need to process them.
+						However, the state must be marked blue and removed from cyan in the blue dfs *)
+				if (found) then 
+					cyclefound thestate cyclestate
+				else (process_sucs successors;
+					postdfs thestate)
 			))
 		in
 
@@ -353,9 +374,9 @@ class algoNDFS =
 
 		print_message Verbose_standard("---------------- Starting exploration ----------------");
  
-        begin
-        match options#exploration_order with
-            | Exploration_NDFS -> 
+		begin
+		match options#exploration_order with
+			| Exploration_NDFS -> 
 (* Classical NDFS exploration *)
 				print_message Verbose_standard("Using the option NDFS");
 				(* set up the dfs blue calls *)
@@ -366,13 +387,6 @@ class algoNDFS =
 					printqueue "Cyan" !cyan;
 					self#post_from_one_state astate;
 					() in
-				let lookahead (thesuccessors : State.state_index list) :
-					State.state_index * bool = 
-					try ((List.find (fun suc_id ->
-							(State.is_accepting (StateSpace.get_state state_space suc_id)) &&
-								(List.mem suc_id !cyan)) thesuccessors), true)
-					with Not_found -> init_state_index, false
-				in
 				let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 					print_highlighted_message Shell_bold Verbose_standard
 						("Cycle found at state " ^ (string_of_int astate));
@@ -402,9 +416,6 @@ class algoNDFS =
 						let predfs (astate : State.state_index) : unit =
 							red := astate::(!red);
 							printqueue "Red" !red in
-						let lookahead (thesuccessors : State.state_index list) :
-							State.state_index * bool = 
-							init_state_index, false in
 						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 							print_highlighted_message Shell_bold Verbose_standard
 								("Cycle found at state " ^ (string_of_int astate));
@@ -428,7 +439,7 @@ class algoNDFS =
 							if (not (List.mem astate !red)) then true else false in
 						let postdfs (astate : State.state_index) : unit =
 							() in					
-						rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
+						rundfs enterdfs predfs noLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
 					);
 					blue := astate::(!blue);
 					printqueue "Blue" !blue;
@@ -438,12 +449,12 @@ class algoNDFS =
 						printqueue "Cyan" !cyan;
 					| _ -> print_message Verbose_standard "Error popping from cyan";
 					() in
-				(try (rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index;)
+				(try (rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index;)
 					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
-            | Exploration_NDFS_sub ->
+			| Exploration_NDFS_sub ->
 (* NDFS with subsumption *)
-            	print_message Verbose_standard("Using the option NDFSsub");
+				print_message Verbose_standard("Using the option NDFSsub");
 				(* set up the dfs blue calls *)
 				let enterdfs (astate : State.state_index) : bool =
 					true in
@@ -452,13 +463,6 @@ class algoNDFS =
 					printqueue "Cyan" !cyan;
 					self#post_from_one_state astate;
 					() in
-				let lookahead (thesuccessors : State.state_index list) :
-					State.state_index * bool = 
-					try ((List.find (fun suc_id ->
-							(State.is_accepting (StateSpace.get_state state_space suc_id)) &&
-								(List.mem suc_id !cyan)) thesuccessors), true)
-					with Not_found -> init_state_index, false
-				in
 				let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 					print_highlighted_message Shell_bold Verbose_standard
 						("Cycle found at state " ^ (string_of_int astate));
@@ -489,9 +493,6 @@ class algoNDFS =
 						let predfs (astate: State.state_index) : unit =
 							red := astate::(!red);
 							printqueue "Red" !red in
-						let lookahead (thesuccessors : State.state_index list) :
-							State.state_index * bool = 
-							init_state_index, false in
 						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 							print_highlighted_message Shell_bold Verbose_standard
 								("Cycle found at state " ^ (string_of_int astate));
@@ -516,7 +517,7 @@ class algoNDFS =
 							if (not (setsubsumes !red astate)) then true else false in
 						let postdfs (astate : State.state_index) : unit =
 							() in					
-						rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
+						rundfs enterdfs predfs noLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
 					);
 					blue := astate::(!blue);
 					printqueue "Blue" !blue;
@@ -526,12 +527,12 @@ class algoNDFS =
 						printqueue "Cyan" !cyan;
 					| _ -> print_message Verbose_standard "Error popping from cyan";
 					() in
-				(try (rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index;)
+				(try (rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index;)
 					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
-            | Exploration_layer_NDFS_sub ->
+			| Exploration_layer_NDFS_sub ->
 (* NDFS with subsumption and layers *)
-            	print_message Verbose_standard("Using the option layerNDFSsub");
+				print_message Verbose_standard("Using the option layerNDFSsub");
 				(* set up the dfs blue calls *)
 				add_pending init_state_index;
 				(try (while !pending != [] do
@@ -551,13 +552,6 @@ class algoNDFS =
 							printqueue "Cyan" !cyan;
 							self#post_from_one_state astate;
 							() in
-						let lookahead (thesuccessors : State.state_index list) :
-							State.state_index * bool = 
-							try ((List.find (fun suc_id ->
-									(State.is_accepting (StateSpace.get_state state_space suc_id)) &&
-										(List.mem suc_id !cyan)) thesuccessors), true)
-							with Not_found -> init_state_index, false
-						in
 						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 							print_highlighted_message Shell_bold Verbose_standard
 								("Cycle found at state " ^ (string_of_int astate));
@@ -589,9 +583,6 @@ class algoNDFS =
 								let predfs (astate: State.state_index) : unit =
 									red := astate::(!red);
 									printqueue "Red" !red in
-								let lookahead (thesuccessors : State.state_index list) :
-									State.state_index * bool = 
-									init_state_index, false in
 								let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 									print_highlighted_message Shell_bold Verbose_standard
 										("Cycle found at state " ^ (string_of_int astate));
@@ -618,7 +609,7 @@ class algoNDFS =
 									else false in
 								let postdfs (astate : State.state_index) : unit =
 									() in					
-								rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
+								rundfs enterdfs predfs noLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
 							);
 							blue := astate::(!blue);
 							printqueue "Blue" !blue;
@@ -628,14 +619,14 @@ class algoNDFS =
 								printqueue "Cyan" !cyan;
 							| _ -> print_message Verbose_standard "Error popping from cyan";
 							() in
-						rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate;
+						rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate;
 						end;
 				done;)
 							with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
-            | Exploration_syn_NDFS_sub ->
+			| Exploration_syn_NDFS_sub ->
 (* collecting NDFS with subsumption *)
-            	print_message Verbose_standard("Using the option synNDFSsub");
+				print_message Verbose_standard("Using the option synNDFSsub");
 				(* set up the dfs blue calls *)
 				let enterdfs (astate : State.state_index) : bool =
 					if (List.exists (fun aconstraint ->
@@ -651,13 +642,6 @@ class algoNDFS =
 					printqueue "Cyan" !cyan;
 					self#post_from_one_state astate;
 					() in
-				let lookahead (thesuccessors : State.state_index list) :
-					State.state_index * bool = 
-					try ((List.find (fun suc_id ->
-							(State.is_accepting (StateSpace.get_state state_space suc_id)) &&
-								(List.mem suc_id !cyan)) thesuccessors), true)
-					with Not_found -> init_state_index, false
-				in
 				let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 					cyclecount <- cyclecount + 1;
 					print_highlighted_message Shell_bold Verbose_standard
@@ -700,9 +684,6 @@ class algoNDFS =
 						let predfs (astate: State.state_index) : unit =
 							red := astate::(!red);
 							printqueue "Red" !red in
-						let lookahead (thesuccessors : State.state_index list) :
-							State.state_index * bool = 
-							init_state_index, false in
 						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 							cyclecount <- cyclecount + 1;
 							print_highlighted_message Shell_bold Verbose_standard
@@ -727,7 +708,7 @@ class algoNDFS =
 							if (not (setsubsumes !red astate)) then true else false in
 						let postdfs (astate : State.state_index) : unit =
 							() in					
-						rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
+						rundfs enterdfs predfs noLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
 					);
 					if (not (List.mem astate !blue)) then blue := astate::(!blue);
 					printqueue "Blue" !blue;
@@ -737,12 +718,12 @@ class algoNDFS =
 						printqueue "Cyan" !cyan;
 					| _ -> print_message Verbose_standard "Error popping from cyan";
 					() in
-				(try (rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index;)
+				(try (rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index;)
 					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
-            | Exploration_syn_layer_NDFS_sub ->
+			| Exploration_syn_layer_NDFS_sub ->
 (* collecting NDFS with layers and subsumption *)
-            	print_message Verbose_standard("Using the option synlayerNDFSsub");
+				print_message Verbose_standard("Using the option synlayerNDFSsub");
 				(* set up the dfs blue calls *)
 				add_pending init_state_index;
 				(try (while !pending != [] do
@@ -769,13 +750,6 @@ class algoNDFS =
 							printqueue "Cyan" !cyan;
 							self#post_from_one_state astate;
 							() in
-						let lookahead (thesuccessors : State.state_index list) :
-							State.state_index * bool = 
-							try ((List.find (fun suc_id ->
-									(State.is_accepting (StateSpace.get_state state_space suc_id)) &&
-										(List.mem suc_id !cyan)) thesuccessors), true)
-							with Not_found -> init_state_index, false
-						in
 						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 							cyclecount <- cyclecount + 1;
 							print_highlighted_message Shell_bold Verbose_standard
@@ -819,9 +793,6 @@ class algoNDFS =
 								let predfs (astate: State.state_index) : unit =
 									red := astate::(!red);
 									printqueue "Red" !red in
-								let lookahead (thesuccessors : State.state_index list) :
-									State.state_index * bool = 
-									init_state_index, false in
 								let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 									cyclecount <- cyclecount + 1;
 									print_highlighted_message Shell_bold Verbose_standard
@@ -848,7 +819,7 @@ class algoNDFS =
 									else false in
 								let postdfs (astate : State.state_index) : unit =
 									() in					
-								rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
+								rundfs enterdfs predfs noLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate
 							);
 							if (not (List.mem astate !blue)) then blue := astate::(!blue);
 							printqueue "Blue" !blue;
@@ -858,16 +829,16 @@ class algoNDFS =
 								printqueue "Cyan" !cyan;
 							| _ -> print_message Verbose_standard "Error popping from cyan";
 							() in
-						rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate;
+						rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate;
 						end;
 				done;)
 							with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
-            | Exploration_syn_mixed_NDFS -> print_message Verbose_standard("Using the option synMixedNDFS")
-            | _ -> raise (InternalError ("Unknown variant of NDFS"))
-        end;
+			| Exploration_syn_mixed_NDFS -> print_message Verbose_standard("Using the option synMixedNDFS --- Not implemented yet")
+			| _ -> raise (InternalError ("Unknown variant of NDFS"))
+		end;
 
-        (* combine the linear constraints *)
+		(* combine the linear constraints *)
 		constraint_valuations <- Some (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list);
 
 		print_message Verbose_standard("---------------- Ending exploration ------------------");
