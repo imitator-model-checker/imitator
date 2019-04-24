@@ -166,7 +166,7 @@ class imitator_options =
 		(* Check whether the accumulated constraint is restricted to pi0 *)
 		val mutable check_point = ref false
 		
-		(* Limit the depth in a BFS algorithm *)
+		(* Limit the depth in a BFS algorithm or in NDFS for early backtracking *)
 		val mutable depth_limit = ref None
 		
 		(* Distributed version of IMITATOR *)
