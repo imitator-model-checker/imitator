@@ -7,9 +7,9 @@
  *
  * Module description: Description of the symbolic states and of the state space
  *
- * File contributors : Ulrich Kühne, Étienne André
+ * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2018/05/30
+ * Last modified     : 2019/04/15
  *
  ************************************************************)
 
@@ -645,7 +645,7 @@ let get_resets state_space state_index action_index state_index' =
 					print_warning ("Non-deterministic PTA! Selecting an edge arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
 
 					(* Take arbitrarily the first element *)
-					let _,updates,_ = List.nth transitions 0 in updates.clock (*HERE*)
+					let _,updates,_ = List.nth transitions 0 in updates.clock
 				)
 
 		(* Otherwise, if the source and target locations differ: necessarily a transition with this action *)

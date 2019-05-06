@@ -7,9 +7,9 @@
  *
  * Module description: Parser for the input model
  *
- * File contributors : Étienne André
+ * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/09/07
- * Last modified     : 2018/09/06
+ * Last modified     : 2019/04/15
  *
  ************************************************************/
 
@@ -322,6 +322,8 @@ update:
 	| NAME OP_ASSIGN arithmetic_expression { ($1, $3) }
 ;
 
+/** List containing only normal updates.
+		NOTE: it is used to avoid nested conditional updates */
 normal_update_list:
 	update COMMA normal_update_list { $1 :: $3}
 	| update { [$1]}

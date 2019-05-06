@@ -7,9 +7,9 @@
  *
  * Module description: Convert an IMITATOR model to a .jpg file generated thanks to the dot utility
  *
- * File contributors : Étienne André
+ * File contributors : Étienne André, Jaime Arias
  * Created           : 2012/08/24
- * Last modified     : 2018/08/20
+ * Last modified     : 2019/04/15
  *
  ************************************************************)
 
@@ -62,6 +62,7 @@ let string_of_sync model action_index =
 	| Action_type_nosync -> ""
 
 
+(** Convert clock updates into a string *)
 let string_of_clock_updates model clock_updates =
 	let sep = "\\n" in
 	let wrap_reset variable_index =  (model.variable_names variable_index) ^ " := 0" in
@@ -70,7 +71,7 @@ let string_of_clock_updates model clock_updates =
 			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term) in
 	ModelPrinter.string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
 
-(* Convert a list of updates into a string *)
+(* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates model discrete_updates =
 	ModelPrinter.string_of_discrete_updates ~sep:"\\n" model discrete_updates
 

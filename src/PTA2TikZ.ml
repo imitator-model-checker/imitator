@@ -6,8 +6,9 @@
  *
  * Author:        Etienne Andre
  *
- * Created:       2015/03/24
- * Last modified: 2017/06/25
+ * File contributors : Jaime Arias
+ * Created           : 2015/03/24
+ * Last modified     : 2019/04/15
  *
  ****************************************************************)
 
@@ -80,6 +81,7 @@ let string_of_sync model action_index =
 	| Action_type_nosync -> ""
 
 
+(** Convert clock updates into a string *)
 let string_of_clock_updates model clock_updates =
 	let sep = "\\n" in
 	let wrap_reset variable_index =  "\n\t\t & $" ^ (variable_names_with_style variable_index) ^ ":=0$\\\\" in
@@ -89,7 +91,7 @@ let string_of_clock_updates model clock_updates =
 			^ (LinearConstraint.string_of_pxd_linear_term variable_names_with_style linear_term)^"$\\\\% " in
 	ModelPrinter.string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
 
-(* Convert a list of updates into a string *)
+(* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates model updates =
 	string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, arithmetic_expression) ->
 			"\n\t\t & $"
@@ -102,7 +104,7 @@ let string_of_discrete_updates model updates =
 			^ "$\\\\% "
 	) updates)
 
-
+(** Convert logical operators into a string *)
 let string_of_logical_operators lop =
 	let string_of_boolean_operations op =
 		match op with
@@ -121,6 +123,7 @@ let string_of_logical_operators lop =
 	| Or_bool _ -> " \\lor "
 	| Expression_bool (_, op, _)->  " " ^ (string_of_boolean_operations op) ^ " "
 
+(** Convert a boolean expression into a string *)
 let rec string_of_boolean variable_names boolean_expr =
 	ModelPrinter.string_of_boolean_template variable_names boolean_expr string_of_logical_operators
 

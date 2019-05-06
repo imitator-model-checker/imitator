@@ -98,7 +98,7 @@ This version of the protocol is neither the most complete, nor the most simple; 
 Fischer mutual exclusion protocol is a protocol that guarantees the mutual exclusion of several processes (here two) that want to access a shared resource (called the critical section).
 % We give below an example of a coffee machine interacting with a researching drinking coffee, given using the \imitator{} syntax.
 % 	% TODO: point to figure
-% 
+%
 % \IncludeIMIfile{../examples/Coffee/coffeeDrinker.imi}
 
 \paragraph{Input syntax}
@@ -122,7 +122,7 @@ Let us comment this case model by starting with the header.
 First, text in comments gives generalities about the model (author, date, description, etc.).
 The form is not normalized, but it could be in the future, so it is strongly advised to follow this form.\footnote{%
 	An empty model template with all these comments ready to be filled out (containing also a sample \IPTA{} and its initial definitions) is available at:
-	
+
 	\url{https://github.com/etienneandre/imitator/blob/master/benchmarks/model.imi}.
 }
 
@@ -725,12 +725,12 @@ The method implemented in \imitator{} is based on CUB-\IPTA{}, a syntactic subcl
 Two options are possible in \imitator{}:
 \begin{enumerate}
 	\item a partial method (but slightly faster) than first detects whether the input \NIPTA{} is already a CUB-PTA; if so, it applies non-Zeno checking on this CUB-PTA; otherwise, the returned constraint will be false.
-	
+
 	\styleCommand{\binimitator{} model.imi -mode NZCUBcheck -output-result}
 
-	
+
 	\item a complete method (though of course without guarantee of termination), that transforms the \NIPTA{} into a network of CUB-PTAs, and applies non-Zeno checking on the transformed CUB-PTA.
-	
+
 	\styleCommand{\binimitator{} model.imi -mode NZCUBtrans -output-result}
 
 \end{enumerate}
@@ -976,7 +976,7 @@ To generate the trace set (\ie{} the discretized state space) of a given computa
 \imitator{} will generate a file \stylePath{model-statespace.pdf}.
 States are made of two part: the left-hand number (\eg{} \styleFileContent{s\_0}) is the number of the symbolic state, which comes from \imitator{} internal representation (\styleFileContent{s\_0} is the first one to be generated, and so on); the right-hand part displays all the discrete part of the symbolic state vertically, that is the current location in each of the NIPTA in parallel, and the value of possible discrete variables (if any).
 Consider state \texttt{s\_1} in \cref{figure:traceset:normal} (and originating from the example in \cref{chapter:syntax-introduction}):
-	the current location of IPTA \styleFileContent{proc\_1} is \styleFileContent{active1}, 
+	the current location of IPTA \styleFileContent{proc\_1} is \styleFileContent{active1},
 	the current location of IPTA \styleFileContent{proc\_2} is \styleFileContent{idle2},
 	while
 	the current location of IPTA \styleFileContent{observer} is \styleFileContent{obs\_waiting}.
@@ -994,11 +994,11 @@ This option is mostly suitable for small trace sets.
 
 \begin{example}
 	An example of state space with no details (output using \styleOption{-output-trace-set-nodetails}), with normal details (using \styleOption{-output-trace-set}), and in verbose mode (using \styleOption{-output-trace-set-verbose}) are given in \cref{figure:traceset:nodetail,figure:traceset:normal,figure:traceset:verbose}.
-	
+
 	These graphics were generated using the example in \cref{chapter:syntax-introduction} with the following command:
-	
+
 	\styleCommand{imitator fischer.imi -mode EF -depth-limit 4 -output-trace-set}
-	
+
 	(where \styleOption{-output-trace-set} should be replaced with the proper option)
 \end{example}
 
@@ -1023,7 +1023,7 @@ This option is mostly suitable for small trace sets.
 		\caption{Verbose}
 		\label{figure:traceset:verbose}
 	\end{subfigure}
-	
+
 	\caption{Examples of graphical state space}
 \end{figure}
 
@@ -1312,7 +1312,7 @@ Note that this option is not implemented as nicely as it could be, and can hence
 % %------------------------------------------------------------
 % \paragraph{\styleOption{-completeIM} (default: false)}
 % %------------------------------------------------------------
-% 
+%
 % Returns a complete result for the inverse method for deterministic PTA, \ie{} returns a conjunction of negations of convex parameter constraints.
 % The result may result in a large list of such constraints, and may hence be complicated to interpret.
 
@@ -1367,7 +1367,7 @@ Dynamic elimination of clocks that are known to not used in the future of the cu
 % %------------------------------------------------------------
 % \paragraph{\styleOption{-fromGrML} (default: false)}
 % %------------------------------------------------------------
-% 
+%
 % Does not use the standard input syntax described here, but a GrML input syntax.
 % This is used when interfacing \imitator{} with the \CosyVerif{} platform~\cite{AHHKLLP13}.
 % Note that, in that case, not all syntactic features of \imitator{} are supported.
@@ -1425,46 +1425,46 @@ The mode for \imitator{}.
 \begin{tabular}{@{} l @{\ \ } l}
 	\styleOption{statespace} & Generation of the entire parametric state space \\
 	& (see \cref{ss:mode:statespace}) \\
-	
+
 	\styleOption{EF} & Parametric reachability synthesis (\EFsynth{} \cite{JLR15}) \\
 	& (see \cref{ss:mode:EFsynth}) \\
-	
+
 	\styleOption{EFmin} & Parametric minimization synthesis \\
 	& (see \cref{ss:mode:EFmin}) \\
-	
+
 	\styleOption{EFmax} & Parametric maximization synthesis \\
 	& (see \cref{ss:mode:EFmax}) \\
-	
+
 	\styleOption{EFsynthminpq} & Minimal-time reachability synthesis~\cite{ABPV19} \\
 	& (see \cref{ss:mode:EFopt}) \\
-	
+
 	\styleOption{PDFC} & Parametric deadlock-freeness checking (\PDFC{} \cite{Andre16}) \\
 	& (see \cref{ss:mode:PDFC}) \\
-	
+
 	\styleOption{LoopSynth} & cycle synthesis \\
 	& (see \cref{ss:mode:LoopSynth}) \\
-	
+
 	\styleOption{NZCUBcheck} & non-Zeno cycle synthesis (with CUB-detection) \\
 	& (see \cref{ss:mode:Zeno}) \\
-	
+
 	\styleOption{NZCUBtrans} & non-Zeno cycle synthesis (with CUB-transformation) \\
 	& (see \cref{ss:mode:Zeno}) \\
-	
+
 	\styleOption{inversemethod} & Inverse method \\
 	& (see \cref{ss:mode:IM}) \\
-	
+
 	\styleOption{PRP} & Parametric reachability preservation \\
 	& (see \cref{ss:mode:PRP}) \\
-	
+
 	\styleOption{PRPC} & Parametric reachability preservation cartography \\
 	& (see \cref{sss:mode:PRPC}) \\
-	
+
 	\styleOption{cover} & Behavioral cartography with full coverage \\
 	& (see \cref{ss:mode:BC}) \\
-	
+
 	\styleOption{randomXX} & Behavioral cartography with \styleOption{XX} iterations \\
 	& (see \cref{sss:mode:BC:random}) \\
-	
+
 	\styleOption{shuffle} & Behavioral cartography with full coverage,\\
 	& and points considered in a random manner \\
 	& (see \cref{sss:mode:BC:shuffle}) \\
@@ -1747,7 +1747,7 @@ Add a timing information to each shell output of the program.
 \paragraph{\styleOption{-tree} (default: false)}
 %------------------------------------------------------------
 Does not test if a new state was already encountered.
-To be set \emph{only} if the reachability graph is a tree with all states being different (otherwise analysis may loop). 
+To be set \emph{only} if the reachability graph is a tree with all states being different (otherwise analysis may loop).
 
 
 
@@ -1981,7 +1981,7 @@ We define each of those two components below.
 	$|$ & \emptystring \\
 \end{tabular}
 
-	
+
 %------------------------------------------------------------
 \regleGrammaire{transitions}
 %------------------------------------------------------------
@@ -2027,8 +2027,10 @@ We define each of those two components below.
 \regleGrammaire{update\_nonempty\_list}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{update} \styleIMI{,} \nt{update\_nonempty\_list} \\
+	\  & \nt{update} \styleIMI{,} \nt{update\_list} \\
+	$|$ & \nt{condition\_update} \styleIMI{,} \nt{update\_list} \\
 	$|$ & \nt{update} \\
+	$|$ & \nt{condition\_update} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2044,6 +2046,34 @@ We define each of those two components below.
 
 \smallskip
 
+%------------------------------------------------------------
+\regleGrammaire{normal\_update\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{update} \styleIMI{,} \nt{normal\_update\_list} \\
+	$|$ & \nt{update} \\
+	$|$ & \emptystring \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{conditon\_update}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \styleIMI{if} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \styleIMI{then} \nt{normal\_update\_list} \styleIMI{end} \\
+	$|$ & \styleIMI{if} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \styleIMI{then} \nt{normal\_update\_list} \styleIMI{else} \nt{normal\_update\_list} \styleIMI{end} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{boolean\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{True} \\
+	$|$ & \styleIMI{False} \\
+	$|$ & \styleIMI{<>} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \\
+	$|$ & \nt{boolean\_expression} \styleIMI{\&} \nt{boolean\_expression} \\
+	$|$ & \nt{boolean\_expression} \styleIMI{|} \nt{boolean\_expression} \\
+	$|$ & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
+\end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{syn\_label}
@@ -2398,7 +2428,7 @@ Again, arithmetic expressions (using integers and rationals) can even be used in
 \section{Reserved words}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The following words are reserved keywords and cannot be used as names for automata, variables, actions or locations. 
+The following words are reserved keywords and cannot be used as names for automata, variables, actions or locations.
 
 \styleIMI{always},
 \styleIMI{and},
@@ -2472,7 +2502,7 @@ We enumerate in the following what seems to us to be the ``most missing'' featur
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \section{Urgent Locations}
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 
+%
 % Urgent transitions are locations in which time cannot elapse, \ie{} there must be left immediately after being entered.
 % Whereas this feature is not natively implemented in \imitator{}, it can easily be simulated as follows:
 % to simulate an urgent location \styleIMI{l}, one can add an extra clock (say \styleIMI{x\_urgent}) initialized to 0 on any transition leading \styleIMI{l}; then, the invariant of \styleIMI{l} is \styleIMI{x\_urgent = 0}.
@@ -2683,4 +2713,3 @@ This user manual is available under the Creative Commons CC-BY-SA license.
 
 
 \end{document}
-

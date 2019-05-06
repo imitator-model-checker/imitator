@@ -7,9 +7,9 @@
  *
  * Module description: Convert a parsing structure into an abstract model
  *
- * File contributors : Étienne André
+ * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/09/09
- * Last modified     : 2018/09/12
+ * Last modified     : 2019/04/15
  *
  ************************************************************)
 
@@ -66,16 +66,17 @@ let saved_variables				= ref None
 (************************************************************)
 (************************************************************)
 
-(** Check if it's a normal update *)
+(** Checks if a update is a normal update *)
 let is_normal_update = function
   | Normal _ -> true
   | _ -> false
 
-(** Returns the value of the update *)
+(** Returns the value of a normal update *)
 let get_normal_update_value = function
   | Normal u -> u
   | _ -> assert false
 
+(** Returns the value of a conditonal update *)
 let get_conditional_update_value = function
   | Condition u -> u
   | _ -> assert false
@@ -2300,7 +2301,7 @@ let convert_normal_updates index_of_variables constants type_of_variables update
     discrete = discrete_updates;
     conditional = [] }
 
-(** Convert a boolean expression in its abstract model *)
+(** Convert a boolean operator in its abstract model *)
 let parsed_relop_to_boolean_op = function
   | OP_L -> BOOL_L
   | OP_LEQ -> BOOL_LEQ
@@ -2309,6 +2310,7 @@ let parsed_relop_to_boolean_op = function
   | OP_GEQ -> BOOL_GEQ
   | OP_G -> BOOL_G
 
+(** Convert a boolean expression in its abstract model *)
 let rec convert_bool_expr index_of_variables constants = function
   | True -> True_bool
   | False -> False_bool
@@ -2400,7 +2402,7 @@ let convert_transitions nb_actions index_of_variables constants removed_variable
               (* let parsed_clock_updates, parsed_discrete_updates = List.partition (is_clock_update index_of_variables only_resets) filtered_updates
                  				in *)
 
-              (* Split between the clock, discrete and conditional updates *)
+              (* translate parsed updates into their abstract model *)
               let converted_updates = convert_updates index_of_variables constants type_of_variables filtered_updates in
 
               (* Convert the updates *)

@@ -7,9 +7,9 @@
  *
  * Module description: Convert an abstract model to the input syntax of IMITATOR
  *
- * File contributors : Étienne André
+ * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2019/03/14
+ * Last modified     : 2019/04/15
  *
  ************************************************************)
 
@@ -144,10 +144,7 @@ let string_of_sync model action_index =
 	| Action_type_sync -> " sync " ^ (model.action_names action_index)
 	| Action_type_nosync -> " (* sync " ^ (model.action_names action_index) ^ "*) "
 
-
-
-
-
+(** generic template for converting clock updates into string *)
 let string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep =
 	match clock_updates with
 		| No_update -> ""
@@ -160,6 +157,7 @@ let string_of_clock_updates_template model clock_updates wrap_reset wrap_expr se
 				wrap_expr variable_index linear_term
 			) list_of_clocks_lt)
 
+(** Convert a clock update into a string *)
 let string_of_clock_updates model clock_updates =
 	let sep = ", " in
 	let wrap_reset variable_index =  (model.variable_names variable_index) ^ " := 0" in
@@ -226,7 +224,7 @@ let string_of_arithmetic_expression variable_names =
 
 
 
-(* Convert a list of updates into a string *)
+(* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates ?(sep=", ") model updates =
 	string_of_list_of_string_with_sep sep (List.map (fun (variable_index, arithmetic_expression) ->
 		(* Convert the variable name *)
@@ -237,7 +235,7 @@ let string_of_discrete_updates ?(sep=", ") model updates =
 	) updates)
 
 
-(** Convert a boolean operation into a string*)
+(** Convert a logical operation into a string *)
 let string_of_logical_operators lop =
 	let string_of_boolean_operations op =
 		match op with
@@ -256,7 +254,7 @@ let string_of_logical_operators lop =
 	| Or_bool _ -> " | "
 	| Expression_bool (_, op, _) -> " " ^ (string_of_boolean_operations op) ^ " "
 
-(** Convert a boolean expression into a string *)
+(** Generic template to convert a boolean expression into a string *)
 let rec string_of_boolean_template variable_names boolean_expr str_lop=
 	let symbol = str_lop boolean_expr in
 	match boolean_expr with
@@ -271,6 +269,7 @@ let rec string_of_boolean_template variable_names boolean_expr str_lop=
 																					^ symbol
 																					^ (string_of_arithmetic_expression variable_names expr2)
 
+(** Convert a boolean expression into a string *)
 let string_of_boolean variable_names boolean_expr =
 	string_of_boolean_template variable_names boolean_expr string_of_logical_operators
 
@@ -289,7 +288,7 @@ let separator_comma updates =
 	let second_separator = not (no_conditional_updates || (no_clock_updates_ && no_discrete_updates)) in
 	(first_separator, second_separator)
 
-(** Convert a list of conditional updates into a string *)
+(** Generic template to convert conditional updates into a string *)
 let string_of_conditional_updates_template model conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep =
 	string_of_list_of_string_with_sep sep (List.map (fun (boolean_expr, if_updates, else_updates) ->
 		let if_separator, _ = separator_comma if_updates in
@@ -310,6 +309,7 @@ let string_of_conditional_updates_template model conditional_updates string_of_c
 		^ wrap_end
 	) conditional_updates)
 
+(** Convert a list of conditional updates into a string *)
 let string_of_conditional_updates model conditional_updates =
 	let wrap_if boolean_expr  = "if (" ^ (string_of_boolean model.variable_names boolean_expr) ^  ") then " in
 	let wrap_else = " else " in

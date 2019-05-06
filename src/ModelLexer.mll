@@ -7,8 +7,9 @@
  *
  * Author:        Etienne Andre
  *
- * Created       : 2009/09/07
- * Last modified : 2018/02/23
+ * File contributors : Jaime Arias
+ * Created           : 2009/09/07
+ * Last modified     : 2019/04/15
 *****************************************************************)
 
 {
