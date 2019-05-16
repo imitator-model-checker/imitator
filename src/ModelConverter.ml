@@ -2348,10 +2348,16 @@ let convert_updates index_of_variables constants type_of_variables updates : upd
 (*------------------------------------------------------------*)
 (* Convert the transitions *)
 (*------------------------------------------------------------*)
-(* Convert the structure: 'automaton_index -> location_index -> list of (action_index, guard, resets, target_state)' into a structure: 'automaton_index -> location_index -> action_index -> list of (guard, resets, target_state)' *)
-let convert_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions : (((AbstractModel.transition list) array) array) array =
-  (* Create the empty array *)
+(* Convert the structure: 'automaton_index -> location_index -> list of (action_index, guard, resets, target_state)'
+	into a structure:
+	'automaton_index -> location_index -> action_index -> list of (transition_index)'
+	and creates a structure transition_index -> (guard, resets, target_state) *)
+let convert_transitions nb_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions : (((AbstractModel.transition list) array) array) array * (AbstractModel.transition array) =
+  (* Create the empty array of transitions automaton_index -> location_index -> action_index -> list of (transition_index) *)
   let array_of_transitions : (((AbstractModel.transition list) array) array) array = Array.make (Array.length transitions) (Array.make 0 (Array.make 0 [])) in
+  (* Create the empty array transition_index -> transition *)
+  let dummy_transition = True_guard , { clock = No_update; discrete = [] ; conditional = []} , -1 in
+  let transitions_description = Array.make nb_transitions dummy_transition in
 
   (* Iterate on automata *)
   Array.iteri (fun automaton_index transitions_for_this_automaton ->
@@ -2436,8 +2442,8 @@ let convert_transitions nb_actions index_of_variables constants removed_variable
         ) transitions_for_this_automaton;
     ) transitions;
 
-  (* Return transitions *)
-  array_of_transitions
+  (* Return transitions and the array transition_index -> transition *)
+  array_of_transitions, transitions_description
 
 
 
@@ -3084,7 +3090,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(*** TODO: integrate inside 'make_automata' (?) ***)
 
 	(* Convert transitions *)
-	let transitions = convert_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions in
+	let transitions, transitions_description = convert_transitions nb_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions in
 
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3592,7 +3598,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches = stopwatches;
 	(* An array transition_index -> transition *)
-(* 	edges = (*** TODO ***); *)
+(* 	transitions_description = (*** TODO ***); *)
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative = px_clocks_non_negative;

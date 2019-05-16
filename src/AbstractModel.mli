@@ -350,7 +350,7 @@ type abstract_model = {
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches : automaton_index -> location_index -> clock_index list;
 	(* An array transition_index -> transition *)
-(* 	edges : transition_index -> transition; *)
+(* 	transitions_description : transition_index -> transition; *)
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative: LinearConstraint.px_linear_constraint;
