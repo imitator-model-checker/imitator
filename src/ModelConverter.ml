@@ -3021,7 +3021,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Construct the automata *)
+	(* Construct the automata without the observer, and with the transitions in a non-finalized form *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_total ("*** Building automata…");
 	(* Get all the possible actions for every location of every automaton *)
@@ -3029,13 +3029,48 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 		make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions (*removed_variable_names *)removed_synclab_names parsed_automata (observer_automaton != None) in
 	let nb_actions = List.length actions in
 
-	(* Convert the transitions *)
 
-	(*** TODO: integrate inside 'make_automata' ***)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Get the observer information here *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	let observer_structure, nb_transitions_for_observer, correctness_condition, initial_observer_constraint =
+	match observer_automaton with
+	| None -> print_message Verbose_total ("*** (No observer)");
+		(* Still check the case of non-reachability user-defined property *)
+		begin
+		match property with
+			| Unreachable_locations unreachable_global_location_list -> None, 0, Some (Unreachable unreachable_global_location_list), None
+			| _ -> None, 0, None, None
+		end
+	| Some observer_id ->
+		print_message Verbose_low ("*** Generating the observer…");
+		(* Get the silent action index for the observer *)
+		let nosync_obs = match nosync_obs with
+			| Some nosync_obs -> nosync_obs
+			| None -> raise (InternalError ("An observer action should have been defined."))
+		in
+		(* Get the local clock for the observer *)
+		(*** WARNING: quite a HACK, here ***)
+		let clock_obs = nb_parameters + nb_clocks - 1 in
+		(* Get the info from the observer pattern *)
+		let observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions, initial_observer_constraint, correctness_condition =
+			ObserverPatterns.get_automaton nb_actions observer_id nosync_obs clock_obs property in
 
+		(* Return the structure and the correctness_condition *)
+		Some (observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions),
+		Array.length observer_transitions,
+		Some correctness_condition,
+		initial_observer_constraint
+	in
+
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Convert the transitions to their final form *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	
 	print_message Verbose_total ("*** Building transitions…");
 	(* Count the number of transitions *)
-	let nb_transitions =
+	let nb_transitions_without_observer =
 		(* Iterate on automata *)
 		Array.fold_left (fun nb_transitions_for_automata transitions_for_this_automaton ->
 			(* Iterate on locations *)
@@ -3044,10 +3079,46 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 			) nb_transitions_for_automata transitions_for_this_automaton
 		) 0 transitions
 	in
+	let nb_transitions = nb_transitions_without_observer + nb_transitions_for_observer in
+	
+	(*** TODO: integrate inside 'make_automata' (?) ***)
+
 	(* Convert transitions *)
 	let transitions = convert_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions in
 
 	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Add the observer structure to the automata *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	begin
+	match observer_automaton with
+	| None -> ()
+	| Some observer_id ->
+		(* Get the info from the observer pattern *)
+		begin
+		match observer_structure with
+		| None -> raise (InternalError ("No observer structure saved although it should have been set at that point"))
+		| Some (observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions) ->
+			(* Retrieve the number of locations of the observer *)
+			let nb_locations = Array.length observer_actions_per_location in
+			(* Update actions per automaton *)
+			actions_per_automaton.(observer_id) <- observer_actions;
+			(* Update actions per location *)
+			actions_per_location.(observer_id) <- observer_actions_per_location;
+			(* Update urgency *)
+			location_urgency.(observer_id) <- observer_location_urgency;
+			(* Update transitions *)
+			transitions.(observer_id) <- observer_transitions;
+			(* Update invariants *)
+			invariants.(observer_id) <- observer_invariants;
+			(* Update costs (no costs in observers) *)
+			costs.(observer_id) <- Array.make nb_locations None;
+		end;
+	end;
+	
+	(*** TODO : perform init for observer (location) ***)
+
+	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Handle the observer here *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3091,11 +3162,9 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 		(* Set the correctness_condition *)
 		Some correctness_condition, initial_observer_constraint
 	in
+*)
 
 
-
-
-	(*** TODO : perform init for observer (location) ***)
 
 
 
