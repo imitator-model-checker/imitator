@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/04/15
+ * Last modified     : 2019/05/16
  *
  ************************************************************)
 
@@ -935,9 +935,9 @@ let compute_new_location_guards_updates aut_table trans_table action_index origi
 		(* Get the index of the examined transition for this automaton *)
 		let current_index = trans_table.(local_index) in
 		(* Keep the 'current_index'th transition *)
-		let transition = List.nth transitions current_index in
-		(* Keep only the dest location *)
-    let guard, updates, dest_index = transition in
+		let transition_index = List.nth transitions current_index in
+		(* Access the transition and get the components *)
+		let guard, updates, dest_index = model.transitions_description transition_index in
 
       (** Collecting the updates by evaluating the conditions, if there is any *)
       let clock_updates, discrete_updates = List.fold_left (
@@ -1297,7 +1297,7 @@ let compute_transitions location constr action_index automata aut_table max_inde
 			(* Get the current location for this automaton *)
 			let location_index = Location.get_location location automaton_index in
 			(* Get transitions for this automaton *)
-			let transitions = model.transitions automaton_index location_index action_index in
+			let transitions = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
 
 			(* REMOVED 2011/11/21 : computation always slower ; might be faster for strongly branching systems? EXCEPT FOR LSV.imi --> put it back! *)
 			(* Keep only possible transitions *)

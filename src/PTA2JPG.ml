@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2012/08/24
- * Last modified     : 2019/04/15
+ * Last modified     : 2019/05/16
  *
  ************************************************************)
 
@@ -144,7 +144,7 @@ let string_of_transitions model automaton_index location_index =
 	List.map (fun action_index ->
 		(* Get the list of transitions *)
 (* 		print_message Verbose_high "Entering string_of_transitions…5"; *)
-		let transitions = model.transitions automaton_index location_index action_index in
+		let transitions = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
 (* 		print_message Verbose_high "Entering string_of_transitions…6"; *)
 		(* Convert to string *)
 		string_of_list_of_string (

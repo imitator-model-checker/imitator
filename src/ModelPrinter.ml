@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2019/04/15
+ * Last modified     : 2019/05/16
  *
  ************************************************************)
 
@@ -359,7 +359,7 @@ let string_of_transitions model automaton_index location_index =
 		(* Convert to string *)
 		string_of_list_of_string (
 			(* For each transition *)
-			List.map (string_of_transition model automaton_index action_index) transitions
+			List.map (string_of_transition model automaton_index action_index) (List.map model.transitions_description transitions)
 			)
 		) (model.actions_per_location automaton_index location_index)
 	)

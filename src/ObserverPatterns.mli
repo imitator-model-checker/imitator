@@ -48,7 +48,7 @@ val get_automaton : int -> automaton_index -> action_index -> clock_index -> pro
 	* location_urgency array
 	(* Invariants *)
 	* (AbstractModel.invariant) array
-	(* Transitions *)
+	(* Transitions: structure location_index -> action_index -> list of (transition) *)
 	* ((AbstractModel.transition list) array) array
 	(* Initial inequalities (if any) *)
 	* LinearConstraint.px_linear_constraint option

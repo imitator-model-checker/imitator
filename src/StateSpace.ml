@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2019/04/15
+ * Last modified     : 2019/05/16
  *
  ************************************************************)
 
@@ -548,7 +548,7 @@ let get_guard state_space state_index action_index state_index' =
 		if l = l' then (
 			(* Find the transitions l -> action_index -> l' *)
 			(*** NOTE: type transition = guard * clock_updates * discrete_update list * location_index ***)
-			let transitions = List.filter (fun (_,_, target) -> target = l') (model.transitions automaton_index l action_index) in
+			let transitions = List.filter (fun (_,_, target) -> target = l') (List.map model.transitions_description (model.transitions automaton_index l action_index)) in
 
 			(* If none: then not concerned -> true gard *)
 			if List.length transitions = 0 then LinearConstraint.pxd_true_constraint()
@@ -568,7 +568,7 @@ let get_guard state_space state_index action_index state_index' =
 		(* Otherwise, if the source and target locations differ: necessarily a transition with this action *)
 		) else (
 			(* Find the transitions l -> action_index -> l' *)
-			let transitions = List.filter (fun (_,_, target) -> target = l') (model.transitions automaton_index l action_index) in
+			let transitions = List.filter (fun (_,_, target) -> target = l') (List.map model.transitions_description (model.transitions automaton_index l action_index)) in
 
 			(* There cannot be none *)
 			if List.length transitions = 0 then raise (raise (InternalError("There cannot be no transition from '" ^ (model.location_names automaton_index l) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' with action to '" ^ (model.action_names action_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ ".")))
@@ -630,7 +630,7 @@ let get_resets state_space state_index action_index state_index' =
 		if l = l' then (
 			(* Find the transitions l -> action_index -> l' *)
 			(*** NOTE: type transition = guard * clock_updates * discrete_update list * location_index ***)
-			let transitions = List.filter (fun (_,_, target) -> target = l') (model.transitions automaton_index l action_index) in
+			let transitions = List.filter (fun (_,_, target) -> target = l') (List.map model.transitions_description (model.transitions automaton_index l action_index)) in
 
 			(* If none: then not concerned -> no reset nor update *)
 			if List.length transitions = 0 then No_update
@@ -651,7 +651,7 @@ let get_resets state_space state_index action_index state_index' =
 		(* Otherwise, if the source and target locations differ: necessarily a transition with this action *)
 		) else (
 			(* Find the transitions l -> action_index -> l' *)
-			let transitions = List.filter (fun (_,_, target) -> target = l') (model.transitions automaton_index l action_index) in
+			let transitions = List.filter (fun (_,_, target) -> target = l') (List.map model.transitions_description (model.transitions automaton_index l action_index)) in
 
 			(* There cannot be none *)
 			if List.length transitions = 0 then raise (raise (InternalError("There cannot be no transition from '" ^ (model.location_names automaton_index l) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' with action to '" ^ (model.action_names action_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ ".")))

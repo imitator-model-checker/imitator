@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2015/11/27
- * Last modified     : 2019/04/15
+ * Last modified     : 2019/05/16
  *
  ************************************************************)
 
@@ -101,7 +101,7 @@ let find_local_clocks () =
         let actions_for_this_location = model.actions_per_location automaton_index location_index in
         let clocks_for_actions = List.fold_left (fun list_of_clocks_for_previous_actions action_index ->
             (* For each transition for this automaton, location and action *)
-            let transitions_for_this_action = model.transitions automaton_index location_index action_index in
+            let transitions_for_this_action = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
 
             let clocks_for_transitions = List.fold_left (fun list_of_clocks_for_previous_transitions transition ->
                 (* Name the elements in the transition *)
@@ -187,7 +187,7 @@ let find_useless_clocks_in_automata local_clocks_per_automaton =
         (* For each action available in this location *)
         List.iter (fun action_index ->
             (* Retrieve the transitions from this location & action *)
-            let transitions = model.transitions automaton_index location_index action_index in
+            let transitions = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
 
             (* For each transition starting from this location *)
             (** TODO: What happens here with the clock updates ?? *)
@@ -243,7 +243,7 @@ let find_useless_clocks_in_automata local_clocks_per_automaton =
                                   (* For each action available in this location *)
                                   List.fold_left (fun current_list_of_locations action_index ->
                                       (* Retrieve the transitions from this location & action *)
-                                      let transitions = model.transitions automaton_index location_index action_index in
+                                      let transitions = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
                                       (* Check if there exists a guard in an outgoing transition where the clock is constrained *)
                                       let exists_guard = List.exists (fun (guard , (*updates*)_ , (*target_index*)_) ->
                                           (* Check if the clock is present in the guard *)

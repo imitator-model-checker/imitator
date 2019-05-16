@@ -2352,12 +2352,18 @@ let convert_updates index_of_variables constants type_of_variables updates : upd
 	into a structure:
 	'automaton_index -> location_index -> action_index -> list of (transition_index)'
 	and creates a structure transition_index -> (guard, resets, target_state) *)
-let convert_transitions nb_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions : (((AbstractModel.transition list) array) array) array * (AbstractModel.transition array) =
+let convert_transitions nb_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions : (((AbstractModel.transition_index list) array) array) array * (AbstractModel.transition array) =
   (* Create the empty array of transitions automaton_index -> location_index -> action_index -> list of (transition_index) *)
-  let array_of_transitions : (((AbstractModel.transition list) array) array) array = Array.make (Array.length transitions) (Array.make 0 (Array.make 0 [])) in
+  
+  (*** NOTE/TODO: why (Array.length transitions) ?! ***)
+  
+  let array_of_transitions : (((AbstractModel.transition_index list) array) array) array = Array.make (Array.length transitions) (Array.make 0 (Array.make 0 [])) in
   (* Create the empty array transition_index -> transition *)
   let dummy_transition = True_guard , { clock = No_update; discrete = [] ; conditional = []} , -1 in
   let transitions_description = Array.make nb_transitions dummy_transition in
+  
+  (* Maintain an index for the next transition *)
+  let transition_index = ref 0 in
 
   (* Iterate on automata *)
   Array.iteri (fun automaton_index transitions_for_this_automaton ->
@@ -2435,8 +2441,14 @@ let convert_transitions nb_transitions nb_actions index_of_variables constants r
                  					)
                  				in *)
 
-              (* Update the transition *)
-              array_of_transitions.(automaton_index).(location_index).(action_index) <- (converted_guard, converted_updates, target_location_index) :: array_of_transitions.(automaton_index).(location_index).(action_index);
+              (* Update the transition array *)
+              array_of_transitions.(automaton_index).(location_index).(action_index) <- !transition_index :: array_of_transitions.(automaton_index).(location_index).(action_index);
+              
+              (* Add the transition to the description *)
+              transitions_description.(!transition_index) <- (converted_guard, converted_updates, target_location_index);
+              
+              (* Increment the index *)
+              transition_index := !transition_index + 1;
 
             ) transitions_for_this_location;
         ) transitions_for_this_automaton;
@@ -3029,7 +3041,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the automata without the observer, and with the transitions in a non-finalized form *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	print_message Verbose_total ("*** Building automata…");
+	print_message Verbose_high ("*** Building automata…");
 	(* Get all the possible actions for every location of every automaton *)
 	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_urgency, costs, invariants, stopwatches_array, has_stopwatches, transitions, nosync_obs =
 		make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions (*removed_variable_names *)removed_synclab_names parsed_automata (observer_automaton != None) in
@@ -3064,7 +3076,13 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 
 		(* Return the structure and the correctness_condition *)
 		Some (observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions),
-		Array.length observer_transitions,
+		((* Iterate on locations *)
+			Array.fold_left (fun nb_transitions_for_locations transitions_for_this_location ->
+				Array.fold_left (fun nb_transitions_for_actions transitions_for_this_action ->
+				nb_transitions_for_actions + (List.length transitions_for_this_action)
+				) nb_transitions_for_locations transitions_for_this_location
+			) 0 observer_transitions
+		),
 		Some correctness_condition,
 		initial_observer_constraint
 	in
@@ -3074,7 +3092,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* Convert the transitions to their final form *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	
-	print_message Verbose_total ("*** Building transitions…");
+	print_message Verbose_high ("*** Building transitions…");
 	(* Count the number of transitions *)
 	let nb_transitions_without_observer =
 		(* Iterate on automata *)
@@ -3087,9 +3105,11 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	in
 	let nb_transitions = nb_transitions_without_observer + nb_transitions_for_observer in
 	
-	(*** TODO: integrate inside 'make_automata' (?) ***)
+	(* Print some information *)
+	print_message Verbose_total ("" ^ (string_of_int nb_transitions_without_observer) ^ " transition" ^ (s_of_int nb_transitions_without_observer) ^ " in the model, and " ^ (string_of_int nb_transitions_for_observer) ^ " additional transition" ^ (s_of_int nb_transitions_for_observer) ^ " for the observer");
 
 	(* Convert transitions *)
+	(*** TODO: integrate inside 'make_automata' (?) ***)
 	let transitions, transitions_description = convert_transitions nb_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions in
 
 	
@@ -3105,6 +3125,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 		match observer_structure with
 		| None -> raise (InternalError ("No observer structure saved although it should have been set at that point"))
 		| Some (observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions) ->
+			print_message Verbose_high ("*** Adding observer data to automata…");
 			(* Retrieve the number of locations of the observer *)
 			let nb_locations = Array.length observer_actions_per_location in
 			(* Update actions per automaton *)
@@ -3113,12 +3134,47 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 			actions_per_location.(observer_id) <- observer_actions_per_location;
 			(* Update urgency *)
 			location_urgency.(observer_id) <- observer_location_urgency;
-			(* Update transitions *)
-			transitions.(observer_id) <- observer_transitions;
 			(* Update invariants *)
 			invariants.(observer_id) <- observer_invariants;
 			(* Update costs (no costs in observers) *)
 			costs.(observer_id) <- Array.make nb_locations None;
+			
+			(* Update transitions *)
+			
+			(* First convert the transitions to transition_index, and update the transitions_description *)
+
+			(* Maintain an index for the next transition *)
+			let transition_index = ref nb_transitions_without_observer in
+			let observer_transitions =
+			(* Iterate on locations *)
+			Array.map (fun actions_for_this_location ->
+				(* Iterate on actions *)
+				Array.map (fun transitions_for_this_action ->
+					(* Iterate on transitions for this action *)
+					List.map (fun (guard, updates, target_location_index) ->
+						let current_transition_index = !transition_index in
+						(* Add the transition to the description *)
+						begin
+						try(
+						transitions_description.(current_transition_index) <- (guard, updates, target_location_index)
+						) with
+							| Invalid_argument e -> raise (InternalError ("Invalid argument '" ^ e ^ "' when updating observer transitions (current index: " ^ (string_of_int current_transition_index) ^ " max size: " ^ (string_of_int (Array.length transitions_description)) ^ ")"))
+						;
+						end;
+						
+						(* Increment the index *)
+						transition_index := !transition_index + 1;
+
+						(* Update the transition array *)
+						current_transition_index
+					) transitions_for_this_action;
+				) actions_for_this_location;
+			) observer_transitions
+			in
+			
+			(* Then update transitions *)
+			transitions.(observer_id) <- observer_transitions;
+			
 		end;
 	end;
 	
@@ -3181,6 +3237,8 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* Convert to functional view *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+	print_message Verbose_high ("*** Converting to functional view…");
+
 	let array_of_variable_names = Array.make nb_variables "" in
 	(* Add normal names *)
 	for variable_index = 0 to nb_variables - 1 do
@@ -3205,6 +3263,8 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	let stopwatches = (fun automaton_index location_index -> stopwatches_array.(automaton_index).(location_index)) in
 	(* Transitions *)
 	let transitions = fun automaton_index location_index action_index -> transitions.(automaton_index).(location_index).(action_index) in
+	(* Transition description *)
+	let transitions_description = fun transition_index -> transitions_description.(transition_index) in
 	(* Actions *)
 	let action_names = fun action_index ->
 		try (array_of_action_names.(action_index))
@@ -3227,7 +3287,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* List of automata for every action *)
-	print_message Verbose_total ("*** Building automata per action…");
+	print_message Verbose_high ("*** Building automata per action…");
 	let automata_per_action = make_automata_per_action actions_per_automaton nb_automata nb_actions in
 
 (*	(* Convert the costs *)
@@ -3305,7 +3365,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 			let actions_for_this_location = actions_per_location automaton_index location_index in
 			(* For all actions *)
 			List.iter (fun action_index ->
-				let transitions_for_this_location = transitions automaton_index location_index action_index in
+				let transitions_for_this_location = List.map transitions_description (transitions automaton_index location_index action_index) in
 				(* For all transitions *)
 				List.iter (fun (guard, _, _) ->
 
@@ -3337,7 +3397,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the initial state *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	print_message Verbose_total ("*** Building initial state…");
+	print_message Verbose_high ("*** Building initial state…");
 	let (initial_location, initial_constraint) =
 		make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs parsed_init_definition in
 
@@ -3598,7 +3658,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches = stopwatches;
 	(* An array transition_index -> transition *)
-(* 	transitions_description = (*** TODO ***); *)
+	transitions_description = transitions_description;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative = px_clocks_non_negative;

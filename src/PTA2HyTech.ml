@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2016/01/26
- * Last modified     : 2019/04/15
+ * Last modified     : 2019/05/16
  *
  ************************************************************)
 
@@ -256,7 +256,7 @@ let string_of_transitions model automaton_index location_index =
 	(* For each action *)
 	List.map (fun action_index ->
 		(* Get the list of transitions *)
-		let transitions = model.transitions automaton_index location_index action_index in
+		let transitions = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
 		(* Convert to string *)
 		string_of_list_of_string (
 			(* For each transition *)
