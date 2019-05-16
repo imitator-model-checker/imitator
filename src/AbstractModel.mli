@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/09/11
- * Last modified     : 2019/04/15
+ * Last modified     : 2019/05/16
  *
  ************************************************************)
 
@@ -143,6 +143,8 @@ and conditional_update = boolean_expression * updates * updates
 (** Transition: guard, list of updates, destination location *)
 type transition = guard * updates * location_index
 
+type transition_index = int
+
 
 (************************************************************)
 (** Definition of correctness property *)
@@ -268,12 +270,14 @@ type lu_status =
 type abstract_model = {
 	(** General information **)
 	(* Cardinality *)
-	nb_automata : int;
-	nb_actions : int;
-	nb_clocks : int;
-	nb_discrete : int;
+	nb_automata   : int;
+	nb_actions    : int;
+	nb_clocks     : int;
+	nb_discrete   : int;
 	nb_parameters : int;
-	nb_variables : int;
+	nb_variables  : int;
+	nb_locations  : int;
+	nb_transitions: int;
 
 	(* Is there any stopwatch in the model? *)
 	has_stopwatches : bool;
@@ -342,9 +346,11 @@ type abstract_model = {
 	invariants : automaton_index -> location_index -> invariant;
 
 	(* The transitions for each automaton and each location and each action *)
-	transitions : automaton_index -> location_index -> action_index -> (transition list);
+	transitions : automaton_index -> location_index -> action_index -> (*(transition_index list);*) (transition list);
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches : automaton_index -> location_index -> clock_index list;
+	(* An array transition_index -> transition *)
+(* 	edges : transition_index -> transition; *)
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative: LinearConstraint.px_linear_constraint;

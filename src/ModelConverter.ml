@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/09/09
- * Last modified     : 2019/04/15
+ * Last modified     : 2019/05/16
  *
  ************************************************************)
 
@@ -2344,6 +2344,7 @@ let convert_updates index_of_variables constants type_of_variables updates : upd
   (** updates abstract model *)
   { converted_updates with conditional = conditional_updates_values }
 
+
 (*------------------------------------------------------------*)
 (* Convert the transitions *)
 (*------------------------------------------------------------*)
@@ -3033,8 +3034,20 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(*** TODO: integrate inside 'make_automata' ***)
 
 	print_message Verbose_total ("*** Building transitions…");
+	(* Count the number of transitions *)
+	let nb_transitions =
+		(* Iterate on automata *)
+		Array.fold_left (fun nb_transitions_for_automata transitions_for_this_automaton ->
+			(* Iterate on locations *)
+			Array.fold_left (fun nb_transitions_for_locations transitions_for_this_location ->
+				nb_transitions_for_locations + (List.length transitions_for_this_location)
+			) nb_transitions_for_automata transitions_for_this_automaton
+		) 0 transitions
+	in
+	(* Convert transitions *)
 	let transitions = convert_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions in
 
+	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Handle the observer here *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3122,6 +3135,8 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 		try (array_of_action_names.(action_index))
 		with _ -> raise (InternalError ("Action index " ^ (string_of_int action_index) ^ " does not exist in the model."))
 	in
+	
+	let nb_locations = List.fold_left (fun current_nb automaton -> current_nb + (List.length (locations_per_automaton automaton))) 0 automata in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3173,10 +3188,8 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 		print_message Verbose_standard (
 			(string_of_int nb_automata) ^ " automat" ^ (if nb_automata > 1 then "a" else "on")
 			^ ", "
-			(*** NOTE: compute number of locations here as not used elsewhere ***)
-			^ (let nb_locations = List.fold_left (fun current_nb automaton -> current_nb + (List.length (locations_per_automaton automaton))) 0 automata in (string_of_int nb_locations) ^ " location" ^ (s_of_int nb_locations) ^ ", ")
-			(*** NOTE: compute number of transitions here as not used elsewhere ***)
-(* 			^ (let nb_transitions = List.fold_left (fun current_nb, automaton -> current_nb +  ) 0 transitions in (string_of_int nb_locations) ^ " location" ^ (s_of_int nb_locations) ^ ", " *)
+			^ (string_of_int nb_locations) ^ " location" ^ (s_of_int nb_locations) ^ ", "
+			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ ", "
 			^ (string_of_int nb_labels) ^ " declared synchronization action" ^ (s_of_int nb_labels) ^ ", "
 			^ (string_of_int nb_clocks) ^ " clock variable" ^ (s_of_int nb_clocks) ^ ", "
 			^ (string_of_int nb_discrete) ^ " discrete variable" ^ (s_of_int nb_discrete) ^ ", "
@@ -3426,12 +3439,14 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	{
 	(* Cardinality *)
-	nb_automata = nb_automata;
-	nb_actions = nb_actions;
-	nb_clocks = nb_clocks;
-	nb_discrete = nb_discrete;
-	nb_parameters = nb_parameters;
-	nb_variables = nb_variables;
+	nb_automata    = nb_automata;
+	nb_actions     = nb_actions;
+	nb_clocks      = nb_clocks;
+	nb_discrete    = nb_discrete;
+	nb_parameters  = nb_parameters;
+	nb_variables   = nb_variables;
+	nb_locations   = nb_locations;
+	nb_transitions = nb_transitions;
 
 	(* Is there any stopwatch in the model? *)
 	has_stopwatches = has_stopwatches;
@@ -3507,6 +3522,8 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	transitions = transitions;
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches = stopwatches;
+	(* An array transition_index -> transition *)
+(* 	edges = (*** TODO ***); *)
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative = px_clocks_non_negative;

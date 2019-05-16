@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2017/06/27
+ * Last modified     : 2019/05/16
  *
  ************************************************************)
 
@@ -250,10 +250,10 @@ let file_header () =
 
 (* Return a string made of some information concerning the input model *)
 let model_statistics () =
+	
 	(* Retrieve the model *)
 	let model = Input.get_model() in
-	(* Compute the number of locations *)
-	let nb_total_locations = List.fold_left (fun current_sum automaton_index -> current_sum + (List.length (model.locations_per_automaton automaton_index))) 0 model.automata in
+
 	(* Create the statistics *)
 	    "Number of IPTAs                         : " ^ (string_of_int model.nb_automata)
 	^ "\nNumber of clocks                        : " ^ (string_of_int model.nb_clocks)
@@ -262,8 +262,10 @@ let model_statistics () =
 	^ "\nNumber of parameters                    : " ^ (string_of_int model.nb_parameters)
 	^ "\nNumber of discrete variables            : " ^ (string_of_int model.nb_discrete)
 	^ "\nNumber of actions                       : " ^ (string_of_int model.nb_actions)
-	^ "\nTotal number of locations               : " ^ (string_of_int nb_total_locations)
-	^ "\nAverage locations per IPTA              : " ^ (round1_float ((float_of_int nb_total_locations) /. (float_of_int model.nb_automata)))
+	^ "\nTotal number of locations               : " ^ (string_of_int model.nb_locations)
+	^ "\nAverage locations per IPTA              : " ^ (round1_float ((float_of_int model.nb_locations) /. (float_of_int model.nb_automata)))
+	^ "\nTotal number of transitions             : " ^ (string_of_int model.nb_transitions)
+	^ "\nAverage transitions per IPTA            : " ^ (round1_float ((float_of_int model.nb_transitions) /. (float_of_int model.nb_automata)))
 
 
 
