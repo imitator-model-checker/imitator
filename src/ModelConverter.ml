@@ -3180,51 +3180,6 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	
 	(*** TODO : perform init for observer (location) ***)
 
-	(*
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Handle the observer here *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let correctness_condition, initial_observer_constraint =
-	match observer_automaton with
-	| None -> print_message Verbose_total ("*** (No observer)");
-		(* Still check the case of non-reachability user-defined property *)
-		begin
-		match property with
-			| Unreachable_locations unreachable_global_location_list -> Some (Unreachable unreachable_global_location_list), None
-			| _ -> None, None
-		end
-	| Some observer_id ->
-		print_message Verbose_low ("*** Generating the observer…");
-		(* Get the silent action index for the observer *)
-		let nosync_obs = match nosync_obs with
-			| Some nosync_obs -> nosync_obs
-			| None -> raise (InternalError ("An observer action should have been defined."))
-		in
-		(* Get the local clock for the observer *)
-		(*** WARNING: quite a HACK, here ***)
-		let clock_obs = nb_parameters + nb_clocks - 1 in
-		(* Get the info from the observer pattern *)
-		let observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions, initial_observer_constraint, correctness_condition =
-			ObserverPatterns.get_automaton nb_actions observer_id nosync_obs clock_obs property in
-		(* Retrieve the number of locations of the observer *)
-		let nb_locations = Array.length observer_actions_per_location in
-		(* Update actions per automaton *)
-		actions_per_automaton.(observer_id) <- observer_actions;
-		(* Update actions per location *)
-		actions_per_location.(observer_id) <- observer_actions_per_location;
-		(* Update urgency *)
-		location_urgency.(observer_id) <- observer_location_urgency;
-		(* Update transitions *)
-		transitions.(observer_id) <- observer_transitions;
-		(* Update invariants *)
-		invariants.(observer_id) <- observer_invariants;
-		(* Update costs (no costs in observers) *)
-		costs.(observer_id) <- Array.make nb_locations None;
-
-		(* Set the correctness_condition *)
-		Some correctness_condition, initial_observer_constraint
-	in
-*)
 
 
 
