@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13 (France)
  * 
  * Module description: Description of the symbolic states and of the state space
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/10/11
+ * Last modified     : 2019/05/22
  *
  ************************************************************)
 
@@ -66,6 +66,9 @@ type state_space
 (** An SCC is just a list of states *)
 type scc = state_index list
 
+(** A combined transition is a list of transitions (one for each automaton involved) *)
+type combined_transition = AbstractModel.transition_index list
+
 
 (************************************************************)
 (** State space creation *)
@@ -117,17 +120,17 @@ val get_successors : state_space -> state_index -> state_index list
 (*------------------------------------------------------------*)
 (** Compte and return the list of pairs (index successor of a state, corresponding action) *)
 (*------------------------------------------------------------*)
-val get_successors_with_actions : state_space -> state_index -> (state_index * action_index) list
+val get_successors_with_actions : state_space -> state_index -> (state_index * combined_transition) list
 
 (*------------------------------------------------------------*)
 (** Compute and return a predecessor table state_index -> (state_index, action_index) list *)
 (*------------------------------------------------------------*)
-val compute_predecessors_with_actions : state_space -> (state_index , (state_index * action_index) list) Hashtbl.t
+val compute_predecessors_with_actions : state_space -> (state_index , (state_index * combined_transition) list) Hashtbl.t
 
 (*------------------------------------------------------------*)
 (** Return the table of transitions *)
 (*------------------------------------------------------------*)
-val get_transitions : state_space -> ((state_index * action_index), state_index) Hashtbl.t
+val get_transitions : state_space -> ((state_index * combined_transition), state_index) Hashtbl.t
 
 (*------------------------------------------------------------*)
 (** Return the list of all state indexes *)
@@ -171,13 +174,11 @@ val last_states: AbstractModel.abstract_model -> state_space -> state_index list
 
 
 (*------------------------------------------------------------*)
-(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the guard ***)
 (*------------------------------------------------------------*)
-val get_guard : state_space -> state_index -> action_index -> state_index -> LinearConstraint.pxd_linear_constraint
+val get_guard : state_space -> state_index -> combined_transition -> state_index -> LinearConstraint.pxd_linear_constraint
 
-(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the set of clocks to be reset along a transition ***)
 (*** NOTE: the function only works for regular resets (it raises an NotImplemented for other updates) ***)
-val get_resets : state_space -> state_index -> action_index -> state_index -> Automaton.clock_index list
+val get_resets : state_space -> state_index -> combined_transition -> state_index -> Automaton.clock_index list
 
 
 (*------------------------------------------------------------*)
@@ -186,9 +187,9 @@ val get_resets : state_space -> state_index -> action_index -> state_index -> Au
 val reconstruct_scc : state_space -> state_index -> scc option
 
 (*------------------------------------------------------------*)
-(** From a set of states, return all transitions within this set of states, in the form of a triple (state_index, action_index, state_index) *)
+(** From a set of states, return all transitions within this set of states, in the form of a triple (state_index, combined_transition, state_index) *)
 (*------------------------------------------------------------*)
-val find_transitions_in : state_space -> scc -> (state_index * action_index * state_index) list
+val find_transitions_in : state_space -> scc -> (state_index * combined_transition * state_index) list
 
 
 (************************************************************)
@@ -205,7 +206,7 @@ val add_state : state_space -> state_comparison -> state -> addition_result
 (* val add_state_dyn : AbstractModel.abstract_model -> state_space -> state -> LinearConstraint.linear_constraint -> (state_index * bool) *)
 
 (** Add a transition to the state space *)
-val add_transition : state_space -> (state_index * action_index * state_index) -> unit
+val add_transition : state_space -> (state_index * combined_transition * state_index) -> unit
 
 (** Add a p_inequality to all the states of the state space *)
 (*** NOTE: it is assumed that the p_constraint does not render some states inconsistent! ***)
@@ -241,8 +242,5 @@ val string_of_statespace_nature : statespace_nature -> string
 (************************************************************)
 (** Debug and performances *)
 (************************************************************)
-(*(** Get statistics on number of comparisons *)
-val get_statistics : unit -> string*)
-
 (** Get statistics on states *)
 val get_statistics_states : state_space -> string

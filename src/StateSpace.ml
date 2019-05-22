@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2019/05/16
+ * Last modified     : 2019/05/22
  *
  ************************************************************)
 
@@ -18,8 +18,6 @@
 (************************************************************)
 (* Modules *)
 (************************************************************)
-(*module Ppl = Ppl_ocaml
-open Ppl*)
 
 open Exceptions
 open OCamlUtilities
@@ -85,6 +83,11 @@ module StateIndexSet = Set.Make(State)
 (************************************************************)
 (** State space structure *)
 (************************************************************)
+
+(** A combined transition is a list of transitions (one for each automaton involved) *)
+type combined_transition = AbstractModel.transition_index list
+
+
 type state_space = {
 	(** The number of generated states (even not added to the state space) *)
 	nb_generated_states : int ref;
@@ -106,7 +109,7 @@ type state_space = {
 	states_for_comparison : (int, state_index) Hashtbl.t;
 
 	(** A hashtable '(state_index, action_index)' -> 'target_state_index' *)
-	transitions_table : ((state_index * action_index), state_index) Hashtbl.t;
+	transitions_table : ((state_index * combined_transition), state_index) Hashtbl.t;
 
 	(** An integer that remembers the next index of state_index (may not be equal to the number of states, if states are removed *)
 	next_state_index : state_index ref;
@@ -188,14 +191,14 @@ let make guessed_nb_transitions =
 
 	(* Create the state space *)
 	{
-		nb_generated_states = ref 0;
-		all_states = states;
-		initial = None;
-		index_of_locations = index_of_locations;
-		locations = locations;
+		nb_generated_states   = ref 0;
+		all_states            = states;
+		initial               = None;
+		index_of_locations    = index_of_locations;
+		locations             = locations;
 		states_for_comparison = states_for_comparison;
-		transitions_table = transitions_table;
-		next_state_index = ref 0;
+		transitions_table     = transitions_table;
+		next_state_index      = ref 0;
 	}
 
 
@@ -287,10 +290,6 @@ let get_initial_state_index state_space =
 	| None -> raise Not_found
 
 
-(*(** Return the initial state, or raise Not_found if not defined *)
-let get_initial_state state_space =
-	get_state state_space (get_initial_state_index state_space)*)
-
 
 (** Return the table of transitions *)
 let get_transitions state_space =
@@ -318,10 +317,20 @@ let get_successors state_space state_index =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
-	let result =
-	List.fold_left (fun succs action_index ->
+	(* Version with actions *)
+(*	let result =
+	List.fold_left (fun succs combined_transition ->
 		try (
-			let succ = Hashtbl.find_all state_space.transitions_table (state_index, action_index) in
+			let succ = Hashtbl.find_all state_space.transitions_table (state_index, combined_transition) in
+			List.rev_append succ succs
+		) with Not_found -> succs
+	) [] model.actions
+	in*)
+	(* Version with list of edges *)
+	let result =
+	List.fold_left (fun succs combined_transition ->
+		try (
+			let succ = Hashtbl.find_all state_space.transitions_table (state_index, combined_transition) in
 			List.rev_append succ succs
 		) with Not_found -> succs
 	) [] model.actions
