@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2019/05/22
+ * Last modified     : 2019/05/28
  *
  ************************************************************)
 
@@ -108,8 +108,12 @@ type state_space = {
 	(** A hashtable to quickly find states with identical locations (? ; made by Ulrich); only for states to be compared *)
 	states_for_comparison : (int, state_index) Hashtbl.t;
 
+	(* Version with actions (old state space) *)
 	(** A hashtable '(state_index, action_index)' -> 'target_state_index' *)
-	transitions_table : ((state_index * combined_transition), state_index) Hashtbl.t;
+	(* 	transitions_table : ((state_index * combined_transition), state_index) Hashtbl.t; *)
+	
+	(** A (long) array state_index -> list of (combined_transition * 'target_state_index') *)
+	transitions_table : ((combined_transition * state_index) list) DynArray.t;
 
 	(** An integer that remembers the next index of state_index (may not be equal to the number of states, if states are removed *)
 	next_state_index : state_index ref;
@@ -146,6 +150,7 @@ let counter_get_state = create_hybrid_counter_and_register "StateSpace.get_state
 
 let counter_add_transition = create_hybrid_counter_and_register "StateSpace.add_transition" States_counter Verbose_experiments
 let counter_get_successors = create_hybrid_counter_and_register "StateSpace.get_successors" States_counter Verbose_experiments
+let counter_get_successors_with_actions = create_hybrid_counter_and_register "StateSpace.get_successors_with_actions" States_counter Verbose_experiments
 let counter_get_transitions = create_hybrid_counter_and_register "StateSpace.get_transitions" States_counter Verbose_experiments
 let counter_nb_states = create_hybrid_counter_and_register "StateSpace.nb_states" States_counter Verbose_experiments
 let counter_nb_transitions = create_hybrid_counter_and_register "StateSpace.nb_transitions" States_counter Verbose_experiments
@@ -187,7 +192,7 @@ let make guessed_nb_transitions =
 	(* Create an empty lookup table : hash -> state_index *)
 	let states_for_comparison = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
 	(* Create a hashtable for the state space *)
-	let transitions_table = Hashtbl.create guessed_nb_transitions in
+	let transitions_table = (*Hashtbl.create guessed_nb_transitions*) DynArray.make Constants.guessed_nb_states_for_hashtable in
 
 	(* Create the state space *)
 	{
@@ -235,7 +240,10 @@ let nb_transitions state_space =
 	counter_nb_transitions#start;
 
 	let result =
-		Hashtbl.length state_space.transitions_table
+(*		Hashtbl.length state_space.transitions_table*)
+		DynArray.fold_left (fun current_nb current_transitions -> 
+			current_nb + (List.length current_transitions)
+		) 0 state_space.transitions_table
 	in
 
 	(* Statistics *)
@@ -266,7 +274,7 @@ let get_state state_space state_index =
 	counter_get_state#increment;
 	counter_get_state#start;
 
-	(* Find the couple (location_index, constraint) *)
+	(* Find the pair (location_index, constraint) *)
 	let location_index, linear_constraint =
 		(* Exception just in case *)
 		try (
@@ -292,7 +300,7 @@ let get_initial_state_index state_space =
 
 
 (** Return the table of transitions *)
-let get_transitions state_space =
+let get_transitions_table state_space =
 
 	(* Statistics *)
 	counter_get_transitions#increment;
@@ -317,7 +325,7 @@ let get_successors state_space state_index =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
-	(* Version with actions *)
+	(* Version with actions (old state space) *)
 (*	let result =
 	List.fold_left (fun succs combined_transition ->
 		try (
@@ -327,37 +335,78 @@ let get_successors state_space state_index =
 	) [] model.actions
 	in*)
 	(* Version with list of edges *)
-	let result =
-	List.fold_left (fun succs combined_transition ->
-		try (
-			let succ = Hashtbl.find_all state_space.transitions_table (state_index, combined_transition) in
-			List.rev_append succ succs
-		) with Not_found -> succs
-	) [] model.actions
-	in
+	(*** NOTE: we get all pairs "transition , target", then we keep the second elements, i.e., the target state indexes ***)
+	let _ , target_state_indices = List.split (DynArray.get state_space.transitions_table state_index) in
+	
+	(* We eliminate duplicates *)
+	let result = list_only_once target_state_indices in
 
 	(* Statistics *)
 	counter_get_successors#stop;
 
 	result
 
+(** Get the (unique) action associated with a combined_transition *)
+let get_action_from_combined_transition combined_transition =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	(* The action is the same for any transition of a combined_transition, therefore pick up the first one *)
+	let action_index =
+	try (
+		(* Get the first transition *)
+		let first_transition_index = List.nth combined_transition 0 in
+		(* Get the actual transition *)
+		let transition = model.transitions_description first_transition_index in
+		(* Get the action *)
+		let _ , action_index , _ , _ = transition in
+		action_index
+	) with Failure msg -> raise (InternalError ("Empty list of transitions in a combined_transition found in get_action_from_combined_transition, although this should not have been the case: '" ^ msg ^ "'."))
+	in
+	action_index
+
 
 (** Compte and return the list of pairs (index successor of a state, corresponding action) *)
 let get_successors_with_actions state_space state_index =
+	(* Statistics *)
+	counter_get_successors_with_actions#increment;
+	counter_get_successors_with_actions#start;
+
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
-	List.fold_left (fun succs action_index ->
+			(* Version with actions (old state space) *)
+(*	List.fold_left (fun succs action_index ->
 		try (
 			let succ = Hashtbl.find_all state_space.transitions_table (state_index, action_index) in
 			let succ_with_action = List.map (fun state_index -> state_index , action_index) succ in
 			List.rev_append succ_with_action succs
 		) with Not_found -> succs
-	) [] model.actions
+	) [] model.actions*)
+	
+	(* Version with list of edges *)
+	(* Get all successors with their combined transition *)
+	let transitions_and_successors = DynArray.get state_space.transitions_table state_index in
+	(* Transform to pair (target state index, action index) *)
+	let result = List.map (fun (combined_transition , target_state_index) ->
+		(* Get the action_index *)
+		let action_index = get_action_from_combined_transition combined_transition in
+		(* Create pair *)
+		target_state_index , action_index
+	) transitions_and_successors in
+	
+(*	(* We eliminate duplicates *)
+	let result = list_only_once target_state_indices in*)
+	(*** TODO: ??? ***)
+	
+	(* Statistics *)
+	counter_get_successors_with_actions#stop;
 
+	result
+
+	
 
 (*------------------------------------------------------------*)
-(** Compute and return a predecessor table state_index -> (state_index, action_index) list *)
+(** Compute and return a predecessor array state_index -> (combined_transition , state_index) list *)
 (*------------------------------------------------------------*)
 let compute_predecessors_with_actions state_space =
 
@@ -368,12 +417,16 @@ let compute_predecessors_with_actions state_space =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
-	(* Create a hash table for predecessors: state_index -> (state_index, action_index) list *)
-	let predecessors = Hashtbl.create (Hashtbl.length state_space.all_states) in
+	(* Version with actions (old state space) *)
+(*	(* Create a hash table for predecessors: state_index -> (state_index, action_index) list *)
+	let predecessors = Hashtbl.create (Hashtbl.length state_space.all_states) in*)
+	(* Create an array for predecessors: state_index -> (state_index, action_index) list *)
+	let predecessors = Array.make (Hashtbl.length state_space.all_states) [] in
 
 	(* Iterate on all states in the state space *)
 	Hashtbl.iter(fun source_state_index _ ->
-		(* Iterate on actions, and fill *)
+		(* Version with actions (old state space) *)
+(*		(* Iterate on actions, and fill *)
 		List.iter (fun action_index ->
 			(* Test if the origin state has some transitions with this action *)
 			if Hashtbl.mem state_space.transitions_table (source_state_index, action_index) then(
@@ -392,7 +445,24 @@ let compute_predecessors_with_actions state_space =
 					Hashtbl.replace predecessors target_state_index updated_predecessors;
 				) successors;
 			);
-		) model.actions;
+		) model.actions;*)
+		
+		(* Get all successors of this state *)
+		let successors = DynArray.get state_space.transitions_table source_state_index in
+		(* Iterate on pairs (combined_transition * 'target_state_index') *)
+		List.iter (fun (combined_transition, target_state_index) -> 
+			(* Add to the predecessor array *)
+			Array.set predecessors target_state_index (
+				(* Add the new element *)
+				(combined_transition , source_state_index)
+				(* to *)
+				::
+				(* the former list *)
+				predecessors.(target_state_index)
+				)
+		) successors;
+		
+		
 	) state_space.all_states;
 
 	(* Statistics *)
@@ -533,6 +603,7 @@ let continuous_part_of_guard (*: LinearConstraint.pxd_linear_constraint*) = func
 	| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard
 
 
+(* Version with actions (old state space) *)
 (*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the guard ***)
 let get_guard state_space state_index action_index state_index' =
 	(* Retrieve the model *)
@@ -556,41 +627,41 @@ let get_guard state_space state_index action_index state_index' =
 		(* If source and target are equal: either a self-loop (if there exists a self-loop with this action), or the current PTA is not concerned by the transition *)
 		if l = l' then (
 			(* Find the transitions l -> action_index -> l' *)
-			(*** NOTE: type transition = guard * clock_updates * discrete_update list * location_index ***)
-			let transitions = List.filter (fun (_,_, target) -> target = l') (List.map model.transitions_description (model.transitions automaton_index l action_index)) in
+			(*** NOTE: type transition = guard * action * clock_updates * discrete_update list * location_index ***)
+			let transitions = List.filter (fun (_,_,_, target) -> target = l') (List.map model.transitions_description (model.transitions automaton_index l action_index)) in
 
 			(* If none: then not concerned -> true gard *)
 			if List.length transitions = 0 then LinearConstraint.pxd_true_constraint()
 
 			(* If exactly one: good situation: return the guard *)
-			else if List.length transitions = 1 then let g,_,_ = List.nth transitions 0 in continuous_part_of_guard g
+			else if List.length transitions = 1 then let g,_,_,_ = List.nth transitions 0 in continuous_part_of_guard g
 			(* If more than one: take the first one (*** HACK ***) and warn *)
 			else(
 				(* Warning *)
 				print_warning ("Non-deterministic PTA! Selecting a guard arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
 
 				(* Take arbitrarily the first element *)
-				let g,_,_ = List.nth transitions 0 in continuous_part_of_guard g
+				let g,_,_,_ = List.nth transitions 0 in continuous_part_of_guard g
 
 			)
 
 		(* Otherwise, if the source and target locations differ: necessarily a transition with this action *)
 		) else (
 			(* Find the transitions l -> action_index -> l' *)
-			let transitions = List.filter (fun (_,_, target) -> target = l') (List.map model.transitions_description (model.transitions automaton_index l action_index)) in
+			let transitions = List.filter (fun (_,_,_, target) -> target = l') (List.map model.transitions_description (model.transitions automaton_index l action_index)) in
 
 			(* There cannot be none *)
 			if List.length transitions = 0 then raise (raise (InternalError("There cannot be no transition from '" ^ (model.location_names automaton_index l) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' with action to '" ^ (model.action_names action_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ ".")))
 
 			(* If exactly one: good situation: return the guard *)
-			else if List.length transitions = 1 then let g,_,_ = List.nth transitions 0 in continuous_part_of_guard g
+			else if List.length transitions = 1 then let g,_,_,_ = List.nth transitions 0 in continuous_part_of_guard g
 			(* If more than one: take the first one (*** HACK ***) and warn *)
 			else(
 				(* Warning *)
 				print_warning ("Non-deterministic PTA! Selecting a guard arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
 
 				(* Take arbitrarily the first element *)
-				let g,_,_ = List.nth transitions 0 in continuous_part_of_guard g
+				let g,_,_,_ = List.nth transitions 0 in continuous_part_of_guard g
 			)
 
 		) in
@@ -612,6 +683,9 @@ let get_guard state_space state_index action_index state_index' =
 
 	(* Finally! Return the guard *)
 	guard
+(*** TODO next: rewrite get_guard:
+let get_guard state_space state_index combined_transition state_index' =
+	***)
 
 
 (*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the set of clocks to be reset along a transition ***)
@@ -639,7 +713,7 @@ let get_resets state_space state_index action_index state_index' =
 		if l = l' then (
 			(* Find the transitions l -> action_index -> l' *)
 			(*** NOTE: type transition = guard * clock_updates * discrete_update list * location_index ***)
-			let transitions = List.filter (fun (_,_, target) -> target = l') (List.map model.transitions_description (model.transitions automaton_index l action_index)) in
+			let transitions = List.filter (fun (_,_,_, target) -> target = l') (List.map model.transitions_description (model.transitions automaton_index l action_index)) in
 
 			(* If none: then not concerned -> no reset nor update *)
 			if List.length transitions = 0 then No_update
@@ -647,34 +721,34 @@ let get_resets state_space state_index action_index state_index' =
 			(** TODO: Here we need to evaluate the conditions  *)
 			(* If exactly one: good situation: find the clock_updates *)
 			else if List.length transitions = 1
-				then let _,updates,_ = List.nth transitions 0 in updates.clock (*HERE*)
+				then let _,_,updates,_ = List.nth transitions 0 in updates.clock (*HERE*)
 				(* If more than one: take the first one (*** HACK ***) and warn *)
 				else (
 					(* Warning *)
 					print_warning ("Non-deterministic PTA! Selecting an edge arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
 
 					(* Take arbitrarily the first element *)
-					let _,updates,_ = List.nth transitions 0 in updates.clock
+					let _,_,updates,_ = List.nth transitions 0 in updates.clock
 				)
 
 		(* Otherwise, if the source and target locations differ: necessarily a transition with this action *)
 		) else (
 			(* Find the transitions l -> action_index -> l' *)
-			let transitions = List.filter (fun (_,_, target) -> target = l') (List.map model.transitions_description (model.transitions automaton_index l action_index)) in
+			let transitions = List.filter (fun (_,_,_, target) -> target = l') (List.map model.transitions_description (model.transitions automaton_index l action_index)) in
 
 			(* There cannot be none *)
 			if List.length transitions = 0 then raise (raise (InternalError("There cannot be no transition from '" ^ (model.location_names automaton_index l) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' with action to '" ^ (model.action_names action_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ ".")))
 
 			(* If exactly one: good situation: return the clock_updates *)
 			else if List.length transitions = 1
-			then let _,updates,_ = List.nth transitions 0 in updates.clock (*HERE*)
+			then let _,_,updates,_ = List.nth transitions 0 in updates.clock (*HERE*)
 			(* If more than one: take the first one (*** HACK ***) and warn *)
 			else (
 				(* Warning *)
 				print_warning ("Non-deterministic PTA! Selecting an edge arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
 
 				(* Take arbitrarily the first element *)
-				let _,updates,_ = List.nth transitions 0 in updates.clock (*HERE*)
+				let _,_,updates,_ = List.nth transitions 0 in updates.clock (*HERE*)
 			)
 		) in
 
@@ -1266,13 +1340,18 @@ let add_state state_space state_comparison new_state =
 	result
 
 
-let get_transitions_of_state state_space source_state_index action_index =
-	try (
+(** Get all combined transitions from a state_index *)
+let get_transitions_of_state state_space source_state_index =
+	(* Version with actions (old state space) *)
+(*	try (
 		Hashtbl.find_all state_space.transitions_table (source_state_index, action_index)
-	)	with Not_found -> []
+	)	with Not_found -> []*)
+	let result , _ = List.split (DynArray.get state_space.transitions_table source_state_index) in
+	result
 
 
-(** Add a transition to the state space. Transitions are unique in that this
+	(* Version with actions (old state space) *)
+(*(** Add a transition to the state space. Transitions are unique in that this
     function will refuse to add two transitions with the same source and
 		target index and the same label. *)
 let add_transition state_space (source_state_index, action_index, target_state_index) =
@@ -1284,6 +1363,24 @@ let add_transition state_space (source_state_index, action_index, target_state_i
 	let transitions = get_transitions_of_state state_space source_state_index action_index in
 	if not (List.mem target_state_index transitions) then
 		Hashtbl.add state_space.transitions_table (source_state_index, action_index) target_state_index
+	;
+	(* Statistics *)
+	counter_add_transition#stop;
+	()*)
+(** Add a combined transition to the state space *)
+let add_transition state_space (source_state_index, combined_transition, target_state_index) =
+	(* Statistics *)
+	counter_add_transition#increment;
+	counter_add_transition#start;
+
+	(* check if it already exists *)
+	let transitions = get_transitions_of_state state_space source_state_index in
+	(*** TODO: it seems that getting the list is doing twice here; optimization? ***)
+	if not (List.mem combined_transition transitions) then
+		(** Add to the list *)
+		DynArray.set state_space.transitions_table source_state_index
+			(*** NOTE: what if not present: Exception?! ***)
+			((combined_transition , target_state_index) :: (DynArray.get state_space.transitions_table source_state_index))
 	;
 	(* Statistics *)
 	counter_add_transition#stop;
@@ -1331,7 +1428,7 @@ let merge_2_states state_space state_index1 state_index2 =
 
 
 				(* Unexpected case *)
-(* 				raise (InternalError ("Error when merging states: a couple '(source_state_index, action_index)' is already bound in the transitions table.")); *)
+(* 				raise (InternalError ("Error when merging states: a pair '(source_state_index, action_index)' is already bound in the transitions table.")); *)
 			)else
 				Hashtbl.add state_space.transitions_table (state_index1, action_index) new_target_state_index;
 		)
@@ -1343,7 +1440,7 @@ let merge_2_states state_space state_index1 state_index2 =
 				(* TO RECHECK (exception disabled by Etienne, 16/03/2012 *)
 
 				(* Unexpected case *)
-(* 				raise (InternalError ("Error when merging states: a couple '(source_state_index, action_index)' is already bound in the transitions table.")); *)
+(* 				raise (InternalError ("Error when merging states: a pair '(source_state_index, action_index)' is already bound in the transitions table.")); *)
 			)else
 				Hashtbl.add state_space.transitions_table (source_state_index, action_index) state_index1;
 		);
@@ -1398,14 +1495,17 @@ let merge_states_ulrich state_space merger_state_index merged =
 	print_message Verbose_high ("Merging: update tables for state '" ^ (string_of_int merger_state_index) ^ "' with " ^ (string_of_int (List.length merged)) ^ " merged.");
 
 	(* Rebuild transitions table *)
-	print_message Verbose_high ("Merging: update transition table, containing " ^ (string_of_int (Hashtbl.length state_space.transitions_table)) ^ " elements");
-	let t' = Hashtbl.copy state_space.transitions_table in
-	Hashtbl.clear state_space.transitions_table;
-	Hashtbl.iter (fun (src, a) trg ->
-		let src' = if (List.mem src merged) then merger_state_index else src
-		and trg' = if (List.mem trg merged) then merger_state_index else trg in
-		(* Add if not *)
-		add_transition state_space (src', a, trg')
+	if verbose_mode_greater Verbose_high then
+		print_message Verbose_high ("Merging: update transition table, containing " ^ (string_of_int (nb_transitions state_space)) ^ " transitions");
+	let t' = DynArray.copy state_space.transitions_table in
+	DynArray.clear state_space.transitions_table;
+	DynArray.iteri (fun src successors ->
+		List.iter (fun (combined_transition, target_state_index) -> 
+			let src' = if (List.mem src merged) then merger_state_index else src
+			and trg' = if (List.mem target_state_index merged) then merger_state_index else target_state_index in
+			(* Add if not *)
+			add_transition state_space (src', combined_transition, trg')
+		) successors;
 	) t';
 
 	(* Remove merged from hash table *)
@@ -1592,7 +1692,7 @@ let get_statistics_states state_space =
 	let nb_states = nb_states state_space in
 	(* Compute the number of constraints per location *)
 	let nb_constraints_per_location_id = Hashtbl.create (DynArray.length state_space.locations) in
-	(* Compute the number of constraints equal to each other (list of couples (constraint, nb) )*)
+	(* Compute the number of constraints equal to each other (list of pairs (constraint, nb) )*)
 	let nb_per_constraint = DynArray.make 0 in
 	(* Iterate on all states *)
 	iterate_on_states (fun _ (location_index, the_constraint) ->

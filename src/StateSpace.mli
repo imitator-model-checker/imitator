@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2019/05/22
+ * Last modified     : 2019/05/28
  *
  ************************************************************)
 
@@ -120,17 +120,17 @@ val get_successors : state_space -> state_index -> state_index list
 (*------------------------------------------------------------*)
 (** Compte and return the list of pairs (index successor of a state, corresponding action) *)
 (*------------------------------------------------------------*)
-val get_successors_with_actions : state_space -> state_index -> (state_index * combined_transition) list
+val get_successors_with_actions : state_space -> state_index -> (state_index * action_index) list
 
 (*------------------------------------------------------------*)
-(** Compute and return a predecessor table state_index -> (state_index, action_index) list *)
+(** Compute and return a predecessor array state_index -> (combined_transition , state_index) list *)
 (*------------------------------------------------------------*)
-val compute_predecessors_with_actions : state_space -> (state_index , (state_index * combined_transition) list) Hashtbl.t
+val compute_predecessors_with_actions : state_space -> ((combined_transition * state_index) list) array
 
 (*------------------------------------------------------------*)
 (** Return the table of transitions *)
 (*------------------------------------------------------------*)
-val get_transitions : state_space -> ((state_index * combined_transition), state_index) Hashtbl.t
+val get_transitions_table : state_space -> ((combined_transition * state_index) list) DynArray.t
 
 (*------------------------------------------------------------*)
 (** Return the list of all state indexes *)

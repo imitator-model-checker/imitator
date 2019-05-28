@@ -3,13 +3,13 @@
  *                       IMITATOR
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13 (France)
  *
  * Module description: Abstract description of the input model
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/09/11
- * Last modified     : 2019/05/16
+ * Last modified     : 2019/05/28
  *
  ************************************************************)
 
@@ -141,7 +141,7 @@ type updates = {
 and conditional_update = boolean_expression * updates * updates
 
 (** Transition: guard, list of updates, destination location *)
-type transition = guard * updates * location_index
+type transition = guard * action_index * updates * location_index
 
 type transition_index = int
 

@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/09/09
- * Last modified     : 2019/05/16
+ * Last modified     : 2019/05/28
  *
  ************************************************************)
 
@@ -2445,7 +2445,7 @@ let convert_transitions nb_transitions nb_actions index_of_variables constants r
               array_of_transitions.(automaton_index).(location_index).(action_index) <- !transition_index :: array_of_transitions.(automaton_index).(location_index).(action_index);
               
               (* Add the transition to the description *)
-              transitions_description.(!transition_index) <- (converted_guard, converted_updates, target_location_index);
+              transitions_description.(!transition_index) <- (converted_guard, action_index, converted_updates, target_location_index);
               
               (* Increment the index *)
               transition_index := !transition_index + 1;
