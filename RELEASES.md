@@ -10,6 +10,7 @@
 ### Export
 * Added a (tentative) translation to Uppaal (option `-PTA2Uppaal`)
 * In the graphical state space and states description, the projection onto a selected set of parameters is added if the model contains `projectresult(…)`
+* In the text files, state and transition descriptions are now ordered by increasing order
 
 ### Internal
 * Changed the internal reprensetation of the state space: (state, action, state) is now (state, edge, state)

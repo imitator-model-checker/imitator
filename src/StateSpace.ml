@@ -288,6 +288,27 @@ let get_state state_space state_index =
 	(global_location, linear_constraint)
 
 
+(** Return the global_location_index of a state_index *)
+let get_global_location_index state_space state_index =
+	(* Statistics *)
+	counter_get_state#increment;
+	counter_get_state#start;
+
+	(* Find the pair (location_index, constraint) *)
+	let location_index, _ =
+		(* Exception just in case *)
+		try (
+			Hashtbl.find state_space.all_states state_index
+		) with Not_found -> raise (InternalError ("State of index '" ^ (string_of_int state_index) ^ "' was not found in state_space (in function: StateSpace.get_global_location_index)."))
+	in
+
+	(* Statistics *)
+	counter_get_state#stop;
+
+	(* Return the location_index *)
+	location_index
+
+
 (** Return the index of the initial state, or raise Not_found if not defined *)
 let get_initial_state_index state_space =
 	match state_space.initial with

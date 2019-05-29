@@ -120,6 +120,11 @@ val get_location : state_space -> Location.global_location_index -> Location.glo
 val get_state : state_space -> state_index -> state
 
 (*------------------------------------------------------------*)
+(** Return the global_location_index of a state_index *)
+(*------------------------------------------------------------*)
+val get_global_location_index : state_space -> state_index -> Location.global_location_index
+
+(*------------------------------------------------------------*)
 (** Return the index of the initial state, or raise Not_found if not defined *)
 (*------------------------------------------------------------*)
 val get_initial_state_index : state_space -> state_index
