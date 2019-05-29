@@ -691,6 +691,9 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 	let state_indexes = List.sort (fun a b -> if a = b then 0 else if a < b then -1 else 1) state_indexes in
 	
 	print_message Verbose_high "[dot_of_statespace] Starting to convert states…";
+	
+	(* Sorting function for pairs (combined_transition, target_index) by increasing target_index *)
+	let sort_by_target = (fun (_, a) (_, b) -> if a = b then 0 else if a < b then -1 else 1) in
 
 	let states_description =	
 		(* Give the state indexes in comments *)
@@ -754,7 +757,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 		) transitions ""
 		)
 		^ "\n"*)
-		(*** NOTE: LESS EASY VERSION BUT ORDER IS SPECIFIED (we rank by source states indices) ***)
+		(*** NOTE: LESS EASY VERSION BUT ORDER IS SPECIFIED (we rank by source states indices, and then by target) ***)
 		"\n  DESCRIPTION OF THE TRANSITIONS"
 		(* We iterate on the states *)
 		^ (List.fold_left (fun current_string source_index ->
@@ -762,6 +765,9 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 			let successors = hashtbl_get_or_default transitions source_index [] in
 
 			current_string ^ (string_of_list_of_string (
+				(* Order by successors *)
+				let ordered_successors = List.sort sort_by_target successors in
+				
 				List.map (fun (combined_transition , target_index) ->
 					(* Get the action of the combined_transition *)
 					let action_index = StateSpace.get_action_from_combined_transition combined_transition in
@@ -783,7 +789,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 					^ " -> "
 					^ "s_" ^ (string_of_int target_index)
 					^ label
-				) successors
+				) ordered_successors
 			))
 		) "" state_indexes
 		)
@@ -812,6 +818,9 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 			(* Get the successors *)
 			let successors = hashtbl_get_or_default transitions source_index [] in
 			current_string ^ (string_of_list_of_string (
+				(* Order by successors *)
+				let ordered_successors = List.sort sort_by_target successors in
+				
 				List.map (fun (combined_transition , target_index) ->
 					(* Get the action of the combined_transition *)
 					let action_index = StateSpace.get_action_from_combined_transition combined_transition in
@@ -833,7 +842,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 					^ " -> "
 					^ "s_" ^ (string_of_int target_index)
 					^ label
-				) successors
+				) ordered_successors
 			))
 		) "" state_indexes
 		)
