@@ -3,13 +3,13 @@
  *                       IMITATOR
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  *
  * Module description: Convert an IMITATOR model to a .jpg file generated thanks to the dot utility
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2012/08/24
- * Last modified     : 2019/05/16
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
 
@@ -134,18 +134,10 @@ let string_of_transitions model automaton_index location_index =
 
 	let result =
 	string_of_list_of_string (
-(* 	print_message Verbose_high "Entering string_of_transitions…2"; *)
-
-(* 	print_message Verbose_high ("List length string_of_transitions " ^ (string_of_int (List.length (model.actions_per_location automaton_index location_index)) )); *)
-
-(* 	print_message Verbose_high "Entering string_of_transitions…4"; *)
-
 	(* For each action *)
 	List.map (fun action_index ->
 		(* Get the list of transitions *)
-(* 		print_message Verbose_high "Entering string_of_transitions…5"; *)
 		let transitions = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
-(* 		print_message Verbose_high "Entering string_of_transitions…6"; *)
 		(* Convert to string *)
 		string_of_list_of_string (
 			(* For each transition *)
@@ -153,10 +145,8 @@ let string_of_transitions model automaton_index location_index =
 			)
 		) (model.actions_per_location automaton_index location_index)
 
-	(* print_message Verbose_high "Entering string_of_transitions…5"; *)
 	)
 	in
-(* 	print_message Verbose_high "Entering string_of_transitions…7"; *)
 	result
 
 
