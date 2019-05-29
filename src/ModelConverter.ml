@@ -3520,7 +3520,8 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 				(*** TODO: print source too (and guard, and reset?!) ***)
 			print_message Verbose_total ("Transition " ^ (string_of_int transition_index) ^ ": in automaton '" ^ (automata_names automaton_index) ^ "' via action '" ^ (action_names (transition.action)) ^ "' to location '" ^ (location_names automaton_index (transition.target)) ^ "'")
 		done;
-
+		
+		print_message Verbose_total ("");
 	);
 
 

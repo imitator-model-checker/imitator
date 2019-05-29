@@ -142,7 +142,7 @@ val compute_predecessors_with_actions : state_space -> ((combined_transition * s
 (*------------------------------------------------------------*)
 (** Return the table of transitions *)
 (*------------------------------------------------------------*)
-val get_transitions_table : state_space -> ((combined_transition * state_index) list) DynArray.t
+val get_transitions_table : state_space -> (state_index , ((combined_transition * state_index) list)) Hashtbl.t
 
 (*------------------------------------------------------------*)
 (** Return the list of all state indexes *)

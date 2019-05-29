@@ -1875,10 +1875,16 @@ class virtual algoStateBased =
 		(* Expand the transition *)
 		let source_state_index, combined_transition, target_state_index = transition in
 
+		(* Print some information *)
+(*  		print_message Verbose_total ("About to update the state space…");  *)
+ 		
 		(* Update state space *)
 		StateSpace.add_transition state_space (source_state_index, combined_transition, target_state_index);
 
 		(* Print some information *)
+(*  		print_message Verbose_total ("State space updated");  *)
+
+ 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then (
 			(* Retrieve the target state *)
 			let new_target_state = StateSpace.get_state state_space target_state_index in

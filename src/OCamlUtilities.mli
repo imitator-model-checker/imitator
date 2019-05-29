@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Useful OCaml functions
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/03/15
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
 
@@ -128,6 +128,8 @@ val dynArray_exists : ('a -> bool) -> 'a DynArray.t -> bool
 (*** NOTE: indeed, in our setting, we only use hashtbl with a single binding ***)
 val hashtbl_get_all_keys : ('a , 'b) Hashtbl.t -> 'a list
 
+(** Get the binding associated to a key, or the default binding if key is not associated to any binding *)
+val hashtbl_get_or_default : ('a , 'b) Hashtbl.t -> 'a -> 'b -> 'b
 
 (************************************************************)
 (** Useful functions on string *)

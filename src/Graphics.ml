@@ -746,8 +746,8 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 	let transitions_description =
 		(* Convert the transitions for humans *)
 		"\n  DESCRIPTION OF THE TRANSITIONS"
-		(* We iterate by updating the current string and the source_index, manually incremened by 1 *)
-		^ (let description , _ = DynArray.fold_left (fun (current_string, source_index) successors ->
+		(* We iterate by updating the current string *)
+		^ (Hashtbl.fold (fun source_index successors current_string ->
 			current_string ^ (string_of_list_of_string (
 				List.map (fun (combined_transition , target_index) ->
 					(* Get the action of the combined_transition *)
@@ -771,12 +771,9 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 					^ "s_" ^ (string_of_int target_index)
 					^ label
 				) successors
-			)),
-			(* Next index *)
-			source_index+1
+			))
 			
-		) ("", 0) transitions
-		in description
+		) transitions ""
 		)
 		^ "\n"
 	in
@@ -798,8 +795,8 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 		^ "\n generator -> date [color=white];"*)
 		
 		(* Convert the transitions for dot *)
-		(* We iterate by updating the current string and the source_index, manually incremened by 1 *)
-		^ (let description , _ = DynArray.fold_left (fun (current_string, source_index) successors ->
+		(* We iterate by updating the current string *)
+		^ (Hashtbl.fold (fun source_index successors current_string ->
 			current_string ^ (string_of_list_of_string (
 				List.map (fun (combined_transition , target_index) ->
 					(* Get the action of the combined_transition *)
@@ -823,12 +820,8 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 					^ "s_" ^ (string_of_int target_index)
 					^ label
 				) successors
-			)),
-			(* Next index *)
-			source_index+1
-			
-		) ("", 0) transitions
-		in description
+			))
+			) transitions ""
 		)
 
 		(** HANDLE INITIAL STATE *)

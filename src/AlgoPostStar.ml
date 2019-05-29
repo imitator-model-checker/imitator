@@ -76,6 +76,9 @@ class algoPostStar =
 		(* Try to add the new state to the state space *)
 		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
 		
+		(* Print some information *)
+		print_message Verbose_total ("New state addition attempt successfully performed.");
+		
 		begin
 		match addition_result with
 		(* If the state was present: do nothing *)
@@ -93,11 +96,17 @@ class algoPostStar =
 		end; (* end if new state *)
 		
 		
+		(* Print some information *)
+(* 		print_message Verbose_total ("About to update transitions…"); *)
+
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 		
 		(* Update the transitions *)
 		self#add_transition_to_state_space (source_state_index, combined_transition, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
 	
+		(* Print some information *)
+(* 		print_message Verbose_total ("Transitions successfully updated."); *)
+		
 		(* The state is necessarily kept by the algorithm *)
 		true
 	
