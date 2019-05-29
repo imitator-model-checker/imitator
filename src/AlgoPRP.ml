@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: PRP algorithm [ALNS15]
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/11
- * Last modified     : 2017/03/19
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
 
@@ -163,7 +163,7 @@ class algoPRP =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** WARNING/BADPROG: the following is partially copy/paste from AlgoEFsynth.ml and AlgoPRP.ml***)
 	(*** TODO: factorize ***)
-	method add_a_new_state source_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
+	method add_a_new_state source_state_index new_states_indexes combined_transition location (final_constraint : LinearConstraint.px_linear_constraint) =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 
@@ -178,7 +178,7 @@ class algoPRP =
 			if not pi0compatible then(
 				let new_state = location, final_constraint in
 				if verbose_mode_greater Verbose_high then
-					self#print_algo_message Verbose_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names action_index) ^ "', and was:\n" ^ (ModelPrinter.string_of_state model new_state));
+					self#print_algo_message Verbose_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "', and was:\n" ^ (ModelPrinter.string_of_state model new_state));
 			);
 		);
 
@@ -214,7 +214,7 @@ class algoPRP =
 			(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 			
 			(* Update the transitions *)
-			self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
+			self#add_transition_to_state_space (source_state_index, combined_transition, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
 			
 		); (* end if valid new state *)
 	

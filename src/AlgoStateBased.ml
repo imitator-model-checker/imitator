@@ -937,7 +937,7 @@ let compute_new_location_guards_updates_combinedtransition involved_automata_ind
 		let transition_index = List.nth transitions current_index in
 		(* Access the transition and get the components *)
 		let transition = model.transitions_description transition_index in
-		let guard, updates, dest_index = transition.guard, transition.updates, transition.target in
+		let guard, updates, target_index = transition.guard, transition.updates, transition.target in
 
       (** Collecting the updates by evaluating the conditions, if there is any *)
       let clock_updates, discrete_updates = List.fold_left (
@@ -976,7 +976,7 @@ let compute_new_location_guards_updates_combinedtransition involved_automata_ind
 			);
 		) discrete_updates;
 		(* Update the global location *)
-		Location.update_location_with [real_automaton_index, dest_index] [] location;
+		Location.update_location_with [real_automaton_index, target_index] [] location;
 		(* Update the update flag *)
 		begin
 		match clock_updates with
@@ -1622,7 +1622,7 @@ class virtual algoStateBased =
 
 		(* Build the list of new states (for variant of merging only) *)
 		(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
-		let new_action_and_state_list = ref [] in
+(* 		let new_action_and_state_list = ref [] in *)
 
 		(* Flag to check whether the state of which the successors are computed is a deadlock or not *)
 		let has_successors = ref false in

@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: "EF optimized" algorithm: minimization or minimization of a parameter valuation for which there exists a run leading to some states. Algorithm with a priority queue.
  * 
@@ -666,8 +666,8 @@ class algoEFoptQueue =
 (*		                print_message Verbose_standard ("source constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names source_constraint);
 		                print_message Verbose_standard ("time constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names time_constr);
 		                print_message Verbose_standard ("target constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names target_constraint);
-		                print_message Verbose_standard ("p constr: " ^ LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint)*)
-                    (*);*)
+		                print_message Verbose_standard ("p constr: " ^ LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint)
+                    );*)
                 );
     
 

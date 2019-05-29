@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: All graphics handling (cartography, trace set…)
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2019/03/07
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
  
@@ -619,7 +619,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 	let options = Input.get_options () in
 	
 	(* Retrieve info from the graph *)
-	let transitions = get_transitions state_space in
+	let transitions = StateSpace.get_transitions_table state_space in
 	let initial_state_index = get_initial_state_index state_space in
 	
 	(* Create the array of dot colors *)
@@ -650,9 +650,6 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 	in
 	
 	
-(*	(* Array location_index -> location *)
-	let locations = DynArray.create () in*)
-	
 	print_message Verbose_high "\n[dot_of_statespace] Starting to convert states to a graphics.";
 	
 	let header =
@@ -677,7 +674,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 		)*)
 		^ "\n *"
 		^ "\n * " ^ (string_of_int (nb_states state_space)) ^ " states and "
-			^ (string_of_int (Hashtbl.length transitions)) ^ " transitions"
+			^ (string_of_int (StateSpace.nb_transitions state_space)) ^ " transitions"
 		^ "\n *" 
 		^ "\n * " ^ Constants.program_name ^ " terminated " ^ (after_seconds ())
 		^ "\n************************************************************/"
@@ -746,27 +743,41 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 	
 	print_message Verbose_high "[dot_of_statespace] Starting to convert transitions…";
 
-	
 	let transitions_description =
 		(* Convert the transitions for humans *)
 		"\n  DESCRIPTION OF THE TRANSITIONS"
-		^ (Hashtbl.fold (fun (orig_state_index, action_index) dest_state_index my_string ->
-			let is_nosync action =
-				String.length action >= 7 &&
-				String.sub action 0 7 = "nosync_" in
-			let action = model.action_names action_index in
-			let label = if is_nosync action then (
-				""
-			) else (
-				" via \"" ^ action ^ "\""
-			) in
-			my_string
-			^ "\n  "
-			^ "s_" ^ (string_of_int orig_state_index)
-			^ " -> "
-			^ "s_" ^ (string_of_int dest_state_index)
-			^ label
-		) transitions "")
+		(* We iterate by updating the current string and the source_index, manually incremened by 1 *)
+		^ (let description , _ = DynArray.fold_left (fun (current_string, source_index) successors ->
+			current_string ^ (string_of_list_of_string (
+				List.map (fun (combined_transition , target_index) ->
+					(* Get the action of the combined_transition *)
+					let action_index = StateSpace.get_action_from_combined_transition combined_transition in
+					
+					(*** HACK! ***)
+					let is_nosync action_name =
+						String.length action_name >= 7 &&
+						String.sub action_name 0 7 = "nosync_" in
+						
+					let action_name = model.action_names action_index in
+					let label = if is_nosync action_name then (
+						""
+					) else (
+						" via \"" ^ action_name ^ "\""
+					) in
+					
+					  "\n  "
+					^ "s_" ^ (string_of_int source_index)
+					^ " -> "
+					^ "s_" ^ (string_of_int target_index)
+					^ label
+				) successors
+			)),
+			(* Next index *)
+			source_index+1
+			
+		) ("", 0) transitions
+		in description
+		)
 		^ "\n"
 	in
 	
@@ -787,23 +798,38 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 		^ "\n generator -> date [color=white];"*)
 		
 		(* Convert the transitions for dot *)
-		^ (Hashtbl.fold (fun (orig_state_index, action_index) dest_state_index my_string ->
-			let is_nosync action =
-				String.length action >= 7 &&
-				String.sub action 0 7 = "nosync_" in
-			let action = model.action_names action_index in
-			let label = if is_nosync action then (
-				";"
-			) else (
-				" [label=\"" ^ action ^ "\"];"
-			) in
-			my_string
-			^ "\n  "
-			^ "s_" ^ (string_of_int orig_state_index)
-			^ " -> "
-			^ "s_" ^ (string_of_int dest_state_index)
-			^ label
-		) transitions "")
+		(* We iterate by updating the current string and the source_index, manually incremened by 1 *)
+		^ (let description , _ = DynArray.fold_left (fun (current_string, source_index) successors ->
+			current_string ^ (string_of_list_of_string (
+				List.map (fun (combined_transition , target_index) ->
+					(* Get the action of the combined_transition *)
+					let action_index = StateSpace.get_action_from_combined_transition combined_transition in
+					
+					(*** HACK! ***)
+					let is_nosync action_name =
+						String.length action_name >= 7 &&
+						String.sub action_name 0 7 = "nosync_" in
+						
+					let action_name = model.action_names action_index in
+					let label = if is_nosync action_name then (
+						";"
+					) else (
+						" [label=\"" ^ action_name ^ "\"];"
+					) in
+
+					  "\n  "
+					^ "s_" ^ (string_of_int source_index)
+					^ " -> "
+					^ "s_" ^ (string_of_int target_index)
+					^ label
+				) successors
+			)),
+			(* Next index *)
+			source_index+1
+			
+		) ("", 0) transitions
+		in description
+		)
 
 		(** HANDLE INITIAL STATE *)
 		^ "\n\n/* Initial state */"

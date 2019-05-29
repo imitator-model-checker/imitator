@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: AF synthesis [JLR15]
  * 
  * File contributors : Étienne André
  * Created           : 2018/03/15
- * Last modified     : 2018/03/15
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
 
@@ -169,7 +169,8 @@ class algoAFsynth =
 			(* retrieve the guard *)
 			(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the guard ***)
 			(*** WARNING: very expensive function (for now) ***)
-			let guard = StateSpace.get_guard state_space state_index action_index state_index' in
+				(*** TODO (disabled 2019/05/29) ***)
+			let guard = raise (NotImplemented "get_guard not yet available for AF") (*StateSpace.get_guard state_space state_index action_index state_index'*) in
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then(

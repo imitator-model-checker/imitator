@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Parametric deadlock-freeness
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/08
- * Last modified     : 2017/05/02
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
 
@@ -126,7 +126,8 @@ class algoDeadlockFree =
 			(* retrieve the guard *)
 			(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the guard ***)
 			(*** WARNING: very expensive function (for now) ***)
-			let guard = StateSpace.get_guard state_space state_index action_index state_index' in
+				(*** TODO (disabled 2019/05/29) ***)
+			let guard = raise (NotImplemented "get_guard not yet available for algoDeadlockFree") (*StateSpace.get_guard state_space state_index action_index state_index'*) in
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then(
@@ -338,7 +339,7 @@ class algoDeadlockFree =
 		self#print_algo_message_newline Verbose_low "Retrieving successors…";
 
 		(* Retrieve predecessors *)
-		let predecessors = StateSpace.compute_predecessors_with_actions state_space in
+		let predecessors_table = StateSpace.compute_predecessors_with_actions state_space in
 		
 		(* Retrieve all state indexes *)
 		let all_state_indexes = StateSpace.all_state_indexes state_space in
@@ -362,13 +363,13 @@ class algoDeadlockFree =
 			(* Predecessors *)
 			self#print_algo_message_newline Verbose_high ("PREDECESSORS");
 			(* Iterate on all states in the state space *)
-			List.iter(fun state_index ->
+			List.iter (fun state_index ->
 				self#print_algo_message_newline Verbose_high ("State " ^ (string_of_int state_index) ^ ":");
 				(* Retrieve predecessors *)
-				let predecessors = if Hashtbl.mem predecessors state_index then Hashtbl.find predecessors state_index else [] in
+				let predecessors = Array.get predecessors_table state_index in
 				(* Print each of them *)
-				List.iter (fun (state_index' , action_index) -> 
-					self#print_algo_message Verbose_high ("- " ^ (string_of_int state_index') ^ " (via action " ^ (model.action_names action_index) ^ ")");
+				List.iter (fun (combined_transition, state_index') -> 
+					self#print_algo_message Verbose_high ("- " ^ (string_of_int state_index') ^ " (via action " ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ ")");
 				) predecessors;
 			) all_state_indexes;
 		); (* end if verbose_mode >= high *)
@@ -455,9 +456,9 @@ class algoDeadlockFree =
 				(* Only consider this state if it is not already disabled *)
 				if not (disabled#mem state_index) then(
 					(* Find its predecessors *)
-					let local_predecessors = try Hashtbl.find predecessors state_index with Not_found -> [] in
+					let local_predecessors = Array.get predecessors_table state_index in
 					(* Add them *)
-					List.iter (fun (state_index , _ ) -> predecessors_of_marked#add state_index) local_predecessors;
+					List.iter (fun (_ , state_index ) -> predecessors_of_marked#add state_index) local_predecessors;
 				) (* end if not a member of marked *)
 			) !current_marked_states;
 			

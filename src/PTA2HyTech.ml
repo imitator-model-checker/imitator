@@ -3,7 +3,7 @@
  *                       IMITATOR
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  *
  * Module description: Convert an input IMITATOR file to a file readable by HyTech
  *
@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2016/01/26
- * Last modified     : 2019/05/16
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
 
@@ -224,14 +224,14 @@ let string_of_discrete_updates model updates =
 
 (* Convert a transition of a location into a string *)
 (** NOTE: currently HyTech does not support conditional *)
-let string_of_transition model automaton_index action_index (guard, updates, destination_location) =
-	let clock_updates = updates.clock in
-	let discrete_updates = updates.discrete in
-	let conditional_updates = updates.conditional in
+let string_of_transition model automaton_index transition =
+	let clock_updates = transition.updates.clock in
+	let discrete_updates = transition.updates.discrete in
+	let conditional_updates = transition.updates.conditional in
 	(if conditional_updates <> [] then print_message Verbose_standard "Conditions are not supported by HyTech. Ignoring..." );
 	"\n\t" ^ "when "
 	(* Convert the guard *)
-	^ (ModelPrinter.string_of_guard model.variable_names guard)
+	^ (ModelPrinter.string_of_guard model.variable_names transition.guard)
 
 	(* Convert the updates *)
 	^ " do {"
@@ -244,9 +244,9 @@ let string_of_transition model automaton_index action_index (guard, updates, des
 	^ "} "
 
 	(* Convert the sync *)
-	^ (string_of_sync model action_index)
+	^ (string_of_sync model transition.action)
 	(* Convert the destination location *)
-	^ " goto " ^ (model.location_names automaton_index destination_location)
+	^ " goto " ^ (model.location_names automaton_index transition.target)
 	^ ";"
 
 
@@ -260,7 +260,7 @@ let string_of_transitions model automaton_index location_index =
 		(* Convert to string *)
 		string_of_list_of_string (
 			(* For each transition *)
-			List.map (string_of_transition model automaton_index action_index) transitions
+			List.map (string_of_transition model automaton_index) transitions
 			)
 		) (model.actions_per_location automaton_index location_index)
 	)

@@ -84,24 +84,24 @@ let string_of_conditional_updates model conditional_updates =
 	ModelPrinter.string_of_conditional_updates_template model conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep
 
 (* Convert a transition of a location into a string *)
-let string_of_transition model automaton_index source_location action_index (guard, updates, destination_location) =
+let string_of_transition model automaton_index source_location transition =
 (* s_12 -> s_5 [label="bUp"]; *)
-	let first_separator, second_separator = ModelPrinter.separator_comma updates in
+	let first_separator, second_separator = ModelPrinter.separator_comma transition.updates in
 	"\n\t"
 	(* Source *)
 	^ (id_of_location automaton_index source_location)
 	(* Destination *)
 	^ " -> "
-	^ (id_of_location automaton_index destination_location)
+	^ (id_of_location automaton_index transition.target)
 
 	^ " ["
 	(* Color and style for sync label *)
 	(* Check if the label is shared *)
-	^ (if List.length (model.automata_per_action action_index) > 1 then
-		let color = color action_index in
+	^ (if List.length (model.automata_per_action transition.action) > 1 then
+		let color = color transition.action in
 		"style=bold, color=" ^ color ^ ", "
 		(* Check if this is a Action_type_nosync action: in which case dotted *)
-		else match model.action_types action_index with
+		else match model.action_types transition.action with
 			| Action_type_sync -> ""
 			| Action_type_nosync -> "style=dashed, "
 		)
@@ -110,21 +110,21 @@ let string_of_transition model automaton_index source_location action_index (gua
 	^ "label=\""
 	(* Guard *)
 	^ (
-		if guard <> AbstractModel.True_guard then
-			(escape_string_for_dot (ModelPrinter.string_of_guard model.variable_names guard)) ^ "\\n"
+		if transition.guard <> AbstractModel.True_guard then
+			(escape_string_for_dot (ModelPrinter.string_of_guard model.variable_names transition.guard)) ^ "\\n"
 		else ""
 		)
 	(* Sync *)
-	^ (string_of_sync model action_index)
+	^ (string_of_sync model transition.action)
 	(* Clock updates *)
-	^ (string_of_clock_updates model updates.clock)
+	^ (string_of_clock_updates model transition.updates.clock)
 	(* Add a \n in case of both clocks and discrete *)
 	^ (if first_separator then "\\n" else "")
 	(* Discrete updates *)
-	^ (string_of_discrete_updates model updates.discrete)
+	^ (string_of_discrete_updates model transition.updates.discrete)
 	(* Add a \n in case of both discrete and conditional updates *)
 	^ (if second_separator then "\\n" else "")
-	^ (string_of_conditional_updates model updates.conditional)
+	^ (string_of_conditional_updates model transition.updates.conditional)
 	^ "\"];"
 
 
@@ -141,7 +141,7 @@ let string_of_transitions model automaton_index location_index =
 		(* Convert to string *)
 		string_of_list_of_string (
 			(* For each transition *)
-			List.map (string_of_transition model automaton_index location_index action_index) transitions
+			List.map (string_of_transition model automaton_index location_index) transitions
 			)
 		) (model.actions_per_location automaton_index location_index)
 
