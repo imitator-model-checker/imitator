@@ -4,10 +4,15 @@
 ### Bug fixing:
 * Fixed a "+ 0" that appeared in some of the text and graphical outputs
 
+### Options
+* Removed the `-merge-before` option (that was not documented nor tested)
+
 ### Export
 * Added a (tentative) translation to Uppaal (option `-PTA2Uppaal`)
 * In the graphical state space and states description, the projection onto a selected set of parameters is added if the model contains `projectresult(…)`
 
+### Internal
+* Changed the internal reprensetation of the state space: (state, action, state) is now (state, edge, state)
 
 *******************************************************
 # release 2.11 (2019-03-01)

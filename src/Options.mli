@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Options definitions
  * 
  * File contributors : Étienne André
  * Created:       2012/05/10
- * Last modified: 2019/03/01
+ * Last modified: 2019/05/29
  *
  ************************************************************)
  
@@ -62,7 +62,7 @@ class imitator_options :
 		method inclusion : bool
 		method inclusion2 : bool
 		method merge : bool
-		method merge_before : bool
+(* 		method merge_before : bool *)
 		method merge_heuristic : merge_heuristic
 		method model_input_file_name : string
 		method nb_args : int

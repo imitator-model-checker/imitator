@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Options definitions
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2019/04/08
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
 
@@ -259,7 +259,7 @@ class imitator_options =
 		(* Merging states on the fly *)
 		val mutable merge = ref false
 		(* Merging states on the fly (after pi0-compatibility check) *)
-		val mutable merge_before = ref false
+(* 		val mutable merge_before = ref false *)
 	
 		(* Merging heuristic *)
 		val mutable merge_heuristic = Merge_iter10
@@ -304,7 +304,7 @@ class imitator_options =
 		method inclusion = !inclusion
 		method inclusion2 = !inclusion2
 		method merge = !merge
-		method merge_before = !merge_before
+(* 		method merge_before = !merge_before *)
 		method merge_heuristic = merge_heuristic
 		method model_input_file_name = model_input_file_name
 		method nb_args = nb_args
@@ -743,7 +743,7 @@ class imitator_options =
 				
 				("-merge", Set merge, " Use the merging technique of [AFS13]. Default: 'false' (disable)");
 				
-				("-merge-before", Set merge_before , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");
+(*				("-merge-before", Set merge_before , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");*)
 				
 				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Options are 'always', 'targetseen', 'pq10', 'pq100', 'iter10', 'iter100'. Default: iter10.");
 
@@ -1289,11 +1289,11 @@ class imitator_options =
 			) else
 				print_message Verbose_medium ("Merging technique of [AFS13] disabled (default).")
 			;
-			if !merge_before then
+(*			if !merge_before then
 				print_message Verbose_standard ("Variant of the merging technique of [AFS13] enabled. States will be merged before pi0-compatibility test (EXPERIMENTAL).")
 			else
 				print_message Verbose_medium ("Variant of the merging technique of [AFS13] disabled.")
-			;
+			;*)
 
 			(*if !dynamic then
 				print_message Verbose_standard ("Dynamic mode (optimization by RS).")

@@ -1772,7 +1772,8 @@ class virtual algoStateBased =
 							(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding …) *)
 							StateSpace.increment_nb_gen_states state_space;
 
-							(************************************************************)
+		(*** DISABLED merge_before ***)
+(*							(************************************************************)
 							(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
 							(************************************************************)
 							(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
@@ -1783,22 +1784,22 @@ class virtual algoStateBased =
 								new_action_and_state_list := ([action_index], location, final_constraint) :: !new_action_and_state_list;
 
 							(* EXPERIMENTAL BRANCHING: END CASE MERGE AFTER *)
-							)else(
+							)else( *)
 
 							(* EXPERIMENTAL BRANCHING: CASE MERGE BEFORE (classical version) *)
-								(* Print some information *)
-								if verbose_mode_greater Verbose_total then(
-									(* Build the state *)
-									let new_state = location, final_constraint in
-									self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
-								);
+							(* Print some information *)
+							if verbose_mode_greater Verbose_total then(
+								(* Build the state *)
+								let new_state = location, final_constraint in
+								self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
+							);
 
-								let added = self#add_a_new_state source_state_index new_states_indexes combined_transition location final_constraint in
+							let added = self#add_a_new_state source_state_index new_states_indexes combined_transition location final_constraint in
 
-								(* Update *)
-								has_successors := !has_successors || added;
+							(* Update *)
+							has_successors := !has_successors || added;
 
-							); (* EXPERIMENTAL BRANCHING: END CASE MERGE BEFORE (classical version) *)
+(* 							); (* EXPERIMENTAL BRANCHING: END CASE MERGE BEFORE (classical version) *) *)
 
 						); (* end if satisfiable *)
 					); (* end if Some constraint *)
@@ -1819,7 +1820,8 @@ class virtual algoStateBased =
 		(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
 		(*** NOTE: why not in mode state space ??? ***)
 		(*** NOTE/WARNING: this is the ONLY place where the StatesMerging module is called :/ Otherwise, the function used is the one in StateSpace ***)
-		if options#imitator_mode <> State_space_exploration && options#merge_before then(
+		(*** DISABLED merge_before ***)
+(*		if options#imitator_mode <> State_space_exploration && options#merge_before then(
 
 			(* Merge *)
 			StatesMerging.merge new_action_and_state_list;
@@ -1842,7 +1844,7 @@ class virtual algoStateBased =
 				) action_index_list;
 			) !new_action_and_state_list
 
-		); (* EXPERIMENTAL BRANCHING: END CASE MERGE AFTER *)
+		); (* EXPERIMENTAL BRANCHING: END CASE MERGE AFTER *)*)
 
 
 		(* Algorithm-specific handling of deadlock states, i.e., states without successors *)
@@ -2678,7 +2680,7 @@ class virtual algoStateBased =
 			(*** Here, we merge only the queue ***)
 			(*** TODO: merge something else? ***)
 			let new_states_after_merging = ref (!queue) in
-			if options#merge || options#merge_before then (
+			if options#merge (*|| options#merge_before*) then (
 				(* New version *)
 				let eaten_states = StateSpace.merge state_space !new_states_after_merging in
 				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
@@ -2860,7 +2862,7 @@ class virtual algoStateBased =
 			(* Merge states! *)
 			let new_states_after_merging = ref post_n_plus_1 in
 			(*** HACK here! For #merge_before, we should ONLY merge here; but, in order not to change the full structure of the post computation, we first merge locally before the pi0-compatibility test, then again here ***)
-			if options#merge || options#merge_before then (
+			if options#merge (*|| options#merge_before*) then (
 	(* 			new_states_after_merging := try_to_merge_states state_space !new_states_after_merging; *)
 				(* New version *)
 				let eaten_states = StateSpace.merge state_space !new_states_after_merging in
