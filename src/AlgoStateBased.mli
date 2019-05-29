@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: main virtual class to explore the state space: only defines post-related function, i.e., to compute the successor states of ONE state
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2018/10/08
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
 
@@ -192,7 +192,7 @@ class virtual algoStateBased :
 		(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 		(*------------------------------------------------------------*)
 		(*** TODO: simplify signature by removing the state_index list ref and the action_index, and by returning the list of actually added states ***)
-		method virtual add_a_new_state : state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
+		method virtual add_a_new_state : state_index -> state_index list ref -> StateSpace.combined_transition -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
 		
 		
 
@@ -206,7 +206,7 @@ class virtual algoStateBased :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Add a transition to the state space *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method add_transition_to_state_space : (state_index * Automaton.action_index * state_index) -> StateSpace.addition_result -> unit
+		method add_transition_to_state_space : (state_index * StateSpace.combined_transition * state_index) -> StateSpace.addition_result -> unit
 
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

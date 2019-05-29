@@ -3,13 +3,13 @@
  *                       IMITATOR
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  *
  * Module description: Abstract description of the input model
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/09/11
- * Last modified     : 2019/05/28
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
 
@@ -140,8 +140,13 @@ type updates = {
 (** Conditional updates *)
 and conditional_update = boolean_expression * updates * updates
 
-(** Transition: guard, list of updates, destination location *)
-type transition = guard * action_index * updates * location_index
+(** Transition: guard, action, list of updates, destination location *)
+type transition = {
+	guard		: guard;
+	action		: action_index;
+	updates		: updates;
+	target		: location_index;
+}
 
 type transition_index = int
 
@@ -351,6 +356,8 @@ type abstract_model = {
 	stopwatches : automaton_index -> location_index -> clock_index list;
 	(* An array transition_index -> transition *)
 	transitions_description : transition_index -> transition;
+	(* An array transition_index -> automaton_index *)
+	automaton_of_transition : transition_index -> automaton_index;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative: LinearConstraint.px_linear_constraint;

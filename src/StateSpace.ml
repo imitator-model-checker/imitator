@@ -3,13 +3,13 @@
  *                       IMITATOR
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  *
  * Module description: Description of the symbolic states and of the state space
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2019/05/28
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
 
@@ -323,7 +323,7 @@ let get_successors state_space state_index =
 	counter_get_successors#start;
 
 	(* Retrieve the model *)
-	let model = Input.get_model() in
+(* 	let model = Input.get_model() in *)
 
 	(* Version with actions (old state space) *)
 (*	let result =
@@ -357,12 +357,20 @@ let get_action_from_combined_transition combined_transition =
 		let first_transition_index = List.nth combined_transition 0 in
 		(* Get the actual transition *)
 		let transition = model.transitions_description first_transition_index in
-		(* Get the action *)
-		let _ , action_index , _ , _ = transition in
-		action_index
+		(* Get the action index *)
+		transition.action
 	) with Failure msg -> raise (InternalError ("Empty list of transitions in a combined_transition found in get_action_from_combined_transition, although this should not have been the case: '" ^ msg ^ "'."))
 	in
 	action_index
+
+
+(** Compte and return the list of pairs (index successor of a state, combined transition) *)
+let get_successors_with_combined_transitions state_space state_index =
+	(* Retrieve the model *)
+(* 	let model = Input.get_model() in *)
+
+	(* Get all successors with their combined transition *)
+	DynArray.get state_space.transitions_table state_index
 
 
 (** Compte and return the list of pairs (index successor of a state, corresponding action) *)
@@ -372,7 +380,7 @@ let get_successors_with_actions state_space state_index =
 	counter_get_successors_with_actions#start;
 
 	(* Retrieve the model *)
-	let model = Input.get_model() in
+(* 	let model = Input.get_model() in *)
 
 			(* Version with actions (old state space) *)
 (*	List.fold_left (fun succs action_index ->
@@ -415,7 +423,7 @@ let compute_predecessors_with_actions state_space =
 	counter_compute_predecessors_with_actions#start;
 
 	(* Retrieve the model *)
-	let model = Input.get_model() in
+(* 	let model = Input.get_model() in *)
 
 	(* Version with actions (old state space) *)
 (*	(* Create a hash table for predecessors: state_index -> (state_index, action_index) list *)
@@ -588,7 +596,7 @@ let is_bad program state_space =
 	) *)
 
 
-
+(*
 (*------------------------------------------------------------*)
 (** Big hack: guard and resets reconstruction *)
 (*------------------------------------------------------------*)
@@ -605,7 +613,7 @@ let continuous_part_of_guard (*: LinearConstraint.pxd_linear_constraint*) = func
 
 (* Version with actions (old state space) *)
 (*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the guard ***)
-let get_guard state_space state_index action_index state_index' =
+(*let get_guard state_space state_index action_index state_index' =
 	(* Retrieve the model *)
 	let model = Input.get_model () in
 
@@ -682,12 +690,47 @@ let get_guard state_space state_index action_index state_index' =
 	let guard = LinearConstraint.pxd_intersection (discrete_constraint :: !local_guards) in
 
 	(* Finally! Return the guard *)
-	guard
-(*** TODO next: rewrite get_guard:
+	guard*)
 let get_guard state_space state_index combined_transition state_index' =
-	***)
+	(* Retrieve the model *)
+	let model = Input.get_model () in
+
+	(* Retrieve source and target locations *)
+	let (location : Location.global_location), _ = get_state state_space state_index in
+(* 	let (location' : Location.global_location), _ = get_state state_space state_index' in *)
+
+	(* For all transitions involved in the combined transition *)
+	let continuous_guards : LinearConstraint.pxd_linear_constraint list = List.map (fun transition_index ->
+		(* Get the actual transition *)
+		let transition : AbstractModel.transition = model.transitions_description transition_index in
+
+(*		(* Get the automaton *)
+		let automaton_index = model.automaton_of_transition transition_index in
+		
+		(* Retrieve source and target location indexes *)
+		let l : Automaton.location_index = Location.get_location location automaton_index in
+		let l' : Automaton.location_index = Location.get_location location' automaton_index in*)
+		
+		(* Get the actual guard *)
+		let g, _, _, _ = transition in
+		g
+		
+	) combined_transition
+	in
+
+	(* Compute constraint for assigning a (constant) value to discrete variables *)
+	print_message Verbose_high ("Computing constraint for discrete variables");
+	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value location discrete_index)) model.discrete in
+	(* Constraint of the form D_i = d_i *)
+	let discrete_constraint = LinearConstraint.pxd_constraint_of_point discrete_values in
+
+	(* Create the constraint guard ^ D_i = d_i *)
+	LinearConstraint.pxd_intersection (discrete_constraint :: continuous_guards)
+
+	
 
 
+(*(* Version with actions (old state space) *)
 (*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the set of clocks to be reset along a transition ***)
 (*** NOTE: the function only works for regular resets (it raises an NotImplemented for other updates) ***)
 let get_resets state_space state_index action_index state_index' =
@@ -772,8 +815,39 @@ let get_resets state_space state_index action_index state_index' =
 	let unique_clock_resets = list_only_once !clock_resets in
 
 	(* Finally! Return the list of clocks to reset *)
-	unique_clock_resets
+	unique_clock_resets*)
 
+(*** NOTE: the function only works for regular resets (it raises NotImplemented for other updates) ***)
+(*** TODO: allow for all resets ***)
+let get_resets state_space state_index combined_transition state_index' =
+	(* Retrieve the model *)
+	let model = Input.get_model () in
+
+	(* Retrieve source location *)
+	let (location : Location.global_location), _ = get_state state_space state_index in
+	
+	(* For all transitions involved in the combined transition *)
+	let resets = List.fold_left (fun current_resets transition_index ->
+		(* Get the actual transition *)
+		let transition = model.transitions_description transition_index in
+
+		(* Get the actual updates *)
+		let _, _, updates, _ = transition in
+		
+		(*** WARNING: we only accept clock resets (no arbitrary updates) ***)
+		(*** TODO ***)
+		match clock_updates with
+			(* No update at all *)
+			| No_update -> current_resets
+			(* Reset to 0 only *)
+			| Resets clock_resets -> List.rev_append clock_resets current_resets
+			(* Reset to arbitrary value (including discrete, parameters and clocks) *)
+			| Updates _ -> raise (NotImplemented "Only clock resets are allowed for now in StateSpace.get_resets")
+	) [] combined_transition
+	in
+	
+	(* Keep each clock once *)
+	list_only_once resets*)
 
 
 (************************************************************)
@@ -1017,18 +1091,18 @@ let reconstruct_scc state_space source_state_index : scc option =
 
 
 (*------------------------------------------------------------*)
-(** From a set of states, return all transitions within this set of states, in the form of a triple (state_index, action_index, state_index) *)
+(** From a set of states, return all transitions within this set of states, in the form of a triple (state_index, combined_transition, state_index) *)
 (*------------------------------------------------------------*)
-let find_transitions_in state_space (scc : scc) : (state_index * action_index * state_index) list =
+let find_transitions_in state_space (scc : scc) : (state_index * combined_transition * state_index) list =
 	List.fold_left (fun current_list state_index ->
 		(* Compute the successors of state_index *)
-		let successors = get_successors_with_actions state_space state_index in
+		let successors = get_successors_with_combined_transitions state_space state_index in
 
 		(* Filter only those who belong to the scc *)
-		let successors_in_scc = List.filter (fun (state_index, _) -> List.mem state_index scc) successors in
+		let successors_in_scc = List.filter (fun (_, state_index) -> List.mem state_index scc) successors in
 
-		(* Convert into triple (state_index, action_index, state_index) *)
-		let triples = List.map (fun (target_state_index, action_index) -> (state_index, action_index, target_state_index) ) successors_in_scc in
+		(* Convert into triple (state_index, combined_transition, state_index) *)
+		let triples = List.map (fun (combined_transition , target_state_index) -> (state_index, combined_transition, target_state_index) ) successors_in_scc in
 
 		(* Add them to the current list *)
 		List.rev_append triples current_list

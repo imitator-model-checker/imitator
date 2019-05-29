@@ -3,13 +3,13 @@
  *                       IMITATOR
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13
+ * Université Paris 13, LIPN, CNRS, France
  *
  * Module description: Convert a parsing structure into an abstract model
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/09/09
- * Last modified     : 2019/05/28
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
 
@@ -2351,16 +2351,26 @@ let convert_updates index_of_variables constants type_of_variables updates : upd
 (* Convert the structure: 'automaton_index -> location_index -> list of (action_index, guard, resets, target_state)'
 	into a structure:
 	'automaton_index -> location_index -> action_index -> list of (transition_index)'
-	and creates a structure transition_index -> (guard, resets, target_state) *)
-let convert_transitions nb_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions : (((AbstractModel.transition_index list) array) array) array * (AbstractModel.transition array) =
+	and creates a structure transition_index -> (guard, action_index, resets, target_state)
+	and creates a structure transition_index -> automaton_index
+*)
+let convert_transitions nb_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions
+	: (((AbstractModel.transition_index list) array) array) array * (AbstractModel.transition array) * (Automaton.automaton_index array)
+	=
   (* Create the empty array of transitions automaton_index -> location_index -> action_index -> list of (transition_index) *)
   
   (*** NOTE/TODO: why (Array.length transitions) ?! ***)
   
   let array_of_transitions : (((AbstractModel.transition_index list) array) array) array = Array.make (Array.length transitions) (Array.make 0 (Array.make 0 [])) in
   (* Create the empty array transition_index -> transition *)
-  let dummy_transition = True_guard , { clock = No_update; discrete = [] ; conditional = []} , -1 in
-  let transitions_description = Array.make nb_transitions dummy_transition in
+  let dummy_transition = {
+	guard		= True_guard;
+	action		= -1;
+	updates		= { clock = No_update; discrete = [] ; conditional = []};
+	target		= -1;
+	} in
+  let transitions_description : AbstractModel.transition array = Array.make nb_transitions dummy_transition in
+  let automaton_of_transition : Automaton.automaton_index array = Array.make nb_transitions (-1) in
   
   (* Maintain an index for the next transition *)
   let transition_index = ref 0 in
@@ -2445,7 +2455,14 @@ let convert_transitions nb_transitions nb_actions index_of_variables constants r
               array_of_transitions.(automaton_index).(location_index).(action_index) <- !transition_index :: array_of_transitions.(automaton_index).(location_index).(action_index);
               
               (* Add the transition to the description *)
-              transitions_description.(!transition_index) <- (converted_guard, action_index, converted_updates, target_location_index);
+              transitions_description.(!transition_index) <- {
+					guard   = converted_guard;
+					action  = action_index;
+					updates = converted_updates;
+					target  = target_location_index;
+				};
+              (* Add the automaton *)
+              automaton_of_transition.(!transition_index) <- automaton_index;
               
               (* Increment the index *)
               transition_index := !transition_index + 1;
@@ -2454,8 +2471,8 @@ let convert_transitions nb_transitions nb_actions index_of_variables constants r
         ) transitions_for_this_automaton;
     ) transitions;
 
-  (* Return transitions and the array transition_index -> transition *)
-  array_of_transitions, transitions_description
+  (* Return transitions and the arrays transition_index -> transition and transition_index -> automaton_index *)
+  array_of_transitions, transitions_description, automaton_of_transition
 
 
 
@@ -3110,7 +3127,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 
 	(* Convert transitions *)
 	(*** TODO: integrate inside 'make_automata' (?) ***)
-	let transitions, transitions_description = convert_transitions nb_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions in
+	let transitions, transitions_description, automaton_of_transition = convert_transitions nb_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions in
 
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3151,12 +3168,15 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 				(* Iterate on actions *)
 				Array.map (fun transitions_for_this_action ->
 					(* Iterate on transitions for this action *)
-					List.map (fun (guard, updates, target_location_index) ->
+					List.map (fun transition ->
 						let current_transition_index = !transition_index in
 						(* Add the transition to the description *)
 						begin
 						try(
-						transitions_description.(current_transition_index) <- (guard, updates, target_location_index)
+							(* Update transition description *)
+							transitions_description.(current_transition_index) <- transition;
+							(* Update automaton of transition *)
+							automaton_of_transition.(current_transition_index) <- observer_id;
 						) with
 							| Invalid_argument e -> raise (InternalError ("Invalid argument '" ^ e ^ "' when updating observer transitions (current index: " ^ (string_of_int current_transition_index) ^ " max size: " ^ (string_of_int (Array.length transitions_description)) ^ ")"))
 						;
@@ -3220,6 +3240,9 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	let transitions = fun automaton_index location_index action_index -> transitions.(automaton_index).(location_index).(action_index) in
 	(* Transition description *)
 	let transitions_description = fun transition_index -> transitions_description.(transition_index) in
+	(* Automaton of transition *)
+	let automaton_of_transition = fun transition_index -> automaton_of_transition.(transition_index) in
+	
 	(* Actions *)
 	let action_names = fun action_index ->
 		try (array_of_action_names.(action_index))
@@ -3322,12 +3345,11 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 			List.iter (fun action_index ->
 				let transitions_for_this_location = List.map transitions_description (transitions automaton_index location_index action_index) in
 				(* For all transitions *)
-				List.iter (fun (guard, _, _) ->
+				List.iter (fun transition ->
 
 					(* Add guard *)
 					(*** NOTE: quite inefficient as we create a lot of pxd_true_constraint() although we just want to know whether they are L/U or not (but OK because prior to model analysis) ***)
-					all_constraints := (continuous_part_of_guard guard) :: !all_constraints;
-
+					all_constraints := (continuous_part_of_guard transition.guard) :: !all_constraints;
 				) transitions_for_this_location;
 			) actions_for_this_location;
 		) locations_for_this_automaton;
@@ -3614,6 +3636,8 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	stopwatches = stopwatches;
 	(* An array transition_index -> transition *)
 	transitions_description = transitions_description;
+	(* An array transition_index -> automaton_index *)
+	automaton_of_transition = automaton_of_transition;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative = px_clocks_non_negative;

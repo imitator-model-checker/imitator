@@ -7,7 +7,7 @@
  * Module description: "EF optimized" algorithm: minimization or minimization of a parameter valuation for which there exists a run leading to some states. Algorithm with a priority queue.
  * 
  * File contributors : Vincent Bloemen, Étienne André
- * Created           : 2018/0?/??
+ * Created           : 2018/10/08
  * Last modified     : 2019/02/19
  *
  ************************************************************)

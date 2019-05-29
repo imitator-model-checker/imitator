@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: "EF optimized" algorithm: minimization or minimization of a parameter valuation for which there exists a run leading to some states. Algorithm with a priority queue.
  * 
  * File contributors : Vincent Bloemen, Étienne André
- * Created           : 2018/0?/??
- * Last modified     : 2018/10/08
+ * Created           : 2018/10/08
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
 
@@ -47,7 +47,7 @@ class algoEFoptQueue :
 		(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 		(*------------------------------------------------------------*)
 		(*** TODO: simplify signature by removing the orig_state_index and returning the list of actually added states ***)
-		method add_a_new_state : state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
+		method add_a_new_state : state_index -> state_index list ref -> StateSpace.combined_transition -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
 
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

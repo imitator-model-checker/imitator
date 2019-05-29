@@ -4,14 +4,13 @@
  *
  * File containing the operations linked to the observer patterns
  *
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Université Paris 13, LIPN, CNRS, France
  *
- * Author:        Etienne Andre
+ * Author:        Étienne André
  *
  * File contributors : Jaime Arias
  * Created           : 2013/02/04
- * Last modified     : 2019/04/15
+ * Last modified     : 2019/05/29
  *
  ****************************************************************)
 
@@ -51,7 +50,13 @@ let create_update clock_updates discrete_updates conditional_updates =
 	 conditional = conditional_updates}
 
 (** Creates a transition without guards and updates *)
-let untimedt destination_index = [True_guard, create_update No_update [] [], destination_index]
+let untimedt action_index target_index =
+	[{
+		guard		= True_guard;
+		action		= action_index;
+		updates		= create_update No_update [] [];
+		target		= target_index;
+	}]
 
 (* Constraint x <= d, with 'd' a LinearConstraint.p_linear_term : d - x >= 0 *)
 let ct_x_leq_d x d =
@@ -209,7 +214,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* The array of transitions for locations who allow all declared observer actions for a location, as self-loops *)
 		function location_index ->
 			let allow_all = Array.make nb_actions [] in
-			List.iter (fun action_index -> allow_all.(action_index) <- untimedt location_index) all_actions;
+			List.iter (fun action_index -> allow_all.(action_index) <- untimedt action_index location_index) all_actions;
 			allow_all
 	in
 
@@ -227,8 +232,8 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* No need to update actions per location (no nosync action here) *)
 
 		(* Compute transitions *)
-		transitions.(0).(a1) <- untimedt 1;
-		transitions.(0).(a2) <- untimedt 2;
+		transitions.(0).(a1) <- untimedt a1 1;
+		transitions.(0).(a2) <- untimedt a2 2;
 		transitions.(1) <- allow_all 1;
 		transitions.(2) <- allow_all 2;
 		(* Return structure *)
@@ -247,10 +252,10 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* No need to update actions per location (no nosync action here) *)
 
 		(* Compute transitions *)
-		transitions.(0).(a1) <- untimedt 1;
-		transitions.(0).(a2) <- untimedt 2;
-		transitions.(1).(a1) <- untimedt 1;
-		transitions.(1).(a2) <- untimedt 0;
+		transitions.(0).(a1) <- untimedt a1 1;
+		transitions.(0).(a2) <- untimedt a2 2;
+		transitions.(1).(a1) <- untimedt a1 1;
+		transitions.(1).(a2) <- untimedt a2 0;
 		transitions.(2) <- allow_all 2;
 		(*print_message Debug_standard ("Index of a1: " ^ (string_of_int a1) ^ " ; index of a2: " ^ (string_of_int a2) ^ "");
 		for location_index = 0 to nb_locations - 1 do
@@ -258,7 +263,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 				let t = transitions.(location_index).(action_index) in
 				match t with
 				| [] -> print_message Debug_standard ("Location " ^ (string_of_int location_index) ^ "  -> action " ^ (string_of_int action_index) ^ " : nothing")
-				| [(_, _, _, destination_index)] -> print_message Debug_standard ("Location " ^ (string_of_int location_index) ^ "  -> action " ^ (string_of_int action_index) ^ " : " ^ (string_of_int destination_index) ^ "")
+				| [(_, _, _, target_index)] -> print_message Debug_standard ("Location " ^ (string_of_int location_index) ^ "  -> action " ^ (string_of_int action_index) ^ " : " ^ (string_of_int target_index) ^ "")
 				| _ -> print_message Debug_standard ("Location " ^ (string_of_int location_index) ^ "  -> action " ^ (string_of_int action_index) ^ " : something else")
 			done;
 		done;*)
@@ -278,10 +283,10 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* No need to update actions per location (no nosync action here) *)
 
 		(* Compute transitions *)
-		transitions.(0).(a1) <- untimedt 1;
-		transitions.(0).(a2) <- untimedt 2;
-		transitions.(1).(a1) <- untimedt 2;
-		transitions.(1).(a2) <- untimedt 0;
+		transitions.(0).(a1) <- untimedt a1 1;
+		transitions.(0).(a2) <- untimedt a2 2;
+		transitions.(1).(a1) <- untimedt a1 2;
+		transitions.(1).(a2) <- untimedt a2 0;
 		transitions.(2) <- allow_all 2;
 		(* Return structure *)
 		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
@@ -308,8 +313,14 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* Update invariants *)
 		invariants.(0) <- ct_x_leq_d x_obs d ;
 		(* Compute transitions *)
-		transitions.(0).(a) <- untimedt 1;
-		transitions.(0).(nosync_index) <- [Continuous_guard (ct_x_eq_d x_obs d), create_update No_update [] [], 2];
+		transitions.(0).(a) <- untimedt a 1;
+		transitions.(0).(nosync_index) <-
+			[{
+				guard		= Continuous_guard (ct_x_eq_d x_obs d);
+				action		= nosync_index;
+				updates		= create_update No_update [] [];
+				target		= 2;
+			}];
 		transitions.(1) <- allow_all 1;
 		transitions.(2) <- allow_all 2;
 		(* Return structure (and add silent action) *)
@@ -327,12 +338,36 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no silent action here) *)
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [True_guard, create_update (Resets [x_obs]) [] [], 1];
-		transitions.(0).(a2) <- untimedt 3;
-		transitions.(1).(a1) <- [True_guard, create_update (Resets [x_obs]) [] [], 1];
-		transitions.(1).(a2) <- [
-			Continuous_guard (ct_x_leq_d x_obs d), create_update No_update [] [], 2;
-			Continuous_guard (ct_x_geq_d x_obs d), create_update No_update [] [], 3
+		transitions.(0).(a1) <- 
+			[{
+				guard		= True_guard;
+				action		= a1;
+				updates		= create_update (Resets [x_obs]) [] [];
+				target		= 1;
+			}];
+		transitions.(0).(a2) <- untimedt a2 3;
+		transitions.(1).(a1) <-
+			[{
+				guard		= True_guard;
+				action		= a1;
+				updates		= create_update (Resets [x_obs]) [] [];
+				target		= 1;
+			}];
+		transitions.(1).(a2) <-
+			[
+			{
+				guard		= Continuous_guard (ct_x_leq_d x_obs d);
+				action		= a2;
+				updates		= create_update No_update [] [];
+				target		= 2;
+			}
+			;
+			{
+				guard		= Continuous_guard (ct_x_geq_d x_obs d);
+				action		= a2;
+				updates		= create_update No_update [] [];
+				target		= 3;
+			}
 			];
 		transitions.(2) <- allow_all 2;
 		transitions.(3) <- allow_all 3;
@@ -351,12 +386,36 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no silent action here) *)
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [True_guard, create_update (Resets [x_obs]) [] [], 1];
-		transitions.(0).(a2) <- untimedt 2;
-		transitions.(1).(a1) <- [True_guard, create_update (Resets [x_obs]) [] [], 1];
-		transitions.(1).(a2) <- [
-			Continuous_guard (ct_x_leq_d x_obs d), create_update No_update [] [], 0;
-			Continuous_guard (ct_x_geq_d x_obs d), create_update No_update [] [], 2
+		transitions.(0).(a1) <-
+			[{
+				guard		= True_guard;
+				action		= a1;
+				updates		= create_update (Resets [x_obs]) [] [];
+				target		= 1;
+			}];
+		transitions.(0).(a2) <- untimedt a2 2;
+		transitions.(1).(a1) <-
+			[{
+				guard		= True_guard;
+				action		= a1;
+				updates		= create_update (Resets [x_obs]) [] [];
+				target		= 1;
+			}];
+		transitions.(1).(a2) <-
+			[
+			{
+				guard		= Continuous_guard (ct_x_leq_d x_obs d);
+				action		= a2;
+				updates		= create_update No_update [] [];
+				target		= 0;
+			}
+			;
+			{
+				guard		= Continuous_guard (ct_x_geq_d x_obs d);
+				action		= a2;
+				updates		= create_update No_update [] [];
+				target		= 2;
+			}
 			];
 		transitions.(2) <- allow_all 2;
 		(* Return structure *)
@@ -374,12 +433,30 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no silent action here) *)
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [True_guard, create_update (Resets [x_obs]) [] [], 1];
-		transitions.(0).(a2) <- untimedt 2;
-		transitions.(1).(a1) <- untimedt 2;
-		transitions.(1).(a2) <- [
-			Continuous_guard (ct_x_leq_d x_obs d), create_update No_update [] [], 0;
-			Continuous_guard (ct_x_geq_d x_obs d), create_update No_update [] [], 2
+		transitions.(0).(a1) <-
+			[{
+				guard		= True_guard;
+				action		= a1;
+				updates		= create_update (Resets [x_obs]) [] [];
+				target		= 1;
+			}];
+		transitions.(0).(a2) <- untimedt a2 2;
+		transitions.(1).(a1) <- untimedt a1 2;
+		transitions.(1).(a2) <-
+			[
+			{
+				guard		= Continuous_guard (ct_x_leq_d x_obs d);
+				action		= a2;
+				updates		= create_update No_update [] [];
+				target		= 0;
+			}
+			;
+			{
+				guard		= Continuous_guard (ct_x_geq_d x_obs d);
+				action		= a2;
+				updates		= create_update No_update [] [];
+				target		= 2;
+			}
 			];
 		transitions.(2) <- allow_all 2;
 		(* Return structure *)
@@ -400,11 +477,23 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* Update invariants *)
 		invariants.(1) <- ct_x_leq_d x_obs d;
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [True_guard, create_update (Resets [x_obs]) [] [], 1];
-		transitions.(0).(a2) <- untimedt 0;
-		transitions.(1).(a1) <- untimedt 1;
-		transitions.(1).(a2) <- untimedt 2;
-		transitions.(1).(nosync_index) <- [Continuous_guard (ct_x_eq_d x_obs d), create_update No_update [] [], 3];
+		transitions.(0).(a1) <-
+			[{
+				guard		= True_guard;
+				action		= a1;
+				updates		= create_update (Resets [x_obs]) [] [];
+				target		= 1;
+			}];
+		transitions.(0).(a2) <- untimedt a2 0;
+		transitions.(1).(a1) <- untimedt a1 1;
+		transitions.(1).(a2) <- untimedt a2 2;
+		transitions.(1).(nosync_index) <-
+			[{
+				guard		= Continuous_guard (ct_x_eq_d x_obs d);
+				action		= nosync_index;
+				updates		= create_update No_update [] [];
+				target		= 3;
+			}];
 		transitions.(2) <- allow_all 2;
 		transitions.(3) <- allow_all 3;
 		(* Return structure (and add silent action) *)
@@ -424,11 +513,23 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* Update invariants *)
 		invariants.(1) <- ct_x_leq_d x_obs d;
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [True_guard, create_update (Resets [x_obs]) [] [], 1];
-		transitions.(0).(a2) <- untimedt 0;
-		transitions.(1).(a1) <- untimedt 1;
-		transitions.(1).(a2) <- untimedt 0;
-		transitions.(1).(nosync_index) <- [Continuous_guard (ct_x_eq_d x_obs d), create_update No_update [] [], 2];
+		transitions.(0).(a1) <-
+			[{
+				guard		= True_guard;
+				action		= a1;
+				updates		= create_update (Resets [x_obs]) [] [];
+				target		= 1;
+			}];
+		transitions.(0).(a2) <- untimedt a2 0;
+		transitions.(1).(a1) <- untimedt a1 1;
+		transitions.(1).(a2) <- untimedt a2 0;
+		transitions.(1).(nosync_index) <-
+			[{
+				guard		= Continuous_guard (ct_x_eq_d x_obs d);
+				action		= nosync_index;
+				updates		= create_update No_update [] [];
+				target		= 2;
+			}];
 		transitions.(2) <- allow_all 2;
 		(* Return structure (and add silent action) *)
 		nosync_index :: all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
@@ -448,11 +549,23 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* Update invariants *)
 		invariants.(1) <- ct_x_leq_d x_obs d;
 		(* Compute transitions *)
-		transitions.(0).(a1) <- [True_guard, create_update (Resets [x_obs]) [] [], 1];
-		transitions.(0).(a2) <- untimedt 2;
-		transitions.(1).(a1) <- untimedt 2;
-		transitions.(1).(a2) <- untimedt 0;
-		transitions.(1).(nosync_index) <- [Continuous_guard (ct_x_eq_d x_obs d), create_update No_update [] [], 2];
+		transitions.(0).(a1) <-
+			[{
+				guard		= True_guard;
+				action		= a1;
+				updates		= create_update (Resets [x_obs]) [] [];
+				target		= 1;
+			}];
+		transitions.(0).(a2) <- untimedt a2 2;
+		transitions.(1).(a1) <- untimedt a1 2;
+		transitions.(1).(a2) <- untimedt a2 0;
+		transitions.(1).(nosync_index) <-
+			[{
+				guard		= Continuous_guard (ct_x_eq_d x_obs d);
+				action		= nosync_index;
+				updates		= create_update No_update [] [];
+				target		= 2;
+			}];
 		transitions.(2) <- allow_all 2;
 		(* Return structure (and add silent action) *)
 		nosync_index :: all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
@@ -480,11 +593,11 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		for i = 0 to lf-1 do
 			(* Add the action l_i --{a_i}--> l_i+1 *)
 			let a_i = List.nth list_of_actions i in
-			transitions.(i).(a_i) <- untimedt (i+1);
+			transitions.(i).(a_i) <- untimedt a_i (i+1);
 			(* Add the transitions to bad *)
 			List.iter(fun action_index ->
 				if action_index <> a_i then (
-					transitions.(i).(action_index) <- untimedt (lbad);
+					transitions.(i).(action_index) <- untimedt action_index lbad;
 				);
 			) list_of_actions;
 		done;
@@ -519,18 +632,18 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 			let a_i = List.nth list_of_actions i in
 			(* Add the action l_i --{a_i}--> l_i+1, except for location n-1 *)
 			if i <> lbad-1 then(
-				transitions.(i).(a_i) <- untimedt (i+1);
+				transitions.(i).(a_i) <- untimedt a_i (i+1);
 			);
 			(* Add the transitions to bad *)
 			List.iter(fun action_index ->
 				if action_index <> a_i then (
-					transitions.(i).(action_index) <- untimedt (lbad);
+					transitions.(i).(action_index) <- untimedt action_index lbad;
 				);
 			) list_of_actions;
 		done;
 		(* Location n-1: add the loop back to loc_0 *)
 		let a_n = List.nth list_of_actions (List.length list_of_actions - 1) in
-		transitions.(lbad-1).(a_n) <- untimedt (0);
+		transitions.(lbad-1).(a_n) <- untimedt a_n 0;
 		(* Add self-loops *)
 		transitions.(lbad) <- allow_all lbad;
 

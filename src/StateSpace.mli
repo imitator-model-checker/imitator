@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Description of the symbolic states and of the state space
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2019/05/28
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
 
@@ -20,6 +20,21 @@
 open Automaton
 open State
 
+
+(************************************************************)
+(** Type definitions *)
+(************************************************************)
+
+(** A combined transition is a list of transitions (one for each automaton involved) *)
+type combined_transition = AbstractModel.transition_index list
+
+
+(************************************************************)
+(** Functions independent from state space *)
+(************************************************************)
+
+(** Get the (unique) action associated with a combined_transition *)
+val get_action_from_combined_transition : combined_transition -> action_index
 
 
 (************************************************************)
@@ -65,9 +80,6 @@ type state_space
 
 (** An SCC is just a list of states *)
 type scc = state_index list
-
-(** A combined transition is a list of transitions (one for each automaton involved) *)
-type combined_transition = AbstractModel.transition_index list
 
 
 (************************************************************)
@@ -173,12 +185,13 @@ val last_states: AbstractModel.abstract_model -> state_space -> state_index list
 
 
 
-(*------------------------------------------------------------*)
+(*(*------------------------------------------------------------*)
+(* Get the (full) guard associated with a transition *)
 (*------------------------------------------------------------*)
 val get_guard : state_space -> state_index -> combined_transition -> state_index -> LinearConstraint.pxd_linear_constraint
 
-(*** NOTE: the function only works for regular resets (it raises an NotImplemented for other updates) ***)
-val get_resets : state_space -> state_index -> combined_transition -> state_index -> Automaton.clock_index list
+(*** NOTE: the function only works for regular resets (it raises NotImplemented for other updates) ***)
+val get_resets : state_space -> state_index -> combined_transition -> state_index -> Automaton.clock_index list*)
 
 
 (*------------------------------------------------------------*)

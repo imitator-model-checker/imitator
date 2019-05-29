@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13 (France)
  * 
  * Module description: Parametric deadlock-freeness
  * 

@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  *
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  *
  * Module description: main virtual class to explore the state space: only
  * defines post-related function, i.e., to compute the successor states of ONE
@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/05/16
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
 
@@ -937,7 +937,8 @@ let compute_new_location_guards_updates aut_table trans_table action_index origi
 		(* Keep the 'current_index'th transition *)
 		let transition_index = List.nth transitions current_index in
 		(* Access the transition and get the components *)
-		let guard, updates, dest_index = model.transitions_description transition_index in
+		let transition = model.transitions_description transition_index in
+		let guard, updates, dest_index = transition.guard, transition.updates, transition.target in
 
       (** Collecting the updates by evaluating the conditions, if there is any *)
       let clock_updates, discrete_updates = List.fold_left (
@@ -1302,7 +1303,7 @@ let compute_transitions location constr action_index automata aut_table max_inde
 			(* REMOVED 2011/11/21 : computation always slower ; might be faster for strongly branching systems? EXCEPT FOR LSV.imi --> put it back! *)
 			(* Keep only possible transitions *)
 			let is_possible = fun trans -> (
-				let guard, _, _ = trans in
+				let guard = trans.guard in
 
 				(* First check whether the discrete part is possible *)
 				let discrete_part_possible = is_discrete_guard_satisfied location guard in
@@ -1567,7 +1568,7 @@ class virtual algoStateBased =
 	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** TODO: simplify signature by removing the source_state_index and returning the list of actually added states ***)
-	method virtual add_a_new_state : state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
+	method virtual add_a_new_state : state_index -> state_index list ref -> StateSpace.combined_transition -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1864,10 +1865,10 @@ class virtual algoStateBased =
 		counter_add_transition_to_state_space#start;
 
 		(* Expand the transition *)
-		let source_state_index, action_index, target_state_index = transition in
+		let source_state_index, combined_transition, target_state_index = transition in
 
 		(* Update state space *)
-		StateSpace.add_transition state_space (source_state_index, action_index, target_state_index);
+		StateSpace.add_transition state_space (source_state_index, combined_transition, target_state_index);
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then (
@@ -1879,7 +1880,7 @@ class virtual algoStateBased =
 				| StateSpace.State_already_present _ -> "Old state"
 				| StateSpace.State_replacing _ -> "BIGGER STATE than a former state"
 			 in
-			print_message Verbose_high ("\n" ^ beginning_message ^ " s_" ^ (string_of_int target_state_index) ^ " reachable from s_" ^ (string_of_int source_state_index) ^ " via action '" ^ (model.action_names action_index) ^ "': ");
+			print_message Verbose_high ("\n" ^ beginning_message ^ " s_" ^ (string_of_int target_state_index) ^ " reachable from s_" ^ (string_of_int source_state_index) ^ " via action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "': ");
 			print_message Verbose_high (ModelPrinter.string_of_state model new_target_state);
 		);
 

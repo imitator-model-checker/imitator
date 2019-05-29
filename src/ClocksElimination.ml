@@ -2,14 +2,13 @@
  *
  *                       IMITATOR
  *
- * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * LIPN, Université Paris 13 (France)
  *
  * Module description: Dynamic elimination of clocks not used in the future [Andre13, FSFMA]
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2015/11/27
- * Last modified     : 2019/05/16
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
 
@@ -105,7 +104,7 @@ let find_local_clocks () =
 
             let clocks_for_transitions = List.fold_left (fun list_of_clocks_for_previous_transitions transition ->
                 (* Name the elements in the transition *)
-                let guard , updates , _ = transition in
+                let guard , updates = transition.guard, transition.updates in
 
                 let clocks_in_guards = get_clocks_in_guard model.clocks guard in
                 let clocks_in_updates = get_clocks_in_updates updates in
@@ -191,15 +190,15 @@ let find_useless_clocks_in_automata local_clocks_per_automaton =
 
             (* For each transition starting from this location *)
             (** TODO: What happens here with the clock updates ?? *)
-            List.iter (fun ((*guard*) _ , updates,  target_index) ->
+            List.iter (fun transition ->
 
                 (* Get the clocks updated or reset *)
-                let reset_clocks = ModelConverter.get_clocks_in_updates updates in
+                let reset_clocks = ModelConverter.get_clocks_in_updates transition.updates in
 
                 (* Compute the local clocks updated or reset *)
                 let reset_local_clocks = list_inter reset_clocks local_clocks in
                 (* Update the predecessors *)
-                predecessors.(target_index) <- (location_index, reset_local_clocks) :: predecessors.(target_index);
+                predecessors.(transition.target) <- (location_index, reset_local_clocks) :: predecessors.(transition.target);
               ) transitions; (* end for each transition *)
           ) actions_for_this_location; (* end for each action *)
       ) locations_for_this_automaton; (* end for each location *)
@@ -245,9 +244,9 @@ let find_useless_clocks_in_automata local_clocks_per_automaton =
                                       (* Retrieve the transitions from this location & action *)
                                       let transitions = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
                                       (* Check if there exists a guard in an outgoing transition where the clock is constrained *)
-                                      let exists_guard = List.exists (fun (guard , (*updates*)_ , (*target_index*)_) ->
+                                      let exists_guard = List.exists (fun transition ->
                                           (* Check if the clock is present in the guard *)
-                                          let constrained = is_constrained_in_guard clock_index guard in
+                                          let constrained = is_constrained_in_guard clock_index transition.guard in
                                           (* Print some information *)
                                           if constrained then (
                                             print_message Verbose_high ("Found a transition where clock '" ^ (model.variable_names clock_index) ^ "' is constrained in guard from location '" ^ (model.location_names automaton_index location_index) ^ "', through '" ^ (model.action_names action_index) ^ "'");

@@ -3,13 +3,13 @@
  *                       IMITATOR
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  *
  * Module description: Convert an abstract model to the input syntax of IMITATOR
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2019/05/16
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
 
@@ -318,15 +318,15 @@ let string_of_conditional_updates model conditional_updates =
 	string_of_conditional_updates_template model conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep
 
 (* Convert a transition of a location into a string *)
-let string_of_transition model automaton_index action_index (guard, updates, destination_location) =
-	let clock_updates = updates.clock in
-	let discrete_updates = updates.discrete in
-	let conditional_updates = updates.conditional in
-	let first_separator, second_separator = separator_comma updates in
+let string_of_transition model automaton_index transition =
+	let clock_updates = transition.updates.clock in
+	let discrete_updates = transition.updates.discrete in
+	let conditional_updates = transition.updates.conditional in
+	let first_separator, second_separator = separator_comma transition.updates in
 
 	"\n\t" ^ "when "
 	(* Convert the guard *)
-	^ (string_of_guard model.variable_names guard)
+	^ (string_of_guard model.variable_names transition.guard)
 
 	(* Convert the updates *)
 	^ " do {"
@@ -343,9 +343,9 @@ let string_of_transition model automaton_index action_index (guard, updates, des
 	^ "} "
 
 	(* Convert the sync *)
-	^ (string_of_sync model action_index)
+	^ (string_of_sync model transition.action)
 	(* Convert the destination location *)
-	^ " goto " ^ (model.location_names automaton_index destination_location)
+	^ " goto " ^ (model.location_names automaton_index transition.target)
 	^ ";"
 
 
@@ -359,7 +359,7 @@ let string_of_transitions model automaton_index location_index =
 		(* Convert to string *)
 		string_of_list_of_string (
 			(* For each transition *)
-			List.map (string_of_transition model automaton_index action_index) (List.map model.transitions_description transitions)
+			List.map (string_of_transition model automaton_index) (List.map model.transitions_description transitions)
 			)
 		) (model.actions_per_location automaton_index location_index)
 	)
