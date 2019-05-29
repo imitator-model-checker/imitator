@@ -187,7 +187,7 @@ let tcounter_next_transitions = create_time_counter_and_register "next transitio
 (* Counter measuring the time spent on exhibiting which transitions can effectively be taken (this DOES include some PPL time) *)
 let tcounter_legal_transitions_exist = create_time_counter_and_register "legal transitions exist" States_counter Verbose_experiments
 
-(* Counter measuring the time spent in function compute_new_location_guards_updates *)
+(* Counter measuring the time spent in function compute_new_location_guards_updates_combinedtransition *)
 let tcounter_compute_location_guards_discrete = create_time_counter_and_register "compute locations,guards,updates" States_counter Verbose_experiments
 
 (* let nb_unsat2 = ref 0 *)
@@ -908,15 +908,14 @@ let merge_clock_updates first_update second_update : clock_updates =
 
 (*------------------------------------------------------------------*)
 (* Compute a new location for a given set of transitions            *)
-(* aut_table         : indices of involved automata                 *)
+(* involved_automata_indices: indices of involved automata          *)
 (* trans_table       : indices of examined transition per automaton *)
 (* action_index      : index of current action                      *)
 (* original_location : the source location                          *)
 (*------------------------------------------------------------------*)
-(* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of pxd_linear_constraint), and the updates *)
+(* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of pxd_linear_constraint), the updates and the combined transition *)
 (*------------------------------------------------------------------*)
-(*** TODO: remove the model from the arguments, and retrieve it ***)
-let compute_new_location_guards_updates aut_table trans_table action_index original_location =
+let compute_new_location_guards_updates_combinedtransition involved_automata_indices trans_table action_index original_location =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -927,13 +926,13 @@ let compute_new_location_guards_updates aut_table trans_table action_index origi
 	(* Check if we actually have updates *)
 	let has_updates = ref false in
 	(* Update the location for the automata synchronized with 'action_index'; return the list of guards and updates *)
-	let guards_and_updates = Array.to_list (Array.mapi (fun local_index real_index ->
+	let guards_and_updates_and_combinedtransition = Array.to_list (Array.mapi (fun local_automaton_index real_automaton_index ->
 		(* Get the current location for this automaton *)
-		let location_index = Location.get_location original_location real_index in
+		let location_index = Location.get_location original_location real_automaton_index in
 		(* Find the transitions for this automaton *)
-		let transitions = model.transitions real_index location_index action_index in
+		let transitions = model.transitions real_automaton_index location_index action_index in
 		(* Get the index of the examined transition for this automaton *)
-		let current_index = trans_table.(local_index) in
+		let current_index = trans_table.(local_automaton_index) in
 		(* Keep the 'current_index'th transition *)
 		let transition_index = List.nth transitions current_index in
 		(* Access the transition and get the components *)
@@ -977,7 +976,7 @@ let compute_new_location_guards_updates aut_table trans_table action_index origi
 			);
 		) discrete_updates;
 		(* Update the global location *)
-		Location.update_location_with [real_index, dest_index] [] location;
+		Location.update_location_with [real_automaton_index, dest_index] [] location;
 		(* Update the update flag *)
 		begin
 		match clock_updates with
@@ -985,9 +984,11 @@ let compute_new_location_guards_updates aut_table trans_table action_index origi
 			| Updates (_ :: _) -> has_updates := true
 			| _ -> ()
 		end;
-		(* Keep the guard and updates *)
-		guard, clock_updates;
-	) aut_table) in
+		(* Keep the guard and updates and the transition_index *)
+		(guard, clock_updates), transition_index;
+	) involved_automata_indices) in
+	(* Split between guard+updates and transition_index *)
+	let guards_and_updates, combined_transition = List.split guards_and_updates_and_combinedtransition in
 	(* Split the list of guards and updates *)
 	let guards, clock_updates = List.split guards_and_updates in
 	(* Compute couples to update the discrete variables *)
@@ -1013,7 +1014,7 @@ let compute_new_location_guards_updates aut_table trans_table action_index origi
 	) ([], []) guards in
 
 	(* Return the new location, the guards, and the clock updates (if any!) *)
-	location, discrete_guards, continuous_guards, (if !has_updates then clock_updates else [])
+	location, discrete_guards, continuous_guards, (if !has_updates then clock_updates else []), combined_transition
 
 
 
@@ -1285,7 +1286,7 @@ let is_constraint_and_continuous_guard_satisfiable pxd_linear_constraint = funct
 (* returns a bool, indicating iff at least one legal     *)
 (* combination exists.                                   *)
 (*-------------------------------------------------------*)
-let compute_transitions location constr action_index automata aut_table max_indexes possible_transitions  =
+let compute_transitions location constr action_index automata involved_automata_indices max_indexes possible_transitions  =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -1294,7 +1295,7 @@ let compute_transitions location constr action_index automata aut_table max_inde
 	try (
 		List.iter (fun automaton_index ->
 			(* Tabulate the real index *)
-			aut_table.(!current_index) <- automaton_index;
+			involved_automata_indices.(!current_index) <- automaton_index;
 			(* Get the current location for this automaton *)
 			let location_index = Location.get_location location automaton_index in
 			(* Get transitions for this automaton *)
@@ -1315,6 +1316,7 @@ let compute_transitions location constr action_index automata aut_table max_inde
 					false
 				)else(
 				(* Else: the discrete part is satisfiable; so now we check the continuous intersection between the current constraint and the discrete + continuous outgoing guard *)
+				(*** TODO: check if this test is really worth it ***)
 					let is_possible = is_constraint_and_continuous_guard_satisfiable constr guard in
 					if not is_possible then (
 						(* Statistics *)
@@ -1663,7 +1665,7 @@ class virtual algoStateBased =
 			tcounter_next_transitions#start;
 
 			(* Give a new index to those automata *)
-			let real_indexes = Array.make nb_automata_for_this_action 0 in
+			let involved_automata_indices = Array.make nb_automata_for_this_action 0 in
 			(* Keep an array of possible transition indices for each automaton *)
 			let possible_transitions = Array.make nb_automata_for_this_action [] in
 			(* Use an array of transition indices for the search (start with 0), indicating the current index within the possible transitions for each automaton *)
@@ -1680,7 +1682,7 @@ class virtual algoStateBased =
 			tcounter_legal_transitions_exist#start;
 
 			(* compute the possible combinations of transitions *)
-			let legal_transitions_exist = compute_transitions original_location orig_plus_discrete action_index automata_for_this_action real_indexes max_indexes possible_transitions in
+			let legal_transitions_exist = compute_transitions original_location orig_plus_discrete action_index automata_for_this_action involved_automata_indices max_indexes possible_transitions in
 
 			(* Statistics *)
 			tcounter_legal_transitions_exist#stop;
@@ -1696,7 +1698,10 @@ class virtual algoStateBased =
 			(* Loop on all the transition combinations *)
 			let more_combinations = ref legal_transitions_exist in
 			let debug_i = ref 0 in
+			
+			(* ------------------------------------------------------------ *)
 			while !more_combinations do
+			(* ------------------------------------------------------------ *)
 				(* Statistics *)
 				tcounter_next_transitions#start;
 
@@ -1711,7 +1716,7 @@ class virtual algoStateBased =
 					let local_indexes = string_of_array_of_string_with_sep "\n\t" (
 					Array.mapi (fun local_index real_index ->
 						(string_of_int local_index) ^ " -> " ^ (string_of_int real_index) ^ " : " ^ (string_of_int current_indexes.(local_index)) ^ "; ";
-					) real_indexes) in
+					) involved_automata_indices) in
 					print_message Verbose_high ("\n--- This combination is:\n\t" ^ local_indexes);
 					print_message Verbose_high ("\n------------------------------------------------------------");
 				);
@@ -1728,7 +1733,7 @@ class virtual algoStateBased =
 				tcounter_compute_location_guards_discrete#start;
 
 				(* Compute the new location for the current combination of transitions *)
-				let location, (discrete_guards : LinearConstraint.d_linear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates real_indexes current_transitions action_index original_location in
+				let location, (discrete_guards : LinearConstraint.d_linear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates, combined_transition = compute_new_location_guards_updates_combinedtransition involved_automata_indices current_transitions action_index original_location in
 
 				(* Statistics *)
 				tcounter_compute_location_guards_discrete#stop;
@@ -1788,7 +1793,7 @@ class virtual algoStateBased =
 									self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
 								);
 
-								let added = self#add_a_new_state source_state_index new_states_indexes action_index location final_constraint in
+								let added = self#add_a_new_state source_state_index new_states_indexes combined_transition location final_constraint in
 
 								(* Update *)
 								has_successors := !has_successors || added;
@@ -1805,6 +1810,7 @@ class virtual algoStateBased =
 				more_combinations := next_combination current_indexes max_indexes;
 
 			done; (* while more new states *)
+			(* ------------------------------------------------------------ *)
 		) list_of_possible_actions;
 
 		(************************************************************)

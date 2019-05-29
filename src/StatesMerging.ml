@@ -2,8 +2,7 @@
  *
  *                       IMITATOR
  * 
- * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Merging states the union of which is convex [AFS13, ATVA]
  * 

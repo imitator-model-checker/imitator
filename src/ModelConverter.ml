@@ -3446,6 +3446,22 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	);
 
 	if verbose_mode_greater Verbose_total then(
+		(* Urgency of locations *)
+		print_message Verbose_total ("\n*** Urgency of locations:");
+		(* For each automaton *)
+		List.iter (fun automaton_index ->
+			(* Print the automaton name *)
+			print_message Verbose_total ("" ^ (automata_names automaton_index) ^ " :");
+			(* For each location *)
+			List.iter (fun location_index ->
+				(* Get the urgency *)
+				let my_string =
+					if is_urgent automaton_index location_index then "URGENT" else "non-urgent"
+				in
+				print_message Verbose_total (" - " ^ (location_names automaton_index location_index) ^ " :" ^ my_string);
+			) (locations_per_automaton automaton_index);
+		) automata;
+
 		(* All action names *)
 		print_message Verbose_total ("\n*** All action names:");
 		(* For each action *)
@@ -3492,21 +3508,20 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 			) (locations_per_automaton automaton_index);
 		) automata;
 
-		(* Urgency of locations *)
-		print_message Verbose_total ("\n*** Urgency of locations:");
-		(* For each automaton *)
-		List.iter (fun automaton_index ->
-			(* Print the automaton name *)
-			print_message Verbose_total ("" ^ (automata_names automaton_index) ^ " :");
-			(* For each location *)
-			List.iter (fun location_index ->
-				(* Get the urgency *)
-				let my_string =
-					if is_urgent automaton_index location_index then "URGENT" else "non-urgent"
-				in
-				print_message Verbose_total (" - " ^ (location_names automaton_index location_index) ^ " :" ^ my_string);
-			) (locations_per_automaton automaton_index);
-		) automata;	);
+		(* Debug print: transition indexes *)
+		print_message Verbose_total ("\n*** Transitions:");
+		(* For each transition *)
+		for transition_index = 0 to nb_transitions - 1 do
+			(* Get the automaton *)
+			let automaton_index = automaton_of_transition transition_index in
+			(* Get the transition *)
+			let transition = transitions_description transition_index in
+			(* Print automaton + action *)
+				(*** TODO: print source too (and guard, and reset?!) ***)
+			print_message Verbose_total ("Transition " ^ (string_of_int transition_index) ^ ": in automaton '" ^ (automata_names automaton_index) ^ "' via action '" ^ (action_names (transition.action)) ^ "' to location '" ^ (location_names automaton_index (transition.target)) ^ "'")
+		done;
+
+	);
 
 
 	(* Debug print: L/U *)
