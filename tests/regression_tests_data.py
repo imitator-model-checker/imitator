@@ -6,11 +6,14 @@
 #
 #             Data for non-regression tests
 #
-# Etienne ANDRE
-# Laboratoire d'Informatique de Paris Nord
-# Universite Paris 13, France
-# Created      : 2015/10/23
-# Last modified: 2019/04/08
+# Université Paris 13, LIPN, CNRS, France
+#
+# File description: non-regression tests data
+#
+# File contributors : Étienne André
+#
+# Created           : 2015/10/23
+# Last modified     : 2019/05/29
 #************************************************************
 
 
@@ -369,25 +372,25 @@ tests = [
 & dG4_u >= 3
 
   DESCRIPTION OF THE TRANSITIONS
-  s_7 -> s_10 via "ckDown"
-  s_8 -> s_12 via "ckDown"
-  s_14 -> s_19 via "ckDown"
-  s_8 -> s_13 via "qUp"
-  s_3 -> s_4 via "dDown"
   s_0 -> s_1 via "dUp"
-  s_10 -> s_18 via "qUp"
-  s_13 -> s_15 via "ckDown"
-  s_9 -> s_14 via "dDown"
-  s_5 -> s_8 via "dDown"
-  s_4 -> s_7 via "qG3Down"
-  s_11 -> s_17 via "ckDown"
-  s_2 -> s_3 via "ckUp"
-  s_5 -> s_9 via "qUp"
-  s_3 -> s_5 via "qG3Down"
-  s_7 -> s_11 via "qUp"
-  s_4 -> s_6 via "ckDown"
   s_1 -> s_2 via "qG1Down"
+  s_2 -> s_3 via "ckUp"
+  s_3 -> s_4 via "dDown"
+  s_3 -> s_5 via "qG3Down"
+  s_4 -> s_6 via "ckDown"
+  s_4 -> s_7 via "qG3Down"
+  s_5 -> s_8 via "dDown"
+  s_5 -> s_9 via "qUp"
+  s_7 -> s_10 via "ckDown"
+  s_7 -> s_11 via "qUp"
+  s_8 -> s_12 via "ckDown"
+  s_8 -> s_13 via "qUp"
+  s_9 -> s_14 via "dDown"
+  s_10 -> s_18 via "qUp"
+  s_11 -> s_17 via "ckDown"
   s_12 -> s_16 via "qUp"
+  s_13 -> s_15 via "ckDown"
+  s_14 -> s_19 via "ckDown"
 			"""
 			} #end statespace file
 		] # end expectations
@@ -565,14 +568,14 @@ tests = [
    pabs >= 0
 
   DESCRIPTION OF THE TRANSITIONS
-  s_1 -> s_6 via "b"
-  s_1 -> s_5 via "b"
-  s_1 -> s_4 via "a"
-  s_1 -> s_3 via "a"
-  s_3 -> s_8 via "a"
-  s_3 -> s_7 via "a"
-  s_0 -> s_2 via "a"
   s_0 -> s_1 via "a"
+  s_0 -> s_2 via "a"
+  s_1 -> s_3 via "a"
+  s_1 -> s_4 via "a"
+  s_1 -> s_5 via "b"
+  s_1 -> s_6 via "b"
+  s_3 -> s_7 via "a"
+  s_3 -> s_8 via "a"
 """
 			} # end result file
 			,
@@ -590,15 +593,15 @@ tests = [
 		'expectations' : [
 			{'file': 'testUrgency-statespace.states' , 'content' : """
 		  DESCRIPTION OF THE TRANSITIONS
-  s_4 -> s_4 via "a"
-  s_2 -> s_4 via "c"
-  s_0 -> s_2 via "b"
-  s_0 -> s_1 via "b"
-  s_2 -> s_4 via "b"
-  s_3 -> s_3 via "a"
-  s_3 -> s_1 via "b"
   s_0 -> s_0 via "a"
+  s_0 -> s_1 via "b"
+  s_0 -> s_2 via "b"
   s_1 -> s_3 via "c"
+  s_2 -> s_4 via "b"
+  s_2 -> s_4 via "c"
+  s_3 -> s_1 via "b"
+  s_3 -> s_3 via "a"
+  s_4 -> s_4 via "a"
 		"""
 			} # end result file
 			,
@@ -653,9 +656,9 @@ tests = [
   True
 
   DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_1 via "c"
   s_1 -> s_2 via "a"
   s_2 -> s_3 via "b"
-  s_0 -> s_1 via "c"
 		"""
 			} # end result file
 			,
@@ -3086,11 +3089,11 @@ END CONSTRAINT
 & p2 >= 0
 
   DESCRIPTION OF THE TRANSITIONS
-  s_1 -> s_2
   s_0 -> s_1
+  s_1 -> s_2
   s_1 -> s_3
   s_2 -> s_2
-		  """
+"""
 			} # end result file
 			,
 		] # end expectations
@@ -3168,8 +3171,8 @@ END CONSTRAINT
 & p2 >= 0
 
   DESCRIPTION OF THE TRANSITIONS
-  s_1 -> s_2
   s_0 -> s_1
+  s_1 -> s_2
   s_1 -> s_3
   s_2 -> s_2
 		  """
@@ -3258,10 +3261,10 @@ OR
 & p1 >= 3
 
   DESCRIPTION OF THE TRANSITIONS
-  s_1 -> s_4
   s_0 -> s_1
-  s_1 -> s_3
   s_0 -> s_2
+  s_1 -> s_3
+  s_1 -> s_4
 		  """
 			} # end result file
 			,
@@ -3348,10 +3351,10 @@ OR
 & p1 >= 3
 
   DESCRIPTION OF THE TRANSITIONS
-  s_1 -> s_4
   s_0 -> s_1
-  s_1 -> s_3
   s_0 -> s_2
+  s_1 -> s_3
+  s_1 -> s_4
 		  """
 			} # end result file
 			,
@@ -3556,19 +3559,19 @@ OR
 & p1 >= 0
 
   DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_3
-  s_3 -> s_6
-  s_8 -> s_9
-  s_1 -> s_5
   s_0 -> s_1
-  s_1 -> s_4
-  s_10 -> s_11
-  s_7 -> s_8
   s_0 -> s_2
+  s_0 -> s_3
+  s_1 -> s_4
+  s_1 -> s_5
+  s_3 -> s_6
   s_6 -> s_7
-  s_12 -> s_13
-  s_11 -> s_12
+  s_7 -> s_8
+  s_8 -> s_9
   s_9 -> s_10
+  s_10 -> s_11
+  s_11 -> s_12
+  s_12 -> s_13
 
 
 		  """
@@ -3777,19 +3780,19 @@ OR
 & p1 >= 0
 
   DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_3
-  s_3 -> s_6
-  s_8 -> s_9
-  s_1 -> s_5
   s_0 -> s_1
-  s_1 -> s_4
-  s_10 -> s_11
-  s_7 -> s_8
   s_0 -> s_2
+  s_0 -> s_3
+  s_1 -> s_4
+  s_1 -> s_5
+  s_3 -> s_6
   s_6 -> s_7
-  s_12 -> s_13
-  s_11 -> s_12
+  s_7 -> s_8
+  s_8 -> s_9
   s_9 -> s_10
+  s_10 -> s_11
+  s_11 -> s_12
+  s_12 -> s_13
 
 
 		  """
@@ -6860,8 +6863,8 @@ Average number of transitions           : 6.0
    p >= 2
 
   DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_2 via "b"
   s_0 -> s_1 via "a"
+  s_0 -> s_2 via "b"
 		"""
 			} # end result file
 			,
@@ -6901,8 +6904,8 @@ Average number of transitions           : 6.0
    p >= 0
 
   DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_1 via "b"
   s_0 -> s_1 via "a"
+  s_0 -> s_1 via "b"
   """
 			} # end result file
 			,
@@ -7673,10 +7676,10 @@ end
 		'options'    : '-mode statespace -output-trace-set-nodetails -output-graphics-source',
 		'expectations' : [
 			{'file': 'CUBPTA1-statespace.dot' , 'content' : """
-  s_3 -> s_2 [label="a"];
   s_0 -> s_1 [label="a"];
-  s_2 -> s_3 [label="a"];
   s_1 -> s_2 [label="a"];
+  s_2 -> s_3 [label="a"];
+  s_3 -> s_2 [label="a"];
 
 /* Initial state */
   s_init [shape=none, label="init"];
@@ -7684,10 +7687,10 @@ end
 
 /* Colors */
 
-  s_2 [color=blue, style=filled];
   s_0 [color=blue, style=filled];
-  s_3 [color=yellow, style=filled];
   s_1 [color=yellow, style=filled];
+  s_2 [color=blue, style=filled];
+  s_3 [color=yellow, style=filled];
 		"""
 			} # end result file
 			,
@@ -7702,10 +7705,10 @@ end
 		'options'    : '-mode statespace -output-trace-set -output-graphics-source',
 		'expectations' : [
 			{'file': 'CUBPTA1-statespace.dot' , 'content' : """
-  s_3 -> s_2 [label="a"];
   s_0 -> s_1 [label="a"];
-  s_2 -> s_3 [label="a"];
   s_1 -> s_2 [label="a"];
+  s_2 -> s_3 [label="a"];
+  s_3 -> s_2 [label="a"];
 
 /* Initial state */
   s_init [shape=none, label="init"];
@@ -7713,10 +7716,10 @@ end
 
 /* Colors */
 
-  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}"];
   s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{pta : l1}"];
-  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}"];
   s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{pta : l2}"];
+  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}"];
+  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}"];
 		"""
 			} # end result file
 			,
@@ -7731,10 +7734,10 @@ end
 		'options'    : '-mode statespace -output-trace-set-verbose -output-graphics-source',
 		'expectations' : [
 			{'file': 'CUBPTA1-statespace.dot' , 'content' : """
-  s_3 -> s_2 [label="a"];
   s_0 -> s_1 [label="a"];
-  s_2 -> s_3 [label="a"];
   s_1 -> s_2 [label="a"];
+  s_2 -> s_3 [label="a"];
+  s_3 -> s_2 [label="a"];
 
 /* Initial state */
   s_init [shape=none, label="init"];
@@ -7742,10 +7745,10 @@ end
 
 /* Colors */
 
-  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& x = y| p2 \>= 1 \\n \& p1 \>= 0}"];
   s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 0 \\n \& x \>= 0 \\n \& x = y| p2 \>= 0 \\n \& p1 \>= 0}"];
-  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1}"];
   s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& x \>= 0 \\n \& y \>= x| p2 \>= 0 \\n \& p1 \>= 0}"];
+  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& x = y| p2 \>= 1 \\n \& p1 \>= 0}"];
+  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1}"];
 		"""
 			} # end result file
 			# NOTE (ÉA, 2018/06/05): I had to manually replace '\n' with '\\n' to make this test pass
@@ -7763,10 +7766,10 @@ end
 		'options'    : '-mode statespace -output-trace-set-verbose -output-graphics-source',
 		'expectations' : [
 			{'file': 'CUBPTA1project-statespace.dot' , 'content' : """
-  s_3 -> s_2 [label="a"];
   s_0 -> s_1 [label="a"];
-  s_2 -> s_3 [label="a"];
   s_1 -> s_2 [label="a"];
+  s_2 -> s_3 [label="a"];
+  s_3 -> s_2 [label="a"];
 
 /* Initial state */
   s_init [shape=none, label="init"];
@@ -7774,10 +7777,10 @@ end
 
 /* Colors */
 
-  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& x = y| p2 \>= 1 \\n \& p1 \>= 0| p2 \>= 1}"];
   s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 0 \\n \& x \>= 0 \\n \& x = y| p2 \>= 0 \\n \& p1 \>= 0| p2 \>= 0}"];
-  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1| p2 \>= 1}"];
   s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& x \>= 0 \\n \& y \>= x| p2 \>= 0 \\n \& p1 \>= 0| p2 \>= 0}"];
+  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& x = y| p2 \>= 1 \\n \& p1 \>= 0| p2 \>= 1}"];
+  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1| p2 \>= 1}"];
 		"""
 			} # end result file
 			# NOTE (ÉA, 2019/03/07): I had to manually replace '\n' with '\\n' to make this test pass
