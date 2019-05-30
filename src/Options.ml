@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2010
- * Last modified     : 2019/05/29
+ * Last modified     : 2019/05/30
  *
  ************************************************************)
 
@@ -672,7 +672,7 @@ class imitator_options =
 					print_contributors();
 					exit 0), " Print contributors and exit.");
 				
-				("-counterexample", Set counterex, " For EF or PRP, stop the analysis as soon as a bad state is discovered. Default: false.");
+				("-counterexample", Set counterex, " For EF, stop the analysis as soon as a bad state is discovered. Default: false.");
 				
 				("-depth-limit", Int (fun i -> depth_limit := Some i), " Limits the depth of the exploration of the state space. Default: no limit.");
 
@@ -1056,8 +1056,8 @@ class imitator_options =
 			);
 				
 			(* No counterex if not EF *)
-			if !counterex && (imitator_mode <> EF_synthesis && imitator_mode <> EFunsafe_synthesis && imitator_mode <> PRP) then(
-				print_warning ("The option '-counterexample' is reserved for EF and PRP. It will thus be ignored.");
+			if !counterex && (imitator_mode <> EF_synthesis && imitator_mode <> EFunsafe_synthesis) then(
+				print_warning ("The option '-counterexample' is reserved for EF. It will thus be ignored.");
 			);
 			
 			
@@ -1149,7 +1149,7 @@ class imitator_options =
 			;
 
 
-			if (imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = PRP) then(
+			if (imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis) then(
 				if !counterex then(
 					print_message Verbose_standard ("Counterexample mode: the analysis will stop as soon as a target state is found.");
 				)else(
