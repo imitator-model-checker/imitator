@@ -148,7 +148,7 @@ val get_successors_with_combined_transitions : state_space -> state_index -> (co
 (*------------------------------------------------------------*)
 (** Compute and return a predecessor array state_index -> (combined_transition , state_index) list *)
 (*------------------------------------------------------------*)
-val compute_predecessors_with_actions : state_space -> ((combined_transition * state_index) list) array
+val compute_predecessors_with_combined_transitions : state_space -> ((combined_transition * state_index) list) array
 
 (*------------------------------------------------------------*)
 (** Return the table of transitions *)
@@ -214,6 +214,12 @@ val reconstruct_scc : state_space -> state_index -> scc option
 (** From a set of states, return all transitions within this set of states, in the form of a triple (state_index, combined_transition, state_index) *)
 (*------------------------------------------------------------*)
 val find_transitions_in : state_space -> scc -> (state_index * combined_transition * state_index) list
+
+
+(*------------------------------------------------------------*)
+(** Returns the path (list of pairs (state, combined transition)) from the source_state_index to the target_state_index. Can take a predecessors_table as an option, otherwise recomputes it from the state space. The list of transitions is ordered from the initial state to the target state; the target state is not included. Raise Not_found if path not found. *)
+(*------------------------------------------------------------*)
+val backward_path : state_space -> state_index -> state_index -> (((combined_transition * state_index) list) array) option -> (State.state_index * combined_transition) list
 
 
 (************************************************************)

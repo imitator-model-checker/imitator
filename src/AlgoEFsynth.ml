@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: EFsynth algorithm [JLR15]
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2018/04/06
+ * Last modified     : 2019/05/30
  *
  ************************************************************)
 
@@ -345,11 +345,62 @@ class virtual algoEFsynth =
 		
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 		
+		(* Retrieve the new state index *)
+		(*** HACK ***)
+		let new_state_index = match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index in
+		
 		(* Add the transition to the state space *)
-		self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
+		self#add_transition_to_state_space (source_state_index, action_index, new_state_index) addition_result;
 		
 		(* If an immediate termination is requested: raise exception! *)
 		if !terminate_analysis_immediately then(
+			
+			(* Print the counter-example *)
+			
+			(* First get the predecessors table *)
+			let predecessors = StateSpace.compute_predecessors_with_combined_transitions state_space in
+			
+			(* Also retrieve the initial state *)
+			let initial_state_index = StateSpace.get_initial_state_index state_space in
+			
+			(* Get the path *)
+			let path = StateSpace.backward_path state_space new_state_index initial_state_index (Some predecessors) in
+			
+			(* Print some information *)
+			if verbose_mode_greater Verbose_low then (
+				print_message Verbose_low "Counter-example found:";
+				
+				(* Function to pretty-print combined transitions *)
+				let debug_string_of_combined_transition combined_transition = string_of_list_of_string_with_sep ", " (
+					List.map (fun transition_index ->
+						(* Get automaton index *)
+						let automaton_index = model.automaton_of_transition transition_index in
+						(* Get actual transition *)
+						let transition = model.transitions_description transition_index in
+						(* Print *)
+						ModelPrinter.debug_string_of_transition model automaton_index transition
+					) combined_transition
+				) in
+
+				(* Iterate *)
+				List.iter (fun (state_index, combined_transition) ->
+					(* Get actual state *)
+					let state = StateSpace.get_state state_space state_index in
+				
+					print_message Verbose_low (" " ^ (ModelPrinter.string_of_state model state));
+					print_message Verbose_low (" | ");
+					print_message Verbose_low (" | via combined transition " ^ (debug_string_of_combined_transition combined_transition));
+					print_message Verbose_low (" | ");
+					print_message Verbose_low (" v ");
+				) path;
+				
+				(* Print target *)
+				let final_state = StateSpace.get_state state_space new_state_index in
+				print_message Verbose_low (" " ^ (ModelPrinter.string_of_state model final_state));
+				
+			);
+			
+			
 			(* Update termination status *)
 			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
 			self#print_algo_message Verbose_standard "Target state found! Terminating…";

@@ -336,7 +336,7 @@ class algoDeadlockFree =
 		self#print_algo_message_newline Verbose_low "Retrieving successors…";
 
 		(* Retrieve predecessors *)
-		let predecessors_table = StateSpace.compute_predecessors_with_actions state_space in
+		let predecessors_table = StateSpace.compute_predecessors_with_combined_transitions state_space in
 		
 		(* Retrieve all state indexes *)
 		let all_state_indexes = StateSpace.all_state_indexes state_space in

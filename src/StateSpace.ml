@@ -140,7 +140,7 @@ let nb_merged = create_discrete_counter_and_register "StateSpace.merges" States_
 
 (* Functions *)
 let counter_add_state = create_hybrid_counter_and_register "StateSpace.add_state" States_counter Verbose_experiments
-let counter_compute_predecessors_with_actions = create_hybrid_counter_and_register "StateSpace.compute_predecessors" States_counter Verbose_experiments
+let counter_compute_predecessors_with_combined_transitions = create_hybrid_counter_and_register "StateSpace.compute_predecessors" States_counter Verbose_experiments
 let counter_get_location = create_hybrid_counter_and_register "StateSpace.counter_get_location" States_counter Verbose_experiments
 let counter_get_state = create_hybrid_counter_and_register "StateSpace.get_state" States_counter Verbose_experiments
 
@@ -420,11 +420,11 @@ let get_successors_with_actions state_space state_index =
 (*------------------------------------------------------------*)
 (** Compute and return a predecessor array state_index -> (combined_transition , state_index) list *)
 (*------------------------------------------------------------*)
-let compute_predecessors_with_actions state_space =
+let compute_predecessors_with_combined_transitions state_space =
 
 	(* Statistics *)
-	counter_compute_predecessors_with_actions#increment;
-	counter_compute_predecessors_with_actions#start;
+	counter_compute_predecessors_with_combined_transitions#increment;
+	counter_compute_predecessors_with_combined_transitions#start;
 
 	(* Create an array for predecessors: state_index -> (state_index, action_index) list *)
 	let predecessors = Array.make (Hashtbl.length state_space.all_states) [] in
@@ -450,7 +450,7 @@ let compute_predecessors_with_actions state_space =
 	) state_space.all_states;
 
 	(* Statistics *)
-	counter_compute_predecessors_with_actions#stop;
+	counter_compute_predecessors_with_combined_transitions#stop;
 
 	(* Return structure *)
 	predecessors
@@ -898,6 +898,100 @@ let find_transitions_in state_space (scc : scc) : (state_index * combined_transi
 		(* Add them to the current list *)
 		List.rev_append triples current_list
 	) [] scc
+
+
+(************************************************************)
+(** Backward path-computation *)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(** Table to color/mark states *)
+(*------------------------------------------------------------*)
+let colortable_create init_nb : ('a, bool) Hashtbl.t = Hashtbl.create init_nb
+
+let mark colortable element =
+	Hashtbl.replace colortable element true
+
+let unmark colortable element =
+	Hashtbl.replace colortable element false
+
+let is_marked colortable element : bool =
+	(*** NOTE: split the test in case OCaml does not evaluate the way we think it does ***)
+	if not (Hashtbl.mem colortable element) then false
+	else Hashtbl.find colortable element
+
+
+(*------------------------------------------------------------*)
+(** Returns the path (list of pairs (state, combined transition)) from the source_state_index to the target_state_index. Can take a predecessors_table as an option, otherwise recomputes it from the state space. The list of transitions is ordered from the initial state to the target state; the target state is not included. Raise Not_found if path not found. *)
+(*------------------------------------------------------------*)
+let backward_path state_space (target_state_index : state_index) (source_state_index : state_index) (predecessors_table_option : (((combined_transition * state_index) list) array) option) =
+	(* First manage the predecessors_table *)
+	let predecessors_table = match predecessors_table_option with
+		(* If given: keep it *)
+		| Some predecessors_table -> predecessors_table
+		(* Otherwise: recompute *)
+		| None -> compute_predecessors_with_combined_transitions state_space
+	in
+	
+	(* Create a table to remember whether a state is marked or not *)
+	(*** NOTE: use the number of states in the state space as default init ***)
+	let colortable = colortable_create (nb_states state_space) in
+	
+	(* Function to sort the predecessors made of a pair of a combined_transition and a state_index *)
+	let sort_predecessors = List.sort (fun (_, a) (_, b) -> Pervasives.compare a b) in
+	
+	(*------------------------------------------------------------*)
+	(* Use a recursive procedure returning a (list of (state, combined transition))'option ; None denotes the current path is useless. The states are returned in reversed order. *)
+	let rec backward_path_rec current_state_index =
+		(* If target is reached: return *)
+		if current_state_index = source_state_index then Some [] (*** NOTE: do not add index, it will be added during the recursion together with the transition ***)
+		
+		(* If the state is marked, give up *)
+		else if is_marked colortable current_state_index then None
+		
+		(* Else process this state *)
+		else(
+			(* Mark it! *)
+			mark colortable current_state_index;
+			
+			(* Get the predecessors *)
+			let predecessors = predecessors_table.(current_state_index) in
+			
+			(* Heuristics: test the predecessors by increasing state_index (intuitively, a smaller state_index may be closer to the initial state, hence should be tried first) *)
+			let sorted_predecessors = sort_predecessors predecessors in
+
+			(* Iterate on the predecessors *)
+			let path = List.fold_left (fun current_path (combined_transition, predecessor_index) ->
+				(* If predecessor is marked: skip and go to next predecessor *)
+				if is_marked colortable predecessor_index then current_path
+				
+				(* If unmarked: call recursively *)
+				else 
+				let recursive_result = backward_path_rec predecessor_index in
+				match recursive_result with
+					(* If no result in this direction: skip and go to next predecessor *)
+					| None -> current_path
+					(* Otherwise: return the result and add the predecessor and the transition *)
+					| Some path -> Some ((predecessor_index, combined_transition) :: path)
+			
+			) None sorted_predecessors in
+			
+			match path with
+				(* If no path found after iterating, we are in a deadlock *)
+				| None -> None
+				(* Otherwise return (do NOT add current state, as it was added above) *)
+					| Some path -> Some path
+		)
+
+	in
+	(*------------------------------------------------------------*)
+	
+	(* Call the recursive procedure and reverse the result *)
+	match backward_path_rec target_state_index with
+	(* Oops! *)
+	| None -> raise Not_found
+	(* Reverse because states were added in reversed order *)
+	| Some path -> List.rev path
 
 
 
