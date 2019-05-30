@@ -3156,8 +3156,6 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 		(*** WARNING: other updates than clock updates not considered so far ***)
 		
-		(*** NEW 2019 ***)
-(* 		let new_transition = action_index , (Continuous_guard guard, Resets clock_updates, discrete_update, target_location_index) in *)
 		let new_transition = {
 			guard		= Continuous_guard guard;
 			action		= action_index;
@@ -3193,10 +3191,6 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		List.iter(fun action_index ->
 			(* First retrieve the transitions for this location and for this action *)
 			let transitions_for_this_location_and_action = List.filter (fun transition -> transition.action = action_index) transitions_for_this_location in
-
-			(*** NEW 2019 ***)
-			(* Then only keep the transitions (not the actions, as they are now all equal to action_index) *)
-(* 			let _ , (transitions_for_this_location_and_action : AbstractModel.transition list) = List.split actions_and_transitions_for_this_location_and_action in *)
 
 			(* Convert transitions to transition indexes and update tables *)
 			let transitions_indexes_for_this_location_and_action = List.map (fun transition ->

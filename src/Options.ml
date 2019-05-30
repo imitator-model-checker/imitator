@@ -52,13 +52,7 @@ class imitator_options =
 		
 		(* pi0 file *)
 		val mutable second_file_name = ""
-		
-		(* Create a "fake" pi0 file (USELESS) *)
-(* 		val mutable forcePi0 = ref false *)
-		
-		(* GML syntax *)
-(* 		val mutable fromGML = false *)
-		
+
 		
 	
 		(* OUTPUT OPTIONS *)
@@ -68,9 +62,6 @@ class imitator_options =
 		
 		(* only plot cartography *)
 		val mutable cartonly = false
-		
-		(* Give location detais in dot *)
-(* 		val mutable fancy = ref true *)
 		
 		(* prefix for output files *)
 		val mutable files_prefix = ref ""
@@ -105,18 +96,11 @@ class imitator_options =
 		(* Print graph of reachable states *)
 		val mutable graphical_state_space = Graphical_state_space_none
 		
-		(* Print graph of reachable states in verbose mode *)
-(* 		val mutable output_trace_set_verbose = ref false *)
-		
 		(* Keep the source file used for dot *)
 		val mutable with_graphics_source = ref false
 		
 		(* Print logs *)
 		val mutable with_log = ref false
-		
-(*		(* print parametric logs *)
-		val mutable with_parametric_log = ref false*)
-
 
 		
 		(* ALGORITHIMS *)
@@ -126,9 +110,6 @@ class imitator_options =
 		
 		(* Complete version of IM (experimental) *)
 (* 		val mutable completeIM = ref false *)
-		
-		(* Property input via CosyVerif *)
-(* 		val mutable cosyprop = ref "" *)
 		
 		(* imitator mode *)
 		val mutable imitator_mode = Inverse_method
@@ -233,9 +214,6 @@ class imitator_options =
 (*		(* Translate PTA model into a CLP program *)
 		val mutable pta2clp = ref false*)
 		
-		(* Translate PTA model into a GML model *)
-(* 		val mutable pta2gml = ref false *)
-		
 		(* Translate PTA model into a HyTech file *)
 		val mutable pta2hytech = ref false
 
@@ -275,10 +253,8 @@ class imitator_options =
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		
 		method acyclic = !acyclic
-(* 		method acyclic_unset = (acyclic := false) *)
 (* 		method best_worst_case = !best_worst_case *)
 		method branch_and_bound = !branch_and_bound
-(* 		method branch_and_bound_unset = (branch_and_bound := false) *)
 		method cart = cart
 		method carto_tiles_limit = carto_tiles_limit
 		method carto_time_limit = carto_time_limit
@@ -286,7 +262,6 @@ class imitator_options =
 		method check_ippta = !check_ippta
 		method check_point = !check_point
 (* 		method completeIM = !completeIM *)
-(* 		method cosyprop = !cosyprop *)
 		method counterex = !counterex
 		method depth_limit = !depth_limit
 		method distribution_mode = !distribution_mode
@@ -296,9 +271,7 @@ class imitator_options =
 		method early_terminate = !early_terminate
 		method efim = !efim
 		method exploration_order = exploration_order
-(* 		method fancy = !fancy *)
 		method files_prefix = !files_prefix
-(* 		method fromGML = fromGML *)
 		method imitator_mode = imitator_mode
 		method new_ef_mode = new_ef_mode
 		method inclusion = !inclusion
@@ -324,7 +297,6 @@ class imitator_options =
 		method pi_compatible = !pi_compatible
 		method precomputepi0 = !precomputepi0
 (* 		method pta2clp = !pta2clp *)
-(* 		method pta2gml = !pta2gml *)
 		method pta2imi = !pta2imi
 		method pta2hytech = !pta2hytech
 		method pta2jpg = !pta2jpg
@@ -342,10 +314,8 @@ class imitator_options =
 		method tree = !tree
 		method union = !union
 		method graphical_state_space = graphical_state_space
-(* 		method output_trace_set_verbose = !output_trace_set_verbose *)
 		method with_graphics_source = !with_graphics_source
 		method with_log = !with_log
-(* 		method with_parametric_log = !with_parametric_log *)
 
 		
 		
@@ -788,8 +758,6 @@ class imitator_options =
 				("-output-cart-y-max", Int (fun n -> output_cart_y_max := Some n), " Set maximum value for the y axis when plotting the cartography (not entirely functional yet). Default: automatic.");
 				
 				("-output-graphics-source", Set with_graphics_source, " Keep file(s) used for generating graphical output. Default: false.");
-
-(* 				("-output-parametric-states", Set with_parametric_log, " Adds the elimination of the clock variables to the constraints in the description of all reachable states. Default: false."); *)
 
 				("-output-prefix", Set_string files_prefix, " Set the prefix for output files. Default: [model].");
 				
@@ -1265,15 +1233,6 @@ class imitator_options =
 
 
 
-(*			(* Syntax *)
-			if fromGML then
-				print_message Verbose_standard ("GrML syntax used.");*)
-
-			(* Syntax *)
-			(*if !forcePi0 then
-				print_warning ("Pi0 is automatically generated.");*)
-
-
 			(* OPTIONS *)
 
 			(*** TODO: check that only in IM/BC mode ***)
@@ -1412,29 +1371,11 @@ class imitator_options =
 			else
 				print_message Verbose_medium ("No graphical output for trace set(s) (default).")
 			;
-			
-(*			if !output_trace_set_verbose then
-				print_message Verbose_standard ("The trace set(s) will be generated in a graphical mode with verbose information (with all constraints).")
-			else
-				print_message Verbose_medium ("No verbose graphical output for trace set(s) (default).")
-			;*)
-			
-(*			if !fancy then
-				print_message Verbose_medium ("Locations will be detailed in the graphical trace set (default).")
-			else
-				print_message Verbose_standard ("No location details in the graphical trace set.")
-			;
-			*)
-			
+
 			if !with_log then
 				print_message Verbose_standard ("Description of states will be output.")
 			else
 				print_message Verbose_medium ("No state description (default).");
-
-(*			if !with_parametric_log then
-				print_message Verbose_standard ("Parametric description of states will be generated.")
-			else
-				print_message Verbose_medium ("No parametric description of states (default).");*)
 
 				
 			(************************************************************)

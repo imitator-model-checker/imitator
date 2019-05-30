@@ -573,99 +573,9 @@ let is_bad program state_space =
 
 
 (*------------------------------------------------------------*)
-(** Big hack: guard and resets reconstruction *)
+(** Access to guard and resets *)
 (*------------------------------------------------------------*)
 
-(*(*** NOTE: this function is defined here just because it was necessary here first; perhaps a better module would be more logical… ***)
-(*** NOTE/HACK: duplicate function in ModelConverter ***)
-let continuous_part_of_guard (*: LinearConstraint.pxd_linear_constraint*) = function
-	| True_guard -> LinearConstraint.pxd_true_constraint()
-	| False_guard -> LinearConstraint.pxd_false_constraint()
-	| Discrete_guard discrete_guard -> LinearConstraint.pxd_true_constraint()
-	| Continuous_guard continuous_guard -> continuous_guard
-	| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard*)
-
-
-(* Version with actions (old state space) *)
-(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the guard ***)
-(*let get_guard state_space state_index action_index state_index' =
-	(* Retrieve the model *)
-	let model = Input.get_model () in
-
-	(* Retrieve source and target locations *)
-	let (location : Location.global_location), _ = get_state state_space state_index in
-	let (location' : Location.global_location), _ = get_state state_space state_index' in
-
-	(* Create the list of local guards *)
-	let local_guards = ref [] in
-
-	(* For all PTA *)
-	List.iter (fun automaton_index ->
-		(* Retrieve source and target location indexes *)
-		let l : Automaton.location_index = Location.get_location location automaton_index in
-		let l' : Automaton.location_index = Location.get_location location' automaton_index in
-
-		(* Now, compute the local guard, i.e., the guard in the current PTA *)
-		let local_guard =
-		(* If source and target are equal: either a self-loop (if there exists a self-loop with this action), or the current PTA is not concerned by the transition *)
-		if l = l' then (
-			(* Find the transitions l -> action_index -> l' *)
-			(*** NOTE: type transition = guard * action * clock_updates * discrete_update list * location_index ***)
-			let transitions = List.filter (fun (_,_,_, target) -> target = l') (List.map model.transitions_description (model.transitions automaton_index l action_index)) in
-
-			(* If none: then not concerned -> true gard *)
-			if List.length transitions = 0 then LinearConstraint.pxd_true_constraint()
-
-			(* If exactly one: good situation: return the guard *)
-			else if List.length transitions = 1 then let g,_,_,_ = List.nth transitions 0 in continuous_part_of_guard g
-			(* If more than one: take the first one (*** HACK ***) and warn *)
-			else(
-				(* Warning *)
-				print_warning ("Non-deterministic PTA! Selecting a guard arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
-
-				(* Take arbitrarily the first element *)
-				let g,_,_,_ = List.nth transitions 0 in continuous_part_of_guard g
-
-			)
-
-		(* Otherwise, if the source and target locations differ: necessarily a transition with this action *)
-		) else (
-			(* Find the transitions l -> action_index -> l' *)
-			let transitions = List.filter (fun (_,_,_, target) -> target = l') (List.map model.transitions_description (model.transitions automaton_index l action_index)) in
-
-			(* There cannot be none *)
-			if List.length transitions = 0 then raise (raise (InternalError("There cannot be no transition from '" ^ (model.location_names automaton_index l) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' with action to '" ^ (model.action_names action_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ ".")))
-
-			(* If exactly one: good situation: return the guard *)
-			else if List.length transitions = 1 then let g,_,_,_ = List.nth transitions 0 in continuous_part_of_guard g
-			(* If more than one: take the first one (*** HACK ***) and warn *)
-			else(
-				(* Warning *)
-				print_warning ("Non-deterministic PTA! Selecting a guard arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
-
-				(* Take arbitrarily the first element *)
-				let g,_,_,_ = List.nth transitions 0 in continuous_part_of_guard g
-			)
-
-		) in
-
-		(* Add the guard *)
-		(*** NOTE: VERY inefficient as we create a lot of pxd_true_constraint() (when the guards are true) although it would be better to just NOT add them to the list… ***)
-		local_guards := local_guard :: !local_guards;
-
-	) model.automata;
-
-	(* Compute constraint for assigning a (constant) value to discrete variables *)
-	print_message Verbose_high ("Computing constraint for discrete variables");
-	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value location discrete_index)) model.discrete in
-	(* Constraint of the form D_i = d_i *)
-	let discrete_constraint = LinearConstraint.pxd_constraint_of_point discrete_values in
-
-	(* Create the constraint guard ^ D_i = d_i *)
-	let guard = LinearConstraint.pxd_intersection (discrete_constraint :: !local_guards) in
-
-	(* Finally! Return the guard *)
-	guard*)
 let get_guard state_space state_index combined_transition state_index' =
 	(* Retrieve the model *)
 	let model = Input.get_model () in
@@ -704,95 +614,6 @@ let get_guard state_space state_index combined_transition state_index' =
 	(* Create the constraint guard ^ D_i = d_i *)
 	LinearConstraint.pxd_intersection (discrete_constraint :: continuous_guards)
 
-	
-
-
-(*(* Version with actions (old state space) *)
-(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the set of clocks to be reset along a transition ***)
-(*** NOTE: the function only works for regular resets (it raises an NotImplemented for other updates) ***)
-let get_resets state_space state_index action_index state_index' =
-	(* Retrieve the model *)
-	let model = Input.get_model () in
-
-	(* Retrieve source and target locations *)
-	let (location : Location.global_location), _ = get_state state_space state_index in
-	let (location' : Location.global_location), _ = get_state state_space state_index' in
-
-	(* Create the list of clocks to be reset *)
-	let clock_resets = ref [] in
-
-	(* For all PTA *)
-	List.iter (fun automaton_index ->
-		(* Retrieve source and target location indexes *)
-		let l : Automaton.location_index = Location.get_location location automaton_index in
-		let l' : Automaton.location_index = Location.get_location location' automaton_index in
-
-		(* Now, compute the clock_updates in the current PTA *)
-		let clock_updates =
-		(* If source and target are equal: either a self-loop (if there exists a self-loop with this action), or the current PTA is not concerned by the transition *)
-		if l = l' then (
-			(* Find the transitions l -> action_index -> l' *)
-			(*** NOTE: type transition = guard * clock_updates * discrete_update list * location_index ***)
-			let transitions = List.filter (fun (_,_,_, target) -> target = l') (List.map model.transitions_description (model.transitions automaton_index l action_index)) in
-
-			(* If none: then not concerned -> no reset nor update *)
-			if List.length transitions = 0 then No_update
-
-			(** TODO: Here we need to evaluate the conditions  *)
-			(* If exactly one: good situation: find the clock_updates *)
-			else if List.length transitions = 1
-				then let _,_,updates,_ = List.nth transitions 0 in updates.clock (*HERE*)
-				(* If more than one: take the first one (*** HACK ***) and warn *)
-				else (
-					(* Warning *)
-					print_warning ("Non-deterministic PTA! Selecting an edge arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
-
-					(* Take arbitrarily the first element *)
-					let _,_,updates,_ = List.nth transitions 0 in updates.clock
-				)
-
-		(* Otherwise, if the source and target locations differ: necessarily a transition with this action *)
-		) else (
-			(* Find the transitions l -> action_index -> l' *)
-			let transitions = List.filter (fun (_,_,_, target) -> target = l') (List.map model.transitions_description (model.transitions automaton_index l action_index)) in
-
-			(* There cannot be none *)
-			if List.length transitions = 0 then raise (raise (InternalError("There cannot be no transition from '" ^ (model.location_names automaton_index l) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' with action to '" ^ (model.action_names action_index) ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ ".")))
-
-			(* If exactly one: good situation: return the clock_updates *)
-			else if List.length transitions = 1
-			then let _,_,updates,_ = List.nth transitions 0 in updates.clock (*HERE*)
-			(* If more than one: take the first one (*** HACK ***) and warn *)
-			else (
-				(* Warning *)
-				print_warning ("Non-deterministic PTA! Selecting an edge arbitrarily among the " ^ (string_of_int (List.length transitions)) ^ " transitions from '" ^ (model.location_names automaton_index l) ^ "' via action '" ^ (model.action_names action_index) ^ "' to '" ^ (model.location_names automaton_index l') ^ "' in automaton '" ^ (model.automata_names automaton_index) ^ "'.");
-
-				(* Take arbitrarily the first element *)
-				let _,_,updates,_ = List.nth transitions 0 in updates.clock (*HERE*)
-			)
-		) in
-
-		let local_clock_resets =
-		(*** WARNING: we only accept clock resets (no arbitrary updates) ***)
-		match clock_updates with
-			(* No update at all *)
-			| No_update -> []
-			(* Reset to 0 only *)
-			| Resets clock_resets -> clock_resets
-			(* Reset to arbitrary value (including discrete, parameters and clocks) *)
-			| Updates _ -> raise (NotImplemented "Only clock resets are allowed for now in StateSpace.get_resets")
-		in
-
-		(* Add the guard *)
-		clock_resets := List.rev_append !clock_resets local_clock_resets;
-
-	) model.automata;
-
-	(* Keep each clock once *)
-	let unique_clock_resets = list_only_once !clock_resets in
-
-	(* Finally! Return the list of clocks to reset *)
-	unique_clock_resets*)
 
 (*** NOTE: the function only works for regular resets (it raises NotImplemented for other updates) ***)
 (*** TODO: allow for all resets ***)
@@ -800,9 +621,6 @@ let get_resets state_space state_index combined_transition state_index' =
 	(* Retrieve the model *)
 	let model = Input.get_model () in
 
-	(* Retrieve source location *)
-(* 	let (location : Location.global_location), _ = get_state state_space state_index in *)
-	
 	(* For all transitions involved in the combined transition *)
 	let resets = List.fold_left (fun current_resets transition_index ->
 		(* Get the actual transition *)
