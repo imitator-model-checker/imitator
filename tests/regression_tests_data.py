@@ -1254,6 +1254,62 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2019/05/30
+		# Test for IMITATOR version: 2.11
+		'purpose'    : 'Test EFunsafe',
+		'input_files': ['testEFcounterex.imi'],
+		'options'    : '-mode EFunsafe -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFcounterex.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 1
+ OR
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : bad
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/05/30
+		# Test for IMITATOR version: 2.11
+		'purpose'    : 'Test EFunsafe with counterexample',
+		'input_files': ['testEFcounterex.imi'],
+		'options'    : '-mode EFunsafe -merge -incl -counterexample -output-result',
+		'expectations' : [
+			{'file': 'testEFcounterex.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : bad
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test EFmin on a toy example',
 		'input_files': ['testEFmin.imi'],
 		'options'    : '-mode EFmin -merge -incl -output-result',
