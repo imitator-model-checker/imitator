@@ -3074,7 +3074,38 @@ END CONSTRAINT		  """
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+
 	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/05/30
+		# Test for IMITATOR version: 2.11
+		'purpose'    : 'Test PRP on a very simple example',
+		'input_files': ['testEFcounterex.imi', 'testEFcounterex.pi0'],
+		'options'    : '-mode PRP -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFcounterex.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 0
+& 1 > p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PRP (old version) on a simple example (good reference valuation)',
