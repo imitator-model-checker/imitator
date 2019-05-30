@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2012/08/24
- * Last modified     : 2019/05/29
+ * Last modified     : 2019/05/30
  *
  ************************************************************)
 
@@ -111,7 +111,10 @@ let string_of_transition model automaton_index source_location transition =
 	(* Guard *)
 	^ (
 		if transition.guard <> AbstractModel.True_guard then
-			(escape_string_for_dot (ModelPrinter.string_of_guard model.variable_names transition.guard)) ^ "\\n"
+			(*** HACK: also check that the result is not "True" ***)
+			let guard_string = ModelPrinter.string_of_guard model.variable_names transition.guard in
+			if guard_string = LinearConstraint.string_of_true then "" else
+			(escape_string_for_dot guard_string) ^ "\\n"
 		else ""
 		)
 	(* Sync *)
