@@ -105,8 +105,8 @@ type discrete_guard = LinearConstraint.d_linear_constraint
 type continuous_guard = LinearConstraint.pxd_linear_constraint
 
 type discrete_continuous_guard = {
-  discrete_guard		: discrete_guard;
-  continuous_guard	: continuous_guard;
+  discrete_guard   : discrete_guard;
+  continuous_guard : continuous_guard;
 }
 type guard =
   | True_guard
@@ -133,8 +133,8 @@ type boolean_expression =
 
 (** Updates *)
 type updates = {
-  clock: clock_updates; (** Clock updates *)
-  discrete: discrete_update list; (** List of discrete updates *)
+  clock      : clock_updates;           (** Clock updates *)
+  discrete   : discrete_update list;    (** List of discrete updates *)
   conditional: conditional_update list; (** List of conditional updates *)
 }
 (** Conditional updates *)

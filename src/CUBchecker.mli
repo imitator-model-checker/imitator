@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Checks whether a PTA is a CUB-PTA
  * 

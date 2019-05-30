@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Non-zenoness emptiness check using CUB transformation (synthesizes valuations for which there exists a non-zeno loop in the PTA)
  * 
  * File contributors : Étienne André
  * Created           : 2016/10/10
- * Last modified     : 2016/11/25
+ * Last modified     : 2019/05/30
  *
  ************************************************************)
 
@@ -133,25 +133,24 @@ class algoNZCUB =
 			let all_transitions = StateSpace.find_transitions_in state_space scc in
 			
 			(* Compute the set of clocks that must be reset *)
-			let transitions_with_resets_and_b = List.map (fun (source_index, action_index, target_index ) -> 
+			let transitions_with_resets_and_b = List.map (fun (source_index, combined_transition, target_index ) -> 
 				(* Compute resets *)
-				(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the set of clocks to be reset along a transition ***)
-				let resets = StateSpace.get_resets state_space source_index action_index target_index in
+				let resets = StateSpace.get_resets state_space source_index combined_transition target_index in
 				
 				(* Find the 'b' (which is that of the target) *)
 				(*** NOTE: quite expensive, but much much less than computing resets (or any polyhedra operation) so we don't optimize here ***)
 				let _ , b = List.find (fun (state_index , b) -> state_index  = target_index) states_and_b in
 				
 				(* Combine! *)
-				source_index, action_index, b, resets , target_index
+				source_index, combined_transition, b, resets , target_index
 				
 			) all_transitions in
 	
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then(
-				self#print_algo_message Verbose_high ("All transitions with flags: \n " ^ (string_of_list_of_string_with_sep "\n -- \n" (List.map (fun (source_index, action_index, b, resets , target_index) ->
+				self#print_algo_message Verbose_high ("All transitions with flags: \n " ^ (string_of_list_of_string_with_sep "\n -- \n" (List.map (fun (source_index, combined_transition, b, resets , target_index) ->
 					(StateSpace.string_of_state_index source_index)
-					^ " --" ^ (model.action_names action_index)
+					^ " --" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition))
 					^ "," ^ (string_of_bool b)
 					^ ",[" ^ (string_of_list_of_string_with_sep "," (List.map model.variable_names resets)) ^ "]"
 					^ "--> " 

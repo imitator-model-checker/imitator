@@ -9,7 +9,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2009/09/07
- * Last modified     : 2019/03/14
+ * Last modified     : 2019/05/30
  *
  ************************************************************)
 
@@ -558,7 +558,6 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(************************************************************)
 	(* Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
 	(************************************************************)
-	(** TODO: add conditions to CUB
 	| Parametric_NZ_CUBcheck ->
 		(* Computing a constraint for which the PTA is CUB *)
 		print_message Verbose_standard ("Checking whether the PTA is CUB for some parameter valuations…");
@@ -649,7 +648,6 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		(* Just call the NZ emptiness check *)
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB in myalgo
 
-	*)
 
 	(************************************************************)
 	(* Parametric deadlock checking *)
