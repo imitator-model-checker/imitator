@@ -13,7 +13,7 @@
 # File contributors : Étienne André
 #
 # Created           : 2015/10/23
-# Last modified     : 2019/05/29
+# Last modified     : 2019/05/30
 #************************************************************
 
 
@@ -24,8 +24,9 @@
 tests = [
 	#------------------------------------------------------------
 	{
-		# Test version: TODO
-		# Test since  : TODO
+		# Test version             : TODO
+		# Test since               : TODO
+		# Test for IMITATOR version: TODO
 		'purpose'    : 'Test the state space',
 		'input_files': ['flipflop.imi'],
 		'options'    : '-mode statespace -output-states -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
@@ -2338,12 +2339,12 @@ Number of computed states     : 7
 & p2 >= 0
 
   DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_2
-  s_4 -> s_2 via "a"
-  s_1 -> s_3 via "a"
-  s_3 -> s_1 via "a"
-  s_2 -> s_4 via "a"
   s_0 -> s_1 via "a"
+  s_0 -> s_2
+  s_1 -> s_3 via "a"
+  s_2 -> s_4 via "a"
+  s_3 -> s_1 via "a"
+  s_4 -> s_2 via "a"
 """
 			} #end result file
 		] # end expectations
@@ -2714,25 +2715,25 @@ Number of computed states     : 20
 & dG4_u >= 3
 
   DESCRIPTION OF THE TRANSITIONS
-  s_7 -> s_10 via "ckDown"
-  s_8 -> s_12 via "ckDown"
-  s_14 -> s_19 via "ckDown"
-  s_8 -> s_13 via "qUp"
-  s_3 -> s_4 via "dDown"
   s_0 -> s_1 via "dUp"
-  s_10 -> s_18 via "qUp"
-  s_13 -> s_15 via "ckDown"
-  s_9 -> s_14 via "dDown"
-  s_5 -> s_8 via "dDown"
-  s_4 -> s_7 via "qG3Down"
-  s_11 -> s_17 via "ckDown"
-  s_2 -> s_3 via "ckUp"
-  s_5 -> s_9 via "qUp"
-  s_3 -> s_5 via "qG3Down"
-  s_7 -> s_11 via "qUp"
-  s_4 -> s_6 via "ckDown"
   s_1 -> s_2 via "qG1Down"
+  s_2 -> s_3 via "ckUp"
+  s_3 -> s_4 via "dDown"
+  s_3 -> s_5 via "qG3Down"
+  s_4 -> s_6 via "ckDown"
+  s_4 -> s_7 via "qG3Down"
+  s_5 -> s_8 via "dDown"
+  s_5 -> s_9 via "qUp"
+  s_7 -> s_10 via "ckDown"
+  s_7 -> s_11 via "qUp"
+  s_8 -> s_12 via "ckDown"
+  s_8 -> s_13 via "qUp"
+  s_9 -> s_14 via "dDown"
+  s_10 -> s_18 via "qUp"
+  s_11 -> s_17 via "ckDown"
   s_12 -> s_16 via "qUp"
+  s_13 -> s_15 via "ckDown"
+  s_14 -> s_19 via "ckDown"
 """
 			} #end result file
 		] # end expectations

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2018/03/15
- * Last modified     : 2019/05/29
+ * Last modified     : 2019/05/30
  *
  ************************************************************)
 
@@ -150,7 +150,7 @@ class algoAFsynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Computing the p_nnconvex_constraint for which there may exist a deadlock from a given state; the second argument is the list of successors (in case we may want to consider not all successors, typically in backward exploration) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private compute_deadlock_p_constraint state_index (successors : (State.state_index * Automaton.action_index) list) : LinearConstraint.p_nnconvex_constraint =
+	method private compute_deadlock_p_constraint state_index (successors : (StateSpace.combined_transition * State.state_index) list) : LinearConstraint.p_nnconvex_constraint =
 	
 		(* Define a local constraint storing the union of PX-constraints allowing to leave s *)
 		let good_constraint_s = LinearConstraint.false_px_nnconvex_constraint () in
@@ -159,11 +159,11 @@ class algoAFsynth =
 		let s_location, s_constraint = StateSpace.get_state state_space state_index in
 		
 		(* For all state s' in the successors of s *)
-		List.iter (fun (state_index', action_index) ->
+		List.iter (fun (combined_transition, state_index') ->
 		
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
-				self#print_algo_message Verbose_medium ("Considering transition from state " ^ (string_of_int state_index) ^ " via action '" ^ (model.action_names action_index) ^ "' to state " ^ (string_of_int state_index') ^ "…");
+				self#print_algo_message Verbose_medium ("Considering transition from state " ^ (string_of_int state_index) ^ " via action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "' to state " ^ (string_of_int state_index') ^ "…");
 			);
 			
 			(* retrieve the guard *)
@@ -174,7 +174,7 @@ class algoAFsynth =
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then(
-				self#print_algo_message Verbose_high ("Guard computed via action '" ^ (model.action_names action_index) ^ "':\n" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));
+				self#print_algo_message Verbose_high ("Guard computed via action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "':\n" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));
 			);
 			
 			(* Retrieving the constraint s'|P *)
@@ -420,7 +420,7 @@ class algoAFsynth =
 		(* For all state s in post^n *)
 		List.iter (fun state_index ->
 			(* Retrieve all successors of this state with their action *)
-			let succs_of_s = StateSpace.get_successors_with_actions state_space state_index in
+			let succs_of_s = StateSpace.get_successors_with_combined_transitions state_space state_index in
 			
 			let p_af_constraint_s = self#compute_deadlock_p_constraint state_index succs_of_s in
 			

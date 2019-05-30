@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2019/05/29
+ * Last modified     : 2019/05/30
  *
  ************************************************************)
 
@@ -146,7 +146,7 @@ let counter_get_state = create_hybrid_counter_and_register "StateSpace.get_state
 
 let counter_add_transition = create_hybrid_counter_and_register "StateSpace.add_transition" States_counter Verbose_experiments
 let counter_get_successors = create_hybrid_counter_and_register "StateSpace.get_successors" States_counter Verbose_experiments
-let counter_get_successors_with_actions = create_hybrid_counter_and_register "StateSpace.get_successors_with_actions" States_counter Verbose_experiments
+(* let counter_get_successors_with_actions = create_hybrid_counter_and_register "StateSpace.get_successors_with_actions" States_counter Verbose_experiments *)
 let counter_get_transitions = create_hybrid_counter_and_register "StateSpace.get_transitions" States_counter Verbose_experiments
 let counter_nb_states = create_hybrid_counter_and_register "StateSpace.nb_states" States_counter Verbose_experiments
 let counter_nb_transitions = create_hybrid_counter_and_register "StateSpace.nb_transitions" States_counter Verbose_experiments
@@ -334,7 +334,7 @@ let get_transitions_table state_space =
 	result
 
 
-(** Compte and return the list of pairs (index successor of a state, combined transition) (if entry undefined in the hashtable, then []) *)
+(** Compte and return the list of pairs (combined transition, index successor of a state) (if entry undefined in the hashtable, then []) *)
 let get_successors_with_combined_transitions state_space state_index =
 	(* Get all successors with their combined transition *)
 	hashtbl_get_or_default state_space.transitions_table state_index []
@@ -389,7 +389,7 @@ let get_action_from_combined_transition combined_transition =
 	action_index
 
 
-(** Compte and return the list of pairs (index successor of a state, corresponding action) (if entry undefined in the hashtable, then []) *)
+(*(** Compte and return the list of pairs (index successor of a state, corresponding action) (if entry undefined in the hashtable, then []) *)
 let get_successors_with_actions state_space state_index =
 	(* Statistics *)
 	counter_get_successors_with_actions#increment;
@@ -413,7 +413,7 @@ let get_successors_with_actions state_space state_index =
 	(* Statistics *)
 	counter_get_successors_with_actions#stop;
 
-	result
+	result*)
 
 	
 
@@ -572,19 +572,18 @@ let is_bad program state_space =
 	) *)
 
 
-(*
 (*------------------------------------------------------------*)
 (** Big hack: guard and resets reconstruction *)
 (*------------------------------------------------------------*)
 
-(*** NOTE: this function is defined here just because it was necessary here first; perhaps a better module would be more logical… ***)
+(*(*** NOTE: this function is defined here just because it was necessary here first; perhaps a better module would be more logical… ***)
 (*** NOTE/HACK: duplicate function in ModelConverter ***)
 let continuous_part_of_guard (*: LinearConstraint.pxd_linear_constraint*) = function
 	| True_guard -> LinearConstraint.pxd_true_constraint()
 	| False_guard -> LinearConstraint.pxd_false_constraint()
 	| Discrete_guard discrete_guard -> LinearConstraint.pxd_true_constraint()
 	| Continuous_guard continuous_guard -> continuous_guard
-	| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard
+	| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard*)
 
 
 (* Version with actions (old state space) *)
@@ -676,24 +675,26 @@ let get_guard state_space state_index combined_transition state_index' =
 (* 	let (location' : Location.global_location), _ = get_state state_space state_index' in *)
 
 	(* For all transitions involved in the combined transition *)
-	let continuous_guards : LinearConstraint.pxd_linear_constraint list = List.map (fun transition_index ->
+	let continuous_guards : LinearConstraint.pxd_linear_constraint list = List.fold_left (fun current_list_of_guards transition_index ->
 		(* Get the actual transition *)
 		let transition : AbstractModel.transition = model.transitions_description transition_index in
 
-(*		(* Get the automaton *)
-		let automaton_index = model.automaton_of_transition transition_index in
+		(* Add the actual guard to the list *)
+		match transition.guard with
+			| True_guard -> current_list_of_guards
+			(*** NOTE: we could optimize the case of False (because no need to go further); BUT the number of transitions is usually small and, most importantly, it is unlikely a guard is false in the model ***)
+			| False_guard -> (LinearConstraint.pxd_false_constraint()) :: current_list_of_guards
+			| Discrete_guard discrete_guard -> current_list_of_guards
+			| Continuous_guard continuous_guard -> continuous_guard :: current_list_of_guards
+			| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard :: current_list_of_guards
 		
-		(* Retrieve source and target location indexes *)
-		let l : Automaton.location_index = Location.get_location location automaton_index in
-		let l' : Automaton.location_index = Location.get_location location' automaton_index in*)
-		
-		(* Get the actual guard *)
-		let g, _, _, _ = transition in
-		g
-		
-	) combined_transition
+	) [] combined_transition
 	in
+	
+	(* Replace with true if empty list *)
+	let continuous_guards = if continuous_guards = [] then [LinearConstraint.pxd_true_constraint()] else continuous_guards in
 
+	(*** NOTE (ÉA, 2019/05/30): Not sure what I did there??? ***)
 	(* Compute constraint for assigning a (constant) value to discrete variables *)
 	print_message Verbose_high ("Computing constraint for discrete variables");
 	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value location discrete_index)) model.discrete in
@@ -800,19 +801,15 @@ let get_resets state_space state_index combined_transition state_index' =
 	let model = Input.get_model () in
 
 	(* Retrieve source location *)
-	let (location : Location.global_location), _ = get_state state_space state_index in
+(* 	let (location : Location.global_location), _ = get_state state_space state_index in *)
 	
 	(* For all transitions involved in the combined transition *)
 	let resets = List.fold_left (fun current_resets transition_index ->
 		(* Get the actual transition *)
 		let transition = model.transitions_description transition_index in
 
-		(* Get the actual updates *)
-		let _, _, updates, _ = transition in
-		
 		(*** WARNING: we only accept clock resets (no arbitrary updates) ***)
-		(*** TODO ***)
-		match clock_updates with
+		match transition.updates.clock with
 			(* No update at all *)
 			| No_update -> current_resets
 			(* Reset to 0 only *)
@@ -823,7 +820,7 @@ let get_resets state_space state_index combined_transition state_index' =
 	in
 	
 	(* Keep each clock once *)
-	list_only_once resets*)
+	list_only_once resets
 
 
 (************************************************************)

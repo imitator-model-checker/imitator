@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2019/05/29
+ * Last modified     : 2019/05/30
  *
  ************************************************************)
 
@@ -135,9 +135,15 @@ val get_initial_state_index : state_space -> state_index
 val get_successors : state_space -> state_index -> state_index list
 
 (*------------------------------------------------------------*)
+(** Compte and return the list of pairs (index successor of a state, corresponding combined_transition) *)
+(*------------------------------------------------------------*)
+val get_successors_with_combined_transitions : state_space -> state_index -> (combined_transition * state_index) list
+
+
+(*------------------------------------------------------------*)
 (** Compte and return the list of pairs (index successor of a state, corresponding action) *)
 (*------------------------------------------------------------*)
-val get_successors_with_actions : state_space -> state_index -> (state_index * action_index) list
+(* val get_successors_with_actions : state_space -> state_index -> (state_index * action_index) list *)
 
 (*------------------------------------------------------------*)
 (** Compute and return a predecessor array state_index -> (combined_transition , state_index) list *)
@@ -190,13 +196,13 @@ val last_states: AbstractModel.abstract_model -> state_space -> state_index list
 
 
 
-(*(*------------------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Get the (full) guard associated with a transition *)
 (*------------------------------------------------------------*)
 val get_guard : state_space -> state_index -> combined_transition -> state_index -> LinearConstraint.pxd_linear_constraint
 
 (*** NOTE: the function only works for regular resets (it raises NotImplemented for other updates) ***)
-val get_resets : state_space -> state_index -> combined_transition -> state_index -> Automaton.clock_index list*)
+val get_resets : state_space -> state_index -> combined_transition -> state_index -> Automaton.clock_index list
 
 
 (*------------------------------------------------------------*)
