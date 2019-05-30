@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2019/05/29
+ * Last modified     : 2019/05/30
  *
  ************************************************************)
 
@@ -317,7 +317,7 @@ let string_of_conditional_updates model conditional_updates =
 	let sep = ", " in
 	string_of_conditional_updates_template model conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep
 
-(* Convert a transition of a location into a string *)
+(* Convert a transition into a string *)
 let string_of_transition model automaton_index transition =
 	let clock_updates = transition.updates.clock in
 	let discrete_updates = transition.updates.discrete in
@@ -347,6 +347,37 @@ let string_of_transition model automaton_index transition =
 	(* Convert the destination location *)
 	^ " goto " ^ (model.location_names automaton_index transition.target)
 	^ ";"
+
+(* Convert a transition into a string: compact version for debugging/pretty-printing *)
+let debug_string_of_transition model automaton_index transition =
+	let clock_updates = transition.updates.clock in
+	let discrete_updates = transition.updates.discrete in
+	let conditional_updates = transition.updates.conditional in
+	let first_separator, second_separator = separator_comma transition.updates in
+
+	"[PTA " ^ (model.automata_names automaton_index) ^ ": guard{"
+	(* Convert the guard *)
+	^ (string_of_guard model.variable_names transition.guard)
+
+	(* Convert the updates *)
+	^ "} updates{"
+	(* Clock updates *)
+	^ (string_of_clock_updates model clock_updates)
+	(* Add a coma in case of both clocks and discrete *)
+	^ (if first_separator then ", " else "")
+	(* Discrete updates *)
+	^ (string_of_discrete_updates model discrete_updates)
+	(* Add a coma in case of both clocks and discrete and conditions *)
+	^ (if second_separator then ", " else "")
+	(* Conditional updates *)
+	^ (string_of_conditional_updates model conditional_updates)
+	^ "} "
+
+	(* Convert the sync *)
+	^ (string_of_sync model transition.action)
+	(* Convert the destination location *)
+	^ " Target " ^ (model.location_names automaton_index transition.target)
+	^ "] "
 
 
 (* Convert the transitions of a location into a string *)

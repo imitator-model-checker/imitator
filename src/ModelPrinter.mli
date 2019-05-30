@@ -3,13 +3,13 @@
  *                       IMITATOR
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  *
  * Module description: Convert an abstract model to the input syntax of IMITATOR
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2019/04/15
+ * Last modified     : 2019/05/30
  *
  ************************************************************)
 
@@ -35,7 +35,7 @@ val string_of_arithmetic_expression : (Automaton.variable_index -> Automaton.var
 (************************************************************)
 (*** TODO/BADPROG : Move elsewhere? ***)
 (** Convert a state into a string *)
-val string_of_state : abstract_model -> (Location.global_location * LinearConstraint.px_linear_constraint) -> string
+val string_of_state : abstract_model -> State.state -> string
 
 
 (************************************************************)
@@ -45,21 +45,17 @@ val string_of_state : abstract_model -> (Location.global_location * LinearConstr
 val string_of_guard : (Automaton.variable_index -> Automaton.variable_name) -> AbstractModel.guard -> string
 
 
+(************************************************************)
+(** Transitions *)
+(************************************************************)
+(* Convert a transition into a string: compact version for debugging/pretty-printing *)
+val debug_string_of_transition : AbstractModel.abstract_model -> Automaton.automaton_index -> AbstractModel.transition -> string
+
 
 (************************************************************)
-(** model *)
+(** Updates *)
 (************************************************************)
-(* Convert a pi0 into a string *)
-val string_of_pi0 : abstract_model -> pi0 -> string
 
-(* Convert a v0 into a string *)
-val string_of_v0 : abstract_model -> v0 -> string
-
-(* Convert a model into a string *)
-val string_of_model : abstract_model -> string
-
-(** Convert the correctness property to a string *)
-val string_of_property : abstract_model -> property_definition -> string
 
 (** Returns when add comma separators between clock and discrete updates and
 between discrete and conditional updates *)
@@ -83,5 +79,22 @@ val string_of_boolean :  (Automaton.discrete_index -> Automaton.variable_name) -
 (** Template to convert conditional updates into a string *)
 val string_of_conditional_updates_template : abstract_model -> conditional_update list -> (abstract_model -> clock_updates -> string) -> (abstract_model -> discrete_update list -> string) -> (boolean_expression -> string) -> string -> string -> string -> string
 
-(** COnvert conditional updates into a string *)
+(** Convert conditional updates into a string *)
 val string_of_conditional_updates : abstract_model -> conditional_update list -> string
+
+
+(************************************************************)
+(** model *)
+(************************************************************)
+(* Convert a pi0 into a string *)
+val string_of_pi0 : abstract_model -> pi0 -> string
+
+(* Convert a v0 into a string *)
+val string_of_v0 : abstract_model -> v0 -> string
+
+(* Convert a model into a string *)
+val string_of_model : abstract_model -> string
+
+(** Convert the correctness property to a string *)
+val string_of_property : abstract_model -> property_definition -> string
+
