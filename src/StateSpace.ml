@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2019/05/30
+ * Last modified     : 2019/05/31
  *
  ************************************************************)
 
@@ -426,15 +426,40 @@ let compute_predecessors_with_combined_transitions state_space =
 	counter_compute_predecessors_with_combined_transitions#increment;
 	counter_compute_predecessors_with_combined_transitions#start;
 
+	(* Print some information *)
+	print_message Verbose_total "Computing predecessors…";
+	
+	(* Get the highest id of the state space *)
+	(*** NOTE: we get the highest id and not the length of the Hashtbl due to the fact that states may be merged/removed by bidirectional inclusion ***)
+	let highest_id = !(state_space.next_state_index) - 1 in
+	
+	(* Print some information *)
+	print_message Verbose_total ("Creating an array of length " ^ (string_of_int (highest_id + 1)) ^ "");
+	
 	(* Create an array for predecessors: state_index -> (state_index, action_index) list *)
-	let predecessors = Array.make (Hashtbl.length state_space.all_states) [] in
+	let predecessors = Array.make (highest_id + 1) [] in
 
 	(* Iterate on all states in the state space *)
 	Hashtbl.iter(fun source_state_index _ ->
+		(* Print some information *)
+		print_message Verbose_total ("Retrieving successors of state #" ^ (string_of_int source_state_index));
+		
 		(* Get all successors of this state *)
 		let successors = hashtbl_get_or_default state_space.transitions_table source_state_index [] in
+		
+		(* Print some information *)
+		if verbose_mode_greater Verbose_total then(
+			print_message Verbose_total ("Successors of state #" ^ (string_of_int source_state_index) ^ ": " ^ (string_of_list_of_string_with_sep "," (List.map (fun (_, state_index) -> string_of_int state_index) successors)));
+		);
+
 		(* Iterate on pairs (combined_transition * 'target_state_index') *)
-		List.iter (fun (combined_transition, target_state_index) -> 
+		List.iter (fun (combined_transition, target_state_index) ->
+		
+			(* Print some information *)
+			if verbose_mode_greater Verbose_total then(
+				print_message Verbose_total ("Adding #" ^ (string_of_int source_state_index) ^ " to the predecessors of #" ^ (string_of_int target_state_index) ^ "");
+			);
+			
 			(* Add to the predecessor array *)
 			Array.set predecessors target_state_index (
 				(* Add the new element *)
@@ -444,6 +469,13 @@ let compute_predecessors_with_combined_transitions state_space =
 				(* the former list *)
 				predecessors.(target_state_index)
 				)
+			;
+
+			(* Print some information *)
+			if verbose_mode_greater Verbose_total then(
+				print_message Verbose_total ("Predecessors of #" ^ (string_of_int target_state_index) ^ " now: " ^ (string_of_list_of_string_with_sep "," (List.map (fun (_, state_index) -> string_of_int state_index) predecessors.(target_state_index))));
+			);
+			
 		) successors;
 		
 		

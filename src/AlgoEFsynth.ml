@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2019/05/30
+ * Last modified     : 2019/05/31
  *
  ************************************************************)
 
@@ -352,20 +352,30 @@ class virtual algoEFsynth =
 		(* Add the transition to the state space *)
 		self#add_transition_to_state_space (source_state_index, action_index, new_state_index) addition_result;
 		
+		
 		(* If an immediate termination is requested: raise exception! *)
 		if !terminate_analysis_immediately then(
 			
 			(* Print the counter-example *)
 			
+			(* Print some information *)
+			print_message Verbose_medium "Counterexample found: reconstructing counterexample…";
+			
 			(* First get the predecessors table *)
 			let predecessors = StateSpace.compute_predecessors_with_combined_transitions state_space in
 			
+			(* Print some information *)
+			print_message Verbose_medium "Predecessor table built";
+
 			(* Also retrieve the initial state *)
 			let initial_state_index = StateSpace.get_initial_state_index state_space in
 			
 			(* Get the path *)
 			let path = StateSpace.backward_path state_space new_state_index initial_state_index (Some predecessors) in
 			
+			(* Print some information *)
+			print_message Verbose_medium "Path built";
+
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then (
 				print_message Verbose_low "Counter-example found:";
