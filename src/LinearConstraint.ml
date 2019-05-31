@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/03/14
+ * Last modified     : 2019/05/31
  *
  ************************************************************)
 
@@ -318,66 +318,6 @@ type d_linear_constraint = linear_constraint
 (** Convex constraint (polyhedron) on the parameters, clocks and discrete *)
 type pxd_linear_constraint = linear_constraint
 
-
-(* In order to convert a linear_term (with rational coefficients) *)
-(* to the corresponding PPL data structure, it is normalized such *)
-(* that the only non-rational coefficient is outside the term:    *)
-(* p/q * ( ax + by + c ) *)
-let normalize_linear_term (lt : linear_term) : (Ppl.linear_expression * NumConst.t) =
-	(* Increment discrete counter *)
-	ppl_tcounter_normalize_linear_term#increment;
-	
-	(* Start continuous counter *)
-	ppl_tcounter_normalize_linear_term#start;
-	
-	let rec normalize_linear_term_rec lt =
-(*	(*	(* Statistics *)*)
-	(*** TODO ***)
-		ppl_nb_normalize_linear_term := !ppl_nb_normalize_linear_term + 1;*)
-
-		let result =
-		match lt with
-			| Var v -> Variable v, NumConst.one
-			| Coef c -> (
-					let p = NumConst.get_num c in
-					let q = NumConst.get_den c in
-					Coefficient p, NumConst.numconst_of_zfrac Gmp.Z.one q )
-			| Pl (lterm, rterm) -> (
-					let lterm_norm, fl = normalize_linear_term_rec lterm in
-					let rterm_norm, fr = normalize_linear_term_rec rterm in
-					let pl = NumConst.get_num fl in
-					let ql = NumConst.get_den fl in
-					let pr = NumConst.get_num fr in
-					let qr = NumConst.get_den fr in
-					(Plus (Times (pl *! qr, lterm_norm), (Times (pr *! ql, rterm_norm)))),
-					NumConst.numconst_of_zfrac Gmp.Z.one (ql *! qr))
-			| Mi (lterm, rterm) -> (
-					let lterm_norm, fl = normalize_linear_term_rec lterm in
-					let rterm_norm, fr = normalize_linear_term_rec rterm in
-					let pl = NumConst.get_num fl in
-					let ql = NumConst.get_den fl in
-					let pr = NumConst.get_num fr in
-					let qr = NumConst.get_den fr in
-					(Minus (Times (pl *! qr, lterm_norm), (Times (pr *! ql, rterm_norm)))),
-					NumConst.numconst_of_zfrac Gmp.Z.one (ql *! qr))
-			| Ti (fac, term) -> (
-					let term_norm, r = normalize_linear_term_rec term in
-					let p = NumConst.get_num fac in
-					let q = NumConst.get_den fac in
-					term_norm, NumConst.mul r (NumConst.numconst_of_zfrac p q))
-		in
-	(* Return result *)
-		result
-	in
-	
-	let result = normalize_linear_term_rec lt in
-
-	(* Stop continuous counter *)
-	ppl_tcounter_normalize_linear_term#stop;
-	
-	(* Return result *)
-	result
-	
 
 
 (** Add on for TA2CLP *)
@@ -981,6 +921,81 @@ let rec string_of_linear_term_ppl names linear_term =
 						| _ -> fstr ^ " * (" ^ tstr ^ ")" )
 				
 
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Conversion to PPL} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+(* In order to convert a linear_term (with rational coefficients) *)
+(* to the corresponding PPL data structure, it is normalized such *)
+(* that the only non-rational coefficient is outside the term:    *)
+(* p/q * ( ax + by + c ) *)
+let normalize_linear_term (lt : linear_term) : (Ppl.linear_expression * NumConst.t) =
+	(* Increment discrete counter *)
+	ppl_tcounter_normalize_linear_term#increment;
+	
+	(* Start continuous counter *)
+	ppl_tcounter_normalize_linear_term#start;
+	
+	let rec normalize_linear_term_rec lt =
+(*	(*	(* Statistics *)*)
+	(*** TODO ***)
+		ppl_nb_normalize_linear_term := !ppl_nb_normalize_linear_term + 1;*)
+
+		let result =
+		match lt with
+			| Var v -> Variable v, NumConst.one
+			| Coef c -> (
+					let p = NumConst.get_num c in
+					let q = NumConst.get_den c in
+					Coefficient p, NumConst.numconst_of_zfrac Gmp.Z.one q )
+			| Pl (lterm, rterm) -> (
+					let lterm_norm, fl = normalize_linear_term_rec lterm in
+					let rterm_norm, fr = normalize_linear_term_rec rterm in
+					let pl = NumConst.get_num fl in
+					let ql = NumConst.get_den fl in
+					let pr = NumConst.get_num fr in
+					let qr = NumConst.get_den fr in
+					(Plus (Times (pl *! qr, lterm_norm), (Times (pr *! ql, rterm_norm)))),
+					NumConst.numconst_of_zfrac Gmp.Z.one (ql *! qr))
+			| Mi (lterm, rterm) -> (
+					let lterm_norm, fl = normalize_linear_term_rec lterm in
+					let rterm_norm, fr = normalize_linear_term_rec rterm in
+					let pl = NumConst.get_num fl in
+					let ql = NumConst.get_den fl in
+					let pr = NumConst.get_num fr in
+					let qr = NumConst.get_den fr in
+					(Minus (Times (pl *! qr, lterm_norm), (Times (pr *! ql, rterm_norm)))),
+					NumConst.numconst_of_zfrac Gmp.Z.one (ql *! qr))
+			| Ti (fac, term) -> (
+					let term_norm, r = normalize_linear_term_rec term in
+					let p = NumConst.get_num fac in
+					let q = NumConst.get_den fac in
+					term_norm, NumConst.mul r (NumConst.numconst_of_zfrac p q))
+		in
+	(* Return result *)
+		result
+	in
+	
+	let result = normalize_linear_term_rec lt in
+
+	(* Stop continuous counter *)
+	ppl_tcounter_normalize_linear_term#stop;
+	
+	(* Return result *)
+	result
+	
+
+(** Convert our ad-hoc linear_term into a Ppl.linear_expression *)
+let ppl_linear_expression_of_linear_term linear_term : Ppl.linear_expression =
+	let ppl_term, r = normalize_linear_term linear_term in
+	let p = NumConst.get_num r in
+	(* Simplifies a bit *)
+	if Gmp.Z.equal p Gmp.Z.one then ppl_term
+	else Times (p, ppl_term)
+
+
+
 (************************************************************)
 (************************************************************)
 (** {2 Linear inequalities} *)
@@ -1005,15 +1020,16 @@ let ppl_linear_expression_of_linear_term (linear_term : linear_term) : Ppl.linea
 
 (** Create a linear inequality using a linear term and an operator *)
 let make_linear_inequality linear_term op =
-	let lin_term = ppl_linear_expression_of_linear_term linear_term in
+	(* Convert to Ppl.linear_expression *)
+	let linear_expression = ppl_linear_expression_of_linear_term linear_term in
+	(* Build zero term for comparison with the operator *)
 	let zero_term = Coefficient Gmp.Z.zero in
 	match op with
-		| Op_g -> Greater_Than (lin_term, zero_term)
-		| Op_ge -> Greater_Or_Equal (lin_term, zero_term)
-		| Op_eq -> Equal (lin_term, zero_term)
-		| Op_le -> Less_Or_Equal (lin_term, zero_term)
-		| Op_l -> Less_Than (lin_term, zero_term)
-
+		| Op_g -> Greater_Than (linear_expression, zero_term)
+		| Op_ge -> Greater_Or_Equal (linear_expression, zero_term)
+		| Op_eq -> Equal (linear_expression, zero_term)
+		| Op_le -> Less_Or_Equal (linear_expression, zero_term)
+		| Op_l -> Less_Than (linear_expression, zero_term)
 
 let make_p_linear_inequality = make_linear_inequality
 let make_px_linear_inequality = make_linear_inequality
