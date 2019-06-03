@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2019/05/30
+ * Last modified     : 2019/06/03
  *
  ************************************************************)
 
@@ -71,7 +71,7 @@ val string_of_clock_updates_template : abstract_model -> clock_updates -> (clock
 val string_of_clock_updates :  abstract_model -> clock_updates -> string
 
 (** Template to convert a boolean expresion into a string *)
-val string_of_boolean_template :  (Automaton.variable_index -> Automaton.variable_name) -> boolean_expression -> (boolean_expression -> string) -> string
+val string_of_boolean_template : (Automaton.variable_index -> Automaton.variable_name) -> boolean_expression -> (boolean_expression -> string) -> string
 
 (** Convert a boolean expression into a string *)
 val string_of_boolean :  (Automaton.discrete_index -> Automaton.variable_name) -> boolean_expression -> string
@@ -84,13 +84,22 @@ val string_of_conditional_updates : abstract_model -> conditional_update list ->
 
 
 (************************************************************)
-(** model *)
+(** Points and hyperrectangles *)
 (************************************************************)
+
 (* Convert a pi0 into a string *)
 val string_of_pi0 : abstract_model -> pi0 -> string
 
+(* Convert a px-valuation into a string *)
+val string_of_px_valuation : abstract_model -> (Automaton.variable_index -> NumConst.t) -> string
+
 (* Convert a v0 into a string *)
 val string_of_v0 : abstract_model -> v0 -> string
+
+
+(************************************************************)
+(** Model and property *)
+(************************************************************)
 
 (* Convert a model into a string *)
 val string_of_model : abstract_model -> string

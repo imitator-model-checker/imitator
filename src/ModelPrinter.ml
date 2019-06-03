@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2019/05/30
+ * Last modified     : 2019/06/03
  *
  ************************************************************)
 
@@ -671,6 +671,21 @@ let string_of_state model (global_location, linear_constraint) =
 	let options = Input.get_options () in
 
 	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names options#output_float global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names linear_constraint) ^ ""
+
+
+
+(************************************************************)
+(** PX-valuation *)
+(************************************************************)
+(* Convert a px-valuation into a string *)
+let string_of_px_valuation model valuation =
+	string_of_list_of_string_with_sep " & " (
+		List.map (fun variable ->
+			(model.variable_names variable)
+			^ " = "
+			^ (NumConst.string_of_numconst (valuation variable))
+		) model.parameters_and_clocks
+	)
 
 
 (************************************************************)
