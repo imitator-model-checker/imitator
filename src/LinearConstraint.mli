@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: common definitions for linear terms and constraints (interface to PPL)
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/03/07
+ * Last modified     : 2019/06/03
  *
  ************************************************************)
 
@@ -510,12 +510,12 @@ val string_of_and : string
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion to GrML} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** Convert a linear term into a string for GML *)
+(*(** Convert a linear term into a string for GML *)
 val grml_of_pxd_linear_term : (variable -> string) -> int -> pxd_linear_term -> string
 
 (** Convert a linear constraint into a string for GML *)
 val grml_of_px_linear_constraint : (variable -> string) -> int -> px_linear_constraint -> string
-val grml_of_pxd_linear_constraint : (variable -> string) -> int -> pxd_linear_constraint -> string
+val grml_of_pxd_linear_constraint : (variable -> string) -> int -> pxd_linear_constraint -> string*)
 
 
 

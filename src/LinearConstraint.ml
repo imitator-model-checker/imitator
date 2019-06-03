@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: ommon definitions for linear terms and constraints (interface to PPL)
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/05/31
+ * Last modified     : 2019/06/03
  *
  ************************************************************)
 
@@ -2370,7 +2370,7 @@ let partition_pi0_compatible pi0 linear_constraint =
 	List.partition (is_pi0_compatible_inequality pi0) list_of_inequalities
 
 
-
+(*
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion to GrML} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2497,7 +2497,7 @@ let grml_of_linear_constraint names t_level linear_constraint =
 	))
 
 let grml_of_px_linear_constraint = grml_of_linear_constraint
-let grml_of_pxd_linear_constraint = grml_of_linear_constraint
+let grml_of_pxd_linear_constraint = grml_of_linear_constraint*)
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
