@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2019/05/31
+ * Last modified     : 2019/06/03
  *
  ************************************************************)
 
@@ -410,7 +410,32 @@ class virtual algoEFsynth =
 				
 			);
 			
+			(* Exhibit a concrete parameter valuation *)
+			(*** NOTE: here, we use the cache system ***)
+			let p_constraint = self#compute_p_constraint_with_cache current_constraint in
+			let concrete_p_valuation = LinearConstraint.p_exhibit_point p_constraint in
 			
+			(* Print it *)
+			if verbose_mode_greater Verbose_standard then(
+				(* Convert to PVal *)
+				let pval = new PVal.pval in
+				List.iter (fun parameter ->
+					pval#set_value parameter (concrete_p_valuation parameter);
+				) model.parameters;
+				
+				print_message Verbose_standard "Example of parameter valuation:";
+				print_message Verbose_standard (ModelPrinter.string_of_pi0 model pval);
+			);
+			
+			(* Exhibit a concrete clock+parameter valuation *)
+			let concrete_px_valuation = LinearConstraint.px_exhibit_point current_constraint in
+			
+			(* Print it *)
+			if verbose_mode_greater Verbose_low then(
+				print_message Verbose_low "Example of px-valuation:";
+				print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation);
+			);
+
 			(* Update termination status *)
 			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
 			self#print_algo_message Verbose_standard "Target state found! Terminating…";
