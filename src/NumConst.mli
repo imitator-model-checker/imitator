@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2017/04/18
+ * Last modified     : 2019/06/03
  *
  ************************************************************)
  
@@ -63,6 +63,9 @@ val mul : t -> t -> t
 val div : t -> t -> t
 val neg : t -> t
 val abs : t -> t
+
+val min : t -> t -> t
+val max : t -> t -> t
 
 (** Find the closest multiple of step from base_number below (or equal to) number *)
 val find_multiple_below : t -> t -> t -> t

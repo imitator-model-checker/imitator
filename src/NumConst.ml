@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2017/04/18
+ * Last modified     : 2019/06/03
  *
  ************************************************************)
  
@@ -200,6 +200,12 @@ let l  = ( </ )
 let le = ( <=/ )
 let ge = ( >=/ )
 let g  = ( >/ )
+
+let min a b =
+	if le a b then a else b
+
+let max a b =
+	if ge a b then a else b
 
 
 (**************************************************)
