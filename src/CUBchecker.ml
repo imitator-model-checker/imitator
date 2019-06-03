@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2019/05/30
+ * Last modified     : 2019/06/03
  *
  ************************************************************)
 
@@ -3574,6 +3574,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		clocks_and_discrete = model.clocks_and_discrete;
 		(* The non clocks (parameters and discrete) *)
 		parameters_and_discrete = model.parameters_and_discrete;
+		(* The non discrete (clocks and parameters) *)
+		parameters_and_clocks = model.parameters_and_clocks;
 		(* The function = variable_index -> variable name *)
 		variable_names = model.variable_names;
 		(* The type of variables *)

@@ -314,6 +314,8 @@ type abstract_model = {
 	clocks_and_discrete : variable_index list;
 	(* The non clocks (parameters and discrete) *)
 	parameters_and_discrete : variable_index list;
+	(* The non discrete (clocks and parameters) *)
+	parameters_and_clocks : variable_index list;
 	(* The function : variable_index -> variable name *)
 	variable_names : variable_index -> variable_name;
 	(* The type of variables *)

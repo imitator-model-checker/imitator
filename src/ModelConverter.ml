@@ -3610,6 +3610,8 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	clocks_and_discrete = list_append clocks discrete;
 	(* The non clocks (parameters and discrete) *)
 	parameters_and_discrete = list_append parameters discrete;
+	(* The non discrete (clocks and parameters) *)
+	parameters_and_clocks = list_append parameters clocks;
 	(* The function : variable_index -> variable name *)
 	variable_names = variable_names;
 	(* The type of variables *)
