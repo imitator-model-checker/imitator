@@ -45,6 +45,9 @@ exception Not_a_clock_guard
 (* Raised when a linear_term is not a one-dimensional single parameter constraint, i.e., of the form p ~ c *)
 exception Not_a_1d_parameter_constraint
 
+(* Raised when trying to get a point in an empty (false) constraint *)
+exception EmptyConstraint
+
 
 (************************************************************)
 (* CONSTANTS *)
@@ -103,8 +106,10 @@ let check_assert_dimensions = true
 	let ppl_tcounter_get_generators = create_hybrid_counter_and_register "get_generators" PPL_counter Verbose_low
 	
 
-let ppl_nb_add_constraints = ref 0
-(*	let ppl_t_add_constraints = ref 0.0*)
+	let ppl_tcounter_minimize = create_hybrid_counter_and_register "minimize" PPL_counter Verbose_low
+
+	let ppl_tcounter_maximize = create_hybrid_counter_and_register "maxnimize" PPL_counter Verbose_low
+
 	let ppl_tcounter_add_constraints = create_hybrid_counter_and_register "add_constraints" PPL_counter Verbose_low
 
 	let ppl_tcounter_add_space_dimensions_and_project = create_hybrid_counter_and_register "add_space_dimensions_and_project" PPL_counter Verbose_low
@@ -389,6 +394,12 @@ let ippl_generic f counter =
 
 let ippl_space_dimension x =
 	ippl_generic (fun () -> ppl_Polyhedron_space_dimension x) ppl_tcounter_space_dimension
+
+let ippl_minimize x =
+	ippl_generic (fun () -> ppl_Polyhedron_minimize x) ppl_tcounter_minimize
+
+let ippl_maximize x =
+	ippl_generic (fun () -> ppl_Polyhedron_maximize x) ppl_tcounter_maximize
 
 let ippl_add_constraints x =
 	ippl_generic (fun () -> ppl_Polyhedron_add_constraints x) ppl_tcounter_add_constraints
@@ -1774,6 +1785,8 @@ let clock_upper_bound_in clock_index px_linear_constraint =
 	p_linear_term_option
 
 
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2272,6 +2285,148 @@ let render_non_strict_p_linear_constraint k =
 	let inequality_list = ippl_get_inequalities k in 
 	(* Replace inequelities and convert back to a linear_constraint *)
 	make_p_constraint (List.map strict_to_not_strict_inequality inequality_list)
+
+
+	
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Operations without modification} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(*------------------------------------------------------------*)
+(* Point exhibition *)
+(*------------------------------------------------------------*)
+
+(** Exhibit a point in a linear_constraint; raise EmptyConstraint if the constraint is empty. *)
+(*** NOTE: we try to exhibit in each dimension the minimum, except if no minimum (infimum) in which case we get either the middle between the infimum and the supremum (if any supremum), or the infimum if no supremum; and dually if no infimum. ***)
+let exhibit_point nb_dimensions linear_constraint =
+	(* First quick check that the constraint is satisfiable *)
+	if pxd_is_false linear_constraint then raise EmptyConstraint;
+	
+	(* Create an array for storing the valuation *)
+	let valuations = Array.make nb_dimensions NumConst.zero in
+	
+	(* Print some information *)
+	print_message Verbose_high "Entering exhibit_point";
+	
+	(* Print some information *)
+	print_message Verbose_high "Copying the constraint…";
+	
+	(* Copy the constraint, as we will restrict it dimension by dimension *)
+	let restricted_linear_constraint = copy linear_constraint in
+	
+	(* Iterate on dimensions *)
+	for dimension = 0 to nb_dimensions - 1 do
+	
+		(* Find the valuation for this dimension *)
+		let valuation =
+
+		(* If variable unbound: arbitrarily return 1 *)
+		if not (ippl_is_constrained restricted_linear_constraint dimension) then(
+			
+			(* Print some information *)
+			print_message Verbose_high ("Dimension " ^ (string_of_int dimension) ^ " is unconstrained here.");
+				
+			(* return 1 *)
+			NumConst.one
+		)
+		else(
+			
+			(* Print some information *)
+			print_message Verbose_high ("Getting infimum of dimension " ^ (string_of_int dimension) ^ "…");
+		
+			(* Get infimum *)
+		
+		(* Create linear expression with just the dimension of interest *)
+		let linear_expression : Ppl.linear_expression = ppl_linear_expression_of_linear_term (make_linear_term [(NumConst.one, dimension)] NumConst.zero) in
+		
+			(*** DOC: function signature is val ppl_Polyhedron_minimize : polyhedron -> linear_expression -> bool * Gmp.Z.t * Gmp.Z.t * bool ***)
+			let bounded_from_below, infimum_numerator, infimum_denominator, is_minimum = ippl_minimize restricted_linear_constraint linear_expression in
+			
+			(* Build the infimum *)
+			let infimum = NumConst.numconst_of_zfrac infimum_numerator infimum_denominator in
+
+			(* Print some information *)
+			if verbose_mode_greater Verbose_high then
+				print_message Verbose_high ("Infimum of dimension " ^ (string_of_int dimension) ^ " is " ^ (NumConst.string_of_numconst infimum) ^ ". Is it a minimum? " ^ (string_of_bool is_minimum));
+		
+			(* If minimum: pick it *)
+			if bounded_from_below && is_minimum then(
+				(* Return the infimum *)
+				infimum
+				
+			)else(
+			(* Otherwise find supremum *)
+				let bounded_from_above, supremum_numerator, supremum_denominator, is_maximum = ippl_maximize restricted_linear_constraint linear_expression in
+				
+				(* Build the supremum *)
+				let supremum = NumConst.numconst_of_zfrac supremum_numerator supremum_denominator in
+				
+				(* Print some information *)
+				if verbose_mode_greater Verbose_high then
+					print_message Verbose_high ("Supremum of dimension " ^ (string_of_int dimension) ^ " is " ^ (NumConst.string_of_numconst supremum) ^ ". Is it a maximum? " ^ (string_of_bool is_maximum));
+					
+				(* Case 0: bounded from neither below nor above: return 1 (arbitrarily) *)
+				if not bounded_from_below && not bounded_from_above then(
+					(* Print some information *)
+					print_message Verbose_high ("Dimension " ^ (string_of_int dimension) ^ " is bounded from neither below nor above: pick 1");
+					
+					(* Return 1 *)
+					NumConst.one
+				)
+
+				(* Case 1: infimum and no supremum: return infimum + 1 *)
+				else if bounded_from_below && not bounded_from_above then
+					NumConst.add infimum NumConst.one
+				
+				(* Case 2: no infimum and supremum: return 1 if 1 is allowed, otherwise supremum - 1, i.e., min(1, supremum - 1) *)
+				else if not bounded_from_below && bounded_from_above then
+					NumConst.min NumConst.one (NumConst.sub supremum NumConst.one)
+				
+				(* Case 3: infimum and supremum: return (infimum + supremum) / 2 *)
+				else(
+					(* If empty constraint: problem, raise exception *)
+					if NumConst.l supremum infimum || (NumConst.le supremum infimum && (not is_maximum || not is_minimum)) then raise (InternalError "This situation is not supposed to happen, as the constraint was shown to be non-empty");
+					
+					(* Compute average  *)
+					NumConst.div (
+						NumConst.add infimum supremum
+					) (NumConst.numconst_of_int 2)
+				)
+			) (* end else if no minimum *)
+		) (* end else if not unbound *)
+		in
+
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			print_message Verbose_medium ("Valuation found for dimension " ^ (string_of_int dimension) ^ ": " ^ (NumConst.string_of_numconst valuation) ^ "");
+		);
+	
+		(* Store it *)
+		valuations.(dimension) <- valuation;
+			
+		(* Constrain the constraint with the found valuation, i.e., dimension = valuation *)
+		let valuation_constraint : linear_constraint = make nb_dimensions [
+			make_linear_inequality
+				(* "dimension - valuation = 0" *)
+				(make_linear_term [(NumConst.one, dimension)] (NumConst.neg valuation))
+				Op_eq
+			] in
+		intersection_assign nb_dimensions restricted_linear_constraint [valuation_constraint];
+	
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high ("Current constraint after handling dimension " ^ (string_of_int dimension) ^ " is: " ^ (string_of_linear_constraint default_string (fun v -> "v_" ^ (string_of_int v)) restricted_linear_constraint ) ^ "");
+		);
+		
+	done;
+	
+	(* Return functional view *)
+	(fun variable -> valuations.(variable))
+
+(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+let p_exhibit_point v l = exhibit_point !p_dim v l
+let px_exhibit_point v l = exhibit_point !px_dim v l
+let pxd_exhibit_point v l = exhibit_point !pxd_dim v l
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

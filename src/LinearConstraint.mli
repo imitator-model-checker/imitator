@@ -26,6 +26,9 @@ exception Not_a_clock_guard
 (* Raised when a linear_term is not a one-dimensional single parameter constraint, i.e., of the form p ~ c *)
 exception Not_a_1d_parameter_constraint
 
+(* Raised when trying to get a point in an empty (false) constraint *)
+exception EmptyConstraint
+
 
 (************************************************************)
 (** {2 Variables and coefficients} *)
@@ -256,6 +259,16 @@ val pxd_find_variables : variable list -> pxd_linear_constraint -> variable list
 
 (** Given a list of variables V and a list of linear_constraint, partition the list V into variables appearing only as lower-bound in inequalities, and variables only appearing as upper-bounds in inequalities; raise Not_LU if some variables in V appear as both (or in equalities) *)
 val partition_lu : variable list -> pxd_linear_constraint list -> (variable list * variable list)
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Operations without modification} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Exhibit a point in a linear_constraint; raise EmptyConstraint if the constraint is empty. *)
+(*** NOTE: we try to exhibit in each dimension the minimum, except if no minimum (infimum) in which case we get either the middle between the infimum and the supremum (if any supremum), or the infimum if no supremum; and dually if no infimum. ***)
+val p_exhibit_point : p_linear_constraint -> (variable -> coef)
+val px_exhibit_point : px_linear_constraint -> (variable -> coef)
+val pxd_exhibit_point : pxd_linear_constraint -> (variable -> coef)
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
