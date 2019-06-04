@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/06/03
+ * Last modified     : 2019/06/04
  *
  ************************************************************)
 
@@ -357,6 +357,10 @@ let pxd_dim			= ref 0
 (*** NOTE: would be smarter to compute this list only once, when the dimensions have been initialized ***)
 (* let nonparameters () = list_of_interval !nb_parameters (!pxd_dim - 1) *)
 let clocks () = list_of_interval !nb_parameters (!px_dim - 1)
+
+
+(* For verbose print *)
+let debug_variable_names = fun v -> "v_" ^ (string_of_int v)
 
 
 (************************************************************)
@@ -2415,7 +2419,7 @@ let exhibit_point nb_dimensions linear_constraint =
 	
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
-			print_message Verbose_high ("Current constraint after handling dimension " ^ (string_of_int dimension) ^ " is: " ^ (string_of_linear_constraint default_string (fun v -> "v_" ^ (string_of_int v)) restricted_linear_constraint ) ^ "");
+			print_message Verbose_high ("Current constraint after handling dimension " ^ (string_of_int dimension) ^ " is: " ^ (string_of_linear_constraint default_string debug_variable_names restricted_linear_constraint ) ^ "");
 		);
 		
 	done;
