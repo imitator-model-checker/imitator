@@ -4,14 +4,14 @@
  #
  #                       BUILDATOR
  # 
- # Script to build the non-distributed version of IMITATOR
+ # Script to build the distributed version of IMITATOR
  #
- # Université Paris 13, Sorbonne Paris Cite, LIPN (France)
+ # Université Paris 13, LIPN, CNRS, France
  # 
- # Author:        Etienne Andre
+ # Author:        Étienne André
  # 
  # Created:       2014/08/18
- # Last modified: 2015/07/22
+ # Last modified: 2019/06/04
  #
 ################################################################
 
