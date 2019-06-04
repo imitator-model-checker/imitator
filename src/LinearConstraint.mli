@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/06/03
+ * Last modified     : 2019/06/04
  *
  ************************************************************)
 
@@ -269,6 +269,9 @@ val partition_lu : variable list -> pxd_linear_constraint list -> (variable list
 val p_exhibit_point : p_linear_constraint -> (variable -> coef)
 val px_exhibit_point : px_linear_constraint -> (variable -> coef)
 val pxd_exhibit_point : pxd_linear_constraint -> (variable -> coef)
+
+(** Given two zones z1 and z2, such that z2 is the successor of z1, and given z a subset of z2, then nnconvex_constraint_zone_predecessor z1 z2 z t nott r computes the zone predecessor of z within z1, given the set t (nott) of variables sensitive (resp. insensitive) to time-elapsing, and r the variables reset between z1 and z2. *)
+val px_zone_predecessor : px_linear_constraint -> px_linear_constraint -> px_linear_constraint -> (variable list) -> (variable list) -> (variable list) -> px_linear_constraint
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

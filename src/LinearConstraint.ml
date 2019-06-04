@@ -2433,6 +2433,45 @@ let px_exhibit_point v l = exhibit_point !px_dim v l
 let pxd_exhibit_point v l = exhibit_point !pxd_dim v l
 
 
+(*------------------------------------------------------------*)
+(* Backward valuations computation *)
+(*------------------------------------------------------------*)
+
+(** Given two zones z1 and z2, such that z2 is the successor of z1, and given z a subset of z2, then nnconvex_constraint_zone_predecessor z1 z2 z t nott r computes the zone predecessor of z within z1, given the set t (nott) of variables sensitive (resp. insensitive) to time-elapsing, and r the variables reset between z1 and z2. *)
+(*** NOTE: no check is made that z2 is a successor of z1, nor that z is a subset of z2 ***)
+(*** NOTE: only works for constant resets of the form clock := constant ***)
+let zone_predecessor nb_dimensions z1 z2 z variables_elapse variables_constant variable_reset =
+	(* Copy z, to avoid side-effects *)
+	let linear_constraint = copy z in
+	
+	(* Compute time-past of z *)
+	time_past_assign nb_dimensions variables_elapse variables_constant linear_constraint;
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Current constraint after time past: " ^ (string_of_linear_constraint default_string debug_variable_names linear_constraint ) ^ "");
+	);
+	
+	(* Free the variables involved in the reset *)
+	hide_assign nb_dimensions variable_reset linear_constraint;
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Current constraint after anti-reset: " ^ (string_of_linear_constraint default_string debug_variable_names linear_constraint ) ^ "");
+	);
+	
+	(* Perform intersection with z1 *)
+	intersection_assign nb_dimensions linear_constraint [z1];
+	
+	(* Return result *)
+	linear_constraint
+
+
+(* Instance for px-constraints *)
+let px_zone_predecessor z1 z2 z variables_elapse variables_constant variable_reset = zone_predecessor !px_dim z1 z2 z variables_elapse variables_constant variable_reset
+	
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 More testing functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
