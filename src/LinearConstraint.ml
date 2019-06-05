@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/06/04
+ * Last modified     : 2019/06/05
  *
  ************************************************************)
 
@@ -1494,9 +1494,12 @@ let constraint_of_point nb_dimensions (thepoint : (variable * coef) list) =
 	in
 	make nb_dimensions inequalities
 
+
+
 (*** NOTE: must provide the argument to be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
 let p_constraint_of_point v_c_list = constraint_of_point !p_dim v_c_list
 let pxd_constraint_of_point v_c_list = constraint_of_point !pxd_dim v_c_list
+let pxd_constraint_of_discrete_values = pxd_constraint_of_point
 
 
 (** "linear_constraint_of_clock_and_parameters x ~ d neg" will create a linear_constraint x ~ d, with "x" a clock, "~" in {>, >=, =}, "d" a PConstraint.linear_term, and "neg" indicates whether x and d should be kept in this direction or reversed (e.g., "x > p1 true" generates "x > p1" whereas "x >= p1+p2 false" generates "p1+p2 >= x" *)
@@ -2701,22 +2704,6 @@ let grml_of_pxd_linear_constraint = grml_of_linear_constraint*)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion between types of constraints } *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-(** Create a pxd_linear_constraint from a set of pairs (discrete variable, value) *)
-let pxd_constraint_of_discrete_values (discrete_values : (variable * coef) list) =
-(* 	raise (InternalError "Not implemented!!") *)
-(* let instantiate_discrete discrete_values = *)
-	let inequalities = List.map (fun (discrete_index, discrete_value) ->
-		(* Create a linear term 'D - d' *)
-		let linear_term = make_pxd_linear_term
-			[(NumConst.one, discrete_index)]
-			(NumConst.neg discrete_value)
-		in
-		(* Create a linear equality *)
-		make_pxd_linear_inequality linear_term Op_eq
-	) discrete_values in
-	(* Create the linear constraint *)
-	make_pxd_constraint inequalities
 
 
 (** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)

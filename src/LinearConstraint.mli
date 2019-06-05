@@ -216,6 +216,9 @@ val make_pxd_constraint : pxd_linear_inequality list -> pxd_linear_constraint
 val p_constraint_of_point : (variable * coef) list -> p_linear_constraint
 val pxd_constraint_of_point : (variable * coef) list -> pxd_linear_constraint
 
+(** Create a pxd_linear_constraint from a set of pairs (discrete variable, value) *)
+val pxd_constraint_of_discrete_values : (variable * coef) list -> pxd_linear_constraint
+
 (** Create a false constraint *)
 (* val false_constraint : unit -> linear_constraint *)
 val p_false_constraint : unit -> p_linear_constraint
@@ -462,8 +465,6 @@ val partition_pi0_compatible : (variable -> coef) -> p_linear_constraint -> (p_l
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion between types of constraints } *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** Create a pxd_linear_constraint from a set of pairs (discrete variable, value) *)
-val pxd_constraint_of_discrete_values : (variable * coef) list -> pxd_linear_constraint
 
 (** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
 val px_of_p_constraint : p_linear_constraint -> px_linear_constraint
