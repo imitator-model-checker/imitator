@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/05/29
+ * Last modified     : 2019/06/06
  *
  ************************************************************)
 
@@ -898,12 +898,12 @@ let merge_clock_updates first_update second_update : clock_updates =
   match first_update, second_update with
   | No_update, _ -> second_update
   | _ , No_update -> first_update
-  | Resets r1, Resets r2 -> Resets (r1@r2)
-  | Updates u1, Updates u2 -> Updates (u2@u2)
+  | Resets r1, Resets r2 -> Resets (list_append r1 r2)
+  | Updates u1, Updates u2 -> Updates (list_append u2 u2)
   (** convert resets into updates *)
   | Resets r, Updates u
   | Updates u, Resets r -> let members = List.map (fun i -> (i, LinearConstraint.make_pxd_linear_term [(NumConst.one, i)] NumConst.zero)) r in
-    Updates (members@u)
+    Updates (list_append members u)
 
 
 (*------------------------------------------------------------------*)
@@ -944,7 +944,7 @@ let compute_new_location_guards_updates_combinedtransition involved_automata_ind
         fun (acc_clock, acc_discrete) (conditional_update:AbstractModel.conditional_update) ->
           let boolean_expr, if_updates, else_updates = conditional_update in
           let filter_updates = if (is_boolean_expression_satisfied original_location boolean_expr) then if_updates else else_updates in
-          (merge_clock_updates acc_clock filter_updates.clock, acc_discrete@filter_updates.discrete)
+          (merge_clock_updates acc_clock filter_updates.clock, list_append acc_discrete filter_updates.discrete)
         ) (updates.clock, updates.discrete) updates.conditional
       in
 
@@ -2316,7 +2316,7 @@ class virtual algoStateBased =
 															^ " with rank value: " ^ printrank (Hashtbl.find rank_hashtable successor2)^ "!");
 															);
 
-				 				successors := !successors@[successor2];
+				 				successors := list_append !successors [successor2];
 				 				count := !count + 1;
 				 			);
 				 	) nextSuccessors;
