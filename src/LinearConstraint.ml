@@ -1498,6 +1498,7 @@ let constraint_of_point nb_dimensions (thepoint : (variable * coef) list) =
 
 (*** NOTE: must provide the argument to be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
 let p_constraint_of_point v_c_list = constraint_of_point !p_dim v_c_list
+let px_constraint_of_point v_c_list = constraint_of_point !px_dim v_c_list
 let pxd_constraint_of_point v_c_list = constraint_of_point !pxd_dim v_c_list
 let pxd_constraint_of_discrete_values = pxd_constraint_of_point
 

@@ -914,7 +914,7 @@ let merge_clock_updates first_update second_update : clock_updates =
 (* Returns a pair of the list of clock updates and discrete updates *)
 (*------------------------------------------------------------------*)
 (** Collecting the updates by evaluating the conditions, if there is any *)
-let get_updates original_location updates =
+let get_updates (original_location : Location.global_location) (updates : AbstractModel.updates) =
 	let clock_updates, discrete_updates = List.fold_left (
 	fun (acc_clock, acc_discrete) (conditional_update : AbstractModel.conditional_update) ->
 		let boolean_expr, if_updates, else_updates = conditional_update in
@@ -960,7 +960,7 @@ let compute_new_location_guards_updates_combinedtransition involved_automata_ind
 
       (** Collecting the updates by evaluating the conditions, if there is any *)
       let clock_updates, discrete_updates = get_updates original_location updates in
-
+      
 		(* Update discrete *)
 		List.iter (fun (discrete_index, arithmetic_expression) ->
 			(* Compute its new value *)

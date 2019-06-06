@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/06/04
+ * Last modified     : 2019/06/05
  *
  ************************************************************)
 
@@ -214,6 +214,7 @@ val make_pxd_constraint : pxd_linear_inequality list -> pxd_linear_constraint
 
 (** Create a linear constraint from a single point *)
 val p_constraint_of_point : (variable * coef) list -> p_linear_constraint
+val px_constraint_of_point : (variable * coef) list -> px_linear_constraint
 val pxd_constraint_of_point : (variable * coef) list -> pxd_linear_constraint
 
 (** Create a pxd_linear_constraint from a set of pairs (discrete variable, value) *)

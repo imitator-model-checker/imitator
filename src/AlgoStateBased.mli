@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2019/05/29
+ * Last modified     : 2019/06/06
  *
  ************************************************************)
 
@@ -70,6 +70,17 @@ val compute_initial_state_or_abort : unit -> State.state
 (* Compute the invariant associated to a location and valuate the value of the discrete variables   *)
 (*------------------------------------------------------------*)
 val compute_valuated_invariant : Location.global_location -> LinearConstraint.px_linear_constraint
+
+
+(*------------------------------------------------------------------*)
+(* Get the list of updates from ONE transition                      *)
+(* Function by Jaime Arias (moved by Étienne André)                 *)
+(* original_location : the original location, needed to test the Boolean expressions*)
+(* updates           : the list of updates                          *)
+(*------------------------------------------------------------------*)
+(* Returns a pair of the list of clock updates and discrete updates *)
+(*------------------------------------------------------------------*)
+val get_updates : Location.global_location -> AbstractModel.updates -> AbstractModel.clock_updates * (AbstractModel.discrete_update list)
 
 
 (*------------------------------------------------------------*)

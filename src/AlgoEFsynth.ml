@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2019/06/03
+ * Last modified     : 2019/06/06
  *
  ************************************************************)
 
@@ -356,6 +356,10 @@ class virtual algoEFsynth =
 		(* If an immediate termination is requested: raise exception! *)
 		if !terminate_analysis_immediately then(
 			
+			(*------------------------------------------------------------*)
+			(* Counter-example reconstruction (to be moved?) *)
+			(*------------------------------------------------------------*)
+			
 			(* Print the counter-example *)
 			
 			(* Print some information *)
@@ -410,7 +414,11 @@ class virtual algoEFsynth =
 				
 			);
 			
-			(* Exhibit a concrete parameter valuation *)
+			(*** TODO: eventually disable this test ***)
+
+			if verbose_mode_greater Verbose_low then (
+
+			(* Exhibit a concrete parameter valuation in the final state *)
 			(*** NOTE: here, we use the cache system ***)
 			let p_constraint = self#compute_p_constraint_with_cache current_constraint in
 			let concrete_p_valuation = LinearConstraint.p_exhibit_point p_constraint in
@@ -427,7 +435,7 @@ class virtual algoEFsynth =
 				print_message Verbose_standard (ModelPrinter.string_of_pi0 model pval);
 			);
 			
-			(* Exhibit a concrete clock+parameter valuation *)
+			(* Exhibit a concrete clock+parameter valuation in the final state *)
 			let concrete_px_valuation = LinearConstraint.px_exhibit_point current_constraint in
 			
 			(* Print it *)
@@ -435,6 +443,62 @@ class virtual algoEFsynth =
 				print_message Verbose_low "Example of px-valuation:";
 				print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation);
 			);
+			
+			
+			(* Now construct valuations for the whole path *)
+			print_message Verbose_low "Building concrete path:";
+			
+			(* Iterate starting from s_n and going backward *)
+			let _, _, valuations = List.fold_left (fun (state_index_n_plus_1, valuation_n_plus_1, current_list) (state_index, combined_transition) ->
+				(* Get state n *)
+				let state = StateSpace.get_state state_space state_index in
+				(* Get state n+1 *)
+				let state_n_plus_1 = StateSpace.get_state state_space state_index_n_plus_1 in
+				
+				(* Get the zones *)
+				let _, z_n = state in
+				let _, z_n_plus_1 = state_n_plus_1 in
+				
+				(* Get resets from the combined transition *)
+				let resets = raise (NotImplemented "get resets") in
+				
+				(* Build the constraint from the valuation *)
+				(* Convert to set of pairs *)
+				let pairs = List.map (fun variable_index ->
+					variable_index , (valuation_n_plus_1 variable_index)
+				) model.parameters_and_clocks in
+				let constraint_from_valuation_n_plus_1 = LinearConstraint.px_constraint_of_point pairs in
+				
+				(* Compute a set of valuations that can be a predecessor of the valuation of n+1 *)
+				let predecessors_of_valuation_n_plus_1 = LinearConstraint.px_zone_predecessor z_n z_n_plus_1 constraint_from_valuation_n_plus_1 model.clocks model.parameters_and_discrete resets in
+				
+				(* Pick a valuation *)
+				let valuation_n = LinearConstraint.px_exhibit_point predecessors_of_valuation_n_plus_1 in
+				
+				(*** DEBUG: test that it is indeed a good valuation, belonging to n! ***)
+				(*** TODO ***)
+				
+				(* Add the valuation to the list, and replace n+1 with n *)
+				(state_index, valuation_n, valuation_n :: current_list)
+			
+			) (new_state_index, concrete_px_valuation, []) (List.rev path) in
+			
+			
+			(* Print the list*)
+			
+			List.iter (fun valuation -> 
+				print_message Verbose_low "Next valuation:";
+				print_message Verbose_low (ModelPrinter.string_of_px_valuation model valuation);
+			) valuations;
+
+			
+			(*** TODO: eventually disable this test ***)
+			); (* end if reconstruction *)
+
+			
+			(*------------------------------------------------------------*)
+			(* END Counter-example reconstruction *)
+			(*------------------------------------------------------------*)
 
 			(* Update termination status *)
 			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
