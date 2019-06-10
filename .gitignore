@@ -30,13 +30,17 @@ benchmarks/**/*.png
 benchmarks/**/*.jpg
 benchmarks/**/*.states
 benchmarks/**/*.pdf
+benchmarks/**/*.xml
 
 tests/**/*.log
 tests/**/*.jpg
 tests/**/*.png
+tests/**/*.res
+tests/**/*.states
 tests/**/*.txt
 tests/**/*.sh
 tests/**/*.pdf
+tests/**/*.xml
 
 # binaries
 *.native
