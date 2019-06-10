@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2019/06/06
+ * Last modified     : 2019/06/10
  *
  ************************************************************)
 
@@ -81,6 +81,18 @@ val compute_valuated_invariant : Location.global_location -> LinearConstraint.px
 (* Returns a pair of the list of clock updates and discrete updates *)
 (*------------------------------------------------------------------*)
 val get_updates : Location.global_location -> AbstractModel.updates -> AbstractModel.clock_updates * (AbstractModel.discrete_update list)
+
+
+
+(*------------------------------------------------------------------*)
+(* Get the list of updates from a combined transition               *)
+(* Function by Étienne André                                        *)
+(* original_location  : the original location, needed to test the Boolean expressions*)
+(* combined_transition: the combined_transition in which the updates are sought *)
+(*------------------------------------------------------------------*)
+(* Returns a pair of the list of clock updates and discrete updates *)
+(*------------------------------------------------------------------*)
+val get_updates_in_combined_transition : Location.global_location -> StateSpace.combined_transition -> AbstractModel.clock_updates * (AbstractModel.discrete_update list)
 
 
 (*------------------------------------------------------------*)

@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/06/06
+ * Last modified     : 2019/06/10
  *
  ************************************************************)
 
@@ -915,14 +915,37 @@ let merge_clock_updates first_update second_update : clock_updates =
 (*------------------------------------------------------------------*)
 (** Collecting the updates by evaluating the conditions, if there is any *)
 let get_updates (original_location : Location.global_location) (updates : AbstractModel.updates) =
-	let clock_updates, discrete_updates = List.fold_left (
+	List.fold_left (
 	fun (acc_clock, acc_discrete) (conditional_update : AbstractModel.conditional_update) ->
 		let boolean_expr, if_updates, else_updates = conditional_update in
 		let filter_updates = if (is_boolean_expression_satisfied original_location boolean_expr) then if_updates else else_updates in
 		(merge_clock_updates acc_clock filter_updates.clock, list_append acc_discrete filter_updates.discrete)
 	) (updates.clock, updates.discrete) updates.conditional
-	in
-	clock_updates, discrete_updates
+
+
+(*------------------------------------------------------------------*)
+(* Get the list of updates from a combined transition               *)
+(* Function by Étienne André                                        *)
+(* original_location  : the original location, needed to test the Boolean expressions*)
+(* combined_transition: the combined_transition in which the updates are sought *)
+(*------------------------------------------------------------------*)
+(* Returns a pair of the list of clock updates and discrete updates *)
+(*------------------------------------------------------------------*)
+(** Collecting the updates by evaluating the conditions, if there is any *)
+let get_updates_in_combined_transition (original_location : Location.global_location) (combined_transition : StateSpace.combined_transition) =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+
+	(* Iterate on each transition of the combined_transition *)
+	List.fold_left (
+	fun (current_clock_updates, current_discrete_updates) (transition : AbstractModel.transition_index) ->
+		(* Get updates *)
+		let updates = (model.transitions_description transition).updates in
+		(* Call dedicated function *)
+		let new_clock_updates, new_discrete_updates = get_updates original_location updates in
+		(* Append and merge *)
+		(merge_clock_updates current_clock_updates new_clock_updates) , (list_append current_discrete_updates new_discrete_updates)
+	) (No_update, []) combined_transition
 
 
 (*------------------------------------------------------------------*)
@@ -958,8 +981,8 @@ let compute_new_location_guards_updates_combinedtransition involved_automata_ind
 		let transition = model.transitions_description transition_index in
 		let guard, updates, target_index = transition.guard, transition.updates, transition.target in
 
-      (** Collecting the updates by evaluating the conditions, if there is any *)
-      let clock_updates, discrete_updates = get_updates original_location updates in
+		(** Collecting the updates by evaluating the conditions, if there is any *)
+		let clock_updates, discrete_updates = get_updates original_location updates in
       
 		(* Update discrete *)
 		List.iter (fun (discrete_index, arithmetic_expression) ->
@@ -993,9 +1016,13 @@ let compute_new_location_guards_updates_combinedtransition involved_automata_ind
 		(* Update the update flag *)
 		begin
 		match clock_updates with
-			| Resets (_ :: _) -> has_updates := true
+			(* Some updates? *)
+			| Resets (_ :: _)
 			| Updates (_ :: _) -> has_updates := true
-			| _ -> ()
+			(* Otherwise: no update *)
+			| No_update
+			| Resets []
+			| Updates [] -> ()
 		end;
 		(* Keep the guard and updates and the transition_index *)
 		(guard, clock_updates), transition_index;

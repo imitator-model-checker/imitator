@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2019/06/06
+ * Last modified     : 2019/06/10
  *
  ************************************************************)
 
@@ -456,11 +456,31 @@ class virtual algoEFsynth =
 				let state_n_plus_1 = StateSpace.get_state state_space state_index_n_plus_1 in
 				
 				(* Get the zones *)
-				let _, z_n = state in
+				let location_n, z_n = state in
 				let _, z_n_plus_1 = state_n_plus_1 in
 				
-				(* Get resets from the combined transition *)
-				let resets = raise (NotImplemented "get resets") in
+				(* Get all updates from the combined transition *)
+				let clock_updates, _ = AlgoStateBased.get_updates_in_combined_transition location_n combined_transition in
+				
+				(* Find the clock resets *)
+				let resets = match clock_updates with
+				| No_update -> []
+				| Resets cl -> cl
+				| Updates updates ->
+(*					(* We need to check that no update in the form x -> f(x') or x -> f(p) occurs, otherwise the method does not work *)
+					(*** IN FACT it does not matter ***)
+					List.iter (fun (clock_index, pxd_linear_term) -> 
+						(* Get the list of variables in the term *)
+						let variables = 
+						(* If clocks or parameters: problem *)
+						
+					) updates;*)
+					
+					(* Return the list of clocks *)
+					let clocks, _ = List.split updates in
+					clocks
+				
+				in
 				
 				(* Build the constraint from the valuation *)
 				(* Convert to set of pairs *)
