@@ -1,0 +1,88 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy example to test EF with counterexample
+ *
+ * Description     : Toy example to test EF with counterexample
+ * Correctness     : lbad unreachable
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2019/06/10
+ * Last modified   : 2019/06/10
+ *
+ * IMITATOR version: 2.11
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Discrete *)
+	i,
+		: discrete;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant x <= 1
+	when x = 1 sync a do {x := 0} goto l2;
+
+loc l2: invariant x <= 2.23
+	when x = 2.23 sync a goto l3;
+
+loc l3: invariant x <= 8/3
+	when x = 8/3 sync a goto lbad;
+
+loc lbad: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[pta] = lbad;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
