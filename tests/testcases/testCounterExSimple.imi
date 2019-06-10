@@ -23,14 +23,6 @@ var
  	x,
 		: clock;
 
-(* Discrete *)
-	i,
-		: discrete;
-
-(* Parameters *)
-	p,
-		: parameter;
-
 
 
 (************************************************************)
@@ -38,14 +30,17 @@ var
 (************************************************************)
 synclabs: a;
 
-loc l1: invariant x <= 1
-	when x = 1 sync a do {x := 0} goto l2;
+loc l1: invariant x <= 3
+	when x = 3 sync a do {x := 0} goto l2;
 
-loc l2: invariant x <= 2.23
-	when x = 2.23 sync a goto l3;
+loc l2: invariant x <= 1
+	when x = 1 sync a do {x := 0} goto l3;
 
-loc l3: invariant x <= 8/3
-	when x = 8/3 sync a goto lbad;
+loc l3: invariant x <= 1
+	when x = 1 sync a goto l4;
+
+loc l4: invariant x <= 8
+	when x = 8 sync a goto lbad;
 
 loc lbad: invariant True
 
@@ -67,11 +62,6 @@ init :=
 	(* Initial clock constraints *)
 	(*------------------------------------------------------------*)
 	& x = 0
-
-	(*------------------------------------------------------------*)
-	(* Parameter constraints *)
-	(*------------------------------------------------------------*)
-	& p >= 0
 ;
 
 
