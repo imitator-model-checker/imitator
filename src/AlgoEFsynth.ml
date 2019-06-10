@@ -449,7 +449,7 @@ class virtual algoEFsynth =
 			print_message Verbose_low "Building concrete path:";
 			
 			(* Iterate starting from s_n and going backward *)
-			let _, _, valuations = List.fold_left (fun (state_index_n_plus_1, valuation_n_plus_1, current_list) (state_index, combined_transition) ->
+			let _, _, valuations = List.fold_left (fun (state_index_n_plus_1, (valuation_n_plus_1 : (Automaton.clock_index -> NumConst.t)), current_list) (state_index, combined_transition) ->
 				(* Get state n *)
 				let state = StateSpace.get_state state_space state_index in
 				(* Get state n+1 *)
@@ -495,19 +495,34 @@ class virtual algoEFsynth =
 				(* Pick a valuation *)
 				let valuation_n = LinearConstraint.px_exhibit_point predecessors_of_valuation_n_plus_1 in
 				
+				(* Now compute the time spent between the previous and the new valuation *)
+				
+				(* Find a clock not hit by the reset *)
+				
+				(*** WARNING with stopwatches! ***)
+				(*** TODO ***)
+					
+				let clocks_not_reset = list_diff model.clocks resets in
+				let time_elapsed_n = match clocks_not_reset with
+					(* If all clocks are reset, what to do?? let's pick 0 for now *)
+					| [] -> NumConst.zero (*** WARNING / TODO ***)
+					(* If at least one clock, perform difference *)
+					| clock_index :: _ -> NumConst.sub (valuation_n_plus_1 clock_index) (valuation_n clock_index)
+				in
+				
 				(*** DEBUG: test that it is indeed a good valuation, belonging to n! ***)
 				(*** TODO ***)
 				
 				(* Add the valuation to the list, and replace n+1 with n *)
-				(state_index, valuation_n, valuation_n :: current_list)
+				(state_index, valuation_n, (time_elapsed_n , valuation_n) :: current_list)
 			
 			) (new_state_index, concrete_px_valuation, []) (List.rev path) in
 			
 			
 			(* Print the list*)
 			
-			List.iter (fun valuation -> 
-				print_message Verbose_low "Next valuation:";
+			List.iter (fun (time_elapsed, valuation) -> 
+				print_message Verbose_low ("Next valuation after " ^ (NumConst.string_of_numconst time_elapsed) ^ ":");
 				print_message Verbose_low (ModelPrinter.string_of_px_valuation model valuation);
 			) valuations;
 
