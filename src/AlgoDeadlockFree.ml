@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/08
- * Last modified     : 2019/05/30
+ * Last modified     : 2019/06/11
  *
  ************************************************************)
 
@@ -25,6 +25,7 @@ open AbstractModel
 open Result
 open AlgoStateBased (* for type UnexSucc_some *)
 open AlgoPostStar
+open State
 
 
 (************************************************************)
@@ -113,7 +114,8 @@ class algoDeadlockFree =
 		let good_constraint_s = LinearConstraint.false_px_nnconvex_constraint () in
 		
 		(* Get the location and the constraint of s *)
-		let s_location, s_constraint = StateSpace.get_state state_space state_index in
+		let state : state = StateSpace.get_state state_space state_index in
+		let s_location, s_constraint = state.global_location, state.px_constraint in
 		
 		(* For all state s' in the successors of s *)
 		List.iter (fun (combined_transition, state_index') ->
@@ -132,7 +134,7 @@ class algoDeadlockFree =
 			);
 			
 			(* Retrieving the constraint s'|P *)
-			let _, px_destination = StateSpace.get_state state_space state_index' in
+			let px_destination = (StateSpace.get_state state_space state_index').px_constraint in
 			let p_destination = LinearConstraint.px_hide_nonparameters_and_collapse px_destination in
 
 			(* Intersect with the guard with s *)
@@ -417,7 +419,7 @@ class algoDeadlockFree =
 				if not (disabled#mem state_index) then(
 					
 					(* Retrieve the state constraint *)
-					let _, s_constraint = StateSpace.get_state state_space state_index in
+					let s_constraint = (StateSpace.get_state state_space state_index).px_constraint in
 					
 					(* Project onto the parameters *)
 					let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse s_constraint in
@@ -494,7 +496,7 @@ class algoDeadlockFree =
 				if not (newly_marked#mem state_index) then(
 					
 					(* Retrieve the state constraint *)
-					let _, s_constraint = StateSpace.get_state state_space state_index in
+					let s_constraint = (StateSpace.get_state state_space state_index).px_constraint in
 					(* Project onto the parameters *)
 					(*** TO OPTIMIZE: this projection was (maybe) already computed earlier; use a cache??? ***)
 					let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse s_constraint in

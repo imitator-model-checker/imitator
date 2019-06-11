@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2018/03/15
- * Last modified     : 2019/05/30
+ * Last modified     : 2019/06/11
  *
  ************************************************************)
 
@@ -26,6 +26,7 @@ open Result
 open AlgoStateBased (* for type UnexSucc_some *)
 open AlgoPostStar
 open Statistics
+open State
 
 
 (************************************************************)
@@ -156,7 +157,8 @@ class algoAFsynth =
 		let good_constraint_s = LinearConstraint.false_px_nnconvex_constraint () in
 		
 		(* Get the location and the constraint of s *)
-		let s_location, s_constraint = StateSpace.get_state state_space state_index in
+		let state = StateSpace.get_state state_space state_index in
+		let s_location, s_constraint = state.global_location, state.px_constraint in
 		
 		(* For all state s' in the successors of s *)
 		List.iter (fun (combined_transition, state_index') ->
@@ -178,7 +180,7 @@ class algoAFsynth =
 			);
 			
 			(* Retrieving the constraint s'|P *)
-			let _, px_destination = StateSpace.get_state state_space state_index' in
+			let px_destination = (StateSpace.get_state state_space state_index').px_constraint in
 			let p_destination = LinearConstraint.px_hide_nonparameters_and_collapse px_destination in
 
 			(* Intersect with the guard with s *)
@@ -278,7 +280,7 @@ class algoAFsynth =
 		);
 		
 		(* Build the state *)
-		let new_state = location, current_constraint in
+		let new_state = {global_location = location ; px_constraint = current_constraint } in
 		
 		(* Try to add the new state to the state space *)
 		(*** WARNING: AF is probably not safe with state inclusion ***)
@@ -324,7 +326,7 @@ class algoAFsynth =
 			self#print_algo_message Verbose_medium "Entering process_state…";
 		);
 
-		let state_location, state_constraint = state in
+		let state_location, state_constraint = state.global_location, state.px_constraint in
 		
 		let to_be_added = match model.correctness_condition with
 		| None -> raise (InternalError("A correctness property must be defined to perform AF-synthesis. This should have been checked before."))

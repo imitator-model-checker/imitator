@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2019/05/29
+ * Last modified     : 2019/06/11
  *
  ************************************************************)
 
@@ -22,6 +22,7 @@ open Exceptions
 open AbstractModel
 open Result
 open AlgoStateBased
+open State
 
 
 
@@ -70,7 +71,7 @@ class algoPostStar =
 (* 		let model = Input.get_model () in *)
 
 		(* Build the state *)
-		let new_state = location, final_constraint in
+		let new_state : state = {global_location = location ; px_constraint = final_constraint } in
 
 		
 		(* Try to add the new state to the state space *)

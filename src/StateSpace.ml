@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2019/05/31
+ * Last modified     : 2019/06/11
  *
  ************************************************************)
 
@@ -271,13 +271,17 @@ let get_state state_space state_index =
 	counter_get_state#increment;
 	counter_get_state#start;
 
-	(* Find the pair (location_index, constraint) *)
-	let location_index, linear_constraint =
+	(* Find the state *)
+	let state =
 		(* Exception just in case *)
 		try (
 			Hashtbl.find state_space.all_states state_index
 		) with Not_found -> raise (InternalError ("State of index '" ^ (string_of_int state_index) ^ "' was not found in state_space (in function: StateSpace.get_state)."))
 	in
+	
+	(* Find the pair (location_index, constraint) *)
+	let location_index, linear_constraint = state.global_location_index, state.px_constraint in
+	
 	(* Find the location *)
 	let global_location = get_location state_space location_index in
 
@@ -285,7 +289,7 @@ let get_state state_space state_index =
 	counter_get_state#stop;
 
 	(* Return the state *)
-	(global_location, linear_constraint)
+	{ global_location = global_location; px_constraint = linear_constraint; }
 
 
 (** Return the global_location_index of a state_index *)
@@ -294,11 +298,11 @@ let get_global_location_index state_space state_index =
 	counter_get_state#increment;
 	counter_get_state#start;
 
-	(* Find the pair (location_index, constraint) *)
-	let location_index, _ =
+	(* Find the location_index *)
+	let location_index =
 		(* Exception just in case *)
 		try (
-			Hashtbl.find state_space.all_states state_index
+			(Hashtbl.find state_space.all_states state_index).global_location_index
 		) with Not_found -> raise (InternalError ("State of index '" ^ (string_of_int state_index) ^ "' was not found in state_space (in function: StateSpace.get_global_location_index)."))
 	in
 
@@ -499,12 +503,13 @@ let all_state_indexes state_space = hashtbl_get_all_keys state_space.all_states
 
 
 (*** WARNING: big memory, here! Why not perform intersection on the fly? *)
+(*** TODO: List.map! ***)
 
 (** Return the list of all constraints on the parameters associated to the states of a state space *)
 let all_p_constraints state_space =
 	Hashtbl.fold
-		(fun _ (_, linear_constraint) current_list ->
-			let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse linear_constraint in
+		(fun _ state current_list ->
+			let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state.px_constraint in
 			p_constraint :: current_list)
 		state_space.all_states []
 
@@ -613,8 +618,7 @@ let get_guard state_space state_index combined_transition state_index' =
 	let model = Input.get_model () in
 
 	(* Retrieve source and target locations *)
-	let (location : Location.global_location), _ = get_state state_space state_index in
-(* 	let (location' : Location.global_location), _ = get_state state_space state_index' in *)
+	let (location : Location.global_location) = (get_state state_space state_index).global_location in
 
 	(* For all transitions involved in the combined transition *)
 	let continuous_guards : LinearConstraint.pxd_linear_constraint list = List.fold_left (fun current_list_of_guards transition_index ->
@@ -1041,14 +1045,14 @@ let increment_nb_gen_states state_space =
 
 
 (** compute a hash code for a state, depending only on the location *)
-let hash_code (location, _) =
-	Location.hash_code location
+let location_hash_code (state : state) =
+	Location.hash_code state.global_location
 
 
 (** Check if two states are equal *)
-let states_equal state1 state2 =
-	let (loc1, constr1) = state1 in
-	let (loc2, constr2) = state2 in
+let states_equal (state1 : state) (state2 : state) : bool =
+	let (loc1, constr1) = state1.global_location, state1.px_constraint in
+	let (loc2, constr2) = state2.global_location, state2.px_constraint in
 	if not (Location.location_equal loc1 loc2) then false else (
 		(* Statistics *)
 		print_message Verbose_high ("About to compare equality between two constraints.");
@@ -1065,9 +1069,9 @@ let states_equal state1 state2 =
 	)
 
 (* Check dynamically if two states are equal*)
-let states_equal_dyn state1 state2 constr =
-	let (loc1, constr1) = state1 in
-	let (loc2, constr2) = state2 in
+let states_equal_dyn (state1 : state) (state2 : state) constr : bool =
+	let (loc1, constr1) = state1.global_location, state1.px_constraint in
+	let (loc2, constr2) = state2.global_location, state2.px_constraint in
 	if not (Location.location_equal loc1 loc2) then false else (
 		(* Statistics *)
 		print_message Verbose_high ("About to compare (dynamic) equality between two constraints.");
@@ -1089,9 +1093,9 @@ let states_equal_dyn state1 state2 constr =
 
 (** Check if a state is included in another one *)
 (* (Despite the test based on the hash table, this is still necessary in case of hash collisions) *)
-let state_included state1 state2 =
-	let (loc1, constr1) = state1 in
-	let (loc2, constr2) = state2 in
+let state_included (state1 : state) (state2 : state) : bool =
+	let (loc1, constr1) = state1.global_location, state1.px_constraint in
+	let (loc2, constr2) = state2.global_location, state2.px_constraint in
 	if not (Location.location_equal loc1 loc2) then false else (
 
 		(* Statistics *)
@@ -1107,11 +1111,11 @@ let state_included state1 state2 =
 
 
 (** Perform the insertion of a new state in a state space *)
-let insert_state state_space hash new_state =
+let insert_state state_space hash (new_state : state) =
 	(* Compute the new state index *)
 	let new_state_index = !(state_space.next_state_index) in
 	(* Retrieve the location and the constraint *)
-	let location, linear_constraint = new_state in
+	let location, linear_constraint = new_state.global_location, new_state.px_constraint in
 	(* Try to find the location index *)
 	let location_index = try (
 		Hashtbl.find state_space.index_of_locations location
@@ -1151,7 +1155,7 @@ let insert_state state_space hash new_state =
 
 
 	(* Add the state to the tables *)
-	Hashtbl.add state_space.all_states new_state_index (location_index, linear_constraint);
+	Hashtbl.add state_space.all_states new_state_index {global_location_index = location_index; px_constraint = linear_constraint;};
 	Hashtbl.add state_space.states_for_comparison hash new_state_index;
 	(* Update next state index *)
 	state_space.next_state_index := !(state_space.next_state_index) + 1;
@@ -1165,7 +1169,7 @@ let add_state_dyn program state_space new_state constr =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	(* compute hash value for the new state *)
-	let hash = hash_code new_state in
+	let hash = location_hash_code new_state in
 	if verbose_mode_greater Verbose_total then (
 		print_message Verbose_standard ("hash : " ^ (string_of_int hash));
 	);
@@ -1211,15 +1215,15 @@ let replace_constraint state_space state_index px_linear_constraint =
 	let linear_constraint_copy = LinearConstraint.px_copy px_linear_constraint in
 	try (
 		(* Get the location index *)
-		let location_index, _ = Hashtbl.find state_space.all_states state_index in
+		let location_index = (Hashtbl.find state_space.all_states state_index).global_location_index in
 		(* Replace with the new constraint *)
-		Hashtbl.replace state_space.all_states state_index (location_index, linear_constraint_copy);
+		Hashtbl.replace state_space.all_states state_index {global_location_index = location_index; px_constraint = linear_constraint_copy};
 	) with Not_found -> raise (InternalError ("Error when replacing state '" ^ (string_of_int state_index) ^ "' in StateSpace.replace_constraint."))
 
 
 
 (** Add a state to a state space: takes as input the state space, a comparison instruction, the state to add, and returns whether the state was indeed added or not *)
-let add_state state_space state_comparison new_state =
+let add_state state_space state_comparison (new_state : state) =
 	(* Statistics *)
 	counter_add_state#increment;
 	counter_add_state#start;
@@ -1230,7 +1234,7 @@ let add_state state_space state_comparison new_state =
 	let result =
 
 	(* compute hash value for the new state *)
-	let hash = hash_code new_state in
+	let hash = location_hash_code new_state in
 	if verbose_mode_greater Verbose_total then (
 		print_message Verbose_total ("hash : " ^ (string_of_int hash));
 	);
@@ -1302,11 +1306,8 @@ let add_state state_space state_comparison new_state =
 							(* Print some information *)
 							print_message Verbose_medium ("Found an old state <= the new state");
 
-							(* Retrieve the constraint *)
-							let _, new_constraint = new_state in
-
 							(* Replace old with new *)
-							replace_constraint state_space state_index new_constraint;
+							replace_constraint state_space state_index new_state.px_constraint;
 
 							(* Statistics *)
 							statespace_dcounter_nb_states_including#increment;
@@ -1371,8 +1372,8 @@ let add_transition state_space (source_state_index, combined_transition, target_
 let add_p_constraint_to_states state_space p_constraint =
 (* 	let constraint_to_add = LinearConstraint.make_p_constraint [inequality] in *)
 	(* For all state: *)
-	iterate_on_states (fun _ (_, constr) ->
-		 LinearConstraint.px_intersection_assign_p constr [p_constraint]
+	iterate_on_states (fun _ state ->
+		 LinearConstraint.px_intersection_assign_p state.px_constraint [p_constraint]
 	) state_space
 
 
@@ -1430,7 +1431,7 @@ let merge_2_states state_space state_index1 state_index2 =
 	(* Replace s2 with s1 in states_for_comparison *)
 	(*-------------------------------------------------------------*)
 	(* Find the hash *)
-	let hash2 = hash_code state2 in
+	let hash2 = location_hash_code state2 in
 	(* Get all states with that hash *)
 	let all_states_with_hash2 = Hashtbl.find_all state_space.states_for_comparison hash2 in
 	(* Remove them all *)
@@ -1484,7 +1485,7 @@ let merge_states_ulrich state_space merger_state_index merged =
 	(* Remove merged from hash table *)
 	print_message Verbose_high "Merging: update hash table";
 	let the_state = get_state state_space merger_state_index in
-	let h = hash_code the_state in
+	let h = location_hash_code the_state in
 	(* Get all states with that hash *)
 	let bucket = Hashtbl.find_all state_space.states_for_comparison h in
 	print_message Verbose_high ("Merging: got " ^ (string_of_int (List.length bucket)) ^ " states with hash " ^ (string_of_int h));
@@ -1519,13 +1520,14 @@ let merge_states_ulrich state_space merger_state_index merged =
 (* Get states sharing the same location and discrete values from hash_table, excluding s *)
 let get_siblings state_space si =
 	let s = get_state state_space si in
-	let l, _ = s in
-	let h = hash_code s in
+	let l = s.global_location in
+	let h = location_hash_code s in
 	let sibs = Hashtbl.find_all state_space.states_for_comparison h in
 	(* check for exact correspondence (=> hash collisions!), and exclude si *)
 	List.fold_left (fun siblings sj ->
 		if sj = si then siblings else begin
-			let l', c' = get_state state_space sj in
+			let state = get_state state_space sj in
+			let l', c' = state.global_location, state.px_constraint in
 			if (Location.location_equal l l') then
 				(sj, (l',c')) :: siblings
 			else
@@ -1558,7 +1560,8 @@ let merge state_space new_states =
 	(* function for merging one state with its siblings *)
 	let merge_state si =
 		print_message Verbose_total ("[merging] Try to merge state " ^ (string_of_int si));
-		let l, c = get_state state_space si in
+		let state = get_state state_space si in
+		let l, c = state.global_location, state.px_constraint in
 		(* get merge candidates as pairs (index, state) *)
 		let candidates = get_siblings state_space si in
 		(* try to merge with siblings, restart if merge found, return eaten states *)
@@ -1645,7 +1648,6 @@ let string_of_statespace_nature = function
 	| Good -> "good"
 	| Bad -> "bad"
 	| Unknown -> "unknown"
-(* 	| _ -> raise (InternalError ("Tile nature should be good or bad only, so far ")) *)
 
 
 
@@ -1661,13 +1663,13 @@ let get_statistics_states state_space =
 	(* Compute the number of constraints equal to each other (list of pairs (constraint, nb) )*)
 	let nb_per_constraint = DynArray.make 0 in
 	(* Iterate on all states *)
-	iterate_on_states (fun _ (location_index, the_constraint) ->
+	iterate_on_states (fun _ state ->
 		(* Find former nb of constraints for this location *)
 		let former_nb = try
-			Hashtbl.find nb_constraints_per_location_id location_index
+			Hashtbl.find nb_constraints_per_location_id state.global_location_index
 		with Not_found -> 0 in
 		(* Add +1 *)
-		Hashtbl.replace nb_constraints_per_location_id location_index (former_nb + 1);
+		Hashtbl.replace nb_constraints_per_location_id state.global_location_index (former_nb + 1);
 
 		(*(* Find former nb of constraints *)
 		let _ =

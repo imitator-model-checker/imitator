@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: "EF optimized" algorithm: minimization or minimization of a parameter valuation for which there exists a run leading to some states
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2018/10/18
+ * Last modified     : 2019/06/11
  *
  ************************************************************)
 
@@ -25,6 +25,7 @@ open AbstractModel
 open Result
 open AlgoStateBased
 open Statistics
+open State
 
 
 (************************************************************)
@@ -262,14 +263,14 @@ class virtual algoEFopt =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform when trying to minimize/maximize a parameter. Returns true if the same should be kept, false if discarded. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private process_state state = 
+	method private process_state (state : state) = 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
 			self#print_algo_message Verbose_high "Entering AlgoEFopt:process_state…";
 		);
 
 		(* Retrieve the constraint *)
-		let state_location, px_constraint = state in
+		let state_location, px_constraint = state.global_location, state.px_constraint in
 		
 		(* Check if an optimum constraint was defined *)
 		match current_optimum with
@@ -457,7 +458,7 @@ class virtual algoEFopt =
 		);
 		
 		(* Build the state *)
-		let new_state = location, current_constraint in
+		let new_state : state = { global_location = location ; px_constraint = current_constraint } in
 		
 		(* If we have to optimize a parameter, do that now *)
 		let keep_processing = self#process_state new_state in

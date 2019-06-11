@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: IMKunion algorithm [AS11]
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/08
- * Last modified     : 2016/08/15
+ * Last modified     : 2019/06/11
  *
  ************************************************************)
 
@@ -25,6 +25,7 @@ open Exceptions
 open AbstractModel
 open Result
 open AlgoIMK
+open State
 
 
 
@@ -78,7 +79,7 @@ class algoIMunion =
 		self#print_algo_message_newline Verbose_low ("found a state with no successor");
 		
 		(* Get the state *)
-		let _, px_constraint = StateSpace.get_state state_space state_index in
+		let px_constraint = (StateSpace.get_state state_space state_index).px_constraint in
 		(* Projet onto P *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
 		(* Add the constraint to the result *)
@@ -95,7 +96,7 @@ class algoIMunion =
 		self#print_algo_message_newline Verbose_low ("found a state in a loop");
 		
 		(* Get the state *)
-		let _, px_constraint = StateSpace.get_state state_space state_index in
+		let px_constraint = (StateSpace.get_state state_space state_index).px_constraint in
 		(* Projet onto P *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
 		(* Add the constraint to the result *)
@@ -116,7 +117,7 @@ class algoIMunion =
 		let initial_state_index = StateSpace.get_initial_state_index state_space in
 		let initial_state = StateSpace.get_state state_space initial_state_index in
 		(* Retrieve the constraint of the initial state *)
-		let (_ , px_constraint ) = initial_state in
+		let px_constraint = initial_state.px_constraint in
 		
 		self#print_algo_message_newline Verbose_total ("projecting the initial state constraint onto the parameters...");
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in

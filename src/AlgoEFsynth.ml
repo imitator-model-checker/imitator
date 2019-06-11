@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2019/06/10
+ * Last modified     : 2019/06/11
  *
  ************************************************************)
 
@@ -25,6 +25,7 @@ open AbstractModel
 open Result
 open AlgoStateBased
 open Statistics
+open State
 
 
 
@@ -101,7 +102,7 @@ class virtual algoEFsynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Process a symbolic state: returns false if the state is a target state (and should not be added to the next states to explore), true otherwise *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private process_state state =
+	method private process_state (state : state) =
 	
 		(* Statistics *)
 		counter_process_state#increment;
@@ -112,7 +113,7 @@ class virtual algoEFsynth =
 			self#print_algo_message Verbose_medium "Entering process_state…";
 		);
 
-		let state_location, state_constraint = state in
+		let state_location, state_constraint = state.global_location, state.px_constraint in
 		
 		let to_be_added = match model.correctness_condition with
 		| None -> raise (InternalError("A correctness property must be defined to perform EF-synthesis or PRP. This should have been checked before."))
@@ -273,7 +274,7 @@ class virtual algoEFsynth =
 		cached_p_constraint <- None;
 		
 		(* Build the state *)
-		let new_state = location, current_constraint in
+		let new_state = { global_location = location ; px_constraint = current_constraint; }  in
 		
 		(* Try to add the new state to the state space *)
 		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
@@ -456,8 +457,8 @@ class virtual algoEFsynth =
 				let state_n_plus_1 = StateSpace.get_state state_space state_index_n_plus_1 in
 				
 				(* Get the zones *)
-				let location_n, z_n = state in
-				let _, z_n_plus_1 = state_n_plus_1 in
+				let location_n, z_n = state.global_location, state.px_constraint in
+				let z_n_plus_1 = state_n_plus_1.px_constraint in
 				
 				(* Get all updates from the combined transition *)
 				let clock_updates, _ = AlgoStateBased.get_updates_in_combined_transition location_n combined_transition in

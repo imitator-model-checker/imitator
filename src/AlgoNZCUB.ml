@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/10/10
- * Last modified     : 2019/05/30
+ * Last modified     : 2019/06/11
  *
  ************************************************************)
 
@@ -24,6 +24,7 @@ open Exceptions
 open AbstractModel
 open Result
 open AlgoLoopSynth
+open State
 
 
 
@@ -108,7 +109,7 @@ class algoNZCUB =
 		
 		(* Compute the "b" variable in [WSWLSDYL14] *)
 		let states_and_b = List.map (fun state_index ->
-			let _, state_constraint = StateSpace.get_state state_space state_index in
+			let state_constraint = (StateSpace.get_state state_space state_index).px_constraint in
 			
 			(* b is true if time can elapse if the reset_clock is non-necessarily 0 *)
 			let b = not (LinearConstraint.px_is_zero_in reset_clock state_constraint) in
@@ -166,7 +167,7 @@ class algoNZCUB =
 				(* 1. We check whether the clock is not unbounded in one of the locations *)
 				if List.exists (fun state_index ->
 					(* Let us find the location *)
-					let global_location , _ = StateSpace.get_state state_space state_index in
+					let global_location = (StateSpace.get_state state_space state_index).global_location in
 					
 					(* Construct the invariant *)
 					let invariant = AlgoStateBased.compute_valuated_invariant global_location in

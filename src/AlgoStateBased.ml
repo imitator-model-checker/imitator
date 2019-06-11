@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/06/10
+ * Last modified     : 2019/06/11
  *
  ************************************************************)
 
@@ -676,7 +676,7 @@ let apply_time_past location the_constraint = apply_time_shift Backward location
 (*------------------------------------------------------------*)
 (** Compute the initial state with the initial invariants and time elapsing *)
 (*------------------------------------------------------------*)
-let create_initial_state () =
+let create_initial_state () : state =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
@@ -764,14 +764,14 @@ let create_initial_state () =
 
 
 	(* Return the initial state *)
-	initial_location, current_constraint
+	{global_location = initial_location; px_constraint = current_constraint}
 
 
 
 (*------------------------------------------------------------*)
 (* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, abort *)
 (*------------------------------------------------------------*)
-let compute_initial_state_or_abort () =
+let compute_initial_state_or_abort () : state =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
@@ -779,7 +779,7 @@ let compute_initial_state_or_abort () =
 
 	(* Print the initial state *)
 	if verbose_mode_greater Verbose_medium then
-		print_message Verbose_medium ("\nInitial state:\n" ^ (ModelPrinter.string_of_state model (model.initial_location, model.initial_constraint)) ^ "\n");
+		print_message Verbose_medium ("\nInitial state:\n" ^ (ModelPrinter.string_of_state model {global_location = model.initial_location; px_constraint = model.initial_constraint}) ^ "\n");
 
 	(* Check the satisfiability *)
 	if not (LinearConstraint.px_is_satisfiable model.initial_constraint) then (
@@ -790,8 +790,8 @@ let compute_initial_state_or_abort () =
 	);
 
 	(* Get the initial state after time elapsing *)
-	let init_state_after_time_elapsing = create_initial_state () in
-	let _, initial_constraint_after_time_elapsing = init_state_after_time_elapsing in
+	let init_state_after_time_elapsing : state = create_initial_state () in
+	let initial_constraint_after_time_elapsing = init_state_after_time_elapsing.px_constraint in
 
 
 	(* Check the satisfiability *)
@@ -1584,13 +1584,12 @@ class virtual algoStateBased =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Update the nature of the trace set *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method update_statespace_nature ((location : Location.global_location), (_ : LinearConstraint.px_linear_constraint)) =
-
+	method update_statespace_nature (state : state) =
 		match model.correctness_condition with
 		| None -> ()
 		| Some (Unreachable unreachable_global_locations) ->
 			(* Check whether the current location matches one of the unreachable global locations *)
-			if State.match_unreachable_global_locations unreachable_global_locations location then(
+			if State.match_unreachable_global_locations unreachable_global_locations state.global_location then(
 				statespace_nature <- StateSpace.Bad;
 			);
 		| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))
@@ -1625,18 +1624,18 @@ class virtual algoStateBased =
 		counter_post_from_one_state#start;
 
 		(* Original location: static *)
-		let original_location, _ = StateSpace.get_state state_space source_state_index in
+		let original_location = (StateSpace.get_state state_space source_state_index).global_location in
 		(* Dynamic version of the original px_constraint (can change!) *)
 		(*** NOTE / TO OPTIMIZE: OK but not in all algorithms !! ***)
 		let source_constraint () =
-			let _, source_constraint = StateSpace.get_state state_space source_state_index in
+			let source_constraint = (StateSpace.get_state state_space source_state_index).px_constraint in
 			source_constraint
 		in
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
 			let source_state = StateSpace.get_state state_space source_state_index in
-			let _, source_constraint = source_state in
+			let source_constraint = source_state.px_constraint in
 			let source_constraint_projection = LinearConstraint.px_hide_nonparameters_and_collapse source_constraint in
 			print_message Verbose_high ("Performing post from state:");
 			print_message Verbose_high (ModelPrinter.string_of_state model source_state);
@@ -1830,7 +1829,7 @@ class virtual algoStateBased =
 							(* Print some information *)
 							if verbose_mode_greater Verbose_total then(
 								(* Build the state *)
-								let new_state = location, final_constraint in
+								let new_state = {global_location = location; px_constraint = final_constraint} in
 								self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
 							);
 
@@ -2157,10 +2156,11 @@ class virtual algoStateBased =
 			);
 			(* popped state information *)
 			(* location: static , constraint*)
-			let loc, constr = StateSpace.get_state state_space state_index in
+			let state = StateSpace.get_state state_space state_index in
+			let constr = state.px_constraint in
 
 			if verbose_mode_greater Verbose_low then(
-				print_message Verbose_low ( ModelPrinter.string_of_state model (loc, constr) );
+				print_message Verbose_low ( ModelPrinter.string_of_state model state );
 			);
 
 			let checkTrueConstr = LinearConstraint.px_is_equal constr model.px_clocks_non_negative_and_initial_p_constraint in
@@ -2210,7 +2210,8 @@ class virtual algoStateBased =
 			(* Print some information *)
 			print_message Verbose_total ("Entering checkLargerVisitedLocation(" ^ (string_of_int state_index1) ^ ")…");
 
-			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
+			let state = StateSpace.get_state state_space state_index1 in
+			let loc1, constr1 = state.global_location, state.px_constraint in
 
 			(* Print some information *)
 			print_message Verbose_total ("Retrieved state information");
@@ -2221,8 +2222,9 @@ class virtual algoStateBased =
 						(* Print some information *)
 						print_message Verbose_total ("Comparing with state " ^ (string_of_int state_index2) ^ "…");
 
-						let loc2, constr2 = StateSpace.get_state state_space state_index2 in
-						if (loc1 == loc2) && not (LinearConstraint.px_is_leq constr2 constr1)
+						let state = StateSpace.get_state state_space state_index2 in
+						let loc2, constr2 = state.global_location, state.px_constraint in
+						if (Location.location_equal loc1 loc2) && not (LinearConstraint.px_is_leq constr2 constr1)
 						then  raise (FoundLargerZone);
 					) rank_hashtable;
 					false;
@@ -2232,12 +2234,14 @@ class virtual algoStateBased =
 
 
 		let getSmallerVisitedLocations state_index1 rank_hashtable =
-			let loc1, constr1 = StateSpace.get_state state_space state_index1 in
+			let state = StateSpace.get_state state_space state_index1 in
+			let loc1, constr1 = state.global_location, state.px_constraint in
 
 			let smallers = Hashtbl.fold (fun state_index2 rank smaller_state_index ->
-				let loc2, constr2 = StateSpace.get_state state_space state_index2 in
+				let state = StateSpace.get_state state_space state_index2 in
+				let loc2, constr2 = state.global_location, state.px_constraint in
 				(* if (loc1 == loc2) && not (LinearConstraint.px_is_leq constr1 constr2) *)
-				if (loc1 == loc2) && not (LinearConstraint.px_is_leq constr1 constr2) && not (List.mem state_index2 !uncheckAgainStates)
+				if (Location.location_equal loc1 loc2) && not (LinearConstraint.px_is_leq constr1 constr2) && not (List.mem state_index2 !uncheckAgainStates)
 				then  (state_index2)::smaller_state_index
 				else smaller_state_index;
 			) rank_hashtable [];
@@ -2537,8 +2541,12 @@ class virtual algoStateBased =
 							let rank = Hashtbl.find rank_hashtable x in
 							match rank with
 							| Infinity -> x :: (addNonInfinityToPriorQueue state_index l)
-							| Int r -> 	let loc1, constr1 = StateSpace.get_state state_space state_index in
-										let loc2, constr2 = StateSpace.get_state state_space x in
+							| Int r -> 	
+
+										let state = StateSpace.get_state state_space state_index in
+										let loc1, constr1 = state.global_location, state.px_constraint in
+										let state = StateSpace.get_state state_space x in
+										let loc2, constr2 = state.global_location, state.px_constraint in
 										(
 										if not (LinearConstraint.px_is_leq constr2 constr1)
 										then
@@ -3089,8 +3097,8 @@ class virtual algoStateBased =
 
 		(* copy init state, as it might be destroyed later *)
 		(*** NOTE: this operation appears to be here totally useless ***)
-		let init_loc, init_constr = init_state in
-		let init_state = (init_loc, LinearConstraint.px_copy init_constr) in
+		let init_loc, init_constr = init_state.global_location, init_state.px_constraint in
+		let init_state : state = { global_location = init_loc; px_constraint = LinearConstraint.px_copy init_constr} in
 
 		(* Set up the initial state constraint *)
 		initial_constraint <- Some init_constr;

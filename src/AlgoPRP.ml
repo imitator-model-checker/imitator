@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/11
- * Last modified     : 2019/05/29
+ * Last modified     : 2019/06/11
  *
  ************************************************************)
 
@@ -24,6 +24,7 @@ open Exceptions
 open AbstractModel
 open Result
 open AlgoIMK
+open State
 
 
 
@@ -85,11 +86,11 @@ class algoPRP =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Process a pi-compatible state *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private process_pi0_compatible_state state =
+	method private process_pi0_compatible_state (state : state) =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 		
-		let state_location, state_constraint = state in
+		let state_location, state_constraint = state.global_location, state.px_constraint in
 		
 		let to_be_added = match model.correctness_condition with
 		| None -> raise (InternalError("A correctness property must be defined to perform PRP. This should have been checked before."))
@@ -176,7 +177,7 @@ class algoPRP =
 		if verbose_mode_greater Verbose_high then(
 			(* Means state was not compatible *)
 			if not pi0compatible then(
-				let new_state = location, final_constraint in
+				let new_state : State.state = { global_location = location ; px_constraint = final_constraint } in
 				if verbose_mode_greater Verbose_high then
 					self#print_algo_message Verbose_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "', and was:\n" ^ (ModelPrinter.string_of_state model new_state));
 			);
@@ -186,7 +187,7 @@ class algoPRP =
 		(*** NOTE: this is a key principle of PRP to NOT explore pi0-incompatible states ***)
 		if pi0compatible then (
 			(* Build the state *)
-			let new_state = location, final_constraint in
+			let new_state : State.state = { global_location = location ; px_constraint = final_constraint; } in
 
 			(* Try to add the new state to the state space *)
 			let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
@@ -228,7 +229,7 @@ class algoPRP =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_initial_state initial_state =
 		(* Get the constraint *)
-		let _, initial_constraint = initial_state in
+		let initial_constraint = initial_state.px_constraint in
 		
 		(*** NOTE: the addition of neg J to all reached states is performed as a side effect inside the following function ***)
 		(*** BADPROG: same reason ***)

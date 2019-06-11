@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Generic class for cartography-style algorithms
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2017/03/08
+ * Last modified     : 2019/06/11
  *
  ************************************************************)
 
@@ -25,6 +25,7 @@ open Statistics
 open AbstractModel
 open Result
 open AlgoGeneric
+open State
 
 
 
@@ -588,7 +589,7 @@ class virtual algoCartoGeneric =
 		find_next_point_counter#reset;
 
 		(* Initial constraint of the model *)
-		let _, init_px_constraint = init_state in
+		let init_px_constraint = init_state.px_constraint in
 		(* Hide non parameters *)
 		init_p_constraint <- LinearConstraint.px_hide_nonparameters_and_collapse init_px_constraint;
 

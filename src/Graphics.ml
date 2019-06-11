@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2019/05/29
+ * Last modified     : 2019/06/11
  *
  ************************************************************)
  
@@ -26,6 +26,7 @@ open Statistics
 open AbstractModel
 open StateSpace
 open Result
+open State
 
 
 (************************************************************)
@@ -704,7 +705,8 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 		(let string_states = ref "" in
 			List.iter (fun state_index ->
 			(* Retrieve location and constraint *)
-			let global_location, linear_constraint = StateSpace.get_state state_space state_index in
+			let state = StateSpace.get_state state_space state_index in
+			let global_location, linear_constraint = state.global_location, state.px_constraint in
 
 			print_message Verbose_high ("[dot_of_statespace] Converting state " ^ (string_of_int state_index) ^ "");
 
@@ -717,7 +719,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 				^ "\n\n  /************************************************************/"
 				^ (if initial_state_index = state_index then ("\n  INITIAL") else "")
 				^ "\n  STATE " ^ (string_of_int state_index) ^ ":"
-				^ "\n  " ^ (ModelPrinter.string_of_state model (global_location, linear_constraint))
+				^ "\n  " ^ (ModelPrinter.string_of_state model {global_location = global_location ; px_constraint = linear_constraint;})
 				(* Add the projection of the constraint onto the parameters *)
 				^ (
 					"\n\n  Projection onto the parameters:"
@@ -859,7 +861,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 		^ (List.fold_left (fun current_string state_index ->
 			(* Get the actual state *)
 			let state = StateSpace.get_state state_space state_index in
-			let (global_location, linear_constraint) = state in
+			let global_location, linear_constraint = state.global_location, state.px_constraint in
 			
 (*			(* Get the location *)
 			let global_location = get_location state_space location_index in*)

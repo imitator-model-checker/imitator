@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: "EF min" algorithm: minimization of a parameter valuation for which there exists a run leading to some states
  * 

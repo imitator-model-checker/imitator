@@ -8,7 +8,7 @@
  * 
  * File contributors : Vincent Bloemen, Étienne André
  * Created           : 2018/10/08
- * Last modified     : 2019/02/19
+ * Last modified     : 2019/06/11
  *
  ************************************************************)
 
@@ -25,6 +25,7 @@ open AbstractModel
 open Result
 open AlgoStateBased
 open Statistics
+open State
 
 
 (************************************************************)
@@ -308,7 +309,7 @@ class algoEFoptQueue =
 	(* Obtain the minimum time from a state index *)
 	method private state_index_to_min_time state_index =
         let source_state = StateSpace.get_state state_space state_index in
-        let _, source_constraint = source_state in
+        let source_constraint = source_state.px_constraint in
         let time_constraint = LinearConstraint.px_copy source_constraint in
         let pxd_constr = LinearConstraint.pxd_of_px_constraint time_constraint in
 		self#time_constr_to_val pxd_constr
@@ -317,7 +318,7 @@ class algoEFoptQueue =
 	(* Obtain the maximum time from a state index *)
 	method private state_index_to_max_time state_index =
         let source_state = StateSpace.get_state state_space state_index in
-        let _, source_constraint = source_state in
+        let source_constraint = source_state.px_constraint in
         let time_constraint = LinearConstraint.px_copy source_constraint in
         let pxd_constr = LinearConstraint.pxd_of_px_constraint time_constraint in
 		self#time_constr_to_max_val pxd_constr
@@ -328,7 +329,7 @@ class algoEFoptQueue =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
     method private print_state_info state_index =
         let source_state = StateSpace.get_state state_space state_index in
-        let _, source_constraint = source_state in
+        let source_constraint = source_state.px_constraint in
         print_message Verbose_standard ("----------\nstate:" ^ (string_of_int state_index) ^ "\n");
         print_message Verbose_standard (ModelPrinter.string_of_state model source_state);
         let time_constraint = LinearConstraint.px_copy source_constraint in
@@ -607,7 +608,8 @@ class algoEFoptQueue =
 			)
             else (
                 (* Check if this is the target location *)
-                let source_location, source_constraint = StateSpace.get_state state_space source_id in
+                let state = StateSpace.get_state state_space source_id in
+                let source_location, source_constraint = state.global_location, state.px_constraint in
                 if self#is_target_state source_location then (
                     (* Target state found ! (NB: assert time = upper_bound) *)
                     (* NB: We update best_time_bound in the successor part, so we should never see time < best_time_bound *)
@@ -704,7 +706,7 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
                                 (* Only add states if the time to reach does not exceed the minimum time *)
                                 if suc_time <= !best_time_bound then (
                                     (* Check if the suc state is the target location, and possibly update minimum time *)
-                                    let suc_location, _ = StateSpace.get_state state_space suc_id in
+                                    let suc_location = (StateSpace.get_state state_space suc_id).global_location in
                                     if self#is_target_state suc_location then (
 										
 										if options#merge && (options#merge_heuristic = Merge_targetseen) then can_merge := true;
@@ -841,7 +843,7 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
 (* 		let model = Input.get_model () in *)
 
 		(* Build the state *)
-		let new_state = location, final_constraint in
+		let new_state : state = { global_location = location ; px_constraint = final_constraint} in
 
 		
 		(* Try to add the new state to the state space *)

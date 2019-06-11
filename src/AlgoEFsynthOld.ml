@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: EFsynth algorithm [JLR15]
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2017/03/19
+ * Last modified     : 2019/06/11
  *
  ************************************************************)
 
@@ -24,6 +24,7 @@ open Exceptions
 open AbstractModel
 open Result
 open AlgoStateBased
+open State
 
 
 
@@ -68,11 +69,11 @@ class algoEFsynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Process a symbolic state *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private process_state state =
+	method private process_state (state : state) =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 		
-		let state_location, state_constraint = state in
+		let state_location, state_constraint = state.global_location, state.px_constraint in
 		
 		let to_be_added = match model.correctness_condition with
 		| None -> raise (InternalError("A correctness property must be defined to perform EF-synthesis or PRP. This should have been checked before."))
@@ -151,7 +152,7 @@ class algoEFsynth =
 (* 		let model = Input.get_model () in *)
 
 		(* Build the state *)
-		let new_state = location, final_constraint in
+		let new_state = { global_location = location ; px_constraint = final_constraint } in
 
 		(* Try to add the new state to the state space *)
 		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in

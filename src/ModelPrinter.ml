@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2019/06/03
+ * Last modified     : 2019/06/11
  *
  ************************************************************)
 
@@ -17,6 +17,7 @@ open OCamlUtilities
 open Result
 open AbstractModel
 open ImitatorUtilities
+open State
 
 
 
@@ -666,11 +667,11 @@ let string_of_model model =
 	string_of_array_of_string_with_sep ", " string_array*)
 
 (* Convert a state into a string *)
-let string_of_state model (global_location, linear_constraint) =
+let string_of_state model (state : state) =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names options#output_float global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names linear_constraint) ^ ""
+	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names options#output_float state.global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names state.px_constraint) ^ ""
 
 
 

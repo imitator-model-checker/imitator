@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: LoopSynth algorithm [AL16] (synthesizes valuations for which there exists a loop in the PTA)
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2017/03/19
+ * Last modified     : 2019/06/11
  *
  ************************************************************)
 
@@ -24,6 +24,7 @@ open Exceptions
 open AbstractModel
 open Result
 open AlgoStateBased
+open State
 
 
 (************************************************************)
@@ -95,7 +96,7 @@ class algoLoopSynth =
 (* 		let model = Input.get_model () in *)
 
 		(* Build the state *)
-		let new_state = location, current_constraint in
+		let new_state : state = {global_location = location ; px_constraint = current_constraint } in
 
 		(* Try to add the new state to the state space *)
 		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
