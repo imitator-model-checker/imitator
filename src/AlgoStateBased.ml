@@ -813,7 +813,7 @@ let compute_initial_state_or_abort () : state =
 (*------------------------------------------------------------*)
 (* Compute a list of possible actions for a state   *)
 (*------------------------------------------------------------*)
-let compute_possible_actions original_location =
+let compute_possible_actions source_location =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -822,7 +822,7 @@ let compute_possible_actions original_location =
 	(* Fill it with all the possible actions per location *)
 	for automaton_index = 0 to model.nb_automata - 1 do
 		(* Get the current location for automaton_index *)
-		let location_index = Location.get_location original_location automaton_index in
+		let location_index = Location.get_location source_location automaton_index in
 		(* Print some information *)
 		print_message Verbose_total ("Considering automaton " ^ (model.automata_names automaton_index) ^ " with location " ^ (model.location_names automaton_index location_index) ^ ".");
 		(* Get the possible actions for this location *)
@@ -855,7 +855,7 @@ let compute_possible_actions original_location =
 		let action_possible =
 			List.fold_left (fun still_possible automaton_index ->
 				still_possible
-				&& (List.mem action_index (model.actions_per_location automaton_index (Location.get_location original_location automaton_index)))
+				&& (List.mem action_index (model.actions_per_location automaton_index (Location.get_location source_location automaton_index)))
 			) possible automata_for_this_action in
 		(* Print some information *)
 		if not action_possible && (verbose_mode_greater Verbose_total) then (
@@ -908,17 +908,17 @@ let merge_clock_updates first_update second_update : clock_updates =
 (*------------------------------------------------------------------*)
 (* Get the list of updates from ONE transition                      *)
 (* Function by Jaime Arias (moved by Étienne André)                 *)
-(* original_location : the original location, needed to test the Boolean expressions*)
+(* source_location   : the original location, needed to test the Boolean expressions*)
 (* updates           : the list of updates                          *)
 (*------------------------------------------------------------------*)
 (* Returns a pair of the list of clock updates and discrete updates *)
 (*------------------------------------------------------------------*)
 (** Collecting the updates by evaluating the conditions, if there is any *)
-let get_updates (original_location : Location.global_location) (updates : AbstractModel.updates) =
+let get_updates (source_location : Location.global_location) (updates : AbstractModel.updates) =
 	List.fold_left (
 	fun (acc_clock, acc_discrete) (conditional_update : AbstractModel.conditional_update) ->
 		let boolean_expr, if_updates, else_updates = conditional_update in
-		let filter_updates = if (is_boolean_expression_satisfied original_location boolean_expr) then if_updates else else_updates in
+		let filter_updates = if (is_boolean_expression_satisfied source_location boolean_expr) then if_updates else else_updates in
 		(merge_clock_updates acc_clock filter_updates.clock, list_append acc_discrete filter_updates.discrete)
 	) (updates.clock, updates.discrete) updates.conditional
 
@@ -926,13 +926,13 @@ let get_updates (original_location : Location.global_location) (updates : Abstra
 (*------------------------------------------------------------------*)
 (* Get the list of updates from a combined transition               *)
 (* Function by Étienne André                                        *)
-(* original_location  : the original location, needed to test the Boolean expressions*)
+(* source_location  : the original location, needed to test the Boolean expressions*)
 (* combined_transition: the combined_transition in which the updates are sought *)
 (*------------------------------------------------------------------*)
 (* Returns a pair of the list of clock updates and discrete updates *)
 (*------------------------------------------------------------------*)
 (** Collecting the updates by evaluating the conditions, if there is any *)
-let get_updates_in_combined_transition (original_location : Location.global_location) (combined_transition : StateSpace.combined_transition) =
+let get_updates_in_combined_transition (source_location : Location.global_location) (combined_transition : StateSpace.combined_transition) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -942,54 +942,47 @@ let get_updates_in_combined_transition (original_location : Location.global_loca
 		(* Get updates *)
 		let updates = (model.transitions_description transition).updates in
 		(* Call dedicated function *)
-		let new_clock_updates, new_discrete_updates = get_updates original_location updates in
+		let new_clock_updates, new_discrete_updates = get_updates source_location updates in
 		(* Append and merge *)
 		(merge_clock_updates current_clock_updates new_clock_updates) , (list_append current_discrete_updates new_discrete_updates)
 	) (No_update, []) combined_transition
 
 
 (*------------------------------------------------------------------*)
-(* Compute a new location for a given set of transitions            *)
-(* involved_automata_indices: indices of involved automata          *)
-(* trans_table       : indices of examined transition per automaton *)
-(* action_index      : index of current action                      *)
-(* original_location : the source location                          *)
+(* Compute a new location for a combined_transition                 *)
+(* combined_transition: the transition involved                     *)
+(* source_location    : the source location                         *)
 (*------------------------------------------------------------------*)
-(* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of pxd_linear_constraint), the updates and the combined transition *)
+(* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of pxd_linear_constraint) and the updates *)
 (*------------------------------------------------------------------*)
-let compute_new_location_guards_updates_combinedtransition involved_automata_indices trans_table action_index original_location =
+let compute_new_location_guards_updates source_location combined_transition =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
 	(* make a copy of the location *)
-	let location = Location.copy_location original_location in
+	let location = Location.copy_location source_location in
 	(* Create a temporary hashtbl for discrete values *)
 	let updated_discrete = Hashtbl.create model.nb_discrete in
 	(* Check if we actually have updates *)
 	let has_updates = ref false in
 	(* Update the location for the automata synchronized with 'action_index'; return the list of guards and updates *)
-	let guards_and_updates_and_combinedtransition = Array.to_list (Array.mapi (fun local_automaton_index real_automaton_index ->
-		(* Get the current location for this automaton *)
-		let location_index = Location.get_location original_location real_automaton_index in
-		(* Find the transitions for this automaton *)
-		let transitions = model.transitions real_automaton_index location_index action_index in
-		(* Get the index of the examined transition for this automaton *)
-		let current_index = trans_table.(local_automaton_index) in
-		(* Keep the 'current_index'th transition *)
-		let transition_index = List.nth transitions current_index in
+	let guards_and_updates = List.map (fun transition_index ->
+		(* Get the automaton concerned *)
+		let automaton_index = model.automaton_of_transition transition_index in
+		
 		(* Access the transition and get the components *)
 		let transition = model.transitions_description transition_index in
 		let guard, updates, target_index = transition.guard, transition.updates, transition.target in
 
 		(** Collecting the updates by evaluating the conditions, if there is any *)
-		let clock_updates, discrete_updates = get_updates original_location updates in
+		let clock_updates, discrete_updates = get_updates source_location updates in
       
 		(* Update discrete *)
 		List.iter (fun (discrete_index, arithmetic_expression) ->
 			(* Compute its new value *)
-(* 			let new_value = LinearConstraint.evaluate_pxd_linear_term (Location.get_discrete_value original_location) linear_term in *)
+(* 			let new_value = LinearConstraint.evaluate_pxd_linear_term (Location.get_discrete_value source_location) linear_term in *)
 			let new_value = try(
-				evaluate_discrete_arithmetic_expression (Location.get_discrete_value original_location) arithmetic_expression)
+				evaluate_discrete_arithmetic_expression (Location.get_discrete_value source_location) arithmetic_expression)
 				with Division_by_0_while_evaluating_discrete -> (
 					(*** NOTE: we could still go on with the computation by setting the discrete to, e.g., 0 but this seems really not good for a model checker ***)
 					raise (Division_by_0 ("Division by 0 encountered when evaluating the successor of the discrete variables!"))
@@ -1004,6 +997,7 @@ let compute_new_location_guards_updates_combinedtransition involved_automata_ind
 				(* Compare with the new one *)
 				if NumConst.neq previous_new_value new_value then (
 				(* If different: warning *)
+					let action_index = StateSpace.get_action_from_combined_transition combined_transition in
 					print_warning ("The discrete variable '" ^ (model.variable_names discrete_index) ^ "' is updated several times with different values for the same synchronized action '" ^ (model.action_names action_index) ^ "'. The behavior of the system is now unspecified.");
 				);
 			) else (
@@ -1012,7 +1006,7 @@ let compute_new_location_guards_updates_combinedtransition involved_automata_ind
 			);
 		) discrete_updates;
 		(* Update the global location *)
-		Location.update_location_with [real_automaton_index, target_index] [] location;
+		Location.update_location_with [automaton_index, target_index] [] location;
 		(* Update the update flag *)
 		begin
 		match clock_updates with
@@ -1024,14 +1018,14 @@ let compute_new_location_guards_updates_combinedtransition involved_automata_ind
 			| Resets []
 			| Updates [] -> ()
 		end;
-		(* Keep the guard and updates and the transition_index *)
-		(guard, clock_updates), transition_index;
-	) involved_automata_indices) in
-	(* Split between guard+updates and transition_index *)
-	let guards_and_updates, combined_transition = List.split guards_and_updates_and_combinedtransition in
+		(* Keep the guard and updates  *)
+		(guard, clock_updates)
+	) combined_transition in
+	
 	(* Split the list of guards and updates *)
 	let guards, clock_updates = List.split guards_and_updates in
-	(* Compute couples to update the discrete variables *)
+	
+	(* Compute pairs to update the discrete variables *)
 	let updated_discrete_couples = ref [] in
 	Hashtbl.iter (fun discrete_index discrete_value ->
 		updated_discrete_couples := (discrete_index, discrete_value) :: !updated_discrete_couples;
@@ -1054,7 +1048,7 @@ let compute_new_location_guards_updates_combinedtransition involved_automata_ind
 	) ([], []) guards in
 
 	(* Return the new location, the guards, and the clock updates (if any!) *)
-	location, discrete_guards, continuous_guards, (if !has_updates then clock_updates else []), combined_transition
+	location, discrete_guards, continuous_guards, (if !has_updates then clock_updates else [])
 
 
 
@@ -1623,8 +1617,8 @@ class virtual algoStateBased =
 		counter_post_from_one_state#increment;
 		counter_post_from_one_state#start;
 
-		(* Original location: static *)
-		let original_location = (StateSpace.get_state state_space source_state_index).global_location in
+		(* Source location: static *)
+		let source_location = (StateSpace.get_state state_space source_state_index).global_location in
 		(* Dynamic version of the original px_constraint (can change!) *)
 		(*** NOTE / TO OPTIMIZE: OK but not in all algorithms !! ***)
 		let source_constraint () =
@@ -1646,7 +1640,7 @@ class virtual algoStateBased =
 		(* Statistics *)
 		tcounter_next_transitions#start;
 		(* get possible actions originating from current state *)
-		let list_of_possible_actions = compute_possible_actions original_location in
+		let list_of_possible_actions = compute_possible_actions source_location in
 		(* Statistics *)
 		tcounter_next_transitions#stop;
 
@@ -1668,7 +1662,7 @@ class virtual algoStateBased =
 
 
 		(* Create a constraint D_i = d_i for the discrete variables *)
-		let discrete_constr = discrete_constraint_of_global_location original_location in
+		let discrete_constr = discrete_constraint_of_global_location source_location in
 
 		(* FOR ALL ACTION DO: *)
 		List.iter (fun action_index ->
@@ -1697,7 +1691,7 @@ class virtual algoStateBased =
 			(*** WARNING: time elapsing is AGAIN performed in compute_new_constraint, which is a loss of efficiency ***)
 			if options#no_time_elapsing then(
 				print_message Verbose_total ("\nAlternative time elapsing: Applying time elapsing NOW");
-				apply_time_elapsing original_location orig_plus_discrete;
+				apply_time_elapsing source_location orig_plus_discrete;
 			);
 
 			(* Statistics *)
@@ -1721,7 +1715,7 @@ class virtual algoStateBased =
 			tcounter_legal_transitions_exist#start;
 
 			(* compute the possible combinations of transitions *)
-			let legal_transitions_exist = compute_transitions original_location orig_plus_discrete action_index automata_for_this_action involved_automata_indices max_indexes possible_transitions in
+			let legal_transitions_exist = compute_transitions source_location orig_plus_discrete action_index automata_for_this_action involved_automata_indices max_indexes possible_transitions in
 
 			(* Statistics *)
 			tcounter_legal_transitions_exist#stop;
@@ -1770,15 +1764,30 @@ class virtual algoStateBased =
 
 				(* Statistics *)
 				tcounter_compute_location_guards_discrete#start;
+				
+				(* Create the combined transition *)
+				let combined_transition = Array.to_list (Array.mapi (fun local_automaton_index real_automaton_index ->
+					(* Get the current location for this automaton *)
+					let location_index = Location.get_location source_location real_automaton_index in
+					(* Find the transitions for this automaton *)
+					let transitions = model.transitions real_automaton_index location_index action_index in
+					(* Get the index of the examined transition for this automaton *)
+					let current_index = current_transitions.(local_automaton_index) in
+					(* Keep the 'current_index'th transition *)
+					let transition_index = List.nth transitions current_index in
+					(* This is the transition index we are interested in *)
+					transition_index
+				) involved_automata_indices) in
+
 
 				(* Compute the new location for the current combination of transitions *)
-				let location, (discrete_guards : LinearConstraint.d_linear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates, combined_transition = compute_new_location_guards_updates_combinedtransition involved_automata_indices current_transitions action_index original_location in
+				let location, (discrete_guards : LinearConstraint.d_linear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates source_location combined_transition in
 
 				(* Statistics *)
 				tcounter_compute_location_guards_discrete#stop;
 
 				(* Check if the discrete guards are satisfied *)
-				if not (List.for_all (evaluate_d_linear_constraint_in_location original_location) discrete_guards) then(
+				if not (List.for_all (evaluate_d_linear_constraint_in_location source_location) discrete_guards) then(
 					(* Statistics *)
 					counter_nb_unsatisfiable_discrete#increment;
 					(* Print some information *)
@@ -1787,7 +1796,7 @@ class virtual algoStateBased =
 				(* Else: the discrete part is satisfied *)
 				)else(
 					(* Compute the new constraint for the current transition *)
-					let new_constraint = compute_new_constraint source_constraint discrete_constr original_location location continuous_guards clock_updates in
+					let new_constraint = compute_new_constraint source_constraint discrete_constr source_location location continuous_guards clock_updates in
 
 					begin
 					(* Check the satisfiability *)
