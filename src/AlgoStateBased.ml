@@ -1781,7 +1781,7 @@ class virtual algoStateBased =
 
 
 				(* Compute the new location for the current combination of transitions *)
-				let location, (discrete_guards : LinearConstraint.d_linear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates source_location combined_transition in
+				let target_location, (discrete_guards : LinearConstraint.d_linear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates source_location combined_transition in
 
 				(* Statistics *)
 				tcounter_compute_location_guards_discrete#stop;
@@ -1796,7 +1796,7 @@ class virtual algoStateBased =
 				(* Else: the discrete part is satisfied *)
 				)else(
 					(* Compute the new constraint for the current transition *)
-					let new_constraint = compute_new_constraint source_constraint discrete_constr source_location location continuous_guards clock_updates in
+					let new_constraint = compute_new_constraint source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
 
 					begin
 					(* Check the satisfiability *)
@@ -1838,11 +1838,11 @@ class virtual algoStateBased =
 							(* Print some information *)
 							if verbose_mode_greater Verbose_total then(
 								(* Build the state *)
-								let new_state = {global_location = location; px_constraint = final_constraint} in
+								let new_state = {global_location = target_location; px_constraint = final_constraint} in
 								self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
 							);
 
-							let added = self#add_a_new_state source_state_index new_states_indexes combined_transition location final_constraint in
+							let added = self#add_a_new_state source_state_index new_states_indexes combined_transition target_location final_constraint in
 
 							(* Update *)
 							has_successors := !has_successors || added;
