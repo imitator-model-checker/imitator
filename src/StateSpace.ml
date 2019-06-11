@@ -503,7 +503,6 @@ let all_state_indexes state_space = hashtbl_get_all_keys state_space.all_states
 
 
 (*** WARNING: big memory, here! Why not perform intersection on the fly? *)
-(*** TODO: List.map! ***)
 
 (** Return the list of all constraints on the parameters associated to the states of a state space *)
 let all_p_constraints state_space =
