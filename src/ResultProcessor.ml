@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2019/05/16
+ * Last modified     : 2019/06/11
  *
  ************************************************************)
 
@@ -715,7 +715,7 @@ let print_state_space_statistics total_time state_space =
 	let average = (float_of_int nb_gen_states) /. total_time in
 	print_message Verbose_standard ("States computed per second: " ^ (string_of_average average) ^ " (" ^ (string_of_int nb_gen_states) ^ "/" ^ (string_of_seconds total_time) ^ ")");*)
 	
-	if options#statistics || verbose_mode_greater Verbose_experiments then(
+	if options#statistics || verbose_mode_greater Verbose_medium then(
 		print_message Verbose_standard "\n------------------------------------------------------------";
 		print_message Verbose_standard "Statistics: State space";
 		print_message Verbose_standard "------------------------------------------------------------";
@@ -723,7 +723,7 @@ let print_state_space_statistics total_time state_space =
 	);
 
 	
-	if options#statistics || verbose_mode_greater Verbose_low then (
+	if options#statistics || verbose_mode_greater Verbose_medium then (
 		(* State space *)
 (*		print_message Verbose_standard "------------------------------------------------------------";
 		print_message Verbose_standard "Statistics: Graph";
@@ -741,7 +741,7 @@ let print_memory_statistics () =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-	if options#statistics || verbose_mode_greater Verbose_low then (
+	if options#statistics || verbose_mode_greater Verbose_medium then (
 		print_message Verbose_standard "------------------------------------------------------------";
 		print_message Verbose_standard "Statistics on memory";
 		print_message Verbose_standard "------------------------------------------------------------";
