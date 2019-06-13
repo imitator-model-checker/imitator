@@ -85,18 +85,13 @@ class algoLoopSynth =
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the state_space (if indeed needed) *)
-	(* Side-effects: modify new_states_indexes *)
-	(*** TODO: move new_states_indexes to a variable of the class ***)
+	(* Add a new state to the reachability_graph (if indeed needed) *)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
+	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*** TODO: return the list of actually added states ***)
 	(*** WARNING/BADPROG: the following is partially copy/paste from AlgoEF.ml (though much modified) ***)
-	method add_a_new_state source_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
-		(* Retrieve the model *)
-(* 		let model = Input.get_model () in *)
-
-		(* Build the state *)
-		let new_state : state = {global_location = location ; px_constraint = current_constraint } in
+	method add_a_new_state source_state_index combined_transition new_state =
 
 		(* Try to add the new state to the state space *)
 		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
@@ -107,7 +102,7 @@ class algoLoopSynth =
 		| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
 
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
-			new_states_indexes := new_state_index :: !new_states_indexes;
+			new_states_indexes <- new_state_index :: new_states_indexes;
 		 (* end if new state *)
 		(* If the state was present:  *)
 		| StateSpace.State_already_present new_state_index ->
@@ -119,7 +114,7 @@ class algoLoopSynth =
 		;
 		
 		(* Update the transitions *)
-		self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
+		self#add_transition_to_state_space (source_state_index, combined_transition, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
 		
 		let has_loop =
 			match addition_result with
@@ -147,7 +142,7 @@ class algoLoopSynth =
 			| Loop scc ->
 				self#print_algo_message Verbose_standard "Found a cycle.";
 				(*** NOTE: this method is called AFTER the transition table was updated ***)
-				self#process_loop_constraint ((*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) scc current_constraint;
+				self#process_loop_constraint ((*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) scc new_state.px_constraint;
 		end; (* end if found a loop *)
 		
 		(* The state is kept in any case *)

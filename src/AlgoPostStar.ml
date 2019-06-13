@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2019/06/11
+ * Last modified     : 2019/06/13
  *
  ************************************************************)
 
@@ -61,19 +61,13 @@ class algoPostStar =
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the state space (if indeed needed) *)
-	(* Side-effects: modify new_states_indexes *)
-	(*** TODO: move new_states_indexes to a variable of the class ***)
+	(* Add a new state to the reachability_graph (if indeed needed) *)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
+	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method add_a_new_state source_state_index new_states_indexes combined_transition location (final_constraint : LinearConstraint.px_linear_constraint) =
-		(* Retrieve the model *)
-(* 		let model = Input.get_model () in *)
+	(*** TODO: return the list of actually added states ***)
+	method add_a_new_state source_state_index combined_transition new_state =
 
-		(* Build the state *)
-		let new_state : state = {global_location = location ; px_constraint = final_constraint } in
-
-		
 		(* Try to add the new state to the state space *)
 		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
 		
@@ -92,7 +86,7 @@ class algoPostStar =
 			self#update_statespace_nature new_state;
 			
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
-			new_states_indexes := new_state_index :: !new_states_indexes;
+			new_states_indexes <- new_state_index :: new_states_indexes;
 			
 		end; (* end if new state *)
 		

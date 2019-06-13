@@ -1605,6 +1605,9 @@ class virtual algoStateBased =
 	(* Depth in the explored state space *)
 	(*** NOTE: private ***)
 	val mutable bfs_current_depth = 0
+	
+	(* The current new state indexes *)
+	val mutable new_states_indexes : State.state_index list = []
 
 	(* Variable to remain of the termination *)
 	(*** NOTE: public only for AlgoEFoptQueue ***)
@@ -1659,13 +1662,11 @@ class virtual algoStateBased =
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add a new state to the reachability_graph (if indeed needed) *)
-	(* Side-effects: modify new_states_indexes *)
-	(*** TODO: move new_states_indexes to a variable of the class ***)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** TODO: simplify signature by removing the source_state_index and returning the list of actually added states ***)
-	method virtual add_a_new_state : state_index -> state_index list ref -> StateSpace.combined_transition -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
+	(*** TODO: return the list of actually added states ***)
+	method virtual add_a_new_state : state_index -> StateSpace.combined_transition -> State.state -> bool
 
 	
 	
@@ -1713,7 +1714,7 @@ class virtual algoStateBased =
 		);
 
 		(* Build the list of new states indexes *)
-		let new_states_indexes = ref [] in
+		new_states_indexes <- [];
 
 		(* Flag to check whether the state of which the successors are computed is a deadlock or not *)
 		let has_successors = ref false in
@@ -1855,7 +1856,7 @@ class virtual algoStateBased =
 					);
 
 					(* Try to add the state to the state space *)
-					let added = self#add_a_new_state source_state_index new_states_indexes combined_transition new_state.global_location new_state.px_constraint in
+					let added = self#add_a_new_state source_state_index combined_transition new_state in
 
 					(* Update *)
 					has_successors := !has_successors || added;
@@ -1879,7 +1880,7 @@ class virtual algoStateBased =
 
 		(* Return the list of (really) new states *)
 		(*** NOTE: List.rev really useful??!!!! ***)
-		List.rev (!new_states_indexes)
+		List.rev (new_states_indexes)
 
 
 

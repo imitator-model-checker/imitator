@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2019/05/29
+ * Last modified     : 2019/06/13
  *
  ************************************************************)
 
@@ -72,12 +72,12 @@ class virtual algoEFopt :
 		
 
 		(*------------------------------------------------------------*)
-		(* Add a new state to the reachability_graph (if indeed needed) *)
-		(* Also update tile_nature and slast (*** TODO: remove these operations, and move them back to their algorithms ***) *)
+		(* Add a new state to the state space (if indeed needed) *)
 		(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
+		(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 		(*------------------------------------------------------------*)
-		(*** TODO: simplify signature by removing the orig_state_index and returning the list of actually added states ***)
-		method add_a_new_state : state_index -> state_index list ref -> StateSpace.combined_transition -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
+		(*** TODO: return the list of actually added states ***)
+		method add_a_new_state : state_index -> StateSpace.combined_transition -> State.state -> bool
 
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

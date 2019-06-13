@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2019/06/11
+ * Last modified     : 2019/06/13
  *
  ************************************************************)
 
@@ -446,19 +446,16 @@ class virtual algoEFopt =
 			)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the state_space (if indeed needed) *)
-	(* Side-effects: modify new_states_indexes *)
-	(*** TODO: move new_states_indexes to a variable of the class ***)
+	(* Add a new state to the reachability_graph (if indeed needed) *)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
+	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method add_a_new_state source_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
+	(*** TODO: return the list of actually added states ***)
+	method add_a_new_state source_state_index combined_transition new_state =
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
 			self#print_algo_message Verbose_medium "Entering AlgoEFopt:add_a_new_state…";
 		);
-		
-		(* Build the state *)
-		let new_state : state = { global_location = location ; px_constraint = current_constraint } in
 		
 		(* If we have to optimize a parameter, do that now *)
 		let keep_processing = self#process_state new_state in
@@ -487,7 +484,7 @@ class virtual algoEFopt =
 
 				(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
 				if true then
-					new_states_indexes := new_state_index :: !new_states_indexes;
+					new_states_indexes <- new_state_index :: new_states_indexes;
 				
 			end (* end if new state *)
 			;
@@ -495,7 +492,7 @@ class virtual algoEFopt =
 			(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 			
 			(* Add the transition to the state space *)
-			self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
+			self#add_transition_to_state_space (source_state_index, combined_transition, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
 		
 			(* The state is kept in any case *)
 			true

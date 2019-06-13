@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2019/06/11
+ * Last modified     : 2019/06/13
  *
  ************************************************************)
 
@@ -196,12 +196,12 @@ class algoIMK =
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the state_space (if indeed needed) *)
-	(* Side-effects: modify new_states_indexes *)
-	(*** TODO: move new_states_indexes to a variable of the class ***)
+	(* Add a new state to the reachability_graph (if indeed needed) *)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
+	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method add_a_new_state source_state_index new_states_indexes combined_transition location (final_constraint : LinearConstraint.px_linear_constraint) =
+	(*** TODO: return the list of actually added states ***)
+	method add_a_new_state source_state_index combined_transition new_state =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 
@@ -209,7 +209,7 @@ class algoIMK =
 		
 		(*** NOTE: the addition of neg J to all reached states is performed as a side effect inside the following function ***)
 		(*** BADPROG: same reason ***)
-		let pi0_compatible = self#check_pi0compatibility final_constraint
+		let pi0_compatible = self#check_pi0compatibility new_state.px_constraint
 		in
 		
 		(* If pi-compatible state: add the new state's p_constraint to the on-the-fly computation of the result of IMss *)
@@ -230,7 +230,6 @@ class algoIMK =
 		if verbose_mode_greater Verbose_high then(
 			(* Means state was not compatible *)
 			if not pi0_compatible then(
-				let new_state : State.state = { global_location = location ; px_constraint = final_constraint } in
 				if verbose_mode_greater Verbose_high then
 					self#print_algo_message Verbose_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "', and was:\n" ^ (ModelPrinter.string_of_state model new_state));
 			);
@@ -238,8 +237,6 @@ class algoIMK =
 		
 		(* Only add the new state if it is actually valid *)
 		if pi0_compatible then (
-			(* Build the state *)
-			let new_state : State.state = { global_location = location ; px_constraint = final_constraint } in
 
 			(* If IM or BC: Add the inequality to the result (except if case variants) *)
 	(*		begin
@@ -278,7 +275,7 @@ class algoIMK =
 				self#update_statespace_nature new_state;
 				
 				(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
-				new_states_indexes := new_state_index :: !new_states_indexes;
+				new_states_indexes <- new_state_index :: new_states_indexes;
 				
 			(* If the state was present: *)
 			| StateSpace.State_already_present new_state_index ->
