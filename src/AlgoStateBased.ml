@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/06/11
+ * Last modified     : 2019/06/13
  *
  ************************************************************)
 
@@ -1054,16 +1054,16 @@ let compute_new_location_guards_updates source_location combined_transition =
 
 
 (*------------------------------------------------------------*)
-(* Compute the new constraint for a transition      *)
-(* source_constraint : contraint in source location   *)
+(* Compute the new constraint for a transition                *)
+(* source_constraint : contraint in source location           *)
 (* discrete_constr_src : contraint D_i = d_i in source location (discrete variables) *)
-(* orig_location   : source location                *)
-(* target_location : target location                *)
-(* guards          : guard constraints per automaton*)
-(* clock_updates   : updated clock variables        *)
+(* orig_location   : source location                          *)
+(* target_location : target location                          *)
+(* guards          : guard constraints per automaton          *)
+(* clock_updates   : updated clock variables                  *)
 (*------------------------------------------------------------*)
 (*** TODO: remove the model from the arguments, and retrieve it ***)
-let compute_new_constraint source_constraint (discrete_constr_src : LinearConstraint.pxd_linear_constraint) orig_location target_location guards clock_updates =
+let compute_new_constraint (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr_src : LinearConstraint.pxd_linear_constraint) (orig_location : Location.global_location) (target_location : Location.global_location) guards clock_updates =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
@@ -1073,13 +1073,13 @@ let compute_new_constraint source_constraint (discrete_constr_src : LinearConstr
 		print_message Verbose_total ("\n***********************************");
 		print_message Verbose_total ("Entering compute_new_constraint");
 		print_message Verbose_total ("***********************************");
-		print_message Verbose_total ("C = " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names (source_constraint ())));
+		print_message Verbose_total ("C = " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names source_constraint ));
 	);
 	(* The constraint is checked on the fly for satisfiability -> exception mechanism *)
 	try (
 		(* Retrieve the original constraint *)
 		(*** WARNING / VERY IMPORTANT: copy!!! (in fact convert, which is also a copy) ***)
-		let source_constraint_with_maybe_time_elapsing = LinearConstraint.pxd_of_px_constraint  (source_constraint ()) in
+		let source_constraint_with_maybe_time_elapsing = LinearConstraint.pxd_of_px_constraint source_constraint in
 
 		(* Alternative IMITATOR semantics for time-elapsing: apply time-elapsing NOW, and intersect with invariant *)
 		if options#no_time_elapsing then(
@@ -1307,7 +1307,7 @@ let is_constraint_and_continuous_guard_satisfiable pxd_linear_constraint = funct
 		LinearConstraint.pxd_is_satisfiable (LinearConstraint.pxd_intersection [pxd_linear_constraint; discrete_continuous_guard.continuous_guard])
 
 
-(*-------------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* Computes all possible transition combinations for the *)
 (* involved automata.                                    *)
 (* constr               : current state constraint       *)
@@ -1316,10 +1316,10 @@ let is_constraint_and_continuous_guard_satisfiable pxd_linear_constraint = funct
 (* aut_table            : array of automata              *)
 (* max_indexes          : array of maximal trans. indices*)
 (* possible_transitions : array of transition indices    *)
-(*-------------------------------------------------------*)
+(*------------------------------------------------------------*)
 (* returns a bool, indicating iff at least one legal     *)
 (* combination exists.                                   *)
-(*-------------------------------------------------------*)
+(*------------------------------------------------------------*)
 let compute_transitions location constr action_index automata involved_automata_indices max_indexes possible_transitions  =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
@@ -1387,6 +1387,68 @@ let compute_transitions location constr action_index automata involved_automata_
 	) with Unsat_exception -> false
 
 
+
+(*------------------------------------------------------------*)
+(* Computes the (unique) successor via a combined transition. *)
+(* source_location      : the source location                 *)
+(* source_constraint    : the source px-constraint            *)
+(* discrete_constr      : the source state D_i=d_i            *)
+(* combined_transition  : the combined transition             *)
+(*------------------------------------------------------------*)
+(* returns Some state if satisfiable, None otherwise          *)
+(*------------------------------------------------------------*)
+
+let post_from_one_state_via_one_transition (source_location : Location.global_location) (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr : LinearConstraint.pxd_linear_constraint) (combined_transition : StateSpace.combined_transition) : State.state option =
+
+	(* Compute the new location for the current combination of transitions *)
+	let target_location, (discrete_guards : LinearConstraint.d_linear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates source_location combined_transition in
+
+	(* Statistics *)
+	tcounter_compute_location_guards_discrete#stop;
+
+	(* Check if the discrete guards are satisfied *)
+	if not (List.for_all (evaluate_d_linear_constraint_in_location source_location) discrete_guards) then(
+		(* Statistics *)
+		counter_nb_unsatisfiable_discrete#increment;
+		(* Print some information *)
+		print_message Verbose_high ("\nThis combination of discrete guards is not satisfiable.");
+
+		(* Return *)
+		None
+		
+	(* Else: the discrete part is satisfied *)
+	)else(
+		(* Compute the new constraint for the current transition *)
+		let new_constraint = compute_new_constraint source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
+
+		(* Check the satisfiability *)
+		match new_constraint with
+			| None ->
+				(* Statistics *)
+				counter_nb_unsatisfiable#increment;
+
+				(* Print some information *)
+				print_message Verbose_high ("\nThis constraint is not satisfiable ('None').");
+				
+				(* Return *)
+				None
+
+			| Some (final_constraint : LinearConstraint.px_linear_constraint) -> (
+				if not (LinearConstraint.px_is_satisfiable final_constraint) then(
+					(* Statistics *)
+					counter_nb_unsatisfiable#increment;
+
+					(* Print some information *)
+					print_message Verbose_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
+					
+					(* Return *)
+					None
+				) else (
+					(* Return the constraint *)
+					Some { global_location = target_location ; px_constraint = final_constraint }
+				); (* end if satisfiable *)
+			) (* end if Some constraint *)
+	) (* end discrete part of the guard is satisfied *)
 
 
 (************************************************************)
@@ -1605,6 +1667,9 @@ class virtual algoStateBased =
 	(*** TODO: simplify signature by removing the source_state_index and returning the list of actually added states ***)
 	method virtual add_a_new_state : state_index -> state_index list ref -> StateSpace.combined_transition -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
 
+	
+	
+	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
@@ -1621,10 +1686,7 @@ class virtual algoStateBased =
 		let source_location = (StateSpace.get_state state_space source_state_index).global_location in
 		(* Dynamic version of the original px_constraint (can change!) *)
 		(*** NOTE / TO OPTIMIZE: OK but not in all algorithms !! ***)
-		let source_constraint () =
-			let source_constraint = (StateSpace.get_state state_space source_state_index).px_constraint in
-			source_constraint
-		in
+		let recompute_source_constraint () = (StateSpace.get_state state_space source_state_index).px_constraint in
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
@@ -1653,16 +1715,11 @@ class virtual algoStateBased =
 		(* Build the list of new states indexes *)
 		let new_states_indexes = ref [] in
 
-		(* Build the list of new states (for variant of merging only) *)
-		(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
-(* 		let new_action_and_state_list = ref [] in *)
-
 		(* Flag to check whether the state of which the successors are computed is a deadlock or not *)
 		let has_successors = ref false in
 
-
 		(* Create a constraint D_i = d_i for the discrete variables *)
-		let discrete_constr = discrete_constraint_of_global_location source_location in
+		let discrete_constr : LinearConstraint.pxd_linear_constraint = discrete_constraint_of_global_location source_location in
 
 		(* FOR ALL ACTION DO: *)
 		List.iter (fun action_index ->
@@ -1685,7 +1742,7 @@ class virtual algoStateBased =
 
 			(* Compute conjunction with current constraint *)
 			(*** To optimize: it seems intersection_assign could be used instead ***)
-			let orig_plus_discrete = LinearConstraint.pxd_intersection [LinearConstraint.pxd_of_px_constraint (source_constraint ()); discrete_constr] in
+			let orig_plus_discrete = LinearConstraint.pxd_intersection [LinearConstraint.pxd_of_px_constraint (recompute_source_constraint ()); discrete_constr] in
 
 			(* In alternative semantics, apply time elapsing NOW, so as to factor this operation once for all *)
 			(*** WARNING: time elapsing is AGAIN performed in compute_new_constraint, which is a loss of efficiency ***)
@@ -1779,81 +1836,30 @@ class virtual algoStateBased =
 					transition_index
 				) involved_automata_indices) in
 
+				
+				
+				begin
+				(* Compute the successor constraint from the current state via this combined_transition *)
+				match post_from_one_state_via_one_transition source_location (recompute_source_constraint ()) discrete_constr combined_transition with
+				(* No result: constraint unsatisfiable: do nothing *)
+				| None -> ()
+				
+				(* Some state with its (satisfiable) constraint: *)
+				| Some new_state ->
+					(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding …) *)
+					StateSpace.increment_nb_gen_states state_space;
 
-				(* Compute the new location for the current combination of transitions *)
-				let target_location, (discrete_guards : LinearConstraint.d_linear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates source_location combined_transition in
-
-				(* Statistics *)
-				tcounter_compute_location_guards_discrete#stop;
-
-				(* Check if the discrete guards are satisfied *)
-				if not (List.for_all (evaluate_d_linear_constraint_in_location source_location) discrete_guards) then(
-					(* Statistics *)
-					counter_nb_unsatisfiable_discrete#increment;
 					(* Print some information *)
-					print_message Verbose_high ("\nThis combination of discrete guards is not satisfiable.");
+					if verbose_mode_greater Verbose_total then(
+						self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
+					);
 
-				(* Else: the discrete part is satisfied *)
-				)else(
-					(* Compute the new constraint for the current transition *)
-					let new_constraint = compute_new_constraint source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
+					(* Try to add the state to the state space *)
+					let added = self#add_a_new_state source_state_index new_states_indexes combined_transition new_state.global_location new_state.px_constraint in
 
-					begin
-					(* Check the satisfiability *)
-					match new_constraint with
-						| None ->
-							(* Statistics *)
-							counter_nb_unsatisfiable#increment;
-
-							(* Print some information *)
-							print_message Verbose_high ("\nThis constraint is not satisfiable ('None').");
-
-						| Some (final_constraint : LinearConstraint.px_linear_constraint) -> (
-							if not (LinearConstraint.px_is_satisfiable final_constraint) then(
-								(* Statistics *)
-								counter_nb_unsatisfiable#increment;
-
-								(* Print some information *)
-								print_message Verbose_high ("\nThis constraint is not satisfiable ('Some unsatisfiable').");
-							) else (
-
-							(* Increment a counter: this state IS generated (although maybe it will be discarded because equal / merged / algorithmic discarding …) *)
-							StateSpace.increment_nb_gen_states state_space;
-
-		(*** DISABLED merge_before ***)
-(*							(************************************************************)
-							(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
-							(************************************************************)
-							(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
-							(*** NOTE: why not in mode state space??? ***)
-							if options#imitator_mode <> State_space_exploration && options#merge_before then(
-
-								(* Only add to the local list of new states *)
-								new_action_and_state_list := ([action_index], location, final_constraint) :: !new_action_and_state_list;
-
-							(* EXPERIMENTAL BRANCHING: END CASE MERGE AFTER *)
-							)else( *)
-
-							(* EXPERIMENTAL BRANCHING: CASE MERGE BEFORE (classical version) *)
-							(* Print some information *)
-							if verbose_mode_greater Verbose_total then(
-								(* Build the state *)
-								let new_state = {global_location = target_location; px_constraint = final_constraint} in
-								self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
-							);
-
-							let added = self#add_a_new_state source_state_index new_states_indexes combined_transition target_location final_constraint in
-
-							(* Update *)
-							has_successors := !has_successors || added;
-
-(* 							); (* EXPERIMENTAL BRANCHING: END CASE MERGE BEFORE (classical version) *) *)
-
-						); (* end if satisfiable *)
-					); (* end if Some constraint *)
-					end; (* end match constraint *)
-
-				); (* end discrete part of the guard is satisfied *)
+					(* Update *)
+					has_successors := !has_successors || added;
+				end;
 
 				(* Update the next combination *)
 				more_combinations := next_combination current_indexes max_indexes;
@@ -1861,39 +1867,6 @@ class virtual algoStateBased =
 			done; (* while more new states *)
 			(* ------------------------------------------------------------ *)
 		) list_of_possible_actions;
-
-		(************************************************************)
-		(* EXPERIMENTAL BRANCHING: MERGE BEFORE OR AFTER? *)
-		(************************************************************)
-		(* EXPERIMENTAL BRANCHING: CASE MERGE AFTER (this new version may be better?) *)
-		(*** NOTE: why not in mode state space ??? ***)
-		(*** NOTE/WARNING: this is the ONLY place where the StatesMerging module is called :/ Otherwise, the function used is the one in StateSpace ***)
-		(*** DISABLED merge_before ***)
-(*		if options#imitator_mode <> State_space_exploration && options#merge_before then(
-
-			(* Merge *)
-			StatesMerging.merge new_action_and_state_list;
-
-			(* Add the remaining states *)
-			List.iter (fun (action_index_list, location, final_constraint) ->
-				(* Iterate on all actions *)
-				(*** WARNING: not very beautiful !! ***)
-				List.iter (fun action_index ->
-					(* Print some information *)
-					if verbose_mode_greater Verbose_total then(
-						(* Build the state *)
-						let new_state = location, final_constraint in
-						self#print_algo_message Verbose_total ("Consider the state \n" ^ (ModelPrinter.string_of_state model new_state));
-					);
-
-					let added = self#add_a_new_state source_state_index new_states_indexes action_index location final_constraint in
-					(* Update flag for deadlock checking *)
-					has_successors := !has_successors || added;
-				) action_index_list;
-			) !new_action_and_state_list
-
-		); (* EXPERIMENTAL BRANCHING: END CASE MERGE AFTER *)*)
-
 
 		(* Algorithm-specific handling of deadlock states, i.e., states without successors *)
 		if not !has_successors then (
