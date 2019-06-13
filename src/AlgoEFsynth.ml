@@ -442,6 +442,141 @@ class virtual algoEFsynth =
 				print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation);
 			);
 			
+			(* We reconstruct a concrete path, for which we need absolute time *)
+			
+			
+			(*** BEGIN CODE THAT WON'T WORK DUE TO THE DIMENSION HANDLING IN LINEAR.CONSTRAINT ***)
+			(*
+			(* 1. we backup the model *)
+			let original_model = model in
+			
+			(* 2. We rebuild a model with one more clock *)
+			(*** HACK (quite!) ***)
+			let extra_clock = model.nb_variables in
+			
+			
+			let px_clocks_non_negative = LinearConstraint.px_constraint_of_nonnegative_variables (original_model.clocks @ [extra_clock]) in
+			
+			(* Add >= 0 to the initial constraint *)
+			let initial_constraint = LinearConstraint.px_intersection [original_model.initial_constraint ; TODO ] in
+			
+			let px_clocks_non_negative_and_initial_p_constraint = LinearConstraint.px_intersection [px_clocks_non_negative; (LinearConstraint.px_of_p_constraint original_model.initial_p_constraint)
+			
+			
+			let model_with_one_extra_clock =
+			{
+				(* Cardinality *)
+				nb_automata    = original_model.nb_automata;
+				nb_actions     = original_model.nb_actions;
+				nb_clocks      = original_model.nb_clocks + 1;
+				nb_discrete    = original_model.nb_discrete;
+				nb_parameters  = original_model.nb_parameters;
+				nb_variables   = original_model.nb_variables + 1;
+				nb_locations   = original_model.nb_locations;
+				nb_transitions = original_model.nb_transitions;
+
+				(* Is there any stopwatch in the model? *)
+				has_stopwatches = original_model.has_stopwatches;
+				(* Is the model an L/U-PTA? *)
+				lu_status = original_model.lu_status;
+
+
+				(* The observer *)
+				observer_pta = original_model.observer_automaton;
+				is_observer = original_model.is_observer;
+
+				(* The list of clock indexes *)
+				clocks = list_append original_model.clocks [extra_clock];
+				(* True for clocks, false otherwise *)
+				is_clock = fun variable_index -> if variable_index = extra_clock then true else original_model.is_clock variable_index;
+				(* Index of the special clock to be reset at each transition to measure time elapsing (only used in NZ checking) *)
+				special_reset_clock = original_model.special_reset_clock;
+				(* Index of a special clock meant to measure the global time (how this clock is actually used is up to the model designer *)
+				global_time_clock = original_model.global_time_clock;
+				(* The list of clock indexes except the reset clock (used, e.g., to print the model *)
+				clocks_without_special_reset_clock = list_append original_model.clocks_without_special_reset_clock [extra_clock];
+				(* The list of discrete indexes *)
+				discrete = original_model.discrete;
+				(* True for discrete, false otherwise *)
+				is_discrete = original_model.is_discrete;
+				(* The list of parameter indexes *)
+				parameters = original_model.parameters;
+				(* The non parameters (clocks and discrete) *)
+				clocks_and_discrete = list_append (list_append clocks discrete) [extra_clock];
+				(* The non clocks (parameters and discrete) *)
+				parameters_and_discrete = list_append parameters discrete;
+				(* The non discrete (clocks and parameters) *)
+				parameters_and_clocks = list_append (list_append parameters clocks) [extra_clock];
+				(* The function : variable_index -> variable name *)
+				variable_names = fun variable_index -> if variable_index = extra_clock then "x_absolute" else original_model.variable_names variable_index;
+				(* The type of variables *)
+				type_of_variables = fun variable_index -> if variable_index = extra_clock then Var_type_clock else original_model.type_of_variables variable_index;
+
+				(* The automata *)
+				automata = original_model.automata;
+				(* The automata names *)
+				automata_names = original_model.automata_names;
+
+				(* The locations for each automaton *)
+				locations_per_automaton = original_model.locations_per_automaton;
+				(* The location names for each automaton *)
+				location_names = original_model.location_names;
+				(* The location names for each automaton *)
+				(*** HACK ***)
+				is_urgent = original_model.is_urgent;
+
+				(* All action indexes *)
+				actions = original_model.actions;
+				(* Action names *)
+				action_names = original_model.action_names;
+				(* The type of actions *)
+				action_types = original_model.action_types;
+				(* The list of actions for each automaton *)
+				actions_per_automaton = original_model.actions_per_automaton;
+				(* The list of automatons for each action *)
+				automata_per_action = original_model.automata_per_action;
+				(* The list of actions for each automaton for each location *)
+				actions_per_location = original_model.actions_per_location;
+
+				(* The cost for each automaton and each location *)
+				costs = original_model.costs;
+
+				(* The invariant for each automaton and each location *)
+				invariants = original_model.invariants;
+				(* The transitions for each automaton and each location and each action *)
+				transitions = original_model.transitions;
+				(* The list of clocks stopped for each automaton and each location *)
+				stopwatches = original_model.stopwatches;
+				(* An array transition_index -> transition *)
+				transitions_description = original_model.transitions_description;
+				(* An array transition_index -> automaton_index *)
+				automaton_of_transition = original_model.automaton_of_transition;
+
+				(* All clocks non-negative *)
+				px_clocks_non_negative = px_clocks_non_negative;
+				(* Initial location of the model *)
+				initial_location = original_model.initial_location;
+				(* Initial constraint of the model *)
+				initial_constraint = initial_constraint;
+				(* Initial constraint of the model projected onto P *)
+				initial_p_constraint = original_model.initial_p_constraint;
+				(* Initial constraint of the model projected onto P and all clocks non-negative *)
+				px_clocks_non_negative_and_initial_p_constraint = px_clocks_non_negative_and_initial_p_constraint;
+
+
+				(* Property defined by the user *)
+				user_property = original_model.property;
+				(* Property defined by the model *)
+				correctness_condition = original_model.correctness_condition;
+				(* List of parameters to project the result onto *)
+				projection = original_model.projection;
+				(* Parameter to be minimized or maximized *)
+				optimized_parameter = original_model.optimization;
+			}
+			in
+			
+			*)
+			(*** END CODE THAT WON'T WORK DUE TO THE DIMENSION HANDLING IN LINEAR.CONSTRAINT ***)
 			
 			(* Now construct valuations for the whole path *)
 			print_message Verbose_low "Building concrete path:";
