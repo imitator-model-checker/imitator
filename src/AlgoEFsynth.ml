@@ -372,15 +372,15 @@ class virtual algoEFsynth =
 			(* Also retrieve the initial state *)
 			let initial_state_index = StateSpace.get_initial_state_index state_space in
 			
-			(* Get the path *)
-			let path = StateSpace.backward_path state_space new_state_index initial_state_index (Some predecessors) in
+			(* Get the path, i.e., a list of a pair of a symbolic state followed by a combined transition (the last state does not belong to the path) *)
+			let path : (State.state_index * StateSpace.combined_transition) list = StateSpace.backward_path state_space new_state_index initial_state_index (Some predecessors) in
 			
 			(* Print some information *)
 			print_message Verbose_medium "Path built";
 
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then (
-				print_message Verbose_low "Counter-example found:";
+				print_message Verbose_low "\nCounter-example found:";
 				
 				(* Function to pretty-print combined transitions *)
 				let debug_string_of_combined_transition combined_transition = string_of_list_of_string_with_sep ", " (
@@ -442,7 +442,7 @@ class virtual algoEFsynth =
 				print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation);
 			);
 			
-			(* We reconstruct a concrete path, for which we need absolute time *)
+			(* We reconstruct a concrete run, for which we need absolute time *)
 			
 			
 			(*** BEGIN CODE THAT WON'T WORK DUE TO THE DIMENSION HANDLING IN LINEAR.CONSTRAINT ***)
@@ -582,6 +582,15 @@ class virtual algoEFsynth =
 			
 			print_message Verbose_low "\nBuilding concrete path:";
 			
+			(*** TODO: change this system one day, as it costs us one more clock in the ENTIRE analysis, although it would only be used in the path regeneration ***)
+			
+			(* Get the absolute time clock *)
+			let absolute_time_clock = match model.global_time_clock with
+				| Some clock_index -> clock_index
+				| None -> raise (InternalError ("No absolute time clock is defined in the model, which is (so far) necessary to reconstruct the counterexample."))
+			in 
+
+			
 			(* Iterate starting from s_n and going backward *)
 			let _, _, (valuations : (NumConst.t * (Automaton.variable_index -> NumConst.t)) list ) = List.fold_left (fun (state_index_n_plus_1, (valuation_n_plus_1 : (Automaton.clock_index -> NumConst.t)), current_list) (state_index, combined_transition) ->
 				(* Get state n *)
@@ -645,12 +654,7 @@ class virtual algoEFsynth =
 					| clock_index :: _ -> NumConst.sub (valuation_n_plus_1 clock_index) (valuation_n clock_index)
 				in*)
 				
-				(*** TODO: change this system one day, as it costs us one more clock in the ENTIRE analysis, although it would only be used in the path regeneration ***)
-				(* Get the absolute time clock *)
-				let absolute_time_clock = match model.global_time_clock with
-					| Some clock_index -> clock_index
-					| None -> raise (InternalError ("No absolute time clock is defined in the model, which is (so far) necessary to reconstruct the counterexample."))
-				in 
+				(* Compute the time elapsing *)
 				let time_elapsed_n = NumConst.sub (valuation_n_plus_1 absolute_time_clock) (valuation_n absolute_time_clock) in
 				
 				(*** DEBUG: test that it is indeed a good valuation, belonging to n! ***)
@@ -663,7 +667,17 @@ class virtual algoEFsynth =
 
 			
 			(*** TODO: initial valuation + initial time elapsing ***)
+			(* Get 2nd time elapsing and 2nd valuation *)
+			let time_elapsed_2, concrete_px_valuation_2 = match valuations, path with 
+				| time_elapsed :: _, concrete_px_valuation :: _ -> time_elapsed , concrete_px_valuation
+				| _ -> raise (InternalError ("Empty lists spotted while reconstructing concrete run"))
+			in
 			
+			
+			(* Compute 1st valuation, i.e., a predecessor of concrete_px_valuation_2 intersected with absolute_time_clock = 0 *)
+			
+			
+			(*** NOTE: alternatively, we could just take the initial state and intersect with absolute_time_clock = 0 ***)
 			
 			(* Print the list*)
 			
