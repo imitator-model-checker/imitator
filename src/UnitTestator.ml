@@ -2,7 +2,7 @@
  *
  *                       UnitTestator
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Module NOT linked to IMITATOR, but used to perform various unit tests
  * 

@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: master-worker with random pi0 and n retries before switching to sequential mode. [ACE14]
  * Master algorithm

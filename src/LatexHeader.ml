@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Universite Paris 13, Sorbonne Paris Cite (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Author:        Etienne Andre
  * 

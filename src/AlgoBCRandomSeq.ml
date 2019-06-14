@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Random Behavioral Cartography with a maximum number of consecutive failed attempts to find a non-integer point not covered by any tile, then followed by a sequential check point by point. Described in the distributed setting in [ACE14,ACN15]
  * Note: the algorithm does NOT track points already computed randomly but not kept because covered by some tile.

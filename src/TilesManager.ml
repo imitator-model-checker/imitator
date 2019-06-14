@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Abstract tiles manager class to manage the tiles received in the cartography algorithms.
  * 

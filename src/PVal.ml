@@ -6,7 +6,7 @@
  * Description:   Class for parameter valuation
  * 
  * Author:        Etienne Andre
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Created:       2014/10/01
  * Last modified: 2016/01/27
