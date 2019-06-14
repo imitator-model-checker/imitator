@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/05/04
- * Last modified     : 2019/06/11
+ * Last modified     : 2019/06/14
  *
  ************************************************************)
 
@@ -23,6 +23,12 @@
 (** Reachable states *)
 (************************************************************)
 type state_index = int
+
+(** Concrete state: location and px-valuation *)
+type concrete_state = {
+	global_location: Location.global_location;
+	px_valuation   : (Automaton.variable_index -> NumConst.t);
+}
 
 (** State: location and constraint *)
 type state = {
