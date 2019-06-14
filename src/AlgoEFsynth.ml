@@ -578,11 +578,12 @@ class virtual algoEFsynth =
 			*)
 			(*** END CODE THAT WON'T WORK DUE TO THE DIMENSION HANDLING IN LINEAR.CONSTRAINT ***)
 			
-			(* Now construct valuations for the whole path *)
+			(* Now construct valuations for the whole path, i.e. pair (time elapsed, valuation) *)
+			
 			print_message Verbose_low "\nBuilding concrete path:";
 			
 			(* Iterate starting from s_n and going backward *)
-			let _, _, valuations = List.fold_left (fun (state_index_n_plus_1, (valuation_n_plus_1 : (Automaton.clock_index -> NumConst.t)), current_list) (state_index, combined_transition) ->
+			let _, _, (valuations : (NumConst.t * (Automaton.variable_index -> NumConst.t)) list ) = List.fold_left (fun (state_index_n_plus_1, (valuation_n_plus_1 : (Automaton.clock_index -> NumConst.t)), current_list) (state_index, combined_transition) ->
 				(* Get state n *)
 				let state = StateSpace.get_state state_space state_index in
 				(* Get state n+1 *)
