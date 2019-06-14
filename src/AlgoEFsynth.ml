@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2019/06/13
+ * Last modified     : 2019/06/14
  *
  ************************************************************)
 
@@ -579,7 +579,7 @@ class virtual algoEFsynth =
 			(*** END CODE THAT WON'T WORK DUE TO THE DIMENSION HANDLING IN LINEAR.CONSTRAINT ***)
 			
 			(* Now construct valuations for the whole path *)
-			print_message Verbose_low "Building concrete path:";
+			print_message Verbose_low "\nBuilding concrete path:";
 			
 			(* Iterate starting from s_n and going backward *)
 			let _, _, valuations = List.fold_left (fun (state_index_n_plus_1, (valuation_n_plus_1 : (Automaton.clock_index -> NumConst.t)), current_list) (state_index, combined_transition) ->
@@ -595,7 +595,7 @@ class virtual algoEFsynth =
 				(* Get all updates from the combined transition *)
 				let clock_updates, _ = AlgoStateBased.get_updates_in_combined_transition location_n combined_transition in
 				
-				(* Find the clock resets *)
+				(* Compute the set of clocks impacted by the updates *)
 				let resets = match clock_updates with
 				| No_update -> []
 				| Resets cl -> cl
@@ -630,18 +630,27 @@ class virtual algoEFsynth =
 				
 				(* Now compute the time spent between the previous and the new valuation *)
 				
-				(* Find a clock not hit by the reset *)
+				
+(*				(* Find a clock not hit by the reset *)
 				
 				(*** WARNING with stopwatches! ***)
 				(*** TODO ***)
-					
+
 				let clocks_not_reset = list_diff model.clocks resets in
 				let time_elapsed_n = match clocks_not_reset with
 					(* If all clocks are reset, what to do?? let's pick 0 for now *)
 					| [] -> NumConst.zero (*** WARNING / TODO ***)
 					(* If at least one clock, perform difference *)
 					| clock_index :: _ -> NumConst.sub (valuation_n_plus_1 clock_index) (valuation_n clock_index)
-				in
+				in*)
+				
+				(*** TODO: change this system one day, as it costs us one more clock in the ENTIRE analysis, although it would only be used in the path regeneration ***)
+				(* Get the absolute time clock *)
+				let absolute_time_clock = match model.global_time_clock with
+					| Some clock_index -> clock_index
+					| None -> raise (InternalError ("No absolute time clock is defined in the model, which is (so far) necessary to reconstruct the counterexample."))
+				in 
+				let time_elapsed_n = NumConst.sub (valuation_n_plus_1 absolute_time_clock) (valuation_n absolute_time_clock) in
 				
 				(*** DEBUG: test that it is indeed a good valuation, belonging to n! ***)
 				(*** TODO ***)
@@ -650,13 +659,20 @@ class virtual algoEFsynth =
 				(state_index, valuation_n, (time_elapsed_n , valuation_n) :: current_list)
 			
 			) (new_state_index, concrete_px_valuation, []) (List.rev path) in
+
+			
+			(*** TODO: initial valuation + initial time elapsing ***)
 			
 			
 			(* Print the list*)
 			
+			(* Dummy counter for printing *)
+			let i = ref 0 in
 			List.iter (fun (time_elapsed, valuation) -> 
-				print_message Verbose_low ("Next valuation after " ^ (NumConst.string_of_numconst time_elapsed) ^ ":");
+				incr i;
+				print_message Verbose_low ("Valuation " ^ (string_of_int !i) ^ ":");
 				print_message Verbose_low (ModelPrinter.string_of_px_valuation model valuation);
+				print_message Verbose_low ("Time elapsing: " ^ (NumConst.string_of_numconst time_elapsed) ^ "");
 			) valuations;
 
 			

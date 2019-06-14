@@ -12,7 +12,7 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2019/06/10
- * Last modified   : 2019/06/10
+ * Last modified   : 2019/06/14
  *
  * IMITATOR version: 2.11
  ************************************************************)
@@ -21,6 +21,7 @@ var
 
 (* Clocks *)
  	x,
+ 	global_time, (*** NOTE: special keyword ***)
 		: clock;
 
 
@@ -30,7 +31,7 @@ var
 (************************************************************)
 synclabs: a;
 
-loc l1: invariant x <= 3
+loc l1: invariant x <= 3 & global_time >= 0
 	when x = 3 sync a do {x := 0} goto l2;
 
 loc l2: invariant x <= 1
@@ -62,6 +63,7 @@ init :=
 	(* Initial clock constraints *)
 	(*------------------------------------------------------------*)
 	& x = 0
+	& global_time = 0
 ;
 
 
