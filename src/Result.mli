@@ -124,7 +124,19 @@ type bc_coverage =
 (** Concrete run *)
 (************************************************************)
 
+type concrete_step = {
+	(* First let time elapse *)
+	time			: NumConst.t;
+	(* Then take a discrete transition *)
+	transition		: StateSpace.combined_transition;
+	(* Then reach the target state *)
+	target			: State.concrete_state;
+}
 
+type concrete_run = {
+	intial_state	: State.concrete_state;
+	steps			: concrete_step list;
+}
 
 
 
