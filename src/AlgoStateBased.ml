@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/06/13
+ * Last modified     : 2019/06/18
  *
  ************************************************************)
 
@@ -437,7 +437,7 @@ let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) (clo
 
 
 
-			(* Compute the couples (X_i , = linear_term) from the hashtable *)
+			(* Compute the pairs (X_i , = linear_term) from the hashtable *)
 			let updates = Hashtbl.fold (fun clock_id linear_term current_updates -> (clock_id, linear_term) :: current_updates) clocks_hash [] in
 			(** TO OPTIMIZE (?): could be performed statically (when converting the model).
 				PRO: save time because no need to compute this for each constraint;
@@ -516,8 +516,8 @@ let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) (clo
 
 			(* Renames clock X_i' into X_i *)
 			(** TO OPTIMIZE !! *)
-			(* Compute couples (X_i', X_i) *)
-			let clocks_and_primes = Hashtbl.fold (fun clock_id clock_prime_id couples -> (clock_id, clock_prime_id) :: couples) prime_of_variable [] in
+			(* Compute pairs (X_i', X_i) *)
+			let clocks_and_primes = Hashtbl.fold (fun clock_id clock_prime_id pairs -> (clock_id, clock_prime_id) :: pairs) prime_of_variable [] in
 			print_message Verbose_total ("\n -- Renaming clocks X_i' into X_i for updated clocks");
 			LinearConstraint.pxd_rename_variables_assign clocks_and_primes linear_constraint;
 			(* Print some information *)
@@ -1026,13 +1026,13 @@ let compute_new_location_guards_updates source_location combined_transition =
 	let guards, clock_updates = List.split guards_and_updates in
 	
 	(* Compute pairs to update the discrete variables *)
-	let updated_discrete_couples = ref [] in
+	let updated_discrete_pairs = ref [] in
 	Hashtbl.iter (fun discrete_index discrete_value ->
-		updated_discrete_couples := (discrete_index, discrete_value) :: !updated_discrete_couples;
+		updated_discrete_pairs := (discrete_index, discrete_value) :: !updated_discrete_pairs;
 	) updated_discrete;
 
 	(* Update the global location *)
-	Location.update_location_with [] !updated_discrete_couples location;
+	Location.update_location_with [] !updated_discrete_pairs location;
 
 	(* Split guards between discrete and continuous *)
 	let discrete_guards, continuous_guards = List.fold_left (fun (current_discrete_guards, current_continuous_guards) guard ->

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/06/05
+ * Last modified     : 2019/06/18
  *
  ************************************************************)
 
@@ -2146,12 +2146,12 @@ let pxd_remove_dimensions = remove_dimensions
 (*------------------------------------------------------------*)
 
 (** rename variables in a constraint, with side effects *)
-let pxd_rename_variables_assign list_of_couples linear_constraint =
+let pxd_rename_variables_assign list_of_pairs linear_constraint =
 	(* add reverse mapping *)
-	let reverse_couples = List.map (fun (a,b) -> (b,a)) list_of_couples in
-	let joined_couples = List.rev_append list_of_couples reverse_couples in
+	let reverse_pairs = List.map (fun (a,b) -> (b,a)) list_of_pairs in
+	let joined_pairs = List.rev_append list_of_pairs reverse_pairs in
 	(* find all dimensions that will be mapped *)
-	let from, _  = List.split joined_couples in
+	let from, _  = List.split joined_pairs in
 	(* add identity pairs (x,x) for remaining dimensions *) 
 	let rec add_id list i = 
 		if i < 0 then list else
@@ -2161,7 +2161,7 @@ let pxd_rename_variables_assign list_of_couples linear_constraint =
 				add_id list (i-1)
 		in 
 	
-	let complete_list = add_id joined_couples (!pxd_dim - 1) in
+	let complete_list = add_id joined_pairs (!pxd_dim - 1) in
 	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then (
@@ -2179,10 +2179,10 @@ let pxd_rename_variables_assign list_of_couples linear_constraint =
 
 
 (*(** Rename variables in a constraint *)
-let rename_variables list_of_couples linear_constraint =
+let rename_variables list_of_pairs linear_constraint =
 	(* copy polyhedron, as ppl function has sideeffects *)
 	let poly = copy linear_constraint in
-	rename_variables_assign list_of_couples poly;
+	rename_variables_assign list_of_pairs poly;
 	poly*)
 
 (* let pxd_rename_variables = rename_variables *)
