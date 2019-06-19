@@ -5,7 +5,7 @@
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
  * 
- * Module description: common definitions for linear terms and constraints (interface to PPL)
+ * Module description: Common definitions for linear terms and constraints (interface to PPL)
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
@@ -217,7 +217,7 @@ val p_constraint_of_point : (variable * coef) list -> p_linear_constraint
 val px_constraint_of_point : (variable * coef) list -> px_linear_constraint
 val pxd_constraint_of_point : (variable * coef) list -> pxd_linear_constraint
 
-(** Create a pxd_linear_constraint from a set of pairs (discrete variable, value) *)
+(** Create a pxd_linear_constraint from a set of pairs (variable index, value) *)
 val pxd_constraint_of_discrete_values : (variable * coef) list -> pxd_linear_constraint
 
 (** Create a false constraint *)

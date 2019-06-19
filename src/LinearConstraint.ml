@@ -5,11 +5,11 @@
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
  * 
- * Module description: ommon definitions for linear terms and constraints (interface to PPL)
+ * Module description: Common definitions for linear terms and constraints (interface to PPL)
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/06/18
+ * Last modified     : 2019/06/19
  *
  ************************************************************)
 
@@ -2473,7 +2473,7 @@ let zone_predecessor nb_dimensions z1 z2 z variables_elapse variables_constant v
 
 (* Instance for px-constraints *)
 let px_zone_predecessor z1 z2 z variables_elapse variables_constant variable_reset = zone_predecessor !px_dim z1 z2 z variables_elapse variables_constant variable_reset
-	
+
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
