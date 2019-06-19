@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/06/18
+ * Last modified     : 2019/06/19
  *
  ************************************************************)
 
@@ -322,13 +322,29 @@ let compute_valuated_invariant (location : Location.global_location) : LinearCon
 	LinearConstraint.pxd_hide_discrete_and_collapse current_constraint
 
 
+(*------------------------------------------------------------*)
+(* Get the list of clocks concerned by an AbstractModel.clock_updates *)
+(*------------------------------------------------------------*)
+let get_clocks_in_update (update : AbstractModel.clock_updates) : Automaton.clock_index list = match update with
+	(* No update at all *)
+	| No_update -> []
+	(* Reset to 0 only *)
+	| Resets clocks -> clocks
+	(* Reset to arbitrary value (including discrete, parameters and clocks) *)
+	| Updates updates ->
+		(* Keep only the clock members, and discard the linear terms *)
+		let clocks, _ = List.split updates in clocks
+
+let get_clocks_in_updates (updates : AbstractModel.clock_updates list) : Automaton.clock_index list =
+	list_only_once (List.fold_left (fun current_list clock_update -> List.rev_append current_list (get_clocks_in_update clock_update) ) [] updates)
+
 
 
 (*------------------------------------------------------------*)
-(* Compute the polyhedron p projected onto rho(X) *)
+(* Apply the updates to a linear constraint, i.e., compute the polyhedron p projected onto the function rho(X) *)
 (*------------------------------------------------------------*)
 (*** TO OPTIMIZE: use cache (?) *)
-let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) (clock_updates : AbstractModel.clock_updates list) =
+let update_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) (clock_updates : AbstractModel.clock_updates list) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -543,8 +559,9 @@ let rho_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) (clo
 
 (*------------------------------------------------------------*)
 (* Compute the list of stopped and elapsing clocks in a location *)
+(* Returns a pair (stopped clocks, elapsing clocks)           *)
 (*------------------------------------------------------------*)
-let compute_stopwatches location =
+let compute_stopwatches (location : Location.global_location) : (Automaton.clock_index list * Automaton.clock_index list) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -582,7 +599,7 @@ let compute_stopwatches location =
 
 
 (*------------------------------------------------------------*)
-(* Generic function to apply either time elapsing or time past to a costraint in a location *)
+(* Generic function to apply either time elapsing or time past to a constraint in a location *)
 (*------------------------------------------------------------*)
 type time_direction = Forward | Backward
 
@@ -673,6 +690,91 @@ let apply_time_elapsing location the_constraint = apply_time_shift Forward locat
 let apply_time_past location the_constraint = apply_time_shift Backward location the_constraint
 
 
+
+
+(*------------------------------------------------------------*)
+(** Compute the predecessors of a zone *)
+(*------------------------------------------------------------*)
+
+(** Given `Zn-1` and `Zn` such that `Zn` is the successor zone of `Zn-1` by guard `g-1` and updating variables in `Un-1` to some values, given `Zn+1` a set of concrete points (valuations) successor of zone `Zn` by elapsing of a set of variables `t` and non-elapsing of others `nont`, by guard `gn`, updates `Rn`, then `zonepredgr(Zn-1, gn-1, Un-1, Zn, t, nont, gn, Un, Zn+1)` computes the subset of points in `Zn` that are predecessors of `Zn` (by updates of `Un`, guard `gn`, elapsing of `t`, non-elapsing of `nont`), and that are direct successors (without time elapsing) of `Zn-1` via `gn-1` and `Un-1`. *)
+(*** NOTE: no check is made that Zn is a successor of Zn-1, nor that Zn+1 is a subset of Zn ***)
+(*** NOTE: no check is made that t and nont represent exactly the set of variables used in the polyhedra. ***)
+let constraint_zone_predecessor_g_u (zn_minus_1 : LinearConstraint.px_linear_constraint) gn_minus_1 updates_n_minus_1 (zn : LinearConstraint.px_linear_constraint) variables_elapse variables_constant gn updates_n (zn_plus_1 : LinearConstraint.px_linear_constraint) =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	
+	(* Copy the constraint and convert to PXD *)
+	let pxd_linear_constraint = LinearConstraint.pxd_of_px_constraint zn_plus_1 in
+	
+	(* Useful conversions *)
+	let pxd_zn = LinearConstraint.pxd_of_px_constraint zn in
+
+	
+	(* Step 1: compute the predecessors of zn_plus_1 in zn without time elapsing, i.e., the points zn' subset of zn such that zn' ^ g ^ updates = zn_plus_1 *)
+	(* Method: zn_plus_1 => assign the updates to updates_n => free variables in updates_n => intersect with g => intersect with zn *)
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Initial constraint Zn+1: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint ) ^ "");
+	);
+
+	(* Apply the updates to find the "initial" valuations of zn_plus_1 *)
+	update_assign pxd_linear_constraint updates_n;
+	
+	(* Hide the updated variables *)
+	LinearConstraint.pxd_hide_assign (get_clocks_in_updates updates_n) pxd_linear_constraint;
+	
+	(* Intersect with the incoming guard *)
+	LinearConstraint.pxd_intersection_assign pxd_linear_constraint [pxd_zn ; gn];
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Initial valuations of Zn+1: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
+	);
+
+	
+	(* Step 2: compute the time predecessors of zn' in zn *)
+	(* Method: zn' => backward elapsing => intersection with zn *)
+	
+	LinearConstraint.pxd_time_past_assign variables_elapse variables_constant pxd_linear_constraint;
+	
+	(* Intersect again with zn *)
+	LinearConstraint.pxd_intersection_assign pxd_linear_constraint [pxd_zn];
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Time predecessors of Zn+1 within Zn: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
+	);
+
+	
+	(* Step 3: compute the subset of zn' that comes from a direct update (without time elapsing) from zn-1 *)
+	(* Method: zn' => assign the updates to Un-1 => intersection with (zn-1 ^ gn-1 \ Un-1) => intersection again with zn *)
+	
+	(* Apply the updates to find the "initial" valuations of zn *)
+	update_assign pxd_linear_constraint updates_n_minus_1;
+	
+	(* Intersect with the points that pass the guard, and remove these variables *)
+	let zn_gn = LinearConstraint.pxd_intersection [LinearConstraint.pxd_of_px_constraint zn_minus_1 ; gn_minus_1] in
+	LinearConstraint.pxd_hide_assign (get_clocks_in_updates updates_n_minus_1) zn_gn;
+	LinearConstraint.pxd_intersection_assign pxd_linear_constraint [zn_gn];
+	
+(* 	nnconvex_intersection_assign zn' (nnconvex_hide (let variables, _ = List.split updates_n_minus_1 in variables) (nnconvex_intersection zn_minus_1 gn_minus_1)); *)
+
+	(* Intersect again with zn to make sure we are part of the zone *)
+	LinearConstraint.pxd_intersection_assign pxd_linear_constraint [pxd_zn];
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Initial valuations of Zn: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint ) ^ "");
+	);
+
+	
+	(* Return the result on px dimensions *)
+	LinearConstraint.pxd_hide_discrete_and_collapse pxd_linear_constraint
+	
+
+	
+	
 (*------------------------------------------------------------*)
 (** Compute the initial state with the initial invariants and time elapsing *)
 (*------------------------------------------------------------*)
@@ -893,7 +995,7 @@ let is_boolean_expression_satisfied location (boolean_expr : AbstractModel.boole
   in
   is_boolean_expression_satisfied_rec boolean_expr
 
-(** Merge two clock_updates - NOTE: conflict resolution done by rho_assign *)
+(** Merge two clock_updates - NOTE: conflict resolution done by update_assign *)
 let merge_clock_updates first_update second_update : clock_updates =
   match first_update, second_update with
   | No_update, _ -> second_update
@@ -955,7 +1057,7 @@ let get_updates_in_combined_transition (source_location : Location.global_locati
 (*------------------------------------------------------------------*)
 (* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of pxd_linear_constraint) and the updates *)
 (*------------------------------------------------------------------*)
-let compute_new_location_guards_updates source_location combined_transition =
+let compute_new_location_guards_updates (source_location: Location.global_location) (combined_transition : StateSpace.combined_transition) : (Location.global_location * LinearConstraint.d_linear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -1091,7 +1193,7 @@ let compute_new_constraint (source_constraint : LinearConstraint.px_linear_const
 				| Some clock_index ->
 				(* Reset it *)
 					print_message Verbose_medium "Resetting the special reset clock…";
-					rho_assign source_constraint_with_maybe_time_elapsing [Resets [clock_index]];
+					update_assign source_constraint_with_maybe_time_elapsing [Resets [clock_index]];
 			end;
 
 			print_message Verbose_total ("\nAlternative time elapsing: Applying time elapsing NOW");
@@ -1147,7 +1249,7 @@ let compute_new_constraint (source_constraint : LinearConstraint.px_linear_const
 		);
 
 		print_message Verbose_total ("\nProjecting C(X) and g(X) onto rho");
-		rho_assign current_constraint clock_updates;
+		update_assign current_constraint clock_updates;
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total ("\nResult:");

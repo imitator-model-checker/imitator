@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2019/06/13
+ * Last modified     : 2019/06/19
  *
  ************************************************************)
 
@@ -72,6 +72,13 @@ val compute_initial_state_or_abort : unit -> State.state
 val compute_valuated_invariant : Location.global_location -> LinearConstraint.px_linear_constraint
 
 
+(*------------------------------------------------------------*)
+(* Compute the list of stopped and elapsing clocks in a location *)
+(* Returns a pair (stopped clocks, elapsing clocks)           *)
+(*------------------------------------------------------------*)
+val compute_stopwatches : Location.global_location -> (Automaton.clock_index list * Automaton.clock_index list)
+
+
 (*------------------------------------------------------------------*)
 (* Get the list of updates from ONE transition                      *)
 (* Function by Jaime Arias (moved by Étienne André)                 *)
@@ -95,6 +102,16 @@ val get_updates : Location.global_location -> AbstractModel.updates -> AbstractM
 val get_updates_in_combined_transition : Location.global_location -> StateSpace.combined_transition -> AbstractModel.clock_updates * (AbstractModel.discrete_update list)
 
 
+(*------------------------------------------------------------------*)
+(* Compute a new location for a combined_transition                 *)
+(* combined_transition: the transition involved                     *)
+(* source_location    : the source location                         *)
+(*------------------------------------------------------------------*)
+(* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of pxd_linear_constraint) and the updates *)
+(*------------------------------------------------------------------*)
+val compute_new_location_guards_updates : Location.global_location -> StateSpace.combined_transition -> (Location.global_location * LinearConstraint.d_linear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list)
+
+
 (*------------------------------------------------------------*)
 (** Apply time elapsing in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
@@ -106,7 +123,25 @@ val get_updates_in_combined_transition : Location.global_location -> StateSpace.
 val apply_time_past : Location.global_location -> LinearConstraint.pxd_linear_constraint -> unit
 
 
+(*------------------------------------------------------------*)
+(** Given `Zn-1` and `Zn` such that `Zn` is the successor zone of `Zn-1` by guard `g-1` and updating variables in `Un-1` to some values (that we do not need to know as we know the zone), given `Zn+1` a set of concrete points (valuations) successor of zone `Zn` by elapsing of a set of variables `t` and non-elapsing of others `nont`, by guard `gn`, updates `Rn`, then `nnconvex_constraint_zone_predecessor_g_u(Zn-1, gn-1, Un-1, Zn, t, nont, gn, Un, Zn+1)` computes the subset of points in `Zn` that are predecessors of `Zn` (by updates of `Un`, guard `gn`, elapsing of `t`, non-elapsing of `nont`), and that are direct successors (without time elapsing) of `Zn-1` via `gn-1` and `Un-1`. *)
+(*------------------------------------------------------------*)
+(*** NOTE: no check is made that Zn is a successor of Zn-1, nor that Zn+1 is a subset of Zn ***)
+(*** NOTE: no check is made that t and nont represent exactly the set of variables used in the polyhedra. ***)
+(*------------------------------------------------------------*)
+val constraint_zone_predecessor_g_u :
+	(* Zn-1 *) LinearConstraint.px_linear_constraint ->
+	(* gn-1 *) LinearConstraint.pxd_linear_constraint ->
+	(* Un-1 *) AbstractModel.clock_updates list ->
+	(* Zn *)   LinearConstraint.px_linear_constraint ->
+	(* t *)    (Automaton.variable_index list) ->
+	(* nont *) (Automaton.variable_index list) ->
+	(* gn *)   LinearConstraint.pxd_linear_constraint ->
+	(* Un *)   AbstractModel.clock_updates list ->
+	(* Zn+1 *) LinearConstraint.px_linear_constraint ->
+	LinearConstraint.px_linear_constraint
 
+	
 (************************************************************)
 (************************************************************)
 (* Class definition for state_index waiting lists *)
