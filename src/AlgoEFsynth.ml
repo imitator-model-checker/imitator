@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2019/06/14
+ * Last modified     : 2019/06/19
  *
  ************************************************************)
 
@@ -588,24 +588,70 @@ class virtual algoEFsynth =
 			let absolute_time_clock = match model.global_time_clock with
 				| Some clock_index -> clock_index
 				| None -> raise (InternalError ("No absolute time clock is defined in the model, which is (so far) necessary to reconstruct the counterexample."))
-			in 
-
+			in
+			
 			
 			(* Iterate starting from s_n and going backward *)
-			let _, _, (valuations : (NumConst.t * (Automaton.variable_index -> NumConst.t)) list ) = List.fold_left (fun (state_index_n_plus_1, (valuation_n_plus_1 : (Automaton.clock_index -> NumConst.t)), current_list) (state_index, combined_transition) ->
+			
+			let valuation_n_plus_1 = ref concrete_px_valuation in
+			let te_and_valuations = ref [] in
+			
+			for i = List.length path - 1 downto 0 do
+			
+				print_message Verbose_low ("\n\nComputing concrete valuation in path at position " ^ (string_of_int i) ^ "…");
+				
+				(* Get the values *)
+				
+				let state_index_n_plus_1 = if i = List.length path - 1 then new_state_index else (let first,_ = List.nth path (i+1) in first) in
+				let state_index_n, combined_transition_n = List.nth path i in
+				
+(* 			let _, _, (valuations : (NumConst.t * (Automaton.variable_index -> NumConst.t)) list ) = List.fold_left (fun (state_index_n_plus_1, (valuation_n_plus_1 : (Automaton.clock_index -> NumConst.t)), current_list) (state_index, combined_transition) -> *)
 				(* Get state n *)
-				let state = StateSpace.get_state state_space state_index in
+				let state_n = StateSpace.get_state state_space state_index_n in
 				(* Get state n+1 *)
 				let state_n_plus_1 = StateSpace.get_state state_space state_index_n_plus_1 in
 				
 				(* Get the zones *)
-				let location_n, z_n = state.global_location, state.px_constraint in
+				let location_n, z_n = state_n.global_location, state_n.px_constraint in
 				let z_n_plus_1 = state_n_plus_1.px_constraint in
 				
-				(* Get all updates from the combined transition *)
+				(* Get the n-1 elements *)
+				let z_n_minus_1, continuous_guard_n_minus_1, updates_n_minus_1 =
+					(* Normal case *)
+					if i > 0 then(
+						(* Get the state index *)
+						let state_index_n_minus_1, combined_transition_n_minus_1 = List.nth path (i-1) in
+
+						(* Get the state *)
+						let state_n_minus_1 = StateSpace.get_state state_space state_index_n_minus_1 in
+						(* Get location and constraint *)
+						let location_n_minus_1, z_n_minus_1 = state_n_minus_1.global_location, state_n_minus_1.px_constraint in
+						
+						(* Reconstruct the continuous guard from n-1 to n *)
+						(*** WARNING/BADPROG/TOOPTIMIZE: double computation as we recompute it at the next i-1 ***)
+						let _, _, continuous_guards_n_minus_1, updates_n_minus_1 = compute_new_location_guards_updates location_n_minus_1 combined_transition_n_minus_1 in
+						
+						z_n_minus_1, LinearConstraint.pxd_intersection continuous_guards_n_minus_1, updates_n_minus_1
+					
+					(* Case "before" 0 *)
+					) else(
+						(* True "previous" zone *)
+						LinearConstraint.px_true_constraint(),
+						(* Guard: set the absolute time clock to 0 *)
+						LinearConstraint.pxd_constraint_of_point [(absolute_time_clock, NumConst.zero)],
+						(* No updates *)
+						[]
+				)
+				in
+				
+				(* Get all updates from the combined transition n *)
 				let clock_updates, _ = AlgoStateBased.get_updates_in_combined_transition location_n combined_transition in
 				
-				(* Compute the set of clocks impacted by the updates *)
+				(* Reconstruct the continuous guard from n to n+1 *)
+				let _, _, continuous_guards_n, _ = compute_new_location_guards_updates location_n combined_transition_n in
+				let continuous_guard_n = LinearConstraint.pxd_intersection continuous_guards_n in
+				
+(*				(* Compute the set of clocks impacted by the updates *)
 				let resets = match clock_updates with
 				| No_update -> []
 				| Resets cl -> cl
@@ -623,55 +669,65 @@ class virtual algoEFsynth =
 					let clocks, _ = List.split updates in
 					clocks
 				
-				in
+				in*)
 				
 				(* Build the constraint from the valuation *)
 				(* Convert to set of pairs *)
-				let pairs = List.map (fun variable_index ->
-					variable_index , (valuation_n_plus_1 variable_index)
+(*				let pairs = List.map (fun variable_index ->
+					variable_index , (!valuation_n_plus_1 variable_index)
 				) model.parameters_and_clocks in
-				let constraint_from_valuation_n_plus_1 = LinearConstraint.px_constraint_of_point pairs in
+
+				let constraint_from_valuation_n_plus_1 = LinearConstraint.px_constraint_of_point pairs in*)
+				
+				(* Get the elapsed and stopped clocks (+ other variables) *)
+				let stopped_clocks, elapsing_clocks = compute_stopwatches location_n in
+				let all_stopped_variables = List.rev_append stopped_clocks model.parameters_and_discrete in
 				
 				(* Compute a set of valuations that can be a predecessor of the valuation of n+1 *)
-				let predecessors_of_valuation_n_plus_1 = LinearConstraint.px_zone_predecessor z_n z_n_plus_1 constraint_from_valuation_n_plus_1 model.clocks model.parameters_and_discrete resets in
+				let predecessors_of_valuation_n_plus_1 = AlgoStateBased.constraint_zone_predecessor_g_u
+					(* Zn-1 *) z_n_minus_1
+					(* gn-1 *) continuous_guard_n_minus_1
+					(* Un-1 *) updates_n_minus_1
+					(* Zn *)   z_n
+					(* t *)    elapsing_clocks
+					(* nont *) all_stopped_variables
+					(* gn *)   continuous_guard_n
+					(*** NOTE: a bit twice the work here, as they were processed by get_updates_in_combined_transition ***)
+					(* Un *)   [clock_updates]
+					(* Zn+1 *) z_n_plus_1
+					in
+				
 				
 				(* Pick a valuation *)
 				let valuation_n = LinearConstraint.px_exhibit_point predecessors_of_valuation_n_plus_1 in
 				
 				(* Now compute the time spent between the previous and the new valuation *)
-				
-				
-(*				(* Find a clock not hit by the reset *)
-				
-				(*** WARNING with stopwatches! ***)
-				(*** TODO ***)
 
-				let clocks_not_reset = list_diff model.clocks resets in
-				let time_elapsed_n = match clocks_not_reset with
-					(* If all clocks are reset, what to do?? let's pick 0 for now *)
-					| [] -> NumConst.zero (*** WARNING / TODO ***)
-					(* If at least one clock, perform difference *)
-					| clock_index :: _ -> NumConst.sub (valuation_n_plus_1 clock_index) (valuation_n clock_index)
-				in*)
-				
 				(* Compute the time elapsing *)
-				let time_elapsed_n = NumConst.sub (valuation_n_plus_1 absolute_time_clock) (valuation_n absolute_time_clock) in
+				let time_elapsed_n = NumConst.sub (!valuation_n_plus_1 absolute_time_clock) (valuation_n absolute_time_clock) in
 				
 				(*** DEBUG: test that it is indeed a good valuation, belonging to n! ***)
 				(*** TODO ***)
 				
+				if verbose_mode_greater Verbose_medium then(
+					print_message Verbose_medium ("Valuation " ^ (string_of_int i) ^ " just computed:\n" ^ (ModelPrinter.string_of_px_valuation model valuation_n));
+				);
+				
 				(* Add the valuation to the list, and replace n+1 with n *)
-				(state_index, valuation_n, (time_elapsed_n , valuation_n) :: current_list)
+(* 				(state_index, valuation_n, (time_elapsed_n , valuation_n) :: current_list) *)
+				te_and_valuations := (time_elapsed_n , valuation_n) :: !te_and_valuations;
+				valuation_n_plus_1 := valuation_n;
 			
-			) (new_state_index, concrete_px_valuation, []) (List.rev path) in
+			done;
+(* 			) (new_state_index, concrete_px_valuation, []) (List.rev path) in *)
 
 			
 			(*** TODO: initial valuation + initial time elapsing ***)
 			(* Get 2nd time elapsing and 2nd valuation *)
-			let time_elapsed_2, concrete_px_valuation_2 = match valuations, path with 
+(*			let time_elapsed_2, concrete_px_valuation_2 = match !te_and_valuations, path with 
 				| time_elapsed :: _, concrete_px_valuation :: _ -> time_elapsed , concrete_px_valuation
 				| _ -> raise (InternalError ("Empty lists spotted while reconstructing concrete run"))
-			in
+			in*)
 			
 			
 			(* Compute 1st valuation, i.e., a predecessor of concrete_px_valuation_2 intersected with absolute_time_clock = 0 *)
@@ -688,7 +744,7 @@ class virtual algoEFsynth =
 				print_message Verbose_low ("Valuation " ^ (string_of_int !i) ^ ":");
 				print_message Verbose_low (ModelPrinter.string_of_px_valuation model valuation);
 				print_message Verbose_low ("Time elapsing: " ^ (NumConst.string_of_numconst time_elapsed) ^ "");
-			) valuations;
+			) !te_and_valuations;
 
 			
 			(*** TODO: eventually disable this test ***)
