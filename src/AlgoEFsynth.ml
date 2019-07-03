@@ -596,16 +596,15 @@ class virtual algoEFsynth =
 			let valuation_n_plus_1 = ref concrete_px_valuation in
 			let te_and_valuations = ref [] in
 			
-			for i = List.length path - 1 downto 0 do
+			for n = List.length path - 1 downto 0 do
 			
-				print_message Verbose_low ("\n\nComputing concrete valuation in path at position " ^ (string_of_int i) ^ "…");
+				print_message Verbose_low ("\n\nComputing concrete valuation in path at position " ^ (string_of_int n) ^ "…");
 				
 				(* Get the values *)
 				
-				let state_index_n_plus_1 = if i = List.length path - 1 then new_state_index else (let first,_ = List.nth path (i+1) in first) in
-				let state_index_n, combined_transition_n = List.nth path i in
+				let state_index_n_plus_1 = if n = List.length path - 1 then new_state_index else (let first,_ = List.nth path (n+1) in first) in
+				let state_index_n, combined_transition_n = List.nth path n in
 				
-(* 			let _, _, (valuations : (NumConst.t * (Automaton.variable_index -> NumConst.t)) list ) = List.fold_left (fun (state_index_n_plus_1, (valuation_n_plus_1 : (Automaton.clock_index -> NumConst.t)), current_list) (state_index, combined_transition) -> *)
 				(* Get state n *)
 				let state_n = StateSpace.get_state state_space state_index_n in
 				(* Get state n+1 *)
@@ -618,9 +617,9 @@ class virtual algoEFsynth =
 				(* Get the n-1 elements *)
 				let z_n_minus_1, continuous_guard_n_minus_1, updates_n_minus_1 =
 					(* Normal case *)
-					if i > 0 then(
+					if n > 0 then(
 						(* Get the state index *)
-						let state_index_n_minus_1, combined_transition_n_minus_1 = List.nth path (i-1) in
+						let state_index_n_minus_1, combined_transition_n_minus_1 = List.nth path (n-1) in
 
 						(* Get the state *)
 						let state_n_minus_1 = StateSpace.get_state state_space state_index_n_minus_1 in
@@ -628,7 +627,7 @@ class virtual algoEFsynth =
 						let location_n_minus_1, z_n_minus_1 = state_n_minus_1.global_location, state_n_minus_1.px_constraint in
 						
 						(* Reconstruct the continuous guard from n-1 to n *)
-						(*** WARNING/BADPROG/TOOPTIMIZE: double computation as we recompute it at the next i-1 ***)
+						(*** WARNING/BADPROG/TOOPTIMIZE: double computation as we recompute it at the next n-1 ***)
 						let _, _, continuous_guards_n_minus_1, updates_n_minus_1 = compute_new_location_guards_updates location_n_minus_1 combined_transition_n_minus_1 in
 						
 						z_n_minus_1, LinearConstraint.pxd_intersection continuous_guards_n_minus_1, updates_n_minus_1
@@ -645,7 +644,7 @@ class virtual algoEFsynth =
 				in
 				
 				(* Get all updates from the combined transition n *)
-				let clock_updates, _ = AlgoStateBased.get_updates_in_combined_transition location_n combined_transition in
+				let clock_updates, _ = AlgoStateBased.get_updates_in_combined_transition location_n combined_transition_n in
 				
 				(* Reconstruct the continuous guard from n to n+1 *)
 				let _, _, continuous_guards_n, _ = compute_new_location_guards_updates location_n combined_transition_n in
@@ -710,16 +709,14 @@ class virtual algoEFsynth =
 				(*** TODO ***)
 				
 				if verbose_mode_greater Verbose_medium then(
-					print_message Verbose_medium ("Valuation " ^ (string_of_int i) ^ " just computed:\n" ^ (ModelPrinter.string_of_px_valuation model valuation_n));
+					print_message Verbose_medium ("Valuation " ^ (string_of_int n) ^ " just computed:\n" ^ (ModelPrinter.string_of_px_valuation model valuation_n));
 				);
 				
 				(* Add the valuation to the list, and replace n+1 with n *)
-(* 				(state_index, valuation_n, (time_elapsed_n , valuation_n) :: current_list) *)
 				te_and_valuations := (time_elapsed_n , valuation_n) :: !te_and_valuations;
 				valuation_n_plus_1 := valuation_n;
 			
 			done;
-(* 			) (new_state_index, concrete_px_valuation, []) (List.rev path) in *)
 
 			
 			(*** TODO: initial valuation + initial time elapsing ***)
@@ -745,6 +742,8 @@ class virtual algoEFsynth =
 				print_message Verbose_low (ModelPrinter.string_of_px_valuation model valuation);
 				print_message Verbose_low ("Time elapsing: " ^ (NumConst.string_of_numconst time_elapsed) ^ "");
 			) !te_and_valuations;
+			(* Print last one *)
+			print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation);
 
 			
 			(*** TODO: eventually disable this test ***)

@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/06/19
+ * Last modified     : 2019/07/03
  *
  ************************************************************)
 
@@ -715,21 +715,36 @@ let constraint_zone_predecessor_g_u (zn_minus_1 : LinearConstraint.px_linear_con
 
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("Initial constraint Zn+1: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint ) ^ "");
+		print_message Verbose_medium ("Initial constraint Zn+1: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint ) ^ "");
 	);
 
 	(* Apply the updates to find the "initial" valuations of zn_plus_1 *)
 	update_assign pxd_linear_constraint updates_n;
 	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Applied updates to find the 'initial' valuations of Zn+1: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
+	);
+
 	(* Hide the updated variables *)
 	LinearConstraint.pxd_hide_assign (get_clocks_in_updates updates_n) pxd_linear_constraint;
 	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Hid variables concerned by the updates, i.e., '" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names (get_clocks_in_updates updates_n))) ^ "': " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
+	);
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Intersecting with incoming guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names gn) ^ " and Zn: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_zn) ^ "…");
+	);
+
 	(* Intersect with the incoming guard *)
 	LinearConstraint.pxd_intersection_assign pxd_linear_constraint [pxd_zn ; gn];
 	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("Initial valuations of Zn+1: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
+		print_message Verbose_medium ("Initial valuations of Zn+1: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
 	);
 
 	
@@ -738,12 +753,17 @@ let constraint_zone_predecessor_g_u (zn_minus_1 : LinearConstraint.px_linear_con
 	
 	LinearConstraint.pxd_time_past_assign variables_elapse variables_constant pxd_linear_constraint;
 	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Applied timed past: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
+	);
+
 	(* Intersect again with zn *)
 	LinearConstraint.pxd_intersection_assign pxd_linear_constraint [pxd_zn];
 
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("Time predecessors of Zn+1 within Zn: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
+		print_message Verbose_medium ("Time predecessors of Zn+1 within Zn: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
 	);
 
 	
@@ -765,7 +785,7 @@ let constraint_zone_predecessor_g_u (zn_minus_1 : LinearConstraint.px_linear_con
 
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("Initial valuations of Zn: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint ) ^ "");
+		print_message Verbose_medium ("Initial valuations of Zn: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint ) ^ "");
 	);
 
 	
