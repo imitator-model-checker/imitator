@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2019/06/11
+ * Last modified     : 2019/07/03
  *
  ************************************************************)
  
@@ -38,6 +38,10 @@ let counter_graphics_statespace = create_time_counter_and_register "state space 
 (************************************************************)
 (* Plot (graph) Functions *)
 (************************************************************)
+
+(*** WARNING! very dangerous here! may not work for big integers ***)
+let bad_float_of_num_const n = float_of_string (NumConst.string_of_numconst n)
+
 
 (*------------------------------------------------------------*)
 (* Convert a tile_index into a color for graph (actually an integer from 1 to 5) *)
@@ -75,7 +79,7 @@ let make_file_name cartography_file_prefix file_index =
 
 
 (*------------------------------------------------------------*)
-(** Draw the cartography corresponding to a list of constraints. Takes as second argument the file name prefix. *)
+(** Draw (using the plotutils graph utility) the cartography corresponding to a list of constraints. Takes as second argument the file name prefix. *)
 (*------------------------------------------------------------*)
 exception CartographyError
 
@@ -354,13 +358,10 @@ try(
 
 	(* Conversion to float, because all functions handle floats *)
 	
-	(*** WARNING! very dangerous here! may not work for big integers ***)
-	let bad_float_of_num_const n = float_of_string (NumConst.string_of_numconst n) in
-
 	(* Print some information *)
 	print_message Verbose_low ("Finding minima and maxima for axes…");
 
-	(* Find mininma and maxima for axes (version Etienne, who finds imperative here better ) *)
+	(* Find mininma and maxima for axes (version Étienne, who finds imperative here better ) *)
 	let min_abs = ref (bad_float_of_num_const init_min_abs) in
 	let max_abs = ref (bad_float_of_num_const init_max_abs) in
 	let min_ord = ref (bad_float_of_num_const init_min_ord) in
@@ -593,6 +594,46 @@ try(
 	counter_graphics_cartography#stop;
 	()
 	)
+
+
+(*------------------------------------------------------------*)
+(** Draw (using the plotutils graph utility) the evolution of clock and discrete variables valuations according to time. *)
+(*------------------------------------------------------------*)
+
+let draw_valuations (valuations_with_time : ((Automaton.variable_index -> NumConst.t) * NumConst.t) list) (file_prefix : string) : unit =
+	(* Retrieve model *)
+	let model = Input.get_model() in
+	
+	(* Create one file per clock and discrete variable *)
+	List.iter (fun variable_index ->
+	
+		(* Print some information *)
+		print_message Verbose_medium ("Preparing plot for " ^ (ModelPrinter.string_of_var_type (model.type_of_variables variable_index)) ^  " '" ^ (model.variable_names variable_index) ^  "'…");
+	
+		let file_content = string_of_list_of_string_with_sep "\n" (
+			(* Iterate on the points *)
+			List.map (fun (valuation, absolute_time) ->
+				(* If discrete: first add a point equal to the previous value, as the change is discrete *)
+				if model.type_of_variables variable_index = Var_type_discrete then (
+				
+					(*** TODO ***)
+					
+					()
+				);
+				
+				(* Print x (= time) *)
+				(string_of_float (bad_float_of_num_const absolute_time))
+				(* Separator *)
+				^ " "
+				(* Print y (= value of variable) *)
+				^ (string_of_float (bad_float_of_num_const (valuation variable_index)))
+			) valuations_with_time;
+		) in
+		print_warning file_content;
+	) model.clocks;
+
+	(*** TODO: work in progress here ***)
+	raise (NotImplemented ("draw_valuations"))
 
 
 

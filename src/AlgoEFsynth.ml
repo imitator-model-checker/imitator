@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2019/06/19
+ * Last modified     : 2019/07/03
  *
  ************************************************************)
 
@@ -744,6 +744,12 @@ class virtual algoEFsynth =
 			) !te_and_valuations;
 			(* Print last one *)
 			print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation);
+			
+			(* Create a representation with the absolute time, and the last element too *)
+			let valuations_and_time = (List.map (fun (_, valuation) -> valuation , (valuation absolute_time_clock) ) !te_and_valuations) @ [concrete_px_valuation , (concrete_px_valuation absolute_time_clock)] in
+			
+			(* Generate the graphics *)
+			Graphics.draw_valuations valuations_and_time "TODO";
 
 			
 			(*** TODO: eventually disable this test ***)
