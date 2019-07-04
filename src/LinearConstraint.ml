@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/06/19
+ * Last modified     : 2019/07/05
  *
  ************************************************************)
 
@@ -2432,9 +2432,9 @@ let exhibit_point nb_dimensions linear_constraint =
 	(fun variable -> valuations.(variable))
 
 (*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
-let p_exhibit_point v l = exhibit_point !p_dim v l
-let px_exhibit_point v l = exhibit_point !px_dim v l
-let pxd_exhibit_point v l = exhibit_point !pxd_dim v l
+let p_exhibit_point l = exhibit_point !p_dim l
+let px_exhibit_point l = exhibit_point !px_dim l
+let pxd_exhibit_point l = exhibit_point !pxd_dim l
 
 
 (*------------------------------------------------------------*)
