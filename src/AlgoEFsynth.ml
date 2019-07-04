@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2019/07/03
+ * Last modified     : 2019/07/05
  *
  ************************************************************)
 
@@ -712,8 +712,15 @@ class virtual algoEFsynth =
 					print_message Verbose_medium ("Valuation " ^ (string_of_int n) ^ " just computed:\n" ^ (ModelPrinter.string_of_px_valuation model valuation_n));
 				);
 				
+				(*** NOTE: we need a px AND d valuation, therefore a bit a hack here ***)
+				let pxd_valuation = fun variable_index ->
+					match model.type_of_variables variable_index with
+					| Var_type_clock | Var_type_parameter -> valuation_n variable_index
+					| Var_type_discrete -> Location.get_discrete_value location_n variable_index
+				in
+				
 				(* Add the valuation to the list, and replace n+1 with n *)
-				te_and_valuations := (time_elapsed_n , valuation_n) :: !te_and_valuations;
+				te_and_valuations := (time_elapsed_n , pxd_valuation) :: !te_and_valuations;
 				valuation_n_plus_1 := valuation_n;
 			
 			done;
@@ -749,7 +756,7 @@ class virtual algoEFsynth =
 			let valuations_and_time = (List.map (fun (_, valuation) -> valuation , (valuation absolute_time_clock) ) !te_and_valuations) @ [concrete_px_valuation , (concrete_px_valuation absolute_time_clock)] in
 			
 			(* Generate the graphics *)
-			Graphics.draw_valuations valuations_and_time "TODO";
+			Graphics.draw_valuations valuations_and_time (options#files_prefix ^ "_signals");
 
 			
 			(*** TODO: eventually disable this test ***)
