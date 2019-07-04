@@ -41,7 +41,7 @@ loc l2: invariant x <= 1
 	when x = 1 sync a do {x := 0, d1 := d1 + 2} goto l3;
 
 loc l3: invariant x <= 1
-	when x = 1 sync a do {d2 := 25} goto l4;
+	when x = 1 sync a do {d2 := d2 / 2} goto l4;
 
 loc l4: invariant x <= 8
 	when x = 8 sync a goto lbad;
