@@ -82,6 +82,8 @@ let states_file_extension = "states"
 let cartography_extension = "png"
 let cartography_size = "1024x1024"
 
+let signals_image_extension = "ps"
+
 
 (************************************************************)
 (************************************************************)

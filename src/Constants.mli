@@ -70,6 +70,7 @@ val states_file_extension    : string
 val cartography_extension    : string
 val cartography_size         : string
 
+val signals_image_extension  : string
 
 (************************************************************)
 (************************************************************)
