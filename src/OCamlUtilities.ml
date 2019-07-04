@@ -493,6 +493,7 @@ let read_from_file file_name =
 	Std.input_all ic
 
 
+(** `write_to_file file_name file_content` will create a file `file_name` with content `file_content` *)
 let write_to_file file_name file_content =
 	(*** TODO: test for file existence! ***)
 	let oc = open_out file_name in
