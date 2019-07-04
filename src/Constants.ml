@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2019/03/01
+ * Last modified     : 2019/07/05
  *
  ************************************************************)
 
@@ -78,7 +78,9 @@ let pta_default_image_format = "jpg"
 let dot_file_extension = "dot"
 let default_dot_image_extension = "dot"
 let states_file_extension = "states"
+
 let cartography_extension = "png"
+let cartography_size = "1024x1024"
 
 
 (************************************************************)
