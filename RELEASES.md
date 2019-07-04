@@ -4,6 +4,9 @@
 ### Bug fixing:
 * Fixed a "+ 0" that appeared in some of the text and graphical outputs
 
+### Major features
+* In mode `EF -counterexample`, IMITATOR outputs an example of parameter valuation, and a full concrete run, with a graphical representation of the clocks and discrete variables evolution. [WORK IN PROGRESS]
+
 ### Minor features
 * Removed the creation and deletion of an (unused) script when generating graphics
 

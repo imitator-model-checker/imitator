@@ -412,9 +412,6 @@ class virtual algoEFsynth =
 				
 			);
 			
-			(*** TODO: eventually disable this test ***)
-
-			if verbose_mode_greater Verbose_low then (
 
 			(* Exhibit a concrete parameter valuation in the final state *)
 			(*** NOTE: here, we use the cache system ***)
@@ -708,6 +705,7 @@ class virtual algoEFsynth =
 				(*** DEBUG: test that it is indeed a good valuation, belonging to n! ***)
 				(*** TODO ***)
 				
+				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then(
 					print_message Verbose_medium ("Valuation " ^ (string_of_int n) ^ " just computed:\n" ^ (ModelPrinter.string_of_px_valuation model valuation_n));
 				);
@@ -739,28 +737,35 @@ class virtual algoEFsynth =
 			
 			(*** NOTE: alternatively, we could just take the initial state and intersect with absolute_time_clock = 0 ***)
 			
-			(* Print the list*)
 			
-			(* Dummy counter for printing *)
-			let i = ref 0 in
-			List.iter (fun (time_elapsed, valuation) -> 
-				incr i;
-				print_message Verbose_low ("Valuation " ^ (string_of_int !i) ^ ":");
-				print_message Verbose_low (ModelPrinter.string_of_px_valuation model valuation);
-				print_message Verbose_low ("Time elapsing: " ^ (NumConst.string_of_numconst time_elapsed) ^ "");
-			) !te_and_valuations;
-			(* Print last one *)
-			print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation);
+			(* Print some information *)
+			if verbose_mode_greater Verbose_medium then(
+				(* Print the list*)
+			
+				(* Dummy counter for printing *)
+				let i = ref 0 in
+				List.iter (fun (time_elapsed, valuation) -> 
+					incr i;
+					print_message Verbose_low ("Valuation " ^ (string_of_int !i) ^ ":");
+					print_message Verbose_low (ModelPrinter.string_of_px_valuation model valuation);
+					print_message Verbose_low ("Time elapsing: " ^ (NumConst.string_of_numconst time_elapsed) ^ "");
+				) !te_and_valuations;
+				(* Print last one *)
+				print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation);
+			);
+			
+			(*** NOTE: we need a px AND d valuation, therefore a bit a hack here ***)
+			let concrete_pxd_valuation = fun variable_index ->
+				match model.type_of_variables variable_index with
+				| Var_type_clock | Var_type_parameter -> concrete_px_valuation variable_index
+				| Var_type_discrete -> Location.get_discrete_value new_state.global_location variable_index
+			in
 			
 			(* Create a representation with the absolute time, and the last element too *)
-			let valuations_and_time = (List.map (fun (_, valuation) -> valuation , (valuation absolute_time_clock) ) !te_and_valuations) @ [concrete_px_valuation , (concrete_px_valuation absolute_time_clock)] in
+			let valuations_and_time = (List.map (fun (_, valuation) -> valuation , (valuation absolute_time_clock) ) !te_and_valuations) @ [concrete_pxd_valuation , (concrete_pxd_valuation absolute_time_clock)] in
 			
 			(* Generate the graphics *)
 			Graphics.draw_valuations valuations_and_time (options#files_prefix ^ "_signals");
-
-			
-			(*** TODO: eventually disable this test ***)
-			); (* end if reconstruction *)
 
 			
 			(*------------------------------------------------------------*)

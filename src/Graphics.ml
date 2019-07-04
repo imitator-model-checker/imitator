@@ -701,7 +701,15 @@ let draw_valuations (valuations_with_time : ((Automaton.variable_index -> NumCon
 					match model.type_of_variables variable_index with
 					
 				(* If discrete: the previous value is still valid right before the current transition *)
-					| Var_type_discrete -> 
+					| Var_type_discrete ->
+					
+						(* Print some information *)
+						if verbose_mode_greater Verbose_total then(
+							print_message Verbose_total ("About to perform comparison…");
+							print_message Verbose_total ("Previous valuation = " ^ (NumConst.string_of_numconst (previous_valuation variable_index)) ^ "");
+							print_message Verbose_total ("Current valuation = " ^ (NumConst.string_of_numconst (valuation variable_index)) ^ "");
+						);
+						
 						(* If same value as before, no need to add a new point *)
 						if NumConst.equal (previous_valuation variable_index) (valuation variable_index) then(
 							(* Print some information *)
@@ -838,13 +846,12 @@ let draw_valuations (valuations_with_time : ((Automaton.variable_index -> NumCon
 
 	(* Print some information *)
 	print_message Verbose_standard (
-		"Plot signals to file '" ^ signals_image_file ^ "'."); 
+		"Plot signal-representation of the counterexample to file '" ^ signals_image_file ^ "'."); 
 
 	(* execute the script *)
 	let _ = run_graph command in
 	
-	(*** TODO: erase temporary files ***)
-	(* Remove files *)
+	(* Remove temporary files *)
 	if not options#with_graphics_source then(
 		(* Removing all signal files *)
 		for i = 1 to !file_index do
@@ -853,8 +860,8 @@ let draw_valuations (valuations_with_time : ((Automaton.variable_index -> NumCon
 		done;
 	);
 
-	(*** TODO: work in progress here ***)
-	raise (NotImplemented ("draw_valuations"))
+	(* The end *)
+	()
 
 
 
