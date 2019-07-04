@@ -24,6 +24,9 @@ var
  	global_time, (*** NOTE: special keyword ***)
 		: clock;
 
+ 	d1,
+ 	d2,
+		: discrete;
 
 
 (************************************************************)
@@ -35,10 +38,10 @@ loc l1: invariant x <= 3 & global_time >= 0
 	when x = 3 sync a do {x := 0} goto l2;
 
 loc l2: invariant x <= 1
-	when x = 1 sync a do {x := 0} goto l3;
+	when x = 1 sync a do {x := 0, d1 := d1 + 2} goto l3;
 
 loc l3: invariant x <= 1
-	when x = 1 sync a goto l4;
+	when x = 1 sync a do {d2 := 25} goto l4;
 
 loc l4: invariant x <= 8
 	when x = 8 sync a goto lbad;
@@ -64,6 +67,12 @@ init :=
 	(*------------------------------------------------------------*)
 	& x = 0
 	& global_time = 0
+
+	(*------------------------------------------------------------*)
+	(* Initial discrete *)
+	(*------------------------------------------------------------*)
+	& d1 = 1/2
+	& d2 = 50
 ;
 
 
