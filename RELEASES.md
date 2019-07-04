@@ -4,6 +4,9 @@
 ### Bug fixing:
 * Fixed a "+ 0" that appeared in some of the text and graphical outputs
 
+### Minor features
+* Removed the creation and deletion of an (unused) script when generating graphics
+
 ### Options
 * Removed the `-merge-before` option (that was not documented nor tested)
 
@@ -11,12 +14,13 @@
 * Added a (tentative) translation to Uppaal (option `-PTA2Uppaal`)
 * In the graphical state space and states description, the projection onto a selected set of parameters is added if the model contains `projectresult(…)`
 * In the text files, state and transition descriptions are now ordered by increasing order
+* The cartography and tile graphics are now larger (1024x1024), and the margins are a bit reduced
 
 ### Internal
-* Changed the internal reprensetation of the state space: (state, action, state) is now (state, edge, state)
+* Changed the internal representation of the state space: (state, action, state) is now (state, edge, state)
 
 *******************************************************
-# release 2.11 (2019-03-01)
+# release 2.11 (2019-03-01) Butter Kouign-aman
 MAJOR RELEASE
 
 ### Major features
@@ -82,7 +86,7 @@ minor release
 
 
 *******************************************************
-# release 2.10 (2018-02-21)
+# release 2.10 (2018-02-21) Butter Jellyfish
 MAJOR RELEASE
 
 ### Major features:
@@ -120,7 +124,7 @@ MINOR RELEASE
 
 
 *******************************************************
-# release 2.9 (2017-03-23)
+# release 2.9 (2017-03-23) Butter Incaberry
 MAJOR RELEASE
 
 ### Major
@@ -152,7 +156,7 @@ MAJOR RELEASE
 
 
 *******************************************************
-# release 2.8 (2016-08-13)
+# release 2.8 (2016-08-13) Butter Ham
 MAJOR RELEASE
 
 ### Major
@@ -235,7 +239,7 @@ INTERMEDIATE RELEASE
 
 
 *******************************************************
-# release 2.7 (2015-07-22)
+# release 2.7 (2015-07-22) Butter Guéméné
 
 ### Major algorithmic features since 2.6.1
 * Added EF-synthesis (option `-mode EF`): synthesize all parameter valuations such that a given state is reachable [AHV93,JLR15]
