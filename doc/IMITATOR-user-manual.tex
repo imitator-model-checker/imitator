@@ -32,8 +32,6 @@
 \begin{document}
 % \maketitle
 
-\sloppy
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \input{title_and_toc.tex}
@@ -85,7 +83,7 @@ An \imitator{} parametric timed automaton (hereafter \IPTA{}) is a variant of pa
 \IPTA{} and \NIPTA{} are formalized in \cref{section:NIPTA}.
 
 The input syntax of \imitator{} is originally based on the syntax of \hytech{}~\cite{HHW95}, with several improvements.
-Actually, all standard \hytech{} files describing only PTA (and not more general systems like linear hybrid automata \cite{achh92}) can be analyzed directly by \imitator{} (sometimes with very minor changes).
+Actually, all standard \hytech{} files describing only PTA (and not more general systems like linear hybrid automata \cite{ACHH92}) can be analyzed directly by \imitator{} (sometimes with very minor changes).
 
 Comments are OCaml-like comments starting with \styleIMI{(*} and ending with \styleIMI{*)}.
 As in OCaml, comments can be nested.
@@ -1199,7 +1197,7 @@ In short, \imitator{} is written in \ocaml{}, and contains about 26,000 lines of
 \begin{itemize}
 	\item The OCaml ExtLib library (Extended Standard Library for Objective Caml);
 	\item The GNU Multiple Precision Arithmetic Library (GMP);
-	\item The Parma Polyhedra Library (PPL)~\cite{bhz08}, used to compute operations on polyhedra.
+	\item The Parma Polyhedra Library (PPL)~\cite{BHZ08}, used to compute operations on polyhedra.
 \end{itemize}
 
 
@@ -2628,7 +2626,7 @@ Jaime~Arias simplified a lot the source code management and implemented new feat
 %
 Jiří~Srba suggested the translation of \imitator{}'s strong broadcast into \uppaal{}.
 
-We acknowledge the help of the PPL~\cite{bhz08} developers for their help with solving several issues over the years, and more generally for making this very useful library available.
+We acknowledge the help of the PPL~\cite{BHZ08} developers for their help with solving several issues over the years, and more generally for making this very useful library available.
 
 
 % TODO: projects
@@ -2688,34 +2686,11 @@ This user manual is available under the Creative Commons CC-BY-SA license.
 	\includegraphics[width=.2\textwidth]{images/CC-BY-SA_500.png}
 \end{center}
 
-\bigskip
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \input{graphics-credits.tex}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newpage
-
-\newcommand{\CCIS}{Communications in Computer and Information Science}
-\newcommand{\ENTCS}{Electronic Notes in Theoretical Computer Science}
-\newcommand{\FI}{Fundamenta Informormaticae}
-\newcommand{\FMSD}{Formal Methods in System Design}
-\newcommand{\IJFCS}{International Journal of Foundations of Computer Science}
-\newcommand{\IJSSE}{International Journal of Secure Software Engineering}
-\newcommand{\JLAP}{Journal of Logic and Algebraic Programming}
-\newcommand{\JLC}{Journal of Logic and Computation}
-\newcommand{\LMCS}{Logical Methods in Computer Science}
-\newcommand{\LNCS}{Lecture Notes in Computer Science}
-\newcommand{\RESS}{Reliability Engineering \& System Safety}
-\newcommand{\STTT}{International Journal on Software Tools for Technology Transfer}
-\newcommand{\TCS}{Theoretical Computer Science}
-\newcommand{\ToPNoC}{Transactions on Petri Nets and Other Models of Concurrency}
-\newcommand{\TSE}{IEEE Transactions on Software Engineering}
-
-\bibliographystyle{alpha}
-\addcontentsline{toc}{chapter}{References}
-\bibliography{biblio}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{bibliography.tex}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
