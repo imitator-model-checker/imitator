@@ -6,9 +6,9 @@
  * 
  * Module description: NDFS algorithms
  * 
- * File contributors : Laure Petrucci
+ * File contributors : Laure Petrucci, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2019/03/12
+ * Last modified     : 2019/07/05
  *
  ************************************************************)
 
@@ -41,12 +41,11 @@ class algoNDFS :
 		method initialize_variables : unit
 		
 		(*------------------------------------------------------------*)
-		(* Add a new state to the reachability_graph (if indeed needed) *)
-		(* Also update tile_nature and slast (*** TODO: remove these operations, and move them back to their algorithms ***) *)
+		(* Add a new state to the state space (if indeed needed) *)
 		(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 		(*------------------------------------------------------------*)
-		(*** TODO: simplify signature by removing the orig_state_index and returning the list of actually added states ***)
-		method add_a_new_state : state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
+		(*** TODO: return the list of actually added states ***)
+		method add_a_new_state : state_index -> StateSpace.combined_transition -> State.state -> bool
 
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

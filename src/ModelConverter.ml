@@ -3460,7 +3460,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 
 	if verbose_mode_greater Verbose_total then(
 		(* Urgency of locations *)
-		print_message Verbose_total ("\n*** Urgency of locations:");
+		print_message Verbose_total ("\n*** Urgency and acceptance of locations:");
 		(* For each automaton *)
 		List.iter (fun automaton_index ->
 			(* Print the automaton name *)
@@ -3468,14 +3468,14 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 			(* For each location *)
 			List.iter (fun location_index ->
 				(* Get the urgency *)
-				let my_string =
+				let urgency_string =
 					if is_urgent automaton_index location_index then "URGENT" else "non-urgent"
 				in
 				(* Get the acceptance *)
-				let my_string =
+				let acceptance_string =
 					if is_accepting automaton_index location_index then "ACCEPTING" else "non-accepting"
 				in
-				print_message Verbose_total (" - " ^ (location_names automaton_index location_index) ^ " :" ^ my_string);
+				print_message Verbose_total (" - " ^ (location_names automaton_index location_index) ^ " :" ^ urgency_string ^ "/" ^ acceptance_string);
 			) (locations_per_automaton automaton_index);
 		) automata;
 

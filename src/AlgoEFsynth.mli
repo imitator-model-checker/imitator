@@ -48,7 +48,7 @@ class virtual algoEFsynth :
 		method initialize_variables : unit
 		
 		(*------------------------------------------------------------*)
-		(* Add a new state to the reachability_graph (if indeed needed) *)
+		(* Add a new state to the state space (if indeed needed) *)
 		(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 		(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 		(*------------------------------------------------------------*)

@@ -163,54 +163,58 @@ class algoNDFS =
 			) else thequeue
 		in
 
+		
+		
+		(*** TODO: factor the following 2 functions!!! ***)
+		
 		(***************************************************)
 		(* Check equality of zone projection on parameters *)
 		(***************************************************)
-		let same_parameter_projection state1 state2 =
-			let state1_loc, state1_constr = StateSpace.get_state state_space state1 in
-			let constr1 = LinearConstraint.px_hide_nonparameters_and_collapse state1_constr in
-			let state2_loc, state2_constr = StateSpace.get_state state_space state2 in
-			let constr2 = LinearConstraint.px_hide_nonparameters_and_collapse state2_constr in
+		let same_parameter_projection state_index1 state_index2 =
+			let state1 = StateSpace.get_state state_space state_index1 in
+			let constr1 = LinearConstraint.px_hide_nonparameters_and_collapse state1.px_constraint in
+			let state2 = StateSpace.get_state state_space state_index2 in
+			let constr2 = LinearConstraint.px_hide_nonparameters_and_collapse state2.px_constraint in
 			print_message Verbose_high ("Projected contraint 1: \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
 				^ " state: "
-				^ (StateSpace.string_of_state_index state1));
+				^ (StateSpace.string_of_state_index state_index1));
 			print_message Verbose_high ("Projected contraint 2: \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr2
 				^ " state: "
-				^ (StateSpace.string_of_state_index state2));
+				^ (StateSpace.string_of_state_index state_index2));
 			LinearConstraint.p_is_equal constr1 constr2
 		in
 
 		(****************************************************)
 		(* Check inclusion of zone projection on parameters *)
 		(****************************************************)
-		let smaller_parameter_projection state1 state2 =
-			let state1_loc, state1_constr = StateSpace.get_state state_space state1 in
-			let constr1 = LinearConstraint.px_hide_nonparameters_and_collapse state1_constr in
-			let state2_loc, state2_constr = StateSpace.get_state state_space state2 in
-			let constr2 = LinearConstraint.px_hide_nonparameters_and_collapse state2_constr in
+		let smaller_parameter_projection state_index1 state_index2 =
+			let state1 = StateSpace.get_state state_space state_index1 in
+			let constr1 = LinearConstraint.px_hide_nonparameters_and_collapse state1.px_constraint in
+			let state2 = StateSpace.get_state state_space state_index2 in
+			let constr2 = LinearConstraint.px_hide_nonparameters_and_collapse state2.px_constraint in
 			print_message Verbose_high ("Projected contraint 1: \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
 				^ " state: "
-				^ (StateSpace.string_of_state_index state1));
+				^ (StateSpace.string_of_state_index state_index1));
 			print_message Verbose_high ("Projected contraint 2: \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr2
 				^ " state: "
-				^ (StateSpace.string_of_state_index state2));
+				^ (StateSpace.string_of_state_index state_index2));
 			LinearConstraint.p_is_leq constr1 constr2
 		in
 
 		(*********************************************************************)
 		(* Check inclusion of zone projection on parameters wrt a constraint *)
 		(*********************************************************************)
-		let smaller_parameter_constraint astate aconstraint =
-			let astate_loc, astate_constr = StateSpace.get_state state_space astate in
-			let aconstr = LinearConstraint.px_hide_nonparameters_and_collapse astate_constr in
+		let smaller_parameter_constraint state_index aconstraint =
+			let state = StateSpace.get_state state_space state_index in
+			let aconstr = LinearConstraint.px_hide_nonparameters_and_collapse state.px_constraint in
 			print_message Verbose_high ("Projected contraint : \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names aconstr
 				^ " state: "
-				^ (StateSpace.string_of_state_index astate));
+				^ (StateSpace.string_of_state_index state_index));
 			print_message Verbose_high ("Compared (bigger?) contraint : \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names aconstraint);
 			LinearConstraint.p_is_leq aconstr aconstraint
@@ -262,18 +266,20 @@ class algoNDFS =
 		(**********************************)
 		(* Check the subsumption relation *)
 		(**********************************)
-		let subsumes bigstate smallstate =
+		let subsumes bigstate_index smallstate_index =
 			(* Does bigstate subsume smallstate? *)
 			print_message Verbose_high "Compare (big?) state:";
 			print_message Verbose_high (ModelPrinter.string_of_state model
-						(StateSpace.get_state state_space bigstate));
+						(StateSpace.get_state state_space bigstate_index));
 			print_message Verbose_high "with (small?) state:";
 			print_message Verbose_high (ModelPrinter.string_of_state model
-						(StateSpace.get_state state_space smallstate));
+						(StateSpace.get_state state_space smallstate_index));
 			(* get the big state *)
-			let stateb_loc, stateb_constr = StateSpace.get_state state_space bigstate in
+			let bigstate = StateSpace.get_state state_space bigstate_index in
+			let stateb_loc, stateb_constr = bigstate.global_location, bigstate.px_constraint in
 			(* get the small state *)
-			let states_loc, states_constr = StateSpace.get_state state_space smallstate in
+			let smallstate = StateSpace.get_state state_space smallstate_index in
+			let states_loc, states_constr = smallstate.global_location, smallstate.px_constraint in
 			(* check that the location is the same *)
 			if not (Location.location_equal stateb_loc states_loc) then false
 			else (LinearConstraint.px_is_leq states_constr stateb_constr) (* check the inclusion of constraints *)
@@ -300,7 +306,7 @@ class algoNDFS =
 		(* printing zone projection on parameters *)
 		(******************************************)
 		let print_projection verbose_level thestate =
-			let state_loc, state_constr = StateSpace.get_state state_space thestate in
+			let state_constr = (StateSpace.get_state state_space thestate).px_constraint in
 			let constr = LinearConstraint.px_hide_nonparameters_and_collapse state_constr in
 			print_message verbose_level ("Projected contraint : \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr)
@@ -422,7 +428,7 @@ class algoNDFS =
 							(StateSpace.get_state state_space astate));
 					termination_status <- Some Target_found;
 					print_projection Verbose_standard astate;
-					let state_loc, state_constr = StateSpace.get_state state_space astate in
+					let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 					constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
 					raise TerminateAnalysis
 				in
@@ -451,7 +457,7 @@ class algoNDFS =
 									(StateSpace.get_state state_space astate));
 							termination_status <- Some Target_found;
 							print_projection Verbose_standard astate;
-							let state_loc, state_constr = StateSpace.get_state state_space astate in
+							let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 							constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
 							raise TerminateAnalysis
 						in
@@ -499,7 +505,7 @@ class algoNDFS =
 							(StateSpace.get_state state_space astate));
 					termination_status <- Some Target_found;
 					print_projection Verbose_standard astate;
-					let state_loc, state_constr = StateSpace.get_state state_space astate in
+					let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 					constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
 					raise TerminateAnalysis
 				in
@@ -529,7 +535,7 @@ class algoNDFS =
 									(StateSpace.get_state state_space astate));
 							termination_status <- Some Target_found;
 							print_projection Verbose_standard astate;
-							let state_loc, state_constr = StateSpace.get_state state_space astate in
+							let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 							constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
 							raise TerminateAnalysis
 						in
@@ -589,7 +595,8 @@ class algoNDFS =
 									(StateSpace.get_state state_space astate));
 							termination_status <- Some Target_found;
 							print_projection Verbose_standard astate;
-							let state_loc, state_constr = StateSpace.get_state state_space astate in
+							let astate = StateSpace.get_state state_space astate in
+							let state_constr = astate.px_constraint in
 							constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
 							raise TerminateAnalysis
 						in
@@ -620,7 +627,7 @@ class algoNDFS =
 											(StateSpace.get_state state_space astate));
 									termination_status <- Some Target_found;
 									print_projection Verbose_standard astate;
-									let state_loc, state_constr = StateSpace.get_state state_space astate in
+									let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 									constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
 									raise TerminateAnalysis
 								in
@@ -681,7 +688,7 @@ class algoNDFS =
 							(StateSpace.get_state state_space astate));
 					termination_status <- Some Target_found;
 					print_projection Verbose_standard astate;
-					let state_loc, state_constr = StateSpace.get_state state_space astate in
+					let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 					constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 					(* the state where the lookahead has found a cycle is now set blue *)
 					blue := astate::(!blue);
@@ -723,7 +730,7 @@ class algoNDFS =
 									(StateSpace.get_state state_space astate));
 							termination_status <- Some Target_found;
 							print_projection Verbose_standard astate;
-							let state_loc, state_constr = StateSpace.get_state state_space astate in
+							let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 							constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 						in
 						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
@@ -790,7 +797,7 @@ class algoNDFS =
 									(StateSpace.get_state state_space astate));
 							termination_status <- Some Target_found;
 							print_projection Verbose_standard astate;
-							let state_loc, state_constr = StateSpace.get_state state_space astate in
+							let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 							constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 							(* the state where the lookahead has found a cycle is now set blue *)
 							blue := astate::(!blue);
@@ -833,7 +840,7 @@ class algoNDFS =
 											(StateSpace.get_state state_space astate));
 									termination_status <- Some Target_found;
 									print_projection Verbose_standard astate;
-									let state_loc, state_constr = StateSpace.get_state state_space astate in
+									let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 									constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 								in
 								let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
@@ -899,12 +906,9 @@ class algoNDFS =
 	(*** TODO: move new_states_indexes to a variable of the class ***)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method add_a_new_state source_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
+	method add_a_new_state source_state_index combined_transition new_state =
 		(* Retrieve the model *)
 (* 		let model = Input.get_model () in *)
-
-		(* Build the state *)
-		let new_state = location, final_constraint in
 
 		
 		(* Try to add the new state to the state space *)
@@ -922,7 +926,7 @@ class algoNDFS =
 			self#update_statespace_nature new_state;
 			
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
-			new_states_indexes := new_state_index :: !new_states_indexes;
+			new_states_indexes <- new_state_index :: new_states_indexes;
 			
 		end; (* end if new state *)
 		
@@ -930,7 +934,7 @@ class algoNDFS =
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 		
 		(* Update the transitions *)
-		self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
+		self#add_transition_to_state_space (source_state_index, combined_transition, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
 	
 		(* The state is necessarily kept by the algorithm *)
 		true
