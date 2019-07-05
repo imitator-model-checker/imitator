@@ -7,9 +7,9 @@
  *
  * Module description: Convert a parsing structure into an abstract model
  *
- * File contributors : Étienne André, Jaime Arias
+ * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2019/05/29
+ * Last modified     : 2019/07/05
  *
  ************************************************************)
 
@@ -1981,162 +1981,173 @@ let make_locations_per_automaton index_of_automata parsed_automata nb_automata =
 (* Get all the possible actions for every location of every automaton *)
 (*------------------------------------------------------------*)
 let make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions (*removed_variable_names*) removed_synclab_names parsed_automata with_observer_action =
-  (* Number of automata *)
-  let nb_automata = Hashtbl.length index_of_automata in
-  (* Create an empty array for the actions of every automaton *)
-  let actions_per_automaton = Array.make nb_automata [] in
-  (* Create an empty array for the actions of every location of every automaton *)
-  let actions_per_location = Array.make nb_automata (Array.make 0 []) in
-  (* Create an empty array for the actions of every location of every automaton *)
-  let location_urgency = Array.make nb_automata (Array.make 0 Location_nonurgent) in
-  (* Create an empty array for the costs *)
-  let costs = Array.make nb_automata (Array.make 0 None) in
-  (* Create an empty array for the transitions *)
-  let transitions = Array.make nb_automata (Array.make 0 []) in
-  (* Create an empty array for the invariants *)
-  let invariants = Array.make nb_automata (Array.make 0 (LinearConstraint.pxd_false_constraint ())) in
-  (* Create an empty array for the invariants *)
-  let stopwatches_array = Array.make nb_automata (Array.make 0 []) in
-  (* Does the model has any stopwatch? *)
-  let has_stopwatches = ref false in
-  (* Maintain the index of no_sync *)
-  let no_sync_index = ref (Array.length labels) in
+	(* Number of automata *)
+	let nb_automata = Hashtbl.length index_of_automata in
+	(* Create an empty array for the actions of every automaton *)
+	let actions_per_automaton = Array.make nb_automata [] in
+	(* Create an empty array for the actions of every location of every automaton *)
+	let actions_per_location = Array.make nb_automata (Array.make 0 []) in
+	(* Create an empty array for the actions of every location of every automaton *)
+	let location_urgency = Array.make nb_automata (Array.make 0 Location_nonurgent) in
+	(* Create an empty array for the actions of every location of every automaton *)
+	let location_acceptance = Array.make nb_automata (Array.make 0 Location_nonaccepting) in
+	(* Create an empty array for the costs *)
+	let costs = Array.make nb_automata (Array.make 0 None) in
+	(* Create an empty array for the transitions *)
+	let transitions = Array.make nb_automata (Array.make 0 []) in
+	(* Create an empty array for the invariants *)
+	let invariants = Array.make nb_automata (Array.make 0 (LinearConstraint.pxd_false_constraint ())) in
+	(* Create an empty array for the invariants *)
+	let stopwatches_array = Array.make nb_automata (Array.make 0 []) in
+	(* Does the model has any stopwatch? *)
+	let has_stopwatches = ref false in
+	(* Maintain the index of no_sync *)
+	let no_sync_index = ref (Array.length labels) in
 
-  (* For each automaton (except the observer, if any): *)
-  List.iter
-    (fun (automaton_name, _, locations) ->
-       (* Get the index of the automaton *)
-       print_message Verbose_total ("    - Building automaton " ^ automaton_name);
-       let automaton_index = try (Hashtbl.find index_of_automata automaton_name) with Not_found -> raise (InternalError ("Impossible to find the index of automaton '" ^ automaton_name ^ "'.")) in
-       (* Get the number of locations *)
-       let nb_locations = List.length locations in
-       (* Create the array of lists of actions for this automaton *)
-       actions_per_location.(automaton_index) <- Array.make nb_locations [];
-       (* Create the array of urgent locations for this automaton (default: non-urgent) *)
-       location_urgency.(automaton_index) <- Array.make nb_locations Location_nonurgent;
-       (* Create the array of costs for this automaton *)
-       costs.(automaton_index) <- Array.make nb_locations None;
-       (* Create the array of list of transitions for this automaton *)
-       transitions.(automaton_index) <- Array.make nb_locations [];
-       (* Create the array of invariants for this automaton *)
-       invariants.(automaton_index) <- Array.make nb_locations (LinearConstraint.pxd_false_constraint ());
-       (* Create the array of stopwatches for this automaton *)
-       stopwatches_array.(automaton_index) <- Array.make nb_locations [];
+	(* For each automaton (except the observer, if any): *)
+	List.iter
+		(fun (automaton_name, _, locations) ->
+		(* Get the index of the automaton *)
+		print_message Verbose_total ("    - Building automaton " ^ automaton_name);
+		let automaton_index = try (Hashtbl.find index_of_automata automaton_name) with Not_found -> raise (InternalError ("Impossible to find the index of automaton '" ^ automaton_name ^ "'.")) in
+		(* Get the number of locations *)
+		let nb_locations = List.length locations in
+		(* Create the array of lists of actions for this automaton *)
+		actions_per_location.(automaton_index) <- Array.make nb_locations [];
+		(* Create the array of urgent locations for this automaton (default: non-urgent) *)
+		location_urgency.(automaton_index) <- Array.make nb_locations Location_nonurgent;
+		(* Create the array of accepting locations for this automaton (default: non-accepting) *)
+		location_acceptance.(automaton_index) <- Array.make nb_locations Location_nonaccepting;
+		(* Create the array of costs for this automaton *)
+		costs.(automaton_index) <- Array.make nb_locations None;
+		(* Create the array of list of transitions for this automaton *)
+		transitions.(automaton_index) <- Array.make nb_locations [];
+		(* Create the array of invariants for this automaton *)
+		invariants.(automaton_index) <- Array.make nb_locations (LinearConstraint.pxd_false_constraint ());
+		(* Create the array of stopwatches for this automaton *)
+		stopwatches_array.(automaton_index) <- Array.make nb_locations [];
 
-       (* For each location: *)
-       List.iter
-         (fun (location : parsed_location) ->
-            (* Get the index of the location *)
-            let location_index = try (Hashtbl.find index_of_locations.(automaton_index) location.name) with Not_found -> raise (InternalError ("Impossible to find the index of location '" ^ location.name ^ "'.")) in
+		(* For each location: *)
+		List.iter
+			(fun (location : parsed_location) ->
+				(* Get the index of the location *)
+				let location_index = try (Hashtbl.find index_of_locations.(automaton_index) location.name) with Not_found -> raise (InternalError ("Impossible to find the index of location '" ^ location.name ^ "'.")) in
 
-            (* Create the list of actions for this location, by iterating on parsed_transitions *)
-            let list_of_actions, list_of_transitions =  List.fold_left (fun (current_list_of_actions, current_list_of_transitions) (guard, updates, sync, target_location_name) ->
-                (* Get the index of the target location *)
-                let target_location_index = try (Hashtbl.find index_of_locations.(automaton_index) target_location_name) with Not_found -> raise (InternalError ("Impossible to find the index of location '" ^ target_location_name ^ "'.")) in
-                (* Depend on the action type *)
-                match sync with
-                | ParsingStructure.Sync action_name ->
-                  (* If the 'sync' is within the removed actions, do nothing *)
-                  if List.mem action_name removed_synclab_names then (
-                    current_list_of_actions, current_list_of_transitions
-                    (* Else : *)
-                  ) else (
-                    (* Get the action index *)
-                    let action_index =
-                      try (Hashtbl.find index_of_actions action_name) with Not_found -> raise (InternalError ("Impossible to find the index of action '" ^ action_name ^ "'."))
-                    in
-                    (* Compute the list of actions *)
-                    (action_index :: current_list_of_actions)
-                    ,
-                    (* Compute the list of transitions *)
-                    ((action_index, guard, updates, target_location_index) :: current_list_of_transitions)
-                  )
-                | ParsingStructure.NoSync ->
-                  (* Get the action index *)
-                  let action_index = !no_sync_index in
-                  (* Increment the number of nosync indexes *)
-                  no_sync_index := !no_sync_index + 1;
-                  (* Compute the list of actions *)
-                  (action_index :: current_list_of_actions)
-                  ,
-                  (* Compute the list of transitions *)
-                  ((action_index, guard, updates, target_location_index) :: current_list_of_transitions)
-              ) ([], []) location.transitions in
+				(* Create the list of actions for this location, by iterating on parsed_transitions *)
+				let list_of_actions, list_of_transitions =  List.fold_left (fun (current_list_of_actions, current_list_of_transitions) (guard, updates, sync, target_location_name) ->
+					(* Get the index of the target location *)
+					let target_location_index = try (Hashtbl.find index_of_locations.(automaton_index) target_location_name) with Not_found -> raise (InternalError ("Impossible to find the index of location '" ^ target_location_name ^ "'.")) in
+					(* Depend on the action type *)
+					match sync with
+					| ParsingStructure.Sync action_name ->
+					(* If the 'sync' is within the removed actions, do nothing *)
+					if List.mem action_name removed_synclab_names then (
+						current_list_of_actions, current_list_of_transitions
+						(* Else : *)
+					) else (
+						(* Get the action index *)
+						let action_index =
+						try (Hashtbl.find index_of_actions action_name) with Not_found -> raise (InternalError ("Impossible to find the index of action '" ^ action_name ^ "'."))
+						in
+						(* Compute the list of actions *)
+						(action_index :: current_list_of_actions)
+						,
+						(* Compute the list of transitions *)
+						((action_index, guard, updates, target_location_index) :: current_list_of_transitions)
+					)
+					| ParsingStructure.NoSync ->
+					(* Get the action index *)
+					let action_index = !no_sync_index in
+					(* Increment the number of nosync indexes *)
+					no_sync_index := !no_sync_index + 1;
+					(* Compute the list of actions *)
+					(action_index :: current_list_of_actions)
+					,
+					(* Compute the list of transitions *)
+					((action_index, guard, updates, target_location_index) :: current_list_of_transitions)
+				) ([], []) location.transitions in
 
-            (* Update the array of actions per location *)
-            actions_per_location.(automaton_index).(location_index) <- (List.rev (list_only_once list_of_actions));
+				(* Update the array of actions per location *)
+				actions_per_location.(automaton_index).(location_index) <- (List.rev (list_only_once list_of_actions));
 
-            (* Update the array of costs per location *)
-            begin
-              match location.cost with
-              | Some cost ->
-                costs.(automaton_index).(location_index) <- Some (
-                    LinearConstraint.cast_p_of_pxd_linear_term
-                      (linear_term_of_linear_expression index_of_variables constants cost)
-                      true
-                  );
-              | None -> ()
-            end;
+				(* Update the array of costs per location *)
+				begin
+				match location.cost with
+				| Some cost ->
+					costs.(automaton_index).(location_index) <- Some (
+						LinearConstraint.cast_p_of_pxd_linear_term
+						(linear_term_of_linear_expression index_of_variables constants cost)
+						true
+					);
+				| None -> ()
+				end;
 
-            (* Update the array of urgency *)
-            let urgency =
-              match location.loc_type with
-              | Parsed_location_urgent -> Location_urgent
-              | Parsed_location_nonurgent -> Location_nonurgent
-            in
-            location_urgency.(automaton_index).(location_index) <- urgency;
+				(* Update the array of urgency *)
+				let urgency =
+				match location.urgency with
+				| Parsed_location_urgent -> Location_urgent
+				| Parsed_location_nonurgent -> Location_nonurgent
+				in
+				location_urgency.(automaton_index).(location_index) <- urgency;
+
+				(* Update the array of acceptance *)
+				let acceptance =
+				match location.acceptance with
+				| Parsed_location_accepting -> Location_accepting
+				| Parsed_location_nonaccepting -> Location_nonaccepting
+				in
+				location_acceptance.(automaton_index).(location_index) <- acceptance;
+
+				(* Update the array of transitions per location *)
+				transitions.(automaton_index).(location_index) <- (List.rev list_of_transitions);
+
+				(* Update the array of invariants *)
+				invariants.(automaton_index).(location_index) <- linear_constraint_of_convex_predicate index_of_variables constants location.invariant;
+
+				(* Does the model has stopwatches? *)
+				if location.stopped != [] then has_stopwatches := true;
+				(* Convert the stopwatches names into variables *)
+				let list_of_stopwatch_names = list_only_once location.stopped in
+				(* Update the array of stopwatches *)
+				stopwatches_array.(automaton_index).(location_index) <- List.map (fun stopwatch_index ->
+					Hashtbl.find index_of_variables stopwatch_index
+				)
+					list_of_stopwatch_names;
+
+			) locations;
+		(* Update the array of actions per automaton *)
+		let all_actions_for_this_automaton = Array.fold_left (fun list_of_all_actions list_of_actions ->
+			list_union list_of_all_actions list_of_actions
+			) [] actions_per_location.(automaton_index) in
+		actions_per_automaton.(automaton_index) <- all_actions_for_this_automaton
+		) parsed_automata;
 
 
-            (* Update the array of transitions per location *)
-            transitions.(automaton_index).(location_index) <- (List.rev list_of_transitions);
+	(* Create the array of action names; add 1 no_sync for the observer, if any *)
+	let nb_actions = !no_sync_index + (if with_observer_action then 1 else 0) in
+	let array_of_action_names = Array.make nb_actions "" in
+	(* Create the array of action types (sync / no_sync) *)
+	let array_of_action_types = Array.make nb_actions Action_type_sync in
+	(* Fill the sync actions *)
+	for i = 0 to (Array.length labels) - 1 do
+		array_of_action_names.(i) <- labels.(i);
+	done;
+	(* Fill the no sync actions *)
+	for i = Array.length labels to nb_actions - 1 - (if with_observer_action then 1 else 0) do
+		array_of_action_names.(i) <- ("nosync_" ^ (string_of_int (i - (Array.length labels) + 1)));
+		array_of_action_types.(i) <- Action_type_nosync;
+	done;
+	(* Fill the array for the observer no_sync *)
+	if with_observer_action then(
+		array_of_action_names.(nb_actions - 1) <- ("nosync_obs");
+		array_of_action_types.(nb_actions - 1) <- Action_type_nosync;
+	);
 
-            (* Update the array of invariants *)
-            invariants.(automaton_index).(location_index) <- linear_constraint_of_convex_predicate index_of_variables constants location.invariant;
+	(* Create the action list *)
+	let actions = list_of_interval 0 (nb_actions - 1) in
 
-            (* Does the model has stopwatches? *)
-            if location.stopped != [] then has_stopwatches := true;
-            (* Convert the stopwatches names into variables *)
-            let list_of_stopwatch_names = list_only_once location.stopped in
-            (* Update the array of stopwatches *)
-            stopwatches_array.(automaton_index).(location_index) <- List.map (fun stopwatch_index ->
-                Hashtbl.find index_of_variables stopwatch_index
-              )
-                list_of_stopwatch_names;
-
-         ) locations;
-       (* Update the array of actions per automaton *)
-       let all_actions_for_this_automaton = Array.fold_left (fun list_of_all_actions list_of_actions ->
-           list_union list_of_all_actions list_of_actions
-         ) [] actions_per_location.(automaton_index) in
-       actions_per_automaton.(automaton_index) <- all_actions_for_this_automaton
-    ) parsed_automata;
-
-
-  (* Create the array of action names; add 1 no_sync for the observer, if any *)
-  let nb_actions = !no_sync_index + (if with_observer_action then 1 else 0) in
-  let array_of_action_names = Array.make nb_actions "" in
-  (* Create the array of action types (sync / no_sync) *)
-  let array_of_action_types = Array.make nb_actions Action_type_sync in
-  (* Fill the sync actions *)
-  for i = 0 to (Array.length labels) - 1 do
-    array_of_action_names.(i) <- labels.(i);
-  done;
-  (* Fill the no sync actions *)
-  for i = Array.length labels to nb_actions - 1 - (if with_observer_action then 1 else 0) do
-    array_of_action_names.(i) <- ("nosync_" ^ (string_of_int (i - (Array.length labels) + 1)));
-    array_of_action_types.(i) <- Action_type_nosync;
-  done;
-  (* Fill the array for the observer no_sync *)
-  if with_observer_action then(
-    array_of_action_names.(nb_actions - 1) <- ("nosync_obs");
-    array_of_action_types.(nb_actions - 1) <- Action_type_nosync;
-  );
-
-  (* Create the action list *)
-  let actions = list_of_interval 0 (nb_actions - 1) in
-
-  (* Return all the structures in a functional representation *)
-  actions, array_of_action_names, array_of_action_types, actions_per_automaton, actions_per_location, location_urgency, costs, invariants, stopwatches_array, !has_stopwatches, transitions, (if with_observer_action then Some (nb_actions - 1) else None)
+	(* Return all the structures in a functional representation *)
+	actions, array_of_action_names, array_of_action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, !has_stopwatches, transitions, (if with_observer_action then Some (nb_actions - 1) else None)
 
 
 
@@ -3060,7 +3071,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Building automata…");
 	(* Get all the possible actions for every location of every automaton *)
-	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_urgency, costs, invariants, stopwatches_array, has_stopwatches, transitions, nosync_obs =
+	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_stopwatches, transitions, nosync_obs =
 		make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions (*removed_variable_names *)removed_synclab_names parsed_automata (observer_automaton != None) in
 	let nb_actions = List.length actions in
 
@@ -3230,6 +3241,8 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	let actions_per_location = fun automaton_index location_index -> actions_per_location.(automaton_index).(location_index) in
 	(* Invariants *)
 	let invariants = fun automaton_index location_index -> invariants.(automaton_index).(location_index) in
+	(* Accepting locations *)
+	let is_accepting = fun automaton_index location_index -> location_acceptance.(automaton_index).(location_index) = Location_accepting in
 	(* Urgency *)
 	let is_urgent = fun automaton_index location_index -> location_urgency.(automaton_index).(location_index) = Location_urgent in
 	(* Costs *)
@@ -3447,7 +3460,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 
 	if verbose_mode_greater Verbose_total then(
 		(* Urgency of locations *)
-		print_message Verbose_total ("\n*** Urgency of locations:");
+		print_message Verbose_total ("\n*** Urgency and acceptance of locations:");
 		(* For each automaton *)
 		List.iter (fun automaton_index ->
 			(* Print the automaton name *)
@@ -3455,10 +3468,14 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 			(* For each location *)
 			List.iter (fun location_index ->
 				(* Get the urgency *)
-				let my_string =
+				let urgency_string =
 					if is_urgent automaton_index location_index then "URGENT" else "non-urgent"
 				in
-				print_message Verbose_total (" - " ^ (location_names automaton_index location_index) ^ " :" ^ my_string);
+				(* Get the acceptance *)
+				let acceptance_string =
+					if is_accepting automaton_index location_index then "ACCEPTING" else "non-accepting"
+				in
+				print_message Verbose_total (" - " ^ (location_names automaton_index location_index) ^ " :" ^ urgency_string ^ "/" ^ acceptance_string);
 			) (locations_per_automaton automaton_index);
 		) automata;
 
@@ -3523,7 +3540,6 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 		
 		print_message Verbose_total ("");
 	);
-
 
 	(* Debug print: L/U *)
 	begin
@@ -3626,8 +3642,8 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	locations_per_automaton = locations_per_automaton;
 	(* The location names for each automaton *)
 	location_names = location_names;
-	(* The location names for each automaton *)
-	(*** HACK ***)
+	(* The location attributes for each automaton *)
+	is_accepting = is_accepting;
 	is_urgent = is_urgent;
 
 	(* All action indexes *)
@@ -3910,7 +3926,7 @@ let check_and_make_v0 parsed_v0 =
 		match options#imitator_mode with
 		(* No pi0 / v0 *)
 		(*** BADPROG : should be an option !!! ***)
-		| Translation | State_space_exploration | EF_synthesis | Parametric_deadlock_checking ->
+		| Translation | State_space_exploration | NDFS_exploration | EF_synthesis | Parametric_deadlock_checking ->
 			(* Return blank values *)
 			(new PVal.pval)
 			,

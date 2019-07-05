@@ -2033,6 +2033,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Location names per PTA: Array : automaton_index : -> (Array : location_index -> location_name) *)
 	let new_location_names_array = Array.make (model.nb_automata) (Array.make 0 "UNINITIALIZED") in
 	
+	(* Accepting locations in PTA: Array : automaton_index : -> (Array : location_index -> bool) *)
+	let new_accepting_array = Array.make (model.nb_automata) (Array.make 0 false) in
+
 	(* Urgency in PTA: Array : automaton_index : -> (Array : location_index -> bool) *)
 	let new_urgency_array = Array.make (model.nb_automata) (Array.make 0 false) in
 	
@@ -3047,6 +3050,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Create the structure location_index -> location_name *)
 	let location_name_of_location_index = Array.make new_nb_locations "UNINITIALIZED" in
 	
+	(* Create the structure location_index -> accepting (bool) *)
+	(*** NOTE LP: set all locations to be non-accepting ***)
+	let accepting_of_location_index = Array.make new_nb_locations false in
+
 	(* Create the structure location_index -> urgent (bool) *)
 	(*** NOTE: quite a hack, we set all locations to be urgent, and then all old locations will be erased to their former value; so new (initial) locations will automatically be urgent! ***)
 	let urgency_of_location_index = Array.make new_nb_locations true in
@@ -3305,6 +3312,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	
 	let new_location_names_function automaton_index location_index = new_location_names_array.(automaton_index).(location_index) in
+	
+	let new_accepting_function automaton_index location_index = new_accepting_array.(automaton_index).(location_index) in
 	
 	let new_urgency_function automaton_index location_index = new_urgency_array.(automaton_index).(location_index) in
 	
@@ -3590,6 +3599,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		locations_per_automaton = new_locations_per_automaton_function;
 		(* The location names for each automaton *)
 		location_names = new_location_names_function;
+		(* The accepting status for each location *)
+		is_accepting = new_accepting_function;
 		(* The urgency for each location *)
 		is_urgent = new_urgency_function;
 		(*** TODO: all new initial locations shall be urgent! ***)

@@ -7,7 +7,7 @@
  * 
  * Module description: process the result of IMITATOR: print results, creates files, generates graphics, etc.
  * 
- * File contributors : Étienne André
+ * File contributors : Étienne André, Laure Petrucci
  * Created           : 2015/12/03
  * Last modified     : 2019/06/11
  *
@@ -156,6 +156,7 @@ let verbose_string_of_coverage = function
 let string_of_good_or_bad_constraint variable_names = function 
 	(* Only good valuations *)
 	| Good_constraint (p_nnconvex_constraint, _)
+	| Accepting_cycle_constraint (p_nnconvex_constraint, _)
 	(* Only bad valuations *)
 	| Bad_constraint (p_nnconvex_constraint, _)
 		-> LinearConstraint.string_of_p_nnconvex_constraint variable_names p_nnconvex_constraint
@@ -205,6 +206,7 @@ let string_statespace_nature_of_good_or_bad_constraint = function
 let verbose_string_soundness_of_good_or_bad_constraint = function 
 	(* Only good valuations *)
 	| Good_constraint (_, soundness) -> "This good constraint " ^ (verbose_string_of_soundness_suffix soundness)
+	| Accepting_cycle_constraint (_, soundness) -> "This constraint for accepting cycles " ^ (verbose_string_of_soundness_suffix soundness)
 	(* Only bad valuations *)
 	| Bad_constraint (_, soundness) -> "This bad constraint " ^ (verbose_string_of_soundness_suffix soundness)
 
@@ -774,6 +776,7 @@ let print_single_synthesis_or_point_based_result result computation_time =
 		
 		let text = 
 		match result with
+			| Accepting_cycle_constraint _ -> "Final constraint such that there exists an accepting cycle"
 			| Good_constraint _ -> "Final constraint such that the system is correct"
 			| Bad_constraint _  -> "Final constraint such that the system is incorrect"
 			| Good_bad_constraint _  -> "Final constraints such that the system is correct/incorrect"

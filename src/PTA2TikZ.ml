@@ -6,9 +6,9 @@
  *
  * Author:        Étienne André
  *
- * File contributors : Jaime Arias
+ * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2015/03/24
- * Last modified     : 2019/05/29
+ * Last modified     : 2019/07/05
  *
  ****************************************************************)
 
@@ -217,12 +217,18 @@ let string_of_location model automaton_index location_index =
 
 	(* Handle initial *)
 	let initial_str = if location_index = initial_location then "initial, " else "" in
+	(* Handle accepting states *)
+	let accepting_str = if model.is_accepting automaton_index location_index then "accepting, " else "" in
 
 	(* Handle urgency *)
 	let urgent_str = if model.is_urgent automaton_index location_index then "urgent, " else "" in
 
+	
+	(*** TODO: if accepting, change the style ***)
+	
 	"\n\t\t\\node[location, "
 	^ initial_str
+	^ accepting_str
 	^ urgent_str
 	^ "fill=loccolor" ^ (string_of_int color_id) ^ "] at (" ^ (string_of_int pos_x) ^ "," ^ (string_of_int pos_y) ^ ") (" ^ location_name ^ ") {\\styleloc{" ^ (if model.is_urgent automaton_index location_index then "U: " else "") ^ (escape_latex location_name) ^ "}};"
 

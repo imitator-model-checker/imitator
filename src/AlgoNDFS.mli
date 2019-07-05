@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * Université Paris 13, LIPN, CNRS, France
+ * LIPN, Université Paris 13 (France)
  * 
- * Module description: EFsynth algorithm [JLR15]
+ * Module description: NDFS algorithms
  * 
- * File contributors : Étienne André
- * Created           : 2015/11/25
- * Last modified     : 2019/06/13
+ * File contributors : Laure Petrucci, Étienne André
+ * Created           : 2019/03/12
+ * Last modified     : 2019/07/05
  *
  ************************************************************)
 
@@ -23,34 +23,26 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoEFsynth :
+class algoNDFS :
 	object inherit algoStateBased
+
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
-
 		method algorithm_name : string
+
 		
-		(* Non-necessarily convex constraint allowing the reachability of the bad location *)
-		val mutable bad_constraint : LinearConstraint.p_nnconvex_constraint
-	
-		(* Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is used at the end of the algorithm) *)
-		(*** WARNING: these lines are copied from AlgoDeadlockFree ***)
-		val init_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint
-
-
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
-		
 		method run : unit -> Result.imitator_result
 		
+
 		method initialize_variables : unit
 		
 		(*------------------------------------------------------------*)
 		(* Add a new state to the state space (if indeed needed) *)
 		(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
-		(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 		(*------------------------------------------------------------*)
 		(*** TODO: return the list of actually added states ***)
 		method add_a_new_state : state_index -> StateSpace.combined_transition -> State.state -> bool
@@ -67,6 +59,7 @@ class virtual algoEFsynth :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method process_deadlock_state : state_index -> unit
 		
+		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed). Nothing to do for this algorithm. *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -78,6 +71,6 @@ class virtual algoEFsynth :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method check_termination_at_post_n : bool
 
-		
-		method virtual compute_result : Result.imitator_result
+		method compute_result : Result.imitator_result
+	
 end

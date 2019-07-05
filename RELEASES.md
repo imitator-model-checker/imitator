@@ -6,6 +6,7 @@
 
 ### Major features
 * In mode `EF -counterexample`, IMITATOR outputs an example of parameter valuation, and a full concrete run, with a graphical representation of the clocks and discrete variables evolution. [WORK IN PROGRESS]
+* New NDFS based state space exploration
 
 ### Minor features
 * Removed the creation and deletion of an (unused) script when generating graphics
@@ -14,13 +15,14 @@
 * Removed the `-merge-before` option (that was not documented nor tested)
 
 ### Export
-* Added a (tentative) translation to Uppaal (option `-PTA2Uppaal`)
+* Added a (tentative) translation to Uppaal (option `-PTA2Uppaal`); see limitations in the user manual
 * In the graphical state space and states description, the projection onto a selected set of parameters is added if the model contains `projectresult(…)`
 * In the text files, state and transition descriptions are now ordered by increasing order
 * The cartography and tile graphics are now larger (1024x1024), and the margins are a bit reduced
 
 ### Internal
 * Changed the internal representation of the state space: (state, action, state) is now (state, edge, state)
+
 
 *******************************************************
 # release 2.11 (2019-03-01) Butter Kouign-aman

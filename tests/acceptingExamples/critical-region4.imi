@@ -1,0 +1,303 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Empty template of a case study
+ *
+ * Description     : TODO
+ * Correctness     : TODO
+ * Source          : TODO
+ * Author          : ME
+ * Input by        : ME
+ *
+ * Created         : 1970/01/01
+ * Last modified   : 1970/01/01
+ *
+ * IMITATOR version: 2.7-beta3
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x1, x2, x3, x4
+		: clock;
+
+(* Discrete *)
+	id 
+		: discrete;
+		
+(* Constants *)
+	max_id = 4
+	(*
+	A = 10
+	B = 20
+	*)
+		: constant;
+
+(* Parameters *)
+	A, B
+		: parameter;
+
+
+
+(************************************************************)
+  automaton counter
+(************************************************************)
+
+loc initial: while True wait {}
+	when id = 0 do {id' = 1} goto initCount;
+
+accepting loc initCount: while True wait {}
+	when id < max_id do {id' = id + 1} goto initCount;
+	when id = max_id do {id' = 1} goto initCount;
+	
+end (* counter *)
+
+
+
+
+
+(************************************************************)
+  automaton arbiter1
+(************************************************************)
+
+synclabs: cellenter1; 
+
+loc l0: while True wait {}
+	when id > 0 & id <= max_id sync cellenter1 do {id' = 0} goto l1;
+
+loc l1: while True wait {}
+	when True do {id' = id} goto l0;
+	
+end (* arbiter1 *)
+
+
+
+(************************************************************)
+  automaton prodcell1
+(************************************************************)
+
+synclabs: cellenter1, cellexit1; 
+
+loc notReady: while True wait {}
+	when x1 <= B do {x1' = 0} goto testing;
+
+loc testing: while x1 <= A wait {}
+	when x1 >= A do {x1' = 0} goto notReady;
+	when x1 <= A - 1 do {} goto requesting;
+	
+loc requesting: while True wait {}
+	when True sync cellenter1 do {x1' = 0} goto critical;
+	
+loc critical: while x1 <= B wait {}
+	when x1 <= A - 1 sync cellexit1 do {x1' = 0} goto testing2;
+	when x1 >= B goto error;
+	
+loc error: while True wait {}
+
+loc testing2: while x1 <= A wait {}
+	when x1 >= A do {} goto error;
+	when x1 <= A - 1 do {} goto safe;
+	
+loc safe: while True wait {}
+
+end (* prodcell *)
+
+
+
+
+
+(************************************************************)
+  automaton arbiter2
+(************************************************************)
+
+synclabs: cellenter2; 
+
+loc l0: while True wait {}
+	when id > 0 & id <= max_id sync cellenter2 do {id' = 0} goto l1;
+
+loc l1: while True wait {}
+	when True do {id' = id} goto l0;
+	
+end (* arbiter *)
+
+
+
+(************************************************************)
+  automaton prodcell2
+(************************************************************)
+
+synclabs: cellenter2, cellexit2; 
+
+loc notReady: while True wait {}
+	when x2 <= B do {x2' = 0} goto testing;
+
+loc testing: while x2 <= A wait {}
+	when x2 >= A do {x2' = 0} goto notReady;
+	when x2 <= A - 1 do {} goto requesting;
+	
+loc requesting: while True wait {}
+	when True sync cellenter2 do {x2' = 0} goto critical;
+	
+loc critical: while x2 <= B wait {}
+	when x2 <= A - 1 sync cellexit2 do {x2' = 0} goto testing2;
+	when x2 >= B do {} goto error;
+	
+loc error: while True wait {}
+
+loc testing2: while x2 <= A wait {}
+	when x2 >= A do {} goto error;
+	when x2 <= A - 1 do {} goto safe;
+	
+loc safe: while True wait {}
+
+end (* prodcell *)
+
+
+
+
+(************************************************************)
+  automaton arbiter3
+(************************************************************)
+
+synclabs: cellenter3; 
+
+loc l0: while True wait {}
+	when id > 0 & id <= max_id sync cellenter3 do {id' = 0} goto l1;
+
+loc l1: while True wait {}
+	when True do {id' = id} goto l0;
+	
+end (* arbiter3 *)
+
+
+
+(************************************************************)
+  automaton prodcell3
+(************************************************************)
+
+synclabs: cellenter3, cellexit3; 
+
+loc notReady: while True wait {}
+	when x3 <= B do {x3' = 0} goto testing;
+
+loc testing: while x3 <= A wait {}
+	when x3 >= A do {x3' = 0} goto notReady;
+	when x3 <= A - 1 do {} goto requesting;
+	
+loc requesting: while True wait {}
+	when True sync cellenter3 do {x3' = 0} goto critical;
+	
+loc critical: while x3 <= B wait {}
+	when x3 <= A - 1 sync cellexit3 do {x3' = 0} goto testing2;
+	when x3 >= B goto error;
+	
+loc error: while True wait {}
+
+loc testing2: while x3 <= A wait {}
+	when x3 >= A do {} goto error;
+	when x3 <= A - 1 do {} goto safe;
+	
+loc safe: while True wait {}
+
+end (* prodcell3 *)
+
+
+(************************************************************)
+  automaton arbiter4
+(************************************************************)
+
+synclabs: cellenter4; 
+
+loc l0: while True wait {}
+	when id > 0 & id <= max_id sync cellenter4 do {id' = 0} goto l1;
+
+loc l1: while True wait {}
+	when True do {id' = id} goto l0;
+	
+end (* arbiter4 *)
+
+
+
+(************************************************************)
+  automaton prodcell4
+(************************************************************)
+
+synclabs: cellenter4, cellexit4; 
+
+loc notReady: while True wait {}
+	when x4 <= B do {x4' = 0} goto testing;
+
+loc testing: while x4 <= A wait {}
+	when x4 >= A do {x4' = 0} goto notReady;
+	when x4 <= A - 1 do {} goto requesting;
+	
+loc requesting: while True wait {}
+	when True sync cellenter4 do {x4' = 0} goto critical;
+	
+loc critical: while x4 <= B wait {}
+	when x4 <= A - 1 sync cellexit4 do {x4' = 0} goto testing2;
+	when x4 >= B goto error;
+	
+loc error: while True wait {}
+
+loc testing2: while x1 <= A wait {}
+	when x4 >= A do {} goto error;
+	when x4 <= A - 1 do {} goto safe;
+	
+loc safe: while True wait {}
+
+end (* prodcell4 *)
+
+
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------
+	   INITIAL LOCATION
+	  ------------------------------------------------------------*)
+	& loc[counter] = initial
+	
+	& loc[arbiter1] = l0
+	& loc[prodcell1] = notReady
+
+	& loc[arbiter2] = l0
+	& loc[prodcell2] = notReady
+
+	& loc[arbiter3] = l0
+	& loc[prodcell3] = notReady
+
+	& loc[arbiter4] = l0
+	& loc[prodcell4] = notReady
+
+
+	(*------------------------------------------------------------
+	   INITIAL CLOCKS
+	  ------------------------------------------------------------*)
+	& x1 = 0
+	& x2 = 0
+	& x3 = 0
+	& x4 = 0
+
+
+	(*------------------------------------------------------------
+	   INITIAL DISCRETE
+	  ------------------------------------------------------------*)
+	& id = 0
+
+	(*------------------------------------------------------------
+	   PARAMETER CONSTRAINTS
+	  ------------------------------------------------------------*)
+	& A >= 0
+	& B >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

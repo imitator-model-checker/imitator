@@ -7,7 +7,7 @@
  *
  * Module description: Convert an abstract model to the input syntax of IMITATOR
  *
- * File contributors : Étienne André, Jaime Arias
+ * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
  * Last modified     : 2019/06/11
  *
@@ -400,7 +400,9 @@ let string_of_transitions model automaton_index location_index =
 (* Convert a location of an automaton into a string *)
 let string_of_location model automaton_index location_index =
 	"\n"
-	^ (if model.is_urgent automaton_index location_index then "urgent loc " else "loc ")
+	^ (if model.is_urgent automaton_index location_index then "urgent " else "")
+	^ (if model.is_accepting automaton_index location_index then "accepting " else "")
+	^ "loc "
 	^ (model.location_names automaton_index location_index)
 	 ^ (match model.costs automaton_index location_index with
 		| None -> ""

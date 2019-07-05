@@ -7,9 +7,9 @@
  *
  * Module description: Convert an IMITATOR model to a .jpg file generated thanks to the dot utility
  *
- * File contributors : Étienne André, Jaime Arias
+ * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2012/08/24
- * Last modified     : 2019/05/30
+ * Last modified     : 2019/07/05
  *
  ************************************************************)
 
@@ -164,7 +164,8 @@ let string_of_location model automaton_index location_index =
 	^ (id_of_location automaton_index location_index) ^ "["
 	(* Color *)
 	^ "fillcolor=" ^ (if model.is_urgent automaton_index location_index then "yellow" else "paleturquoise2") (*(color location_index)*) ^ ", style=filled, fontsize=16"
-
+	(* LP: shape MRecord inhibits the peripheries display *)
+	^ (if model.is_accepting automaton_index location_index then ", peripheries=2" else "")
 	(* Label: start *)
 	^ ", label=\""
 	(* Label: urgency *)

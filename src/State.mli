@@ -7,7 +7,7 @@
  * 
  * Module description: Description of a state_index, a symbolic state and sets of states indexes
  * 
- * File contributors : Étienne André
+ * File contributors : Étienne André, Laure Petrucci
  * Created           : 2016/05/04
  * Last modified     : 2019/06/14
  *
@@ -50,7 +50,7 @@ type abstract_state = {
 
 val match_unreachable_global_locations : AbstractModel.unreachable_global_location list -> Location.global_location -> bool
 
-
+val is_accepting : state -> bool
 
 (************************************************************)
 (************************************************************)

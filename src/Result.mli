@@ -7,7 +7,7 @@
  * 
  * Module description: description of the result output by IMITATOR
  * 
- * File contributors : Étienne André
+ * File contributors : Étienne André, Laure Petrucci
  * Created           : 2015/11/23
  * Last modified     : 2019/06/14
  *
@@ -101,6 +101,8 @@ type good_or_bad_constraint =
 	| Bad_constraint of constraint_and_soundness
 	(* Both good and bad valuations *)
 	| Good_bad_constraint of good_and_bad_constraint
+	(* result of NDFS *)
+	| Accepting_cycle_constraint of constraint_and_soundness
 
 
 (************************************************************)
