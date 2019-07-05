@@ -516,15 +516,15 @@ let print_header_string () =
 (* Print the name of the contributors *)
 let print_contributors()  = 
 	print_string ("    " ^ Constants.program_name ^ " has been developed by:\n");
-	print_string ("    * Etienne Andre       (2008 - " ^ (BuildInfo.build_year) ^ "), lead developer\n");
+	print_string ("    * Étienne André       (2008 - " ^ (BuildInfo.build_year) ^ "), lead developer\n");
 	print_string ("    * Jaime Arias         (2018 - " ^ (BuildInfo.build_year) ^ ")\n");
-	print_string "    * Laure Petrucci      (2019)\n";
 	print_string "    * Vincent Bloemen     (2018)\n";
 	print_string "    * Camille Coti        (2014)\n";
 	print_string "    * Daphne Dussaud      (2010)\n";
 	print_string "    * Sami Evangelista    (2014)\n";
 	print_string "    * Ulrich Kuehne       (2010 - 2011)\n";
 	print_string "    * Nguyen Hoang Gia    (2014 - 2016)\n";
+	print_string "    * Laure Petrucci      (2019)\n";
 	print_string "    * Romain Soulat       (2010 - 2013)\n";
 	print_string "\n";
 	print_string "    Compiling, testing and packaging:\n";
