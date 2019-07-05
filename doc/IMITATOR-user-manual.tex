@@ -1956,6 +1956,9 @@ We define each of those two components below.
 \begin{tabular}{l l}
 	\  & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
 	$|$ & \styleIMI{urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
+	$|$ & \styleIMI{accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
+	$|$ & \styleIMI{accepting urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
+	$|$ & \styleIMI{urgent accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
 % 	$|$ & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{while} \nt{convex\_predicate} \nt{transitions} \\
 \end{tabular}
 
@@ -2431,6 +2434,7 @@ Again, arithmetic expressions (using integers and rationals) can even be used in
 
 The following words are reserved keywords and cannot be used as names for automata, variables, actions or locations.
 
+\styleIMI{accepting},
 \styleIMI{always},
 \styleIMI{and},
 \styleIMI{automatically\_generated\_observer},
@@ -2588,6 +2592,7 @@ However, in this latter case, the non-linear power of arithmetic expressions (mu
 \imitator{} does not implement specific algorithms for lower-bound / upper-bound PTA (L/U-PTA).
 This subclass of PTA, introduced in~\cite{HRSV02}, constrains parameters to appear either always as upper-bounds in inequalities comparing them with clocks, or always as lower-bounds.
 L/U-PTA benefit from some decidability results (see \eg{} \cite{HRSV02,BlT09,JLR15,AM15,ALime17}); however, exact synthesis seems to be intractable in practice~\cite{JLR15,ALR16decision}.
+Still, some subclasses for which exact synthesis can be performed were proposed~\cite{BlT09,ALR18FORMATS}.
 
 However, \imitator{} does detect whether an input model is an L/U-PTA, in which case a message is printed with the list of lower-bounds parameters and upper-bounds parameters.
 
