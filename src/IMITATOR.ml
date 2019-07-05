@@ -7,9 +7,9 @@
  *
  * Module description: Main file for IMITATOR
  *
- * File contributors : Ulrich Kühne, Étienne André
+ * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/05/30
+ * Last modified     : 2019/07/05
  *
  ************************************************************)
 
@@ -164,6 +164,7 @@ match options#imitator_mode with
 	(*** BADPROG!!! This should be defined elsewhere... ***)
 	| Translation
 	| State_space_exploration
+	| NDFS_exploration
 	| EF_synthesis
 	| EFunsafe_synthesis
 	| EF_min
@@ -488,8 +489,10 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	| State_space_exploration ->
 			(*** NOTE: this is static subclass coercition; see https://ocaml.org/learn/tutorials/objects.html ***)
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoPostStar.algoPostStar in myalgo
+	| NDFS_exploration ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS in myalgo
 
-
+	
 	(************************************************************)
 	(* EF-synthesis *)
 	(************************************************************)

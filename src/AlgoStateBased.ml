@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/07/03
+ * Last modified     : 2019/07/05
  *
  ************************************************************)
 
@@ -1816,7 +1816,9 @@ class virtual algoStateBased =
 			let source_state = StateSpace.get_state state_space source_state_index in
 			let source_constraint = source_state.px_constraint in
 			let source_constraint_projection = LinearConstraint.px_hide_nonparameters_and_collapse source_constraint in
-			print_message Verbose_high ("Performing post from state:");
+			print_message Verbose_high ("Performing post from "
+				^ (if State.is_accepting source_state then "accepting " else "")
+				^ "state:");
 			print_message Verbose_high (ModelPrinter.string_of_state model source_state);
 			print_message Verbose_high ("\nThe projection of this constraint onto the parameters is:");
 			print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names source_constraint_projection);
@@ -1959,8 +1961,6 @@ class virtual algoStateBased =
 					transition_index
 				) involved_automata_indices) in
 
-				
-				
 				begin
 				(* Compute the successor constraint from the current state via this combined_transition *)
 				match post_from_one_state_via_one_transition source_location (recompute_source_constraint ()) discrete_constr combined_transition with
@@ -2200,7 +2200,6 @@ class virtual algoStateBased =
 			else if options#inclusion then StateSpace.Inclusion_check
 			else if options#inclusion2 then StateSpace.Double_inclusion_check
 			else StateSpace.Equality_check
-
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3262,6 +3261,12 @@ class virtual algoStateBased =
 			| Exploration_queue_BFS -> self#explore_queue_bfs init_state_index;
 			| Exploration_queue_BFS_RS -> self#explore_queue_bfs init_state_index;
 			| Exploration_queue_BFS_PRIOR -> self#explore_queue_bfs init_state_index;
+			| Exploration_NDFS -> self#explore_layer_bfs init_state_index;
+            | Exploration_NDFS_sub -> self#explore_layer_bfs init_state_index;
+            | Exploration_layer_NDFS_sub -> self#explore_layer_bfs init_state_index;
+            | Exploration_syn_NDFS_sub -> self#explore_layer_bfs init_state_index;
+            | Exploration_syn_layer_NDFS_sub -> self#explore_layer_bfs init_state_index;
+            | Exploration_syn_mixed_NDFS -> self#explore_layer_bfs init_state_index;
 		end;
 
 		(* Return the algorithm-dependent result *)

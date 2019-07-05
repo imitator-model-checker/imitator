@@ -7,7 +7,7 @@
  * 
  * Module description: Options definitions
  * 
- * File contributors : Ulrich Kühne, Étienne André
+ * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
  * Last modified     : 2019/05/30
  *
@@ -147,7 +147,7 @@ class imitator_options =
 		(* Check whether the accumulated constraint is restricted to pi0 *)
 		val mutable check_point = ref false
 		
-		(* Limit the depth in a BFS algorithm *)
+		(* Limit the depth in a BFS algorithm or in NDFS for early backtracking *)
 		val mutable depth_limit = ref None
 		
 		(* Distributed version of IMITATOR *)
@@ -171,8 +171,17 @@ class imitator_options =
 		(* Double inclusion mode *)
 		val mutable inclusion2 = ref false
 		
+		(* do not put accepting states at the head of successors list in NDFS *)
+		val mutable no_acceptfirst = ref false
+
 		(* No leq test of the new states wrt the computed constraint in EFsynth *)
 		val mutable no_leq_test_in_ef = false
+
+		(* do not use lookahead in NDFS *)
+		val mutable no_lookahead = ref false
+		
+		(* do not order the pending list with bigger zones first in NDFS synthesis *)
+		val mutable no_pending_ordered = ref false
 
 		(* do not use random values *)
 		val mutable no_random = ref false
@@ -281,7 +290,10 @@ class imitator_options =
 		method merge_heuristic = merge_heuristic
 		method model_input_file_name = model_input_file_name
 		method nb_args = nb_args
+		method no_acceptfirst = !no_acceptfirst
 		method no_leq_test_in_ef = no_leq_test_in_ef
+		method no_lookahead = !no_lookahead
+		method no_pending_ordered = !no_pending_ordered
 		method no_time_elapsing = !no_time_elapsing
 		method no_random = !no_random
 		method no_variable_autoremove = !no_variable_autoremove
@@ -356,7 +368,11 @@ class imitator_options =
 				(* Case: state space exploration *)
 				if mode = "statespace" then 
 					imitator_mode <- State_space_exploration
-					
+
+				(* Case: ndfs exploration *)
+				else if mode = "ndfs" then 
+					imitator_mode <- NDFS_exploration
+
 				(* Case: old version of EF-synthesis using a list of constraints *)
 				else if mode = "EFold" then 
 					imitator_mode <- EF_synthesis
@@ -548,10 +564,22 @@ class imitator_options =
 					exploration_order <- Exploration_queue_BFS_RS
 				else if order = "queueBFSPRIOR" then
 					exploration_order <- Exploration_queue_BFS_PRIOR
+				else if order = "NDFS" then
+					exploration_order <- Exploration_NDFS
+				else if order = "NDFSsub" then
+					exploration_order <- Exploration_NDFS_sub
+				else if order = "layerNDFSsub" then
+					exploration_order <- Exploration_layer_NDFS_sub
+				else if order = "synNDFSsub" then
+					exploration_order <- Exploration_syn_NDFS_sub
+				else if order = "synlayerNDFSsub" then
+					exploration_order <- Exploration_syn_layer_NDFS_sub
+				else if order = "synMixedNDFS" then
+					exploration_order <- Exploration_syn_mixed_NDFS
 				else(
 					(*** HACK: print header now ***)
 					print_header_string();
-					print_error ("The exploration order '" ^ order ^ "' is not valid.");
+					print_error ("The exploration order '" ^ order ^ "' is not valid in ndfs mode.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
 					exit(1);
@@ -698,7 +726,13 @@ class imitator_options =
         Use 'queueBFSRS' for a queue-based breadth-first search with ranking system. [ANP17]
         Use 'queueBFSPRIOR' for a priority-based BFS with ranking system. [ANP17]
         Use 'optTimeQueue' for optimal reachability with priority queue [ANP17]
-        Default: layerBFS.
+        Use 'NDFS' for standard NDFS. [NPvdP18]
+        Use 'NDFSsub' for standard NDFS with subsumption. [NPvdP18]
+        Use 'layerNDFSsub' for layered NDFS with subsumption. [NPvdP18]
+        Use 'synNDFSsub' for NDFS synthesis with subsumption.
+        Use 'synlayerNDFSsub' for NDFS synthesis with subsumption and layers. [NPvdP18]
+        Use 'synMixedNDFS' for mixed NDFS synthesis with inclusion and layers.
+        Default: layerBFS for statespace mode, NDFS orders for ndfs mode.
 				");
 				
 (* 				("-fromGrML", Unit (fun () -> fromGML <- true), "GrML syntax for input files (experimental). Defaut : 'false'"); *)
@@ -719,6 +753,7 @@ class imitator_options =
 
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
         Use 'statespace' for the generation of the entire parametric state space.
+        Use 'ndfs' for Nested Depth First Search of the state space. [NPvdP18]
         
         Use 'EF' for a parametric non-reachability analysis. [AHV93,JLR15]
         Use 'EFmin' for a parametric non-reachability analysis with parameter minimization. [ABPP19]
@@ -738,8 +773,13 @@ class imitator_options =
         Default: 'inversemethod'.");
 				(*** NOTE: hidden option! 'shuffle' to cover all the points within v0 after shuffling the array. (Reason for hiding: only useful in the distributed cartography) ***)
 				(*** NOTE: hidden option! or 'randomseqXX' where XX is a number to iterate random calls to IM followed by a sequential check (e.g., randomseq5 or randomseq10000) (Reason for hiding: only useful in the distributed cartography) ***)
-		
+				("-no-acceptfirst", Set no_acceptfirst, "In NDFS, do not put accepting states at the head of the successors list. Default: false.");
+
 				("-no-inclusion-test-in-EF", Unit (fun () -> no_leq_test_in_ef <- true), " In EFsynth, no inclusion test of the new states constraints in the already computed constraint. Default: false.");
+
+				("-no-lookahead", Set no_lookahead, " In NDFS, no lookahead for finding successors closing an accepting cycle. Default: false.");
+
+				("-no-pending-ordered", Set no_pending_ordered, " In NDFS synthesis, do not order the pending queue with larger zones first. Default: false.");
 
 				("-no-random", Set no_random, " In IM, no random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 
@@ -869,7 +909,7 @@ class imitator_options =
 			
 			(* Case no pi0 file *)
 			(*** TODO: do something less horrible here! ***)
-			if nb_args = 1 && (imitator_mode != State_space_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != AF_synthesis) && (imitator_mode != EFunsafe_synthesis) && (imitator_mode != EF_min) && (imitator_mode != EF_max) && (imitator_mode != EF_synth_min) && (imitator_mode != EF_synth_max) && (imitator_mode != EF_synth_min_priority_queue) && (imitator_mode != Loop_synthesis) && (imitator_mode != Parametric_NZ_CUBtransform) && (imitator_mode != Parametric_NZ_CUBtransformDistributed) && (imitator_mode != Parametric_NZ_CUBcheck) && (imitator_mode != Parametric_NZ_CUB) && (imitator_mode != Parametric_deadlock_checking) && (imitator_mode != Translation) then(
+			if nb_args = 1 && (imitator_mode != State_space_exploration) && (imitator_mode != NDFS_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != AF_synthesis) && (imitator_mode != EFunsafe_synthesis) && (imitator_mode != EF_min) && (imitator_mode != EF_max) && (imitator_mode != EF_synth_min) && (imitator_mode != EF_synth_max) && (imitator_mode != EF_synth_min_priority_queue) && (imitator_mode != Loop_synthesis) && (imitator_mode != Parametric_NZ_CUBtransform) && (imitator_mode != Parametric_NZ_CUBtransformDistributed) && (imitator_mode != Parametric_NZ_CUBcheck) && (imitator_mode != Parametric_NZ_CUB) && (imitator_mode != Parametric_deadlock_checking) && (imitator_mode != Translation) then(
 				(*** HACK: print header now ***)
 				print_header_string();
 				print_error ("Please give a file name for the reference valuation.");
@@ -914,6 +954,7 @@ class imitator_options =
 			let message = match imitator_mode with
 				| Translation -> "translation"
 				| State_space_exploration -> "parametric state space exploration"
+				| NDFS_exploration -> "Nested Depth-First Search"
 				| EF_synthesis -> "EF-synthesis"
 				| EFunsafe_synthesis -> "EFunsafe-synthesis"
 				| EF_min -> "EF-minimization"
@@ -950,7 +991,7 @@ class imitator_options =
 			(* Shortcut *)
 			let in_cartography_mode =
 				match imitator_mode with
-				| Translation | State_space_exploration | EF_synthesis| EFunsafe_synthesis | EF_min | EF_max | EF_synth_min | EF_synth_max | EF_synth_min_priority_queue | AF_synthesis | Loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUBtransformDistributed | Parametric_NZ_CUBcheck | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP -> false
+				| Translation | State_space_exploration | NDFS_exploration | EF_synthesis| EFunsafe_synthesis | EF_min | EF_max | EF_synth_min | EF_synth_max | EF_synth_min_priority_queue | AF_synthesis | Loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUBtransformDistributed | Parametric_NZ_CUBcheck | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP -> false
 				| Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _  | RandomSeq_cartography _ | PRPC -> true
 			in
 			
@@ -1008,6 +1049,9 @@ class imitator_options =
 				if imitator_mode = State_space_exploration then
 					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a state space exploration.")
 				;
+				if imitator_mode = NDFS_exploration then
+					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a NDFS exploration.")
+				;
 				if imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_synth_min || imitator_mode = EF_synth_max || imitator_mode = EF_synth_min_priority_queue || imitator_mode = EF_max|| imitator_mode = AF_synthesis then
 					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a synthesis with respect to a property.")
 				;
@@ -1046,7 +1090,7 @@ class imitator_options =
 			
 			(* Options for variants of IM, but not in IM mode *)
 			(*** TODO: do something less horrible here! ***)
-			if (imitator_mode = State_space_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_max || imitator_mode = EF_synth_min || imitator_mode = EF_synth_max || imitator_mode = EF_synth_min_priority_queue || imitator_mode = AF_synthesis || imitator_mode = Loop_synthesis || imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUBtransformDistributed || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
+			if (imitator_mode = State_space_exploration || imitator_mode = NDFS_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_max || imitator_mode = EF_synth_min || imitator_mode = EF_synth_max || imitator_mode = EF_synth_min_priority_queue || imitator_mode = AF_synthesis || imitator_mode = Loop_synthesis || imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUBtransformDistributed || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
 				print_warning (Constants.program_name ^ " is run in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
 
 			
@@ -1082,7 +1126,13 @@ class imitator_options =
 				| Exploration_queue_BFS -> print_message Verbose_standard ("Exploration order: queue-based BFS [ACN17].")
 				| Exploration_queue_BFS_RS -> print_message Verbose_standard ("Exploration order: queue-based BFS with ranking system [ACN17].")
 				| Exploration_queue_BFS_PRIOR -> print_message Verbose_standard ("Exploration order: queue-based BFS with priority [ACN17].")
-			end;
+				| Exploration_NDFS -> print_message Verbose_standard ("Exploration order: standard NDFS [NPvdP18].")
+				| Exploration_NDFS_sub -> print_message Verbose_standard ("Exploration order: NDFS with subsumption [NPvdP18].")
+				| Exploration_layer_NDFS_sub -> print_message Verbose_standard ("Exploration order: layerd NDFS with subsumption [NPvdP18].")
+				| Exploration_syn_NDFS_sub -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption.")
+				| Exploration_syn_layer_NDFS_sub -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption and layers [NPvdP18].")
+				| Exploration_syn_mixed_NDFS -> print_message Verbose_standard ("Exploration order: NDFS with mix of subsumption and layers.")
+end;
 
             (* Merge heuristic *)
             begin
@@ -1263,6 +1313,23 @@ class imitator_options =
 				print_message Verbose_standard ("Auto-detection mode for sync actions.")
 			else
 				print_message Verbose_medium ("No auto-detection mode for sync actions (default).");
+
+			(*** TODO: check that only in NDFS mode ***)
+			if !no_acceptfirst then
+				print_message Verbose_standard ("Not reordering successors (accepting states first) in NDFS search.")
+			else
+				print_message Verbose_medium ("Reordering successors (accepting states first) in NDFS (default).");
+
+			if !no_lookahead then
+				print_message Verbose_standard ("No lookahead in NDFS search.")
+			else
+				print_message Verbose_medium ("Lookahead for succesors closing accepting cycles in NDFS (default).");
+
+			if !no_pending_ordered then
+				print_message Verbose_standard ("No ordering of pending list with larger zones first in NDFS synthesis.")
+			else
+				print_message Verbose_medium ("Ordering pending list with larger zones first in NDFS synthesis (default).");
+
 
 			(*** TODO: check that only in IM/BC mode ***)
 			if !no_random then

@@ -7,7 +7,7 @@
  * 
  * Module description: Useful and general functions for IMITATOR
  * 
- * File contributors : Étienne André
+ * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
  * Last modified     : 2019/03/01
  *
@@ -203,7 +203,10 @@ type imitator_mode =
 	
 	(** Classical state space exploration *)
 	| State_space_exploration
-	
+
+	(** NDFS exploration *)
+	| NDFS_exploration
+
 	(** EF-synthesis *)
 	| EF_synthesis
 	
@@ -311,6 +314,18 @@ type exploration_order =
 	| Exploration_queue_BFS_RS
 	(** Queue-BFS: queue-based, independent of the depth, with prior for the selection of the next state [ANP17] *)
 	| Exploration_queue_BFS_PRIOR
+	(** NDFS: standard Nested Depth-First Search **)
+	| Exploration_NDFS
+	(** NDFSsub: NDFS with subsumption [NPvdP18] **)
+	| Exploration_NDFS_sub
+	(** layerNDFSsub: NDFS with subsumption  and layers [NPvdP18] **)
+	| Exploration_layer_NDFS_sub
+	(** synNDFSsub: NDFS synthesis with subsumption **)
+	| Exploration_syn_NDFS_sub
+	(** synlayerNDFSsub: NDFS synthesis with subsumption and layers [NPvdP18] **)
+	| Exploration_syn_layer_NDFS_sub
+	(** synMixedNDFS: NDFS synthesis with a mix of subsumption and layers **)
+	| Exploration_syn_mixed_NDFS
 
 
 type merge_heuristic =
@@ -503,6 +518,7 @@ let print_contributors()  =
 	print_string ("    " ^ Constants.program_name ^ " has been developed by:\n");
 	print_string ("    * Etienne Andre       (2008 - " ^ (BuildInfo.build_year) ^ "), lead developer\n");
 	print_string ("    * Jaime Arias         (2018 - " ^ (BuildInfo.build_year) ^ ")\n");
+	print_string "    * Laure Petrucci      (2019)\n";
 	print_string "    * Vincent Bloemen     (2018)\n";
 	print_string "    * Camille Coti        (2014)\n";
 	print_string "    * Daphne Dussaud      (2010)\n";

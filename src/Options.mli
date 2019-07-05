@@ -7,7 +7,7 @@
  * 
  * Module description: Options definitions
  * 
- * File contributors : Étienne André
+ * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
  * Last modified: 2019/05/29
  *
@@ -60,8 +60,11 @@ class imitator_options :
 (* 		method merge_before : bool *)
 		method merge_heuristic : merge_heuristic
 		method model_input_file_name : string
+		method no_acceptfirst : bool
 		method nb_args : int
 		method no_leq_test_in_ef : bool
+		method no_lookahead : bool
+		method no_pending_ordered : bool
 		method no_random : bool
 		method no_time_elapsing : bool
 		method no_variable_autoremove : bool

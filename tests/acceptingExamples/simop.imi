@@ -1,0 +1,320 @@
+--****************************************************--
+--****************************************************--
+--
+--   SIMOP Project
+--
+--   LSV and LURPA
+--   ENS de Cachan, France
+--
+--                                Created :     < 2008
+--                          Last modified : 16/02/2009
+--****************************************************--
+--****************************************************--
+-- automates de etude 1110 - V8
+
+var 	PLCclk, COMclk, NETclk, RIOclk, ENVclk,
+	tt, yy , zz
+	: clock;
+
+	PLCmtt = 100,
+	PLCct = 600,
+	COMd = 25,
+	COMct,
+	NETd = 10,
+	RIOd = 70,
+	SIGmrt		: parameter;
+
+
+
+
+--****************************************************--
+  automaton PLC
+--****************************************************--
+synclabs: PLCbeg,COMin0, COMin1, PLCout0, PLCout1;
+
+loc PLCinit: while True wait {}
+	when True  sync PLCbeg do {PLCclk'=0} goto PLC1; 
+
+
+loc PLC1 : while PLCclk<= PLCct wait{}
+----	when True sync COMin1 do {} goto PLC4; -- remis (30/06/07) ----*
+	when True sync COMin0 do {} goto PLC1; -- remis (30/06/07) ----*
+	when PLCclk>=PLCmtt  sync PLCout0  goto PLC3; 
+----	when PLCclk>=PLCmtt  sync COMin1  do {yy'=0} goto PLC5; 
+
+loc PLC3 : while PLCclk<= PLCct wait{}
+	when PLCclk=PLCct do{PLCclk'=0}  goto PLC1;  -- retrait --> loss
+	when True sync COMin1 do {} goto PLC6;  -- retrait --> loss
+	when True sync COMin0 do {} goto PLC3;  -- retrait --> loss
+
+ loc PLC4 : while PLCclk<= PLCct wait{}	----*
+	when True sync COMin1 do {} goto PLC4;	-- retrait le 03/07/07 --************
+	when PLCclk>=PLCmtt  do {yy'=0} goto PLC5;
+
+loc PLC5 : while  yy <=0  wait{}				-- a remettre 3/07
+	when yy=0 sync PLCout0 do{} goto PLC6;
+	when True sync COMin1 do {} goto PLC5;
+
+loc PLC6 : while PLCclk<= PLCct wait{}
+	when PLCclk=PLCct do{PLCclk'=0}  goto PLC7;
+	when True sync COMin1 do {} goto PLC6; -- remis (30/06/07) ----*
+
+loc PLC7 : while PLCclk<= PLCct wait{}
+	when True sync COMin1 do {} goto PLC7;	-- retrait --> loss
+	when PLCclk>=PLCmtt  sync PLCout1 do {} goto PLC9;  -- ret->loss
+
+
+loc PLC9 : while PLCclk<= PLCct wait{}
+	when PLCclk=PLCct do{PLCclk'=0}  goto PLC7;  
+	when True sync COMin1 do {} goto PLC9;  -- remis (30/06/07) ----*
+
+
+end -- PLC
+
+
+--****************************************************--
+automaton COM
+--****************************************************--
+synclabs : PLCbeg, PLCout0, PLCout1, CNreq0, CNreq1, NCrep0, NCrep1, COMin1, COMin0;
+
+loc COMinit: while True wait {}
+	when True  sync PLCbeg goto COM1; 
+
+loc COM1 : while True wait{}
+	when True do {COMclk'=0} goto COM2;
+	when True sync PLCout0 goto COM1;  -- remis le 30/06/07 ----*
+
+loc COM2 : while COMclk <= COMd wait{}		
+	when COMclk=COMd  sync CNreq0 do {} goto COM3;
+	when True sync PLCout0 goto COM2; -- (remis) (retrait --> loss!!!)
+----	when True sync PLCout1 goto COM7;
+
+loc COM3 : while COMclk <= COMct wait{}  -- inv. nouveau
+	when True sync NCrep0 do {tt'=0} goto COM4; 
+	when True sync PLCout0 goto COM3;	-- retrait --> loss
+	when True sync NCrep1 do {tt'=0} goto COM5;
+----	when True sync PLCout1 goto COM8;	-- retrait le 03/07/07 ----*
+
+loc COM4 : while tt=0 wait{}
+	when tt=0 sync COMin0 do {} goto COM6;
+
+loc COM5 : while tt=0 wait{}
+	when tt=0 sync COMin1 do {} goto COM6;
+
+loc COM6 : while COMclk<= COMct wait{}
+	when COMclk= COMct  do {COMclk'=0} goto COM2; 
+	when True sync PLCout0 goto COM6; -- remis le 30/06/07	 de 10 mn a 1h >> OVERFLOW
+	when True sync PLCout1 goto COM11; --*	-- retrait le 03/07/07 --- de 10 mn a 1h
+
+loc COM7 : while COMclk <= COMd wait{}		
+	when COMclk=COMd  sync CNreq0 do {} goto COM8;
+	when True sync PLCout1 goto COM7; ---- remis le 30/06/07 ----*
+
+loc COM8 : while COMclk <= COMct wait{}  -- inv. nouveau
+	when True sync NCrep0 do {tt'=0} goto COM9;   -- retrait le 03/07/07 ----*
+	when True sync PLCout1 goto COM8; -- remis le 30/06/07 ----*
+	when True sync NCrep1 do {tt'=0} goto COM10;
+
+loc COM9 : while tt=0 wait{} ----*
+	when tt=0 sync COMin0 do {} goto COM11; -- retrait 03/07/07 (no call)
+
+loc COM10 : while tt=0 wait{}
+	when tt=0 sync COMin1 do {} goto COM11;
+
+loc COM11 : while COMclk<= COMct wait{}
+	when COMclk= COMct  do {COMclk'=0} goto COM12; 
+	when True sync PLCout1 goto COM11; -- remis 30/06/07 (retrait ->loss!!)
+
+loc COM12 : while COMclk <= COMd wait{}		
+	when COMclk=COMd  sync CNreq1 do {} goto COM13; -- = au lieu de <=
+	when True sync PLCout1 goto COM12; -- retrait 03/07/07 ----*
+
+loc COM13 : while COMclk <= COMct wait{}  -- inv. nouveau
+	when True sync NCrep1 
+			do {tt'=0} goto COM14;--(03/07) before:goto COM14 ----*
+	when True sync PLCout1 goto COM13; -- (retrait: 55 it.--> 54)
+
+
+
+ loc COM14 : while tt=0 wait{}					----* / ----*
+	when tt=0 sync COMin1 do {} goto COM15;  --(03/07/07) before goto COM15
+
+loc COM15 : while COMclk<= COMct wait{}				----*
+	when COMclk= COMct  do {COMclk'=0} goto COM12; 		----*
+
+	when True sync PLCout1 goto COM15;  -- retrait 03/07/07 ----*
+end -- COM
+
+
+--****************************************************--
+automaton NET
+--****************************************************--
+synclabs : CNreq0, CNreq1, NCrep0, NCrep1, NRreq0, NRreq1, RNrep0, RNrep1;
+
+loc NET1: while True wait {}
+	when True  sync CNreq0 do {NETclk'=0} goto NET2;
+	when True  sync CNreq1 do {NETclk'=0} goto NET5;
+
+loc NET2 : while NETclk <= NETd wait{}
+	when NETclk=NETd sync NRreq0 do {} goto NET3;
+
+loc NET3 : while True wait{}
+	when True  sync RNrep0 do {NETclk'=0} goto NET4;
+	when True  sync RNrep1 do {NETclk'=0} goto NET7;
+
+loc NET4 : while NETclk<=NETd wait{}
+	when NETclk=NETd sync NCrep0  goto NET1;
+
+loc NET5 : while NETclk <= NETd wait{}
+	when NETclk=NETd sync NRreq1 goto NET6;
+
+loc NET6 : while True wait{}
+	when True  sync RNrep1 do {NETclk'=0} goto NET7;
+
+loc NET7 : while NETclk<=NETd wait{}
+	when NETclk=NETd sync NCrep1  do {} goto NET1;
+
+end -- NET
+
+
+--****************************************************--
+automaton RIO
+--****************************************************--
+synclabs : NRreq0, RNrep0, SIGout0, NRreq1, RNrep1, SIGin1, SIGout1;
+
+loc RIO1: while True wait {}
+	when True  sync NRreq0 do {RIOclk'=0} goto RIO2;
+----	when True  sync SIGin1 do {} goto RIO6;
+
+loc RIO2 : while RIOclk <= RIOd wait{}
+	when RIOclk=RIOd sync SIGout0 do {zz'=0} goto RIO3;
+	when True  sync SIGin1 do {} goto RIO4;
+
+loc RIO3 : while zz=0 wait{}
+	when zz=0  sync RNrep0 do {} goto RIO1;
+-----	when zz=0  sync SIGin1 do {} goto RIO5;
+
+loc RIO4 : while RIOclk <= RIOd wait{}
+	when RIOclk=RIOd sync SIGout0 do {zz'=0} goto RIO5;
+
+loc RIO5 : while zz=0 wait{}
+	when zz=0  sync RNrep0 do {} goto RIO6;
+
+loc RIO6: while True wait {}
+	when True  sync NRreq0 do {RIOclk'=0} goto RIO7;
+	when True  sync NRreq1 do {RIOclk'=0} goto RIO9;
+
+loc RIO7 : while RIOclk <= RIOd wait{}
+	when RIOclk=RIOd sync SIGout0 do {zz'=0} goto RIO8;
+
+
+loc RIO8 : while zz=0 wait{}
+	when zz=0  sync RNrep1 do {} goto RIO6;
+
+loc RIO9 : while RIOclk <= RIOd wait{}
+	when RIOclk=RIOd sync SIGout1 do {zz'=0} goto RIO10;
+
+loc RIO10 : while zz=0 wait{}
+	when zz=0  sync RNrep1 do {} goto RIO6;
+
+
+end -- RIO
+
+--****************************************************--
+automaton ENV
+--****************************************************--
+synclabs : SIGout0, SIGout1, SIGin1;
+
+loc ENVinit: while True wait {}
+	when True sync SIGout0 goto ENV1;
+
+
+loc ENV1: while True  wait {}
+	when True sync SIGin1 do {ENVclk'=0} goto ENV2; 
+	when True sync SIGout0 do {} goto ENV1;
+
+loc ENV2 : while ENVclk <= SIGmrt wait{}
+	when True sync SIGout0 do {} goto ENV2;   
+	when True sync SIGout1 do {yy'=0} goto ENV4; 
+	when ENVclk=SIGmrt do {yy'=0} goto ENV5;
+
+loc ENV4 : while yy=0 wait{}
+-- 	when True -- sync SIGout1 
+-- 		goto ENV4;
+
+
+accepting loc ENV5: while yy=0 wait{}
+	when True goto ENV5;
+-- 	when True -- sync SIGout1 
+-- 			goto ENV5;
+--	when True -- sync SIGout0 
+--			goto ENV5;
+
+end -- ENV
+
+
+
+
+--****************************************************--
+--****************************************************--
+-- ANALYSIS
+--****************************************************--
+--****************************************************--
+
+var init : region;
+
+init := 	loc[PLC]=PLCinit 
+	&	loc[COM]=COMinit
+	&	loc[NET]=NET1
+	&	loc[RIO]=RIO1
+	&	loc[ENV]=ENVinit
+
+	& 	PLCclk>=0 & COMclk>=0 & NETclk>=0 & RIOclk>=0 & ENVclk>=0 
+
+
+--	& 	0 <  NETd
+--	& 	NETd < COMd 
+--	&	COMd < RIOd 
+--	& 	RIOd < PLCmtt
+--	& 	PLCmtt < PLCct
+--	& 	PLCct < COMct
+--	& 	COMct < SIGmrt
+
+	---START PI0---
+--	&	PLCct  = 600
+--	&	COMct  = 500
+--	& 	SIGmrt = 2071
+--	&	PLCmtt = 100
+--	&	RIOd   = 70
+--	&	COMd   = 25
+--	&	NETd   = 10
+	---END PI0---
+
+	&	PLCct  > 0
+	&	COMct  > 0
+	&	SIGmrt  > 0
+	&	PLCmtt  > 0
+	&	RIOd  > 0
+	&	COMd  > 0
+	&	NETd  > 0
+
+
+	& 	tt = 0 & yy = 0 & zz=0 -- & s = 0
+
+--	&	ta = 0 & tb = 0 & tc = 0 & td = 0 & te = 0
+--	&	tf = 0 & tg = 0 & th = 0 & ti = 0 
+
+	---START PI0---
+-- 	&	PLCct  = 600
+-- 	&	COMct  = 500
+-- 	& 	SIGmrt = 2071
+-- 	&	PLCmtt = 100
+-- 	&	RIOd   = 70
+-- 	&	COMd   = 25
+-- 	&	NETd   = 10
+	---END PI0---
+
+
+;
+
+end
