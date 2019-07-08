@@ -9,7 +9,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/07/05
+ * Last modified     : 2019/07/08
  *
  ************************************************************)
 
@@ -172,6 +172,7 @@ match options#imitator_mode with
 	| EF_synth_min
 	| EF_synth_max
 	| EF_synth_min_priority_queue
+	| EFexemplify
 	| AF_synthesis
 	| Loop_synthesis
 	| Parametric_NZ_CUBcheck
@@ -405,6 +406,14 @@ if options#imitator_mode = EF_synth_max then(
 			abort_program();
 );
 
+if options#imitator_mode = EFexemplify then(
+	match model.global_time_clock with
+		| Some _ -> ()
+		| _ ->
+			print_error ("An absolute time clock must be defined in the model to run EFexemplify.");
+			abort_program();
+);
+
 
 
 
@@ -545,6 +554,14 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 
 
 
+	(************************************************************)
+	(* EF-exemplification *)
+	(************************************************************)
+	| EFexemplify ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFexemplify.algoEFexemplify in myalgo
+
+
+		
 	(************************************************************)
 	(* AF-synthesis *)
 	(************************************************************)

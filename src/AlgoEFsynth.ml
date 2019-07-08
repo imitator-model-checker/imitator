@@ -257,22 +257,26 @@ class virtual algoEFsynth =
 	(* Generate counter-example(s) if required by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-	method private process_counterexample target_state_index =
-	(* If an immediate termination is requested: raise exception! *)
+	method process_counterexample target_state_index =
+	(* Only process counterexample if needed *)
 		if options#counterex then(
 			
-			(*------------------------------------------------------------*)
-			(* Counter-example reconstruction (to be moved?) *)
-			(*------------------------------------------------------------*)
 			(*** NOTE: so far, the reconstruction needs an absolute time clock ***)
 			begin
-			match model.special_reset_clock with
+			match model.global_time_clock with
 				| Some _ -> AlgoStateBased.reconstruct_counterexample state_space target_state_index;
 				| None -> print_warning "No counterexample reconstruction, as the model requires an absolute time clock.";
 			end;
-			(*------------------------------------------------------------*)
-			(* END Counter-example reconstruction *)
-			(*------------------------------------------------------------*)
+		);
+		
+		(* If the state is a target state (i.e., process_state returned false) AND the option to stop the analysis as soon as a counterexample is found is activated, then we will throw an exception *)
+		if options#counterex (*&& !is_target*) then(
+			(* Update termination status *)
+			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
+			self#print_algo_message Verbose_standard "Target state found! Terminating…";
+			termination_status <- Some Target_found;
+		
+			raise TerminateAnalysis;
 		);
 		
 		(* The end *)
@@ -306,6 +310,9 @@ class virtual algoEFsynth =
 		(* Boolean to check whether the analysis should be terminated immediately *)
 		let terminate_analysis_immediately = ref false in
 		
+		(* Boolean to check whether the state is a target state *)
+		let is_target = ref false in
+		
 		begin
 		match addition_result with
 		(* If the state was present: do nothing *)
@@ -317,11 +324,12 @@ class virtual algoEFsynth =
 			self#update_statespace_nature new_state;
 			
 			(* Will the state be added to the list of new states (the successors of which will be computed)? *)
+			(*** NOTE: if the answer is false, then the new state is a target state ***)
 			(*** BADPROG: ugly bool ref that may be updated in an IF condition below ***)
 			let to_be_added = ref (self#process_state new_state) in
 			
-			(* If the state is a target state (i.e., process_state returned false) AND the option to stop the analysis as soon as a counterexample is found is activated, then we will throw an exception *)
-			terminate_analysis_immediately := options#counterex && not !to_be_added;
+			(* Update the target flag *)
+			is_target := not !to_be_added;
 			
 			(* If to be added: if the state is included into the bad constraint, no need to explore further, and hence do not add *)
 			if !to_be_added then(
@@ -368,7 +376,7 @@ class virtual algoEFsynth =
 		end (* end if new state *)
 		;
 		
-		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
+		(*** TODO: move the two following statements to a higher level function? (post_from_one_state?) ***)
 		
 		(* Retrieve the new state index *)
 		(*** HACK ***)
@@ -376,19 +384,11 @@ class virtual algoEFsynth =
 		
 		(* Add the transition to the state space *)
 		self#add_transition_to_state_space (source_state_index, combined_transition, new_state_index) addition_result;
+
 		
-		(* Construct counterexample if requested by the algorithm *)
-		self#process_counterexample new_state_index;
-		
-		(* If an immediate termination is requested: raise exception! *)
-		if !terminate_analysis_immediately then(
-			(* Update termination status *)
-			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
-			self#print_algo_message Verbose_standard "Target state found! Terminating…";
-			termination_status <- Some Target_found;
-		
-			raise TerminateAnalysis;
-		);
+		(* Construct counterexample if requested by the algorithm (and stop termination by raising a TerminateAnalysis exception, if needed) *)
+		if !is_target then
+			self#process_counterexample new_state_index;
 		
 		(* Statistics *)
 		counter_add_a_new_state#stop;

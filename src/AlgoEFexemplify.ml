@@ -4,11 +4,11 @@
  * 
  * Université Paris 13, LIPN, CNRS, France
  * 
- * Module description: "EF" algorithm (unsafe w.r.t. a set of bad states) [JLR15]
+ * Module description: EFexemplify algorithm [work in progress]. Structurally identical to EFsynth (at the beginning), so the code processes with simple add-ons
  * 
  * File contributors : Étienne André
- * Created           : 2017/02/03
- * Last modified     : 2017/02/03
+ * Created           : 2019/07/08
+ * Last modified     : 2019/07/08
  *
  ************************************************************)
 
@@ -24,6 +24,9 @@ open Exceptions
 open AbstractModel
 open Result
 open AlgoEFsynth
+open Statistics
+open State
+
 
 
 
@@ -32,27 +35,80 @@ open AlgoEFsynth
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoEFunsafeSynth =
+class algoEFexemplify =
 	object (self) inherit algoEFsynth as super
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
 	
+	(* Number of counter-examples spotted *)
+	val mutable nb_counterexamples : int = 0
+
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "EFunsafe"
+	method algorithm_name = "EFexemplify"
 	
 	
 	
 	(************************************************************)
 	(* Class methods *)
 	(************************************************************)
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Variable initialization *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method initialize_variables =
+		super#initialize_variables;
+
+		nb_counterexamples <- 0;
+
+		(* The end *)
+		()
+
+		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Generate counter-example(s) if required by the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	method process_counterexample target_state_index =
+		(* Update the number of counterexamples processed *)
+		nb_counterexamples <- nb_counterexamples + 1;
+		
+		(* Print some information *)
+		self#print_algo_message Verbose_standard ("Target state #" ^ (string_of_int nb_counterexamples) ^ " found!");
+		
+		(*** NOTE: so far, the reconstruction needs an absolute time clock ***)
+		begin
+		match model.global_time_clock with
+			| Some _ -> AlgoStateBased.reconstruct_counterexample state_space target_state_index;
+			| None -> raise (InternalError ("No absolute time clock detected in " ^ self#algorithm_name ^ " although this should have been checked before."));
+		end;
+		
+		(* If maximum number of counterexamples processed: stop *)
+		if nb_counterexamples >= 2 then(
+			(* Update termination status *)
+			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
+			self#print_algo_message Verbose_standard ("Target state #" ^ (string_of_int nb_counterexamples) ^ " is the maximum number sought. Terminating…");
+			termination_status <- Some Target_found;
+		
+			raise TerminateAnalysis;
+		);
+
+		(* The end *)
+		()
+	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	
+	(*** NOTE: temporary version ***)
+	
+	(*** BADPROG: copied from EFunsafeSynth ***)
+	
 	method compute_result =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
@@ -101,13 +157,6 @@ class algoEFunsafeSynth =
 			| Some status -> status
 		in
 
-(*		(* The tile nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
-		let statespace_nature =
-			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
-			(* Otherwise: unchanged *)
-			else statespace_nature
-		in*)
-		
 		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
 		(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
 		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
@@ -127,7 +176,6 @@ class algoEFunsafeSynth =
 			(* Termination *)
 			termination			= termination_status;
 		}
-
 
 	
 (************************************************************)

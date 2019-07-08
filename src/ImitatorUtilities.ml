@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2019/03/01
+ * Last modified     : 2019/07/08
  *
  ************************************************************)
 
@@ -228,6 +228,9 @@ type imitator_mode =
 	(** Optimal reachability with priority queue: queue-based, with priority to the earliest successor for the selection of the next state [ABPP19] *)
 	| EF_synth_min_priority_queue
 
+	(** EF-synthesis with examples of (un)safe words *)
+	| EFexemplify
+	
 	(** AF-synthesis *)
 	| AF_synthesis
 	
