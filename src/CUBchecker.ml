@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2019/06/03
+ * Last modified     : 2019/07/08
  *
  ************************************************************)
 
@@ -2034,6 +2034,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	let new_location_names_array = Array.make (model.nb_automata) (Array.make 0 "UNINITIALIZED") in
 	
 	(* Accepting locations in PTA: Array : automaton_index : -> (Array : location_index -> bool) *)
+	(*** TODO: not used, but should be! (the idea would be to set as accepting any location the equivalent of which was accepting in the original model) ***)
 	let new_accepting_array = Array.make (model.nb_automata) (Array.make 0 false) in
 
 	(* Urgency in PTA: Array : automaton_index : -> (Array : location_index -> bool) *)
@@ -3052,7 +3053,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	(* Create the structure location_index -> accepting (bool) *)
 	(*** NOTE LP: set all locations to be non-accepting ***)
-	let accepting_of_location_index = Array.make new_nb_locations false in
+	(*** TODO ! ***)
+(* 	let accepting_of_location_index = Array.make new_nb_locations false in *)
 
 	(* Create the structure location_index -> urgent (bool) *)
 	(*** NOTE: quite a hack, we set all locations to be urgent, and then all old locations will be erased to their former value; so new (initial) locations will automatically be urgent! ***)
