@@ -252,9 +252,36 @@ class virtual algoEFsynth =
 
 		result
 		
+		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Generate counter-example(s) if required by the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	method private process_counterexample target_state_index =
+	(* If an immediate termination is requested: raise exception! *)
+		if options#counterex then(
+			
+			(*------------------------------------------------------------*)
+			(* Counter-example reconstruction (to be moved?) *)
+			(*------------------------------------------------------------*)
+			(*** NOTE: so far, the reconstruction needs an absolute time clock ***)
+			begin
+			match model.special_reset_clock with
+				| Some _ -> AlgoStateBased.reconstruct_counterexample state_space target_state_index;
+				| None -> print_warning "No counterexample reconstruction, as the model requires an absolute time clock.";
+			end;
+			(*------------------------------------------------------------*)
+			(* END Counter-example reconstruction *)
+			(*------------------------------------------------------------*)
+		);
+		
+		(* The end *)
+		()
+	
+
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the reachability_graph (if indeed needed) *)
+	(* Add a new state to the state space (if indeed needed) *)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -350,31 +377,19 @@ class virtual algoEFsynth =
 		(* Add the transition to the state space *)
 		self#add_transition_to_state_space (source_state_index, combined_transition, new_state_index) addition_result;
 		
+		(* Construct counterexample if requested by the algorithm *)
+		self#process_counterexample new_state_index;
 		
 		(* If an immediate termination is requested: raise exception! *)
 		if !terminate_analysis_immediately then(
-			
-			(*------------------------------------------------------------*)
-			(* Counter-example reconstruction (to be moved?) *)
-			(*------------------------------------------------------------*)
-			(*** NOTE: so far, the reconstruction needs an absolute time clock ***)
-			begin
-			match model.special_reset_clock with
-				| Some _ -> AlgoStateBased.reconstruct_counterexample state_space new_state_index;
-				| None -> print_warning "No counterexample reconstruction, as the model requires an absolute time clock.";
-			end;
-			(*------------------------------------------------------------*)
-			(* END Counter-example reconstruction *)
-			(*------------------------------------------------------------*)
-
 			(* Update termination status *)
 			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
 			self#print_algo_message Verbose_standard "Target state found! Terminating…";
 			termination_status <- Some Target_found;
-			
+		
 			raise TerminateAnalysis;
 		);
-	
+		
 		(* Statistics *)
 		counter_add_a_new_state#stop;
 
