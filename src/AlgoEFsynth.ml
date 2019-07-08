@@ -264,8 +264,13 @@ class virtual algoEFsynth =
 			(*** NOTE: so far, the reconstruction needs an absolute time clock ***)
 			begin
 			match model.global_time_clock with
-				| Some _ -> AlgoStateBased.reconstruct_counterexample state_space target_state_index;
-				| None -> print_warning "No counterexample reconstruction, as the model requires an absolute time clock.";
+				| None -> raise (InternalError ("No absolute time clock detected in " ^ self#algorithm_name ^ " although this should have been checked before."));
+				
+				| Some _ ->
+					let valuations_and_time = AlgoStateBased.reconstruct_counterexample state_space target_state_index in
+
+					(* Generate the graphics *)
+					Graphics.draw_valuations valuations_and_time (options#files_prefix ^ "_signals");
 			end;
 		);
 		

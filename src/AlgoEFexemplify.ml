@@ -44,6 +44,8 @@ class algoEFexemplify =
 	
 	(* Number of counter-examples spotted *)
 	val mutable nb_counterexamples : int = 0
+	
+	val nb_COUNTEREXAMPLE_MAX = 3
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -83,18 +85,26 @@ class algoEFexemplify =
 		(*** NOTE: so far, the reconstruction needs an absolute time clock ***)
 		begin
 		match model.global_time_clock with
-			| Some _ -> AlgoStateBased.reconstruct_counterexample state_space target_state_index;
 			| None -> raise (InternalError ("No absolute time clock detected in " ^ self#algorithm_name ^ " although this should have been checked before."));
+			
+			| Some _ ->
+				let valuations_and_time = AlgoStateBased.reconstruct_counterexample state_space target_state_index in
+
+				(* Generate the graphics *)
+				Graphics.draw_valuations valuations_and_time (options#files_prefix ^ "_signals_" ^ (string_of_int nb_counterexamples));
 		end;
 		
 		(* If maximum number of counterexamples processed: stop *)
-		if nb_counterexamples >= 2 then(
+		if nb_counterexamples >= nb_COUNTEREXAMPLE_MAX then(
 			(* Update termination status *)
 			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
 			self#print_algo_message Verbose_standard ("Target state #" ^ (string_of_int nb_counterexamples) ^ " is the maximum number sought. Terminating…");
 			termination_status <- Some Target_found;
 		
 			raise TerminateAnalysis;
+		)else(
+			(* Add the target state to the set of states to explore (a bit a hack); indeed, for exemplification, we may be interested in exploring beyond bad states, as we may find more! *)
+			new_states_indexes <- target_state_index :: new_states_indexes;
 		);
 
 		(* The end *)

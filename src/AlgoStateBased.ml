@@ -1579,9 +1579,7 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 
 
 (************************************************************)
-(* Counterexample reconstruction *)
-(************************************************************)
-(*** NOTE: so far this function returns nothing (unit), but the idea will be to return a counterexample soon ***)
+(** Reconstruct a whole counterexample from the initial state to a given target state. Return a list of pairs (valuation * absolute time) *)(************************************************************)
 let reconstruct_counterexample state_space target_state_index =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
@@ -1995,11 +1993,10 @@ let reconstruct_counterexample state_space target_state_index =
 	(* Create a representation with the absolute time, and the last element too *)
 	let valuations_and_time = (List.map (fun (_, valuation) -> valuation , (valuation absolute_time_clock) ) !te_and_valuations) @ [concrete_pxd_valuation , (concrete_pxd_valuation absolute_time_clock)] in
 	
-	(* Generate the graphics *)
-	Graphics.draw_valuations valuations_and_time (options#files_prefix ^ "_signals");
-	
 	(* The end *)
-	()
+	valuations_and_time
+
+
 
 (************************************************************)
 (************************************************************)
