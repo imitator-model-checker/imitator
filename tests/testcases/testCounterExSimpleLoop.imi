@@ -1,0 +1,85 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy example to test EF with counterexample
+ *
+ * Description     : Toy example to test EF with counterexample (version with loop)
+ * Correctness     : lbad unreachable
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2019/07/08
+ * Last modified   : 2019/07/08
+ *
+ * IMITATOR version: 2.11
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y,
+ 	global_time, (*** NOTE: special keyword ***)
+		: clock;
+
+ 	d1,
+ 	d2,
+		: discrete;
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant x <= 3 & global_time >= 0
+	when x = 3 & y = 3 sync a do {x := 0, y := 0, d1 := d1 * 2} goto l2;
+
+loc l2: invariant x <= 1
+	when x = 1 sync a do {x := 0, d2 := d2 - d1} goto l3;
+
+loc l3: invariant x <= 1
+	when x = 1 sync a do {d1 := d1 * 2, x := 0} goto l3;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+	& global_time = 0
+
+	(*------------------------------------------------------------*)
+	(* Initial discrete *)
+	(*------------------------------------------------------------*)
+	& d1 = 1/2
+	& d2 = 50
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[pta] = l3;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
