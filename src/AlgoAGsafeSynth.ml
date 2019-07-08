@@ -64,7 +64,7 @@ class algoAGsafeSynth =
 		
 		(* Print some information *)
 		self#print_algo_message_newline Verbose_low (
-			"Performing negation of final constraint..."
+			"Performing negation of final constraint…"
 		);
 		
 		
