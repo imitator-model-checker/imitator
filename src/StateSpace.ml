@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2019/06/11
+ * Last modified     : 2019/07/08
  *
  ************************************************************)
 
@@ -142,7 +142,7 @@ let nb_merged = create_discrete_counter_and_register "StateSpace.merges" States_
 let counter_add_state = create_hybrid_counter_and_register "StateSpace.add_state" States_counter Verbose_experiments
 let counter_compute_predecessors_with_combined_transitions = create_hybrid_counter_and_register "StateSpace.compute_predecessors" States_counter Verbose_experiments
 let counter_get_location = create_hybrid_counter_and_register "StateSpace.counter_get_location" States_counter Verbose_experiments
-let counter_get_state = create_hybrid_counter_and_register "StateSpace.get_state" States_counter Verbose_experiments
+let counter_get_state = create_hybrid_counter_and_register "get_state" States_counter Verbose_experiments
 
 let counter_add_transition = create_hybrid_counter_and_register "StateSpace.add_transition" States_counter Verbose_experiments
 let counter_get_successors = create_hybrid_counter_and_register "StateSpace.get_successors" States_counter Verbose_experiments
@@ -276,7 +276,7 @@ let get_state state_space state_index =
 		(* Exception just in case *)
 		try (
 			Hashtbl.find state_space.all_states state_index
-		) with Not_found -> raise (InternalError ("State of index '" ^ (string_of_int state_index) ^ "' was not found in state_space (in function: StateSpace.get_state)."))
+		) with Not_found -> raise (InternalError ("State of index '" ^ (string_of_int state_index) ^ "' was not found in state_space (in function: get_state)."))
 	in
 	
 	(* Find the pair (location_index, constraint) *)
@@ -1635,6 +1635,8 @@ let empty_states_for_comparison state_space =
 	counter_empty_states_for_comparison#stop;
 
 	()
+
+
 
 
 

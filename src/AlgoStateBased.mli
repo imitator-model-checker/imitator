@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2019/06/19
+ * Last modified     : 2019/07/08
  *
  ************************************************************)
 
@@ -141,7 +141,15 @@ val constraint_zone_predecessor_g_u :
 	(* Zn+1 *) LinearConstraint.px_linear_constraint ->
 	LinearConstraint.px_linear_constraint
 
-	
+
+
+
+(*------------------------------------------------------------*)
+(** Reconstruct a whole counterexample from the initial state to a given target state *)
+(*------------------------------------------------------------*)
+val reconstruct_counterexample : StateSpace.state_space -> state_index -> unit
+
+
 (************************************************************)
 (************************************************************)
 (* Class definition for state_index waiting lists *)
