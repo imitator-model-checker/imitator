@@ -357,9 +357,12 @@ class virtual algoEFsynth =
 			(*------------------------------------------------------------*)
 			(* Counter-example reconstruction (to be moved?) *)
 			(*------------------------------------------------------------*)
-			
-			AlgoStateBased.reconstruct_counterexample state_space new_state_index;
-			
+			(*** NOTE: so far, the reconstruction needs an absolute time clock ***)
+			begin
+			match model.special_reset_clock with
+				| Some _ -> AlgoStateBased.reconstruct_counterexample state_space new_state_index;
+				| None -> print_warning "No counterexample reconstruction, as the model requires an absolute time clock.";
+			end;
 			(*------------------------------------------------------------*)
 			(* END Counter-example reconstruction *)
 			(*------------------------------------------------------------*)
