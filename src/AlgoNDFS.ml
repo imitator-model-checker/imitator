@@ -8,7 +8,7 @@
  * 
  * File contributors : Laure Petrucci, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2019/07/05
+ * Last modified     : 2019/07/08
  *
  ************************************************************)
 
@@ -24,6 +24,7 @@ open Exceptions
 open AbstractModel
 open Result
 open AlgoStateBased
+open State
 open Statistics
 
 (************************************************************)
@@ -978,10 +979,10 @@ class algoNDFS =
 		print_message Verbose_standard ("Number of computed states: " ^ (string_of_int nb_states));
 		print_message Verbose_standard ("Number of processed states: " ^ (string_of_int processed_blue));
 
-		let constr_result = match constraint_valuations with
+(*		let constr_result = match constraint_valuations with
 				| None -> LinearConstraint.false_p_nnconvex_constraint()
 				| Some constr -> constr
-		in
+		in*)
 
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
