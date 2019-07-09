@@ -24,6 +24,26 @@
 tests = [
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the L/U-nature (L-PTA)',
+		'input_files': ['testL.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testL.res' , 'content' : """
+L/U subclass                            : L-PTA
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		# Test version             : TODO
 		# Test since               : TODO
 		# Test for IMITATOR version: TODO
