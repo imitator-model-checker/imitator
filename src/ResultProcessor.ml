@@ -327,7 +327,7 @@ let write_noresult_to_file file_name =
 	counter#start;
 	
 	(* Retrieve the model *)
-	let model = Input.get_model() in
+(* 	let model = Input.get_model() in *)
 
 	(* Prepare the string to write *)
 	let file_content =

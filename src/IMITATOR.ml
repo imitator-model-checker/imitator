@@ -237,6 +237,8 @@ counter_main_algorithm#start;
 if options#imitator_mode = No_analysis then(
 	(* Generate directly the "empty" result *)
 	ResultProcessor.process_result No_analysis "none" None;
+	
+	terminate_program()
 );
 
 
@@ -277,6 +279,10 @@ if options#pta2hytech then(
 	(* Write *)
 	write_to_file hytech_file translated_model;
 	print_message Verbose_standard ("File '" ^ hytech_file ^ "' successfully created.");
+	
+	(* Create a file with some statistics on the origina model if requested *)
+	ResultProcessor.process_result No_analysis "translation to HyTech" None;
+
 	terminate_program()
 );
 
@@ -291,6 +297,10 @@ if options#pta2imi then(
 	(* Write *)
 	write_to_file imi_file translated_model;
 	print_message Verbose_standard ("File '" ^ imi_file ^ "' successfully created.");
+	
+	(* Create a file with some statistics on the origina model if requested *)
+	ResultProcessor.process_result No_analysis "translation to IMITATOR" None;
+
 	terminate_program()
 );
 
@@ -310,6 +320,10 @@ if options#pta2jpg || options#pta2pdf || options#pta2png then(
 	in
 	Graphics.dot extension (options#files_prefix ^ "-pta") translated_model;
 	print_message Verbose_standard ("File successfully created."); (*** TODO: add file name in a proper manner ***)
+	
+	(* Create a file with some statistics on the origina model if requested *)
+	ResultProcessor.process_result No_analysis "translation to graphics" None;
+
 	terminate_program()
 );
 
@@ -324,6 +338,10 @@ if options#pta2tikz then(
 	(* Write *)
 	write_to_file latex_file translated_model;
 	print_message Verbose_standard ("File '" ^ latex_file ^ "' successfully created.");
+	
+	(* Create a file with some statistics on the origina model if requested *)
+	ResultProcessor.process_result No_analysis "translation to TikZ" None;
+
 	terminate_program()
 );
 
@@ -339,6 +357,10 @@ if options#pta2uppaal then(
 	(* Write *)
 	write_to_file output_file translated_model;
 	print_message Verbose_standard ("File '" ^ output_file ^ "' successfully created.");
+	
+	(* Create a file with some statistics on the origina model if requested *)
+	ResultProcessor.process_result No_analysis "translation to Uppaal" None;
+
 	terminate_program()
 );
 
