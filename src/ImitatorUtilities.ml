@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2019/07/08
+ * Last modified     : 2019/07/09
  *
  ************************************************************)
 
@@ -198,6 +198,9 @@ let verbose_mode_of_string verbose_mode =
 
 (** Mode for IMITATOR *)
 type imitator_mode =
+	(** No analysis, syntactic check only *)
+	| No_analysis
+	
 	(** Translation to another language: no analysis *)
 	| Translation
 	

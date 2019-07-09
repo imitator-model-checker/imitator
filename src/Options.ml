@@ -365,8 +365,12 @@ class imitator_options =
 
 			(* Get the mode *)
 			and set_mode mode =
+				(* Case: simple syntax check *)
+				if mode = "checksyntax" then 
+					imitator_mode <- No_analysis
+
 				(* Case: state space exploration *)
-				if mode = "statespace" then 
+				else if mode = "statespace" then 
 					imitator_mode <- State_space_exploration
 
 				(* Case: ndfs exploration *)
@@ -756,6 +760,8 @@ class imitator_options =
 				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Options are 'always', 'targetseen', 'pq10', 'pq100', 'iter10', 'iter100'. Default: iter10.");
 
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
+        Use 'checksyntax' for a simple syntax check and no analysis.
+        
         Use 'statespace' for the generation of the entire parametric state space.
         Use 'ndfs' for Nested Depth First Search of the state space. [NPvdP18]
         
@@ -902,7 +908,7 @@ class imitator_options =
 
 			Arg.parse speclist anon_fun usage_msg;
 
-			(* Case no file (except case translation) *)
+			(* Case no file *)
 			if nb_args < 1 then(
 				(*** HACK: print header now ***)
 				print_header_string();
@@ -956,6 +962,7 @@ class imitator_options =
 
 			(* Global mode *)
 			let message = match imitator_mode with
+				| No_analysis -> "none"
 				| Translation -> "translation"
 				| State_space_exploration -> "parametric state space exploration"
 				| NDFS_exploration -> "Nested Depth-First Search"
@@ -996,7 +1003,7 @@ class imitator_options =
 			(* Shortcut *)
 			let in_cartography_mode =
 				match imitator_mode with
-				| Translation | State_space_exploration | NDFS_exploration | EF_synthesis| EFunsafe_synthesis | EF_min | EF_max | EF_synth_min | EF_synth_max | EF_synth_min_priority_queue | EFexemplify | AF_synthesis | Loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUBtransformDistributed | Parametric_NZ_CUBcheck | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP -> false
+				| No_analysis | Translation | State_space_exploration | NDFS_exploration | EF_synthesis| EFunsafe_synthesis | EF_min | EF_max | EF_synth_min | EF_synth_max | EF_synth_min_priority_queue | EFexemplify | AF_synthesis | Loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUBtransformDistributed | Parametric_NZ_CUBcheck | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP -> false
 				| Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _  | RandomSeq_cartography _ | PRPC -> true
 			in
 			
@@ -1048,6 +1055,9 @@ class imitator_options =
 			(*** TODO: add warning if Learning_cartography is used with some incompatible options (such as -PRP) ***)
 			
 			if nb_args = 2 then(
+				if imitator_mode = No_analysis then
+					print_warning ("The second file " ^ second_file_name ^ " will be ignored since no analysis is requested.")
+				;
 				if imitator_mode = Translation then
 					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a translation.")
 				;
@@ -1095,7 +1105,7 @@ class imitator_options =
 			
 			(* Options for variants of IM, but not in IM mode *)
 			(*** TODO: do something less horrible here! ***)
-			if (imitator_mode = State_space_exploration || imitator_mode = NDFS_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_max || imitator_mode = EF_synth_min || imitator_mode = EF_synth_max || imitator_mode = EF_synth_min_priority_queue || imitator_mode = EFexemplify || imitator_mode = AF_synthesis || imitator_mode = Loop_synthesis || imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUBtransformDistributed || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
+			if (imitator_mode = State_space_exploration || imitator_mode = NDFS_exploration || imitator_mode = No_analysis || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_max || imitator_mode = EF_synth_min || imitator_mode = EF_synth_max || imitator_mode = EF_synth_min_priority_queue || imitator_mode = EFexemplify || imitator_mode = AF_synthesis || imitator_mode = Loop_synthesis || imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUBtransformDistributed || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
 				print_warning (Constants.program_name ^ " is run in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
 
 			

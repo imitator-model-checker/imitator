@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2015/12/03
- * Last modified     : 2019/06/11
+ * Last modified     : 2019/07/09
  *
  ************************************************************)
 
@@ -316,6 +316,45 @@ let result_nature_statistics_bc (soundness_str : string) termination (statespace
 
 
 (*** TODO: would be smarter to have a generic function write_result_to_file : imitator_result -> unit () ***)
+
+(* Write an ef_synth result to the result file *)
+let write_noresult_to_file file_name =
+	(*** WARNING: duplicate code concerning the counter creation ***)
+	(* Create counter *)
+	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
+	
+	(* Start counter *)
+	counter#start;
+	
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+
+	(* Prepare the string to write *)
+	let file_content =
+		(* 1) Header *)
+		file_header ()
+		
+		(* 2) Statistics about model *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (model_statistics ())
+		^ "\n------------------------------------------------------------"
+
+		(* 3) General statistics *)
+		^ "\n" ^ (Statistics.string_of_all_counters())
+		^ "\n------------------------------------------------------------"
+	in
+	
+	(* Write to file *)
+	write_to_file file_name file_content;
+	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	
+	(* Stop counter *)
+	counter#stop;
+	
+	(* The end *)
+	()
+
+
 
 (* Write an ef_synth result to the result file *)
 let write_deprecated_efsynth_result_to_file file_name (deprecated_efsynth_result : Result.deprecated_efsynth_result) =
@@ -854,10 +893,34 @@ let process_result result algorithm_name prefix_option =
 	
 	
 	match result with
+	| No_analysis ->
+		(* Write to file if requested *)
+		if options#output_result then(
+			let file_name = file_prefix ^ Constants.result_file_extension in
+			write_noresult_to_file file_name;
+		)else(
+			print_message Verbose_high "No result export to file requested.";
+		);
+		
+		(* Print statistics *)
+		print_memory_statistics ();
+		
+		(* The end *)
+		()
+
+
 	| PostStar_result poststar_result ->
 		print_message Verbose_low (
 			"Computation time: "
 			^ (string_of_seconds poststar_result.computation_time) ^ "."
+		);
+
+		(* Write to file if requested *)
+		if options#output_result then(
+			let file_name = file_prefix ^ Constants.result_file_extension in
+			write_noresult_to_file file_name;
+		)else(
+			print_message Verbose_high "No result export to file requested.";
 		);
 
 		(* Print statistics *)

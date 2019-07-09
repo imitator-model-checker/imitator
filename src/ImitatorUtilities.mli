@@ -78,6 +78,9 @@ val get_verbose_mode : unit -> verbose_mode
 
 (** Mode for IMITATOR *)
 type imitator_mode =
+	(** No analysis, syntactic check only *)
+	| No_analysis
+	
 	(** Translation to another language: no analysis *)
 	| Translation
 	

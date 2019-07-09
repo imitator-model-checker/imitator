@@ -9,7 +9,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/07/08
+ * Last modified     : 2019/07/09
  *
  ************************************************************)
 
@@ -163,6 +163,7 @@ begin
 match options#imitator_mode with
 	(*** BADPROG!!! This should be defined elsewhere... ***)
 	| Translation
+	| No_analysis
 	| State_space_exploration
 	| NDFS_exploration
 	| EF_synthesis
@@ -229,6 +230,15 @@ if verbose_mode_greater Verbose_low then(
 
 (* Statistics *)
 counter_main_algorithm#start;
+
+(************************************************************)
+(* Case no analysis *)
+(************************************************************)
+if options#imitator_mode = No_analysis then(
+	(* Generate directly the "empty" result *)
+	ResultProcessor.process_result No_analysis "none" None;
+);
+
 
 (************************************************************)
 (* Case translation *)
@@ -492,6 +502,19 @@ in
 (* Find the correct algorithm to execute *)
 let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 
+	(************************************************************)
+	(* No analysis *)
+	(************************************************************)
+	| No_analysis -> raise (InternalError "Case No_analysis should have been treated before")
+	
+	
+	(************************************************************)
+	(* Translation has been handled already *)
+	(************************************************************)
+
+	| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.")
+
+	
 	(************************************************************)
 	(* Exploration *)
 	(************************************************************)
@@ -936,11 +959,6 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		myalgo
 
 
-	(************************************************************)
-	(* Translation has been handled already *)
-	(************************************************************)
-
-	| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.");
 in
 
 

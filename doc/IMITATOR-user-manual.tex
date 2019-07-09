@@ -1440,7 +1440,11 @@ However, not all the properties of the inverse method are preserved when using m
 %------------------------------------------------------------
 The mode for \imitator{}.
 
-\begin{tabular}{@{} l @{\ \ } l}
+\begin{longtable}{@{} l @{\ \ } p{12cm}}
+	\styleOption{checksyntax} & Simple syntax check and no analysis. Use option \styleOption{-output-result} to generate a simple file with statistics on the model (numbers of variables, automata, L/U-nature, strong determinism…)
+% 		(see \cref{ss:mode:statespace}) %TODO?
+	\\
+
 	\styleOption{statespace} & Generation of the entire parametric state space \\
 	& (see \cref{ss:mode:statespace}) \\
 
@@ -1486,7 +1490,7 @@ The mode for \imitator{}.
 	\styleOption{shuffle} & Behavioral cartography with full coverage,\\
 	& and points considered in a random manner \\
 	& (see \cref{sss:mode:BC:shuffle}) \\
-\end{tabular}
+\end{longtable}
 
 
 

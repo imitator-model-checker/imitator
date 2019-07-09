@@ -3360,9 +3360,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 					if verbose_mode_greater Verbose_high then(
 						print_message Verbose_high ("This network of PTAs is not strongly deterministic: in automaton '" ^ (automata_names automaton_index) ^ "', in location '" ^ (location_names automaton_index location_index) ^ "', there are " ^ (string_of_int (List.length transitions_for_this_location)) ^ "outgoing transitions labeled with action '" ^ (action_names action_index) ^ "'.");
 					);
-					
-					raise (InternalError ("plop"));
-					
+
 					(* Update flag *)
 					strongly_deterministic := false;
 					

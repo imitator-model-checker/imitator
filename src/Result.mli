@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2015/11/23
- * Last modified     : 2019/06/14
+ * Last modified     : 2019/07/09
  *
  ************************************************************)
 
@@ -323,6 +323,9 @@ type multiple_synthesis_result = {
 (************************************************************)
 
 type imitator_result =
+	(* No analysis, syntactic check only (+ generation of the result file with syntactic information if requested) *)
+	| No_analysis
+
 	(* Result for Post* *)
 	| PostStar_result of poststar_result
 

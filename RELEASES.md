@@ -6,7 +6,8 @@
 
 ### Major features
 * In mode `EF -counterexample`, IMITATOR outputs an example of parameter valuation, and a full concrete run, with a graphical representation of the clocks and discrete variables evolution. [WORK IN PROGRESS]
-* New NDFS based state space exploration
+* New NDFS based state space construction (`-mode ndfs`) with no analysis
+* New check-syntax mode (`-mode checksyntax`), that simply checks the syntax and terminates without doing any analysis.
 
 ### Minor features
 * Removed the creation and deletion of an (unused) script when generating graphics
