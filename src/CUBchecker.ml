@@ -8,7 +8,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2019/07/08
+ * Last modified     : 2019/07/09
  *
  ************************************************************)
 
@@ -3554,8 +3554,13 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* Is there any stopwatch in the model? *)
 		has_stopwatches = model.has_stopwatches;
 		(* Is the model an L/U-PTA? *)
-		(*** TODO (for now, we just assume that after transformation not an L/U anymore ***)
+		(*** TODO (for now, we just assume that after transformation the model is not an L/U PTA anymore ***)
 		lu_status = PTA_notLU;
+		(* Is the model a strongly deterministic PTA? *)
+		(*** TODO (for now, we just assume that after transformation the model is not determistic anymore ***)
+		strongly_deterministic = false;
+		(* Does the model contain any transition labeled by a silent, non-observable action? *)
+		has_silent_actions = List.exists (fun action_index -> new_action_types action_index = Action_type_nosync) new_actions;
 
 		(** Content of the PTA **)
 		(* The observer *)

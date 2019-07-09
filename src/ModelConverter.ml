@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2019/07/05
+ * Last modified     : 2019/07/09
  *
  ************************************************************)
 
@@ -42,6 +42,9 @@ exception InvalidV0
 
 (* For constraint conversion *)
 exception False_exception
+
+(* For detecting strongly deterministic PTAs *)
+exception Not_strongly_deterministic
 
 
 
@@ -3327,6 +3330,69 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Detect the strongly deterministic nature of the PTA *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*** NOTE: strongly deterministic = for each PTA, for each location, for each VISIBLE (non-silent) action label, at most one outgoing transition with this action label ***)
+
+	(* Print some information *)
+	print_message Verbose_high ("*** Detecting the strongly-deterministic nature of the model…");
+
+	(* By default: yes, it is strongly deterministic *)
+	let strongly_deterministic = ref true in
+	
+	(* And now check for any counterexample *)
+	(* For all PTA *)
+	begin
+	try(
+	List.iter (fun automaton_index ->
+		let locations_for_this_automaton = locations_per_automaton automaton_index in
+		(* For all locations *)
+		List.iter (fun location_index ->
+
+			let actions_for_this_location = actions_per_location automaton_index location_index in
+			(* For all actions *)
+			List.iter (fun action_index ->
+				let transitions_for_this_location = transitions automaton_index location_index action_index in
+				(* If more than one transition with this action: not strongly deterministic *)
+				(*** NOTE: we don't care about silent actions as, by construction, all silent actions are different and therefore their cardinality can only be 1 ***)
+				if List.length transitions_for_this_location > 1 then(
+					(* Write a message *)
+					if verbose_mode_greater Verbose_high then(
+						print_message Verbose_high ("This network of PTAs is not strongly deterministic: in automaton '" ^ (automata_names automaton_index) ^ "', in location '" ^ (location_names automaton_index location_index) ^ "', there are " ^ (string_of_int (List.length transitions_for_this_location)) ^ "outgoing transitions labeled with action '" ^ (action_names action_index) ^ "'.");
+					);
+					
+					raise (InternalError ("plop"));
+					
+					(* Update flag *)
+					strongly_deterministic := false;
+					
+					(* Raise exception to not test further *)
+					raise Not_strongly_deterministic;
+				);
+			) actions_for_this_location;
+		) locations_for_this_automaton;
+	) automata;
+	) with
+		(* Just to accelerate exit from the loops *)
+		Not_strongly_deterministic -> ();
+	;
+	end;
+	
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Detect the presence of silent transitions *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	(* Print some information *)
+	print_message Verbose_high ("*** Detecting the presence of silent transitions in the model…");
+
+	(*** NOTE: instead of enumerating all transitions, we just check for the presence of a silent action; if an action was created but unused, it should have been deleted ***)
+	let has_silent_actions = List.exists (fun action_index ->
+		action_types action_index = Action_type_nosync
+	) actions in
+	
+
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Detect the L/U nature of the PTA *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
@@ -3340,7 +3406,10 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	in
 
 	(* 1) Get ALL constraints of guards and invariants *)
+	
+	(* Print some information *)
 	print_message Verbose_total ("*** Retrieving all constraints to detect the L/U nature of the model…");
+	
 	(*** BADPROG ***)
 	let all_constraints = ref [] in
 	(* For all PTA *)
@@ -3369,7 +3438,10 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	) automata;
 
 	(* 2) Try to partition parameters as L- and U- *)
+
+	(* Print some information *)
 	print_message Verbose_high ("*** Detecting the L/U nature of the model…");
+	
 	let lu_status =
 	try(
 		let l_parameters, u_parameters = LinearConstraint.partition_lu parameters !all_constraints in
@@ -3387,7 +3459,10 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the initial state *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	(* Print some information *)
 	print_message Verbose_high ("*** Building initial state…");
+	
 	let (initial_location, initial_constraint) =
 		make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs parsed_init_definition in
 
@@ -3567,6 +3642,21 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 		| None -> print_message Verbose_medium ("No global time clock '" ^ Constants.global_time_clock_name ^ "' detected.");
 	end;
 
+	
+	(* Debug print: strong determinism *)
+	if !strongly_deterministic then
+		print_message Verbose_low ("This PTA is strongly deterministic.")
+	else
+		print_message Verbose_medium ("This PTA is not strongly deterministic.");
+
+	
+	(* Debug print: silent transitions *)
+	if has_silent_actions then
+		print_message Verbose_low ("Silent actions detected.")
+	else
+		print_message Verbose_medium ("No silent action detected.");
+
+
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** HACK (big big hack): save some data structures to be used by the parsing and checking of additional file (pi0 or v0), if any ***)
@@ -3596,6 +3686,10 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	has_stopwatches = has_stopwatches;
 	(* Is the model an L/U-PTA? *)
 	lu_status = lu_status;
+	(* Is the model a strongly deterministic PTA? *)
+	strongly_deterministic = !strongly_deterministic;
+	(* Does the model contain any transition labeled by a silent, non-observable action? *)
+	has_silent_actions = has_silent_actions;
 
 
 	(* The observer *)

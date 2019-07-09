@@ -356,6 +356,7 @@ This syntax includes in particular diagonal constraints (\eg{} \styleIMI{x1 - x2
 \paragraph{Actions}
 Transitions can be synchronized on an action in $\Action$, or have no synchronized action (``$\unobs$''), which is often referred to in the literature as a silent transition, or an $\epsilon$-transition.
 For the semantics of the synchronization model between various \IPTA{}, refer to \cref{sect:synchronization}.
+A non-silent transition is said to be \emph{observable}; and it can be synchronized with other automata.
 
 \paragraph{Clock updates}
 Observe that clocks can be updated to any value, \ie{} a clock can be assigned not only to~0, but to any linear term over the other clocks, the parameters and the discrete variables.
@@ -408,6 +409,24 @@ Note that parameters are not assumed positive; however, the behavior of \imitato
 % TODO: example
 
 Finally, note that the number of \IPTA{}, locations, variables and actions that can be defined in a model is bounded in \imitator{} by some very large number (most probably $2^{32}$); but, well, you don't seriously plan to build such a large model, do you?
+
+\bigskip
+
+\imitator{} may use the determinism in (yet to come) algorithms; and the deterministic nature of an \NIPTA{} is detected by \imitator{}.
+In our setting, the strong determinism denotes at most one transition going out from a location and labeled with a given observable (\ie{} non-silent) transition.
+Let us precisely define what it means:
+
+%------------------------------------------------------------
+\begin{definition}[strong determinism]
+	Let $\A$ be an \NIPTA{} made of $N$ \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \DVar_i, \Clock_i, \Param_i, \invariant_i, \stopwatches_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \grandn$.
+	
+	$\A$ is \emph{strongly-deterministic} if
+	for all automaton $\A_i$,
+	for all location $\loc_i \in \Loc_i$,
+	for all \emph{observable} action $\action \in \Action_i$,
+	there exists at most one transition from~$\loc_i$ labeled with $\action$.
+\end{definition}
+%------------------------------------------------------------
 
 
 
@@ -2593,6 +2612,12 @@ L/U-PTA benefit from some decidability results (see \eg{} \cite{HRSV02,BlT09,JLR
 Still, some subclasses for which exact synthesis can be performed were proposed~\cite{BlT09,ALR18FORMATS}.
 
 However, \imitator{} does detect whether an input model is an L/U-PTA, in which case a message is printed with the list of lower-bounds parameters and upper-bounds parameters.
+
+\begin{remark}
+	Note that our definition of L/U-PTAs is consistent with that of, \eg{} \cite{BlT09}; however, we do \emph{not} consider the constraint of the initial state while checking for the L/U nature of the model.
+	That is, we refer to as L/U-PTAs even for the \emph{constrained L/U-PTAs} of~\cite{BlT09}.
+\end{remark}
+
 
 
 

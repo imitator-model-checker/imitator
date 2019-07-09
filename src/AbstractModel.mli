@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/11
- * Last modified     : 2019/05/29
+ * Last modified     : 2019/07/09
  *
  ************************************************************)
 
@@ -40,8 +40,10 @@ type var_type =
 
 (** Type of sync actions *)
 type action_type =
-  | Action_type_sync
-  | Action_type_nosync
+	(* Observable action label (does not necessarily mean that it is "synchronized", as it can belong to a single automaton) *)
+	| Action_type_sync
+	(* Non-observable, silent action label (necessarily non-synchronized) *)
+	| Action_type_nosync
 
 
 type discrete_value = NumConst.t
@@ -294,6 +296,10 @@ type abstract_model = {
 	has_stopwatches : bool;
 	(* Is the model an L/U-PTA? *)
 	lu_status : lu_status;
+	(* Is the model a strongly deterministic PTA? *)
+	strongly_deterministic : bool;
+	(* Does the model contain any transition labeled by a silent, non-observable action? *)
+	has_silent_actions : bool;
 
 	(** Content of the PTA **)
 	(* The observer *)

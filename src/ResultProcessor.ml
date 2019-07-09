@@ -277,7 +277,7 @@ let statespace_statistics state_space total_time =
 	let nb_states = StateSpace.nb_states state_space in
 	let states_per_second = (float_of_int nb_states) /. total_time in
 	
-	(* Speed: number of states computed, even if not kept (because merged, deleted...) *)
+	(* Speed: number of states computed, even if not kept (because merged, deleted…) *)
 	let nb_gen_states = StateSpace.get_nb_gen_states state_space in
 	let gen_states_per_second = (float_of_int nb_gen_states) /. total_time in
 	
@@ -998,7 +998,7 @@ let process_result result algorithm_name prefix_option =
 		(* If cartography required for BC *)
 		if options#output_bc_cart then (
 			(* Print some information *)
-			print_message Verbose_high "Graphical cartography asked: prepare tiles to be drawn...";
+			print_message Verbose_high "Graphical cartography asked: prepare tiles to be drawn…";
 
 			(* Keep only valid tiles, i.e., underapproximations or exact *)
 			let valid_tiles = cartography_result.tiles (*** TODO ***)(* List.filter (fun (abstract_point_based_result : abstract_point_based_result) -> abstract_point_based_result.soundness = Result.Constraint_maybe_under || abstract_point_based_result.soundness = Result.Constraint_exact) cartography_result.tiles*) in
