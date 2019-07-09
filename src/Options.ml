@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2019/05/30
+ * Last modified     : 2019/07/09
  *
  ************************************************************)
 
@@ -962,7 +962,7 @@ class imitator_options =
 
 			(* Global mode *)
 			let message = match imitator_mode with
-				| No_analysis -> "none"
+				| No_analysis -> "syntax check"
 				| Translation -> "translation"
 				| State_space_exploration -> "parametric state space exploration"
 				| NDFS_exploration -> "Nested Depth-First Search"
