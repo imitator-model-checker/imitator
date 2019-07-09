@@ -236,7 +236,7 @@ counter_main_algorithm#start;
 (************************************************************)
 if options#imitator_mode = No_analysis then(
 	(* Generate directly the "empty" result *)
-	ResultProcessor.process_result No_analysis "none" None;
+	ResultProcessor.process_result No_analysis "syntax check" None;
 	
 	terminate_program()
 );
