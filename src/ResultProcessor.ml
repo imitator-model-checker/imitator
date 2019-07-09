@@ -261,6 +261,8 @@ let model_statistics () =
 	^ "\nNumber of clocks                        : " ^ (string_of_int model.nb_clocks)
 	^ "\nHas stopwatches?                        : " ^ (string_of_bool model.has_stopwatches)
 	^ "\nL/U subclass                            : " ^ (string_of_lu_status model.lu_status)
+	^ "\nHas silent actions?                     : " ^ (string_of_bool model.has_silent_actions)
+	^ "\nIs strongly deterministic?              : " ^ (string_of_bool model.strongly_deterministic)
 	^ "\nNumber of parameters                    : " ^ (string_of_int model.nb_parameters)
 	^ "\nNumber of discrete variables            : " ^ (string_of_int model.nb_discrete)
 	^ "\nNumber of actions                       : " ^ (string_of_int model.nb_actions)
