@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2019/07/08
+ * Last modified     : 2019/07/09
  *
  ************************************************************)
 
@@ -313,7 +313,7 @@ class virtual algoEFsynth =
 		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
 		
 		(* Boolean to check whether the analysis should be terminated immediately *)
-		let terminate_analysis_immediately = ref false in
+(* 		let terminate_analysis_immediately = ref false in *)
 		
 		(* Boolean to check whether the state is a target state *)
 		let is_target = ref false in

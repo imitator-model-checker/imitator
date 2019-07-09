@@ -1585,7 +1585,7 @@ let reconstruct_counterexample state_space target_state_index =
 	let model = Input.get_model() in
 	
 	(* Retrieve the input options *)
-	let options = Input.get_options () in
+(* 	let options = Input.get_options () in *)
 
 	(* Get the state *)
 	let target_state = StateSpace.get_state state_space target_state_index in
