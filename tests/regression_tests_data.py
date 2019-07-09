@@ -22,6 +22,11 @@
 # TESTS TO CARRY
 #************************************************************
 tests = [
+	
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# SYNTACTIC TESTS
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
@@ -42,6 +47,260 @@ L/U subclass                            : L-PTA
 
 	,
 
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the L/U-nature (U-PTA)',
+		'input_files': ['testU.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testU.res' , 'content' : """
+L/U subclass                            : U-PTA
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the L/U-nature (L/U-PTA)',
+		'input_files': ['testLU.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testLU.res' , 'content' : """
+L/U subclass                            : L/U-PTA
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the L/U-nature (none)',
+		'input_files': ['testNotLU.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testNotLU.res' , 'content' : """
+L/U subclass                            : not L/U
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the L/U-nature (flip-flop: U)',
+		'input_files': ['flipflop.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'flipflop.res' , 'content' : """
+L/U subclass                            : U-PTA
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the L/U-nature (JR15: L/U)',
+		'input_files': ['JLR-TACAS13.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'JLR-TACAS13.res' , 'content' : """
+L/U subclass                            : L/U-PTA
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the detection of silent actions: no',
+		'input_files': ['testLU.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testLU.res' , 'content' : """
+Has silent actions?                            : false
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the detection of silent actions: yes',
+		'input_files': ['testNotLU.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testNotLU.res' , 'content' : """
+Has silent actions?                            : true
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the detection of silent actions: JR15',
+		'input_files': ['JLR-TACAS13.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'JLR-TACAS13.res' , 'content' : """
+Has silent actions?                            : true
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the detection of strong determinism: yes',
+		'input_files': ['testLU.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testLU.res' , 'content' : """
+Is strongly deterministic?              : true
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the detection of strong determinism: yes',
+		'input_files': ['testStrongDet.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testStrongDet.res' , 'content' : """
+Is strongly deterministic?              : true
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the detection of strong determinism: yes',
+		'input_files': ['testStrongDet2.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testStrongDet2.res' , 'content' : """
+Is strongly deterministic?              : true
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the detection of strong determinism: no',
+		'input_files': ['testNotStrongDet.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testNotStrongDet.res' , 'content' : """
+Is strongly deterministic?              : false
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# STATE SPACE GENERATION
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	
 	#------------------------------------------------------------
 	{
 		# Test version             : TODO
