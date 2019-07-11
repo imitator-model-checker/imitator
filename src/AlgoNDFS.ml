@@ -244,6 +244,7 @@ class algoNDFS =
 					let newpending = ref [] in
 					while not (queue_is_empty !pending) do
 						match (!pending) with
+							| [] -> raise (InternalError ("Impossible situation in algoNDFS: the queue should not be empty"))
 							| (first_state,first_state_depth)::body ->
 								if (smaller_parameter_projection first_state astate) then (
 									(* insert a state before the current state *)
@@ -347,9 +348,12 @@ class algoNDFS =
 			
 			(* Termination due to time limit reached *)
 			| Time_limit_reached -> termination_status <- Some (Result.Time_limit (List.length !cyan))
-						
+			
 			(* Termination due to a number of explored states reached *)
 			| States_limit_reached -> termination_status <- Some (Result.States_limit (List.length !cyan))
+			
+			(* Termination due to state space depth limit reached *)
+			| Depth_limit_reached -> termination_status <- Some (Result.Depth_limit (List.length !cyan))
 			end;
 			if (limit_reached <> Keep_going) then raise (TerminateAnalysis)
 			else(
@@ -419,7 +423,8 @@ class algoNDFS =
 					processed_blue <- processed_blue + 1;
 					cyan := astate::(!cyan);
 					printqueue "Cyan" !cyan;
-					self#post_from_one_state astate;
+					(*** WARNING (ÉA, 2019/07/11): this statement is a bit strange with unit type ***)
+					let _ = self#post_from_one_state astate in ();
 					() in
 				let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 					print_highlighted_message Shell_bold Verbose_standard
@@ -496,7 +501,8 @@ class algoNDFS =
 					processed_blue <- processed_blue + 1;
 					cyan := astate::(!cyan);
 					printqueue "Cyan" !cyan;
-					self#post_from_one_state astate;
+					(*** WARNING (ÉA, 2019/07/11): this statement is a bit strange with unit type ***)
+					let _ = self#post_from_one_state astate in ();
 					() in
 				let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 					print_highlighted_message Shell_bold Verbose_standard
@@ -678,7 +684,8 @@ class algoNDFS =
 					processed_blue <- processed_blue + 1;
 					cyan := astate::(!cyan);
 					printqueue "Cyan" !cyan;
-					self#post_from_one_state astate;
+					(*** WARNING (ÉA, 2019/07/11): this statement is a bit strange with unit type ***)
+					let _ = self#post_from_one_state astate in ();
 					() in
 				let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 					cyclecount <- cyclecount + 1;
@@ -787,7 +794,8 @@ class algoNDFS =
 							processed_blue <- processed_blue + 1;
 							cyan := astate::(!cyan);
 							printqueue "Cyan" !cyan;
-							self#post_from_one_state astate;
+							(*** WARNING (ÉA, 2019/07/11): this statement is a bit strange with unit type ***)
+							let _ = self#post_from_one_state astate in ();
 							() in
 						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 							cyclecount <- cyclecount + 1;
