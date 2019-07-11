@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/07/08
+ * Last modified     : 2019/07/11
  *
  ************************************************************)
 
@@ -206,7 +206,58 @@ let counter_gcmajor = create_hybrid_counter_and_register "StateBased.gcmajor" St
 
 
 (************************************************************)
-(* Main functions *)
+(* Syntactic functions (i.e. on the automaton structure) *)
+(************************************************************)
+
+(** Compute the predecessors of a location in an automaton via SOME given action or via any (NONE) *)
+let predecessors_of_location_gen (automaton_index : Automaton.automaton_index) (location_index : Automaton.location_index) (action_index_option : Automaton.action_index option) : (Automaton.location_index list) =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	
+	(* Iterate on locations *)
+	let predecessors =
+	List.fold_left (fun current_predecessors_for_all_locations source_location_index ->
+		(* source_location_index is a predecessor of location_index iff there exists an action for which there exists with location_index as target *)
+		if (
+			let actions_to_iterate = match action_index_option with
+			(* Only iterate on the specified action *)
+			| Some action_index -> [action_index]
+			(* Iterate on all actions for this automaton *)
+			| None -> (model.actions_per_automaton automaton_index)
+			in
+			(* Iterate on the specified set of actions *)
+			List.exists (fun action_index ->
+				(* Iterate on the transitions for this automaton, location and action *)
+				List.exists (fun transition_index ->
+					(* Get the transition *)
+					let transition = model.transitions_description transition_index in
+					(* Get the target *)
+					let target_location = transition.target in
+					(* If target = our location, then keep the source *)
+					target_location = location_index
+				) (model.transitions automaton_index source_location_index action_index)
+			) actions_to_iterate
+		)
+		then source_location_index :: current_predecessors_for_all_locations
+		else current_predecessors_for_all_locations
+	) [] (model.locations_per_automaton automaton_index)
+	in
+	(* Remove duplicates *)
+	list_only_once predecessors
+
+
+(** Compute the predecessors of a location in an automaton *)
+let predecessors_of_location (automaton_index : Automaton.automaton_index) (location_index : Automaton.location_index) : (Automaton.location_index list) =
+	predecessors_of_location_gen automaton_index location_index None
+
+
+(** Compute the predecessors of a location in an automaton via a given action *)
+let predecessors_of_location_via_action (automaton_index : Automaton.automaton_index) (location_index : Automaton.location_index) (action_index : Automaton.action_index) : (Automaton.location_index list) =
+	predecessors_of_location_gen automaton_index location_index (Some action_index)
+
+
+(************************************************************)
+(* Main semantic functions *)
 (************************************************************)
 
 
