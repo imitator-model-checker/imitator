@@ -592,7 +592,7 @@ class algoNDFS =
 							processed_blue <- processed_blue + 1;
 							cyan := astate::(!cyan);
 							printqueue "Cyan" !cyan;
-							self#post_from_one_state astate;
+							let _ = self#post_from_one_state astate in ();
 							() in
 						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 							print_highlighted_message Shell_bold Verbose_standard
@@ -1015,6 +1015,9 @@ class algoNDFS =
 			result = Good_constraint(*Accepting_cycle_constraint*) (constr_result, soundness);
 			(*result = Good_constraint (LinearConstraint.false_p_nnconvex_constraint(), soundness);*)
 
+			(* English description of the constraint *)
+			constraint_description = "constraint for accepting cycles";
+	
 			(* Explored state space *)
 			state_space			= state_space;
 			
