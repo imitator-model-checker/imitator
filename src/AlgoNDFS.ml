@@ -8,7 +8,7 @@
  * 
  * File contributors : Laure Petrucci, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2019/07/08
+ * Last modified     : 2019/07/11
  *
  ************************************************************)
 
@@ -1004,7 +1004,7 @@ class algoNDFS =
 		(* Return result *)
 		Single_synthesis_result
 		{
-			result = Accepting_cycle_constraint (constr_result, soundness);
+			result = Good_constraint(*Accepting_cycle_constraint*) (constr_result, soundness);
 			(*result = Good_constraint (LinearConstraint.false_p_nnconvex_constraint(), soundness);*)
 
 			(* Explored state space *)
