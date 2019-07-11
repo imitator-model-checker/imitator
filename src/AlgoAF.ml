@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2018/03/15
- * Last modified     : 2019/06/13
+ * Last modified     : 2019/07/11
  *
  ************************************************************)
 
@@ -520,6 +520,9 @@ class algoAFsynth =
 			(* Non-necessarily convex constraint guaranteeing the non-reachability of the bad location *)
 			result				= result;
 			
+			(* English description of the constraint *)
+			constraint_description = "constraint guaranteeing AF";
+	
 			(* Explored state space *)
 			state_space			= state_space;
 			

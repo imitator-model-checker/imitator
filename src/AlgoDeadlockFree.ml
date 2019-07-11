@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/08
- * Last modified     : 2019/06/11
+ * Last modified     : 2019/07/11
  *
  ************************************************************)
 
@@ -651,6 +651,9 @@ class algoDeadlockFree =
 			(* Non-necessarily convex constraint guaranteeing the non-reachability of the bad location *)
 			result				= result;
 			
+			(* English description of the constraint *)
+			constraint_description = "constraint guaranteeing deadlock-freeness";
+	
 			(* Explored state space *)
 			state_space			= state_space;
 			

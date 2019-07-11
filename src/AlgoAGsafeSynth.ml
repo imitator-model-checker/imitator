@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/02/03
- * Last modified     : 2017/02/03
+ * Last modified     : 2019/07/11
  *
  ************************************************************)
 
@@ -132,6 +132,9 @@ class algoAGsafeSynth =
 			(* Non-necessarily convex constraint guaranteeing the non-reachability of the bad location *)
 			result				= Good_constraint (result, soundness);
 			
+			(* English description of the constraint *)
+			constraint_description = "constraint guaranteeing safety";
+	
 			(* Explored state space *)
 			state_space			= state_space;
 			

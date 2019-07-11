@@ -8,7 +8,7 @@
  * 
  * File contributors : Vincent Bloemen, Étienne André
  * Created           : 2018/10/08
- * Last modified     : 2019/06/13
+ * Last modified     : 2019/07/11
  *
  ************************************************************)
 
@@ -920,6 +920,9 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
 			result = Good_constraint (constr_result, soundness);
 			(*result = Good_constraint (LinearConstraint.false_p_nnconvex_constraint(), soundness);*)
 
+			(* English description of the constraint *)
+			constraint_description = "constraint guaranteeing minimum-time reachability";
+	
 			(* Explored state space *)
 			state_space			= state_space;
 			

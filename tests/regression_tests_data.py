@@ -13,7 +13,7 @@
 # File contributors : Étienne André
 #
 # Created           : 2015/10/23
-# Last modified     : 2019/07/09
+# Last modified     : 2019/07/11
 #************************************************************
 
 
@@ -1550,7 +1550,7 @@ END CONSTRAINT
 ------------------------------------------------------------
 Constraint soundness                    : exact
 Termination                             : regular termination
-Constraint nature                       : bad
+Constraint nature                       : good
 ------------------------------------------------------------
 """
 			} #end result file
@@ -1577,7 +1577,7 @@ END CONSTRAINT
 ------------------------------------------------------------
 Constraint soundness                    : possible under-approximation
 Termination                             : terminated after reaching a target state (some states may have been unexplored)
-Constraint nature                       : bad
+Constraint nature                       : good
 ------------------------------------------------------------
 """
 			} #end result file

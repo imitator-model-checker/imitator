@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2019/06/13
+ * Last modified     : 2019/07/11
  *
  ************************************************************)
 
@@ -613,6 +613,9 @@ class virtual algoEFopt =
 			(* Non-necessarily convex constraint guaranteeing the non-reachability of the bad location *)
 			result				= Good_constraint (result, soundness);
 			
+			(* English description of the constraint *)
+			constraint_description = "constraint guaranteeing " ^ self#str_optimum ^ "-time reachability";
+	
 			(* Explored state space *)
 			state_space			= state_space;
 			

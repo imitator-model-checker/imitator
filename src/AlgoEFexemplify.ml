@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/08
- * Last modified     : 2019/07/08
+ * Last modified     : 2019/07/11
  *
  ************************************************************)
 
@@ -171,11 +171,22 @@ class algoEFexemplify =
 		(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
 		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
 
+		
+		
+		
+		
+		(*** TODO ***)
+		
+		
 		(* Return the result *)
 		Single_synthesis_result
 		{
 			(* Non-necessarily convex constraint guaranteeing the reachability of the bad location *)
 			result				= Bad_constraint (result, soundness);
+			
+			(*** TODO ***)
+			(*** NOTE: it will ultimately not be a Single_synthesis_result, in any case! ***)
+			constraint_description = "TODO";
 			
 			(* Explored state space *)
 			state_space			= state_space;

@@ -205,21 +205,21 @@ let string_statespace_nature_of_good_or_bad_constraint = function
 (** Convert a Result.good_or_bad_constraint into a verbose string for the sole soundness *)
 let verbose_string_soundness_of_good_or_bad_constraint = function 
 	(* Only good valuations *)
-	| Good_constraint (_, soundness) -> "This good constraint " ^ (verbose_string_of_soundness_suffix soundness)
+	| Good_constraint (_, soundness) -> "This positive constraint " ^ (verbose_string_of_soundness_suffix soundness)
 (* 	| Accepting_cycle_constraint (_, soundness) -> "This constraint for accepting cycles " ^ (verbose_string_of_soundness_suffix soundness) *)
 	(* Only bad valuations *)
-	| Bad_constraint (_, soundness) -> "This bad constraint " ^ (verbose_string_of_soundness_suffix soundness)
+	| Bad_constraint (_, soundness) -> "This negative constraint " ^ (verbose_string_of_soundness_suffix soundness)
 
 	(* Both good and bad valuations *)
 	| Good_bad_constraint good_and_bad_constraint
 		->
 		let _, good_soundness = good_and_bad_constraint.good in
 		let _, bad_soundness = good_and_bad_constraint.bad in
-		"The good constraint " ^ (verbose_string_of_soundness_suffix good_soundness)
+		"The positive constraint " ^ (verbose_string_of_soundness_suffix good_soundness)
 		^
 		". "
 		^
-		"The bad constraint " ^ (verbose_string_of_soundness_suffix bad_soundness) ^ "."
+		"The negative constraint " ^ (verbose_string_of_soundness_suffix bad_soundness) ^ "."
 
 
 (** Add standardised delimiters to constraints *)
@@ -802,7 +802,7 @@ let print_memory_statistics () =
 (************************************************************)
 (* Print single_synthesis_result (or in fact point_based_result too) on screen *)
 (************************************************************)
-let print_single_synthesis_or_point_based_result result computation_time =
+let print_single_synthesis_or_point_based_result result computation_time constraint_str =
 	(* Print the result *)
 	if verbose_mode_greater Verbose_standard then(
 		(* Retrieve the model *)
@@ -818,9 +818,9 @@ let print_single_synthesis_or_point_based_result result computation_time =
 		let text = 
 		match result with
 (* 			| Accepting_cycle_constraint _ -> "Final constraint such that there exists an accepting cycle" *)
-			| Good_constraint _ -> "Final constraint such that the system is correct"
-			| Bad_constraint _  -> "Final constraint such that the system is incorrect"
-			| Good_bad_constraint _  -> "Final constraints such that the system is correct/incorrect"
+			| Good_constraint _ -> "Final positive " ^ constraint_str ^ " (positive = guarantees the validity of the property)"
+			| Bad_constraint _  -> "Final negative " ^ constraint_str ^ " (negative = violates the property)"
+			| Good_bad_constraint _  -> "Final positive/negative " ^ constraint_str ^ " (in the form of a pair of constraints guaranteeing the validity/violation of the property)"
 		in
 		
 		(* Print some information *)
@@ -1005,7 +1005,7 @@ let process_result result algorithm_name prefix_option =
 
 	| Single_synthesis_result result ->
 		(* First print the result on the terminal *)
-		print_single_synthesis_or_point_based_result result.result result.computation_time;
+		print_single_synthesis_or_point_based_result result.result result.computation_time result.constraint_description;
 
 		(* Write to file if requested *)
 		if options#output_result then(
@@ -1021,7 +1021,7 @@ let process_result result algorithm_name prefix_option =
 
 	| Point_based_result result ->
 		(* First print the result on the terminal *)
-		print_single_synthesis_or_point_based_result result.result result.computation_time;
+		print_single_synthesis_or_point_based_result result.result result.computation_time "constraint";
 
 		(* Write to file if requested *)
 		if options#output_result then(
@@ -1090,7 +1090,7 @@ let process_result result algorithm_name prefix_option =
 	(* Multiple synthesis (e.g., PRPC) *)
 	| Multiple_synthesis_result result ->
 		(* First print the result on the terminal *)
-		print_single_synthesis_or_point_based_result result.result result.computation_time;
+		print_single_synthesis_or_point_based_result result.result result.computation_time "constraint";
 
 		(* Write to file if requested *)
 		if options#output_bc_result then(

@@ -193,6 +193,9 @@ type single_synthesis_result = {
 	(* Good and/or bad valuations *)
 	result				: good_or_bad_constraint;
 	
+	(* English description of the constraint *)
+	constraint_description: string;
+	
 	(* Explored state space *)
 	state_space			: StateSpace.state_space;
 	

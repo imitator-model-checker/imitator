@@ -16,6 +16,7 @@
 * Removed the `-merge-before` option (that was not documented nor tested)
 
 ### Export
+* The result in the terminal tries to be more precise about what the synthesized constraints actually guarantees
 * Added a (tentative) translation to Uppaal (option `-PTA2Uppaal`); see limitations in the user manual
 * In the graphical state space and states description, the projection onto a selected set of parameters is added if the model contains `projectresult(…)`
 * In the text files, state and transition descriptions are now ordered by increasing order

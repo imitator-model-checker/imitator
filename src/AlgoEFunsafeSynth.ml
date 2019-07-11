@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/02/03
- * Last modified     : 2017/02/03
+ * Last modified     : 2019/07/11
  *
  ************************************************************)
 
@@ -116,8 +116,11 @@ class algoEFunsafeSynth =
 		Single_synthesis_result
 		{
 			(* Non-necessarily convex constraint guaranteeing the reachability of the bad location *)
-			result				= Bad_constraint (result, soundness);
+			result				= Good_constraint (result, soundness);
 			
+			(* English description of the constraint *)
+			constraint_description = "constraint guaranteeing reachability";
+	
 			(* Explored state space *)
 			state_space			= state_space;
 			
