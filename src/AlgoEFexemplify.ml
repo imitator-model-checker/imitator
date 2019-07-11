@@ -145,7 +145,7 @@ class algoEFexemplify =
 				print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
 			);
 
-			(*** TODO! do only once for all... ***)
+			(*** TODO! do only once for all… ***)
 			let all_but_projectparameters = list_diff model.parameters parameters in
 			
 			(* Eliminate other parameters *)
