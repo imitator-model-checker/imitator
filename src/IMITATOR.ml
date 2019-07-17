@@ -9,7 +9,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/07/09
+ * Last modified     : 2019/07/17
  *
  ************************************************************)
 
@@ -176,6 +176,7 @@ match options#imitator_mode with
 	| EFexemplify
 	| AF_synthesis
 	| Loop_synthesis
+	| Acc_loop_synthesis
 	| Parametric_NZ_CUBcheck
 	| Parametric_NZ_CUBtransform
 	| Parametric_NZ_CUBtransformDistributed
@@ -618,6 +619,9 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	(************************************************************)
 	| Loop_synthesis ->
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoLoopSynth.algoLoopSynth in myalgo
+
+	| Acc_loop_synthesis ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoLoopActSynth.algoActLoopSynth in myalgo
 
 
 	(************************************************************)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2019/07/09
+ * Last modified     : 2019/07/17
  *
  ************************************************************)
 
@@ -239,6 +239,9 @@ type imitator_mode =
 	
 	(** Parametric loop synthesis *)
 	| Loop_synthesis
+	
+	(** Parametric accepting loop synthesis *)
+	| Acc_loop_synthesis
 	
 	(** Parametric Büchi-emptiness checking with non-Zenoness (method: check whether the PTA is CUB) *)
 	| Parametric_NZ_CUBcheck

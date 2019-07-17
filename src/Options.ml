@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2019/07/09
+ * Last modified     : 2019/07/17
  *
  ************************************************************)
 
@@ -424,6 +424,10 @@ class imitator_options =
 				else if mode = "LoopSynth" then 
 					imitator_mode <- Loop_synthesis
 				
+				(* Case: Parametric accepting loop synthesis (liveness) *)
+				else if mode = "ActLoopSynth" then 
+					imitator_mode <- Acc_loop_synthesis
+				
 				(** Case: Parametric Büchi-emptiness checking with non-Zenoness (method: check whether the PTA is CUB) *)
 				else if mode = "NZCUBcheck" then(
 					imitator_mode <- Parametric_NZ_CUBcheck;
@@ -455,7 +459,7 @@ class imitator_options =
 					(*** NOTE: very important! This algorithm requires the alternative definition of time-elapsing ***)
 					no_time_elapsing := true;
 					
-					(*** HACK!!! otherwise Graphics won't generate the .jpg file to test...) ***)
+					(*** HACK!!! otherwise Graphics won't generate the .jpg file to test…) ***)
 					graphical_state_space <- Graphical_state_space_normal;
 				)
 					
@@ -771,6 +775,7 @@ class imitator_options =
         Use 'EFsynthminpq' for a parametric non-reachability analysis with global time minimization. [ABPP19]
         Use 'PDFC' for parametric non-deadlock checking. [Andre16]
         Use 'LoopSynth' for cycle-synthesis (without non-Zeno assumption). [ANPS17]
+        Use 'ActLoopSynth' for accepting cycle-synthesis (without non-Zeno assumption).
         Use 'NZCUBcheck' for cycle-synthesis (with non-Zeno assumption, using a CUB-detection). [EXPERIMENTAL] [ANPS17]
         Use 'NZCUBtrans' for cycle-synthesis (with non-Zeno assumption, using a transformation into a CUB-PTA). [EXPERIMENTAL] [ANPS17]
         
@@ -919,7 +924,7 @@ class imitator_options =
 			
 			(* Case no pi0 file *)
 			(*** TODO: do something less horrible here! ***)
-			if nb_args = 1 && (imitator_mode != No_analysis) && (imitator_mode != Translation) && (imitator_mode != State_space_exploration) && (imitator_mode != NDFS_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != AF_synthesis) && (imitator_mode != EFunsafe_synthesis) && (imitator_mode != EF_min) && (imitator_mode != EF_max) && (imitator_mode != EF_synth_min) && (imitator_mode != EF_synth_max) && (imitator_mode != EF_synth_min_priority_queue) && (imitator_mode != EFexemplify) && (imitator_mode != Loop_synthesis) && (imitator_mode != Parametric_NZ_CUBtransform) && (imitator_mode != Parametric_NZ_CUBtransformDistributed) && (imitator_mode != Parametric_NZ_CUBcheck) && (imitator_mode != Parametric_NZ_CUB) && (imitator_mode != Parametric_deadlock_checking) then(
+			if nb_args = 1 && (imitator_mode != No_analysis) && (imitator_mode != Translation) && (imitator_mode != State_space_exploration) && (imitator_mode != NDFS_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != AF_synthesis) && (imitator_mode != EFunsafe_synthesis) && (imitator_mode != EF_min) && (imitator_mode != EF_max) && (imitator_mode != EF_synth_min) && (imitator_mode != EF_synth_max) && (imitator_mode != EF_synth_min_priority_queue) && (imitator_mode != EFexemplify) && (imitator_mode != Loop_synthesis) && (imitator_mode != Acc_loop_synthesis) && (imitator_mode != Parametric_NZ_CUBtransform) && (imitator_mode != Parametric_NZ_CUBtransformDistributed) && (imitator_mode != Parametric_NZ_CUBcheck) && (imitator_mode != Parametric_NZ_CUB) && (imitator_mode != Parametric_deadlock_checking) then(
 				(*** HACK: print header now ***)
 				print_header_string();
 				print_error ("Please give a file name for the reference valuation.");
@@ -975,7 +980,8 @@ class imitator_options =
 				| EF_synth_min_priority_queue -> "EF-synth with minimal reachability"
 				| EFexemplify -> "EF-exemplify"
 				| AF_synthesis -> "AF-synthesis"
-				| Loop_synthesis -> "loop-synthesis"
+				| Loop_synthesis -> "infinite run synthesis"
+				| Acc_loop_synthesis -> "accepting infinite run synthesis"
 				| Parametric_NZ_CUBcheck -> "parametric non-Zeno emptiness checking (CUB checking)"
 				| Parametric_NZ_CUBtransform -> "parametric non-Zeno emptiness checking (CUB transformation)"
 				| Parametric_NZ_CUBtransformDistributed -> "parametric non-Zeno emptiness checking (CUB transformation), distributed version"
@@ -1003,7 +1009,7 @@ class imitator_options =
 			(* Shortcut *)
 			let in_cartography_mode =
 				match imitator_mode with
-				| No_analysis | Translation | State_space_exploration | NDFS_exploration | EF_synthesis| EFunsafe_synthesis | EF_min | EF_max | EF_synth_min | EF_synth_max | EF_synth_min_priority_queue | EFexemplify | AF_synthesis | Loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUBtransformDistributed | Parametric_NZ_CUBcheck | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP -> false
+				| No_analysis | Translation | State_space_exploration | NDFS_exploration | EF_synthesis| EFunsafe_synthesis | EF_min | EF_max | EF_synth_min | EF_synth_max | EF_synth_min_priority_queue | EFexemplify | AF_synthesis | Loop_synthesis | Acc_loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUBtransformDistributed | Parametric_NZ_CUBcheck | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP -> false
 				| Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _  | RandomSeq_cartography _ | PRPC -> true
 			in
 			
@@ -1012,7 +1018,7 @@ class imitator_options =
 			(* Force options *) 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			
-			(* If a time limit is defined for BC but NOT for IM, then define it for IM too (otherwise may yield an infinite loop in IM...) *)
+			(* If a time limit is defined for BC but NOT for IM, then define it for IM too (otherwise may yield an infinite loop in IM…) *)
 			if in_cartography_mode && carto_time_limit <> None && !time_limit = None then(
 				print_warning ("A time limit is defined for BC but not for IM: forcing time limit for IM too.");
 				let limit = match carto_time_limit with
@@ -1070,7 +1076,7 @@ class imitator_options =
 				if imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_synth_min || imitator_mode = EF_synth_max || imitator_mode = EF_synth_min_priority_queue || imitator_mode = EFexemplify || imitator_mode = EF_max|| imitator_mode = AF_synthesis then
 					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a synthesis with respect to a property.")
 				;
-				if imitator_mode = Loop_synthesis then
+				if imitator_mode = Loop_synthesis || imitator_mode = Acc_loop_synthesis then
 					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a loop synthesis.")
 				;
 				if imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform  || imitator_mode = Parametric_NZ_CUBtransformDistributed then
@@ -1105,7 +1111,7 @@ class imitator_options =
 			
 			(* Options for variants of IM, but not in IM mode *)
 			(*** TODO: do something less horrible here! ***)
-			if (imitator_mode = State_space_exploration || imitator_mode = NDFS_exploration || imitator_mode = No_analysis || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_max || imitator_mode = EF_synth_min || imitator_mode = EF_synth_max || imitator_mode = EF_synth_min_priority_queue || imitator_mode = EFexemplify || imitator_mode = AF_synthesis || imitator_mode = Loop_synthesis || imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUBtransformDistributed || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
+			if (imitator_mode = State_space_exploration || imitator_mode = NDFS_exploration || imitator_mode = No_analysis || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_max || imitator_mode = EF_synth_min || imitator_mode = EF_synth_max || imitator_mode = EF_synth_min_priority_queue || imitator_mode = EFexemplify || imitator_mode = AF_synthesis || imitator_mode = Loop_synthesis || imitator_mode = Acc_loop_synthesis || imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUBtransformDistributed || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
 				print_warning (Constants.program_name ^ " is run in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
 
 			
