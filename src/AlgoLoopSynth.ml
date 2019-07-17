@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2019/07/11
+ * Last modified     : 2019/07/17
  *
  ************************************************************)
 
@@ -155,7 +155,7 @@ class algoLoopSynth =
 	method update_loop_constraint current_constraint =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
-
+		
 		(* Project onto the parameters *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse current_constraint in
 		
@@ -170,7 +170,7 @@ class algoLoopSynth =
 			(* Print some information *)
 			self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
 
-			(*** TODO! do only once for all... ***)
+			(*** TODO! do only once for all… ***)
 			let all_but_projectparameters = list_diff model.parameters parameters in
 			
 			(* Eliminate other parameters *)
@@ -209,11 +209,22 @@ class algoLoopSynth =
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Detect whether a loop is accepting *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method is_accepting scc =
+		(* Here, we do not care about 'acceptance' condition: therefore, a loop is always accepting *)
+		true
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when found a loop (after updating the state space) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_loop_constraint _ _ loop_px_constraint =
-		(* Just update the loop constraint *)
-		self#update_loop_constraint loop_px_constraint;
+	method process_loop_constraint state_index scc loop_px_constraint =
+		(* Process loop constraint if accepting loop *)
+		if self#is_accepting scc then(
+			(* Just update the loop constraint *)
+			self#update_loop_constraint loop_px_constraint;
+		);
+		
 		(* The end *)
 		()
 

@@ -22,9 +22,7 @@ open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
-open Result
 open AlgoLoopSynth
-open State
 
 
 (************************************************************)
@@ -50,11 +48,10 @@ class algoActLoopSynth =
 	(* Class methods *)
 	(************************************************************)
 
-
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* When a loop is found, update the loop constraint; current_constraint is a PX constraint that will not be modified. It will be projected onto the parameters and unified with the current parameter loop_constraint *)
+	(* Detect whether a loop is accepting *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method update_loop_constraint current_constraint =
+	method is_accepting scc =
 		raise (NotImplemented "work in progress")
 
 

@@ -32,13 +32,10 @@ class algoActLoopSynth :
 		method algorithm_name : string
 		
 
-		(************************************************************)
-		(* Class methods *)
-		(************************************************************)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* When a loop is found, update the loop constraint; current_constraint is a PX constraint that will not be modified *)
+		(* Detect whether a loop is accepting *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method update_loop_constraint : LinearConstraint.px_linear_constraint -> unit
+		method is_accepting : StateSpace.scc ->  bool
 
 
 end
