@@ -1,0 +1,80 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Testing Laure Petrucci's NDFS algorithm
+ *
+ * Description     : Toy case study to test Laure Petrucci's NDFS algorithm
+ * Correctness     : Accepting cycle
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2019/07/18
+ * Last modified   : 2019/07/18
+ *
+ * IMITATOR version: 2.12
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant True
+	when x < 1 sync a do {x := 0} goto l1;
+	when x = 1 & x = p sync a do {x := 0} goto l2;
+
+accepting loc l2: invariant True
+	when x = 1 goto l2;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* property := unreachable loc[pta] = l1; *)
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
