@@ -99,8 +99,12 @@ main:
 /***********************************************
 	INCLUDES
 ***********************************************/
+include_file:
+	| INCLUDE SEMICOLON { $1 }
+;
+
 include_file_list:
-	| INCLUDE SEMICOLON include_file_list  { $1 :: $3 }
+	| include_file include_file_list  { $1 :: $2 }
 	| { [] }
 ;
 
@@ -151,6 +155,7 @@ var_type:
 
 automata:
 	automaton automata { $1 :: $2 }
+	| include_file automata { $2 }
 	| { [] }
 ;
 
@@ -633,6 +638,8 @@ property_definition:
 
 	// Pattern
 	| CT_PROPERTY OP_ASSIGN pattern semicolon_opt { Some $3 }
+
+	| include_file { None }
 
 	// Case: no property
 	|  { None }
