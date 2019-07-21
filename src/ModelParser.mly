@@ -33,6 +33,7 @@ let parse_error s =
 %token <string> FLOAT
 %token <string> NAME
 %token <string> STRING
+%token <ParsingStructure.parsing_structure> INCLUDE
 
 %token OP_PLUS OP_MINUS OP_MUL OP_DIV
 %token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
@@ -85,12 +86,22 @@ let parse_error s =
 
 /**********************************************/
 main:
-	 automata_descriptions commands EOF
+	include_file_list automata_descriptions commands EOF
 	{
-		let decl, automata = $1 in
-		let init_definition, bad, projection_definition, optimization_definition, carto = $2 in
+		let included_files = $1 in
+		print_endline (string_of_int (List.length included_files));
+		let decl, automata = $2 in
+		let init_definition, bad, projection_definition, optimization_definition, carto = $3 in
 		decl, automata, init_definition, bad, projection_definition, optimization_definition, carto
 	}
+;
+
+/***********************************************
+	INCLUDES
+***********************************************/
+include_file_list:
+	| INCLUDE SEMICOLON include_file_list  { $1 :: $3 }
+	| { [] }
 ;
 
 /***********************************************
@@ -573,6 +584,7 @@ init_definition:
 /* We allow here an optional "&" at the beginning */
 region_expression:
 	| ampersand_opt region_expression_fol { $2 }
+	| { [ ] }
 ;
 
 region_expression_fol:

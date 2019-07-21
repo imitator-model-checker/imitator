@@ -20,12 +20,27 @@ let comment_depth = ref 0;;
 
 let line=ref 1;;
 
+(* store the name of the included files *)
+let fset = Hashtbl.create 17;;
+
 }
 
 rule token = parse
 	  ['\n']             { line := !line + 1 ; token lexbuf }     (* skip new lines *)
 	| [' ' '\t']         { token lexbuf }     (* skip blanks *)
 	| "--" [^'\n']* '\n' { line := !line + 1 ; token lexbuf }     (* skip Hytech-style comments *)
+
+	(* C style include *)
+	| "#include \""   ( [^'"' '\n']* as filename) '"'
+    { if Hashtbl.mem fset filename then
+        raise Exit
+      else
+        let c = open_in filename in
+        Hashtbl.add fset filename ();
+        let lb = Lexing.from_channel c in
+        let p = ModelParser.main token lb in
+        INCLUDE p
+    }
 
 	(* C style comments *)
 	| "/*"
