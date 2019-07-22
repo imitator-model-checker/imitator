@@ -8,7 +8,7 @@
  * 
  * File contributors : Laure Petrucci, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2019/07/11
+ * Last modified     : 2019/07/22
  *
  ************************************************************)
 
@@ -881,7 +881,7 @@ class algoNDFS =
 				done;)
 							with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
-			| Exploration_syn_mixed_NDFS -> print_message Verbose_standard("Using the option synMixedNDFS --- Not implemented yet")
+(* 			| Exploration_syn_mixed_NDFS -> print_message Verbose_standard("Using the option synMixedNDFS --- Not implemented yet") *)
 			| _ -> raise (InternalError ("Unknown variant of NDFS"))
 		end;
 

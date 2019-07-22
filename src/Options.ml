@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2019/07/17
+ * Last modified     : 2019/07/22
  *
  ************************************************************)
 
@@ -589,8 +589,8 @@ class imitator_options =
 					exploration_order <- Exploration_syn_NDFS_sub
 				else if order = "synlayerNDFSsub" then
 					exploration_order <- Exploration_syn_layer_NDFS_sub
-				else if order = "synMixedNDFS" then
-					exploration_order <- Exploration_syn_mixed_NDFS
+		(*		else if order = "synMixedNDFS" then
+					exploration_order <- Exploration_syn_mixed_NDFS*)
 				else(
 					(*** HACK: print header now ***)
 					print_header_string();
@@ -1155,7 +1155,7 @@ class imitator_options =
 				| Exploration_layer_NDFS_sub -> print_message Verbose_standard ("Exploration order: layerd NDFS with subsumption [NPvdP18].")
 				| Exploration_syn_NDFS_sub -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption.")
 				| Exploration_syn_layer_NDFS_sub -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption and layers [NPvdP18].")
-				| Exploration_syn_mixed_NDFS -> print_message Verbose_standard ("Exploration order: NDFS with mix of subsumption and layers.")
+(* 				| Exploration_syn_mixed_NDFS -> print_message Verbose_standard ("Exploration order: NDFS with mix of subsumption and layers.") *)
 end;
 
             (* Merge heuristic *)
