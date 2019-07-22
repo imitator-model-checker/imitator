@@ -876,7 +876,7 @@ class algoNDFS =
 								printqueue "Cyan" !cyan;
 							| _ -> print_message Verbose_standard "Error popping from cyan";
 							() in
-						rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate 0;
+						rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate thestate_depth;
 						end;
 				done;)
 							with TerminateAnalysis -> ());
