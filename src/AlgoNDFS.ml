@@ -357,7 +357,7 @@ class algoNDFS =
 			end;
 			if (limit_reached <> Keep_going) then raise (TerminateAnalysis)
 			else(
-			print_message Verbose_low("Executing rundfs at depth "
+			print_highlighted_message Shell_bold Verbose_low("Executing rundfs at depth "
 				^ (string_of_int thestate_depth)
 				^ " with "
 				^ (if State.is_accepting (StateSpace.get_state state_space thestate)
@@ -385,7 +385,7 @@ class algoNDFS =
 							^ (ModelPrinter.string_of_state model
 								(StateSpace.get_state state_space suc_id)));				
 						if (filterdfs thestate suc_id) then (
-							if (testaltdfs thestate suc_id) then (alternativedfs suc_id)
+							if (testaltdfs thestate suc_id) then (alternativedfs suc_id thestate_depth)
 							else 
 							if (testrecursivedfs suc_id) then (
 								rundfs enterdfs predfs lookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs suc_id (thestate_depth + 1))
@@ -443,7 +443,7 @@ class algoNDFS =
 						not (List.mem astate !cyan)) then true else false in
 				let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 					false in
-				let alternativedfs (astate : State.state_index) : unit =
+				let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
 					() in
 				let testrecursivedfs (astate : State.state_index) : bool =
 					true in
@@ -471,7 +471,7 @@ class algoNDFS =
 							true in
 						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 							if (List.mem astate !cyan) then true else false in
-						let alternativedfs (astate : State.state_index) : unit =
+						let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
 							cyclefound astate astate
 						in
 						let testrecursivedfs (astate : State.state_index) : bool =
@@ -522,7 +522,7 @@ class algoNDFS =
 						not (setsubsumes !red astate)) then true else false in
 				let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 					false in
-				let alternativedfs (astate: State.state_index) : unit =
+				let alternativedfs (astate: State.state_index) (astate_depth : int) : unit =
 					() in
 				let testrecursivedfs (astate: State.state_index) : bool =
 					true in
@@ -551,7 +551,7 @@ class algoNDFS =
 							else false in
 						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 							if (subsumesset astate !cyan) then true else false in
-						let alternativedfs (astate : State.state_index) : unit =
+						let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
 							cyclefound astate astate
 						in
 						let testrecursivedfs (astate : State.state_index) : bool =
@@ -614,8 +614,8 @@ class algoNDFS =
 						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 							if (not (same_parameter_projection thestate astate)) then true
 							else false in
-						let alternativedfs (astate: State.state_index) : unit =
-							add_pending astate (thestate_depth + 1) in
+						let alternativedfs (astate: State.state_index) (astate_depth : int) : unit =
+							add_pending astate (astate_depth + 1) in
 						let testrecursivedfs (astate: State.state_index) : bool =
 							true in
 						let postdfs (astate: State.state_index) (astate_depth : int) : unit =
@@ -644,7 +644,7 @@ class algoNDFS =
 								let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 									if (subsumesset astate !cyan) then true
 									else false in
-								let alternativedfs (astate : State.state_index) : unit =
+								let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
 									cyclefound astate astate
 								in
 								let testrecursivedfs (astate : State.state_index) : bool =
@@ -714,7 +714,7 @@ class algoNDFS =
 						not (setsubsumes !red astate)) then true else false in
 				let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 					false in
-				let alternativedfs (astate: State.state_index) : unit =
+				let alternativedfs (astate: State.state_index) (astate_depth : int) : unit =
 					() in
 				let testrecursivedfs (astate: State.state_index) : bool =
 					true in
@@ -746,7 +746,7 @@ class algoNDFS =
 							else false in
 						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 							if (subsumesset astate !cyan) then true else false in
-						let alternativedfs (astate : State.state_index) : unit =
+						let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
 							cyclefound astate astate
 						in
 						let testrecursivedfs (astate : State.state_index) : bool =
@@ -825,8 +825,8 @@ class algoNDFS =
 						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 							if (not (same_parameter_projection thestate astate)) then true
 							else false in
-						let alternativedfs (astate: State.state_index) : unit =
-							add_pending astate (thestate_depth + 1) in
+						let alternativedfs (astate: State.state_index) (astate_depth : int) : unit =
+							add_pending astate (astate_depth + 1) in
 						let testrecursivedfs (astate: State.state_index) : bool =
 							true in
 						let postdfs (astate: State.state_index) (astate_depth : int) : unit =
@@ -858,7 +858,7 @@ class algoNDFS =
 								let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 									if (subsumesset astate !cyan) then true
 									else false in
-								let alternativedfs (astate : State.state_index) : unit =
+								let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
 									cyclefound astate astate
 								in
 								let testrecursivedfs (astate : State.state_index) : bool =
