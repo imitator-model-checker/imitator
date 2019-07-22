@@ -639,7 +639,7 @@ property_definition:
 	// Pattern
 	| CT_PROPERTY OP_ASSIGN pattern semicolon_opt { Some $3 }
 
-	| include_file { None }
+	| include_file { let _, _, _, property, _, _, _ = $1 in property }
 
 	// Case: no property
 	|  { None }
