@@ -2156,6 +2156,129 @@ Number of computed states               : 7
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test ActLoopSynth: flipflop (no loop)',
+		'input_files': ['flipflop.imi'],
+		'options'    : '-mode ActLoopSynth -output-result',
+		'expectations' : [
+			{'file': 'flipflop.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 20
+Number of transitions                   : 19
+Number of computed states               : 20
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/22
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test ActLoopSynth: simple example 1',
+		'input_files': ['testNDFS-1.imi'],
+		'options'    : '-mode ActLoopSynth -output-result',
+		'expectations' : [
+			{'file': 'testNDFS-1.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 3
+Number of transitions                   : 4
+Number of computed states               : 5
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/22
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test ActLoopSynth: simple example 2',
+		'input_files': ['testNDFS-2.imi'],
+		'options'    : '-mode ActLoopSynth -output-result',
+		'expectations' : [
+			{'file': 'testNDFS-2.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+OR
+  p = 1
+OR
+  p = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 9
+Number of transitions                   : 13
+Number of computed states               : 14
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/22
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test ActLoopSynth: simple example 3 (accepting for all valuations)',
+		'input_files': ['PDFC5.imi'],
+		'options'    : '-mode ActLoopSynth -output-result',
+		'expectations' : [
+			{'file': 'PDFC5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p3 >= 0
+& p2 >= 0
+& p1 >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 5
+Number of transitions                   : 6
+Number of computed states               : 7
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		# Test version             : 1
 		# Test since               : 2019/07/22
 		# Test for IMITATOR version: 2.12

@@ -71,7 +71,8 @@ init :=
 (* Property specification *)
 (************************************************************)
 
-(* property := unreachable loc[pta] = l1; *)
+(*** NOTE: we use both the 'accepting' syntax (for NDFS) and the usual IMITATOR syntax for LoopSynth ***)
+property := unreachable loc[pta] = l2;
 
 
 (************************************************************)
