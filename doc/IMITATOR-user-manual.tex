@@ -726,6 +726,22 @@ As usual, \imitator{} can also
 	or
 	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
 
+\paragraph{Accepting loop}
+Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one \emph{accepting} cycle, \ie{} an infinite run passing infinitely often by an accepting location.
+
+The accepting location is defined as usual using the following syntax:
+
+\begin{center}
+	\styleIMI{property := unreachable loc[pta] = …;}
+\end{center}
+
+…which can be misleading as the property is defined using \styleIMI{unreachable} while the location should actually be reachable.
+Patterns (see \cref{ss:mode:prop}) can also be used. % NOTE: not tested
+
+The command for accepting cycle synthesis is:
+
+\styleCommand{\binimitator{} model.imi -mode LoopSynth -output-result}
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -768,6 +784,10 @@ As usual, \imitator{} can also
 	output the trace set in a graphical form (option \styleOption{-output-trace-set})
 	or
 	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
+
+\begin{remark}
+	The \emph{accepting} cycles are not (yet?) supported for non-Zeno synthesis.
+\end{remark}
 
 
 
@@ -1464,6 +1484,9 @@ The mode for \imitator{}.
 	& (see \cref{ss:mode:PDFC}) \\
 
 	\styleOption{LoopSynth} & cycle synthesis \\
+	& (see \cref{ss:mode:LoopSynth}) \\
+
+	\styleOption{ActLoopSynth} & accepting cycle synthesis \\
 	& (see \cref{ss:mode:LoopSynth}) \\
 
 	\styleOption{NZCUBcheck} & non-Zeno cycle synthesis (with CUB-detection) \\
