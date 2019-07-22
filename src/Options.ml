@@ -374,8 +374,11 @@ class imitator_options =
 					imitator_mode <- State_space_exploration
 
 				(* Case: ndfs exploration *)
-				else if mode = "ndfs" then 
-					imitator_mode <- NDFS_exploration
+				else if mode = "ndfs" then(
+					imitator_mode <- NDFS_exploration;
+					(* By default: NDFS (other options can also be specified) *)
+					exploration_order <- Exploration_NDFS;
+				)
 
 				(* Case: old version of EF-synthesis using a list of constraints *)
 				else if mode = "EFold" then 
@@ -591,7 +594,7 @@ class imitator_options =
 				else(
 					(*** HACK: print header now ***)
 					print_header_string();
-					print_error ("The exploration order '" ^ order ^ "' is not valid in ndfs mode.");
+					print_error ("The exploration order '" ^ order ^ "' is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
 					exit(1);
