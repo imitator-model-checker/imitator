@@ -27,6 +27,9 @@ let parse_error s =
 	raise (ParsingError (symbol_start, symbol_end))
 ;;
 
+
+let include_list = ref [];;
+
 %}
 
 %token <NumConst.t> INT
@@ -86,12 +89,11 @@ let parse_error s =
 
 /**********************************************/
 main:
-	include_file_list automata_descriptions commands EOF
+	automata_descriptions commands EOF
 	{
-		let included_files = $1 in
-		print_endline (string_of_int (List.length included_files));
-		let decl, automata = $2 in
-		let init_definition, bad, projection_definition, optimization_definition, carto = $3 in
+		print_endline (string_of_int (List.length !include_list));
+		let decl, automata = $1 in
+		let init_definition, bad, projection_definition, optimization_definition, carto = $2 in
 		decl, automata, init_definition, bad, projection_definition, optimization_definition, carto
 	}
 ;
@@ -113,7 +115,7 @@ include_file_list:
 ***********************************************/
 
 automata_descriptions:
-	declarations automata { $1, $2 }
+	include_file_list declarations automata { $2, $3 }
 ;
 
 /**********************************************/
@@ -155,7 +157,7 @@ var_type:
 
 automata:
 	automaton automata { $1 :: $2 }
-	| include_file automata { $2 }
+	| include_file automata { include_list := $1 :: !include_list; $2 } /** puede incluir un automata completo **/
 	| { [] }
 ;
 

@@ -33,7 +33,7 @@ rule token = parse
 	(* C style include *)
 	| "#include \""   ( [^'"' '\n']* as filename) '"'
     { if Hashtbl.mem fset filename then
-        raise Exit
+				failwith "File has been already included"
       else
         let c = open_in filename in
         Hashtbl.add fset filename ();
