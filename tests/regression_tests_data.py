@@ -13,7 +13,7 @@
 # File contributors : Étienne André
 #
 # Created           : 2015/10/23
-# Last modified     : 2019/07/11
+# Last modified     : 2019/07/22
 #************************************************************
 
 
@@ -2146,6 +2146,30 @@ Constraint nature                       : good
 Number of states                        : 5
 Number of transitions                   : 6
 Number of computed states               : 7
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/22
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test NDFS: simple example 1',
+		'input_files': ['testNDFS-1.imi'],
+		'options'    : '-mode ndfs -output-result',
+		'expectations' : [
+			{'file': 'testNDFS-1.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
 """
 			} #end result file
 		] # end expectations
