@@ -4,7 +4,7 @@
  * 
  * Université Paris 13, LIPN, CNRS, France
  * 
- * Module description: ActLoopSynth algorithm (synthesizes valuations for which there exists an accepting loop in the PTA)
+ * Module description: AccLoopSynth algorithm (synthesizes valuations for which there exists an accepting loop in the PTA)
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/17
@@ -30,7 +30,7 @@ open AlgoLoopSynth
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoActLoopSynth =
+class algoAccLoopSynth =
 	object (self) inherit algoLoopSynth as super
 	
 	(************************************************************)
@@ -40,7 +40,7 @@ class algoActLoopSynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "ActLoopSynth"
+	method algorithm_name = "AccLoopSynth"
 	
 	
 	(************************************************************)

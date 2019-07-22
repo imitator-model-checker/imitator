@@ -428,7 +428,7 @@ class imitator_options =
 					imitator_mode <- Loop_synthesis
 				
 				(* Case: Parametric accepting loop synthesis (liveness) *)
-				else if mode = "ActLoopSynth" then 
+				else if mode = "AccLoopSynth" then 
 					imitator_mode <- Acc_loop_synthesis
 				
 				(** Case: Parametric Büchi-emptiness checking with non-Zenoness (method: check whether the PTA is CUB) *)
@@ -778,7 +778,7 @@ class imitator_options =
         Use 'EFsynthminpq' for a parametric non-reachability analysis with global time minimization. [ABPP19]
         Use 'PDFC' for parametric non-deadlock checking. [Andre16]
         Use 'LoopSynth' for cycle-synthesis (without non-Zeno assumption). [ANPS17]
-        Use 'ActLoopSynth' for accepting cycle-synthesis (without non-Zeno assumption).
+        Use 'AccLoopSynth' for accepting cycle-synthesis (without non-Zeno assumption).
         Use 'NZCUBcheck' for cycle-synthesis (with non-Zeno assumption, using a CUB-detection). [EXPERIMENTAL] [ANPS17]
         Use 'NZCUBtrans' for cycle-synthesis (with non-Zeno assumption, using a transformation into a CUB-PTA). [EXPERIMENTAL] [ANPS17]
         

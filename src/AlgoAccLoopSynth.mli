@@ -4,11 +4,11 @@
  * 
  * Université Paris 13, LIPN, CNRS, France
  * 
- * Module description: ActLoopSynth algorithm (synthesizes valuations for which there exists an accepting loop in the PTA)
+ * Module description: AccLoopSynth algorithm (synthesizes valuations for which there exists an accepting loop in the PTA)
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/17
- * Last modified     : 2019/07/17
+ * Last modified     : 2019/07/22
  *
  ************************************************************)
 
@@ -23,7 +23,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoActLoopSynth :
+class algoAccLoopSynth :
 	object inherit algoLoopSynth
 		(************************************************************)
 		(* Class variables *)

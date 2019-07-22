@@ -9,7 +9,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/07/17
+ * Last modified     : 2019/07/22
  *
  ************************************************************)
 
@@ -621,7 +621,7 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoLoopSynth.algoLoopSynth in myalgo
 
 	| Acc_loop_synthesis ->
-		let myalgo :> AlgoGeneric.algoGeneric = new AlgoLoopActSynth.algoActLoopSynth in myalgo
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth in myalgo
 
 
 	(************************************************************)

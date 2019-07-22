@@ -2156,9 +2156,9 @@ Number of computed states               : 7
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test ActLoopSynth: flipflop (no loop)',
+		'purpose'    : 'Test AccLoopSynth: flipflop (no loop)',
 		'input_files': ['flipflop.imi'],
-		'options'    : '-mode ActLoopSynth -output-result',
+		'options'    : '-mode AccLoopSynth -output-result',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2186,9 +2186,9 @@ Number of computed states               : 20
 		# Test version             : 1
 		# Test since               : 2019/07/22
 		# Test for IMITATOR version: 2.12
-		'purpose'    : 'Test ActLoopSynth: simple example 1',
+		'purpose'    : 'Test AccLoopSynth: simple example 1',
 		'input_files': ['testNDFS-1.imi'],
-		'options'    : '-mode ActLoopSynth -output-result',
+		'options'    : '-mode AccLoopSynth -output-result',
 		'expectations' : [
 			{'file': 'testNDFS-1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2216,9 +2216,9 @@ Number of computed states               : 5
 		# Test version             : 1
 		# Test since               : 2019/07/22
 		# Test for IMITATOR version: 2.12
-		'purpose'    : 'Test ActLoopSynth: simple example 2',
+		'purpose'    : 'Test AccLoopSynth: simple example 2',
 		'input_files': ['testNDFS-2.imi'],
-		'options'    : '-mode ActLoopSynth -output-result',
+		'options'    : '-mode AccLoopSynth -output-result',
 		'expectations' : [
 			{'file': 'testNDFS-2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2250,9 +2250,9 @@ Number of computed states               : 14
 		# Test version             : 1
 		# Test since               : 2019/07/22
 		# Test for IMITATOR version: 2.12
-		'purpose'    : 'Test ActLoopSynth: simple example 3 (accepting for all valuations)',
+		'purpose'    : 'Test AccLoopSynth: simple example 3 (accepting for all valuations)',
 		'input_files': ['PDFC5.imi'],
-		'options'    : '-mode ActLoopSynth -output-result',
+		'options'    : '-mode AccLoopSynth -output-result',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
