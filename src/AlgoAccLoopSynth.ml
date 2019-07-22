@@ -59,7 +59,7 @@ class algoAccLoopSynth =
 			| Some (Unreachable unreachable_global_locations)
 			| Some (Reachable unreachable_global_locations)
 				-> unreachable_global_locations
-			| _ -> raise (InternalError "Reachability property expected in AlgoLoopActSynth.is_accepting scc")
+			| _ -> raise (InternalError "Reachability property expected in AccLoopSynth.is_accepting scc")
 		in
 
 		(* Accepting if at least one state matches the reachability condition *)
