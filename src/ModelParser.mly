@@ -28,6 +28,7 @@ let parse_error s =
 ;;
 
 
+(* TODO: is it included twice ? *)
 let include_list = ref [];;
 
 %}
@@ -91,10 +92,13 @@ let include_list = ref [];;
 main:
 	automata_descriptions commands EOF
 	{
-		print_endline (string_of_int (List.length !include_list));
+		let incl_decl = List.fold_left (fun acc (i,_,_,_,_,_,_) -> i@acc) [] !include_list in
+		let incl_automata = List.fold_left (fun acc (_,a,_,_,_,_,_) -> a@acc) [] !include_list in
+		let incl_init = List.fold_left (fun acc (_,_,i,_,_,_,_) -> i@acc) [] !include_list in
+
 		let decl, automata = $1 in
 		let init_definition, bad, projection_definition, optimization_definition, carto = $2 in
-		decl, automata, init_definition, bad, projection_definition, optimization_definition, carto
+		(List.append incl_decl decl), (List.append incl_automata automata), (List.append incl_init init_definition), bad, projection_definition, optimization_definition, carto
 	}
 ;
 
