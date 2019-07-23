@@ -29,7 +29,7 @@ IMITATOR is mainly a command-line tool, but that can output results in graphical
 IMITATOR was able to verify numerous case studies from the literature and from the industry, such as communication protocols, hardware asynchronous circuits, schedulability problems with uncertain periods and various other systems such as coffee machines (probably the most critical systems from a researcher point of view).
 Numerous benchmarks are available at the [IMITATOR Web page](https://www.imitator.fr), or on github.
 
-For more info, please visit www.imitator.fr
+For more info, please visit [imitator.fr](https://www.imitator.fr)
 
 
 ### Keywords
@@ -38,7 +38,7 @@ formal verification, model checking, software verification, parameter synthesis,
 
 ### References
 
-[ABPP19] Étienne André, Vincent Bloemen, Laure Petrucci and Jaco Van de Pol. **Minimal-Time Synthesis for Parametric Timed Automata**. In Tomas Vojnar and Lijun Zhang (eds.), TACAS’19, Springer LNCS, April 2019.
+[ABPP19] Étienne André, Vincent Bloemen, Laure Petrucci and Jaco Van de Pol. **[https://doi.org/10.1007/978-3-030-17465-1_12](Minimal-Time Synthesis for Parametric Timed Automata)**. In Tomas Vojnar and Lijun Zhang (eds.), TACAS’19, Springer LNCS, April 2019.
 
 [ACEF09] Étienne André, Thomas Chatain, Emmanuelle Encrenaz and Laurent Fribourg. **An Inverse Method for Parametric Timed Automata**. International Journal of Foundations of Computer Science 20(5), pages 819–836, 2009.
 
