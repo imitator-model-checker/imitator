@@ -334,8 +334,8 @@ type valuation_and_concrete_run = {
 	satisfying		: bool;
 }
 
-(** Result for **runs** synthesis *)
-type runs_synthesis_result = {
+(** Result for runs exhibition *)
+type runs_exhibition_result = {
 	(* Set of runs *)
 	runs				: valuation_and_concrete_run list;
 	
@@ -380,6 +380,6 @@ type imitator_result =
 	(* No result for workers in distributed mode *)
 	| Distributed_worker_result
 
-	(* Result for runs synthesis *)
-	| Runs_synthesis_result of runs_synthesis_result
+	(* Result for runs exhibition *)
+	| Runs_exhibition_result of runs_exhibition_result
 

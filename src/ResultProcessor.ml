@@ -1120,8 +1120,8 @@ let process_result result algorithm_name prefix_option =
 	| Distributed_worker_result ->
 		()
 
-	(* Nothing to do for workers in distributed mode *)
-	| Runs_synthesis_result _ ->
+	(* Result for runs exhibition *)
+	| Runs_exhibition_result _ ->
 		raise (NotImplemented ("work in progress"))
 
 
