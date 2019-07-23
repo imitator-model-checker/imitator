@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2019/07/22
+ * Last modified     : 2019/07/23
  *
  ************************************************************)
 
@@ -362,6 +362,84 @@ type graphical_state_space =
 	| Graphical_state_space_normal
 	(* State space with state numbers, locations, constraints and parameter constraints *)
 	| Graphical_state_space_verbose
+
+
+(************************************************************)
+(** Predicates on mode *)
+(************************************************************)
+
+(*** NOTE: explicit definition to avoid to forget a new algorithm (which would raise a warning upon compiling) ***)
+let is_mode_IM = function
+	| No_analysis
+	| Translation
+	| State_space_exploration
+	| NDFS_exploration
+	| EF_synthesis
+	| EFunsafe_synthesis
+	| EF_min
+	| EF_max
+	| EF_synth_min
+	| EF_synth_max
+	| EF_synth_min_priority_queue
+	| EFexemplify
+	| AF_synthesis
+	| Loop_synthesis
+	| Acc_loop_synthesis
+	| Parametric_NZ_CUBcheck
+	| Parametric_NZ_CUBtransform
+	| Parametric_NZ_CUBtransformDistributed
+	| Parametric_NZ_CUB
+	| Parametric_deadlock_checking
+		-> false
+	| Inverse_method
+	| Inverse_method_complete
+	| PRP
+		-> true
+	| Cover_cartography
+	| Learning_cartography
+	| Shuffle_cartography
+	| Border_cartography
+	| Random_cartography _
+	| RandomSeq_cartography _
+	| PRPC
+		-> false
+
+
+let is_mode_cartography = function
+	| No_analysis
+	| Translation
+	| State_space_exploration
+	| NDFS_exploration
+	| EF_synthesis
+	| EFunsafe_synthesis
+	| EF_min
+	| EF_max
+	| EF_synth_min
+	| EF_synth_max
+	| EF_synth_min_priority_queue
+	| EFexemplify
+	| AF_synthesis
+	| Loop_synthesis
+	| Acc_loop_synthesis
+	| Parametric_NZ_CUBcheck
+	| Parametric_NZ_CUBtransform
+	| Parametric_NZ_CUBtransformDistributed
+	| Parametric_NZ_CUB
+	| Parametric_deadlock_checking
+		-> false
+	| Inverse_method
+	| Inverse_method_complete
+	| PRP
+		-> false
+	| Cover_cartography
+	| Learning_cartography
+	| Shuffle_cartography
+	| Border_cartography
+	| Random_cartography _
+	| RandomSeq_cartography _
+	| PRPC
+		-> true
+
 
 
 (************************************************************)

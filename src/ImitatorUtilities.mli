@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2019/07/22
+ * Last modified     : 2019/07/23
  *
  ************************************************************)
 
@@ -239,6 +239,14 @@ type graphical_state_space =
 	| Graphical_state_space_normal
 	(* State space with state numbers, locations, constraints and parameter constraints *)
 	| Graphical_state_space_verbose
+
+
+(************************************************************)
+(** Predicates on mode *)
+(************************************************************)
+
+val is_mode_IM          : imitator_mode -> bool
+val is_mode_cartography : imitator_mode -> bool
 
 
 (************************************************************)

@@ -159,58 +159,17 @@ PVal.set_dimensions model.nb_parameters;
 (*------------------------------------------------------------*)
 (* Parse the additional file (pi0 or v0) *)
 (*------------------------------------------------------------*)
-begin
-match options#imitator_mode with
-	(*** BADPROG!!! This should be defined elsewhere... ***)
-	| Translation
-	| No_analysis
-	| State_space_exploration
-	| NDFS_exploration
-	| EF_synthesis
-	| EFunsafe_synthesis
-	| EF_min
-	| EF_max
-	| EF_synth_min
-	| EF_synth_max
-	| EF_synth_min_priority_queue
-	| EFexemplify
-	| AF_synthesis
-	| Loop_synthesis
-	| Acc_loop_synthesis
-	| Parametric_NZ_CUBcheck
-	| Parametric_NZ_CUBtransform
-	| Parametric_NZ_CUBtransformDistributed
-	| Parametric_NZ_CUB
-	| Parametric_deadlock_checking
-	(* Case: no additional file *)
-	-> ()
-
-	(* Inverse method : pi0 *)
-	| Inverse_method
-	| Inverse_method_complete
-	| PRP
-	(* Case: pi0 *)
-	->
+if is_mode_IM options#imitator_mode then(
 		let pi0 = ParsingUtility.compile_pi0 options in
 		Input.set_pi0 pi0;
+);
 
-
-	| Cover_cartography
-	| Border_cartography
-	| Random_cartography _
-	| Learning_cartography
-	| Shuffle_cartography
-	| RandomSeq_cartography _
-	| PRPC
-	(* Case: v0 *)
-	->
+if is_mode_cartography options#imitator_mode then(
 		let v0 = ParsingUtility.compile_v0 options in
 		Input.set_v0 v0;
+);
 
-end;
-
-
-
+(* End of parsing *)
 parsing_counter#stop;
 
 

@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2019/07/22
+ * Last modified     : 2019/07/23
  *
  ************************************************************)
 
@@ -925,9 +925,8 @@ class imitator_options =
 				abort_program (); exit(1)
 			);
 			
-			(* Case no pi0 file *)
-			(*** TODO: do something less horrible here! ***)
-			if nb_args = 1 && (imitator_mode != No_analysis) && (imitator_mode != Translation) && (imitator_mode != State_space_exploration) && (imitator_mode != NDFS_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != AF_synthesis) && (imitator_mode != EFunsafe_synthesis) && (imitator_mode != EF_min) && (imitator_mode != EF_max) && (imitator_mode != EF_synth_min) && (imitator_mode != EF_synth_max) && (imitator_mode != EF_synth_min_priority_queue) && (imitator_mode != EFexemplify) && (imitator_mode != Loop_synthesis) && (imitator_mode != Acc_loop_synthesis) && (imitator_mode != Parametric_NZ_CUBtransform) && (imitator_mode != Parametric_NZ_CUBtransformDistributed) && (imitator_mode != Parametric_NZ_CUBcheck) && (imitator_mode != Parametric_NZ_CUB) && (imitator_mode != Parametric_deadlock_checking) then(
+			(* Case no pi0 or no v0 file, although it is needed *)
+			if nb_args = 1 && (is_mode_IM imitator_mode || is_mode_cartography imitator_mode) then(
 				(*** HACK: print header now ***)
 				print_header_string();
 				print_error ("Please give a file name for the reference valuation.");
@@ -1005,24 +1004,13 @@ class imitator_options =
 
 			(*** TODO : print the user-defined correctness condition, if any ***)
 			
-			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-			(* Some useful variables *)
-			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-			
-			(* Shortcut *)
-			let in_cartography_mode =
-				match imitator_mode with
-				| No_analysis | Translation | State_space_exploration | NDFS_exploration | EF_synthesis| EFunsafe_synthesis | EF_min | EF_max | EF_synth_min | EF_synth_max | EF_synth_min_priority_queue | EFexemplify | AF_synthesis | Loop_synthesis | Acc_loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUBtransformDistributed | Parametric_NZ_CUBcheck | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP -> false
-				| Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _  | RandomSeq_cartography _ | PRPC -> true
-			in
-			
 			
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Force options *) 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			
 			(* If a time limit is defined for BC but NOT for IM, then define it for IM too (otherwise may yield an infinite loop in IM…) *)
-			if in_cartography_mode && carto_time_limit <> None && !time_limit = None then(
+			if is_mode_cartography imitator_mode && carto_time_limit <> None && !time_limit = None then(
 				print_warning ("A time limit is defined for BC but not for IM: forcing time limit for IM too.");
 				let limit = match carto_time_limit with
 					| None -> raise (InternalError ("Impossible situation in options, carto_time_limit is set at that point"))
@@ -1033,7 +1021,7 @@ class imitator_options =
 			
 			
 			(* Handling BC tiles files output *)
-			if in_cartography_mode then(
+			if is_mode_cartography imitator_mode then(
 				(* Case cartograpy output requested *)
 				if cart then(
 					(* Enable cartography for BC *)
@@ -1063,37 +1051,9 @@ class imitator_options =
 			
 			(*** TODO: add warning if Learning_cartography is used with some incompatible options (such as -PRP) ***)
 			
-			if nb_args = 2 then(
-				if imitator_mode = No_analysis then
-					print_warning ("The second file " ^ second_file_name ^ " will be ignored since no analysis is requested.")
+			if nb_args = 2 && not (is_mode_cartography imitator_mode) && not (is_mode_IM imitator_mode) then(
+					print_warning ("The second file " ^ second_file_name ^ " will be ignored since the analysis is neither the inverse method nor the behavioral cartography or their variants.")
 				;
-				if imitator_mode = Translation then
-					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a translation.")
-				;
-				if imitator_mode = State_space_exploration then
-					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a state space exploration.")
-				;
-				if imitator_mode = NDFS_exploration then
-					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a NDFS exploration.")
-				;
-				if imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_synth_min || imitator_mode = EF_synth_max || imitator_mode = EF_synth_min_priority_queue || imitator_mode = EFexemplify || imitator_mode = EF_max|| imitator_mode = AF_synthesis then
-					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a synthesis with respect to a property.")
-				;
-				if imitator_mode = Loop_synthesis || imitator_mode = Acc_loop_synthesis then
-					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a loop synthesis.")
-				;
-				if imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform  || imitator_mode = Parametric_NZ_CUBtransformDistributed then
-					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a non-Zeno parametric model checking.")
-				;
-				if imitator_mode = Parametric_NZ_CUB then
-					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a non-Zeno parametric model checking.")
-				;
-				if imitator_mode = Parametric_deadlock_checking then
-					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is parametric deadlock checking.")
-				;
-			(*	if !forcePi0 then
-					print_warning ("The second " ^ !second_file_name ^ " will be ignored since this the pi0 file is automatically generated.")
-				;*)
 			);
 
 			if !acyclic && !tree then (
@@ -1107,15 +1067,14 @@ class imitator_options =
 
 			
 			(* No cart options if not in cartography *)
-			if not in_cartography_mode && carto_tiles_limit <> None then print_warning ("A maximum number of tiles has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
-			if not in_cartography_mode && carto_time_limit <> None then print_warning ("A maximum computation for the cartography has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
-			if not in_cartography_mode && (NumConst.neq !step NumConst.one) then
+			if not (is_mode_cartography imitator_mode) && carto_tiles_limit <> None then print_warning ("A maximum number of tiles has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
+			if not (is_mode_cartography imitator_mode) && carto_time_limit <> None then print_warning ("A maximum computation for the cartography has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
+			if not (is_mode_cartography imitator_mode) && (NumConst.neq !step NumConst.one) then
 				print_warning (Constants.program_name ^ " is not run in cartography mode; the option regarding to the step of the cartography algorithm will thus be ignored.");
 			
 			(* Options for variants of IM, but not in IM mode *)
-			(*** TODO: do something less horrible here! ***)
-			if (imitator_mode = State_space_exploration || imitator_mode = NDFS_exploration || imitator_mode = No_analysis || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_max || imitator_mode = EF_synth_min || imitator_mode = EF_synth_max || imitator_mode = EF_synth_min_priority_queue || imitator_mode = EFexemplify || imitator_mode = AF_synthesis || imitator_mode = Loop_synthesis || imitator_mode = Acc_loop_synthesis || imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUBtransformDistributed || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
-				print_warning (Constants.program_name ^ " is run in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
+			if (not (is_mode_IM imitator_mode) && not (is_mode_cartography imitator_mode)) && (!union || !pi_compatible) then
+				print_warning ("Options regarding the variants of the inverse method will be ignored, as " ^ Constants.program_name ^ " is not run in inverse method or cartography.");
 
 			
 			(* No no_leq_test_in_ef if not EF *)
@@ -1238,44 +1197,44 @@ end;
 				print_message Verbose_medium ("Non-distributed mode (default).");
 			| Distributed_unsupervised ->(
 				print_message Verbose_standard ("Considering a distributed mode with unsupervised workers (work in progress).");
-				if not in_cartography_mode then(
+				if not (is_mode_cartography imitator_mode) then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_unsupervised_multi_threaded ->(
 				print_message Verbose_standard ("Considering a distributed mode with unsupervised multi-threaded workers (work in progress).");
-				if not in_cartography_mode then(
+				if not (is_mode_cartography imitator_mode) then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_static ->(
 				print_message Verbose_standard ("Considering a distributed mode with static splitting [ACN15].");
-				if not in_cartography_mode then(
+				if not (is_mode_cartography imitator_mode) then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_ms_sequential ->(
 				print_message Verbose_standard ("Considering a distributed mode with sequential enumeration of pi0 points [ACE14].");
-				if not in_cartography_mode then(
+				if not (is_mode_cartography imitator_mode) then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_ms_shuffle ->(
 				print_message Verbose_standard ("Considering a distributed mode with \"shuffle\" enumeration of pi0 points.");
-				if not in_cartography_mode then(
+				if not (is_mode_cartography imitator_mode) then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_ms_random max -> (
 				print_message Verbose_standard ("Considering a distributed mode with random generation of pi0 points with up to " ^ (string_of_int max) ^ " successive failure before switching to exhaustive enumeration [ACE14].");
-				if not in_cartography_mode then(
+				if not (is_mode_cartography imitator_mode) then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			(*************)
 			| Distributed_ms_subpart -> (
 				print_message Verbose_standard ("Considering a distributed mode with a dynamic domain decomposition [ACN15].");
-				if not in_cartography_mode then(
+				if not (is_mode_cartography imitator_mode) then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
@@ -1283,7 +1242,7 @@ end;
 
 			if !distributedKillIM then(
 				print_message Verbose_standard ("Heuristics to kill a process when its point is covered by another tile, in the distributed cartography [ACN15]; only works with some distribution schemes.");
-				if not in_cartography_mode || !distribution_mode = Non_distributed then(
+				if not (is_mode_cartography imitator_mode) || !distribution_mode = Non_distributed then(
 					print_warning "The killIM heuristics is only valid for the distributed cartography. Option will be ignored.";
 				);
 			)else
