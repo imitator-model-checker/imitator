@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2019/07/11
+ * Last modified     : 2019/07/23
  *
  ************************************************************)
 
@@ -1119,6 +1119,10 @@ let process_result result algorithm_name prefix_option =
 	(* Nothing to do for workers in distributed mode *)
 	| Distributed_worker_result ->
 		()
+
+	(* Nothing to do for workers in distributed mode *)
+	| Runs_synthesis_result _ ->
+		raise (NotImplemented ("work in progress"))
 
 
 (* 	| _ -> raise (NotImplemented ("function process_result not implemented for all cases")) *)

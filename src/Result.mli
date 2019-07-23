@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2019/07/11
+ * Last modified     : 2019/07/23
  *
  ************************************************************)
 
@@ -321,6 +321,36 @@ type multiple_synthesis_result = {
 	(*** TODO: compute a percentage of the points explored ?? ***)
 }
 
+(*------------------------------------------------------------*)
+(* Algorithms synthesizing runs *)
+(*------------------------------------------------------------*)
+
+type valuation_and_concrete_run = {
+	(* The parameter valuation for which this run exists *)
+	valuation		: PVal.pval;
+	(* The concrete run *)
+	concrete_run	: concrete_run;
+	(* Is the run satisfying or violating the property? *)
+	satisfying		: bool;
+}
+
+(** Result for **runs** synthesis *)
+type runs_synthesis_result = {
+	(* Set of runs *)
+	runs				: valuation_and_concrete_run list;
+	
+	(* Explored state space *)
+	state_space			: StateSpace.state_space;
+	
+	(* Total computation time of the algorithm *)
+	computation_time	: float;
+	
+	(* Termination *)
+	termination			: bfs_algorithm_termination;
+}
+
+
+
 (************************************************************)
 (** A unified type for all results *)
 (************************************************************)
@@ -349,4 +379,7 @@ type imitator_result =
 	
 	(* No result for workers in distributed mode *)
 	| Distributed_worker_result
+
+	(* Result for runs synthesis *)
+	| Runs_synthesis_result of runs_synthesis_result
 
