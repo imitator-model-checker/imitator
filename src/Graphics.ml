@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2019/07/17
+ * Last modified     : 2019/07/23
  *
  ************************************************************)
  
@@ -149,6 +149,17 @@ let draw_cartography (returned_constraint_list : (LinearConstraint.p_convex_or_n
 	counter_graphics_cartography#start;
 	
 try(
+	(* Retrieve the model *)
+	let model = Input.get_model () in
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	
+	(* No reason to draw a cartography: exception! *)
+	if not (cartography_drawing_possible options#imitator_mode) then(
+		print_error "Cartography cannot be drawn in this mode.";
+		raise CartographyError
+	);
+	
 	(* No cartography if no zone *)
 	if returned_constraint_list = [] then(
 		print_warning ("No cartography can be drawn since the list of constraints is empty.");
@@ -157,11 +168,6 @@ try(
 
 	print_message Verbose_standard ("\nDrawing the cartography…");
 
-	(* Retrieve the model *)
-	let model = Input.get_model () in
-	(* Retrieve the input options *)
-	let options = Input.get_options () in
-	
 	print_message Verbose_low "Starting to compute graphical cartography…";
 	
 	(* Converting to convex constraints *)
@@ -215,83 +221,74 @@ try(
 	let range_params : int list ref = ref [] in
 	let bounds = ref (Array.make 2 (NumConst.zero, NumConst.zero)) in
 
+	(* If cartography: find indices of first two variables with a parameter range *)
+	(*** TODO: take the projection into account! ***)
+	if is_mode_cartography options#imitator_mode then(
+		(* Retrieve the V0 *)
+		(*** NOTE: only retrieve here because, in other mode (e.g., EF or IM) this object is not defined ***)
+		let v0 = Input.get_v0 () in
+		
+		print_message Verbose_low "Case real cartography: first 2 parameters with a range";
+		for index = 0 to model.nb_parameters - 1 do
+(* 			Array.iteri (fun index (a,b) ->  *)
+			let a = v0#get_min index in
+			let b = v0#get_max index in
+			if NumConst.neq a b then(
+				(* Add one more parameter *)
+				print_message Verbose_medium "Found a parameter!";
+				range_params := index :: !range_params;
+			)
+		(* ) v0;*)
+		done;
+		range_params := List.rev !range_params;
+		
+		if (List.length !range_params) < 2 then(
+			print_error "Could not plot cartography (region of interest has too few dimensions)";
+			raise CartographyError
+		);
+
+		(* Update bounds *)
+		!bounds.(x_index) <- v0#get_min (List.nth !range_params 0), v0#get_max (List.nth !range_params 0);
+		!bounds.(y_index) <- v0#get_min (List.nth !range_params 1), v0#get_max (List.nth !range_params 1);
+
+	)else(
 	(* If EF-synthesis / IM: choose the first two parameters *)
 	(*** TODO: take the projection into account! ***)
-	begin
-	match options#imitator_mode with
-		(*** TODO: better use an option "is_cartography" ***)
-		| EF_synthesis | EFunsafe_synthesis | EF_min | EF_max | EF_synth_min | EF_synth_max | EF_synth_min_priority_queue | AF_synthesis | Loop_synthesis | Acc_loop_synthesis | Parametric_NZ_CUBcheck | Parametric_NZ_CUBtransform | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP ->
-			print_message Verbose_low "Pick up the first 2 parameters to draw the cartography";
-			(* First check that there are at least 2 parameters *)
-			if model.nb_parameters < 2 then(
-				print_error ("Could not plot cartography (which requires 2 parameters) because there is only " ^ (string_of_int model.nb_parameters) ^ " parameter.");
-				raise CartographyError
-			);
-			(* Choose the first 2 *)
-			range_params := [ List.nth model.parameters 0 ; List.nth model.parameters 1];
-			
-			(* Prepare the "V0" rectangle *)
-			let ef_x_min =
-			match options#output_cart_x_min with
-				| None -> NumConst.numconst_of_int 0 (*** WARNING: quite random thing here ! ***)
-				| Some n -> NumConst.numconst_of_int n
-			in
-			let ef_x_max =
-			match options#output_cart_x_max with
-				| None -> NumConst.numconst_of_int 50 (*** WARNING: quite random thing here ! ***)
-				| Some n -> NumConst.numconst_of_int n
-			in
-			let ef_y_min =
-			match options#output_cart_y_min with
-				| None -> NumConst.numconst_of_int 0 (*** WARNING: quite random thing here ! ***)
-				| Some n -> NumConst.numconst_of_int n
-			in
-			let ef_y_max =
-			match options#output_cart_y_max with
-				| None -> NumConst.numconst_of_int 50 (*** WARNING: quite random thing here ! ***)
-				| Some n -> NumConst.numconst_of_int n
-			in
-			!bounds.(0) <- ef_x_min, ef_x_max;
-			!bounds.(1) <- ef_y_min, ef_y_max;
-	
-	(* If cartography: find indices of first two variables with a parameter range *)
-	(*** TODO: better use an option "cartography mode" ***)
-	(*** TODO: take the projection into account! ***)
-		| Cover_cartography | Shuffle_cartography | Random_cartography _ | RandomSeq_cartography _ | Learning_cartography | Border_cartography | PRPC ->
-			(* Retrieve the V0 *)
-			(*** NOTE: only retrieve here because, in other mode (e.g., EF or IM) this object is not defined ***)
-			let v0 = Input.get_v0 () in
-			
-			print_message Verbose_low "Case real cartography: first 2 parameters with a range";
-			for index = 0 to model.nb_parameters - 1 do
-(* 			Array.iteri (fun index (a,b) ->  *)
-				let a = v0#get_min index in
-				let b = v0#get_max index in
-				if NumConst.neq a b then(
-					(* Add one more parameter *)
-					print_message Verbose_medium "Found a parameter!";
-					range_params := index :: !range_params;
-				)
-			(* ) v0;*)
-			done;
-			range_params := List.rev !range_params;
-			
-			if (List.length !range_params) < 2 then(
-				print_error "Could not plot cartography (region of interest has too few dimensions)";
-				raise CartographyError
-			);
-
-			(* Update bounds *)
-			!bounds.(x_index) <- v0#get_min (List.nth !range_params 0), v0#get_max (List.nth !range_params 0);
-			!bounds.(y_index) <- v0#get_min (List.nth !range_params 1), v0#get_max (List.nth !range_params 1);
+		print_message Verbose_low "Pick up the first 2 parameters to draw the cartography";
+		(* First check that there are at least 2 parameters *)
+		if model.nb_parameters < 2 then(
+			print_error ("Could not plot cartography (which requires 2 parameters) because there is only " ^ (string_of_int model.nb_parameters) ^ " parameter.");
+			raise CartographyError
+		);
+		(* Choose the first 2 *)
+		range_params := [ List.nth model.parameters 0 ; List.nth model.parameters 1];
+		
+		(* Prepare the "V0" rectangle *)
+		let ef_x_min =
+		match options#output_cart_x_min with
+			| None -> NumConst.numconst_of_int 0 (*** WARNING: quite random thing here ! ***)
+			| Some n -> NumConst.numconst_of_int n
+		in
+		let ef_x_max =
+		match options#output_cart_x_max with
+			| None -> NumConst.numconst_of_int 50 (*** WARNING: quite random thing here ! ***)
+			| Some n -> NumConst.numconst_of_int n
+		in
+		let ef_y_min =
+		match options#output_cart_y_min with
+			| None -> NumConst.numconst_of_int 0 (*** WARNING: quite random thing here ! ***)
+			| Some n -> NumConst.numconst_of_int n
+		in
+		let ef_y_max =
+		match options#output_cart_y_max with
+			| None -> NumConst.numconst_of_int 50 (*** WARNING: quite random thing here ! ***)
+			| Some n -> NumConst.numconst_of_int n
+		in
+		!bounds.(0) <- ef_x_min, ef_x_max;
+		!bounds.(1) <- ef_y_min, ef_y_max;
+	);
 
 		
-	(* Else: no reason to draw a cartography *)
-		| _ -> 
-			print_error "Cartography cannot be drawn in this mode.";
-			raise CartographyError
-	end;
-	
 	(*** WARNING: only works partially ***)
 	(* Shrink V0 bounds if options specified *)
 	begin
@@ -646,7 +643,7 @@ try(
 	(* Statistics *)
 	counter_graphics_cartography#stop;
 	()
-	)
+)
 
 
 (*------------------------------------------------------------*)

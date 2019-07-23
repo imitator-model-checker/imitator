@@ -245,8 +245,9 @@ type graphical_state_space =
 (** Predicates on mode *)
 (************************************************************)
 
-val is_mode_IM          : imitator_mode -> bool
-val is_mode_cartography : imitator_mode -> bool
+val is_mode_IM                   : imitator_mode -> bool
+val is_mode_cartography          : imitator_mode -> bool
+val cartography_drawing_possible : imitator_mode -> bool
 
 
 (************************************************************)

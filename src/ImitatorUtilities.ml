@@ -441,6 +441,42 @@ let is_mode_cartography = function
 		-> true
 
 
+let cartography_drawing_possible = function
+	| No_analysis
+	| Translation
+	| State_space_exploration
+		-> false
+	| NDFS_exploration
+	| EF_synthesis
+	| EFunsafe_synthesis
+	| EF_min
+	| EF_max
+	| EF_synth_min
+	| EF_synth_max
+	| EF_synth_min_priority_queue
+	| EFexemplify
+	| AF_synthesis
+	| Loop_synthesis
+	| Acc_loop_synthesis
+	| Parametric_NZ_CUBcheck
+	| Parametric_NZ_CUBtransform
+	| Parametric_NZ_CUBtransformDistributed
+	| Parametric_NZ_CUB
+	| Parametric_deadlock_checking
+		-> true
+	| Inverse_method
+	| Inverse_method_complete
+	| PRP
+		-> true
+	| Cover_cartography
+	| Learning_cartography
+	| Shuffle_cartography
+	| Border_cartography
+	| Random_cartography _
+	| RandomSeq_cartography _
+	| PRPC
+		-> true
+
 
 (************************************************************)
 (** Time functions *)
