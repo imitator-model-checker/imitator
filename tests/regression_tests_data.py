@@ -13,7 +13,7 @@
 # File contributors : Étienne André
 #
 # Created           : 2015/10/23
-# Last modified     : 2019/07/22
+# Last modified     : 2019/08/01
 #************************************************************
 
 
@@ -2282,9 +2282,9 @@ Number of computed states               : 7
 		# Test version             : 1
 		# Test since               : 2019/07/22
 		# Test for IMITATOR version: 2.12
-		'purpose'    : 'Test NDFS: simple example 1',
+		'purpose'    : 'Test AccLoopSynthNDFS: simple example 1',
 		'input_files': ['testNDFS-1.imi'],
-		'options'    : '-mode ndfs -output-result',
+		'options'    : '-mode AccLoopSynthNDFS -output-result',
 		'expectations' : [
 			{'file': 'testNDFS-1.res' , 'content' : """
 BEGIN CONSTRAINT
