@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2019/07/23
+ * Last modified     : 2019/08/01
  *
  ************************************************************)
 
@@ -87,9 +87,6 @@ type imitator_mode =
 	(** Classical state space exploration *)
 	| State_space_exploration
 	
-	(** NDFS exploration *)
-	| NDFS_exploration
-
 	(** EF-synthesis *)
 	| EF_synthesis
 	
@@ -123,6 +120,9 @@ type imitator_mode =
 	(** Parametric accepting loop synthesis *)
 	| Acc_loop_synthesis
 	
+	(** Parametric accepting loop synthesis with NDFS exploration *)
+	| Acc_loop_synthesis_NDFS
+
 	(** Parametric Büchi-emptiness checking with non-Zenoness (method: check whether the PTA is CUB) *)
 	| Parametric_NZ_CUBcheck
 	

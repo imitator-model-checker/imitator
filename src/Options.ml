@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2019/07/23
+ * Last modified     : 2019/08/01
  *
  ************************************************************)
 
@@ -373,13 +373,6 @@ class imitator_options =
 				else if mode = "statespace" then 
 					imitator_mode <- State_space_exploration
 
-				(* Case: ndfs exploration *)
-				else if mode = "ndfs" then(
-					imitator_mode <- NDFS_exploration;
-					(* By default: NDFS (other options can also be specified) *)
-					exploration_order <- Exploration_NDFS;
-				)
-
 				(* Case: old version of EF-synthesis using a list of constraints *)
 				else if mode = "EFold" then 
 					imitator_mode <- EF_synthesis
@@ -431,6 +424,13 @@ class imitator_options =
 				else if mode = "AccLoopSynth" then 
 					imitator_mode <- Acc_loop_synthesis
 				
+				(* Case: parametric accepting loop synthesis with NDFS exploration *)
+				else if mode = "AccLoopSynthNDFS" then(
+					imitator_mode <- Acc_loop_synthesis_NDFS;
+					(* By default: NDFS (other options can also be specified) *)
+					exploration_order <- Exploration_NDFS;
+				)
+
 				(** Case: Parametric Büchi-emptiness checking with non-Zenoness (method: check whether the PTA is CUB) *)
 				else if mode = "NZCUBcheck" then(
 					imitator_mode <- Parametric_NZ_CUBcheck;
@@ -770,7 +770,6 @@ class imitator_options =
         Use 'checksyntax' for a simple syntax check and no analysis.
         
         Use 'statespace' for the generation of the entire parametric state space.
-        Use 'ndfs' for Nested Depth First Search of the state space. [NPvdP18]
         
         Use 'EF' for a parametric non-reachability analysis. [AHV93,JLR15]
         Use 'EFmin' for a parametric non-reachability analysis with parameter minimization. [ABPP19]
@@ -779,6 +778,7 @@ class imitator_options =
         Use 'PDFC' for parametric non-deadlock checking. [Andre16]
         Use 'LoopSynth' for cycle-synthesis (without non-Zeno assumption). [ANPS17]
         Use 'AccLoopSynth' for accepting cycle-synthesis (without non-Zeno assumption).
+        Use 'AccLoopSynthNDFS' for accepting cycle-synthesis with NDFS exploration (without non-Zeno assumption) [NPvdP18]
         Use 'NZCUBcheck' for cycle-synthesis (with non-Zeno assumption, using a CUB-detection). [EXPERIMENTAL] [ANPS17]
         Use 'NZCUBtrans' for cycle-synthesis (with non-Zeno assumption, using a transformation into a CUB-PTA). [EXPERIMENTAL] [ANPS17]
         
@@ -972,7 +972,6 @@ class imitator_options =
 				| No_analysis -> "syntax check"
 				| Translation -> "translation"
 				| State_space_exploration -> "parametric state space exploration"
-				| NDFS_exploration -> "Nested Depth-First Search"
 				| EF_synthesis -> "EF-synthesis"
 				| EFunsafe_synthesis -> "EFunsafe-synthesis"
 				| EF_min -> "EF-minimization"
@@ -984,6 +983,7 @@ class imitator_options =
 				| AF_synthesis -> "AF-synthesis"
 				| Loop_synthesis -> "infinite run synthesis"
 				| Acc_loop_synthesis -> "accepting infinite run synthesis"
+				| Acc_loop_synthesis_NDFS -> "accepting infinite run synthesis with NDFS exploration"
 				| Parametric_NZ_CUBcheck -> "parametric non-Zeno emptiness checking (CUB checking)"
 				| Parametric_NZ_CUBtransform -> "parametric non-Zeno emptiness checking (CUB transformation)"
 				| Parametric_NZ_CUBtransformDistributed -> "parametric non-Zeno emptiness checking (CUB transformation), distributed version"

@@ -9,7 +9,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/07/22
+ * Last modified     : 2019/08/01
  *
  ************************************************************)
 
@@ -503,8 +503,6 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	| State_space_exploration ->
 			(*** NOTE: this is static subclass coercition; see https://ocaml.org/learn/tutorials/objects.html ***)
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoPostStar.algoPostStar in myalgo
-	| NDFS_exploration ->
-		let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS in myalgo
 
 	
 	(************************************************************)
@@ -581,6 +579,9 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 
 	| Acc_loop_synthesis ->
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth in myalgo
+
+	| Acc_loop_synthesis_NDFS ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS in myalgo
 
 
 	(************************************************************)
