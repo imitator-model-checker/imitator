@@ -2034,6 +2034,31 @@ let reconstruct_counterexample state_space target_state_index =
 		print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation);
 	);
 	
+	
+(*	
+GOAL:
+(** Concrete state: location and px-valuation *)
+type concrete_state = {
+	global_location: Location.global_location;
+	px_valuation   : (Automaton.variable_index -> NumConst.t);
+}
+
+type concrete_step = {
+	(* First let time elapse *)
+	time			: NumConst.t;
+	(* Then take a discrete transition *)
+	transition		: StateSpace.combined_transition;
+	(* Then reach the target state *)
+	target			: State.concrete_state;
+}
+
+type concrete_run = {
+	intial_state	: State.concrete_state;
+	steps			: concrete_step list;
+}*)
+
+
+	
 	(*** NOTE: we need a px AND d valuation, therefore a bit a hack here ***)
 	let concrete_pxd_valuation = fun variable_index ->
 		match model.type_of_variables variable_index with
