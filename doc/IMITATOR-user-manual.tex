@@ -715,6 +715,10 @@ As usual, \imitator{} can also
 \section{Parametric cycle synthesis}\label{ss:mode:LoopSynth}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Any loop synthesis}\label{ss:loop}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
 Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, \ie{} an infinite run. % TODO: ~\cite{AL17}
 
 The command is:
@@ -726,7 +730,9 @@ As usual, \imitator{} can also
 	or
 	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
 
-\paragraph{Accepting loop}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Accepting loop}\label{ss:accepting-loop}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one \emph{accepting} cycle, \ie{} an infinite run passing infinitely often by an accepting location.
 
 The accepting location is defined as usual using the following syntax:
@@ -741,6 +747,48 @@ Patterns (see \cref{ss:mode:prop}) can also be used. % NOTE: not tested
 The command for accepting cycle synthesis is:
 
 \styleCommand{\binimitator{} model.imi -mode AccLoopSynth -output-result}
+
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Accepting loop (NDFS)}\label{ss:accepting-loop-NDFS}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one accepting cycle.
+This algorithm differs from the one in \cref{ss:accepting-loop} in the sense that this algorithm performs a nested depth-first search (NDFS) exploration until a cycle is found~\cite{NPP18}.
+In addition, this algorithm is (by default) not complete.
+
+The command is:
+
+\styleCommand{\binimitator{} model.imi -mode AccLoopNDFS -output-result}
+
+Several heuristics can be used, some of them synthesizing all parameter values for which a cycle can be found.
+These are accessible via the \styleOption{-explOrder} option:
+
+\begin{description}
+	\item[\styleOption{-explOrder NDFS}]: use standard NDFS to find an accepting cycle (default option);
+	\item[\styleOption{-explOrder NDFSsub}]: standard NDFS with subsumption;
+	\item[\styleOption{-explOrder layerNDFSsub}]: NDFS with subsumption and layers;
+	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
+	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
+\end{description}
+
+At each cycle found, \imitator{} outputs its number (when using the synthesis) and
+the node at which the cycle was detected. When it terminates the complete parameter
+constraint is displayed.
+
+% NOTE: hidden options
+% -no-acceptfirst In NDFS, do not put accepting states at the head of the successors list. Default: false.
+% -no-lookahead  In NDFS, no lookahead for finding successors closing an accepting cycle. Default: false.
+% -no-pending-ordered  In NDFS synthesis, do not order the pending queue with larger zones first. Default: false.
+
+When using the \styleOption{-depth-limit} option, the depth-first search stops exploring
+the current branch and backtracks when this depth is reached.
+
+
+As usual, \imitator{} can also
+	output the trace set in a graphical form (option \styleOption{-output-trace-set})
+	or
+	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
+
 
 
 
@@ -1296,8 +1344,6 @@ If needed, more information can be obtained by contacting the \imitator{} team.
 	% precomputepi0
 
 
-% TODO: add exploration orders!
-
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-acyclic} (default: false)}
@@ -1400,6 +1446,24 @@ Various distribution modes are possible:
 Dynamic elimination of clocks that are known to not used in the future of the current state~\cite{Andre13FSFMA}.
 
 
+%------------------------------------------------------------
+\paragraph{\styleOption{-explOrder} } % TODO (default: false)
+%------------------------------------------------------------
+Exploration orders are considered in two frameworks.
+
+First, for standard reachability analysis (and counterexample analysis, using \styleOption{-counterexample}), and documented in~\cite{ANP17}.
+% TODO!
+This framework remains relatively experimental.
+
+Second, for accepting loop synthesis with NDFS exploration~\cite{NPP18} (see \cref{ss:accepting-loop-NDFS}).
+In this latter case, the possible values are:
+\begin{description}
+	\item[\styleOption{-explOrder NDFS}]: use standard NDFS to find an accepting cycle (default option);
+	\item[\styleOption{-explOrder NDFSsub}]: standard NDFS with subsumption;
+	\item[\styleOption{-explOrder layerNDFSsub}]: NDFS with subsumption and layers;
+	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
+	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
+\end{description}
 
 
 % %------------------------------------------------------------
@@ -1458,7 +1522,7 @@ However, not all the properties of the inverse method are preserved when using m
 %------------------------------------------------------------
 \paragraph{\styleOption{-mode} (default: \styleOption{inversemethod})}
 %------------------------------------------------------------
-The mode for \imitator{}.
+The mode for \imitator{}, \ie{} the algorithm to run.
 
 \begin{longtable}{@{} l @{\ \ } p{12cm}}
 	\styleOption{checksyntax} & Simple syntax check and no analysis. Use option \styleOption{-output-result} to generate a simple file with statistics on the model (numbers of variables, automata, L/U-nature, strong determinism…)
@@ -1484,10 +1548,13 @@ The mode for \imitator{}.
 	& (see \cref{ss:mode:PDFC}) \\
 
 	\styleOption{LoopSynth} & cycle synthesis \\
-	& (see \cref{ss:mode:LoopSynth}) \\
+	& (see \cref{ss:loop}) \\
 
 	\styleOption{AccLoopSynth} & accepting cycle synthesis \\
-	& (see \cref{ss:mode:LoopSynth}) \\
+	& (see \cref{ss:accepting-loop}) \\
+
+	\styleOption{AccLoopSynthNDFS} & accepting cycle synthesis with NDFS exploration~\cite{NPP18}\\
+	& (see \cref{ss:accepting-loop-NDFS}) \\
 
 	\styleOption{NZCUBcheck} & non-Zeno cycle synthesis (with CUB-detection) \\
 	& (see \cref{ss:mode:Zeno}) \\
