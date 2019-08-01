@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2019/07/09
+ * Last modified     : 2019/08/01
  *
  ************************************************************)
 
@@ -3165,6 +3165,8 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 			actions_per_location.(observer_id) <- observer_actions_per_location;
 			(* Update urgency *)
 			location_urgency.(observer_id) <- observer_location_urgency;
+			(* Create the array of accepting locations for this automaton (for now: all non accepting) *)
+			location_acceptance.(observer_id) <- Array.make nb_locations Location_nonaccepting;
 			(* Update invariants *)
 			invariants.(observer_id) <- observer_invariants;
 			(* Update costs (no costs in observers) *)
