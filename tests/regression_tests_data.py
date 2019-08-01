@@ -2279,6 +2279,54 @@ Number of computed states               : 7
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test AccLoopSynthNDFS: flipflop (no loop)',
+		'input_files': ['flipflop.imi'],
+		'options'    : '-mode AccLoopSynthNDFS -output-result',
+		'expectations' : [
+			{'file': 'flipflop.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test AccLoopSynthNDFS with complete constraint: flipflop (no loop)',
+		'input_files': ['flipflop.imi'],
+		'options'    : '-mode AccLoopSynthNDFS -explOrder synNDFSsub -output-result',
+		'expectations' : [
+			{'file': 'flipflop.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		# Test version             : 1
 		# Test since               : 2019/07/22
 		# Test for IMITATOR version: 2.12
@@ -2289,6 +2337,82 @@ Number of computed states               : 7
 			{'file': 'testNDFS-1.res' , 'content' : """
 BEGIN CONSTRAINT
  p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/08/01
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test AccLoopSynthNDFS: simple example 1 with complete constraint',
+		'input_files': ['testNDFS-1.imi'],
+		'options'    : '-mode AccLoopSynthNDFS -explOrder synNDFSsub -output-result',
+		'expectations' : [
+			{'file': 'testNDFS-1.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/08/01
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test AccLoopSynthNDFS: simple example 2',
+		'input_files': ['testNDFS-2.imi'],
+		'options'    : '-mode AccLoopSynthNDFS -output-result',
+		'expectations' : [
+			{'file': 'testNDFS-2.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/08/01
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test AccLoopSynthNDFS: simple example 2 with complete constraint',
+		'input_files': ['testNDFS-2.imi'],
+		'options'    : '-mode AccLoopSynthNDFS -explOrder synNDFSsub -output-result',
+		'expectations' : [
+			{'file': 'testNDFS-2.res' , 'content' : """
+BEGIN CONSTRAINT
+   p = 2
+ OR
+   p = 1
+ OR
+   p = 4
 END CONSTRAINT
 
 ------------------------------------------------------------
