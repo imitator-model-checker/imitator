@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2019/07/17
+ * Last modified     : 2019/08/01
  *
  ************************************************************)
 
@@ -296,7 +296,7 @@ class algoLoopSynth =
 			result				= Good_constraint (loop_constraint, soundness);
 			
 			(* English description of the constraint *)
-			constraint_description = "constraint guaranteeing the presence of loops";
+			constraint_description = "constraint for detecting cycles";
 	
 			(* Explored state space *)
 			state_space			= state_space;

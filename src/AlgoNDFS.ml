@@ -8,7 +8,7 @@
  * 
  * File contributors : Laure Petrucci, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2019/07/22
+ * Last modified     : 2019/08/01
  *
  ************************************************************)
 
@@ -1016,7 +1016,7 @@ class algoNDFS =
 			(*result = Good_constraint (LinearConstraint.false_p_nnconvex_constraint(), soundness);*)
 
 			(* English description of the constraint *)
-			constraint_description = "constraint for accepting cycles";
+			constraint_description = "constraint for detecting accepting cycles via NDFS exploration";
 	
 			(* Explored state space *)
 			state_space			= state_space;
