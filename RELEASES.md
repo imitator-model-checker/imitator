@@ -7,7 +7,7 @@
 ### Major features
 * In mode `EF -counterexample`, IMITATOR outputs an example of parameter valuation, and a full concrete run, with a graphical representation of the clocks and discrete variables evolution. [WORK IN PROGRESS]
 * New accepting cycle synthesis (`-mode AccLoopSynth`)
-* New NDFS-based accepting cycle synthesis (`-mode ndfs`) with several exploration strategies [NPP18]
+* New NDFS-based accepting cycle synthesis (`-mode AccLoopSynthNDFS`) with several exploration strategies [NPP18]
 * New check-syntax mode (`-mode checksyntax`), that simply checks the syntax and terminates without doing any analysis.
 
 ### Minor features
