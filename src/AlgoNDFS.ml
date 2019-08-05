@@ -8,7 +8,7 @@
  * 
  * File contributors : Laure Petrucci, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2019/08/01
+ * Last modified     : 2019/08/05
  *
  ************************************************************)
 
@@ -130,23 +130,27 @@ class algoNDFS =
 		(* printing the queues *)
 		(***********************)
 		let printqueue colour thequeue =
-			let rec r_printqueue thequeue = match thequeue with
-				| [] -> "";
-				| state_index::body  ->
-					(string_of_int state_index) ^ " " ^ (r_printqueue body);
-			in print_message Verbose_low("Queue " ^ colour ^ " : [ "
-					^ r_printqueue thequeue ^ "]")
+			if verbose_mode_greater Verbose_low then(
+				let rec r_printqueue thequeue = match thequeue with
+					| [] -> "";
+					| state_index::body  ->
+						(string_of_int state_index) ^ " " ^ (r_printqueue body);
+				in print_message Verbose_low("Queue " ^ colour ^ " : [ "
+						^ r_printqueue thequeue ^ "]")
+			);
 		in
 
 		let printpendingqueue colour thequeue =
-			let rec r_printqueue thequeue = match thequeue with
-				| [] -> "";
-				| (state_index,state_depth)::body  ->
-					"(" ^ (string_of_int state_index)
-						^ ", " ^ (string_of_int state_depth) ^ ") "
-						^ (r_printqueue body);
-			in print_message Verbose_low("Queue " ^ colour ^ " : [ "
-					^ r_printqueue thequeue ^ "]")
+			if verbose_mode_greater Verbose_low then(
+				let rec r_printqueue thequeue = match thequeue with
+					| [] -> "";
+					| (state_index,state_depth)::body  ->
+						"(" ^ (string_of_int state_index)
+							^ ", " ^ (string_of_int state_depth) ^ ") "
+							^ (r_printqueue body);
+				in print_message Verbose_low("Queue " ^ colour ^ " : [ "
+						^ r_printqueue thequeue ^ "]")
+			);
 		in
 
 		(***************************************)
@@ -491,6 +495,7 @@ class algoNDFS =
 				(try (rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index 0;)
 					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
+				
 			| Exploration_NDFS_sub ->
 (* NDFS with subsumption *)
 				print_message Verbose_standard("Using the option NDFSsub");
@@ -571,6 +576,7 @@ class algoNDFS =
 				(try (rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index 0;)
 					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
+				
 			| Exploration_layer_NDFS_sub ->
 (* NDFS with subsumption and layers *)
 				print_message Verbose_standard("Using the option layerNDFSsub");
@@ -667,6 +673,7 @@ class algoNDFS =
 				done;)
 							with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
+				
 			| Exploration_syn_NDFS_sub ->
 (* collecting NDFS with subsumption *)
 				print_message Verbose_standard("Using the option synNDFSsub");
@@ -694,7 +701,8 @@ class algoNDFS =
 					print_message Verbose_standard
 						(ModelPrinter.string_of_state model
 							(StateSpace.get_state state_space astate));
-					termination_status <- Some Target_found;
+							(* For synthesis: we do not stop immediately *)
+					termination_status <- Some Regular_termination;
 					print_projection Verbose_standard astate;
 					let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 					constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
@@ -736,6 +744,7 @@ class algoNDFS =
 							print_message Verbose_standard
 								(ModelPrinter.string_of_state model
 									(StateSpace.get_state state_space astate));
+							(* For synthesis: we do not stop immediately *)
 							termination_status <- Some Target_found;
 							print_projection Verbose_standard astate;
 							let state_constr = (StateSpace.get_state state_space astate).px_constraint in
@@ -766,6 +775,7 @@ class algoNDFS =
 				(try (rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index 0;)
 					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
+				
 			| Exploration_syn_layer_NDFS_sub ->
 (* collecting NDFS with layers and subsumption *)
 				print_message Verbose_standard("Using the option synlayerNDFSsub");
@@ -804,7 +814,8 @@ class algoNDFS =
 							print_message Verbose_standard
 								(ModelPrinter.string_of_state model
 									(StateSpace.get_state state_space astate));
-							termination_status <- Some Target_found;
+								(* For synthesis: we do not stop immediately *)
+							termination_status <- Some Regular_termination;
 							print_projection Verbose_standard astate;
 							let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 							constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
@@ -847,7 +858,8 @@ class algoNDFS =
 									print_message Verbose_standard
 										(ModelPrinter.string_of_state model
 											(StateSpace.get_state state_space astate));
-									termination_status <- Some Target_found;
+									(* For synthesis: we do not stop immediately *)
+									termination_status <- Some Regular_termination;
 									print_projection Verbose_standard astate;
 									let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 									constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
@@ -879,10 +891,12 @@ class algoNDFS =
 						rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate thestate_depth;
 						end;
 				done;)
+				
 							with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
 (* 			| Exploration_syn_mixed_NDFS -> print_message Verbose_standard("Using the option synMixedNDFS --- Not implemented yet") *)
-			| _ -> raise (InternalError ("Unknown variant of NDFS"))
+
+(* 			| _ -> raise (InternalError ("Unknown variant of NDFS")) *)
 		end;
 
 		(* combine the linear constraints *)
@@ -999,7 +1013,7 @@ class algoNDFS =
 		in
 
 		let soundness =
-			if (termination_status = Target_found && not depth_reached)
+			if (termination_status = Regular_termination (*&& not depth_reached*))
 			then Constraint_exact
 			else Constraint_maybe_under
 		in

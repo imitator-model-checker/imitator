@@ -13,7 +13,7 @@
 # File contributors : Étienne André
 #
 # Created           : 2015/10/23
-# Last modified     : 2019/08/01
+# Last modified     : 2019/08/05
 #************************************************************
 
 
@@ -2289,7 +2289,7 @@ False
 END CONSTRAINT
 
 ------------------------------------------------------------
-Constraint soundness                    : possible under-approximation
+Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
@@ -2313,7 +2313,7 @@ False
 END CONSTRAINT
 
 ------------------------------------------------------------
-Constraint soundness                    : possible under-approximation
+Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
@@ -2340,7 +2340,10 @@ BEGIN CONSTRAINT
 END CONSTRAINT
 
 ------------------------------------------------------------
-Constraint soundness                    : exact
+Constraint soundness                    : possible under-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} #end result file
 		] # end expectations
@@ -2365,6 +2368,9 @@ END CONSTRAINT
 
 ------------------------------------------------------------
 Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} #end result file
 		] # end expectations
@@ -2388,7 +2394,10 @@ BEGIN CONSTRAINT
 END CONSTRAINT
 
 ------------------------------------------------------------
-Constraint soundness                    : exact
+Constraint soundness                    : possible under-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} #end result file
 		] # end expectations
@@ -2417,6 +2426,9 @@ END CONSTRAINT
 
 ------------------------------------------------------------
 Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} #end result file
 		] # end expectations
