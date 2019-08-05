@@ -14,9 +14,9 @@ Specifically, IMITATOR implements:
 * parametric safety and parametric reachability synthesis [AHV93,JLR15],
 * minimal-time and minimal-parameter reachability synthesis [ABPP19],
 * parametric deadlock-freeness checking [Andre16],
-* cycle-existence synthesis,
+* cycle-existence synthesis [NPP18],
 * cycle-existence synthesis under the non-Zenoness assumption [ANPS17],
-* the inverse method (also known as (robust) language or trace preservation synthesis) [ACEF09,AM15],
+* the inverse method (also known as (robust) language or trace preservation synthesis) [ACEF09,AS11,AM15],
 * the behavioral cartography [AF10], and
 * parametric reachability preservation (PRP and PRPC) [ALNS15].
 
@@ -56,4 +56,8 @@ formal verification, model checking, software verification, parameter synthesis,
 
 [ANPS17] Étienne André, Nguyễn Hoàng Gia, Laure Petrucci and Sun Jun. [**Parametric model checking timed automata under non-Zenoness assumption**](https://doi.org/10.1007/978-3-319-57288-8_3). In Clark Barrett and Temesghen Kahsai (eds.), NFM’17, Springer LNCS 10227, pages 35–51, May 2017.
 
+[AS11] Étienne André and Romain Soulat. [**Synthesis of Timing Parameters Satisfying Safety Properties**](https://doi.org/10.1007/978-3-642-24288-5_5). RP 2011: 31-44, 2011.
+
 [JLR15] Aleksandra Jovanovic, Didier Lime, Olivier H. Roux. [**Integer Parameter Synthesis for Real-Time Systems**](https://doi.org/10.1109/TSE.2014.2357445). IEEE Trans. Software Eng. 41(5): 445–461, 2015.
+
+[NPP18] Hoang Gia Nguyen, Laure Petrucci, Jaco van de Pol. [**Layered and Collecting NDFS with Subsumption for Parametric Timed Automata**](https://doi.org/10.1109/ICECCS2018.2018.00009). ICECCS 2018: 1-9, 2018.
