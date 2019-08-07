@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/07/22
+ * Last modified     : 2019/08/07
  *
  ************************************************************)
 
@@ -25,6 +25,7 @@ open Statistics
 open AbstractModel
 open AlgoGeneric
 open State
+open Result
 
 
 (************************************************************)
@@ -1627,11 +1628,9 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 
 
 
-
-
 (************************************************************)
 (** Reconstruct a whole counterexample from the initial state to a given target state. Return a list of pairs (valuation * absolute time) *)(************************************************************)
-let reconstruct_counterexample state_space target_state_index =
+let reconstruct_counterexample state_space (target_state_index : State.state_index) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	
@@ -1653,7 +1652,7 @@ let reconstruct_counterexample state_space target_state_index =
 	(* Also retrieve the initial state *)
 	let initial_state_index = StateSpace.get_initial_state_index state_space in
 	
-	(* Get the path, i.e., a list of a pair of a symbolic state followed by a combined transition (the last state does not belong to the path) *)
+	(* Get the path, i.e., a list of a pair of a symbolic state *followed* by a combined transition (the last state does not belong to the path) *)
 	let path : (State.state_index * StateSpace.combined_transition) list = StateSpace.backward_path state_space target_state_index initial_state_index (Some predecessors) in
 	
 	(* Print some information *)
@@ -1688,8 +1687,7 @@ let reconstruct_counterexample state_space target_state_index =
 		) path;
 		
 		(* Print target *)
-		let final_state = StateSpace.get_state state_space target_state_index in
-		print_message Verbose_low (" " ^ (ModelPrinter.string_of_state model final_state));
+		print_message Verbose_low (" " ^ (ModelPrinter.string_of_state model target_state));
 		
 	);
 	
@@ -1711,12 +1709,12 @@ let reconstruct_counterexample state_space target_state_index =
 	);
 	
 	(* Exhibit a concrete clock+parameter valuation in the final state *)
-	let concrete_px_valuation = LinearConstraint.px_exhibit_point target_state.px_constraint in
+	let concrete_target_px_valuation = LinearConstraint.px_exhibit_point target_state.px_constraint in
 	
 	(* Print it *)
 	if verbose_mode_greater Verbose_low then(
 		print_message Verbose_low "Example of px-valuation:";
-		print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation);
+		print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_target_px_valuation);
 	);
 	
 	(* We reconstruct a concrete run, for which we need absolute time *)
@@ -1870,7 +1868,7 @@ let reconstruct_counterexample state_space target_state_index =
 	
 	(* Iterate starting from s_n and going backward *)
 	
-	let valuation_n_plus_1 = ref concrete_px_valuation in
+	let valuation_n_plus_1 = ref concrete_target_px_valuation in
 	let te_and_valuations = ref [] in
 	
 	for n = List.length path - 1 downto 0 do
@@ -1879,7 +1877,12 @@ let reconstruct_counterexample state_space target_state_index =
 		
 		(* Get the values *)
 		
-		let state_index_n_plus_1 = if n = List.length path - 1 then target_state_index else (let first,_ = List.nth path (n+1) in first) in
+		let state_index_n_plus_1 : State.state_index =
+			if n = List.length path - 1
+			then target_state_index
+			else (let (first : State.state_index),_ = List.nth path (n+1) in first)
+		in
+
 		let state_index_n, combined_transition_n = List.nth path n in
 		
 		(* Get state n *)
@@ -1890,6 +1893,7 @@ let reconstruct_counterexample state_space target_state_index =
 		(* Get the zones *)
 		let location_n, z_n = state_n.global_location, state_n.px_constraint in
 		let z_n_plus_1 = state_n_plus_1.px_constraint in
+		
 		
 		(* Get the n-1 elements *)
 		let z_n_minus_1, continuous_guard_n_minus_1, updates_n_minus_1 =
@@ -1998,25 +2002,11 @@ let reconstruct_counterexample state_space target_state_index =
 		in
 		
 		(* Add the valuation to the list, and replace n+1 with n *)
-		te_and_valuations := (time_elapsed_n , pxd_valuation) :: !te_and_valuations;
+		te_and_valuations := (time_elapsed_n , combined_transition_n, location_n, pxd_valuation) :: !te_and_valuations;
 		valuation_n_plus_1 := valuation_n;
-	
+		
 	done;
 
-	
-	(*** TODO: initial valuation + initial time elapsing ***)
-	(* Get 2nd time elapsing and 2nd valuation *)
-(*			let time_elapsed_2, concrete_px_valuation_2 = match !te_and_valuations, path with 
-		| time_elapsed :: _, concrete_px_valuation :: _ -> time_elapsed , concrete_px_valuation
-		| _ -> raise (InternalError ("Empty lists spotted while reconstructing concrete run"))
-	in*)
-	
-	
-	(* Compute 1st valuation, i.e., a predecessor of concrete_px_valuation_2 intersected with absolute_time_clock = 0 *)
-	
-	
-	(*** NOTE: alternatively, we could just take the initial state and intersect with absolute_time_clock = 0 ***)
-	
 	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_medium then(
@@ -2024,53 +2014,77 @@ let reconstruct_counterexample state_space target_state_index =
 	
 		(* Dummy counter for printing *)
 		let i = ref 0 in
-		List.iter (fun (time_elapsed, valuation) -> 
+		List.iter (fun (time_elapsed, _, _, valuation) -> 
 			incr i;
 			print_message Verbose_low ("Valuation " ^ (string_of_int !i) ^ ":");
 			print_message Verbose_low (ModelPrinter.string_of_px_valuation model valuation);
 			print_message Verbose_low ("Time elapsing: " ^ (NumConst.string_of_numconst time_elapsed) ^ "");
 		) !te_and_valuations;
 		(* Print last one *)
-		print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation);
+		print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_target_px_valuation);
 	);
 	
 	
-(*	
-GOAL:
-(** Concrete state: location and px-valuation *)
-type concrete_state = {
-	global_location: Location.global_location;
-	px_valuation   : (Automaton.variable_index -> NumConst.t);
-}
+	(* We now reformat the !te_and_valuations into a proper run *)
+	(*** TODO: it might have been possible to do it from the first construction? ***)
 
-type concrete_step = {
-	(* First let time elapse *)
-	time			: NumConst.t;
-	(* Then take a discrete transition *)
-	transition		: StateSpace.combined_transition;
-	(* Then reach the target state *)
-	target			: State.concrete_state;
-}
+	(* Build the initial state of the run *)
+	let run_initial_state : State.concrete_state = {
+		(* The global location is that of the symbolic initial state *)
+		global_location= (StateSpace.get_state state_space initial_state_index).global_location;
+		(* The discrete clock+discrete valuation is that of the concrete initial state computed above *)
+		px_valuation = try (let (_ , _, _, pxd_valuation) = List.nth !te_and_valuations 0 in pxd_valuation)
+			with Failure _ -> raise (InternalError "List !te_and_valuations expected to be non-empty in function reconstruct_counterexample")
+		;
+	} in
 
-type concrete_run = {
-	intial_state	: State.concrete_state;
-	steps			: concrete_step list;
-}*)
-
-
+	(* Build the steps of the run *)
+	let reversed_run_steps : (Result.concrete_step list) ref = ref [] in
+	(* We explore from first position to the last-1 position (the last state will be handled separately) *)
+	for i = 0 to List.length !te_and_valuations - 2 do
+		let time_elapsed_i, combined_transition_i, _, _ = List.nth !te_and_valuations i in
+		let _, _, target_location, target_valuation = List.nth !te_and_valuations (i+1) in
+		let concrete_step : Result.concrete_step = {
+			time		= time_elapsed_i;
+			transition	= combined_transition_i;
+			target		= {global_location = target_location; px_valuation = target_valuation};
+		} in
+		
+		(* Add *)
+		reversed_run_steps := concrete_step :: !reversed_run_steps
+	done;
 	
+	(* Create the last step separately *)
+	let time_elapsed_n, combined_transition_n, _, _ = List.nth !te_and_valuations (List.length (!te_and_valuations) -1) in
+	let last_step : Result.concrete_step = {
+		time		= time_elapsed_n;
+		transition	= combined_transition_n;
+		target		= {global_location = target_state.global_location; px_valuation = concrete_target_px_valuation};
+	} in
+	
+	(* Put the list in right order *)
+	let run_steps = List.rev (last_step :: !reversed_run_steps) in
+	
+	
+	(*
 	(*** NOTE: we need a px AND d valuation, therefore a bit a hack here ***)
-	let concrete_pxd_valuation = fun variable_index ->
+	let concrete_final_pxd_valuation = fun variable_index ->
 		match model.type_of_variables variable_index with
-		| Var_type_clock | Var_type_parameter -> concrete_px_valuation variable_index
+		| Var_type_clock | Var_type_parameter -> concrete_target_px_valuation variable_index
 		| Var_type_discrete -> Location.get_discrete_value target_state.global_location variable_index
 	in
 	
 	(* Create a representation with the absolute time, and the last element too *)
-	let valuations_and_time = (List.map (fun (_, valuation) -> valuation , (valuation absolute_time_clock) ) !te_and_valuations) @ [concrete_pxd_valuation , (concrete_pxd_valuation absolute_time_clock)] in
+	let valuations_and_time = (List.map (fun (_, _, _, valuation) -> valuation , (valuation absolute_time_clock) ) !te_and_valuations) @ [concrete_final_pxd_valuation , (concrete_final_pxd_valuation absolute_time_clock)] in
 	
 	(* The end *)
-	valuations_and_time
+	valuations_and_time*)
+	
+	(* Return the concrete run *)
+	{
+		initial_state	= run_initial_state;
+		steps			= run_steps;
+	}
 
 
 

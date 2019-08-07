@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2019/07/23
+ * Last modified     : 2019/08/07
  *
  ************************************************************)
  
@@ -98,7 +98,7 @@ let run_graph command =
 
 
 (* Create a file name for a given signal (i.e. the evolution of a variable over time) in a valuations drawing *)
-let make_valuations_variable_file_name file_prefix file_index =
+let make_concreterun_variable_file_name file_prefix file_index =
 	file_prefix ^ "_signal_" ^ (string_of_int file_index) ^ ".graph"
 
 (* Create a file name with radical cartography_file_prefix and number file_index for a given tile of the cartography *)
@@ -650,8 +650,7 @@ try(
 (** Draw (using the plotutils graph utility) the evolution of clock and discrete variables valuations according to time. *)
 (*------------------------------------------------------------*)
 
-
-let draw_valuations (valuations_with_time : ((Automaton.variable_index -> NumConst.t) * NumConst.t) list) (file_prefix : string) : unit =
+let draw_concrete_run concrete_run (file_prefix : string) : unit =
 	(* Retrieve model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
@@ -673,23 +672,55 @@ let draw_valuations (valuations_with_time : ((Automaton.variable_index -> NumCon
 		(*** TODO: remove consecutive identical points (not critical) ***)
 		
 		let file_content = string_of_list_of_string_with_sep "\n" (
-		
-			(* Used to keep the previous valuation *)
-			let previous_time = ref None in
-			let previous_valuation = ref None in
+
+			(* Track absolute time *)
+			let absolute_time = ref NumConst.zero in
 			
-			(* Iterate on the points *)
-			List.map (fun (valuation, absolute_time) ->
+			(* Find the first valuation for 0-time *)
+			
+			(* Print some information *)
+			if verbose_mode_greater Verbose_total then(
+				print_message Verbose_total ("Computing value for '" ^ (model.variable_names variable_index) ^  "' at time zero…");
+			);
+			(* Get value *)
+			let zero_value = match model.type_of_variables variable_index with
+				| Var_type_discrete ->
+					Location.get_discrete_value concrete_run.initial_state.global_location variable_index
+				| Var_type_clock ->
+					concrete_run.initial_state.px_valuation variable_index
+				| _ -> raise (InternalError "Clock or discrete variable expected in draw_concrete_run")
+			in
+
+			(* Used to keep the previous value *)
+			let previous_value = ref zero_value in
+			
+			(* Consider the value at time 0 *)
+			(
+				(*** WARNING: do not use !absolute_time here, as it may be modified in the part FOLLOWING the :: (not sure how OCaml executes this!) ***)
+				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("Considering valuation for '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst absolute_time) ^ "…");
+					print_message Verbose_total ("Generating points for '" ^ (model.variable_names variable_index) ^  "' at time zero with value '" ^ (NumConst.string_of_numconst zero_value) ^  "'…");
+				);
+
+				(* Convert to the plotutils format *)
+				(draw_x_y NumConst.zero zero_value)
+			)
+			
+			::
+			
+			(* Iterate on the steps of the concrete run *)
+			(List.map (fun step ->
+				(* Update absolute time *)
+				absolute_time := NumConst.add !absolute_time step.time;
+			
+				(* Print some information *)
+				if verbose_mode_greater Verbose_total then(
+					print_message Verbose_total ("Considering value for '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
 				);
 				
 				(* Handle the point just before the current point: if a clock, need to manage time elapsing if reset; if discrete, we imagine (so far) an immediate change of the value right at (technically "before") this point *)
-				let previous_point_str =
-				match !previous_time, !previous_valuation with
-				| Some previous_time, Some previous_valuation ->
-					begin
+				let previous_point_str , value =
 					(* Print some information *)
 					if verbose_mode_greater Verbose_total then(
 						print_message Verbose_total ("Checking type of variable '" ^ (model.variable_names variable_index) ^  "'…");
@@ -700,83 +731,91 @@ let draw_valuations (valuations_with_time : ((Automaton.variable_index -> NumCon
 				(* If discrete: the previous value is still valid right before the current transition *)
 					| Var_type_discrete ->
 					
+						(* Get the discrete value *)
+						let value = Location.get_discrete_value step.target.global_location variable_index in
+						
 						(* Print some information *)
 						if verbose_mode_greater Verbose_total then(
 							print_message Verbose_total ("About to perform comparison…");
-							print_message Verbose_total ("Previous valuation = " ^ (NumConst.string_of_numconst (previous_valuation variable_index)) ^ "");
-							print_message Verbose_total ("Current valuation = " ^ (NumConst.string_of_numconst (valuation variable_index)) ^ "");
+							print_message Verbose_total ("Previous value = " ^ (NumConst.string_of_numconst !previous_value ) ^ "");
+							print_message Verbose_total ("Current value = " ^ (NumConst.string_of_numconst value) ^ "");
 						);
 						
 						(* If same value as before, no need to add a new point *)
-						if NumConst.equal (previous_valuation variable_index) (valuation variable_index) then(
+						if NumConst.equal !previous_value value then(
 							(* Print some information *)
 							if verbose_mode_greater Verbose_total then(
 								print_message Verbose_total ("Discrete '" ^ (model.variable_names variable_index) ^  "' did not evolve: skip");
 							);
 							(* No new point *)
 							""
+							,value
 						)else(
 							(* Print some information *)
 							if verbose_mode_greater Verbose_total then(
-								print_message Verbose_total ("New additional point for discrete '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst absolute_time) ^ "…");
+								print_message Verbose_total ("New additional point for discrete '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
 							);
 							
 							(* Same value, current time *)
 							(* Convert to the plotutils format *)
-							(draw_x_y absolute_time (previous_valuation variable_index))
+							(draw_x_y !absolute_time !previous_value)
 							(* Separator for next point *)
 							^ "\n"
+							,value
 						)
 
 				(* If clock: the previous value must be incremented by the timed elapsed since the last point *)
 					| Var_type_clock -> 
-						(* Compute the time elapsed *)
-						let time_elapsed = NumConst.sub absolute_time previous_time in
+						
+						(* Get the clock value *)
+						let value = step.target.px_valuation variable_index in
+						
+						(* Retrieve the time elapsed *)
+						let time_elapsed = step.time in
 						(* If no time elapsed: no need to add a point *)
 						if NumConst.equal time_elapsed NumConst.zero then(
 							""
+							, value
 						)else(
 							(* Increment the value of the clock by the elapsed time *)
 							
 							(*** TODO: stopwatches! ***)
 							
-							let clock_value_after_elapsing = NumConst.add (previous_valuation variable_index) time_elapsed in
+							let clock_value_after_elapsing = NumConst.add !previous_value time_elapsed in
 							(* Same value, current time *)
 							(* Convert to the plotutils format *)
-							(draw_x_y absolute_time clock_value_after_elapsing)
+							(draw_x_y !absolute_time clock_value_after_elapsing)
 							(* Separator for next point *)
 							^ "\n"
+							, value
 						)
 					
 				(* Else error *)
-					| _ -> raise (InternalError "Clock or discrete variable expected in draw_valuations")
-					end
+					| _ -> raise (InternalError "Clock or discrete variable expected in draw_concrete_run")
 					
-				(* No previous point (case of the first point): don't do anything *)
-				| _ -> ""
 				in
 				
 				(* Backup current point for next point *)
-				previous_time := Some absolute_time;
-				previous_valuation := Some valuation;
+				previous_value := value;
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("Generating points for '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst absolute_time) ^ "…");
+					print_message Verbose_total ("Generating points for '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst !absolute_time) ^ " with value '" ^ (NumConst.string_of_numconst value) ^  "'…");
 				);
 
 				(* First add "previous" point *)
 				previous_point_str
 				
 				(* Then add the current point (easy) in the plotutils format *)
-				^ (draw_x_y absolute_time (valuation variable_index))
-			) valuations_with_time;
+				^ (draw_x_y !absolute_time value)
+			) concrete_run.steps
+			)
 		) in
 		
 		(* Create and fill file *)
 		
 		(* File name *)
-		let file_name = make_valuations_variable_file_name file_prefix !file_index in
+		let file_name = make_concreterun_variable_file_name file_prefix !file_index in
 		
 		(* Comments at the end of the graph file *)
 		let comments = (draw_comments (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv)) in
@@ -826,7 +865,7 @@ let draw_valuations (valuations_with_time : ((Automaton.variable_index -> NumCon
 			List.map (fun variable_index ->
 				incr file_index;
 				
-				let file_name = make_valuations_variable_file_name file_prefix !file_index in
+				let file_name = make_concreterun_variable_file_name file_prefix !file_index in
 
 				let offset = round3_float (float_of_int (!file_index - 1) /. (float_of_int (nb_files))) in
 				(* Objective: `--reposition .0 .44 .2 -h 1 -w 4.5 -Y "variable3" testCounterExSimple_signals_signal_2.txt \` *)
@@ -853,7 +892,7 @@ let draw_valuations (valuations_with_time : ((Automaton.variable_index -> NumCon
 		(* Removing all signal files *)
 		for i = 1 to !file_index do
 			print_message Verbose_medium ("Removing signal file #" ^ (string_of_int i) ^ "…");
-			delete_file (make_valuations_variable_file_name file_prefix i);
+			delete_file (make_concreterun_variable_file_name file_prefix i);
 		done;
 	);
 

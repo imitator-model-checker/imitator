@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2019/07/08
+ * Last modified     : 2019/08/07
  *
  ************************************************************)
 
@@ -147,7 +147,7 @@ val constraint_zone_predecessor_g_u :
 (*------------------------------------------------------------*)
 (** Reconstruct a whole counterexample from the initial state to a given target state. Return a list of pairs (valuation * absolute time) *)
 (*------------------------------------------------------------*)
-val reconstruct_counterexample : StateSpace.state_space -> state_index -> ((Automaton.variable_index -> NumConst.t) * NumConst.t) list
+val reconstruct_counterexample : StateSpace.state_space -> state_index -> Result.concrete_run
 
 
 (************************************************************)

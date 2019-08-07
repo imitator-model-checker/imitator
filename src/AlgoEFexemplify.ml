@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/08
- * Last modified     : 2019/07/11
+ * Last modified     : 2019/08/07
  *
  ************************************************************)
 
@@ -88,10 +88,10 @@ class algoEFexemplify =
 			| None -> raise (InternalError ("No absolute time clock detected in " ^ self#algorithm_name ^ " although this should have been checked before."));
 			
 			| Some _ ->
-				let valuations_and_time = AlgoStateBased.reconstruct_counterexample state_space target_state_index in
+				let concrete_run = AlgoStateBased.reconstruct_counterexample state_space target_state_index in
 
 				(* Generate the graphics *)
-				Graphics.draw_valuations valuations_and_time (options#files_prefix ^ "_signals_" ^ (string_of_int nb_counterexamples));
+				Graphics.draw_concrete_run concrete_run (options#files_prefix ^ "_signals_" ^ (string_of_int nb_counterexamples));
 		end;
 		
 		(* If maximum number of counterexamples processed: stop *)

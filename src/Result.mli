@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2019/07/23
+ * Last modified     : 2019/08/07
  *
  ************************************************************)
 
@@ -136,7 +136,7 @@ type concrete_step = {
 }
 
 type concrete_run = {
-	intial_state	: State.concrete_state;
+	initial_state	: State.concrete_state;
 	steps			: concrete_step list;
 }
 

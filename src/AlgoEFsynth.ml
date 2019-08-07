@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2019/07/09
+ * Last modified     : 2019/08/07
  *
  ************************************************************)
 
@@ -267,10 +267,10 @@ class virtual algoEFsynth =
 				| None -> print_warning "No counterexample reconstruction, as the model requires an absolute time clock.";
 		
 				| Some _ ->
-					let valuations_and_time = AlgoStateBased.reconstruct_counterexample state_space target_state_index in
+					let concrete_run = AlgoStateBased.reconstruct_counterexample state_space target_state_index in
 
 					(* Generate the graphics *)
-					Graphics.draw_valuations valuations_and_time (options#files_prefix ^ "_signals");
+					Graphics.draw_concrete_run concrete_run (options#files_prefix ^ "_signals");
 			end;
 		);
 		
