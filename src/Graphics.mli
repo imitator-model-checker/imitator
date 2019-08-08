@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2019/08/07
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -37,7 +37,7 @@ val draw_cartography : (LinearConstraint.p_convex_or_nonconvex_constraint * Stat
 
 
 (** Draw (using the plotutils graph utility) the evolution of clock and discrete variables valuations according to time. *)
-val draw_concrete_run : Result.concrete_run -> string -> unit
+val draw_concrete_run : StateSpace.concrete_run -> string -> unit
 
 
 (** Execute the 'dot' utility with as argument the image format, the radical, and the source file *)

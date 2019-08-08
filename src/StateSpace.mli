@@ -74,10 +74,36 @@ type addition_result =
 
 
 (************************************************************)
+(** Concrete run *)
+(************************************************************)
+
+type concrete_step = {
+	(* First let time elapse *)
+	time			: NumConst.t;
+	(* Then take a discrete transition *)
+	transition		: combined_transition;
+	(* Then reach the target state *)
+	target			: State.concrete_state;
+}
+
+(*** WARNING: the structure is here initial state followed by (transition, state) list, but in symbolic_run, it is (state, transition) followed by final state :( ***)
+
+type concrete_run = {
+	(* The parameter valuation for which this run exists *)
+	p_valuation		: PVal.pval;
+	(* The initial concrete state *)
+	initial_state	: State.concrete_state;
+	(* A possibly empty list of steps *)
+	steps			: concrete_step list;
+}
+
+
+
+(************************************************************)
 (** Symbolic run in a state space *)
 (************************************************************)
 
-(*** WARNING: the structure is here (state, transition) followed by final state, but in Result.concrete_run, it is initial state followed by (transition, state) list :( ***)
+(*** WARNING: the structure is here (state, transition) followed by final state, but in concrete_run, it is initial state followed by (transition, state) list :( ***)
  
 type symbolic_step = {
 	source			: State.state_index;
@@ -88,6 +114,8 @@ type symbolic_run = {
 	symbolic_steps	: symbolic_step list;
 	final_state		: State.state_index;
 }
+
+
 
 
 (************************************************************)

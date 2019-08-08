@@ -92,7 +92,32 @@ class algoEFexemplify =
 			| None -> raise (InternalError ("No absolute time clock detected in " ^ self#algorithm_name ^ " although this should have been checked before."));
 			
 			| Some _ ->
-				let concrete_run = AlgoStateBased.reconstruct_counterexample state_space target_state_index in
+				(* Print some information *)
+				print_message Verbose_medium "Counterexample found: reconstructing counterexample…";
+				
+				(* First build the predecessors table *)
+				let predecessors = StateSpace.compute_predecessors_with_combined_transitions state_space in
+				
+				(* Print some information *)
+				print_message Verbose_medium "Predecessor table built";
+
+				(* Also retrieve the initial state *)
+				let initial_state_index = StateSpace.get_initial_state_index state_space in
+				
+				(* Get the symbolic run, i.e., a list of a pair of a symbolic state *followed* by a combined transition *)
+				let symbolic_run : StateSpace.symbolic_run = StateSpace.backward_symbolic_run state_space target_state_index initial_state_index (Some predecessors) in
+				
+				(* Print some information *)
+				if verbose_mode_greater Verbose_low then (
+					print_message Verbose_low "\nSymbolic run reconstructed:";
+					
+					(* Debug print *)
+					(*** TODO: convert to string ***)
+					ModelPrinter.debug_print_symbolic_run model state_space symbolic_run;
+				);
+				
+				(* Exhibit a concrete run from the symbolic run *)
+				let concrete_run = AlgoStateBased.concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) in
 
 				(* Generate the graphics *)
 				Graphics.draw_concrete_run concrete_run (options#files_prefix ^ "_signals_" ^ (string_of_int nb_positive_examples));

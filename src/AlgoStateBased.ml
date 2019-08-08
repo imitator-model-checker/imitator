@@ -1632,7 +1632,10 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 (************************************************************)
 (** Reconstruct a (valid) concrete run from a symbolic run *)
 (************************************************************)
-let concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) : Result.concrete_run =
+
+(*** NOTE: this function could be in StateSpace but that would create a circular dependency with ModelPrinter ***)
+
+let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) : StateSpace.concrete_run =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	
@@ -1995,12 +1998,12 @@ let concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predeces
 	} in
 
 	(* Build the steps of the run *)
-	let reversed_run_steps : (Result.concrete_step list) ref = ref [] in
+	let reversed_run_steps : (StateSpace.concrete_step list) ref = ref [] in
 	(* We explore from first position to the last-1 position (the last state will be handled separately) *)
 	for i = 0 to List.length !te_and_valuations - 2 do
 		let time_elapsed_i, combined_transition_i, _, _ = List.nth !te_and_valuations i in
 		let _, _, target_location, target_valuation = List.nth !te_and_valuations (i+1) in
-		let concrete_step : Result.concrete_step = {
+		let concrete_step : StateSpace.concrete_step = {
 			time		= time_elapsed_i;
 			transition	= combined_transition_i;
 			target		= {global_location = target_location; px_valuation = target_valuation};
@@ -2012,7 +2015,7 @@ let concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predeces
 	
 	(* Create the last step separately *)
 	let time_elapsed_n, combined_transition_n, _, _ = List.nth !te_and_valuations (List.length (!te_and_valuations) -1) in
-	let last_step : Result.concrete_step = {
+	let last_step : StateSpace.concrete_step = {
 		time		= time_elapsed_n;
 		transition	= combined_transition_n;
 		target		= {global_location = target_state.global_location; px_valuation = concrete_target_px_valuation};
@@ -2047,7 +2050,7 @@ let concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predeces
 (************************************************************)
 (** Reconstruct a whole counterexample from the initial state to a given target state. Return a concrete run *)
 (************************************************************)
-let reconstruct_counterexample state_space (target_state_index : State.state_index) : Result.concrete_run =
+let reconstruct_counterexample state_space (target_state_index : State.state_index) : StateSpace.concrete_run =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	

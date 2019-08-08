@@ -122,31 +122,6 @@ type bc_coverage =
 	| Coverage_unknown
 
 
-(************************************************************)
-(** Concrete run *)
-(************************************************************)
-
-type concrete_step = {
-	(* First let time elapse *)
-	time			: NumConst.t;
-	(* Then take a discrete transition *)
-	transition		: StateSpace.combined_transition;
-	(* Then reach the target state *)
-	target			: State.concrete_state;
-}
-
-(*** WARNING: the structure is here initial state followed by (transition, state) list, but in StateSpace.symbolic_run, it is (state, transition) followed by final state :( ***)
-
-type concrete_run = {
-	(* The parameter valuation for which this run exists *)
-	p_valuation		: PVal.pval;
-	(* The initial concrete state *)
-	initial_state	: State.concrete_state;
-	(* A possibly empty list of steps *)
-	steps			: concrete_step list;
-}
-
-
 
 (************************************************************)
 (** General result for the IMITATOR algorithms *)
@@ -335,7 +310,7 @@ type valuation_and_concrete_run = {
 	(* The parameter valuation for which this run exists *)
 	valuation		: PVal.pval;
 	(* The concrete run *)
-	concrete_run	: concrete_run;
+	concrete_run	: StateSpace.concrete_run;
 	(* Is the run satisfying or violating the property? *)
 	satisfying		: bool;
 }
