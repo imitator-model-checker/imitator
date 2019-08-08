@@ -1630,81 +1630,28 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 
 
 (************************************************************)
-(** Reconstruct a whole counterexample from the initial state to a given target state. Return a list of pairs (valuation * absolute time) *)(************************************************************)
-let reconstruct_counterexample state_space (target_state_index : State.state_index) =
+(** Reconstruct a (valid) concrete run from a symbolic run *)
+(************************************************************)
+let concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) : Result.concrete_run =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	
-	(* Retrieve the input options *)
-(* 	let options = Input.get_options () in *)
-
-	(* Get the state *)
+	(* Get the final state *)
+	let target_state_index = symbolic_run.final_state in
 	let target_state = StateSpace.get_state state_space target_state_index in
-	
-	(* Print some information *)
-	print_message Verbose_medium "Counterexample found: reconstructing counterexample…";
-	
-	(* First get the predecessors table *)
-	let predecessors = StateSpace.compute_predecessors_with_combined_transitions state_space in
-	
-	(* Print some information *)
-	print_message Verbose_medium "Predecessor table built";
-
-	(* Also retrieve the initial state *)
-	let initial_state_index = StateSpace.get_initial_state_index state_space in
-	
-	(* Get the symbolic run, i.e., a list of a pair of a symbolic state *followed* by a combined transition *)
-	let symbolic_run : StateSpace.symbolic_run = StateSpace.backward_symbolic_run state_space target_state_index initial_state_index (Some predecessors) in
-	
-	(* Print some information *)
-	print_message Verbose_medium "Symbolic run reconstructed";
-
-	(* Print some information *)
-	if verbose_mode_greater Verbose_low then (
-		print_message Verbose_low "\nCounter-example found:";
-		
-		(* Function to pretty-print combined transitions *)
-		let debug_string_of_combined_transition combined_transition = string_of_list_of_string_with_sep ", " (
-			List.map (fun transition_index ->
-				(* Get automaton index *)
-				let automaton_index = model.automaton_of_transition transition_index in
-				(* Get actual transition *)
-				let transition = model.transitions_description transition_index in
-				(* Print *)
-				ModelPrinter.debug_string_of_transition model automaton_index transition
-			) combined_transition
-		) in
-
-		(* Iterate *)
-		List.iter (fun (symbolic_step : StateSpace.symbolic_step)  ->
-				(* Get actual state *)
-			let state = StateSpace.get_state state_space symbolic_step.source in
-		
-			print_message Verbose_low (" " ^ (ModelPrinter.string_of_state model state));
-			print_message Verbose_low (" | ");
-			print_message Verbose_low (" | via combined transition " ^ (debug_string_of_combined_transition symbolic_step.transition));
-			print_message Verbose_low (" | ");
-			print_message Verbose_low (" v ");
-		) symbolic_run.symbolic_steps;
-		
-		(* Print target *)
-		print_message Verbose_low (" " ^ (ModelPrinter.string_of_state model target_state));
-		
-	);
-	
 
 	(* Exhibit a concrete parameter valuation in the final state *)
 	let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse target_state.px_constraint in
 	let concrete_p_valuation = LinearConstraint.p_exhibit_point p_constraint in
 	
+	(* Convert to PVal *)
+	let pval = new PVal.pval in
+	List.iter (fun parameter ->
+		pval#set_value parameter (concrete_p_valuation parameter);
+	) model.parameters;
+	
 	(* Print it *)
 	if verbose_mode_greater Verbose_standard then(
-		(* Convert to PVal *)
-		let pval = new PVal.pval in
-		List.iter (fun parameter ->
-			pval#set_value parameter (concrete_p_valuation parameter);
-		) model.parameters;
-		
 		print_message Verbose_standard "Example of parameter valuation:";
 		print_message Verbose_standard (ModelPrinter.string_of_pi0 model pval);
 	);
@@ -2029,10 +1976,18 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 	(* We now reformat the !te_and_valuations into a proper run *)
 	(*** TODO: it might have been possible to do it from the first construction? ***)
 
+	(* Retrieve the initial state index of the run *)
+	let initial_state_index = match symbolic_run.symbolic_steps with
+		(* If the list of steps is not empty: pick the first one *)
+		| first_step :: _ -> first_step.source
+		(* If the list of steps is empty: pick the final state *)
+		| [] -> symbolic_run.final_state
+	in
+	
 	(* Build the initial state of the run *)
 	let run_initial_state : State.concrete_state = {
 		(* The global location is that of the symbolic initial state *)
-		global_location= (StateSpace.get_state state_space initial_state_index).global_location;
+		global_location = (StateSpace.get_state state_space initial_state_index).global_location;
 		(* The discrete clock+discrete valuation is that of the concrete initial state computed above *)
 		px_valuation = try (let (_ , _, _, pxd_valuation) = List.nth !te_and_valuations 0 in pxd_valuation)
 			with Failure _ -> raise (InternalError "List !te_and_valuations expected to be non-empty in function reconstruct_counterexample")
@@ -2083,9 +2038,76 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 	
 	(* Return the concrete run *)
 	{
+		p_valuation		= pval;
 		initial_state	= run_initial_state;
 		steps			= run_steps;
 	}
+
+
+(************************************************************)
+(** Reconstruct a whole counterexample from the initial state to a given target state. Return a concrete run *)
+(************************************************************)
+let reconstruct_counterexample state_space (target_state_index : State.state_index) : Result.concrete_run =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	
+	(* Retrieve the input options *)
+(* 	let options = Input.get_options () in *)
+
+	(* Get the state *)
+	let target_state = StateSpace.get_state state_space target_state_index in
+	
+	(* Print some information *)
+	print_message Verbose_medium "Counterexample found: reconstructing counterexample…";
+	
+	(* First get the predecessors table *)
+	let predecessors = StateSpace.compute_predecessors_with_combined_transitions state_space in
+	
+	(* Print some information *)
+	print_message Verbose_medium "Predecessor table built";
+
+	(* Also retrieve the initial state *)
+	let initial_state_index = StateSpace.get_initial_state_index state_space in
+	
+	(* Get the symbolic run, i.e., a list of a pair of a symbolic state *followed* by a combined transition *)
+	let symbolic_run : StateSpace.symbolic_run = StateSpace.backward_symbolic_run state_space target_state_index initial_state_index (Some predecessors) in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_low then (
+		print_message Verbose_low "\nSymbolic run reconstructed:";
+		
+		(* Function to pretty-print combined transitions *)
+		let debug_string_of_combined_transition combined_transition = string_of_list_of_string_with_sep ", " (
+			List.map (fun transition_index ->
+				(* Get automaton index *)
+				let automaton_index = model.automaton_of_transition transition_index in
+				(* Get actual transition *)
+				let transition = model.transitions_description transition_index in
+				(* Print *)
+				ModelPrinter.debug_string_of_transition model automaton_index transition
+			) combined_transition
+		) in
+
+		(* Iterate *)
+		List.iter (fun (symbolic_step : StateSpace.symbolic_step)  ->
+				(* Get actual state *)
+			let state = StateSpace.get_state state_space symbolic_step.source in
+		
+			print_message Verbose_low (" " ^ (ModelPrinter.string_of_state model state));
+			print_message Verbose_low (" | ");
+			print_message Verbose_low (" | via combined transition " ^ (debug_string_of_combined_transition symbolic_step.transition));
+			print_message Verbose_low (" | ");
+			print_message Verbose_low (" v ");
+		) symbolic_run.symbolic_steps;
+		
+		(* Print target *)
+		print_message Verbose_low (" " ^ (ModelPrinter.string_of_state model target_state));
+		
+	);
+	
+	
+	(* Exhibit a concrete run from the symbolic run *)
+	concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run)
 
 
 

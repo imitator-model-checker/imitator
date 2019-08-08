@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2019/08/07
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -138,7 +138,11 @@ type concrete_step = {
 (*** WARNING: the structure is here initial state followed by (transition, state) list, but in StateSpace.symbolic_run, it is (state, transition) followed by final state :( ***)
 
 type concrete_run = {
+	(* The parameter valuation for which this run exists *)
+	p_valuation		: PVal.pval;
+	(* The initial concrete state *)
 	initial_state	: State.concrete_state;
+	(* A possibly empty list of steps *)
 	steps			: concrete_step list;
 }
 
