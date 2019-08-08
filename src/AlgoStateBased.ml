@@ -1643,22 +1643,6 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	let target_state_index = symbolic_run.final_state in
 	let target_state = StateSpace.get_state state_space target_state_index in
 
-	(* Exhibit a concrete parameter valuation in the final state *)
-	let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse target_state.px_constraint in
-	let concrete_p_valuation = LinearConstraint.p_exhibit_point p_constraint in
-	
-	(* Convert to PVal *)
-	let pval = new PVal.pval in
-	List.iter (fun parameter ->
-		pval#set_value parameter (concrete_p_valuation parameter);
-	) model.parameters;
-	
-	(* Print it *)
-	if verbose_mode_greater Verbose_standard then(
-		print_message Verbose_standard "Example of parameter valuation:";
-		print_message Verbose_standard (ModelPrinter.string_of_pi0 model pval);
-	);
-	
 	(* Exhibit a concrete clock+parameter valuation in the final state *)
 	let concrete_target_px_valuation = LinearConstraint.px_exhibit_point target_state.px_constraint in
 	
@@ -1668,6 +1652,23 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_target_px_valuation);
 	);
 	
+	(* Exhibit a concrete parameter valuation in the final state *)
+(*	let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse target_state.px_constraint in
+	let concrete_p_valuation = LinearConstraint.p_exhibit_point p_constraint in*)
+	
+	(* Convert to PVal *)
+	let pval = new PVal.pval in
+	List.iter (fun parameter ->
+		pval#set_value parameter (concrete_target_px_valuation parameter);
+	) model.parameters;
+	
+	(* Print it *)
+	if verbose_mode_greater Verbose_standard then(
+		print_message Verbose_standard "Example of parameter valuation:";
+		print_message Verbose_standard (ModelPrinter.string_of_pi0 model pval);
+	);
+	
+
 	(* We reconstruct a concrete run, for which we need absolute time *)
 	
 	
