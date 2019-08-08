@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2019/07/08
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -64,6 +64,37 @@ type addition_result =
 	| State_replacing of state_index
 
 
+(************************************************************)
+(** Transitions *)
+(************************************************************)
+
+(** A combined transition is a list of transitions (one for each automaton involved) *)
+type combined_transition = AbstractModel.transition_index list
+
+
+(************************************************************)
+(** Predecessors table *)
+(************************************************************)
+type predecessors_table = ((combined_transition * state_index) list) array
+
+
+(************************************************************)
+(** Symbolic run in a state space *)
+(************************************************************)
+
+(*** WARNING: the structure is here (state, transition) followed by final state, but in Result.concrete_run, it is initial state followed by (transition, state) list :( ***)
+ 
+type symbolic_step = {
+	source			: State.state_index;
+	transition		: combined_transition;
+}
+
+type symbolic_run = {
+	symbolic_steps	: symbolic_step list;
+	final_state		: State.state_index;
+}
+
+
 
 (************************************************************)
 (** Set of state index *)
@@ -83,9 +114,6 @@ module StateIndexSet = Set.Make(State)
 (************************************************************)
 (** State space structure *)
 (************************************************************)
-
-(** A combined transition is a list of transitions (one for each automaton involved) *)
-type combined_transition = AbstractModel.transition_index list
 
 
 type state_space = {
@@ -424,7 +452,7 @@ let get_successors_with_actions state_space state_index =
 (*------------------------------------------------------------*)
 (** Compute and return a predecessor array state_index -> (combined_transition , state_index) list *)
 (*------------------------------------------------------------*)
-let compute_predecessors_with_combined_transitions state_space =
+let compute_predecessors_with_combined_transitions state_space : predecessors_table =
 
 	(* Statistics *)
 	counter_compute_predecessors_with_combined_transitions#increment;
@@ -936,7 +964,7 @@ let find_transitions_in state_space (scc : scc) : (state_index * combined_transi
 
 
 (************************************************************)
-(** Backward path-computation *)
+(** Backward run-computation *)
 (************************************************************)
 
 (*------------------------------------------------------------*)
@@ -957,9 +985,10 @@ let is_marked colortable element : bool =
 
 
 (*------------------------------------------------------------*)
-(** Returns the path (list of pairs (state, combined transition)) from the source_state_index to the target_state_index. Can take a predecessors_table as an option, otherwise recomputes it from the state space. The list of transitions is ordered from the initial state to the target state; the target state is not included. Raise Not_found if path not found. *)
+(** Returns the symbolic run (list of pairs (state, combined transition)) from the source_state_index to the target_state_index. Can take a predecessors_table as an option, otherwise recomputes it from the state space. The list of transitions is ordered from the initial state to the target state; the target state is not included. Raise Not_found if run not found. *)
 (*------------------------------------------------------------*)
-let backward_path state_space (target_state_index : state_index) (source_state_index : state_index) (predecessors_table_option : (((combined_transition * state_index) list) array) option) =
+
+let backward_symbolic_run state_space (target_state_index : state_index) (source_state_index : state_index) (predecessors_table_option : predecessors_table option) : symbolic_run =
 	(* First manage the predecessors_table *)
 	let predecessors_table = match predecessors_table_option with
 		(* If given: keep it *)
@@ -976,8 +1005,8 @@ let backward_path state_space (target_state_index : state_index) (source_state_i
 	let sort_predecessors = List.sort (fun (_, a) (_, b) -> Pervasives.compare a b) in
 	
 	(*------------------------------------------------------------*)
-	(* Use a recursive procedure returning a (list of (state, combined transition))'option ; None denotes the current path is useless. The states are returned in reversed order. *)
-	let rec backward_path_rec current_state_index =
+	(* Use a recursive procedure returning a (list of (state, combined transition))'option ; None denotes the current run is useless. The states are returned in reversed order. *)
+	let rec backward_symbolic_run_rec current_state_index =
 		(* If target is reached: return *)
 		if current_state_index = source_state_index then Some [] (*** NOTE: do not add index, it will be added during the recursion together with the transition ***)
 		
@@ -996,38 +1025,43 @@ let backward_path state_space (target_state_index : state_index) (source_state_i
 			let sorted_predecessors = sort_predecessors predecessors in
 
 			(* Iterate on the predecessors *)
-			let path = List.fold_left (fun current_path (combined_transition, predecessor_index) ->
+			let symbolic_steps = List.fold_left (fun current_steps (combined_transition, predecessor_index) ->
 				(* If predecessor is marked: skip and go to next predecessor *)
-				if is_marked colortable predecessor_index then current_path
+				if is_marked colortable predecessor_index then current_steps
 				
 				(* If unmarked: call recursively *)
 				else 
-				let recursive_result = backward_path_rec predecessor_index in
+				let recursive_result = backward_symbolic_run_rec predecessor_index in
 				match recursive_result with
 					(* If no result in this direction: skip and go to next predecessor *)
-					| None -> current_path
-					(* Otherwise: return the result and add the predecessor and the transition *)
-					| Some path -> Some ((predecessor_index, combined_transition) :: path)
+					| None -> current_steps
+					(* Otherwise: return the result and add the symbolic_step *)
+					| Some symbolic_steps -> Some ({source = predecessor_index ; transition = combined_transition } :: symbolic_steps)
 			
 			) None sorted_predecessors in
 			
-			match path with
-				(* If no path found after iterating, we are in a deadlock *)
+			match symbolic_steps with
+				(* If no steps found after iterating, we are in a deadlock *)
 				| None -> None
 				(* Otherwise return (do NOT add current state, as it was added above) *)
-					| Some path -> Some path
+				| Some symbolic_steps -> Some symbolic_steps
 		)
 
 	in
 	(*------------------------------------------------------------*)
 	
 	(* Call the recursive procedure and reverse the result *)
-	match backward_path_rec target_state_index with
+	match backward_symbolic_run_rec target_state_index with
 	(* Oops! *)
 	| None -> raise Not_found
-	(* Reverse because states were added in reversed order *)
-	| Some path -> List.rev path
-
+	| Some symbolic_steps ->
+		(* Construct the structure symbolic_run *)
+		{
+			(* Reverse because states were added in reversed order *)
+			symbolic_steps = List.rev symbolic_steps;
+			(* Add final state *)
+			final_state = target_state_index;
+		}
 
 
 (************************************************************)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2019/07/08
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -71,6 +71,29 @@ type addition_result =
 	(* The new state replaced a former state (because the newer is larger), returns the old state index *)
 	| State_replacing of state_index
 
+
+
+(************************************************************)
+(** Symbolic run in a state space *)
+(************************************************************)
+
+(*** WARNING: the structure is here (state, transition) followed by final state, but in Result.concrete_run, it is initial state followed by (transition, state) list :( ***)
+ 
+type symbolic_step = {
+	source			: State.state_index;
+	transition		: combined_transition;
+}
+
+type symbolic_run = {
+	symbolic_steps	: symbolic_step list;
+	final_state		: State.state_index;
+}
+
+
+(************************************************************)
+(** Predecessors table *)
+(************************************************************)
+type predecessors_table = ((combined_transition * state_index) list) array
 
 
 (************************************************************)
@@ -148,7 +171,7 @@ val get_successors_with_combined_transitions : state_space -> state_index -> (co
 (*------------------------------------------------------------*)
 (** Compute and return a predecessor array state_index -> (combined_transition , state_index) list *)
 (*------------------------------------------------------------*)
-val compute_predecessors_with_combined_transitions : state_space -> ((combined_transition * state_index) list) array
+val compute_predecessors_with_combined_transitions : state_space -> predecessors_table
 
 (*------------------------------------------------------------*)
 (** Return the table of transitions *)
@@ -217,9 +240,9 @@ val find_transitions_in : state_space -> scc -> (state_index * combined_transiti
 
 
 (*------------------------------------------------------------*)
-(** Returns the path (list of pairs (state, combined transition)) from the source_state_index to the target_state_index. Can take a predecessors_table as an option, otherwise recomputes it from the state space. The list of transitions is ordered from the initial state to the target state; the target state is not included. Raise Not_found if path not found. *)
+(** Returns the symbolic run (list of pairs (state, combined transition)) from the source_state_index to the target_state_index. Can take a predecessors_table as an option, otherwise recomputes it from the state space. The list of transitions is ordered from the initial state to the target state; the target state is not included. Raise Not_found if run not found. *)
 (*------------------------------------------------------------*)
-val backward_path : state_space -> state_index -> state_index -> (((combined_transition * state_index) list) array) option -> (State.state_index * combined_transition) list
+val backward_symbolic_run : state_space -> state_index -> state_index -> predecessors_table option -> symbolic_run
 
 
 (************************************************************)

@@ -135,6 +135,8 @@ type concrete_step = {
 	target			: State.concrete_state;
 }
 
+(*** WARNING: the structure is here initial state followed by (transition, state) list, but in StateSpace.symbolic_run, it is (state, transition) followed by final state :( ***)
+
 type concrete_run = {
 	initial_state	: State.concrete_state;
 	steps			: concrete_step list;

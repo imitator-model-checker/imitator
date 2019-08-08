@@ -42,10 +42,14 @@ class algoEFexemplify =
 	(* Class variables *)
 	(************************************************************)
 	
-	(* Number of counter-examples spotted *)
-	val mutable nb_counterexamples : int = 0
+	(* Number of positive examples spotted (positive examples: concrete runs to the target state) *)
+	val mutable nb_positive_examples : int = 0
 	
-	val nb_COUNTEREXAMPLE_MAX = 3
+	(* Number of negative examples spotted (negative examples: *impossible* concrete runs to the target state) *)
+	val mutable nb_negative_examples : int = 0
+	
+	val nb_POSITIVE_EXAMPLES_MAX = 3
+	val nb_NEGATIVE_EXAMPLES_MAX = 3
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -65,7 +69,7 @@ class algoEFexemplify =
 	method initialize_variables =
 		super#initialize_variables;
 
-		nb_counterexamples <- 0;
+		nb_positive_examples <- 0;
 
 		(* The end *)
 		()
@@ -77,10 +81,10 @@ class algoEFexemplify =
 
 	method process_counterexample target_state_index =
 		(* Update the number of counterexamples processed *)
-		nb_counterexamples <- nb_counterexamples + 1;
+		nb_positive_examples <- nb_positive_examples + 1;
 		
 		(* Print some information *)
-		self#print_algo_message Verbose_standard ("Target state #" ^ (string_of_int nb_counterexamples) ^ " found!");
+		self#print_algo_message Verbose_standard ("Target state #" ^ (string_of_int nb_positive_examples) ^ " found!");
 		
 		(*** NOTE: so far, the reconstruction needs an absolute time clock ***)
 		begin
@@ -91,14 +95,14 @@ class algoEFexemplify =
 				let concrete_run = AlgoStateBased.reconstruct_counterexample state_space target_state_index in
 
 				(* Generate the graphics *)
-				Graphics.draw_concrete_run concrete_run (options#files_prefix ^ "_signals_" ^ (string_of_int nb_counterexamples));
+				Graphics.draw_concrete_run concrete_run (options#files_prefix ^ "_signals_" ^ (string_of_int nb_positive_examples));
 		end;
 		
 		(* If maximum number of counterexamples processed: stop *)
-		if nb_counterexamples >= nb_COUNTEREXAMPLE_MAX then(
+		if nb_positive_examples >= nb_POSITIVE_EXAMPLES_MAX then(
 			(* Update termination status *)
 			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
-			self#print_algo_message Verbose_standard ("Target state #" ^ (string_of_int nb_counterexamples) ^ " is the maximum number sought. Terminating…");
+			self#print_algo_message Verbose_standard ("Target state #" ^ (string_of_int nb_positive_examples) ^ " is the maximum number sought. Terminating…");
 			termination_status <- Some Target_found;
 		
 			raise TerminateAnalysis;

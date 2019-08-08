@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/08/07
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -26,6 +26,7 @@ open AbstractModel
 open AlgoGeneric
 open State
 open Result
+open StateSpace
 
 
 (************************************************************)
@@ -1652,11 +1653,11 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 	(* Also retrieve the initial state *)
 	let initial_state_index = StateSpace.get_initial_state_index state_space in
 	
-	(* Get the path, i.e., a list of a pair of a symbolic state *followed* by a combined transition (the last state does not belong to the path) *)
-	let path : (State.state_index * StateSpace.combined_transition) list = StateSpace.backward_path state_space target_state_index initial_state_index (Some predecessors) in
+	(* Get the symbolic run, i.e., a list of a pair of a symbolic state *followed* by a combined transition *)
+	let symbolic_run : StateSpace.symbolic_run = StateSpace.backward_symbolic_run state_space target_state_index initial_state_index (Some predecessors) in
 	
 	(* Print some information *)
-	print_message Verbose_medium "Path built";
+	print_message Verbose_medium "Symbolic run reconstructed";
 
 	(* Print some information *)
 	if verbose_mode_greater Verbose_low then (
@@ -1675,16 +1676,16 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 		) in
 
 		(* Iterate *)
-		List.iter (fun (state_index, combined_transition) ->
-			(* Get actual state *)
-			let state = StateSpace.get_state state_space state_index in
+		List.iter (fun (symbolic_step : StateSpace.symbolic_step)  ->
+				(* Get actual state *)
+			let state = StateSpace.get_state state_space symbolic_step.source in
 		
 			print_message Verbose_low (" " ^ (ModelPrinter.string_of_state model state));
 			print_message Verbose_low (" | ");
-			print_message Verbose_low (" | via combined transition " ^ (debug_string_of_combined_transition combined_transition));
+			print_message Verbose_low (" | via combined transition " ^ (debug_string_of_combined_transition symbolic_step.transition));
 			print_message Verbose_low (" | ");
 			print_message Verbose_low (" v ");
-		) path;
+		) symbolic_run.symbolic_steps;
 		
 		(* Print target *)
 		print_message Verbose_low (" " ^ (ModelPrinter.string_of_state model target_state));
@@ -1853,11 +1854,11 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 	*)
 	(*** END CODE THAT WON'T WORK DUE TO THE DIMENSION HANDLING IN LINEAR.CONSTRAINT ***)
 	
-	(* Now construct valuations for the whole path, i.e. pair (time elapsed, valuation) *)
+	(* Now construct valuations for the whole run, i.e. pair (time elapsed, valuation) *)
 	
-	print_message Verbose_low "\nBuilding concrete path:";
+	print_message Verbose_low "\nBuilding concrete run:";
 	
-	(*** TODO: change this system one day, as it costs us one more clock in the ENTIRE analysis, although it would only be used in the path regeneration ***)
+	(*** TODO: change this system one day, as it costs us one more clock in the ENTIRE analysis, although it would only be used in the run regeneration ***)
 	
 	(* Get the absolute time clock *)
 	let absolute_time_clock = match model.global_time_clock with
@@ -1871,22 +1872,22 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 	let valuation_n_plus_1 = ref concrete_target_px_valuation in
 	let te_and_valuations = ref [] in
 	
-	for n = List.length path - 1 downto 0 do
+	for n = List.length symbolic_run.symbolic_steps - 1 downto 0 do
 	
-		print_message Verbose_low ("\n\nComputing concrete valuation in path at position " ^ (string_of_int n) ^ "…");
+		print_message Verbose_low ("\n\nComputing concrete valuation in symbolic run at position " ^ (string_of_int n) ^ "…");
 		
 		(* Get the values *)
 		
 		let state_index_n_plus_1 : State.state_index =
-			if n = List.length path - 1
+			if n = List.length symbolic_run.symbolic_steps - 1
 			then target_state_index
-			else (let (first : State.state_index),_ = List.nth path (n+1) in first)
+			else ((List.nth symbolic_run.symbolic_steps (n+1)).source)
 		in
 
-		let state_index_n, combined_transition_n = List.nth path n in
+		let symbolic_step_n : StateSpace.symbolic_step = List.nth symbolic_run.symbolic_steps n in
 		
 		(* Get state n *)
-		let state_n = StateSpace.get_state state_space state_index_n in
+		let state_n = StateSpace.get_state state_space symbolic_step_n.source in
 		(* Get state n+1 *)
 		let state_n_plus_1 = StateSpace.get_state state_space state_index_n_plus_1 in
 		
@@ -1900,16 +1901,16 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 			(* Normal case *)
 			if n > 0 then(
 				(* Get the state index *)
-				let state_index_n_minus_1, combined_transition_n_minus_1 = List.nth path (n-1) in
+				let symbolic_step_n_minus_1 = List.nth symbolic_run.symbolic_steps (n-1) in
 
 				(* Get the state *)
-				let state_n_minus_1 = StateSpace.get_state state_space state_index_n_minus_1 in
+				let state_n_minus_1 = StateSpace.get_state state_space symbolic_step_n_minus_1.source in
 				(* Get location and constraint *)
 				let location_n_minus_1, z_n_minus_1 = state_n_minus_1.global_location, state_n_minus_1.px_constraint in
 				
 				(* Reconstruct the continuous guard from n-1 to n *)
 				(*** WARNING/BADPROG/TOOPTIMIZE: double computation as we recompute it at the next n-1 ***)
-				let _, _, continuous_guards_n_minus_1, updates_n_minus_1 = compute_new_location_guards_updates location_n_minus_1 combined_transition_n_minus_1 in
+				let _, _, continuous_guards_n_minus_1, updates_n_minus_1 = compute_new_location_guards_updates location_n_minus_1 symbolic_step_n_minus_1.transition in
 				
 				z_n_minus_1, LinearConstraint.pxd_intersection continuous_guards_n_minus_1, updates_n_minus_1
 			
@@ -1925,10 +1926,10 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 		in
 		
 		(* Get all updates from the combined transition n *)
-		let clock_updates, _ = (*AlgoStateBased.*)get_updates_in_combined_transition location_n combined_transition_n in
+		let clock_updates, _ = (*AlgoStateBased.*)get_updates_in_combined_transition location_n symbolic_step_n.transition in
 		
 		(* Reconstruct the continuous guard from n to n+1 *)
-		let _, _, continuous_guards_n, _ = compute_new_location_guards_updates location_n combined_transition_n in
+		let _, _, continuous_guards_n, _ = compute_new_location_guards_updates location_n symbolic_step_n.transition in
 		let continuous_guard_n = LinearConstraint.pxd_intersection continuous_guards_n in
 		
 (*				(* Compute the set of clocks impacted by the updates *)
@@ -2002,7 +2003,7 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 		in
 		
 		(* Add the valuation to the list, and replace n+1 with n *)
-		te_and_valuations := (time_elapsed_n , combined_transition_n, location_n, pxd_valuation) :: !te_and_valuations;
+		te_and_valuations := (time_elapsed_n , symbolic_step_n.transition, location_n, pxd_valuation) :: !te_and_valuations;
 		valuation_n_plus_1 := valuation_n;
 		
 	done;
