@@ -309,6 +309,11 @@ val p_is_leq : p_linear_constraint -> p_linear_constraint -> bool
 val px_is_leq : px_linear_constraint -> px_linear_constraint -> bool
 val pxd_is_leq : pxd_linear_constraint -> pxd_linear_constraint -> bool
 
+(** Check if a constraint is strictly included in another one *)
+val p_is_le : p_linear_constraint -> p_linear_constraint -> bool
+(*val px_is_le : px_linear_constraint -> px_linear_constraint -> bool
+val pxd_is_le : pxd_linear_constraint -> pxd_linear_constraint -> bool*)
+
 (** Check if a variable is bound to be >= 0 in a constraint *)
 val px_is_positive_in : variable -> px_linear_constraint -> bool
 

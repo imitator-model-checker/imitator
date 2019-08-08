@@ -90,6 +90,8 @@ let check_assert_dimensions = true
 (*let ppl_nb_contains = ref 0
 	let ppl_t_contains = ref 0.0*)
 	let ppl_tcounter_contains = create_hybrid_counter_and_register "contains" PPL_counter Verbose_low
+	
+	let ppl_tcounter_strictly_contains = create_hybrid_counter_and_register "strictly_contains" PPL_counter Verbose_low
 
 
 (*let ppl_nb_contains_integer_point = ref 0
@@ -448,6 +450,11 @@ let ippl_is_equal c1 c2 =
 (** Check if a constraint is included in another one *)
 let ippl_is_leq x y =
 	ippl_generic (fun () -> ppl_Polyhedron_contains_Polyhedron y x) ppl_tcounter_contains
+
+
+(** Check if a constraint is strictly included in another one *)
+let ippl_is_le x y =
+	ippl_generic (fun () -> ppl_Polyhedron_strictly_contains_Polyhedron y x) ppl_tcounter_strictly_contains
 
 
 (** Check if a constraint contains an integer point *)
@@ -1580,6 +1587,12 @@ let is_leq = ippl_is_leq
 let p_is_leq = ippl_is_leq
 let px_is_leq = ippl_is_leq
 let pxd_is_leq = ippl_is_leq
+
+(** Check if a constraint is strictly included in another one *)
+let is_le = ippl_is_le
+let p_is_le = ippl_is_le
+let px_is_le = ippl_is_le
+let pxd_is_le = ippl_is_le
 
 
 (** Check if a constraint contains an integer point *)
