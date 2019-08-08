@@ -92,6 +92,9 @@ class algoEFexemplify =
 			| None -> raise (InternalError ("No absolute time clock detected in " ^ self#algorithm_name ^ " although this should have been checked before."));
 			
 			| Some _ ->
+				(*------------------------------------------------------------*)
+				(* Part 1: positive counterexample *)
+				(*------------------------------------------------------------*)
 				(* Print some information *)
 				print_message Verbose_medium "Counterexample found: reconstructing counterexample…";
 				
@@ -121,6 +124,41 @@ class algoEFexemplify =
 
 				(* Generate the graphics *)
 				Graphics.draw_concrete_run concrete_run (options#files_prefix ^ "_signals_" ^ (string_of_int nb_positive_examples));
+				
+				
+				(*------------------------------------------------------------*)
+				(* Part 2: negative counterexample *)
+				(*------------------------------------------------------------*)
+				
+				(*** TODO: handle non-deterministic ***)
+				
+				if model.strongly_deterministic && not model.has_silent_actions then(
+					(* Part 2.a: try to find a parameter valuation NOT going to the final state using this run *)
+					(* Idea: any parameter valuation "deadlocked" along this run is a valuation for which no identical symbolic run leads to the target, or any other target (in case of several discrete target locations) *)
+
+					(* Reason backward *)
+					let i = ref ((List.length symbolic_run.symbolic_steps) - 1) in
+					(* Define the next valuation along the run, and reason backward *)
+					let pconstraint_i_plus_one = ref (LinearConstraint.px_hide_nonparameters_and_collapse (StateSpace.get_state state_space symbolic_run.final_state).px_constraint) in
+					
+					while !i > 0 do
+						(* Get the p-constraint at position i *)
+						let pconstraint_i : LinearConstraint.p_linear_constraint = LinearConstraint.px_hide_nonparameters_and_collapse (StateSpace.get_state state_space (List.nth symbolic_run.symbolic_steps !i).source).px_constraint in
+						
+						(* Check if difference is non-null *)
+						();
+						
+						(* Move to previous step *)
+						pconstraint_i_plus_one := pconstraint_i;
+						decr i;
+					done;
+					
+					
+					
+				
+				);
+				
+				
 		end;
 		
 		(* If maximum number of counterexamples processed: stop *)
