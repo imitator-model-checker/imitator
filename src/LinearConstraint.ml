@@ -3736,7 +3736,18 @@ let p_nnconvex_difference_assign p_nnconvex_constraint p_nnconvex_constraint' =
 	(* The end *)
 	()
 
+
 let px_nnconvex_difference_assign = p_nnconvex_difference_assign
+
+(** Performs the difference between a first p_nnconvex_constraint and a second p_nnconvex_constraint; no side-effects *)
+let p_nnconvex_difference p_nnconvex_constraint p_nnconvex_constraint' =
+	(* Copy*)
+	let p_nnconvex_constraint_copied = p_nnconvex_copy p_nnconvex_constraint in
+	(* Apply side-effects function *)
+	p_nnconvex_difference_assign p_nnconvex_constraint_copied p_nnconvex_constraint';
+	(* Return *)
+	p_nnconvex_constraint_copied
+
 
 
 (*(** Eliminate a set of variables, side effects version *)

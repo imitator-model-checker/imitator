@@ -629,6 +629,8 @@ val p_nnconvex_union_assign : p_nnconvex_constraint -> p_nnconvex_constraint -> 
 (** Performs the difference between a first px_nnconvex_constraint and a second px_nnconvex_constraint; the first is modified, the second is not *)
 val p_nnconvex_difference_assign : p_nnconvex_constraint -> p_nnconvex_constraint -> unit
 val px_nnconvex_difference_assign : px_nnconvex_constraint -> px_nnconvex_constraint -> unit
+(** Performs the difference between a first p_nnconvex_constraint and a second p_nnconvex_constraint; no side-effects *)
+val p_nnconvex_difference : p_nnconvex_constraint -> p_nnconvex_constraint -> p_nnconvex_constraint
 
 (** Eliminate a set of variables *)
 val p_nnconvex_hide : variable list -> p_nnconvex_constraint -> p_nnconvex_constraint
