@@ -172,6 +172,33 @@ class algoEFexemplify =
 							(* Exhibit a point *)
 							let concrete_p_valuation = LinearConstraint.p_nnconvex_exhibit_point difference in
 							
+							(* Convert to PVal *)
+							let pval = new PVal.pval in
+							List.iter (fun parameter ->
+								pval#set_value parameter (concrete_p_valuation parameter);
+							) model.parameters;
+							
+							(* Print it *)
+							if verbose_mode_greater Verbose_standard then(
+								print_message Verbose_standard "Example of parameter valuation:";
+								print_message Verbose_standard (ModelPrinter.string_of_pi0 model pval);
+							);
+							
+							(* Intersect with the px-constraint to then obtain px-valuation *)
+							
+							(* Get the px-constraint *)
+							let pxconstraint_i = (StateSpace.get_state state_space (List.nth symbolic_run.symbolic_steps !i).source).px_constraint in
+							(* Convert the p-valuation to a constraint *)
+							let concrete_p_valuation_constraint = LinearConstraint.p_constraint_of_point (List.map (fun parameter_index -> parameter_index , concrete_p_valuation parameter_index) model.parameters ) in
+							(* Convert to px-dimensions *)
+							let concrete_p_valuation_px_constraint = LinearConstraint.px_of_p_constraint concrete_p_valuation_constraint in
+							(* Intersect *)
+							LinearConstraint.px_intersection_assign concrete_p_valuation_px_constraint [pxconstraint_i];
+							
+							(* Exhibit a px-point in this constraint *)
+							let concrete_px_valuation = LinearConstraint.px_exhibit_point concrete_p_valuation_px_constraint in
+							
+							
 							()
 						);
 						
