@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2019/06/11
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -18,6 +18,7 @@ open Result
 open AbstractModel
 open ImitatorUtilities
 open State
+open StateSpace
 
 
 
@@ -381,6 +382,8 @@ let debug_string_of_transition model automaton_index transition =
 	^ "] "
 
 
+
+
 (* Convert the transitions of a location into a string *)
 let string_of_transitions model automaton_index location_index =
 	string_of_list_of_string (
@@ -677,6 +680,49 @@ let string_of_state model (state : state) =
 
 
 
+
+
+(************************************************************)
+(** Debug-print for symbolic run *)
+(************************************************************)
+
+(*** TODO: convert to string result ***)
+
+let debug_print_symbolic_run model state_space (symbolic_run : StateSpace.symbolic_run) =
+	(* Function to pretty-print combined transitions *)
+	let debug_string_of_combined_transition combined_transition = string_of_list_of_string_with_sep ", " (
+		List.map (fun transition_index ->
+			(* Get automaton index *)
+			let automaton_index = model.automaton_of_transition transition_index in
+			(* Get actual transition *)
+			let transition = model.transitions_description transition_index in
+			(* Print *)
+			debug_string_of_transition model automaton_index transition
+		) combined_transition
+	) in
+
+	(* Iterate *)
+	List.iter (fun (symbolic_step : StateSpace.symbolic_step)  ->
+			(* Get actual state *)
+		let state = StateSpace.get_state state_space symbolic_step.source in
+	
+		print_message Verbose_low (" " ^ (string_of_state model state));
+		print_message Verbose_low (" | ");
+		print_message Verbose_low (" | via combined transition " ^ (debug_string_of_combined_transition symbolic_step.transition));
+		print_message Verbose_low (" | ");
+		print_message Verbose_low (" v ");
+	) symbolic_run.symbolic_steps;
+	
+	(* Get the state *)
+	let target_state = StateSpace.get_state state_space symbolic_run.final_state in
+	
+	(* Print target *)
+	print_message Verbose_low (" " ^ (string_of_state model target_state));
+	
+	()
+
+
+
 (************************************************************)
 (** PX-valuation *)
 (************************************************************)
@@ -728,3 +774,6 @@ let string_of_v0 model v0 =
 		) model.parameters
 	)
 	)
+
+
+

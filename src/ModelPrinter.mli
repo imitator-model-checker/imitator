@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2019/06/03
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -50,6 +50,13 @@ val string_of_guard : (Automaton.variable_index -> Automaton.variable_name) -> A
 (************************************************************)
 (* Convert a transition into a string: compact version for debugging/pretty-printing *)
 val debug_string_of_transition : AbstractModel.abstract_model -> Automaton.automaton_index -> AbstractModel.transition -> string
+
+
+(************************************************************)
+(** Debug-print for symbolic run *)
+(************************************************************)
+
+val debug_print_symbolic_run : AbstractModel.abstract_model -> StateSpace.state_space -> StateSpace.symbolic_run -> unit
 
 
 (************************************************************)

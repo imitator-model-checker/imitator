@@ -2051,16 +2051,10 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	
-	(* Retrieve the input options *)
-(* 	let options = Input.get_options () in *)
-
-	(* Get the state *)
-	let target_state = StateSpace.get_state state_space target_state_index in
-	
 	(* Print some information *)
 	print_message Verbose_medium "Counterexample found: reconstructing counterexample…";
 	
-	(* First get the predecessors table *)
+	(* First build the predecessors table *)
 	let predecessors = StateSpace.compute_predecessors_with_combined_transitions state_space in
 	
 	(* Print some information *)
@@ -2076,35 +2070,10 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 	if verbose_mode_greater Verbose_low then (
 		print_message Verbose_low "\nSymbolic run reconstructed:";
 		
-		(* Function to pretty-print combined transitions *)
-		let debug_string_of_combined_transition combined_transition = string_of_list_of_string_with_sep ", " (
-			List.map (fun transition_index ->
-				(* Get automaton index *)
-				let automaton_index = model.automaton_of_transition transition_index in
-				(* Get actual transition *)
-				let transition = model.transitions_description transition_index in
-				(* Print *)
-				ModelPrinter.debug_string_of_transition model automaton_index transition
-			) combined_transition
-		) in
-
-		(* Iterate *)
-		List.iter (fun (symbolic_step : StateSpace.symbolic_step)  ->
-				(* Get actual state *)
-			let state = StateSpace.get_state state_space symbolic_step.source in
-		
-			print_message Verbose_low (" " ^ (ModelPrinter.string_of_state model state));
-			print_message Verbose_low (" | ");
-			print_message Verbose_low (" | via combined transition " ^ (debug_string_of_combined_transition symbolic_step.transition));
-			print_message Verbose_low (" | ");
-			print_message Verbose_low (" v ");
-		) symbolic_run.symbolic_steps;
-		
-		(* Print target *)
-		print_message Verbose_low (" " ^ (ModelPrinter.string_of_state model target_state));
-		
+		(* Debug print *)
+		(*** TODO: convert to string ***)
+		ModelPrinter.debug_print_symbolic_run model state_space symbolic_run;
 	);
-	
 	
 	(* Exhibit a concrete run from the symbolic run *)
 	concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run)
