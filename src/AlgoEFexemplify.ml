@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/08
- * Last modified     : 2019/08/07
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -26,6 +26,7 @@ open Result
 open AlgoEFsynth
 open Statistics
 open State
+open StateSpace
 
 
 
