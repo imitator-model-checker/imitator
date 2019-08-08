@@ -118,7 +118,6 @@ let check_assert_dimensions = true
 
 	let ppl_tcounter_remove_higher_dimensions = create_hybrid_counter_and_register "remove_higher_space_dimensions" PPL_counter Verbose_low
 	
-
 	let ppl_tcounter_constrains = create_hybrid_counter_and_register "constrains" PPL_counter Verbose_low
 
 	let ppl_tcounter_bounds_from_above = create_hybrid_counter_and_register "bounds_from_above" PPL_counter Verbose_low
@@ -205,6 +204,12 @@ let ppl_nb_hull_assign_if_exact_false = ref 0
 	
 	let ppl_nncc_geometrically_equals = create_hybrid_counter_and_register "nncc_geometrically_equals" PPL_counter Verbose_low
 	
+	let ppl_tcounter_nncc_constrains = create_hybrid_counter_and_register "nncc_constrains" PPL_counter Verbose_low
+
+	let ppl_tcounter_nncc_minimize = create_hybrid_counter_and_register "nncc_minimize" PPL_counter Verbose_low
+
+	let ppl_tcounter_nncc_maximize = create_hybrid_counter_and_register "nncc_maxnimize" PPL_counter Verbose_low
+
 	let ppl_nncc_pairwise_reduce = create_hybrid_counter_and_register "nncc_pairwise_reduce" PPL_counter Verbose_low
 	
 	let ppl_nncc_omega_reduce = create_hybrid_counter_and_register "nncc_omega_reduce" PPL_counter Verbose_low
@@ -590,6 +595,16 @@ let ippl_nncc_geometrically_covers nnconvex_constraint nnconvex_constraint' =
 let ippl_nncc_geometrically_equals nnconvex_constraint nnconvex_constraint' =
 	(*** NOTE: ppl_Pointset_Powerset_NNC_Polyhedron_equals_Pointset_Powerset_NNC_Polyhedron is NOT the right function ***)
 	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_geometrically_equals_Pointset_Powerset_NNC_Polyhedron nnconvex_constraint nnconvex_constraint') ppl_nncc_geometrically_equals
+
+(** Return true if the variable is constrained in a linear_constraint *)
+let ippl_nncc_is_constrained =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_constrains) ppl_tcounter_nncc_constrains
+	
+let ippl_nncc_minimize x =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_minimize x) ppl_tcounter_nncc_minimize
+
+let ippl_nncc_maximize x =
+	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_maximize x) ppl_tcounter_nncc_maximize
 
 let ippl_nncc_pairwise_reduce nnconvex_constraint =
 	ippl_generic (fun () -> ppl_Pointset_Powerset_NNC_Polyhedron_pairwise_reduce nnconvex_constraint) ppl_nncc_pairwise_reduce
@@ -3592,6 +3607,7 @@ let get_disjuncts p_nnconvex_constraint =
 
 
 
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Tests} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3656,6 +3672,9 @@ let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
 	)
 
 let string_of_px_nnconvex_constraint = string_of_p_nnconvex_constraint
+
+
+
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3881,6 +3900,151 @@ let px_nnconvex_hide_nonparameters_and_collapse px_nnconvex_constraint =
 	
 
 
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Operations without modification} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(*------------------------------------------------------------*)
+(* Point exhibition *)
+(*------------------------------------------------------------*)
+
+(*** NOTE/BADPROG: I used essentially the SAME function as exhibit_point, but I prefer having two separate functions than always using the, probably less efficient, nnconvex_constraint function all the time ***)
+(*** TODO: merge them using a generic function taking as argument the dedicated instantiated functions? ***)
+
+(** Exhibit a point in a nnconvex_constraint; raise EmptyConstraint if the constraint is empty. *)
+let nnconvex_constraint_exhibit_point nb_dimensions nnconvex_constraint =
+	(* First quick check that the constraint is satisfiable *)
+	if ippl_nncc_is_empty nnconvex_constraint then raise EmptyConstraint;
+	
+	(* Create an array for storing the valuation *)
+	let valuations = Array.make nb_dimensions NumConst.zero in
+	
+	(* Print some information *)
+	print_message Verbose_high "Entering nnconvex_constraint_exhibit_point";
+	
+	(* Print some information *)
+	print_message Verbose_high "Copying the constraint…";
+	
+	(* Copy the constraint, as we will restrict it dimension by dimension *)
+	let restricted_linear_constraint = nnconvex_copy nnconvex_constraint in
+	
+	(* Iterate on dimensions *)
+	for dimension = 0 to nb_dimensions - 1 do
+	
+		(* Find the valuation for this dimension *)
+		let valuation =
+
+		(* If variable unbound: arbitrarily return 1 *)
+		if not (ippl_nncc_is_constrained restricted_linear_constraint dimension) then(
+			
+			(* Print some information *)
+			print_message Verbose_high ("Dimension " ^ (string_of_int dimension) ^ " is unconstrained here.");
+				
+			(* return 1 *)
+			NumConst.one
+		)
+		else(
+			
+			(* Print some information *)
+			print_message Verbose_high ("Getting infimum of dimension " ^ (string_of_int dimension) ^ "…");
+		
+			(* Get infimum *)
+		
+		(* Create linear expression with just the dimension of interest *)
+		let linear_expression : Ppl.linear_expression = ppl_linear_expression_of_linear_term (make_linear_term [(NumConst.one, dimension)] NumConst.zero) in
+		
+			(*** DOC: function signature is val ppl_Polyhedron_minimize : polyhedron -> linear_expression -> bool * Gmp.Z.t * Gmp.Z.t * bool ***)
+			let bounded_from_below, infimum_numerator, infimum_denominator, is_minimum = ippl_nncc_minimize restricted_linear_constraint linear_expression in
+			
+			(* Build the infimum *)
+			let infimum = NumConst.numconst_of_zfrac infimum_numerator infimum_denominator in
+
+			(* Print some information *)
+			if verbose_mode_greater Verbose_high then
+				print_message Verbose_high ("Infimum of dimension " ^ (string_of_int dimension) ^ " is " ^ (NumConst.string_of_numconst infimum) ^ ". Is it a minimum? " ^ (string_of_bool is_minimum));
+		
+			(* If minimum: pick it *)
+			if bounded_from_below && is_minimum then(
+				(* Return the infimum *)
+				infimum
+				
+			)else(
+			(* Otherwise find supremum *)
+				let bounded_from_above, supremum_numerator, supremum_denominator, is_maximum = ippl_nncc_maximize restricted_linear_constraint linear_expression in
+				
+				(* Build the supremum *)
+				let supremum = NumConst.numconst_of_zfrac supremum_numerator supremum_denominator in
+				
+				(* Print some information *)
+				if verbose_mode_greater Verbose_high then
+					print_message Verbose_high ("Supremum of dimension " ^ (string_of_int dimension) ^ " is " ^ (NumConst.string_of_numconst supremum) ^ ". Is it a maximum? " ^ (string_of_bool is_maximum));
+					
+				(* Case 0: bounded from neither below nor above: return 1 (arbitrarily) *)
+				if not bounded_from_below && not bounded_from_above then(
+					(* Print some information *)
+					print_message Verbose_high ("Dimension " ^ (string_of_int dimension) ^ " is bounded from neither below nor above: pick 1");
+					
+					(* Return 1 *)
+					NumConst.one
+				)
+
+				(* Case 1: infimum and no supremum: return infimum + 1 *)
+				else if bounded_from_below && not bounded_from_above then
+					NumConst.add infimum NumConst.one
+				
+				(* Case 2: no infimum and supremum: return 1 if 1 is allowed, otherwise supremum - 1, i.e., min(1, supremum - 1) *)
+				else if not bounded_from_below && bounded_from_above then
+					NumConst.min NumConst.one (NumConst.sub supremum NumConst.one)
+				
+				(* Case 3: infimum and supremum: return (infimum + supremum) / 2 *)
+				else(
+					(* If empty constraint: problem, raise exception *)
+					if NumConst.l supremum infimum || (NumConst.le supremum infimum && (not is_maximum || not is_minimum)) then raise (InternalError "This situation is not supposed to happen, as the constraint was shown to be non-empty");
+					
+					(* Compute average  *)
+					NumConst.div (
+						NumConst.add infimum supremum
+					) (NumConst.numconst_of_int 2)
+				)
+			) (* end else if no minimum *)
+		) (* end else if not unbound *)
+		in
+
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			print_message Verbose_medium ("Valuation found for dimension " ^ (string_of_int dimension) ^ ": " ^ (NumConst.string_of_numconst valuation) ^ "");
+		);
+	
+		(* Store it *)
+		valuations.(dimension) <- valuation;
+			
+		(* Constrain the constraint with the found valuation, i.e., dimension = valuation *)
+		let valuation_constraint : linear_constraint = make nb_dimensions [
+			make_linear_inequality
+				(* "dimension - valuation = 0" *)
+				(make_linear_term [(NumConst.one, dimension)] (NumConst.neg valuation))
+				Op_eq
+			] in
+		nnconvex_intersection_assign nb_dimensions restricted_linear_constraint valuation_constraint;
+	
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high ("Current constraint after handling dimension " ^ (string_of_int dimension) ^ " is: " ^ (string_of_p_nnconvex_constraint debug_variable_names restricted_linear_constraint ) ^ "");
+		);
+		
+	done;
+	
+	(* Return functional view *)
+	(fun variable -> valuations.(variable))
+
+
+(*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+let p_nnconvex_exhibit_point l = nnconvex_constraint_exhibit_point !p_dim l
+let px_nnconvex_exhibit_point l = nnconvex_constraint_exhibit_point !px_dim l
+let pxd_nnconvex_exhibit_point l = nnconvex_constraint_exhibit_point !pxd_dim l
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion to a list of p_linear_constraint} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3897,7 +4061,7 @@ let p_linear_constraint_list_of_p_nnconvex_constraint =
 
 (************************************************************)
 (************************************************************)
-(** {2 Non-necessarily convex linear Constraints} *)
+(** {2 Convex or non-necessarily convex linear Constraints} *)
 (************************************************************)
 (************************************************************)
 type p_convex_or_nonconvex_constraint =
