@@ -142,12 +142,38 @@ class algoEFexemplify =
 					(* Define the next valuation along the run, and reason backward *)
 					let pconstraint_i_plus_one = ref (LinearConstraint.px_hide_nonparameters_and_collapse (StateSpace.get_state state_space symbolic_run.final_state).px_constraint) in
 					
+					(* Print some information *)
+					print_message Verbose_medium "\nLooking for larger valuations by exploring backwards…";
+					
 					while !i > 0 do
+						(* Print some information *)
+						print_message Verbose_high ("\nConsidering position " ^ (string_of_int !i) ^ "");
+						
 						(* Get the p-constraint at position i *)
 						let pconstraint_i : LinearConstraint.p_linear_constraint = LinearConstraint.px_hide_nonparameters_and_collapse (StateSpace.get_state state_space (List.nth symbolic_run.symbolic_steps !i).source).px_constraint in
 						
 						(* Check if difference is non-null *)
-						();
+						(*** NOTE: we rather use p_is_le, even though we have to then compute the difference, if indeed smaller, for (presumably) efficiency reasons ***)
+						if LinearConstraint.p_is_le !pconstraint_i_plus_one pconstraint_i then(
+							(* Print some information *)
+							print_message Verbose_medium ("\nFound a shrinking of parameter constraint between position " ^ (string_of_int !i) ^ " to " ^ (string_of_int (!i+1)) ^ ":");
+							
+							(* Convert to a nnconvex_constraint *)
+							let difference = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint pconstraint_i in
+							(* Compute the difference K_i \ K_i+1 *)
+							LinearConstraint.p_nnconvex_difference_assign difference (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint !pconstraint_i_plus_one);
+							
+							(* Print some information *)
+							if verbose_mode_greater Verbose_high then(
+								print_message Verbose_high ("\nParameter valuations blocked between position " ^ (string_of_int !i) ^ " to " ^ (string_of_int (!i+1)) ^ ":");
+								print_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names difference);
+							);
+							
+							(* Exhibit a point *)
+							let concrete_p_valuation = LinearConstraint.p_nnconvex_exhibit_point difference in
+							
+							()
+						);
 						
 						(* Move to previous step *)
 						pconstraint_i_plus_one := pconstraint_i;
