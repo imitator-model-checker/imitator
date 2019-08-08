@@ -616,6 +616,17 @@ val p_nnconvex_constraint_is_leq : p_nnconvex_constraint -> p_nnconvex_constrain
 val p_nnconvex_constraint_is_equal : p_nnconvex_constraint -> p_nnconvex_constraint -> bool
 
 
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(** {3 Operations without modification} *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Exhibit a point in a nnconvex_constraint; raise EmptyConstraint if the constraint is empty. *)
+(*** NOTE: function quasi-identical to {pxd}_exhibit_point ***)
+val p_nnconvex_exhibit_point : p_nnconvex_constraint -> (variable -> coef)
+val px_nnconvex_exhibit_point : px_nnconvex_constraint -> (variable -> coef)
+(* val pxd_nnconvex_exhibit_point : pxd_nnconvex_constraint -> (variable -> coef) *)
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Modifications} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

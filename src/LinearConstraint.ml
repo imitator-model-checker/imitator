@@ -4042,7 +4042,7 @@ let nnconvex_constraint_exhibit_point nb_dimensions nnconvex_constraint =
 (*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
 let p_nnconvex_exhibit_point l = nnconvex_constraint_exhibit_point !p_dim l
 let px_nnconvex_exhibit_point l = nnconvex_constraint_exhibit_point !px_dim l
-let pxd_nnconvex_exhibit_point l = nnconvex_constraint_exhibit_point !pxd_dim l
+(* let pxd_nnconvex_exhibit_point l = nnconvex_constraint_exhibit_point !pxd_dim l *)
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
