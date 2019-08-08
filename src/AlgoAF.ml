@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2018/03/15
- * Last modified     : 2019/07/11
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -203,7 +203,7 @@ class algoAFsynth =
 			(* Update the local constraint by adding the new constraint as a union *)
 			(*** WARNING: ugly (and expensive) to convert from pxd to px ***)
 			(*** NOTE: still safe since discrete values are all instantiated ***)
-			LinearConstraint.px_nnconvex_px_union good_constraint_s (LinearConstraint.pxd_hide_discrete_and_collapse guard);
+			LinearConstraint.px_nnconvex_px_union_assign good_constraint_s (LinearConstraint.pxd_hide_discrete_and_collapse guard);
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
@@ -238,7 +238,7 @@ class algoAFsynth =
 			self#print_algo_message Verbose_high ("nnconvex_s (= s) is:\n" ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names nnconvex_s));
 		);
 
-		LinearConstraint.px_nnconvex_difference nnconvex_s good_constraint_s;
+		LinearConstraint.px_nnconvex_difference_assign nnconvex_s good_constraint_s;
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
@@ -246,7 +246,7 @@ class algoAFsynth =
 		);
 		
 		(* Ensure clocks and parameters are not negative *)
-		LinearConstraint.px_nnconvex_intersection nnconvex_s all_clocks_and_parameters_nonnegative;
+		LinearConstraint.px_nnconvex_intersection_assign nnconvex_s all_clocks_and_parameters_nonnegative;
 		
 		
 		(* Print some information *)
@@ -372,7 +372,7 @@ class algoAFsynth =
 					
 				(* Update the target constraint using the current constraint *)
 				(*** TODO: not the right operation here ***)
-				LinearConstraint.p_nnconvex_intersection af_constraint p_constraint;
+				LinearConstraint.p_nnconvex_intersection_assign af_constraint p_constraint;
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
@@ -424,7 +424,7 @@ class algoAFsynth =
 			let p_af_constraint_s = self#compute_deadlock_p_constraint state_index succs_of_s in
 			
 			(* Update the constraint using the local constraint *)
-			LinearConstraint.p_nnconvex_union af_constraint p_af_constraint_s;
+			LinearConstraint.p_nnconvex_union_assign af_constraint p_af_constraint_s;
 		
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
@@ -487,7 +487,7 @@ class algoAFsynth =
 		
 		(* Perform result = initial_state|P \ af_constraint *)
 		let result = LinearConstraint.p_nnconvex_copy init_p_nnconvex_constraint in
-		LinearConstraint.p_nnconvex_difference result af_constraint;
+		LinearConstraint.p_nnconvex_difference_assign result af_constraint;
 		
 		self#print_algo_message_newline Verbose_medium (
 			"Negation of final constraint completed."

@@ -4,11 +4,11 @@
  * 
  * Université Paris 13, LIPN, CNRS, France
  * 
- * Module description: "EF optimized" algorithm: minimization or minimization of a parameter valuation for which there exists a run leading to some states
+ * Module description: "EF optimized" algorithm: minimization or minimization of a parameter valuation for which there exists a run leading to some states [ABPP19]
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2019/07/11
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -227,7 +227,7 @@ class virtual algoEFopt =
 		(* Add to the collected current_optimum_constraint *)
 		match current_optimum_valuations with
 		| Some current_optimum_valuations ->
-			LinearConstraint.p_nnconvex_p_union current_optimum_valuations projected_constraint_onto_P;
+			LinearConstraint.p_nnconvex_p_union_assign current_optimum_valuations projected_constraint_onto_P;
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then(
 				self#print_algo_message_newline Verbose_low ("New " ^ self#str_optimum ^ " constraint after addition: " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names current_optimum_valuations));
@@ -582,7 +582,7 @@ class virtual algoEFopt =
 						let equality_constraint = LinearConstraint.p_constraint_of_point [(parameter_index, coefficient)] in
 						
 						(* Intersect with the optimum valuations *)
-						LinearConstraint.p_nnconvex_intersection current_optimum_valuations equality_constraint;
+						LinearConstraint.p_nnconvex_intersection_assign current_optimum_valuations equality_constraint;
 					);
 					
 					(* Return the constraint *)

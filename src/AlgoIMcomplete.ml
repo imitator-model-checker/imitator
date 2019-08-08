@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/03/21
- * Last modified     : 2017/03/21
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -117,7 +117,7 @@ class algoIMcomplete =
 			)else(
 			
 				(* Update K := K ^ not s *)
-				LinearConstraint.p_nnconvex_difference k_result (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint);
+				LinearConstraint.p_nnconvex_difference_assign k_result (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint);
 
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
@@ -131,7 +131,7 @@ class algoIMcomplete =
 		) (* end if pi-incompatible *)
 		else(
 			(* Update K := K ^ s *)
-			LinearConstraint.p_nnconvex_intersection k_result p_constraint;
+			LinearConstraint.p_nnconvex_intersection_assign k_result p_constraint;
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then(

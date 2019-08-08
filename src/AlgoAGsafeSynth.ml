@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/02/03
- * Last modified     : 2019/07/11
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -101,7 +101,7 @@ class algoAGsafeSynth =
 		in
 		
 		(* Perform the difference *)
-		LinearConstraint.p_nnconvex_difference result bad_constraint;
+		LinearConstraint.p_nnconvex_difference_assign result bad_constraint;
 		
 		
 		(* Print some information *)

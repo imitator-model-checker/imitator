@@ -4,7 +4,7 @@
  * 
  * Université Paris 13, LIPN, CNRS, France
  * 
- * Module description: "EF max" algorithm: maximization of a parameter valuation for which there exists a run leading to some states
+ * Module description: "EF max" algorithm: maximization of a parameter valuation for which there exists a run leading to some states [ABPP19]
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02

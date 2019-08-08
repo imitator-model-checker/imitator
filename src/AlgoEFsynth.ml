@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2019/08/07
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -172,7 +172,7 @@ class virtual algoEFsynth =
 						
 					(* Update the bad constraint using the current constraint *)
 					(*** NOTE: perhaps try first whether p_constraint <= bad_constraint ? ***)
-					LinearConstraint.p_nnconvex_p_union bad_constraint p_constraint;
+					LinearConstraint.p_nnconvex_p_union_assign bad_constraint p_constraint;
 					
 					(* Print some information *)
 					if verbose_mode_greater Verbose_low then(

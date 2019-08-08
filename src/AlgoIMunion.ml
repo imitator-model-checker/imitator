@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/08
- * Last modified     : 2019/06/11
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -83,7 +83,7 @@ class algoIMunion =
 		(* Projet onto P *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
 		(* Add the constraint to the result *)
-		LinearConstraint.p_nnconvex_p_union result p_constraint
+		LinearConstraint.p_nnconvex_p_union_assign result p_constraint
 		
 (*		(* Add to the list of last states *)
 		last_states <- state_index :: last_states*)
@@ -100,7 +100,7 @@ class algoIMunion =
 		(* Projet onto P *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
 		(* Add the constraint to the result *)
-		LinearConstraint.p_nnconvex_p_union result p_constraint
+		LinearConstraint.p_nnconvex_p_union_assign result p_constraint
 		(* Add to the list of last states *)
 (* 		last_states <- state_index :: last_states *)
 
@@ -123,7 +123,7 @@ class algoIMunion =
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
 
 		self#print_algo_message_newline Verbose_total ("adding the initial constraint to the result");
-		LinearConstraint.p_nnconvex_intersection result p_constraint;
+		LinearConstraint.p_nnconvex_intersection_assign result p_constraint;
 		
 		
 		self#print_algo_message_newline Verbose_standard (

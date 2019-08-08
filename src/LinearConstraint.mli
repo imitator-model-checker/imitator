@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/06/05
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -616,19 +616,19 @@ val p_nnconvex_constraint_is_equal : p_nnconvex_constraint -> p_nnconvex_constra
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Performs the intersection of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
-val p_nnconvex_intersection  : p_nnconvex_constraint -> p_linear_constraint -> unit
-val px_nnconvex_intersection  : px_nnconvex_constraint -> px_linear_constraint -> unit
+val p_nnconvex_intersection_assign  : p_nnconvex_constraint -> p_linear_constraint -> unit
+val px_nnconvex_intersection_assign  : px_nnconvex_constraint -> px_linear_constraint -> unit
 
 (** Performs the union of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
-val p_nnconvex_p_union : p_nnconvex_constraint -> p_linear_constraint -> unit
-val px_nnconvex_px_union : px_nnconvex_constraint -> px_linear_constraint -> unit
+val p_nnconvex_p_union_assign : p_nnconvex_constraint -> p_linear_constraint -> unit
+val px_nnconvex_px_union_assign : px_nnconvex_constraint -> px_linear_constraint -> unit
 
 (** Performs the union of a p_nnconvex_constraint with another p_nnconvex_constraint; the first p_nnconvex_constraint is modified, the second is not *)
-val p_nnconvex_union : p_nnconvex_constraint -> p_nnconvex_constraint -> unit
+val p_nnconvex_union_assign : p_nnconvex_constraint -> p_nnconvex_constraint -> unit
 
 (** Performs the difference between a first px_nnconvex_constraint and a second px_nnconvex_constraint; the first is modified, the second is not *)
-val p_nnconvex_difference : p_nnconvex_constraint -> p_nnconvex_constraint -> unit
-val px_nnconvex_difference : px_nnconvex_constraint -> px_nnconvex_constraint -> unit
+val p_nnconvex_difference_assign : p_nnconvex_constraint -> p_nnconvex_constraint -> unit
+val px_nnconvex_difference_assign : px_nnconvex_constraint -> px_nnconvex_constraint -> unit
 
 (** Eliminate a set of variables *)
 val p_nnconvex_hide : variable list -> p_nnconvex_constraint -> p_nnconvex_constraint

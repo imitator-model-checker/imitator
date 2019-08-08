@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2019/08/01
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -183,7 +183,7 @@ class algoLoopSynth =
 		end;
 
 		(* Update the loop constraint using the current constraint *)
-		LinearConstraint.p_nnconvex_p_union loop_constraint p_constraint;
+		LinearConstraint.p_nnconvex_p_union_assign loop_constraint p_constraint;
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(

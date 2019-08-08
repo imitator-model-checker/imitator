@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/07/05
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -3650,7 +3650,7 @@ let string_of_px_nnconvex_constraint = string_of_p_nnconvex_constraint
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Performs the intersection of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
-let nnconvex_intersection nb_dimensions nnconvex_constraint linear_constraint =
+let nnconvex_intersection_assign nb_dimensions nnconvex_constraint linear_constraint =
 	(* Assert *)
 	nncc_assert_dimensions nb_dimensions nnconvex_constraint;
 	assert_dimensions nb_dimensions linear_constraint;
@@ -3658,7 +3658,7 @@ let nnconvex_intersection nb_dimensions nnconvex_constraint linear_constraint =
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (
-			"Entering 'LinearConstraint.p_nnconvex_intersection' with " ^ (string_of_int (ippl_nncc_space_dimension nnconvex_constraint)) ^ " and " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions."
+			"Entering 'LinearConstraint.p_nnconvex_intersection_assign' with " ^ (string_of_int (ippl_nncc_space_dimension nnconvex_constraint)) ^ " and " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions."
 	);
 
 	(* First retrieve inequalities *)
@@ -3673,16 +3673,16 @@ let nnconvex_intersection nb_dimensions nnconvex_constraint linear_constraint =
 	()
 
 (*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
-let p_nnconvex_intersection c = nnconvex_intersection !p_dim c
-let px_nnconvex_intersection c = nnconvex_intersection !px_dim c
+let p_nnconvex_intersection_assign c = nnconvex_intersection_assign !p_dim c
+let px_nnconvex_intersection_assign c = nnconvex_intersection_assign !px_dim c
 
 
 (** Performs the union of a p_nnconvex_constraint with a p_linear_constraint; the p_nnconvex_constraint is modified, the p_linear_constraint is not *)
-let nnconvex_union nb_dimensions nnconvex_constraint linear_constraint =
+let nnconvex_union_assign nb_dimensions nnconvex_constraint linear_constraint =
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (
-			"Entering 'LinearConstraint.nnconvex_union' with " ^ (string_of_int (ippl_nncc_space_dimension nnconvex_constraint)) ^ " and " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions. Expected: " ^ (string_of_int nb_dimensions) ^ "."
+			"Entering 'LinearConstraint.nnconvex_union_assign' with " ^ (string_of_int (ippl_nncc_space_dimension nnconvex_constraint)) ^ " and " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions. Expected: " ^ (string_of_int nb_dimensions) ^ "."
 	);
 	
 	(* Assert *)
@@ -3699,17 +3699,17 @@ let nnconvex_union nb_dimensions nnconvex_constraint linear_constraint =
 
 
 (*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
-let p_nnconvex_p_union c =
-	print_message Verbose_total ("Entering 'LinearConstraint.p_nnconvex_p_union'");
-	nnconvex_union !p_dim c
+let p_nnconvex_p_union_assign c =
+	print_message Verbose_total ("Entering 'LinearConstraint.p_nnconvex_p_union_assign'");
+	nnconvex_union_assign !p_dim c
 
-let px_nnconvex_px_union c =
-	print_message Verbose_total ("Entering 'LinearConstraint.px_nnconvex_px_union'");
-	nnconvex_union !px_dim c
+let px_nnconvex_px_union_assign c =
+	print_message Verbose_total ("Entering 'LinearConstraint.px_nnconvex_px_union_assign'");
+	nnconvex_union_assign !px_dim c
 
 
 (** Performs the union of a p_nnconvex_constraint with another p_nnconvex_constraint; the first p_nnconvex_constraint is modified, the second is not *)
-let p_nnconvex_union p_nnconvex_constraint p_nnconvex_constraint' =
+let p_nnconvex_union_assign p_nnconvex_constraint p_nnconvex_constraint' =
 	(* Assert *)
 (*	nncc_assert_dimensions nb_dimensions p_nnconvex_constraint;
 	nncc_assert_dimensions nb_dimensions p_nnconvex_constraint';*)
@@ -3718,11 +3718,11 @@ let p_nnconvex_union p_nnconvex_constraint p_nnconvex_constraint' =
 	let disjuncts = get_disjuncts p_nnconvex_constraint' in
 	
 	(* Add each of them as a union *)
-	List.iter (p_nnconvex_p_union p_nnconvex_constraint) disjuncts
+	List.iter (p_nnconvex_p_union_assign p_nnconvex_constraint) disjuncts
 
 
 (** Performs the difference between a first p_nnconvex_constraint and a second p_nnconvex_constraint; the first is modified, the second is not *)
-let p_nnconvex_difference p_nnconvex_constraint p_nnconvex_constraint' =
+let p_nnconvex_difference_assign p_nnconvex_constraint p_nnconvex_constraint' =
 	(* Assert *)
 (*	nncc_assert_dimensions nb_dimensions p_nnconvex_constraint;
 	nncc_assert_dimensions nb_dimensions p_nnconvex_constraint';*)
@@ -3736,7 +3736,7 @@ let p_nnconvex_difference p_nnconvex_constraint p_nnconvex_constraint' =
 	(* The end *)
 	()
 
-let px_nnconvex_difference = p_nnconvex_difference
+let px_nnconvex_difference_assign = p_nnconvex_difference_assign
 
 
 (*(** Eliminate a set of variables, side effects version *)
@@ -3782,7 +3782,7 @@ let p_nnconvex_constraint_of_p_linear_constraints (p_linear_constraints : p_line
 	let result = false_p_nnconvex_constraint() in
 	(* Add each constraint as a disjunction *)
 	List.iter (fun p_linear_constraint -> 
-		p_nnconvex_p_union result p_linear_constraint;
+		p_nnconvex_p_union_assign result p_linear_constraint;
 	) p_linear_constraints;
 	(* Return result *)
 	result
@@ -3793,7 +3793,7 @@ let px_nnconvex_constraint_of_px_linear_constraints (px_linear_constraints : px_
 	let result = false_px_nnconvex_constraint() in
 	(* Add each constraint as a disjunction *)
 	List.iter (fun px_linear_constraint -> 
-		px_nnconvex_px_union result px_linear_constraint;
+		px_nnconvex_px_union_assign result px_linear_constraint;
 	) px_linear_constraints;
 	(* Return result *)
 	result
