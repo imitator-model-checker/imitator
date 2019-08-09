@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2019/08/08
+ * Last modified     : 2019/08/09
  *
  ************************************************************)
 
@@ -661,69 +661,6 @@ let string_of_model model =
 
 
 (************************************************************)
-(** States *)
-(************************************************************)
-
-(* Convert a location name into a string *)
-(*let string_of_location_name model location =
-	let string_array = List.map (fun automaton_index location_index ->
-		model.automata_names.(automaton_index) ^ ": " ^ (model.location_names automaton_index location_index)
-	) location in
-	string_of_array_of_string_with_sep ", " string_array*)
-
-(* Convert a state into a string *)
-let string_of_state model (state : state) =
-	(* Retrieve the input options *)
-	let options = Input.get_options () in
-
-	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names options#output_float state.global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names state.px_constraint) ^ ""
-
-
-
-
-
-(************************************************************)
-(** Debug-print for symbolic run *)
-(************************************************************)
-
-(*** TODO: convert to string result ***)
-
-let debug_print_symbolic_run model state_space (symbolic_run : StateSpace.symbolic_run) =
-	(* Function to pretty-print combined transitions *)
-	let debug_string_of_combined_transition combined_transition = string_of_list_of_string_with_sep ", " (
-		List.map (fun transition_index ->
-			(* Get automaton index *)
-			let automaton_index = model.automaton_of_transition transition_index in
-			(* Get actual transition *)
-			let transition = model.transitions_description transition_index in
-			(* Print *)
-			debug_string_of_transition model automaton_index transition
-		) combined_transition
-	) in
-
-	(* Iterate *)
-	List.iter (fun (symbolic_step : StateSpace.symbolic_step)  ->
-			(* Get actual state *)
-		let state = StateSpace.get_state state_space symbolic_step.source in
-	
-		print_message Verbose_low (" " ^ (string_of_state model state));
-		print_message Verbose_low (" | ");
-		print_message Verbose_low (" | via combined transition " ^ (debug_string_of_combined_transition symbolic_step.transition));
-		print_message Verbose_low (" | ");
-		print_message Verbose_low (" v ");
-	) symbolic_run.symbolic_steps;
-	
-	(* Get the state *)
-	let target_state = StateSpace.get_state state_space symbolic_run.final_state in
-	
-	(* Print target *)
-	print_message Verbose_low (" " ^ (string_of_state model target_state));
-	
-	()
-
-
-
-(************************************************************)
 (** PX-valuation *)
 (************************************************************)
 (* Convert a px-valuation into a string *)
@@ -777,3 +714,89 @@ let string_of_v0 model v0 =
 
 
 
+
+
+
+(************************************************************)
+(** States *)
+(************************************************************)
+
+(* Convert a location name into a string *)
+(*let string_of_location_name model location =
+	let string_array = List.map (fun automaton_index location_index ->
+		model.automata_names.(automaton_index) ^ ": " ^ (model.location_names automaton_index location_index)
+	) location in
+	string_of_array_of_string_with_sep ", " string_array*)
+
+(* Convert a state into a string *)
+let string_of_state model (state : state) =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names options#output_float state.global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names state.px_constraint) ^ ""
+
+let string_of_concrete_state model (state : State.concrete_state) =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names options#output_float state.global_location) ^ " ==> \n" ^ (string_of_px_valuation model state.px_valuation) ^ ""
+	
+
+
+(************************************************************)
+(** Debug-print for runs *)
+(************************************************************)
+
+(* Function to pretty-print combined transitions *)
+let debug_string_of_combined_transition model combined_transition = string_of_list_of_string_with_sep ", " (
+	List.map (fun transition_index ->
+		(* Get automaton index *)
+		let automaton_index = model.automaton_of_transition transition_index in
+		(* Get actual transition *)
+		let transition = model.transitions_description transition_index in
+		(* Print *)
+		debug_string_of_transition model automaton_index transition
+	) combined_transition
+)
+
+(** Convert a symbolic run to a string (for debug-purpose) *)
+let debug_string_of_symbolic_run model state_space (symbolic_run : StateSpace.symbolic_run) =
+	(* Iterate *)
+	let steps_string = string_of_list_of_string_with_sep "\n" (List.map (fun (symbolic_step : StateSpace.symbolic_step)  ->
+		(* Get actual state *)
+		let state = StateSpace.get_state state_space symbolic_step.source in
+	
+		  (" " ^ (string_of_state model state))
+		^ ("\n | ")
+		^ ("\n | via combined transition " ^ (debug_string_of_combined_transition model symbolic_step.transition))
+		^ ("\n | ")
+		^ ("\n v ")
+	) symbolic_run.symbolic_steps) in
+	
+	(* Get the state *)
+	let target_state = StateSpace.get_state state_space symbolic_run.final_state in
+	
+	(* Add target and return *)
+	steps_string ^ (" " ^ (string_of_state model target_state))
+
+
+(** Convert a concrete run to a string (for debug-purpose) *)
+let debug_string_of_concrete_run model (concrete_run : StateSpace.concrete_run) =
+	(* First recall the parameter valuation *)
+	"Concrete run for parameter valuation:"
+	^ "\n" ^ (string_of_pi0 model concrete_run.p_valuation)
+	
+	^ "\n"
+	
+	(* Then print the initial state *)
+	^ "\n" ^ (string_of_concrete_state model concrete_run.initial_state)
+	(* Iterate on following steps *)
+	^ (string_of_list_of_string_with_sep "\n" (List.map (fun (concrete_step : StateSpace.concrete_step)  ->
+		  ("\n | ")
+		^ ("\n | via combined transition " ^ (debug_string_of_combined_transition model concrete_step.transition))
+		^ ("\n | and t =  " ^ (NumConst.string_of_numconst concrete_step.time))
+		^ ("\n | ")
+		^ ("\n v ")
+		^ (" " ^ (string_of_concrete_state model concrete_step.target))
+	) concrete_run.steps))
+	

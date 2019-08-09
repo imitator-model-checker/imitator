@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2019/08/08
+ * Last modified     : 2019/08/09
  *
  ************************************************************)
 
@@ -34,9 +34,11 @@ val string_of_arithmetic_expression : (Automaton.variable_index -> Automaton.var
 (** State *)
 (************************************************************)
 (*** TODO/BADPROG : Move elsewhere? ***)
-(** Convert a state into a string *)
+(** Convert a symbolic state into a string *)
 val string_of_state : abstract_model -> State.state -> string
 
+(** Convert a symbolic state into a string *)
+val string_of_concrete_state : abstract_model -> State.concrete_state -> string
 
 (************************************************************)
 (** Guard *)
@@ -56,7 +58,7 @@ val debug_string_of_transition : AbstractModel.abstract_model -> Automaton.autom
 (** Debug-print for symbolic run *)
 (************************************************************)
 
-val debug_print_symbolic_run : AbstractModel.abstract_model -> StateSpace.state_space -> StateSpace.symbolic_run -> unit
+val debug_string_of_symbolic_run : AbstractModel.abstract_model -> StateSpace.state_space -> StateSpace.symbolic_run -> string
 
 
 (************************************************************)
