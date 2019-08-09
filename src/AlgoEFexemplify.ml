@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/08
- * Last modified     : 2019/08/08
+ * Last modified     : 2019/08/09
  *
  ************************************************************)
 
@@ -120,8 +120,36 @@ class algoEFexemplify =
 					ModelPrinter.debug_print_symbolic_run model state_space symbolic_run;
 				);
 				
+				(* Get the final state *)
+				let target_state = StateSpace.get_state state_space target_state_index in
+
+				(* Exhibit a concrete clock+parameter valuation in the final state *)
+				let concrete_target_px_valuation : (Automaton.variable_index -> NumConst.t) = LinearConstraint.px_exhibit_point target_state.px_constraint in
+				
+				(* Print it *)
+				if verbose_mode_greater Verbose_low then(
+					print_message Verbose_low "Example of px-valuation:";
+					print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_target_px_valuation);
+				);
+				
+				(* Exhibit a concrete parameter valuation in the final state *)
+			(*	let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse target_state.px_constraint in
+				let concrete_p_valuation = LinearConstraint.p_exhibit_point p_constraint in*)
+				
+				(* Convert to PVal *)
+				let pval = new PVal.pval in
+				List.iter (fun parameter ->
+					pval#set_value parameter (concrete_target_px_valuation parameter);
+				) model.parameters;
+				
+				(* Print it *)
+				if verbose_mode_greater Verbose_standard then(
+					print_message Verbose_standard "Example of parameter valuation:";
+					print_message Verbose_standard (ModelPrinter.string_of_pi0 model pval);
+				);
+				
 				(* Exhibit a concrete run from the symbolic run *)
-				let concrete_run = AlgoStateBased.concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) in
+				let concrete_run = AlgoStateBased.concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) concrete_target_px_valuation in
 
 				(* Generate the graphics *)
 				Graphics.draw_concrete_run concrete_run (options#files_prefix ^ "_signals_" ^ (string_of_int nb_positive_examples));

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2019/08/08
+ * Last modified     : 2019/08/09
  *
  ************************************************************)
 
@@ -146,7 +146,7 @@ val constraint_zone_predecessor_g_u :
 (*------------------------------------------------------------*)
 (** Reconstruct a (valid) concrete run from a symbolic run *)
 (*------------------------------------------------------------*)
-val concrete_run_of_symbolic_run : StateSpace.state_space -> StateSpace.predecessors_table -> StateSpace.symbolic_run -> StateSpace.concrete_run
+val concrete_run_of_symbolic_run : StateSpace.state_space -> StateSpace.predecessors_table -> StateSpace.symbolic_run -> (Automaton.variable_index -> NumConst.t) -> StateSpace.concrete_run
 
 (*------------------------------------------------------------*)
 (** Reconstruct a whole counterexample from the initial state to a given target state. Return a list of pairs (valuation * absolute time) *)

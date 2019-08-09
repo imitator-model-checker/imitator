@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/08/08
+ * Last modified     : 2019/08/09
  *
  ************************************************************)
 
@@ -1635,7 +1635,7 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 
 (*** NOTE: this function could be in StateSpace but that would create a circular dependency with ModelPrinter ***)
 
-let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) : StateSpace.concrete_run =
+let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) (concrete_target_px_valuation : (Automaton.variable_index -> NumConst.t) ) : StateSpace.concrete_run =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	
@@ -1643,31 +1643,6 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	let target_state_index = symbolic_run.final_state in
 	let target_state = StateSpace.get_state state_space target_state_index in
 
-	(* Exhibit a concrete clock+parameter valuation in the final state *)
-	let concrete_target_px_valuation = LinearConstraint.px_exhibit_point target_state.px_constraint in
-	
-	(* Print it *)
-	if verbose_mode_greater Verbose_low then(
-		print_message Verbose_low "Example of px-valuation:";
-		print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_target_px_valuation);
-	);
-	
-	(* Exhibit a concrete parameter valuation in the final state *)
-(*	let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse target_state.px_constraint in
-	let concrete_p_valuation = LinearConstraint.p_exhibit_point p_constraint in*)
-	
-	(* Convert to PVal *)
-	let pval = new PVal.pval in
-	List.iter (fun parameter ->
-		pval#set_value parameter (concrete_target_px_valuation parameter);
-	) model.parameters;
-	
-	(* Print it *)
-	if verbose_mode_greater Verbose_standard then(
-		print_message Verbose_standard "Example of parameter valuation:";
-		print_message Verbose_standard (ModelPrinter.string_of_pi0 model pval);
-	);
-	
 
 	(* We reconstruct a concrete run, for which we need absolute time *)
 	
@@ -2026,6 +2001,12 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	let run_steps = List.rev (last_step :: !reversed_run_steps) in
 	
 	
+	(* (Re)create the PVal *)
+	let pval = new PVal.pval in
+	List.iter (fun parameter ->
+		pval#set_value parameter (concrete_target_px_valuation parameter);
+	) model.parameters;
+
 	(*
 	(*** NOTE: we need a px AND d valuation, therefore a bit a hack here ***)
 	let concrete_final_pxd_valuation = fun variable_index ->
@@ -2079,8 +2060,37 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 		ModelPrinter.debug_print_symbolic_run model state_space symbolic_run;
 	);
 	
+	(* Get the final state *)
+	let target_state = StateSpace.get_state state_space target_state_index in
+
+	(* Exhibit a concrete clock+parameter valuation in the final state *)
+	let concrete_target_px_valuation : (Automaton.variable_index -> NumConst.t) = LinearConstraint.px_exhibit_point target_state.px_constraint in
+	
+	(* Print it *)
+	if verbose_mode_greater Verbose_low then(
+		print_message Verbose_low "Example of px-valuation:";
+		print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_target_px_valuation);
+	);
+	
+	(* Exhibit a concrete parameter valuation in the final state *)
+(*	let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse target_state.px_constraint in
+	let concrete_p_valuation = LinearConstraint.p_exhibit_point p_constraint in*)
+	
+	
+	(* Print it *)
+	if verbose_mode_greater Verbose_standard then(
+		(* Convert to PVal *)
+		let pval = new PVal.pval in
+		List.iter (fun parameter ->
+			pval#set_value parameter (concrete_target_px_valuation parameter);
+		) model.parameters;
+		
+		print_message Verbose_standard "Example of parameter valuation:";
+		print_message Verbose_standard (ModelPrinter.string_of_pi0 model pval);
+	);
+	
 	(* Exhibit a concrete run from the symbolic run *)
-	concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run)
+	concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) concrete_target_px_valuation
 
 
 
