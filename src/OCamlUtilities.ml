@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2019/05/29
+ * Last modified     : 2019/08/09
  *
  ************************************************************)
  
@@ -216,6 +216,21 @@ let list_set_nth i elem l =
 		| h::t -> h :: set (i - 1) elem t
 	in
 	set i elem l
+
+
+(** Select the sublist of a list from position i to position j *)
+let sublist minb maxb l =
+	if minb < 0 || maxb >= (List.length l) || minb > maxb then(
+		raise (Invalid_argument "sublist")
+	);
+	let rec sublist_rec minb maxb l =
+	match l with
+		| [] -> raise (Invalid_argument "sublist")
+		| h :: t -> 
+			let tail = if maxb = 0 then [] else sublist_rec (minb - 1) (maxb - 1) t in
+			if minb > 0 then tail else h :: tail
+	in sublist_rec minb maxb l
+
 
 
 (************************************************************)
