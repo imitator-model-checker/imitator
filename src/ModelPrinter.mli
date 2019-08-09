@@ -59,6 +59,7 @@ val debug_string_of_transition : AbstractModel.abstract_model -> Automaton.autom
 (************************************************************)
 
 val debug_string_of_symbolic_run : AbstractModel.abstract_model -> StateSpace.state_space -> StateSpace.symbolic_run -> string
+val debug_string_of_concrete_run : AbstractModel.abstract_model -> StateSpace.concrete_run -> string
 
 
 (************************************************************)
