@@ -177,8 +177,10 @@ class algoEFexemplify =
 						(* Print some information *)
 						print_message Verbose_high ("\nConsidering position " ^ (string_of_int !i) ^ "");
 						
+						(* Get the state index at position i *)
+						let state_index_i = (List.nth symbolic_run.symbolic_steps !i).source in
 						(* Get the p-constraint at position i *)
-						let pconstraint_i : LinearConstraint.p_linear_constraint = LinearConstraint.px_hide_nonparameters_and_collapse (StateSpace.get_state state_space (List.nth symbolic_run.symbolic_steps !i).source).px_constraint in
+						let pconstraint_i : LinearConstraint.p_linear_constraint = LinearConstraint.px_hide_nonparameters_and_collapse (StateSpace.get_state state_space state_index_i).px_constraint in
 						
 						(* Check if difference is non-null *)
 						(*** NOTE: we rather use p_is_le, even though we have to then compute the difference, if indeed smaller, for (presumably) efficiency reasons ***)
@@ -200,14 +202,15 @@ class algoEFexemplify =
 							(* Exhibit a point *)
 							let concrete_p_valuation = LinearConstraint.p_nnconvex_exhibit_point difference in
 							
-							(* Convert to PVal *)
-							let pval = new PVal.pval in
-							List.iter (fun parameter ->
-								pval#set_value parameter (concrete_p_valuation parameter);
-							) model.parameters;
 							
 							(* Print it *)
 							if verbose_mode_greater Verbose_standard then(
+								(* Convert to PVal *)
+								let pval = new PVal.pval in
+								List.iter (fun parameter ->
+									pval#set_value parameter (concrete_p_valuation parameter);
+								) model.parameters;
+								
 								print_message Verbose_standard "Example of parameter valuation:";
 								print_message Verbose_standard (ModelPrinter.string_of_pi0 model pval);
 							);
@@ -224,8 +227,23 @@ class algoEFexemplify =
 							LinearConstraint.px_intersection_assign concrete_p_valuation_px_constraint [pxconstraint_i];
 							
 							(* Exhibit a px-point in this constraint *)
-							let concrete_px_valuation = LinearConstraint.px_exhibit_point concrete_p_valuation_px_constraint in
+							let concrete_px_valuation_i = LinearConstraint.px_exhibit_point concrete_p_valuation_px_constraint in
 							
+							(* Generate the concrete run up to this point *)
+							
+							(* Cut the symbolic run *)
+							let symbolic_run_prefix : StateSpace.symbolic_run = {
+								(* Take the sublist of steps from position 0 to the current position *)
+								symbolic_steps	= OCamlUtilities.sublist 0 !i symbolic_run.symbolic_steps;
+								(* Final state becomes the current state *)
+								final_state		= state_index_i;
+							} in
+							
+							(* Generate a concrete run for this cut symbolic run *)
+							let concrete_run_prefix = AlgoStateBased.concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run_prefix : StateSpace.symbolic_run) concrete_px_valuation_i in
+						
+
+
 							
 							()
 						);
@@ -234,9 +252,6 @@ class algoEFexemplify =
 						pconstraint_i_plus_one := pconstraint_i;
 						decr i;
 					done;
-					
-					
-					
 				
 				);
 				

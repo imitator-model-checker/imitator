@@ -2002,10 +2002,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	
 	
 	(* (Re)create the PVal *)
-	let pval = new PVal.pval in
-	List.iter (fun parameter ->
-		pval#set_value parameter (concrete_target_px_valuation parameter);
-	) model.parameters;
+	let pval = PVal.pval_from_valuation_function concrete_target_px_valuation in
 
 	(*
 	(*** NOTE: we need a px AND d valuation, therefore a bit a hack here ***)
@@ -2079,11 +2076,7 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 	
 	(* Print it *)
 	if verbose_mode_greater Verbose_standard then(
-		(* Convert to PVal *)
-		let pval = new PVal.pval in
-		List.iter (fun parameter ->
-			pval#set_value parameter (concrete_target_px_valuation parameter);
-		) model.parameters;
+		let pval = PVal.pval_from_valuation_function concrete_target_px_valuation in
 		
 		print_message Verbose_standard "Example of parameter valuation:";
 		print_message Verbose_standard (ModelPrinter.string_of_pi0 model pval);
