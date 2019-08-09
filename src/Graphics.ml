@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2019/08/07
+ * Last modified     : 2019/08/09
  *
  ************************************************************)
  
@@ -650,7 +650,7 @@ try(
 (** Draw (using the plotutils graph utility) the evolution of clock and discrete variables valuations according to time. *)
 (*------------------------------------------------------------*)
 
-let draw_concrete_run concrete_run (file_prefix : string) : unit =
+let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : string) : unit =
 	(* Retrieve model *)
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
@@ -710,7 +710,7 @@ let draw_concrete_run concrete_run (file_prefix : string) : unit =
 			::
 			
 			(* Iterate on the steps of the concrete run *)
-			(List.map (fun step ->
+			(List.map (fun (step : StateSpace.concrete_step) ->
 				(* Update absolute time *)
 				absolute_time := NumConst.add !absolute_time step.time;
 			

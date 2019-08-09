@@ -116,8 +116,7 @@ class algoEFexemplify =
 					print_message Verbose_low "\nSymbolic run reconstructed:";
 					
 					(* Debug print *)
-					(*** TODO: convert to string ***)
-					ModelPrinter.debug_print_symbolic_run model state_space symbolic_run;
+					print_message Verbose_low (ModelPrinter.debug_string_of_symbolic_run model state_space symbolic_run);
 				);
 				
 				(* Get the final state *)
@@ -136,14 +135,11 @@ class algoEFexemplify =
 			(*	let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse target_state.px_constraint in
 				let concrete_p_valuation = LinearConstraint.p_exhibit_point p_constraint in*)
 				
-				(* Convert to PVal *)
-				let pval = new PVal.pval in
-				List.iter (fun parameter ->
-					pval#set_value parameter (concrete_target_px_valuation parameter);
-				) model.parameters;
 				
-				(* Print it *)
+				(* Print some information *)
 				if verbose_mode_greater Verbose_standard then(
+					(* Convert to PVal *)
+					let pval = PVal.pval_from_valuation_function concrete_target_px_valuation in
 					print_message Verbose_standard "Example of parameter valuation:";
 					print_message Verbose_standard (ModelPrinter.string_of_pi0 model pval);
 				);
@@ -202,15 +198,10 @@ class algoEFexemplify =
 							(* Exhibit a point *)
 							let concrete_p_valuation = LinearConstraint.p_nnconvex_exhibit_point difference in
 							
-							
-							(* Print it *)
+							(* Print some information *)
 							if verbose_mode_greater Verbose_standard then(
 								(* Convert to PVal *)
-								let pval = new PVal.pval in
-								List.iter (fun parameter ->
-									pval#set_value parameter (concrete_p_valuation parameter);
-								) model.parameters;
-								
+								let pval = PVal.pval_from_valuation_function concrete_p_valuation in
 								print_message Verbose_standard "Example of parameter valuation:";
 								print_message Verbose_standard (ModelPrinter.string_of_pi0 model pval);
 							);
@@ -242,6 +233,11 @@ class algoEFexemplify =
 							(* Generate a concrete run for this cut symbolic run *)
 							let concrete_run_prefix = AlgoStateBased.concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run_prefix : StateSpace.symbolic_run) concrete_px_valuation_i in
 						
+							(* Print it *)
+							if verbose_mode_greater Verbose_low then(
+								print_message Verbose_low "Concrete run prefix:";
+								print_message Verbose_low (ModelPrinter.debug_string_of_concrete_run model concrete_run_prefix);
+							);
 
 
 							

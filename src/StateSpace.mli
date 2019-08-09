@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2019/08/08
+ * Last modified     : 2019/08/09
  *
  ************************************************************)
 
@@ -95,6 +95,33 @@ type concrete_run = {
 	initial_state	: State.concrete_state;
 	(* A possibly empty list of steps *)
 	steps			: concrete_step list;
+}
+
+
+(************************************************************)
+(** Impossible concrete run *)
+(************************************************************)
+
+(* An impossible concrete run is a run that starts with a concrete run prefix, and then follows by taking transitions NOT admissible in the state space. Transitions may be imaginary, but locations remain existing locations. *)
+
+type impossible_concrete_step = {
+	(* First let time elapse *)
+	time			: NumConst.t;
+	(* Then take a discrete transition *)
+	transition		: Automaton.action_index;
+	(* Then reach the target state *)
+	target			: State.concrete_state;
+}
+
+type impossible_concrete_run = {
+	(* The parameter valuation for which this run exists *)
+	p_valuation		: PVal.pval;
+	(* The initial concrete state *)
+	initial_state	: State.concrete_state;
+	(* A possibly empty list of steps *)
+	steps			: concrete_step list;
+	(* A non-empty list of imaginary steps *)
+	impossible_steps: impossible_concrete_step list;
 }
 
 

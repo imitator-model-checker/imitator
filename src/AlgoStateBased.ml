@@ -2000,24 +2000,9 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	(* Put the list in right order *)
 	let run_steps = List.rev (last_step :: !reversed_run_steps) in
 	
-	
 	(* (Re)create the PVal *)
 	let pval = PVal.pval_from_valuation_function concrete_target_px_valuation in
 
-	(*
-	(*** NOTE: we need a px AND d valuation, therefore a bit a hack here ***)
-	let concrete_final_pxd_valuation = fun variable_index ->
-		match model.type_of_variables variable_index with
-		| Var_type_clock | Var_type_parameter -> concrete_target_px_valuation variable_index
-		| Var_type_discrete -> Location.get_discrete_value target_state.global_location variable_index
-	in
-	
-	(* Create a representation with the absolute time, and the last element too *)
-	let valuations_and_time = (List.map (fun (_, _, _, valuation) -> valuation , (valuation absolute_time_clock) ) !te_and_valuations) @ [concrete_final_pxd_valuation , (concrete_final_pxd_valuation absolute_time_clock)] in
-	
-	(* The end *)
-	valuations_and_time*)
-	
 	(* Return the concrete run *)
 	{
 		p_valuation		= pval;
@@ -2053,8 +2038,7 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 		print_message Verbose_low "\nSymbolic run reconstructed:";
 		
 		(* Debug print *)
-		(*** TODO: convert to string ***)
-		ModelPrinter.debug_print_symbolic_run model state_space symbolic_run;
+		print_message Verbose_low (ModelPrinter.debug_string_of_symbolic_run model state_space symbolic_run);
 	);
 	
 	(* Get the final state *)
