@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/08/08
+ * Last modified     : 2019/08/09
  *
  ************************************************************)
 
@@ -40,6 +40,16 @@ type coef = NumConst.t
 
 (*(** Add on for TA2CLP *)
 val string_of_var : (variable -> string) -> variable -> string*)
+
+
+(************************************************************)
+(** {2 Valuations} *)
+(************************************************************)
+
+type p_valuation = (variable -> coef)
+type px_valuation = (variable -> coef)
+type pxd_valuation = (variable -> coef)
+type d_valuation = (variable -> coef)
 
 
 (************************************************************)
@@ -85,8 +95,8 @@ val sub_p_linear_terms : p_linear_term -> p_linear_term -> p_linear_term
 val sub_pxd_linear_terms : pxd_linear_term -> pxd_linear_term -> pxd_linear_term
 
 (** Evaluate a linear term with a function assigning a value to each variable. *)
-val evaluate_p_linear_term : (variable -> coef) -> p_linear_term -> coef
-val evaluate_pxd_linear_term : (variable -> coef) -> pxd_linear_term -> coef
+val evaluate_p_linear_term : p_valuation -> p_linear_term -> coef
+val evaluate_pxd_linear_term : pxd_valuation -> pxd_linear_term -> coef
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -144,10 +154,10 @@ val make_pxd_linear_inequality : pxd_linear_term -> op -> pxd_linear_inequality
 
 
 (** Check if a linear inequality is pi0-compatible *)
-(* val is_pi0_compatible_inequality : (variable -> coef) -> linear_inequality -> bool *)
+(* val is_pi0_compatible_inequality : p_valuation -> linear_inequality -> bool *)
 
 (** Negate a linear inequality; for an equality, perform the pi0-compatible negation *)
-val negate_wrt_pi0 : (variable -> coef) -> p_linear_inequality -> p_linear_inequality
+val negate_wrt_pi0 : p_valuation -> p_linear_inequality -> p_linear_inequality
 
 (** Negate an inequality ('=' is disallowed); raises InternalError if "=" is used *)
 val negate_inequality : p_linear_inequality -> p_linear_inequality
@@ -270,9 +280,9 @@ val partition_lu : variable list -> pxd_linear_constraint list -> (variable list
 
 (** Exhibit a point in a linear_constraint; raise EmptyConstraint if the constraint is empty. *)
 (*** NOTE: we try to exhibit in each dimension the minimum, except if no minimum (infimum) in which case we get either the middle between the infimum and the supremum (if any supremum), or the infimum if no supremum; and dually if no infimum. ***)
-val p_exhibit_point : p_linear_constraint -> (variable -> coef)
-val px_exhibit_point : px_linear_constraint -> (variable -> coef)
-val pxd_exhibit_point : pxd_linear_constraint -> (variable -> coef)
+val p_exhibit_point : p_linear_constraint -> p_valuation
+val px_exhibit_point : px_linear_constraint -> px_valuation
+val pxd_exhibit_point : pxd_linear_constraint -> pxd_valuation
 
 (** Given two zones z1 and z2, such that z2 is the successor of z1, and given z a subset of z2, then nnconvex_constraint_zone_predecessor z1 z2 z t nott r computes the zone predecessor of z within z1, given the set t (nott) of variables sensitive (resp. insensitive) to time-elapsing, and r the variables reset between z1 and z2. *)
 val px_zone_predecessor : px_linear_constraint -> px_linear_constraint -> px_linear_constraint -> (variable list) -> (variable list) -> (variable list) -> px_linear_constraint
@@ -458,14 +468,14 @@ val render_non_strict_p_linear_constraint : p_linear_constraint -> p_linear_cons
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if a p_linear_constraint is pi0-compatible, i.e., whether the parameter valuation satisfies the linear constraint *)
-val is_pi0_compatible : (variable -> coef) -> p_linear_constraint -> bool
+val is_pi0_compatible : p_valuation -> p_linear_constraint -> bool
 
 (** Check if a d_linear_constraint is pi0-compatible, i.e., whether the discrete valuation satisfies the linear constraint *)
-val d_is_pi0_compatible : (variable -> coef) -> d_linear_constraint -> bool
+val d_is_pi0_compatible : d_valuation -> d_linear_constraint -> bool
 
 
 (** Compute the pi0-compatible and pi0-incompatible inequalities within a constraint *)
-val partition_pi0_compatible : (variable -> coef) -> p_linear_constraint -> (p_linear_inequality list * p_linear_inequality list)
+val partition_pi0_compatible : p_valuation -> p_linear_constraint -> (p_linear_inequality list * p_linear_inequality list)
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -607,7 +617,7 @@ val p_nnconvex_constraint_is_false : p_nnconvex_constraint -> bool
 val p_nnconvex_constraint_is_true  : p_nnconvex_constraint -> bool
 
 (** Check if a nnconvex_constraint is pi0-compatible *)
-val p_nnconvex_constraint_is_pi0_compatible : (variable -> coef) -> p_nnconvex_constraint -> bool
+val p_nnconvex_constraint_is_pi0_compatible : p_valuation -> p_nnconvex_constraint -> bool
 
 (** Check if a nnconvex_constraint is included in another one *)
 val p_nnconvex_constraint_is_leq : p_nnconvex_constraint -> p_nnconvex_constraint -> bool
@@ -622,9 +632,9 @@ val p_nnconvex_constraint_is_equal : p_nnconvex_constraint -> p_nnconvex_constra
 
 (** Exhibit a point in a nnconvex_constraint; raise EmptyConstraint if the constraint is empty. *)
 (*** NOTE: function quasi-identical to {pxd}_exhibit_point ***)
-val p_nnconvex_exhibit_point : p_nnconvex_constraint -> (variable -> coef)
-val px_nnconvex_exhibit_point : px_nnconvex_constraint -> (variable -> coef)
-(* val pxd_nnconvex_exhibit_point : pxd_nnconvex_constraint -> (variable -> coef) *)
+val p_nnconvex_exhibit_point : p_nnconvex_constraint -> p_valuation
+val px_nnconvex_exhibit_point : px_nnconvex_constraint -> px_valuation
+(* val pxd_nnconvex_exhibit_point : pxd_nnconvex_constraint -> pxd_valuation *)
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/08/08
+ * Last modified     : 2019/08/09
  *
  ************************************************************)
 
@@ -336,6 +336,15 @@ type pxd_linear_constraint = linear_constraint
 let string_of_var names variable =
 	"V_" ^ (names variable)
 
+
+(************************************************************)
+(** {2 Valuations} *)
+(************************************************************)
+
+type p_valuation = (variable -> coef)
+type px_valuation = (variable -> coef)
+type pxd_valuation = (variable -> coef)
+type d_valuation = (variable -> coef)
 
 	
 (***********************************************coef*************)

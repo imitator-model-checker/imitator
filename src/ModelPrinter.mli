@@ -101,7 +101,7 @@ val string_of_conditional_updates : abstract_model -> conditional_update list ->
 val string_of_pi0 : abstract_model -> pi0 -> string
 
 (* Convert a px-valuation into a string *)
-val string_of_px_valuation : abstract_model -> (Automaton.variable_index -> NumConst.t) -> string
+val string_of_px_valuation : abstract_model -> LinearConstraint.px_valuation -> string
 
 (* Convert a v0 into a string *)
 val string_of_v0 : abstract_model -> v0 -> string

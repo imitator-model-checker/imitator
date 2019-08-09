@@ -21,7 +21,7 @@ open Automaton
 
 
 (************************************************************)
-(** Reference valuation *)
+(** Reference parameter valuations *)
 (************************************************************)
 type pi0 = PVal.pval
 
