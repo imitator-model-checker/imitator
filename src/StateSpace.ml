@@ -114,7 +114,7 @@ type impossible_concrete_step = {
 	(* First let time elapse *)
 	time			: NumConst.t;
 	(* Then take a discrete transition *)
-	transition		: Automaton.action_index;
+	action			: Automaton.action_index;
 	(* Then reach the target state *)
 	target			: State.concrete_state;
 }

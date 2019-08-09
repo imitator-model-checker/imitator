@@ -221,7 +221,8 @@ class algoEFexemplify =
 							let concrete_px_valuation_i = LinearConstraint.px_exhibit_point concrete_p_valuation_px_constraint in
 							
 							(* Generate the concrete run up to this point *)
-							
+							(*------------------------------------------------------------*)
+
 							(* Cut the symbolic run *)
 							let symbolic_run_prefix : StateSpace.symbolic_run = {
 								(* Take the sublist of steps from position 0 to the current position *)
@@ -238,8 +239,58 @@ class algoEFexemplify =
 								print_message Verbose_low "Concrete run prefix:";
 								print_message Verbose_low (ModelPrinter.debug_string_of_concrete_run model concrete_run_prefix);
 							);
+							
+							(* Now create an impossible concrete run from this point to the accepting location *)
+							(*------------------------------------------------------------*)
+							
+							(* Starting point: the last known existing valuation *)
+							let current_valuation = ref concrete_px_valuation_i in
+							
+							let impossible_steps_suffix : StateSpace.impossible_concrete_step list = List.map (fun symbolic_step ->
+							
+								(* Idea: keep everything, including the actions and discrete values, but increment (arbitrarily!) the time by 1 at each step *)
+								
+								(* Arbitrarily choose 1 *)
+								let chosen_time_elapsing = NumConst.one in
+								
+								(* Get the location *)
+								let current_location = (StateSpace.get_state state_space symbolic_step.source).global_location in
+								
+								(* Apply time elapsing (let us not care about resets, because this transition does not exist; we could care about resets to be closer to the original automaton BUT the guards/invariants could not be satisfied, precisely because this parameter valuation does not allow to take this run!) *)
+								(*** NOTE: we still care about urgency and stopwatches though ***)
+								let valuation_after_elapsing = AlgoStateBased.apply_time_elapsing_to_concrete_valuation current_location chosen_time_elapsing !current_valuation in
+								
+								(* Update the valuation for next step *)
+								current_valuation := valuation_after_elapsing;
+								
+								(* Return the impossible_concrete_step *)
+								{
+									(* First let time elapse: arbitrarily take one *)
+									time			= chosen_time_elapsing;
+									(* Then take a discrete transition: keep the action *)
+									action			= StateSpace.get_action_from_combined_transition symbolic_step.transition;
+									(* Then reach the target state *)
+									target			= {
+										global_location= current_location;
+										px_valuation   = valuation_after_elapsing;
+									}
+								}
 
+							) (OCamlUtilities.sublist (!i+1) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps)
+							in
 
+							(* Now create the "impossible" concrete run *)
+							let impossible_concrete_run : StateSpace.impossible_concrete_run = {
+								(* The parameter valuation for which this run exists *)
+								p_valuation		= concrete_run_prefix.p_valuation;
+								(* The initial concrete state *)
+								initial_state	= concrete_run_prefix.initial_state;
+								(* A possibly empty list of steps *)
+								steps			= concrete_run_prefix.steps;
+								(* A non-empty list of imaginary steps *)
+								impossible_steps= impossible_steps_suffix;
+							}
+							in
 							
 							()
 						);

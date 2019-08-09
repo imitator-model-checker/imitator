@@ -124,6 +124,12 @@ val apply_time_past : Location.global_location -> LinearConstraint.pxd_linear_co
 
 
 (*------------------------------------------------------------*)
+(** Apply time elapsing in location to a concrete valuation (the location is needed to retrieve the stopwatches stopped in this location) *)
+(*------------------------------------------------------------*)
+val apply_time_elapsing_to_concrete_valuation : Location.global_location -> NumConst.t -> LinearConstraint.px_valuation -> LinearConstraint.px_valuation
+
+
+(*------------------------------------------------------------*)
 (** Given `Zn-1` and `Zn` such that `Zn` is the successor zone of `Zn-1` by guard `g-1` and updating variables in `Un-1` to some values (that we do not need to know as we know the zone), given `Zn+1` a set of concrete points (valuations) successor of zone `Zn` by elapsing of a set of variables `t` and non-elapsing of others `nont`, by guard `gn`, updates `Rn`, then `nnconvex_constraint_zone_predecessor_g_u(Zn-1, gn-1, Un-1, Zn, t, nont, gn, Un, Zn+1)` computes the subset of points in `Zn` that are predecessors of `Zn` (by updates of `Un`, guard `gn`, elapsing of `t`, non-elapsing of `nont`), and that are direct successors (without time elapsing) of `Zn-1` via `gn-1` and `Un-1`. *)
 (*------------------------------------------------------------*)
 (*** NOTE: no check is made that Zn is a successor of Zn-1, nor that Zn+1 is a subset of Zn ***)

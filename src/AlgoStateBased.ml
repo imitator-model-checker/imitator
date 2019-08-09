@@ -656,7 +656,7 @@ let compute_stopwatches (location : Location.global_location) : (Automaton.clock
 (*------------------------------------------------------------*)
 type time_direction = Forward | Backward
 
-let apply_time_shift direction location the_constraint =
+let apply_time_shift (direction : time_direction) (location : Location.global_location) (the_constraint : LinearConstraint.pxd_linear_constraint) =
 	(* Get the model *)
 	let model = Input.get_model() in
 
@@ -703,45 +703,51 @@ let apply_time_shift direction location the_constraint =
 (*------------------------------------------------------------*)
 (** Apply time elapsing in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
-let apply_time_elapsing location the_constraint = apply_time_shift Forward location the_constraint
-(*	(* Get the model *)
-	let model = Input.get_model() in
-	(* If urgent: no time elapsing *)
-	if is_location_urgent location then (
-		print_message Verbose_high ("Location urgent: NO time elapsing");
-		()
-	(* If not urgent: apply time elapsing *)
-	)else(
-		(* Compute the list of stopwatches *)
-		let stopped_clocks, elapsing_clocks = compute_stopwatches location in
-		print_message Verbose_high ("Computing list of stopwatches");
-		if verbose_mode_greater Verbose_total then(
-			let list_of_names = List.map model.variable_names stopped_clocks in
-			print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
-			let list_of_names = List.map model.variable_names elapsing_clocks in
-			print_message Verbose_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
-		);
+let apply_time_elapsing = apply_time_shift Forward
 
-		(* Perform time elapsing *)
-		print_message Verbose_high ("Now applying time elapsing…");
-		(*** NOTE: the comment is to be changed in alternative TE mode ***)
-		LinearConstraint.pxd_time_elapse_assign
-			elapsing_clocks
-			(List.rev_append stopped_clocks model.parameters_and_discrete)
-			the_constraint
-		;
-		(* Print some information *)
-		if verbose_mode_greater Verbose_total then(
-			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names the_constraint);
-		);
-		()
-	)*)
 
 (*------------------------------------------------------------*)
 (** Apply time past in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
-let apply_time_past location the_constraint = apply_time_shift Backward location the_constraint
+let apply_time_past = apply_time_shift Backward
 
+
+(*------------------------------------------------------------*)
+(** Apply time elapsing in location to a concrete valuation (the location is needed to retrieve the stopwatches stopped in this location) *)
+(*------------------------------------------------------------*)
+let apply_time_elapsing_to_concrete_valuation (location : Location.global_location) (time_elapsing : NumConst.t) (px_valuation : LinearConstraint.px_valuation) =
+	(* Get the model *)
+	let model = Input.get_model() in
+
+	(* If urgent location: nothing to change, i.e., copy *)
+	if is_location_urgent location then px_valuation
+	else(
+		(* First, recreate a data structure *)
+		let valuation_array = Array.make (model.nb_parameters + model.nb_clocks) NumConst.zero in
+		
+		(* Copy parameters (unchanged) *)
+		(*** WARNING: depends on the internal representation of IMITATOR (first parameters, then clocks) ***)
+		for variable_index = 0 to model.nb_parameters - 1 do
+			valuation_array.(variable_index) <- px_valuation variable_index;
+		done;
+
+		(* Compute the set of stopped and elapsing clocks in this location *)
+		let stopped_clocks, _ = compute_stopwatches location in
+		
+		(* Iterate on clocks *)
+		for variable_index = model.nb_parameters to model.nb_parameters + model.nb_clocks - 1 do
+			if List.mem variable_index stopped_clocks then(
+				(* Clock stopped: copy *)
+				valuation_array.(variable_index) <- px_valuation variable_index;
+			)else(
+				(* Elapsing clock: increment by time_elapsing *)
+				valuation_array.(variable_index) <- NumConst.add (valuation_array.(variable_index)) time_elapsing;
+			);
+		done;
+		
+		(* Return a functional view *)
+		(fun variable_index -> valuation_array.(variable_index))
+	)
 
 
 
