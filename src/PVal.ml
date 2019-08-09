@@ -1,18 +1,17 @@
-(*****************************************************************
+(************************************************************
  *
  *                       IMITATOR
- * 
  *
- * Description:   Class for parameter valuation
- * 
- * Author:        Etienne Andre
  * Université Paris 13, LIPN, CNRS, France
- * 
- * Created:       2014/10/01
- * Last modified: 2016/01/27
  *
- ****************************************************************)
-
+ * Module description: Class for parameter valuation
+ *
+ * File contributors : Étienne André
+ * Created           : 2014/10/01
+ * Last modified     : 2019/08/09
+ *
+ ************************************************************)
+ 
  
 (****************************************************************)
 (* Modules *)
@@ -23,16 +22,23 @@ open Exceptions
 (****************************************************************)
 (* Handling the global number of dimensions *)
 (****************************************************************)
-(* Singleton pattern *)
+(* Number of dimensions (singleton pattern) *)
 let nb_dim = ref None
+
+(* All dimensions, i.e., [0, …, nb_dim] (singleton pattern) *)
+let all_dimensions = ref None
 
 
 (** Set the number of dimensions for ALL parameter valuations; must be called (once and only once) before creating any object *)
 let set_dimensions nb_dimensions =
 	begin
 	match !nb_dim with
-	| None -> nb_dim := Some nb_dimensions
-	| Some _ -> raise (InternalError "Trying to set the number of dimensions of PVal although it was already set before.")
+	| None ->
+		(* Set number of dimensions *)
+		nb_dim := Some nb_dimensions;
+		(* Set list of all dimensions *)
+		all_dimensions := Some (OCamlUtilities.list_of_interval 0 (nb_dimensions - 1));
+	| _ -> raise (InternalError "Trying to set the number of dimensions of PVal although it was already set before.")
 	end;
 	()
 
@@ -43,12 +49,19 @@ let get_dim () =
 	| Some nb_dim -> nb_dim
 	end
 
+let get_all_dimensions () =
+	begin
+	match !all_dimensions with
+	| None -> raise (InternalError "Trying to access PVal although the number of dimensions was not set before.")
+	| Some all_dimensions -> all_dimensions
+	end
+
 
 let assert_nb_dim_initialized () =
 	begin
 	match !nb_dim with
 	| None -> raise (InternalError "Trying to access PVal although the number of dimensions was not set before.")
-	| Some _ -> ()
+	| _ -> ()
 	end
 
 
@@ -106,3 +119,20 @@ class pval =
 end
 
 
+
+(** Create a pval from a valuation function *)
+(*** NOTE: no check is made that the valuation_function is indeed defined for all parameters! If not, an exception may be raised depending on how valuation_function is implemented ***)
+let pval_from_valuation_function (valuation_function : (int -> NumConst.t)) : pval =
+	(* Get dimensions in the form of a list *)
+	let all_dimensions = get_all_dimensions () in
+	
+	(* Create fresh valuation *)
+	let pval = new pval in
+
+	(* Update it *)
+	List.iter (fun parameter ->
+		pval#set_value parameter (valuation_function parameter);
+	) all_dimensions;
+	
+	(* Return it *)
+	pval
