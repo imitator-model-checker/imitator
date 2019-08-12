@@ -40,6 +40,7 @@ tests/**/*.states
 tests/**/*.txt
 tests/**/*.sh
 tests/**/*.pdf
+tests/**/*.ps
 tests/**/*.xml
 
 # binaries
