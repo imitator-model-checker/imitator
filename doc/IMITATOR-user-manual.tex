@@ -419,7 +419,7 @@ Let us precisely define what it means:
 %------------------------------------------------------------
 \begin{definition}[strong determinism]
 	Let $\A$ be an \NIPTA{} made of $N$ \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \DVar_i, \Clock_i, \Param_i, \invariant_i, \stopwatches_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \grandn$.
-	
+
 	$\A$ is \emph{strongly-deterministic} if
 	for all automaton $\A_i$,
 	for all location $\loc_i \in \Loc_i$,
@@ -1944,10 +1944,25 @@ We define each of those two components below.
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 %------------------------------------------------------------
+\regleGrammaire{include\_file\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{include\_file} \nt{include\_file\_list} \\
+	$|$ & \emptystring
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{include\_file}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \styleIMI{\#include} \styleIMI{"<path>"} \styleIMI{;} \\
+\end{tabular}
+
+%------------------------------------------------------------
 \regleGrammaire{automata\_descriptions}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{declarations} \nt{automata} \\
+	\  & \nt{include\_file\_list} \nt{declarations} \nt{automata} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -1955,6 +1970,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\  & \code{var} \nt{var\_lists} \\
+	$|$ & \emptystring
 \end{tabular}
 
 %------------------------------------------------------------
@@ -1989,6 +2005,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\  & \nt{automaton} \nt{automata} \\
+	$|$ & \nt{include\_file} \nt{automata} \\
 	$|$ & \emptystring \\
 \end{tabular}
 
@@ -2386,6 +2403,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\  & \styleIMI{init} \styleIMI{:=} \nt{region\_expression} \styleIMI{;} \\
+	$|$ & \emptystring \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2465,6 +2483,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\  & \styleIMI{property :=} \nt{pattern} \styleIMI{;} \\
+	$|$ & \nt{include\_file} \\
 	$|$ & \emptystring \\
 \end{tabular}
 
@@ -2545,6 +2564,7 @@ Again, arithmetic expressions (using integers and rationals) can even be used in
 
 The following words are reserved keywords and cannot be used as names for automata, variables, actions or locations.
 
+\styleIMI{\#include},
 \styleIMI{accepting},
 \styleIMI{always},
 \styleIMI{and},
@@ -2558,6 +2578,7 @@ The following words are reserved keywords and cannot be used as names for automa
 \styleIMI{constant},
 \styleIMI{discrete},
 \styleIMI{do},
+\styleIMI{else},
 \styleIMI{end},
 \styleIMI{eventually},
 \styleIMI{everytime},
