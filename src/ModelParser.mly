@@ -126,6 +126,7 @@ automata_descriptions:
 
 declarations:
 	CT_VAR decl_var_lists { $2 }
+	| { []}
 ;
 
 
@@ -589,6 +590,7 @@ anything:
 
 init_definition:
 	| CT_INIT OP_ASSIGN region_expression SEMICOLON { $3 }
+	| { [ ] }
 ;
 
 

@@ -20,9 +20,6 @@ let comment_depth = ref 0;;
 
 let line=ref 1;;
 
-(* store the name of the included files *)
-let fset = Hashtbl.create 17;;
-
 }
 
 rule token = parse
@@ -32,14 +29,16 @@ rule token = parse
 
 	(* C style include *)
 	| "#include \""   ( [^'"' '\n']* as filename) '"'
-    { if Hashtbl.mem fset filename then
-				failwith "File has been already included"
-      else
-        let c = open_in filename in
-        Hashtbl.add fset filename ();
-        let lb = Lexing.from_channel c in
-        let p = ModelParser.main token lb in
-        INCLUDE p
+    {
+			let top_file = lexbuf.lex_start_p.pos_fname in
+			let absolute_filename = FilePath.make_absolute (FilePath.dirname top_file) filename in
+
+			let c = open_in absolute_filename in
+			let lb = Lexing.from_channel c in
+			lb.Lexing.lex_curr_p <- { lb.Lexing.lex_curr_p with Lexing.pos_fname = absolute_filename };
+
+			let p = ModelParser.main token lb in
+			INCLUDE p
     }
 
 	(* C style comments *)
