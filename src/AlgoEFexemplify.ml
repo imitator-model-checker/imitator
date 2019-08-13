@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/08
- * Last modified     : 2019/08/09
+ * Last modified     : 2019/08/13
  *
  ************************************************************)
 
@@ -235,9 +235,9 @@ class algoEFexemplify =
 							let concrete_run_prefix = AlgoStateBased.concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run_prefix : StateSpace.symbolic_run) concrete_px_valuation_i in
 						
 							(* Print it *)
-							if verbose_mode_greater Verbose_low then(
-								print_message Verbose_low "Concrete run prefix:";
-								print_message Verbose_low (ModelPrinter.debug_string_of_concrete_run model concrete_run_prefix);
+							if verbose_mode_greater Verbose_medium then(
+								print_message Verbose_medium "Concrete run prefix:";
+								print_message Verbose_medium (ModelPrinter.debug_string_of_concrete_run model concrete_run_prefix);
 							);
 							
 							(* Now create an impossible concrete run from this point to the accepting location *)
@@ -292,6 +292,15 @@ class algoEFexemplify =
 							}
 							in
 							
+							(* Print some information *)
+							if verbose_mode_greater Verbose_low then (
+								print_message Verbose_low "\nNegative counterexample run constructed:";
+								
+								(* Debug print *)
+								print_message Verbose_low (ModelPrinter.debug_string_of_impossible_concrete_run model impossible_concrete_run);
+							);
+							
+							(*** TODO ***)
 							()
 						);
 						
