@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2019/08/01
+ * Last modified     : 2019/08/13
  *
  ************************************************************)
 
@@ -3645,16 +3645,18 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	
 	(* Debug print: strong determinism *)
 	if !strongly_deterministic then
-		print_message Verbose_low ("This PTA is strongly deterministic.")
+		print_message Verbose_standard ("This PTA is strongly deterministic.")
 	else
-		print_message Verbose_medium ("This PTA is not strongly deterministic.");
+		print_message Verbose_medium ("This PTA is not strongly deterministic.")
+	;
 
 	
 	(* Debug print: silent transitions *)
 	if has_silent_actions then
 		print_message Verbose_low ("Silent actions detected.")
 	else
-		print_message Verbose_medium ("No silent action detected.");
+		print_message Verbose_standard ("No silent action detected.")
+	;
 
 
 
