@@ -31,8 +31,17 @@ let parse_error s =
 (* TODO: is it included twice ? *)
 let include_list = ref [];;
 
-let f (decl_l,aut_l, init_l) (decl,aut,init,_,_,_,_) = (decl@decl_l,aut@aut_l, init@init_l);;
-let unzip l = List.fold_left f ([],[],[]) (List.rev l);;
+let f (decl_l, aut_l, init_l, prop_l) (decl,aut,init,prop,_,_,_) = (decl@decl_l,aut@aut_l, init@init_l, prop::prop_l);;
+let unzip l = List.fold_left f ([],[],[], []) (List.rev l);;
+let filter_opt = List.filter (function | None -> false | Some _ -> true);;
+
+let resolve_property l =
+	match filter_opt l with
+	| [] -> None
+	| [p] -> p
+	| _ -> raise Parsing.Parse_error;
+;;
+
 %}
 
 %token <NumConst.t> INT
@@ -95,10 +104,10 @@ main:
 	automata_descriptions commands EOF
 	{
 		let decl, automata = $1 in
-		let incl_decl, incl_automata, incl_init = unzip !include_list in
-
+		let incl_decl, incl_automata, incl_init, incl_prop = unzip !include_list in
 		let init_definition, bad, projection_definition, optimization_definition, carto = $2 in
-		(List.append incl_decl decl), (List.append incl_automata automata), (List.append incl_init init_definition), bad, projection_definition, optimization_definition, carto
+
+		(List.append incl_decl decl), (List.append incl_automata automata), (List.append incl_init init_definition), resolve_property (bad::incl_prop), projection_definition, optimization_definition, carto
 	}
 ;
 
