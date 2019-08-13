@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2019/08/09
+ * Last modified     : 2019/08/13
  *
  ************************************************************)
 
@@ -60,6 +60,7 @@ val debug_string_of_transition : AbstractModel.abstract_model -> Automaton.autom
 
 val debug_string_of_symbolic_run : AbstractModel.abstract_model -> StateSpace.state_space -> StateSpace.symbolic_run -> string
 val debug_string_of_concrete_run : AbstractModel.abstract_model -> StateSpace.concrete_run -> string
+val debug_string_of_impossible_concrete_run : AbstractModel.abstract_model -> StateSpace.impossible_concrete_run -> string
 
 
 (************************************************************)

@@ -780,6 +780,32 @@ let debug_string_of_symbolic_run model state_space (symbolic_run : StateSpace.sy
 	steps_string ^ (" " ^ (string_of_state model target_state))
 
 
+
+let string_of_concrete_steps model concrete_steps =
+	(* Iterate on following steps *)
+	(string_of_list_of_string_with_sep "\n" (List.map (fun (concrete_step : StateSpace.concrete_step)  ->
+		  ("\n | ")
+		^ ("\n | via combined transition " ^ (debug_string_of_combined_transition model concrete_step.transition))
+		^ ("\n | and t =  " ^ (NumConst.string_of_numconst concrete_step.time))
+		^ ("\n | ")
+		^ ("\n v ")
+		^ (" " ^ (string_of_concrete_state model concrete_step.target))
+	) concrete_steps))
+
+
+let string_of_impossible_concrete_steps model impossible_concrete_steps =
+	(* Iterate on following steps *)
+	(string_of_list_of_string_with_sep "\n" (List.map (fun (impossible_concrete_step : StateSpace.impossible_concrete_step)  ->
+		  ("\n | ")
+		^ ("\n | via impossible transition labeled with " ^ (model.action_names impossible_concrete_step.action))
+		^ ("\n | and t =  " ^ (NumConst.string_of_numconst impossible_concrete_step.time))
+		^ ("\n | ")
+		^ ("\n v ")
+		^ (" " ^ (string_of_concrete_state model impossible_concrete_step.target))
+	) impossible_concrete_steps))
+
+
+
 (** Convert a concrete run to a string (for debug-purpose) *)
 let debug_string_of_concrete_run model (concrete_run : StateSpace.concrete_run) =
 	(* First recall the parameter valuation *)
@@ -790,13 +816,26 @@ let debug_string_of_concrete_run model (concrete_run : StateSpace.concrete_run) 
 	
 	(* Then print the initial state *)
 	^ "\n" ^ (string_of_concrete_state model concrete_run.initial_state)
+	
 	(* Iterate on following steps *)
-	^ (string_of_list_of_string_with_sep "\n" (List.map (fun (concrete_step : StateSpace.concrete_step)  ->
-		  ("\n | ")
-		^ ("\n | via combined transition " ^ (debug_string_of_combined_transition model concrete_step.transition))
-		^ ("\n | and t =  " ^ (NumConst.string_of_numconst concrete_step.time))
-		^ ("\n | ")
-		^ ("\n v ")
-		^ (" " ^ (string_of_concrete_state model concrete_step.target))
-	) concrete_run.steps))
+	^ (string_of_concrete_steps model concrete_run.steps)
+	
+
+	
+(** Convert an impossible_concrete_run to a string (for debug-purpose) *)
+let debug_string_of_impossible_concrete_run model (impossible_concrete_run : StateSpace.impossible_concrete_run) =
+	(* First recall the parameter valuation *)
+	"Impossible concrete run for parameter valuation:"
+	^ "\n" ^ (string_of_pi0 model impossible_concrete_run.p_valuation)
+	
+	^ "\n"
+	
+	(* Then print the initial state *)
+	^ "\n" ^ (string_of_concrete_state model impossible_concrete_run.initial_state)
+	
+	(* Iterate on following concrete steps *)
+	^ (string_of_concrete_steps model impossible_concrete_run.steps)
+	
+	(* Iterate on following impossible steps *)
+	^ (string_of_concrete_steps model impossible_concrete_run.steps)
 	
