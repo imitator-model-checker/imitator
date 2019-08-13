@@ -27,6 +27,20 @@ rule token = parse
 	| [' ' '\t']         { token lexbuf }     (* skip blanks *)
 	| "--" [^'\n']* '\n' { line := !line + 1 ; token lexbuf }     (* skip Hytech-style comments *)
 
+	(* C style include *)
+	| "#include \""   ( [^'"' '\n']* as filename) '"'
+    {
+			let top_file = lexbuf.lex_start_p.pos_fname in
+			let absolute_filename = FilePath.make_absolute (FilePath.dirname top_file) filename in
+
+			let c = open_in absolute_filename in
+			let lb = Lexing.from_channel c in
+			lb.Lexing.lex_curr_p <- { lb.Lexing.lex_curr_p with Lexing.pos_fname = absolute_filename };
+
+			let p = ModelParser.main token lb in
+			INCLUDE p
+    }
+
 	(* C style comments *)
 	| "/*"
 		{ comment_depth := 1;

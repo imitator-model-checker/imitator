@@ -27,12 +27,28 @@ let parse_error s =
 	raise (ParsingError (symbol_start, symbol_end))
 ;;
 
+
+(* TODO: is it included twice ? *)
+let include_list = ref [];;
+
+let f (decl_l, aut_l, init_l, prop_l) (decl,aut,init,prop,_,_,_) = (decl@decl_l,aut@aut_l, init@init_l, prop::prop_l);;
+let unzip l = List.fold_left f ([],[],[], []) (List.rev l);;
+let filter_opt = List.filter (function | None -> false | Some _ -> true);;
+
+let resolve_property l =
+	match filter_opt l with
+	| [] -> None
+	| [p] -> p
+	| _ -> raise Parsing.Parse_error;
+;;
+
 %}
 
 %token <NumConst.t> INT
 %token <string> FLOAT
 %token <string> NAME
 %token <string> STRING
+%token <ParsingStructure.parsing_structure> INCLUDE
 
 %token OP_PLUS OP_MINUS OP_MUL OP_DIV
 %token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
@@ -85,12 +101,26 @@ let parse_error s =
 
 /**********************************************/
 main:
-	 automata_descriptions commands EOF
+	automata_descriptions commands EOF
 	{
 		let decl, automata = $1 in
+		let incl_decl, incl_automata, incl_init, incl_prop = unzip !include_list in
 		let init_definition, bad, projection_definition, optimization_definition, carto = $2 in
-		decl, automata, init_definition, bad, projection_definition, optimization_definition, carto
+
+		(List.append incl_decl decl), (List.append incl_automata automata), (List.append incl_init init_definition), resolve_property (bad::incl_prop), projection_definition, optimization_definition, carto
 	}
+;
+
+/***********************************************
+	INCLUDES
+***********************************************/
+include_file:
+	| INCLUDE SEMICOLON { $1 }
+;
+
+include_file_list:
+	| include_file include_file_list  { $1 :: $2 }
+	| { [] }
 ;
 
 /***********************************************
@@ -98,13 +128,14 @@ main:
 ***********************************************/
 
 automata_descriptions:
-	declarations automata { $1, $2 }
+	include_file_list declarations automata { $2, $3 }
 ;
 
 /**********************************************/
 
 declarations:
 	CT_VAR decl_var_lists { $2 }
+	| { []}
 ;
 
 
@@ -140,6 +171,7 @@ var_type:
 
 automata:
 	automaton automata { $1 :: $2 }
+	| include_file automata { include_list := $1 :: !include_list; $2 }
 	| { [] }
 ;
 
@@ -567,12 +599,14 @@ anything:
 
 init_definition:
 	| CT_INIT OP_ASSIGN region_expression SEMICOLON { $3 }
+	| { [ ] }
 ;
 
 
 /* We allow here an optional "&" at the beginning */
 region_expression:
 	| ampersand_opt region_expression_fol { $2 }
+	| { [ ] }
 ;
 
 region_expression_fol:
@@ -621,6 +655,8 @@ property_definition:
 
 	// Pattern
 	| CT_PROPERTY OP_ASSIGN pattern semicolon_opt { Some $3 }
+
+	| include_file { let _, _, _, property, _, _, _ = $1 in property }
 
 	// Case: no property
 	|  { None }
