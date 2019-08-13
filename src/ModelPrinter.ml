@@ -837,5 +837,5 @@ let debug_string_of_impossible_concrete_run model (impossible_concrete_run : Sta
 	^ (string_of_concrete_steps model impossible_concrete_run.steps)
 	
 	(* Iterate on following impossible steps *)
-	^ (string_of_concrete_steps model impossible_concrete_run.steps)
+	^ (string_of_impossible_concrete_steps model impossible_concrete_run.impossible_steps)
 	
