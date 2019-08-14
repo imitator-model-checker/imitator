@@ -9,11 +9,12 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/04/15
+ * Last modified     : 2019/08/14
 *****************************************************************)
 
 {
 open ModelParser
+open Lexing
 
 (* OCaml style comments *)
 let comment_depth = ref 0;;
