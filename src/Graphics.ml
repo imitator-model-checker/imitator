@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2019/08/09
+ * Last modified     : 2019/08/14
  *
  ************************************************************)
  
@@ -650,6 +650,273 @@ try(
 (** Draw (using the plotutils graph utility) the evolution of clock and discrete variables valuations according to time. *)
 (*------------------------------------------------------------*)
 
+(* This generic function takes a list of "abstract steps", i.e., only the target and the duration; this is to unify concrete and impossible steps *)
+(*** TODO: draw differently the impossible part of impossible concrete runs ***)
+let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_state) (abstract_steps : (NumConst.t * State.concrete_state) list) (file_prefix : string) : unit =
+	(* Retrieve model *)
+	let model = Input.get_model() in
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+	
+	let file_index = ref 0 in
+
+	(* Create one file per clock and discrete variable *)
+	List.iter (fun variable_index ->
+	
+		(* Increment counter *)
+		incr file_index;
+		
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			print_message Verbose_medium ("Preparing signal plot for " ^ (ModelPrinter.string_of_var_type (model.type_of_variables variable_index)) ^  " '" ^ (model.variable_names variable_index) ^  "'…");
+		);
+		
+		(*** TODO: remove consecutive identical points (not critical) ***)
+		
+		let file_content = string_of_list_of_string_with_sep "\n" (
+
+			(* Track absolute time *)
+			let absolute_time = ref NumConst.zero in
+			
+			(* Find the first valuation for 0-time *)
+			
+			(* Print some information *)
+			if verbose_mode_greater Verbose_total then(
+				print_message Verbose_total ("Computing value for '" ^ (model.variable_names variable_index) ^  "' at time zero…");
+			);
+			(* Get value *)
+			let zero_value = match model.type_of_variables variable_index with
+				| Var_type_discrete ->
+					Location.get_discrete_value initial_state.global_location variable_index
+				| Var_type_clock ->
+					initial_state.px_valuation variable_index
+				| _ -> raise (InternalError "Clock or discrete variable expected in draw_concrete_run")
+			in
+
+			(* Used to keep the previous value *)
+			let previous_value = ref zero_value in
+			
+			(* Consider the value at time 0 *)
+			(
+				(*** WARNING: do not use !absolute_time here, as it may be modified in the part FOLLOWING the :: (not sure how OCaml executes this!) ***)
+				
+				(* Print some information *)
+				if verbose_mode_greater Verbose_total then(
+					print_message Verbose_total ("Generating points for '" ^ (model.variable_names variable_index) ^  "' at time zero with value '" ^ (NumConst.string_of_numconst zero_value) ^  "'…");
+				);
+
+				(* Convert to the plotutils format *)
+				(draw_x_y NumConst.zero zero_value)
+			)
+			
+			::
+			
+			(* Iterate on the steps of the concrete run *)
+			(List.map (fun ((step_time, step_target) : (NumConst.t * State.concrete_state)) ->
+				(* Update absolute time *)
+				absolute_time := NumConst.add !absolute_time step_time;
+			
+				(* Print some information *)
+				if verbose_mode_greater Verbose_total then(
+					print_message Verbose_total ("Considering value for '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
+				);
+				
+				(* Handle the point just before the current point: if a clock, need to manage time elapsing if reset; if discrete, we imagine (so far) an immediate change of the value right at (technically "before") this point *)
+				let previous_point_str , value =
+					(* Print some information *)
+					if verbose_mode_greater Verbose_total then(
+						print_message Verbose_total ("Checking type of variable '" ^ (model.variable_names variable_index) ^  "'…");
+					);
+				
+					match model.type_of_variables variable_index with
+					
+				(* If discrete: the previous value is still valid right before the current transition *)
+					| Var_type_discrete ->
+					
+						(* Get the discrete value *)
+						let value = Location.get_discrete_value step_target.global_location variable_index in
+						
+						(* Print some information *)
+						if verbose_mode_greater Verbose_total then(
+							print_message Verbose_total ("About to perform comparison…");
+							print_message Verbose_total ("Previous value = " ^ (NumConst.string_of_numconst !previous_value ) ^ "");
+							print_message Verbose_total ("Current value = " ^ (NumConst.string_of_numconst value) ^ "");
+						);
+						
+						(* If same value as before, no need to add a new point *)
+						if NumConst.equal !previous_value value then(
+							(* Print some information *)
+							if verbose_mode_greater Verbose_total then(
+								print_message Verbose_total ("Discrete '" ^ (model.variable_names variable_index) ^  "' did not evolve: skip");
+							);
+							(* No new point *)
+							""
+							,value
+						)else(
+							(* Print some information *)
+							if verbose_mode_greater Verbose_total then(
+								print_message Verbose_total ("New additional point for discrete '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
+							);
+							
+							(* Same value, current time *)
+							(* Convert to the plotutils format *)
+							(draw_x_y !absolute_time !previous_value)
+							(* Separator for next point *)
+							^ "\n"
+							,value
+						)
+
+				(* If clock: the previous value must be incremented by the timed elapsed since the last point *)
+					| Var_type_clock -> 
+						
+						(* Get the clock value *)
+						let value = step_target.px_valuation variable_index in
+						
+						(* Retrieve the time elapsed *)
+						let time_elapsed = step_time in
+						(* If no time elapsed: no need to add a point *)
+						if NumConst.equal time_elapsed NumConst.zero then(
+							""
+							, value
+						)else(
+							(* Increment the value of the clock by the elapsed time *)
+							
+							(*** TODO: urgency / stopwatches! ***)
+							
+							let clock_value_after_elapsing = NumConst.add !previous_value time_elapsed in
+							(* Same value, current time *)
+							(* Convert to the plotutils format *)
+							(draw_x_y !absolute_time clock_value_after_elapsing)
+							(* Separator for next point *)
+							^ "\n"
+							, value
+						)
+					
+				(* Else error *)
+					| _ -> raise (InternalError "Clock or discrete variable expected in draw_concrete_run")
+					
+				in
+				
+				(* Backup current point for next point *)
+				previous_value := value;
+				
+				(* Print some information *)
+				if verbose_mode_greater Verbose_total then(
+					print_message Verbose_total ("Generating points for '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst !absolute_time) ^ " with value '" ^ (NumConst.string_of_numconst value) ^  "'…");
+				);
+
+				(* First add "previous" point *)
+				previous_point_str
+				
+				(* Then add the current point (easy) in the plotutils format *)
+				^ (draw_x_y !absolute_time value)
+			) abstract_steps
+			)
+		) in
+		
+		(* Create and fill file *)
+		
+		(* File name *)
+		let file_name = make_concreterun_variable_file_name file_prefix !file_index in
+		
+		(* Comments at the end of the graph file *)
+		let comments = (draw_comments (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv)) in
+		
+		(* Create file content *)
+		let file_content = file_content ^ "\n" ^ comments in
+		
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high ("Writing content to file '" ^ (file_name) ^ "'…");
+		);
+
+		(* Print some information *)
+		if verbose_mode_greater Verbose_total then(
+			print_message Verbose_total ("File content: \n\n" ^ (file_content) ^ "\n");
+		);
+
+		(* Export the file content to the file *)
+		write_to_file file_name file_content;
+		
+		()
+
+		
+	) model.clocks_and_discrete;
+	
+	let signals_image_file = file_prefix ^ "." ^ signals_image_extension in
+		
+	(* Create command *)
+	let command =
+		(* Base command *)
+		(* -T: extension *)
+		(* -L: label (title) *)
+		(* -X: name of the X axis *)
+		(* -r: right shift (by default 0.2) *)
+		(* -u: upper shift (by default 0.2) *)
+		"graph -T ps -L \"" ^ options#files_prefix ^ "\" -X \"t\" -r 0.0 -u 0.0 \\"
+		^ (string_of_list_of_string (
+			(* Store number of files *)
+			let nb_files = !file_index in
+			
+			(* Get the size for each file *)
+			(*** NOTE: add "+1" to keep a little space in between two files ***)
+			let size = round3_float (1. /. (float_of_int (nb_files + 1))) in
+			let width = string_of_float ((float_of_int nb_files) +. 0.5) in
+			
+			let file_index = ref 0 in
+			List.map (fun variable_index ->
+				incr file_index;
+				
+				let file_name = make_concreterun_variable_file_name file_prefix !file_index in
+
+				let offset = round3_float (float_of_int (!file_index - 1) /. (float_of_int (nb_files))) in
+				(* Objective: `--reposition .0 .44 .2 -h 1 -w 4.5 -Y "variable3" testCounterExSimple_signals_signal_2.txt \` *)
+				(* -h: height *)
+				(* -w: width *)
+				(* -C: in color *)
+				(* -m: the number of colors (modulo 25, managed automatically by graph) *)
+				"\n\t--reposition .0 " ^ offset ^ " " ^ size ^ " -h 1 -w " ^ width ^ " -C -m " ^ (string_of_int !file_index) ^ " -Y \"" ^ (model.variable_names variable_index) ^ "\" " ^ file_name ^ " \\"
+				
+			) model.clocks_and_discrete
+		))
+		^ "\n\t--blankout 1.0 > " ^ signals_image_file ^ ""
+	in
+
+	(* Print some information *)
+	print_message Verbose_standard (
+		"Plot signal-representation of the counterexample to file '" ^ signals_image_file ^ "'."); 
+
+	(* execute the script *)
+	let _ = run_graph command in
+	
+	(* Remove temporary files *)
+	if not options#with_graphics_source then(
+		(* Removing all signal files *)
+		for i = 1 to !file_index do
+			print_message Verbose_medium ("Removing signal file #" ^ (string_of_int i) ^ "…");
+			delete_file (make_concreterun_variable_file_name file_prefix i);
+		done;
+	);
+
+	(* The end *)
+	()
+
+
+
+let draw_impossible_concrete_run (impossible_concrete_run : StateSpace.impossible_concrete_run) (file_prefix : string) : unit =
+	(* Transforms steps to abstract pairs *)
+	let abstract_steps = list_append
+		(List.map (fun (concrete_step : StateSpace.concrete_step) -> concrete_step.time , concrete_step.target) impossible_concrete_run.steps)
+		(List.map (fun (impossible_concrete_step : StateSpace.impossible_concrete_step) -> impossible_concrete_step.time , impossible_concrete_step.target) impossible_concrete_run.impossible_steps)
+	in
+	draw_run_generic impossible_concrete_run.p_valuation impossible_concrete_run.initial_state abstract_steps file_prefix
+	
+let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : string) : unit =
+	(* Transforms steps to abstract pairs *)
+	let abstract_steps = List.map (fun (concrete_step : StateSpace.concrete_step) -> concrete_step.time , concrete_step.target) concrete_run.steps in
+	draw_run_generic concrete_run.p_valuation concrete_run.initial_state abstract_steps file_prefix
+
+(*
 let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : string) : unit =
 	(* Retrieve model *)
 	let model = Input.get_model() in
@@ -898,7 +1165,7 @@ let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : st
 
 	(* The end *)
 	()
-
+*)
 
 
 (************************************************************)
