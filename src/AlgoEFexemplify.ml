@@ -148,7 +148,7 @@ class algoEFexemplify =
 				let concrete_run = AlgoStateBased.concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) concrete_target_px_valuation in
 
 				(* Generate the graphics *)
-				Graphics.draw_concrete_run concrete_run (options#files_prefix ^ "_signals_" ^ (string_of_int nb_positive_examples));
+				Graphics.draw_concrete_run concrete_run (options#files_prefix ^ "_expos_" ^ (string_of_int nb_positive_examples));
 				
 				
 				(*------------------------------------------------------------*)
@@ -187,6 +187,9 @@ class algoEFexemplify =
 							(* Print some information *)
 							print_message Verbose_medium ("\nFound a shrinking of parameter constraint between position " ^ (string_of_int !i) ^ " to " ^ (string_of_int (!i+1)) ^ ":");
 							
+							(* Update the number of counterexamples processed *)
+							nb_negative_examples <- nb_negative_examples + 1;
+
 							(* Convert to a nnconvex_constraint *)
 							let difference = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint pconstraint_i in
 							(* Compute the difference K_i \ K_i+1 *)
@@ -326,6 +329,9 @@ class algoEFexemplify =
 								print_message Verbose_low (ModelPrinter.debug_string_of_impossible_concrete_run model impossible_concrete_run);
 							);
 							
+							(* Generate the graphics *)
+							Graphics.draw_impossible_concrete_run impossible_concrete_run (options#files_prefix ^ "_exneg_" ^ (string_of_int nb_negative_examples));
+							
 							(*** TODO ***)
 							()
 						);
@@ -334,6 +340,8 @@ class algoEFexemplify =
 						pconstraint_i_plus_one := pconstraint_i;
 						decr i;
 					done;
+					
+					(*** TODO: not sure to find something ***)
 				
 				);
 				
