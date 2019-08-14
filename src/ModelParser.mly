@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/07/05
+ * Last modified     : 2019/09/14
  *
  ************************************************************/
 
@@ -363,14 +363,25 @@ update:
 /** List containing only normal updates.
 		NOTE: it is used to avoid nested conditional updates */
 normal_update_list:
-	update COMMA normal_update_list { $1 :: $3}
+	| update COMMA normal_update_list { $1 :: $3}
 	| update { [$1]}
 	| { [] }
+;
+
+normal_update_list_par_opt:
+	 | normal_update_list { $1 }
+	 | LPAREN normal_update_list RPAREN { $2 }
+;
+
+boolean_expression_par_opt:
+	 | boolean_expression { $1 }
+	 | LPAREN boolean_expression RPAREN { $2 }
+;
 
 /** Condition updates **/
 condition_update:
-	| CT_IF LPAREN boolean_expression RPAREN CT_THEN normal_update_list CT_END { ($3, $6, []) }
-	| CT_IF LPAREN boolean_expression RPAREN CT_THEN normal_update_list CT_ELSE normal_update_list CT_END { ($3, $6,  $8) }
+	| CT_IF boolean_expression_par_opt CT_THEN normal_update_list_par_opt CT_END { ($2, $4, []) }
+	| CT_IF boolean_expression_par_opt CT_THEN normal_update_list_par_opt CT_ELSE normal_update_list_par_opt CT_END { ($2, $4, $6) }
 ;
 
 /**********************************************/
