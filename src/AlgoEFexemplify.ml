@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/08
- * Last modified     : 2019/08/13
+ * Last modified     : 2019/08/14
  *
  ************************************************************)
 
@@ -158,6 +158,9 @@ class algoEFexemplify =
 				(*** TODO: handle non-deterministic ***)
 				
 				if model.strongly_deterministic && not model.has_silent_actions then(
+					(* Print some information *)
+					print_message Verbose_low "\n\nLooking for a negative counterexample (deterministic system without silent actions)";
+					
 					(* Part 2.a: try to find a parameter valuation NOT going to the final state using this run *)
 					(* Idea: any parameter valuation "deadlocked" along this run is a valuation for which no identical symbolic run leads to the target, or any other target (in case of several discrete target locations) *)
 
@@ -220,6 +223,12 @@ class algoEFexemplify =
 							(* Exhibit a px-point in this constraint *)
 							let concrete_px_valuation_i = LinearConstraint.px_exhibit_point concrete_p_valuation_px_constraint in
 							
+							(* Print some information *)
+							if verbose_mode_greater Verbose_low then(
+								print_message Verbose_low ("Example of point at position " ^ (string_of_int !i) ^ ":");
+								print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation_i);
+							);
+							
 							(* Generate the concrete run up to this point *)
 							(*------------------------------------------------------------*)
 
@@ -243,8 +252,16 @@ class algoEFexemplify =
 							(* Now create an impossible concrete run from this point to the accepting location *)
 							(*------------------------------------------------------------*)
 							
+							(* Print some information *)
+							if verbose_mode_greater Verbose_low then(
+								print_message Verbose_low ("Now generating the \"impossible\" concrete run from position " ^ (string_of_int !i) ^ "…");
+							);
+							
 							(* Starting point: the last known existing valuation *)
 							let current_valuation = ref concrete_px_valuation_i in
+							
+							(* For debug purpose *)
+							let current_position = ref (!i) in
 							
 							let impossible_steps_suffix : StateSpace.impossible_concrete_step list = List.map (fun symbolic_step ->
 							
@@ -258,10 +275,19 @@ class algoEFexemplify =
 								
 								(* Apply time elapsing (let us not care about resets, because this transition does not exist; we could care about resets to be closer to the original automaton BUT the guards/invariants could not be satisfied, precisely because this parameter valuation does not allow to take this run!) *)
 								(*** NOTE: we still care about urgency and stopwatches though ***)
-								let valuation_after_elapsing = AlgoStateBased.apply_time_elapsing_to_concrete_valuation current_location chosen_time_elapsing !current_valuation in
+								let valuation_after_elapsing : LinearConstraint.px_valuation = AlgoStateBased.apply_time_elapsing_to_concrete_valuation current_location chosen_time_elapsing !current_valuation in
+								
+								(* Print some information *)
+								if verbose_mode_greater Verbose_medium then(
+									print_message Verbose_medium ("Valuation for position " ^ (string_of_int !current_position) ^ ":");
+									print_message Verbose_medium (ModelPrinter.string_of_px_valuation model valuation_after_elapsing);
+								);
 								
 								(* Update the valuation for next step *)
 								current_valuation := valuation_after_elapsing;
+								
+								(* Update the position *)
+								incr current_position;
 								
 								(* Return the impossible_concrete_step *)
 								{

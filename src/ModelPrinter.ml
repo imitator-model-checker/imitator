@@ -786,7 +786,7 @@ let string_of_concrete_steps model concrete_steps =
 	(string_of_list_of_string_with_sep "\n" (List.map (fun (concrete_step : StateSpace.concrete_step)  ->
 		  ("\n | ")
 		^ ("\n | via combined transition " ^ (debug_string_of_combined_transition model concrete_step.transition))
-		^ ("\n | and t =  " ^ (NumConst.string_of_numconst concrete_step.time))
+		^ ("\n | and d =  " ^ (NumConst.string_of_numconst concrete_step.time))
 		^ ("\n | ")
 		^ ("\n v ")
 		^ (" " ^ (string_of_concrete_state model concrete_step.target))
@@ -798,7 +798,7 @@ let string_of_impossible_concrete_steps model impossible_concrete_steps =
 	(string_of_list_of_string_with_sep "\n" (List.map (fun (impossible_concrete_step : StateSpace.impossible_concrete_step)  ->
 		  ("\n | ")
 		^ ("\n | via impossible transition labeled with " ^ (model.action_names impossible_concrete_step.action))
-		^ ("\n | and t =  " ^ (NumConst.string_of_numconst impossible_concrete_step.time))
+		^ ("\n | and d =  " ^ (NumConst.string_of_numconst impossible_concrete_step.time))
 		^ ("\n | ")
 		^ ("\n v ")
 		^ (" " ^ (string_of_concrete_state model impossible_concrete_step.target))

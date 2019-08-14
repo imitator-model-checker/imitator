@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/08/09
+ * Last modified     : 2019/08/14
  *
  ************************************************************)
 
@@ -720,7 +720,10 @@ let apply_time_elapsing_to_concrete_valuation (location : Location.global_locati
 	let model = Input.get_model() in
 
 	(* If urgent location: nothing to change, i.e., copy *)
-	if is_location_urgent location then px_valuation
+	if is_location_urgent location then(
+		print_message Verbose_medium ("Urgent location: do not apply time elapsing");
+		px_valuation
+	)
 	else(
 		(* First, recreate a data structure *)
 		let valuation_array = Array.make (model.nb_parameters + model.nb_clocks) NumConst.zero in
@@ -740,8 +743,8 @@ let apply_time_elapsing_to_concrete_valuation (location : Location.global_locati
 				(* Clock stopped: copy *)
 				valuation_array.(variable_index) <- px_valuation variable_index;
 			)else(
-				(* Elapsing clock: increment by time_elapsing *)
-				valuation_array.(variable_index) <- NumConst.add (valuation_array.(variable_index)) time_elapsing;
+				(* Elapsing clock: increment px_valuation by time_elapsing *)
+				valuation_array.(variable_index) <- NumConst.add (px_valuation variable_index) time_elapsing;
 			);
 		done;
 		
