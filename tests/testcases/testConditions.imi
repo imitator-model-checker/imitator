@@ -1,9 +1,9 @@
 (************************************************************
  *                      IMITATOR MODEL
  *
- * Simple test for discrete variable elimination
+ * Simple test for discrete variable elimination and conditions if-then-else
  *
- * Description     : Simple test for discrete variable elimination: i and j should be kept, not k and l
+ * Description     : Simple test for discrete variable elimination and if-then-else conditions: i and j should be kept, not k and l
  * Correctness     : N/A
  * Source          : Own work
  * Author          : Étienne André
@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2019/02/20
- * Last modified   : 2019/02/20
+ * Last modified   : 2019/08/14
  *
- * IMITATOR version: 2.10.4
+ * IMITATOR version: 2.12
  ************************************************************)
 
 var
@@ -39,10 +39,10 @@ var
 synclabs: a;
 
 loc l1: invariant True
-	when x = 1 & x = p & j = 0 sync a do {if (l = 0) then x := i, l := 15 end} goto l2;
+	when x = 1 & x = p & j = 0 sync a do {if (l = 0) then (x := i, l := 15) end} goto l2;
 
 loc l2: invariant True
-	when x = 2 sync a do {if (l <= 10) then x := 0, l := 0 else i := 2  end} goto l1;
+	when x = 2 sync a do {if l <= 10 then x := 0, l := 0 else i := 2 end} goto l1;
 end (* pta *)
 
 
