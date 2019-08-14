@@ -13,6 +13,10 @@
 ### Minor features
 * Removed the creation and deletion of an (unused) script when generating graphics
 
+### Syntax improvement
+* `if`-`then`-`else` conditions are now allowed in updates. Example syntax: `when x = 2 sync a do {if l <= 10 then x := 0, l := 0 else (i := 2) end} goto l1;`
+* Partial model inclusion is now possible thanks to keyword `#include`. Notably, properties can now be included from other files.
+
 ### Options
 * Removed the `-merge-before` option (that was not documented nor tested)
 
