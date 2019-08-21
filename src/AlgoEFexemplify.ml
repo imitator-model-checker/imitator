@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/08
- * Last modified     : 2019/08/14
+ * Last modified     : 2019/08/21
  *
  ************************************************************)
 
@@ -147,8 +147,13 @@ class algoEFexemplify =
 				(* Exhibit a concrete run from the symbolic run *)
 				let concrete_run = AlgoStateBased.concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) concrete_target_px_valuation in
 
-				(* Generate the graphics *)
-				Graphics.draw_concrete_run concrete_run (options#files_prefix ^ "_expos_" ^ (string_of_int nb_positive_examples));
+				(* Generate the graphics: run *)
+				let prefix = options#files_prefix ^ "_expos_" ^ (string_of_int nb_positive_examples) in
+				Graphics.draw_concrete_run concrete_run prefix;
+				(* Generate the graphics: parameters *)
+				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse target_state.px_constraint in
+				let zones = [LinearConstraint.Convex_p_constraint p_constraint, Good] in
+				Graphics.draw_cartography zones prefix;
 				
 				
 				(*------------------------------------------------------------*)
@@ -329,8 +334,13 @@ class algoEFexemplify =
 								print_message Verbose_low (ModelPrinter.debug_string_of_impossible_concrete_run model impossible_concrete_run);
 							);
 							
-							(* Generate the graphics *)
-							Graphics.draw_impossible_concrete_run impossible_concrete_run (options#files_prefix ^ "_exneg_" ^ (string_of_int nb_negative_examples));
+							(* Generate the graphics: run *)
+							let prefix = options#files_prefix ^ "_exneg_" ^ (string_of_int nb_negative_examples) in
+							Graphics.draw_impossible_concrete_run impossible_concrete_run prefix;
+							(* Generate the graphics: parameters *)
+							let zones = [LinearConstraint.Nonconvex_p_constraint difference, Bad] in
+							Graphics.draw_cartography zones prefix;
+
 							
 							(*** TODO ***)
 							()
