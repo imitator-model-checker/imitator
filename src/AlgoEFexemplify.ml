@@ -389,50 +389,16 @@ class algoEFexemplify =
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_result =
-		(* Retrieve the model *)
-		let model = Input.get_model () in
-
 		(* Print some information *)
 		self#print_algo_message_newline Verbose_standard (
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);
-		
-		(* Projecting onto SOME parameters if required *)
-		let result =
-		match model.projection with
-		(* No projection: copy the initial p constraint *)
-		| None -> bad_constraint
-		(* Project *)
-		| Some parameters ->
-			(* Print some information *)
-			if verbose_mode_greater Verbose_medium then(
-				self#print_algo_message Verbose_medium "Projecting the bad constraint onto some of the parameters.";
-				self#print_algo_message Verbose_medium "Before projection:";
-				print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
-			);
-
-			(*** TODO! do only once for all… ***)
-			let all_but_projectparameters = list_diff model.parameters parameters in
-			
-			(* Eliminate other parameters *)
-			let projected_init_p_nnconvex_constraint = LinearConstraint.p_nnconvex_hide all_but_projectparameters bad_constraint in
-
-			(* Print some information *)
-			if verbose_mode_greater Verbose_medium then(
-				self#print_algo_message Verbose_medium "After projection:";
-				print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names projected_init_p_nnconvex_constraint);
-			);
-			
-			(* Return *)
-			projected_init_p_nnconvex_constraint
-		in
 		
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
 			| None -> raise (InternalError ("Termination status not set in " ^ (self#algorithm_name) ^ ".compute_result"))
 			| Some status -> status
 		in
-
 		
 		(* Return the result *)
 		Runs_exhibition_result

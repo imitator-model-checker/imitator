@@ -8,7 +8,7 @@
  * 
  * File contributors : Laure Petrucci, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2019/08/05
+ * Last modified     : 2019/08/21
  *
  ************************************************************)
 
@@ -896,7 +896,7 @@ class algoNDFS =
 				print_message Verbose_low("Finished the calls")
 (* 			| Exploration_syn_mixed_NDFS -> print_message Verbose_standard("Using the option synMixedNDFS --- Not implemented yet") *)
 
-(* 			| _ -> raise (InternalError ("Unknown variant of NDFS")) *)
+			| _ -> raise (InternalError ("Unknown exploration order in NDFS"))
 		end;
 
 		(* combine the linear constraints *)
