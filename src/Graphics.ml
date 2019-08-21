@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2019/08/14
+ * Last modified     : 2019/08/21
  *
  ************************************************************)
  
@@ -243,7 +243,7 @@ try(
 		range_params := List.rev !range_params;
 		
 		if (List.length !range_params) < 2 then(
-			print_error "Could not plot cartography (region of interest has too few dimensions)";
+			print_warning "Could not plot cartography (region of interest has too few dimensions)";
 			raise CartographyError
 		);
 
@@ -257,7 +257,7 @@ try(
 		print_message Verbose_low "Pick up the first 2 parameters to draw the cartography";
 		(* First check that there are at least 2 parameters *)
 		if model.nb_parameters < 2 then(
-			print_error ("Could not plot cartography (which requires 2 parameters) because there is only " ^ (string_of_int model.nb_parameters) ^ " parameter.");
+			print_warning ("Could not plot cartography (which requires at least 2 parameters) because there is " ^ (if model.nb_parameters = 1 then "only one parameter" else "no parameter at all") ^ " in this model.");
 			raise CartographyError
 		);
 		(* Choose the first 2 *)
@@ -639,7 +639,7 @@ try(
 	()
 
 ) with
-	| CartographyError -> (print_error "Error while printing the cartography";
+	| CartographyError -> (print_warning "Error while printing the cartography";
 	(* Statistics *)
 	counter_graphics_cartography#stop;
 	()
