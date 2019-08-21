@@ -1,5 +1,10 @@
 *******************************************************
-# release 2.12 (XXXX) FUTURE MAJOR RELEASE
+# release X.XX (XXXX) FUTURE MAJOR RELEASE
+MAJOR RELEASE
+
+
+*******************************************************
+# release 2.12 (XXXX) Butter Lobster
 MAJOR RELEASE
 
 ### Bug fixing:
