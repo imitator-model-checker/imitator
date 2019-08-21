@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/08/14
+ * Last modified     : 2019/08/21
  *
  ************************************************************)
 
@@ -3771,8 +3771,8 @@ class virtual algoStateBased =
 			| Exploration_NDFS -> self#explore_layer_bfs init_state_index;
             | Exploration_NDFS_sub -> self#explore_layer_bfs init_state_index;
             | Exploration_layer_NDFS_sub -> self#explore_layer_bfs init_state_index;
-            | Exploration_syn_NDFS_sub -> self#explore_layer_bfs init_state_index;
-            | Exploration_syn_layer_NDFS_sub -> self#explore_layer_bfs init_state_index;
+(*            | Exploration_syn_NDFS_sub -> self#explore_layer_bfs init_state_index;
+            | Exploration_syn_layer_NDFS_sub -> self#explore_layer_bfs init_state_index;*)
 (*             | Exploration_syn_mixed_NDFS -> self#explore_layer_bfs init_state_index; *)
 		end;
 

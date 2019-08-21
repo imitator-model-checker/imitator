@@ -13,7 +13,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2019/08/14
+# Last modified     : 2019/08/21
 #************************************************************
 
 
@@ -2599,9 +2599,9 @@ Number of computed states               : 7
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test AccLoopSynthNDFS: flipflop (no loop)',
+		'purpose'    : 'Test AccLoopSynthNDFS emptiness: flipflop (no loop)',
 		'input_files': ['flipflop.imi'],
-		'options'    : '-mode AccLoopSynthNDFS -output-result',
+		'options'    : '-mode AccLoopSynthNDFS -output-result -counterexample',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2625,7 +2625,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test AccLoopSynthNDFS with complete constraint: flipflop (no loop)',
 		'input_files': ['flipflop.imi'],
-		'options'    : '-mode AccLoopSynthNDFS -explOrder synNDFSsub -output-result',
+		'options'    : '-mode AccLoopSynthNDFS -explOrder NDFSsub -output-result',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2650,9 +2650,9 @@ Constraint nature                       : good
 		# Test version             : 1
 		# Test since               : 2019/07/22
 		# Test for IMITATOR version: 2.12
-		'purpose'    : 'Test AccLoopSynthNDFS: simple example 1',
+		'purpose'    : 'Test AccLoopSynthNDFS emptiness: simple example 1',
 		'input_files': ['testNDFS-1.imi'],
-		'options'    : '-mode AccLoopSynthNDFS -output-result',
+		'options'    : '-mode AccLoopSynthNDFS -output-result -counterexample',
 		'expectations' : [
 			{'file': 'testNDFS-1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2679,7 +2679,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test AccLoopSynthNDFS: simple example 1 with complete constraint',
 		'input_files': ['testNDFS-1.imi'],
-		'options'    : '-mode AccLoopSynthNDFS -explOrder synNDFSsub -output-result',
+		'options'    : '-mode AccLoopSynthNDFS -explOrder NDFSsub -output-result',
 		'expectations' : [
 			{'file': 'testNDFS-1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2704,9 +2704,9 @@ Constraint nature                       : good
 		# Test version             : 1
 		# Test since               : 2019/08/01
 		# Test for IMITATOR version: 2.12
-		'purpose'    : 'Test AccLoopSynthNDFS: simple example 2',
+		'purpose'    : 'Test AccLoopSynthNDFS emptiness: simple example 2',
 		'input_files': ['testNDFS-2.imi'],
-		'options'    : '-mode AccLoopSynthNDFS -output-result',
+		'options'    : '-mode AccLoopSynthNDFS -output-result -counterexample',
 		'expectations' : [
 			{'file': 'testNDFS-2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2733,7 +2733,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test AccLoopSynthNDFS: simple example 2 with complete constraint',
 		'input_files': ['testNDFS-2.imi'],
-		'options'    : '-mode AccLoopSynthNDFS -explOrder synNDFSsub -output-result',
+		'options'    : '-mode AccLoopSynthNDFS -explOrder NDFSsub -output-result',
 		'expectations' : [
 			{'file': 'testNDFS-2.res' , 'content' : """
 BEGIN CONSTRAINT

@@ -602,6 +602,15 @@ The standard command is:
 
 Internally, this algorithm works exactly the same as the reachability-synthesis, and at the end the obtained constraint is \emph{negated} (with parameters being constrained to be included in the initial state valuations).
 
+%------------------------------------------------------------
+\begin{remark}
+	For both reachability and safety, one can use the option \styleOption{-counterexample} to stop the analysis as soon as a counterexample is found (see list of options in \cref{chapter:options}).
+	
+	In that case, the result is not exact, but approximated.
+\end{remark}
+%------------------------------------------------------------
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{EF-minimization}\label{ss:mode:EFmin}
@@ -760,7 +769,7 @@ In addition, this algorithm is (by default) not complete.
 
 The command is:
 
-\styleCommand{\binimitator{} model.imi -mode AccLoopNDFS -output-result}
+\styleCommand{\binimitator{} model.imi -mode AccLoopSynthNDFS -output-result}
 
 Several heuristics can be used, some of them synthesizing all parameter values for which a cycle can be found.
 These are accessible via the \styleOption{-explOrder} option:
@@ -769,8 +778,8 @@ These are accessible via the \styleOption{-explOrder} option:
 	\item[\styleOption{-explOrder NDFS}]: use standard NDFS to find an accepting cycle (default option);
 	\item[\styleOption{-explOrder NDFSsub}]: standard NDFS with subsumption;
 	\item[\styleOption{-explOrder layerNDFSsub}]: NDFS with subsumption and layers;
-	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
-	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
+% 	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
+% 	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
 \end{description}
 
 At each cycle found, \imitator{} outputs its number (when using the synthesis) and
@@ -791,6 +800,12 @@ As usual, \imitator{} can also
 	or
 	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
 
+
+%------------------------------------------------------------
+\begin{remark}
+	As for \EFsynth{}, one can use here the option \styleOption{-counterexample} to stop the analysis as soon as a counterexample is found (see list of options in \cref{chapter:options}).
+\end{remark}
+%------------------------------------------------------------
 
 
 
@@ -1341,7 +1356,7 @@ If needed, more information can be obtained by contacting the \imitator{} team.
 	% check-iptta
 	% check-point
 	% completeIM
-	% -counterex
+	% -counterexample
 	% distributedKillIM
 	% precomputepi0
 
@@ -1412,7 +1427,10 @@ Print the list of contributors and exits.
 %------------------------------------------------------------
 \paragraph{\styleOption{-counterexample}}
 %------------------------------------------------------------
-For algorithm \EFsynth{}, stops the analysis as soon as one target state is found, and returns the (possibly approximated) result.
+For algorithms \EFsynth{} and \styleOption{AccLoopSynthNDFS}, stops the analysis as soon as one target state is found, and returns the (possibly approximated) result.
+
+This can be a way to solve the \emph{emptiness} instead of the \emph{synthesis} prolem.
+Nevertheless, note that, instead of returning a Boolean answer, the algorithm still outputs some valuations (typically the valuations associated with the first parametric zone found, that allows to guarantee the violation of the property).
 
 
 %------------------------------------------------------------
@@ -1463,8 +1481,8 @@ In this latter case, the possible values are:
 	\item[\styleOption{-explOrder NDFS}]: use standard NDFS to find an accepting cycle (default option);
 	\item[\styleOption{-explOrder NDFSsub}]: standard NDFS with subsumption;
 	\item[\styleOption{-explOrder layerNDFSsub}]: NDFS with subsumption and layers;
-	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
-	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
+% 	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
+% 	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
 \end{description}
 
 

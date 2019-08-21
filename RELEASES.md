@@ -1,13 +1,14 @@
 *******************************************************
-# release XXX (XXXX) FUTURE MAJOR RELEASE
+# release 2.12 (XXXX) FUTURE MAJOR RELEASE
+MAJOR RELEASE
 
 ### Bug fixing:
 * Fixed a "+ 0" that appeared in some of the text and graphical outputs
 
 ### Major features
-* In mode `EF -counterexample`, IMITATOR outputs an example of parameter valuation, and a full concrete run, with a graphical representation of the clocks and discrete variables evolution. [WORK IN PROGRESS]
 * New accepting cycle synthesis (`-mode AccLoopSynth`)
-* New NDFS-based accepting cycle synthesis (`-mode AccLoopSynthNDFS`) with several exploration strategies [NPP18]
+* New NDFS-based accepting cycle synthesis (`-mode AccLoopSynthNDFS`) with several exploration strategies [NPP18]. Additional option `-counterexample` terminates the analysis as soon as one cycle is found.
+* In mode `EF -counterexample`, IMITATOR outputs an example of parameter valuation, and a full concrete run, with a graphical representation of the clocks and discrete variables evolution. [EXPERIMENTAL]
 * New check-syntax mode (`-mode checksyntax`), that simply checks the syntax and terminates without doing any analysis.
 
 ### Minor features

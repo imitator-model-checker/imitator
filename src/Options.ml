@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2019/08/01
+ * Last modified     : 2019/08/21
  *
  ************************************************************)
 
@@ -585,10 +585,10 @@ class imitator_options =
 					exploration_order <- Exploration_NDFS_sub
 				else if order = "layerNDFSsub" then
 					exploration_order <- Exploration_layer_NDFS_sub
-				else if order = "synNDFSsub" then
+(*				else if order = "synNDFSsub" then
 					exploration_order <- Exploration_syn_NDFS_sub
 				else if order = "synlayerNDFSsub" then
-					exploration_order <- Exploration_syn_layer_NDFS_sub
+					exploration_order <- Exploration_syn_layer_NDFS_sub*)
 		(*		else if order = "synMixedNDFS" then
 					exploration_order <- Exploration_syn_mixed_NDFS*)
 				else(
@@ -744,10 +744,7 @@ class imitator_options =
         Use 'NDFS' for standard NDFS. [NPvdP18]
         Use 'NDFSsub' for standard NDFS with subsumption. [NPvdP18]
         Use 'layerNDFSsub' for layered NDFS with subsumption. [NPvdP18]
-        Use 'synNDFSsub' for NDFS synthesis with subsumption.
-        Use 'synlayerNDFSsub' for NDFS synthesis with subsumption and layers. [NPvdP18]
-        Use 'synMixedNDFS' for mixed NDFS synthesis with inclusion and layers.
-        Default: layerBFS for statespace mode, NDFS orders for ndfs mode.
+        Default: layerBFS (except for AccLoopSynthNDFS, in which case this is NDFS).
 				");
 				
 (* 				("-fromGrML", Unit (fun () -> fromGML <- true), "GrML syntax for input files (experimental). Defaut : 'false'"); *)
@@ -1083,8 +1080,8 @@ class imitator_options =
 			);
 				
 			(* No counterex if not EF *)
-			if !counterex && (imitator_mode <> EF_synthesis && imitator_mode <> EFunsafe_synthesis) then(
-				print_warning ("The option '-counterexample' is reserved for EF. It will thus be ignored.");
+			if !counterex && (imitator_mode <> EF_synthesis && imitator_mode <> EFunsafe_synthesis && imitator_mode <> Acc_loop_synthesis_NDFS) then(
+				print_warning ("The option '-counterexample' is reserved for EF and AccLoopSynthNDFS. It will thus be ignored.");
 			);
 			
 			
@@ -1109,11 +1106,12 @@ class imitator_options =
 				| Exploration_queue_BFS -> print_message Verbose_standard ("Exploration order: queue-based BFS [ACN17].")
 				| Exploration_queue_BFS_RS -> print_message Verbose_standard ("Exploration order: queue-based BFS with ranking system [ACN17].")
 				| Exploration_queue_BFS_PRIOR -> print_message Verbose_standard ("Exploration order: queue-based BFS with priority [ACN17].")
+				
 				| Exploration_NDFS -> print_message Verbose_standard ("Exploration order: standard NDFS [NPvdP18].")
-				| Exploration_NDFS_sub -> print_message Verbose_standard ("Exploration order: NDFS with subsumption [NPvdP18].")
-				| Exploration_layer_NDFS_sub -> print_message Verbose_standard ("Exploration order: layerd NDFS with subsumption [NPvdP18].")
-				| Exploration_syn_NDFS_sub -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption.")
-				| Exploration_syn_layer_NDFS_sub -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption and layers [NPvdP18].")
+				| Exploration_NDFS_sub when !counterex = true -> print_message Verbose_standard ("Exploration order: NDFS with subsumption [NPvdP18]; emptiness only.")
+				| Exploration_layer_NDFS_sub when !counterex = true -> print_message Verbose_standard ("Exploration order: layerd NDFS with subsumption [NPvdP18]; emptiness only.")
+				| Exploration_NDFS_sub when !counterex = false -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption [NPvdP18].")
+				| Exploration_layer_NDFS_sub when !counterex = false -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption and layers [NPvdP18].")
 (* 				| Exploration_syn_mixed_NDFS -> print_message Verbose_standard ("Exploration order: NDFS with mix of subsumption and layers.") *)
 end;
 

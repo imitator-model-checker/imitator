@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2019/08/01
+ * Last modified     : 2019/08/21
  *
  ************************************************************)
 
@@ -206,10 +206,10 @@ type exploration_order =
 	| Exploration_NDFS_sub
 	(** layerNDFSsub: NDFS with subsumption  and layers [NPvdP18] **)
 	| Exploration_layer_NDFS_sub
-	(** synNDFSsub: NDFS synthesis with subsumption **)
+(*	(** synNDFSsub: NDFS synthesis with subsumption **)
 	| Exploration_syn_NDFS_sub
 	(** synlayerNDFSsub: NDFS synthesis with subsumption and layers [NPvdP18] **)
-	| Exploration_syn_layer_NDFS_sub
+	| Exploration_syn_layer_NDFS_sub*)
 	(** synMixedNDFS: NDFS synthesis with a mix of subsumption and layers **)
 (* 	| Exploration_syn_mixed_NDFS *)
 

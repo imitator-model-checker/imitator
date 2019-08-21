@@ -417,6 +417,8 @@ class algoNDFS =
  
 		begin
 		match options#exploration_order with
+			(* NORMAL VERSION *)
+			(*** NOTE (ÉA, 2019/08/21: synthesis or emptiness?!! ***)
 			| Exploration_NDFS -> 
 (* Classical NDFS exploration *)
 				print_message Verbose_standard("Using the option NDFS");
@@ -496,7 +498,8 @@ class algoNDFS =
 					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
 				
-			| Exploration_NDFS_sub ->
+			(* Subsumption + emptiness *)
+			| Exploration_NDFS_sub when options#counterex = true ->
 (* NDFS with subsumption *)
 				print_message Verbose_standard("Using the option NDFSsub");
 				(* set up the dfs blue calls *)
@@ -577,7 +580,8 @@ class algoNDFS =
 					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
 				
-			| Exploration_layer_NDFS_sub ->
+			(* Layer + emptiness *)
+			| Exploration_layer_NDFS_sub when options#counterex = true ->
 (* NDFS with subsumption and layers *)
 				print_message Verbose_standard("Using the option layerNDFSsub");
 				(* set up the dfs blue calls *)
@@ -674,7 +678,8 @@ class algoNDFS =
 							with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
 				
-			| Exploration_syn_NDFS_sub ->
+			(* Subsumption + synthesis *)
+			| (*Exploration_syn_NDFS_sub*)Exploration_NDFS_sub when options#counterex = false ->
 (* collecting NDFS with subsumption *)
 				print_message Verbose_standard("Using the option synNDFSsub");
 				(* set up the dfs blue calls *)
@@ -776,7 +781,8 @@ class algoNDFS =
 					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
 				
-			| Exploration_syn_layer_NDFS_sub ->
+			(* Layer + synthesis *)
+			| (*Exploration_syn_layer_NDFS_sub*)Exploration_layer_NDFS_sub when options#counterex = false ->
 (* collecting NDFS with layers and subsumption *)
 				print_message Verbose_standard("Using the option synlayerNDFSsub");
 				(* set up the dfs blue calls *)
