@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2019/08/08
+ * Last modified     : 2019/08/21
  *
  ************************************************************)
 
@@ -306,13 +306,19 @@ type multiple_synthesis_result = {
 (* Algorithms synthesizing runs *)
 (*------------------------------------------------------------*)
 
+type impossible_or_concrete_run =
+	| Impossible_concrete_run of StateSpace.impossible_concrete_run
+	| Concrete_run of StateSpace.concrete_run
+
 type valuation_and_concrete_run = {
 	(* The parameter valuation for which this run exists *)
 	valuation		: PVal.pval;
-	(* The concrete run *)
-	concrete_run	: StateSpace.concrete_run;
-	(* Is the run satisfying or violating the property? *)
-	satisfying		: bool;
+	
+	(* Sometimes, we can even infer more valuations for which an equivalent DISCRETE run exist (note that the exact timings of the run might differ!!!) *)
+	valuations		: LinearConstraint.p_convex_or_nonconvex_constraint;
+	
+	(* The possibly impossible concrete run *)
+	concrete_run	: impossible_or_concrete_run;
 }
 
 (** Result for runs exhibition *)

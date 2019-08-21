@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2019/07/23
+ * Last modified     : 2019/08/21
  *
  ************************************************************)
 
@@ -317,10 +317,10 @@ let result_nature_statistics_bc (soundness_str : string) termination (statespace
 	^ "\nConstraint nature                       : " ^ statespace_nature_str
 
 
-(*** TODO: would be smarter to have a generic function write_result_to_file : imitator_result -> unit () ***)
+(*** TODO: would be smarter to have a generic function export_to_file_result : imitator_result -> unit () ***)
 
 (* Write an ef_synth result to the result file *)
-let write_noresult_to_file file_name =
+let export_to_file_noresult file_name =
 	(*** WARNING: duplicate code concerning the counter creation ***)
 	(* Create counter *)
 	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
@@ -359,7 +359,7 @@ let write_noresult_to_file file_name =
 
 
 (* Write an ef_synth result to the result file *)
-let write_deprecated_efsynth_result_to_file file_name (deprecated_efsynth_result : Result.deprecated_efsynth_result) =
+let export_to_file_deprecated_efsynth_result file_name (deprecated_efsynth_result : Result.deprecated_efsynth_result) =
 	(*** WARNING: duplicate code concerning the counter creation ***)
 	(* Create counter *)
 	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
@@ -414,7 +414,7 @@ let write_deprecated_efsynth_result_to_file file_name (deprecated_efsynth_result
 
 
 (* Write a single_synthesis_result to the result file *)
-let write_single_synthesis_result file_name (single_synthesis_result : Result.single_synthesis_result) =
+let export_to_file_single_synthesis_result file_name (single_synthesis_result : Result.single_synthesis_result) =
 	(*** WARNING: duplicate code concerning the counter creation ***)
 	(* Create counter *)
 	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
@@ -475,7 +475,7 @@ let write_single_synthesis_result file_name (single_synthesis_result : Result.si
 
 
 (* Write a multiple_synthesis_result to the result file *)
-let write_multiple_synthesis_result file_name (multiple_synthesis_result : Result.multiple_synthesis_result) =
+let export_to_file_multiple_synthesis_result file_name (multiple_synthesis_result : Result.multiple_synthesis_result) =
 	(*** WARNING: duplicate code concerning the counter creation ***)
 	(* Create counter *)
 	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
@@ -530,7 +530,7 @@ let write_multiple_synthesis_result file_name (multiple_synthesis_result : Resul
 
 
 (* Write an ef_synth result to the result file *)
-let write_point_based_result_to_file file_name (point_based_result : Result.point_based_result) =
+let export_to_file_point_based_result file_name (point_based_result : Result.point_based_result) =
 	(*** WARNING: duplicate code concerning the counter creation ***)
 	(* Create counter *)
 	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
@@ -636,7 +636,7 @@ let general_bc_statistics (cartography_result : Result.cartography_result) =
 
 		
 (* Write result of BC to file *)
-let write_cartography_result_to_file file_name (cartography_result : Result.cartography_result) =
+let export_to_file_cartography_result file_name (cartography_result : Result.cartography_result) =
 	(*** WARNING: duplicate code concerning the counter creation ***)
 	(* Create counter *)
 	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
@@ -731,6 +731,88 @@ let write_cartography_result_to_file file_name (cartography_result : Result.cart
 	()
 
 
+(* Export result of type 'Runs_exhibition_result' *)
+let export_to_file_runs_exhibition_result file_name (result : Result.runs_exhibition_result) =
+	(*** WARNING: duplicate code concerning the counter creation ***)
+	(* Create counter *)
+	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
+	
+	(* Start counter *)
+	counter#start;
+
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	(* Retrieve the input options *)
+(* 	let options = Input.get_options () in *)
+
+	(* Convert the valuation_and_concrete_run's to string *)
+	let runs_str = string_of_list_of_string_with_sep "\n" (
+		List.mapi (fun index (valuation_and_concrete_run : Result.valuation_and_concrete_run) ->
+		
+			(* Get the run (shortcut) *)
+			let run = valuation_and_concrete_run.concrete_run in
+			
+			(* mapi starts counting from 0, but we like starting counting from 1 *)
+			let index_from_one = index + 1 in
+			"\n(************************************************************)"
+			^ "\n Run #" ^ (string_of_int index_from_one)
+			(* 1) Valuation for this run *)
+			^ "\n\n Valuation " ^ (string_of_int index_from_one) ^ ":"
+			^ "\n" ^ (ModelPrinter.string_of_pi0 model valuation_and_concrete_run.valuation)
+
+			(* 2) Valuations for which an equivalent DISCRETE run exists *)
+			^ "\n\n Other valuations with equivalent (discrete) run:"
+			^ "\n" ^ (LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names valuation_and_concrete_run.valuations)
+
+			(* 3) Run *)
+			^ "\n\n Run " ^ (string_of_int index_from_one) ^ ":"
+			^ "\n\n Run nature: " ^ (match run with Impossible_concrete_run _ -> "impossible run" | Concrete_run _ -> "valid run")
+			^ "\n" ^ (let str = match run with
+				| Concrete_run concrete_run -> ModelPrinter.debug_string_of_concrete_run model concrete_run
+				| Impossible_concrete_run impossible_concrete_run -> ModelPrinter.debug_string_of_impossible_concrete_run model impossible_concrete_run
+				in str
+			)
+			^ "\n(************************************************************)\n"
+		) result.runs
+	)
+	in
+	
+
+	(* Prepare the string to write *)
+	let file_content =
+		(* 1) Header *)
+		file_header ()
+		
+		(* 2) Statistics about model *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (model_statistics ())
+		^ "\n------------------------------------------------------------"
+
+		(* 3) The actual result with delimiters *)
+		(*** NOTE: for now, no delimiters ***)
+		^ ((*add_constraints_delimiters *)runs_str)
+		
+		(* 4) Statistics about state space *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (statespace_statistics result.state_space result.computation_time)
+		^ "\n------------------------------------------------------------"
+		
+		(* 5) General statistics *)
+		^ "\n" ^ (Statistics.string_of_all_counters())
+		^ "\n------------------------------------------------------------"
+	in
+	
+	(* Write to file *)
+	write_to_file file_name file_content;
+	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	
+	(* Stop counter *)
+	counter#stop;
+	
+	(* The end *)
+	()
+
+
 
 (*------------------------------------------------------------*)
 (* Display statistics on the state space *)
@@ -743,7 +825,7 @@ let print_state_space_statistics total_time state_space =
 	
 	
 (*	(* Speed (number of states in the graph) *)
-	(*** WARNING: duplicate code from write_efsynth_result_to_file ***)
+	(*** WARNING: duplicate code from export_to_file_efsynth_result_to_file ***)
 	(* Generic function for float/int conversion *)
 	let string_of_average average = 
 		if average < 10.0 then string_of_float average
@@ -811,7 +893,7 @@ let print_single_synthesis_or_point_based_result result computation_time constra
 		let options = Input.get_options () in
 		
 		(* Convert result to string *)
-		(*** NOTE: this conversion to string is duplicate, since it will again be converted in write_pdfc_result_to_file; but it not sure wether both operations are done, in addition they are not extremely time consuming, and they are not part of the computation time anyway *)
+		(*** NOTE: this conversion to string is duplicate, since it will again be converted in export_to_file_pdfc_result_to_file; but it not sure wether both operations are done, in addition they are not extremely time consuming, and they are not part of the computation time anyway *)
 	
 		let result_str = string_of_good_or_bad_constraint model.variable_names result in
 		
@@ -899,7 +981,7 @@ let process_result result algorithm_name prefix_option =
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			write_noresult_to_file file_name;
+			export_to_file_noresult file_name;
 		)else(
 			print_message Verbose_high "No result export to file requested.";
 		);
@@ -920,7 +1002,7 @@ let process_result result algorithm_name prefix_option =
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			write_noresult_to_file file_name;
+			export_to_file_noresult file_name;
 		)else(
 			print_message Verbose_high "No result export to file requested.";
 		);
@@ -947,7 +1029,7 @@ let process_result result algorithm_name prefix_option =
 			let model = Input.get_model() in
 			
 			(* Convert result to string *)
-			(*** NOTE: this conversion to string is duplicate, since it will again be converted in write_efsynth_result_to_file; but it not sure wether both operations are done, in addition they are not extremely time consuming, and they are not part of the computation time anyway *)
+			(*** NOTE: this conversion to string is duplicate, since it will again be converted in export_to_file_efsynth_result_to_file; but it not sure wether both operations are done, in addition they are not extremely time consuming, and they are not part of the computation time anyway *)
 			let result_str = string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) efsynth_result.constraints) in
 			
 			print_message Verbose_standard ("\nFinal constraint such that the property is *violated* (" ^ (string_of_int (List.length efsynth_result.constraints)) ^ " constraint" ^ (s_of_int (List.length efsynth_result.constraints)) ^ "): ");
@@ -976,7 +1058,7 @@ let process_result result algorithm_name prefix_option =
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			write_deprecated_efsynth_result_to_file file_name efsynth_result;
+			export_to_file_deprecated_efsynth_result file_name efsynth_result;
 		)else(
 			print_message Verbose_high "No result export to file requested.";
 		);
@@ -1010,7 +1092,7 @@ let process_result result algorithm_name prefix_option =
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			write_single_synthesis_result file_name result;
+			export_to_file_single_synthesis_result file_name result;
 		)else(
 			print_message Verbose_high "No result export to file requested.";
 		);
@@ -1026,7 +1108,7 @@ let process_result result algorithm_name prefix_option =
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			write_point_based_result_to_file file_name result;
+			export_to_file_point_based_result file_name result;
 		)else(
 			print_message Verbose_high "No result export to file requested.";
 		);
@@ -1055,7 +1137,7 @@ let process_result result algorithm_name prefix_option =
 		(* Write to file if requested for BC *)
 		if options#output_bc_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			write_cartography_result_to_file file_name cartography_result;
+			export_to_file_cartography_result file_name cartography_result;
 		)else(
 			print_message Verbose_high "No result export to file requested.";
 		);
@@ -1095,7 +1177,7 @@ let process_result result algorithm_name prefix_option =
 		(* Write to file if requested *)
 		if options#output_bc_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			write_multiple_synthesis_result file_name result;
+			export_to_file_multiple_synthesis_result file_name result;
 			()
 		)else(
 			print_message Verbose_high "No result export to file requested.";
@@ -1120,9 +1202,46 @@ let process_result result algorithm_name prefix_option =
 	| Distributed_worker_result ->
 		()
 
+		
 	(* Result for runs exhibition *)
-	| Runs_exhibition_result _ ->
-		raise (NotImplemented ("work in progress"))
+	| Runs_exhibition_result result ->
+		(* Write to file *)
+		let file_name = file_prefix ^ Constants.result_file_extension in
+		export_to_file_runs_exhibition_result file_name result;
+		
+		(* Print statistics *)
+		print_memory_statistics ();
+
+		(* Render signals and sets of parameters in a graphical form *)
+		List.iteri (fun index valuation_and_concrete_run ->
+			(* iteri starts counting from 0, but we like starting counting from 1 *)
+			let index_from_one = index + 1 in
+			
+			(* Create prefix *)
+			let prefix = options#files_prefix ^ "_ex_" ^ (string_of_int index_from_one) ^ "_" ^ (match valuation_and_concrete_run.concrete_run with Concrete_run _ -> "pos" | Impossible_concrete_run _ -> "neg") in
+
+			(* Print signal *)
+			begin
+			match valuation_and_concrete_run.concrete_run with
+				| Concrete_run concrete_run -> Graphics.draw_concrete_run concrete_run prefix
+				| Impossible_concrete_run impossible_concrete_run -> Graphics.draw_impossible_concrete_run impossible_concrete_run prefix
+			end;
+
+			(* Print parameter zone *)
+			if options#output_bc_cart then (
+				(* Generate the graphics: parameters *)
+				let zones = [valuation_and_concrete_run.valuations, match valuation_and_concrete_run.concrete_run with Concrete_run _ -> StateSpace.Good | Impossible_concrete_run _ -> StateSpace.Bad] in
+				Graphics.draw_cartography zones prefix;
+			) else (
+				print_message Verbose_high "Graphical cartography not asked: not drawn.";
+			);
+		
+		) result.runs;
+		
+		(* The end *)
+		()
+
+
 
 
 (* 	| _ -> raise (NotImplemented ("function process_result not implemented for all cases")) *)

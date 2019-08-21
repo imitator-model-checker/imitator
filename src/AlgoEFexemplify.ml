@@ -43,11 +43,11 @@ class algoEFexemplify =
 	(* Class variables *)
 	(************************************************************)
 	
-	(* Number of positive examples spotted (positive examples: concrete runs to the target state) *)
-	val mutable nb_positive_examples : int = 0
+	(* Positive examples spotted (positive examples: concrete runs to the target state) *)
+	val mutable positive_examples : Result.valuation_and_concrete_run list = []
 	
-	(* Number of negative examples spotted (negative examples: *impossible* concrete runs to the target state) *)
-	val mutable nb_negative_examples : int = 0
+	(* Negative examples spotted (negative examples: *impossible* concrete runs to the target state) *)
+	val mutable negative_examples : Result.valuation_and_concrete_run list = []
 	
 	val nb_POSITIVE_EXAMPLES_MAX = 3
 	val nb_NEGATIVE_EXAMPLES_MAX = 3
@@ -70,7 +70,8 @@ class algoEFexemplify =
 	method initialize_variables =
 		super#initialize_variables;
 
-		nb_positive_examples <- 0;
+		positive_examples <- [];
+		negative_examples <- [];
 
 		(* The end *)
 		()
@@ -81,10 +82,8 @@ class algoEFexemplify =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	method process_counterexample target_state_index =
-		(* Update the number of counterexamples processed *)
-		nb_positive_examples <- nb_positive_examples + 1;
-		
 		(* Print some information *)
+		let nb_positive_examples = List.length positive_examples + 1 in
 		self#print_algo_message Verbose_standard ("Target state #" ^ (string_of_int nb_positive_examples) ^ " found!");
 		
 		(*** NOTE: so far, the reconstruction needs an absolute time clock ***)
@@ -136,25 +135,34 @@ class algoEFexemplify =
 				let concrete_p_valuation = LinearConstraint.p_exhibit_point p_constraint in*)
 				
 				
+				(* Convert to PVal *)
+				let pval = PVal.pval_from_valuation_function concrete_target_px_valuation in
+				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_standard then(
-					(* Convert to PVal *)
-					let pval = PVal.pval_from_valuation_function concrete_target_px_valuation in
 					print_message Verbose_standard "Example of parameter valuation:";
 					print_message Verbose_standard (ModelPrinter.string_of_pi0 model pval);
 				);
 				
 				(* Exhibit a concrete run from the symbolic run *)
 				let concrete_run = AlgoStateBased.concrete_run_of_symbolic_run state_space (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) concrete_target_px_valuation in
-
-				(* Generate the graphics: run *)
-				let prefix = options#files_prefix ^ "_expos_" ^ (string_of_int nb_positive_examples) in
-				Graphics.draw_concrete_run concrete_run prefix;
-				(* Generate the graphics: parameters *)
-				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse target_state.px_constraint in
-				let zones = [LinearConstraint.Convex_p_constraint p_constraint, Good] in
-				Graphics.draw_cartography zones prefix;
 				
+				(* Project onto the parameters *)
+				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse target_state.px_constraint in
+
+				(* Add the run to the list of results *)
+				let valuation_and_concrete_run = {
+					(* The parameter valuation for which this run exists *)
+					valuation		= pval;
+					(* Sometimes, we can even infer more valuations for which an equivalent DISCRETE run exist (note that the exact timings of the run might differ!!!) *)
+					valuations		= LinearConstraint.Convex_p_constraint p_constraint;
+					(* The concrete run *)
+					concrete_run	= Result.Concrete_run concrete_run;
+				} in
+				
+				(* Update the counterexamples processed *)
+				positive_examples <- valuation_and_concrete_run :: positive_examples;
+
 				
 				(*------------------------------------------------------------*)
 				(* Part 2: negative counterexample *)
@@ -192,9 +200,6 @@ class algoEFexemplify =
 							(* Print some information *)
 							print_message Verbose_medium ("\nFound a shrinking of parameter constraint between position " ^ (string_of_int !i) ^ " to " ^ (string_of_int (!i+1)) ^ ":");
 							
-							(* Update the number of counterexamples processed *)
-							nb_negative_examples <- nb_negative_examples + 1;
-
 							(* Convert to a nnconvex_constraint *)
 							let difference = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint pconstraint_i in
 							(* Compute the difference K_i \ K_i+1 *)
@@ -209,10 +214,11 @@ class algoEFexemplify =
 							(* Exhibit a point *)
 							let concrete_p_valuation = LinearConstraint.p_nnconvex_exhibit_point difference in
 							
+							(* Convert to PVal *)
+							let pval = PVal.pval_from_valuation_function concrete_p_valuation in
+							
 							(* Print some information *)
 							if verbose_mode_greater Verbose_standard then(
-								(* Convert to PVal *)
-								let pval = PVal.pval_from_valuation_function concrete_p_valuation in
 								print_message Verbose_standard "Example of parameter valuation:";
 								print_message Verbose_standard (ModelPrinter.string_of_pi0 model pval);
 							);
@@ -334,35 +340,39 @@ class algoEFexemplify =
 								print_message Verbose_low (ModelPrinter.debug_string_of_impossible_concrete_run model impossible_concrete_run);
 							);
 							
-							(* Generate the graphics: run *)
-							let prefix = options#files_prefix ^ "_exneg_" ^ (string_of_int nb_negative_examples) in
-							Graphics.draw_impossible_concrete_run impossible_concrete_run prefix;
-							(* Generate the graphics: parameters *)
-							let zones = [LinearConstraint.Nonconvex_p_constraint difference, Bad] in
-							Graphics.draw_cartography zones prefix;
+							(* Add the run to the list of results *)
+							let valuation_and_concrete_run = {
+								(* The parameter valuation for which this run exists *)
+								valuation		= pval;
+								(* Sometimes, we can even infer more valuations for which an equivalent DISCRETE run exist (note that the exact timings of the run might differ!!!) *)
+								valuations		= LinearConstraint.Nonconvex_p_constraint difference;
+								(* The concrete run *)
+								concrete_run	= Result.Impossible_concrete_run impossible_concrete_run;
+							} in
 
-							
-							(*** TODO ***)
+							(* Update the counterexamples processed *)
+							negative_examples <- valuation_and_concrete_run :: negative_examples;
+
 							()
 						);
 						
 						(* Move to previous step *)
 						pconstraint_i_plus_one := pconstraint_i;
 						decr i;
-					done;
+					done; (* end while backward *)
 					
 					(*** TODO: not sure to find something ***)
 				
-				);
+				); (* end if strongly deterministic without silent actions *)
 				
 				
-		end;
+		end; (* end match global time clock *)
 		
 		(* If maximum number of counterexamples processed: stop *)
-		if nb_positive_examples >= nb_POSITIVE_EXAMPLES_MAX then(
+		if List.length positive_examples >= nb_POSITIVE_EXAMPLES_MAX then(
 			(* Update termination status *)
+			self#print_algo_message Verbose_standard ("Target state #" ^ (string_of_int (List.length positive_examples)) ^ " is the maximum number sought. Terminating…");
 			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
-			self#print_algo_message Verbose_standard ("Target state #" ^ (string_of_int nb_positive_examples) ^ " is the maximum number sought. Terminating…");
 			termination_status <- Some Target_found;
 		
 			raise TerminateAnalysis;
@@ -378,11 +388,6 @@ class algoEFexemplify =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Method packaging the result output by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	
-	(*** NOTE: temporary version ***)
-	
-	(*** BADPROG: copied from EFunsafeSynth ***)
-	
 	method compute_result =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
@@ -392,9 +397,6 @@ class algoEFexemplify =
 			"Algorithm completed " ^ (after_seconds ()) ^ "."
 		);
 		
-		
-		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
-				
 		(* Projecting onto SOME parameters if required *)
 		let result =
 		match model.projection with
@@ -431,26 +433,13 @@ class algoEFexemplify =
 			| Some status -> status
 		in
 
-		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
-		(*** NOTE/TODO: technically, if the constraint is true/false, its soundness can be further refined easily ***)
-		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
-
-		
-		
-		
-		
-		(*** TODO ***)
-		
 		
 		(* Return the result *)
-		Single_synthesis_result
+		Runs_exhibition_result
 		{
 			(* Non-necessarily convex constraint guaranteeing the reachability of the bad location *)
-			result				= Bad_constraint (result, soundness);
-			
-			(*** TODO ***)
-			(*** NOTE: it will ultimately not be a Single_synthesis_result, in any case! ***)
-			constraint_description = "TODO";
+			(*** NOTE: use rev since we added the runs by reversed order ***)
+			runs				= List.rev_append positive_examples (List.rev negative_examples);
 			
 			(* Explored state space *)
 			state_space			= state_space;
