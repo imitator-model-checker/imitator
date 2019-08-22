@@ -1619,8 +1619,9 @@ let pxd_is_leq = ippl_is_leq
 (** Check if a constraint is strictly included in another one *)
 let is_le = ippl_is_le
 let p_is_le = ippl_is_le
-let px_is_le = ippl_is_le
-let pxd_is_le = ippl_is_le
+let x_is_le = ippl_is_le
+(*let px_is_le = ippl_is_le
+let pxd_is_le = ippl_is_le*)
 
 
 (** Check if a constraint contains an integer point *)

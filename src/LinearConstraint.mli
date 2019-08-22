@@ -324,6 +324,7 @@ val pxd_is_leq : pxd_linear_constraint -> pxd_linear_constraint -> bool
 
 (** Check if a constraint is strictly included in another one *)
 val p_is_le : p_linear_constraint -> p_linear_constraint -> bool
+val x_is_le : x_linear_constraint -> x_linear_constraint -> bool
 (*val px_is_le : px_linear_constraint -> px_linear_constraint -> bool
 val pxd_is_le : pxd_linear_constraint -> pxd_linear_constraint -> bool*)
 
