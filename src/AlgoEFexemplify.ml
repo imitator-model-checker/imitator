@@ -31,6 +31,9 @@ open StateSpace
 
 
 
+
+
+
 (************************************************************)
 (************************************************************)
 (* Class definition *)
@@ -76,7 +79,63 @@ class algoEFexemplify =
 		(* The end *)
 		()
 
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Create an arbitrary impossible concrete run from a symbolic run *)
+	(* The debug_offset variable is used for pretty-printing; it represents the offset between the actual position in the original list of symbolic steps, and the sublist provided here in symbolic_steps *)
+	(*** NOTE: the starting valuation is already known to be impossible, therefore any concrete run corresponding to the symbolic run will do ***)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method private impossible_concrete_steps_of_symbolic_steps (start_valuation : LinearConstraint.px_valuation) (debug_offset : int) (symbolic_steps : symbolic_step list) : impossible_concrete_step list =
+		(* Starting point: the last known existing valuation *)
+		let current_valuation = ref start_valuation in
 		
+		(* For debug purpose *)
+		let current_position = ref 0 in
+		
+		List.map (fun symbolic_step ->
+		
+			(* Idea: keep everything, including the actions and discrete values, but increment (arbitrarily!) the time by 1 at each step *)
+			
+			(* Arbitrarily choose 1 *)
+			let chosen_time_elapsing = NumConst.one in
+			
+			(* Get the location *)
+			let current_location = (StateSpace.get_state state_space symbolic_step.source).global_location in
+			
+			(* Apply time elapsing (let us not care about resets, because this transition does not exist; we could care about resets to be closer to the original automaton BUT the guards/invariants could not be satisfied, precisely because this parameter valuation does not allow to take this run!) *)
+			(*** NOTE: we still care about urgency and stopwatches though ***)
+			let valuation_after_elapsing : LinearConstraint.px_valuation = AlgoStateBased.apply_time_elapsing_to_concrete_valuation current_location chosen_time_elapsing !current_valuation in
+			
+			(* Print some information *)
+			if verbose_mode_greater Verbose_medium then(
+				print_message Verbose_medium ("Valuation for position " ^ (string_of_int (!current_position + debug_offset)) ^ ":");
+				print_message Verbose_medium (ModelPrinter.string_of_px_valuation model valuation_after_elapsing);
+			);
+			
+			(* Update the valuation for next step *)
+			current_valuation := valuation_after_elapsing;
+			
+			(* Update the position *)
+			incr current_position;
+			
+			(* Return the impossible_concrete_step *)
+			{
+				(* First let time elapse: arbitrarily take one *)
+				time			= chosen_time_elapsing;
+				(* Then take a discrete transition: keep the action *)
+				action			= StateSpace.get_action_from_combined_transition symbolic_step.transition;
+				(* Then reach the target state *)
+				target			= {
+					global_location= current_location;
+					px_valuation   = valuation_after_elapsing;
+				}
+			}
+
+		) symbolic_steps
+
+
+	
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Generate counter-example(s) if required by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -121,6 +180,9 @@ class algoEFexemplify =
 				(* Get the final state *)
 				let target_state = StateSpace.get_state state_space target_state_index in
 
+				(* Get the associated parameter valuations *)
+				let target_p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse target_state.px_constraint in
+				
 				(* Exhibit a concrete clock+parameter valuation in the final state *)
 				let concrete_target_px_valuation : (Automaton.variable_index -> NumConst.t) = LinearConstraint.px_exhibit_point target_state.px_constraint in
 				
@@ -158,6 +220,9 @@ class algoEFexemplify =
 					concrete_run	= Result.Concrete_run concrete_run;
 				} in
 				
+				(* Print some information *)
+				print_message Verbose_standard "Positive concrete run constructed!";
+				
 				(* Update the counterexamples processed *)
 				positive_examples <- valuation_and_concrete_run :: positive_examples;
 
@@ -180,10 +245,10 @@ class algoEFexemplify =
 
 					(* Idea: any parameter valuation "deadlocked" along this run is a valuation for which no identical symbolic run leads to the target, or any other target (in case of several discrete target locations) *)
 
-					(* Reason backward *)
-					let i = ref ((List.length symbolic_run.symbolic_steps) - 1) in
+					(* Reason backward from the last but one state (as we compare i and i+1) *)
+					let i = ref ((List.length symbolic_run.symbolic_steps) - 2) in
 					(* Define the next valuation along the run, and reason backward *)
-					let pconstraint_i_plus_one : LinearConstraint.p_linear_constraint ref = ref (LinearConstraint.px_hide_nonparameters_and_collapse (StateSpace.get_state state_space symbolic_run.final_state).px_constraint) in
+					let pconstraint_i_plus_one : LinearConstraint.p_linear_constraint ref = ref target_p_constraint in
 					
 					(* Print some information *)
 					print_message Verbose_medium "\nLooking for larger valuations by exploring backwards…";
@@ -200,11 +265,11 @@ class algoEFexemplify =
 						(* Get the p-constraint at position i *)
 						let pconstraint_i : LinearConstraint.p_linear_constraint = LinearConstraint.px_hide_nonparameters_and_collapse (StateSpace.get_state state_space state_index_i).px_constraint in
 						
-						(* Check if difference is non-null *)
+						(* Check if difference is non-empty *)
 						(*** NOTE: we rather use p_is_le, even though we have to then compute the difference, if indeed smaller, for (presumably) efficiency reasons ***)
 						if LinearConstraint.p_is_le !pconstraint_i_plus_one pconstraint_i then(
 							(* Print some information *)
-							print_message Verbose_medium ("\nFound a shrinking of parameter constraint between position " ^ (string_of_int !i) ^ " to " ^ (string_of_int (!i+1)) ^ ":");
+							print_message Verbose_medium ("\nFound a shrinking of parameter constraint between positions " ^ (string_of_int !i) ^ " to " ^ (string_of_int (!i+1)) ^ ":");
 							
 							(* Update flag *)
 							found := true;
@@ -216,7 +281,7 @@ class algoEFexemplify =
 							
 							(* Print some information *)
 							if verbose_mode_greater Verbose_high then(
-								print_message Verbose_high ("\nParameter valuations blocked between position " ^ (string_of_int !i) ^ " to " ^ (string_of_int (!i+1)) ^ ":");
+								print_message Verbose_high ("\nParameter valuations blocked between positions " ^ (string_of_int !i) ^ " to " ^ (string_of_int (!i+1)) ^ ":");
 								print_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names difference);
 							);
 							
@@ -282,54 +347,9 @@ class algoEFexemplify =
 								print_message Verbose_low ("Now generating the \"impossible\" concrete run from position " ^ (string_of_int !i) ^ "…");
 							);
 							
-							(* Starting point: the last known existing valuation *)
-							let current_valuation = ref concrete_px_valuation_i in
+							(* Convert the symbolic existing steps to concrete steps from the impossible valuation *)
+							let impossible_steps_suffix : StateSpace.impossible_concrete_step list = self#impossible_concrete_steps_of_symbolic_steps concrete_px_valuation_i (!i) (OCamlUtilities.sublist (!i+1) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps) in
 							
-							(* For debug purpose *)
-							let current_position = ref (!i) in
-							
-							let impossible_steps_suffix : StateSpace.impossible_concrete_step list = List.map (fun symbolic_step ->
-							
-								(* Idea: keep everything, including the actions and discrete values, but increment (arbitrarily!) the time by 1 at each step *)
-								
-								(* Arbitrarily choose 1 *)
-								let chosen_time_elapsing = NumConst.one in
-								
-								(* Get the location *)
-								let current_location = (StateSpace.get_state state_space symbolic_step.source).global_location in
-								
-								(* Apply time elapsing (let us not care about resets, because this transition does not exist; we could care about resets to be closer to the original automaton BUT the guards/invariants could not be satisfied, precisely because this parameter valuation does not allow to take this run!) *)
-								(*** NOTE: we still care about urgency and stopwatches though ***)
-								let valuation_after_elapsing : LinearConstraint.px_valuation = AlgoStateBased.apply_time_elapsing_to_concrete_valuation current_location chosen_time_elapsing !current_valuation in
-								
-								(* Print some information *)
-								if verbose_mode_greater Verbose_medium then(
-									print_message Verbose_medium ("Valuation for position " ^ (string_of_int !current_position) ^ ":");
-									print_message Verbose_medium (ModelPrinter.string_of_px_valuation model valuation_after_elapsing);
-								);
-								
-								(* Update the valuation for next step *)
-								current_valuation := valuation_after_elapsing;
-								
-								(* Update the position *)
-								incr current_position;
-								
-								(* Return the impossible_concrete_step *)
-								{
-									(* First let time elapse: arbitrarily take one *)
-									time			= chosen_time_elapsing;
-									(* Then take a discrete transition: keep the action *)
-									action			= StateSpace.get_action_from_combined_transition symbolic_step.transition;
-									(* Then reach the target state *)
-									target			= {
-										global_location= current_location;
-										px_valuation   = valuation_after_elapsing;
-									}
-								}
-
-							) (OCamlUtilities.sublist (!i+1) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps)
-							in
-
 							(* Now create the "impossible" concrete run *)
 							let impossible_concrete_run : StateSpace.impossible_concrete_run = {
 								(* The parameter valuation for which this run exists *)
@@ -344,9 +364,8 @@ class algoEFexemplify =
 							in
 							
 							(* Print some information *)
+							print_message Verbose_standard "Negative counterexample run constructed for the a negative parameter valuation!";
 							if verbose_mode_greater Verbose_low then (
-								print_message Verbose_low "\nNegative counterexample run constructed:";
-								
 								(* Debug print *)
 								print_message Verbose_low (ModelPrinter.debug_string_of_impossible_concrete_run model impossible_concrete_run);
 							);
@@ -372,10 +391,11 @@ class algoEFexemplify =
 						decr i;
 					done; (* end while backward *)
 					
-					(*** TODO: not sure to find something ***)
-
 					if not !found then(
 						print_message Verbose_standard "\n\nFound no parameter valuation allowing a negative counterexample for this run";
+						
+						(*** TODO: try some other heuristics? ***)
+
 					);
 					
 					(*------------------------------------------------------------*)
@@ -387,10 +407,13 @@ class algoEFexemplify =
 
 					(* Idea: any clock valuation "deadlocked" along this run is a valuation for which no identical symbolic run leads to the target, or any other target (in case of several discrete target locations) *)
 
-					(* Reason backward *)
-					let i = ref ((List.length symbolic_run.symbolic_steps) - 1) in
 					(* Define the next valuation along the run, and reason backward *)
-					let xconstraint_i_plus_one : LinearConstraint.x_linear_constraint ref = ref (LinearConstraint.px_valuate_parameters functional_pval_positive (StateSpace.get_state state_space symbolic_run.final_state).px_constraint) in
+					
+					(* Start from the last but one state (as we compare i and i+1) *)
+					let i = ref ((List.length symbolic_run.symbolic_steps) - 2) in
+					
+					
+					let xconstraint_i_plus_one : LinearConstraint.x_linear_constraint ref = ref (LinearConstraint.px_valuate_parameters functional_pval_positive target_state.px_constraint) in
 					
 					(* Print some information *)
 					print_message Verbose_medium "\nLooking for larger valuations by exploring backwards…";
@@ -407,23 +430,22 @@ class algoEFexemplify =
 						(* Get the x-constraint at position i *)
 						let xconstraint_i : LinearConstraint.x_linear_constraint = LinearConstraint.px_valuate_parameters functional_pval_positive (StateSpace.get_state state_space state_index_i).px_constraint in
 						
-						(* Check if difference is non-null *)
-						(*** NOTE: we rather use x_is_le, even though we have to then compute the difference, if indeed smaller, for (presumably) efficiency reasons ***)
-						if LinearConstraint.x_is_le !xconstraint_i_plus_one xconstraint_i then(
+						(* Convert to a nnconvex_constraint *)
+						let difference = LinearConstraint.x_nnconvex_constraint_of_x_linear_constraint xconstraint_i in
+						(* Compute the difference K_i \ K_i+1 *)
+						LinearConstraint.x_nnconvex_difference_assign difference (LinearConstraint.x_nnconvex_constraint_of_x_linear_constraint !xconstraint_i_plus_one);
+						
+						(* Check if difference is non-empty *)
+						if not (LinearConstraint.x_nnconvex_constraint_is_false difference) then(
 							(* Print some information *)
-							print_message Verbose_medium ("\nFound a shrinking of clock constraint between position " ^ (string_of_int !i) ^ " to " ^ (string_of_int (!i+1)) ^ ":");
+							print_message Verbose_low ("\nFound a shrinking of clock constraint between positions " ^ (string_of_int !i) ^ " to " ^ (string_of_int (!i+1)) ^ ":");
 							
 							(* Update flag *)
 							found := true;
 							
-							(* Convert to a nnconvex_constraint *)
-							let difference = LinearConstraint.x_nnconvex_constraint_of_x_linear_constraint xconstraint_i in
-							(* Compute the difference K_i \ K_i+1 *)
-							LinearConstraint.x_nnconvex_difference_assign difference (LinearConstraint.x_nnconvex_constraint_of_x_linear_constraint !xconstraint_i_plus_one);
-							
 							(* Print some information *)
 							if verbose_mode_greater Verbose_high then(
-								print_message Verbose_high ("\nClock valuations blocked between position " ^ (string_of_int !i) ^ " to " ^ (string_of_int (!i+1)) ^ ":");
+								print_message Verbose_high ("\nClock valuations blocked between positions " ^ (string_of_int !i) ^ " to " ^ (string_of_int (!i+1)) ^ ":");
 								print_message Verbose_high (LinearConstraint.string_of_x_nnconvex_constraint model.variable_names difference);
 							);
 							
@@ -496,18 +518,66 @@ class algoEFexemplify =
 								}
 							}
 							in
+							
+							(* Now build the rest of the impossible run *)
+							print_message Verbose_medium ("Building suffix from step " ^ (string_of_int (!i+1)) ^ "…");
+							
+							(* First check whether there is any state to build *)
+							let impossible_steps_suffix =
+							if List.length symbolic_run.symbolic_steps = !i+2 then(
+								print_message Verbose_medium ("No suffix to generate as the symbolic run has length " ^ (string_of_int (!i+2)) ^ ".");
+								
+								(* Nothing to do *)
+								[]
+							
+							)else(
+							
+								(* Print some information *)
+								if verbose_mode_greater Verbose_low then(
+									print_message Verbose_high ("Considering subset of symbolic run of length " ^ (string_of_int (List.length symbolic_run.symbolic_steps)) ^ " from position " ^ (string_of_int (!i+2)) ^ " to position " ^ (string_of_int ((List.length symbolic_run.symbolic_steps) - 1)) ^ "…");
+								);
+								
+								(* Convert the symbolic existing steps to concrete steps from the impossible valuation *)
+								self#impossible_concrete_steps_of_symbolic_steps concrete_px_valuation_i (!i+1) (OCamlUtilities.sublist (!i+2) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps)
+							)
+							in
+							
+							
+							(* Now create the "impossible" concrete run *)
+							let impossible_concrete_run : StateSpace.impossible_concrete_run = {
+								(* The parameter valuation for which this run exists *)
+								p_valuation		= concrete_run_prefix.p_valuation;
+								(* The initial concrete state *)
+								initial_state	= concrete_run_prefix.initial_state;
+								(* A possibly empty list of steps *)
+								steps			= concrete_run_prefix.steps;
+								(* A non-empty list of imaginary steps *)
+								impossible_steps= impossible_step_i :: impossible_steps_suffix;
+							}
+							in
+							
+							(* Print some information *)
+							print_message Verbose_standard "Negative counterexample run constructed for the positive parameter valuation!";
+							if verbose_mode_greater Verbose_low then (
+								(* Debug print *)
+								print_message Verbose_low (ModelPrinter.debug_string_of_impossible_concrete_run model impossible_concrete_run);
+							);
 
-							
-							(* Starting point: the last known existing valuation *)
-							let current_valuation = ref concrete_px_valuation_i in
-							
-							(* For debug purpose *)
-							let current_position = ref (!i) in
-							
-							(*** TODO ***)
+							(* Add the run to the list of results *)
+							let valuation_and_concrete_run = {
+								(* The parameter valuation for which this run exists *)
+								valuation		= pval_positive;
+								(* Sometimes, we can even infer more valuations for which an equivalent DISCRETE run exist (note that the exact timings of the run might differ!!!) *)
+								(*** WARNING: is that sure??? ***)
+								valuations		= LinearConstraint.Convex_p_constraint target_p_constraint;
+								(* The concrete run *)
+								concrete_run	= Result.Impossible_concrete_run impossible_concrete_run;
+							} in
+
+							(* Update the counterexamples processed *)
+							negative_examples <- valuation_and_concrete_run :: negative_examples;
+
 							()
-							
-							
 							
 						); (* end if found restrained constraint *)
 						
@@ -516,10 +586,11 @@ class algoEFexemplify =
 						decr i;
 					done; (* end while backward *)
 					
-					(*** TODO: not sure to find something ***)
-
 					if not !found then(
-						print_message Verbose_standard "\n\nFound no parameter valuation allowing a negative counterexample for this run";
+						print_message Verbose_standard "\n\nFound no clock valuation allowing a negative counterexample for the same parameter valuaton for this run";
+						
+						(*** TODO: try some other heuristics? ***)
+						
 					);
 							
 				
