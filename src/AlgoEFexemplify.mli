@@ -1,22 +1,14 @@
-
-
-  !!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!
- WARNING !!! THIS FILE IS NOW UNPLUGGED FROM THE IMITATOR SOURCE CODE (as of 2016/03/04)
- This paragraph should raise a compiling error (syntax error) if by any chance this file was linked from another file.
-  !!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!***!!!
-
-
 (************************************************************
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
- * Module description: Virtual class for distributed master-slave algorithms, on the master side
+ * Module description: EFexemplify algorithm [work in progress]
  * 
  * File contributors : Étienne André
- * Created           : 2016/02/05
- * Last modified     : 2016/03/04
+ * Created           : 2019/07/08
+ * Last modified     : 2019/07/08
  *
  ************************************************************)
 
@@ -24,21 +16,31 @@
 (************************************************************)
 (* Modules *)
 (************************************************************)
+open AlgoEFsynth
+open State
 
 
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoMaster :
-	object
+class algoEFexemplify :
+	object inherit algoEFsynth
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
 
+		method algorithm_name : string
+		
 
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
-		method run_as_master : Result.imitator_result
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Generate counter-example(s) if required by the algorithm *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method process_counterexample : state_index -> unit
 
+		
+		method compute_result : Result.imitator_result
 end

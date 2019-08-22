@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: "EF" algorithm (unsafe w.r.t. a set of bad states) [JLR15]
  * 
  * File contributors : Étienne André
  * Created           : 2017/02/03
- * Last modified     : 2017/02/03
+ * Last modified     : 2019/07/11
  *
  ************************************************************)
 
@@ -97,7 +97,7 @@ class algoEFunsafeSynth =
 		
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
-			| None -> raise (InternalError "Termination status not set in EFunsafe.compute_result")
+			| None -> raise (InternalError ("Termination status not set in " ^ (self#algorithm_name) ^ ".compute_result"))
 			| Some status -> status
 		in
 
@@ -116,8 +116,11 @@ class algoEFunsafeSynth =
 		Single_synthesis_result
 		{
 			(* Non-necessarily convex constraint guaranteeing the reachability of the bad location *)
-			result				= Bad_constraint (result, soundness);
+			result				= Good_constraint (result, soundness);
 			
+			(* English description of the constraint *)
+			constraint_description = "constraint guaranteeing reachability";
+	
 			(* Explored state space *)
 			state_space			= state_space;
 			

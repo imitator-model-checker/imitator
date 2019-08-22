@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * All (?) constants of IMITATOR
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2018/07/19
+ * Last modified     : 2019/07/05
  *
  ************************************************************)
 
@@ -66,7 +66,11 @@ val pta_default_image_format : string
 val dot_file_extension       : string
 val default_dot_image_extension  : string
 val states_file_extension    : string
+
 val cartography_extension    : string
+val cartography_size         : string
+
+val signals_image_extension  : string
 
 (************************************************************)
 (************************************************************)

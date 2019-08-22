@@ -1,17 +1,16 @@
-(*****************************************************************
+(************************************************************
  *
  *                       IMITATOR
- * 
  *
- * Description:   Class for parameter valuation
- * 
- * Author:        Etienne Andre
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
- * 
- * Created:       2014/10/01
- * Last modified: 2016/01/27
+ * Université Paris 13, LIPN, CNRS, France
  *
- ****************************************************************)
+ * Module description: Class for parameter valuation
+ *
+ * File contributors : Étienne André
+ * Created           : 2014/10/01
+ * Last modified     : 2019/08/09
+ *
+ ************************************************************)
 
 
  (** Global function: set the number of dimensions for ALL parameter valuations; must be called (once and only once) before creating any object *)
@@ -34,3 +33,7 @@ class pval :
 		method copy : pval
 
 end
+
+(** Create a pval from a valuation function *)
+(*** NOTE: no check is made that the valuation_function is indeed defined for all parameters! If not, an exception may be raised depending on how valuation_function is implemented ***)
+val pval_from_valuation_function : (int -> NumConst.t) -> pval

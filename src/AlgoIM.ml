@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: IM algorithm [ACEF09]
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/06
- * Last modified     : 2016/08/15
+ * Last modified     : 2019/06/11
  *
  ************************************************************)
 
@@ -25,6 +25,7 @@ open AbstractModel
 open Result
 open AlgoStateBased
 open AlgoIMK
+open State
 
 
 
@@ -79,7 +80,7 @@ class algoIM =
 (* 		val iterate_on_states : (state_index -> abstract_state -> unit) -> state_space -> unit *)
 		StateSpace.iterate_on_states (fun state_index abstract_state ->
 			(* Retrieve the px-constraint *)
-			let _, px_linear_constraint = abstract_state in
+			let px_linear_constraint = abstract_state.px_constraint in
 			(* Project onto the parameters *)
 			let projection = LinearConstraint.px_hide_nonparameters_and_collapse px_linear_constraint in
 			(* Intersect with the result *)

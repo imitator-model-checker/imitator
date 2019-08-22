@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: IMK algorithm [AS11]
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2017/03/21
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -24,6 +24,7 @@ open Exceptions
 open AbstractModel
 open Result
 open AlgoStateBased
+open State
 
 
 
@@ -109,7 +110,7 @@ class algoIMK =
 				List.iter (fun inequality -> print_message Verbose_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names inequality)) incompatible;
 				if verbose_mode_greater Verbose_high then(
 					self#print_algo_message_newline Verbose_high ("Recall that pi0 is:");
-					print_message Verbose_high   (ModelPrinter.string_of_pi0 model pi0);
+					print_message Verbose_high   (ModelPrinter.string_of_pval model pi0);
 				);
 			);
 			
@@ -122,11 +123,6 @@ class algoIMK =
 				false
 			)else(
 			
-(*			(* Case EFIM: no need to select a pi-incompatible inequality if already bad *)
-			if options#efim && !tile_nature = Bad then(
-				print_message Verbose_low ("\n[EFIM] Cut branch.");
-				(false , p_constraint)
-*)
 			(* Case normal IM: select a pi-incompatible inequality *)
 				let p_inequality =
 					(* If random selection: pick up a random inequality *)
@@ -200,12 +196,12 @@ class algoIMK =
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the state_space (if indeed needed) *)
-	(* Side-effects: modify new_states_indexes *)
-	(*** TODO: move new_states_indexes to a variable of the class ***)
+	(* Add a new state to the reachability_graph (if indeed needed) *)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
+	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method add_a_new_state source_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
+	(*** TODO: return the list of actually added states ***)
+	method add_a_new_state source_state_index combined_transition new_state =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 
@@ -213,7 +209,7 @@ class algoIMK =
 		
 		(*** NOTE: the addition of neg J to all reached states is performed as a side effect inside the following function ***)
 		(*** BADPROG: same reason ***)
-		let pi0_compatible = self#check_pi0compatibility final_constraint
+		let pi0_compatible = self#check_pi0compatibility new_state.px_constraint
 		in
 		
 		(* If pi-compatible state: add the new state's p_constraint to the on-the-fly computation of the result of IMss *)
@@ -234,16 +230,13 @@ class algoIMK =
 		if verbose_mode_greater Verbose_high then(
 			(* Means state was not compatible *)
 			if not pi0_compatible then(
-				let new_state = location, final_constraint in
 				if verbose_mode_greater Verbose_high then
-					self#print_algo_message Verbose_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names action_index) ^ "', and was:\n" ^ (ModelPrinter.string_of_state model new_state));
+					self#print_algo_message Verbose_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "', and was:\n" ^ (ModelPrinter.string_of_state model new_state));
 			);
 		);
 		
 		(* Only add the new state if it is actually valid *)
 		if pi0_compatible then (
-			(* Build the state *)
-			let new_state = location, final_constraint in
 
 			(* If IM or BC: Add the inequality to the result (except if case variants) *)
 	(*		begin
@@ -282,7 +275,7 @@ class algoIMK =
 				self#update_statespace_nature new_state;
 				
 				(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
-				new_states_indexes := new_state_index :: !new_states_indexes;
+				new_states_indexes <- new_state_index :: new_states_indexes;
 				
 			(* If the state was present: *)
 			| StateSpace.State_already_present new_state_index ->
@@ -304,7 +297,7 @@ class algoIMK =
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 
 			(* Update the transitions *)
-			self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
+			self#add_transition_to_state_space (source_state_index, combined_transition, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
 		); (* end if valid new state *)
 		
 		(* Return true if the state is pi-compatible *)
@@ -317,7 +310,7 @@ class algoIMK =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_initial_state initial_state =
 		(* Get the constraint *)
-		let _, initial_constraint = initial_state in
+		let initial_constraint = initial_state.px_constraint in
 		
 		(*** NOTE: the addition of neg J to all reached states is performed as a side effect inside the following function ***)
 		(*** BADPROG: same reason ***)
@@ -385,12 +378,11 @@ class algoIMK =
 		let initial_state_index = StateSpace.get_initial_state_index state_space in
 		let initial_state = StateSpace.get_state state_space initial_state_index in
 		(* Retrieve the constraint of the initial state *)
-		let (_ , px_constraint ) = initial_state in
+		let px_constraint = initial_state.px_constraint in
 		
 		self#print_algo_message Verbose_total ("projecting the initial state constraint onto the parameters…");
 		
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_constraint in
-(* 		Convex_constraint (LinearConstraint.px_hide_nonparameters_and_collapse px_constraint , !tile_nature)  *)
 	
 		self#print_algo_message_newline Verbose_standard (
 			"Successfully terminated " ^ (after_seconds ()) ^ "."

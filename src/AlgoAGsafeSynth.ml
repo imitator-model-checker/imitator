@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: "AG not" algorithm (safety from a set of bad states) [JLR15]
  * 
  * File contributors : Étienne André
  * Created           : 2017/02/03
- * Last modified     : 2017/02/03
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -64,7 +64,7 @@ class algoAGsafeSynth =
 		
 		(* Print some information *)
 		self#print_algo_message_newline Verbose_low (
-			"Performing negation of final constraint..."
+			"Performing negation of final constraint…"
 		);
 		
 		
@@ -101,7 +101,7 @@ class algoAGsafeSynth =
 		in
 		
 		(* Perform the difference *)
-		LinearConstraint.p_nnconvex_difference result bad_constraint;
+		LinearConstraint.p_nnconvex_difference_assign result bad_constraint;
 		
 		
 		(* Print some information *)
@@ -132,6 +132,9 @@ class algoAGsafeSynth =
 			(* Non-necessarily convex constraint guaranteeing the non-reachability of the bad location *)
 			result				= Good_constraint (result, soundness);
 			
+			(* English description of the constraint *)
+			constraint_description = "constraint guaranteeing safety";
+	
 			(* Explored state space *)
 			state_space			= state_space;
 			

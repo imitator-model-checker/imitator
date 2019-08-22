@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: IM algorithm with complete result, i.e., possibly non-convex and without random selection [AM15]
  * 
  * File contributors : Étienne André
  * Created           : 2017/03/21
- * Last modified     : 2017/03/21
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -106,7 +106,7 @@ class algoIMcomplete =
 				print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 				if verbose_mode_greater Verbose_high then(
 					self#print_algo_message_newline Verbose_high ("Recall that pi0 is:");
-					print_message Verbose_high   (ModelPrinter.string_of_pi0 model pi0);
+					print_message Verbose_high   (ModelPrinter.string_of_pval model pi0);
 				);
 			);
 			
@@ -117,7 +117,7 @@ class algoIMcomplete =
 			)else(
 			
 				(* Update K := K ^ not s *)
-				LinearConstraint.p_nnconvex_difference k_result (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint);
+				LinearConstraint.p_nnconvex_difference_assign k_result (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint);
 
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
@@ -131,7 +131,7 @@ class algoIMcomplete =
 		) (* end if pi-incompatible *)
 		else(
 			(* Update K := K ^ s *)
-			LinearConstraint.p_nnconvex_intersection k_result p_constraint;
+			LinearConstraint.p_nnconvex_intersection_assign k_result p_constraint;
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then(

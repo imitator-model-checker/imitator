@@ -1,0 +1,105 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Test the automatic detection of strong-determinism
+ *
+ * Description     : Test the automatic detection of strong-determinism: here a strongly-deterministic NPTA
+ * Correctness     : N/A
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2019/07/09
+ * Last modified   : 2019/07/09
+ *
+ * IMITATOR version: 2.12
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y,
+		: clock;
+
+(* Discrete *)
+	i,
+		: discrete;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta1
+(************************************************************)
+synclabs: a, b;
+
+loc l1: invariant x < p
+	when x = 1 sync b do {x := 0.5, i := i + 1} goto l1;
+
+loc l2: invariant x >= p
+
+end (* pta *)
+
+(************************************************************)
+  automaton pta2
+(************************************************************)
+synclabs: a, c;
+
+loc l1: invariant x < p
+	(*** In fact, still strongly deterministic because 'a' is removed from the model because no a transition is present in pta1 ***)
+	when y = 1 sync a do {x := 0.5, i := i + 1} goto l1;
+	when y > 1 sync a do {x := 0.5, i := i + 1} goto l1;
+	when y = 1 sync c do {x := 0.5, i := i + 1} goto l2;
+
+loc l2: invariant True
+	when True sync c goto l1;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta1] = l1
+	& loc[pta2] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+	& i = 0
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 1
+	& y = 2
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* property := unreachable loc[pta] = l1; *)
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

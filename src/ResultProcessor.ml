@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: process the result of IMITATOR: print results, creates files, generates graphics, etc.
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2017/06/27
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -156,6 +156,7 @@ let verbose_string_of_coverage = function
 let string_of_good_or_bad_constraint variable_names = function 
 	(* Only good valuations *)
 	| Good_constraint (p_nnconvex_constraint, _)
+(* 	| Accepting_cycle_constraint (p_nnconvex_constraint, _) *)
 	(* Only bad valuations *)
 	| Bad_constraint (p_nnconvex_constraint, _)
 		-> LinearConstraint.string_of_p_nnconvex_constraint variable_names p_nnconvex_constraint
@@ -204,20 +205,21 @@ let string_statespace_nature_of_good_or_bad_constraint = function
 (** Convert a Result.good_or_bad_constraint into a verbose string for the sole soundness *)
 let verbose_string_soundness_of_good_or_bad_constraint = function 
 	(* Only good valuations *)
-	| Good_constraint (_, soundness) -> "This good constraint " ^ (verbose_string_of_soundness_suffix soundness)
+	| Good_constraint (_, soundness) -> "This positive constraint " ^ (verbose_string_of_soundness_suffix soundness)
+(* 	| Accepting_cycle_constraint (_, soundness) -> "This constraint for accepting cycles " ^ (verbose_string_of_soundness_suffix soundness) *)
 	(* Only bad valuations *)
-	| Bad_constraint (_, soundness) -> "This bad constraint " ^ (verbose_string_of_soundness_suffix soundness)
+	| Bad_constraint (_, soundness) -> "This negative constraint " ^ (verbose_string_of_soundness_suffix soundness)
 
 	(* Both good and bad valuations *)
 	| Good_bad_constraint good_and_bad_constraint
 		->
 		let _, good_soundness = good_and_bad_constraint.good in
 		let _, bad_soundness = good_and_bad_constraint.bad in
-		"The good constraint " ^ (verbose_string_of_soundness_suffix good_soundness)
+		"The positive constraint " ^ (verbose_string_of_soundness_suffix good_soundness)
 		^
 		". "
 		^
-		"The bad constraint " ^ (verbose_string_of_soundness_suffix bad_soundness) ^ "."
+		"The negative constraint " ^ (verbose_string_of_soundness_suffix bad_soundness) ^ "."
 
 
 (** Add standardised delimiters to constraints *)
@@ -227,6 +229,14 @@ let add_constraints_delimiters constraint_str =
 	^ constraint_str ^ ""
 	(* end delimiter *)
 	^ "\nEND CONSTRAINT\n"
+
+(** Add standardised delimiters to results (e.g. runs) *)
+let add_result_delimiters constraint_str =
+	(* begin delimiter *)
+	"\n\nBEGIN RESULT\n"
+	^ constraint_str ^ ""
+	(* end delimiter *)
+	^ "\nEND RESULT\n"
 
 
 (************************************************************)
@@ -250,20 +260,24 @@ let file_header () =
 
 (* Return a string made of some information concerning the input model *)
 let model_statistics () =
+	
 	(* Retrieve the model *)
 	let model = Input.get_model() in
-	(* Compute the number of locations *)
-	let nb_total_locations = List.fold_left (fun current_sum automaton_index -> current_sum + (List.length (model.locations_per_automaton automaton_index))) 0 model.automata in
+
 	(* Create the statistics *)
 	    "Number of IPTAs                         : " ^ (string_of_int model.nb_automata)
 	^ "\nNumber of clocks                        : " ^ (string_of_int model.nb_clocks)
 	^ "\nHas stopwatches?                        : " ^ (string_of_bool model.has_stopwatches)
 	^ "\nL/U subclass                            : " ^ (string_of_lu_status model.lu_status)
+	^ "\nHas silent actions?                     : " ^ (string_of_bool model.has_silent_actions)
+	^ "\nIs strongly deterministic?              : " ^ (string_of_bool model.strongly_deterministic)
 	^ "\nNumber of parameters                    : " ^ (string_of_int model.nb_parameters)
 	^ "\nNumber of discrete variables            : " ^ (string_of_int model.nb_discrete)
 	^ "\nNumber of actions                       : " ^ (string_of_int model.nb_actions)
-	^ "\nTotal number of locations               : " ^ (string_of_int nb_total_locations)
-	^ "\nAverage locations per IPTA              : " ^ (round1_float ((float_of_int nb_total_locations) /. (float_of_int model.nb_automata)))
+	^ "\nTotal number of locations               : " ^ (string_of_int model.nb_locations)
+	^ "\nAverage locations per IPTA              : " ^ (round1_float ((float_of_int model.nb_locations) /. (float_of_int model.nb_automata)))
+	^ "\nTotal number of transitions             : " ^ (string_of_int model.nb_transitions)
+	^ "\nAverage transitions per IPTA            : " ^ (round1_float ((float_of_int model.nb_transitions) /. (float_of_int model.nb_automata)))
 
 
 
@@ -273,7 +287,7 @@ let statespace_statistics state_space total_time =
 	let nb_states = StateSpace.nb_states state_space in
 	let states_per_second = (float_of_int nb_states) /. total_time in
 	
-	(* Speed: number of states computed, even if not kept (because merged, deleted...) *)
+	(* Speed: number of states computed, even if not kept (because merged, deleted…) *)
 	let nb_gen_states = StateSpace.get_nb_gen_states state_space in
 	let gen_states_per_second = (float_of_int nb_gen_states) /. total_time in
 	
@@ -311,10 +325,49 @@ let result_nature_statistics_bc (soundness_str : string) termination (statespace
 	^ "\nConstraint nature                       : " ^ statespace_nature_str
 
 
-(*** TODO: would be smarter to have a generic function write_result_to_file : imitator_result -> unit () ***)
+(*** TODO: would be smarter to have a generic function export_to_file_result : imitator_result -> unit () ***)
 
 (* Write an ef_synth result to the result file *)
-let write_deprecated_efsynth_result_to_file file_name (deprecated_efsynth_result : Result.deprecated_efsynth_result) =
+let export_to_file_noresult file_name =
+	(*** WARNING: duplicate code concerning the counter creation ***)
+	(* Create counter *)
+	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
+	
+	(* Start counter *)
+	counter#start;
+	
+	(* Retrieve the model *)
+(* 	let model = Input.get_model() in *)
+
+	(* Prepare the string to write *)
+	let file_content =
+		(* 1) Header *)
+		file_header ()
+		
+		(* 2) Statistics about model *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (model_statistics ())
+		^ "\n------------------------------------------------------------"
+
+		(* 3) General statistics *)
+		^ "\n" ^ (Statistics.string_of_all_counters())
+		^ "\n------------------------------------------------------------"
+	in
+	
+	(* Write to file *)
+	write_to_file file_name file_content;
+	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	
+	(* Stop counter *)
+	counter#stop;
+	
+	(* The end *)
+	()
+
+
+
+(* Write an ef_synth result to the result file *)
+let export_to_file_deprecated_efsynth_result file_name (deprecated_efsynth_result : Result.deprecated_efsynth_result) =
 	(*** WARNING: duplicate code concerning the counter creation ***)
 	(* Create counter *)
 	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
@@ -369,7 +422,7 @@ let write_deprecated_efsynth_result_to_file file_name (deprecated_efsynth_result
 
 
 (* Write a single_synthesis_result to the result file *)
-let write_single_synthesis_result file_name (single_synthesis_result : Result.single_synthesis_result) =
+let export_to_file_single_synthesis_result file_name (single_synthesis_result : Result.single_synthesis_result) =
 	(*** WARNING: duplicate code concerning the counter creation ***)
 	(* Create counter *)
 	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
@@ -430,7 +483,7 @@ let write_single_synthesis_result file_name (single_synthesis_result : Result.si
 
 
 (* Write a multiple_synthesis_result to the result file *)
-let write_multiple_synthesis_result file_name (multiple_synthesis_result : Result.multiple_synthesis_result) =
+let export_to_file_multiple_synthesis_result file_name (multiple_synthesis_result : Result.multiple_synthesis_result) =
 	(*** WARNING: duplicate code concerning the counter creation ***)
 	(* Create counter *)
 	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
@@ -485,7 +538,7 @@ let write_multiple_synthesis_result file_name (multiple_synthesis_result : Resul
 
 
 (* Write an ef_synth result to the result file *)
-let write_point_based_result_to_file file_name (point_based_result : Result.point_based_result) =
+let export_to_file_point_based_result file_name (point_based_result : Result.point_based_result) =
 	(*** WARNING: duplicate code concerning the counter creation ***)
 	(* Create counter *)
 	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
@@ -522,7 +575,7 @@ let write_point_based_result_to_file file_name (point_based_result : Result.poin
 		(* 3) Recall pi0 *)
 		^ "\n\n------------------------------------------------------------"
 		^ "\n Reference parameter valuation:"
-		^ "\n" ^ (ModelPrinter.string_of_pi0 model pi0)
+		^ "\n" ^ (ModelPrinter.string_of_pval model pi0)
 		^ "\n------------------------------------------------------------"
 		
 		(* 4) The actual result with delimiters *)
@@ -591,7 +644,7 @@ let general_bc_statistics (cartography_result : Result.cartography_result) =
 
 		
 (* Write result of BC to file *)
-let write_cartography_result_to_file file_name (cartography_result : Result.cartography_result) =
+let export_to_file_cartography_result file_name (cartography_result : Result.cartography_result) =
 	(*** WARNING: duplicate code concerning the counter creation ***)
 	(* Create counter *)
 	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
@@ -621,7 +674,7 @@ let write_cartography_result_to_file file_name (cartography_result : Result.cart
 			^ "\n Tile #" ^ (string_of_int index_from_one)
 			(* 1) Reference valuation *)
 			^ "\n\n Pi" ^ (string_of_int index_from_one) ^ ":"
-			^ "\n" ^ (ModelPrinter.string_of_pi0 model abstract_point_based_result.reference_val)
+			^ "\n" ^ (ModelPrinter.string_of_pval model abstract_point_based_result.reference_val)
 
 			(* 2) Constraint *)
 			^ "\n\n K" ^ (string_of_int index_from_one) ^ ":"
@@ -686,6 +739,87 @@ let write_cartography_result_to_file file_name (cartography_result : Result.cart
 	()
 
 
+(* Export result of type 'Runs_exhibition_result' *)
+let export_to_file_runs_exhibition_result file_name (result : Result.runs_exhibition_result) =
+	(*** WARNING: duplicate code concerning the counter creation ***)
+	(* Create counter *)
+	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
+	
+	(* Start counter *)
+	counter#start;
+
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	(* Retrieve the input options *)
+(* 	let options = Input.get_options () in *)
+
+	(* Convert the valuation_and_concrete_run's to string *)
+	let runs_str = string_of_list_of_string_with_sep "\n" (
+		List.mapi (fun index (valuation_and_concrete_run : Result.valuation_and_concrete_run) ->
+		
+			(* Get the run (shortcut) *)
+			let run = valuation_and_concrete_run.concrete_run in
+			
+			(* mapi starts counting from 0, but we like starting counting from 1 *)
+			let index_from_one = index + 1 in
+			"\n(************************************************************)"
+			^ "\n Run #" ^ (string_of_int index_from_one)
+			(* 1) Valuation for this run *)
+			^ "\n\n Valuation:"
+			^ "\n" ^ (ModelPrinter.string_of_pval model valuation_and_concrete_run.valuation)
+
+			(* 2) Valuations for which an equivalent DISCRETE run exists *)
+			^ "\n\n Other valuations with equivalent (discrete) run:"
+			^ "\n" ^ (LinearConstraint.string_of_p_convex_or_nonconvex_constraint model.variable_names valuation_and_concrete_run.valuations)
+
+			(* 3) Run *)
+			^ "\n\n Run nature: " ^ (match run with Impossible_concrete_run _ -> "impossible run" | Concrete_run _ -> "valid run")
+			^ "\n\n Run:"
+			^ "\n" ^ (let str = match run with
+				| Concrete_run concrete_run -> ModelPrinter.debug_string_of_concrete_run model concrete_run
+				| Impossible_concrete_run impossible_concrete_run -> ModelPrinter.debug_string_of_impossible_concrete_run model impossible_concrete_run
+				in str
+			)
+			^ "\n(************************************************************)\n"
+		) result.runs
+	)
+	in
+	
+
+	(* Prepare the string to write *)
+	let file_content =
+		(* 1) Header *)
+		file_header ()
+		
+		(* 2) Statistics about model *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (model_statistics ())
+		^ "\n------------------------------------------------------------"
+
+		(* 3) The actual result with delimiters *)
+		^ (add_result_delimiters runs_str)
+		
+		(* 4) Statistics about state space *)
+		^ "\n------------------------------------------------------------"
+		^ "\n" ^ (statespace_statistics result.state_space result.computation_time)
+		^ "\n------------------------------------------------------------"
+		
+		(* 5) General statistics *)
+		^ "\n" ^ (Statistics.string_of_all_counters())
+		^ "\n------------------------------------------------------------"
+	in
+	
+	(* Write to file *)
+	write_to_file file_name file_content;
+	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	
+	(* Stop counter *)
+	counter#stop;
+	
+	(* The end *)
+	()
+
+
 
 (*------------------------------------------------------------*)
 (* Display statistics on the state space *)
@@ -698,7 +832,7 @@ let print_state_space_statistics total_time state_space =
 	
 	
 (*	(* Speed (number of states in the graph) *)
-	(*** WARNING: duplicate code from write_efsynth_result_to_file ***)
+	(*** WARNING: duplicate code from export_to_file_efsynth_result_to_file ***)
 	(* Generic function for float/int conversion *)
 	let string_of_average average = 
 		if average < 10.0 then string_of_float average
@@ -713,7 +847,7 @@ let print_state_space_statistics total_time state_space =
 	let average = (float_of_int nb_gen_states) /. total_time in
 	print_message Verbose_standard ("States computed per second: " ^ (string_of_average average) ^ " (" ^ (string_of_int nb_gen_states) ^ "/" ^ (string_of_seconds total_time) ^ ")");*)
 	
-	if options#statistics || verbose_mode_greater Verbose_experiments then(
+	if options#statistics || verbose_mode_greater Verbose_medium then(
 		print_message Verbose_standard "\n------------------------------------------------------------";
 		print_message Verbose_standard "Statistics: State space";
 		print_message Verbose_standard "------------------------------------------------------------";
@@ -721,7 +855,7 @@ let print_state_space_statistics total_time state_space =
 	);
 
 	
-	if options#statistics || verbose_mode_greater Verbose_low then (
+	if options#statistics || verbose_mode_greater Verbose_medium then (
 		(* State space *)
 (*		print_message Verbose_standard "------------------------------------------------------------";
 		print_message Verbose_standard "Statistics: Graph";
@@ -739,7 +873,7 @@ let print_memory_statistics () =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-	if options#statistics || verbose_mode_greater Verbose_low then (
+	if options#statistics || verbose_mode_greater Verbose_medium then (
 		print_message Verbose_standard "------------------------------------------------------------";
 		print_message Verbose_standard "Statistics on memory";
 		print_message Verbose_standard "------------------------------------------------------------";
@@ -757,7 +891,7 @@ let print_memory_statistics () =
 (************************************************************)
 (* Print single_synthesis_result (or in fact point_based_result too) on screen *)
 (************************************************************)
-let print_single_synthesis_or_point_based_result result computation_time =
+let print_single_synthesis_or_point_based_result result computation_time constraint_str =
 	(* Print the result *)
 	if verbose_mode_greater Verbose_standard then(
 		(* Retrieve the model *)
@@ -766,15 +900,16 @@ let print_single_synthesis_or_point_based_result result computation_time =
 		let options = Input.get_options () in
 		
 		(* Convert result to string *)
-		(*** NOTE: this conversion to string is duplicate, since it will again be converted in write_pdfc_result_to_file; but it not sure wether both operations are done, in addition they are not extremely time consuming, and they are not part of the computation time anyway *)
+		(*** NOTE: this conversion to string is duplicate, since it will again be converted in export_to_file_pdfc_result_to_file; but it not sure wether both operations are done, in addition they are not extremely time consuming, and they are not part of the computation time anyway *)
 	
 		let result_str = string_of_good_or_bad_constraint model.variable_names result in
 		
 		let text = 
 		match result with
-			| Good_constraint _ -> "Final constraint such that the system is correct"
-			| Bad_constraint _  -> "Final constraint such that the system is incorrect"
-			| Good_bad_constraint _  -> "Final constraints such that the system is correct/incorrect"
+(* 			| Accepting_cycle_constraint _ -> "Final constraint such that there exists an accepting cycle" *)
+			| Good_constraint _ -> "Final positive " ^ constraint_str ^ " (positive = guarantees the validity of the property)"
+			| Bad_constraint _  -> "Final negative " ^ constraint_str ^ " (negative = violates the property)"
+			| Good_bad_constraint _  -> "Final positive/negative " ^ constraint_str ^ " (in the form of a pair of constraints guaranteeing the validity/violation of the property)"
 		in
 		
 		(* Print some information *)
@@ -849,10 +984,34 @@ let process_result result algorithm_name prefix_option =
 	
 	
 	match result with
+	| No_analysis ->
+		(* Write to file if requested *)
+		if options#output_result then(
+			let file_name = file_prefix ^ Constants.result_file_extension in
+			export_to_file_noresult file_name;
+		)else(
+			print_message Verbose_high "No result export to file requested.";
+		);
+		
+		(* Print statistics *)
+		print_memory_statistics ();
+		
+		(* The end *)
+		()
+
+
 	| PostStar_result poststar_result ->
 		print_message Verbose_low (
 			"Computation time: "
 			^ (string_of_seconds poststar_result.computation_time) ^ "."
+		);
+
+		(* Write to file if requested *)
+		if options#output_result then(
+			let file_name = file_prefix ^ Constants.result_file_extension in
+			export_to_file_noresult file_name;
+		)else(
+			print_message Verbose_high "No result export to file requested.";
 		);
 
 		(* Print statistics *)
@@ -877,7 +1036,7 @@ let process_result result algorithm_name prefix_option =
 			let model = Input.get_model() in
 			
 			(* Convert result to string *)
-			(*** NOTE: this conversion to string is duplicate, since it will again be converted in write_efsynth_result_to_file; but it not sure wether both operations are done, in addition they are not extremely time consuming, and they are not part of the computation time anyway *)
+			(*** NOTE: this conversion to string is duplicate, since it will again be converted in export_to_file_efsynth_result_to_file; but it not sure wether both operations are done, in addition they are not extremely time consuming, and they are not part of the computation time anyway *)
 			let result_str = string_of_list_of_string_with_sep "\n OR \n" (List.map (LinearConstraint.string_of_p_linear_constraint model.variable_names) efsynth_result.constraints) in
 			
 			print_message Verbose_standard ("\nFinal constraint such that the property is *violated* (" ^ (string_of_int (List.length efsynth_result.constraints)) ^ " constraint" ^ (s_of_int (List.length efsynth_result.constraints)) ^ "): ");
@@ -906,7 +1065,7 @@ let process_result result algorithm_name prefix_option =
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			write_deprecated_efsynth_result_to_file file_name efsynth_result;
+			export_to_file_deprecated_efsynth_result file_name efsynth_result;
 		)else(
 			print_message Verbose_high "No result export to file requested.";
 		);
@@ -935,12 +1094,12 @@ let process_result result algorithm_name prefix_option =
 
 	| Single_synthesis_result result ->
 		(* First print the result on the terminal *)
-		print_single_synthesis_or_point_based_result result.result result.computation_time;
+		print_single_synthesis_or_point_based_result result.result result.computation_time result.constraint_description;
 
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			write_single_synthesis_result file_name result;
+			export_to_file_single_synthesis_result file_name result;
 		)else(
 			print_message Verbose_high "No result export to file requested.";
 		);
@@ -951,12 +1110,12 @@ let process_result result algorithm_name prefix_option =
 
 	| Point_based_result result ->
 		(* First print the result on the terminal *)
-		print_single_synthesis_or_point_based_result result.result result.computation_time;
+		print_single_synthesis_or_point_based_result result.result result.computation_time "constraint";
 
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			write_point_based_result_to_file file_name result;
+			export_to_file_point_based_result file_name result;
 		)else(
 			print_message Verbose_high "No result export to file requested.";
 		);
@@ -985,7 +1144,7 @@ let process_result result algorithm_name prefix_option =
 		(* Write to file if requested for BC *)
 		if options#output_bc_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			write_cartography_result_to_file file_name cartography_result;
+			export_to_file_cartography_result file_name cartography_result;
 		)else(
 			print_message Verbose_high "No result export to file requested.";
 		);
@@ -993,7 +1152,7 @@ let process_result result algorithm_name prefix_option =
 		(* If cartography required for BC *)
 		if options#output_bc_cart then (
 			(* Print some information *)
-			print_message Verbose_high "Graphical cartography asked: prepare tiles to be drawn...";
+			print_message Verbose_high "Graphical cartography asked: prepare tiles to be drawn…";
 
 			(* Keep only valid tiles, i.e., underapproximations or exact *)
 			let valid_tiles = cartography_result.tiles (*** TODO ***)(* List.filter (fun (abstract_point_based_result : abstract_point_based_result) -> abstract_point_based_result.soundness = Result.Constraint_maybe_under || abstract_point_based_result.soundness = Result.Constraint_exact) cartography_result.tiles*) in
@@ -1020,12 +1179,12 @@ let process_result result algorithm_name prefix_option =
 	(* Multiple synthesis (e.g., PRPC) *)
 	| Multiple_synthesis_result result ->
 		(* First print the result on the terminal *)
-		print_single_synthesis_or_point_based_result result.result result.computation_time;
+		print_single_synthesis_or_point_based_result result.result result.computation_time "constraint";
 
 		(* Write to file if requested *)
 		if options#output_bc_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
-			write_multiple_synthesis_result file_name result;
+			export_to_file_multiple_synthesis_result file_name result;
 			()
 		)else(
 			print_message Verbose_high "No result export to file requested.";
@@ -1049,6 +1208,47 @@ let process_result result algorithm_name prefix_option =
 	(* Nothing to do for workers in distributed mode *)
 	| Distributed_worker_result ->
 		()
+
+		
+	(* Result for runs exhibition *)
+	| Runs_exhibition_result result ->
+		(* Write to file *)
+		let file_name = file_prefix ^ Constants.result_file_extension in
+		export_to_file_runs_exhibition_result file_name result;
+		
+		(* Print statistics *)
+		print_memory_statistics ();
+
+		(* Render signals and sets of parameters in a graphical form *)
+		List.iteri (fun index valuation_and_concrete_run ->
+			(* iteri starts counting from 0, but we like starting counting from 1 *)
+			let index_from_one = index + 1 in
+			
+			(* Create prefix *)
+			let prefix = options#files_prefix ^ "_ex_" ^ (string_of_int index_from_one) ^ "_" ^ (match valuation_and_concrete_run.concrete_run with Concrete_run _ -> "pos" | Impossible_concrete_run _ -> "neg") in
+
+			(* Print signal *)
+			begin
+			match valuation_and_concrete_run.concrete_run with
+				| Concrete_run concrete_run -> Graphics.draw_concrete_run concrete_run prefix
+				| Impossible_concrete_run impossible_concrete_run -> Graphics.draw_impossible_concrete_run impossible_concrete_run prefix
+			end;
+
+			(* Print parameter zone *)
+			if options#output_bc_cart then (
+				(* Generate the graphics: parameters *)
+				let zones = [valuation_and_concrete_run.valuations, match valuation_and_concrete_run.concrete_run with Concrete_run _ -> StateSpace.Good | Impossible_concrete_run _ -> StateSpace.Bad] in
+				Graphics.draw_cartography zones prefix;
+			) else (
+				print_message Verbose_high "Graphical cartography not asked: not drawn.";
+			);
+		
+		) result.runs;
+		
+		(* The end *)
+		()
+
+
 
 
 (* 	| _ -> raise (NotImplemented ("function process_result not implemented for all cases")) *)

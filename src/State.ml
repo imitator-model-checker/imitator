@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Description of a state_index, a symbolic state and sets of states indexes
  * 
- * File contributors : Étienne André
+ * File contributors : Étienne André, Laure Petrucci
  * Created           : 2016/05/04
- * Last modified     : 2018/02/23
+ * Last modified     : 2019/07/05
  *
  ************************************************************)
 
@@ -18,8 +18,6 @@
 (************************************************************)
 (* Modules *)
 (************************************************************)
-(*module Ppl = Ppl_ocaml
-open Ppl*)
 
 open Exceptions
 open OCamlUtilities
@@ -33,11 +31,23 @@ open AbstractModel
 (************************************************************)
 type state_index = int
 
+(** Concrete state: location and px-valuation *)
+type concrete_state = {
+	global_location: Location.global_location;
+	px_valuation   : (Automaton.variable_index -> NumConst.t);
+}
+
 (** State: location and constraint *)
-type state = Location.global_location * LinearConstraint.px_linear_constraint
+type state = {
+	global_location: Location.global_location;
+	px_constraint  : LinearConstraint.px_linear_constraint;
+}
 
-type abstract_state = Location.global_location_index * LinearConstraint.px_linear_constraint
-
+(** Abstract state: abstract location (index) and concrete constraint *)
+type abstract_state = {
+	global_location_index: Location.global_location_index;
+	px_constraint        : LinearConstraint.px_linear_constraint;
+}
 
 
 
@@ -119,6 +129,24 @@ let match_unreachable_global_locations unreachable_global_locations location =
 		) unreachable_global_location.discrete_constraints)
 	) unreachable_global_locations
 
+
+(*------------------------------------------------*)
+(* Check whether the global location is accepting *)
+(*------------------------------------------------*)
+let is_accepting (state : state) =
+	
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+	(* Retrieve the locations *)
+	let locations = Location.get_locations state.global_location in
+	let result = ref false in
+	(* Check whether a local location is accepting *)
+	
+	(*** TODO: rewrite using Array.exists! ***)
+	
+	Array.iteri (fun automaton_index location_index ->
+		result := !result || model.is_accepting automaton_index location_index) locations;
+	!result
 
 
 

@@ -4,7 +4,7 @@
  *
  * Represent a reachability tree for depth first exploration
  *
- * LIPN, Universite Paris 13, Sorbonne Paris Cite, France
+ * Université Paris 13, LIPN, CNRS, France
  * Author:        Etienne Andre
  * Created:       2012/06/07
  * Last modified: 2012/06/21

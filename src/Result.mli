@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: description of the result output by IMITATOR
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2017/05/22
+ * Last modified     : 2019/08/21
  *
  ************************************************************)
 
@@ -101,6 +101,8 @@ type good_or_bad_constraint =
 	| Bad_constraint of constraint_and_soundness
 	(* Both good and bad valuations *)
 	| Good_bad_constraint of good_and_bad_constraint
+(*	(* result of NDFS *)
+	| Accepting_cycle_constraint of constraint_and_soundness*)
 
 
 (************************************************************)
@@ -118,6 +120,7 @@ type bc_coverage =
 
 	(* No indication of coverage *)
 	| Coverage_unknown
+
 
 
 (************************************************************)
@@ -170,6 +173,9 @@ type deprecated_efsynth_result = {
 type single_synthesis_result = {
 	(* Good and/or bad valuations *)
 	result				: good_or_bad_constraint;
+	
+	(* English description of the constraint *)
+	constraint_description: string;
 	
 	(* Explored state space *)
 	state_space			: StateSpace.state_space;
@@ -296,11 +302,50 @@ type multiple_synthesis_result = {
 	(*** TODO: compute a percentage of the points explored ?? ***)
 }
 
+(*------------------------------------------------------------*)
+(* Algorithms synthesizing runs *)
+(*------------------------------------------------------------*)
+
+type impossible_or_concrete_run =
+	| Impossible_concrete_run of StateSpace.impossible_concrete_run
+	| Concrete_run of StateSpace.concrete_run
+
+type valuation_and_concrete_run = {
+	(* The parameter valuation for which this run exists *)
+	valuation		: PVal.pval;
+	
+	(* Sometimes, we can even infer more valuations for which an equivalent DISCRETE run exist (note that the exact timings of the run might differ!!!) *)
+	valuations		: LinearConstraint.p_convex_or_nonconvex_constraint;
+	
+	(* The possibly impossible concrete run *)
+	concrete_run	: impossible_or_concrete_run;
+}
+
+(** Result for runs exhibition *)
+type runs_exhibition_result = {
+	(* Set of runs *)
+	runs				: valuation_and_concrete_run list;
+	
+	(* Explored state space *)
+	state_space			: StateSpace.state_space;
+	
+	(* Total computation time of the algorithm *)
+	computation_time	: float;
+	
+	(* Termination *)
+	termination			: bfs_algorithm_termination;
+}
+
+
+
 (************************************************************)
 (** A unified type for all results *)
 (************************************************************)
 
 type imitator_result =
+	(* No analysis, syntactic check only (+ generation of the result file with syntactic information if requested) *)
+	| No_analysis
+
 	(* Result for Post* *)
 	| PostStar_result of poststar_result
 
@@ -321,4 +366,7 @@ type imitator_result =
 	
 	(* No result for workers in distributed mode *)
 	| Distributed_worker_result
+
+	(* Result for runs exhibition *)
+	| Runs_exhibition_result of runs_exhibition_result
 

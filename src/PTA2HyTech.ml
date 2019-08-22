@@ -1,17 +1,17 @@
 (************************************************************
  *
  *                       IMITATOR
- * 
+ *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
- * 
+ * Université Paris 13, LIPN, CNRS, France
+ *
  * Module description: Convert an input IMITATOR file to a file readable by HyTech
- * 
+ *
  * Remark            : extensively copied from ModelPrinter as IMITATOR and HyTech syntax are very similar
- * 
- * File contributors : Étienne André
+ *
+ * File contributors : Étienne André, Jaime Arias
  * Created           : 2016/01/26
- * Last modified     : 2018/02/23
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
 
@@ -70,23 +70,23 @@ let string_of_var_type = function
 let find_stopwatches () =
 	(* Retrieve the model *)
 	let model = Input.get_model () in
-	
+
 	(* Print some information *)
 	print_message Verbose_low "Computing the set of stopwatches.";
 
 	(*** BADPROG ***)
 	let list_of_stopwatches = ref [] in
-	
+
 	(*** WARNING: Do not look in the observer! ***)
 	let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
 	in
-	
+
 	(* Iterate on each automaton *)
 	List.iter (fun automaton_index ->
 		let locations = model.locations_per_automaton automaton_index in
-		
+
 		print_message Verbose_high ("Gathering stopwatches in automaton '" ^ (model.automata_names automaton_index)  ^ "'...");
-		
+
 		(* Iterate on each location *)
 		List.iter (fun location_index ->
 			print_message Verbose_high ("  Gathering stopwatches in location '" ^ (model.location_names automaton_index location_index)  ^ 	"'...");
@@ -95,7 +95,7 @@ let find_stopwatches () =
 			list_of_stopwatches := List.rev_append !list_of_stopwatches stopwatches;
 		) locations; (* end for each location *)
 	) pta_without_obs; (* end for each PTA *)
-	
+
 	(* Print some information *)
 	print_message Verbose_medium "Set of stopwatches successfully computed.";
 
@@ -107,7 +107,7 @@ let find_stopwatches () =
 let string_of_declarations model stopwatches clocks =
 	let string_of_variables list_of_variables =
 		string_of_list_of_string_with_sep ", " (List.map model.variable_names list_of_variables) in
-	
+
 		"var "
 	^
 	(if clocks <> [] then
@@ -159,28 +159,28 @@ let string_of_invariant model automaton_index location_index stopwatches clocks 
 	(* Invariant *)
 	"while "
 	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index))
-	
+
 	(* Handle stopwatches *)
 	^
 	let stopped = model.stopwatches automaton_index location_index in
 	let running = list_diff stopwatches stopped in
-	
+
 	let stopped_str = string_of_list_of_string_with_sep ","
 		(List.map (fun clock_index ->
 			" d" ^ (model.variable_names clock_index) ^ " = 0"
 		) stopped
 	) in
-	
+
 	(*** NOTE: it seems HyTech requests the rate of ALL stopwatches to be explicitly defined in all invariants... ***)
 	let running_str = string_of_list_of_string_with_sep ","
 		(List.map (fun clock_index ->
 			" d" ^ (model.variable_names clock_index) ^ " = 1"
 		) running
 	) in
-	
+
 	(* Comma only if both lists are non empty *)
 	let comma = if stopped <> [] && running <> [] then ", " else "" in
-	
+
 	" wait{" ^ stopped_str ^ comma ^ running_str ^ "}"
 
 
@@ -195,20 +195,20 @@ let string_of_sync model action_index =
 
 let string_of_clock_updates model = function
 	| No_update -> ""
-	| Resets list_of_clocks -> 
+	| Resets list_of_clocks ->
 		string_of_list_of_string_with_sep ", " (List.map (fun variable_index ->
 			(model.variable_names variable_index)
 			^ "' = 0"
 		) list_of_clocks)
-	| Updates list_of_clocks_lt -> 
+	| Updates list_of_clocks_lt ->
 		string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, linear_term) ->
 			(model.variable_names variable_index)
 			^ "' = "
 			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
 		) list_of_clocks_lt)
 
-	
-	
+
+
 (* Convert a list of updates into a string *)
 (*** WARNING: calling string_of_arithmetic_expression might yield a syntax incompatible with HyTech for models more expressive than its input syntax! ***)
 (*** TODO: fix or print warning ***)
@@ -223,10 +223,15 @@ let string_of_discrete_updates model updates =
 
 
 (* Convert a transition of a location into a string *)
-let string_of_transition model automaton_index action_index (guard, clock_updates, discrete_updates, destination_location) =
+(** NOTE: currently HyTech does not support conditional *)
+let string_of_transition model automaton_index transition =
+	let clock_updates = transition.updates.clock in
+	let discrete_updates = transition.updates.discrete in
+	let conditional_updates = transition.updates.conditional in
+	(if conditional_updates <> [] then print_message Verbose_standard "Conditions are not supported by HyTech. Ignoring..." );
 	"\n\t" ^ "when "
 	(* Convert the guard *)
-	^ (ModelPrinter.string_of_guard model.variable_names guard)
+	^ (ModelPrinter.string_of_guard model.variable_names transition.guard)
 
 	(* Convert the updates *)
 	^ " do {"
@@ -237,11 +242,11 @@ let string_of_transition model automaton_index action_index (guard, clock_update
 	(* Discrete updates *)
 	^ (string_of_discrete_updates model discrete_updates)
 	^ "} "
-	
+
 	(* Convert the sync *)
-	^ (string_of_sync model action_index)
+	^ (string_of_sync model transition.action)
 	(* Convert the destination location *)
-	^ " goto " ^ (model.location_names automaton_index destination_location)
+	^ " goto " ^ (model.location_names automaton_index transition.target)
 	^ ";"
 
 
@@ -249,13 +254,13 @@ let string_of_transition model automaton_index action_index (guard, clock_update
 let string_of_transitions model automaton_index location_index =
 	string_of_list_of_string (
 	(* For each action *)
-	List.map (fun action_index -> 
+	List.map (fun action_index ->
 		(* Get the list of transitions *)
-		let transitions = model.transitions automaton_index location_index action_index in
+		let transitions = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
 		(* Convert to string *)
 		string_of_list_of_string (
 			(* For each transition *)
-			List.map (string_of_transition model automaton_index action_index) transitions
+			List.map (string_of_transition model automaton_index) transitions
 			)
 		) (model.actions_per_location automaton_index location_index)
 	)
@@ -315,7 +320,7 @@ let string_of_automata model stopwatches clocks =
 let string_of_initial_state () =
 	(* Retrieve the model *)
 	let model = Input.get_model () in
-	
+
 	(* Print some information *)
 	print_message Verbose_low "Translating the initial state...";
 
@@ -327,7 +332,7 @@ let string_of_initial_state () =
 	^ "\n" ^ "var init : region;"
 	^ "\n" ^ ""
 	^ "\n" ^ "init := True"
-	
+
 	(* Initial location *)
 	^ "\n" ^ "\t------------------------------------------------------------"
 	^ "\n" ^ "\t-- Initial location"
@@ -339,7 +344,7 @@ let string_of_initial_state () =
 
 	(* Handle all (other) PTA *)
 	let inital_global_location  = model.initial_location in
-	let initial_automata = List.map 
+	let initial_automata = List.map
 	(fun automaton_index ->
 		(* Finding the initial location for this automaton *)
 		let initial_location = Location.get_location inital_global_location automaton_index in
@@ -347,14 +352,14 @@ let string_of_initial_state () =
 		"\n\t& loc[" ^ (model.automata_names automaton_index) ^ "] = " ^ (model.location_names automaton_index initial_location)
 	) pta_without_obs
 	in string_of_list_of_string initial_automata
-	
+
 	(* Initial discrete assignments *)
 	^ "\n" ^ ""
 	^ "\n" ^ "\t------------------------------------------------------------"
 	^ "\n" ^ "\t-- Initial discrete assignments "
 	^ "\n" ^ "\t------------------------------------------------------------"
 	^
-	let initial_discrete = List.map 
+	let initial_discrete = List.map
 	(fun discrete_index ->
 		(* Finding the initial value for this discrete *)
 		let initial_value = Location.get_discrete_value inital_global_location discrete_index in
@@ -362,7 +367,7 @@ let string_of_initial_state () =
 		"\n\t& " ^ (model.variable_names discrete_index) ^ " = " ^ (NumConst.string_of_numconst initial_value)
 	) model.discrete
 	in string_of_list_of_string initial_discrete
-	
+
 	(* Initial constraint *)
 	^ "\n" ^ ""
 	^ "\n" ^ "\t------------------------------------------------------------"
@@ -421,7 +426,7 @@ let string_of_unreachable_location model unreachable_global_location =
 
 
 (** Convert the correctness property to a string *)
-let string_of_property model property = 
+let string_of_property model property =
 	match property with
 	(* An "OR" list of global locations *)
 	| Unreachable_locations unreachable_global_location_list ->
@@ -461,7 +466,7 @@ let string_of_property model property =
 	(* everytime a2 then a1 happened once within d before *)
 	| TB_Action_precedence_cyclicstrict (a1 , a2, d) ->
 		"property := everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened once within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " before;"
-	
+
 	(* if a1 then eventually a2 within d *)
 	| TB_response_acyclic (a1 , a2, d) ->
 		"property := if " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ ";"
@@ -478,7 +483,7 @@ let string_of_property model property =
 	(* always sequence a1, ..., an *)
 	| Sequence_cyclic action_index_list ->
 		"property := always sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
-	
+
 	(*** NOTE: Would be better to have an "option" type ***)
 	| Noproperty -> "-- (no property)"
 
@@ -519,23 +524,23 @@ let string_of_model model =
 	string_of_header model
 	(* The variable declarations *)
 	^  "\n" ^ string_of_declarations model stopwatches clocks
-	
+
 	(* All automata *)
 	^  "\n" ^ string_of_automata model stopwatches clocks
-	
+
 	(* The initial state *)
 	^ "\n" ^ string_of_initial_state ()
-	
+
 	(* The property *)
 	(*** TODO: encode reachability properties! ***)
 	^ property_header
 	^  "\n" ^ "--" ^ string_of_property model model.user_property ^ " (NOT CONSIDERED BY HYTECH)"
-	
+
 	(* The projection *)
 	^  "\n" ^ string_of_projection model
-	
+
 	(* The optimization *)
 	^  "\n" ^ string_of_optimization model
-	
+
 	(* The footer *)
 	^  "\n" ^ footer

@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Generic class for cartography-style algorithms
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2017/03/08
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -25,6 +25,7 @@ open Statistics
 open AbstractModel
 open Result
 open AlgoGeneric
+open State
 
 
 
@@ -588,7 +589,7 @@ class virtual algoCartoGeneric =
 		find_next_point_counter#reset;
 
 		(* Initial constraint of the model *)
-		let _, init_px_constraint = init_state in
+		let init_px_constraint = init_state.px_constraint in
 		(* Hide non parameters *)
 		init_p_constraint <- LinearConstraint.px_hide_nonparameters_and_collapse init_px_constraint;
 
@@ -682,7 +683,7 @@ class virtual algoCartoGeneric =
 			nb_unsuccessful_points <- nb_unsuccessful_points + 1;
 			if verbose_mode_greater Verbose_low then (
 				self#print_algo_message Verbose_low "The following pi0 is already included in a constraint.";
-				print_message Verbose_low (ModelPrinter.string_of_pi0 model tentative_pi0);
+				print_message Verbose_low (ModelPrinter.string_of_pval model tentative_pi0);
 			);
 			(*** TODO: could be optimized by finding the nearest multiple of tile next to the border, and directly switching to that one ***)
 			false
@@ -693,7 +694,7 @@ class virtual algoCartoGeneric =
 			nb_unsuccessful_points <- nb_unsuccessful_points + 1;
 			if verbose_mode_greater Verbose_low then (
 				self#print_algo_message Verbose_low "The following pi0 does not satisfy the initial constraint of the model.";
-				print_message Verbose_low (ModelPrinter.string_of_pi0 model tentative_pi0);
+				print_message Verbose_low (ModelPrinter.string_of_pval model tentative_pi0);
 			);
 			false
 		(* If both checks passed, then pi0 found *)
@@ -979,7 +980,7 @@ class virtual algoCartoGeneric =
 			print_message Verbose_standard ("\n**************************************************");
 			print_message Verbose_standard ("ALGORITHM " ^ (self#algorithm_name) ^ ": iteration " ^ (string_of_int current_iteration) ^ "");
 			print_message Verbose_standard ("Considering the following pi" ^ (string_of_int current_iteration));
-			print_message Verbose_standard (ModelPrinter.string_of_pi0 model pi0);
+			print_message Verbose_standard (ModelPrinter.string_of_pval model pi0);
 (* 			); *)
 			
 			

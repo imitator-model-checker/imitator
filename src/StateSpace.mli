@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Description of the symbolic states and of the state space
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2016/10/11
+ * Last modified     : 2019/08/09
  *
  ************************************************************)
 
@@ -20,6 +20,21 @@
 open Automaton
 open State
 
+
+(************************************************************)
+(** Type definitions *)
+(************************************************************)
+
+(** A combined transition is a list of transitions (one for each automaton involved) *)
+type combined_transition = AbstractModel.transition_index list
+
+
+(************************************************************)
+(** Functions independent from state space *)
+(************************************************************)
+
+(** Get the (unique) action associated with a combined_transition *)
+val get_action_from_combined_transition : combined_transition -> action_index
 
 
 (************************************************************)
@@ -56,6 +71,84 @@ type addition_result =
 	(* The new state replaced a former state (because the newer is larger), returns the old state index *)
 	| State_replacing of state_index
 
+
+
+(************************************************************)
+(** Concrete run *)
+(************************************************************)
+
+type concrete_step = {
+	(* First let time elapse *)
+	time			: NumConst.t;
+	(* Then take a discrete transition *)
+	transition		: combined_transition;
+	(* Then reach the target state *)
+	target			: State.concrete_state;
+}
+
+(*** WARNING: the structure is here initial state followed by (transition, state) list, but in symbolic_run, it is (state, transition) followed by final state :( ***)
+
+type concrete_run = {
+	(* The parameter valuation for which this run exists *)
+	p_valuation		: PVal.pval;
+	(* The initial concrete state *)
+	initial_state	: State.concrete_state;
+	(* A possibly empty list of steps *)
+	steps			: concrete_step list;
+}
+
+
+(************************************************************)
+(** Impossible concrete run *)
+(************************************************************)
+
+(* An impossible concrete run is a run that starts with a concrete run prefix, and then follows by taking transitions NOT admissible in the state space. Transitions may be imaginary, but locations remain existing locations. *)
+
+type impossible_concrete_step = {
+	(* First let time elapse *)
+	time			: NumConst.t;
+	(* Then take a discrete transition *)
+	action			: Automaton.action_index;
+	(* Then reach the target state *)
+	target			: State.concrete_state;
+}
+
+type impossible_concrete_run = {
+	(* The parameter valuation for which this run exists *)
+	p_valuation		: PVal.pval;
+	(* The initial concrete state *)
+	initial_state	: State.concrete_state;
+	(* A possibly empty list of steps *)
+	steps			: concrete_step list;
+	(* A non-empty list of imaginary steps *)
+	impossible_steps: impossible_concrete_step list;
+}
+
+
+
+(************************************************************)
+(** Symbolic run in a state space *)
+(************************************************************)
+
+(*** WARNING: the structure is here (state, transition) followed by final state, but in concrete_run, it is initial state followed by (transition, state) list :( ***)
+ 
+type symbolic_step = {
+	source			: State.state_index;
+	transition		: combined_transition;
+}
+
+type symbolic_run = {
+	symbolic_steps	: symbolic_step list;
+	final_state		: State.state_index;
+}
+
+
+
+
+(************************************************************)
+(** Predecessors table *)
+(************************************************************)
+type predecessors_table = ((combined_transition * state_index) list) array
 
 
 (************************************************************)
@@ -105,6 +198,11 @@ val get_location : state_space -> Location.global_location_index -> Location.glo
 val get_state : state_space -> state_index -> state
 
 (*------------------------------------------------------------*)
+(** Return the global_location_index of a state_index *)
+(*------------------------------------------------------------*)
+val get_global_location_index : state_space -> state_index -> Location.global_location_index
+
+(*------------------------------------------------------------*)
 (** Return the index of the initial state, or raise Not_found if not defined *)
 (*------------------------------------------------------------*)
 val get_initial_state_index : state_space -> state_index
@@ -115,19 +213,25 @@ val get_initial_state_index : state_space -> state_index
 val get_successors : state_space -> state_index -> state_index list
 
 (*------------------------------------------------------------*)
-(** Compte and return the list of pairs (index successor of a state, corresponding action) *)
+(** Compte and return the list of pairs (index successor of a state, corresponding combined_transition) *)
 (*------------------------------------------------------------*)
-val get_successors_with_actions : state_space -> state_index -> (state_index * action_index) list
+val get_successors_with_combined_transitions : state_space -> state_index -> (combined_transition * state_index) list
+
 
 (*------------------------------------------------------------*)
-(** Compute and return a predecessor table state_index -> (state_index, action_index) list *)
+(** Compte and return the list of pairs (index successor of a state, corresponding action) *)
 (*------------------------------------------------------------*)
-val compute_predecessors_with_actions : state_space -> (state_index , (state_index * action_index) list) Hashtbl.t
+(* val get_successors_with_actions : state_space -> state_index -> (state_index * action_index) list *)
+
+(*------------------------------------------------------------*)
+(** Compute and return a predecessor array state_index -> (combined_transition , state_index) list *)
+(*------------------------------------------------------------*)
+val compute_predecessors_with_combined_transitions : state_space -> predecessors_table
 
 (*------------------------------------------------------------*)
 (** Return the table of transitions *)
 (*------------------------------------------------------------*)
-val get_transitions : state_space -> ((state_index * action_index), state_index) Hashtbl.t
+val get_transitions_table : state_space -> (state_index , ((combined_transition * state_index) list)) Hashtbl.t
 
 (*------------------------------------------------------------*)
 (** Return the list of all state indexes *)
@@ -171,13 +275,12 @@ val last_states: AbstractModel.abstract_model -> state_space -> state_index list
 
 
 (*------------------------------------------------------------*)
-(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the guard ***)
+(* Get the (full) guard associated with a transition *)
 (*------------------------------------------------------------*)
-val get_guard : state_space -> state_index -> action_index -> state_index -> LinearConstraint.pxd_linear_constraint
+val get_guard : state_space -> state_index -> combined_transition -> state_index -> LinearConstraint.pxd_linear_constraint
 
-(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the set of clocks to be reset along a transition ***)
-(*** NOTE: the function only works for regular resets (it raises an NotImplemented for other updates) ***)
-val get_resets : state_space -> state_index -> action_index -> state_index -> Automaton.clock_index list
+(*** NOTE: the function only works for regular resets (it raises NotImplemented for other updates) ***)
+val get_resets : state_space -> state_index -> combined_transition -> state_index -> Automaton.clock_index list
 
 
 (*------------------------------------------------------------*)
@@ -186,9 +289,15 @@ val get_resets : state_space -> state_index -> action_index -> state_index -> Au
 val reconstruct_scc : state_space -> state_index -> scc option
 
 (*------------------------------------------------------------*)
-(** From a set of states, return all transitions within this set of states, in the form of a triple (state_index, action_index, state_index) *)
+(** From a set of states, return all transitions within this set of states, in the form of a triple (state_index, combined_transition, state_index) *)
 (*------------------------------------------------------------*)
-val find_transitions_in : state_space -> scc -> (state_index * action_index * state_index) list
+val find_transitions_in : state_space -> scc -> (state_index * combined_transition * state_index) list
+
+
+(*------------------------------------------------------------*)
+(** Returns the symbolic run (list of pairs (state, combined transition)) from the source_state_index to the target_state_index. Can take a predecessors_table as an option, otherwise recomputes it from the state space. The list of transitions is ordered from the initial state to the target state; the target state is not included. Raise Not_found if run not found. *)
+(*------------------------------------------------------------*)
+val backward_symbolic_run : state_space -> state_index -> state_index -> predecessors_table option -> symbolic_run
 
 
 (************************************************************)
@@ -205,7 +314,7 @@ val add_state : state_space -> state_comparison -> state -> addition_result
 (* val add_state_dyn : AbstractModel.abstract_model -> state_space -> state -> LinearConstraint.linear_constraint -> (state_index * bool) *)
 
 (** Add a transition to the state space *)
-val add_transition : state_space -> (state_index * action_index * state_index) -> unit
+val add_transition : state_space -> (state_index * combined_transition * state_index) -> unit
 
 (** Add a p_inequality to all the states of the state space *)
 (*** NOTE: it is assumed that the p_constraint does not render some states inconsistent! ***)
@@ -241,8 +350,5 @@ val string_of_statespace_nature : statespace_nature -> string
 (************************************************************)
 (** Debug and performances *)
 (************************************************************)
-(*(** Get statistics on number of comparisons *)
-val get_statistics : unit -> string*)
-
 (** Get statistics on states *)
 val get_statistics_states : state_space -> string

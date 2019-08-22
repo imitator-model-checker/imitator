@@ -6,9 +6,6 @@ m4 classDiagramSimplified.m4 > classDiagramSimplified.dot && dot -T png -o class
 m4 classDiagramFull.m4 > classDiagramFull.dot && dot -T png -o classDiagramFull.png classDiagramFull.dot
 
 # Compile developer manual
-echo "Compiling the manual…"
-pdflatex IMITATOR-not-developer-manual.tex
-bibtex IMITATOR-not-developer-manual
-pdflatex IMITATOR-not-developer-manual.tex
-pdflatex IMITATOR-not-developer-manual.tex
-echo "Done"
+echo "Compiling the developer manual…"
+./compileManual.sh IMITATOR-not-developer-manual.tex
+echo "Done compiling the developer manual."

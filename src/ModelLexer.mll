@@ -1,18 +1,20 @@
 (*****************************************************************
  *
  *                       IMITATOR
- * 
+ *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
- * 
- * Author:        Etienne Andre
- * 
- * Created       : 2009/09/07
- * Last modified : 2018/02/23
+ * Université Paris 13, LIPN, CNRS, France
+ *
+ * Author:        Étienne André
+ *
+ * File contributors : Étienne André, Jaime Arias, Laure Petrucci
+ * Created           : 2009/09/07
+ * Last modified     : 2019/08/14
 *****************************************************************)
 
 {
 open ModelParser
+open Lexing
 
 (* OCaml style comments *)
 let comment_depth = ref 0;;
@@ -25,6 +27,20 @@ rule token = parse
 	  ['\n']             { line := !line + 1 ; token lexbuf }     (* skip new lines *)
 	| [' ' '\t']         { token lexbuf }     (* skip blanks *)
 	| "--" [^'\n']* '\n' { line := !line + 1 ; token lexbuf }     (* skip Hytech-style comments *)
+
+	(* C style include *)
+	| "#include \""   ( [^'"' '\n']* as filename) '"'
+    {
+			let top_file = lexbuf.lex_start_p.pos_fname in
+			let absolute_filename = FilePath.make_absolute (FilePath.dirname top_file) filename in
+
+			let c = open_in absolute_filename in
+			let lb = Lexing.from_channel c in
+			lb.Lexing.lex_curr_p <- { lb.Lexing.lex_curr_p with Lexing.pos_fname = absolute_filename };
+
+			let p = ModelParser.main token lb in
+			INCLUDE p
+    }
 
 	(* C style comments *)
 	| "/*"
@@ -41,7 +57,8 @@ rule token = parse
  	| "automatically_generated_x_obs"       { CT_OBSERVER_CLOCK } (* to forbid this keyword, potentially used in the observer *)
  	| "special_0_clock" {CT_SPECIAL_RESET_CLOCK_NAME} (* to forbid this keyword, used when a special reset clock is defined *)
 
- 	| "always"         { CT_ALWAYS }
+ 	| "accepting"      { CT_ACCEPTING }
+	| "always"         { CT_ALWAYS }
 	| "and"            { CT_AND }
 	| "automaton"      { CT_AUTOMATON }
 	| "bad"            { CT_BAD }
@@ -51,6 +68,7 @@ rule token = parse
 	| "constant"       { CT_CONSTANT }
 	| "discrete"       { CT_DISCRETE }
 	| "do"             { CT_DO }
+	| "else"           { CT_ELSE }
 	| "end"            { CT_END }
  	| "eventually"     { CT_EVENTUALLY }
  	| "everytime"      { CT_EVERYTIME }
@@ -88,11 +106,11 @@ rule token = parse
 	| "when"           { CT_WHEN }
 	| "while"          { CT_WHILE }
 	| "within"         { CT_WITHIN }
-	
+
 
 
 	| ['a'-'z''A'-'Z']['a'-'z''A'-'Z''_''0'-'9']* as lxm { NAME lxm }
-	| ['0'-'9']*'.'['0'-'9']+ as lxm { FLOAT lxm } 
+	| ['0'-'9']*'.'['0'-'9']+ as lxm { FLOAT lxm }
 	| ['0'-'9']+ as lxm { INT(NumConst.numconst_of_string lxm) }
 	| '"' [^'"']* '"' as lxm { STRING lxm } (* a string between double quotes *)
 
@@ -136,10 +154,10 @@ and comment_c = parse
             if !comment_depth == 0 then () else comment_c lexbuf }
   | eof
     { failwith "End of file inside a comment." }
-	
+
   | '\n'  { line := !line + 1 ; comment_c lexbuf }
   | _     { comment_c lexbuf }
-  
+
 (* OCaml style comments *)
 and comment_ocaml = parse
     "(*"  { incr comment_depth; comment_ocaml lexbuf }

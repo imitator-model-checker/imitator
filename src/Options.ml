@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Options definitions
  * 
- * File contributors : Ulrich Kühne, Étienne André
+ * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2019/02/19
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -52,13 +52,7 @@ class imitator_options =
 		
 		(* pi0 file *)
 		val mutable second_file_name = ""
-		
-		(* Create a "fake" pi0 file (USELESS) *)
-(* 		val mutable forcePi0 = ref false *)
-		
-		(* GML syntax *)
-(* 		val mutable fromGML = false *)
-		
+
 		
 	
 		(* OUTPUT OPTIONS *)
@@ -68,9 +62,6 @@ class imitator_options =
 		
 		(* only plot cartography *)
 		val mutable cartonly = false
-		
-		(* Give location detais in dot *)
-(* 		val mutable fancy = ref true *)
 		
 		(* prefix for output files *)
 		val mutable files_prefix = ref ""
@@ -105,18 +96,11 @@ class imitator_options =
 		(* Print graph of reachable states *)
 		val mutable graphical_state_space = Graphical_state_space_none
 		
-		(* Print graph of reachable states in verbose mode *)
-(* 		val mutable output_trace_set_verbose = ref false *)
-		
 		(* Keep the source file used for dot *)
 		val mutable with_graphics_source = ref false
 		
 		(* Print logs *)
 		val mutable with_log = ref false
-		
-(*		(* print parametric logs *)
-		val mutable with_parametric_log = ref false*)
-
 
 		
 		(* ALGORITHIMS *)
@@ -126,9 +110,6 @@ class imitator_options =
 		
 		(* Complete version of IM (experimental) *)
 (* 		val mutable completeIM = ref false *)
-		
-		(* Property input via CosyVerif *)
-(* 		val mutable cosyprop = ref "" *)
 		
 		(* imitator mode *)
 		val mutable imitator_mode = Inverse_method
@@ -166,7 +147,7 @@ class imitator_options =
 		(* Check whether the accumulated constraint is restricted to pi0 *)
 		val mutable check_point = ref false
 		
-		(* Limit the depth in a BFS algorithm *)
+		(* Limit the depth in a BFS algorithm or in NDFS for early backtracking *)
 		val mutable depth_limit = ref None
 		
 		(* Distributed version of IMITATOR *)
@@ -190,8 +171,17 @@ class imitator_options =
 		(* Double inclusion mode *)
 		val mutable inclusion2 = ref false
 		
+		(* do not put accepting states at the head of successors list in NDFS *)
+		val mutable no_acceptfirst = ref false
+
 		(* No leq test of the new states wrt the computed constraint in EFsynth *)
 		val mutable no_leq_test_in_ef = false
+
+		(* do not use lookahead in NDFS *)
+		val mutable no_lookahead = ref false
+		
+		(* do not order the pending list with bigger zones first in NDFS synthesis *)
+		val mutable no_pending_ordered = ref false
 
 		(* do not use random values *)
 		val mutable no_random = ref false
@@ -233,9 +223,6 @@ class imitator_options =
 (*		(* Translate PTA model into a CLP program *)
 		val mutable pta2clp = ref false*)
 		
-		(* Translate PTA model into a GML model *)
-(* 		val mutable pta2gml = ref false *)
-		
 		(* Translate PTA model into a HyTech file *)
 		val mutable pta2hytech = ref false
 
@@ -250,13 +237,16 @@ class imitator_options =
 		(* Translate PTA model into a TikZ LaTeX code *)
 		val mutable pta2tikz = ref false
 		
+		(* Translate PTA model into an Uppaal file *)
+		val mutable pta2uppaal = ref false
+
 		
 		(* SPECIALIZED OPTIONS*)
 		
 		(* Merging states on the fly *)
 		val mutable merge = ref false
 		(* Merging states on the fly (after pi0-compatibility check) *)
-		val mutable merge_before = ref false
+(* 		val mutable merge_before = ref false *)
 	
 		(* Merging heuristic *)
 		val mutable merge_heuristic = Merge_iter10
@@ -272,10 +262,8 @@ class imitator_options =
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		
 		method acyclic = !acyclic
-(* 		method acyclic_unset = (acyclic := false) *)
 (* 		method best_worst_case = !best_worst_case *)
 		method branch_and_bound = !branch_and_bound
-(* 		method branch_and_bound_unset = (branch_and_bound := false) *)
 		method cart = cart
 		method carto_tiles_limit = carto_tiles_limit
 		method carto_time_limit = carto_time_limit
@@ -283,7 +271,6 @@ class imitator_options =
 		method check_ippta = !check_ippta
 		method check_point = !check_point
 (* 		method completeIM = !completeIM *)
-(* 		method cosyprop = !cosyprop *)
 		method counterex = !counterex
 		method depth_limit = !depth_limit
 		method distribution_mode = !distribution_mode
@@ -293,19 +280,20 @@ class imitator_options =
 		method early_terminate = !early_terminate
 		method efim = !efim
 		method exploration_order = exploration_order
-(* 		method fancy = !fancy *)
 		method files_prefix = !files_prefix
-(* 		method fromGML = fromGML *)
 		method imitator_mode = imitator_mode
 		method new_ef_mode = new_ef_mode
 		method inclusion = !inclusion
 		method inclusion2 = !inclusion2
 		method merge = !merge
-		method merge_before = !merge_before
+(* 		method merge_before = !merge_before *)
 		method merge_heuristic = merge_heuristic
 		method model_input_file_name = model_input_file_name
 		method nb_args = nb_args
+		method no_acceptfirst = !no_acceptfirst
 		method no_leq_test_in_ef = no_leq_test_in_ef
+		method no_lookahead = !no_lookahead
+		method no_pending_ordered = !no_pending_ordered
 		method no_time_elapsing = !no_time_elapsing
 		method no_random = !no_random
 		method no_variable_autoremove = !no_variable_autoremove
@@ -321,13 +309,13 @@ class imitator_options =
 		method pi_compatible = !pi_compatible
 		method precomputepi0 = !precomputepi0
 (* 		method pta2clp = !pta2clp *)
-(* 		method pta2gml = !pta2gml *)
 		method pta2imi = !pta2imi
 		method pta2hytech = !pta2hytech
 		method pta2jpg = !pta2jpg
 		method pta2pdf = !pta2pdf
 		method pta2png = !pta2png
 		method pta2tikz = !pta2tikz
+		method pta2uppaal = !pta2uppaal
 		method second_file_name = second_file_name
 		method states_limit = !states_limit
 		method statistics = !statistics
@@ -338,10 +326,8 @@ class imitator_options =
 		method tree = !tree
 		method union = !union
 		method graphical_state_space = graphical_state_space
-(* 		method output_trace_set_verbose = !output_trace_set_verbose *)
 		method with_graphics_source = !with_graphics_source
 		method with_log = !with_log
-(* 		method with_parametric_log = !with_parametric_log *)
 
 		
 		
@@ -379,10 +365,14 @@ class imitator_options =
 
 			(* Get the mode *)
 			and set_mode mode =
+				(* Case: simple syntax check *)
+				if mode = "checksyntax" then 
+					imitator_mode <- No_analysis
+
 				(* Case: state space exploration *)
-				if mode = "statespace" then 
+				else if mode = "statespace" then 
 					imitator_mode <- State_space_exploration
-					
+
 				(* Case: old version of EF-synthesis using a list of constraints *)
 				else if mode = "EFold" then 
 					imitator_mode <- EF_synthesis
@@ -418,6 +408,10 @@ class imitator_options =
 				else if mode = "EFsynthminpq" then 
 					imitator_mode <- EF_synth_min_priority_queue
 					
+				(** EF-synthesis with examples of (un)safe words *)
+				else if mode = "EFexemplify" then 
+					imitator_mode <- EFexemplify
+					
 				(* Case: AF-synthesis *)
 				else if mode = "AF" then 
 					imitator_mode <- AF_synthesis
@@ -426,6 +420,17 @@ class imitator_options =
 				else if mode = "LoopSynth" then 
 					imitator_mode <- Loop_synthesis
 				
+				(* Case: Parametric accepting loop synthesis (liveness) *)
+				else if mode = "AccLoopSynth" then 
+					imitator_mode <- Acc_loop_synthesis
+				
+				(* Case: parametric accepting loop synthesis with NDFS exploration *)
+				else if mode = "AccLoopSynthNDFS" then(
+					imitator_mode <- Acc_loop_synthesis_NDFS;
+					(* By default: NDFS (other options can also be specified) *)
+					exploration_order <- Exploration_NDFS;
+				)
+
 				(** Case: Parametric Büchi-emptiness checking with non-Zenoness (method: check whether the PTA is CUB) *)
 				else if mode = "NZCUBcheck" then(
 					imitator_mode <- Parametric_NZ_CUBcheck;
@@ -457,7 +462,7 @@ class imitator_options =
 					(*** NOTE: very important! This algorithm requires the alternative definition of time-elapsing ***)
 					no_time_elapsing := true;
 					
-					(*** HACK!!! otherwise Graphics won't generate the .jpg file to test...) ***)
+					(*** HACK!!! otherwise Graphics won't generate the .jpg file to test…) ***)
 					graphical_state_space <- Graphical_state_space_normal;
 				)
 					
@@ -574,6 +579,18 @@ class imitator_options =
 					exploration_order <- Exploration_queue_BFS_RS
 				else if order = "queueBFSPRIOR" then
 					exploration_order <- Exploration_queue_BFS_PRIOR
+				else if order = "NDFS" then
+					exploration_order <- Exploration_NDFS
+				else if order = "NDFSsub" then
+					exploration_order <- Exploration_NDFS_sub
+				else if order = "layerNDFSsub" then
+					exploration_order <- Exploration_layer_NDFS_sub
+(*				else if order = "synNDFSsub" then
+					exploration_order <- Exploration_syn_NDFS_sub
+				else if order = "synlayerNDFSsub" then
+					exploration_order <- Exploration_syn_layer_NDFS_sub*)
+		(*		else if order = "synMixedNDFS" then
+					exploration_order <- Exploration_syn_mixed_NDFS*)
 				else(
 					(*** HACK: print header now ***)
 					print_header_string();
@@ -698,7 +715,7 @@ class imitator_options =
 					print_contributors();
 					exit 0), " Print contributors and exit.");
 				
-				("-counterexample", Set counterex, " For EF or PRP, stop the analysis as soon as a bad state is discovered. Default: false.");
+				("-counterexample", Set counterex, " For EF, stop the analysis as soon as a bad state is discovered. Default: false.");
 				
 				("-depth-limit", Int (fun i -> depth_limit := Some i), " Limits the depth of the exploration of the state space. Default: no limit.");
 
@@ -724,7 +741,10 @@ class imitator_options =
         Use 'queueBFSRS' for a queue-based breadth-first search with ranking system. [ANP17]
         Use 'queueBFSPRIOR' for a priority-based BFS with ranking system. [ANP17]
         Use 'optTimeQueue' for optimal reachability with priority queue [ANP17]
-        Default: layerBFS.
+        Use 'NDFS' for standard NDFS. [NPvdP18]
+        Use 'NDFSsub' for standard NDFS with subsumption. [NPvdP18]
+        Use 'layerNDFSsub' for layered NDFS with subsumption. [NPvdP18]
+        Default: layerBFS (except for AccLoopSynthNDFS, in which case this is NDFS).
 				");
 				
 (* 				("-fromGrML", Unit (fun () -> fromGML <- true), "GrML syntax for input files (experimental). Defaut : 'false'"); *)
@@ -739,11 +759,13 @@ class imitator_options =
 				
 				("-merge", Set merge, " Use the merging technique of [AFS13]. Default: 'false' (disable)");
 				
-				("-merge-before", Set merge_before , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");
+(*				("-merge-before", Set merge_before , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");*)
 				
 				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Options are 'always', 'targetseen', 'pq10', 'pq100', 'iter10', 'iter100'. Default: iter10.");
 
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
+        Use 'checksyntax' for a simple syntax check and no analysis.
+        
         Use 'statespace' for the generation of the entire parametric state space.
         
         Use 'EF' for a parametric non-reachability analysis. [AHV93,JLR15]
@@ -752,6 +774,8 @@ class imitator_options =
         Use 'EFsynthminpq' for a parametric non-reachability analysis with global time minimization. [ABPP19]
         Use 'PDFC' for parametric non-deadlock checking. [Andre16]
         Use 'LoopSynth' for cycle-synthesis (without non-Zeno assumption). [ANPS17]
+        Use 'AccLoopSynth' for accepting cycle-synthesis (without non-Zeno assumption).
+        Use 'AccLoopSynthNDFS' for accepting cycle-synthesis with NDFS exploration (without non-Zeno assumption) [NPvdP18]
         Use 'NZCUBcheck' for cycle-synthesis (with non-Zeno assumption, using a CUB-detection). [EXPERIMENTAL] [ANPS17]
         Use 'NZCUBtrans' for cycle-synthesis (with non-Zeno assumption, using a transformation into a CUB-PTA). [EXPERIMENTAL] [ANPS17]
         
@@ -764,8 +788,13 @@ class imitator_options =
         Default: 'inversemethod'.");
 				(*** NOTE: hidden option! 'shuffle' to cover all the points within v0 after shuffling the array. (Reason for hiding: only useful in the distributed cartography) ***)
 				(*** NOTE: hidden option! or 'randomseqXX' where XX is a number to iterate random calls to IM followed by a sequential check (e.g., randomseq5 or randomseq10000) (Reason for hiding: only useful in the distributed cartography) ***)
-		
+				("-no-acceptfirst", Set no_acceptfirst, "In NDFS, do not put accepting states at the head of the successors list. Default: false.");
+
 				("-no-inclusion-test-in-EF", Unit (fun () -> no_leq_test_in_ef <- true), " In EFsynth, no inclusion test of the new states constraints in the already computed constraint. Default: false.");
+
+				("-no-lookahead", Set no_lookahead, " In NDFS, no lookahead for finding successors closing an accepting cycle. Default: false.");
+
+				("-no-pending-ordered", Set no_pending_ordered, " In NDFS synthesis, do not order the pending queue with larger zones first. Default: false.");
 
 				("-no-random", Set no_random, " In IM, no random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 
@@ -784,8 +813,6 @@ class imitator_options =
 				("-output-cart-y-max", Int (fun n -> output_cart_y_max := Some n), " Set maximum value for the y axis when plotting the cartography (not entirely functional yet). Default: automatic.");
 				
 				("-output-graphics-source", Set with_graphics_source, " Keep file(s) used for generating graphical output. Default: false.");
-
-(* 				("-output-parametric-states", Set with_parametric_log, " Adds the elimination of the clock variables to the constraints in the description of all reachable states. Default: false."); *)
 
 				("-output-prefix", Set_string files_prefix, " Set the prefix for output files. Default: [model].");
 				
@@ -836,6 +863,8 @@ class imitator_options =
 				
 				("-PTA2TikZ", Unit (fun _ -> pta2tikz := true; imitator_mode <- Translation), "Translate the model into LaTeX TikZ code (no positioning yet), and exit without performing any analysis. Defaut : 'false'");
 				
+				("-PTA2Uppaal", Unit (fun _ -> pta2uppaal := true; imitator_mode <- Translation), "Translate the model into an Uppaal model, and exit without performing any analysis. Some features may not be translated, see user manual. Defaut : 'false'");
+				
 				(* Hidden option (April fool 2017) *)
 				(*** NOTE: "Beware: options that have an empty doc string will not be included in the list." ***)
 				("-romeo", Unit call_romeo, "");
@@ -884,7 +913,7 @@ class imitator_options =
 
 			Arg.parse speclist anon_fun usage_msg;
 
-			(* Case no file (except case translation) *)
+			(* Case no file *)
 			if nb_args < 1 then(
 				(*** HACK: print header now ***)
 				print_header_string();
@@ -893,9 +922,8 @@ class imitator_options =
 				abort_program (); exit(1)
 			);
 			
-			(* Case no pi0 file *)
-			(*** TODO: do something less horrible here! ***)
-			if nb_args = 1 && (imitator_mode != State_space_exploration) && (imitator_mode != EF_synthesis) && (imitator_mode != AF_synthesis) && (imitator_mode != EFunsafe_synthesis) && (imitator_mode != EF_min) && (imitator_mode != EF_max) && (imitator_mode != EF_synth_min) && (imitator_mode != EF_synth_max) && (imitator_mode != EF_synth_min_priority_queue) && (imitator_mode != Loop_synthesis) && (imitator_mode != Parametric_NZ_CUBtransform) && (imitator_mode != Parametric_NZ_CUBtransformDistributed) && (imitator_mode != Parametric_NZ_CUBcheck) && (imitator_mode != Parametric_NZ_CUB) && (imitator_mode != Parametric_deadlock_checking) && (imitator_mode != Translation) then(
+			(* Case no pi0 or no v0 file, although it is needed *)
+			if nb_args = 1 && (is_mode_IM imitator_mode || is_mode_cartography imitator_mode) then(
 				(*** HACK: print header now ***)
 				print_header_string();
 				print_error ("Please give a file name for the reference valuation.");
@@ -938,6 +966,7 @@ class imitator_options =
 
 			(* Global mode *)
 			let message = match imitator_mode with
+				| No_analysis -> "syntax check"
 				| Translation -> "translation"
 				| State_space_exploration -> "parametric state space exploration"
 				| EF_synthesis -> "EF-synthesis"
@@ -947,8 +976,11 @@ class imitator_options =
 				| EF_synth_min -> "EF-synth with minimization"
 				| EF_synth_max -> "EF-synth with maximization"
 				| EF_synth_min_priority_queue -> "EF-synth with minimal reachability"
+				| EFexemplify -> "EF-exemplify"
 				| AF_synthesis -> "AF-synthesis"
-				| Loop_synthesis -> "loop-synthesis"
+				| Loop_synthesis -> "infinite run synthesis"
+				| Acc_loop_synthesis -> "accepting infinite run synthesis"
+				| Acc_loop_synthesis_NDFS -> "accepting infinite run synthesis with NDFS exploration"
 				| Parametric_NZ_CUBcheck -> "parametric non-Zeno emptiness checking (CUB checking)"
 				| Parametric_NZ_CUBtransform -> "parametric non-Zeno emptiness checking (CUB transformation)"
 				| Parametric_NZ_CUBtransformDistributed -> "parametric non-Zeno emptiness checking (CUB transformation), distributed version"
@@ -969,24 +1001,13 @@ class imitator_options =
 
 			(*** TODO : print the user-defined correctness condition, if any ***)
 			
-			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-			(* Some useful variables *)
-			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-			
-			(* Shortcut *)
-			let in_cartography_mode =
-				match imitator_mode with
-				| Translation | State_space_exploration | EF_synthesis| EFunsafe_synthesis | EF_min | EF_max | EF_synth_min | EF_synth_max | EF_synth_min_priority_queue | AF_synthesis | Loop_synthesis | Parametric_NZ_CUBtransform | Parametric_NZ_CUBtransformDistributed | Parametric_NZ_CUBcheck | Parametric_NZ_CUB | Parametric_deadlock_checking | Inverse_method | Inverse_method_complete | PRP -> false
-				| Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _  | RandomSeq_cartography _ | PRPC -> true
-			in
-			
 			
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Force options *) 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			
-			(* If a time limit is defined for BC but NOT for IM, then define it for IM too (otherwise may yield an infinite loop in IM...) *)
-			if in_cartography_mode && carto_time_limit <> None && !time_limit = None then(
+			(* If a time limit is defined for BC but NOT for IM, then define it for IM too (otherwise may yield an infinite loop in IM…) *)
+			if is_mode_cartography imitator_mode && carto_time_limit <> None && !time_limit = None then(
 				print_warning ("A time limit is defined for BC but not for IM: forcing time limit for IM too.");
 				let limit = match carto_time_limit with
 					| None -> raise (InternalError ("Impossible situation in options, carto_time_limit is set at that point"))
@@ -997,7 +1018,7 @@ class imitator_options =
 			
 			
 			(* Handling BC tiles files output *)
-			if in_cartography_mode then(
+			if is_mode_cartography imitator_mode then(
 				(* Case cartograpy output requested *)
 				if cart then(
 					(* Enable cartography for BC *)
@@ -1027,31 +1048,9 @@ class imitator_options =
 			
 			(*** TODO: add warning if Learning_cartography is used with some incompatible options (such as -PRP) ***)
 			
-			if nb_args = 2 then(
-				if imitator_mode = Translation then
-					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a translation.")
+			if nb_args = 2 && not (is_mode_cartography imitator_mode) && not (is_mode_IM imitator_mode) then(
+					print_warning ("The second file " ^ second_file_name ^ " will be ignored since the analysis is neither the inverse method nor the behavioral cartography or their variants.")
 				;
-				if imitator_mode = State_space_exploration then
-					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a state space exploration.")
-				;
-				if imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_synth_min || imitator_mode = EF_synth_max || imitator_mode = EF_synth_min_priority_queue || imitator_mode = EF_max|| imitator_mode = AF_synthesis then
-					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a synthesis with respect to a property.")
-				;
-				if imitator_mode = Loop_synthesis then
-					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a loop synthesis.")
-				;
-				if imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform  || imitator_mode = Parametric_NZ_CUBtransformDistributed then
-					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a non-Zeno parametric model checking.")
-				;
-				if imitator_mode = Parametric_NZ_CUB then
-					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is a non-Zeno parametric model checking.")
-				;
-				if imitator_mode = Parametric_deadlock_checking then
-					print_warning ("The second file " ^ second_file_name ^ " will be ignored since this is parametric deadlock checking.")
-				;
-			(*	if !forcePi0 then
-					print_warning ("The second " ^ !second_file_name ^ " will be ignored since this the pi0 file is automatically generated.")
-				;*)
 			);
 
 			if !acyclic && !tree then (
@@ -1065,25 +1064,24 @@ class imitator_options =
 
 			
 			(* No cart options if not in cartography *)
-			if not in_cartography_mode && carto_tiles_limit <> None then print_warning ("A maximum number of tiles has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
-			if not in_cartography_mode && carto_time_limit <> None then print_warning ("A maximum computation for the cartography has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
-			if not in_cartography_mode && (NumConst.neq !step NumConst.one) then
+			if not (is_mode_cartography imitator_mode) && carto_tiles_limit <> None then print_warning ("A maximum number of tiles has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
+			if not (is_mode_cartography imitator_mode) && carto_time_limit <> None then print_warning ("A maximum computation for the cartography has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
+			if not (is_mode_cartography imitator_mode) && (NumConst.neq !step NumConst.one) then
 				print_warning (Constants.program_name ^ " is not run in cartography mode; the option regarding to the step of the cartography algorithm will thus be ignored.");
 			
 			(* Options for variants of IM, but not in IM mode *)
-			(*** TODO: do something less horrible here! ***)
-			if (imitator_mode = State_space_exploration || imitator_mode = Translation || imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = EF_min || imitator_mode = EF_max || imitator_mode = EF_synth_min || imitator_mode = EF_synth_max || imitator_mode = EF_synth_min_priority_queue || imitator_mode = AF_synthesis || imitator_mode = Loop_synthesis || imitator_mode = Parametric_NZ_CUBcheck || imitator_mode = Parametric_NZ_CUBtransform || imitator_mode = Parametric_NZ_CUBtransformDistributed || imitator_mode = Parametric_NZ_CUB || imitator_mode = Parametric_deadlock_checking) && (!union || !pi_compatible) then
-				print_warning (Constants.program_name ^ " is run in state space exploration mode; options regarding to the variant of the inverse method will thus be ignored.");
+			if (not (is_mode_IM imitator_mode) && not (is_mode_cartography imitator_mode)) && (!union || !pi_compatible) then
+				print_warning ("Options regarding the variants of the inverse method will be ignored, as " ^ Constants.program_name ^ " is not run in inverse method or cartography.");
 
 			
 			(* No no_leq_test_in_ef if not EF *)
-			if no_leq_test_in_ef && (imitator_mode <> EF_synthesis && imitator_mode <> EF_min && imitator_mode <> EF_max && imitator_mode <> EF_synth_min && imitator_mode <> EF_synth_max && imitator_mode <> EF_synth_min_priority_queue && imitator_mode <> EFunsafe_synthesis && imitator_mode <> PRP) then(
+			if no_leq_test_in_ef && (imitator_mode <> EF_synthesis && imitator_mode <> EF_min && imitator_mode <> EF_max && imitator_mode <> EF_synth_min && imitator_mode <> EF_synth_max && imitator_mode <> EF_synth_min_priority_queue && imitator_mode <> EFunsafe_synthesis && imitator_mode <> EFexemplify && imitator_mode <> PRP) then(
 				print_warning ("The option '-no-inclusion-test-in-EF' is reserved for EF and PRP. It will thus be ignored.");
 			);
 				
 			(* No counterex if not EF *)
-			if !counterex && (imitator_mode <> EF_synthesis && imitator_mode <> EFunsafe_synthesis && imitator_mode <> PRP) then(
-				print_warning ("The option '-counterexample' is reserved for EF and PRP. It will thus be ignored.");
+			if !counterex && (imitator_mode <> EF_synthesis && imitator_mode <> EFunsafe_synthesis && imitator_mode <> Acc_loop_synthesis_NDFS) then(
+				print_warning ("The option '-counterexample' is reserved for EF and AccLoopSynthNDFS. It will thus be ignored.");
 			);
 			
 			
@@ -1108,7 +1106,14 @@ class imitator_options =
 				| Exploration_queue_BFS -> print_message Verbose_standard ("Exploration order: queue-based BFS [ACN17].")
 				| Exploration_queue_BFS_RS -> print_message Verbose_standard ("Exploration order: queue-based BFS with ranking system [ACN17].")
 				| Exploration_queue_BFS_PRIOR -> print_message Verbose_standard ("Exploration order: queue-based BFS with priority [ACN17].")
-			end;
+				
+				| Exploration_NDFS -> print_message Verbose_standard ("Exploration order: standard NDFS [NPvdP18].")
+				| Exploration_NDFS_sub when !counterex = true -> print_message Verbose_standard ("Exploration order: NDFS with subsumption [NPvdP18]; emptiness only.")
+				| Exploration_layer_NDFS_sub when !counterex = true -> print_message Verbose_standard ("Exploration order: layerd NDFS with subsumption [NPvdP18]; emptiness only.")
+				| Exploration_NDFS_sub (*when !counterex = false*) -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption [NPvdP18].")
+				| Exploration_layer_NDFS_sub (*when !counterex = false*) -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption and layers [NPvdP18].")
+(* 				| Exploration_syn_mixed_NDFS -> print_message Verbose_standard ("Exploration order: NDFS with mix of subsumption and layers.") *)
+end;
 
             (* Merge heuristic *)
             begin
@@ -1175,7 +1180,7 @@ class imitator_options =
 			;
 
 
-			if (imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis || imitator_mode = PRP) then(
+			if (imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis) then(
 				if !counterex then(
 					print_message Verbose_standard ("Counterexample mode: the analysis will stop as soon as a target state is found.");
 				)else(
@@ -1190,44 +1195,44 @@ class imitator_options =
 				print_message Verbose_medium ("Non-distributed mode (default).");
 			| Distributed_unsupervised ->(
 				print_message Verbose_standard ("Considering a distributed mode with unsupervised workers (work in progress).");
-				if not in_cartography_mode then(
+				if not (is_mode_cartography imitator_mode) then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_unsupervised_multi_threaded ->(
 				print_message Verbose_standard ("Considering a distributed mode with unsupervised multi-threaded workers (work in progress).");
-				if not in_cartography_mode then(
+				if not (is_mode_cartography imitator_mode) then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_static ->(
 				print_message Verbose_standard ("Considering a distributed mode with static splitting [ACN15].");
-				if not in_cartography_mode then(
+				if not (is_mode_cartography imitator_mode) then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_ms_sequential ->(
 				print_message Verbose_standard ("Considering a distributed mode with sequential enumeration of pi0 points [ACE14].");
-				if not in_cartography_mode then(
+				if not (is_mode_cartography imitator_mode) then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_ms_shuffle ->(
 				print_message Verbose_standard ("Considering a distributed mode with \"shuffle\" enumeration of pi0 points.");
-				if not in_cartography_mode then(
+				if not (is_mode_cartography imitator_mode) then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_ms_random max -> (
 				print_message Verbose_standard ("Considering a distributed mode with random generation of pi0 points with up to " ^ (string_of_int max) ^ " successive failure before switching to exhaustive enumeration [ACE14].");
-				if not in_cartography_mode then(
+				if not (is_mode_cartography imitator_mode) then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			(*************)
 			| Distributed_ms_subpart -> (
 				print_message Verbose_standard ("Considering a distributed mode with a dynamic domain decomposition [ACN15].");
-				if not in_cartography_mode then(
+				if not (is_mode_cartography imitator_mode) then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
@@ -1235,7 +1240,7 @@ class imitator_options =
 
 			if !distributedKillIM then(
 				print_message Verbose_standard ("Heuristics to kill a process when its point is covered by another tile, in the distributed cartography [ACN15]; only works with some distribution schemes.");
-				if not in_cartography_mode || !distribution_mode = Non_distributed then(
+				if not (is_mode_cartography imitator_mode) || !distribution_mode = Non_distributed then(
 					print_warning "The killIM heuristics is only valid for the distributed cartography. Option will be ignored.";
 				);
 			)else
@@ -1259,15 +1264,6 @@ class imitator_options =
 
 
 
-(*			(* Syntax *)
-			if fromGML then
-				print_message Verbose_standard ("GrML syntax used.");*)
-
-			(* Syntax *)
-			(*if !forcePi0 then
-				print_warning ("Pi0 is automatically generated.");*)
-
-
 			(* OPTIONS *)
 
 			(*** TODO: check that only in IM/BC mode ***)
@@ -1283,11 +1279,11 @@ class imitator_options =
 			) else
 				print_message Verbose_medium ("Merging technique of [AFS13] disabled (default).")
 			;
-			if !merge_before then
+(*			if !merge_before then
 				print_message Verbose_standard ("Variant of the merging technique of [AFS13] enabled. States will be merged before pi0-compatibility test (EXPERIMENTAL).")
 			else
 				print_message Verbose_medium ("Variant of the merging technique of [AFS13] disabled.")
-			;
+			;*)
 
 			(*if !dynamic then
 				print_message Verbose_standard ("Dynamic mode (optimization by RS).")
@@ -1298,6 +1294,23 @@ class imitator_options =
 				print_message Verbose_standard ("Auto-detection mode for sync actions.")
 			else
 				print_message Verbose_medium ("No auto-detection mode for sync actions (default).");
+
+			(*** TODO: check that only in NDFS mode ***)
+			if !no_acceptfirst then
+				print_message Verbose_standard ("Not reordering successors (accepting states first) in NDFS search.")
+			else
+				print_message Verbose_medium ("Reordering successors (accepting states first) in NDFS (default).");
+
+			if !no_lookahead then
+				print_message Verbose_standard ("No lookahead in NDFS search.")
+			else
+				print_message Verbose_medium ("Lookahead for succesors closing accepting cycles in NDFS (default).");
+
+			if !no_pending_ordered then
+				print_message Verbose_standard ("No ordering of pending list with larger zones first in NDFS synthesis.")
+			else
+				print_message Verbose_medium ("Ordering pending list with larger zones first in NDFS synthesis (default).");
+
 
 			(*** TODO: check that only in IM/BC mode ***)
 			if !no_random then
@@ -1406,29 +1419,11 @@ class imitator_options =
 			else
 				print_message Verbose_medium ("No graphical output for trace set(s) (default).")
 			;
-			
-(*			if !output_trace_set_verbose then
-				print_message Verbose_standard ("The trace set(s) will be generated in a graphical mode with verbose information (with all constraints).")
-			else
-				print_message Verbose_medium ("No verbose graphical output for trace set(s) (default).")
-			;*)
-			
-(*			if !fancy then
-				print_message Verbose_medium ("Locations will be detailed in the graphical trace set (default).")
-			else
-				print_message Verbose_standard ("No location details in the graphical trace set.")
-			;
-			*)
-			
+
 			if !with_log then
 				print_message Verbose_standard ("Description of states will be output.")
 			else
 				print_message Verbose_medium ("No state description (default).");
-
-(*			if !with_parametric_log then
-				print_message Verbose_standard ("Parametric description of states will be generated.")
-			else
-				print_message Verbose_medium ("No parametric description of states (default).");*)
 
 				
 			(************************************************************)

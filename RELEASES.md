@@ -1,9 +1,44 @@
 *******************************************************
-# release XXX (XXXX) FUTURE MAJOR RELEASE
+# release X.XX (XXXX) FUTURE MAJOR RELEASE
+MAJOR RELEASE
 
 
 *******************************************************
-# release 2.11 (2019-03-01)
+# release 2.12 (2019-08-22) Butter Lobster
+MAJOR RELEASE
+
+### Bug fixing:
+* Fixed a "+ 0" that appeared in some of the text and graphical outputs
+
+### Major features
+* New accepting cycle synthesis (`-mode AccLoopSynth`)
+* New NDFS-based accepting cycle synthesis (`-mode AccLoopSynthNDFS`) with several exploration strategies [NPP18]. Additional option `-counterexample` terminates the analysis as soon as one cycle is found.
+* In mode `EF -counterexample`, IMITATOR outputs an example of parameter valuation, and a full concrete run, with a graphical representation of the clocks and discrete variables evolution. An absolute time clock (initially set to 0 and never reset) named `global_time` needs to be defined in the model. [EXPERIMENTAL]
+* New check-syntax mode (`-mode checksyntax`), that simply checks the syntax and terminates without doing any analysis.
+
+### Minor features
+* Removed the creation and deletion of an (unused) script when generating graphics
+
+### Syntax improvement
+* `if`-`then`-`else` conditions are now allowed in updates. Example syntax: `when x = 2 sync a do {if l <= 10 then x := 0, l := 0 else (i := 2) end} goto l1;`
+* Partial model inclusion is now possible thanks to keyword `#include`. Notably, properties can now be included from other files.
+
+### Options
+* Removed the `-merge-before` option (that was not documented nor properly tested)
+
+### Export
+* The result in the terminal tries to be more precise about what the synthesized constraints actually guarantees
+* Added a (tentative) translation to Uppaal (option `-PTA2Uppaal`); see limitations in the user manual
+* In the graphical state space and states description, the projection onto a selected set of parameters is added if the model contains `projectresult(…)`
+* In the text files, state and transition descriptions are now ordered by increasing order
+* The cartography and tile graphics are now larger (1024x1024), and the margins are a bit reduced
+
+### Internal
+* Changed the internal representation of the state space: (state, action, state) is now (state, edge, state)
+
+
+*******************************************************
+# release 2.11 (2019-03-01) Butter Kouign-aman
 MAJOR RELEASE
 
 ### Major features
@@ -69,7 +104,7 @@ minor release
 
 
 *******************************************************
-# release 2.10 (2018-02-21)
+# release 2.10 (2018-02-21) Butter Jellyfish
 MAJOR RELEASE
 
 ### Major features:
@@ -107,7 +142,7 @@ MINOR RELEASE
 
 
 *******************************************************
-# release 2.9 (2017-03-23)
+# release 2.9 (2017-03-23) Butter Incaberry
 MAJOR RELEASE
 
 ### Major
@@ -139,7 +174,7 @@ MAJOR RELEASE
 
 
 *******************************************************
-# release 2.8 (2016-08-13)
+# release 2.8 (2016-08-13) Butter Ham
 MAJOR RELEASE
 
 ### Major
@@ -222,7 +257,7 @@ INTERMEDIATE RELEASE
 
 
 *******************************************************
-# release 2.7 (2015-07-22)
+# release 2.7 (2015-07-22) Butter Guéméné
 
 ### Major algorithmic features since 2.6.1
 * Added EF-synthesis (option `-mode EF`): synthesize all parameter valuations such that a given state is reachable [AHV93,JLR15]
@@ -275,7 +310,7 @@ INTERMEDIATE RELEASE
 ### Install and compile
 * Main binary now in lower case (`imitator`)
 * Two versions:
-	* non-distributed (`sh compile.sh`), that creates a static binary `imitator`, or 
+	* non-distributed (`sh compile.sh`), that creates a static binary `imitator`, or
 	* distributed (`sh compile-distr.sh`), that creates a dynamic binary `patator`
 
 ### Internal

@@ -5,30 +5,35 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PACKAGES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\usepackage[utf8x]{inputenc}
+\usepackage[utf8]{inputenc}
 
 \usepackage[english]{babel} % francais,
 
 \usepackage{fourier}
-\usepackage{eulervm}
+% \usepackage{eulervm}
+% NOTE: both fourier + eulervm make '<' and '>' not displaid!
 
 \usepackage{pdflscape}
 
 \usepackage{amsmath,amssymb,amsthm,url}
 \usepackage{amsfonts}
 
-% \usepackage{caption}
 \usepackage{subcaption}
 % \usepackage{marginnote}
+
+\usepackage{longtable}
 
 % \usepackage[pdftex]{graphicx,color}
 \usepackage[pdftex,
 		colorlinks=true,
-		pagebackref=true,
+% 		pagebackref=true,
 		citecolor=darkgreen,
 		linkcolor=darkblue,
-		urlcolor=darkpurple,
+		urlcolor=URLCOLOR,
 	]{hyperref}
+
+\usepackage{graphicx}
+\graphicspath{{./images/}{../logos/}}
 
 
 % BEGIN Watermarking
@@ -65,7 +70,7 @@
 \fancyhead[r]{%
 	\includegraphics[height=1em]{../logos/imitator-500.png}
 	\includegraphics[height=1em]{../logos/logo2-300.png}
-	\includegraphics[height=1em]{../logos/logo2-11-300.png}
+	\includegraphics[height=1em]{../logos/logo2-12-300.png}
 }
 
 \renewcommand{\headrulewidth}{.1pt}
@@ -84,9 +89,9 @@
 \usetikzlibrary{arrows,automata,decorations.pathmorphing}
 % Couleurs
 
-\definecolor{darkblue}{rgb}{0, 0, 0.7}
+\definecolor{darkblue}{rgb}{0.0,0.0,0.6}
 \definecolor{darkgreen}{rgb}{0, 0.5, 0}
-\definecolor{darkpurple}{rgb}{0.7, 0, 0.7}
+\definecolor{URLCOLOR}{rgb}{.4, .4, .7}
 
 
 \definecolor{turquoise}{rgb}{0 0.41 0.41}
@@ -161,7 +166,7 @@
 \newcommand{\LTerm}{\mathcal{LT}} % (#1)% set of all linear terms over some set
 \newcommand{\LTermD}{\LTerm(\DVar)}
 \newcommand{\LTermXPD}{\LTerm(\Clock \cup \Param \cup \DVar)}
-\newcommand{\loc}{l} % location
+\newcommand{\loc}{\ell} % location
 \newcommand{\locinit}{\loc_\init}
 \newcommand{\Loc}{L} % set of locations
 \newcommand{\Param}{P} % set of parameters
@@ -238,7 +243,6 @@
 \newcommand{\gdot}{\texttt{dot}}
 \newcommand{\graphviz}{Graphviz}
 \newcommand{\hytech}{{\sc HyTech}}
-% \newcommand{\imitator}{\textsc{Imitator}}
 \newcommand{\imitator}{\textsf{IMITATOR}}
 \newcommand{\imitatorExec}{\code{imitator}}
 \newcommand{\IPTA}{IPTA}
@@ -255,8 +259,8 @@
 
 
 % Current version
-\newcommand{\imitatorversion}{2.11}
-\newcommand{\imitatorversionname}{Butter Kouign-amann}
+\newcommand{\imitatorversion}{2.12}
+\newcommand{\imitatorversionname}{Butter Lobster}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -450,3 +454,33 @@
 	morecomment=[s][\color{gray!50!blue}]{(*}{*)},
 }
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% bibLaTeX
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[backend=biber,backref=true,style=alphabetic,url=false,doi=true,defernumbers=true,sorting=anyt,maxnames=99]{biblatex} % tlmgr install biblatex etoolbox logreq
+\addbibresource{biblio.bib}
+
+% Reformat DOI
+\renewbibmacro*{doi+eprint+url}{%
+	\iftoggle{bbx:doi}
+		{\color{black!40}\footnotesize\printfield{doi}}
+		{}%
+	\newunit\newblock
+	\iftoggle{bbx:eprint}
+		{\usebibmacro{eprint}}
+		{}%
+	\newunit\newblock
+	\iftoggle{bbx:url}
+% 		{\color{black!40}\footnotesize\printfield{url}}
+		{\usebibmacro{url+urldate}}
+		{}%
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MISC
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\sloppy

@@ -1,12 +1,12 @@
 (************************************************************
  *
  *                       IMITATOR
- * 
+ *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
- * 
+ * Université Paris 13, LIPN, CNRS, France
+ *
  * Module description: Parsing functions for input elements
- * 
+ *
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
  * Last modified     : 2018/04/06
@@ -41,7 +41,11 @@ let converting_counter = create_time_counter_and_register "model converting" Par
 (* Generic parser that returns the abstract structure *)
 let parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name =
 	(* Parsing *)
-	let parsing_structure = try(
+	let parsing_structure = try (
+		let absolute_filename = FilePath.make_absolute (FileUtil.pwd ()) file_name in
+		lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with Lexing.pos_fname = absolute_filename };
+		lexbuf.Lexing.lex_start_p <- { lexbuf.Lexing.lex_start_p with Lexing.pos_fname = absolute_filename };
+
 		the_parser the_lexer lexbuf
 	) with
 		| ParsingError (symbol_start, symbol_end) ->
@@ -112,19 +116,19 @@ let parser_lexer_from_string the_parser the_lexer the_string =
 (** Compile the concrete model and convert it into an abstract model *)
 (************************************************************)
 let compile_model options (with_special_reset_clock : bool) =
-	
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Parsing *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* Statistics *)
 	parsing_counter#start;
-	
+
 	(* Parsing the main model *)
 	print_message Verbose_low ("Parsing file " ^ options#model_input_file_name ^ "...");
-	let parsing_structure = 
+	let parsing_structure =
 		(* Branching between 2 input syntaxes *)
-		
+
 (*		(* Case GrML *)
 		if options#fromGML then(
 			(*** HACK: for EFsynth, we will have to get the property from the command line and insert it into the parsed structure ***)
@@ -149,23 +153,23 @@ let compile_model options (with_special_reset_clock : bool) =
 					| _ -> raise (InternalError("Only one automaton is expected when parsing GrML."))
 				in
 				let automaton_name, _, _ = automaton in
-				
+
 				(* Insert the automaton name in the property *)
-				let property_updated = 
-				match property with 
+				let property_updated =
+				match property with
 				(* Case Unreachable_locations: edit *)
 				| Some (ParsingStructure.Parsed_unreachable_locations parsed_unreachable_global_location) ->
 					begin
 					match parsed_unreachable_global_location with
 					(* Expecting a single Unreachable_location *)
-					| [[ParsingStructure.Parsed_unreachable_loc (_, location_name)]] -> 
+					| [[ParsingStructure.Parsed_unreachable_loc (_, location_name)]] ->
 						Some (ParsingStructure.Parsed_unreachable_locations [[ParsingStructure.Parsed_unreachable_loc (automaton_name, location_name)]])
 					| _ -> raise (InternalError("Unexpected form of unreachable property found when parsing GrML."))
 					end
 				(* Other: no edit *)
 				| p -> p
 				in
-				
+
 				(* Finally, insert the property at its right location *)
 				variable_declarations, automata, init_definition, property_updated, noprojection, nocarto_definition
 			) else (
@@ -174,14 +178,14 @@ let compile_model options (with_special_reset_clock : bool) =
 
 			)
 		) (* end if GrML *)
-		
+
 		(* Case normal parsing *)
 		else*) parser_lexer_from_file ModelParser.main ModelLexer.token options#model_input_file_name
 	in
 
 	(* Statistics *)
 	parsing_counter#stop;
-	
+
 	print_message Verbose_low ("\nParsing completed " ^ (after_seconds ()) ^ ".");
 	(** USELESS, even increases memory x-( **)
 	(* Gc.major (); *)
@@ -193,11 +197,11 @@ let compile_model options (with_special_reset_clock : bool) =
 
 	(* Statistics *)
 	converting_counter#start;
-	
-	let model = 
+
+	let model =
 	try (
 		ModelConverter.abstract_model_of_parsing_structure options with_special_reset_clock parsing_structure
-	) with 
+	) with
 		| InvalidModel -> (print_error ("The input model contains errors. Please check it again."); abort_program (); exit 1)
 		| InternalError e -> (print_error ("Internal error while parsing the input model: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
 		in
@@ -220,7 +224,7 @@ let compile_model options (with_special_reset_clock : bool) =
 
 	(* Ugly line break *)
 	print_message Verbose_experiments "";
-	
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* return *)
@@ -234,7 +238,7 @@ let compile_model options (with_special_reset_clock : bool) =
 let compile_pi0 options =
 	(* Print some information *)
 	print_message Verbose_low ("Parsing reference valuation in file " ^ options#second_file_name ^ "...");
-	
+
 	(* Pi0 Parsing *)
 	let pi0_parsed =
 	(*
@@ -245,16 +249,16 @@ let compile_pi0 options =
 	*)
 	parser_lexer_from_file Pi0Parser.main Pi0Lexer.token options#second_file_name
 	in
-	
+
 	(* Convert to an abstract representation *)
 	let pi0 =
 	try (
 		ModelConverter.check_and_make_pi0 pi0_parsed
-	) with 
+	) with
 		| ModelConverter.InvalidPi0 -> (print_error ("The input reference valuation file contains errors. Please check it again."); abort_program (); exit 1)
 		| InternalError e -> (print_error ("Internal error while parsing the reference valuation: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
 	in
-	
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* return *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -267,19 +271,19 @@ let compile_pi0 options =
 let compile_v0 options =
 	(* Print some information *)
 	print_message Verbose_low ("Parsing hyper-rectangle in file " ^ options#second_file_name ^ "...");
-	
+
 	(* Parsing *)
 	let v0_parsed = parser_lexer_from_file V0Parser.main V0Lexer.token options#second_file_name in
-	
+
 	(* Convert to an abstract representation *)
 	let v0 =
 	try (
 		ModelConverter.check_and_make_v0 v0_parsed
-	) with 
+	) with
 		| ModelConverter.InvalidV0 -> (print_error ("The input reference hyper-rectangle file contains errors. Please check it again."); abort_program (); exit 1)
 		| InternalError e -> (print_error ("Internal error while parsing the reference hyper-rectangle: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
 	in
-	
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* return *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

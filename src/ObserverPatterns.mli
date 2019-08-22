@@ -4,8 +4,7 @@
  * 
  * File containing the operations linked to the observer patterns
  *
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Author:        Etienne Andre
  * 
@@ -48,7 +47,7 @@ val get_automaton : int -> automaton_index -> action_index -> clock_index -> pro
 	* location_urgency array
 	(* Invariants *)
 	* (AbstractModel.invariant) array
-	(* Transitions *)
+	(* Transitions: structure location_index -> action_index -> list of (transition) *)
 	* ((AbstractModel.transition list) array) array
 	(* Initial inequalities (if any) *)
 	* LinearConstraint.px_linear_constraint option

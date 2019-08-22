@@ -4,7 +4,7 @@ PPL_VERSION=1.2
 if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
     sudo apt-get update -qq
     sudo apt-get install -qq wget unzip curl build-essential g++ m4 ocaml-native-compilers camlp4-extra ocaml oasis \
-        libextlib-ocaml libextlib-ocaml-dev \
+        libextlib-ocaml libextlib-ocaml-dev libfileutils-ocaml-dev \
         libgmp-dev libgmp-ocaml libgmp-ocaml-dev libmpfr-dev \
         libppl-dev \
         graphviz plotutils
@@ -25,7 +25,7 @@ if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
 fi
 
 # installing PPL
-wget http://www.bugseng.com/products/ppl/download/ftp/releases/${PPL_VERSION}/ppl-${PPL_VERSION}.zip
+wget -q --no-check-certificate https://www.bugseng.com/products/ppl/download/ftp/releases/${PPL_VERSION}/ppl-${PPL_VERSION}.zip
 unzip -qq ppl-${PPL_VERSION}.zip
 (cd ppl-${PPL_VERSION}; ./configure --prefix=/usr; cd interfaces/OCaml; make -j 4; sudo make install)
 rm -rf ppl-${PPL_VERSION}*

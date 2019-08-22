@@ -32,8 +32,6 @@
 \begin{document}
 % \maketitle
 
-\sloppy
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \input{title_and_toc.tex}
@@ -85,7 +83,7 @@ An \imitator{} parametric timed automaton (hereafter \IPTA{}) is a variant of pa
 \IPTA{} and \NIPTA{} are formalized in \cref{section:NIPTA}.
 
 The input syntax of \imitator{} is originally based on the syntax of \hytech{}~\cite{HHW95}, with several improvements.
-Actually, all standard \hytech{} files describing only PTA (and not more general systems like linear hybrid automata \cite{achh92}) can be analyzed directly by \imitator{} (sometimes with very minor changes).
+Actually, all standard \hytech{} files describing only PTA (and not more general systems like linear hybrid automata \cite{ACHH92}) can be analyzed directly by \imitator{} (sometimes with very minor changes).
 
 Comments are OCaml-like comments starting with \styleIMI{(*} and ending with \styleIMI{*)}.
 As in OCaml, comments can be nested.
@@ -98,7 +96,7 @@ This version of the protocol is neither the most complete, nor the most simple; 
 Fischer mutual exclusion protocol is a protocol that guarantees the mutual exclusion of several processes (here two) that want to access a shared resource (called the critical section).
 % We give below an example of a coffee machine interacting with a researching drinking coffee, given using the \imitator{} syntax.
 % 	% TODO: point to figure
-% 
+%
 % \IncludeIMIfile{../examples/Coffee/coffeeDrinker.imi}
 
 \paragraph{Input syntax}
@@ -122,7 +120,7 @@ Let us comment this case model by starting with the header.
 First, text in comments gives generalities about the model (author, date, description, etc.).
 The form is not normalized, but it could be in the future, so it is strongly advised to follow this form.\footnote{%
 	An empty model template with all these comments ready to be filled out (containing also a sample \IPTA{} and its initial definitions) is available at:
-	
+
 	\url{https://github.com/etienneandre/imitator/blob/master/benchmarks/model.imi}.
 }
 
@@ -274,7 +272,7 @@ a discrete variable valuation is a function $\dval \colon \DVar \rightarrow \gra
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
-\subsection{Linear constraints}
+\subsection{Linear constraints}\label{ss:constraints}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
 
 Let us formalize the set of linear constraints allowed in \imitator{}.
@@ -298,7 +296,6 @@ $
 	$\lterm$ is a linear term over~$\Var$,
 	and
 	${\bowtie} \in \{ <, \leq, =, \geq, > \}$.
-		% TODO: problem < > don't print
 
 A~\emph{constraint} over $\Var$ is a conjunction of atomic constraints.
 We denote by $\LTerm(\Var)$ the set of linear terms over~$\Var$, and by $\LConstraint(\Var)$ the set of constraints over~$\Var$.
@@ -359,6 +356,7 @@ This syntax includes in particular diagonal constraints (\eg{} \styleIMI{x1 - x2
 \paragraph{Actions}
 Transitions can be synchronized on an action in $\Action$, or have no synchronized action (``$\unobs$''), which is often referred to in the literature as a silent transition, or an $\epsilon$-transition.
 For the semantics of the synchronization model between various \IPTA{}, refer to \cref{sect:synchronization}.
+A non-silent transition is said to be \emph{observable}; and it can be synchronized with other automata.
 
 \paragraph{Clock updates}
 Observe that clocks can be updated to any value, \ie{} a clock can be assigned not only to~0, but to any linear term over the other clocks, the parameters and the discrete variables.
@@ -371,6 +369,8 @@ If clocks are always reset to constants (\ie{} not assigned to more complex line
 Discrete variables can be assigned to arithmetic expressions over~$\DVar$.
 On the one hand, this is more restrictive than clock updates, because discrete variables cannot be assigned to a clock or to a parameter.
 On the other hand, arithmetic expressions are richer than linear constraints, as they allow multiplication or division of variables with each other.
+
+Since version 2.12, \styleIMI{if}-\styleIMI{then}-\styleIMI{else} conditions are allowed in \emph{discrete} updates.
 
 \paragraph{Stopwatches}
 There are no distinction between clocks and stopwatches.
@@ -411,6 +411,24 @@ Note that parameters are not assumed positive; however, the behavior of \imitato
 % TODO: example
 
 Finally, note that the number of \IPTA{}, locations, variables and actions that can be defined in a model is bounded in \imitator{} by some very large number (most probably $2^{32}$); but, well, you don't seriously plan to build such a large model, do you?
+
+\bigskip
+
+\imitator{} may use the determinism in (yet to come) algorithms; and the deterministic nature of an \NIPTA{} is detected by \imitator{}.
+In our setting, the strong determinism denotes at most one transition going out from a location and labeled with a given observable (\ie{} non-silent) transition.
+Let us precisely define what it means:
+
+%------------------------------------------------------------
+\begin{definition}[strong determinism]
+	Let $\A$ be an \NIPTA{} made of $N$ \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \DVar_i, \Clock_i, \Param_i, \invariant_i, \stopwatches_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \grandn$.
+
+	$\A$ is \emph{strongly-deterministic} if
+	for all automaton $\A_i$,
+	for all location $\loc_i \in \Loc_i$,
+	for all \emph{observable} action $\action \in \Action_i$,
+	there exists at most one transition from~$\loc_i$ labeled with $\action$.
+\end{definition}
+%------------------------------------------------------------
 
 
 
@@ -531,6 +549,7 @@ The standard command is:
 \styleCommand{\binimitator{} model.imi -mode statespace -output-states}
 
 The option \styleOption{-output-states} generates a file with a textual description of all states (without this option, \imitator{} will not output anything).
+Each state is represented with its discrete part (location and values of the discrete variables), the clock and parameter constraints, and below their projection onto the parameters; in addition, if \styleFileContent{projectresult} is defined in the model (see \cref{section:projection}), the projection onto a specific set of parameters is also added.
 
 \imitator{} can also output the trace set in a graphical form using option \styleOption{-output-trace-set}.
 
@@ -582,6 +601,15 @@ The standard command is:
 
 
 Internally, this algorithm works exactly the same as the reachability-synthesis, and at the end the obtained constraint is \emph{negated} (with parameters being constrained to be included in the initial state valuations).
+
+%------------------------------------------------------------
+\begin{remark}
+	For both reachability and safety, one can use the option \styleOption{-counterexample} to stop the analysis as soon as a counterexample is found (see list of options in \cref{chapter:options}).
+	
+	In that case, the result is not exact, but approximated.
+\end{remark}
+%------------------------------------------------------------
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -698,6 +726,10 @@ As usual, \imitator{} can also
 \section{Parametric cycle synthesis}\label{ss:mode:LoopSynth}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Any loop synthesis}\label{ss:loop}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
 Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, \ie{} an infinite run. % TODO: ~\cite{AL17}
 
 The command is:
@@ -708,6 +740,72 @@ As usual, \imitator{} can also
 	output the trace set in a graphical form (option \styleOption{-output-trace-set})
 	or
 	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Accepting loop}\label{ss:accepting-loop}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one \emph{accepting} cycle, \ie{} an infinite run passing infinitely often by an accepting location.
+
+The accepting location is defined as usual using the following syntax:
+
+\begin{center}
+	\styleIMI{property := unreachable loc[pta] = …;}
+\end{center}
+
+…which can be misleading as the property is defined using \styleIMI{unreachable} while the location should actually be reachable.
+Patterns (see \cref{ss:mode:prop}) can also be used. % NOTE: not tested
+
+The command for accepting cycle synthesis is:
+
+\styleCommand{\binimitator{} model.imi -mode AccLoopSynth -output-result}
+
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Accepting loop (NDFS)}\label{ss:accepting-loop-NDFS}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one accepting cycle.
+This algorithm differs from the one in \cref{ss:accepting-loop} in the sense that this algorithm performs a nested depth-first search (NDFS) exploration until a cycle is found~\cite{NPP18}.
+In addition, this algorithm is (by default) not complete.
+
+The command is:
+
+\styleCommand{\binimitator{} model.imi -mode AccLoopSynthNDFS -output-result}
+
+Several heuristics can be used, some of them synthesizing all parameter values for which a cycle can be found.
+These are accessible via the \styleOption{-explOrder} option:
+
+\begin{description}
+	\item[\styleOption{-explOrder NDFS}]: use standard NDFS to find an accepting cycle (default option);
+	\item[\styleOption{-explOrder NDFSsub}]: standard NDFS with subsumption;
+	\item[\styleOption{-explOrder layerNDFSsub}]: NDFS with subsumption and layers;
+% 	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
+% 	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
+\end{description}
+
+At each cycle found, \imitator{} outputs its number (when using the synthesis) and
+the node at which the cycle was detected. When it terminates the complete parameter
+constraint is displayed.
+
+% NOTE: hidden options
+% -no-acceptfirst In NDFS, do not put accepting states at the head of the successors list. Default: false.
+% -no-lookahead  In NDFS, no lookahead for finding successors closing an accepting cycle. Default: false.
+% -no-pending-ordered  In NDFS synthesis, do not order the pending queue with larger zones first. Default: false.
+
+When using the \styleOption{-depth-limit} option, the depth-first search stops exploring
+the current branch and backtracks when this depth is reached.
+
+
+As usual, \imitator{} can also
+	output the trace set in a graphical form (option \styleOption{-output-trace-set})
+	or
+	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
+
+
+%------------------------------------------------------------
+\begin{remark}
+	As for \EFsynth{}, one can use here the option \styleOption{-counterexample} to stop the analysis as soon as a counterexample is found (see list of options in \cref{chapter:options}).
+\end{remark}
+%------------------------------------------------------------
 
 
 
@@ -724,12 +822,12 @@ The method implemented in \imitator{} is based on CUB-\IPTA{}, a syntactic subcl
 Two options are possible in \imitator{}:
 \begin{enumerate}
 	\item a partial method (but slightly faster) than first detects whether the input \NIPTA{} is already a CUB-PTA; if so, it applies non-Zeno checking on this CUB-PTA; otherwise, the returned constraint will be false.
-	
+
 	\styleCommand{\binimitator{} model.imi -mode NZCUBcheck -output-result}
 
-	
+
 	\item a complete method (though of course without guarantee of termination), that transforms the \NIPTA{} into a network of CUB-PTAs, and applies non-Zeno checking on the transformed CUB-PTA.
-	
+
 	\styleCommand{\binimitator{} model.imi -mode NZCUBtrans -output-result}
 
 \end{enumerate}
@@ -739,16 +837,22 @@ Two options are possible in \imitator{}:
 	In contrast to most other algorithms of \imitator{}, these two algorithms work on a slightly restricted syntax:
 	\begin{itemize}
 		\item in a guard or invariant, each clock must be used at most once;
+		\item the conditional updates (new since version 2.12) are not supported;
 		\item the use of discrete variables was not tested (and may not be always working);
 		\item the use of coefficients on parameters (different from 0 or~1) was not tested;
 		\item the use of stopwatches was not tested (but should be no problem).
 	\end{itemize}
+	Overall, this part of \imitator{} has been less tested and is probably less stable than the rest of the tool.
 \end{warning}
 
 As usual, \imitator{} can also
 	output the trace set in a graphical form (option \styleOption{-output-trace-set})
 	or
 	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
+
+\begin{remark}
+	The \emph{accepting} cycles are not (yet?) supported for non-Zeno synthesis.
+\end{remark}
 
 
 
@@ -942,13 +1046,15 @@ Finally, some statistics on specific operations (model parsing, graphics drawing
 More statistics are obtained with higher levels of verbosity, or with the \styleOption{-statistics} option.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Projection onto some parameters}
+\section{Projection onto some parameters}\label{section:projection}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The result can be projected onto selected parameters, by using the following syntax at the end of the model file:
 
 \styleIMI{projectresult(param1, \dots, paramn);}
 
 In that case, all parameters not in that set are eliminated using variable elimination, and the result in the result file only contains the selected parameters.
+
+This projection is also added to the states description (see option \styleOption{-output-states}) and to the graphical state space output (see option \styleOption{-output-trace-set-verbose}).
 
 
 
@@ -973,7 +1079,7 @@ To generate the trace set (\ie{} the discretized state space) of a given computa
 \imitator{} will generate a file \stylePath{model-statespace.pdf}.
 States are made of two part: the left-hand number (\eg{} \styleFileContent{s\_0}) is the number of the symbolic state, which comes from \imitator{} internal representation (\styleFileContent{s\_0} is the first one to be generated, and so on); the right-hand part displays all the discrete part of the symbolic state vertically, that is the current location in each of the NIPTA in parallel, and the value of possible discrete variables (if any).
 Consider state \texttt{s\_1} in \cref{figure:traceset:normal} (and originating from the example in \cref{chapter:syntax-introduction}):
-	the current location of IPTA \styleFileContent{proc\_1} is \styleFileContent{active1}, 
+	the current location of IPTA \styleFileContent{proc\_1} is \styleFileContent{active1},
 	the current location of IPTA \styleFileContent{proc\_2} is \styleFileContent{idle2},
 	while
 	the current location of IPTA \styleFileContent{observer} is \styleFileContent{obs\_waiting}.
@@ -985,16 +1091,17 @@ Note that, beyond about 1,000 states or 1,000 transitions, the \gdot{} utility (
 
 Using \styleOption{-output-trace-set-nodetails} makes a more compact representation, but is also less informative as only the state number and the transition labels are shown.
 
-Conversely, \styleOption{-output-trace-set-verbose} makes a more detailed representation, by also adding to the state space all constraints (the clock and parameter constraints, and below their projection onto the parameters).
+Conversely, \styleOption{-output-trace-set-verbose} makes a more detailed representation, by also adding to the state space all constraints:
+	the clock and parameter constraints, and below their projection onto the parameters; in addition, if \styleFileContent{projectresult} is defined in the model (see \cref{section:projection}), the projection onto a specific set of parameters is also added.
 This option is mostly suitable for small trace sets.
 
 \begin{example}
 	An example of state space with no details (output using \styleOption{-output-trace-set-nodetails}), with normal details (using \styleOption{-output-trace-set}), and in verbose mode (using \styleOption{-output-trace-set-verbose}) are given in \cref{figure:traceset:nodetail,figure:traceset:normal,figure:traceset:verbose}.
-	
+
 	These graphics were generated using the example in \cref{chapter:syntax-introduction} with the following command:
-	
+
 	\styleCommand{imitator fischer.imi -mode EF -depth-limit 4 -output-trace-set}
-	
+
 	(where \styleOption{-output-trace-set} should be replaced with the proper option)
 \end{example}
 
@@ -1019,7 +1126,7 @@ This option is mostly suitable for small trace sets.
 		\caption{Verbose}
 		\label{figure:traceset:verbose}
 	\end{subfigure}
-	
+
 	\caption{Examples of graphical state space}
 \end{figure}
 
@@ -1051,7 +1158,68 @@ and \styleOption{-output-graphics-source} to keep the plot source.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Translation to \hytech{}}
+\section{Translation to \uppaal{}}\label{section:uppaal}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% TODO: 2.12?
+Since version 2.11, \imitator{} supports a translation of the model to the \uppaal{} syntax~\cite{LPY97}.
+To generate an equivalent \uppaal{} model without performing any analysis, use:
+
+\styleCommand{\binimitator{} model.imi -PTA2Uppaal}
+
+\imitator{} will generate a file \stylePath{model-uppaal.xml}.
+Note that translation of properties is not supported.
+
+Due to the different semantics and features between \imitator{} and \uppaal{}, the translation is done in a ``best effort'' manner, but the semantics may differ.
+We review some points in the following.
+
+\paragraph{Parameters}
+A fundamental difference \imitator{} and \uppaal{} is that \uppaal{} does not support timing parameters.
+Parameters are therefore translated to constants, the value of which can be manually changed by the user.
+
+\paragraph{Form of the constraints}
+\imitator{} allows a much wider form of constraints than \uppaal{}.
+In particular, \imitator{} allows any conjunction of linear constraints (see \cref{ss:constraints}) while \uppaal{} mainly allows clocks to be compared to integers.
+In addition, \uppaal{} only allows invariants of the form $\clock \leq c$ or $\clock < c$, which is not a restriction in \imitator{}.
+No check are made when translating, and therefore \uppaal{} may not accept models translated from \imitator{} input models using these features.
+
+\paragraph{Discrete variables}
+Discrete variables in \imitator{} are rational-valued with an exact value.
+In \uppaal{}, they are interpreted as (bounded) integers: overflows may occur and, if their value becomes non-integer, it seems \uppaal{} will just round them to the nearest integer, thus creating a difference in semantics.
+
+\paragraph{Strong broadcast synchronization}
+\imitator{} uses a single communication model: strong broadcast (see \cref{sect:synchronization}), while \uppaal{} uses both channel binary synchronization, and broadcast synchronization.
+None of them match \imitator{}'s semantics.
+Our translation tries to preserve \imitator{} semantics, using the following scheme:
+\begin{itemize}
+	\item Unnamed actions (necessarily used in a single \IPTA{}) remain unnamed in \uppaal{}.
+	\item An action \styleFileContent{a} used in a single \IPTA{} is implemented in \uppaal{} using a broadcast action \styleFileContent{a!}.
+	\item An action \styleFileContent{a} used in exactly two \IPTA{} is implemented in \uppaal{} using a binary action \styleFileContent{a}, where the first (\ie{} declared first in the \imitator{} file) uses \styleFileContent{a!} while the second uses \styleFileContent{a?}.
+	\item An action \styleFileContent{a} used in $n$ \IPTA{} with $n \geq 3$ is implemented in \uppaal{} using a broadcast action \styleFileContent{a} and an additional variable \styleFileContent{nb\_\_a} initially set to~$n$, and that will be responsible to check that all automata can indeed synchronize, as follows:
+		\begin{itemize}
+			\item all invariants contain \styleFileContent{nb\_\_a = n}
+			\item the first automaton (\ie{} declared first in the \imitator{} file) involved in the synchronization synchronizes on \styleFileContent{a!} and performs \styleFileContent{nb\_\_a := 1};
+			\item all other automata involved in the synchronization perform \styleFileContent{nb\_\_a := nb\_\_a + 1}.
+		\end{itemize}
+		From the \uppaal{} official semantics, the discrete variables are updated by first executing the update label given on the \styleFileContent{a!} transition, and then the update labels given on the \styleFileContent{a?} for increasing, which guarantees the correctness of this construction.
+		(This construction was suggested by Jiří~Srba.)
+\end{itemize}
+However, a major difference (which may prevent \uppaal{} to interpret the translated models) is that \uppaal{} forbids guard on receiving actions (of the form \styleFileContent{a?}).
+Therefore, translating an \imitator{} model where an action \styleFileContent{a} is used in two automata (or more) with guards on more than one transition will lead \uppaal{} to not accept the model.
+A manual editing will be needed.
+
+\paragraph{Initial constraint}
+The initial constraint is \emph{not} translated, except for the initial value of the discrete variables.
+Notably, the clocks are initially~0 in \uppaal{}, which is not necessarily the case in \imitator{}.
+
+\paragraph{Properties}
+Properties are so far not translated to \uppaal{}.
+
+
+% TODO: stopwatches
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Translation to \hytech{}}\label{section:hytech}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Since version 2.8, \imitator{} supports a translation of the model to the \hytech{} syntax~\cite{HHW95} (that is quite close to that of \imitator{} anyway).
@@ -1062,7 +1230,6 @@ To generate an equivalent \hytech{} model without performing any analysis, use:
 \imitator{} will generate a file \stylePath{model.hy}.
 Note that translation of properties is not supported.
 	% TODO
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1134,7 +1301,7 @@ In short, \imitator{} is written in \ocaml{}, and contains about 26,000 lines of
 \begin{itemize}
 	\item The OCaml ExtLib library (Extended Standard Library for Objective Caml);
 	\item The GNU Multiple Precision Arithmetic Library (GMP);
-	\item The Parma Polyhedra Library (PPL)~\cite{bhz08}, used to compute operations on polyhedra.
+	\item The Parma Polyhedra Library (PPL)~\cite{BHZ08}, used to compute operations on polyhedra.
 \end{itemize}
 
 
@@ -1189,12 +1356,10 @@ If needed, more information can be obtained by contacting the \imitator{} team.
 	% check-iptta
 	% check-point
 	% completeIM
-	% -counterex
+	% -counterexample
 	% distributedKillIM
 	% precomputepi0
 
-
-% TODO: add exploration orders!
 
 
 %------------------------------------------------------------
@@ -1248,7 +1413,7 @@ Note that this option is not implemented as nicely as it could be, and can hence
 % %------------------------------------------------------------
 % \paragraph{\styleOption{-completeIM} (default: false)}
 % %------------------------------------------------------------
-% 
+%
 % Returns a complete result for the inverse method for deterministic PTA, \ie{} returns a conjunction of negations of convex parameter constraints.
 % The result may result in a large list of such constraints, and may hence be complicated to interpret.
 
@@ -1262,7 +1427,10 @@ Print the list of contributors and exits.
 %------------------------------------------------------------
 \paragraph{\styleOption{-counterexample}}
 %------------------------------------------------------------
-For algorithms \EFsynth{} and \PRP{}, stops the analysis as soon as one target state is found.
+For algorithms \EFsynth{} and \styleOption{AccLoopSynthNDFS}, stops the analysis as soon as one target state is found, and returns the (possibly approximated) result.
+
+This can be a way to solve the \emph{emptiness} instead of the \emph{synthesis} prolem.
+Nevertheless, note that, instead of returning a Boolean answer, the algorithm still outputs some valuations (typically the valuations associated with the first parametric zone found, that allows to guarantee the violation of the property).
 
 
 %------------------------------------------------------------
@@ -1298,12 +1466,30 @@ Various distribution modes are possible:
 Dynamic elimination of clocks that are known to not used in the future of the current state~\cite{Andre13FSFMA}.
 
 
+%------------------------------------------------------------
+\paragraph{\styleOption{-explOrder} } % TODO (default: false)
+%------------------------------------------------------------
+Exploration orders are considered in two frameworks.
+
+First, for standard reachability analysis (and counterexample analysis, using \styleOption{-counterexample}), and documented in~\cite{ANP17}.
+% TODO!
+This framework remains relatively experimental.
+
+Second, for accepting loop synthesis with NDFS exploration~\cite{NPP18} (see \cref{ss:accepting-loop-NDFS}).
+In this latter case, the possible values are:
+\begin{description}
+	\item[\styleOption{-explOrder NDFS}]: use standard NDFS to find an accepting cycle (default option);
+	\item[\styleOption{-explOrder NDFSsub}]: standard NDFS with subsumption;
+	\item[\styleOption{-explOrder layerNDFSsub}]: NDFS with subsumption and layers;
+% 	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
+% 	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
+\end{description}
 
 
 % %------------------------------------------------------------
 % \paragraph{\styleOption{-fromGrML} (default: false)}
 % %------------------------------------------------------------
-% 
+%
 % Does not use the standard input syntax described here, but a GrML input syntax.
 % This is used when interfacing \imitator{} with the \CosyVerif{} platform~\cite{AHHKLLP13}.
 % Note that, in that case, not all syntactic features of \imitator{} are supported.
@@ -1356,55 +1542,65 @@ However, not all the properties of the inverse method are preserved when using m
 %------------------------------------------------------------
 \paragraph{\styleOption{-mode} (default: \styleOption{inversemethod})}
 %------------------------------------------------------------
-The mode for \imitator{}.
+The mode for \imitator{}, \ie{} the algorithm to run.
 
-\begin{tabular}{@{} l @{\ \ } l}
+\begin{longtable}{@{} l @{\ \ } p{12cm}}
+	\styleOption{checksyntax} & Simple syntax check and no analysis. Use option \styleOption{-output-result} to generate a simple file with statistics on the model (numbers of variables, automata, L/U-nature, strong determinism…)
+% 		(see \cref{ss:mode:statespace}) %TODO?
+	\\
+
 	\styleOption{statespace} & Generation of the entire parametric state space \\
 	& (see \cref{ss:mode:statespace}) \\
-	
+
 	\styleOption{EF} & Parametric reachability synthesis (\EFsynth{} \cite{JLR15}) \\
 	& (see \cref{ss:mode:EFsynth}) \\
-	
+
 	\styleOption{EFmin} & Parametric minimization synthesis \\
 	& (see \cref{ss:mode:EFmin}) \\
-	
+
 	\styleOption{EFmax} & Parametric maximization synthesis \\
 	& (see \cref{ss:mode:EFmax}) \\
-	
+
 	\styleOption{EFsynthminpq} & Minimal-time reachability synthesis~\cite{ABPV19} \\
 	& (see \cref{ss:mode:EFopt}) \\
-	
+
 	\styleOption{PDFC} & Parametric deadlock-freeness checking (\PDFC{} \cite{Andre16}) \\
 	& (see \cref{ss:mode:PDFC}) \\
-	
+
 	\styleOption{LoopSynth} & cycle synthesis \\
-	& (see \cref{ss:mode:LoopSynth}) \\
-	
+	& (see \cref{ss:loop}) \\
+
+	\styleOption{AccLoopSynth} & accepting cycle synthesis \\
+	& (see \cref{ss:accepting-loop}) \\
+
+	\styleOption{AccLoopSynthNDFS} & accepting cycle synthesis with NDFS exploration~\cite{NPP18}\\
+	& (see \cref{ss:accepting-loop-NDFS}) \\
+
 	\styleOption{NZCUBcheck} & non-Zeno cycle synthesis (with CUB-detection) \\
 	& (see \cref{ss:mode:Zeno}) \\
-	
+
 	\styleOption{NZCUBtrans} & non-Zeno cycle synthesis (with CUB-transformation) \\
 	& (see \cref{ss:mode:Zeno}) \\
-	
+
 	\styleOption{inversemethod} & Inverse method \\
 	& (see \cref{ss:mode:IM}) \\
-	
+
 	\styleOption{PRP} & Parametric reachability preservation \\
 	& (see \cref{ss:mode:PRP}) \\
-	
+
 	\styleOption{PRPC} & Parametric reachability preservation cartography \\
 	& (see \cref{sss:mode:PRPC}) \\
-	
+
 	\styleOption{cover} & Behavioral cartography with full coverage \\
 	& (see \cref{ss:mode:BC}) \\
-	
+
 	\styleOption{randomXX} & Behavioral cartography with \styleOption{XX} iterations \\
 	& (see \cref{sss:mode:BC:random}) \\
-	
+
 	\styleOption{shuffle} & Behavioral cartography with full coverage,\\
 	& and points considered in a random manner \\
 	& (see \cref{sss:mode:BC:shuffle}) \\
-\end{tabular}
+\end{longtable}
 
 
 
@@ -1587,6 +1783,7 @@ Since version 2.9, it is advised to use instead \styleOption{-mode PRP} and \sty
 \paragraph{\styleOption{-PTA2HyTech} (default: false)}
 %------------------------------------------------------------
 Translates the input model to a \hytech{} model, and exits.
+See \cref{section:hytech} for details.
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-PTA2IMI} (default: false)}
@@ -1617,6 +1814,12 @@ Translates the input model to a graphical, human-readable form (in \texttt{.png}
 Translates the input model to a \LaTeX{} representation of the model (using the \texttt{tikz} package) without performing any analysis, and exits.
 Note that node positioning is not (much) supported, so may want to edit manually some positions.
 	% TODO refer to the graphics of the coffee machine
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-PTA2Uppaal} (default: false)}
+%------------------------------------------------------------
+Translates the input model to a \uppaal{} model, and exits.
+See \cref{section:uppaal} for details.
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-romeo} (default: false)}
@@ -1676,7 +1879,7 @@ Add a timing information to each shell output of the program.
 \paragraph{\styleOption{-tree} (default: false)}
 %------------------------------------------------------------
 Does not test if a new state was already encountered.
-To be set \emph{only} if the reachability graph is a tree with all states being different (otherwise analysis may loop). 
+To be set \emph{only} if the reachability graph is a tree with all states being different (otherwise analysis may loop).
 
 
 
@@ -1761,10 +1964,25 @@ We define each of those two components below.
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 %------------------------------------------------------------
+\regleGrammaire{include\_file\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{include\_file} \nt{include\_file\_list} \\
+	$|$ & \emptystring
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{include\_file}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \styleIMI{\#include} \styleIMI{"<path>"} \styleIMI{;} \\
+\end{tabular}
+
+%------------------------------------------------------------
 \regleGrammaire{automata\_descriptions}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{declarations} \nt{automata} \\
+	\  & \nt{include\_file\_list} \nt{declarations} \nt{automata} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -1772,6 +1990,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\  & \code{var} \nt{var\_lists} \\
+	$|$ & \emptystring
 \end{tabular}
 
 %------------------------------------------------------------
@@ -1806,6 +2025,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\  & \nt{automaton} \nt{automata} \\
+	$|$ & \nt{include\_file} \nt{automata} \\
 	$|$ & \emptystring \\
 \end{tabular}
 
@@ -1884,12 +2104,15 @@ We define each of those two components below.
 \begin{tabular}{l l}
 	\  & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
 	$|$ & \styleIMI{urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
+	$|$ & \styleIMI{accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
+	$|$ & \styleIMI{accepting urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
+	$|$ & \styleIMI{urgent accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
 % 	$|$ & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{while} \nt{convex\_predicate} \nt{transitions} \\
 \end{tabular}
 
 \smallskip
 
-(for backward compatibility with versions $< 2.10.1$, replacing ``\styleIMI{invariant}'' with ``\styleIMI{while}'' is still allowed, although it is deprecated)
+(for backward compatibility with versions $< 2.10.1$ and \hytech{}, replacing ``\styleIMI{invariant}'' with ``\styleIMI{while}'' is still allowed, although it is deprecated)
 
 \smallskip
 
@@ -1910,7 +2133,7 @@ We define each of those two components below.
 	$|$ & \emptystring \\
 \end{tabular}
 
-	
+
 %------------------------------------------------------------
 \regleGrammaire{transitions}
 %------------------------------------------------------------
@@ -1956,8 +2179,10 @@ We define each of those two components below.
 \regleGrammaire{update\_nonempty\_list}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{update} \styleIMI{,} \nt{update\_nonempty\_list} \\
+	\  & \nt{update} \styleIMI{,} \nt{update\_list} \\
+	$|$ & \nt{condition\_update} \styleIMI{,} \nt{update\_list} \\
 	$|$ & \nt{update} \\
+	$|$ & \nt{condition\_update} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -1969,10 +2194,38 @@ We define each of those two components below.
 
 \smallskip
 
-(for backward compatibility with versions $< 2.10.1$, replacing ``\styleIMI{<name>} \styleIMI{:=}'' with ``\styleIMI{<name>} \styleIMI{'} \styleIMI{=}'' is still allowed, although it is deprecated)
+(for backward compatibility with versions $< 2.10.1$ and \hytech{}, replacing ``\styleIMI{<name>} \styleIMI{:=}'' with ``\styleIMI{<name>} \styleIMI{'} \styleIMI{=}'' is still allowed, although it is deprecated)
 
 \smallskip
 
+%------------------------------------------------------------
+\regleGrammaire{normal\_update\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{update} \styleIMI{,} \nt{normal\_update\_list} \\
+	$|$ & \nt{update} \\
+	$|$ & \emptystring \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{conditon\_update}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \styleIMI{if} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \styleIMI{then} \nt{normal\_update\_list} \styleIMI{end} \\
+	$|$ & \styleIMI{if} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \styleIMI{then} \nt{normal\_update\_list} \styleIMI{else} \nt{normal\_update\_list} \styleIMI{end} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{boolean\_expression}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{True} \\
+	$|$ & \styleIMI{False} \\
+	$|$ & \styleIMI{<>} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \\
+	$|$ & \nt{boolean\_expression} \styleIMI{\&} \nt{boolean\_expression} \\
+	$|$ & \nt{boolean\_expression} \styleIMI{|} \nt{boolean\_expression} \\
+	$|$ & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
+\end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{syn\_label}
@@ -2170,6 +2423,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\  & \styleIMI{init} \styleIMI{:=} \nt{region\_expression} \styleIMI{;} \\
+	$|$ & \emptystring \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2249,6 +2503,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\  & \styleIMI{property :=} \nt{pattern} \styleIMI{;} \\
+	$|$ & \nt{include\_file} \\
 	$|$ & \emptystring \\
 \end{tabular}
 
@@ -2327,8 +2582,10 @@ Again, arithmetic expressions (using integers and rationals) can even be used in
 \section{Reserved words}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The following words are reserved keywords and cannot be used as names for automata, variables, actions or locations. 
+The following words are reserved keywords and cannot be used as names for automata, variables, actions or locations.
 
+\styleIMI{\#include},
+\styleIMI{accepting},
 \styleIMI{always},
 \styleIMI{and},
 \styleIMI{automatically\_generated\_observer},
@@ -2341,6 +2598,7 @@ The following words are reserved keywords and cannot be used as names for automa
 \styleIMI{constant},
 \styleIMI{discrete},
 \styleIMI{do},
+\styleIMI{else},
 \styleIMI{end},
 \styleIMI{eventually},
 \styleIMI{everytime},
@@ -2401,7 +2659,7 @@ We enumerate in the following what seems to us to be the ``most missing'' featur
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \section{Urgent Locations}
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 
+%
 % Urgent transitions are locations in which time cannot elapse, \ie{} there must be left immediately after being entered.
 % Whereas this feature is not natively implemented in \imitator{}, it can easily be simulated as follows:
 % to simulate an urgent location \styleIMI{l}, one can add an extra clock (say \styleIMI{x\_urgent}) initialized to 0 on any transition leading \styleIMI{l}; then, the invariant of \styleIMI{l} is \styleIMI{x\_urgent = 0}.
@@ -2486,8 +2744,15 @@ However, in this latter case, the non-linear power of arithmetic expressions (mu
 \imitator{} does not implement specific algorithms for lower-bound / upper-bound PTA (L/U-PTA).
 This subclass of PTA, introduced in~\cite{HRSV02}, constrains parameters to appear either always as upper-bounds in inequalities comparing them with clocks, or always as lower-bounds.
 L/U-PTA benefit from some decidability results (see \eg{} \cite{HRSV02,BlT09,JLR15,AM15,ALime17}); however, exact synthesis seems to be intractable in practice~\cite{JLR15,ALR16decision}.
+Still, some subclasses for which exact synthesis can be performed were proposed~\cite{BlT09,ALR18FORMATS}.
 
 However, \imitator{} does detect whether an input model is an L/U-PTA, in which case a message is printed with the list of lower-bounds parameters and upper-bounds parameters.
+
+\begin{remark}
+	Note that our definition of L/U-PTAs is consistent with that of, \eg{} \cite{BlT09}; however, we do \emph{not} consider the constraint of the initial state while checking for the L/U nature of the model.
+	That is, we refer to as L/U-PTAs even for the \emph{constrained L/U-PTAs} of~\cite{BlT09}.
+\end{remark}
+
 
 
 
@@ -2511,14 +2776,17 @@ Romain~Soulat implemented in part the merging technique~\cite{AFS13atva}, and br
 Giuseppe~Lipari and Sun~Youcheng provided examples from the real-time systems community, and collaborated on several algorithms.
 Camille~Coti, Sami~Evangelista and Nguy\~{ê}n~Hoàng~Gia worked on the distributed version of \imitator{}.
 Nguy\~{ê}n~Hoàng~Gia worked on the non-Zeno synthesis algorithms.
+Laure~Petrucci implemented an NDFS algorithm.
 %
 Stéphane Rosse improved a script for comparing results and speeds of various versions of \imitator{}.
 %
 Vincent~Bloemen implemented the optimal-time reachability synthesis.
 %
 Jaime~Arias simplified a lot the source code management and implemented new features.
+%
+Jiří~Srba suggested the translation of \imitator{}'s strong broadcast into \uppaal{}.
 
-We acknowledge the help of the PPL~\cite{bhz08} developers for their help with solving several issues over the years, and more generally for making this very useful library available.
+We acknowledge the help of the PPL~\cite{BHZ08} developers for their help with solving several issues over the years, and more generally for making this very useful library available.
 
 
 % TODO: projects
@@ -2552,6 +2820,7 @@ The following people contributed to the development of \imitator{}.
 	Sami Evangelista & 2014 & & \\
 	Ulrich Kühne & 2010 & -- & 2011 \\
 	Nguy\~{ê}n~Hoàng~Gia & 2014 & -- & 2018 \\
+	Laure Petrucci & 2019 & & \\
 	Romain Soulat & 2010 & -- & 2013 \\
 \end{tabular}
 
@@ -2577,37 +2846,13 @@ This user manual is available under the Creative Commons CC-BY-SA license.
 	\includegraphics[width=.2\textwidth]{images/CC-BY-SA_500.png}
 \end{center}
 
-\bigskip
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \input{graphics-credits.tex}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newpage
-
-\newcommand{\CCIS}{Communications in Computer and Information Science}
-\newcommand{\ENTCS}{Electronic Notes in Theoretical Computer Science}
-\newcommand{\FI}{Fundamenta Informormaticae}
-\newcommand{\FMSD}{Formal Methods in System Design}
-\newcommand{\IJFCS}{International Journal of Foundations of Computer Science}
-\newcommand{\IJSSE}{International Journal of Secure Software Engineering}
-\newcommand{\JLAP}{Journal of Logic and Algebraic Programming}
-\newcommand{\JLC}{Journal of Logic and Computation}
-\newcommand{\LMCS}{Logical Methods in Computer Science}
-\newcommand{\LNCS}{Lecture Notes in Computer Science}
-\newcommand{\RESS}{Reliability Engineering \& System Safety}
-\newcommand{\STTT}{International Journal on Software Tools for Technology Transfer}
-\newcommand{\TCS}{Theoretical Computer Science}
-\newcommand{\ToPNoC}{Transactions on Petri Nets and Other Models of Concurrency}
-\newcommand{\TSE}{IEEE Transactions on Software Engineering}
-
-\bibliographystyle{alpha}
-\addcontentsline{toc}{chapter}{References}
-\bibliography{biblio}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{bibliography.tex}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
 \end{document}
-

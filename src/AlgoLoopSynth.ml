@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: LoopSynth algorithm [AL16] (synthesizes valuations for which there exists a loop in the PTA)
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2017/03/19
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -24,6 +24,7 @@ open Exceptions
 open AbstractModel
 open Result
 open AlgoStateBased
+open State
 
 
 (************************************************************)
@@ -84,18 +85,13 @@ class algoLoopSynth =
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the state_space (if indeed needed) *)
-	(* Side-effects: modify new_states_indexes *)
-	(*** TODO: move new_states_indexes to a variable of the class ***)
+	(* Add a new state to the reachability_graph (if indeed needed) *)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
+	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*** TODO: return the list of actually added states ***)
 	(*** WARNING/BADPROG: the following is partially copy/paste from AlgoEF.ml (though much modified) ***)
-	method add_a_new_state source_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
-		(* Retrieve the model *)
-(* 		let model = Input.get_model () in *)
-
-		(* Build the state *)
-		let new_state = location, current_constraint in
+	method add_a_new_state source_state_index combined_transition new_state =
 
 		(* Try to add the new state to the state space *)
 		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
@@ -106,7 +102,7 @@ class algoLoopSynth =
 		| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
 
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
-			new_states_indexes := new_state_index :: !new_states_indexes;
+			new_states_indexes <- new_state_index :: new_states_indexes;
 		 (* end if new state *)
 		(* If the state was present:  *)
 		| StateSpace.State_already_present new_state_index ->
@@ -118,7 +114,7 @@ class algoLoopSynth =
 		;
 		
 		(* Update the transitions *)
-		self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
+		self#add_transition_to_state_space (source_state_index, combined_transition, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
 		
 		let has_loop =
 			match addition_result with
@@ -146,7 +142,7 @@ class algoLoopSynth =
 			| Loop scc ->
 				self#print_algo_message Verbose_standard "Found a cycle.";
 				(*** NOTE: this method is called AFTER the transition table was updated ***)
-				self#process_loop_constraint ((*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) scc current_constraint;
+				self#process_loop_constraint ((*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) scc new_state.px_constraint;
 		end; (* end if found a loop *)
 		
 		(* The state is kept in any case *)
@@ -159,7 +155,7 @@ class algoLoopSynth =
 	method update_loop_constraint current_constraint =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
-
+		
 		(* Project onto the parameters *)
 		let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse current_constraint in
 		
@@ -174,7 +170,7 @@ class algoLoopSynth =
 			(* Print some information *)
 			self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
 
-			(*** TODO! do only once for all... ***)
+			(*** TODO! do only once for all… ***)
 			let all_but_projectparameters = list_diff model.parameters parameters in
 			
 			(* Eliminate other parameters *)
@@ -187,7 +183,7 @@ class algoLoopSynth =
 		end;
 
 		(* Update the loop constraint using the current constraint *)
-		LinearConstraint.p_nnconvex_p_union loop_constraint p_constraint;
+		LinearConstraint.p_nnconvex_p_union_assign loop_constraint p_constraint;
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
@@ -213,11 +209,22 @@ class algoLoopSynth =
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Detect whether a loop is accepting *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method is_accepting scc =
+		(* Here, we do not care about 'acceptance' condition: therefore, a loop is always accepting *)
+		true
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when found a loop (after updating the state space) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_loop_constraint _ _ loop_px_constraint =
-		(* Just update the loop constraint *)
-		self#update_loop_constraint loop_px_constraint;
+	method process_loop_constraint state_index scc loop_px_constraint =
+		(* Process loop constraint if accepting loop *)
+		if self#is_accepting scc then(
+			(* Just update the loop constraint *)
+			self#update_loop_constraint loop_px_constraint;
+		);
+		
 		(* The end *)
 		()
 
@@ -288,6 +295,9 @@ class algoLoopSynth =
 			(* Non-necessarily convex constraint guaranteeing the existence of at least one loop *)
 			result				= Good_constraint (loop_constraint, soundness);
 			
+			(* English description of the constraint *)
+			constraint_description = "constraint for detecting cycles";
+	
 			(* Explored state space *)
 			state_space			= state_space;
 			

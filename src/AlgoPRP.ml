@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: PRP algorithm [ALNS15]
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/11
- * Last modified     : 2017/03/19
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -24,6 +24,7 @@ open Exceptions
 open AbstractModel
 open Result
 open AlgoIMK
+open State
 
 
 
@@ -85,11 +86,11 @@ class algoPRP =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Process a pi-compatible state *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private process_pi0_compatible_state state =
+	method private process_pi0_compatible_state (state : state) =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 		
-		let state_location, state_constraint = state in
+		let state_location, state_constraint = state.global_location, state.px_constraint in
 		
 		let to_be_added = match model.correctness_condition with
 		| None -> raise (InternalError("A correctness property must be defined to perform PRP. This should have been checked before."))
@@ -124,7 +125,7 @@ class algoPRP =
 				);
 				
 				(*** NOTE: not copy paste (actually, to copy when EFsynth will be improved with non-convex constraints) ***)
-				LinearConstraint.p_nnconvex_p_union bad_constraint p_constraint;
+				LinearConstraint.p_nnconvex_p_union_assign bad_constraint p_constraint;
 				
 				if verbose_mode_greater Verbose_low then(
 					self#print_algo_message_newline Verbose_low ("Kbad now equal to:");
@@ -156,37 +157,32 @@ class algoPRP =
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the state_space (if indeed needed) *)
-	(* Side-effects: modify new_states_indexes *)
-	(*** TODO: move new_states_indexes to a variable of the class ***)
-		(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
+	(* Add a new state to the reachability_graph (if indeed needed) *)
+	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
+	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*** TODO: return the list of actually added states ***)
 	(*** WARNING/BADPROG: the following is partially copy/paste from AlgoEFsynth.ml and AlgoPRP.ml***)
 	(*** TODO: factorize ***)
-	method add_a_new_state source_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
+	method add_a_new_state source_state_index combined_transition new_state =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 
-		(* Retrieve the input options *)
-(* 		let options = Input.get_options () in *)
-
-		let pi0compatible = self#check_pi0compatibility final_constraint in
+		(* Test pi0-compatibility *)
+		let pi0compatible = self#check_pi0compatibility new_state.px_constraint in
 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
 			(* Means state was not compatible *)
 			if not pi0compatible then(
-				let new_state = location, final_constraint in
 				if verbose_mode_greater Verbose_high then
-					self#print_algo_message Verbose_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names action_index) ^ "', and was:\n" ^ (ModelPrinter.string_of_state model new_state));
+					self#print_algo_message Verbose_high ("The pi-incompatible state had been computed through action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "', and was:\n" ^ (ModelPrinter.string_of_state model new_state));
 			);
 		);
 
 		(* Only add the new state if it is pi0-compatible *)
 		(*** NOTE: this is a key principle of PRP to NOT explore pi0-incompatible states ***)
 		if pi0compatible then (
-			(* Build the state *)
-			let new_state = location, final_constraint in
 
 			(* Try to add the new state to the state space *)
 			let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
@@ -206,7 +202,7 @@ class algoPRP =
 
 				(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
 				if to_be_added then
-					new_states_indexes := new_state_index :: !new_states_indexes;
+					new_states_indexes <- new_state_index :: new_states_indexes;
 				
 			end (* end if new state *)
 			;
@@ -214,7 +210,7 @@ class algoPRP =
 			(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 			
 			(* Update the transitions *)
-			self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
+			self#add_transition_to_state_space (source_state_index, combined_transition, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
 			
 		); (* end if valid new state *)
 	
@@ -228,7 +224,7 @@ class algoPRP =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_initial_state initial_state =
 		(* Get the constraint *)
-		let _, initial_constraint = initial_state in
+		let initial_constraint = initial_state.px_constraint in
 		
 		(*** NOTE: the addition of neg J to all reached states is performed as a side effect inside the following function ***)
 		(*** BADPROG: same reason ***)

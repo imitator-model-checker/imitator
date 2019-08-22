@@ -1,0 +1,94 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy graph to test various graph-based algorithms; version with merging states
+ *
+ * Description     : Toy (untimed) graph to test various graph-based algorithms
+ * Correctness     : N/A
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2019/05/31
+ * Last modified   : 2019/05/31
+ *
+ * IMITATOR version: 2.11
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+ 	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton graph
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant True
+	when True goto l2;
+	when True goto l3;
+
+loc l2: invariant True
+	when True goto l4;
+	when p >= 1 goto l5;
+
+loc l3: invariant True
+	when p < 1 goto l5;
+
+loc l4: invariant True
+	when True goto l2;
+	when True goto l6;
+
+loc l5: invariant True
+	when True goto l5;
+	when True goto l6;
+
+loc l6: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[graph] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	
+	(*------------------------------------------------------------*)
+	(* Initial parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[graph] = l6;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

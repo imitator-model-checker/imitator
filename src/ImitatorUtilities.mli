@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Useful and general functions for IMITATOR
  * 
- * File contributors : Étienne André
+ * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2019/03/01
+ * Last modified     : 2019/08/21
  *
  ************************************************************)
 
@@ -78,6 +78,9 @@ val get_verbose_mode : unit -> verbose_mode
 
 (** Mode for IMITATOR *)
 type imitator_mode =
+	(** No analysis, syntactic check only *)
+	| No_analysis
+	
 	(** Translation to another language: no analysis *)
 	| Translation
 	
@@ -105,12 +108,21 @@ type imitator_mode =
 	(** Optimal reachability with priority queue: queue-based, with priority to the earliest successor for the selection of the next state [ABPP19] *)
 	| EF_synth_min_priority_queue
 
+	(** EF-synthesis with examples of (un)safe words *)
+	| EFexemplify
+	
 	(** AF-synthesis *)
 	| AF_synthesis
 	
 	(** Parametric loop synthesis *)
 	| Loop_synthesis
 	
+	(** Parametric accepting loop synthesis *)
+	| Acc_loop_synthesis
+	
+	(** Parametric accepting loop synthesis with NDFS exploration *)
+	| Acc_loop_synthesis_NDFS
+
 	(** Parametric Büchi-emptiness checking with non-Zenoness (method: check whether the PTA is CUB) *)
 	| Parametric_NZ_CUBcheck
 	
@@ -188,6 +200,18 @@ type exploration_order =
 	| Exploration_queue_BFS_RS
 	(** Queue-BFS: queue-based, independent of the depth, with prior for the selection of the next state [ANP17] *)
 	| Exploration_queue_BFS_PRIOR
+	(** NDFS: standard Nested Depth-First Search **)
+	| Exploration_NDFS
+	(** NDFSsub: NDFS with subsumption [NPvdP18] **)
+	| Exploration_NDFS_sub
+	(** layerNDFSsub: NDFS with subsumption  and layers [NPvdP18] **)
+	| Exploration_layer_NDFS_sub
+(*	(** synNDFSsub: NDFS synthesis with subsumption **)
+	| Exploration_syn_NDFS_sub
+	(** synlayerNDFSsub: NDFS synthesis with subsumption and layers [NPvdP18] **)
+	| Exploration_syn_layer_NDFS_sub*)
+	(** synMixedNDFS: NDFS synthesis with a mix of subsumption and layers **)
+(* 	| Exploration_syn_mixed_NDFS *)
 
 
 type merge_heuristic =
@@ -215,6 +239,15 @@ type graphical_state_space =
 	| Graphical_state_space_normal
 	(* State space with state numbers, locations, constraints and parameter constraints *)
 	| Graphical_state_space_verbose
+
+
+(************************************************************)
+(** Predicates on mode *)
+(************************************************************)
+
+val is_mode_IM                   : imitator_mode -> bool
+val is_mode_cartography          : imitator_mode -> bool
+val cartography_drawing_possible : imitator_mode -> bool
 
 
 (************************************************************)

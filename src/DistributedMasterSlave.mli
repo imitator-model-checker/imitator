@@ -3,7 +3,7 @@
  *                       IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Author:        Etienne Andre, Camille Coti
  * 

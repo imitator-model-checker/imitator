@@ -1,15 +1,16 @@
-(*****************************************************************
+(************************************************************
  *
  *                       IMITATOR
- * 
- * LIPN, Universite Paris 13, Sorbonne Paris Cite (France)
- * 
- * Author:        Etienne Andre
- * 
- * Created:       2015/03/24
- * Last modified: 2015/07/31
  *
- ****************************************************************)
+ * Université Paris 13, LIPN, CNRS, France
+ *
+ * Module description: (Constant) LaTeX header for translation to LaTeX/TikZ
+ *
+ * File contributors : Étienne André, Laure Petrucci
+ * Created           : 2015/03/24
+ * Last modified     : 2019/07/05
+ *
+ ************************************************************)
 
 
 (************************************************************
@@ -42,6 +43,7 @@ let latex_header = "
 \\tikzstyle{location}=[rectangle, rounded corners, minimum size=12pt, draw=black, inner sep=1.5pt]
 \\tikzstyle{invariant}=[draw=black, xshift=1em, inner sep=1pt]
 \\tikzstyle{urgent}=[dotted, draw=red, very thick]
+\\tikzstyle{accepting}=[double]
 
 
 \\definecolor{coloract}{rgb}{0.50, 0.70, 0.30}

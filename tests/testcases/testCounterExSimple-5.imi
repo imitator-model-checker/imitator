@@ -1,0 +1,84 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy example to test EF with counterexample
+ *
+ * Description     : Toy example to test EF with counterexample. Idea of this toy example: the only possible way for clock and/or parameter valuation not following the concrete run is to take a different valuation from the initial state (e.g. x=1 or p=0)
+ * Correctness     : ltarget unreachable
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2019/08/22
+ * Last modified   : 2019/08/22
+ *
+ * IMITATOR version: 2.12
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+ 	global_time, (*** NOTE: special keyword ***)
+		: clock;
+
+ 	p,
+		: parameter;
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant x <= 3 & global_time >= 0
+	when p > 0 sync a goto l2;
+
+loc l2: invariant x > 1
+	when True sync a goto l3;
+
+loc l3: invariant x > 1
+	when True sync a goto ltarget;
+
+loc ltarget: invariant x > 1
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 1
+	& global_time = 0
+
+	(*------------------------------------------------------------*)
+	(* Initial parameter valuations *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[pta] = ltarget;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
