@@ -1651,7 +1651,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	(* Get the final state *)
 	let target_state_index = symbolic_run.final_state in
 	let target_state = StateSpace.get_state state_space target_state_index in
-
+	
 
 	(* We reconstruct a concrete run, for which we need absolute time *)
 	
@@ -1977,9 +1977,14 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		(* The global location is that of the symbolic initial state *)
 		global_location = (StateSpace.get_state state_space initial_state_index).global_location;
 		(* The discrete clock+discrete valuation is that of the concrete initial state computed above *)
-		px_valuation = try (let (_ , _, _, pxd_valuation) = List.nth !te_and_valuations 0 in pxd_valuation)
-			with Failure _ -> raise (InternalError "List !te_and_valuations expected to be non-empty in function reconstruct_counterexample")
-		;
+		px_valuation = 
+			(* Case empty list: take from final state *)
+			if !te_and_valuations = [] then concrete_target_px_valuation
+			else(
+			try (let (_ , _, _, pxd_valuation) = List.nth !te_and_valuations 0 in pxd_valuation)
+				with Failure _ -> raise (InternalError "List !te_and_valuations expected to be non-empty in function reconstruct_counterexample")
+			)
+			;
 	} in
 
 	(* Build the steps of the run *)
@@ -1998,16 +2003,22 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		reversed_run_steps := concrete_step :: !reversed_run_steps
 	done;
 	
-	(* Create the last step separately *)
-	let time_elapsed_n, combined_transition_n, _, _ = List.nth !te_and_valuations (List.length (!te_and_valuations) -1) in
-	let last_step : StateSpace.concrete_step = {
-		time		= time_elapsed_n;
-		transition	= combined_transition_n;
-		target		= {global_location = target_state.global_location; px_valuation = concrete_target_px_valuation};
-	} in
-	
-	(* Put the list in right order *)
-	let run_steps = List.rev (last_step :: !reversed_run_steps) in
+	let run_steps = 
+		(* Case empty list of steps *)
+		if !te_and_valuations = [] then []
+		else(
+			(* Create the last step separately *)
+			let time_elapsed_n, combined_transition_n, _, _ = List.nth !te_and_valuations (List.length (!te_and_valuations) -1) in
+			let last_step : StateSpace.concrete_step = {
+				time		= time_elapsed_n;
+				transition	= combined_transition_n;
+				target		= {global_location = target_state.global_location; px_valuation = concrete_target_px_valuation};
+			} in
+			
+			(* Put the list in right order *)
+			List.rev (last_step :: !reversed_run_steps)
+		)
+	in
 	
 	(* (Re)create the PVal *)
 	let pval = PVal.pval_from_valuation_function concrete_target_px_valuation in
@@ -2018,6 +2029,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		initial_state	= run_initial_state;
 		steps			= run_steps;
 	}
+	
 
 
 (************************************************************)

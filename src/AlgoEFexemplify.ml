@@ -277,7 +277,7 @@ class algoEFexemplify =
 						(*** NOTE: we rather use p_is_le, even though we have to then compute the difference, if indeed smaller, for (presumably) efficiency reasons ***)
 						if LinearConstraint.p_is_le !pconstraint_i_plus_one pconstraint_i then(
 							(* Print some information *)
-							print_message Verbose_medium ("\nFound a shrinking of parameter constraint between positions " ^ (string_of_int !i) ^ " to " ^ (string_of_int (!i+1)) ^ ":");
+							print_message Verbose_medium ("\nFound a shrinking of parameter constraint between positions " ^ (string_of_int !i) ^ " and " ^ (string_of_int (!i+1)) ^ ":");
 							
 							(* Update flag *)
 							found := true;
@@ -289,7 +289,7 @@ class algoEFexemplify =
 							
 							(* Print some information *)
 							if verbose_mode_greater Verbose_high then(
-								print_message Verbose_high ("\nParameter valuations blocked between positions " ^ (string_of_int !i) ^ " to " ^ (string_of_int (!i+1)) ^ ":");
+								print_message Verbose_high ("\nParameter valuations blocked between positions " ^ (string_of_int !i) ^ " and " ^ (string_of_int (!i+1)) ^ ":");
 								print_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names difference);
 							);
 							
@@ -301,7 +301,7 @@ class algoEFexemplify =
 							
 							(* Print some information *)
 							if verbose_mode_greater Verbose_standard then(
-								print_message Verbose_standard "Example of negative parameter valuation:";
+								print_message Verbose_standard "Example of \"negative\" parameter valuation, i.e., not allowing to reach target:";
 								print_message Verbose_standard (ModelPrinter.string_of_pval model pval_negative);
 							);
 							
@@ -333,7 +333,7 @@ class algoEFexemplify =
 							(* Cut the symbolic run *)
 							let symbolic_run_prefix : StateSpace.symbolic_run = {
 								(* Take the sublist of steps from position 0 to the current position *)
-								symbolic_steps	= OCamlUtilities.sublist 0 !i symbolic_run.symbolic_steps;
+								symbolic_steps	= if !i > 0 then OCamlUtilities.sublist 0 (!i-1) symbolic_run.symbolic_steps else [];
 								(* Final state becomes the current state *)
 								final_state		= state_index_i;
 							} in
@@ -459,14 +459,14 @@ class algoEFexemplify =
 						(* Check if difference is non-empty *)
 						if not (LinearConstraint.x_nnconvex_constraint_is_false difference) then(
 							(* Print some information *)
-							print_message Verbose_low ("\nFound a shrinking of clock constraint between positions " ^ (string_of_int !i) ^ " to " ^ (string_of_int (!i+1)) ^ ":");
+							print_message Verbose_low ("\nFound a shrinking of clock constraint between positions " ^ (string_of_int !i) ^ " and " ^ (string_of_int (!i+1)) ^ ":");
 							
 							(* Update flag *)
 							found := true;
 							
 							(* Print some information *)
 							if verbose_mode_greater Verbose_high then(
-								print_message Verbose_high ("\nClock valuations blocked between positions " ^ (string_of_int !i) ^ " to " ^ (string_of_int (!i+1)) ^ ":");
+								print_message Verbose_high ("\nClock valuations blocked between positions " ^ (string_of_int !i) ^ " and " ^ (string_of_int (!i+1)) ^ ":");
 								print_message Verbose_high (LinearConstraint.string_of_x_nnconvex_constraint model.variable_names difference);
 							);
 							
@@ -500,7 +500,7 @@ class algoEFexemplify =
 							(* Cut the symbolic run *)
 							let symbolic_run_prefix : StateSpace.symbolic_run = {
 								(* Take the sublist of steps from position 0 to the current position *)
-								symbolic_steps	= OCamlUtilities.sublist 0 !i symbolic_run.symbolic_steps;
+								symbolic_steps	= if !i > 0 then OCamlUtilities.sublist 0 (!i-1) symbolic_run.symbolic_steps else [];
 								(* Final state becomes the current state *)
 								final_state		= state_index_i;
 							} in
