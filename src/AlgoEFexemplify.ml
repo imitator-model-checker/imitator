@@ -246,17 +246,17 @@ class algoEFexemplify =
 					(* Idea: any parameter valuation "deadlocked" along this run is a valuation for which no identical symbolic run leads to the target, or any other target (in case of several discrete target locations) *)
 
 					(* Reason backward from the last but one state (as we compare i and i+1) *)
-					let i = ref ((List.length symbolic_run.symbolic_steps) - 2) in
+					let i = ref ((List.length symbolic_run.symbolic_steps) - 1) in
 					(* Define the next valuation along the run, and reason backward *)
 					let pconstraint_i_plus_one : LinearConstraint.p_linear_constraint ref = ref target_p_constraint in
 					
 					(* Print some information *)
-					print_message Verbose_medium "\nLooking for larger valuations by exploring backwards…";
+					print_message Verbose_medium ("\nLooking for larger parameter valuations by exploring backwards from position " ^ (string_of_int !i) ^ "…");
 					
 					(* Flag to interrupt the loop when found *)
 					let found = ref false in
 					
-					while !i > 0 && not !found do
+					while !i >= 0 && not !found do
 						(* Print some information *)
 						print_message Verbose_high ("\nConsidering position " ^ (string_of_int !i) ^ "");
 						
@@ -264,6 +264,14 @@ class algoEFexemplify =
 						let state_index_i = (List.nth symbolic_run.symbolic_steps !i).source in
 						(* Get the p-constraint at position i *)
 						let pconstraint_i : LinearConstraint.p_linear_constraint = LinearConstraint.px_hide_nonparameters_and_collapse (StateSpace.get_state state_space state_index_i).px_constraint in
+						
+						(* Print some information *)
+						if verbose_mode_greater Verbose_high then(
+							print_message Verbose_high ("\nAbout to compare parameter constraint at position " ^ (string_of_int !i) ^ ":");
+							print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names pconstraint_i);
+							print_message Verbose_high ("\n…with parameter constraint at position " ^ (string_of_int (!i+1)) ^ ":");
+							print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names (!pconstraint_i_plus_one));
+						);
 						
 						(* Check if difference is non-empty *)
 						(*** NOTE: we rather use p_is_le, even though we have to then compute the difference, if indeed smaller, for (presumably) efficiency reasons ***)
@@ -344,11 +352,16 @@ class algoEFexemplify =
 							
 							(* Print some information *)
 							if verbose_mode_greater Verbose_low then(
-								print_message Verbose_low ("Now generating the \"impossible\" concrete run from position " ^ (string_of_int !i) ^ "…");
+								print_message Verbose_low ("Now generating the \"impossible\" concrete run for negative parameter valuation from position " ^ (string_of_int !i) ^ "…");
+							);
+							
+							(* Print some information *)
+							if verbose_mode_greater Verbose_high then(
+								print_message Verbose_high ("Considering subset of symbolic run of length " ^ (string_of_int (List.length symbolic_run.symbolic_steps)) ^ " from position " ^ (string_of_int (!i)) ^ " to position " ^ (string_of_int ((List.length symbolic_run.symbolic_steps) - 1)) ^ "…");
 							);
 							
 							(* Convert the symbolic existing steps to concrete steps from the impossible valuation *)
-							let impossible_steps_suffix : StateSpace.impossible_concrete_step list = self#impossible_concrete_steps_of_symbolic_steps concrete_px_valuation_i (!i) (OCamlUtilities.sublist (!i+1) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps) in
+							let impossible_steps_suffix : StateSpace.impossible_concrete_step list = self#impossible_concrete_steps_of_symbolic_steps concrete_px_valuation_i (!i) (OCamlUtilities.sublist (!i) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps) in
 							
 							(* Now create the "impossible" concrete run *)
 							let impossible_concrete_run : StateSpace.impossible_concrete_run = {
@@ -364,7 +377,7 @@ class algoEFexemplify =
 							in
 							
 							(* Print some information *)
-							print_message Verbose_standard "Negative counterexample run constructed for the a negative parameter valuation!";
+							print_message Verbose_standard "Negative counterexample run constructed for a negative parameter valuation!";
 							if verbose_mode_greater Verbose_low then (
 								(* Debug print *)
 								print_message Verbose_low (ModelPrinter.debug_string_of_impossible_concrete_run model impossible_concrete_run);
@@ -410,18 +423,18 @@ class algoEFexemplify =
 					(* Define the next valuation along the run, and reason backward *)
 					
 					(* Start from the last but one state (as we compare i and i+1) *)
-					let i = ref ((List.length symbolic_run.symbolic_steps) - 2) in
+					let i = ref ((List.length symbolic_run.symbolic_steps) - 1) in
 					
 					
 					let xconstraint_i_plus_one : LinearConstraint.x_linear_constraint ref = ref (LinearConstraint.px_valuate_parameters functional_pval_positive target_state.px_constraint) in
 					
 					(* Print some information *)
-					print_message Verbose_medium "\nLooking for larger valuations by exploring backwards…";
+					print_message Verbose_medium ("\nLooking for blocking clock valuations by exploring backwards from position " ^ (string_of_int !i) ^ "…");
 					
 					(* Flag to interrupt the loop when found *)
 					let found = ref false in
 					
-					while !i > 0 && not !found do
+					while !i >= 0 && not !found do
 						(* Print some information *)
 						print_message Verbose_high ("\nConsidering position " ^ (string_of_int !i) ^ "");
 						
@@ -429,6 +442,14 @@ class algoEFexemplify =
 						let state_index_i = (List.nth symbolic_run.symbolic_steps !i).source in
 						(* Get the x-constraint at position i *)
 						let xconstraint_i : LinearConstraint.x_linear_constraint = LinearConstraint.px_valuate_parameters functional_pval_positive (StateSpace.get_state state_space state_index_i).px_constraint in
+						
+						(* Print some information *)
+						if verbose_mode_greater Verbose_high then(
+							print_message Verbose_high ("\nAbout to compare clock constraint at position " ^ (string_of_int !i) ^ ":");
+							print_message Verbose_high (LinearConstraint.string_of_x_linear_constraint model.variable_names xconstraint_i);
+							print_message Verbose_high ("\n…with clock constraint at position " ^ (string_of_int (!i+1)) ^ ":");
+							print_message Verbose_high (LinearConstraint.string_of_x_linear_constraint model.variable_names (!xconstraint_i_plus_one));
+						);
 						
 						(* Convert to a nnconvex_constraint *)
 						let difference = LinearConstraint.x_nnconvex_constraint_of_x_linear_constraint xconstraint_i in
@@ -498,12 +519,16 @@ class algoEFexemplify =
 							
 							(* Print some information *)
 							if verbose_mode_greater Verbose_low then(
-								print_message Verbose_low ("Now generating the \"impossible\" concrete run from position " ^ (string_of_int !i) ^ "…");
+								print_message Verbose_low ("Now generating the \"impossible\" concrete run for positive parameter valuation from position " ^ (string_of_int !i) ^ "…");
 							);
 							
 							(*** NOTE: now, the only way to choose the NEXT point at position i+1 is to consider a 0-time transition from position i, because we know that the point exhibited at position i does not belong to the i+1 zone ***)
 							
-							let state_i_plus_one = (List.nth symbolic_run.symbolic_steps (!i+1)).source in
+							let state_i_plus_one =
+								(* Careful! If run is too short, choose final state *)
+								if !i = List.length symbolic_run.symbolic_steps - 1 then symbolic_run.final_state
+								else (List.nth symbolic_run.symbolic_steps (!i+1)).source
+							in
 							let transition_i_plus_one = (List.nth symbolic_run.symbolic_steps (!i)).transition in
 							let impossible_step_i =
 							{
@@ -524,8 +549,8 @@ class algoEFexemplify =
 							
 							(* First check whether there is any state to build *)
 							let impossible_steps_suffix =
-							if List.length symbolic_run.symbolic_steps = !i+2 then(
-								print_message Verbose_medium ("No suffix to generate as the symbolic run has length " ^ (string_of_int (!i+2)) ^ ".");
+							if List.length symbolic_run.symbolic_steps = !i+1 then(
+								print_message Verbose_medium ("No suffix to generate as the symbolic run has length " ^ (string_of_int (!i+1)) ^ ".");
 								
 								(* Nothing to do *)
 								[]
@@ -533,12 +558,12 @@ class algoEFexemplify =
 							)else(
 							
 								(* Print some information *)
-								if verbose_mode_greater Verbose_low then(
-									print_message Verbose_high ("Considering subset of symbolic run of length " ^ (string_of_int (List.length symbolic_run.symbolic_steps)) ^ " from position " ^ (string_of_int (!i+2)) ^ " to position " ^ (string_of_int ((List.length symbolic_run.symbolic_steps) - 1)) ^ "…");
+								if verbose_mode_greater Verbose_high then(
+									print_message Verbose_high ("Considering subset of symbolic run of length " ^ (string_of_int (List.length symbolic_run.symbolic_steps)) ^ " from position " ^ (string_of_int (!i+1)) ^ " to position " ^ (string_of_int ((List.length symbolic_run.symbolic_steps) - 1)) ^ "…");
 								);
 								
 								(* Convert the symbolic existing steps to concrete steps from the impossible valuation *)
-								self#impossible_concrete_steps_of_symbolic_steps concrete_px_valuation_i (!i+1) (OCamlUtilities.sublist (!i+2) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps)
+								self#impossible_concrete_steps_of_symbolic_steps concrete_px_valuation_i (!i+1) (OCamlUtilities.sublist (!i+1) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps)
 							)
 							in
 							
