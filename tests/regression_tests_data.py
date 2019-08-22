@@ -13,7 +13,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2019/08/21
+# Last modified     : 2019/08/22
 #************************************************************
 
 
@@ -2378,6 +2378,103 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFexemplify on a toy example',
+		'input_files': ['testCounterExSimple-3.imi'],
+		'options'    : '-mode EFexemplify -output-result',
+		'expectations' : [
+			{'file': 'testCounterExSimple-3.res' , 'content' : """
+(************************************************************)
+ Run #1
+
+ Valuation:
+  p = 1/2
+
+ Other valuations with equivalent (discrete) run:
+ 2*p = 1
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  p = 1/2
+
+pta: l1 ==> 
+p = 1/2 & x = 0 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ 2*p = 1
+& x = 3} updates{x := 0}  sync a Target ltarget] 
+ | and d =  3
+ | 
+ v  pta: ltarget ==> 
+p = 1/2 & x = 0 & global_time = 3
+(************************************************************)
+
+
+(************************************************************)
+ Run #2
+
+ Valuation:
+  p = 0
+
+ Other valuations with equivalent (discrete) run:
+ 2*p > 1
+OR
+  p >= 0
+& 1 > 2*p
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 0
+
+pta: l1 ==> 
+p = 0 & x = 0 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l1 ==> 
+p = 0 & x = 1 & global_time = 1
+(************************************************************)
+
+
+(************************************************************)
+ Run #3
+
+ Valuation:
+  p = 1/2
+
+ Other valuations with equivalent (discrete) run:
+ 2*p = 1
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 1/2
+
+pta: l1 ==> 
+p = 1/2 & x = 0 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  0
+ | 
+ v  pta: ltarget ==> 
+p = 1/2 & x = 0 & global_time = 0
+(************************************************************)
 """
 			} # end result file
 			,
