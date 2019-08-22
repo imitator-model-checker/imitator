@@ -13,7 +13,7 @@ MAJOR RELEASE
 ### Major features
 * New accepting cycle synthesis (`-mode AccLoopSynth`)
 * New NDFS-based accepting cycle synthesis (`-mode AccLoopSynthNDFS`) with several exploration strategies [NPP18]. Additional option `-counterexample` terminates the analysis as soon as one cycle is found.
-* In mode `EF -counterexample`, IMITATOR outputs an example of parameter valuation, and a full concrete run, with a graphical representation of the clocks and discrete variables evolution. [EXPERIMENTAL]
+* In mode `EF -counterexample`, IMITATOR outputs an example of parameter valuation, and a full concrete run, with a graphical representation of the clocks and discrete variables evolution. An absolute time clock (initially set to 0 and never reset) named `global_time` needs to be defined in the model. [EXPERIMENTAL]
 * New check-syntax mode (`-mode checksyntax`), that simply checks the syntax and terminates without doing any analysis.
 
 ### Minor features
@@ -24,7 +24,7 @@ MAJOR RELEASE
 * Partial model inclusion is now possible thanks to keyword `#include`. Notably, properties can now be included from other files.
 
 ### Options
-* Removed the `-merge-before` option (that was not documented nor tested)
+* Removed the `-merge-before` option (that was not documented nor properly tested)
 
 ### Export
 * The result in the terminal tries to be more precise about what the synthesized constraints actually guarantees
