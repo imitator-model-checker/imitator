@@ -345,6 +345,7 @@ let string_of_var names variable =
 (************************************************************)
 
 type p_valuation = (variable -> coef)
+type x_valuation = (variable -> coef)
 type px_valuation = (variable -> coef)
 type pxd_valuation = (variable -> coef)
 type d_valuation = (variable -> coef)
@@ -1533,6 +1534,7 @@ let constraint_of_point nb_dimensions (thepoint : (variable * coef) list) =
 
 (*** NOTE: must provide the argument to be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
 let p_constraint_of_point v_c_list = constraint_of_point !p_dim v_c_list
+let x_constraint_of_point v_c_list = constraint_of_point !px_dim v_c_list
 let px_constraint_of_point v_c_list = constraint_of_point !px_dim v_c_list
 let pxd_constraint_of_point v_c_list = constraint_of_point !pxd_dim v_c_list
 let pxd_constraint_of_discrete_values = pxd_constraint_of_point
@@ -1916,6 +1918,7 @@ let intersection_assign nb_dimensions linear_constraint constrs =
 let p_intersection_assign l c = intersection_assign !p_dim l c
 let px_intersection_assign l c = intersection_assign !px_dim l c
 let pxd_intersection_assign l c = intersection_assign !pxd_dim l c
+let px_intersection_assign_x l c = intersection_assign !px_dim l c
 
 let px_intersection_assign_p px_linear_constraint = function
 	(* No constraint: nothing to do *)
@@ -3554,6 +3557,7 @@ let test_PDBMs () =
 type nnconvex_constraint = Ppl.pointset_powerset_nnc_polyhedron
 
 type p_nnconvex_constraint = nnconvex_constraint
+type x_nnconvex_constraint = nnconvex_constraint
 type px_nnconvex_constraint = nnconvex_constraint
 
 
@@ -3571,8 +3575,9 @@ let true_p_nnconvex_constraint () = ippl_nncc_true_constraint !p_dim
 let true_px_nnconvex_constraint () = ippl_nncc_true_constraint !px_dim
 
 
-(** Create a new p_nnconvex_constraint from a linear_constraint *)
+(** Create a new nnconvex_constraint from a linear_constraint *)
 let p_nnconvex_constraint_of_p_linear_constraint (p_linear_constraint : p_linear_constraint) = ippl_nncc_from_poly p_linear_constraint
+let x_nnconvex_constraint_of_x_linear_constraint (x_linear_constraint : x_linear_constraint) = ippl_nncc_from_poly x_linear_constraint
 
 let px_nnconvex_constraint_of_px_linear_constraint c =
 	(* Assert *)
@@ -3699,6 +3704,7 @@ let string_of_p_nnconvex_constraint names p_nnconvex_constraint =
 	)
 
 let string_of_px_nnconvex_constraint = string_of_p_nnconvex_constraint
+let string_of_x_nnconvex_constraint = string_of_p_nnconvex_constraint
 
 
 
@@ -3797,6 +3803,7 @@ let p_nnconvex_difference_assign p_nnconvex_constraint p_nnconvex_constraint' =
 
 
 let px_nnconvex_difference_assign = p_nnconvex_difference_assign
+let x_nnconvex_difference_assign = p_nnconvex_difference_assign
 
 (** Performs the difference between a first p_nnconvex_constraint and a second p_nnconvex_constraint; no side-effects *)
 let p_nnconvex_difference p_nnconvex_constraint p_nnconvex_constraint' =
@@ -4069,6 +4076,8 @@ let nnconvex_constraint_exhibit_point nb_dimensions nnconvex_constraint =
 (*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
 let p_nnconvex_exhibit_point l = nnconvex_constraint_exhibit_point !p_dim l
 let px_nnconvex_exhibit_point l = nnconvex_constraint_exhibit_point !px_dim l
+(*** WARNING: in the current version, it is absolutely necessary that the p-valuations in the internal representation of the x_nnconvex_constraint are reduced to a point here ***)
+let x_nnconvex_exhibit_point l = nnconvex_constraint_exhibit_point !px_dim l
 (* let pxd_nnconvex_exhibit_point l = nnconvex_constraint_exhibit_point !pxd_dim l *)
 
 

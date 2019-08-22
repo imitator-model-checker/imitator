@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2019/08/13
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -103,6 +103,9 @@ val string_of_pi0 : abstract_model -> pi0 -> string
 
 (* Convert a px-valuation into a string *)
 val string_of_px_valuation : abstract_model -> LinearConstraint.px_valuation -> string
+
+(* Convert a x-valuation into a string *)
+val string_of_x_valuation : abstract_model -> LinearConstraint.x_valuation -> string
 
 (* Convert a v0 into a string *)
 val string_of_v0 : abstract_model -> v0 -> string

@@ -47,6 +47,7 @@ val string_of_var : (variable -> string) -> variable -> string*)
 (************************************************************)
 
 type p_valuation = (variable -> coef)
+type x_valuation = (variable -> coef)
 type px_valuation = (variable -> coef)
 type pxd_valuation = (variable -> coef)
 type d_valuation = (variable -> coef)
@@ -227,6 +228,7 @@ val make_pxd_constraint : pxd_linear_inequality list -> pxd_linear_constraint
 
 (** Create a linear constraint from a single point *)
 val p_constraint_of_point : (variable * coef) list -> p_linear_constraint
+val x_constraint_of_point : (variable * coef) list -> x_linear_constraint
 val px_constraint_of_point : (variable * coef) list -> px_linear_constraint
 val pxd_constraint_of_point : (variable * coef) list -> pxd_linear_constraint
 
@@ -389,6 +391,7 @@ val px_intersection_assign : px_linear_constraint -> px_linear_constraint list -
 val pxd_intersection_assign : pxd_linear_constraint -> pxd_linear_constraint list -> unit
 
 val px_intersection_assign_p : px_linear_constraint -> p_linear_constraint list -> unit
+val px_intersection_assign_x : px_linear_constraint -> x_linear_constraint list -> unit
 
 (** Perform the hull assignation *)
 (* val hull_assign : linear_constraint -> linear_constraint -> unit *)
@@ -585,6 +588,7 @@ val plot_2d : variable -> variable -> p_linear_constraint -> float -> float -> f
 
 (** Non-necessarily convex constraint on the parameters ("pointset powerset" in the underlying PPL implementation) *)
 type p_nnconvex_constraint
+type x_nnconvex_constraint
 type px_nnconvex_constraint
 
 
@@ -606,8 +610,9 @@ val p_nnconvex_copy : p_nnconvex_constraint -> p_nnconvex_constraint
 val px_nnconvex_copy : px_nnconvex_constraint -> px_nnconvex_constraint
 
 
-(** Create a new p_nnconvex_constraint from a linear_constraint *)
+(** Create a new nnconvex_constraint from a linear_constraint *)
 val p_nnconvex_constraint_of_p_linear_constraint : p_linear_constraint -> p_nnconvex_constraint
+val x_nnconvex_constraint_of_x_linear_constraint : x_linear_constraint -> x_nnconvex_constraint
 val px_nnconvex_constraint_of_px_linear_constraint : px_linear_constraint -> px_nnconvex_constraint
 
 (** Create a new non-convex p_nnconvex_constraint from a list of linear_constraint *)
@@ -641,6 +646,7 @@ val p_nnconvex_constraint_is_equal : p_nnconvex_constraint -> p_nnconvex_constra
 (** Exhibit a point in a nnconvex_constraint; raise EmptyConstraint if the constraint is empty. *)
 (*** NOTE: function quasi-identical to {pxd}_exhibit_point ***)
 val p_nnconvex_exhibit_point : p_nnconvex_constraint -> p_valuation
+val x_nnconvex_exhibit_point : x_nnconvex_constraint -> x_valuation
 val px_nnconvex_exhibit_point : px_nnconvex_constraint -> px_valuation
 (* val pxd_nnconvex_exhibit_point : pxd_nnconvex_constraint -> pxd_valuation *)
 
@@ -662,6 +668,7 @@ val p_nnconvex_union_assign : p_nnconvex_constraint -> p_nnconvex_constraint -> 
 
 (** Performs the difference between a first px_nnconvex_constraint and a second px_nnconvex_constraint; the first is modified, the second is not *)
 val p_nnconvex_difference_assign : p_nnconvex_constraint -> p_nnconvex_constraint -> unit
+val x_nnconvex_difference_assign : x_nnconvex_constraint -> x_nnconvex_constraint -> unit
 val px_nnconvex_difference_assign : px_nnconvex_constraint -> px_nnconvex_constraint -> unit
 (** Performs the difference between a first p_nnconvex_constraint and a second p_nnconvex_constraint; no side-effects *)
 val p_nnconvex_difference : p_nnconvex_constraint -> p_nnconvex_constraint -> p_nnconvex_constraint
@@ -687,6 +694,7 @@ val p_linear_constraint_list_of_p_nnconvex_constraint : p_nnconvex_constraint ->
 
 (** Convert a p_nnconvex_constraint into a string *)
 val string_of_p_nnconvex_constraint : (variable -> string) -> p_nnconvex_constraint -> string
+val string_of_x_nnconvex_constraint : (variable -> string) -> x_nnconvex_constraint -> string
 val string_of_px_nnconvex_constraint : (variable -> string) -> px_nnconvex_constraint -> string
 
 

@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2019/08/13
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -663,15 +663,21 @@ let string_of_model model =
 (************************************************************)
 (** PX-valuation *)
 (************************************************************)
-(* Convert a px-valuation into a string *)
-let string_of_px_valuation model valuation =
+(* Convert a valuation into a string *)
+let string_of_valuation variables variable_names valuation =
 	string_of_list_of_string_with_sep " & " (
 		List.map (fun variable ->
-			(model.variable_names variable)
+			(variable_names variable)
 			^ " = "
 			^ (NumConst.string_of_numconst (valuation variable))
-		) model.parameters_and_clocks
+		) variables
 	)
+
+(* Convert a px-valuation into a string *)
+let string_of_px_valuation model = string_of_valuation model.parameters_and_clocks model.variable_names
+
+(* Convert an x-valuation into a string *)
+let string_of_x_valuation model = string_of_valuation model.clocks model.variable_names
 
 
 (************************************************************)
