@@ -4,7 +4,7 @@ MAJOR RELEASE
 
 
 *******************************************************
-# release 2.12 (XXXX) Butter Lobster
+# release 2.12 (2019-08-22) Butter Lobster
 MAJOR RELEASE
 
 ### Bug fixing:
@@ -310,7 +310,7 @@ INTERMEDIATE RELEASE
 ### Install and compile
 * Main binary now in lower case (`imitator`)
 * Two versions:
-	* non-distributed (`sh compile.sh`), that creates a static binary `imitator`, or 
+	* non-distributed (`sh compile.sh`), that creates a static binary `imitator`, or
 	* distributed (`sh compile-distr.sh`), that creates a dynamic binary `patator`
 
 ### Internal
