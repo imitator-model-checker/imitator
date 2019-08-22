@@ -2,12 +2,12 @@
  //
  //                       CLASSDIAGRAMATOR
  // 
- // Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ // Université Paris 13, LIPN, CNRS, France (France)
  // 
  // Author:        Etienne Andre
  // 
  // Created:       2017/03/08
- // Last modified: 2017/03/08
+ // Last modified: 2019/08/22
  //
 //###############################################################
 
@@ -42,7 +42,9 @@
 	
 	BCCoverDistributedSubdomainStaticCollaborator [label = "{BCCoverDistributedSubdomainStaticCollaborator|}"]
 	BCCoverDistributedSubdomainStaticCoordinator [label = "{BCCoverDistributedSubdomainStaticCoordinator|}"]
-	
+
+	NZCUBdist [label = "{NZCUBdist|}"]
+
 	
 	BCCoverDistributedMSPointBasedMaster -> BCCoverDistributed
 	BCCoverDistributedMSPointBasedWorker -> BCCoverDistributed
@@ -60,3 +62,5 @@
 	BCCoverDistributedSubdomainStaticCoordinator -> BCCoverDistributedSubdomainStatic
 
 	BCCoverDistributed-> Generic
+
+	NZCUBdist-> NZCUB
