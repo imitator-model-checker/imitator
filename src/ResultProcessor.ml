@@ -230,6 +230,14 @@ let add_constraints_delimiters constraint_str =
 	(* end delimiter *)
 	^ "\nEND CONSTRAINT\n"
 
+(** Add standardised delimiters to results (e.g. runs) *)
+let add_result_delimiters constraint_str =
+	(* begin delimiter *)
+	"\n\nBEGIN RESULT\n"
+	^ constraint_str ^ ""
+	(* end delimiter *)
+	^ "\nEND RESULT\n"
+
 
 (************************************************************)
 (* I/O functions *)
@@ -789,8 +797,7 @@ let export_to_file_runs_exhibition_result file_name (result : Result.runs_exhibi
 		^ "\n------------------------------------------------------------"
 
 		(* 3) The actual result with delimiters *)
-		(*** NOTE: for now, no delimiters ***)
-		^ ((*add_constraints_delimiters *)runs_str)
+		^ (add_result_delimiters runs_str)
 		
 		(* 4) Statistics about state space *)
 		^ "\n------------------------------------------------------------"
