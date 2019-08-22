@@ -13,7 +13,7 @@ RUN apt-get update -qq && \
   python \
   ocaml-native-compilers camlp4-extra ocaml ocaml-findlib oasis ocamlbuild \
   graphviz plotutils \
-  libextlib-ocaml libextlib-ocaml-dev \
+  libextlib-ocaml libextlib-ocaml-dev libfileutils-ocaml-dev \
   libgmp-dev libgmp-ocaml libgmp-ocaml-dev \
   libmpfr-dev \
   libppl-dev && \
