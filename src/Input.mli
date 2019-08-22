@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2012/06/15
- * Last modified     : 2016/08/04
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -20,8 +20,8 @@ open Options
 val get_model: unit -> abstract_model
 val set_model: abstract_model -> unit
 
-val get_pi0: unit -> pi0
-val set_pi0: pi0 -> unit
+val get_pi0: unit -> PVal.pval
+val set_pi0: PVal.pval -> unit
 
 val get_v0: unit -> v0
 val set_v0: v0 -> unit

@@ -201,7 +201,7 @@ class algoEFexemplify =
 				(* Print some information *)
 				if verbose_mode_greater Verbose_standard then(
 					print_message Verbose_standard "Example of positive parameter valuation:";
-					print_message Verbose_standard (ModelPrinter.string_of_pi0 model pval_positive);
+					print_message Verbose_standard (ModelPrinter.string_of_pval model pval_positive);
 				);
 				
 				(* Exhibit a concrete run from the symbolic run *)
@@ -294,7 +294,7 @@ class algoEFexemplify =
 							(* Print some information *)
 							if verbose_mode_greater Verbose_standard then(
 								print_message Verbose_standard "Example of negative parameter valuation:";
-								print_message Verbose_standard (ModelPrinter.string_of_pi0 model pval_negative);
+								print_message Verbose_standard (ModelPrinter.string_of_pval model pval_negative);
 							);
 							
 							(* Intersect with the px-constraint to then obtain px-valuation *)

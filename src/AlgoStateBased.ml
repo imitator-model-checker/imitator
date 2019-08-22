@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/08/21
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -2072,7 +2072,7 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 		let pval = PVal.pval_from_valuation_function concrete_target_px_valuation in
 		
 		print_message Verbose_standard "Example of parameter valuation:";
-		print_message Verbose_standard (ModelPrinter.string_of_pi0 model pval);
+		print_message Verbose_standard (ModelPrinter.string_of_pval model pval);
 	);
 	
 	(* Exhibit a concrete run from the symbolic run *)

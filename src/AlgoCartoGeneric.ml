@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2019/06/11
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -683,7 +683,7 @@ class virtual algoCartoGeneric =
 			nb_unsuccessful_points <- nb_unsuccessful_points + 1;
 			if verbose_mode_greater Verbose_low then (
 				self#print_algo_message Verbose_low "The following pi0 is already included in a constraint.";
-				print_message Verbose_low (ModelPrinter.string_of_pi0 model tentative_pi0);
+				print_message Verbose_low (ModelPrinter.string_of_pval model tentative_pi0);
 			);
 			(*** TODO: could be optimized by finding the nearest multiple of tile next to the border, and directly switching to that one ***)
 			false
@@ -694,7 +694,7 @@ class virtual algoCartoGeneric =
 			nb_unsuccessful_points <- nb_unsuccessful_points + 1;
 			if verbose_mode_greater Verbose_low then (
 				self#print_algo_message Verbose_low "The following pi0 does not satisfy the initial constraint of the model.";
-				print_message Verbose_low (ModelPrinter.string_of_pi0 model tentative_pi0);
+				print_message Verbose_low (ModelPrinter.string_of_pval model tentative_pi0);
 			);
 			false
 		(* If both checks passed, then pi0 found *)
@@ -980,7 +980,7 @@ class virtual algoCartoGeneric =
 			print_message Verbose_standard ("\n**************************************************");
 			print_message Verbose_standard ("ALGORITHM " ^ (self#algorithm_name) ^ ": iteration " ^ (string_of_int current_iteration) ^ "");
 			print_message Verbose_standard ("Considering the following pi" ^ (string_of_int current_iteration));
-			print_message Verbose_standard (ModelPrinter.string_of_pi0 model pi0);
+			print_message Verbose_standard (ModelPrinter.string_of_pval model pi0);
 (* 			); *)
 			
 			

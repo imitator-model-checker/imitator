@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2019/08/21
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -567,7 +567,7 @@ let export_to_file_point_based_result file_name (point_based_result : Result.poi
 		(* 3) Recall pi0 *)
 		^ "\n\n------------------------------------------------------------"
 		^ "\n Reference parameter valuation:"
-		^ "\n" ^ (ModelPrinter.string_of_pi0 model pi0)
+		^ "\n" ^ (ModelPrinter.string_of_pval model pi0)
 		^ "\n------------------------------------------------------------"
 		
 		(* 4) The actual result with delimiters *)
@@ -666,7 +666,7 @@ let export_to_file_cartography_result file_name (cartography_result : Result.car
 			^ "\n Tile #" ^ (string_of_int index_from_one)
 			(* 1) Reference valuation *)
 			^ "\n\n Pi" ^ (string_of_int index_from_one) ^ ":"
-			^ "\n" ^ (ModelPrinter.string_of_pi0 model abstract_point_based_result.reference_val)
+			^ "\n" ^ (ModelPrinter.string_of_pval model abstract_point_based_result.reference_val)
 
 			(* 2) Constraint *)
 			^ "\n\n K" ^ (string_of_int index_from_one) ^ ":"
@@ -758,7 +758,7 @@ let export_to_file_runs_exhibition_result file_name (result : Result.runs_exhibi
 			^ "\n Run #" ^ (string_of_int index_from_one)
 			(* 1) Valuation for this run *)
 			^ "\n\n Valuation " ^ (string_of_int index_from_one) ^ ":"
-			^ "\n" ^ (ModelPrinter.string_of_pi0 model valuation_and_concrete_run.valuation)
+			^ "\n" ^ (ModelPrinter.string_of_pval model valuation_and_concrete_run.valuation)
 
 			(* 2) Valuations for which an equivalent DISCRETE run exists *)
 			^ "\n\n Other valuations with equivalent (discrete) run:"

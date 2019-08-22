@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/14
- * Last modified     : 2016/08/15
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -139,7 +139,7 @@ class algoBCShuffle =
 			let model = Input.get_model() in
 			for pi0_index = 0 to Array.length all_points - 1 do
 				print_message Verbose_standard ((string_of_int pi0_index) ^ ":");
-				print_message Verbose_standard (ModelPrinter.string_of_pi0 model all_points.(pi0_index));
+				print_message Verbose_standard (ModelPrinter.string_of_pval model all_points.(pi0_index));
 			done;
 			(*** END DEBUG ***)
 		);
@@ -185,7 +185,7 @@ class algoBCShuffle =
 			let model = Input.get_model() in
 			for pi0_index = 0 to Array.length all_points - 1 do
 				print_message Verbose_standard ((string_of_int pi0_index) ^ ":");
-				print_message Verbose_standard (ModelPrinter.string_of_pi0 model all_points.(pi0_index));
+				print_message Verbose_standard (ModelPrinter.string_of_pval model all_points.(pi0_index));
 			done;
 			(*** END DEBUG ***)
 		);

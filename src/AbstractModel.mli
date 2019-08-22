@@ -23,8 +23,6 @@ open Automaton
 (************************************************************)
 (** Reference parameter valuations *)
 (************************************************************)
-type pi0 = PVal.pval
-
 type v0 = HyperRectangle.hyper_rectangle
 
 

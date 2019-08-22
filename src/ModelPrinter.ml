@@ -683,14 +683,14 @@ let string_of_x_valuation model = string_of_valuation model.clocks model.variabl
 (************************************************************)
 (** Pi0 *)
 (************************************************************)
-(* Convert a pi0 into a string *)
-let string_of_pi0 model pi0 =
+(* Convert a parameter valuation (PVal.pval) into a string *)
+let string_of_pval model pval =
 	"  " ^ (
 	string_of_list_of_string_with_sep "\n& " (
 		List.map (fun parameter ->
 			(model.variable_names parameter)
 			^ " = "
-			^ (NumConst.string_of_numconst (pi0#get_value parameter))
+			^ (NumConst.string_of_numconst (pval#get_value parameter))
 		) model.parameters
 	)
 	)
@@ -816,7 +816,7 @@ let string_of_impossible_concrete_steps model impossible_concrete_steps =
 let debug_string_of_concrete_run model (concrete_run : StateSpace.concrete_run) =
 	(* First recall the parameter valuation *)
 	"Concrete run for parameter valuation:"
-	^ "\n" ^ (string_of_pi0 model concrete_run.p_valuation)
+	^ "\n" ^ (string_of_pval model concrete_run.p_valuation)
 	
 	^ "\n"
 	
@@ -832,7 +832,7 @@ let debug_string_of_concrete_run model (concrete_run : StateSpace.concrete_run) 
 let debug_string_of_impossible_concrete_run model (impossible_concrete_run : StateSpace.impossible_concrete_run) =
 	(* First recall the parameter valuation *)
 	"Impossible concrete run for parameter valuation:"
-	^ "\n" ^ (string_of_pi0 model impossible_concrete_run.p_valuation)
+	^ "\n" ^ (string_of_pval model impossible_concrete_run.p_valuation)
 	
 	^ "\n"
 	

@@ -98,8 +98,8 @@ val string_of_conditional_updates : abstract_model -> conditional_update list ->
 (** Points and hyperrectangles *)
 (************************************************************)
 
-(* Convert a pi0 into a string *)
-val string_of_pi0 : abstract_model -> pi0 -> string
+(* Convert a parameter valuation (PVal.pval) into a string *)
+val string_of_pval : abstract_model -> PVal.pval -> string
 
 (* Convert a px-valuation into a string *)
 val string_of_px_valuation : abstract_model -> LinearConstraint.px_valuation -> string

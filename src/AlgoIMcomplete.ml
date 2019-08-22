@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/03/21
- * Last modified     : 2019/08/08
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -106,7 +106,7 @@ class algoIMcomplete =
 				print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 				if verbose_mode_greater Verbose_high then(
 					self#print_algo_message_newline Verbose_high ("Recall that pi0 is:");
-					print_message Verbose_high   (ModelPrinter.string_of_pi0 model pi0);
+					print_message Verbose_high   (ModelPrinter.string_of_pval model pi0);
 				);
 			);
 			

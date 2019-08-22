@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2019/06/13
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -110,7 +110,7 @@ class algoIMK =
 				List.iter (fun inequality -> print_message Verbose_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names inequality)) incompatible;
 				if verbose_mode_greater Verbose_high then(
 					self#print_algo_message_newline Verbose_high ("Recall that pi0 is:");
-					print_message Verbose_high   (ModelPrinter.string_of_pi0 model pi0);
+					print_message Verbose_high   (ModelPrinter.string_of_pval model pi0);
 				);
 			);
 			
