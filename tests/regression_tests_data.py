@@ -2395,8 +2395,10 @@ Constraint nature                       : good
 		'options'    : '-mode EFexemplify -output-result',
 		'expectations' : [
 			{'file': 'testCounterExSimple-3.res' , 'content' : """
+BEGIN RESULT
 (************************************************************)
  Run #1
+
 
  Valuation:
   p = 1/2
@@ -2475,6 +2477,7 @@ p = 1/2 & x = 0 & global_time = 0
  v  pta: ltarget ==> 
 p = 1/2 & x = 0 & global_time = 0
 (************************************************************)
+END RESULT
 """
 			} # end result file
 			,
@@ -2492,8 +2495,10 @@ p = 1/2 & x = 0 & global_time = 0
 		'options'    : '-mode EFexemplify -output-result',
 		'expectations' : [
 			{'file': 'testCounterExSimple-4.res' , 'content' : """
+BEGIN RESULT
 (************************************************************)
  Run #1
+
 
  Valuation:
   p = 4095/2
@@ -2574,6 +2579,7 @@ p = 4095/2 & x = 1 & global_time = 0
  v  pta: ltarget ==> 
 p = 4095/2 & x = 1 & global_time = 0
 (************************************************************)
+END RESULT
 
 """
 			} # end result file
@@ -2591,8 +2597,10 @@ p = 4095/2 & x = 1 & global_time = 0
 		'options'    : '-mode EFexemplify -output-result',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5.res' , 'content' : """
+BEGIN RESULT
 (************************************************************)
  Run #1
+
 
  Valuation:
   p = 1
@@ -2709,6 +2717,7 @@ p = 1 & x = 2 & global_time = 1
  v  pta: l3 ==> 
 p = 1 & x = 3 & global_time = 2
 (************************************************************)
+END RESULT
 
 """
 			} # end result file
@@ -2726,8 +2735,10 @@ p = 1 & x = 3 & global_time = 2
 		'options'    : '-mode EFexemplify -output-result',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5b.res' , 'content' : """
+BEGIN RESULT
 (************************************************************)
  Run #1
+
 
  Valuation:
   p = 1
@@ -2842,6 +2853,7 @@ p = 1 & x = 1 & global_time = 0
  v  pta: l3 ==> 
 p = 1 & x = 2 & global_time = 1
 (************************************************************)
+END RESULT
 
 """
 			} # end result file
@@ -2859,8 +2871,10 @@ p = 1 & x = 2 & global_time = 1
 		'options'    : '-mode EFexemplify -output-result',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5c.res' , 'content' : """
+BEGIN RESULT
 (************************************************************)
  Run #1
+
 
  Valuation:
   p = 1
@@ -2975,6 +2989,7 @@ p = 1 & x = 1 & global_time = 0
  v  pta: ltarget ==> 
 p = 1 & x = 1 & global_time = 0
 (************************************************************)
+END RESULT
 """
 			} # end result file
 			,
