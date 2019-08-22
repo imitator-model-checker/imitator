@@ -3649,6 +3649,7 @@ let get_disjuncts p_nnconvex_constraint =
 
 (** Check if a nnconvex_constraint is false *)
 let p_nnconvex_constraint_is_false = ippl_nncc_is_empty
+let x_nnconvex_constraint_is_false = ippl_nncc_is_empty
 
 
 (** Check if a nnconvex_constraint is true *)

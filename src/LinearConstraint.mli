@@ -625,6 +625,7 @@ val p_nnconvex_constraint_of_p_linear_constraints : p_linear_constraint list -> 
 
 (** Check if a nnconvex_constraint is false *)
 val p_nnconvex_constraint_is_false : p_nnconvex_constraint -> bool
+val x_nnconvex_constraint_is_false : x_nnconvex_constraint -> bool
 
 (** Check if a nnconvex_constraint is true *)
 val p_nnconvex_constraint_is_true  : p_nnconvex_constraint -> bool
