@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/08/09
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -321,6 +321,9 @@ type linear_constraint = Ppl.polyhedron
 (** Convex constraint (polyhedron) on the parameters *)
 type p_linear_constraint = linear_constraint
 
+(** Convex constraint (polyhedron) on the clock variables *)
+type x_linear_constraint = linear_constraint
+
 (** Convex constraint (polyhedron) on the parameters and clocks *)
 type px_linear_constraint = linear_constraint
 
@@ -374,6 +377,7 @@ let pxd_dim			= ref 0
 (* let nonparameters () = list_of_interval !nb_parameters (!pxd_dim - 1) *)
 let clocks () = list_of_interval !nb_parameters (!px_dim - 1)
 
+let parameters () = list_of_interval 0 (!nb_parameters - 1)
 
 (* For verbose print *)
 let debug_variable_names = fun v -> "v_" ^ (string_of_int v)
@@ -2146,6 +2150,19 @@ let pxd_hide_discrete_and_collapse pxd_linear_constraint =
 	(* Return result *)
 	result
 
+
+(** Valuate the parameters in a px_linear_constraint and obtain a x_linear_constraint *)
+let px_valuate_parameters (p_valuation : p_valuation) (px_linear_constraint : px_linear_constraint) : x_linear_constraint =
+	(* Construct a linear constraint p_i = pval(p_i) *)
+	let variables_list : (variable * coef) list = List.map (fun variable_index -> variable_index , p_valuation variable_index) (parameters ()) in
+	let point_p_constraint : p_linear_constraint = p_constraint_of_point variables_list in
+	
+	(* Intersect *)
+	(*** WARNING: somehow a type violation here, but as in reality all constraints have same type, this is all fine ***)
+	px_intersection_assign point_p_constraint [px_linear_constraint];
+	
+	(* Return *)
+	point_p_constraint
 
 
 (*------------------------------------------------------------*)

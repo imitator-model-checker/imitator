@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/08/09
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -192,6 +192,9 @@ val string_of_p_linear_inequality : (variable -> string) -> p_linear_inequality 
 
 (** Convex constraint (polyhedron) on the parameters *)
 type p_linear_constraint
+
+(** Convex constraint (polyhedron) on the clock variables *)
+type x_linear_constraint
 
 (** Convex constraint (polyhedron) on the parameters and clocks *)
 type px_linear_constraint
@@ -404,6 +407,10 @@ val pxd_hide_discrete_and_collapse : pxd_linear_constraint -> px_linear_constrai
 
 (** Eliminate (using existential quantification) the non-parameters in a pxd_linear constraint, and remove the corresponding dimensions *)
 (* val pxd_hide_nonparameters_and_collapse : pxd_linear_constraint -> p_linear_constraint *)
+
+(** Valuate the parameters in a px_linear_constraint and obtain a x_linear_constraint *)
+val px_valuate_parameters : p_valuation -> px_linear_constraint -> x_linear_constraint
+
 
 (*------------------------------------------------------------*)
 (* Convex negation *)
