@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2019/08/21
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -1110,8 +1110,8 @@ class imitator_options =
 				| Exploration_NDFS -> print_message Verbose_standard ("Exploration order: standard NDFS [NPvdP18].")
 				| Exploration_NDFS_sub when !counterex = true -> print_message Verbose_standard ("Exploration order: NDFS with subsumption [NPvdP18]; emptiness only.")
 				| Exploration_layer_NDFS_sub when !counterex = true -> print_message Verbose_standard ("Exploration order: layerd NDFS with subsumption [NPvdP18]; emptiness only.")
-				| Exploration_NDFS_sub when !counterex = false -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption [NPvdP18].")
-				| Exploration_layer_NDFS_sub when !counterex = false -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption and layers [NPvdP18].")
+				| Exploration_NDFS_sub (*when !counterex = false*) -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption [NPvdP18].")
+				| Exploration_layer_NDFS_sub (*when !counterex = false*) -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption and layers [NPvdP18].")
 (* 				| Exploration_syn_mixed_NDFS -> print_message Verbose_standard ("Exploration order: NDFS with mix of subsumption and layers.") *)
 end;
 
