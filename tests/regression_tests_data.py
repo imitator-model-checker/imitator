@@ -3158,6 +3158,280 @@ END RESULT
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test EFexemplify on a toy example without parameter',
+		'input_files': ['testCounterExSimple.imi'],
+		'options'    : '-mode EFexemplify -output-result',
+		'expectations' : [
+			{'file': 'testCounterExSimple.res' , 'content' : """
+
+BEGIN RESULT
+
+(************************************************************)
+ Run #1
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  
+
+pta: l1, d1 = 1/2, d2 = 50 ==> 
+x = 0 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
+ | and d =  3
+ | 
+ v  pta: l2, d1 = 1/2, d2 = 50 ==> 
+x = 0 & global_time = 3
+
+ | 
+ | via combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
+ | and d =  1
+ | 
+ v  pta: l3, d1 = 5/2, d2 = 50 ==> 
+x = 0 & global_time = 4
+
+ | 
+ | via combined transition [PTA pta: guard{ x = 1} updates{d2 := (d2) / 2}  sync a Target l4] 
+ | and d =  1
+ | 
+ v  pta: l4, d1 = 5/2, d2 = 25 ==> 
+x = 1 & global_time = 5
+
+ | 
+ | via combined transition [PTA pta: guard{ x = 8} updates{}  sync a Target lbad] 
+ | and d =  7
+ | 
+ v  pta: lbad, d1 = 5/2, d2 = 25 ==> 
+x = 8 & global_time = 12
+(************************************************************)
+
+
+(************************************************************)
+ Run #2
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  
+
+pta: l1, d1 = 1/2, d2 = 50 ==> 
+x = 0 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
+ | and d =  3
+ | 
+ v  pta: l2, d1 = 1/2, d2 = 50 ==> 
+x = 0 & global_time = 3
+
+ | 
+ | via combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
+ | and d =  1
+ | 
+ v  pta: l3, d1 = 5/2, d2 = 50 ==> 
+x = 0 & global_time = 4
+
+ | 
+ | via combined transition [PTA pta: guard{ x = 1} updates{d2 := (d2) / 2}  sync a Target l4] 
+ | and d =  1
+ | 
+ v  pta: l4, d1 = 5/2, d2 = 25 ==> 
+x = 1 & global_time = 5
+ | 
+ | via impossible transition labeled with a
+ | and d =  0
+ | 
+ v  pta: lbad, d1 = 5/2, d2 = 25 ==> 
+x = 1 & global_time = 5
+(************************************************************)
+
+END RESULT
+
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFexemplify on a toy example with parameters and discrete variables',
+		'input_files': ['testCounterExSimple-2.imi'],
+		'options'    : '-mode EFexemplify -output-result',
+		'expectations' : [
+			{'file': 'testCounterExSimple-2.res' , 'content' : """
+
+BEGIN RESULT
+
+(************************************************************)
+ Run #1
+
+ Valuation:
+  p = 0
+
+ Other valuations with equivalent (discrete) run:
+ 1 > p
+& p >= 0
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  p = 0
+
+pta: l1, d1 = 1/2 ==> 
+p = 0 & x = 0 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
+ | and d =  3
+ | 
+ v  pta: l2, d1 = 1/2 ==> 
+p = 0 & x = 0 & global_time = 3
+
+ | 
+ | via combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
+ | and d =  1
+ | 
+ v  pta: l3, d1 = 5/2 ==> 
+p = 0 & x = 0 & global_time = 4
+
+ | 
+ | via combined transition [PTA pta: guard{ 1 > p
+& x = 1} updates{d1 := (d1) / 2}  sync a Target l4] 
+ | and d =  1
+ | 
+ v  pta: l4, d1 = 5/4 ==> 
+p = 0 & x = 1 & global_time = 5
+
+ | 
+ | via combined transition [PTA pta: guard{ x = 8} updates{}  sync a Target lbad] 
+ | and d =  7
+ | 
+ v  pta: lbad, d1 = 5/4 ==> 
+p = 0 & x = 8 & global_time = 12
+(************************************************************)
+
+
+(************************************************************)
+ Run #2
+
+ Valuation:
+  p = 1
+
+ Other valuations with equivalent (discrete) run:
+ p >= 1
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 1
+
+pta: l1, d1 = 1/2 ==> 
+p = 0 & x = 0 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
+ | and d =  3
+ | 
+ v  pta: l2, d1 = 1/2 ==> 
+p = 0 & x = 0 & global_time = 3
+
+ | 
+ | via combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
+ | and d =  1
+ | 
+ v  pta: l3, d1 = 5/2 ==> 
+p = 1 & x = 0 & global_time = 4
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l3, d1 = 5/2 ==> 
+p = 1 & x = 1 & global_time = 5
+
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l4, d1 = 5/4 ==> 
+p = 1 & x = 2 & global_time = 6
+(************************************************************)
+
+
+(************************************************************)
+ Run #3
+
+ Valuation:
+  p = 0
+
+ Other valuations with equivalent (discrete) run:
+ 1 > p
+& p >= 0
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 0
+
+pta: l1, d1 = 1/2 ==> 
+p = 0 & x = 0 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
+ | and d =  3
+ | 
+ v  pta: l2, d1 = 1/2 ==> 
+p = 0 & x = 0 & global_time = 3
+
+ | 
+ | via combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
+ | and d =  1
+ | 
+ v  pta: l3, d1 = 5/2 ==> 
+p = 0 & x = 0 & global_time = 4
+
+ | 
+ | via combined transition [PTA pta: guard{ 1 > p
+& x = 1} updates{d1 := (d1) / 2}  sync a Target l4] 
+ | and d =  1
+ | 
+ v  pta: l4, d1 = 5/4 ==> 
+p = 0 & x = 1 & global_time = 5
+ | 
+ | via impossible transition labeled with a
+ | and d =  0
+ | 
+ v  pta: lbad, d1 = 5/4 ==> 
+p = 0 & x = 1 & global_time = 5
+(************************************************************)
+END RESULT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test LoopSynth: flip-flop (no loop)',
 		'input_files': ['flipflop.imi'],
 		'options'    : '-mode LoopSynth -output-result',
