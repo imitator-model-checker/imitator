@@ -2586,6 +2586,141 @@ p = 4095/2 & x = 1 & global_time = 0
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test EFexemplify on a toy example (violation possible only in the initial state)',
+		'input_files': ['testCounterExSimple-5.imi'],
+		'options'    : '-mode EFexemplify -output-result',
+		'expectations' : [
+			{'file': 'testCounterExSimple-5.res' , 'content' : """
+(************************************************************)
+ Run #1
+
+ Valuation:
+  p = 1
+
+ Other valuations with equivalent (discrete) run:
+ p > 0
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  p = 1
+
+pta: l1 ==> 
+p = 1 & x = 1 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l2] 
+ | and d =  1
+ | 
+ v  pta: l2 ==> 
+p = 1 & x = 2 & global_time = 1
+
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
+ | and d =  0
+ | 
+ v  pta: l3 ==> 
+p = 1 & x = 2 & global_time = 1
+
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target ltarget] 
+ | and d =  0
+ | 
+ v  pta: ltarget ==> 
+p = 1 & x = 2 & global_time = 1
+(************************************************************)
+
+
+(************************************************************)
+ Run #2
+
+ Valuation:
+  p = 0
+
+ Other valuations with equivalent (discrete) run:
+ p = 0
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 0
+
+pta: l1 ==> 
+p = 0 & x = 1 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l1 ==> 
+p = 0 & x = 2 & global_time = 1
+
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l2 ==> 
+p = 0 & x = 3 & global_time = 2
+
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l3 ==> 
+p = 0 & x = 4 & global_time = 3
+(************************************************************)
+
+
+(************************************************************)
+ Run #3
+
+ Valuation:
+  p = 1
+
+ Other valuations with equivalent (discrete) run:
+ p > 0
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 1
+
+pta: l1 ==> 
+p = 1 & x = 1 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  0
+ | 
+ v  pta: l2 ==> 
+p = 1 & x = 1 & global_time = 0
+
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l2 ==> 
+p = 1 & x = 2 & global_time = 1
+
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l3 ==> 
+p = 1 & x = 3 & global_time = 2
+(************************************************************)
+
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test LoopSynth: flip-flop (no loop)',
 		'input_files': ['flipflop.imi'],
 		'options'    : '-mode LoopSynth -output-result',
