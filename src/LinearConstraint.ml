@@ -1923,6 +1923,7 @@ let string_of_linear_constraint customized_string names linear_constraint =
 
 
 let string_of_p_linear_constraint = string_of_linear_constraint default_string
+let string_of_x_linear_constraint = string_of_linear_constraint default_string
 let string_of_px_linear_constraint = string_of_linear_constraint default_string
 let string_of_d_linear_constraint = string_of_linear_constraint default_string
 let string_of_pxd_linear_constraint = string_of_linear_constraint default_string

@@ -518,6 +518,7 @@ val cast_d_of_pxd_linear_constraint : bool -> pxd_linear_constraint -> d_linear_
 
 (** Convert a linear constraint into a string using default values *)
 val string_of_p_linear_constraint : (variable -> string) -> p_linear_constraint -> string
+val string_of_x_linear_constraint : (variable -> string) -> x_linear_constraint -> string
 val string_of_px_linear_constraint : (variable -> string) -> px_linear_constraint -> string
 val string_of_d_linear_constraint : (variable -> string) -> d_linear_constraint -> string
 val string_of_pxd_linear_constraint : (variable -> string) -> pxd_linear_constraint -> string
