@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
- * Module description: "EF optimized" algorithm: minimization or minimization of a parameter valuation for which there exists a run leading to some states
+ * Module description: "EF optimized" algorithm: minimization or minimization of a parameter valuation for which there exists a run leading to some states [ABPP19]
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2018/10/18
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -25,6 +25,7 @@ open AbstractModel
 open Result
 open AlgoStateBased
 open Statistics
+open State
 
 
 (************************************************************)
@@ -226,7 +227,7 @@ class virtual algoEFopt =
 		(* Add to the collected current_optimum_constraint *)
 		match current_optimum_valuations with
 		| Some current_optimum_valuations ->
-			LinearConstraint.p_nnconvex_p_union current_optimum_valuations projected_constraint_onto_P;
+			LinearConstraint.p_nnconvex_p_union_assign current_optimum_valuations projected_constraint_onto_P;
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then(
 				self#print_algo_message_newline Verbose_low ("New " ^ self#str_optimum ^ " constraint after addition: " ^ (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names current_optimum_valuations));
@@ -262,14 +263,14 @@ class virtual algoEFopt =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform when trying to minimize/maximize a parameter. Returns true if the same should be kept, false if discarded. *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private process_state state = 
+	method private process_state (state : state) = 
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
 			self#print_algo_message Verbose_high "Entering AlgoEFopt:process_state…";
 		);
 
 		(* Retrieve the constraint *)
-		let state_location, px_constraint = state in
+		let state_location, px_constraint = state.global_location, state.px_constraint in
 		
 		(* Check if an optimum constraint was defined *)
 		match current_optimum with
@@ -445,19 +446,16 @@ class virtual algoEFopt =
 			)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the state_space (if indeed needed) *)
-	(* Side-effects: modify new_states_indexes *)
-	(*** TODO: move new_states_indexes to a variable of the class ***)
+	(* Add a new state to the reachability_graph (if indeed needed) *)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
+	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method add_a_new_state source_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
+	(*** TODO: return the list of actually added states ***)
+	method add_a_new_state source_state_index combined_transition new_state =
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
 			self#print_algo_message Verbose_medium "Entering AlgoEFopt:add_a_new_state…";
 		);
-		
-		(* Build the state *)
-		let new_state = location, current_constraint in
 		
 		(* If we have to optimize a parameter, do that now *)
 		let keep_processing = self#process_state new_state in
@@ -486,7 +484,7 @@ class virtual algoEFopt =
 
 				(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
 				if true then
-					new_states_indexes := new_state_index :: !new_states_indexes;
+					new_states_indexes <- new_state_index :: new_states_indexes;
 				
 			end (* end if new state *)
 			;
@@ -494,7 +492,7 @@ class virtual algoEFopt =
 			(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 			
 			(* Add the transition to the state space *)
-			self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
+			self#add_transition_to_state_space (source_state_index, combined_transition, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
 		
 			(* The state is kept in any case *)
 			true
@@ -584,7 +582,7 @@ class virtual algoEFopt =
 						let equality_constraint = LinearConstraint.p_constraint_of_point [(parameter_index, coefficient)] in
 						
 						(* Intersect with the optimum valuations *)
-						LinearConstraint.p_nnconvex_intersection current_optimum_valuations equality_constraint;
+						LinearConstraint.p_nnconvex_intersection_assign current_optimum_valuations equality_constraint;
 					);
 					
 					(* Return the constraint *)
@@ -615,6 +613,9 @@ class virtual algoEFopt =
 			(* Non-necessarily convex constraint guaranteeing the non-reachability of the bad location *)
 			result				= Good_constraint (result, soundness);
 			
+			(* English description of the constraint *)
+			constraint_description = "constraint guaranteeing " ^ self#str_optimum ^ "-time reachability";
+	
 			(* Explored state space *)
 			state_space			= state_space;
 			

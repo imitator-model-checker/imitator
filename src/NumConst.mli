@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: unbounded exact rational computation using GMP
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2017/04/18
+ * Last modified     : 2019/06/03
  *
  ************************************************************)
  
@@ -42,6 +42,7 @@ val numconst_of_string : string -> t
 val numconst_of_int : int -> t
 val numconst_of_float : float -> t
 val numconst_of_frac : int -> int -> t
+(* From num and den *)
 val numconst_of_zfrac : Gmp.Z.t -> Gmp.Z.t -> t
 val numconst_of_mpq : Gmp.Q.t -> t
 val numconst_of_mpz : Gmp.Z.t -> t
@@ -62,6 +63,9 @@ val mul : t -> t -> t
 val div : t -> t -> t
 val neg : t -> t
 val abs : t -> t
+
+val min : t -> t -> t
+val max : t -> t -> t
 
 (** Find the closest multiple of step from base_number below (or equal to) number *)
 val find_multiple_below : t -> t -> t -> t

@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: main virtual class to explore the state space: only defines post-related function, i.e., to compute the successor states of ONE state
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2018/10/08
+ * Last modified     : 2019/08/09
  *
  ************************************************************)
 
@@ -73,6 +73,46 @@ val compute_valuated_invariant : Location.global_location -> LinearConstraint.px
 
 
 (*------------------------------------------------------------*)
+(* Compute the list of stopped and elapsing clocks in a location *)
+(* Returns a pair (stopped clocks, elapsing clocks)           *)
+(*------------------------------------------------------------*)
+val compute_stopwatches : Location.global_location -> (Automaton.clock_index list * Automaton.clock_index list)
+
+
+(*------------------------------------------------------------------*)
+(* Get the list of updates from ONE transition                      *)
+(* Function by Jaime Arias (moved by Étienne André)                 *)
+(* original_location : the original location, needed to test the Boolean expressions*)
+(* updates           : the list of updates                          *)
+(*------------------------------------------------------------------*)
+(* Returns a pair of the list of clock updates and discrete updates *)
+(*------------------------------------------------------------------*)
+val get_updates : Location.global_location -> AbstractModel.updates -> AbstractModel.clock_updates * (AbstractModel.discrete_update list)
+
+
+
+(*------------------------------------------------------------------*)
+(* Get the list of updates from a combined transition               *)
+(* Function by Étienne André                                        *)
+(* original_location  : the original location, needed to test the Boolean expressions*)
+(* combined_transition: the combined_transition in which the updates are sought *)
+(*------------------------------------------------------------------*)
+(* Returns a pair of the list of clock updates and discrete updates *)
+(*------------------------------------------------------------------*)
+val get_updates_in_combined_transition : Location.global_location -> StateSpace.combined_transition -> AbstractModel.clock_updates * (AbstractModel.discrete_update list)
+
+
+(*------------------------------------------------------------------*)
+(* Compute a new location for a combined_transition                 *)
+(* combined_transition: the transition involved                     *)
+(* source_location    : the source location                         *)
+(*------------------------------------------------------------------*)
+(* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of pxd_linear_constraint) and the updates *)
+(*------------------------------------------------------------------*)
+val compute_new_location_guards_updates : Location.global_location -> StateSpace.combined_transition -> (Location.global_location * LinearConstraint.d_linear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list)
+
+
+(*------------------------------------------------------------*)
 (** Apply time elapsing in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
 (* val apply_time_elapsing : Location.global_location -> LinearConstraint.pxd_linear_constraint -> unit *)
@@ -82,6 +122,42 @@ val compute_valuated_invariant : Location.global_location -> LinearConstraint.px
 (*------------------------------------------------------------*)
 val apply_time_past : Location.global_location -> LinearConstraint.pxd_linear_constraint -> unit
 
+
+(*------------------------------------------------------------*)
+(** Apply time elapsing in location to a concrete valuation (the location is needed to retrieve the stopwatches stopped in this location) *)
+(*------------------------------------------------------------*)
+val apply_time_elapsing_to_concrete_valuation : Location.global_location -> NumConst.t -> LinearConstraint.px_valuation -> LinearConstraint.px_valuation
+
+
+(*------------------------------------------------------------*)
+(** Given `Zn-1` and `Zn` such that `Zn` is the successor zone of `Zn-1` by guard `g-1` and updating variables in `Un-1` to some values (that we do not need to know as we know the zone), given `Zn+1` a set of concrete points (valuations) successor of zone `Zn` by elapsing of a set of variables `t` and non-elapsing of others `nont`, by guard `gn`, updates `Rn`, then `nnconvex_constraint_zone_predecessor_g_u(Zn-1, gn-1, Un-1, Zn, t, nont, gn, Un, Zn+1)` computes the subset of points in `Zn` that are predecessors of `Zn` (by updates of `Un`, guard `gn`, elapsing of `t`, non-elapsing of `nont`), and that are direct successors (without time elapsing) of `Zn-1` via `gn-1` and `Un-1`. *)
+(*------------------------------------------------------------*)
+(*** NOTE: no check is made that Zn is a successor of Zn-1, nor that Zn+1 is a subset of Zn ***)
+(*** NOTE: no check is made that t and nont represent exactly the set of variables used in the polyhedra. ***)
+(*------------------------------------------------------------*)
+val constraint_zone_predecessor_g_u :
+	(* Zn-1 *) LinearConstraint.px_linear_constraint ->
+	(* gn-1 *) LinearConstraint.pxd_linear_constraint ->
+	(* Un-1 *) AbstractModel.clock_updates list ->
+	(* Zn *)   LinearConstraint.px_linear_constraint ->
+	(* t *)    (Automaton.variable_index list) ->
+	(* nont *) (Automaton.variable_index list) ->
+	(* gn *)   LinearConstraint.pxd_linear_constraint ->
+	(* Un *)   AbstractModel.clock_updates list ->
+	(* Zn+1 *) LinearConstraint.px_linear_constraint ->
+	LinearConstraint.px_linear_constraint
+
+
+
+(*------------------------------------------------------------*)
+(** Reconstruct a (valid) concrete run from a symbolic run *)
+(*------------------------------------------------------------*)
+val concrete_run_of_symbolic_run : StateSpace.state_space -> StateSpace.predecessors_table -> StateSpace.symbolic_run -> (Automaton.variable_index -> NumConst.t) -> StateSpace.concrete_run
+
+(*------------------------------------------------------------*)
+(** Reconstruct a whole counterexample from the initial state to a given target state. Return a list of pairs (valuation * absolute time) *)
+(*------------------------------------------------------------*)
+val reconstruct_counterexample : StateSpace.state_space -> state_index -> StateSpace.concrete_run
 
 
 (************************************************************)
@@ -144,6 +220,9 @@ class virtual algoStateBased :
 		(* List of state_index that have unexplored successors in case of premature termination *)
 		val mutable unexplored_successors : unexplored_successors
 		
+		(* The current new state indexes *)
+		val mutable new_states_indexes : state_index list
+		
 		(* Variable to remain of the termination *)
 		(*** NOTE: public only for AlgoEFoptQueue ***)
 		val mutable limit_reached : bfs_limit_reached
@@ -185,14 +264,12 @@ class virtual algoStateBased :
 
 		
 		(*------------------------------------------------------------*)
-		(* Add a new state to the reachability_graph (if indeed needed) *)
-		(* Side-effects: modify new_states_indexes *)
-		(*** TODO: move new_states_indexes to a variable of the class ***)
+		(* Add a new state to the state space (if indeed needed) *)
 		(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 		(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 		(*------------------------------------------------------------*)
-		(*** TODO: simplify signature by removing the state_index list ref and the action_index, and by returning the list of actually added states ***)
-		method virtual add_a_new_state : state_index -> state_index list ref -> Automaton.action_index -> Location.global_location -> LinearConstraint.px_linear_constraint -> bool
+		(*** TODO: return the list of actually added states ***)
+		method virtual add_a_new_state : state_index -> StateSpace.combined_transition -> State.state -> bool
 		
 		
 
@@ -206,7 +283,7 @@ class virtual algoStateBased :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Add a transition to the state space *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method add_transition_to_state_space : (state_index * Automaton.action_index * state_index) -> StateSpace.addition_result -> unit
+		method add_transition_to_state_space : (state_index * StateSpace.combined_transition * state_index) -> StateSpace.addition_result -> unit
 
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -220,13 +297,6 @@ class virtual algoStateBased :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method virtual process_deadlock_state : state_index -> unit
 		
-		
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Compute the list of successor states of a given state, and update the state space; returns the list of new states' indexes actually added *)
-		(** TODO: to get a more abstract method, should get rid of the state space, and update the state space from another function ***)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* 		method post_from_one_state : StateSpace.state_space -> state_index -> state_index list *)
-
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(** Actions to perform at the end of the computation of the *successors* of post^n (i.e., when this method is called, the successors were just computed) *)

@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Useful OCaml functions
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/03/15
+ * Last modified     : 2019/08/09
  *
  ************************************************************)
 
@@ -89,6 +89,9 @@ val list_delete_at : int -> 'a list -> 'a list
 (** Replace the ith element of a list *)
 val list_set_nth : int -> 'a -> 'a list -> 'a list
 
+(** Select the sublist of a list from position i to position j *)
+val sublist : int -> int -> 'a list -> 'a list
+
 
 (************************************************************)
 (** Useful functions on arrays *)
@@ -128,6 +131,8 @@ val dynArray_exists : ('a -> bool) -> 'a DynArray.t -> bool
 (*** NOTE: indeed, in our setting, we only use hashtbl with a single binding ***)
 val hashtbl_get_all_keys : ('a , 'b) Hashtbl.t -> 'a list
 
+(** Get the binding associated to a key, or the default binding if key is not associated to any binding *)
+val hashtbl_get_or_default : ('a , 'b) Hashtbl.t -> 'a -> 'b -> 'b
 
 (************************************************************)
 (** Useful functions on string *)
@@ -196,5 +201,6 @@ val read_first_line_from_file : string -> string
 (** Read a file and convert to string *)
 val read_from_file : string -> string
 
+(** `write_to_file file_name file_content` will create a file `file_name` with content `file_content` *)
 val write_to_file : string -> string -> unit
 

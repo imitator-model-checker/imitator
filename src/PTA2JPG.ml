@@ -3,13 +3,13 @@
  *                       IMITATOR
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  *
  * Module description: Convert an IMITATOR model to a .jpg file generated thanks to the dot utility
  *
- * File contributors : Étienne André, Jaime Arias
+ * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2012/08/24
- * Last modified     : 2019/04/15
+ * Last modified     : 2019/07/05
  *
  ************************************************************)
 
@@ -84,24 +84,24 @@ let string_of_conditional_updates model conditional_updates =
 	ModelPrinter.string_of_conditional_updates_template model conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep
 
 (* Convert a transition of a location into a string *)
-let string_of_transition model automaton_index source_location action_index (guard, updates, destination_location) =
+let string_of_transition model automaton_index source_location transition =
 (* s_12 -> s_5 [label="bUp"]; *)
-	let first_separator, second_separator = ModelPrinter.separator_comma updates in
+	let first_separator, second_separator = ModelPrinter.separator_comma transition.updates in
 	"\n\t"
 	(* Source *)
 	^ (id_of_location automaton_index source_location)
 	(* Destination *)
 	^ " -> "
-	^ (id_of_location automaton_index destination_location)
+	^ (id_of_location automaton_index transition.target)
 
 	^ " ["
 	(* Color and style for sync label *)
 	(* Check if the label is shared *)
-	^ (if List.length (model.automata_per_action action_index) > 1 then
-		let color = color action_index in
+	^ (if List.length (model.automata_per_action transition.action) > 1 then
+		let color = color transition.action in
 		"style=bold, color=" ^ color ^ ", "
 		(* Check if this is a Action_type_nosync action: in which case dotted *)
-		else match model.action_types action_index with
+		else match model.action_types transition.action with
 			| Action_type_sync -> ""
 			| Action_type_nosync -> "style=dashed, "
 		)
@@ -110,21 +110,24 @@ let string_of_transition model automaton_index source_location action_index (gua
 	^ "label=\""
 	(* Guard *)
 	^ (
-		if guard <> AbstractModel.True_guard then
-			(escape_string_for_dot (ModelPrinter.string_of_guard model.variable_names guard)) ^ "\\n"
+		if transition.guard <> AbstractModel.True_guard then
+			(*** HACK: also check that the result is not "True" ***)
+			let guard_string = ModelPrinter.string_of_guard model.variable_names transition.guard in
+			if guard_string = LinearConstraint.string_of_true then "" else
+			(escape_string_for_dot guard_string) ^ "\\n"
 		else ""
 		)
 	(* Sync *)
-	^ (string_of_sync model action_index)
+	^ (string_of_sync model transition.action)
 	(* Clock updates *)
-	^ (string_of_clock_updates model updates.clock)
+	^ (string_of_clock_updates model transition.updates.clock)
 	(* Add a \n in case of both clocks and discrete *)
 	^ (if first_separator then "\\n" else "")
 	(* Discrete updates *)
-	^ (string_of_discrete_updates model updates.discrete)
+	^ (string_of_discrete_updates model transition.updates.discrete)
 	(* Add a \n in case of both discrete and conditional updates *)
 	^ (if second_separator then "\\n" else "")
-	^ (string_of_conditional_updates model updates.conditional)
+	^ (string_of_conditional_updates model transition.updates.conditional)
 	^ "\"];"
 
 
@@ -134,29 +137,19 @@ let string_of_transitions model automaton_index location_index =
 
 	let result =
 	string_of_list_of_string (
-(* 	print_message Verbose_high "Entering string_of_transitions…2"; *)
-
-(* 	print_message Verbose_high ("List length string_of_transitions " ^ (string_of_int (List.length (model.actions_per_location automaton_index location_index)) )); *)
-
-(* 	print_message Verbose_high "Entering string_of_transitions…4"; *)
-
 	(* For each action *)
 	List.map (fun action_index ->
 		(* Get the list of transitions *)
-(* 		print_message Verbose_high "Entering string_of_transitions…5"; *)
-		let transitions = model.transitions automaton_index location_index action_index in
-(* 		print_message Verbose_high "Entering string_of_transitions…6"; *)
+		let transitions = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
 		(* Convert to string *)
 		string_of_list_of_string (
 			(* For each transition *)
-			List.map (string_of_transition model automaton_index location_index action_index) transitions
+			List.map (string_of_transition model automaton_index location_index) transitions
 			)
 		) (model.actions_per_location automaton_index location_index)
 
-	(* print_message Verbose_high "Entering string_of_transitions…5"; *)
 	)
 	in
-(* 	print_message Verbose_high "Entering string_of_transitions…7"; *)
 	result
 
 
@@ -171,7 +164,8 @@ let string_of_location model automaton_index location_index =
 	^ (id_of_location automaton_index location_index) ^ "["
 	(* Color *)
 	^ "fillcolor=" ^ (if model.is_urgent automaton_index location_index then "yellow" else "paleturquoise2") (*(color location_index)*) ^ ", style=filled, fontsize=16"
-
+	(* LP: shape MRecord inhibits the peripheries display *)
+	^ (if model.is_accepting automaton_index location_index then ", peripheries=2" else "")
 	(* Label: start *)
 	^ ", label=\""
 	(* Label: urgency *)

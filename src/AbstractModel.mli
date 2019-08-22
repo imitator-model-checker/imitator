@@ -3,13 +3,13 @@
  *                       IMITATOR
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  *
  * Module description: Abstract description of the input model
  *
- * File contributors : Étienne André, Jaime Arias
+ * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/11
- * Last modified     : 2019/04/15
+ * Last modified     : 2019/07/09
  *
  ************************************************************)
 
@@ -21,10 +21,8 @@ open Automaton
 
 
 (************************************************************)
-(** Reference valuation *)
+(** Reference parameter valuations *)
 (************************************************************)
-type pi0 = PVal.pval
-
 type v0 = HyperRectangle.hyper_rectangle
 
 
@@ -40,8 +38,10 @@ type var_type =
 
 (** Type of sync actions *)
 type action_type =
-  | Action_type_sync
-  | Action_type_nosync
+	(* Observable action label (does not necessarily mean that it is "synchronized", as it can belong to a single automaton) *)
+	| Action_type_sync
+	(* Non-observable, silent action label (necessarily non-synchronized) *)
+	| Action_type_nosync
 
 
 type discrete_value = NumConst.t
@@ -50,6 +50,12 @@ type discrete_value = NumConst.t
 (************************************************************)
 (** Locations *)
 (************************************************************)
+type location_accepting =
+	(* accepting location *)
+	| Location_accepting
+	(* Non-accepting location *)
+	| Location_nonaccepting
+
 type location_urgency =
   (* Urgent location *)
   | Location_urgent
@@ -105,8 +111,8 @@ type discrete_guard = LinearConstraint.d_linear_constraint
 type continuous_guard = LinearConstraint.pxd_linear_constraint
 
 type discrete_continuous_guard = {
-  discrete_guard		: discrete_guard;
-  continuous_guard	: continuous_guard;
+  discrete_guard   : discrete_guard;
+  continuous_guard : continuous_guard;
 }
 type guard =
   | True_guard
@@ -133,15 +139,22 @@ type boolean_expression =
 
 (** Updates *)
 type updates = {
-  clock: clock_updates; (** Clock updates *)
-  discrete: discrete_update list; (** List of discrete updates *)
+  clock      : clock_updates;           (** Clock updates *)
+  discrete   : discrete_update list;    (** List of discrete updates *)
   conditional: conditional_update list; (** List of conditional updates *)
 }
 (** Conditional updates *)
 and conditional_update = boolean_expression * updates * updates
 
-(** Transition: guard, list of updates, destination location *)
-type transition = guard * updates * location_index
+(** Transition: guard, action, list of updates, destination location *)
+type transition = {
+	guard		: guard;
+	action		: action_index;
+	updates		: updates;
+	target		: location_index;
+}
+
+type transition_index = int
 
 
 (************************************************************)
@@ -268,17 +281,23 @@ type lu_status =
 type abstract_model = {
 	(** General information **)
 	(* Cardinality *)
-	nb_automata : int;
-	nb_actions : int;
-	nb_clocks : int;
-	nb_discrete : int;
+	nb_automata   : int;
+	nb_actions    : int;
+	nb_clocks     : int;
+	nb_discrete   : int;
 	nb_parameters : int;
-	nb_variables : int;
+	nb_variables  : int;
+	nb_locations  : int;
+	nb_transitions: int;
 
 	(* Is there any stopwatch in the model? *)
 	has_stopwatches : bool;
 	(* Is the model an L/U-PTA? *)
 	lu_status : lu_status;
+	(* Is the model a strongly deterministic PTA? *)
+	strongly_deterministic : bool;
+	(* Does the model contain any transition labeled by a silent, non-observable action? *)
+	has_silent_actions : bool;
 
 	(** Content of the PTA **)
 	(* The observer *)
@@ -305,6 +324,8 @@ type abstract_model = {
 	clocks_and_discrete : variable_index list;
 	(* The non clocks (parameters and discrete) *)
 	parameters_and_discrete : variable_index list;
+	(* The non discrete (clocks and parameters) *)
+	parameters_and_clocks : variable_index list;
 	(* The function : variable_index -> variable name *)
 	variable_names : variable_index -> variable_name;
 	(* The type of variables *)
@@ -319,6 +340,8 @@ type abstract_model = {
 	locations_per_automaton : automaton_index -> location_index list;
 	(* The location names for each automaton *)
 	location_names : automaton_index -> location_index -> location_name;
+	(* The acceptance for each location *)
+	is_accepting : automaton_index -> location_index -> bool;
 	(* The urgency for each location *)
 	is_urgent : automaton_index -> location_index -> bool;
 
@@ -342,9 +365,13 @@ type abstract_model = {
 	invariants : automaton_index -> location_index -> invariant;
 
 	(* The transitions for each automaton and each location and each action *)
-	transitions : automaton_index -> location_index -> action_index -> (transition list);
+	transitions : automaton_index -> location_index -> action_index -> (transition_index list);
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches : automaton_index -> location_index -> clock_index list;
+	(* An array transition_index -> transition *)
+	transitions_description : transition_index -> transition;
+	(* An array transition_index -> automaton_index *)
+	automaton_of_transition : transition_index -> automaton_index;
 
 	(* All clocks non-negative *)
 	px_clocks_non_negative: LinearConstraint.px_linear_constraint;

@@ -3,13 +3,13 @@
  *                       IMITATOR
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  *
  * Module description: Main file for IMITATOR
  *
- * File contributors : Ulrich Kühne, Étienne André
+ * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/03/14
+ * Last modified     : 2019/08/01
  *
  ************************************************************)
 
@@ -159,54 +159,17 @@ PVal.set_dimensions model.nb_parameters;
 (*------------------------------------------------------------*)
 (* Parse the additional file (pi0 or v0) *)
 (*------------------------------------------------------------*)
-begin
-match options#imitator_mode with
-	(*** BADPROG!!! This should be defined elsewhere... ***)
-	| Translation
-	| State_space_exploration
-	| EF_synthesis
-	| EFunsafe_synthesis
-	| EF_min
-	| EF_max
-	| EF_synth_min
-	| EF_synth_max
-	| EF_synth_min_priority_queue
-	| AF_synthesis
-	| Loop_synthesis
-	| Parametric_NZ_CUBcheck
-	| Parametric_NZ_CUBtransform
-	| Parametric_NZ_CUBtransformDistributed
-	| Parametric_NZ_CUB
-	| Parametric_deadlock_checking
-	(* Case: no additional file *)
-	-> ()
-
-	(* Inverse method : pi0 *)
-	| Inverse_method
-	| Inverse_method_complete
-	| PRP
-	(* Case: pi0 *)
-	->
+if is_mode_IM options#imitator_mode then(
 		let pi0 = ParsingUtility.compile_pi0 options in
 		Input.set_pi0 pi0;
+);
 
-
-	| Cover_cartography
-	| Border_cartography
-	| Random_cartography _
-	| Learning_cartography
-	| Shuffle_cartography
-	| RandomSeq_cartography _
-	| PRPC
-	(* Case: v0 *)
-	->
+if is_mode_cartography options#imitator_mode then(
 		let v0 = ParsingUtility.compile_v0 options in
 		Input.set_v0 v0;
+);
 
-end;
-
-
-
+(* End of parsing *)
 parsing_counter#stop;
 
 
@@ -227,6 +190,17 @@ if verbose_mode_greater Verbose_low then(
 
 (* Statistics *)
 counter_main_algorithm#start;
+
+(************************************************************)
+(* Case no analysis *)
+(************************************************************)
+if options#imitator_mode = No_analysis then(
+	(* Generate directly the "empty" result *)
+	ResultProcessor.process_result No_analysis "syntax check" None;
+	
+	terminate_program()
+);
+
 
 (************************************************************)
 (* Case translation *)
@@ -265,6 +239,10 @@ if options#pta2hytech then(
 	(* Write *)
 	write_to_file hytech_file translated_model;
 	print_message Verbose_standard ("File '" ^ hytech_file ^ "' successfully created.");
+	
+	(* Create a file with some statistics on the origina model if requested *)
+	ResultProcessor.process_result No_analysis "translation to HyTech" None;
+
 	terminate_program()
 );
 
@@ -279,6 +257,10 @@ if options#pta2imi then(
 	(* Write *)
 	write_to_file imi_file translated_model;
 	print_message Verbose_standard ("File '" ^ imi_file ^ "' successfully created.");
+	
+	(* Create a file with some statistics on the origina model if requested *)
+	ResultProcessor.process_result No_analysis "translation to IMITATOR" None;
+
 	terminate_program()
 );
 
@@ -298,6 +280,10 @@ if options#pta2jpg || options#pta2pdf || options#pta2png then(
 	in
 	Graphics.dot extension (options#files_prefix ^ "-pta") translated_model;
 	print_message Verbose_standard ("File successfully created."); (*** TODO: add file name in a proper manner ***)
+	
+	(* Create a file with some statistics on the origina model if requested *)
+	ResultProcessor.process_result No_analysis "translation to graphics" None;
+
 	terminate_program()
 );
 
@@ -312,6 +298,10 @@ if options#pta2tikz then(
 	(* Write *)
 	write_to_file latex_file translated_model;
 	print_message Verbose_standard ("File '" ^ latex_file ^ "' successfully created.");
+	
+	(* Create a file with some statistics on the origina model if requested *)
+	ResultProcessor.process_result No_analysis "translation to TikZ" None;
+
 	terminate_program()
 );
 
@@ -327,6 +317,10 @@ if options#pta2uppaal then(
 	(* Write *)
 	write_to_file output_file translated_model;
 	print_message Verbose_standard ("File '" ^ output_file ^ "' successfully created.");
+	
+	(* Create a file with some statistics on the origina model if requested *)
+	ResultProcessor.process_result No_analysis "translation to Uppaal" None;
+
 	terminate_program()
 );
 
@@ -401,6 +395,14 @@ if options#imitator_mode = EF_synth_max then(
 		| Maximize _ -> ()
 		| _ ->
 			print_error ("A maximized parameter must be defined in the model to run EFsynthmax.");
+			abort_program();
+);
+
+if options#imitator_mode = EFexemplify then(
+	match model.global_time_clock with
+		| Some _ -> ()
+		| _ ->
+			print_error ("An absolute time clock must be defined in the model to run EFexemplify.");
 			abort_program();
 );
 
@@ -483,13 +485,26 @@ in
 let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 
 	(************************************************************)
+	(* No analysis *)
+	(************************************************************)
+	| No_analysis -> raise (InternalError "Case No_analysis should have been treated before")
+	
+	
+	(************************************************************)
+	(* Translation has been handled already *)
+	(************************************************************)
+
+	| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.")
+
+	
+	(************************************************************)
 	(* Exploration *)
 	(************************************************************)
 	| State_space_exploration ->
 			(*** NOTE: this is static subclass coercition; see https://ocaml.org/learn/tutorials/objects.html ***)
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoPostStar.algoPostStar in myalgo
 
-
+	
 	(************************************************************)
 	(* EF-synthesis *)
 	(************************************************************)
@@ -543,6 +558,14 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 
 
 	(************************************************************)
+	(* EF-exemplification *)
+	(************************************************************)
+	| EFexemplify ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFexemplify.algoEFexemplify in myalgo
+
+
+		
+	(************************************************************)
 	(* AF-synthesis *)
 	(************************************************************)
 	| AF_synthesis ->
@@ -554,11 +577,16 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 	| Loop_synthesis ->
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoLoopSynth.algoLoopSynth in myalgo
 
+	| Acc_loop_synthesis ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth in myalgo
+
+	| Acc_loop_synthesis_NDFS ->
+		let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS in myalgo
+
 
 	(************************************************************)
 	(* Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
 	(************************************************************)
-	(** TODO: add conditions to CUB
 	| Parametric_NZ_CUBcheck ->
 		(* Computing a constraint for which the PTA is CUB *)
 		print_message Verbose_standard ("Checking whether the PTA is CUB for some parameter valuations…");
@@ -649,7 +677,6 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		(* Just call the NZ emptiness check *)
 		let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB in myalgo
 
-	*)
 
 	(************************************************************)
 	(* Parametric deadlock checking *)
@@ -918,11 +945,6 @@ let algorithm : AlgoGeneric.algoGeneric = match options#imitator_mode with
 		myalgo
 
 
-	(************************************************************)
-	(* Translation has been handled already *)
-	(************************************************************)
-
-	| Translation -> raise (InternalError "Translation cannot be executed here; program should already have terminated at this point.");
 in
 
 

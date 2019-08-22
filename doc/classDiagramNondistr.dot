@@ -2,18 +2,22 @@
  //
  //                       CLASSDIAGRAMATOR
  // 
- // Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ // Université Paris 13, LIPN, CNRS, France (France)
  // 
  // Author:        Etienne Andre
  // 
  // Created:       2017/03/08
- // Last modified: 2017/03/08
+ // Last modified: 2019/08/22
  //
 //###############################################################
 
 // Manually edited!
 // TODO: should be automated from the OCaml code, of course
 
+	AccLoopSynth [label = "{AccLoopSynth|}"]
+	
+	AF [label = "{AF|}"]
+	
 	AGsafeSynth [
 			label = "{AGsafeSynth|}"
 	]
@@ -34,6 +38,16 @@
 
 	DeadlockFree [label = "{DeadlockFree|}"]
 
+	EFexemplify [label = "{EFexemplify|}"]
+	
+	EFmax [label = "{EFmax|}"]
+	
+	EFmin [label = "{EFmin|}"]
+	
+	EFopt [label = "{EFopt|}", fillcolor=yellow, style=filled]
+	
+	EFoptQueue [label = "{EFoptQueue|}", fillcolor=yellow, style=filled]
+	
 	EFsynth [label = "{EFsynth|}", fillcolor=yellow, style=filled]
 	
 	EFsynthOld [label = "{EFsynthOld|}"]
@@ -44,12 +58,16 @@
 	
 	IM [label = "{IM|}"]
 	
+	IMcomplete [label = "{IMcomplete|}"]
+	
 	IMK [label = "{IMK|}"]
 	
 	IMunion [label = "{IMunion|}"]
 	
 	LoopSynth [label = "{LoopSynth|}"]
 	
+	NDFS [label = "{NDFS|}"]
+
 	NZCUB [label = "{NZCUB|}"]
 	
 	PostStar [label = "{PostStar|}"]
@@ -59,6 +77,8 @@
 	StateBased [label = "{StateBased| |v add_a_new_state()\lv process_deadlock_state\l+ post_from_one_state\l}", fillcolor=yellow, style=filled]
 	
 	
+	AccLoopSynth -> LoopSynth
+	AF -> PostStar
 	AGsafeSynth -> EFsynth
 	BCCover -> CartoGeneric
 	
@@ -69,13 +89,20 @@
 // 	BFS -> StateBased
 	CartoGeneric -> Generic
 	DeadlockFree -> PostStar
+	EFexemplify -> EFsynth
+	EFmax -> EFopt
+	EFmin -> EFopt
+	EFopt -> StateBased
+	EFoptQueue -> StateBased
 	EFsynth -> StateBased
 	EFsynthOld -> StateBased
 	EFunsafeSynth -> EFsynth
 	IM -> IMK
+	IMcomplete -> IMK
 	IMK -> StateBased
 	IMunion -> IMK
 	LoopSynth -> StateBased
+	NDFS -> StateBased
 	NZCUB -> LoopSynth
 	PostStar -> StateBased
 	PRP -> IMK

@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Description of a state_index, a symbolic state and sets of states indexes
  * 
- * File contributors : Étienne André
+ * File contributors : Étienne André, Laure Petrucci
  * Created           : 2016/05/04
- * Last modified     : 2016/05/09
+ * Last modified     : 2019/06/14
  *
  ************************************************************)
 
@@ -17,7 +17,6 @@
 (************************************************************)
 (* Modules *)
 (************************************************************)
-(* open Automaton *)
 
 
 (************************************************************)
@@ -25,11 +24,23 @@
 (************************************************************)
 type state_index = int
 
-(** State: location and constraint *)
-(*** TODO: hide this definition, and use (at least) structure or functions ***)
-type state = Location.global_location * LinearConstraint.px_linear_constraint
+(** Concrete state: location and px-valuation *)
+type concrete_state = {
+	global_location: Location.global_location;
+	px_valuation   : (Automaton.variable_index -> NumConst.t);
+}
 
-type abstract_state = Location.global_location_index * LinearConstraint.px_linear_constraint
+(** State: location and constraint *)
+type state = {
+	global_location: Location.global_location;
+	px_constraint  : LinearConstraint.px_linear_constraint;
+}
+
+(** Abstract state: abstract location (index) and concrete constraint *)
+type abstract_state = {
+	global_location_index: Location.global_location_index;
+	px_constraint        : LinearConstraint.px_linear_constraint;
+}
 
 
 
@@ -37,11 +48,9 @@ type abstract_state = Location.global_location_index * LinearConstraint.px_linea
 (** Interrogation on one state *)
 (************************************************************)
 
-(*** NOTE: should NOT be defined in this module! But rather in some (yet to be created...) State.ml ***)
-
 val match_unreachable_global_locations : AbstractModel.unreachable_global_location list -> Location.global_location -> bool
 
-
+val is_accepting : state -> bool
 
 (************************************************************)
 (************************************************************)

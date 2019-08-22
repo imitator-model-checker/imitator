@@ -2,7 +2,7 @@
  *
  *                       IMITATOR
  * 
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Author:        Sami Evangelista
  * 

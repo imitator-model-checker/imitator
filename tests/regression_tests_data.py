@@ -6,11 +6,14 @@
 #
 #             Data for non-regression tests
 #
-# Etienne ANDRE
-# Laboratoire d'Informatique de Paris Nord
-# Universite Paris 13, France
-# Created      : 2015/10/23
-# Last modified: 2019/04/08
+# Université Paris 13, LIPN, CNRS, France
+#
+# File description: non-regression tests data
+#
+# File contributors : Étienne André, Jaime Arias
+#
+# Created           : 2015/10/23
+# Last modified     : 2019/08/22
 #************************************************************
 
 
@@ -19,10 +22,610 @@
 # TESTS TO CARRY
 #************************************************************
 tests = [
+
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# SYNTACTIC TESTS
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
 	#------------------------------------------------------------
 	{
-		# Test version: TODO
-		# Test since  : TODO
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the L/U-nature (L-PTA)',
+		'input_files': ['testL.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testL.res' , 'content' : """
+L/U subclass                            : L-PTA
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the L/U-nature (U-PTA)',
+		'input_files': ['testU.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testU.res' , 'content' : """
+L/U subclass                            : U-PTA
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the L/U-nature (L/U-PTA)',
+		'input_files': ['testLU.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testLU.res' , 'content' : """
+L/U subclass                            : L/U-PTA
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the L/U-nature (none)',
+		'input_files': ['testNotLU.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testNotLU.res' , 'content' : """
+L/U subclass                            : not L/U
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the L/U-nature (flip-flop: U)',
+		'input_files': ['flipflop.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'flipflop.res' , 'content' : """
+L/U subclass                            : U-PTA
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the L/U-nature (JR15: L/U)',
+		'input_files': ['JLR-TACAS13.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'JLR-TACAS13.res' , 'content' : """
+L/U subclass                            : L/U-PTA
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the detection of silent actions: no',
+		'input_files': ['testLU.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testLU.res' , 'content' : """
+Has silent actions?                            : false
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the detection of silent actions: yes',
+		'input_files': ['testNotLU.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testNotLU.res' , 'content' : """
+Has silent actions?                            : true
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the detection of silent actions: JR15',
+		'input_files': ['JLR-TACAS13.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'JLR-TACAS13.res' , 'content' : """
+Has silent actions?                            : true
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the detection of strong determinism: yes',
+		'input_files': ['testLU.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testLU.res' , 'content' : """
+Is strongly deterministic?              : true
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the detection of strong determinism: yes',
+		'input_files': ['testStrongDet.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testStrongDet.res' , 'content' : """
+Is strongly deterministic?              : true
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the detection of strong determinism: yes',
+		'input_files': ['testStrongDet2.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testStrongDet2.res' , 'content' : """
+Is strongly deterministic?              : true
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/09
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test the detection of strong determinism: no',
+		'input_files': ['testNotStrongDet.imi'],
+		'options'    : '-mode checksyntax -output-result',
+		'expectations' : [
+			{'file': 'testNotStrongDet.res' , 'content' : """
+Is strongly deterministic?              : false
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test variable elimination in Boolean expressions',
+		'input_files': ['testConditions.imi'],
+		'options'    : '-mode statespace -output-states',
+		'expectations' : [
+			{'file': 'testConditions-statespace.states' , 'content' : """
+  STATE 0:
+  pta: l1, i = 0, j = 0, l = 0 ==>
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test evaluation of <if> branch in conditional update',
+		'input_files': ['testConditions.imi'],
+		'options'    : '-mode statespace -output-states',
+		'expectations' : [
+			{'file': 'testConditions-statespace.states' , 'content' : """
+	STATE 1:
+	pta: l2, i = 0, j = 0, l = 15 ==>
+	& x >= 0
+	& p = 1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test evaluation of <else> branch in conditional update',
+		'input_files': ['testConditions.imi'],
+		'options'    : '-mode statespace -output-states',
+		'expectations' : [
+			{'file': 'testConditions-statespace.states' , 'content' : """
+	STATE 2:
+  pta: l1, i = 2, j = 0, l = 15 ==>
+	& x >= 2
+	& p = 1
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test include files [1]',
+		'input_files': ['tests_include_model/example-include-1a.imi'],
+		'options'    : '-PTA2IMI -no-var-autoremove',
+		'expectations' : [
+			{'file': 'tests_include_model/example-include-1a-regenerated.imi' , 'content' : """
+var
+	x
+		: clock;
+
+	i
+		: discrete;
+
+	p
+		: parameter;
+
+
+(************************************************************)
+ automaton pta2
+(************************************************************)
+ synclabs: a;
+
+loc l1: invariant True
+	when  x = 1 do {x := 0}  sync a goto l1;
+ end (* pta2 *)
+(************************************************************)
+
+
+(************************************************************)
+ automaton pta1
+(************************************************************)
+ synclabs: a;
+
+loc l1: invariant True
+	when  x = 1 do {x := 0}  sync a goto l1;
+ end (* pta1 *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta2] = l1
+	& loc[pta1] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+	& i = 0
+
+	(*------------------------------------------------------------*)
+	(* Initial constraint *)
+	(*------------------------------------------------------------*)
+	 &  p >= 0
+& x = 0
+
+;
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[pta1] = l1
+
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
+			"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test include files [2]',
+		'input_files': ['tests_include_model/example-include-2a.imi'],
+		'options'    : '-PTA2IMI -no-var-autoremove',
+		'expectations' : [
+			{'file': 'tests_include_model/example-include-2a-regenerated.imi' , 'content' : """
+var
+	x, y
+		: clock;
+
+	i, j
+		: discrete;
+
+	p
+		: parameter;
+
+
+(************************************************************)
+ automaton pta2
+(************************************************************)
+ synclabs: a;
+
+loc l1: invariant True
+	when  y = 1 do {y := p}  sync a goto l1;
+ end (* pta2 *)
+(************************************************************)
+
+
+(************************************************************)
+ automaton pta1
+(************************************************************)
+ synclabs: a;
+
+loc l1: invariant True
+	when  p + 1 = x do {x := 0}  sync a goto l1;
+ end (* pta1 *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta2] = l1
+	& loc[pta1] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+	& i = 0
+	& j = 0
+
+	(*------------------------------------------------------------*)
+	(* Initial constraint *)
+	(*------------------------------------------------------------*)
+	 &  p >= 1
+& x = 0
+& y = 0
+
+;
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[pta1] = l1 & loc[pta2] = l1
+
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
+			"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	##------------------------------------------------------------
+	{
+		'purpose'    : 'Test include files [3]',
+		'input_files': ['tests_include_model/example-include-3a.imi'],
+		'options'    : '-PTA2IMI -no-var-autoremove',
+		'expectations' : [
+			{'file': 'tests_include_model/example-include-3a-regenerated.imi' , 'content' : """
+var
+	x, y
+		: clock;
+
+	i, j
+		: discrete;
+
+	p
+		: parameter;
+
+
+(************************************************************)
+ automaton pta2
+(************************************************************)
+ synclabs: a;
+
+loc l1: invariant True
+	when  y = 1 do {y := p}  sync a goto l1;
+ end (* pta2 *)
+(************************************************************)
+
+
+(************************************************************)
+ automaton pta1
+(************************************************************)
+ synclabs: a;
+
+loc l1: invariant True
+	when  p + 1 = x do {x := 0}  sync a goto l1;
+ end (* pta1 *)
+(************************************************************)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta2] = l1
+	& loc[pta1] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+	& i = 0
+	& j = 0
+
+	(*------------------------------------------------------------*)
+	(* Initial constraint *)
+	(*------------------------------------------------------------*)
+	 &  p >= 1
+& x = 0
+& y = 0
+
+;
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[pta1] = l1 & loc[pta2] = l1
+
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
+			"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	##------------------------------------------------------------]
+
+	,
+
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# STATE SPACE GENERATION
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	#------------------------------------------------------------
+	{
+		# Test version             : TODO
+		# Test since               : TODO
+		# Test for IMITATOR version: TODO
 		'purpose'    : 'Test the state space',
 		'input_files': ['flipflop.imi'],
 		'options'    : '-mode statespace -output-states -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
@@ -369,25 +972,25 @@ tests = [
 & dG4_u >= 3
 
   DESCRIPTION OF THE TRANSITIONS
-  s_7 -> s_10 via "ckDown"
-  s_8 -> s_12 via "ckDown"
-  s_14 -> s_19 via "ckDown"
-  s_8 -> s_13 via "qUp"
-  s_3 -> s_4 via "dDown"
   s_0 -> s_1 via "dUp"
-  s_10 -> s_18 via "qUp"
-  s_13 -> s_15 via "ckDown"
-  s_9 -> s_14 via "dDown"
-  s_5 -> s_8 via "dDown"
-  s_4 -> s_7 via "qG3Down"
-  s_11 -> s_17 via "ckDown"
-  s_2 -> s_3 via "ckUp"
-  s_5 -> s_9 via "qUp"
-  s_3 -> s_5 via "qG3Down"
-  s_7 -> s_11 via "qUp"
-  s_4 -> s_6 via "ckDown"
   s_1 -> s_2 via "qG1Down"
+  s_2 -> s_3 via "ckUp"
+  s_3 -> s_4 via "dDown"
+  s_3 -> s_5 via "qG3Down"
+  s_4 -> s_6 via "ckDown"
+  s_4 -> s_7 via "qG3Down"
+  s_5 -> s_8 via "dDown"
+  s_5 -> s_9 via "qUp"
+  s_7 -> s_10 via "ckDown"
+  s_7 -> s_11 via "qUp"
+  s_8 -> s_12 via "ckDown"
+  s_8 -> s_13 via "qUp"
+  s_9 -> s_14 via "dDown"
+  s_10 -> s_18 via "qUp"
+  s_11 -> s_17 via "ckDown"
   s_12 -> s_16 via "qUp"
+  s_13 -> s_15 via "ckDown"
+  s_14 -> s_19 via "ckDown"
 			"""
 			} #end statespace file
 		] # end expectations
@@ -565,14 +1168,14 @@ tests = [
    pabs >= 0
 
   DESCRIPTION OF THE TRANSITIONS
-  s_1 -> s_6 via "b"
-  s_1 -> s_5 via "b"
-  s_1 -> s_4 via "a"
-  s_1 -> s_3 via "a"
-  s_3 -> s_8 via "a"
-  s_3 -> s_7 via "a"
-  s_0 -> s_2 via "a"
   s_0 -> s_1 via "a"
+  s_0 -> s_2 via "a"
+  s_1 -> s_3 via "a"
+  s_1 -> s_4 via "a"
+  s_1 -> s_5 via "b"
+  s_1 -> s_6 via "b"
+  s_3 -> s_7 via "a"
+  s_3 -> s_8 via "a"
 """
 			} # end result file
 			,
@@ -590,15 +1193,15 @@ tests = [
 		'expectations' : [
 			{'file': 'testUrgency-statespace.states' , 'content' : """
 		  DESCRIPTION OF THE TRANSITIONS
-  s_4 -> s_4 via "a"
-  s_2 -> s_4 via "c"
-  s_0 -> s_2 via "b"
-  s_0 -> s_1 via "b"
-  s_2 -> s_4 via "b"
-  s_3 -> s_3 via "a"
-  s_3 -> s_1 via "b"
   s_0 -> s_0 via "a"
+  s_0 -> s_1 via "b"
+  s_0 -> s_2 via "b"
   s_1 -> s_3 via "c"
+  s_2 -> s_4 via "b"
+  s_2 -> s_4 via "c"
+  s_3 -> s_1 via "b"
+  s_3 -> s_3 via "a"
+  s_4 -> s_4 via "a"
 		"""
 			} # end result file
 			,
@@ -653,9 +1256,9 @@ tests = [
   True
 
   DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_1 via "c"
   s_1 -> s_2 via "a"
   s_2 -> s_3 via "b"
-  s_0 -> s_1 via "c"
 		"""
 			} # end result file
 			,
@@ -1250,6 +1853,62 @@ END CONSTRAINT
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2019/05/30
+		# Test for IMITATOR version: 2.11
+		'purpose'    : 'Test EFunsafe',
+		'input_files': ['testEFcounterex.imi'],
+		'options'    : '-mode EFunsafe -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFcounterex.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 1
+ OR
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/05/30
+		# Test for IMITATOR version: 2.11
+		'purpose'    : 'Test EFunsafe with counterexample',
+		'input_files': ['testEFcounterex.imi'],
+		'options'    : '-mode EFunsafe -merge -incl -counterexample -output-result',
+		'expectations' : [
+			{'file': 'testEFcounterex.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test EFmin on a toy example',
 		'input_files': ['testEFmin.imi'],
 		'options'    : '-mode EFmin -merge -incl -output-result',
@@ -1731,6 +2390,1048 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test EFexemplify on a toy example',
+		'input_files': ['testCounterExSimple-3.imi'],
+		'options'    : '-mode EFexemplify -output-result',
+		'expectations' : [
+			{'file': 'testCounterExSimple-3.res' , 'content' : """
+BEGIN RESULT
+(************************************************************)
+ Run #1
+
+
+ Valuation:
+  p = 1/2
+
+ Other valuations with equivalent (discrete) run:
+ 2*p = 1
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  p = 1/2
+
+pta: l1 ==> 
+p = 1/2 & x = 0 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ 2*p = 1
+& x = 3} updates{x := 0}  sync a Target ltarget] 
+ | and d =  3
+ | 
+ v  pta: ltarget ==> 
+p = 1/2 & x = 0 & global_time = 3
+(************************************************************)
+
+
+(************************************************************)
+ Run #2
+
+ Valuation:
+  p = 0
+
+ Other valuations with equivalent (discrete) run:
+ 2*p > 1
+OR
+  p >= 0
+& 1 > 2*p
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 0
+
+pta: l1 ==> 
+p = 0 & x = 0 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l1 ==> 
+p = 0 & x = 1 & global_time = 1
+(************************************************************)
+
+
+(************************************************************)
+ Run #3
+
+ Valuation:
+  p = 1/2
+
+ Other valuations with equivalent (discrete) run:
+ 2*p = 1
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 1/2
+
+pta: l1 ==> 
+p = 1/2 & x = 0 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  0
+ | 
+ v  pta: ltarget ==> 
+p = 1/2 & x = 0 & global_time = 0
+(************************************************************)
+END RESULT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFexemplify on a toy example (clock initially non-zero, strict constraints)',
+		'input_files': ['testCounterExSimple-4.imi'],
+		'options'    : '-mode EFexemplify -output-result',
+		'expectations' : [
+			{'file': 'testCounterExSimple-4.res' , 'content' : """
+BEGIN RESULT
+(************************************************************)
+ Run #1
+
+
+ Valuation:
+  p = 4095/2
+
+ Other valuations with equivalent (discrete) run:
+ 2048 > p
+& p > 2047
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  p = 4095/2
+
+pta: l1 ==> 
+p = 4095/2 & x = 1 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{True
+&  p = 2046 + x} updates{}  sync a Target ltarget] 
+ | and d =  1/2
+ | 
+ v  pta: ltarget ==> 
+p = 4095/2 & x = 3/2 & global_time = 1/2
+(************************************************************)
+
+
+(************************************************************)
+ Run #2
+
+ Valuation:
+  p = 0
+
+ Other valuations with equivalent (discrete) run:
+ 2047 >= p
+& p >= 0
+OR
+  p >= 2048
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 0
+
+pta: l1 ==> 
+p = 0 & x = 1 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l1 ==> 
+p = 0 & x = 2 & global_time = 1
+(************************************************************)
+
+
+(************************************************************)
+ Run #3
+
+ Valuation:
+  p = 4095/2
+
+ Other valuations with equivalent (discrete) run:
+ 2048 > p
+& p > 2047
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 4095/2
+
+pta: l1 ==> 
+p = 4095/2 & x = 1 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  0
+ | 
+ v  pta: ltarget ==> 
+p = 4095/2 & x = 1 & global_time = 0
+(************************************************************)
+END RESULT
+
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFexemplify on a toy example (violation possible only in the initial state)',
+		'input_files': ['testCounterExSimple-5.imi'],
+		'options'    : '-mode EFexemplify -output-result',
+		'expectations' : [
+			{'file': 'testCounterExSimple-5.res' , 'content' : """
+BEGIN RESULT
+(************************************************************)
+ Run #1
+
+
+ Valuation:
+  p = 1
+
+ Other valuations with equivalent (discrete) run:
+ p > 0
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  p = 1
+
+pta: l1 ==> 
+p = 1 & x = 1 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l2] 
+ | and d =  1
+ | 
+ v  pta: l2 ==> 
+p = 1 & x = 2 & global_time = 1
+
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
+ | and d =  0
+ | 
+ v  pta: l3 ==> 
+p = 1 & x = 2 & global_time = 1
+
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target ltarget] 
+ | and d =  0
+ | 
+ v  pta: ltarget ==> 
+p = 1 & x = 2 & global_time = 1
+(************************************************************)
+
+
+(************************************************************)
+ Run #2
+
+ Valuation:
+  p = 0
+
+ Other valuations with equivalent (discrete) run:
+ p = 0
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 0
+
+pta: l1 ==> 
+p = 0 & x = 1 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l1 ==> 
+p = 0 & x = 2 & global_time = 1
+
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l2 ==> 
+p = 0 & x = 3 & global_time = 2
+
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l3 ==> 
+p = 0 & x = 4 & global_time = 3
+(************************************************************)
+
+
+(************************************************************)
+ Run #3
+
+ Valuation:
+  p = 1
+
+ Other valuations with equivalent (discrete) run:
+ p > 0
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 1
+
+pta: l1 ==> 
+p = 1 & x = 1 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  0
+ | 
+ v  pta: l2 ==> 
+p = 1 & x = 1 & global_time = 0
+
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l2 ==> 
+p = 1 & x = 2 & global_time = 1
+
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l3 ==> 
+p = 1 & x = 3 & global_time = 2
+(************************************************************)
+END RESULT
+
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFexemplify on a toy example (violation possible only at position 2)',
+		'input_files': ['testCounterExSimple-5b.imi'],
+		'options'    : '-mode EFexemplify -output-result',
+		'expectations' : [
+			{'file': 'testCounterExSimple-5b.res' , 'content' : """
+BEGIN RESULT
+(************************************************************)
+ Run #1
+
+
+ Valuation:
+  p = 1
+
+ Other valuations with equivalent (discrete) run:
+ p > 0
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  p = 1
+
+pta: l1 ==> 
+p = 0 & x = 1 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
+ | and d =  0
+ | 
+ v  pta: l2 ==> 
+p = 1 & x = 1 & global_time = 0
+
+ | 
+ | via combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l3] 
+ | and d =  1
+ | 
+ v  pta: l3 ==> 
+p = 1 & x = 2 & global_time = 1
+
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target ltarget] 
+ | and d =  0
+ | 
+ v  pta: ltarget ==> 
+p = 1 & x = 2 & global_time = 1
+(************************************************************)
+
+
+(************************************************************)
+ Run #2
+
+ Valuation:
+  p = 0
+
+ Other valuations with equivalent (discrete) run:
+ p = 0
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 0
+
+pta: l1 ==> 
+p = 0 & x = 1 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
+ | and d =  0
+ | 
+ v  pta: l2 ==> 
+p = 0 & x = 1 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l2 ==> 
+p = 0 & x = 2 & global_time = 1
+
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l3 ==> 
+p = 0 & x = 3 & global_time = 2
+(************************************************************)
+
+
+(************************************************************)
+ Run #3
+
+ Valuation:
+  p = 1
+
+ Other valuations with equivalent (discrete) run:
+ p > 0
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 1
+
+pta: l1 ==> 
+p = 0 & x = 1 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
+ | and d =  0
+ | 
+ v  pta: l2 ==> 
+p = 1 & x = 1 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  0
+ | 
+ v  pta: l3 ==> 
+p = 1 & x = 1 & global_time = 0
+
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l3 ==> 
+p = 1 & x = 2 & global_time = 1
+(************************************************************)
+END RESULT
+
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFexemplify on a toy example (violation possible only at last position)',
+		'input_files': ['testCounterExSimple-5c.imi'],
+		'options'    : '-mode EFexemplify -output-result',
+		'expectations' : [
+			{'file': 'testCounterExSimple-5c.res' , 'content' : """
+BEGIN RESULT
+(************************************************************)
+ Run #1
+
+
+ Valuation:
+  p = 1
+
+ Other valuations with equivalent (discrete) run:
+ p > 0
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  p = 1
+
+pta: l1 ==> 
+p = 0 & x = 1 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
+ | and d =  0
+ | 
+ v  pta: l2 ==> 
+p = 0 & x = 1 & global_time = 0
+
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
+ | and d =  0
+ | 
+ v  pta: l3 ==> 
+p = 1 & x = 1 & global_time = 0
+
+ | 
+ | via combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target ltarget] 
+ | and d =  1
+ | 
+ v  pta: ltarget ==> 
+p = 1 & x = 2 & global_time = 1
+(************************************************************)
+
+
+(************************************************************)
+ Run #2
+
+ Valuation:
+  p = 0
+
+ Other valuations with equivalent (discrete) run:
+ p = 0
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 0
+
+pta: l1 ==> 
+p = 0 & x = 1 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
+ | and d =  0
+ | 
+ v  pta: l2 ==> 
+p = 0 & x = 1 & global_time = 0
+
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
+ | and d =  0
+ | 
+ v  pta: l3 ==> 
+p = 0 & x = 1 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l3 ==> 
+p = 0 & x = 2 & global_time = 1
+(************************************************************)
+
+
+(************************************************************)
+ Run #3
+
+ Valuation:
+  p = 1
+
+ Other valuations with equivalent (discrete) run:
+ p > 0
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 1
+
+pta: l1 ==> 
+p = 0 & x = 1 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
+ | and d =  0
+ | 
+ v  pta: l2 ==> 
+p = 0 & x = 1 & global_time = 0
+
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
+ | and d =  0
+ | 
+ v  pta: l3 ==> 
+p = 1 & x = 1 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  0
+ | 
+ v  pta: ltarget ==> 
+p = 1 & x = 1 & global_time = 0
+(************************************************************)
+END RESULT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter valuation derived)',
+		'input_files': ['testCounterExSimple-6.imi'],
+		'options'    : '-mode EFexemplify -output-result',
+		'expectations' : [
+			{'file': 'testCounterExSimple-6.res' , 'content' : """
+BEGIN RESULT
+
+(************************************************************)
+ Run #1
+
+ Valuation:
+  p = 2
+
+ Other valuations with equivalent (discrete) run:
+ p > 1
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  p = 2
+
+pta: l1 ==> 
+p = 2 & x = 2 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l2] 
+ | and d =  0
+ | 
+ v  pta: l2 ==> 
+p = 2 & x = 2 & global_time = 0
+
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
+ | and d =  0
+ | 
+ v  pta: l3 ==> 
+p = 2 & x = 2 & global_time = 0
+
+ | 
+ | via combined transition [PTA pta: guard{True} updates{x := 0}  sync a Target ltarget] 
+ | and d =  0
+ | 
+ v  pta: ltarget ==> 
+p = 2 & x = 0 & global_time = 0
+(************************************************************)
+
+
+(************************************************************)
+ Run #2
+
+ Valuation:
+  p = 2
+
+ Other valuations with equivalent (discrete) run:
+ p > 1
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 2
+
+pta: l1 ==> 
+p = 2 & x = 2 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l2] 
+ | and d =  0
+ | 
+ v  pta: l2 ==> 
+p = 2 & x = 2 & global_time = 0
+
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
+ | and d =  0
+ | 
+ v  pta: l3 ==> 
+p = 2 & x = 2 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  0
+ | 
+ v  pta: ltarget ==> 
+p = 2 & x = 2 & global_time = 0
+(************************************************************)
+
+END RESULT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter nor clock valuation derived)',
+		'input_files': ['testCounterExSimple-7.imi'],
+		'options'    : '-mode EFexemplify -output-result',
+		'expectations' : [
+			{'file': 'testCounterExSimple-7.res' , 'content' : """
+
+BEGIN RESULT
+
+(************************************************************)
+ Run #1
+
+ Valuation:
+  p = 2
+
+ Other valuations with equivalent (discrete) run:
+ p > 1
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  p = 2
+
+pta: l1 ==> 
+p = 2 & x = 2 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l2] 
+ | and d =  0
+ | 
+ v  pta: l2 ==> 
+p = 2 & x = 2 & global_time = 0
+
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
+ | and d =  0
+ | 
+ v  pta: l3 ==> 
+p = 2 & x = 2 & global_time = 0
+
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target ltarget] 
+ | and d =  0
+ | 
+ v  pta: ltarget ==> 
+p = 2 & x = 2 & global_time = 0
+(************************************************************)
+
+END RESULT
+
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFexemplify on a toy example without parameter',
+		'input_files': ['testCounterExSimple.imi'],
+		'options'    : '-mode EFexemplify -output-result',
+		'expectations' : [
+			{'file': 'testCounterExSimple.res' , 'content' : """
+
+BEGIN RESULT
+
+(************************************************************)
+ Run #1
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  
+
+pta: l1, d1 = 1/2, d2 = 50 ==> 
+x = 0 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
+ | and d =  3
+ | 
+ v  pta: l2, d1 = 1/2, d2 = 50 ==> 
+x = 0 & global_time = 3
+
+ | 
+ | via combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
+ | and d =  1
+ | 
+ v  pta: l3, d1 = 5/2, d2 = 50 ==> 
+x = 0 & global_time = 4
+
+ | 
+ | via combined transition [PTA pta: guard{ x = 1} updates{d2 := (d2) / 2}  sync a Target l4] 
+ | and d =  1
+ | 
+ v  pta: l4, d1 = 5/2, d2 = 25 ==> 
+x = 1 & global_time = 5
+
+ | 
+ | via combined transition [PTA pta: guard{ x = 8} updates{}  sync a Target lbad] 
+ | and d =  7
+ | 
+ v  pta: lbad, d1 = 5/2, d2 = 25 ==> 
+x = 8 & global_time = 12
+(************************************************************)
+
+
+(************************************************************)
+ Run #2
+
+ Valuation:
+  
+
+ Other valuations with equivalent (discrete) run:
+True
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  
+
+pta: l1, d1 = 1/2, d2 = 50 ==> 
+x = 0 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
+ | and d =  3
+ | 
+ v  pta: l2, d1 = 1/2, d2 = 50 ==> 
+x = 0 & global_time = 3
+
+ | 
+ | via combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
+ | and d =  1
+ | 
+ v  pta: l3, d1 = 5/2, d2 = 50 ==> 
+x = 0 & global_time = 4
+
+ | 
+ | via combined transition [PTA pta: guard{ x = 1} updates{d2 := (d2) / 2}  sync a Target l4] 
+ | and d =  1
+ | 
+ v  pta: l4, d1 = 5/2, d2 = 25 ==> 
+x = 1 & global_time = 5
+ | 
+ | via impossible transition labeled with a
+ | and d =  0
+ | 
+ v  pta: lbad, d1 = 5/2, d2 = 25 ==> 
+x = 1 & global_time = 5
+(************************************************************)
+
+END RESULT
+
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EFexemplify on a toy example with parameters and discrete variables',
+		'input_files': ['testCounterExSimple-2.imi'],
+		'options'    : '-mode EFexemplify -output-result',
+		'expectations' : [
+			{'file': 'testCounterExSimple-2.res' , 'content' : """
+
+BEGIN RESULT
+
+(************************************************************)
+ Run #1
+
+ Valuation:
+  p = 0
+
+ Other valuations with equivalent (discrete) run:
+ 1 > p
+& p >= 0
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  p = 0
+
+pta: l1, d1 = 1/2 ==> 
+p = 0 & x = 0 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
+ | and d =  3
+ | 
+ v  pta: l2, d1 = 1/2 ==> 
+p = 0 & x = 0 & global_time = 3
+
+ | 
+ | via combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
+ | and d =  1
+ | 
+ v  pta: l3, d1 = 5/2 ==> 
+p = 0 & x = 0 & global_time = 4
+
+ | 
+ | via combined transition [PTA pta: guard{ 1 > p
+& x = 1} updates{d1 := (d1) / 2}  sync a Target l4] 
+ | and d =  1
+ | 
+ v  pta: l4, d1 = 5/4 ==> 
+p = 0 & x = 1 & global_time = 5
+
+ | 
+ | via combined transition [PTA pta: guard{ x = 8} updates{}  sync a Target lbad] 
+ | and d =  7
+ | 
+ v  pta: lbad, d1 = 5/4 ==> 
+p = 0 & x = 8 & global_time = 12
+(************************************************************)
+
+
+(************************************************************)
+ Run #2
+
+ Valuation:
+  p = 1
+
+ Other valuations with equivalent (discrete) run:
+ p >= 1
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 1
+
+pta: l1, d1 = 1/2 ==> 
+p = 0 & x = 0 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
+ | and d =  3
+ | 
+ v  pta: l2, d1 = 1/2 ==> 
+p = 0 & x = 0 & global_time = 3
+
+ | 
+ | via combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
+ | and d =  1
+ | 
+ v  pta: l3, d1 = 5/2 ==> 
+p = 1 & x = 0 & global_time = 4
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l3, d1 = 5/2 ==> 
+p = 1 & x = 1 & global_time = 5
+
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l4, d1 = 5/4 ==> 
+p = 1 & x = 2 & global_time = 6
+(************************************************************)
+
+
+(************************************************************)
+ Run #3
+
+ Valuation:
+  p = 0
+
+ Other valuations with equivalent (discrete) run:
+ 1 > p
+& p >= 0
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 0
+
+pta: l1, d1 = 1/2 ==> 
+p = 0 & x = 0 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
+ | and d =  3
+ | 
+ v  pta: l2, d1 = 1/2 ==> 
+p = 0 & x = 0 & global_time = 3
+
+ | 
+ | via combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
+ | and d =  1
+ | 
+ v  pta: l3, d1 = 5/2 ==> 
+p = 0 & x = 0 & global_time = 4
+
+ | 
+ | via combined transition [PTA pta: guard{ 1 > p
+& x = 1} updates{d1 := (d1) / 2}  sync a Target l4] 
+ | and d =  1
+ | 
+ v  pta: l4, d1 = 5/4 ==> 
+p = 0 & x = 1 & global_time = 5
+ | 
+ | via impossible transition labeled with a
+ | and d =  0
+ | 
+ v  pta: lbad, d1 = 5/4 ==> 
+p = 0 & x = 1 & global_time = 5
+(************************************************************)
+END RESULT
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test LoopSynth: flip-flop (no loop)',
 		'input_files': ['flipflop.imi'],
 		'options'    : '-mode LoopSynth -output-result',
@@ -1807,6 +3508,289 @@ Constraint nature                       : good
 Number of states                        : 5
 Number of transitions                   : 6
 Number of computed states               : 7
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test AccLoopSynth: flipflop (no loop)',
+		'input_files': ['flipflop.imi'],
+		'options'    : '-mode AccLoopSynth -output-result',
+		'expectations' : [
+			{'file': 'flipflop.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 20
+Number of transitions                   : 19
+Number of computed states               : 20
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/22
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test AccLoopSynth: simple example 1',
+		'input_files': ['testNDFS-1.imi'],
+		'options'    : '-mode AccLoopSynth -output-result',
+		'expectations' : [
+			{'file': 'testNDFS-1.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 3
+Number of transitions                   : 4
+Number of computed states               : 5
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/22
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test AccLoopSynth: simple example 2',
+		'input_files': ['testNDFS-2.imi'],
+		'options'    : '-mode AccLoopSynth -output-result',
+		'expectations' : [
+			{'file': 'testNDFS-2.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+OR
+  p = 1
+OR
+  p = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 9
+Number of transitions                   : 13
+Number of computed states               : 14
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/22
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test AccLoopSynth: simple example 3 (accepting for all valuations)',
+		'input_files': ['PDFC5.imi'],
+		'options'    : '-mode AccLoopSynth -output-result',
+		'expectations' : [
+			{'file': 'PDFC5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p3 >= 0
+& p2 >= 0
+& p1 >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 5
+Number of transitions                   : 6
+Number of computed states               : 7
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test AccLoopSynthNDFS emptiness: flipflop (no loop)',
+		'input_files': ['flipflop.imi'],
+		'options'    : '-mode AccLoopSynthNDFS -output-result -counterexample',
+		'expectations' : [
+			{'file': 'flipflop.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test AccLoopSynthNDFS with complete constraint: flipflop (no loop)',
+		'input_files': ['flipflop.imi'],
+		'options'    : '-mode AccLoopSynthNDFS -explOrder NDFSsub -output-result',
+		'expectations' : [
+			{'file': 'flipflop.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/07/22
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test AccLoopSynthNDFS emptiness: simple example 1',
+		'input_files': ['testNDFS-1.imi'],
+		'options'    : '-mode AccLoopSynthNDFS -output-result -counterexample',
+		'expectations' : [
+			{'file': 'testNDFS-1.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/08/01
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test AccLoopSynthNDFS: simple example 1 with complete constraint',
+		'input_files': ['testNDFS-1.imi'],
+		'options'    : '-mode AccLoopSynthNDFS -explOrder NDFSsub -output-result',
+		'expectations' : [
+			{'file': 'testNDFS-1.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/08/01
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test AccLoopSynthNDFS emptiness: simple example 2',
+		'input_files': ['testNDFS-2.imi'],
+		'options'    : '-mode AccLoopSynthNDFS -output-result -counterexample',
+		'expectations' : [
+			{'file': 'testNDFS-2.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/08/01
+		# Test for IMITATOR version: 2.12
+		'purpose'    : 'Test AccLoopSynthNDFS: simple example 2 with complete constraint',
+		'input_files': ['testNDFS-2.imi'],
+		'options'    : '-mode AccLoopSynthNDFS -explOrder NDFSsub -output-result',
+		'expectations' : [
+			{'file': 'testNDFS-2.res' , 'content' : """
+BEGIN CONSTRAINT
+   p = 2
+ OR
+   p = 1
+ OR
+   p = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} #end result file
 		] # end expectations
@@ -2335,12 +4319,12 @@ Number of computed states     : 7
 & p2 >= 0
 
   DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_2
-  s_4 -> s_2 via "a"
-  s_1 -> s_3 via "a"
-  s_3 -> s_1 via "a"
-  s_2 -> s_4 via "a"
   s_0 -> s_1 via "a"
+  s_0 -> s_2
+  s_1 -> s_3 via "a"
+  s_2 -> s_4 via "a"
+  s_3 -> s_1 via "a"
+  s_4 -> s_2 via "a"
 """
 			} #end result file
 		] # end expectations
@@ -2711,25 +4695,25 @@ Number of computed states     : 20
 & dG4_u >= 3
 
   DESCRIPTION OF THE TRANSITIONS
-  s_7 -> s_10 via "ckDown"
-  s_8 -> s_12 via "ckDown"
-  s_14 -> s_19 via "ckDown"
-  s_8 -> s_13 via "qUp"
-  s_3 -> s_4 via "dDown"
   s_0 -> s_1 via "dUp"
-  s_10 -> s_18 via "qUp"
-  s_13 -> s_15 via "ckDown"
-  s_9 -> s_14 via "dDown"
-  s_5 -> s_8 via "dDown"
-  s_4 -> s_7 via "qG3Down"
-  s_11 -> s_17 via "ckDown"
-  s_2 -> s_3 via "ckUp"
-  s_5 -> s_9 via "qUp"
-  s_3 -> s_5 via "qG3Down"
-  s_7 -> s_11 via "qUp"
-  s_4 -> s_6 via "ckDown"
   s_1 -> s_2 via "qG1Down"
+  s_2 -> s_3 via "ckUp"
+  s_3 -> s_4 via "dDown"
+  s_3 -> s_5 via "qG3Down"
+  s_4 -> s_6 via "ckDown"
+  s_4 -> s_7 via "qG3Down"
+  s_5 -> s_8 via "dDown"
+  s_5 -> s_9 via "qUp"
+  s_7 -> s_10 via "ckDown"
+  s_7 -> s_11 via "qUp"
+  s_8 -> s_12 via "ckDown"
+  s_8 -> s_13 via "qUp"
+  s_9 -> s_14 via "dDown"
+  s_10 -> s_18 via "qUp"
+  s_11 -> s_17 via "ckDown"
   s_12 -> s_16 via "qUp"
+  s_13 -> s_15 via "ckDown"
+  s_14 -> s_19 via "ckDown"
 """
 			} #end result file
 		] # end expectations
@@ -3014,7 +4998,38 @@ END CONSTRAINT		  """
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+
 	,
+
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2019/05/30
+		# Test for IMITATOR version: 2.11
+		'purpose'    : 'Test PRP on a very simple example',
+		'input_files': ['testEFcounterex.imi', 'testEFcounterex.pi0'],
+		'options'    : '-mode PRP -merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testEFcounterex.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 0
+& 1 > p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PRP (old version) on a simple example (good reference valuation)',
@@ -3086,11 +5101,11 @@ END CONSTRAINT
 & p2 >= 0
 
   DESCRIPTION OF THE TRANSITIONS
-  s_1 -> s_2
   s_0 -> s_1
+  s_1 -> s_2
   s_1 -> s_3
   s_2 -> s_2
-		  """
+"""
 			} # end result file
 			,
 		] # end expectations
@@ -3168,8 +5183,8 @@ END CONSTRAINT
 & p2 >= 0
 
   DESCRIPTION OF THE TRANSITIONS
-  s_1 -> s_2
   s_0 -> s_1
+  s_1 -> s_2
   s_1 -> s_3
   s_2 -> s_2
 		  """
@@ -3258,10 +5273,10 @@ OR
 & p1 >= 3
 
   DESCRIPTION OF THE TRANSITIONS
-  s_1 -> s_4
   s_0 -> s_1
-  s_1 -> s_3
   s_0 -> s_2
+  s_1 -> s_3
+  s_1 -> s_4
 		  """
 			} # end result file
 			,
@@ -3348,10 +5363,10 @@ OR
 & p1 >= 3
 
   DESCRIPTION OF THE TRANSITIONS
-  s_1 -> s_4
   s_0 -> s_1
-  s_1 -> s_3
   s_0 -> s_2
+  s_1 -> s_3
+  s_1 -> s_4
 		  """
 			} # end result file
 			,
@@ -3556,19 +5571,19 @@ OR
 & p1 >= 0
 
   DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_3
-  s_3 -> s_6
-  s_8 -> s_9
-  s_1 -> s_5
   s_0 -> s_1
-  s_1 -> s_4
-  s_10 -> s_11
-  s_7 -> s_8
   s_0 -> s_2
+  s_0 -> s_3
+  s_1 -> s_4
+  s_1 -> s_5
+  s_3 -> s_6
   s_6 -> s_7
-  s_12 -> s_13
-  s_11 -> s_12
+  s_7 -> s_8
+  s_8 -> s_9
   s_9 -> s_10
+  s_10 -> s_11
+  s_11 -> s_12
+  s_12 -> s_13
 
 
 		  """
@@ -3777,19 +5792,19 @@ OR
 & p1 >= 0
 
   DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_3
-  s_3 -> s_6
-  s_8 -> s_9
-  s_1 -> s_5
   s_0 -> s_1
-  s_1 -> s_4
-  s_10 -> s_11
-  s_7 -> s_8
   s_0 -> s_2
+  s_0 -> s_3
+  s_1 -> s_4
+  s_1 -> s_5
+  s_3 -> s_6
   s_6 -> s_7
-  s_12 -> s_13
-  s_11 -> s_12
+  s_7 -> s_8
+  s_8 -> s_9
   s_9 -> s_10
+  s_10 -> s_11
+  s_11 -> s_12
+  s_12 -> s_13
 
 
 		  """
@@ -6860,8 +8875,8 @@ Average number of transitions           : 6.0
    p >= 2
 
   DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_2 via "b"
   s_0 -> s_1 via "a"
+  s_0 -> s_2 via "b"
 		"""
 			} # end result file
 			,
@@ -6901,8 +8916,8 @@ Average number of transitions           : 6.0
    p >= 0
 
   DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_1 via "b"
   s_0 -> s_1 via "a"
+  s_0 -> s_1 via "b"
   """
 			} # end result file
 			,
@@ -7673,10 +9688,10 @@ end
 		'options'    : '-mode statespace -output-trace-set-nodetails -output-graphics-source',
 		'expectations' : [
 			{'file': 'CUBPTA1-statespace.dot' , 'content' : """
-  s_3 -> s_2 [label="a"];
   s_0 -> s_1 [label="a"];
-  s_2 -> s_3 [label="a"];
   s_1 -> s_2 [label="a"];
+  s_2 -> s_3 [label="a"];
+  s_3 -> s_2 [label="a"];
 
 /* Initial state */
   s_init [shape=none, label="init"];
@@ -7684,10 +9699,10 @@ end
 
 /* Colors */
 
-  s_2 [color=blue, style=filled];
   s_0 [color=blue, style=filled];
-  s_3 [color=yellow, style=filled];
   s_1 [color=yellow, style=filled];
+  s_2 [color=blue, style=filled];
+  s_3 [color=yellow, style=filled];
 		"""
 			} # end result file
 			,
@@ -7702,10 +9717,10 @@ end
 		'options'    : '-mode statespace -output-trace-set -output-graphics-source',
 		'expectations' : [
 			{'file': 'CUBPTA1-statespace.dot' , 'content' : """
-  s_3 -> s_2 [label="a"];
   s_0 -> s_1 [label="a"];
-  s_2 -> s_3 [label="a"];
   s_1 -> s_2 [label="a"];
+  s_2 -> s_3 [label="a"];
+  s_3 -> s_2 [label="a"];
 
 /* Initial state */
   s_init [shape=none, label="init"];
@@ -7713,10 +9728,10 @@ end
 
 /* Colors */
 
-  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}"];
   s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{pta : l1}"];
-  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}"];
   s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{pta : l2}"];
+  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}"];
+  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}"];
 		"""
 			} # end result file
 			,
@@ -7731,10 +9746,10 @@ end
 		'options'    : '-mode statespace -output-trace-set-verbose -output-graphics-source',
 		'expectations' : [
 			{'file': 'CUBPTA1-statespace.dot' , 'content' : """
-  s_3 -> s_2 [label="a"];
   s_0 -> s_1 [label="a"];
-  s_2 -> s_3 [label="a"];
   s_1 -> s_2 [label="a"];
+  s_2 -> s_3 [label="a"];
+  s_3 -> s_2 [label="a"];
 
 /* Initial state */
   s_init [shape=none, label="init"];
@@ -7742,10 +9757,10 @@ end
 
 /* Colors */
 
-  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& x = y| p2 \>= 1 \\n \& p1 \>= 0}"];
   s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 0 \\n \& x \>= 0 \\n \& x = y| p2 \>= 0 \\n \& p1 \>= 0}"];
-  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1}"];
   s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& x \>= 0 \\n \& y \>= x| p2 \>= 0 \\n \& p1 \>= 0}"];
+  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& x = y| p2 \>= 1 \\n \& p1 \>= 0}"];
+  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1}"];
 		"""
 			} # end result file
 			# NOTE (ÉA, 2018/06/05): I had to manually replace '\n' with '\\n' to make this test pass
@@ -7763,10 +9778,10 @@ end
 		'options'    : '-mode statespace -output-trace-set-verbose -output-graphics-source',
 		'expectations' : [
 			{'file': 'CUBPTA1project-statespace.dot' , 'content' : """
-  s_3 -> s_2 [label="a"];
   s_0 -> s_1 [label="a"];
-  s_2 -> s_3 [label="a"];
   s_1 -> s_2 [label="a"];
+  s_2 -> s_3 [label="a"];
+  s_3 -> s_2 [label="a"];
 
 /* Initial state */
   s_init [shape=none, label="init"];
@@ -7774,10 +9789,10 @@ end
 
 /* Colors */
 
-  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& x = y| p2 \>= 1 \\n \& p1 \>= 0| p2 \>= 1}"];
   s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 0 \\n \& x \>= 0 \\n \& x = y| p2 \>= 0 \\n \& p1 \>= 0| p2 \>= 0}"];
-  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1| p2 \>= 1}"];
   s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& x \>= 0 \\n \& y \>= x| p2 \>= 0 \\n \& p1 \>= 0| p2 \>= 0}"];
+  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& x = y| p2 \>= 1 \\n \& p1 \>= 0| p2 \>= 1}"];
+  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1| p2 \>= 1}"];
 		"""
 			} # end result file
 			# NOTE (ÉA, 2019/03/07): I had to manually replace '\n' with '\\n' to make this test pass
@@ -8343,64 +10358,6 @@ Constraint nature                       : good
 	,
 
 	##------------------------------------------------------------
-	{
-		'purpose'    : 'Test variable elimination in boolean expressions',
-		'input_files': ['testConditions.imi'],
-		'options'    : '-mode statespace -output-states',
-		'expectations' : [
-			{'file': 'testConditions-statespace.states' , 'content' : """
-  STATE 0:
-  pta: l1, i = 0, j = 0, l = 0 ==>
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	##------------------------------------------------------------]
-
-	,
-
-	##------------------------------------------------------------
-	{
-		'purpose'    : 'Test evaluation of <if> branch in conditional update',
-		'input_files': ['testConditions.imi'],
-		'options'    : '-mode statespace -output-states',
-		'expectations' : [
-			{'file': 'testConditions-statespace.states' , 'content' : """
-	STATE 1:
-	pta: l2, i = 0, j = 0, l = 15 ==>
-	& x >= 0
-	& p = 1
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	##------------------------------------------------------------]
-
-	,
-
-	##------------------------------------------------------------
-	{
-		'purpose'    : 'Test evaluation of <else> branch in conditional update',
-		'input_files': ['testConditions.imi'],
-		'options'    : '-mode statespace -output-states',
-		'expectations' : [
-			{'file': 'testConditions-statespace.states' , 'content' : """
-	STATE 2:
-  pta: l1, i = 2, j = 0, l = 15 ==>
-	& x >= 2
-	& p = 1
-		"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	##------------------------------------------------------------]
-
-	,
-
-	##------------------------------------------------------------
 	#{
 		#'purpose'    : 'XXXX',
 		#'input_files': ['XXXX.imi', 'XXXX.pi0'],
@@ -8412,7 +10369,6 @@ Constraint nature                       : good
 		#] # end expectations
 	#} # end test case
 	##------------------------------------------------------------]
-
 
 ### THE END
 ]

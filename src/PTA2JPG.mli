@@ -3,6 +3,7 @@
  *                     IMITATOR II
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
+ * Université Paris 13, LIPN, CNRS, France
  * Author:        Etienne Andre
  * Created:       2012/08/24
  * Last modified: 2013/03/20

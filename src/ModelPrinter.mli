@@ -3,13 +3,13 @@
  *                       IMITATOR
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  *
  * Module description: Convert an abstract model to the input syntax of IMITATOR
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2019/04/15
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -34,9 +34,11 @@ val string_of_arithmetic_expression : (Automaton.variable_index -> Automaton.var
 (** State *)
 (************************************************************)
 (*** TODO/BADPROG : Move elsewhere? ***)
-(** Convert a state into a string *)
-val string_of_state : abstract_model -> (Location.global_location * LinearConstraint.px_linear_constraint) -> string
+(** Convert a symbolic state into a string *)
+val string_of_state : abstract_model -> State.state -> string
 
+(** Convert a symbolic state into a string *)
+val string_of_concrete_state : abstract_model -> State.concrete_state -> string
 
 (************************************************************)
 (** Guard *)
@@ -45,21 +47,26 @@ val string_of_state : abstract_model -> (Location.global_location * LinearConstr
 val string_of_guard : (Automaton.variable_index -> Automaton.variable_name) -> AbstractModel.guard -> string
 
 
+(************************************************************)
+(** Transitions *)
+(************************************************************)
+(* Convert a transition into a string: compact version for debugging/pretty-printing *)
+val debug_string_of_transition : AbstractModel.abstract_model -> Automaton.automaton_index -> AbstractModel.transition -> string
+
 
 (************************************************************)
-(** model *)
+(** Debug-print for symbolic run *)
 (************************************************************)
-(* Convert a pi0 into a string *)
-val string_of_pi0 : abstract_model -> pi0 -> string
 
-(* Convert a v0 into a string *)
-val string_of_v0 : abstract_model -> v0 -> string
+val debug_string_of_symbolic_run : AbstractModel.abstract_model -> StateSpace.state_space -> StateSpace.symbolic_run -> string
+val debug_string_of_concrete_run : AbstractModel.abstract_model -> StateSpace.concrete_run -> string
+val debug_string_of_impossible_concrete_run : AbstractModel.abstract_model -> StateSpace.impossible_concrete_run -> string
 
-(* Convert a model into a string *)
-val string_of_model : abstract_model -> string
 
-(** Convert the correctness property to a string *)
-val string_of_property : abstract_model -> property_definition -> string
+(************************************************************)
+(** Updates *)
+(************************************************************)
+
 
 (** Returns when add comma separators between clock and discrete updates and
 between discrete and conditional updates *)
@@ -75,7 +82,7 @@ val string_of_clock_updates_template : abstract_model -> clock_updates -> (clock
 val string_of_clock_updates :  abstract_model -> clock_updates -> string
 
 (** Template to convert a boolean expresion into a string *)
-val string_of_boolean_template :  (Automaton.variable_index -> Automaton.variable_name) -> boolean_expression -> (boolean_expression -> string) -> string
+val string_of_boolean_template : (Automaton.variable_index -> Automaton.variable_name) -> boolean_expression -> (boolean_expression -> string) -> string
 
 (** Convert a boolean expression into a string *)
 val string_of_boolean :  (Automaton.discrete_index -> Automaton.variable_name) -> boolean_expression -> string
@@ -83,5 +90,34 @@ val string_of_boolean :  (Automaton.discrete_index -> Automaton.variable_name) -
 (** Template to convert conditional updates into a string *)
 val string_of_conditional_updates_template : abstract_model -> conditional_update list -> (abstract_model -> clock_updates -> string) -> (abstract_model -> discrete_update list -> string) -> (boolean_expression -> string) -> string -> string -> string -> string
 
-(** COnvert conditional updates into a string *)
+(** Convert conditional updates into a string *)
 val string_of_conditional_updates : abstract_model -> conditional_update list -> string
+
+
+(************************************************************)
+(** Points and hyperrectangles *)
+(************************************************************)
+
+(* Convert a parameter valuation (PVal.pval) into a string *)
+val string_of_pval : abstract_model -> PVal.pval -> string
+
+(* Convert a px-valuation into a string *)
+val string_of_px_valuation : abstract_model -> LinearConstraint.px_valuation -> string
+
+(* Convert a x-valuation into a string *)
+val string_of_x_valuation : abstract_model -> LinearConstraint.x_valuation -> string
+
+(* Convert a v0 into a string *)
+val string_of_v0 : abstract_model -> v0 -> string
+
+
+(************************************************************)
+(** Model and property *)
+(************************************************************)
+
+(* Convert a model into a string *)
+val string_of_model : abstract_model -> string
+
+(** Convert the correctness property to a string *)
+val string_of_property : abstract_model -> property_definition -> string
+

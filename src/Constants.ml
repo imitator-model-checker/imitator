@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * All (?) constants of IMITATOR
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2019/03/01
+ * Last modified     : 2019/08/21
  *
  ************************************************************)
 
@@ -22,9 +22,9 @@
 
 let program_name = "IMITATOR"
 
-let version_string = "2.11"
+let version_string = "2.12"
 
-let version_name = "Butter Kouign-amann"
+let version_name = "Butter Lobster"
 
 (* Path ending with "/" *)
 let path_to_program =
@@ -78,7 +78,11 @@ let pta_default_image_format = "jpg"
 let dot_file_extension = "dot"
 let default_dot_image_extension = "dot"
 let states_file_extension = "states"
+
 let cartography_extension = "png"
+let cartography_size = "1024x1024"
+
+let signals_image_extension = "ps"
 
 
 (************************************************************)

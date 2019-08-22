@@ -3,13 +3,13 @@
  *                       IMITATOR
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  *
  * Module description: Translater to Uppaal
  *
  * File contributors : Étienne André
  * Created           : 2019/03/01
- * Last modified     : 2019/03/14
+ * Last modified     : 2019/05/29
  *
  ************************************************************)
 
@@ -17,6 +17,7 @@ open OCamlUtilities
 open Result
 open AbstractModel
 open ImitatorUtilities
+open LinearConstraint
 
 
 (************************************************************)
@@ -515,12 +516,12 @@ let string_of_sync model automaton_index action_index =
 
 (* Convert a transition of a location into a string *)
 (** TODO: Add conditions to the translation *)
-let string_of_transition model actions_and_nb_automata automaton_index action_index source_location (guard, updates, target_location) =
-	let clock_updates =  updates.clock in
-	let discrete_updates = updates.discrete in
+let string_of_transition model actions_and_nb_automata automaton_index source_location transition =
+	let clock_updates = transition.updates.clock in
+	let discrete_updates = transition.updates.discrete in
 	(* Arbitrary positioning: x = between source_location and target_location *)
 	(*** NOTE: integer division here, so first multiplication, then division (otherwise result can be 0) ***)
-	let x_coord_str = (string_of_int ((source_location + target_location) * scaling_factor / 2)) in
+	let x_coord_str = (string_of_int ((source_location + transition.target) * scaling_factor / 2)) in
 
 	(* Header *)
 	"\n\t<transition>"
@@ -529,12 +530,12 @@ let string_of_transition model actions_and_nb_automata automaton_index action_in
 	^ "\n\t\t<source ref=\"" ^ (id_of_location model automaton_index source_location) ^ "\"/>"
 
 	(* Target *)
-	^ "\n\t\t<target ref=\"" ^ (id_of_location model automaton_index target_location) ^ "\"/>"
+	^ "\n\t\t<target ref=\"" ^ (id_of_location model automaton_index transition.target) ^ "\"/>"
 
 	(* Synchronisation label *)
 	^ (
-		match model.action_types action_index with
-			| Action_type_sync -> "\n\t\t<label kind=\"synchronisation\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ (string_of_int (scaling_factor * 2 / 5)) ^ "\">" ^ (string_of_sync model automaton_index action_index) ^ "</label>"
+		match model.action_types transition.action with
+			| Action_type_sync -> "\n\t\t<label kind=\"synchronisation\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ (string_of_int (scaling_factor * 2 / 5)) ^ "\">" ^ (string_of_sync model automaton_index transition.action) ^ "</label>"
 			| Action_type_nosync -> ""
 	)
 
@@ -542,14 +543,14 @@ let string_of_transition model actions_and_nb_automata automaton_index action_in
 	^ (
 		(* Quite arbitrary positioning *)
 		let y_coord_str = (string_of_int (scaling_factor / 5)) in
-		"\n\t\t" ^ (string_of_guard actions_and_nb_automata model.variable_names x_coord_str y_coord_str guard)
+		"\n\t\t" ^ (string_of_guard actions_and_nb_automata model.variable_names x_coord_str y_coord_str transition.guard)
 	)
 
 	(* Updates *)
 	^ (
 		(* Quite arbitrary positioning *)
 		let y_coord_str = (string_of_int (- scaling_factor / 5)) in
-		"\n\t\t" ^ (string_of_updates model automaton_index action_index x_coord_str y_coord_str clock_updates discrete_updates)
+		"\n\t\t" ^ (string_of_updates model automaton_index transition.action x_coord_str y_coord_str clock_updates discrete_updates)
 	)
 
 	(* Footer *)
@@ -566,11 +567,11 @@ let string_of_transitions model actions_and_nb_automata automaton_index =
 		(* For each action *)
 		List.map (fun action_index ->
 			(* Get the list of transitions *)
-			let transitions = model.transitions automaton_index location_index action_index in
+			let transitions = List.map model.transitions_description (model.transitions automaton_index location_index action_index) in
 			(* Convert to string *)
 			string_of_list_of_string (
 				(* For each transition *)
-				List.map (string_of_transition model actions_and_nb_automata automaton_index action_index location_index) transitions
+				List.map (string_of_transition model actions_and_nb_automata automaton_index location_index) transitions
 				)
 			) (model.actions_per_location automaton_index location_index)
 		)

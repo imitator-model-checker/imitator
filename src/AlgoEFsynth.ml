@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: EFsynth algorithm [JLR15]
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2018/04/06
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -25,6 +25,7 @@ open AbstractModel
 open Result
 open AlgoStateBased
 open Statistics
+open State
 
 
 
@@ -101,7 +102,7 @@ class virtual algoEFsynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Process a symbolic state: returns false if the state is a target state (and should not be added to the next states to explore), true otherwise *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private process_state state =
+	method private process_state (state : state) =
 	
 		(* Statistics *)
 		counter_process_state#increment;
@@ -112,7 +113,7 @@ class virtual algoEFsynth =
 			self#print_algo_message Verbose_medium "Entering process_state…";
 		);
 
-		let state_location, state_constraint = state in
+		let state_location, state_constraint = state.global_location, state.px_constraint in
 		
 		let to_be_added = match model.correctness_condition with
 		| None -> raise (InternalError("A correctness property must be defined to perform EF-synthesis or PRP. This should have been checked before."))
@@ -171,7 +172,7 @@ class virtual algoEFsynth =
 						
 					(* Update the bad constraint using the current constraint *)
 					(*** NOTE: perhaps try first whether p_constraint <= bad_constraint ? ***)
-					LinearConstraint.p_nnconvex_p_union bad_constraint p_constraint;
+					LinearConstraint.p_nnconvex_p_union_assign bad_constraint p_constraint;
 					
 					(* Print some information *)
 					if verbose_mode_greater Verbose_low then(
@@ -251,15 +252,51 @@ class virtual algoEFsynth =
 
 		result
 		
+		
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Generate counter-example(s) if required by the algorithm *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	method process_counterexample target_state_index =
+	(* Only process counterexample if needed *)
+		if options#counterex then(
+			
+			(*** NOTE: so far, the reconstruction needs an absolute time clock ***)
+			begin
+			match model.global_time_clock with
+				| None -> print_warning "No counterexample reconstruction, as the model requires an absolute time clock.";
+		
+				| Some _ ->
+					let concrete_run = AlgoStateBased.reconstruct_counterexample state_space target_state_index in
+
+					(* Generate the graphics *)
+					Graphics.draw_concrete_run concrete_run (options#files_prefix ^ "_signals");
+			end;
+		);
+		
+		(* If the state is a target state (i.e., process_state returned false) AND the option to stop the analysis as soon as a counterexample is found is activated, then we will throw an exception *)
+		if options#counterex (*&& !is_target*) then(
+			(* Update termination status *)
+			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
+			self#print_algo_message Verbose_standard "Target state found! Terminating…";
+			termination_status <- Some Target_found;
+		
+			raise TerminateAnalysis;
+		);
+		
+		(* The end *)
+		()
+	
+
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the state_space (if indeed needed) *)
-	(* Side-effects: modify new_states_indexes *)
-	(*** TODO: move new_states_indexes to a variable of the class ***)
+	(* Add a new state to the state space (if indeed needed) *)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
+	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(*** TODO: return the list of actually added states ***)
 	(*** WARNING/BADPROG: the following is partially copy/paste to AlgoPRP.ml ***)
-	method add_a_new_state source_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
+	method add_a_new_state source_state_index combined_transition new_state =
 		(* Statistics *)
 		counter_add_a_new_state#increment;
 		counter_add_a_new_state#start;
@@ -272,14 +309,14 @@ class virtual algoEFsynth =
 		(* Reset the cached p-constraint *)
 		cached_p_constraint <- None;
 		
-		(* Build the state *)
-		let new_state = location, current_constraint in
-		
 		(* Try to add the new state to the state space *)
 		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
 		
 		(* Boolean to check whether the analysis should be terminated immediately *)
-		let terminate_analysis_immediately = ref false in
+(* 		let terminate_analysis_immediately = ref false in *)
+		
+		(* Boolean to check whether the state is a target state *)
+		let is_target = ref false in
 		
 		begin
 		match addition_result with
@@ -292,11 +329,12 @@ class virtual algoEFsynth =
 			self#update_statespace_nature new_state;
 			
 			(* Will the state be added to the list of new states (the successors of which will be computed)? *)
+			(*** NOTE: if the answer is false, then the new state is a target state ***)
 			(*** BADPROG: ugly bool ref that may be updated in an IF condition below ***)
 			let to_be_added = ref (self#process_state new_state) in
 			
-			(* If the state is a target state (i.e., process_state returned false) AND the option to stop the analysis as soon as a counterexample is found is activated, then we will throw an exception *)
-			terminate_analysis_immediately := options#counterex && not !to_be_added;
+			(* Update the target flag *)
+			is_target := not !to_be_added;
 			
 			(* If to be added: if the state is included into the bad constraint, no need to explore further, and hence do not add *)
 			if !to_be_added then(
@@ -308,7 +346,7 @@ class virtual algoEFsynth =
 
 				(* Project onto the parameters *)
 				(*** NOTE: here, we use the cache system ***)
-				let p_constraint = self#compute_p_constraint_with_cache current_constraint in
+				let p_constraint = self#compute_p_constraint_with_cache new_state.px_constraint in
 				
 				(* Print some information *)
 				self#print_algo_message Verbose_medium "Checking whether the new state is included into known bad valuations…";
@@ -338,26 +376,25 @@ class virtual algoEFsynth =
 
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
 			if !to_be_added then
-				new_states_indexes := new_state_index :: !new_states_indexes;
+				new_states_indexes <- new_state_index :: new_states_indexes;
 			
 		end (* end if new state *)
 		;
 		
-		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
+		(*** TODO: move the two following statements to a higher level function? (post_from_one_state?) ***)
+		
+		(* Retrieve the new state index *)
+		(*** HACK ***)
+		let new_state_index = match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index in
 		
 		(* Add the transition to the state space *)
-		self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
+		self#add_transition_to_state_space (source_state_index, combined_transition, new_state_index) addition_result;
+
 		
-		(* If an immediate termination is requested: raise exception! *)
-		if !terminate_analysis_immediately then(
-			(* Update termination status *)
-			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
-			self#print_algo_message Verbose_standard "Target state found! Terminating…";
-			termination_status <- Some Target_found;
-			
-			raise TerminateAnalysis;
-		);
-	
+		(* Construct counterexample if requested by the algorithm (and stop termination by raising a TerminateAnalysis exception, if needed) *)
+		if !is_target then
+			self#process_counterexample new_state_index;
+		
 		(* Statistics *)
 		counter_add_a_new_state#stop;
 

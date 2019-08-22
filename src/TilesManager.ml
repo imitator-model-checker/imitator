@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Abstract tiles manager class to manage the tiles received in the cartography algorithms.
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/15
- * Last modified     : 2017/01/18
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -43,24 +43,24 @@ let good_or_bad_constraint_union_assign (good_or_bad_constraint1 : good_or_bad_c
 		let constraint1, _ = good_and_bad_constraint1.good in
 		let constraint2, _ = good_constraint2 in
 		(* Add second good part to the first *)
-		LinearConstraint.p_nnconvex_union constraint1 constraint2
+		LinearConstraint.p_nnconvex_union_assign constraint1 constraint2
 	
 	| Good_bad_constraint good_and_bad_constraint1, Bad_constraint bad_constraint2 ->
 		(* Get bad part *)
 		let constraint1, _ = good_and_bad_constraint1.bad in
 		let constraint2, _ = bad_constraint2 in
 		(* Add second bad part to the first *)
-		LinearConstraint.p_nnconvex_union constraint1 constraint2
+		LinearConstraint.p_nnconvex_union_assign constraint1 constraint2
 	
 	| Good_bad_constraint good_and_bad_constraint1, Good_bad_constraint good_and_bad_constraint2 ->
 		(* Add second good part to the first *)
 		let gconstraint1, _ = good_and_bad_constraint1.good in
 		let gconstraint2, _ = good_and_bad_constraint2.good in
-		LinearConstraint.p_nnconvex_union gconstraint1 gconstraint2;
+		LinearConstraint.p_nnconvex_union_assign gconstraint1 gconstraint2;
 		(* Add second bad part to the first *)
 		let bconstraint1, _ = good_and_bad_constraint1.bad in
 		let bconstraint2, _ = good_and_bad_constraint2.bad in
-		LinearConstraint.p_nnconvex_union bconstraint1 bconstraint2
+		LinearConstraint.p_nnconvex_union_assign bconstraint1 bconstraint2
 	
 	| _ -> raise (InternalError("Case not supported in good_or_bad_constraint_union_assign"))
 

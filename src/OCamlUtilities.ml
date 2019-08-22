@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Useful OCaml functions
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/03/15
+ * Last modified     : 2019/08/09
  *
  ************************************************************)
  
@@ -218,6 +218,21 @@ let list_set_nth i elem l =
 	set i elem l
 
 
+(** Select the sublist of a list from position i to position j *)
+let sublist minb maxb l =
+	if minb < 0 || maxb >= (List.length l) || minb > maxb then(
+		raise (Invalid_argument "sublist")
+	);
+	let rec sublist_rec minb maxb l =
+	match l with
+		| [] -> raise (Invalid_argument "sublist")
+		| h :: t -> 
+			let tail = if maxb = 0 then [] else sublist_rec (minb - 1) (maxb - 1) t in
+			if minb > 0 then tail else h :: tail
+	in sublist_rec minb maxb l
+
+
+
 (************************************************************)
 (** Useful functions on arrays *)
 (************************************************************)
@@ -297,6 +312,11 @@ let hashtbl_get_all_keys hashtbl =
 		(fun key _ current_list ->
 			key :: current_list)
 		hashtbl []
+
+(** Get the binding associated to a key, or the default binding if key is not associated to any binding *)
+let hashtbl_get_or_default hashtbl key default_value =
+	if not (Hashtbl.mem hashtbl key) then default_value
+	else Hashtbl.find hashtbl key
 
 
 (************************************************************)
@@ -488,6 +508,7 @@ let read_from_file file_name =
 	Std.input_all ic
 
 
+(** `write_to_file file_name file_content` will create a file `file_name` with content `file_content` *)
 let write_to_file file_name file_content =
 	(*** TODO: test for file existence! ***)
 	let oc = open_out file_name in

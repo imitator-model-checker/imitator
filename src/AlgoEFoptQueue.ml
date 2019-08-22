@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
- * Module description: "EF optimized" algorithm: minimization or minimization of a parameter valuation for which there exists a run leading to some states. Algorithm with a priority queue.
+ * Module description: "EF optimized" algorithm: minimization or minimization of a parameter valuation for which there exists a run leading to some states. Algorithm with a priority queue. [ABPP19]
  * 
  * File contributors : Vincent Bloemen, Étienne André
- * Created           : 2018/0?/??
- * Last modified     : 2019/02/19
+ * Created           : 2018/10/08
+ * Last modified     : 2019/07/11
  *
  ************************************************************)
 
@@ -25,6 +25,7 @@ open AbstractModel
 open Result
 open AlgoStateBased
 open Statistics
+open State
 
 
 (************************************************************)
@@ -308,7 +309,7 @@ class algoEFoptQueue =
 	(* Obtain the minimum time from a state index *)
 	method private state_index_to_min_time state_index =
         let source_state = StateSpace.get_state state_space state_index in
-        let _, source_constraint = source_state in
+        let source_constraint = source_state.px_constraint in
         let time_constraint = LinearConstraint.px_copy source_constraint in
         let pxd_constr = LinearConstraint.pxd_of_px_constraint time_constraint in
 		self#time_constr_to_val pxd_constr
@@ -317,7 +318,7 @@ class algoEFoptQueue =
 	(* Obtain the maximum time from a state index *)
 	method private state_index_to_max_time state_index =
         let source_state = StateSpace.get_state state_space state_index in
-        let _, source_constraint = source_state in
+        let source_constraint = source_state.px_constraint in
         let time_constraint = LinearConstraint.px_copy source_constraint in
         let pxd_constr = LinearConstraint.pxd_of_px_constraint time_constraint in
 		self#time_constr_to_max_val pxd_constr
@@ -328,7 +329,7 @@ class algoEFoptQueue =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
     method private print_state_info state_index =
         let source_state = StateSpace.get_state state_space state_index in
-        let _, source_constraint = source_state in
+        let source_constraint = source_state.px_constraint in
         print_message Verbose_standard ("----------\nstate:" ^ (string_of_int state_index) ^ "\n");
         print_message Verbose_standard (ModelPrinter.string_of_state model source_state);
         let time_constraint = LinearConstraint.px_copy source_constraint in
@@ -607,7 +608,8 @@ class algoEFoptQueue =
 			)
             else (
                 (* Check if this is the target location *)
-                let source_location, source_constraint = StateSpace.get_state state_space source_id in
+                let state = StateSpace.get_state state_space source_id in
+                let source_location, source_constraint = state.global_location, state.px_constraint in
                 if self#is_target_state source_location then (
                     (* Target state found ! (NB: assert time = upper_bound) *)
                     (* NB: We update best_time_bound in the successor part, so we should never see time < best_time_bound *)
@@ -666,8 +668,8 @@ class algoEFoptQueue =
 (*		                print_message Verbose_standard ("source constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names source_constraint);
 		                print_message Verbose_standard ("time constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names time_constr);
 		                print_message Verbose_standard ("target constr: " ^ LinearConstraint.string_of_px_linear_constraint model.variable_names target_constraint);
-		                print_message Verbose_standard ("p constr: " ^ LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint)*)
-                    (*);*)
+		                print_message Verbose_standard ("p constr: " ^ LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint)
+                    );*)
                 );
     
 
@@ -704,7 +706,7 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
                                 (* Only add states if the time to reach does not exceed the minimum time *)
                                 if suc_time <= !best_time_bound then (
                                     (* Check if the suc state is the target location, and possibly update minimum time *)
-                                    let suc_location, _ = StateSpace.get_state state_space suc_id in
+                                    let suc_location = (StateSpace.get_state state_space suc_id).global_location in
                                     if self#is_target_state suc_location then (
 										
 										if options#merge && (options#merge_heuristic = Merge_targetseen) then can_merge := true;
@@ -831,19 +833,11 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Add a new state to the state space (if indeed needed) *)
-	(* Side-effects: modify new_states_indexes *)
-	(*** TODO: move new_states_indexes to a variable of the class ***)
+	(* Add a new state to the reachability_graph (if indeed needed) *)
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
+	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method add_a_new_state source_state_index new_states_indexes action_index location (final_constraint : LinearConstraint.px_linear_constraint) =
-		(* Retrieve the model *)
-(* 		let model = Input.get_model () in *)
-
-		(* Build the state *)
-		let new_state = location, final_constraint in
-
-		
+	method add_a_new_state source_state_index combined_transition new_state =
 		(* Try to add the new state to the state space *)
 		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
 		
@@ -859,7 +853,7 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
 			self#update_statespace_nature new_state;
 			
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
-			new_states_indexes := new_state_index :: !new_states_indexes;
+			new_states_indexes <- new_state_index :: new_states_indexes;
 			
 		end; (* end if new state *)
 		
@@ -867,7 +861,7 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 		
 		(* Update the transitions *)
-		self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
+		self#add_transition_to_state_space (source_state_index, combined_transition, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
 	
 		(* The state is necessarily kept by the algorithm *)
 		true
@@ -926,6 +920,9 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
 			result = Good_constraint (constr_result, soundness);
 			(*result = Good_constraint (LinearConstraint.false_p_nnconvex_constraint(), soundness);*)
 
+			(* English description of the constraint *)
+			constraint_description = "constraint guaranteeing minimum-time reachability";
+	
 			(* Explored state space *)
 			state_space			= state_space;
 			

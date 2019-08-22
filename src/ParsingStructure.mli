@@ -3,13 +3,13 @@
  *                       IMITATOR
  *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Université Paris 13, LIPN, CNRS, France
  *
  * Author: Etienne Andre
  *
- * File contributors : Jaime Arias
+ * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2019/04/15
+ * Last modified     : 2019/07/05
  *
  ****************************************************************)
 
@@ -106,10 +106,15 @@ type boolean_expression =
 (****************************************************************)
 (** Automata *)
 (****************************************************************)
-(* Type of locations *)
-type loc_type =
+(* Type of locations: urgent or not *)
+type parsed_urgency =
   | Parsed_location_urgent
   | Parsed_location_nonurgent
+
+(* Type of locations: accepting or not *)
+type parsed_acceptance =
+	| Parsed_location_accepting
+	| Parsed_location_nonaccepting
 
 type sync =
   | Sync of sync_name
@@ -131,20 +136,22 @@ and condition_update = boolean_expression * normal_update list * normal_update l
 (* Transition = Guard * update list * sync label * destination location *)
 type transition = guard * update list * sync * location_name
 
-(* Location = Name * Urgent type * Cost * Invariant * list of stopped clocks * transitions *)
+(* Location = Name * Urgent type * Accepting type * Cost * Invariant * list of stopped clocks * transitions *)
 type parsed_location = {
-  (* Name *)
-  name : location_name;
-  (* Urgent or not? *)
-  loc_type : loc_type;
-  (* Cost *)
-  cost : linear_expression option;
-  (* Invariant *)
-  invariant : invariant;
-  (* List of stopped clocks *)
-  stopped : (variable_name list);
-  (* Transitions starting from this location *)
-  transitions : transition list;
+	(* Name *)
+	name        : location_name;
+	(* Urgent or not? *)
+	urgency     : parsed_urgency;
+	(* Accepting or not? *)
+	acceptance  : parsed_acceptance;
+	(* Cost *)
+	cost        : linear_expression option;
+	(* Invariant *)
+	invariant   : invariant;
+	(* List of stopped clocks *)
+	stopped     : (variable_name list);
+	(* Transitions starting from this location *)
+	transitions : transition list;
 }
 
 (* type location = location_name * loc_type * linear_expression option * invariant * (variable_name list) * (transition list) *)

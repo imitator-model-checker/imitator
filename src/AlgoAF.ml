@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: AF synthesis [JLR15]
  * 
  * File contributors : Étienne André
  * Created           : 2018/03/15
- * Last modified     : 2018/03/15
+ * Last modified     : 2019/08/08
  *
  ************************************************************)
 
@@ -26,6 +26,7 @@ open Result
 open AlgoStateBased (* for type UnexSucc_some *)
 open AlgoPostStar
 open Statistics
+open State
 
 
 (************************************************************)
@@ -150,34 +151,36 @@ class algoAFsynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Computing the p_nnconvex_constraint for which there may exist a deadlock from a given state; the second argument is the list of successors (in case we may want to consider not all successors, typically in backward exploration) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private compute_deadlock_p_constraint state_index (successors : (State.state_index * Automaton.action_index) list) : LinearConstraint.p_nnconvex_constraint =
+	method private compute_deadlock_p_constraint state_index (successors : (StateSpace.combined_transition * State.state_index) list) : LinearConstraint.p_nnconvex_constraint =
 	
 		(* Define a local constraint storing the union of PX-constraints allowing to leave s *)
 		let good_constraint_s = LinearConstraint.false_px_nnconvex_constraint () in
 		
 		(* Get the location and the constraint of s *)
-		let s_location, s_constraint = StateSpace.get_state state_space state_index in
+		let state = StateSpace.get_state state_space state_index in
+		let s_location, s_constraint = state.global_location, state.px_constraint in
 		
 		(* For all state s' in the successors of s *)
-		List.iter (fun (state_index', action_index) ->
+		List.iter (fun (combined_transition, state_index') ->
 		
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
-				self#print_algo_message Verbose_medium ("Considering transition from state " ^ (string_of_int state_index) ^ " via action '" ^ (model.action_names action_index) ^ "' to state " ^ (string_of_int state_index') ^ "…");
+				self#print_algo_message Verbose_medium ("Considering transition from state " ^ (string_of_int state_index) ^ " via action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "' to state " ^ (string_of_int state_index') ^ "…");
 			);
 			
 			(* retrieve the guard *)
 			(*** WARNING! big hack: due to the fact that StateSpace only maintains the action, then we have to hope that the PTA is deterministic to retrieve the edge, and hence the guard ***)
 			(*** WARNING: very expensive function (for now) ***)
-			let guard = StateSpace.get_guard state_space state_index action_index state_index' in
+				(*** TODO (disabled 2019/05/29) ***)
+			let guard = raise (NotImplemented "get_guard not yet available for AF") (*StateSpace.get_guard state_space state_index action_index state_index'*) in
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then(
-				self#print_algo_message Verbose_high ("Guard computed via action '" ^ (model.action_names action_index) ^ "':\n" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));
+				self#print_algo_message Verbose_high ("Guard computed via action '" ^ (model.action_names (StateSpace.get_action_from_combined_transition combined_transition)) ^ "':\n" ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));
 			);
 			
 			(* Retrieving the constraint s'|P *)
-			let _, px_destination = StateSpace.get_state state_space state_index' in
+			let px_destination = (StateSpace.get_state state_space state_index').px_constraint in
 			let p_destination = LinearConstraint.px_hide_nonparameters_and_collapse px_destination in
 
 			(* Intersect with the guard with s *)
@@ -200,7 +203,7 @@ class algoAFsynth =
 			(* Update the local constraint by adding the new constraint as a union *)
 			(*** WARNING: ugly (and expensive) to convert from pxd to px ***)
 			(*** NOTE: still safe since discrete values are all instantiated ***)
-			LinearConstraint.px_nnconvex_px_union good_constraint_s (LinearConstraint.pxd_hide_discrete_and_collapse guard);
+			LinearConstraint.px_nnconvex_px_union_assign good_constraint_s (LinearConstraint.pxd_hide_discrete_and_collapse guard);
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
@@ -235,7 +238,7 @@ class algoAFsynth =
 			self#print_algo_message Verbose_high ("nnconvex_s (= s) is:\n" ^ (LinearConstraint.string_of_px_nnconvex_constraint model.variable_names nnconvex_s));
 		);
 
-		LinearConstraint.px_nnconvex_difference nnconvex_s good_constraint_s;
+		LinearConstraint.px_nnconvex_difference_assign nnconvex_s good_constraint_s;
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
@@ -243,7 +246,7 @@ class algoAFsynth =
 		);
 		
 		(* Ensure clocks and parameters are not negative *)
-		LinearConstraint.px_nnconvex_intersection nnconvex_s all_clocks_and_parameters_nonnegative;
+		LinearConstraint.px_nnconvex_intersection_assign nnconvex_s all_clocks_and_parameters_nonnegative;
 		
 		
 		(* Print some information *)
@@ -270,14 +273,11 @@ class algoAFsynth =
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** WARNING/BADPROG: the following is partially copy/paste to AlgoPRP.ml/EFsynth ***)
-	method add_a_new_state source_state_index new_states_indexes action_index location (current_constraint : LinearConstraint.px_linear_constraint) =
+	method add_a_new_state source_state_index combined_transition new_state =
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
 			self#print_algo_message Verbose_medium "Entering add_a_new_state (and reset cache)…";
 		);
-		
-		(* Build the state *)
-		let new_state = location, current_constraint in
 		
 		(* Try to add the new state to the state space *)
 		(*** WARNING: AF is probably not safe with state inclusion ***)
@@ -298,7 +298,7 @@ class algoAFsynth =
 			
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
 			if to_be_added then
-				new_states_indexes := new_state_index :: !new_states_indexes;
+				new_states_indexes <- new_state_index :: new_states_indexes;
 			
 		end (* end if new state *)
 		;
@@ -306,7 +306,7 @@ class algoAFsynth =
 		(*** TODO: move the rest to a higher level function? (post_from_one_state?) ***)
 		
 		(* Add the transition to the state space *)
-		self#add_transition_to_state_space (source_state_index, action_index, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
+		self#add_transition_to_state_space (source_state_index, combined_transition, (*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) addition_result;
 		
 		(* The state is kept in any case *)
 		true
@@ -323,7 +323,7 @@ class algoAFsynth =
 			self#print_algo_message Verbose_medium "Entering process_state…";
 		);
 
-		let state_location, state_constraint = state in
+		let state_location, state_constraint = state.global_location, state.px_constraint in
 		
 		let to_be_added = match model.correctness_condition with
 		| None -> raise (InternalError("A correctness property must be defined to perform AF-synthesis. This should have been checked before."))
@@ -372,7 +372,7 @@ class algoAFsynth =
 					
 				(* Update the target constraint using the current constraint *)
 				(*** TODO: not the right operation here ***)
-				LinearConstraint.p_nnconvex_intersection af_constraint p_constraint;
+				LinearConstraint.p_nnconvex_intersection_assign af_constraint p_constraint;
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_low then(
@@ -419,12 +419,12 @@ class algoAFsynth =
 		(* For all state s in post^n *)
 		List.iter (fun state_index ->
 			(* Retrieve all successors of this state with their action *)
-			let succs_of_s = StateSpace.get_successors_with_actions state_space state_index in
+			let succs_of_s = StateSpace.get_successors_with_combined_transitions state_space state_index in
 			
 			let p_af_constraint_s = self#compute_deadlock_p_constraint state_index succs_of_s in
 			
 			(* Update the constraint using the local constraint *)
-			LinearConstraint.p_nnconvex_union af_constraint p_af_constraint_s;
+			LinearConstraint.p_nnconvex_union_assign af_constraint p_af_constraint_s;
 		
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
@@ -487,7 +487,7 @@ class algoAFsynth =
 		
 		(* Perform result = initial_state|P \ af_constraint *)
 		let result = LinearConstraint.p_nnconvex_copy init_p_nnconvex_constraint in
-		LinearConstraint.p_nnconvex_difference result af_constraint;
+		LinearConstraint.p_nnconvex_difference_assign result af_constraint;
 		
 		self#print_algo_message_newline Verbose_medium (
 			"Negation of final constraint completed."
@@ -520,6 +520,9 @@ class algoAFsynth =
 			(* Non-necessarily convex constraint guaranteeing the non-reachability of the bad location *)
 			result				= result;
 			
+			(* English description of the constraint *)
+			constraint_description = "constraint guaranteeing AF";
+	
 			(* Explored state space *)
 			state_space			= state_space;
 			

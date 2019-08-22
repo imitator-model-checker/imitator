@@ -3,13 +3,13 @@
  *                       IMITATOR
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  *
  * Module description: Convert an abstract model to the input syntax of IMITATOR
  *
- * File contributors : Étienne André, Jaime Arias
+ * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2019/04/15
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -17,6 +17,8 @@ open OCamlUtilities
 open Result
 open AbstractModel
 open ImitatorUtilities
+open State
+open StateSpace
 
 
 
@@ -317,16 +319,16 @@ let string_of_conditional_updates model conditional_updates =
 	let sep = ", " in
 	string_of_conditional_updates_template model conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep
 
-(* Convert a transition of a location into a string *)
-let string_of_transition model automaton_index action_index (guard, updates, destination_location) =
-	let clock_updates = updates.clock in
-	let discrete_updates = updates.discrete in
-	let conditional_updates = updates.conditional in
-	let first_separator, second_separator = separator_comma updates in
+(* Convert a transition into a string *)
+let string_of_transition model automaton_index transition =
+	let clock_updates = transition.updates.clock in
+	let discrete_updates = transition.updates.discrete in
+	let conditional_updates = transition.updates.conditional in
+	let first_separator, second_separator = separator_comma transition.updates in
 
 	"\n\t" ^ "when "
 	(* Convert the guard *)
-	^ (string_of_guard model.variable_names guard)
+	^ (string_of_guard model.variable_names transition.guard)
 
 	(* Convert the updates *)
 	^ " do {"
@@ -343,10 +345,43 @@ let string_of_transition model automaton_index action_index (guard, updates, des
 	^ "} "
 
 	(* Convert the sync *)
-	^ (string_of_sync model action_index)
+	^ (string_of_sync model transition.action)
 	(* Convert the destination location *)
-	^ " goto " ^ (model.location_names automaton_index destination_location)
+	^ " goto " ^ (model.location_names automaton_index transition.target)
 	^ ";"
+
+(* Convert a transition into a string: compact version for debugging/pretty-printing *)
+let debug_string_of_transition model automaton_index transition =
+	let clock_updates = transition.updates.clock in
+	let discrete_updates = transition.updates.discrete in
+	let conditional_updates = transition.updates.conditional in
+	let first_separator, second_separator = separator_comma transition.updates in
+
+	"[PTA " ^ (model.automata_names automaton_index) ^ ": guard{"
+	(* Convert the guard *)
+	^ (string_of_guard model.variable_names transition.guard)
+
+	(* Convert the updates *)
+	^ "} updates{"
+	(* Clock updates *)
+	^ (string_of_clock_updates model clock_updates)
+	(* Add a coma in case of both clocks and discrete *)
+	^ (if first_separator then ", " else "")
+	(* Discrete updates *)
+	^ (string_of_discrete_updates model discrete_updates)
+	(* Add a coma in case of both clocks and discrete and conditions *)
+	^ (if second_separator then ", " else "")
+	(* Conditional updates *)
+	^ (string_of_conditional_updates model conditional_updates)
+	^ "} "
+
+	(* Convert the sync *)
+	^ (string_of_sync model transition.action)
+	(* Convert the destination location *)
+	^ " Target " ^ (model.location_names automaton_index transition.target)
+	^ "] "
+
+
 
 
 (* Convert the transitions of a location into a string *)
@@ -359,7 +394,7 @@ let string_of_transitions model automaton_index location_index =
 		(* Convert to string *)
 		string_of_list_of_string (
 			(* For each transition *)
-			List.map (string_of_transition model automaton_index action_index) transitions
+			List.map (string_of_transition model automaton_index) (List.map model.transitions_description transitions)
 			)
 		) (model.actions_per_location automaton_index location_index)
 	)
@@ -368,7 +403,9 @@ let string_of_transitions model automaton_index location_index =
 (* Convert a location of an automaton into a string *)
 let string_of_location model automaton_index location_index =
 	"\n"
-	^ (if model.is_urgent automaton_index location_index then "urgent loc " else "loc ")
+	^ (if model.is_urgent automaton_index location_index then "urgent " else "")
+	^ (if model.is_accepting automaton_index location_index then "accepting " else "")
+	^ "loc "
 	^ (model.location_names automaton_index location_index)
 	 ^ (match model.costs automaton_index location_index with
 		| None -> ""
@@ -624,35 +661,36 @@ let string_of_model model =
 
 
 (************************************************************)
-(** States *)
+(** PX-valuation *)
 (************************************************************)
+(* Convert a valuation into a string *)
+let string_of_valuation variables variable_names valuation =
+	string_of_list_of_string_with_sep " & " (
+		List.map (fun variable ->
+			(variable_names variable)
+			^ " = "
+			^ (NumConst.string_of_numconst (valuation variable))
+		) variables
+	)
 
-(* Convert a location name into a string *)
-(*let string_of_location_name model location =
-	let string_array = List.map (fun automaton_index location_index ->
-		model.automata_names.(automaton_index) ^ ": " ^ (model.location_names automaton_index location_index)
-	) location in
-	string_of_array_of_string_with_sep ", " string_array*)
+(* Convert a px-valuation into a string *)
+let string_of_px_valuation model = string_of_valuation model.parameters_and_clocks model.variable_names
 
-(* Convert a state into a string *)
-let string_of_state model (global_location, linear_constraint) =
-	(* Retrieve the input options *)
-	let options = Input.get_options () in
-
-	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names options#output_float global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names linear_constraint) ^ ""
+(* Convert an x-valuation into a string *)
+let string_of_x_valuation model = string_of_valuation model.clocks model.variable_names
 
 
 (************************************************************)
 (** Pi0 *)
 (************************************************************)
-(* Convert a pi0 into a string *)
-let string_of_pi0 model pi0 =
+(* Convert a parameter valuation (PVal.pval) into a string *)
+let string_of_pval model pval =
 	"  " ^ (
 	string_of_list_of_string_with_sep "\n& " (
 		List.map (fun parameter ->
 			(model.variable_names parameter)
 			^ " = "
-			^ (NumConst.string_of_numconst (pi0#get_value parameter))
+			^ (NumConst.string_of_numconst (pval#get_value parameter))
 		) model.parameters
 	)
 	)
@@ -679,3 +717,131 @@ let string_of_v0 model v0 =
 		) model.parameters
 	)
 	)
+
+
+
+
+
+
+(************************************************************)
+(** States *)
+(************************************************************)
+
+(* Convert a location name into a string *)
+(*let string_of_location_name model location =
+	let string_array = List.map (fun automaton_index location_index ->
+		model.automata_names.(automaton_index) ^ ": " ^ (model.location_names automaton_index location_index)
+	) location in
+	string_of_array_of_string_with_sep ", " string_array*)
+
+(* Convert a state into a string *)
+let string_of_state model (state : state) =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names options#output_float state.global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names state.px_constraint) ^ ""
+
+let string_of_concrete_state model (state : State.concrete_state) =
+	(* Retrieve the input options *)
+	let options = Input.get_options () in
+
+	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names options#output_float state.global_location) ^ " ==> \n" ^ (string_of_px_valuation model state.px_valuation) ^ ""
+	
+
+
+(************************************************************)
+(** Debug-print for runs *)
+(************************************************************)
+
+(* Function to pretty-print combined transitions *)
+let debug_string_of_combined_transition model combined_transition = string_of_list_of_string_with_sep ", " (
+	List.map (fun transition_index ->
+		(* Get automaton index *)
+		let automaton_index = model.automaton_of_transition transition_index in
+		(* Get actual transition *)
+		let transition = model.transitions_description transition_index in
+		(* Print *)
+		debug_string_of_transition model automaton_index transition
+	) combined_transition
+)
+
+(** Convert a symbolic run to a string (for debug-purpose) *)
+let debug_string_of_symbolic_run model state_space (symbolic_run : StateSpace.symbolic_run) =
+	(* Iterate *)
+	let steps_string = string_of_list_of_string_with_sep "\n" (List.map (fun (symbolic_step : StateSpace.symbolic_step)  ->
+		(* Get actual state *)
+		let state = StateSpace.get_state state_space symbolic_step.source in
+	
+		  (" " ^ (string_of_state model state))
+		^ ("\n | ")
+		^ ("\n | via combined transition " ^ (debug_string_of_combined_transition model symbolic_step.transition))
+		^ ("\n | ")
+		^ ("\n v ")
+	) symbolic_run.symbolic_steps) in
+	
+	(* Get the state *)
+	let target_state = StateSpace.get_state state_space symbolic_run.final_state in
+	
+	(* Add target and return *)
+	steps_string ^ (" " ^ (string_of_state model target_state))
+
+
+
+let string_of_concrete_steps model concrete_steps =
+	(* Iterate on following steps *)
+	(string_of_list_of_string_with_sep "\n" (List.map (fun (concrete_step : StateSpace.concrete_step)  ->
+		  ("\n | ")
+		^ ("\n | via combined transition " ^ (debug_string_of_combined_transition model concrete_step.transition))
+		^ ("\n | and d =  " ^ (NumConst.string_of_numconst concrete_step.time))
+		^ ("\n | ")
+		^ ("\n v ")
+		^ (" " ^ (string_of_concrete_state model concrete_step.target))
+	) concrete_steps))
+
+
+let string_of_impossible_concrete_steps model impossible_concrete_steps =
+	(* Iterate on following steps *)
+	(string_of_list_of_string_with_sep "\n" (List.map (fun (impossible_concrete_step : StateSpace.impossible_concrete_step)  ->
+		  ("\n | ")
+		^ ("\n | via impossible transition labeled with " ^ (model.action_names impossible_concrete_step.action))
+		^ ("\n | and d =  " ^ (NumConst.string_of_numconst impossible_concrete_step.time))
+		^ ("\n | ")
+		^ ("\n v ")
+		^ (" " ^ (string_of_concrete_state model impossible_concrete_step.target))
+	) impossible_concrete_steps))
+
+
+
+(** Convert a concrete run to a string (for debug-purpose) *)
+let debug_string_of_concrete_run model (concrete_run : StateSpace.concrete_run) =
+	(* First recall the parameter valuation *)
+	"Concrete run for parameter valuation:"
+	^ "\n" ^ (string_of_pval model concrete_run.p_valuation)
+	
+	^ "\n"
+	
+	(* Then print the initial state *)
+	^ "\n" ^ (string_of_concrete_state model concrete_run.initial_state)
+	
+	(* Iterate on following steps *)
+	^ (string_of_concrete_steps model concrete_run.steps)
+	
+
+	
+(** Convert an impossible_concrete_run to a string (for debug-purpose) *)
+let debug_string_of_impossible_concrete_run model (impossible_concrete_run : StateSpace.impossible_concrete_run) =
+	(* First recall the parameter valuation *)
+	"Impossible concrete run for parameter valuation:"
+	^ "\n" ^ (string_of_pval model impossible_concrete_run.p_valuation)
+	
+	^ "\n"
+	
+	(* Then print the initial state *)
+	^ "\n" ^ (string_of_concrete_state model impossible_concrete_run.initial_state)
+	
+	(* Iterate on following concrete steps *)
+	^ (string_of_concrete_steps model impossible_concrete_run.steps)
+	
+	(* Iterate on following impossible steps *)
+	^ (string_of_impossible_concrete_steps model impossible_concrete_run.impossible_steps)
+	

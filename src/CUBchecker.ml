@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
- * Module description: Checks whether a PTA is a CUB-PTA
+ * Module description: Checks whether a PTA is a CUB-PTA and/or transform it into a CUB-PTA
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2018/07/19
+ * Last modified     : 2019/07/09
  *
  ************************************************************)
 
@@ -790,8 +790,11 @@ let check_cub model =
 	                	(*Checking bounded clocked in guards (Transition)*)
 	                	List.iter (fun action_index -> print_message Verbose_low (" Transition/Action: " ^ (model.action_names action_index) );
 	            
-	                    	List.iter (fun (guard, clock_updates, _, target_location_index) 
-	                    		-> 
+	                    	List.iter (fun transition_index -> 
+								(* Get actual transition *)
+								let transition = model.transitions_description transition_index in
+								let guard, updates, target_location_index = transition.guard, transition.updates, transition.target in
+								
 	                    		(*print_message Verbose_low ("   Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard));	*)	
 
 	                        	(** WORK HERE **)
@@ -810,7 +813,13 @@ let check_cub model =
 	                			print_message Verbose_low ("\n");
 	                			*)
 
-	                        	let clock_updates = match clock_updates with
+								(* First check that no conditional update is used as they are not supported *)
+								(*** NOTE (ÉA, 2019/05/30): discrete updates are not tested, I suppose ***)
+								if updates.conditional <> [] then
+									raise (InternalError("Conditional updates are not supported by CUB checker"))
+								;
+
+	                        	let clock_updates = match updates.clock with
 	                        						  No_update -> []
 													| Resets clock_update -> clock_update
 													| Updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); in
@@ -2024,6 +2033,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Location names per PTA: Array : automaton_index : -> (Array : location_index -> location_name) *)
 	let new_location_names_array = Array.make (model.nb_automata) (Array.make 0 "UNINITIALIZED") in
 	
+	(* Accepting locations in PTA: Array : automaton_index : -> (Array : location_index -> bool) *)
+	(*** TODO: not used, but should be! (the idea would be to set as accepting any location the equivalent of which was accepting in the original model) ***)
+	let new_accepting_array = Array.make (model.nb_automata) (Array.make 0 false) in
+
 	(* Urgency in PTA: Array : automaton_index : -> (Array : location_index -> bool) *)
 	let new_urgency_array = Array.make (model.nb_automata) (Array.make 0 false) in
 	
@@ -2039,8 +2052,14 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Invariants: Array : automaton_index  -> (Array : location_index -> invariant) *)
 	let new_invariants_array : ( (LinearConstraint.pxd_linear_constraint array) array ) = Array.make (model.nb_automata) (Array.make 0 (LinearConstraint.pxd_true_constraint())) in
 
+	(* Transition description *)
+	(*** NOTE (ÉA, 2019/05/30): in the original model, this used to be an array since we knew the static number of transitions; here due to the dynamic transformation, we use a DynArray ***)
+	let transitions_description : AbstractModel.transition DynArray.t = DynArray.create() in
+	(* Same for automaton_of_transition *)
+	let automaton_of_transition : Automaton.automaton_index DynArray.t = DynArray.create() in
+	
 	(* Transitions : Array : automaton_index  -> (Array : location_index -> (Hashtbl : action_index -> transitions list)) *)
-	let new_transitions_array_hashtbl : ( (( (Automaton.action_index , AbstractModel.transition list) Hashtbl.t) array) array ) = Array.make (model.nb_automata) (Array.make 0 (Hashtbl.create 0)) in
+	let new_transitions_array_hashtbl : ( (( (Automaton.action_index , AbstractModel.transition_index list) Hashtbl.t) array) array ) = Array.make (model.nb_automata) (Array.make 0 (Hashtbl.create 0)) in
 
 	(* Location names per PTA: Array : automaton_index : -> (Array : location_index -> location_index list) *)
 	let old_locations_to_new_locations = Array.make (model.nb_automata) (Array.make 0 []) in
@@ -2129,8 +2148,13 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 				(*Checking bounded clocked in guards (Transition)*)
 				List.iter (fun action_index -> print_message Verbose_low (" Transition/Action: " ^ (model.action_names action_index) );
 		
-					List.iter (fun (guard, clock_updates, discrete_update, target_location_index) 
-						-> (* print_message Verbose_low ("   Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)); *)		
+					List.iter (fun transition_index ->
+						(* print_message Verbose_low ("   Guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names guard)); *)		
+						
+						(* Get actual transition *)
+						let transition = model.transitions_description transition_index in
+						let guard, updates, target_location_index = transition.guard, transition.updates, transition.target in
+
 						(** WORK HERE **)
 						
 						(*** NOTE: unused code written by Gia, removed by ÉA (2017/02/08) ***)
@@ -2145,7 +2169,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 														^ (model.location_names automaton_index target_location_index) 
 														^ ") ----" );
 						print_message Verbose_low ("\n"); *)
-						let clock_updates = match clock_updates with
+						let clock_updates = match updates.clock with
 											No_update -> []
 											| Resets clock_update -> clock_update
 											| Updates clock_update_with_linear_expression -> raise (InternalError(" Clock_update are not supported currently! ")); 
@@ -2153,7 +2177,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 						(*add transitions*)
 						DynArray.add transitions_ini ((model.location_names automaton_index location_index), (model.location_names automaton_index target_location_index),
-														continuous_part_of_guard guard, clock_updates, action_index, discrete_update);
+														continuous_part_of_guard guard, clock_updates, action_index, updates.discrete);
 						
 						()
 					) (model.transitions automaton_index location_index action_index); 
@@ -3027,6 +3051,11 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Create the structure location_index -> location_name *)
 	let location_name_of_location_index = Array.make new_nb_locations "UNINITIALIZED" in
 	
+	(* Create the structure location_index -> accepting (bool) *)
+	(*** NOTE LP: set all locations to be non-accepting ***)
+	(*** TODO ! ***)
+(* 	let accepting_of_location_index = Array.make new_nb_locations false in *)
+
 	(* Create the structure location_index -> urgent (bool) *)
 	(*** NOTE: quite a hack, we set all locations to be urgent, and then all old locations will be erased to their former value; so new (initial) locations will automatically be urgent! ***)
 	let urgency_of_location_index = Array.make new_nb_locations true in
@@ -3136,7 +3165,16 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 		(*** WARNING: other updates than clock updates not considered so far ***)
 		
-		let new_transition = action_index , (Continuous_guard guard, Resets clock_updates, discrete_update, target_location_index) in
+		let new_transition = {
+			guard		= Continuous_guard guard;
+			action		= action_index;
+			updates		= {
+				clock      = Resets clock_updates; (** Clock updates *)
+				discrete   = discrete_update; (** List of discrete updates *)
+				conditional= []
+			};
+			target		= target_location_index;
+		} in
 		
 		(* Add to array *)
 		transitions_per_location.(source_location_index) <- new_transition :: transitions_per_location.(source_location_index);
@@ -3161,19 +3199,37 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(*** BADPROG: unnecessary exponential blow-up (consider all transitions for EACH action); but anyway the model is still "relatively" small so that shouldn't be harmful ***)
 		List.iter(fun action_index ->
 			(* First retrieve the transitions for this location and for this action *)
-			let actions_and_transitions_for_this_location_and_action = List.filter (fun (action_index', _) -> action_index' = action_index) transitions_for_this_location in
+			let transitions_for_this_location_and_action = List.filter (fun transition -> transition.action = action_index) transitions_for_this_location in
 
-			(* Then only keep the transitions (not the actions, as they are now all equal to action_index) *)
-			let _ , (transitions_for_this_location_and_action : AbstractModel.transition list) = List.split actions_and_transitions_for_this_location_and_action in
+			(* Convert transitions to transition indexes and update tables *)
+			let transitions_indexes_for_this_location_and_action = List.map (fun transition ->
+				(* Add the transition to the transitions_description DynArray *)
+				DynArray.add transitions_description transition;
+				
+				(* Get the new transition_index *)
+				let transition_index = DynArray.length transitions_description - 1 in
+				
+				(* Update the automaton_of_transition DynArray *)
+				DynArray.add automaton_of_transition automaton_index;
+				
+				(* Dynamic test to ensure everything is fine: the lenght of both arrays should be exactly the same *)
+				if DynArray.length transitions_description <> DynArray.length automaton_of_transition then(
+					raise (InternalError "Dynamic check failed in CUB checker: the sizes of transitions_description and automaton_of_transition differ!");
+				);
+				
+				(* Replace with the transition_index *)
+				transition_index
+				
+			) transitions_for_this_location_and_action in
 
-			Hashtbl.add new_transitions_array_hashtbl.(automaton_index).(location_index) action_index transitions_for_this_location_and_action;
+			Hashtbl.add new_transitions_array_hashtbl.(automaton_index).(location_index) action_index transitions_indexes_for_this_location_and_action;
 		) new_actions;
 		
 		
 		(* Also find the set of actions available in this location *)
 		(*** BADPROG: clearly not optimal way of computing the set of actions; but anyway the model is still "relatively" small so that shouldn't be harmful ***)
-		let multiply_defined_actions, _ = List.split transitions_for_this_location in
-		let actions_for_this_location = list_only_once multiply_defined_actions in
+		let possibly_multiply_defined_actions = List.map (fun transition -> transition.action) transitions_for_this_location in
+		let actions_for_this_location = list_only_once possibly_multiply_defined_actions in
 		
 		(* Set the actions for this location *)
 		actions_per_location_array.(location_index) <- actions_for_this_location;
@@ -3200,6 +3256,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Convert to the desired functional style *)
 	(*------------------------------------------------------------*)
 	
+	
+	(* Cardinality *)
+	let new_nb_locations = Array.fold_left (fun current_nb list_of_locations -> current_nb + (List.length list_of_locations)) 0 new_locations_per_automaton_array in
+	let new_nb_transitions = DynArray.length transitions_description in
 	
 	(* Action names: identical to before transformation, with the exception of the new local epsilon action in each PTA *)
 	let new_action_names action_index =
@@ -3255,6 +3315,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	
 	let new_location_names_function automaton_index location_index = new_location_names_array.(automaton_index).(location_index) in
 	
+	let new_accepting_function automaton_index location_index = new_accepting_array.(automaton_index).(location_index) in
+	
 	let new_urgency_function automaton_index location_index = new_urgency_array.(automaton_index).(location_index) in
 	
 
@@ -3293,6 +3355,12 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		) with
 			Not_found -> []
 	in
+	
+	(* Transition description *)
+	let new_transitions_description = DynArray.get transitions_description in
+	
+	(* Automaton of transition_index *)
+	let new_automaton_of_transition = DynArray.get automaton_of_transition in
 	
 	(* Transform the property *)
 	(*** NOTE! only support reachability properties for now ***)
@@ -3427,7 +3495,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		in
 	
 		(* Dummy pretty-printing of transitions *)
-		let string_of_transition automaton_index (guard , clock_updates , discrete_update, target_location_index) = 
+		let string_of_transition automaton_index transition_index = 
+			(* Get the actual transition *)
+			let transition = new_transitions_description transition_index in
+			let guard , clock_updates , discrete_update, target_location_index = transition.guard, transition.updates.clock, transition.updates.discrete, transition.target in
 			"["
 				^ "g=" ^ (ModelPrinter.string_of_guard model.variable_names guard)
 				^
@@ -3477,12 +3548,19 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		nb_discrete = model.nb_discrete;
 		nb_parameters = model.nb_parameters;
 		nb_variables = model.nb_variables;
+		nb_locations = new_nb_locations;
+		nb_transitions = new_nb_transitions;
 		
 		(* Is there any stopwatch in the model? *)
 		has_stopwatches = model.has_stopwatches;
 		(* Is the model an L/U-PTA? *)
-		(*** TODO (for now, we just assume that after transformation not an L/U anymore ***)
+		(*** TODO (for now, we just assume that after transformation the model is not an L/U PTA anymore ***)
 		lu_status = PTA_notLU;
+		(* Is the model a strongly deterministic PTA? *)
+		(*** TODO (for now, we just assume that after transformation the model is not determistic anymore ***)
+		strongly_deterministic = false;
+		(* Does the model contain any transition labeled by a silent, non-observable action? *)
+		has_silent_actions = List.exists (fun action_index -> new_action_types action_index = Action_type_nosync) new_actions;
 
 		(** Content of the PTA **)
 		(* The observer *)
@@ -3512,6 +3590,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		clocks_and_discrete = model.clocks_and_discrete;
 		(* The non clocks (parameters and discrete) *)
 		parameters_and_discrete = model.parameters_and_discrete;
+		(* The non discrete (clocks and parameters) *)
+		parameters_and_clocks = model.parameters_and_clocks;
 		(* The function = variable_index -> variable name *)
 		variable_names = model.variable_names;
 		(* The type of variables *)
@@ -3526,6 +3606,8 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		locations_per_automaton = new_locations_per_automaton_function;
 		(* The location names for each automaton *)
 		location_names = new_location_names_function;
+		(* The accepting status for each location *)
+		is_accepting = new_accepting_function;
 		(* The urgency for each location *)
 		is_urgent = new_urgency_function;
 		(*** TODO: all new initial locations shall be urgent! ***)
@@ -3542,6 +3624,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		automata_per_action = new_automata_per_action;
 		(* The list of actions for each automaton for each location *)
 		actions_per_location = new_actions_per_location_function;
+		(* An array transition_index -> transition *)
+		transitions_description = new_transitions_description;
+		(* An array transition_index -> automaton_index *)
+		automaton_of_transition = new_automaton_of_transition;
 
 		(* The cost for each automaton and each location *)
 		(*** TODO ***)

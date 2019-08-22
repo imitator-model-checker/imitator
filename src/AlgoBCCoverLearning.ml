@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  * 
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Behavioral Cartography with exhaustive coverage of integer points and learning-based abstraction.
  * 
  * File contributors : Étienne André
  * Created           : 2016/07/22
- * Last modified     : 2017/03/08
+ * Last modified     : 2019/08/22
  *
  ************************************************************)
 
@@ -120,7 +120,7 @@ class algoBCCoverLearning =
 		
 		(* Format the pi0 so that it is in the form param1=value1,param2=value2… *)
 		let format_pi0 pi0 = 
-			let pi0_string = ModelPrinter.string_of_pi0 (Input.get_model ()) pi0 in
+			let pi0_string = ModelPrinter.string_of_pval (Input.get_model ()) pi0 in
 			(* Remove spaces *)
 			(*** TODO: replace with a generic blank space… ***)
 			let pi0_string = Str.global_replace (Str.regexp " ") "" pi0_string in

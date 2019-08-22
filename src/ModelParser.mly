@@ -3,13 +3,13 @@
  *                       IMITATOR
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  *
  * Module description: Parser for the input model
  *
- * File contributors : Étienne André, Jaime Arias
+ * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/04/15
+ * Last modified     : 2019/09/14
  *
  ************************************************************/
 
@@ -27,12 +27,28 @@ let parse_error s =
 	raise (ParsingError (symbol_start, symbol_end))
 ;;
 
+
+(* TODO: is it included twice ? *)
+let include_list = ref [];;
+
+let f (decl_l, aut_l, init_l, prop_l) (decl,aut,init,prop,_,_,_) = (decl@decl_l,aut@aut_l, init@init_l, prop::prop_l);;
+let unzip l = List.fold_left f ([],[],[], []) (List.rev l);;
+let filter_opt = List.filter (function | None -> false | Some _ -> true);;
+
+let resolve_property l =
+	match filter_opt l with
+	| [] -> None
+	| [p] -> p
+	| _ -> raise Parsing.Parse_error;
+;;
+
 %}
 
 %token <NumConst.t> INT
 %token <string> FLOAT
 %token <string> NAME
 %token <string> STRING
+%token <ParsingStructure.parsing_structure> INCLUDE
 
 %token OP_PLUS OP_MINUS OP_MUL OP_DIV
 %token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
@@ -44,7 +60,7 @@ let parse_error s =
 /* CT_ALL CT_ANALOG CT_ASAP CT_BACKWARD CT_CLDIFF CT_D  CT_ELSE CT_EMPTY  CT_ENDHIDE CT_ENDIF CT_ENDREACH CT_ENDWHILE CT_FORWARD CT_FREE CT_FROM  CT_HIDE CT_HULL CT_INTEGRATOR CT_ITERATE CT_NON_PARAMETERS CT_OMIT CT_POST CT_PRE CT_PRINT CT_PRINTS CT_PRINTSIZE CT_REACH  CT_STOPWATCH CT_THEN CT_TO CT_TRACE CT_USING  CT_WEAKDIFF CT_WEAKEQ CT_WEAKGE CT_WEAKLE  */
 
 %token
-	CT_ALWAYS CT_AND CT_AUTOMATON
+	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BAD CT_BEFORE
 	CT_CARTO CT_CLOCK CT_CONSTANT
 	CT_DISCRETE CT_DO
@@ -85,12 +101,26 @@ let parse_error s =
 
 /**********************************************/
 main:
-	 automata_descriptions commands EOF
+	automata_descriptions commands EOF
 	{
 		let decl, automata = $1 in
+		let incl_decl, incl_automata, incl_init, incl_prop = unzip !include_list in
 		let init_definition, bad, projection_definition, optimization_definition, carto = $2 in
-		decl, automata, init_definition, bad, projection_definition, optimization_definition, carto
+
+		(List.append incl_decl decl), (List.append incl_automata automata), (List.append incl_init init_definition), resolve_property (bad::incl_prop), projection_definition, optimization_definition, carto
 	}
+;
+
+/***********************************************
+	INCLUDES
+***********************************************/
+include_file:
+	| INCLUDE SEMICOLON { $1 }
+;
+
+include_file_list:
+	| include_file include_file_list  { $1 :: $2 }
+	| { [] }
 ;
 
 /***********************************************
@@ -98,13 +128,14 @@ main:
 ***********************************************/
 
 automata_descriptions:
-	declarations automata { $1, $2 }
+	include_file_list declarations automata { $2, $3 }
 ;
 
 /**********************************************/
 
 declarations:
 	CT_VAR decl_var_lists { $2 }
+	| { []}
 ;
 
 
@@ -140,6 +171,7 @@ var_type:
 
 automata:
 	automaton automata { $1 :: $2 }
+	| include_file automata { include_list := $1 :: !include_list; $2 }
 	| { [] }
 ;
 
@@ -217,13 +249,16 @@ while_or_invariant_or_nothing:
 ;
 
 location:
-	| loc_urgency_type location_name_and_costs COLON while_or_invariant_or_nothing convex_predicate stopwatches wait_opt transitions {
+	| loc_urgency_accepting_type location_name_and_costs COLON while_or_invariant_or_nothing convex_predicate stopwatches wait_opt transitions {
+		let urgency, accepting = $1 in
 		let name, cost = $2 in
 		{
 			(* Name *)
 			name = name;
 			(* Urgent or not? *)
-			loc_type = $1;
+			urgency = urgency;
+			(* Accepting or not? *)
+			acceptance = accepting;
 			(* Cost *)
 			cost = cost;
 			(* Invariant *)
@@ -236,9 +271,12 @@ location:
 	}
 ;
 
-loc_urgency_type:
-	| CT_LOC { Parsed_location_nonurgent }
-	| CT_URGENT CT_LOC { Parsed_location_urgent }
+loc_urgency_accepting_type:
+	| CT_LOC { Parsed_location_nonurgent, Parsed_location_nonaccepting }
+	| CT_URGENT CT_LOC { Parsed_location_urgent, Parsed_location_nonaccepting }
+	| CT_ACCEPTING CT_LOC { Parsed_location_nonurgent, Parsed_location_accepting }
+	| CT_URGENT CT_ACCEPTING CT_LOC { Parsed_location_urgent, Parsed_location_accepting }
+	| CT_ACCEPTING CT_URGENT CT_LOC { Parsed_location_urgent, Parsed_location_accepting }
 ;
 
 location_name_and_costs:
@@ -325,14 +363,25 @@ update:
 /** List containing only normal updates.
 		NOTE: it is used to avoid nested conditional updates */
 normal_update_list:
-	update COMMA normal_update_list { $1 :: $3}
+	| update COMMA normal_update_list { $1 :: $3}
 	| update { [$1]}
 	| { [] }
+;
+
+normal_update_list_par_opt:
+	 | normal_update_list { $1 }
+	 | LPAREN normal_update_list RPAREN { $2 }
+;
+
+boolean_expression_par_opt:
+	 | boolean_expression { $1 }
+	 | LPAREN boolean_expression RPAREN { $2 }
+;
 
 /** Condition updates **/
 condition_update:
-	| CT_IF LPAREN boolean_expression RPAREN CT_THEN normal_update_list CT_END { ($3, $6, []) }
-	| CT_IF LPAREN boolean_expression RPAREN CT_THEN normal_update_list CT_ELSE normal_update_list CT_END { ($3, $6,  $8) }
+	| CT_IF boolean_expression_par_opt CT_THEN normal_update_list_par_opt CT_END { ($2, $4, []) }
+	| CT_IF boolean_expression_par_opt CT_THEN normal_update_list_par_opt CT_ELSE normal_update_list_par_opt CT_END { ($2, $4, $6) }
 ;
 
 /**********************************************/
@@ -505,30 +554,30 @@ commands:
 ;
 
 
-// For backward-compatibility with HyTech only
+/* For backward-compatibility with HyTech only */
 init_declaration_opt:
 	| init_declaration_useless { }
 	| { }
 ;
 
-// For backward-compatibility with HyTech only
+/* For backward-compatibility with HyTech only */
 init_declaration_useless:
 	| CT_VAR regions COLON CT_REGION SEMICOLON { }
 ;
 
-// For backward-compatibility with HyTech only
+/* For backward-compatibility with HyTech only */
 regions:
 	| { }
 	| region_names { }
 ;
 
-// For backward-compatibility with HyTech only
+/* For backward-compatibility with HyTech only */
 region_names:
 	| region_name COMMA region_names { }
 	| region_name { }
 ;
 
-// For backward-compatibility with HyTech only
+/* For backward-compatibility with HyTech only */
 region_name:
 	| NAME { }
 	| CT_INIT { }
@@ -561,12 +610,14 @@ anything:
 
 init_definition:
 	| CT_INIT OP_ASSIGN region_expression SEMICOLON { $3 }
+	| { [ ] }
 ;
 
 
-// We allow here an optional "&" at the beginning
+/* We allow here an optional "&" at the beginning */
 region_expression:
 	| ampersand_opt region_expression_fol { $2 }
+	| { [ ] }
 ;
 
 region_expression_fol:
@@ -575,7 +626,7 @@ region_expression_fol:
 	| region_expression_fol AMPERSAND region_expression_fol { $1 @ $3 }
 ;
 
-// Used in the init definition
+/* Used in the init definition */
 init_state_predicate:
 	| loc_predicate { let a,b = $1 in (Loc_assignment (a,b)) }
 	| linear_constraint { Linear_predicate $1 }
@@ -615,6 +666,8 @@ property_definition:
 
 	// Pattern
 	| CT_PROPERTY OP_ASSIGN pattern semicolon_opt { Some $3 }
+
+	| include_file { let _, _, _, property, _, _, _ = $1 in property }
 
 	// Case: no property
 	|  { None }
@@ -685,13 +738,13 @@ pattern:
 ;
 
 
-// A single definition of one bad location or one bad discrete definition
+/* A single definition of one bad location or one bad discrete definition */
 bad_simple_predicate:
 	| discrete_predicate { Parsed_unreachable_discrete($1) }
 	| loc_predicate { Parsed_unreachable_loc($1) }
 ;
 
-// A global definition of several bad locations and/or bad discrete definitions
+/* A global definition of several bad locations and/or bad discrete definitions */
 bad_global_predicate:
 	| bad_global_predicate AMPERSAND bad_global_predicate { List.rev_append $1 $3 }
 	| LPAREN bad_global_predicate RPAREN { $2 }

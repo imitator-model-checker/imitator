@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13, Sorbonne Paris Cité (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: unbounded exact rational computation using GMP
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2017/04/18
+ * Last modified     : 2019/06/03
  *
  ************************************************************)
  
@@ -200,6 +200,12 @@ let l  = ( </ )
 let le = ( <=/ )
 let ge = ( >=/ )
 let g  = ( >/ )
+
+let min a b =
+	if le a b then a else b
+
+let max a b =
+	if ge a b then a else b
 
 
 (**************************************************)

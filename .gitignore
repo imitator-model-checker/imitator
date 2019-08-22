@@ -30,13 +30,18 @@ benchmarks/**/*.png
 benchmarks/**/*.jpg
 benchmarks/**/*.states
 benchmarks/**/*.pdf
+benchmarks/**/*.xml
 
 tests/**/*.log
 tests/**/*.jpg
 tests/**/*.png
+tests/**/*.res
+tests/**/*.states
 tests/**/*.txt
 tests/**/*.sh
 tests/**/*.pdf
+tests/**/*.ps
+tests/**/*.xml
 
 # binaries
 *.native
@@ -53,7 +58,10 @@ doc/*.log
 doc/*.toc
 doc/IMITATOR-not-developer-manual.out
 doc/IMITATOR-not-developer-manual.pdf
+doc/IMITATOR-user-manual.pdf
+doc/classDiagramFull.dot
 doc/classDiagramFull.png
+doc/classDiagramSimplified.dot
 doc/classDiagramSimplified.png
 
 # IDE

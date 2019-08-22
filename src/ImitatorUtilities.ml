@@ -3,13 +3,13 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13 (France)
+ * Université Paris 13, LIPN, CNRS, France
  * 
  * Module description: Useful and general functions for IMITATOR
  * 
- * File contributors : Étienne André
+ * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2019/03/01
+ * Last modified     : 2019/08/21
  *
  ************************************************************)
 
@@ -198,12 +198,15 @@ let verbose_mode_of_string verbose_mode =
 
 (** Mode for IMITATOR *)
 type imitator_mode =
+	(** No analysis, syntactic check only *)
+	| No_analysis
+	
 	(** Translation to another language: no analysis *)
 	| Translation
 	
 	(** Classical state space exploration *)
 	| State_space_exploration
-	
+
 	(** EF-synthesis *)
 	| EF_synthesis
 	
@@ -225,12 +228,21 @@ type imitator_mode =
 	(** Optimal reachability with priority queue: queue-based, with priority to the earliest successor for the selection of the next state [ABPP19] *)
 	| EF_synth_min_priority_queue
 
+	(** EF-synthesis with examples of (un)safe words *)
+	| EFexemplify
+	
 	(** AF-synthesis *)
 	| AF_synthesis
 	
 	(** Parametric loop synthesis *)
 	| Loop_synthesis
 	
+	(** Parametric accepting loop synthesis *)
+	| Acc_loop_synthesis
+	
+	(** Parametric accepting loop synthesis with NDFS exploration *)
+	| Acc_loop_synthesis_NDFS
+
 	(** Parametric Büchi-emptiness checking with non-Zenoness (method: check whether the PTA is CUB) *)
 	| Parametric_NZ_CUBcheck
 	
@@ -311,6 +323,18 @@ type exploration_order =
 	| Exploration_queue_BFS_RS
 	(** Queue-BFS: queue-based, independent of the depth, with prior for the selection of the next state [ANP17] *)
 	| Exploration_queue_BFS_PRIOR
+	(** NDFS: standard Nested Depth-First Search **)
+	| Exploration_NDFS
+	(** NDFSsub: NDFS with subsumption [NPvdP18] **)
+	| Exploration_NDFS_sub
+	(** layerNDFSsub: NDFS with subsumption  and layers [NPvdP18] **)
+	| Exploration_layer_NDFS_sub
+(*	(** synNDFSsub: NDFS synthesis with subsumption **)
+	| Exploration_syn_NDFS_sub
+	(** synlayerNDFSsub: NDFS synthesis with subsumption and layers [NPvdP18] **)
+	| Exploration_syn_layer_NDFS_sub*)
+	(** synMixedNDFS: NDFS synthesis with a mix of subsumption and layers **)
+(* 	| Exploration_syn_mixed_NDFS *)
 
 
 type merge_heuristic =
@@ -338,6 +362,120 @@ type graphical_state_space =
 	| Graphical_state_space_normal
 	(* State space with state numbers, locations, constraints and parameter constraints *)
 	| Graphical_state_space_verbose
+
+
+(************************************************************)
+(** Predicates on mode *)
+(************************************************************)
+
+(*** NOTE: explicit definition to avoid to forget a new algorithm (which would raise a warning upon compiling) ***)
+let is_mode_IM = function
+	| No_analysis
+	| Translation
+	| State_space_exploration
+	| Acc_loop_synthesis_NDFS
+	| EF_synthesis
+	| EFunsafe_synthesis
+	| EF_min
+	| EF_max
+	| EF_synth_min
+	| EF_synth_max
+	| EF_synth_min_priority_queue
+	| EFexemplify
+	| AF_synthesis
+	| Loop_synthesis
+	| Acc_loop_synthesis
+	| Parametric_NZ_CUBcheck
+	| Parametric_NZ_CUBtransform
+	| Parametric_NZ_CUBtransformDistributed
+	| Parametric_NZ_CUB
+	| Parametric_deadlock_checking
+		-> false
+	| Inverse_method
+	| Inverse_method_complete
+	| PRP
+		-> true
+	| Cover_cartography
+	| Learning_cartography
+	| Shuffle_cartography
+	| Border_cartography
+	| Random_cartography _
+	| RandomSeq_cartography _
+	| PRPC
+		-> false
+
+
+let is_mode_cartography = function
+	| No_analysis
+	| Translation
+	| State_space_exploration
+	| Acc_loop_synthesis_NDFS
+	| EF_synthesis
+	| EFunsafe_synthesis
+	| EF_min
+	| EF_max
+	| EF_synth_min
+	| EF_synth_max
+	| EF_synth_min_priority_queue
+	| EFexemplify
+	| AF_synthesis
+	| Loop_synthesis
+	| Acc_loop_synthesis
+	| Parametric_NZ_CUBcheck
+	| Parametric_NZ_CUBtransform
+	| Parametric_NZ_CUBtransformDistributed
+	| Parametric_NZ_CUB
+	| Parametric_deadlock_checking
+		-> false
+	| Inverse_method
+	| Inverse_method_complete
+	| PRP
+		-> false
+	| Cover_cartography
+	| Learning_cartography
+	| Shuffle_cartography
+	| Border_cartography
+	| Random_cartography _
+	| RandomSeq_cartography _
+	| PRPC
+		-> true
+
+
+let cartography_drawing_possible = function
+	| No_analysis
+	| Translation
+	| State_space_exploration
+		-> false
+	| Acc_loop_synthesis_NDFS
+	| EF_synthesis
+	| EFunsafe_synthesis
+	| EF_min
+	| EF_max
+	| EF_synth_min
+	| EF_synth_max
+	| EF_synth_min_priority_queue
+	| EFexemplify
+	| AF_synthesis
+	| Loop_synthesis
+	| Acc_loop_synthesis
+	| Parametric_NZ_CUBcheck
+	| Parametric_NZ_CUBtransform
+	| Parametric_NZ_CUBtransformDistributed
+	| Parametric_NZ_CUB
+	| Parametric_deadlock_checking
+		-> true
+	| Inverse_method
+	| Inverse_method_complete
+	| PRP
+		-> true
+	| Cover_cartography
+	| Learning_cartography
+	| Shuffle_cartography
+	| Border_cartography
+	| Random_cartography _
+	| RandomSeq_cartography _
+	| PRPC
+		-> true
 
 
 (************************************************************)
@@ -485,10 +623,10 @@ let print_header_string () =
 	"************************************************************\n"
 	^ "*  " ^ (shell_code_of_shell_highlighting_type Shell_bold) ^ imi_name ^ (shell_code_of_shell_highlighting_type Shell_normal) ^  (string_n_times (length_header - (String.length imi_name)) " ") ^ "  *\n"
 	^ "*                                                          *\n"
-	^ "*                                    Etienne Andre et al.  *\n"
+	^ "*                                    Étienne André et al.  *\n"
 	^ "*                                             2009 - " ^ (BuildInfo.build_year) ^ "  *\n"
 	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
-	^ "*                       LIPN, Universite Paris 13, France  *\n"
+	^ "*                       LIPN, Université Paris 13, France  *\n"
 	^ "*  " ^ (string_n_times (length_header - (String.length imitator_url)) " ") ^ imitator_url ^ "  *\n"
 	^ "*                                                          *\n"
 	^ "*  " ^ (string_n_times (length_header - (String.length build_info)) " ") ^ build_info ^ "  *\n"
@@ -501,7 +639,7 @@ let print_header_string () =
 (* Print the name of the contributors *)
 let print_contributors()  = 
 	print_string ("    " ^ Constants.program_name ^ " has been developed by:\n");
-	print_string ("    * Etienne Andre       (2008 - " ^ (BuildInfo.build_year) ^ "), lead developer\n");
+	print_string ("    * Étienne André       (2008 - " ^ (BuildInfo.build_year) ^ "), lead developer\n");
 	print_string ("    * Jaime Arias         (2018 - " ^ (BuildInfo.build_year) ^ ")\n");
 	print_string "    * Vincent Bloemen     (2018)\n";
 	print_string "    * Camille Coti        (2014)\n";
@@ -509,6 +647,7 @@ let print_contributors()  =
 	print_string "    * Sami Evangelista    (2014)\n";
 	print_string "    * Ulrich Kuehne       (2010 - 2011)\n";
 	print_string "    * Nguyen Hoang Gia    (2014 - 2016)\n";
+	print_string "    * Laure Petrucci      (2019)\n";
 	print_string "    * Romain Soulat       (2010 - 2013)\n";
 	print_string "\n";
 	print_string "    Compiling, testing and packaging:\n";
