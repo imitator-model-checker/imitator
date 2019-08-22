@@ -1581,6 +1581,57 @@ let pxd_constraint_of_nonnegative_variables v = constraint_of_nonnegative_variab
 
 
 
+
+
+(*------------------------------------------------------------*)
+(* Copy *)
+(*------------------------------------------------------------*)
+
+let copy = ippl_copy_linear_constraint
+let p_copy = ippl_copy_linear_constraint
+let px_copy = ippl_copy_linear_constraint
+let pxd_copy = ippl_copy_linear_constraint
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(** {3 Conversion between types of constraints } *)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+
+(** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
+let px_of_p_constraint c =
+	(* First copy *)
+	let px_constraint = copy c in
+	(* Extend number of dimensions *)
+	ippl_add_dimensions (!px_dim - !p_dim) px_constraint;
+	(* Assert *)
+	assert_dimensions !px_dim px_constraint;
+	(* Return *)
+	px_constraint
+	
+(** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
+let pxd_of_p_constraint c =
+	(* First copy *)
+	let pxd_constraint = copy c in
+	(* Extend number of dimensions *)
+	ippl_add_dimensions (!pxd_dim - !p_dim) pxd_constraint;
+	(* Assert *)
+	assert_dimensions !pxd_dim pxd_constraint;
+	(* Return *)
+	pxd_constraint
+	
+let pxd_of_px_constraint c =
+	(* First copy *)
+	let pxd_constraint = copy c in
+	(* Extend number of dimensions *)
+	ippl_add_dimensions (!pxd_dim - !px_dim) pxd_constraint;
+	(* Assert *)
+	assert_dimensions !pxd_dim pxd_constraint;
+	(* Return *)
+	pxd_constraint
+
+
+
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Tests} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1886,16 +1937,6 @@ let customized_string_of_pxd_linear_constraint = string_of_linear_constraint
 (** {3 Functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(*------------------------------------------------------------*)
-(* Copy *)
-(*------------------------------------------------------------*)
-
-let copy = ippl_copy_linear_constraint
-let p_copy = ippl_copy_linear_constraint
-let px_copy = ippl_copy_linear_constraint
-let pxd_copy = ippl_copy_linear_constraint
-
-
 
 (*------------------------------------------------------------*)
 (* Intersection *)
@@ -2159,14 +2200,14 @@ let pxd_hide_discrete_and_collapse pxd_linear_constraint =
 let px_valuate_parameters (p_valuation : p_valuation) (px_linear_constraint : px_linear_constraint) : x_linear_constraint =
 	(* Construct a linear constraint p_i = pval(p_i) *)
 	let variables_list : (variable * coef) list = List.map (fun variable_index -> variable_index , p_valuation variable_index) (parameters ()) in
-	let point_p_constraint : p_linear_constraint = p_constraint_of_point variables_list in
+	let resulting_constraint : px_linear_constraint = px_of_p_constraint (p_constraint_of_point variables_list) in
 	
 	(* Intersect *)
 	(*** WARNING: somehow a type violation here, but as in reality all constraints have same type, this is all fine ***)
-	px_intersection_assign point_p_constraint [px_linear_constraint];
+	px_intersection_assign resulting_constraint [px_linear_constraint];
 	
 	(* Return *)
-	point_p_constraint
+	resulting_constraint
 
 
 (*------------------------------------------------------------*)
@@ -2758,44 +2799,6 @@ let grml_of_linear_constraint names t_level linear_constraint =
 
 let grml_of_px_linear_constraint = grml_of_linear_constraint
 let grml_of_pxd_linear_constraint = grml_of_linear_constraint*)
-
-
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(** {3 Conversion between types of constraints } *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-
-(** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
-let px_of_p_constraint c =
-	(* First copy *)
-	let px_constraint = copy c in
-	(* Extend number of dimensions *)
-	ippl_add_dimensions (!px_dim - !p_dim) px_constraint;
-	(* Assert *)
-	assert_dimensions !px_dim px_constraint;
-	(* Return *)
-	px_constraint
-	
-(** Convert (and copy) a PX into a PXD constraint by extending the number of dimensions; the original constraint remains unchanged *)
-let pxd_of_p_constraint c =
-	(* First copy *)
-	let pxd_constraint = copy c in
-	(* Extend number of dimensions *)
-	ippl_add_dimensions (!pxd_dim - !p_dim) pxd_constraint;
-	(* Assert *)
-	assert_dimensions !pxd_dim pxd_constraint;
-	(* Return *)
-	pxd_constraint
-	
-let pxd_of_px_constraint c =
-	(* First copy *)
-	let pxd_constraint = copy c in
-	(* Extend number of dimensions *)
-	ippl_add_dimensions (!pxd_dim - !px_dim) pxd_constraint;
-	(* Assert *)
-	assert_dimensions !pxd_dim pxd_constraint;
-	(* Return *)
-	pxd_constraint
 
 
 (*------------------------------------------------------------*)
