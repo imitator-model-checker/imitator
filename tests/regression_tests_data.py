@@ -2487,6 +2487,105 @@ p = 1/2 & x = 0 & global_time = 0
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test EFexemplify on a toy example (clock initially non-zero, strict constraints)',
+		'input_files': ['testCounterExSimple-4.imi'],
+		'options'    : '-mode EFexemplify -output-result',
+		'expectations' : [
+			{'file': 'testCounterExSimple-4.res' , 'content' : """
+(************************************************************)
+ Run #1
+
+ Valuation:
+  p = 4095/2
+
+ Other valuations with equivalent (discrete) run:
+ 2048 > p
+& p > 2047
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  p = 4095/2
+
+pta: l1 ==> 
+p = 4095/2 & x = 1 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{True
+&  p = 2046 + x} updates{}  sync a Target ltarget] 
+ | and d =  1/2
+ | 
+ v  pta: ltarget ==> 
+p = 4095/2 & x = 3/2 & global_time = 1/2
+(************************************************************)
+
+
+(************************************************************)
+ Run #2
+
+ Valuation:
+  p = 0
+
+ Other valuations with equivalent (discrete) run:
+ 2047 >= p
+& p >= 0
+OR
+  p >= 2048
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 0
+
+pta: l1 ==> 
+p = 0 & x = 1 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l1 ==> 
+p = 0 & x = 2 & global_time = 1
+(************************************************************)
+
+
+(************************************************************)
+ Run #3
+
+ Valuation:
+  p = 4095/2
+
+ Other valuations with equivalent (discrete) run:
+ 2048 > p
+& p > 2047
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p = 4095/2
+
+pta: l1 ==> 
+p = 4095/2 & x = 1 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  0
+ | 
+ v  pta: ltarget ==> 
+p = 4095/2 & x = 1 & global_time = 0
+(************************************************************)
+
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test LoopSynth: flip-flop (no loop)',
 		'input_files': ['flipflop.imi'],
 		'options'    : '-mode LoopSynth -output-result',
