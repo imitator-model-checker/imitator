@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/08/22
+ * Last modified     : 2019/08/23
  *
  ************************************************************)
 
@@ -798,7 +798,7 @@ let constraint_zone_predecessor_g_u (zn_minus_1 : LinearConstraint.px_linear_con
 
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("Intersecting with incoming guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names gn) ^ " and Zn: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_zn) ^ "…");
+		print_message Verbose_high ("Intersecting with incoming guard: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names gn) ^ "\n  and intersecting with Zn: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_zn) ^ "…");
 	);
 
 	(* Intersect with the incoming guard *)
@@ -1644,7 +1644,7 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 
 (*** NOTE: this function could be in StateSpace but that would create a circular dependency with ModelPrinter ***)
 
-let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) (concrete_target_px_valuation : (Automaton.variable_index -> NumConst.t) ) : StateSpace.concrete_run =
+let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predecessors : StateSpace.predecessors_table) (symbolic_run : StateSpace.symbolic_run) (concrete_target_px_valuation : LinearConstraint.px_valuation ) : StateSpace.concrete_run =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	
@@ -1804,7 +1804,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	
 	(* Iterate starting from s_n and going backward *)
 	
-	let valuation_n_plus_1 = ref concrete_target_px_valuation in
+	let valuation_n_plus_1 : LinearConstraint.px_valuation ref= ref concrete_target_px_valuation in
 	let te_and_valuations = ref [] in
 	
 	for n = List.length symbolic_run.symbolic_steps - 1 downto 0 do
@@ -1828,7 +1828,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		
 		(* Get the zones *)
 		let location_n, z_n = state_n.global_location, state_n.px_constraint in
-		let z_n_plus_1 = state_n_plus_1.px_constraint in
+(* 		let z_n_plus_1 = state_n_plus_1.px_constraint in *)
 		
 		
 		(* Get the n-1 elements *)
@@ -1898,6 +1898,10 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		(* Get the elapsed and stopped clocks (+ other variables) *)
 		let stopped_clocks, elapsing_clocks = compute_stopwatches location_n in
 		let all_stopped_variables = List.rev_append stopped_clocks model.parameters_and_discrete in
+		
+		(* The Zn+1 that we consider is of course the valuation *)
+		let z_n_plus_1 : LinearConstraint.px_linear_constraint = LinearConstraint.px_constraint_of_point (List.map (fun variable_index -> variable_index , !valuation_n_plus_1 variable_index) model.parameters_and_clocks) in
+		
 		
 		(* Compute a set of valuations that can be a predecessor of the valuation of n+1 *)
 		let predecessors_of_valuation_n_plus_1 = (*AlgoStateBased.*)constraint_zone_predecessor_g_u
@@ -2066,7 +2070,7 @@ let reconstruct_counterexample state_space (target_state_index : State.state_ind
 	let target_state = StateSpace.get_state state_space target_state_index in
 
 	(* Exhibit a concrete clock+parameter valuation in the final state *)
-	let concrete_target_px_valuation : (Automaton.variable_index -> NumConst.t) = LinearConstraint.px_exhibit_point target_state.px_constraint in
+	let concrete_target_px_valuation : LinearConstraint.px_valuation = LinearConstraint.px_exhibit_point target_state.px_constraint in
 	
 	(* Print it *)
 	if verbose_mode_greater Verbose_low then(
