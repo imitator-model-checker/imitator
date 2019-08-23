@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/08/22
+ * Last modified     : 2019/08/23
  *
  ************************************************************)
 
@@ -456,6 +456,7 @@ val pxd_rename_variables_assign : (variable * variable) list -> pxd_linear_const
 val pxd_time_elapse_assign : variable list -> variable list -> pxd_linear_constraint -> unit
 
 (** Time elapsing function, in backward direction (corresponds to the "past" operation in, e.g., [JLR15]) *)
+val px_time_past_assign : variable list -> variable list -> px_linear_constraint -> unit
 val pxd_time_past_assign : variable list -> variable list -> pxd_linear_constraint -> unit
 
 (** Remove all upper bounds on the first variable list; the second list will remain constant *)

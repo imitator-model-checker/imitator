@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/08/22
+ * Last modified     : 2019/08/23
  *
  ************************************************************)
 
@@ -2348,6 +2348,7 @@ let time_past_assign nb_dimensions variables_elapse variables_constant linear_co
 	
 
 (*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
+let px_time_past_assign c = time_past_assign !px_dim c
 let pxd_time_past_assign c = time_past_assign !pxd_dim c
 
 
@@ -2444,62 +2445,69 @@ let exhibit_point nb_dimensions linear_constraint =
 		
 			(* Get infimum *)
 		
-		(* Create linear expression with just the dimension of interest *)
-		let linear_expression : Ppl.linear_expression = ppl_linear_expression_of_linear_term (make_linear_term [(NumConst.one, dimension)] NumConst.zero) in
+			(* Create linear expression with just the dimension of interest *)
+			let linear_expression : Ppl.linear_expression = ppl_linear_expression_of_linear_term (make_linear_term [(NumConst.one, dimension)] NumConst.zero) in
 		
 			(*** DOC: function signature is val ppl_Polyhedron_minimize : polyhedron -> linear_expression -> bool * Gmp.Z.t * Gmp.Z.t * bool ***)
 			let bounded_from_below, infimum_numerator, infimum_denominator, is_minimum = ippl_minimize restricted_linear_constraint linear_expression in
 			
 			(* Build the infimum *)
-			let infimum = NumConst.numconst_of_zfrac infimum_numerator infimum_denominator in
+			let infimum : NumConst.t = NumConst.numconst_of_zfrac infimum_numerator infimum_denominator in
 
 			(* Print some information *)
 			if verbose_mode_greater Verbose_high then
 				print_message Verbose_high ("Infimum of dimension " ^ (string_of_int dimension) ^ " is " ^ (NumConst.string_of_numconst infimum) ^ ". Is it a minimum? " ^ (string_of_bool is_minimum));
 		
-			(* If minimum: pick it *)
-			if bounded_from_below && is_minimum then(
-				(* Return the infimum *)
-				infimum
-				
-			)else(
 			(* Otherwise find supremum *)
-				let bounded_from_above, supremum_numerator, supremum_denominator, is_maximum = ippl_maximize restricted_linear_constraint linear_expression in
+			let bounded_from_above, supremum_numerator, supremum_denominator, is_maximum = ippl_maximize restricted_linear_constraint linear_expression in
+			
+			(* Build the supremum *)
+			let supremum = NumConst.numconst_of_zfrac supremum_numerator supremum_denominator in
+			
+			(* Print some information *)
+			if verbose_mode_greater Verbose_high then
+				print_message Verbose_high ("Supremum of dimension " ^ (string_of_int dimension) ^ " is " ^ (NumConst.string_of_numconst supremum) ^ ". Is it a maximum? " ^ (string_of_bool is_maximum));
 				
-				(* Build the supremum *)
-				let supremum = NumConst.numconst_of_zfrac supremum_numerator supremum_denominator in
-				
+			
+			(* Case 0: bounded from neither below nor above: return 1 (arbitrarily) *)
+			if not bounded_from_below && not bounded_from_above then(
 				(* Print some information *)
-				if verbose_mode_greater Verbose_high then
-					print_message Verbose_high ("Supremum of dimension " ^ (string_of_int dimension) ^ " is " ^ (NumConst.string_of_numconst supremum) ^ ". Is it a maximum? " ^ (string_of_bool is_maximum));
-					
-				(* Case 0: bounded from neither below nor above: return 1 (arbitrarily) *)
-				if not bounded_from_below && not bounded_from_above then(
-					(* Print some information *)
-					print_message Verbose_high ("Dimension " ^ (string_of_int dimension) ^ " is bounded from neither below nor above: pick 1");
-					
-					(* Return 1 *)
+				print_message Verbose_high ("Dimension " ^ (string_of_int dimension) ^ " is bounded from neither below nor above: pick 1");
+				
+				(* Return 1 *)
+				NumConst.one
+			)
+			(* Case 1: constant minimum *)
+			(* If minimum: pick it -- except if 0 (to avoid picking 0 for intervals [0, infty) or for intervals [0, c] with c > 1 ) *)
+			else if bounded_from_below && is_minimum then(
+				(* Case 1a: constant minimum equal to zero, and no bound from above or large enough *)
+				if NumConst.equal infimum NumConst.zero && (not bounded_from_above || NumConst.g supremum NumConst.one) then(
+					(* Return arbitrarily one, to avoid picking 0 *)
 					NumConst.one
 				)
-
-				(* Case 1: infimum and no supremum: return infimum + 1 *)
-				else if bounded_from_below && not bounded_from_above then
-					NumConst.add infimum NumConst.one
-				
-				(* Case 2: no infimum and supremum: return 1 if 1 is allowed, otherwise supremum - 1, i.e., min(1, supremum - 1) *)
-				else if not bounded_from_below && bounded_from_above then
-					NumConst.min NumConst.one (NumConst.sub supremum NumConst.one)
-				
-				(* Case 3: infimum and supremum: return (infimum + supremum) / 2 *)
+				(* Case 1b: constant minimum and non-zero minimum or small bound from above *)
 				else(
-					(* If empty constraint: problem, raise exception *)
-					if NumConst.l supremum infimum || (NumConst.le supremum infimum && (not is_maximum || not is_minimum)) then raise (InternalError "This situation is not supposed to happen, as the constraint was shown to be non-empty");
-					
-					(* Compute average  *)
-					NumConst.div (
-						NumConst.add infimum supremum
-					) (NumConst.numconst_of_int 2)
+					(* Return the infimum *)
+					infimum
 				)
+			)
+			(* Case 2: some infimum and no supremum: return infimum + 1 *)
+			else if bounded_from_below && not bounded_from_above then
+				NumConst.add infimum NumConst.one
+			
+			(* Case 3: no infimum and some supremum: return 1 if 1 is allowed, otherwise supremum - 1, i.e., min(1, supremum - 1) *)
+			else if not bounded_from_below && bounded_from_above then
+				NumConst.min NumConst.one (NumConst.sub supremum NumConst.one)
+			
+			(* Case 4: some infimum and some supremum: return (infimum + supremum) / 2 *)
+			else(
+				(* If empty constraint: problem, raise exception *)
+				if NumConst.l supremum infimum || (NumConst.le supremum infimum && (not is_maximum || not is_minimum)) then raise (InternalError "This situation is not supposed to happen, as the constraint was shown to be non-empty");
+				
+				(* Compute average  *)
+				NumConst.div (
+					NumConst.add infimum supremum
+				) (NumConst.numconst_of_int 2)
 			) (* end else if no minimum *)
 		) (* end else if not unbound *)
 		in
