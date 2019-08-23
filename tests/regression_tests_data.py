@@ -3155,6 +3155,160 @@ END RESULT
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter nor clock valuation derived)',
+		'input_files': ['testCounterExSimple-8.imi'],
+		'options'    : '-mode EFexemplify -output-result -output-cart',
+		'expectations' : [
+			{'file': 'testCounterExSimple-8.res' , 'content' : """
+
+BEGIN RESULT
+
+(************************************************************)
+ Run #1
+
+ Valuation:
+  p1 = 1
+& p2 = 1/2
+
+ Other valuations with equivalent (discrete) run:
+ p1 > p2
+& p2 > 0
+& 6 > p2
+
+ Run nature: valid run
+
+ Run:
+Concrete run for parameter valuation:
+  p1 = 1
+& p2 = 1/2
+
+pta: l1 ==> 
+p1 = 1 & p2 = 1/2 & x = 3 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ p2 > 0} updates{}  sync a Target l2] 
+ | and d =  0
+ | 
+ v  pta: l2 ==> 
+p1 = 1 & p2 = 1/2 & x = 3 & global_time = 0
+
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
+ | and d =  0
+ | 
+ v  pta: l3 ==> 
+p1 = 1 & p2 = 1/2 & x = 3 & global_time = 0
+
+ | 
+ | via combined transition [PTA pta: guard{ p1 > p2
+& p2 + x > p1} updates{}  sync a Target ltarget] 
+ | and d =  0
+ | 
+ v  pta: ltarget ==> 
+p1 = 1 & p2 = 1/2 & x = 3 & global_time = 0
+(************************************************************)
+
+
+(************************************************************)
+ Run #2
+
+ Valuation:
+  p1 = 3
+& p2 = 3
+
+ Other valuations with equivalent (discrete) run:
+ p1 > 0
+& p2 >= p1
+& 6 > p2
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p1 = 3
+& p2 = 3
+
+pta: l1 ==> 
+p1 = 3 & p2 = 3 & x = 2 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ p2 > 0} updates{}  sync a Target l2] 
+ | and d =  0
+ | 
+ v  pta: l2 ==> 
+p1 = 3 & p2 = 3 & x = 2 & global_time = 0
+
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
+ | and d =  0
+ | 
+ v  pta: l3 ==> 
+p1 = 3 & p2 = 3 & x = 2 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  1
+ | 
+ v  pta: l3 ==> 
+p1 = 3 & p2 = 3 & x = 3 & global_time = 1
+(************************************************************)
+
+
+(************************************************************)
+ Run #3
+
+ Valuation:
+  p1 = 1
+& p2 = 1/2
+
+ Other valuations with equivalent (discrete) run:
+ p1 > p2
+& p2 > 0
+& 6 > p2
+
+ Run nature: impossible run
+
+ Run:
+Impossible concrete run for parameter valuation:
+  p1 = 1
+& p2 = 1/2
+
+pta: l1 ==> 
+p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0
+ | 
+ | via combined transition [PTA pta: guard{ p2 > 0} updates{}  sync a Target l2] 
+ | and d =  0
+ | 
+ v  pta: l2 ==> 
+p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0
+
+ | 
+ | via combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
+ | and d =  0
+ | 
+ v  pta: l3 ==> 
+p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0
+ | 
+ | via impossible transition labeled with a
+ | and d =  0
+ | 
+ v  pta: ltarget ==> 
+p1 = 1 & p2 = 1/2 & x = 3/2 & global_time = 0
+(************************************************************)
+END RESULT
+
+"""
+			} # end result file
+			,
+			# NOTE: Just check its existence
+			{'file': 'testCounterExSimple-8_ex_3_neg.png' , 'content' : ""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test EFexemplify on a toy example without parameter',
 		'input_files': ['testCounterExSimple.imi'],
 		'options'    : '-mode EFexemplify -output-result',
