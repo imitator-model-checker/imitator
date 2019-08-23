@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2019/08/09
+ * Last modified     : 2019/08/23
  *
  ************************************************************)
 
@@ -135,7 +135,7 @@ val apply_time_elapsing_to_concrete_valuation : Location.global_location -> NumC
 (*** NOTE: no check is made that Zn is a successor of Zn-1, nor that Zn+1 is a subset of Zn ***)
 (*** NOTE: no check is made that t and nont represent exactly the set of variables used in the polyhedra. ***)
 (*------------------------------------------------------------*)
-val constraint_zone_predecessor_g_u :
+(*val constraint_zone_predecessor_g_u :
 	(* Zn-1 *) LinearConstraint.px_linear_constraint ->
 	(* gn-1 *) LinearConstraint.pxd_linear_constraint ->
 	(* Un-1 *) AbstractModel.clock_updates list ->
@@ -145,7 +145,7 @@ val constraint_zone_predecessor_g_u :
 	(* gn *)   LinearConstraint.pxd_linear_constraint ->
 	(* Un *)   AbstractModel.clock_updates list ->
 	(* Zn+1 *) LinearConstraint.px_linear_constraint ->
-	LinearConstraint.px_linear_constraint
+	LinearConstraint.px_linear_constraint*)
 
 
 

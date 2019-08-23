@@ -758,10 +758,23 @@ let apply_time_elapsing_to_concrete_valuation (location : Location.global_locati
 (** Compute the predecessors of a zone *)
 (*------------------------------------------------------------*)
 
-(** Given `Zn-1` and `Zn` such that `Zn` is the successor zone of `Zn-1` by guard `g-1` and updating variables in `Un-1` to some values, given `Zn+1` a set of concrete points (valuations) successor of zone `Zn` by elapsing of a set of variables `t` and non-elapsing of others `nont`, by guard `gn`, updates `Rn`, then `zonepredgr(Zn-1, gn-1, Un-1, Zn, t, nont, gn, Un, Zn+1)` computes the subset of points in `Zn` that are predecessors of `Zn` (by updates of `Un`, guard `gn`, elapsing of `t`, non-elapsing of `nont`), and that are direct successors (without time elapsing) of `Zn-1` via `gn-1` and `Un-1`. *)
+(** Given `Zn-1` and `Zn` such that
+	`Zn` is the successor zone of `Zn-1` by guard `g-1` and updating variables in `Un-1` to some values,
+	given `Zn+1` a set of concrete points (valuations) successor of zone `Zn` by elapsing of a set of variables `t` and non-elapsing of others `nont`, by guard `gn`, updates `Rn`,
+	then `zonepredgr(Zn-1, gn-1, Un-1, Zn, t, nont, gn, Un, Zn+1)` computes the subset of points in `Zn` that are predecessors of `Zn` (by updates of `Un`, guard `gn`, elapsing of `t`, non-elapsing of `nont`), and that are direct successors (without time elapsing) of `Zn-1` via `gn-1` and `Un-1`. *)
 (*** NOTE: no check is made that Zn is a successor of Zn-1, nor that Zn+1 is a subset of Zn ***)
 (*** NOTE: no check is made that t and nont represent exactly the set of variables used in the polyhedra. ***)
-let constraint_zone_predecessor_g_u (zn_minus_1 : LinearConstraint.px_linear_constraint) gn_minus_1 updates_n_minus_1 (zn : LinearConstraint.px_linear_constraint) variables_elapse variables_constant gn updates_n (zn_plus_1 : LinearConstraint.px_linear_constraint) =
+let constraint_zone_predecessor_g_u
+	(zn_minus_1 : LinearConstraint.px_linear_constraint)
+	gn_minus_1
+	(updates_n_minus_1 : AbstractModel.clock_updates list)
+	(zn : LinearConstraint.px_linear_constraint)
+	(variables_elapse_n : Automaton.variable_index list)
+	(variables_constant_n : Automaton.variable_index list)
+	gn
+	(updates_n : AbstractModel.clock_updates list)
+	(zn_plus_1 : LinearConstraint.px_linear_constraint)
+		=
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	
@@ -813,11 +826,11 @@ let constraint_zone_predecessor_g_u (zn_minus_1 : LinearConstraint.px_linear_con
 	(* Step 2: compute the time predecessors of zn' in zn *)
 	(* Method: zn' => backward elapsing => intersection with zn *)
 	
-	LinearConstraint.pxd_time_past_assign variables_elapse variables_constant pxd_linear_constraint;
+	LinearConstraint.pxd_time_past_assign variables_elapse_n variables_constant_n pxd_linear_constraint;
 	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("Applied timed past: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
+		print_message Verbose_high ("Applied timed past at state n: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
 	);
 
 	(* Intersect again with zn *)
@@ -1648,14 +1661,6 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 	
-	(* Get the final state *)
-	let target_state_index = symbolic_run.final_state in
-	let target_state = StateSpace.get_state state_space target_state_index in
-	
-
-	(* We reconstruct a concrete run, for which we need absolute time *)
-	
-	
 	(*** BEGIN CODE THAT WON'T WORK DUE TO THE DIMENSION HANDLING IN LINEAR.CONSTRAINT ***)
 	(*
 	(* 1. we backup the model *)
@@ -1789,6 +1794,94 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	*)
 	(*** END CODE THAT WON'T WORK DUE TO THE DIMENSION HANDLING IN LINEAR.CONSTRAINT ***)
 	
+	(* Get the final state *)
+	let target_state_index = symbolic_run.final_state in
+	let target_state = StateSpace.get_state state_space target_state_index in
+	
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_low then(
+		print_message Verbose_low ("Cancelling the time elapsing of the last valuation of the symbolic run…:\n " ^ (ModelPrinter.string_of_px_valuation model concrete_target_px_valuation) ^ "");
+	);
+
+	(* Zn+1 is the target valuation, preceeded by time past plus invariant intersection *)
+	
+	let z_n_plus_1 : LinearConstraint.px_linear_constraint = LinearConstraint.px_constraint_of_point (List.map (fun variable_index -> variable_index , concrete_target_px_valuation variable_index) model.parameters_and_clocks) in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Starting from state target:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1) ^ "");
+	);
+	
+	(* Get the location state_n_plus_1 *)
+	let location_n_plus_1 = target_state.global_location in
+	(* Get the elapsed and stopped clocks (+ other variables) *)
+	let stopped_clocks_n_plus_1, elapsing_clocks_n_plus_1 = compute_stopwatches location_n_plus_1 in
+	let all_stopped_variables_n_plus_1 = List.rev_append stopped_clocks_n_plus_1 model.parameters in
+	(* Apply time past *)
+	print_message Verbose_total ("Applying time past…");
+	LinearConstraint.px_time_past_assign elapsing_clocks_n_plus_1 all_stopped_variables_n_plus_1 z_n_plus_1;
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Applied timed past at state n+1:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1) ^ "");
+	);
+	
+	(* Intersect with invariant (NOTE: shorter: we can fact intersect with the symbolic state, that already contains the invariant!) *)
+	LinearConstraint.px_intersection_assign z_n_plus_1 [target_state.px_constraint];
+	
+	(* Apply the updates to find the "initial" valuations of zn+1, only if the run is not empty *)
+	let z_n_plus_1 = if symbolic_run.symbolic_steps = [] then z_n_plus_1
+	else(
+		let symbolic_step_n : StateSpace.symbolic_step = List.nth symbolic_run.symbolic_steps (List.length symbolic_run.symbolic_steps - 1) in
+		let state_n = StateSpace.get_state state_space symbolic_step_n.source in
+		let location_n = state_n.global_location in
+		(*** BADPROG: multiple computations! ***)
+		let _, _, _, updates_n = compute_new_location_guards_updates location_n symbolic_step_n.transition in
+
+		(*** BADPROG: multiple conversions here! ***)
+		let z_n_plus_1 = LinearConstraint.pxd_of_px_constraint z_n_plus_1 in
+		update_assign z_n_plus_1 updates_n;
+		let z_n_plus_1 = LinearConstraint.pxd_hide_discrete_and_collapse z_n_plus_1 in
+
+		
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high ("Intersected state n+1 with its invariant:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1) ^ "");
+		);
+		
+		z_n_plus_1
+	)
+	in
+	
+	(* To make things more human-friendly, we change the initial valuation only if it did not belong to the admissible "initial points" before time elapsing *)
+	
+	let concrete_target_px_valuation_before_time_elapsing = 
+	(* If intersection is empty, find new valuation *)
+	if LinearConstraint.px_is_false (
+		LinearConstraint.px_intersection[
+			LinearConstraint.px_constraint_of_point (List.map (fun variable_index -> variable_index , concrete_target_px_valuation variable_index) model.parameters_and_clocks)
+			;
+			z_n_plus_1
+		]
+	) then(
+		(* Re-choose a valuation in this constraint *)
+		LinearConstraint.px_exhibit_point z_n_plus_1
+	(* Otherwise, keep the original valuation *)
+	)else(
+		concrete_target_px_valuation
+	)
+	in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_low then(
+		print_message Verbose_low ("New final valuation of the symbolic run before time elapsing:\n " ^ (ModelPrinter.string_of_px_valuation model concrete_target_px_valuation_before_time_elapsing) ^ "");
+	);
+	
+
+	(* We reconstruct a concrete run, for which we need absolute time *)
+	
+
 	(* Now construct valuations for the whole run, i.e. pair (time elapsed, valuation) *)
 	
 	print_message Verbose_low "\nBuilding concrete run:";
@@ -1801,10 +1894,11 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		| None -> raise (InternalError ("No absolute time clock is defined in the model, which is (so far) necessary to reconstruct the counterexample."))
 	in
 	
-	
+
 	(* Iterate starting from s_n and going backward *)
 	
-	let valuation_n_plus_1 : LinearConstraint.px_valuation ref= ref concrete_target_px_valuation in
+	let valuation_n_plus_1 : LinearConstraint.px_valuation ref = ref concrete_target_px_valuation_before_time_elapsing in
+
 	let te_and_valuations = ref [] in
 	
 	for n = List.length symbolic_run.symbolic_steps - 1 downto 0 do
@@ -1826,10 +1920,8 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		(* Get state n+1 *)
 		let state_n_plus_1 = StateSpace.get_state state_space state_index_n_plus_1 in
 		
-		(* Get the zones *)
+		(* Get the location and zone for state_n *)
 		let location_n, z_n = state_n.global_location, state_n.px_constraint in
-(* 		let z_n_plus_1 = state_n_plus_1.px_constraint in *)
-		
 		
 		(* Get the n-1 elements *)
 		let z_n_minus_1, continuous_guard_n_minus_1, updates_n_minus_1 =
@@ -1851,6 +1943,11 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 			
 			(* Case "before" 0 *)
 			) else(
+				(* Print some information *)
+				if verbose_mode_greater Verbose_medium then(
+					print_message Verbose_medium ("Now handling final case at position n=" ^ (string_of_int n) ^ ":");
+				);
+				
 				(* True "previous" zone *)
 				LinearConstraint.px_true_constraint(),
 				(* Guard: set the absolute time clock to 0 *)
@@ -1864,53 +1961,28 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		let clock_updates, _ = (*AlgoStateBased.*)get_updates_in_combined_transition location_n symbolic_step_n.transition in
 		
 		(* Reconstruct the continuous guard from n to n+1 *)
-		let _, _, continuous_guards_n, _ = compute_new_location_guards_updates location_n symbolic_step_n.transition in
+		let _, _, continuous_guards_n, updates_n = compute_new_location_guards_updates location_n symbolic_step_n.transition in
 		let continuous_guard_n = LinearConstraint.pxd_intersection continuous_guards_n in
 		
-(*				(* Compute the set of clocks impacted by the updates *)
-		let resets = match clock_updates with
-		| No_update -> []
-		| Resets cl -> cl
-		| Updates updates ->
-(*					(* We need to check that no update in the form x -> f(x') or x -> f(p) occurs, otherwise the method does not work *)
-			(*** IN FACT it does not matter ***)
-			List.iter (fun (clock_index, pxd_linear_term) -> 
-				(* Get the list of variables in the term *)
-				let variables = 
-				(* If clocks or parameters: problem *)
-				
-			) updates;*)
-			
-			(* Return the list of clocks *)
-			let clocks, _ = List.split updates in
-			clocks
-		
-		in*)
-		
-		(* Build the constraint from the valuation *)
-		(* Convert to set of pairs *)
-(*				let pairs = List.map (fun variable_index ->
-			variable_index , (!valuation_n_plus_1 variable_index)
-		) model.parameters_and_clocks in
-
-		let constraint_from_valuation_n_plus_1 = LinearConstraint.px_constraint_of_point pairs in*)
-		
 		(* Get the elapsed and stopped clocks (+ other variables) *)
-		let stopped_clocks, elapsing_clocks = compute_stopwatches location_n in
-		let all_stopped_variables = List.rev_append stopped_clocks model.parameters_and_discrete in
+		let stopped_clocks_n, elapsing_clocks_n = compute_stopwatches location_n in
+		let all_stopped_variables_n = List.rev_append stopped_clocks_n model.parameters in
 		
-		(* The Zn+1 that we consider is of course the valuation *)
+		
+		(* Zn+1 is the target valuation, preceeded by time past plus invariant intersection *)
+		
 		let z_n_plus_1 : LinearConstraint.px_linear_constraint = LinearConstraint.px_constraint_of_point (List.map (fun variable_index -> variable_index , !valuation_n_plus_1 variable_index) model.parameters_and_clocks) in
 		
 		
+
 		(* Compute a set of valuations that can be a predecessor of the valuation of n+1 *)
 		let predecessors_of_valuation_n_plus_1 = (*AlgoStateBased.*)constraint_zone_predecessor_g_u
 			(* Zn-1 *) z_n_minus_1
 			(* gn-1 *) continuous_guard_n_minus_1
 			(* Un-1 *) updates_n_minus_1
 			(* Zn *)   z_n
-			(* t *)    elapsing_clocks
-			(* nont *) all_stopped_variables
+			(* tn *)    elapsing_clocks_n
+			(* nontn *) all_stopped_variables_n
 			(* gn *)   continuous_guard_n
 			(*** NOTE: a bit twice the work here, as they were processed by get_updates_in_combined_transition ***)
 			(* Un *)   [clock_updates]
@@ -1961,7 +2033,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 			print_message Verbose_low ("Time elapsing: " ^ (NumConst.string_of_numconst time_elapsed) ^ "");
 		) !te_and_valuations;
 		(* Print last one *)
-		print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_target_px_valuation);
+		print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_target_px_valuation_before_time_elapsing);
 	);
 	
 	
@@ -1983,7 +2055,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		(* The discrete clock+discrete valuation is that of the concrete initial state computed above *)
 		px_valuation = 
 			(* Case empty list: take from final state *)
-			if !te_and_valuations = [] then concrete_target_px_valuation
+			if !te_and_valuations = [] then concrete_target_px_valuation_before_time_elapsing
 			else(
 			try (let (_ , _, _, pxd_valuation) = List.nth !te_and_valuations 0 in pxd_valuation)
 				with Failure _ -> raise (InternalError "List !te_and_valuations expected to be non-empty in function reconstruct_counterexample")
@@ -2016,7 +2088,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 			let last_step : StateSpace.concrete_step = {
 				time		= time_elapsed_n;
 				transition	= combined_transition_n;
-				target		= {global_location = target_state.global_location; px_valuation = concrete_target_px_valuation};
+				target		= {global_location = target_state.global_location; px_valuation = concrete_target_px_valuation_before_time_elapsing};
 			} in
 			
 			(* Put the list in right order *)
@@ -2025,7 +2097,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	in
 	
 	(* (Re)create the PVal *)
-	let pval = PVal.pval_from_valuation_function concrete_target_px_valuation in
+	let pval = PVal.pval_from_valuation_function concrete_target_px_valuation_before_time_elapsing in
 
 	(* Return the concrete run *)
 	{

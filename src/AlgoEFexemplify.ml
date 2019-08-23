@@ -150,7 +150,7 @@ class algoEFexemplify =
 		match model.global_time_clock with
 			| None -> raise (InternalError ("No absolute time clock detected in " ^ self#algorithm_name ^ " although this should have been checked before."));
 			
-			| Some _ ->
+			| Some global_time_clock ->
 				(*------------------------------------------------------------*)
 				(* Part 1: positive counterexample *)
 				(*------------------------------------------------------------*)
@@ -241,7 +241,7 @@ class algoEFexemplify =
 					(* Part 2.a: try to find a parameter valuation NOT going to the final state using this run *)
 					
 					(* Print some information *)
-					print_message Verbose_low "\n\nLooking for a negative counterexample using a different parameter valuation (case of deterministic system without silent actions)";
+					print_message Verbose_low "\n\n*** Looking for a negative counterexample using a different parameter valuation (case of deterministic system without silent actions)";
 
 					(* Idea: any parameter valuation "deadlocked" along this run is a valuation for which no identical symbolic run leads to the target, or any other target (in case of several discrete target locations) *)
 
@@ -315,6 +315,13 @@ class algoEFexemplify =
 							let concrete_p_valuation_px_constraint = LinearConstraint.px_of_p_constraint concrete_p_valuation_constraint in
 							(* Intersect *)
 							LinearConstraint.px_intersection_assign concrete_p_valuation_px_constraint [pxconstraint_i];
+							
+							(* Special case: if this is the initial state, then the constraint must contain global_time_clock = 0, to make sure we start from the initial position *)
+							if !i = 0 then(
+								print_message Verbose_medium "Borderline case with empty concrete run: intersect with constraint 'global_time_clock = 0'";
+								(* Intersect with 'global_time_clock = 0' *)
+								LinearConstraint.px_intersection_assign concrete_p_valuation_px_constraint [LinearConstraint.px_constraint_of_point [(global_time_clock, NumConst.zero)]];
+							);
 							
 							(* Exhibit a px-point in this constraint *)
 							let concrete_px_valuation_i = LinearConstraint.px_exhibit_point concrete_p_valuation_px_constraint in
@@ -416,7 +423,7 @@ class algoEFexemplify =
 					(*------------------------------------------------------------*)
 					
 					(* Print some information *)
-					print_message Verbose_low "\n\nLooking for a negative counterexample using the same parameter valuation (case of deterministic system without silent actions)";
+					print_message Verbose_low "\n\n*** Looking for a negative counterexample using the same parameter valuation (case of deterministic system without silent actions)";
 
 					(* Idea: any clock valuation "deadlocked" along this run is a valuation for which no identical symbolic run leads to the target, or any other target (in case of several discrete target locations) *)
 
@@ -522,26 +529,55 @@ class algoEFexemplify =
 								print_message Verbose_low ("Now generating the \"impossible\" concrete run for positive parameter valuation from position " ^ (string_of_int !i) ^ "…");
 							);
 							
-							(*** NOTE: now, the only way to choose the NEXT point at position i+1 is to consider a 0-time transition from position i, because we know that the point exhibited at position i does not belong to the i+1 zone ***)
 							
-							let state_i_plus_one =
-								(* Careful! If run is too short, choose final state *)
-								if !i = List.length symbolic_run.symbolic_steps - 1 then symbolic_run.final_state
-								else (List.nth symbolic_run.symbolic_steps (!i+1)).source
-							in
-							let transition_i_plus_one = (List.nth symbolic_run.symbolic_steps (!i)).transition in
 							let impossible_step_i =
-							{
-								(* NO time elapsing *)
-								time			= NumConst.zero;
-								(* Then take a discrete transition: keep the action *)
-								action			= StateSpace.get_action_from_combined_transition transition_i_plus_one;
-								(* Then reach the target state *)
-								target			= {
-									global_location= (StateSpace.get_state state_space state_i_plus_one).global_location;
-									px_valuation   = concrete_px_valuation_i;
+							(* Special case: if the concrete run is empty (a single state), we need to be careful, as the chosen point may not be the initial point! (global_time_clock > 0) *)
+							if concrete_run_prefix.steps = [] then(
+								(* Get the initial global_time_clock value *)
+								let initial_time = concrete_run_prefix.initial_state.px_valuation global_time_clock in
+								
+								(* Let initial_time elapse, and remove initial_time time units from the initial valuation to get it back to 0 *)
+								
+								let state_i_plus_one =
+									(* Careful! If run is too short, choose final state *)
+									if !i = List.length symbolic_run.symbolic_steps - 1 then symbolic_run.final_state
+									else (List.nth symbolic_run.symbolic_steps (!i+1)).source
+								in
+								let transition_i_plus_one = (List.nth symbolic_run.symbolic_steps (!i)).transition in
+								{
+									(* Compensate time elapsing *)
+									time			= initial_time;
+									(* Then take a discrete transition: keep the action *)
+									action			= StateSpace.get_action_from_combined_transition transition_i_plus_one;
+									(* Then reach the target state *)
+									target			= {
+										global_location= (StateSpace.get_state state_space state_i_plus_one).global_location;
+										px_valuation   = AlgoStateBased.apply_time_elapsing_to_concrete_valuation concrete_run_prefix.initial_state.global_location initial_time concrete_px_valuation_i
+									}
 								}
-							}
+							
+							)else(
+							
+								(*** NOTE: now, the only way to choose the NEXT point at position i+1 is to consider a 0-time transition from position i, because we know that the point exhibited at position i does not belong to the i+1 zone ***)
+								
+								let state_i_plus_one =
+									(* Careful! If run is too short, choose final state *)
+									if !i = List.length symbolic_run.symbolic_steps - 1 then symbolic_run.final_state
+									else (List.nth symbolic_run.symbolic_steps (!i+1)).source
+								in
+								let transition_i_plus_one = (List.nth symbolic_run.symbolic_steps (!i)).transition in
+								{
+									(* NO time elapsing *)
+									time			= NumConst.zero;
+									(* Then take a discrete transition: keep the action *)
+									action			= StateSpace.get_action_from_combined_transition transition_i_plus_one;
+									(* Then reach the target state *)
+									target			= {
+										global_location= (StateSpace.get_state state_space state_i_plus_one).global_location;
+										px_valuation   = concrete_px_valuation_i;
+									}
+								}
+							)
 							in
 							
 							(* Now build the rest of the impossible run *)
