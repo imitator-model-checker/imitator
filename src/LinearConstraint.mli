@@ -298,8 +298,8 @@ val px_zone_predecessor : px_linear_constraint -> px_linear_constraint -> px_lin
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Check if a constraint is false *)
-(* val is_false : linear_constraint -> bool *)
 val p_is_false : p_linear_constraint -> bool
+val px_is_false : px_linear_constraint -> bool
 val pxd_is_false : pxd_linear_constraint -> bool
 
 (** Check if a constraint is true *)
@@ -456,6 +456,7 @@ val pxd_rename_variables_assign : (variable * variable) list -> pxd_linear_const
 val pxd_time_elapse_assign : variable list -> variable list -> pxd_linear_constraint -> unit
 
 (** Time elapsing function, in backward direction (corresponds to the "past" operation in, e.g., [JLR15]) *)
+(*** NOTE: elapsing variables are constrained to be non-negative ***)
 val px_time_past_assign : variable list -> variable list -> px_linear_constraint -> unit
 val pxd_time_past_assign : variable list -> variable list -> pxd_linear_constraint -> unit
 

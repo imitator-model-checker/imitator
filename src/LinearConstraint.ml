@@ -2295,6 +2295,9 @@ let rename_variables list_of_pairs linear_constraint =
 (* Generic time elapsing function *)
 (* 'reverse_direction' should be minus_one for growing, one for decreasing *)
 let time_elapse_gen_assign reverse_direction nb_dimensions variables_elapse variables_constant linear_constraint =
+	(* Print some information *)
+	print_message Verbose_total ("Entering time_elapse_gen_assign with " ^ (string_of_int nb_dimensions) ^ " dimension" ^ (s_of_int nb_dimensions) ^ "…");
+
 	(* Create the inequalities var = 1, for var in variables_elapse *)
 	let inequalities_elapse = List.map (fun variable ->
 		(* Create a linear term *)
@@ -2302,6 +2305,7 @@ let time_elapse_gen_assign reverse_direction nb_dimensions variables_elapse vari
 		(* Create the inequality *)
 		make_linear_inequality linear_term Op_eq
 	) variables_elapse in
+	
 	(* Create the inequalities var = 0, for var in variables_constant *)
 	let inequalities_constant = List.map (fun variable ->
 		(* Create a linear term *)
@@ -2309,9 +2313,16 @@ let time_elapse_gen_assign reverse_direction nb_dimensions variables_elapse vari
 		(* Create the inequality *)
 		make_linear_inequality linear_term Op_eq
 	) variables_constant in
+	
+	(* Print some information *)
+	print_message Verbose_total ("Creating linear constraint for time elapsing…");
+
 	(* Convert both sets of inequalities to a constraint *)
 	let linear_constraint_time = make nb_dimensions (List.rev_append inequalities_elapse inequalities_constant) in
 	
+	(* Print some information *)
+	print_message Verbose_total ("Applying PPL time elapsing function…");
+
 	(* Apply the time elapsing using PPL *)
 	ippl_time_elapse_assign linear_constraint linear_constraint_time
 
@@ -2331,10 +2342,18 @@ let pxd_time_elapse_assign c = time_elapse_assign !pxd_dim c
 
 
 (** Time elapsing function, in backward direction (corresponds to the "past" operation in, e.g., [JLR15]) *)
+(*** NOTE: elapsing variables are constrained to be non-negative ***)
 let time_past_assign nb_dimensions variables_elapse variables_constant linear_constraint =
+
+	(* Print some information *)
+	print_message Verbose_total ("Entering time_past_assign with " ^ (string_of_int nb_dimensions) ^ " dimension" ^ (s_of_int nb_dimensions) ^ "…");
+
 	(* 1) Apply generic function *)
 	time_elapse_gen_assign NumConst.one nb_dimensions variables_elapse variables_constant linear_constraint;
 	
+	(* Print some information *)
+	print_message Verbose_total ("Constraining elapsing variables to be non-negative…");
+
 	(* 2) Constrain the elapsing variables to be non-negative! *)
 	(* Create the inequalities var >= 0, for var in variables_elapse *)
 	let inequalities_nonnegative = List.map (fun variable ->
