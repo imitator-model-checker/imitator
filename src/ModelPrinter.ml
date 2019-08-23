@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2019/08/22
+ * Last modified     : 2019/08/23
  *
  ************************************************************)
 
@@ -791,8 +791,8 @@ let string_of_concrete_steps model concrete_steps =
 	(* Iterate on following steps *)
 	(string_of_list_of_string_with_sep "\n" (List.map (fun (concrete_step : StateSpace.concrete_step)  ->
 		  ("\n | ")
-		^ ("\n | via combined transition " ^ (debug_string_of_combined_transition model concrete_step.transition))
-		^ ("\n | and d =  " ^ (NumConst.string_of_numconst concrete_step.time))
+		^ ("\n | via d = " ^ (NumConst.string_of_numconst concrete_step.time))
+		^ ("\n | followed by combined transition " ^ (debug_string_of_combined_transition model concrete_step.transition))
 		^ ("\n | ")
 		^ ("\n v ")
 		^ (" " ^ (string_of_concrete_state model concrete_step.target))
@@ -803,8 +803,8 @@ let string_of_impossible_concrete_steps model impossible_concrete_steps =
 	(* Iterate on following steps *)
 	(string_of_list_of_string_with_sep "\n" (List.map (fun (impossible_concrete_step : StateSpace.impossible_concrete_step)  ->
 		  ("\n | ")
-		^ ("\n | via impossible transition labeled with " ^ (model.action_names impossible_concrete_step.action))
-		^ ("\n | and d =  " ^ (NumConst.string_of_numconst impossible_concrete_step.time))
+		^ ("\n | via d = " ^ (NumConst.string_of_numconst impossible_concrete_step.time))
+		^ ("\n | followed by impossible transition labeled with " ^ (model.action_names impossible_concrete_step.action))
 		^ ("\n | ")
 		^ ("\n v ")
 		^ (" " ^ (string_of_concrete_state model impossible_concrete_step.target))

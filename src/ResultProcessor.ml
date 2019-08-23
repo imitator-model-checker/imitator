@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2019/08/22
+ * Last modified     : 2019/08/23
  *
  ************************************************************)
 
@@ -1235,7 +1235,8 @@ let process_result result algorithm_name prefix_option =
 			end;
 
 			(* Print parameter zone *)
-			if options#output_bc_cart then (
+			if options#cart then (
+				print_message Verbose_low "Plotting cartography of the runs' constraints…";
 				(* Generate the graphics: parameters *)
 				let zones = [valuation_and_concrete_run.valuations, match valuation_and_concrete_run.concrete_run with Concrete_run _ -> StateSpace.Good | Impossible_concrete_run _ -> StateSpace.Bad] in
 				Graphics.draw_cartography zones prefix;
