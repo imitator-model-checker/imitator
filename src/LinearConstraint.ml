@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/08/23
+ * Last modified     : 2019/08/28
  *
  ************************************************************)
 
@@ -2442,6 +2442,11 @@ let exhibit_point nb_dimensions linear_constraint =
 	(* Copy the constraint, as we will restrict it dimension by dimension *)
 	let restricted_linear_constraint = copy linear_constraint in
 	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Starting with constraint: " ^ (string_of_linear_constraint default_string debug_variable_names restricted_linear_constraint) ^ "");
+	);
+	
 	(* Iterate on dimensions *)
 	for dimension = 0 to nb_dimensions - 1 do
 	
@@ -2484,9 +2489,9 @@ let exhibit_point nb_dimensions linear_constraint =
 			let supremum = NumConst.numconst_of_zfrac supremum_numerator supremum_denominator in
 			
 			(* Print some information *)
-			if verbose_mode_greater Verbose_high then
+			if verbose_mode_greater Verbose_high then(
 				print_message Verbose_high ("Supremum of dimension " ^ (string_of_int dimension) ^ " is " ^ (NumConst.string_of_numconst supremum) ^ ". Is it a maximum? " ^ (string_of_bool is_maximum));
-				
+			);
 			
 			(* Case 0: bounded from neither below nor above: return 1 (arbitrarily) *)
 			if not bounded_from_below && not bounded_from_above then(
@@ -2500,9 +2505,19 @@ let exhibit_point nb_dimensions linear_constraint =
 			(* If minimum: pick it -- except if 0 (to avoid picking 0 for intervals [0, infty) or for intervals [0, c] with c > 1 ) *)
 			else if bounded_from_below && is_minimum then(
 				(* Case 1a: constant minimum equal to zero, and no bound from above or large enough *)
-				if NumConst.equal infimum NumConst.zero && (not bounded_from_above || NumConst.g supremum NumConst.one) then(
-					(* Return arbitrarily one, to avoid picking 0 *)
-					NumConst.one
+				if NumConst.equal infimum NumConst.zero && (not bounded_from_above || NumConst.g supremum NumConst.zero) then(
+					if not bounded_from_above || NumConst.g supremum NumConst.one then(
+						(* Return arbitrarily one, to avoid picking 0 *)
+						NumConst.one
+					)else(
+						(* Print some information *)
+						if verbose_mode_greater Verbose_high then(
+							print_message Verbose_high ("Supremum of dimension " ^ (string_of_int dimension) ^ " is " ^ (NumConst.string_of_numconst supremum) ^ ": take its half.");
+						);
+						
+						(* Or if the bound is in (0, 1], then return half of this bound *)
+						NumConst.div supremum (NumConst.numconst_of_int 2)
+					)
 				)
 				(* Case 1b: constant minimum and non-zero minimum or small bound from above *)
 				else(
