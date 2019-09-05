@@ -846,9 +846,18 @@ let constraint_zone_predecessor_g_u
 	(* Step 3: compute the subset of zn' that comes from a direct update (without time elapsing) from zn-1 *)
 	(* Method: zn' => assign the updates to Un-1 => intersection with (zn-1 ^ gn-1 \ Un-1) => intersection again with zn *)
 	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_medium ("Now applying updates…");
+	);
+
 	(* Apply the updates to find the "initial" valuations of zn *)
 	update_assign pxd_linear_constraint updates_n_minus_1;
 	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Updates were applied: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
+	);
 	(* Intersect with the points that pass the guard, and remove these variables *)
 	let zn_gn = LinearConstraint.pxd_intersection [LinearConstraint.pxd_of_px_constraint zn_minus_1 ; gn_minus_1] in
 	LinearConstraint.pxd_hide_assign (get_clocks_in_updates updates_n_minus_1) zn_gn;
