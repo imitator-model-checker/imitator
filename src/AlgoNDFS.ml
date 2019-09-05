@@ -8,7 +8,7 @@
  * 
  * File contributors : Laure Petrucci, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2019/08/21
+ * Last modified     : 2019/09/05
  *
  ************************************************************)
 
@@ -1019,7 +1019,7 @@ class algoNDFS =
 		in
 
 		let soundness =
-			if (termination_status = Regular_termination (*&& not depth_reached*))
+			if (termination_status = Regular_termination && not depth_reached)
 			then Constraint_exact
 			else Constraint_maybe_under
 		in
