@@ -8,7 +8,7 @@
  * 
  * File contributors : Laure Petrucci, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2019/09/05
+ * Last modified     : 2019/09/10
  *
  ************************************************************)
 
@@ -180,11 +180,11 @@ class algoNDFS =
 			let constr1 = LinearConstraint.px_hide_nonparameters_and_collapse state1.px_constraint in
 			let state2 = StateSpace.get_state state_space state_index2 in
 			let constr2 = LinearConstraint.px_hide_nonparameters_and_collapse state2.px_constraint in
-			print_message Verbose_high ("Projected contraint 1: \n"
+			print_message Verbose_high ("Projected constraint 1: \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
 				^ " state: "
 				^ (StateSpace.string_of_state_index state_index1));
-			print_message Verbose_high ("Projected contraint 2: \n"
+			print_message Verbose_high ("Projected constraint 2: \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr2
 				^ " state: "
 				^ (StateSpace.string_of_state_index state_index2));
@@ -199,11 +199,11 @@ class algoNDFS =
 			let constr1 = LinearConstraint.px_hide_nonparameters_and_collapse state1.px_constraint in
 			let state2 = StateSpace.get_state state_space state_index2 in
 			let constr2 = LinearConstraint.px_hide_nonparameters_and_collapse state2.px_constraint in
-			print_message Verbose_high ("Projected contraint 1: \n"
+			print_message Verbose_high ("Projected constraint 1: \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
 				^ " state: "
 				^ (StateSpace.string_of_state_index state_index1));
-			print_message Verbose_high ("Projected contraint 2: \n"
+			print_message Verbose_high ("Projected constraint 2: \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr2
 				^ " state: "
 				^ (StateSpace.string_of_state_index state_index2));
@@ -216,11 +216,11 @@ class algoNDFS =
 		let smaller_parameter_constraint state_index aconstraint =
 			let state = StateSpace.get_state state_space state_index in
 			let aconstr = LinearConstraint.px_hide_nonparameters_and_collapse state.px_constraint in
-			print_message Verbose_high ("Projected contraint : \n"
+			print_message Verbose_high ("Projected constraint : \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names aconstr
 				^ " state: "
 				^ (StateSpace.string_of_state_index state_index));
-			print_message Verbose_high ("Compared (bigger?) contraint : \n"
+			print_message Verbose_high ("Compared (bigger?) constraint : \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names aconstraint);
 			LinearConstraint.p_is_leq aconstr aconstraint
 		in
@@ -314,7 +314,7 @@ class algoNDFS =
 		let print_projection verbose_level thestate =
 			let state_constr = (StateSpace.get_state state_space thestate).px_constraint in
 			let constr = LinearConstraint.px_hide_nonparameters_and_collapse state_constr in
-			print_message verbose_level ("Projected contraint : \n"
+			print_message verbose_level ("Projected constraint : \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr)
 		in
 
