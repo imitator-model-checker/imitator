@@ -13,7 +13,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2019/09/09
+# Last modified     : 2019/09/10
 #************************************************************
 
 
@@ -3335,14 +3335,14 @@ Concrete run for parameter valuation:
 pta: l1 ==> 
 p = 1 & x = 0 & global_time = 0
  | 
- | via d = 1/2
+ | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 1 & x = 0 & global_time = 1/2
+p = 1 & x = 0 & global_time = 0
 
  | 
- | via d = 1/2
+ | via d = 1
  | followed by combined transition [PTA pta: guard{ p = x} updates{x := 0}  sync b Target l3] 
  | 
  v  pta: l3 ==> 
@@ -3375,14 +3375,14 @@ Impossible concrete run for parameter valuation:
 pta: l1 ==> 
 p = 1 & x = 0 & global_time = 0
  | 
- | via d = 1/2
+ | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 1 & x = 0 & global_time = 1/2
+p = 1 & x = 0 & global_time = 0
 
  | 
- | via d = 1/2
+ | via d = 1
  | followed by combined transition [PTA pta: guard{ p = x} updates{x := 0}  sync b Target l3] 
  | 
  v  pta: l3 ==> 
