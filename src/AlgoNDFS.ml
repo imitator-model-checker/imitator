@@ -260,36 +260,78 @@ class algoNDFS =
 		(**************************************************)
 		(* add a state and its depth to the pending queue *)
 		(**************************************************)
-		let add_pending astate astate_depth =
-			if options#no_pending_ordered then
+		let add_pending astate_index astate_depth =
+		begin
+			match options#pending_order with
+			| Pending_none ->
 				(* standard queuing *)
-				pending := (astate,astate_depth)::(!pending)
-			else (
-				(* add the state in the right place in the queue:	larger zones first *)
+				pending := (astate_index,astate_depth)::(!pending)
+			| Pending_param ->
+				(* add the state in the right place in the queue: larger parametric projections of zones first *)
 				if (queue_is_empty !pending) then
-					pending := [(astate,astate_depth)]
+					pending := [(astate_index,astate_depth)]
 				else (
 					let newpending = ref [] in
 					while not (queue_is_empty !pending) do
 						match (!pending) with
 							| [] -> raise (InternalError ("Impossible situation in algoNDFS: the queue should not be empty"))
-							| (first_state,first_state_depth)::body ->
-								if (smaller_parameter_projection first_state astate) then (
+							| (first_state_index,first_state_depth)::body ->
+								if (smaller_parameter_projection first_state_index astate_index) then (
 									(* insert a state before the current state *)
-									newpending := (!newpending)@[(astate,astate_depth)];
+									newpending := (!newpending)@[(astate_index,astate_depth)];
 									newpending := (!newpending)@(!pending);
 									pending := [];
 								) else (
-									newpending := (!newpending)@[(first_state,first_state_depth)];
+									newpending := (!newpending)@[(first_state_index,first_state_depth)];
 									pending := body;
 									if (queue_is_empty !pending) then
 										(* no more states to compare with *)
-										newpending := (!newpending)@[(astate,astate_depth)];
+										newpending := (!newpending)@[(astate_index,astate_depth)];
 								)
 					done;
 					pending := !newpending;
 				)
-			);
+			| Pending_accept ->
+				(* insert accepting states at the head, others at the tail *)
+				if (State.is_accepting (StateSpace.get_state state_space astate_index)) then (
+						pending := (astate_index,astate_depth)::(!pending);
+				) else (pending := (!pending)@[(astate_index,astate_depth)];
+				)
+			| Pending_zone ->
+				(* add the state in the right place in the queue: larger zones first *)
+				if (queue_is_empty !pending) then
+					pending := [(astate_index,astate_depth)]
+				else (
+					let newpending = ref [] in
+					let astate = StateSpace.get_state state_space astate_index in
+					let astate_loc, astate_constr =
+							astate.global_location, astate.px_constraint in
+					while not (queue_is_empty !pending) do
+						match (!pending) with
+							| [] -> raise (InternalError ("Impossible situation in algoNDFS: the queue should not be empty"))
+							| (first_state_index,first_state_depth)::body ->
+								let state1 =
+										StateSpace.get_state state_space first_state_index in
+								let state1_loc, state1_constr =
+										state1.global_location, state1.px_constraint in
+								if (LinearConstraint.px_is_leq state1_constr astate_constr) then (
+									(* insert a state before the current state *)
+									newpending := (!newpending)@[(astate_index,astate_depth)];
+									newpending := (!newpending)@(!pending);
+									pending := [];
+								) else (
+									newpending :=
+										(!newpending)@[(first_state_index,first_state_depth)];
+									pending := body;
+									if (queue_is_empty !pending) then
+										(* no more states to compare with *)
+										newpending :=
+											(!newpending)@[(astate_index,astate_depth)];
+								)
+					done;
+					pending := !newpending;
+				)
+			end;
 			printpendingqueue "Pending (state added)" !pending
 		in
 

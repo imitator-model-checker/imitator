@@ -67,7 +67,7 @@ class imitator_options :
 (* 		method no_initprune : bool *)
 		method no_leq_test_in_ef : bool
 		method no_lookahead : bool
-		method no_pending_ordered : bool
+(* 		method no_pending_ordered : bool *)
 		method no_random : bool
 		method no_time_elapsing : bool
 		method no_variable_autoremove : bool
@@ -84,6 +84,7 @@ class imitator_options :
 		method set_output_result : bool -> unit
 		
 		method output_tiles_files : bool
+		method pending_order : pending_order
 		method pi_compatible : bool
 		method precomputepi0 : bool
 		method property_file_name : string option
