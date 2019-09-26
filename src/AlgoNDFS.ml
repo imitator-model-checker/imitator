@@ -174,7 +174,6 @@ class algoNDFS =
 		in
 
 
-
 		(*** TODO: factor the following 2 functions!!! ***)
 
 		(***************************************************)
@@ -215,21 +214,6 @@ class algoNDFS =
 			LinearConstraint.p_is_leq constr1 constr2
 		in
 
-		(*********************************************************************)
-		(* Check inclusion of zone projection on parameters wrt a constraint *)
-		(*********************************************************************)
-(* 		let smaller_parameter_constraint state_index aconstraint =
-			let state = StateSpace.get_state state_space state_index in
-			let aconstr = LinearConstraint.px_hide_nonparameters_and_collapse state.px_constraint in
-			print_message Verbose_high ("Projected constraint : \n"
-				^ LinearConstraint.string_of_p_linear_constraint model.variable_names aconstr
-				^ " state: "
-				^ (StateSpace.string_of_state_index state_index));
-			print_message Verbose_high ("Compared (bigger?) constraint : \n"
-				^ LinearConstraint.string_of_p_linear_constraint model.variable_names aconstraint);
-			LinearConstraint.p_is_leq aconstr aconstraint
-		in
- *)
 		(****************************************************************************************)
 		(* Check if parameter constraint is included in a non-convex list of convex constraints *)
 		(****************************************************************************************)
@@ -241,9 +225,7 @@ class algoNDFS =
 				LinearConstraint.px_hide_nonparameters_and_collapse astate.px_constraint in
 			let astate_constr =
 				LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint linear_aconstr in
-(* 			let found_constr =
-				LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list in
- *)			if (LinearConstraint.p_nnconvex_constraint_is_leq astate_constr !collected_constr) then (
+			if (LinearConstraint.p_nnconvex_constraint_is_leq astate_constr !collected_constr) then (
 				print_highlighted_message Shell_bold Verbose_medium("Pruning with inclusion in collected constraints");
 				true
 			) else false
@@ -401,24 +383,6 @@ class algoNDFS =
 		(*****************************)
 		let noLookahead thesuccessors = init_state_index, false in
 
-		(**************************)
-		(* Function for initprune *)
-		(**************************)
-(* 		let withinitprune () =
-			if not options#no_initprune then (
-				print_highlighted_message Shell_bold Verbose_high("Testing inclusion of initial state");
-				let init_state = StateSpace.get_state state_space init_state_index in
-				let linear_init_constr = LinearConstraint.px_hide_nonparameters_and_collapse init_state.px_constraint in
-				let init_constr = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint linear_init_constr in
-				let found_constr = LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list in
-				if (LinearConstraint.p_nnconvex_constraint_is_leq init_constr found_constr) then (
-					print_highlighted_message Shell_bold Verbose_standard("Pruning with inclusion of initial state");
-					true
-				) else false
-			) else false
-		in
- *)
-
 		(***************************)
 		(* General Scheme of a DFS *)
 		(***************************)
@@ -504,13 +468,17 @@ class algoNDFS =
 
 		begin
 		match options#exploration_order with
-			(* NORMAL VERSION *)
-			(*** NOTE (ÉA, 2019/08/21: synthesis or emptiness?!! ***)
+
 			| Exploration_NDFS ->
-(* Classical NDFS exploration *)
+(* NDFS without subsumption *)
 				(* set up the dfs blue calls *)
 				let enterdfs (astate : State.state_index) : bool =
-					true in
+					if (options#counterex = false &&
+							check_parameter_leq_list astate) then (
+						blue := astate::(!blue);
+						printqueue "Blue" !blue;
+						false
+					) else true in
 				let predfs (astate : State.state_index) : unit =
 					processed_blue <- processed_blue + 1;
 					cyan := astate::(!cyan);
@@ -519,18 +487,32 @@ class algoNDFS =
 					let _ = self#post_from_one_state astate in ();
 					() in
 				let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
-					print_highlighted_message Shell_bold Verbose_standard
-						("Cycle found at state " ^ (string_of_int astate));
+					cyclecount <- cyclecount + 1;
+					if (options#counterex = true) then
+						print_highlighted_message Shell_bold Verbose_standard
+							("Cycle found at state " ^ (string_of_int astate))
+					else print_highlighted_message Shell_bold Verbose_standard
+							("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
 					print_message Verbose_standard
 						(ModelPrinter.string_of_state model
 							(StateSpace.get_state state_space astate));
-					termination_status <- Some Target_found;
+					(* For synthesis: we do not stop immediately *)
+					if (options#counterex = false) then
+						termination_status <- Some Regular_termination
+					else termination_status <- Some Target_found;
 					print_projection Verbose_standard astate;
 					let state_constr = (StateSpace.get_state state_space astate).px_constraint in
-					constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
+					constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 					collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
-					cyclecount <- cyclecount + 1;
-					raise TerminateAnalysis
+					if (options#counterex = true) then raise TerminateAnalysis;
+					blue := astate::(!blue);
+					printqueue "Blue" !blue;
+					(* and the current state is popped from the cyan list *)
+					match !cyan with
+					| thestate::body ->
+						cyan := body;
+						printqueue "Cyan" !cyan;
+					| _ -> print_message Verbose_standard "Error popping from cyan";
 				in
 				let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 					if (not (List.mem astate !blue) &&
@@ -542,7 +524,9 @@ class algoNDFS =
 				let testrecursivedfs (astate : State.state_index) : bool =
 					true in
 				let postdfs (astate : State.state_index) (astate_depth : int) : unit =
-					if (State.is_accepting (StateSpace.get_state state_space astate)) then (
+					(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
+					if ((not (check_parameter_leq_list astate)) &&
+							(State.is_accepting (StateSpace.get_state state_space astate))) then (
 						(* set up the dfs red calls *)
 						let enterdfs (astate : State.state_index) : bool =
 							true in
@@ -550,18 +534,22 @@ class algoNDFS =
 							red := astate::(!red);
 							printqueue "Red" !red in
 						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
-							print_highlighted_message Shell_bold Verbose_standard
-								("Cycle found at state " ^ (string_of_int astate));
+							cyclecount <- cyclecount + 1;
+							if (options#counterex = true) then
+								print_highlighted_message Shell_bold Verbose_standard
+									("Cycle found at state " ^ (string_of_int astate))
+							else print_highlighted_message Shell_bold Verbose_standard
+								("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
 							print_message Verbose_standard
 								(ModelPrinter.string_of_state model
 									(StateSpace.get_state state_space astate));
+							(* For synthesis: we do not stop immediately *)
 							termination_status <- Some Target_found;
 							print_projection Verbose_standard astate;
 							let state_constr = (StateSpace.get_state state_space astate).px_constraint in
-							constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
+							constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 							collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
-							cyclecount <- cyclecount + 1;
-							raise TerminateAnalysis
+							if (options#counterex = true) then raise TerminateAnalysis;
 						in
 						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 							true in
@@ -576,7 +564,7 @@ class algoNDFS =
 							() in
 						rundfs enterdfs predfs noLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
 					);
-					blue := astate::(!blue);
+					if (not (List.mem astate !blue)) then blue := astate::(!blue);
 					printqueue "Blue" !blue;
 					match !cyan with
 					| astate::body ->
@@ -588,201 +576,12 @@ class algoNDFS =
 					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
 
-			(* Subsumption + emptiness *)
-			| Exploration_NDFS_sub when property.synthesis_type = Witness ->
+			| Exploration_NDFS_sub ->
 (* NDFS with subsumption *)
 				(* set up the dfs blue calls *)
 				let enterdfs (astate : State.state_index) : bool =
-					true in
-				let predfs (astate : State.state_index) : unit =
-					processed_blue <- processed_blue + 1;
-					cyan := astate::(!cyan);
-					printqueue "Cyan" !cyan;
-					(*** WARNING (ÉA, 2019/07/11): this statement is a bit strange with unit type ***)
-					let _ = self#post_from_one_state astate in ();
-					() in
-				let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
-					print_highlighted_message Shell_bold Verbose_standard
-						("Cycle found at state " ^ (string_of_int astate));
-					print_message Verbose_standard
-						(ModelPrinter.string_of_state model
-							(StateSpace.get_state state_space astate));
-					termination_status <- Some Target_found;
-					print_projection Verbose_standard astate;
-					let state_constr = (StateSpace.get_state state_space astate).px_constraint in
-					constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
-					collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
-					cyclecount <- cyclecount + 1;
-					raise TerminateAnalysis
-				in
-				let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-					if (not (List.mem astate !blue) &&
-						not (List.mem astate !cyan) &&
-						not (setsubsumes !red astate)) then true else false in
-				let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-					false in
-				let alternativedfs (astate: State.state_index) (astate_depth : int) : unit =
-					() in
-				let testrecursivedfs (astate: State.state_index) : bool =
-					true in
-				let postdfs (astate: State.state_index) (astate_depth : int) : unit =
-					if (State.is_accepting (StateSpace.get_state state_space astate)) then (
-						(* set up the dfs red calls *)
-						let enterdfs (astate: State.state_index) : bool =
-							true in
-						let predfs (astate: State.state_index) : unit =
-							red := astate::(!red);
-							printqueue "Red" !red in
-						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
-							print_highlighted_message Shell_bold Verbose_standard
-								("Cycle found at state " ^ (string_of_int astate));
-							print_message Verbose_standard
-								(ModelPrinter.string_of_state model
-									(StateSpace.get_state state_space astate));
-							termination_status <- Some Target_found;
-							print_projection Verbose_standard astate;
-							let state_constr = (StateSpace.get_state state_space astate).px_constraint in
-							constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
-							collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
-							cyclecount <- cyclecount + 1;
-							raise TerminateAnalysis
-						in
-						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-							if (same_parameter_projection thestate astate) then true
-							else false in
-						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-							if (subsumesset astate !cyan) then true else false in
-						let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
-							cyclefound astate astate
-						in
-						let testrecursivedfs (astate : State.state_index) : bool =
-							if (not (setsubsumes !red astate)) then true else false in
-						let postdfs (astate : State.state_index) (astate_depth : int) : unit =
-							() in
-						rundfs enterdfs predfs noLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
-					);
-					blue := astate::(!blue);
-					printqueue "Blue" !blue;
-					match !cyan with
-					| astate::body ->
-						cyan := body;
-						printqueue "Cyan" !cyan;
-					| _ -> print_message Verbose_standard "Error popping from cyan";
-					() in
-				(try (rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index 0;)
-					with TerminateAnalysis -> ());
-				print_message Verbose_low("Finished the calls")
-
-			(* Layer + emptiness *)
-			| Exploration_layer_NDFS_sub when property.synthesis_type = Witness ->
-(* NDFS with subsumption and layers *)
-				(* set up the dfs blue calls *)
-				add_pending init_state_index 0;
-				(try (while !pending != [] do
-					match !pending with
-					| [] -> print_message Verbose_standard ("Impossible case");
-					| (thestate,thestate_depth)::body ->
-						pending := body;
-						print_message Verbose_low ("Popped state "
-							^ (string_of_int thestate));
-						printpendingqueue "Pending" !pending;
-						if (not (List.mem thestate !blue)) then
-						begin
-						let enterdfs (astate : State.state_index) : bool =
-							true in
-						let predfs (astate : State.state_index) : unit =
-							processed_blue <- processed_blue + 1;
-							cyan := astate::(!cyan);
-							printqueue "Cyan" !cyan;
-							let _ = self#post_from_one_state astate in ();
-							() in
-						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
-							print_highlighted_message Shell_bold Verbose_standard
-								("Cycle found at state " ^ (string_of_int astate));
-							print_message Verbose_standard
-								(ModelPrinter.string_of_state model
-									(StateSpace.get_state state_space astate));
-							termination_status <- Some Target_found;
-							print_projection Verbose_standard astate;
-							let astate = StateSpace.get_state state_space astate in
-							let state_constr = astate.px_constraint in
-							constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
-							collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
-							cyclecount <- cyclecount + 1;
-							raise TerminateAnalysis
-						in
-						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-							if (not (List.mem astate !blue) &&
-								not (List.mem astate !cyan) &&
-								not (layersetsubsumes !red astate)) then true else false in
-						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-							if (not (same_parameter_projection thestate astate)) then true
-							else false in
-						let alternativedfs (astate: State.state_index) (astate_depth : int) : unit =
-							add_pending astate (astate_depth + 1) in
-						let testrecursivedfs (astate: State.state_index) : bool =
-							true in
-						let postdfs (astate: State.state_index) (astate_depth : int) : unit =
-							if (State.is_accepting (StateSpace.get_state state_space astate)) then (
-								(* set up the dfs red calls *)
-								let enterdfs (astate: State.state_index) : bool =
-									true in
-								let predfs (astate: State.state_index) : unit =
-									red := astate::(!red);
-									printqueue "Red" !red in
-								let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
-									print_highlighted_message Shell_bold Verbose_standard
-										("Cycle found at state " ^ (string_of_int astate));
-									print_message Verbose_standard
-										(ModelPrinter.string_of_state model
-											(StateSpace.get_state state_space astate));
-									termination_status <- Some Target_found;
-									print_projection Verbose_standard astate;
-									let state_constr = (StateSpace.get_state state_space astate).px_constraint in
-									constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
-									collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
-									cyclecount <- cyclecount + 1;
-									raise TerminateAnalysis
-								in
-								let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-									if (same_parameter_projection thestate astate) then true
-									else false in
-								let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-									if (subsumesset astate !cyan) then true
-									else false in
-								let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
-									cyclefound astate astate
-								in
-								let testrecursivedfs (astate : State.state_index) : bool =
-									if (not (layersetsubsumes !red astate)) then true
-									else false in
-								let postdfs (astate : State.state_index) (astate_depth : int) : unit =
-									() in
-								rundfs enterdfs predfs noLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
-							);
-							blue := astate::(!blue);
-							printqueue "Blue" !blue;
-							match !cyan with
-							| astate::body ->
-								cyan := body;
-								printqueue "Cyan" !cyan;
-							| _ -> print_message Verbose_standard "Error popping from cyan";
-							() in
-						rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate thestate_depth;
-						end;
-				done;)
-							with TerminateAnalysis -> ());
-				print_message Verbose_low("Finished the calls")
-
-			(* Subsumption + synthesis *)
-			| (*Exploration_syn_NDFS_sub*)Exploration_NDFS_sub when property.synthesis_type = Synthesis ->
-(* collecting NDFS with subsumption *)
-				(* set up the dfs blue calls *)
-				let enterdfs (astate : State.state_index) : bool =
-					if (check_parameter_leq_list astate) then (
-(* 					if (List.exists (fun aconstraint ->
-							smaller_parameter_constraint astate aconstraint) !constraint_list) then (
- *)						(* State astate has been handled and must now become blue *)
+					if (options#counterex = false && check_parameter_leq_list astate) then (
+						(* State astate has been handled and must now become blue *)
 						blue := astate::(!blue);
 						printqueue "Blue" !blue;
 						false
@@ -797,18 +596,23 @@ class algoNDFS =
 					() in
 				let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 					cyclecount <- cyclecount + 1;
-					print_highlighted_message Shell_bold Verbose_standard
-						("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
+					if (options#counterex = true) then
+						print_highlighted_message Shell_bold Verbose_standard
+							("Cycle found at state " ^ (string_of_int astate))
+					else print_highlighted_message Shell_bold Verbose_standard
+							("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
 					print_message Verbose_standard
 						(ModelPrinter.string_of_state model
 							(StateSpace.get_state state_space astate));
 							(* For synthesis: we do not stop immediately *)
-					termination_status <- Some Regular_termination;
+					if (options#counterex = false) then
+						termination_status <- Some Regular_termination
+					else termination_status <- Some Target_found;
 					print_projection Verbose_standard astate;
 					let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 					constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 					collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
-(* 					if withinitprune () then raise TerminateAnalysis; *)
+					if (options#counterex = true) then raise TerminateAnalysis;
 					(* the state where the lookahead has found a cycle is now set blue *)
 					blue := astate::(!blue);
 					printqueue "Blue" !blue;
@@ -831,8 +635,7 @@ class algoNDFS =
 					true in
 				let postdfs (astate: State.state_index) (astate_depth : int) : unit =
 					(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
-					if ((not (check_parameter_leq_list astate) (* (List.exists (fun aconstraint ->
-								smaller_parameter_constraint astate aconstraint) !constraint_list) *)) &&
+					if ((not (check_parameter_leq_list astate)) &&
 							(State.is_accepting (StateSpace.get_state state_space astate))) then (
 						(* set up the dfs red calls *)
 						let enterdfs (astate: State.state_index) : bool =
@@ -842,18 +645,23 @@ class algoNDFS =
 							printqueue "Red" !red in
 						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 							cyclecount <- cyclecount + 1;
-							print_highlighted_message Shell_bold Verbose_standard
+							if (options#counterex = true) then
+								print_highlighted_message Shell_bold Verbose_standard
+									("Cycle found at state " ^ (string_of_int astate))
+							else print_highlighted_message Shell_bold Verbose_standard
 								("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
 							print_message Verbose_standard
 								(ModelPrinter.string_of_state model
 									(StateSpace.get_state state_space astate));
 							(* For synthesis: we do not stop immediately *)
-							termination_status <- Some Target_found;
+							if (options#counterex = false) then
+								termination_status <- Some Regular_termination
+							else termination_status <- Some Target_found;
 							print_projection Verbose_standard astate;
 							let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 							constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 							collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
-(* 							if withinitprune () then raise TerminateAnalysis; *)
+							if (options#counterex = true) then raise TerminateAnalysis;
 						in
 						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 							if (same_parameter_projection thestate astate) then true
@@ -882,9 +690,8 @@ class algoNDFS =
 				print_message Verbose_low("Finished the calls")
 
 			(* Layer + synthesis *)
-			| (*Exploration_syn_layer_NDFS_sub*)Exploration_layer_NDFS_sub when property.synthesis_type = Synthesis ->
-				(* collecting NDFS with layers and subsumption *)
-				print_message Verbose_standard("Using the option synlayerNDFSsub");
+			| Exploration_layer_NDFS_sub ->
+(* NDFS with layers and subsumption *)
 				(* set up the dfs blue calls *)
 				add_pending init_state_index 0;
 				(try (while !pending != [] do
@@ -898,10 +705,8 @@ class algoNDFS =
 						if (not (List.mem thestate !blue)) then
 						begin
 						let enterdfs (astate : State.state_index) : bool =
-							if (check_parameter_leq_list astate) then (
-(* 							if (List.exists (fun aconstraint ->
-									smaller_parameter_constraint astate aconstraint) !constraint_list) then (
- *)								(* State astate has been handled and must now become blue *)
+							if (options#counterex = false && check_parameter_leq_list astate) then (
+								(* State astate has been handled and must now become blue *)
 								blue := astate::(!blue);
 								printqueue "Blue" !blue;
 								false
@@ -916,18 +721,23 @@ class algoNDFS =
 							() in
 						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 							cyclecount <- cyclecount + 1;
-							print_highlighted_message Shell_bold Verbose_standard
-								("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
+							if (options#counterex = true) then
+								print_highlighted_message Shell_bold Verbose_standard
+									("Cycle found at state " ^ (string_of_int astate))
+							else print_highlighted_message Shell_bold Verbose_standard
+									("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
 							print_message Verbose_standard
 								(ModelPrinter.string_of_state model
 									(StateSpace.get_state state_space astate));
 								(* For synthesis: we do not stop immediately *)
-							termination_status <- Some Regular_termination;
+							if (options#counterex = false) then
+								termination_status <- Some Regular_termination
+							else termination_status <- Some Target_found;
 							print_projection Verbose_standard astate;
 							let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 							constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 							collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
-(* 							if withinitprune () then raise TerminateAnalysis; *)
+							if (options#counterex = true) then raise TerminateAnalysis;
 							(* the state where the lookahead has found a cycle is now set blue *)
 							blue := astate::(!blue);
 							printqueue "Blue" !blue;
@@ -951,8 +761,7 @@ class algoNDFS =
 							true in
 						let postdfs (astate: State.state_index) (astate_depth : int) : unit =
 							(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
-							if ((not (check_parameter_leq_list astate )(* List.exists (fun aconstraint ->
-										smaller_parameter_constraint astate aconstraint) !constraint_list) *)) &&
+							if ((not (check_parameter_leq_list astate)) &&
 									(State.is_accepting (StateSpace.get_state state_space astate))) then (
 								(* set up the dfs red calls *)
 								let enterdfs (astate: State.state_index) : bool =
@@ -962,18 +771,23 @@ class algoNDFS =
 									printqueue "Red" !red in
 								let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
 									cyclecount <- cyclecount + 1;
-									print_highlighted_message Shell_bold Verbose_standard
+									if (options#counterex = true) then
+										print_highlighted_message Shell_bold Verbose_standard
+											("Cycle found at state " ^ (string_of_int astate))
+									else print_highlighted_message Shell_bold Verbose_standard
 										("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
 									print_message Verbose_standard
 										(ModelPrinter.string_of_state model
 											(StateSpace.get_state state_space astate));
 									(* For synthesis: we do not stop immediately *)
-									termination_status <- Some Regular_termination;
+									if (options#counterex = false) then
+										termination_status <- Some Regular_termination
+									else termination_status <- Some Target_found;
 									print_projection Verbose_standard astate;
 									let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 									constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 									collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
-(* 									if withinitprune () then raise TerminateAnalysis; *)
+								if (options#counterex = true) then raise TerminateAnalysis;
 								in
 								let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 									if (same_parameter_projection thestate astate) then true
@@ -1005,13 +819,11 @@ class algoNDFS =
 
 							with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
-(* 			| Exploration_syn_mixed_NDFS -> print_message Verbose_standard("Using the option synMixedNDFS --- Not implemented yet") *)
 
 			| _ -> raise (InternalError ("Unknown exploration order in NDFS"))
 		end;
 
 		(* combine the linear constraints *)
-		(* constraint_valuations <- Some (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list); *)
 		constraint_valuations <- Some !collected_constr;
 
 		print_message Verbose_standard("---------------- Ending exploration ------------------");
@@ -1042,10 +854,6 @@ class algoNDFS =
 	(* Return true if the state is not discarded by the algorithm, i.e., if it is either added OR was already present before *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method add_a_new_state source_state_index combined_transition new_state =
-		(* Retrieve the model *)
-(* 		let model = Input.get_model () in *)
-
-
 		(* Try to add the new state to the state space *)
 		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
 
@@ -1114,11 +922,6 @@ class algoNDFS =
 		print_message Verbose_standard ("Number of processed states: " ^ (string_of_int processed_blue));
 		print_message Verbose_standard ("Number of cycles found: " ^ (string_of_int cyclecount));
 
-(*		let constr_result = match constraint_valuations with
-				| None -> LinearConstraint.false_p_nnconvex_constraint()
-				| Some constr -> constr
-		in*)
-
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
 			| None -> raise (InternalError "Termination status not set in NDFS exploration")
@@ -1139,8 +942,8 @@ class algoNDFS =
 		(* Return result *)
 		Single_synthesis_result
 		{
-			result = Good_constraint(*Accepting_cycle_constraint*) (constr_result, soundness);
-			(*result = Good_constraint (LinearConstraint.false_p_nnconvex_constraint(), soundness);*)
+			(* Accepting_cycle_constraint *)
+			result = Good_constraint (constr_result, soundness);
 
 			(* English description of the constraint *)
 			constraint_description = "constraint for detecting accepting cycles via NDFS exploration";
