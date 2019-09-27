@@ -3992,6 +3992,7 @@ class virtual algoStateBased =
 			| Exploration_queue_BFS_PRIOR -> self#explore_queue_bfs init_state_index;
 			| Exploration_NDFS -> self#explore_layer_bfs init_state_index;
             | Exploration_NDFS_sub -> self#explore_layer_bfs init_state_index;
+            | Exploration_layer_NDFS -> self#explore_layer_bfs init_state_index;
             | Exploration_layer_NDFS_sub -> self#explore_layer_bfs init_state_index;
 (*            | Exploration_syn_NDFS_sub -> self#explore_layer_bfs init_state_index;
             | Exploration_syn_layer_NDFS_sub -> self#explore_layer_bfs init_state_index;*)
