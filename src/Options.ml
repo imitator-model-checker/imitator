@@ -447,14 +447,10 @@ class imitator_options =
 					exploration_order <- Exploration_NDFS
 				else if order = "NDFSsub" then
 					exploration_order <- Exploration_NDFS_sub
+				else if order = "layerNDFS" then
+					exploration_order <- Exploration_layer_NDFS
 				else if order = "layerNDFSsub" then
 					exploration_order <- Exploration_layer_NDFS_sub
-(*				else if order = "synNDFSsub" then
-					exploration_order <- Exploration_syn_NDFS_sub
-				else if order = "synlayerNDFSsub" then
-					exploration_order <- Exploration_syn_layer_NDFS_sub*)
-		(*		else if order = "synMixedNDFS" then
-					exploration_order <- Exploration_syn_mixed_NDFS*)
 				else(
 					(*** HACK: print header now ***)
 					print_header_string();
@@ -643,6 +639,7 @@ class imitator_options =
         Use `queueBFSPRIOR` for a priority-based BFS with ranking system. [ANP17]
         Use `NDFS` for standard NDFS. [NPvdP18]
         Use `NDFSsub` for standard NDFS with subsumption. [NPvdP18]
+        Use `layerNDFS` for layered NDFS. [NPvdP18]
         Use `layerNDFSsub` for layered NDFS with subsumption. [NPvdP18]
         Default: layerBFS.
 				");
@@ -943,8 +940,8 @@ class imitator_options =
 
 				| Exploration_NDFS -> print_message Verbose_standard ("Exploration order: standard NDFS [NPvdP18].")
 				| Exploration_NDFS_sub -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption [NPvdP18].")
+				| Exploration_layer_NDFS -> print_message Verbose_standard ("Exploration order: NDFS synthesis with layers [NPvdP18].")
 				| Exploration_layer_NDFS_sub -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption and layers [NPvdP18].")
-(* 				| Exploration_syn_mixed_NDFS -> print_message Verbose_standard ("Exploration order: NDFS with mix of subsumption and layers.") *)
 end;
 
             (* Merge heuristic *)

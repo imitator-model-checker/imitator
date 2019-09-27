@@ -688,8 +688,136 @@ class algoNDFS =
 				(try (rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index 0;)
 					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
-
-			(* Layer + synthesis *)
+				
+			| Exploration_layer_NDFS ->
+(* NDFS with layers but no subsumption *)
+				(* set up the dfs blue calls *)
+				add_pending init_state_index 0;
+				(try (while !pending != [] do
+					match !pending with
+					| [] -> print_message Verbose_standard ("Impossible case");
+					| (thestate,thestate_depth)::body ->
+						pending := body;
+						print_message Verbose_low ("Popped state "
+							^ (string_of_int thestate));
+						printpendingqueue "Pending" !pending;
+						if (not (List.mem thestate !blue)) then
+						begin 
+						let enterdfs (astate : State.state_index) : bool =
+							if (options#counterex = false && check_parameter_leq_list astate) then (
+								(* State astate has been handled and must now become blue *)
+								blue := astate::(!blue);
+								printqueue "Blue" !blue;
+								false
+							) else true
+						in
+						let predfs (astate : State.state_index) : unit =
+							processed_blue <- processed_blue + 1;
+							cyan := astate::(!cyan);
+							printqueue "Cyan" !cyan;
+							(*** WARNING (ÉA, 2019/07/11): this statement is a bit strange with unit type ***)
+							let _ = self#post_from_one_state astate in ();
+							() in
+						let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
+							cyclecount <- cyclecount + 1;
+							if (options#counterex = true) then
+								print_highlighted_message Shell_bold Verbose_standard
+									("Cycle found at state " ^ (string_of_int astate))
+							else print_highlighted_message Shell_bold Verbose_standard
+									("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
+							print_message Verbose_standard
+								(ModelPrinter.string_of_state model
+									(StateSpace.get_state state_space astate));
+								(* For synthesis: we do not stop immediately *)
+							if (options#counterex = false) then
+								termination_status <- Some Regular_termination
+							else termination_status <- Some Target_found;
+							print_projection Verbose_standard astate;
+							let state_constr = (StateSpace.get_state state_space astate).px_constraint in
+							constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
+							collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
+							if (options#counterex = true) then raise TerminateAnalysis;
+							(* the state where the lookahead has found a cycle is now set blue *)
+							blue := astate::(!blue);
+							printqueue "Blue" !blue;
+							(* and the current state is popped from the cyan list *)
+							match !cyan with
+							| thestate::body ->
+								cyan := body;
+								printqueue "Cyan" !cyan;
+							| _ -> print_message Verbose_standard "Error popping from cyan";
+						in
+						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+							if (not (List.mem astate !blue) &&
+								not (List.mem astate !cyan)) then true else false in
+						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+							if (not (same_parameter_projection thestate astate)) then true
+							else false in
+						let alternativedfs (astate: State.state_index) (astate_depth : int) : unit =
+							add_pending astate (astate_depth + 1) in
+						let testrecursivedfs (astate: State.state_index) : bool =
+							true in
+						let postdfs (astate: State.state_index) (astate_depth : int) : unit =
+							(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
+							if ((not (check_parameter_leq_list astate)) &&
+									(State.is_accepting (StateSpace.get_state state_space astate))) then (
+								(* set up the dfs red calls *)
+								let enterdfs (astate: State.state_index) : bool =
+									true in
+								let predfs (astate: State.state_index) : unit =
+									red := astate::(!red);
+									printqueue "Red" !red in
+								let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
+									cyclecount <- cyclecount + 1;
+									if (options#counterex = true) then
+										print_highlighted_message Shell_bold Verbose_standard
+											("Cycle found at state " ^ (string_of_int astate))
+									else print_highlighted_message Shell_bold Verbose_standard
+										("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
+									print_message Verbose_standard
+										(ModelPrinter.string_of_state model
+											(StateSpace.get_state state_space astate));
+									(* For synthesis: we do not stop immediately *)
+									if (options#counterex = false) then
+										termination_status <- Some Regular_termination
+									else termination_status <- Some Target_found;
+									print_projection Verbose_standard astate;
+									let state_constr = (StateSpace.get_state state_space astate).px_constraint in
+									constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
+									collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
+								if (options#counterex = true) then raise TerminateAnalysis;
+								in
+								let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+									if (same_parameter_projection thestate astate) then true
+									else false in
+								let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
+									if (List.mem astate !cyan) then true
+									else false in
+								let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
+									cyclefound astate astate
+								in
+								let testrecursivedfs (astate : State.state_index) : bool =
+									if (not (List.mem astate !red)) then true
+									else false in
+								let postdfs (astate : State.state_index) (astate_depth : int) : unit =
+									() in					
+								rundfs enterdfs predfs noLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
+							);
+							if (not (List.mem astate !blue)) then blue := astate::(!blue);
+							printqueue "Blue" !blue;
+							match !cyan with
+							| astate::body ->
+								cyan := body;
+								printqueue "Cyan" !cyan;
+							| _ -> print_message Verbose_standard "Error popping from cyan";
+							() in
+						rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate thestate_depth;
+						end;
+				done;)
+				
+							with TerminateAnalysis -> ());
+				print_message Verbose_low("Finished the calls")
+			
 			| Exploration_layer_NDFS_sub ->
 (* NDFS with layers and subsumption *)
 				(* set up the dfs blue calls *)

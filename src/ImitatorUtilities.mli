@@ -205,14 +205,10 @@ type exploration_order =
 	| Exploration_NDFS
 	(** NDFSsub: NDFS with subsumption [NPvdP18] **)
 	| Exploration_NDFS_sub
-	(** layerNDFSsub: NDFS with subsumption  and layers [NPvdP18] **)
+	(** layerNDFSsub: NDFS without subsumption but with layers **)
+	| Exploration_layer_NDFS
+	(** layerNDFSsub: NDFS with subsumption and layers [NPvdP18] **)
 	| Exploration_layer_NDFS_sub
-(*	(** synNDFSsub: NDFS synthesis with subsumption **)
-	| Exploration_syn_NDFS_sub
-	(** synlayerNDFSsub: NDFS synthesis with subsumption and layers [NPvdP18] **)
-	| Exploration_syn_layer_NDFS_sub*)
-	(** synMixedNDFS: NDFS synthesis with a mix of subsumption and layers **)
-(* 	| Exploration_syn_mixed_NDFS *)
 
 type pending_order =
 	(** NDFS with layers: order in the pending list exploration **)
