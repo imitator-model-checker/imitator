@@ -1,0 +1,217 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Fig.1 from [WAH19]
+ *
+ * Description     : Fig.1 from [WAH19] "Monitoring copy to b within tp time units"
+ * Correctness     : Valuations of tp such for which copy is not well copied within tp time units
+ * Source          : "Symbolic Monitoring Against Specifications Parametric in Time and Data", CAV 2019, Masaki Waga, Étienne André, Ichiro Hasuo [doi:10.1007/978-3-030-25540-4_30]
+ * Author          : Étienne André, Masaki Waga
+ * Modeling        : Étienne André, Masaki Waga
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2019/09/30
+ * Last modified   : 2019/09/30
+ *
+ * IMITATOR version: 2.11
+ ************************************************************)
+
+var
+
+(* Clocks *)
+	(* The monitor local clock *)
+ 	c,
+	(* The absolute time clock for the word *)
+ 	tabs,
+		: clock;
+
+(* Discrete *)
+	(* Current 'x' and 'v' used to feed the PTDAs to IMITATOR *)
+	current_x,
+	current_v,
+	(* Memory variables for the PTDA, as in [WAH19] *)
+	valx,
+	valb,
+		: discrete;
+
+(* Parameters *)
+	(* The monitor parameters *)
+	tp,
+	px,
+	(* Additional parameters to "record" the start and end dates of the matches *)
+	tstart,
+	tend,
+		: parameter;
+
+(* Constants *)
+	SIGNAL_a = 1,
+	SIGNAL_b = 2,
+	SIGNAL_c = 3,
+		: constant;
+
+
+(* General modeling idea: since the formalism of [WAH19] differs from IMITATOR, we slightly change the words encoding: they first update their signal, and then in 0 time take the transition update. That is "@2 update(a, 0)" is translated into "vala := 0, current_x := SIGNAL_a" at time 2, immediately followed by sync on "update" *)
+
+
+(************************************************************)
+  automaton monitor
+(************************************************************)
+synclabs: update, epsilon;
+
+loc l0: invariant True
+	(*** HACK: still no "<>", so we use 2 transitions instead ***)
+	when current_x > SIGNAL_b sync update goto l0;
+	when current_x < SIGNAL_b sync update goto l0;
+
+	when current_x = SIGNAL_b && tabs = tstart do {valb := current_v} sync update goto l0;
+
+	(*** HACK: still no "<>", so we use 2 transitions instead ***)
+	when current_x = px && valb > current_v do {c := 0, valx := current_v} sync update goto lneq;
+	when current_x = px && valb < current_v do {c := 0, valx := current_v} sync update goto lneq;
+
+	when current_x = px && valb = current_v sync update goto leq;
+
+
+loc lneq: invariant True
+
+	(*** HACK: still no "<>", so we use 2 transitions instead ***)
+	when c < tp && current_x < SIGNAL_b sync update goto lneq;
+	when c < tp && current_x > SIGNAL_b sync update goto lneq;
+
+	(*** HACK: still no "<>", so we use 2 transitions instead ***)
+	when c < tp && current_x = SIGNAL_b && current_v < valx sync update goto lneq;
+	when c < tp && current_x = SIGNAL_b && current_v > valx sync update goto lneq;
+	
+	when c < tp && current_x = SIGNAL_b & current_v = valx goto leq;
+
+	when c >= tp && tabs = tend sync epsilon goto lfrownie;
+
+
+loc leq: invariant True
+
+
+loc lfrownie: invariant True
+
+
+end (* monitor *)
+
+
+
+(************************************************************)
+  automaton word
+(************************************************************)
+synclabs: update;
+
+(* "@0 update (a , 0)" *)
+loc word_0: invariant tabs <= 0
+	when tabs = 0 do {current_x := SIGNAL_a, current_v := 0} goto word_0_bis;
+loc word_0_bis: invariant tabs <= 0
+	when tabs = 0 sync update goto word_1;
+
+(* "@1 update (c , 1)" *)
+loc word_1: invariant tabs <= 1
+	when tabs = 1 do {current_x := SIGNAL_c, current_v := 1} goto word_1_bis;
+loc word_1_bis: invariant tabs <= 1
+	when tabs = 1 sync update goto word_2;
+
+(* "@2 update (a , 0)" *)
+loc word_2: invariant tabs <= 2
+	when tabs = 2 do {current_x := SIGNAL_a, current_v := 0} goto word_2_bis;
+loc word_2_bis: invariant tabs <= 2
+	when tabs = 2 sync update goto word_3;
+
+(* "@3 update (b , 1)" *)
+loc word_3: invariant tabs <= 3
+	when tabs = 3 do {current_x := SIGNAL_b, current_v := 1} goto word_3_bis;
+loc word_3_bis: invariant tabs <= 3
+	when tabs = 3 sync update goto word_4;
+
+(* "@4 update (b , 0)" *)
+loc word_4: invariant tabs <= 4
+	when tabs = 4 do {current_x := SIGNAL_b, current_v := 0} goto word_4_bis;
+loc word_4_bis: invariant tabs <= 4
+	when tabs = 4 sync update goto word_4c;
+
+(* "@4 update (c , 2)" *)
+loc word_4c: invariant tabs <= 4
+	when tabs = 4 do {current_x := SIGNAL_c, current_v := 2} goto word_4c_bis;
+loc word_4c_bis: invariant tabs <= 4
+	when tabs = 4 sync update goto word_5;
+
+(* "@5 update (a , 2)" *)
+loc word_5: invariant tabs <= 5
+	when tabs = 5 do {current_x := SIGNAL_a, current_v := 2} goto word_5_bis;
+loc word_5_bis: invariant tabs <= 5
+	when tabs = 5 sync update goto word_6;
+
+(* "@6 update (b , 2)" *)
+loc word_6: invariant tabs <= 6
+	when tabs = 6 do {current_x := SIGNAL_b, current_v := 2} goto word_6_bis;
+loc word_6_bis: invariant tabs <= 6
+	when tabs = 6 sync update goto word_7;
+
+(* "@7 update (c , 3)" *)
+loc word_7: invariant tabs <= 7
+	when tabs = 7 do {current_x := SIGNAL_c, current_v := 3} goto word_7_bis;
+loc word_7_bis: invariant tabs <= 7
+	when tabs = 7 sync update goto word_9;
+
+(* "@9 update (b , 3)" *)
+loc word_9: invariant tabs <= 9
+	when tabs = 9 do {current_x := SIGNAL_b, current_v := 3} goto word_9_bis;
+loc word_9_bis: invariant tabs <= 9
+	when tabs = 9 sync update goto word_end;
+
+
+urgent loc word_end: invariant True
+
+end (* word *)
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[monitor] = l0
+	& loc[word] = word_0
+
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+	& current_v	= -1
+	& current_x	= -1
+	& valx		= -1
+	& valb		= -1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& c			= 0
+	& tabs		= 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& tp		>= 0
+	& px		>= 0
+	& tstart	>= 0
+	& tend		>= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[monitor] = lfrownie;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
