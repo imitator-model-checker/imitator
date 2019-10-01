@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2019/08/21
+ * Last modified     : 2019/09/30
  *
  ************************************************************)
 
@@ -22,7 +22,7 @@
 
 let program_name = "IMITATOR"
 
-let version_string = "2.12"
+let version_string = "2.12.1"
 
 let version_name = "Butter Lobster"
 

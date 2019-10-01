@@ -559,7 +559,7 @@ Each state is represented with its discrete part (location and values of the dis
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Reachability}
+\subsection{Reachability}\label{ss:mode:EFunsafe}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 A main problem in parametric timed automata is to compute the set of parameter valuations for which some location (for instance, an error location) is reachable.
@@ -590,14 +590,14 @@ The option \styleOption{-dynamic-elimination} can also be used to reduce the sta
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Safety}
+\subsection{Safety}\label{ss:mode:EF}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 Often, we are rather interested in \emph{safety} synthesis, \ie{} the set of valuations for which the target location is unreachable.
 
 The standard command is:
 
-\styleCommand{\binimitator{} model.imi -mode EFsynth -merge -incl -output-result}
+\styleCommand{\binimitator{} model.imi -mode EF -merge -incl -output-result}
 
 
 Internally, this algorithm works exactly the same as the reachability-synthesis, and at the end the obtained constraint is \emph{negated} (with parameters being constrained to be included in the initial state valuations).
@@ -699,7 +699,7 @@ The semantics of these properties is detailed in~\cite{Andre13ICECCS}.
 
 Then, the command to synthesize parameters is the same as for the EF-synthesis:
 
-\styleCommand{\binimitator{} model.imi -mode EFsynth -merge -incl -output-result}
+\styleCommand{\binimitator{} model.imi -mode EF -merge -incl -output-result}
 
 Once more, options \styleOption{-merge} and \styleOption{-incl} are optional, but often improve efficiency and termination.
 
@@ -1552,8 +1552,11 @@ The mode for \imitator{}, \ie{} the algorithm to run.
 	\styleOption{statespace} & Generation of the entire parametric state space \\
 	& (see \cref{ss:mode:statespace}) \\
 
-	\styleOption{EF} & Parametric reachability synthesis (\EFsynth{} \cite{JLR15}) \\
-	& (see \cref{ss:mode:EFsynth}) \\
+	\styleOption{EFunsafe} & Parametric reachability synthesis (\EFsynth{} \cite{JLR15}) \\
+	& (see \cref{ss:mode:EFunsafe}) \\
+
+	\styleOption{EF} & Parametric safety synthesis (\EFsynth{} \cite{JLR15}) \\
+	& (see \cref{ss:mode:EF}) \\
 
 	\styleOption{EFmin} & Parametric minimization synthesis \\
 	& (see \cref{ss:mode:EFmin}) \\

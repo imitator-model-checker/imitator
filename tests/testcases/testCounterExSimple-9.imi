@@ -1,0 +1,84 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy example to test EF with counterexample
+ *
+ * Description     : Toy example to test EF with counterexample. Idea of this toy example: monitor modeling the property "at any time I can have 'a'; then, I have twice 'b' exactly p time units later"
+ * Correctness     : ltarget unreachable
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2019/08/23
+ * Last modified   : 2019/08/23
+ *
+ * IMITATOR version: 2.12
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+ 	global_time, (*** NOTE: special keyword ***)
+		: clock;
+
+	p,
+		: parameter;
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a, b;
+
+loc l1: invariant True & global_time >= 0
+	when True sync a do {x := 0} goto l2;
+
+loc l2: invariant x <= p
+	when x = p sync b do {x := 0} goto l3;
+
+loc l3: invariant x <= p
+	when x = p sync b goto ltarget;
+
+loc ltarget: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& global_time = 0
+
+	(*------------------------------------------------------------*)
+	(* Initial parameter valuations *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[pta] = ltarget;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -1,0 +1,74 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy example to test EF with counterexample
+ *
+ * Description     : Toy example to test EF with counterexample. Idea of this toy example: synthesize 2-d constraint
+ * Correctness     : ltarget unreachable
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2019/08/22
+ * Last modified   : 2019/08/23
+ *
+ * IMITATOR version: 2.12
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+ 	global_time, (*** NOTE: special keyword ***)
+		: clock;
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant x <= 3 & global_time >= 0
+	when True sync a goto ltarget;
+
+loc ltarget: invariant x > 2
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x > 1
+	& global_time = 0
+
+	(*------------------------------------------------------------*)
+	(* Initial parameter valuations *)
+	(*------------------------------------------------------------*)
+;
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := unreachable loc[pta] = ltarget;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
