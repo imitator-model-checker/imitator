@@ -5,8 +5,8 @@ matrix:
   include:
     - os: linux
       env: DISTRIBUTED=False
-    - os: linux
-      env: DISTRIBUTED=True
+#   - os: linux
+#     env: DISTRIBUTED=True
 
 script:
 - "./.travis/build.sh"
