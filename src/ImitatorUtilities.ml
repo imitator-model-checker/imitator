@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2019/08/21
+ * Last modified     : 2019/09/09
  *
  ************************************************************)
 
@@ -627,6 +627,7 @@ let print_header_string () =
 	^ "*                                             2009 - " ^ (BuildInfo.build_year) ^ "  *\n"
 	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
 	^ "*                       LIPN, Université Paris 13, France  *\n"
+	^ "*                   LORIA, Université de Lorraine, France  *\n"
 	^ "*  " ^ (string_n_times (length_header - (String.length imitator_url)) " ") ^ imitator_url ^ "  *\n"
 	^ "*                                                          *\n"
 	^ "*  " ^ (string_n_times (length_header - (String.length build_info)) " ") ^ build_info ^ "  *\n"

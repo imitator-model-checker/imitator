@@ -13,7 +13,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2019/08/23
+# Last modified     : 2019/09/10
 #************************************************************
 
 
@@ -3030,18 +3030,18 @@ p = 2 & x = 2 & global_time = 0
 p = 2 & x = 2 & global_time = 0
 
  | 
- | via d = 0
+ | via d = 1/4
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p = 2 & x = 2 & global_time = 0
+p = 2 & x = 9/4 & global_time = 1/4
 
  | 
- | via d = 0
+ | via d = 1/4
  | followed by combined transition [PTA pta: guard{True} updates{x := 0}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 2 & x = 0 & global_time = 0
+p = 2 & x = 0 & global_time = 1/2
 (************************************************************)
 
 
@@ -3119,27 +3119,27 @@ Concrete run for parameter valuation:
   p = 2
 
 pta: l1 ==> 
-p = 2 & x = 2 & global_time = 0
+p = 2 & x = 3/2 & global_time = 0
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{ p > 0} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p = 2 & x = 2 & global_time = 0
+p = 2 & x = 3/2 & global_time = 0
 
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p = 2 & x = 2 & global_time = 0
+p = 2 & x = 3/2 & global_time = 0
 
  | 
- | via d = 0
+ | via d = 1/2
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target ltarget] 
  | 
  v  pta: ltarget ==> 
-p = 2 & x = 2 & global_time = 0
+p = 2 & x = 2 & global_time = 1/2
 (************************************************************)
 
 END RESULT
@@ -3228,26 +3228,26 @@ Impossible concrete run for parameter valuation:
 & p2 = 3
 
 pta: l1 ==> 
-p1 = 3 & p2 = 3 & x = 2 & global_time = 0
+p1 = 3 & p2 = 3 & x = 3/2 & global_time = 0
  | 
  | via d = 0
  | followed by combined transition [PTA pta: guard{ p2 > 0} updates{}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
-p1 = 3 & p2 = 3 & x = 2 & global_time = 0
+p1 = 3 & p2 = 3 & x = 3/2 & global_time = 0
 
  | 
- | via d = 0
+ | via d = 1/2
  | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l3] 
  | 
  v  pta: l3 ==> 
-p1 = 3 & p2 = 3 & x = 2 & global_time = 0
+p1 = 3 & p2 = 3 & x = 2 & global_time = 1/2
  | 
  | via d = 1
  | followed by impossible transition labeled with a
  | 
  v  pta: l3 ==> 
-p1 = 3 & p2 = 3 & x = 3 & global_time = 1
+p1 = 3 & p2 = 3 & x = 3 & global_time = 3/2
 (************************************************************)
 
 
@@ -3336,7 +3336,7 @@ pta: l1 ==>
 p = 1 & x = 0 & global_time = 0
  | 
  | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
+ | followed by combined transition [PTA pta: guard{True} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
 p = 1 & x = 0 & global_time = 0
@@ -3376,7 +3376,7 @@ pta: l1 ==>
 p = 1 & x = 0 & global_time = 0
  | 
  | via d = 0
- | followed by combined transition [PTA pta: guard{True} updates{}  sync a Target l2] 
+ | followed by combined transition [PTA pta: guard{True} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2 ==> 
 p = 1 & x = 0 & global_time = 0
@@ -3531,7 +3531,7 @@ BEGIN RESULT
  Run #1
 
  Valuation:
-  p = 0
+  p = 1/2
 
  Other valuations with equivalent (discrete) run:
  1 > p
@@ -3541,23 +3541,23 @@ BEGIN RESULT
 
  Run:
 Concrete run for parameter valuation:
-  p = 0
+  p = 1/2
 
 pta: l1, d1 = 1/2 ==> 
-p = 0 & x = 0 & global_time = 0
+p = 1/2 & x = 0 & global_time = 0
  | 
  | via d = 3
  | followed by combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2, d1 = 1/2 ==> 
-p = 0 & x = 0 & global_time = 3
+p = 1/2 & x = 0 & global_time = 3
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
  | 
  v  pta: l3, d1 = 5/2 ==> 
-p = 0 & x = 0 & global_time = 4
+p = 1/2 & x = 0 & global_time = 4
 
  | 
  | via d = 1
@@ -3565,14 +3565,14 @@ p = 0 & x = 0 & global_time = 4
 & x = 1} updates{d1 := (d1) / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/4 ==> 
-p = 0 & x = 1 & global_time = 5
+p = 1/2 & x = 1 & global_time = 5
 
  | 
  | via d = 7
  | followed by combined transition [PTA pta: guard{ x = 8} updates{}  sync a Target lbad] 
  | 
  v  pta: lbad, d1 = 5/4 ==> 
-p = 0 & x = 8 & global_time = 12
+p = 1/2 & x = 8 & global_time = 12
 (************************************************************)
 
 
@@ -3626,7 +3626,7 @@ p = 1 & x = 2 & global_time = 6
  Run #3
 
  Valuation:
-  p = 0
+  p = 1/2
 
  Other valuations with equivalent (discrete) run:
  1 > p
@@ -3636,23 +3636,23 @@ p = 1 & x = 2 & global_time = 6
 
  Run:
 Impossible concrete run for parameter valuation:
-  p = 0
+  p = 1/2
 
 pta: l1, d1 = 1/2 ==> 
-p = 0 & x = 0 & global_time = 0
+p = 1/2 & x = 0 & global_time = 0
  | 
  | via d = 3
  | followed by combined transition [PTA pta: guard{ x = 3} updates{x := 0}  sync a Target l2] 
  | 
  v  pta: l2, d1 = 1/2 ==> 
-p = 0 & x = 0 & global_time = 3
+p = 1/2 & x = 0 & global_time = 3
 
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ x = 1} updates{x := 0, d1 := d1 + 2}  sync a Target l3] 
  | 
  v  pta: l3, d1 = 5/2 ==> 
-p = 0 & x = 0 & global_time = 4
+p = 1/2 & x = 0 & global_time = 4
 
  | 
  | via d = 1
@@ -3660,13 +3660,13 @@ p = 0 & x = 0 & global_time = 4
 & x = 1} updates{d1 := (d1) / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/4 ==> 
-p = 0 & x = 1 & global_time = 5
+p = 1/2 & x = 1 & global_time = 5
  | 
  | via d = 0
  | followed by impossible transition labeled with a
  | 
  v  pta: lbad, d1 = 5/4 ==> 
-p = 0 & x = 1 & global_time = 5
+p = 1/2 & x = 1 & global_time = 5
 (************************************************************)
 END RESULT
 """

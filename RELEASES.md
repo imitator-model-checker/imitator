@@ -4,6 +4,15 @@ MAJOR RELEASE
 
 
 *******************************************************
+# release 2.12.1 (2019-09-30)
+minor release
+
+### Bug fixing:
+* Fix bugs for option `-counterexample`
+* Fix issues in NDFS-based accepting cycle synthesis [NPP18], and options names
+
+
+*******************************************************
 # release 2.12 (2019-08-22) Butter Lobster
 MAJOR RELEASE
 

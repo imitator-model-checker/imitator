@@ -34,7 +34,7 @@ var
 synclabs: a, b;
 
 loc l1: invariant True & global_time >= 0
-	when True sync a goto l2;
+	when True sync a do {x := 0} goto l2;
 
 loc l2: invariant x <= p
 	when x = p sync b do {x := 0} goto l3;

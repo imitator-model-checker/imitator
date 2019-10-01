@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/08/23
+ * Last modified     : 2019/09/10
  *
  ************************************************************)
 
@@ -394,10 +394,18 @@ let get_clocks_in_updates (updates : AbstractModel.clock_updates list) : Automat
 
 
 (*------------------------------------------------------------*)
-(* Apply the updates to a linear constraint, i.e., compute the polyhedron p projected onto the function rho(X) *)
+(* Check whether there are some complex updates of the form clock' = linear_term *)
+(*------------------------------------------------------------*)
+
+
+(*------------------------------------------------------------*)
+(* Generic function to apply the updates to a linear constraint (either by intersection with the updates, or by existential quantification) *)
+(* quantify         : if true then apply existential quantification (used for forward analysis), otherwise just intersect with the update constraints (used for backward analysis) *)
+(* linear_constraint: the linear constraint (modified by this function) *)
+(* clock_updates    : the list of clock updates to apply *)
 (*------------------------------------------------------------*)
 (*** TO OPTIMIZE: use cache (?) *)
-let update_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) (clock_updates : AbstractModel.clock_updates list) =
+let apply_updates_assign_gen (quantify: bool) (linear_constraint : LinearConstraint.pxd_linear_constraint) (clock_updates : AbstractModel.clock_updates list) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -410,7 +418,7 @@ let update_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) (
 
 		(* Check wether there are some complex updates of the form clock' = linear_term *)
 		let arbitrary_updates = ref false in
-		(* Iterate on the lists of clocks for all synchronized automaton *)
+		(* Iterate on the lists of clocks for all synchronized automata *)
 		List.iter (fun local_updates ->
 			match local_updates with
 			| No_update -> ()
@@ -484,19 +492,31 @@ let update_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) (
 				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names updates);
 			);
 
-			(* Hide clocks updated within the linear constraint, viz., exists X' : lc, for X' in rho(X) *)
-			print_message Verbose_total ("\n -- Computing exists X : lc for reset clocks");
-			LinearConstraint.pxd_hide_assign list_of_clocks_to_update linear_constraint;
-			if verbose_mode_greater Verbose_total then(
-				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names linear_constraint);
+			(* Only in case of existential quantification: Hide clocks updated within the linear constraint, viz., exists X' : lc, for X' in rho(X) *)
+			if quantify then(
+				(* Print some information *)
+				print_message Verbose_total ("\n -- Computing exists X : lc for reset clocks");
+				
+				(* Eliminate variables *)
+				LinearConstraint.pxd_hide_assign list_of_clocks_to_update linear_constraint;
+				
+				(* Print some information *)
+				if verbose_mode_greater Verbose_total then(
+					print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names linear_constraint);
+				);
 			);
 
 			(* Add the constraints X = 0 *)
+			(* Print some information *)
 			print_message Verbose_total ("\n -- Adding X = 0 for reset clocks");
+			
+			(* Apply intersection *)
 			LinearConstraint.pxd_intersection_assign linear_constraint [updates];
+			
+			(* Print some information *)
 			if verbose_mode_greater Verbose_total then(
 				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names linear_constraint);
-			)
+			);
 
 		(* CASE 3: updates to linear terms *)
 		)else(
@@ -504,110 +524,168 @@ let update_assign (linear_constraint : LinearConstraint.pxd_linear_constraint) (
 
 			(*** TODO (not urgent) : add "update" function to LinearConstraint ***)
 
-
-
 			(* Compute the pairs (X_i , = linear_term) from the hashtable *)
 			let updates = Hashtbl.fold (fun clock_id linear_term current_updates -> (clock_id, linear_term) :: current_updates) clocks_hash [] in
-			(** TO OPTIMIZE (?): could be performed statically (when converting the model).
-				PRO: save time because no need to compute this for each constraint;
-				CON: lose time & memory (but maybe not that much) at some point because operations on constraints will have all dimensions instead of just the updated prime variables
-				TO OPTIMIZE (other option): merge all operations together, so that no need for hashtable
-			*)
-			(* Compute the correspondance between clocks X_i and renamed clocks X_i' *)
-			let prime_of_variable = Hashtbl.create (List.length updates) in
-			let variable_of_prime = Hashtbl.create (List.length updates) in
-			let clock_prime_id = ref model.nb_variables in
-			List.iter (fun (clock_id, _) ->
-				Hashtbl.add prime_of_variable clock_id !clock_prime_id;
-				Hashtbl.add variable_of_prime !clock_prime_id clock_id;
-				(* Debug message *)
-				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("\nThe primed index of variable '" ^ (model.variable_names clock_id) ^ "' (index = " ^ (string_of_int clock_id) ^ ") is set to " ^ (string_of_int !clock_prime_id) ^ ".")
-				);
-				(* Increment the prime id for next variable *)
-				clock_prime_id := !clock_prime_id + 1;
-				()
-			) updates;
-			let new_max_dimension = !clock_prime_id in
-			let extra_dimensions = new_max_dimension - model.nb_variables in
-			print_message Verbose_total ("\nNew dimension for constraints: " ^ (string_of_int new_max_dimension) ^ "; extra dimensions : " ^ (string_of_int extra_dimensions) ^ ".");
-			(* Extend the number of dimensions *)
-(* 			LinearConstraint.set_manager 0 new_max_dimension; *)
-			LinearConstraint.set_dimensions model.nb_parameters (model.nb_clocks + extra_dimensions) model.nb_discrete;
-			LinearConstraint.pxd_add_dimensions extra_dimensions linear_constraint;
 
-			(* Create constraints X_i' = linear_term *)
-			let inequalities = List.map (fun (clock_id, linear_term) ->
-				(* Build linear_term - clock_id' = 0 *)
-				LinearConstraint.make_pxd_linear_inequality (
-					LinearConstraint.add_pxd_linear_terms
-						(* 1: The update linear term *)
-						linear_term
-						(* 2: - clock_id' *)
-						(LinearConstraint.make_pxd_linear_term [
-								NumConst.minus_one, (Hashtbl.find prime_of_variable clock_id);
-							] NumConst.zero)
-				) LinearConstraint.Op_eq
-			) updates in
-			(* Create the constraint *)
-			let inequalities = LinearConstraint.make_pxd_constraint inequalities in
-			(* Print some information *)
-			let print_constraint c =
-				if verbose_mode_greater Verbose_total then(
-					let all_variable_names = fun variable_id ->
-						if variable_id < model.nb_variables then
-							model.variable_names variable_id
-						else
-							(model.variable_names (Hashtbl.find variable_of_prime variable_id)) ^ "'"
-					in
-					print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint all_variable_names c);
-				)else(
+			(* Case 3a: existential quantification requires to create primed variables *)
+			if quantify then(
+
+				(** TO OPTIMIZE (?): could be performed statically (when converting the model).
+					PRO: save time because no need to compute this for each constraint;
+					CON: lose time & memory (but maybe not that much) at some point because operations on constraints will have all dimensions instead of just the updated prime variables
+					TO OPTIMIZE (other option): merge all operations together, so that no need for hashtable
+				*)
+				
+				
+				(* Compute the correspondance between clocks X_i and renamed clocks X_i' *)
+				let prime_of_variable = Hashtbl.create (List.length updates) in
+				let variable_of_prime = Hashtbl.create (List.length updates) in
+				let clock_prime_id = ref model.nb_variables in
+				List.iter (fun (clock_id, _) ->
+					Hashtbl.add prime_of_variable clock_id !clock_prime_id;
+					Hashtbl.add variable_of_prime !clock_prime_id clock_id;
+					(* Debug message *)
+					if verbose_mode_greater Verbose_total then(
+						print_message Verbose_total ("\nThe primed index of variable '" ^ (model.variable_names clock_id) ^ "' (index = " ^ (string_of_int clock_id) ^ ") is set to " ^ (string_of_int !clock_prime_id) ^ ".")
+					);
+					(* Increment the prime id for next variable *)
+					clock_prime_id := !clock_prime_id + 1;
 					()
-				)
-			in
-			print_constraint inequalities;
+				) updates;
+				let new_max_dimension = !clock_prime_id in
+				let extra_dimensions = new_max_dimension - model.nb_variables in
+				print_message Verbose_total ("\nNew dimension for constraints: " ^ (string_of_int new_max_dimension) ^ "; extra dimensions : " ^ (string_of_int extra_dimensions) ^ ".");
+				(* Extend the number of dimensions *)
+				LinearConstraint.set_dimensions model.nb_parameters (model.nb_clocks + extra_dimensions) model.nb_discrete;
+				LinearConstraint.pxd_add_dimensions extra_dimensions linear_constraint;
 
-			(* Add the constraints X_i' = linear_term *)
-			print_message Verbose_total ("\n -- Adding X_i' = linear_term for updated clocks");
-			LinearConstraint.pxd_intersection_assign linear_constraint [inequalities];
-			(* Print some information *)
-			print_constraint linear_constraint;
+				(* Create constraints X_i' = linear_term *)
+				let inequalities = List.map (fun (clock_id, linear_term) ->
+					(* Build linear_term - clock_id' = 0 *)
+					LinearConstraint.make_pxd_linear_inequality (
+						LinearConstraint.add_pxd_linear_terms
+							(* 1: The update linear term *)
+							linear_term
+							(* 2: - clock_id' *)
+							(LinearConstraint.make_pxd_linear_term [
+									NumConst.minus_one, (Hashtbl.find prime_of_variable clock_id);
+								] NumConst.zero)
+					) LinearConstraint.Op_eq
+				) updates in
+				
+				(* Create the constraint *)
+				let inequalities = LinearConstraint.make_pxd_constraint inequalities in
+				
+				(* Print some information *)
+				let print_constraint c =
+					if verbose_mode_greater Verbose_total then(
+						let all_variable_names = fun variable_id ->
+							if variable_id < model.nb_variables then
+								model.variable_names variable_id
+							else
+								(model.variable_names (Hashtbl.find variable_of_prime variable_id)) ^ "'"
+						in
+						print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint all_variable_names c);
+					)else(
+						()
+					)
+				in
+				
+				print_constraint inequalities;
 
-			(* Remove the variables X_i *)
-			let list_of_clocks_to_hide, _ = List.split updates in
-			(* Hide clocks updated within the linear constraint, viz., exists X_i : lc, for X_i in rho(X) *)
-			print_message Verbose_total ("\n -- Computing exists X : lc for updated clocks");
-			LinearConstraint.pxd_hide_assign list_of_clocks_to_hide linear_constraint;
-			(* Print some information *)
-			if verbose_mode_greater Verbose_total then(
+				(* Add the constraints X_i' = linear_term *)
+				
+				(* Print some information *)
+				print_message Verbose_total ("\n -- Adding X_i' = linear_term for updated clocks");
+				(* Apply intersection *)
+				LinearConstraint.pxd_intersection_assign linear_constraint [inequalities];
+				(* Print some information *)
 				print_constraint linear_constraint;
-			);
 
-			(* Renames clock X_i' into X_i *)
-			(** TO OPTIMIZE !! *)
-			(* Compute pairs (X_i', X_i) *)
-			let clocks_and_primes = Hashtbl.fold (fun clock_id clock_prime_id pairs -> (clock_id, clock_prime_id) :: pairs) prime_of_variable [] in
-			print_message Verbose_total ("\n -- Renaming clocks X_i' into X_i for updated clocks");
-			LinearConstraint.pxd_rename_variables_assign clocks_and_primes linear_constraint;
-			(* Print some information *)
-			if verbose_mode_greater Verbose_total then(
-				print_constraint linear_constraint;
-			);
+				(* Remove the variables X_i *)
+				let list_of_clocks_to_hide, _ = List.split updates in
+				(* Hide clocks updated within the linear constraint, viz., exists X_i : lc, for X_i in rho(X) *)
+				print_message Verbose_total ("\n -- Computing exists X : lc for updated clocks");
+				LinearConstraint.pxd_hide_assign list_of_clocks_to_hide linear_constraint;
+				(* Print some information *)
+				if verbose_mode_greater Verbose_total then(
+					print_constraint linear_constraint;
+				);
 
-			(* Go back to the original number of dimensions *)
-			print_message Verbose_total ("\nGo back to standard dimension for constraints: " ^ (string_of_int model.nb_variables) ^ ".");
-(* 			LinearConstraint.set_manager 0 model.nb_variables; *)
-			LinearConstraint.set_dimensions model.nb_parameters model.nb_clocks model.nb_discrete;
-			LinearConstraint.pxd_remove_dimensions extra_dimensions linear_constraint;
-			(* Print some information *)
-			if verbose_mode_greater Verbose_total then(
-				print_constraint linear_constraint;
-			);
+				(* Renames clock X_i' into X_i *)
+				(** TO OPTIMIZE !! *)
+				(* Compute pairs (X_i', X_i) *)
+				let clocks_and_primes = Hashtbl.fold (fun clock_id clock_prime_id pairs -> (clock_id, clock_prime_id) :: pairs) prime_of_variable [] in
+				print_message Verbose_total ("\n -- Renaming clocks X_i' into X_i for updated clocks");
+				LinearConstraint.pxd_rename_variables_assign clocks_and_primes linear_constraint;
+				(* Print some information *)
+				if verbose_mode_greater Verbose_total then(
+					print_constraint linear_constraint;
+				);
+
+				(* Go back to the original number of dimensions *)
+				print_message Verbose_total ("\nGo back to standard dimension for constraints: " ^ (string_of_int model.nb_variables) ^ ".");
+				LinearConstraint.set_dimensions model.nb_parameters model.nb_clocks model.nb_discrete;
+				LinearConstraint.pxd_remove_dimensions extra_dimensions linear_constraint;
+				(* Print some information *)
+				if verbose_mode_greater Verbose_total then(
+					print_constraint linear_constraint;
+				);
+			
+			(* Case 3b: without existential quantification, just intersect with updates *)
+			) else (
+			
+				(* Create constraints X_i = linear_term *)
+				let inequalities = List.map (fun (clock_id, linear_term) ->
+					(* Build linear_term - clock_id = 0 *)
+					LinearConstraint.make_pxd_linear_inequality (
+						LinearConstraint.add_pxd_linear_terms
+							(* 1: The update linear term *)
+							linear_term
+							(* 2: - clock_id *)
+							(LinearConstraint.make_pxd_linear_term [
+									NumConst.minus_one, clock_id;
+								] NumConst.zero)
+					) LinearConstraint.Op_eq
+				) updates in
+				
+				(* Create the constraint *)
+				let inequalities = LinearConstraint.make_pxd_constraint inequalities in
+
+				(* Print some information *)
+				if verbose_mode_greater Verbose_total then(
+					print_message Verbose_total ("\nConstraint before intersection with update constraint…");
+					print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names inequalities);
+				);
+
+				(* Apply intersection *)
+				LinearConstraint.pxd_intersection_assign linear_constraint [inequalities];
+				
+				(* Print some information *)
+				if verbose_mode_greater Verbose_total then(
+					print_message Verbose_total ("\nConstraint after intersection with update constraint…");
+					print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names inequalities);
+				);
+
+			
+			)
 
 			(*** TODO: check what about discrete variables ?!! ***)
 		)
 		)
-	)
+	) (* end if some clock updates *)
+
+
+(*------------------------------------------------------------*)
+(* Apply the updates to a linear constraint by existential quantification (that is, when applying x := y+1, "x" is replaced with "y+1" *)
+(*------------------------------------------------------------*)
+let apply_updates_assign = apply_updates_assign_gen true
+
+
+(*------------------------------------------------------------*)
+(* Apply the updates to a linear constraint by intersection (that is, when applying x := y+1, we simply intersect the existing constraint with x = y+1 *)
+(*------------------------------------------------------------*)
+let intersect_updates_assign = apply_updates_assign_gen false
 
 
 (*------------------------------------------------------------*)
@@ -794,7 +872,7 @@ let constraint_zone_predecessor_g_u
 	);
 
 	(* Apply the updates to find the "initial" valuations of zn_plus_1 *)
-	update_assign pxd_linear_constraint updates_n;
+	apply_updates_assign pxd_linear_constraint updates_n;
 	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
@@ -831,6 +909,7 @@ let constraint_zone_predecessor_g_u
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("Applied timed past at state n: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
+		print_message Verbose_high ("\nIntersecting again with zn: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_zn) ^ "…");
 	);
 
 	(* Intersect again with zn *)
@@ -845,9 +924,19 @@ let constraint_zone_predecessor_g_u
 	(* Step 3: compute the subset of zn' that comes from a direct update (without time elapsing) from zn-1 *)
 	(* Method: zn' => assign the updates to Un-1 => intersection with (zn-1 ^ gn-1 \ Un-1) => intersection again with zn *)
 	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_medium ("Now applying updates…");
+	);
+
 	(* Apply the updates to find the "initial" valuations of zn *)
-	update_assign pxd_linear_constraint updates_n_minus_1;
 	
+	intersect_updates_assign pxd_linear_constraint updates_n_minus_1;
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("Updates were applied: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
+	);
 	(* Intersect with the points that pass the guard, and remove these variables *)
 	let zn_gn = LinearConstraint.pxd_intersection [LinearConstraint.pxd_of_px_constraint zn_minus_1 ; gn_minus_1] in
 	LinearConstraint.pxd_hide_assign (get_clocks_in_updates updates_n_minus_1) zn_gn;
@@ -1090,7 +1179,7 @@ let is_boolean_expression_satisfied location (boolean_expr : AbstractModel.boole
   in
   is_boolean_expression_satisfied_rec boolean_expr
 
-(** Merge two clock_updates - NOTE: conflict resolution done by update_assign *)
+(** Merge two clock_updates - NOTE: conflict resolution done by apply_updates_assign *)
 let merge_clock_updates first_update second_update : clock_updates =
   match first_update, second_update with
   | No_update, _ -> second_update
@@ -1288,7 +1377,7 @@ let compute_new_constraint (source_constraint : LinearConstraint.px_linear_const
 				| Some clock_index ->
 				(* Reset it *)
 					print_message Verbose_medium "Resetting the special reset clock…";
-					update_assign source_constraint_with_maybe_time_elapsing [Resets [clock_index]];
+					apply_updates_assign source_constraint_with_maybe_time_elapsing [Resets [clock_index]];
 			end;
 
 			print_message Verbose_total ("\nAlternative time elapsing: Applying time elapsing NOW");
@@ -1344,7 +1433,7 @@ let compute_new_constraint (source_constraint : LinearConstraint.px_linear_const
 		);
 
 		print_message Verbose_total ("\nProjecting C(X) and g(X) onto rho");
-		update_assign current_constraint clock_updates;
+		apply_updates_assign current_constraint clock_updates;
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total ("\nResult:");
@@ -1841,7 +1930,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 
 		(*** BADPROG: multiple conversions here! ***)
 		let z_n_plus_1 = LinearConstraint.pxd_of_px_constraint z_n_plus_1 in
-		update_assign z_n_plus_1 updates_n;
+		apply_updates_assign z_n_plus_1 updates_n;
 		let z_n_plus_1 = LinearConstraint.pxd_hide_discrete_and_collapse z_n_plus_1 in
 
 		

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/08
- * Last modified     : 2019/08/23
+ * Last modified     : 2019/09/09
  *
  ************************************************************)
 
@@ -92,8 +92,20 @@ class algoEFexemplify =
 		(* For debug purpose *)
 		let current_position = ref 0 in
 		
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high ("Starting from valuation for position " ^ (string_of_int (!current_position + debug_offset)) ^ ":");
+			print_message Verbose_high (ModelPrinter.string_of_px_valuation model !current_valuation);
+		);
+		
 		List.map (fun symbolic_step ->
 		
+			(* Print some information *)
+			if verbose_mode_greater Verbose_high then(
+				print_message Verbose_high ("Valuation for position " ^ (string_of_int (!current_position + debug_offset)) ^ " before time elapsing:");
+				print_message Verbose_high (ModelPrinter.string_of_px_valuation model !current_valuation);
+			);
+			
 			(* Idea: keep everything, including the actions and discrete values, but increment (arbitrarily!) the time by 1 at each step *)
 			
 			(* Arbitrarily choose 1 *)
@@ -108,7 +120,7 @@ class algoEFexemplify =
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then(
-				print_message Verbose_medium ("Valuation for position " ^ (string_of_int (!current_position + debug_offset)) ^ ":");
+				print_message Verbose_medium ("Valuation for position " ^ (string_of_int (!current_position + debug_offset)) ^ " after time elapsing:");
 				print_message Verbose_medium (ModelPrinter.string_of_px_valuation model valuation_after_elapsing);
 			);
 			
@@ -362,13 +374,28 @@ class algoEFexemplify =
 								print_message Verbose_low ("Now generating the \"impossible\" concrete run for negative parameter valuation from position " ^ (string_of_int !i) ^ "…");
 							);
 							
+							(* First, retrieve the last point, i.e., the one in the last state of the prefix *)
+							(*** NOTE: 'concrete_px_valuation_i' is not suitable, as it may not be an "initial" point, i.e., it may be the subject of some time elapsing ***)
+							let last_concrete_valuation =
+								(* Empty list of steps: the last state is the initial state *)
+								if concrete_run_prefix.steps = [] then concrete_run_prefix.initial_state.px_valuation
+								(* Non-empty list of steps: the last state is the last state of the steps *)
+								else (OCamlUtilities.list_last (concrete_run_prefix.steps)).target.px_valuation
+							in
+							
+							(* Print some information *)
+							if verbose_mode_greater Verbose_medium then(
+								print_message Verbose_medium ("Starting valuation for the impossible concrete run (at position " ^ (string_of_int !i) ^ "):");
+								print_message Verbose_medium (ModelPrinter.string_of_px_valuation model last_concrete_valuation);
+							);
+							
 							(* Print some information *)
 							if verbose_mode_greater Verbose_high then(
 								print_message Verbose_high ("Considering subset of symbolic run of length " ^ (string_of_int (List.length symbolic_run.symbolic_steps)) ^ " from position " ^ (string_of_int (!i)) ^ " to position " ^ (string_of_int ((List.length symbolic_run.symbolic_steps) - 1)) ^ "…");
 							);
 							
 							(* Convert the symbolic existing steps to concrete steps from the impossible valuation *)
-							let impossible_steps_suffix : StateSpace.impossible_concrete_step list = self#impossible_concrete_steps_of_symbolic_steps concrete_px_valuation_i (!i) (OCamlUtilities.sublist (!i) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps) in
+							let impossible_steps_suffix : StateSpace.impossible_concrete_step list = self#impossible_concrete_steps_of_symbolic_steps last_concrete_valuation (!i) (OCamlUtilities.sublist (!i) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps) in
 							
 							(* Now create the "impossible" concrete run *)
 							let impossible_concrete_run : StateSpace.impossible_concrete_run = {
@@ -529,6 +556,20 @@ class algoEFexemplify =
 								print_message Verbose_low ("Now generating the \"impossible\" concrete run for positive parameter valuation from position " ^ (string_of_int !i) ^ "…");
 							);
 							
+							(* First, retrieve the last point, i.e., the one in the last state of the prefix *)
+							(*** NOTE: 'concrete_px_valuation_i' is not suitable, as it may not be an "initial" point, i.e., it may be the subject of some time elapsing ***)
+							let last_concrete_valuation =
+								(* Empty list of steps: the last state is the initial state *)
+								if concrete_run_prefix.steps = [] then concrete_run_prefix.initial_state.px_valuation
+								(* Non-empty list of steps: the last state is the last state of the steps *)
+								else (OCamlUtilities.list_last (concrete_run_prefix.steps)).target.px_valuation
+							in
+							
+							(* Print some information *)
+							if verbose_mode_greater Verbose_medium then(
+								print_message Verbose_medium ("Starting valuation for the impossible concrete run (at position " ^ (string_of_int !i) ^ "):");
+								print_message Verbose_medium (ModelPrinter.string_of_px_valuation model last_concrete_valuation);
+							);
 							
 							let impossible_step_i =
 							(* Special case: if the concrete run is empty (a single state), we need to be careful, as the chosen point may not be the initial point! (global_time_clock > 0) *)
@@ -552,7 +593,7 @@ class algoEFexemplify =
 									(* Then reach the target state *)
 									target			= {
 										global_location= (StateSpace.get_state state_space state_i_plus_one).global_location;
-										px_valuation   = AlgoStateBased.apply_time_elapsing_to_concrete_valuation concrete_run_prefix.initial_state.global_location initial_time concrete_px_valuation_i
+										px_valuation   = AlgoStateBased.apply_time_elapsing_to_concrete_valuation concrete_run_prefix.initial_state.global_location initial_time last_concrete_valuation
 									}
 								}
 							
@@ -574,7 +615,7 @@ class algoEFexemplify =
 									(* Then reach the target state *)
 									target			= {
 										global_location= (StateSpace.get_state state_space state_i_plus_one).global_location;
-										px_valuation   = concrete_px_valuation_i;
+										px_valuation   = last_concrete_valuation;
 									}
 								}
 							)
@@ -599,7 +640,7 @@ class algoEFexemplify =
 								);
 								
 								(* Convert the symbolic existing steps to concrete steps from the impossible valuation *)
-								self#impossible_concrete_steps_of_symbolic_steps concrete_px_valuation_i (!i+1) (OCamlUtilities.sublist (!i+1) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps)
+								self#impossible_concrete_steps_of_symbolic_steps last_concrete_valuation (!i+1) (OCamlUtilities.sublist (!i+1) ((List.length symbolic_run.symbolic_steps) - 1) symbolic_run.symbolic_steps)
 							)
 							in
 							

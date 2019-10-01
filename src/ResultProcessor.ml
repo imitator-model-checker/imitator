@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2019/08/23
+ * Last modified     : 2019/09/05
  *
  ************************************************************)
 
@@ -907,8 +907,8 @@ let print_single_synthesis_or_point_based_result result computation_time constra
 		let text = 
 		match result with
 (* 			| Accepting_cycle_constraint _ -> "Final constraint such that there exists an accepting cycle" *)
-			| Good_constraint _ -> "Final positive " ^ constraint_str ^ " (positive = guarantees the validity of the property)"
-			| Bad_constraint _  -> "Final negative " ^ constraint_str ^ " (negative = violates the property)"
+			| Good_constraint _ -> "Final positive " ^ constraint_str ^ "" (*  (positive = guarantees the validity of the property) *)
+			| Bad_constraint _  -> "Final negative " ^ constraint_str ^ ""  (*(negative = violates the property)*)
 			| Good_bad_constraint _  -> "Final positive/negative " ^ constraint_str ^ " (in the form of a pair of constraints guaranteeing the validity/violation of the property)"
 		in
 		
