@@ -373,6 +373,16 @@ let get_state state_space state_index =
 	(* Return the state *)
 	{ global_location = global_location; px_constraint = linear_constraint; }
 
+(** compute a hash code for a state, depending only on the location *)
+let location_hash_code (state : state) =
+	Location.hash_code state.global_location
+
+
+(** return the list of states with the same location (modulo hash collisions) *)
+let get_comparable_states state_space state_index =
+        let state = get_state state_space state_index in
+        let hash = location_hash_code state in
+        Hashtbl.find_all state_space.states_for_comparison hash
 
 (** Return the global_location_index of a state_index *)
 let get_global_location_index state_space state_index =
@@ -1131,11 +1141,6 @@ exception Found_new of state_index
 (** Increment the number of generated states (even though not member of the state space) *)
 let increment_nb_gen_states state_space =
 	state_space.nb_generated_states := !(state_space.nb_generated_states) + 1
-
-
-(** compute a hash code for a state, depending only on the location *)
-let location_hash_code (state : state) =
-	Location.hash_code state.global_location
 
 
 (** Check if two states are equal *)

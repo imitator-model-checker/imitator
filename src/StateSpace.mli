@@ -198,6 +198,11 @@ val get_location : state_space -> Location.global_location_index -> Location.glo
 val get_state : state_space -> state_index -> state
 
 (*------------------------------------------------------------*)
+(** return the list of states with the same location (modulo hash collisions) *)
+(*------------------------------------------------------------*)
+val get_comparable_states : state_space -> state_index -> state_index list
+
+(*------------------------------------------------------------*)
 (** Return the global_location_index of a state_index *)
 (*------------------------------------------------------------*)
 val get_global_location_index : state_space -> state_index -> Location.global_location_index
