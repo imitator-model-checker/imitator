@@ -158,7 +158,7 @@ class algoNDFS =
 
 	        let printtable colour thetable =
                         if verbose_mode_greater Verbose_low then(
-                                let printrecord state_index u rest = 
+                                let printrecord state_index u rest =
                                         (string_of_int state_index) ^ " " ^ rest;
                                 in print_message Verbose_low("Table " ^ colour ^ " : [ "
                                         ^ Hashtbl.fold printrecord thetable "" ^ "]")
@@ -708,7 +708,7 @@ class algoNDFS =
 				(try (rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index 0;)
 					with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
-				
+
 			| Exploration_layer_NDFS ->
 (* NDFS with layers but no subsumption *)
 				(* set up the dfs blue calls *)
@@ -722,7 +722,7 @@ class algoNDFS =
 							^ (string_of_int thestate));
 						printpendingqueue "Pending" !pending;
 						if (not (table_test blue thestate)) then
-						begin 
+						begin
 						let enterdfs (astate : State.state_index) : bool =
 							if (options#counterex = false && check_parameter_leq_list astate) then (
 								(* State astate has been handled and must now become blue *)
@@ -820,7 +820,7 @@ class algoNDFS =
 									if (not (List.mem astate !red)) then true
 									else false in
 								let postdfs (astate : State.state_index) (astate_depth : int) : unit =
-									() in					
+									() in
 								rundfs enterdfs predfs noLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
 							);
 							table_add blue astate;
@@ -834,10 +834,10 @@ class algoNDFS =
 						rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs thestate thestate_depth;
 						end;
 				done;)
-				
+
 							with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
-			
+
 			| Exploration_layer_NDFS_sub ->
 (* NDFS with layers and subsumption *)
 				(* set up the dfs blue calls *)
@@ -850,13 +850,8 @@ class algoNDFS =
 						print_message Verbose_low ("Popped state "
 							^ (string_of_int thestate));
 						printpendingqueue "Pending" !pending;
-<<<<<<< HEAD
-						if (not (List.mem thestate !blue)) then
-						begin
-=======
 						if (not (table_test blue thestate)) then
-						begin 
->>>>>>> Store blue states in a hashtable
+						begin
 						let enterdfs (astate : State.state_index) : bool =
 							if (options#counterex = false && check_parameter_leq_list astate) then (
 								(* State astate has been handled and must now become blue *)
