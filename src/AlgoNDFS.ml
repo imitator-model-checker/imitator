@@ -361,19 +361,41 @@ class algoNDFS =
 
 		let setsubsumes setbig smallstate =
 			(* Does an element of the set subsume smallstate? *)
+<<<<<<< HEAD
 			List.exists (fun bigstate -> (subsumes bigstate smallstate)) setbig
+=======
+                        (* we traverse all states with the same location modulo hash collision *)
+                        let similar_states = StateSpace.get_comparable_states state_space smallstate in
+                        let check_sub bigstate = (table_test setbig bigstate) && (subsumes bigstate smallstate) in
+			List.exists check_sub similar_states
+>>>>>>> Restricting set-subsumption to states with same location
 		in
 
 		let subsumesset bigstate setsmall =
 			(* Does bigstate subsume some element of the set? *)
+<<<<<<< HEAD
 			List.exists (fun smallstate -> (subsumes bigstate smallstate)) setsmall
+=======
+                        (* we traverse all states with the same location modulo hash collision *)
+                        let similar_states = StateSpace.get_comparable_states state_space bigstate in
+                        let check_sub smallstate = (table_test setsmall smallstate) && (subsumes bigstate smallstate) in
+			List.exists check_sub similar_states
+>>>>>>> Restricting set-subsumption to states with same location
 		in
 
 		let layersetsubsumes setbig smallstate =
 			(* Does an element of the set subsume smallstate and is in the same layer? *)
+<<<<<<< HEAD
 			List.exists (fun bigstate ->
 				((same_parameter_projection bigstate smallstate) && (subsumes bigstate smallstate))
 			) setbig
+=======
+                        (* we traverse all states with the same location modulo hash collision *)
+                        let similar_states = StateSpace.get_comparable_states state_space smallstate in
+                        let check_sub bigstate = 
+                                (table_test setbig bigstate) && (subsumes bigstate smallstate) && (same_parameter_projection bigstate smallstate) in
+			List.exists check_sub similar_states
+>>>>>>> Restricting set-subsumption to states with same location
 		in
 
 		(******************************************)
