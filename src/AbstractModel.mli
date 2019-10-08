@@ -393,8 +393,4 @@ type abstract_model = {
 	(* Parameter to be minimized or maximized *)
 	optimized_parameter : optimization;
 
-	(* Set of polyhedra (only used for direct cartography without running the model) *)
-	(*** BADPROG ***)
-	(*** TODO: simplify this mode!!! (and remove from abstract model...) ***)
-(* 	carto : (LinearConstraint.p_linear_constraint * StateSpace.tile_nature) list * (NumConst.t * NumConst.t) * (NumConst.t * NumConst.t); *)
 }

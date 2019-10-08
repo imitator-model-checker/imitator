@@ -4,12 +4,11 @@
  *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
- *
- * Author: Etienne Andre
+ * Université de Lorraine, LORIA, CNRS, France
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2019/07/05
+ * Last modified     : 2019/10/08
  *
  ****************************************************************)
 
@@ -270,19 +269,6 @@ type parsed_optimization =
 
 
 (****************************************************************)
-(** Carto definition *)
-(****************************************************************)
-
-type tile_nature =
-  | Good
-  | Bad
-  | Unknown
-
-(*** BADPROG: should not mix AbstractModel here (but it's easier) *)
-type carto_definition  = (convex_predicate * tile_nature) list * (NumConst.t * NumConst.t) * (NumConst.t * NumConst.t)
-
-
-(****************************************************************)
 (** Input program *)
 (****************************************************************)
 
@@ -294,13 +280,128 @@ type parsing_structure =
   * property_definition
   * projection
   * parsed_optimization
-  * carto_definition
+
 
 
 (****************************************************************)
-(** Input pi0 *)
+(** Parsed valuation and valuation domains *)
 (****************************************************************)
 
 type pi0 = (string *  NumConst.t) list
 
 type v0 = (string * NumConst.t * NumConst.t) list
+
+
+(****************************************************************)
+(** Parsed property *)
+(****************************************************************)
+
+type parsed_synthesis_type =
+	| Parsed_emptiness
+	| Parsed_synthesis
+
+
+type parsed_state_predicate =
+	(*** TODO ***)
+	| TODO
+
+type parsed_property_type =
+
+	(*------------------------------------------------------------*)
+	(* Non-nested CTL *)
+	(*------------------------------------------------------------*)
+
+	(* Reachability *)
+	| EF of parsed_state_predicate
+	
+	(* Unavoidability *)
+	| AF of parsed_state_predicate
+	
+	(* Liveness *)
+	| AG of parsed_state_predicate
+	
+	
+	(*------------------------------------------------------------*)
+	(* Optimized reachability *)
+	(*------------------------------------------------------------*)
+	
+	(* Reachability with minimization *)
+	| EFmin of parsed_state_predicate * TODO
+	
+	(*** TODO: EFmin, EFmax, EFsynthmin, EFsynthmax, EF_synth_min_priority_queue ***)
+	
+	(** EF-synthesis with examples of (un)safe words *)
+	| EFexemplify of parsed_state_predicate
+	
+
+	(*------------------------------------------------------------*)
+	(* Cycles *)
+	(*------------------------------------------------------------*)
+	
+	(** Infinite-run (cycle) *)
+	| Cycle
+
+	(** Accepting infinite-run (cycle) *)
+	| Acc_Cycle
+
+	(** Infinite-run (cycle) with non-Zeno assumption *)
+	| NZCycle
+	
+
+	(*------------------------------------------------------------*)
+	(* Deadlock-freeness *)
+	(*------------------------------------------------------------*)
+	
+	(* Deadlock-free synthesis *)
+	| Deadlock_Freeness
+
+	
+	(*------------------------------------------------------------*)
+	(* Inverse method, trace preservation, robustness *)
+	(*------------------------------------------------------------*)
+	
+	(* Inverse method with complete, non-convex result *)
+	| IM of pi0
+
+	(* Non-complete inverse method with convex result *)
+	| ConvexIM of pi0
+
+	(* Parametric reachability preservation *)
+	| PRP of pi0
+
+	
+	(*------------------------------------------------------------*)
+	(* Cartography algorithms *)
+	(*------------------------------------------------------------*)
+	
+	(* Cartography *)
+	| Cover_cartography of v0
+
+	
+	(** Cover the whole cartography using learning-based abstractions *)
+	| Learning_cartography of v0
+	
+	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+	| Shuffle_cartography of v0
+	
+	(** Look for the border using the cartography*)
+	| Border_cartography of v0
+	
+	(** Randomly pick up values for a given number of iterations *)
+	| Random_cartography  of v0 * int
+	
+	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+	| RandomSeq_cartography  of v0 * int
+
+	(* Parametric reachability preservation *)
+	| PRPC of v0
+
+
+
+type parsed_property = {
+	(* Emptiness or synthesis *)
+	synthesis_type : parsed_synthesis_type;
+	(* Property *)
+	property       : parsed_property_type;
+}
+

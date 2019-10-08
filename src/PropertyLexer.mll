@@ -2,14 +2,12 @@
  *
  *                       IMITATOR
  *
- * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Université Paris 13, LIPN, CNRS, France
  * Université de Lorraine, LORIA, CNRS, France
  *
- * Author:        Étienne André
+ * Module description: Parser for the input model
  *
- * File contributors : Étienne André, Jaime Arias, Laure Petrucci
- * Created           : 2009/09/07
+ * File contributors : Étienne André
+ * Created           : 2019/10/08
  * Last modified     : 2019/10/08
 *****************************************************************)
 
@@ -48,57 +46,37 @@ rule token = parse
 		comment_ocaml lexbuf;
 		token lexbuf }
 
- 	| "automatically_generated_observer"       { CT_OBSERVER } (* to forbid this keyword, potentially used in the observer *)
- 	| "automatically_generated_x_obs"       { CT_OBSERVER_CLOCK } (* to forbid this keyword, potentially used in the observer *)
- 	| "special_0_clock" {CT_SPECIAL_RESET_CLOCK_NAME} (* to forbid this keyword, used when a special reset clock is defined *)
+ 	| "#empty"         { CT_EMPTY }
+ 	| "#synth"         { CT_SYNTH }
+ 	
+	| "EF"             { CT_EF }
+	| "AG"             { CT_AG }
 
- 	| "accepting"      { CT_ACCEPTING }
+	| "accloop"        { CT_ACCLOOP }
 	| "always"         { CT_ALWAYS }
 	| "and"            { CT_AND }
-	| "automaton"      { CT_AUTOMATON }
-	| "bad"            { CT_BAD }
- 	| "before"         { CT_BEFORE }
-	| "clock"          { CT_CLOCK }
-	| "constant"       { CT_CONSTANT }
-	| "discrete"       { CT_DISCRETE }
-	| "do"             { CT_DO }
-	| "else"           { CT_ELSE }
-	| "end"            { CT_END }
+	| "before"         { CT_BEFORE }
+ 	| "deadlockfree"   { CT_DEADLOCKFREE }
  	| "eventually"     { CT_EVENTUALLY }
  	| "everytime"      { CT_EVERYTIME }
 	| "False"          { CT_FALSE }
-	| "goto"           { CT_GOTO }
  	| "happened"       { CT_HAPPENED }
  	| "has"            { CT_HAS }
 	| "if"             { CT_IF }
 	| "in"             { CT_IN }
-	| "init"           { CT_INIT }
-	| "initially"      { CT_INITIALLY }
-	| "invariant"      { CT_INVARIANT }
-	| "loc"            { CT_LOC }
-	| "locations"      { CT_LOCATIONS }
-	| "maximize"       { CT_MAXIMIZE }
-	| "minimize"       { CT_MINIMIZE }
+ 	| "inversemethod"  { CT_INVERSEMETHOD }
+	| "loop"           { CT_LOOP }
 	| "next"           { CT_NEXT }
 	| "not"            { CT_NOT }
  	| "once"           { CT_ONCE }
 	| "or"             { CT_OR }
 	| "parameter"      { CT_PARAMETER }
  	| "projectresult"  { CT_PROJECTRESULT }
- 	| "property"       { CT_PROPERTY }
-	| "region"         { CT_REGION }
 	| "sequence"       { CT_SEQUENCE }
-	| "stop"           { CT_STOP }
-	| "sync"           { CT_SYNC }
-	| "synclabs"       { CT_SYNCLABS }
  	| "then"           { CT_THEN }
+ 	| "tracepreservation" { CT_TRACEPRESERVATION }
 	| "True"           { CT_TRUE }
- 	| "unreachable"    { CT_UNREACHABLE }
- 	| "urgent"         { CT_URGENT }
-	| "var"            { CT_VAR }
-	| "wait"           { CT_WAIT }
 	| "when"           { CT_WHEN }
-	| "while"          { CT_WHILE }
 	| "within"         { CT_WITHIN }
 
 
@@ -118,8 +96,8 @@ rule token = parse
 
 	| '+'              { OP_PLUS }
 	| '-'              { OP_MINUS }
-	| '*'              { OP_MUL }
 	| '/'              { OP_DIV }
+	| '*'              { OP_MULT }
 
 	| '('              { LPAREN }
 	| ')'              { RPAREN }
@@ -131,7 +109,6 @@ rule token = parse
 	| '&'              { AMPERSAND }
 	| ".."             { DOUBLEDOT }
 	| ','              { COMMA }
-	| '\''             { APOSTROPHE }
 	| '|'              { PIPE }
 	| ':'              { COLON }
 	| ';'              { SEMICOLON }
@@ -147,6 +124,6 @@ and comment_ocaml = parse
   | "*)"  { decr comment_depth;
             if !comment_depth == 0 then () else comment_ocaml lexbuf }
   | eof
-    { failwith "End of file inside a comment in model." }
+    { failwith "End of file inside a comment in property." }
   | '\n'  { line := !line + 1 ; comment_ocaml lexbuf }
   | _     { comment_ocaml lexbuf }

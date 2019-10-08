@@ -2,6 +2,10 @@
 # release X.XX (XXXX) FUTURE MAJOR RELEASE
 MAJOR RELEASE
 
+### Syntax
+* Terminate support for HyTech-style comments (`-- comment`) and C-style comments (`/* comment */`)
+* Terminate support for some HyTech-style optional syntax (regions declaration…)
+
 
 *******************************************************
 # release 2.12.1 (2019-10-01)

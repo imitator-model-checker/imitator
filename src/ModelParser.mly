@@ -57,12 +57,10 @@ let resolve_property l =
 %token AMPERSAND APOSTROPHE COLON COMMA DOUBLEDOT PIPE SEMICOLON
 %token CT_IF CT_THEN CT_ELSE CT_END /* tokens for conditions on transitions*/
 
-/* CT_ALL CT_ANALOG CT_ASAP CT_BACKWARD CT_CLDIFF CT_D  CT_ELSE CT_EMPTY  CT_ENDHIDE CT_ENDIF CT_ENDREACH CT_ENDWHILE CT_FORWARD CT_FREE CT_FROM  CT_HIDE CT_HULL CT_INTEGRATOR CT_ITERATE CT_NON_PARAMETERS CT_OMIT CT_POST CT_PRE CT_PRINT CT_PRINTS CT_PRINTSIZE CT_REACH  CT_STOPWATCH CT_THEN CT_TO CT_TRACE CT_USING  CT_WEAKDIFF CT_WEAKEQ CT_WEAKGE CT_WEAKLE  */
-
 %token
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BAD CT_BEFORE
-	CT_CARTO CT_CLOCK CT_CONSTANT
+	CT_CLOCK CT_CONSTANT
 	CT_DISCRETE CT_DO
 	CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE
@@ -346,6 +344,7 @@ update_nonempty_list:
 	| update { [Normal $1] }
 	| condition_update COMMA update_list { Condition $1 :: $3}
 	| condition_update { [Condition $1] }
+;
 
 /**********************************************/
 
@@ -460,7 +459,6 @@ linear_term:
 	| rational OP_MUL NAME { Variable ($1, $3) }
 	| OP_MINUS NAME { Variable (NumConst.minus_one, $2) }
 	| NAME { Variable (NumConst.one, $1) }
-// 	| LPAREN linear_expression RPAREN { $2 }
 	| LPAREN linear_term RPAREN { $2 }
 ;
 
@@ -549,63 +547,12 @@ boolean_expression:
 /***********************************************/
 
 commands:
-	| init_declaration_opt init_definition property_definition projection_definition optimization_definition carto_definition rest_of_commands_opt { ($2, $3, $4, $5, $6) }
-// 	| init_declaration_opt init_definition bad_definition { ($2, $3, ([] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero))) }
+	| init_definition property_definition projection_definition optimization_definition end_opt { ($1, $2, $3, $4) }
 ;
 
-
-/* For backward-compatibility with HyTech only */
-init_declaration_opt:
-	| init_declaration_useless { }
+end_opt:
+	| CT_END { }
 	| { }
-;
-
-/* For backward-compatibility with HyTech only */
-init_declaration_useless:
-	| CT_VAR regions COLON CT_REGION SEMICOLON { }
-;
-
-/* For backward-compatibility with HyTech only */
-regions:
-	| { }
-	| region_names { }
-;
-
-/* For backward-compatibility with HyTech only */
-region_names:
-	| region_name COMMA region_names { }
-	| region_name { }
-;
-
-/* For backward-compatibility with HyTech only */
-region_name:
-	| NAME { }
-	| CT_INIT { }
-	| CT_BAD { }
-;
-
-rest_of_commands_opt:
-	/* print (reach forward from init endreach); */
-/*	| CT_PRINT LPAREN CT_REACH CT_FORWARD CT_FROM region_name CT_ENDREACH RPAREN SEMICOLON { }
-	| { }*/
-	/* Allow anything from here! (to ensure compatibility with HyTech or other similar tools) */
-	| CT_END rest_of_commands { }
-	| { }
-
-rest_of_commands:
-	/* print (reach forward from init endreach); */
-/*	| CT_PRINT LPAREN CT_REACH CT_FORWARD CT_FROM region_name CT_ENDREACH RPAREN SEMICOLON { }
-	| { }*/
-	/* Allow anything from here! (to ensure compatibility with HyTech or other similar tools) */
-	| anything rest_of_commands { }
-	| { }
-;
-
-anything:
-	| LPAREN { }
-	| region_name { }
-	| RPAREN { }
-	| SEMICOLON { }
 ;
 
 init_definition:
@@ -642,7 +589,7 @@ discrete_predicate:
 	| NAME OP_EQ rational { Parsed_discrete_equal($1, $3) }
 	| NAME OP_GEQ rational { Parsed_discrete_geq($1, $3) }
 	| NAME OP_G rational { Parsed_discrete_g($1, $3) }
-	// Two forms allowed for intervals: d in [a, b] or d in [a..b]
+	/* Two forms allowed for intervals: d in [a, b] or d in [a..b] */
 	| NAME CT_IN LSQBRA rational COMMA rational RSQBRA { Parsed_discrete_interval($1, $4, $6) }
 	| NAME CT_IN LSQBRA rational DOUBLEDOT rational RSQBRA { Parsed_discrete_interval($1, $4, $6) }
 ;
@@ -669,7 +616,7 @@ property_definition:
 
 	| include_file { let _, _, _, property, _, _, _ = $1 in property }
 
-	// Case: no property
+	/* Case: no property */
 	|  { None }
 
 ;
@@ -677,7 +624,7 @@ property_definition:
 projection_definition:
 	| CT_PROJECTRESULT LPAREN name_nonempty_list RPAREN semicolon_opt { Some $3 }
 
-	// Case: no projection
+	/* Case: no projection */
 	|  { None }
 
 ;
@@ -686,13 +633,13 @@ optimization_definition:
 	| CT_MINIMIZE LPAREN NAME RPAREN semicolon_opt { Parsed_minimize $3 }
 	| CT_MAXIMIZE LPAREN NAME RPAREN semicolon_opt { Parsed_maximize $3 }
 
-	// Case: no min/max
+	/* Case: no min/max */
 	|  { No_parsed_optimization }
 
 ;
 
 
-// List of patterns
+/* List of patterns */
 pattern:
 	// Unreachability
 	| CT_UNREACHABLE bad_global_predicates { Parsed_unreachable_locations ($2) }
@@ -704,6 +651,7 @@ pattern:
 	/* everytime a2 then a1 has happened once before */
 	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_BEFORE { Action_precedence_cyclicstrict ($4, $2) }
 
+/*
 	// PATTERNS NOT IMPLEMENTED
 // 	/* if a1 then eventually a2 */
 // 	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_acyclic ($2, $5) }
@@ -711,6 +659,7 @@ pattern:
 // 	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_cyclic ($2, $5) }
 // 	/* everytime a1 then eventually a2 once before next */
 // 	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_ONCE CT_BEFORE CT_NEXT { Eventual_response_cyclicstrict ($2, $5) }
+*/
 
 	/* a within d */
 	| NAME CT_WITHIN linear_expression { Action_deadline ($1, $3) }
@@ -758,35 +707,8 @@ bad_global_predicates:
 
 
 convex_predicate_with_nature:
-	// TODO
-// 	| convex_predicate LBRACE CT_GOOD RBRACE { $1, Good }
-// 	| convex_predicate LBRACE CT_BAD RBRACE { $1, Bad }
-// 	| convex_predicate LBRACE CT_UNKNOWN RBRACE { $1, Unknown }
-// 	| convex_predicate LBRACE RBRACE { $1, Unknown }
 	| convex_predicate { $1, Unknown }
-
-carto_definition:
-	| CT_CARTO OP_ASSIGN carto_definition_interval OP_MUL carto_definition_interval convex_predicate_with_nature carto_definition_foll SEMICOLON { $6 :: $7 , $3 , $5 }
-// 	| CT_CARTO OP_ASSIGN convex_predicate_with_nature carto_definition_foll SEMICOLON { $3 :: $4 , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero) }
-// 	| CT_CARTO OP_ASSIGN   SEMICOLON { [] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero) }
-	// WARNING: bad prog below
-	|  { [] , (NumConst.zero,NumConst.zero) , (NumConst.zero,NumConst.zero) }
 ;
-
-carto_definition_interval:
-	| LPAREN pos_integer COMMA pos_integer RPAREN { ($2,$4) }
-;
-
-carto_definition_foll:
-	| PIPE convex_predicate_with_nature carto_definition_foll { $2 :: $3 }
-	| { [] }
-
-//// NOTE: Old version
-// loc_expression:
-// 	| loc_predicate { [ $1 ] }
-// 	| loc_predicate AMPERSAND loc_expression { $1 :: $3 }
-// 	| loc_predicate loc_expression { $1 :: $2 }
-// ;
 
 comma_opt:
 	| COMMA { }
