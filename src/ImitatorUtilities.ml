@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Useful and general functions for IMITATOR
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2019/09/09
+ * Last modified     : 2019/10/09
  *
  ************************************************************)
 
@@ -616,23 +617,23 @@ let print_header_string () =
 	
 	(* Build info *)
 	let build_info = "Build: " ^ BuildInfo.build_number ^ " (" ^ BuildInfo.build_time ^ ")" in
-	let length_header = 54 in
+	let length_header = 57 in
 	
 	let imi_name = program_name_and_version_and_nickname() in
 	
-	"************************************************************\n"
+	"***************************************************************\n"
 	^ "*  " ^ (shell_code_of_shell_highlighting_type Shell_bold) ^ imi_name ^ (shell_code_of_shell_highlighting_type Shell_normal) ^  (string_n_times (length_header - (String.length imi_name)) " ") ^ "  *\n"
-	^ "*                                                          *\n"
-	^ "*                                    Étienne André et al.  *\n"
+	^ "*                                                             *\n"
+	^ "*                                    Étienne André et al.     *\n"
 	^ "*                                             2009 - " ^ (BuildInfo.build_year) ^ "  *\n"
-	^ "*                       LSV, ENS de Cachan & CNRS, France  *\n"
-	^ "*                       LIPN, Université Paris 13, France  *\n"
-	^ "*                   LORIA, Université de Lorraine, France  *\n"
-	^ "*  " ^ (string_n_times (length_header - (String.length imitator_url)) " ") ^ imitator_url ^ "  *\n"
-	^ "*                                                          *\n"
-	^ "*  " ^ (string_n_times (length_header - (String.length build_info)) " ") ^ build_info ^ "  *\n"
-	^ "*  " ^ (string_n_times (length_header - (String.length git_branch_and_hash)) " ") ^ git_branch_and_hash ^ "  *\n"
-	^ "************************************************************"
+	^ "*                       LSV, ENS de Cachan & CNRS, France     *\n"
+	^ "*                       LIPN, Université Paris 13, France     *\n"
+	^ "*  Université de Lorraine, CNRS, Inria, LORIA, Nancy, France  *\n"
+	^ "*  " ^ (string_n_times (length_header - (String.length imitator_url)) " ") ^ imitator_url ^ "     *\n"
+	^ "*                                                             *\n"
+	^ "*  " ^ (string_n_times (length_header - (String.length build_info)) " ") ^ build_info ^ "     *\n"
+	^ "*  " ^ (string_n_times (length_header - (String.length git_branch_and_hash)) " ") ^ git_branch_and_hash ^ "     *\n"
+	^ "***************************************************************"
 	
 	in print_message Verbose_standard header_string
 
