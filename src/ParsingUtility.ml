@@ -4,12 +4,13 @@
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: Parsing functions for input elements
  *
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2018/04/06
+ * Last modified     : 2019/10/09
  *
  ************************************************************)
 
@@ -59,7 +60,7 @@ let parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name =
 					(* Resize it if too big *)
 					let error_symbol =
 						if (String.length error_symbol > 25) then
-							"..." ^ (String.sub error_symbol (String.length error_symbol - 25) 25)
+							"…" ^ (String.sub error_symbol (String.length error_symbol - 25) 25)
 						else error_symbol
 					in
 					(* Get the line *)
@@ -125,62 +126,8 @@ let compile_model options (with_special_reset_clock : bool) =
 	parsing_counter#start;
 
 	(* Parsing the main model *)
-	print_message Verbose_low ("Parsing file " ^ options#model_input_file_name ^ "...");
-	let parsing_structure =
-		(* Branching between 2 input syntaxes *)
-
-(*		(* Case GrML *)
-		if options#fromGML then(
-			(*** HACK: for EFsynth, we will have to get the property from the command line and insert it into the parsed structure ***)
-			let variable_declarations, automata, init_definition, noproperty_definition, noprojection, nocarto_definition =
-			try parser_lexer_from_file GrMLParser.main GrMLLexer.token options#model_input_file_name
-			with InvalidModel -> (print_error ("GrML input contains error. Please check it again."); abort_program (); exit 1)
-			in
-			if options#imitator_mode = EF_synthesis then(
-				(* So far, we retrieved the parsing structure for the GrML model *)
-				(* Now, let us check whether the command line property is present *)
-				if options#cosyprop = "" then(
-					print_error ("[GrML parser] The file name corresponding to the property must be given when executing CosyVerif in mode EFsynth."); abort_program (); exit 1
-				);
-				(* Now, let us get and parse the property *)
-				let property = parser_lexer_from_file CosyPropertyParser.main CosyPropertyLexer.token options#cosyprop in
-
-				(*** Big HACK: we need to get the automaton name, to insert it in the property if it is an Unreachable_location property ***)
-				(* First get the (unique) automaton name *)
-				let automaton =
-				match automata with
-					| [automaton] -> automaton
-					| _ -> raise (InternalError("Only one automaton is expected when parsing GrML."))
-				in
-				let automaton_name, _, _ = automaton in
-
-				(* Insert the automaton name in the property *)
-				let property_updated =
-				match property with
-				(* Case Unreachable_locations: edit *)
-				| Some (ParsingStructure.Parsed_unreachable_locations parsed_unreachable_global_location) ->
-					begin
-					match parsed_unreachable_global_location with
-					(* Expecting a single Unreachable_location *)
-					| [[ParsingStructure.Parsed_unreachable_loc (_, location_name)]] ->
-						Some (ParsingStructure.Parsed_unreachable_locations [[ParsingStructure.Parsed_unreachable_loc (automaton_name, location_name)]])
-					| _ -> raise (InternalError("Unexpected form of unreachable property found when parsing GrML."))
-					end
-				(* Other: no edit *)
-				| p -> p
-				in
-
-				(* Finally, insert the property at its right location *)
-				variable_declarations, automata, init_definition, property_updated, noprojection, nocarto_definition
-			) else (
-				(* simply return the parsed structure as it is *)
-				variable_declarations, automata, init_definition, noproperty_definition, noprojection, nocarto_definition
-
-			)
-		) (* end if GrML *)
-
-		(* Case normal parsing *)
-		else*) parser_lexer_from_file ModelParser.main ModelLexer.token options#model_input_file_name
+	print_message Verbose_low ("Parsing file " ^ options#model_input_file_name ^ "…");
+	let parsing_structure = parser_lexer_from_file ModelParser.main ModelLexer.token options#model_input_file_name
 	in
 
 	(* Statistics *)
@@ -202,7 +149,7 @@ let compile_model options (with_special_reset_clock : bool) =
 	try (
 		ModelConverter.abstract_model_of_parsing_structure options with_special_reset_clock parsing_structure
 	) with
-		| InvalidModel -> (print_error ("The input model contains errors. Please check it again."); abort_program (); exit 1)
+		| ModelConverter.InvalidModel -> (print_error ("The input model contains errors. Please check it again."); abort_program (); exit 1)
 		| InternalError e -> (print_error ("Internal error while parsing the input model: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
 		in
 
@@ -233,21 +180,42 @@ let compile_model options (with_special_reset_clock : bool) =
 
 
 (************************************************************)
+(** Parse the property file and convert it into an abstract representation *)
+(************************************************************)
+let compile_property options =
+	(* Print some information *)
+	print_message Verbose_low ("Parsing property in file " ^ options#second_file_name ^ "…");
+
+	(* Property parsing *)
+	let parsed_property = parser_lexer_from_file PropertyParser.main PropertyLexer.token options#second_file_name
+	in
+
+	(* Convert to an abstract representation *)
+	let property =
+	try (
+		ModelConverter.abstract_model_of_parsed_property options parsed_property
+	) with
+		| ModelConverter.InvalidProperty -> (print_error ("The property contains errors. Please check it again."); abort_program (); exit 1)
+		| InternalError e -> (print_error ("Internal error while parsing the property: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
+	in
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* return *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	property
+
+
+(*
+
+(************************************************************)
 (** Parse the pi0 file and convert it into an abstract representation *)
 (************************************************************)
 let compile_pi0 options =
 	(* Print some information *)
-	print_message Verbose_low ("Parsing reference valuation in file " ^ options#second_file_name ^ "...");
+	print_message Verbose_low ("Parsing reference valuation in file " ^ options#second_file_name ^ "…");
 
 	(* Pi0 Parsing *)
-	let pi0_parsed =
-	(*
-	(* Case forcePi0 *)
-	if options#forcePi0 then  parser_lexer_from_string Pi0Parser.main Pi0Lexer.token "p1 = 1 & p2 = 2 & p3 = 3 & p4 = 4 & p5 = 5", []
-	(* Normal case *)
-	else
-	*)
-	parser_lexer_from_file Pi0Parser.main Pi0Lexer.token options#second_file_name
+	let pi0_parsed = parser_lexer_from_file Pi0Parser.main Pi0Lexer.token options#second_file_name
 	in
 
 	(* Convert to an abstract representation *)
@@ -270,7 +238,7 @@ let compile_pi0 options =
 (************************************************************)
 let compile_v0 options =
 	(* Print some information *)
-	print_message Verbose_low ("Parsing hyper-rectangle in file " ^ options#second_file_name ^ "...");
+	print_message Verbose_low ("Parsing hyper-rectangle in file " ^ options#second_file_name ^ "…");
 
 	(* Parsing *)
 	let v0_parsed = parser_lexer_from_file V0Parser.main V0Lexer.token options#second_file_name in
@@ -288,3 +256,5 @@ let compile_v0 options =
 	(* return *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	v0
+
+*)

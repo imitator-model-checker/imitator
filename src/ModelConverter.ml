@@ -4,12 +4,13 @@
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: Convert a parsing structure into an abstract model
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2019/08/13
+ * Last modified     : 2019/10/09
  *
  ************************************************************)
 
@@ -46,6 +47,10 @@ exception False_exception
 (* For detecting strongly deterministic PTAs *)
 exception Not_strongly_deterministic
 
+
+exception InvalidModel
+
+exception InvalidProperty
 
 
 (************************************************************)
@@ -340,53 +345,89 @@ module StringSet = Set.Make(String)
 (* Gather all variable names used in a parsed_update_arithmetic_expression *)
 (*------------------------------------------------------------*)
 let rec get_variables_in_parsed_update_factor variables_used_ref = function
-  | Parsed_UF_variable variable_name ->
-    (* Add the variable name to the set and update the reference *)
-    variables_used_ref := StringSet.add variable_name !variables_used_ref
+	| Parsed_UF_variable variable_name ->
+		(* Add the variable name to the set and update the reference *)
+		variables_used_ref := StringSet.add variable_name !variables_used_ref
 
-  | Parsed_UF_constant _ -> ()
+	| Parsed_UF_constant _ -> ()
 
-  | Parsed_UF_expression parsed_update_arithmetic_expression ->
-    get_variables_in_parsed_update_arithmetic_expression variables_used_ref parsed_update_arithmetic_expression
+	| Parsed_UF_expression parsed_update_arithmetic_expression ->
+		get_variables_in_parsed_update_arithmetic_expression variables_used_ref parsed_update_arithmetic_expression
 
 
 and get_variables_in_parsed_update_term variables_used_ref = function
-  | Parsed_UT_mul (parsed_update_term, parsed_update_factor)
-  | Parsed_UT_div (parsed_update_term, parsed_update_factor) ->
-    get_variables_in_parsed_update_term variables_used_ref parsed_update_term;
-    get_variables_in_parsed_update_factor variables_used_ref parsed_update_factor
+	| Parsed_UT_mul (parsed_update_term, parsed_update_factor)
+	| Parsed_UT_div (parsed_update_term, parsed_update_factor) ->
+		get_variables_in_parsed_update_term variables_used_ref parsed_update_term;
+		get_variables_in_parsed_update_factor variables_used_ref parsed_update_factor
 
-  | Parsed_UT_factor parsed_update_factor ->
-    get_variables_in_parsed_update_factor variables_used_ref parsed_update_factor
+	| Parsed_UT_factor parsed_update_factor ->
+		get_variables_in_parsed_update_factor variables_used_ref parsed_update_factor
 
 (** Add variables names in the update expression *)
 and get_variables_in_parsed_update_arithmetic_expression variables_used_ref = function
-  | Parsed_UAE_plus (parsed_update_arithmetic_expression, parsed_update_term)
-  | Parsed_UAE_minus (parsed_update_arithmetic_expression , parsed_update_term) ->
-    get_variables_in_parsed_update_arithmetic_expression variables_used_ref parsed_update_arithmetic_expression;
-    get_variables_in_parsed_update_term variables_used_ref parsed_update_term
+	| Parsed_UAE_plus (parsed_update_arithmetic_expression, parsed_update_term)
+	| Parsed_UAE_minus (parsed_update_arithmetic_expression , parsed_update_term) ->
+		get_variables_in_parsed_update_arithmetic_expression variables_used_ref parsed_update_arithmetic_expression;
+		get_variables_in_parsed_update_term variables_used_ref parsed_update_term
 
-  | Parsed_UAE_term parsed_update_term ->
-    get_variables_in_parsed_update_term variables_used_ref parsed_update_term
+	| Parsed_UAE_term parsed_update_term ->
+		get_variables_in_parsed_update_term variables_used_ref parsed_update_term
 
 (** Add variables names in normal and conditional updates *)
 and get_variables_in_parsed_update variables_used_ref = function
-  | Normal (_, arithmetic_expression) -> get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expression
-  | Condition (bool_expr, update_list_if, update_list_else) -> (** recolect in bool exprs *)
-    get_variables_in_parsed_boolean_expression variables_used_ref bool_expr;
-    List.iter (fun (_, arithmetic_expression) ->
-        get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expression
-      ) (update_list_if@update_list_else)
+	| Normal (_, arithmetic_expression) -> get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expression
+	| Condition (bool_expr, update_list_if, update_list_else) -> (** recolect in bool exprs *)
+		get_variables_in_parsed_boolean_expression variables_used_ref bool_expr;
+		List.iter (fun (_, arithmetic_expression) ->
+			get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expression
+		) (update_list_if@update_list_else)
 and get_variables_in_parsed_boolean_expression variables_used_ref = function
-  | And (bool_expr1, bool_expr2)
-  | Or (bool_expr1, bool_expr2) ->
-    get_variables_in_parsed_boolean_expression variables_used_ref bool_expr1;
-    get_variables_in_parsed_boolean_expression variables_used_ref bool_expr2;
-  | Not bool_expr -> get_variables_in_parsed_boolean_expression variables_used_ref bool_expr
-  | Expression (arithmetic_expr1, _ (* relop *), arithmetic_expr2) ->
-    get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr1;
-    get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr2;
-  | _ -> ()  (** add nothing *)
+	| And (bool_expr1, bool_expr2)
+	| Or (bool_expr1, bool_expr2) ->
+		get_variables_in_parsed_boolean_expression variables_used_ref bool_expr1;
+		get_variables_in_parsed_boolean_expression variables_used_ref bool_expr2;
+	| Not bool_expr -> get_variables_in_parsed_boolean_expression variables_used_ref bool_expr
+	| Expression (arithmetic_expr1, _ (* relop *), arithmetic_expr2) ->
+		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr1;
+		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr2;
+	| _ -> ()  (** add nothing *)
+
+
+(*------------------------------------------------------------*)
+(* Gather all variable names used in a parsed_update_arithmetic_expression *)
+(*------------------------------------------------------------*)
+let rec get_variables_in_parsed_discrete_factor variables_used_ref = function
+	| Parsed_DF_variable variable_name ->
+		(* Add the variable name to the set and discrete the reference *)
+		variables_used_ref := StringSet.add variable_name !variables_used_ref
+
+	| Parsed_DF_constant _ -> ()
+
+	| Parsed_DF_expression parsed_discrete_arithmetic_expression ->
+		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref parsed_discrete_arithmetic_expression
+
+
+and get_variables_in_parsed_discrete_term variables_used_ref = function
+	| Parsed_DT_mul (parsed_discrete_term, parsed_discrete_factor)
+	| Parsed_DT_div (parsed_discrete_term, parsed_discrete_factor) ->
+		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term;
+		get_variables_in_parsed_discrete_factor variables_used_ref parsed_discrete_factor
+
+	| Parsed_DT_factor parsed_discrete_factor ->
+		get_variables_in_parsed_discrete_factor variables_used_ref parsed_discrete_factor
+
+(** Add variables names in the discrete expression *)
+and get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref = function
+	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression, parsed_discrete_term)
+	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
+		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref parsed_discrete_arithmetic_expression;
+		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term
+
+	| Parsed_DAE_term parsed_discrete_term ->
+		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term
+
+
 
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a linear_term *)
@@ -396,6 +437,7 @@ let get_variables_in_linear_term variables_used_ref = function
   | Variable (_, variable_name) ->
     (* Add the variable name to the set and update the reference *)
     variables_used_ref := StringSet.add variable_name !variables_used_ref
+
 
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a linear_expression *)
@@ -1754,6 +1796,54 @@ let discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_
     | Parsed_UF_expression parsed_update_arithmetic_expression -> DF_expression (discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression)
   in
   discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec
+
+
+
+
+(*** TODO (though really not critical): try to do some simplifications… ***)
+
+(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
+let discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression index_of_variables constants =
+	let rec discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec = function
+		| Parsed_DAE_plus (parsed_discrete_arithmetic_expression, parsed_discrete_term) ->
+			DAE_plus ((discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec parsed_discrete_arithmetic_expression), (discrete_term_of_parsed_discrete_term parsed_discrete_term))
+		| Parsed_DAE_minus (parsed_discrete_arithmetic_expression, parsed_discrete_term) ->
+			DAE_minus ((discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec parsed_discrete_arithmetic_expression), (discrete_term_of_parsed_discrete_term parsed_discrete_term))
+		| Parsed_DAE_term parsed_discrete_term ->
+			DAE_term (discrete_term_of_parsed_discrete_term parsed_discrete_term)
+
+	and discrete_term_of_parsed_discrete_term = function
+		| Parsed_DT_mul (parsed_discrete_term, parsed_discrete_factor) ->
+			DT_mul ((discrete_term_of_parsed_discrete_term parsed_discrete_term), (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor))
+		| Parsed_DT_div (parsed_discrete_term, parsed_discrete_factor) ->
+			DT_div ((discrete_term_of_parsed_discrete_term parsed_discrete_term), (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor))
+		| Parsed_DT_factor parsed_discrete_factor -> DT_factor (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor)
+
+	and discrete_factor_of_parsed_discrete_factor = function
+		| Parsed_DF_variable variable_name ->
+		(* Try to find the variable_index *)
+		if Hashtbl.mem index_of_variables variable_name then (
+			let variable_index = Hashtbl.find index_of_variables variable_name in
+			(* Convert *)
+			DF_variable variable_index
+			(* Try to find a constant *)
+		) else (
+			if Hashtbl.mem constants variable_name then (
+			(* Retrieve the value of the global constant *)
+			let value = Hashtbl.find constants variable_name in
+			(* Convert *)
+			DF_constant value
+			) else (
+			raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although this should have been checked before."))
+			)
+		)
+		| Parsed_DF_constant var_value -> DF_constant var_value
+		| Parsed_DF_expression parsed_discrete_arithmetic_expression -> DF_expression (discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec parsed_discrete_arithmetic_expression)
+		| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor)
+	in
+	(* Call high-level function *)
+	discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec
+
 
 
 (*------------------------------------------------------------*)

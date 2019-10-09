@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: process the result of IMITATOR: print results, creates files, generates graphics, etc.
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2019/09/05
+ * Last modified     : 2019/10/09
  *
  ************************************************************)
 
@@ -984,7 +985,7 @@ let process_result result algorithm_name prefix_option =
 	
 	
 	match result with
-	| No_analysis ->
+	| Syntax_check ->
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in

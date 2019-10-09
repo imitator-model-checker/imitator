@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: all public exceptions used in IMITATOR
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2017/06/25
+ * Last modified     : 2019/10/09
  *
  ************************************************************)
 
@@ -27,8 +28,6 @@ exception Found
 exception InterfacingError of string
 
 exception InternalError of string
-
-exception InvalidModel
 
 (** When a constraint contains no integer point *)
 exception NoIPPTA

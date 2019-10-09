@@ -193,21 +193,12 @@ let verbose_mode_of_string verbose_mode =
 
 
 
+
 (************************************************************)
-(** Global types *)
+(** Available algorithms *)
 (************************************************************)
 
-(** Mode for IMITATOR *)
-type imitator_mode =
-	(** No analysis, syntactic check only *)
-	| No_analysis
-	
-	(** Translation to another language: no analysis *)
-	| Translation
-	
-	(** Classical state space exploration *)
-	| State_space_exploration
-
+type algorithm =
 	(** EF-synthesis *)
 	| EF_synthesis
 	
@@ -225,7 +216,7 @@ type imitator_mode =
 	
 	(** EF-synthesis with maximization *)
 	| EF_synth_max
-
+	
 	(** Optimal reachability with priority queue: queue-based, with priority to the earliest successor for the selection of the next state [ABPP19] *)
 	| EF_synth_min_priority_queue
 
@@ -288,9 +279,44 @@ type imitator_mode =
 
 	(** Synthesis using iterative calls to PRP *)
 	| PRPC
+	
+
+(************************************************************)
+(** Synthesis *)
+(************************************************************)
+
+type synthesis_type =
+	(* (tentative) exhibition of at least one valuation for which a property holds *)
+	| Witness
+	(* (tentative) synthesis of all valuations for which a property holds *)
+	| Synthesis
 
 
+type synthesis_algorithm = {
+	algorithm     : algorithm;
+	synthesis_type: synthesis_type;
+}
 
+
+(** Mode for IMITATOR *)
+type imitator_mode =
+	(** No analysis, syntactic check only *)
+	| Syntax_check
+	
+	(** Translation to another language: no analysis *)
+	| Translation
+	
+	(** Full state space exploration, until fully explored or some preliminary termination *)
+	| State_space_exploration
+	
+	(** Synthesis algorithm *)
+	| Algorithm of synthesis_algorithm
+	
+	
+
+(************************************************************)
+(** Options *)
+(************************************************************)
 
 type distribution_mode =
 	(** Normal mode *)
@@ -312,7 +338,6 @@ type distribution_mode =
 	| Distributed_unsupervised
 	(**  Distributed mode: multi-threaded version of Distributed_unsupervised  **)
 	| Distributed_unsupervised_multi_threaded
-
 
 
 type exploration_order =
@@ -343,9 +368,9 @@ type merge_heuristic =
 	| Merge_always
 	(** Merge_always: merge after every processed state for which the target state is a successor of the current state *)
 	| Merge_targetseen
-	(** Merge_always: merge after every processed state, for every 10th state added to PQ *)
+	(** Merge_always: merge after every processed state, for every 10th added state to PQ *)
 	| Merge_pq10
-	(** Merge_always: merge after every processed state, for every 100th state added to PQ *)
+	(** Merge_always: merge after every processed state, for every 100th added state to PQ *)
 	| Merge_pq100
 	(** Merge_always: merge after every 10th processed state *)
 	| Merge_iter10
@@ -363,6 +388,7 @@ type graphical_state_space =
 	| Graphical_state_space_normal
 	(* State space with state numbers, locations, constraints and parameter constraints *)
 	| Graphical_state_space_verbose
+
 
 
 (************************************************************)

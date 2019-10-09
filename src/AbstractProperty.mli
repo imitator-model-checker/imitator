@@ -18,7 +18,7 @@
 (* Modules *)
 (************************************************************)
 open Automaton
-open Model
+(* open AbstractModel *)
 
 
 (****************************************************************)
@@ -88,7 +88,7 @@ and state_predicate =
 	| State_predicate_OR of state_predicate * state_predicate
 	| State_predicate_term of state_predicate_term
 
-
+(*
 
 (************************************************************)
 (** Definition of correctness property *)
@@ -155,7 +155,7 @@ type projection = (parameter_index list) option
 type optimization =
   | No_optimization
   | Minimize of parameter_index
-  | Maximize of parameter_index
+  | Maximize of parameter_index*)
 
 
 (************************************************************)

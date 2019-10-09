@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Useful and general functions for IMITATOR
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2019/08/21
+ * Last modified     : 2019/10/09
  *
  ************************************************************)
 
@@ -72,25 +73,20 @@ val set_verbose_mode : verbose_mode -> unit
 val get_verbose_mode : unit -> verbose_mode
 
 
+
+
+
+
+
 (************************************************************)
-(** Global types *)
+(** Available algorithms *)
 (************************************************************)
 
-(** Mode for IMITATOR *)
-type imitator_mode =
-	(** No analysis, syntactic check only *)
-	| No_analysis
+type algorithm =
+	(** Reachability *)
+	| EF of AbstractProperty.state_predicate
 	
-	(** Translation to another language: no analysis *)
-	| Translation
-	
-	(** Classical state space exploration *)
-	| State_space_exploration
-	
-	(** EF-synthesis *)
-	| EF_synthesis
-	
-	(** EF-synthesis w.r.t. unsafe locations *)
+(*	(** EF-synthesis w.r.t. unsafe locations *)
 	| EFunsafe_synthesis
 	
 	(** EF-minimization *)
@@ -166,8 +162,45 @@ type imitator_mode =
 	| RandomSeq_cartography of int
 
 	(** Synthesis using iterative calls to PRP *)
-	| PRPC
+	| PRPC*)
 	
+
+(************************************************************)
+(** Synthesis *)
+(************************************************************)
+
+type synthesis_type =
+	(* (tentative) exhibition of at least one valuation for which a property holds *)
+	| Witness
+	(* (tentative) synthesis of all valuations for which a property holds *)
+	| Synthesis
+
+
+type synthesis_algorithm = {
+	algorithm     : algorithm;
+	synthesis_type: synthesis_type;
+}
+
+
+(** Mode for IMITATOR *)
+type imitator_mode =
+	(** No analysis, syntactic check only *)
+	| Syntax_check
+	
+	(** Translation to another language: no analysis *)
+	| Translation
+	
+(*	(** Full state space exploration, until fully explored or some preliminary termination *)
+	| State_space_exploration*)
+	
+	(** Synthesis algorithm *)
+	| Algorithm of synthesis_algorithm
+	
+	
+
+(************************************************************)
+(** Options *)
+(************************************************************)
 
 type distribution_mode =
 	(** Normal mode *)
