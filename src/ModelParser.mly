@@ -97,7 +97,7 @@ let resolve_property l =
 %type <ParsingStructure.parsing_structure> main
 %%
 
-/**********************************************/
+/************************************************************/
 main:
 	automata_descriptions commands EOF
 	{
@@ -109,9 +109,9 @@ main:
 	}
 ;
 
-/***********************************************
+/************************************************************
 	INCLUDES
-***********************************************/
+************************************************************/
 include_file:
 	| INCLUDE SEMICOLON { $1 }
 ;
@@ -121,15 +121,15 @@ include_file_list:
 	| { [] }
 ;
 
-/***********************************************
+/************************************************************
   MAIN DEFINITIONS
-***********************************************/
+************************************************************/
 
 automata_descriptions:
 	include_file_list declarations automata { $2, $3 }
 ;
 
-/**********************************************/
+/************************************************************/
 
 declarations:
 	CT_VAR decl_var_lists { $2 }
@@ -137,16 +137,16 @@ declarations:
 ;
 
 
-/**********************************************/
+/************************************************************/
 
-/**********************************************/
+/************************************************************/
 
 decl_var_lists:
 	decl_var_list COLON var_type SEMICOLON decl_var_lists { (($3, $1) :: $5) }
 	| { [] }
 ;
 
-/**********************************************/
+/************************************************************/
 
 decl_var_list:
 	| NAME comma_opt { [($1, None)] }
@@ -156,7 +156,7 @@ decl_var_list:
 	| NAME OP_EQ rational_linear_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
 ;
 
-/**********************************************/
+/************************************************************/
 
 var_type:
 	| CT_CLOCK { Var_type_clock }
@@ -165,7 +165,7 @@ var_type:
 	| CT_PARAMETER { Var_type_parameter }
 ;
 
-/**********************************************/
+/************************************************************/
 
 automata:
 	automaton automata { $1 :: $2 }
@@ -173,7 +173,7 @@ automata:
 	| { [] }
 ;
 
-/**********************************************/
+/************************************************************/
 
 automaton:
 	CT_AUTOMATON NAME prolog locations CT_END
@@ -182,7 +182,7 @@ automaton:
 	}
 ;
 
-/**********************************************/
+/************************************************************/
 
 prolog:
 	| initialization sync_labels { $2 }
@@ -192,7 +192,7 @@ prolog:
 	| { [] }
 ;
 
-/**********************************************/
+/************************************************************/
 
 /* WARNING: deprecated syntax */
 initialization:
@@ -203,41 +203,41 @@ initialization:
 	}
 ;
 
-/**********************************************/
+/************************************************************/
 
 state_initialization:
 	AMPERSAND convex_predicate {}
 	| {}
 ;
 
-/**********************************************/
+/************************************************************/
 
 sync_labels:
 	CT_SYNCLABS COLON name_list SEMICOLON { $3 }
 ;
 
-/**********************************************/
+/************************************************************/
 
 name_list:
 	name_nonempty_list { $1 }
 	| { [] }
 ;
 
-/**********************************************/
+/************************************************************/
 
 name_nonempty_list:
 	NAME COMMA name_nonempty_list { $1 :: $3}
 	| NAME comma_opt { [$1] }
 ;
 
-/**********************************************/
+/************************************************************/
 
 locations:
 	location locations { $1 :: $2}
 	| { [] }
 ;
 
-/**********************************************/
+/************************************************************/
 
 while_or_invariant_or_nothing:
 	/* From 2018/02/22, "while" can be replaced with invariant */
@@ -289,21 +289,21 @@ wait_opt:
 	| { }
 ;
 
-/**********************************************/
+/************************************************************/
 
 stopwatches:
 	| CT_STOP LBRACE name_list RBRACE { $3 }
 	| { [] }
 ;
 
-/**********************************************/
+/************************************************************/
 
 transitions:
 	transition transitions { $1 :: $2 }
 	| { [] }
 ;
 
-/**********************************************/
+/************************************************************/
 
 transition:
 	CT_WHEN convex_predicate update_synchronization CT_GOTO NAME SEMICOLON
@@ -313,7 +313,7 @@ transition:
 	}
 ;
 
-/**********************************************/
+/************************************************************/
 
 /* A l'origine de 3 conflits ("2 shift/reduce conflicts, 1 reduce/reduce conflict.") donc petit changement */
 update_synchronization:
@@ -324,20 +324,20 @@ update_synchronization:
 	| syn_label updates { $2, (Sync $1) }
 ;
 
-/**********************************************/
+/************************************************************/
 
 updates:
 	CT_DO LBRACE update_list RBRACE { $3 }
 ;
 
-/**********************************************/
+/************************************************************/
 
 update_list:
 	update_nonempty_list { $1 }
 	| { [] }
 ;
 
-/**********************************************/
+/************************************************************/
 
 update_nonempty_list:
 	update COMMA update_list { Normal $1 :: $3}
@@ -346,7 +346,7 @@ update_nonempty_list:
 	| condition_update { [Condition $1] }
 ;
 
-/**********************************************/
+/************************************************************/
 
 /** Normal updates */
 update:
@@ -383,15 +383,15 @@ condition_update:
 	| CT_IF boolean_expression_par_opt CT_THEN normal_update_list_par_opt CT_ELSE normal_update_list_par_opt CT_END { ($2, $4, $6) }
 ;
 
-/**********************************************/
+/************************************************************/
 
 syn_label:
 	CT_SYNC NAME { $2 }
 ;
 
-/**********************************************/
+/************************************************************/
 /** ARITHMETIC EXPRESSIONS */
-/***********************************************/
+/************************************************************/
 
 arithmetic_expression:
 	| arithmetic_term { Parsed_UAE_term $1 }
@@ -416,9 +416,9 @@ arithmetic_factor:
 ;
 
 
-/**********************************************/
+/************************************************************/
 /** RATIONALS, LINEAR TERMS, LINEAR CONSTRAINTS AND CONVEX PREDICATES */
-/***********************************************/
+/************************************************************/
 
 /* We allow an optional "&" at the beginning of a convex predicate (sometimes useful) */
 convex_predicate:
@@ -472,7 +472,7 @@ rational_linear_expression:
 
 /* Linear term over rationals only */
 rational_linear_term:
-	rational { $1 }
+	| rational { $1 }
 	| OP_MINUS rational { NumConst.sub NumConst.zero $2 }
 	| LPAREN rational_linear_term RPAREN { $2 }
 ;
@@ -499,41 +499,13 @@ float:
 
 pos_float:
   FLOAT {
-		let fstr = $1 in
-		let point = String.index fstr '.' in
-		(* get integer part *)
-		let f = if point = 0 then ref NumConst.zero else (
-			let istr = String.sub fstr 0 point in
-		  ref (NumConst.numconst_of_int (int_of_string istr))
-		) in
-		(* add decimal fraction part *)
-		let numconst_of_char = function
-			| '0' -> NumConst.zero
-			| '1' -> NumConst.one
-			| '2' -> NumConst.numconst_of_int 2
-			| '3' -> NumConst.numconst_of_int 3
-			| '4' -> NumConst.numconst_of_int 4
-			| '5' -> NumConst.numconst_of_int 5
-			| '6' -> NumConst.numconst_of_int 6
-			| '7' -> NumConst.numconst_of_int 7
-			| '8' -> NumConst.numconst_of_int 8
-			| '9' -> NumConst.numconst_of_int 9
-			| _ ->  raise (ParsingError (0,0)) in
-		let ten = NumConst.numconst_of_int 10 in
-		let dec = ref (NumConst.numconst_of_frac 1 10) in
-		for i = point+1 to (String.length fstr) - 1 do
-			let c = fstr.[i] in
-			let d = numconst_of_char c in
-			f := NumConst.add !f (NumConst.mul !dec d);
-			dec := NumConst.div !dec ten
-		done;
-		!f
+		NumConst.numconst_of_string $1
 	}
 ;
 
-/**********************************************/
+/************************************************************/
 /** BOOLEAN EXPRESSIONS */
-/***********************************************/
+/************************************************************/
 boolean_expression:
 	| CT_TRUE { True }
 	| CT_FALSE { False }
@@ -541,10 +513,10 @@ boolean_expression:
 	| boolean_expression AMPERSAND boolean_expression { And ($1, $3) }
 	| boolean_expression PIPE boolean_expression { Or ($1, $3) }
 	| arithmetic_expression relop arithmetic_expression { Expression ($1, $2, $3) }
-
-/***********************************************/
+;
+/************************************************************/
 /** ANALYSIS COMMANDS */
-/***********************************************/
+/************************************************************/
 
 commands:
 	| init_definition property_definition projection_definition optimization_definition end_opt { ($1, $2, $3, $4) }
@@ -599,6 +571,7 @@ discrete_predicate:
 
 
 property_definition:
+/*
 // TODO: improve the bad definitions
 	// NOTE: Old version
 // 	| CT_BAD OP_ASSIGN loc_expression SEMICOLON { $3 }
@@ -610,8 +583,8 @@ property_definition:
 	// NOTE: only one allowed before version 2.6 and ICECCS paper
 	// Case: location
 	// | CT_BAD OP_ASSIGN CT_EXISTS_LOCATION loc_predicate SEMICOLON { let a,b = $4 in [(Exists_location (a , b))] }
-
-	// Pattern
+*/
+	/* Pattern */
 	| CT_PROPERTY OP_ASSIGN pattern semicolon_opt { Some $3 }
 
 	| include_file { let _, _, _, property, _, _, _ = $1 in property }
@@ -641,7 +614,7 @@ optimization_definition:
 
 /* List of patterns */
 pattern:
-	// Unreachability
+	/* Safety */
 	| CT_UNREACHABLE bad_global_predicates { Parsed_unreachable_locations ($2) }
 
 	/* if a2 then a1 has happened before */

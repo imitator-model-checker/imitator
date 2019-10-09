@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  *
- * Université de Lorraine, LORIA, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: Property description
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2019/10/08
+ * Last modified     : 2019/10/09
  *
  ************************************************************)
 
@@ -18,7 +18,75 @@
 (* Modules *)
 (************************************************************)
 open Automaton
+open Model
 
+
+(****************************************************************)
+(** Operators *)
+(****************************************************************)
+
+(** Boolean operators *)
+
+type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
+
+
+(****************************************************************)
+(** Arithmetic expressions for discrete variables *)
+(****************************************************************)
+type discrete_arithmetic_expression =
+	| DAE_plus of discrete_arithmetic_expression * discrete_term
+	| DAE_minus of discrete_arithmetic_expression * discrete_term
+	| DAE_term of discrete_term
+
+and discrete_term =
+	| DT_mul of discrete_term * discrete_factor
+	| DT_div of discrete_term * discrete_factor
+	| DT_factor of discrete_factor
+
+and discrete_factor =
+	| DF_variable of variable_name
+	| DF_constant of variable_value
+	| DF_expression of discrete_arithmetic_expression
+	| DF_unary_min of discrete_factor
+
+
+(****************************************************************)
+(** Boolean expressions for discrete variables *)
+(****************************************************************)
+
+type discrete_boolan_expression =
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Expression of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
+
+
+(****************************************************************)
+(** Predicates for properties *)
+(****************************************************************)
+
+type loc_predicate =
+	| Loc_predicate_EQ of automaton_name * location_name
+	| Loc_predicate_NEQ of automaton_name * location_name
+
+
+type simple_predicate =
+	| Discrete_boolean_expression of discrete_boolan_expression
+	| Loc_predicate of loc_predicate
+
+
+type state_predicate_factor =
+	| State_predicate_factor_NOT of state_predicate_factor
+	| Simple_predicate of simple_predicate
+	| State_predicate of state_predicate
+
+and state_predicate_term =
+	| State_predicate_term_AND of state_predicate_term * state_predicate_term
+	| State_predicate_factor of state_predicate_factor
+
+and state_predicate =
+	| State_predicate_OR of state_predicate * state_predicate
+	| State_predicate_term of state_predicate_term
 
 
 
@@ -29,23 +97,6 @@ open Automaton
 
 type duration = LinearConstraint.p_linear_term
 
-type unreachable_location = automaton_index * location_index
-
-(*** TODO: allow more!!! ***)
-type discrete_constraint =
-	| Discrete_l of discrete_index * discrete_value
-	| Discrete_leq of discrete_index * discrete_value
-	| Discrete_equal of discrete_index * discrete_value
-	| Discrete_neq of discrete_index * discrete_value
-	| Discrete_geq of discrete_index * discrete_value
-	| Discrete_g of discrete_index * discrete_value
-	| Discrete_interval of discrete_index * discrete_value * discrete_value
-
-(* A global location is a list of locations (at most one per IPTA) and of simple atomic constraints on discrete variables (at most one constraint per discrete variable) *)
-type unreachable_global_location = {
-  unreachable_locations: unreachable_location list;
-  discrete_constraints :  discrete_constraint list;
-}
 
 (** Definition of the property by the end user *)
 type property =
@@ -96,23 +147,6 @@ type property =
   | Noproperty
 
 
-type property_definition  = property
-
-
-(** Reduction to (non-)reachability checking *)
-
-type reachability_property =
-  (* Location never reachable *)
-  | Unreachable of unreachable_global_location list
-
-  (* Location reachable for each trace *)
-  (*** NOTE: not implemented ***)
-  | Reachable of unreachable_global_location list (*automaton_index * location_index*)
-
-  (* Combining the two properties *)
-  (*** NOTE: not implemented ***)
-  | Unreachable_and_reachable of (unreachable_global_location list) * (unreachable_global_location list) (*automaton_index * location_index * automaton_index * location_index*)
-
 
 type correctness_condition = reachability_property option
 
@@ -127,7 +161,4 @@ type optimization =
 (************************************************************)
 (** The actual property *)
 (************************************************************)
-
-type state_predicate =
-	
 

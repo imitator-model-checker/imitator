@@ -4,11 +4,11 @@
  *
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
- * Université de Lorraine, LORIA, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2019/10/08
+ * Last modified     : 2019/10/09
  *
  ****************************************************************)
 
@@ -24,14 +24,23 @@ type sync_name = string
 
 
 (****************************************************************)
+(** Operators *)
+(****************************************************************)
+
+(** Boolean operators *)
+
+type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ | PARSED_OP_GEQ | PARSED_OP_G
+
+
+(****************************************************************)
 (** Declarations *)
 (****************************************************************)
 (* Type of variable in declarations *)
 type var_type =
-  | Var_type_clock
-  | Var_type_constant
-  | Var_type_discrete
-  | Var_type_parameter
+	| Var_type_clock
+	| Var_type_constant
+	| Var_type_discrete
+	| Var_type_parameter
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
 type var_value = NumConst.t
@@ -42,22 +51,23 @@ type variable_declarations = variable_declaration list
 
 
 (****************************************************************)
-(** Arithmetic expressions for updates *)
+(** Arithmetic expressions for discrete variables *)
 (****************************************************************)
-type parsed_update_arithmetic_expression =
-  | Parsed_UAE_plus of parsed_update_arithmetic_expression * parsed_update_term
-  | Parsed_UAE_minus of parsed_update_arithmetic_expression * parsed_update_term
-  | Parsed_UAE_term of parsed_update_term
+type parsed_discrete_arithmetic_expression =
+	| Parsed_DAE_plus of parsed_discrete_arithmetic_expression * parsed_discrete_term
+	| Parsed_DAE_minus of parsed_discrete_arithmetic_expression * parsed_discrete_term
+	| Parsed_DAE_term of parsed_discrete_term
 
-and parsed_update_term =
-  | Parsed_UT_mul of parsed_update_term * parsed_update_factor
-  | Parsed_UT_div of parsed_update_term * parsed_update_factor
-  | Parsed_UT_factor of parsed_update_factor
+and parsed_discrete_term =
+	| Parsed_DT_mul of parsed_discrete_term * parsed_discrete_factor
+	| Parsed_DT_div of parsed_discrete_term * parsed_discrete_factor
+	| Parsed_DT_factor of parsed_discrete_factor
 
-and parsed_update_factor =
-  | Parsed_UF_variable of variable_name
-  | Parsed_UF_constant of var_value
-  | Parsed_UF_expression of parsed_update_arithmetic_expression
+and parsed_discrete_factor =
+	| Parsed_DF_variable of variable_name
+	| Parsed_DF_constant of var_value
+	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
+	| Parsed_DF_unary_min of parsed_discrete_factor
 
 
 
@@ -65,41 +75,46 @@ and parsed_update_factor =
 (** Convex predicates and linear expressions *)
 (****************************************************************)
 
-(** Operators *)
-
-type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 
 
 (** Linear expressions *)
 
 type linear_term =
-  | Constant of  NumConst.t
-  | Variable of  NumConst.t * variable_name
+	| Constant of  NumConst.t
+	| Variable of  NumConst.t * variable_name
 
 
 type linear_expression =
-  | Linear_term of linear_term
-  | Linear_plus_expression of linear_expression * linear_term
-  | Linear_minus_expression of linear_expression * linear_term
+	| Linear_term of linear_term
+	| Linear_plus_expression of linear_expression * linear_term
+	| Linear_minus_expression of linear_expression * linear_term
 
 
 type linear_constraint =
-  | True_constraint (** True *)
-  | False_constraint (** False *)
-  | Linear_constraint of linear_expression * relop * linear_expression
+	| True_constraint (** True *)
+	| False_constraint (** False *)
+	| Linear_constraint of linear_expression * parsed_relop * linear_expression
 
 
 type convex_predicate = linear_constraint list
 
 
-(** boolean expressions *)
+	(** boolean expressions *)
 type boolean_expression =
-  | True (** True *)
-  | False (** False *)
-  | Not of boolean_expression (** Negation *)
-  | And of boolean_expression * boolean_expression (** Conjunction *)
-  | Or of boolean_expression * boolean_expression (** Disjunction *)
-  | Expression of parsed_update_arithmetic_expression * relop * parsed_update_arithmetic_expression (** Arithmetic Expression *)
+	| True (** True *)
+	| False (** False *)
+	| Not of boolean_expression (** Negation *)
+	| And of boolean_expression * boolean_expression (** Conjunction *)
+	| Or of boolean_expression * boolean_expression (** Disjunction *)
+	| Discrete_boolan_expression of parsed_discrete_boolan_expression
+
+
+type parsed_discrete_boolan_expression =
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Expression of parsed_discrete_arithmetic_expression * parsed_relop * parsed_discrete_arithmetic_expression
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| Expression_in of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
+
 
 
 (****************************************************************)
@@ -107,8 +122,8 @@ type boolean_expression =
 (****************************************************************)
 (* Type of locations: urgent or not *)
 type parsed_urgency =
-  | Parsed_location_urgent
-  | Parsed_location_nonurgent
+	| Parsed_location_urgent
+	| Parsed_location_nonurgent
 
 (* Type of locations: accepting or not *)
 type parsed_acceptance =
@@ -116,8 +131,8 @@ type parsed_acceptance =
 	| Parsed_location_nonaccepting
 
 type sync =
-  | Sync of sync_name
-  | NoSync
+	| Sync of sync_name
+	| NoSync
 
 type guard = convex_predicate
 type invariant = convex_predicate
@@ -125,10 +140,10 @@ type invariant = convex_predicate
 
 (** Updates on transitions *)
 type update =
-  | Normal of normal_update (** Updates withput conditions *)
-  | Condition of condition_update (** Updates with conditions *)
+	| Normal of normal_update (** Updates withput conditions *)
+	| Condition of condition_update (** Updates with conditions *)
 (** basic updating *)
-and normal_update = variable_name * parsed_update_arithmetic_expression
+and normal_update = variable_name * parsed_discrete_arithmetic_expression
 (** conditional updating - NOTE: it does not support nested conditions *)
 and condition_update = boolean_expression * normal_update list * normal_update list
 
@@ -167,8 +182,8 @@ type automata = automaton list
 (** State predicates *)
 
 type state_predicate =
-  | Loc_assignment of automaton_name * location_name
-  | Linear_predicate of linear_constraint
+	| Loc_assignment of automaton_name * location_name
+	| Linear_predicate of linear_constraint
 
 
 type init_definition = state_predicate list
@@ -185,24 +200,7 @@ type discrete_value = NumConst.t
 
 (** Predicates for the definition of the correctness property *)
 
-type parsed_unreachable_location = automaton_name * location_name
-
-type parsed_update_constraint =
-  | Parsed_discrete_l of variable_name * discrete_value
-  | Parsed_discrete_leq of variable_name * discrete_value
-  | Parsed_discrete_equal of variable_name * discrete_value
-  | Parsed_discrete_geq of variable_name * discrete_value
-  | Parsed_discrete_g of variable_name * discrete_value
-  | Parsed_discrete_interval of variable_name * discrete_value * discrete_value
-
-type parsed_unreachable_predicate =
-  | Parsed_unreachable_discrete of parsed_update_constraint
-  | Parsed_unreachable_loc of parsed_unreachable_location
-
-(* A global location is a list of locations (at most one per IPTA) and of simple atomic constraints on discrete variables (at most one constraint per discrete variable) *)
-type parsed_unreachable_global_location = parsed_unreachable_predicate list
-
-
+(*
 type parsed_property =
   | Parsed_unreachable_locations of parsed_unreachable_global_location list
 
@@ -247,7 +245,7 @@ type parsed_property =
   | Sequence_cyclic of sync_name list
 
 
-type property_definition  = parsed_property option
+type property_definition  = parsed_property option*)
 
 
 (****************************************************************)
@@ -262,9 +260,9 @@ type projection = (variable_name list) option
 (****************************************************************)
 
 type parsed_optimization =
-  | No_parsed_optimization
-  | Parsed_minimize of variable_name
-  | Parsed_maximize of variable_name
+	| No_parsed_optimization
+	| Parsed_minimize of variable_name
+	| Parsed_maximize of variable_name
 
 
 
@@ -274,12 +272,12 @@ type parsed_optimization =
 
 (* TODO: transform to structure *)
 type parsing_structure =
-  variable_declarations
-  * automata
-  * init_definition
-  * property_definition
-  * projection
-  * parsed_optimization
+	variable_declarations
+	* automata
+	* init_definition
+	* property_definition
+	* projection
+	* parsed_optimization
 
 
 
@@ -293,17 +291,42 @@ type v0 = (string * NumConst.t * NumConst.t) list
 
 
 (****************************************************************)
+(** Predicates for properties *)
+(****************************************************************)
+
+type parsed_loc_predicate =
+	| Parsed_loc_predicate_EQ of automaton_name * location_name
+	| Parsed_loc_predicate_NEQ of automaton_name * location_name
+
+
+type parsed_simple_predicate =
+	| Parsed_discrete_boolean_expression of parsed_discrete_boolan_expression
+	| Parsed_loc_predicate of parsed_loc_predicate
+
+
+type parsed_state_predicate_factor =
+	| Parsed_state_predicate_factor_NOT of parsed_state_predicate_factor
+	| Parsed_simple_predicate of parsed_simple_predicate
+	| Parsed_state_predicate of parsed_state_predicate
+
+and parsed_state_predicate_term =
+	| Parsed_state_predicate_term_AND of parsed_state_predicate_term * parsed_state_predicate_term
+	| Parsed_state_predicate_factor of parsed_state_predicate_factor
+
+and parsed_state_predicate =
+	| Parsed_state_predicate_OR of parsed_state_predicate * parsed_state_predicate
+	| Parsed_state_predicate_term of parsed_state_predicate_term
+
+	
+(****************************************************************)
 (** Parsed property *)
 (****************************************************************)
 
 type parsed_synthesis_type =
-	| Parsed_emptiness
+	| Parsed_exhibition
 	| Parsed_synthesis
 
 
-type parsed_state_predicate =
-	(*** TODO ***)
-	| TODO
 
 type parsed_property_type =
 

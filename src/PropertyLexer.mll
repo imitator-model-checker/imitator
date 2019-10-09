@@ -2,13 +2,13 @@
  *
  *                       IMITATOR
  *
- * Université de Lorraine, LORIA, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: Parser for the input model
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2019/10/08
+ * Last modified     : 2019/10/09
 *****************************************************************)
 
 {
@@ -46,7 +46,8 @@ rule token = parse
 		comment_ocaml lexbuf;
 		token lexbuf }
 
- 	| "#empty"         { CT_EMPTY }
+ 	| "#exhibit"       { CT_EXHIBIT }
+ 	| "#witness"       { CT_EXHIBIT }
  	| "#synth"         { CT_SYNTH }
  	
 	| "EF"             { CT_EF }
@@ -64,6 +65,7 @@ rule token = parse
  	| "has"            { CT_HAS }
 	| "if"             { CT_IF }
 	| "in"             { CT_IN }
+	| "is"             { CT_IS }
  	| "inversemethod"  { CT_INVERSEMETHOD }
 	| "loop"           { CT_LOOP }
 	| "next"           { CT_NEXT }
@@ -107,9 +109,11 @@ rule token = parse
 	| ']'              { RSQBRA }
 
 	| '&'              { AMPERSAND }
+	| "&&"             { DOUBLEAMPERSAND }
 	| ".."             { DOUBLEDOT }
 	| ','              { COMMA }
 	| '|'              { PIPE }
+	| "||"             { DOUBLEPIPE }
 	| ':'              { COLON }
 	| ';'              { SEMICOLON }
 

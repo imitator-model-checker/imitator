@@ -4,7 +4,7 @@
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
- * Université de Lorraine, LORIA, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: Main file for IMITATOR
  *

@@ -164,22 +164,22 @@ type transition_index = int
 
 type duration = LinearConstraint.p_linear_term
 
-type unreachable_location = automaton_index * location_index
+(* type unreachable_location = automaton_index * location_index *)
 
-type discrete_constraint =
+(*type discrete_constraint =
   | Discrete_l of discrete_index * discrete_value
   | Discrete_leq of discrete_index * discrete_value
   | Discrete_equal of discrete_index * discrete_value
   | Discrete_neq of discrete_index * discrete_value
   | Discrete_geq of discrete_index * discrete_value
   | Discrete_g of discrete_index * discrete_value
-  | Discrete_interval of discrete_index * discrete_value * discrete_value
+  | Discrete_interval of discrete_index * discrete_value * discrete_value*)
 
 (* A global location is a list of locations (at most one per IPTA) and of simple atomic constraints on discrete variables (at most one constraint per discrete variable) *)
-type unreachable_global_location = {
+(*type unreachable_global_location = {
   unreachable_locations: unreachable_location list;
   discrete_constraints :  discrete_constraint list;
-}
+}*)
 
 (** Definition of the property by the end user *)
 type property =
@@ -233,7 +233,7 @@ type property =
 type property_definition  = property
 
 
-(** Reduction to (non-)reachability checking *)
+(*(** Reduction to (non-)reachability checking *)
 
 type reachability_property =
   (* Location never reachable *)
@@ -245,7 +245,7 @@ type reachability_property =
 
   (* Combining the two properties *)
   (*** NOTE: not implemented ***)
-  | Unreachable_and_reachable of (unreachable_global_location list) * (unreachable_global_location list) (*automaton_index * location_index * automaton_index * location_index*)
+  | Unreachable_and_reachable of (unreachable_global_location list) * (unreachable_global_location list) (*automaton_index * location_index * automaton_index * location_index*)*)
 
 
 type correctness_condition = reachability_property option
