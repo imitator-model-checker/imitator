@@ -1,3 +1,6 @@
+(* Merging is not working anymore. But NDFSsub runs as expected *)
+(* potential problem: maybe the "same" locations still hash to a different index? *)
+
 (************************************************************
  *
  *                       IMITATOR
@@ -188,7 +191,8 @@ type state_space = {
 	locations : Location.global_location DynArray.t;
 
 	(** A hashtable to quickly find states with identical locations (? ; made by Ulrich); only for states to be compared *)
-	states_for_comparison : (int, state_index) Hashtbl.t;
+        (* modified by Jaco van de Pol: use global_location_index as key, rather than hash code of global_location *)
+	states_for_comparison : (location_index, state_index) Hashtbl.t;
 
 	(** A HashTable state_index -> list of (combined_transition * 'target_state_index') *)
 	transitions_table : (state_index , (combined_transition * state_index) list) Hashtbl.t;
@@ -373,16 +377,6 @@ let get_state state_space state_index =
 	(* Return the state *)
 	{ global_location = global_location; px_constraint = linear_constraint; }
 
-(** compute a hash code for a state, depending only on the location *)
-let location_hash_code (state : state) =
-	Location.hash_code state.global_location
-
-
-(** return the list of states with the same location (modulo hash collisions) *)
-let get_comparable_states state_space state_index =
-        let state = get_state state_space state_index in
-        let hash = location_hash_code state in
-        Hashtbl.find_all state_space.states_for_comparison hash
 
 (** Return the global_location_index of a state_index *)
 let get_global_location_index state_space state_index =
@@ -403,6 +397,11 @@ let get_global_location_index state_space state_index =
 
 	(* Return the location_index *)
 	location_index
+
+(** return the list of states with the same location (modulo hash collisions) *)
+let get_comparable_states state_space state_index =
+        let location_index = get_global_location_index state_space state_index in
+        Hashtbl.find_all state_space.states_for_comparison location_index
 
 
 (** Return the index of the initial state, or raise Not_found if not defined *)
@@ -1203,34 +1202,32 @@ let state_included (state1 : state) (state2 : state) : bool =
 		LinearConstraint.px_is_leq constr1 constr2
 	)
 
+let new_location_index state_space location = 
+        let new_index = try (
+	Hashtbl.find state_space.index_of_locations location
+) with Not_found -> (
+(* If not found: add it *)
+	(* Find new index *)
+	let new_index = Hashtbl.length state_space.index_of_locations in
+	(* Add to hash table *)
+	Hashtbl.add state_space.index_of_locations location new_index;
+	(* Add to Dyn Array *)
+	DynArray.add state_space.locations location;
+	(* Check length (COULD BE REMOVED) *)
+	(* if DynArray.length state_space.locations != Hashtbl.length state_space.index_of_locations then(
+		raise (InternalError "Locations and index_of_locations seem not to be consistent anymore."); *)
+        new_index;
+	) in
+	(* Return new index *)
+	new_index
 
 (** Perform the insertion of a new state in a state space *)
-let insert_state state_space hash (new_state : state) =
+let insert_state state_space (new_state : state) =
 	(* Compute the new state index *)
 	let new_state_index = !(state_space.next_state_index) in
 	(* Retrieve the location and the constraint *)
 	let location, linear_constraint = new_state.global_location, new_state.px_constraint in
-	(* Try to find the location index *)
-	let location_index = try (
-		Hashtbl.find state_space.index_of_locations location
-	) with Not_found -> (
-	(* If not found: add it *)
-		(* Find new index *)
-		let new_index = Hashtbl.length state_space.index_of_locations in
-		(* Add to hash table *)
-		Hashtbl.add state_space.index_of_locations location new_index;
-		(* Add to Dyn Array *)
-		DynArray.add state_space.locations location;
-		(* Check length (COULD BE REMOVED) *)
-		if DynArray.length state_space.locations != Hashtbl.length state_space.index_of_locations then(
-			raise (InternalError "Locations and index_of_locations seem not to be consistent anymore.");
-		);
-		(* Return new index *)
-		new_index;
-	) in
-
-
-
+        let location_index = new_location_index state_space location in
 (*	print_warning "warning: consistency check";
 	(* Consistency check: the state should NOT be present (otherwise this is a duplicate) *)
 	Hashtbl.iter (fun state_index _ ->
@@ -1250,9 +1247,9 @@ let insert_state state_space hash (new_state : state) =
 
 	(* Add the state to the tables *)
 	Hashtbl.add state_space.all_states new_state_index {global_location_index = location_index; px_constraint = linear_constraint;};
-	Hashtbl.add state_space.states_for_comparison hash new_state_index;
+	Hashtbl.add state_space.states_for_comparison location_index new_state_index;
 	(* Update next state index *)
-	state_space.next_state_index := !(state_space.next_state_index) + 1;
+	state_space.next_state_index := new_state_index + 1;
 	(* Return state_index *)
 	new_state_index
 
@@ -1327,24 +1324,20 @@ let add_state state_space state_comparison (new_state : state) =
 
 	let result =
 
-	(* compute hash value for the new state *)
-	let hash = location_hash_code new_state in
-	if verbose_mode_greater Verbose_total then (
-		print_message Verbose_total ("hash : " ^ (string_of_int hash));
-	);
 	(* If no check requested: does not test anything *)
 	if state_comparison = No_check then (
 		(* Since the state does NOT belong to the state space: insert directly and find the state index *)
-		let new_state_index = insert_state state_space hash new_state in
+		let new_state_index = insert_state state_space new_state in
 		(* Return state_index  *)
 		New_state new_state_index
 	) else (
 		try (
-			(* use hash table to find all states with same locations (modulo hash collisions) *)
-			let old_states = Hashtbl.find_all state_space.states_for_comparison hash in
+			(* use hash table to find all states with same locations*)
+                        let location_index = new_location_index state_space new_state.global_location in
+			let old_states = Hashtbl.find_all state_space.states_for_comparison location_index in
 			if verbose_mode_greater Verbose_total then (
 				let nb_old = List.length old_states in
-				print_message Verbose_total ("hashed list of length " ^ (string_of_int nb_old));
+				print_message Verbose_total ("list with states on same location of length " ^ (string_of_int nb_old));
 			);
 
 			(* Statistics *)
@@ -1413,7 +1406,7 @@ let add_state state_space state_comparison (new_state : state) =
 			) old_states;
 
 			(* Not found -> insert state *)
-			let new_state_index = insert_state state_space hash new_state in
+			let new_state_index = insert_state state_space new_state in
 			
 			(* Print some information *)
 			print_message Verbose_total ("Inserted new state #" ^ (string_of_int new_state_index) ^ ".");
@@ -1578,19 +1571,18 @@ let merge_states_ulrich state_space merger_state_index merged =
 
 	(* Remove merged from hash table *)
 	print_message Verbose_high "Merging: update hash table";
-	let the_state = get_state state_space merger_state_index in
-	let h = location_hash_code the_state in
-	(* Get all states with that hash *)
-	let bucket = Hashtbl.find_all state_space.states_for_comparison h in
-	print_message Verbose_high ("Merging: got " ^ (string_of_int (List.length bucket)) ^ " states with hash " ^ (string_of_int h));
+	let location_index = get_global_location_index state_space merger_state_index in
+	(* Get all states with that location *)
+	let bucket = Hashtbl.find_all state_space.states_for_comparison location_index in
+	print_message Verbose_high ("Merging: got " ^ (string_of_int (List.length bucket)) ^ " states with location " ^ (string_of_int location_index));
 	(* Remove them all *)
-	while Hashtbl.mem state_space.states_for_comparison h do
-		Hashtbl.remove state_space.states_for_comparison h;
+	while Hashtbl.mem state_space.states_for_comparison location_index do
+		Hashtbl.remove state_space.states_for_comparison location_index;
 	done;
 	(* Add them back *)
 	List.iter (fun y ->
 		(* Only add if not to be merged *)
-		if not (List.mem y merged) then Hashtbl.add state_space.states_for_comparison h y;
+		if not (List.mem y merged) then Hashtbl.add state_space.states_for_comparison location_index y;
 	) bucket;
 
 	(* Remove merged from state table *)
@@ -1615,9 +1607,10 @@ let merge_states_ulrich state_space merger_state_index merged =
 let get_siblings state_space si =
 	let s = get_state state_space si in
 	let l = s.global_location in
-	let h = location_hash_code s in
-	let sibs = Hashtbl.find_all state_space.states_for_comparison h in
-	(* check for exact correspondence (=> hash collisions!), and exclude si *)
+        let li = new_location_index state_space l in
+	let sibs = Hashtbl.find_all state_space.states_for_comparison li in
+        print_message Verbose_high ("Siblings:" ^ string_of_int (List.length sibs));
+	(* check for exact correspondence (=> hash collisions!), and exclude si *) (* they should be exact now? Drop this? For now added InternalError (Jaco) *)
 	List.fold_left (fun siblings sj ->
 		if sj = si then siblings else begin
 			let state = get_state state_space sj in
@@ -1625,6 +1618,7 @@ let get_siblings state_space si =
 			if (Location.location_equal l l') then
 				(sj, (l',c')) :: siblings
 			else
+                                raise (InternalError "Didn't expect to find states with different location");
 				siblings
 		end
 	) [] sibs
@@ -1655,7 +1649,7 @@ let merge state_space new_states =
 	let merge_state si =
 		print_message Verbose_total ("[merging] Try to merge state " ^ (string_of_int si));
 		let state = get_state state_space si in
-		let l, c = state.global_location, state.px_constraint in
+		let c = state.px_constraint in
 		(* get merge candidates as pairs (index, state) *)
 		let candidates = get_siblings state_space si in
 		(* try to merge with siblings, restart if merge found, return eaten states *)
