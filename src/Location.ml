@@ -10,7 +10,7 @@
  * File contributors        : Étienne André
  * Created                  : 2010/03/10
  * Renamed from Automaton.ml: 2015/10/22
- * Last modified            : 2017/04/18
+ * Last modified            : 2019/10/16
  *
  ************************************************************)
  
@@ -91,11 +91,11 @@ let get_locations (locations, _) =	locations
 
 let get_discrete (_, discrete) = discrete
 
-let location_hash_code location =
+(*let location_hash_code location =
 	let locations = get_locations location in
 	Array.fold_left (fun h loc -> 
 		7919 * h + loc
-	) 0 locations
+	) 0 locations*)
 
 let hash_code location =
 	let locations, discrete = location in
