@@ -10,7 +10,7 @@
  * File contributors        : Étienne André
  * Created                  : 2010/03/10
  * Renamed from Automaton.ml: 2015/10/22
- * Last modified            : 2015/10/22
+ * Last modified            : 2019/10/16
  *
  ************************************************************)
 
@@ -82,12 +82,7 @@ val get_location : global_location -> automaton_index -> location_index
 (** Get the value associated to some discrete variable *)
 val get_discrete_value : global_location -> discrete_index -> discrete_value
 
-(** Get a hash value for a location *)
-(*** WARNING: unclear what is the difference with the below function *)
-val location_hash_code : global_location -> int
-
 (** Get a hash value for a location, including discrete values *)
-(*** WARNING: unclear what is the difference with the above function *)
 val hash_code : global_location -> int
 
 
