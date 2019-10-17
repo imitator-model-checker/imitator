@@ -23,10 +23,6 @@ bin/imitator -mode AccLoopSynthNDFS -explOrder=NDFSsub $exp_dir/brp_RC_loop40.im
 echo -e '\e[42mExperiments of section 6.3\e[0m'
 bin/imitator -mode AccLoopSynthNDFS -explOrder=NDFS $exp_dir/brp_GF_S_in_RC.imi -incl
 bin/imitator -mode AccLoopSynthNDFS -explOrder=NDFS $exp_dir/brp_GF_S_in_RC2.imi -incl
-# experiments of section 6.4
-echo -e '\e[42mExperiments of section 6.4\e[0m'
 bin/imitator -mode AccLoopSynthNDFS -explOrder=NDFSsub -counterexample $exp_dir/brp_GSinFSnok.imi
 bin/imitator -mode AccLoopSynthNDFS -explOrder=NDFSsub $exp_dir/brp_GSinFSnok.imi
-# experiment of section 6.5
-echo -e '\e[42mExperiment of section 6.5\e[0m'
 bin/imitator -mode AccLoopSynthNDFS -explOrder=NDFS $exp_dir/brp_GSinFSdk.imi -incl
