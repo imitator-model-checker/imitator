@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2019/10/09
+ * Last modified     : 2019/10/16
  *
  ************************************************************)
 
@@ -463,10 +463,20 @@ let get_variables_in_linear_constraint variables_used_ref = function
     get_variables_in_linear_expression variables_used_ref linear_expression1;
     get_variables_in_linear_expression variables_used_ref linear_expression2
 
+    
+
 (*------------------------------------------------------------*)
-(* Gather all variable names used in the property definition *)
+(* Gather all variable names used in the parsed property *)
 (*------------------------------------------------------------*)
-let get_variables_in_property variables_used_ref = function
+
+let get_variables_in_property = function
+	(* Reachability *)
+	| EF parsed_state_predicate -> blublu
+
+
+
+
+(*let get_variables_in_property variables_used_ref = function
   | Parsed_unreachable_locations (parsed_unreachable_global_location_list) ->
     List.iter (fun parsed_unreachable_global_location ->
         List.iter (function
@@ -517,7 +527,7 @@ let get_variables_in_property variables_used_ref = function
   | Sequence_acyclic _
   (* sequence: always a1, …, an *)
   | Sequence_cyclic _
-    -> ()
+    -> ()*)
 
 
 (*------------------------------------------------------------*)
@@ -2405,14 +2415,15 @@ let convert_normal_updates index_of_variables constants type_of_variables update
     discrete = discrete_updates;
     conditional = [] }
 
-(** Convert a boolean operator in its abstract model *)
-let parsed_relop_to_boolean_op = function
-  | OP_L -> BOOL_L
-  | OP_LEQ -> BOOL_LEQ
-  | OP_EQ -> BOOL_EQ
-  | OP_NEQ -> BOOL_NEQ
-  | OP_GEQ -> BOOL_GEQ
-  | OP_G -> BOOL_G
+(** Convert a Boolean operator to its abstract model *)
+let convert_parsed_relop = function
+	| PARSED_OP_L -> BOOL_L
+	| PARSED_OP_LEQ -> BOOL_LEQ
+	| PARSED_OP_EQ -> BOOL_EQ
+	| PARSED_OP_NEQ -> BOOL_NEQ
+	| PARSED_OP_GEQ -> BOOL_GEQ
+	| PARSED_OP_G -> BOOL_G
+
 
 (** Convert a boolean expression in its abstract model *)
 let rec convert_bool_expr index_of_variables constants = function
@@ -2423,7 +2434,7 @@ let rec convert_bool_expr index_of_variables constants = function
   | Or (e1, e2) -> Or_bool ((convert_bool_expr index_of_variables constants e1), (convert_bool_expr index_of_variables constants e2))
   | Expression (expr1, relop, expr2) -> Expression_bool (
       (discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr1),
-      (parsed_relop_to_boolean_op relop),
+      (convert_parsed_relop relop),
       (discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr2)
     )
 
@@ -3889,6 +3900,218 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 
 (************************************************************)
 (************************************************************)
+(** Property conversion *)
+(************************************************************)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(* Check the property w.r.t. the model variables *)
+(*------------------------------------------------------------*)
+
+(* Check correct variable names in parsed_discrete_arithmetic_expression *)
+let rec check_parsed_discrete_arithmetic_expression = function
+	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression , parsed_discrete_term)
+	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
+		let check1 = check_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression in
+		let check2 = check_parsed_discrete_term parsed_discrete_term in
+		check1 && check2
+	| Parsed_DAE_term parsed_discrete_term -> check_parsed_discrete_term parsed_discrete_term
+
+and check_parsed_discrete_term = function
+	| Parsed_DT_mul (parsed_discrete_term , parsed_discrete_factor)
+	| Parsed_DT_div (parsed_discrete_term , parsed_discrete_factor) ->
+		let check1 = check_parsed_discrete_term parsed_discrete_term in
+		let check2 = check_parsed_discrete_factor parsed_discrete_factor in
+		check1 && check2
+	| Parsed_DT_factor parsed_discrete_factor -> check_parsed_discrete_factor parsed_discrete_factor
+
+and check_parsed_discrete_factor = function
+	| Parsed_DF_variable variable_name ->
+		if not (Hashtbl.mem index_of_variables variable_name then (
+			print_error ("Variable name '" ^ variable_name ^ "' undefined in the property");
+		);
+	| Parsed_DF_constant _ -> true
+	| Parsed_DF_expression parsed_discrete_arithmetic_expression -> check_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression
+	| Parsed_DF_unary_min parsed_discrete_factor -> check_parsed_discrete_factor parsed_discrete_factor
+
+
+(* Check correct variable names in parsed_discrete_boolean_expression *)
+let check_parsed_discrete_boolean_expression = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Parsed_expression (parsed_discrete_arithmetic_expression1 , _ , parsed_discrete_arithmetic_expression2) ->
+		let check1 = check_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression1 in
+		let check2 = check_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression2 in
+		check1 && check2
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| Parsed_expression_in (parsed_discrete_arithmetic_expression1 , parsed_discrete_arithmetic_expression2 , parsed_discrete_arithmetic_expression3) ->
+		let check1 = check_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression1 in
+		let check2 = check_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression2 in
+		let check3 = check_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression3 in
+		check1 && check2 && check3
+
+	
+(* Check correct variable names in parsed_loc_predicate *)
+let check_parsed_loc_predicate = function
+	| Parsed_loc_predicate_EQ (automaton_name, location_name)
+	| Parsed_loc_predicate_NEQ (automaton_name, location_name)
+	->
+		(* Check automaton name *)
+		let check_automaton = Hashtbl.mem index_of_automata automaton_name in
+		if not check_automaton then (
+			print_error ("Automaton name '" ^ automaton_name ^ "' undefined in the property");
+		);
+		(* Check location name *)
+		let check_location = Hashtbl.mem index_of_locations location_name in
+		if not check_location then (
+			print_error ("Location name '" ^ location_name ^ "' undefined in the property");
+		);
+		(* Return *)
+		check_automaton && check_location
+
+
+(* Check correct variable names in parsed_simple_predicate *)
+let check_parsed_simple_predicate = function
+	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> check_parsed_discrete_boolean_expression parsed_discrete_boolean_expression
+	| Parsed_loc_predicate parsed_loc_predicate -> check_parsed_loc_predicate parsed_loc_predicate
+
+
+(* Check correct variable names in parsed_state_predicate *)
+let rec check_parsed_state_predicate_factor = function
+	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor -> check_parsed_state_predicate_factor parsed_state_predicate_factor
+	| Parsed_simple_predicate parsed_simple_predicate -> check_parsed_simple_predicate parsed_simple_predicate
+	| Parsed_state_predicate parsed_state_predicate -> check_parsed_state_predicate parsed_state_predicate
+
+and check_parsed_state_predicate_term = function
+	| Parsed_state_predicate_term_AND (parsed_state_predicate_term1, parsed_state_predicate_term2) ->
+		let check1 = check_parsed_state_predicate_term parsed_state_predicate_term1 in
+		let check2 = check_parsed_state_predicate_term parsed_state_predicate_term2 in
+		check1 && check2
+	| Parsed_state_predicate_factor parsed_state_predicate_factor -> check_parsed_state_predicate_factor parsed_state_predicate_factor
+
+and check_parsed_state_predicate = function
+	| Parsed_state_predicate_OR (parsed_state_predicate1, parsed_state_predicate2) ->
+		let check1 = check_parsed_state_predicate parsed_state_predicate1 in
+		let check2 = check_parsed_state_predicate parsed_state_predicate2 in
+		check1 && check2
+	| Parsed_state_predicate_term parsed_state_predicate_term -> check_parsed_state_predicate_term parsed_state_predicate_term
+
+
+	
+let check_property TODO parsed_property : bool =
+	match parsed_property with
+	(* Reachability *)
+	| EF parsed_state_predicate
+	(* Unavoidability *)
+	| AF parsed_state_predicate	
+	(* Liveness *)
+	| AG parsed_state_predicate
+		-> check_parsed_state_predicate parsed_state_predicate
+
+
+
+(*------------------------------------------------------------*)
+(* Convert the property *)
+(*------------------------------------------------------------*)
+
+(* Convert parsed_discrete_arithmetic_expression *)
+let rec convert_parsed_discrete_arithmetic_expression = function
+	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
+		DAE_plus ((convert_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression) , (convert_parsed_discrete_term parsed_discrete_term))
+	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
+		DAE_minus ((convert_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression) , (convert_parsed_discrete_term parsed_discrete_term))
+	| Parsed_DAE_term parsed_discrete_term -> DAE_term (convert_parsed_discrete_term parsed_discrete_term)
+
+and convert_parsed_discrete_term = function
+	| Parsed_DT_mul (parsed_discrete_term , parsed_discrete_factor) ->
+		DT_mul ((convert_parsed_discrete_term parsed_discrete_term) , convert_parsed_discrete_factor parsed_discrete_factor))
+	| Parsed_DT_div (parsed_discrete_term , parsed_discrete_factor) ->
+		DT_div ((convert_parsed_discrete_term parsed_discrete_term) , convert_parsed_discrete_factor parsed_discrete_factor))
+	| Parsed_DT_factor parsed_discrete_factor -> DT_factor (convert_parsed_discrete_factor parsed_discrete_factor)
+
+and convert_parsed_discrete_factor = function
+		(*** TODO: constants! ***)
+	| Parsed_DF_variable variable_name -> DF_variable (Hashtbl.find index_of_variables variable_name)
+	| Parsed_DF_constant var_value -> DF_constant var_value
+	| Parsed_DF_expression parsed_discrete_arithmetic_expression -> DF_expression (convert_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression)
+	| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (convert_parsed_discrete_factor parsed_discrete_factor)
+
+
+(* Convert parsed_discrete_boolean_expression *)
+let convert_parsed_discrete_boolean_expression = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Parsed_expression (parsed_discrete_arithmetic_expression1 , parsed_relop , parsed_discrete_arithmetic_expression2) ->
+		Expression (
+			convert_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression1
+			,
+			convert_parsed_relop relop
+			,
+			convert_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression2
+		)
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| Parsed_expression_in (parsed_discrete_arithmetic_expression1 , parsed_discrete_arithmetic_expression2 , parsed_discrete_arithmetic_expression3) ->
+		Expression_in (
+			convert_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression1
+			,
+			convert_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression2
+			,
+			convert_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression3
+		)
+
+	
+(* Convert parsed_loc_predicate *)
+let convert_parsed_loc_predicate = function
+	| Parsed_loc_predicate_EQ (automaton_name, location_name) ->
+		Loc_predicate_EQ ( (Hashtbl.find index_of_automata automaton_name) , (Hashtbl.find index_of_locations location_name))
+	| Parsed_loc_predicate_NEQ (automaton_name, location_name) ->
+		Loc_predicate_NEQ ( (Hashtbl.find index_of_automata automaton_name) , (Hashtbl.find index_of_locations location_name))
+
+
+(* Convert parsed_simple_predicate *)
+let convert_parsed_simple_predicate = function
+	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (convert_parsed_discrete_boolean_expression parsed_discrete_boolean_expression)
+	| Parsed_loc_predicate parsed_loc_predicate -> Loc_predicate (convert_parsed_loc_predicate parsed_loc_predicate)
+
+
+(* Convert parsed_state_predicate *)
+let rec convert_parsed_state_predicate_factor = function
+	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor -> State_predicate_factor_NOT (convert_parsed_state_predicate_factor parsed_state_predicate_factor)
+	| Parsed_simple_predicate parsed_simple_predicate -> Simple_predicate (convert_parsed_simple_predicate parsed_simple_predicate)
+	| Parsed_state_predicate parsed_state_predicate -> State_predicate (convert_parsed_state_predicate parsed_state_predicate)
+
+and convert_parsed_state_predicate_term = function
+	| Parsed_state_predicate_term_AND (parsed_state_predicate_term1, parsed_state_predicate_term2) ->
+		State_predicate_term_AND (
+			convert_parsed_state_predicate_term parsed_state_predicate_term1
+			,
+			convert_parsed_state_predicate_term parsed_state_predicate_term2
+		)
+	| Parsed_state_predicate_factor parsed_state_predicate_factor -> State_predicate_factor (convert_parsed_state_predicate_factor parsed_state_predicate_factor)
+
+and convert_parsed_state_predicate = function
+	| Parsed_state_predicate_OR (parsed_state_predicate1, parsed_state_predicate2) ->
+		State_predicate_OR (
+			convert_parsed_state_predicate parsed_state_predicate1
+			,
+			convert_parsed_state_predicate parsed_state_predicate2
+		)
+	| Parsed_state_predicate_term parsed_state_predicate_term -> State_predicate_term (convert_parsed_state_predicate_term parsed_state_predicate_term)
+
+
+(* Convert ParsingStructure.parsed_property into AbstractProperty.property *)
+let convert_property TODO parsed_property : AbstractProperty.property =
+	match parsed_property with
+	(* Reachability *)
+	| EF parsed_state_predicate -> EF (convert_parsed_state_predicate parsed_state_predicate)
+(*	(* Unavoidability *)
+	| AF parsed_state_predicate	
+	(* Liveness *)
+	| AG parsed_state_predicate
+		-> convert_parsed_state_predicate parsed_state_predicate*)
+
+
+
+(************************************************************)
+(************************************************************)
 (** Pi0 conversion *)
 (************************************************************)
 (************************************************************)
@@ -3908,18 +4131,18 @@ let check_pi0 pi0 parameters_names =
 
   (*** TODO: only warns if it is always defined to the same value ***)
 
-  (* Check if the variables are all defined *)
-  let all_defined = List.fold_left
-      (fun all_defined variable_name ->
-         if List.mem variable_name list_of_variables then all_defined
-         else (
-           print_error ("The parameter '" ^ variable_name ^ "' was not assigned a valuation in pi0.");
-           false
-         )
-      )
-      true
-      parameters_names
-  in
+	(* Check if the variables are all defined *)
+	let all_defined = List.fold_left
+			(fun all_defined variable_name ->
+				if List.mem variable_name list_of_variables then all_defined
+				else (
+				print_error ("The parameter '" ^ variable_name ^ "' was not assigned a valuation in pi0.");
+				false
+				)
+			)
+			true
+			parameters_names
+	in
 
   (* Check if some defined variables are not parameters (and warn) *)
   List.iter
@@ -3932,8 +4155,6 @@ let check_pi0 pi0 parameters_names =
   ;
 
   (* If something went wrong: launch an error *)
-  (*	if multiply_defined_variables != [] || not all_defined
-    	then false else true*)
   multiply_defined_variables = [] && all_defined
 
 
@@ -4101,71 +4322,3 @@ let check_and_make_v0 parsed_v0 =
   (* Return the hyper-rectangle *)
   v0
 
-
-
-(*
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Constuct the pi0 *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-	let (pi0 : AbstractModel.pi0), (v0 : AbstractModel.v0) =
-		match options#imitator_mode with
-		(* No pi0 / v0 *)
-		(*** BADPROG : should be an option !!! ***)
-		| Translation | State_space_exploration | NDFS_exploration | EF_synthesis | Parametric_deadlock_checking ->
-			(* Return blank values *)
-			(new PVal.pval)
-			,
-			(new HyperRectangle.hyper_rectangle)
-
-		(* IM : Pi0 *)
-		| Inverse_method ->
-			print_message Verbose_total ("*** Building reference valuation…");
-			(* Verification of the pi0 *)
-			if not (check_pi0 parsed_pi0 parameters_names) then raise InvalidPi0;
-			(* Construction of the pi0 *)
-			let pi0 = make_pi0 parsed_pi0 variables nb_parameters in
-			(* Return the pair *)
-			pi0
-			,
-			(new HyperRectangle.hyper_rectangle)
-
-		(* BC : V0 *)
-		| Cover_cartography | Learning_cartography | Shuffle_cartography | Random_cartography _ | RandomSeq_cartography _ | Border_cartography ->
-			print_message Verbose_total ("*** Building reference rectangle…");
-			(* Verification of the pi0 *)
-			if not (check_v0 parsed_v0 parameters_names) then raise InvalidV0;
-			(* Construction of the pi0 *)
-			let v0 = make_v0 parsed_v0 index_of_variables nb_parameters in
-			(* Return the pair *)
-			(new PVal.pval)
-			,
-			v0
-	in
-
-
-	(* Debut print: Pi0 / V0 *)
-	if verbose_mode_greater Verbose_medium then(
-		match options#imitator_mode with
-		| Inverse_method ->
-			print_message Verbose_medium ("\n*** Reference valuation pi0:");
-			List.iter (fun parameter ->
-				print_message Verbose_medium (
-					variables.(parameter) ^ " : " ^ (NumConst.string_of_numconst (pi0#get_value parameter))
-				)
-			) parameters;
-
-		| Cover_cartography | Border_cartography | Random_cartography _ ->
-			print_message Verbose_medium ("\n*** Reference rectangle V0:");
-			for parameter_index = 0 to nb_parameters - 1 do
-				let min = v0#get_min parameter_index in
-				let max = v0#get_max parameter_index in
-				print_message Verbose_medium (
-					variables.(parameter_index) ^ " : [" ^ (NumConst.string_of_numconst min) ^ ", " ^ (NumConst.string_of_numconst max) ^ "]"
-				);
-			done;
-
-		(* If not IM and not BC: no print *)
-		| _ -> ()
-	);
-	*)

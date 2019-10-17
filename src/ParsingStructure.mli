@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2019/10/09
+ * Last modified     : 2019/10/16
  *
  ****************************************************************)
 
@@ -106,14 +106,14 @@ type boolean_expression =
 	| Not of boolean_expression (** Negation *)
 	| And of boolean_expression * boolean_expression (** Conjunction *)
 	| Or of boolean_expression * boolean_expression (** Disjunction *)
-	| Discrete_boolan_expression of parsed_discrete_boolan_expression
+	| Discrete_boolean_expression of parsed_discrete_boolean_expression
 
 
-type parsed_discrete_boolan_expression =
+type parsed_discrete_boolean_expression =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Expression of parsed_discrete_arithmetic_expression * parsed_relop * parsed_discrete_arithmetic_expression
+	| Parsed_expression of parsed_discrete_arithmetic_expression * parsed_relop * parsed_discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Expression_in of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
+	| Parsed_expression_in of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
 
 
 
@@ -300,7 +300,7 @@ type parsed_loc_predicate =
 
 
 type parsed_simple_predicate =
-	| Parsed_discrete_boolean_expression of parsed_discrete_boolan_expression
+	| Parsed_discrete_boolean_expression of parsed_discrete_boolean_expression
 	| Parsed_loc_predicate of parsed_loc_predicate
 
 
@@ -335,13 +335,13 @@ type parsed_property_type =
 	(*------------------------------------------------------------*)
 
 	(* Reachability *)
-	| EF of parsed_state_predicate
+	| Parsed_EF of parsed_state_predicate
 	
 	(* Unavoidability *)
-	| AF of parsed_state_predicate
+	| Parsed_AF of parsed_state_predicate
 	
 	(* Liveness *)
-	| AG of parsed_state_predicate
+	| Parsed_AG of parsed_state_predicate
 	
 	
 	(*------------------------------------------------------------*)
@@ -349,12 +349,12 @@ type parsed_property_type =
 	(*------------------------------------------------------------*)
 	
 	(* Reachability with minimization *)
-	| EFmin of parsed_state_predicate * TODO
+	| Parsed_EFmin of parsed_state_predicate * TODO
 	
 	(*** TODO: EFmin, EFmax, EFsynthmin, EFsynthmax, EF_synth_min_priority_queue ***)
 	
 	(** EF-synthesis with examples of (un)safe words *)
-	| EFexemplify of parsed_state_predicate
+	| Parsed_EFexemplify of parsed_state_predicate
 	
 
 	(*------------------------------------------------------------*)
@@ -362,13 +362,13 @@ type parsed_property_type =
 	(*------------------------------------------------------------*)
 	
 	(** Infinite-run (cycle) *)
-	| Cycle
+	| Parsed_Cycle
 
 	(** Accepting infinite-run (cycle) *)
-	| Acc_Cycle
+	| Parsed_Acc_Cycle
 
 	(** Infinite-run (cycle) with non-Zeno assumption *)
-	| NZCycle
+	| Parsed_NZCycle
 	
 
 	(*------------------------------------------------------------*)
@@ -376,7 +376,7 @@ type parsed_property_type =
 	(*------------------------------------------------------------*)
 	
 	(* Deadlock-free synthesis *)
-	| Deadlock_Freeness
+	| Parsed_Deadlock_Freeness
 
 	
 	(*------------------------------------------------------------*)
@@ -384,13 +384,13 @@ type parsed_property_type =
 	(*------------------------------------------------------------*)
 	
 	(* Inverse method with complete, non-convex result *)
-	| IM of pi0
+	| Parsed_IM of pi0
 
 	(* Non-complete inverse method with convex result *)
-	| ConvexIM of pi0
+	| Parsed_ConvexIM of pi0
 
 	(* Parametric reachability preservation *)
-	| PRP of pi0
+	| Parsed_PRP of pi0
 
 	
 	(*------------------------------------------------------------*)
@@ -398,26 +398,26 @@ type parsed_property_type =
 	(*------------------------------------------------------------*)
 	
 	(* Cartography *)
-	| Cover_cartography of v0
+	| Parsed_Cover_cartography of v0
 
 	
 	(** Cover the whole cartography using learning-based abstractions *)
-	| Learning_cartography of v0
+	| Parsed_Learning_cartography of v0
 	
 	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
-	| Shuffle_cartography of v0
+	| Parsed_Shuffle_cartography of v0
 	
 	(** Look for the border using the cartography*)
-	| Border_cartography of v0
+	| Parsed_Border_cartography of v0
 	
 	(** Randomly pick up values for a given number of iterations *)
-	| Random_cartography  of v0 * int
+	| Parsed_Random_cartography  of v0 * int
 	
 	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
-	| RandomSeq_cartography  of v0 * int
+	| Parsed_RandomSeq_cartography  of v0 * int
 
 	(* Parametric reachability preservation *)
-	| PRPC of v0
+	| Parsed_PRPC of v0
 
 
 

@@ -161,17 +161,27 @@ PVal.set_dimensions model.nb_parameters;
 
 
 (*------------------------------------------------------------*)
+(* Parse property *)
+(*------------------------------------------------------------*)
+
+if property_needed options#imitator_mode then(
+	let property = ParsingUtility.compile_property options in
+	Input.set_property property;
+);
+
+
+(*(*------------------------------------------------------------*)
 (* Parse the additional file (pi0 or v0) *)
 (*------------------------------------------------------------*)
 if is_mode_IM options#imitator_mode then(
-		let pi0 = ParsingUtility.compile_pi0 options in
-		Input.set_pi0 pi0;
+	let pi0 = ParsingUtility.compile_pi0 options in
+	Input.set_pi0 pi0;
 );
 
 if is_mode_cartography options#imitator_mode then(
-		let v0 = ParsingUtility.compile_v0 options in
-		Input.set_v0 v0;
-);
+	let v0 = ParsingUtility.compile_v0 options in
+	Input.set_v0 v0;
+);*)
 
 (* End of parsing *)
 parsing_counter#stop;

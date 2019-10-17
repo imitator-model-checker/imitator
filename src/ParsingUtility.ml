@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2019/10/09
+ * Last modified     : 2019/10/16
  *
  ************************************************************)
 
@@ -184,10 +184,10 @@ let compile_model options (with_special_reset_clock : bool) =
 (************************************************************)
 let compile_property options =
 	(* Print some information *)
-	print_message Verbose_low ("Parsing property in file " ^ options#second_file_name ^ "…");
+	print_message Verbose_low ("Parsing property in file " ^ options#property_file_name ^ "…");
 
 	(* Property parsing *)
-	let parsed_property = parser_lexer_from_file PropertyParser.main PropertyLexer.token options#second_file_name
+	let parsed_property = parser_lexer_from_file PropertyParser.main PropertyLexer.token options#property_file_name
 	in
 
 	(* Convert to an abstract representation *)
@@ -212,10 +212,10 @@ let compile_property options =
 (************************************************************)
 let compile_pi0 options =
 	(* Print some information *)
-	print_message Verbose_low ("Parsing reference valuation in file " ^ options#second_file_name ^ "…");
+	print_message Verbose_low ("Parsing reference valuation in file " ^ options#property_file_name ^ "…");
 
 	(* Pi0 Parsing *)
-	let pi0_parsed = parser_lexer_from_file Pi0Parser.main Pi0Lexer.token options#second_file_name
+	let pi0_parsed = parser_lexer_from_file Pi0Parser.main Pi0Lexer.token options#property_file_name
 	in
 
 	(* Convert to an abstract representation *)
@@ -238,10 +238,10 @@ let compile_pi0 options =
 (************************************************************)
 let compile_v0 options =
 	(* Print some information *)
-	print_message Verbose_low ("Parsing hyper-rectangle in file " ^ options#second_file_name ^ "…");
+	print_message Verbose_low ("Parsing hyper-rectangle in file " ^ options#property_file_name ^ "…");
 
 	(* Parsing *)
-	let v0_parsed = parser_lexer_from_file V0Parser.main V0Lexer.token options#second_file_name in
+	let v0_parsed = parser_lexer_from_file V0Parser.main V0Lexer.token options#property_file_name in
 
 	(* Convert to an abstract representation *)
 	let v0 =

@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * All (?) constants of IMITATOR
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2019/07/05
+ * Last modified     : 2019/10/16
  *
  ************************************************************)
 
@@ -57,6 +58,9 @@ val global_time_clock_name : string
 
 (** Extension for input model files *)
 val model_extension          : string
+
+(** Extension for property files *)
+val property_extension       : string
 
 (** Extension for files output *)
 val result_file_extension    : string

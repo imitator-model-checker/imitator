@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2019/10/09
+ * Last modified     : 2019/10/16
  *
  ************************************************************/
 
@@ -116,7 +116,7 @@ property:
 	/*------------------------------------------------------------*/
 
 	/* Reachability */
-	| CT_EF state_predicate { EF $1 }
+	| CT_EF state_predicate { Parsed_EF $1 }
 
 
 
@@ -175,10 +175,10 @@ loc_predicate:
 discrete_boolean_predicate:
 /************************************************************/
 	/* expr ~ expr */
-	| discrete_expression op_bool discrete_expression { Expression ($1, $2, $3) }
+	| discrete_expression op_bool discrete_expression { Parsed_expression ($1, $2, $3) }
 	/* expr in [expr .. expr] */
-	| discrete_expression CT_IN LSQBRA discrete_expression COMMA discrete_expression RSQBRA { Expression_in ($1, $4, $6) }
-	| discrete_expression CT_IN LSQBRA discrete_expression DOUBLEDOT discrete_expression RSQBRA { Expression_in ($1, $4, $6) }
+	| discrete_expression CT_IN LSQBRA discrete_expression COMMA discrete_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
+	| discrete_expression CT_IN LSQBRA discrete_expression DOUBLEDOT discrete_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
 ;
 
 discrete_expression:

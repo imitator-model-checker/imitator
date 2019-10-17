@@ -88,11 +88,13 @@ and state_predicate =
 	| State_predicate_OR of state_predicate * state_predicate
 	| State_predicate_term of state_predicate_term
 
-(*
 
 (************************************************************)
-(** Definition of correctness property *)
+(** Definition of property *)
 (************************************************************)
+type property = ImitatorUtilities.algorithm
+
+(*
 (** predicates for bad definition *)
 
 type duration = LinearConstraint.p_linear_term

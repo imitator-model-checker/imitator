@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2019/10/09
+ * Last modified     : 2019/10/16
  *
  ************************************************************)
 
@@ -166,6 +166,20 @@ type algorithm =
 	
 
 (************************************************************)
+(** Available translations *)
+(************************************************************)
+
+type translation =
+	| HyTech
+	| IMI
+	| JPG
+	| PDF
+	| PNG
+	| TikZ
+	| Uppaal
+
+
+(************************************************************)
 (** Synthesis *)
 (************************************************************)
 
@@ -188,13 +202,13 @@ type imitator_mode =
 	| Syntax_check
 	
 	(** Translation to another language: no analysis *)
-	| Translation
+	| Translation of translation
 	
-(*	(** Full state space exploration, until fully explored or some preliminary termination *)
-	| State_space_exploration*)
+	(** Full state space exploration, until fully explored or some preliminary termination *)
+(* 	| State_space_exploration *)
 	
 	(** Synthesis algorithm *)
-	| Algorithm of synthesis_algorithm
+	| Algorithm (*of synthesis_algorithm*)
 	
 	
 
@@ -278,9 +292,18 @@ type graphical_state_space =
 (** Predicates on mode *)
 (************************************************************)
 
-val is_mode_IM                   : imitator_mode -> bool
-val is_mode_cartography          : imitator_mode -> bool
+val property_needed              : imitator_mode -> bool
+(*val is_mode_IM                   : imitator_mode -> bool
+val is_mode_cartography          : imitator_mode -> bool*)
 val cartography_drawing_possible : imitator_mode -> bool
+
+
+(************************************************************)
+(** Conversions of modes to string *)
+(************************************************************)
+
+val string_of_mode : imitator_mode -> string
+
 
 
 (************************************************************)

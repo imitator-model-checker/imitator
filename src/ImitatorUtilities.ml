@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2019/10/09
+ * Last modified     : 2019/10/16
  *
  ************************************************************)
 
@@ -199,10 +199,10 @@ let verbose_mode_of_string verbose_mode =
 (************************************************************)
 
 type algorithm =
-	(** EF-synthesis *)
-	| EF_synthesis
+	(** Reachability *)
+	| EF of AbstractProperty.state_predicate
 	
-	(** EF-synthesis w.r.t. unsafe locations *)
+(*	(** EF-synthesis w.r.t. unsafe locations *)
 	| EFunsafe_synthesis
 	
 	(** EF-minimization *)
@@ -278,8 +278,22 @@ type algorithm =
 	| RandomSeq_cartography of int
 
 	(** Synthesis using iterative calls to PRP *)
-	| PRPC
+	| PRPC*)
 	
+
+(************************************************************)
+(** Available translations *)
+(************************************************************)
+
+type translation =
+	| HyTech
+	| IMI
+	| JPG
+	| PDF
+	| PNG
+	| TikZ
+	| Uppaal
+
 
 (************************************************************)
 (** Synthesis *)
@@ -304,13 +318,13 @@ type imitator_mode =
 	| Syntax_check
 	
 	(** Translation to another language: no analysis *)
-	| Translation
+	| Translation of translation
 	
 	(** Full state space exploration, until fully explored or some preliminary termination *)
-	| State_space_exploration
+(* 	| State_space_exploration *)
 	
 	(** Synthesis algorithm *)
-	| Algorithm of synthesis_algorithm
+	| Algorithm (*of synthesis_algorithm*)
 	
 	
 
@@ -396,6 +410,15 @@ type graphical_state_space =
 (************************************************************)
 
 (*** NOTE: explicit definition to avoid to forget a new algorithm (which would raise a warning upon compiling) ***)
+let property_needed = function
+	| Syntax_check
+	| Translation _
+		-> false
+	| Algorithm (*_*)
+		-> true
+
+(*
+(*** NOTE: explicit definition to avoid to forget a new algorithm (which would raise a warning upon compiling) ***)
 let is_mode_IM = function
 	| No_analysis
 	| Translation
@@ -466,7 +489,7 @@ let is_mode_cartography = function
 	| RandomSeq_cartography _
 	| PRPC
 		-> true
-
+*)
 
 let cartography_drawing_possible = function
 	| No_analysis
@@ -504,6 +527,61 @@ let cartography_drawing_possible = function
 	| PRPC
 		-> true
 
+
+(************************************************************)
+(** Conversions of modes to string *)
+(************************************************************)
+
+let string_of_translation = function
+	| HyTech -> "HyTech"
+	| IMI    -> "IMITATOR"
+	| JPG    -> "JPG"
+	| PDF    -> "PDF"
+	| PNG    -> "PNG"
+	| TikZ   -> "TikZ"
+	| Uppaal -> "Uppaal"
+
+
+let string_of_mode (imitator_mode : imitator_mode) : string = match imitator_mode with
+	(** No analysis, syntactic check only *)
+	| Syntax_check -> "syntax check"
+	
+	(** Translation to another language: no analysis *)
+	| Translation translation -> "translation to " ^ (string_of_translation translation)
+	
+	(** Synthesis algorithm *)
+	| Algorithm (*synthesis_algorithm*) -> "algorithm" (*** TODO: not so precise! ***)
+
+(*
+				| State_space_exploration -> "parametric state space exploration"
+				| EF_synthesis -> "EF-synthesis"
+				| EFunsafe_synthesis -> "EFunsafe-synthesis"
+				| EF_min -> "EF-minimization"
+				| EF_max -> "EF-maximization"
+				| EF_synth_min -> "EF-synth with minimization"
+				| EF_synth_max -> "EF-synth with maximization"
+				| EF_synth_min_priority_queue -> "EF-synth with minimal reachability"
+				| EFexemplify -> "EF-exemplify"
+				| AF_synthesis -> "AF-synthesis"
+				| Loop_synthesis -> "infinite run synthesis"
+				| Acc_loop_synthesis -> "accepting infinite run synthesis"
+				| Acc_loop_synthesis_NDFS -> "accepting infinite run synthesis with NDFS exploration"
+				| Parametric_NZ_CUBcheck -> "parametric non-Zeno emptiness checking (CUB checking)"
+				| Parametric_NZ_CUBtransform -> "parametric non-Zeno emptiness checking (CUB transformation)"
+				| Parametric_NZ_CUBtransformDistributed -> "parametric non-Zeno emptiness checking (CUB transformation), distributed version"
+				| Parametric_NZ_CUB -> "parametric non-Zeno emptiness checking [testing mode without transformation]"
+				| Parametric_deadlock_checking -> "Parametric deadlock-checking"
+				| Inverse_method -> "inverse method"
+				| Inverse_method_complete -> "inverse method with complete result"
+				| PRP -> "parametric reachability preservation"
+				| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step)
+				| Learning_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step) ^ " and using learning-based abstractions"
+				| Shuffle_cartography -> "behavioral cartography algorithm with full coverage (shuffled version) and step " ^ (NumConst.string_of_numconst !step)
+				| Border_cartography -> "behavioral cartography algorithm with border detection (experimental) and step " ^ (NumConst.string_of_numconst !step)
+				| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " ^ (NumConst.string_of_numconst !step)
+				| RandomSeq_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations + sequential phase and step " ^ (NumConst.string_of_numconst !step)
+				| PRPC -> "parametric reachability preservation cartography"
+				*)
 
 (************************************************************)
 (** Time functions *)

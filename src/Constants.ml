@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * All (?) constants of IMITATOR
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2019/09/30
+ * Last modified     : 2019/10/16
  *
  ************************************************************)
 
@@ -69,6 +70,9 @@ let global_time_clock_name = "global_time"
 
 (** Extension for input model files *)
 let model_extension = ".imi"
+
+(** Extension for property files *)
+let property_extension = ".prop"
 
 (** Extension for files output *)
 let result_file_extension = ".res"

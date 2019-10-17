@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Options definitions
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2019/05/29
+ * Last modified: 2019/10/16
  *
  ************************************************************)
  
@@ -35,12 +36,11 @@ class imitator_options :
 		method branch_and_bound : bool
 (* 		method branch_and_bound_unset : unit *)
 		method cart : bool
-		method cartonly : bool
+(* 		method cartonly : bool *)
 		method carto_tiles_limit : int option
 		method carto_time_limit : int option
 		method check_ippta : bool
 		method check_point : bool
-(* 		method completeIM : bool *)
 		method counterex : bool
 		method depth_limit : int option
 		method distribution_mode : distribution_mode
@@ -48,7 +48,7 @@ class imitator_options :
 (* 		method dynamic : bool *)
 		method dynamic_clock_elimination : bool
 		method early_terminate : bool
-		method efim : bool
+(* 		method efim : bool *)
 		method exploration_order : exploration_order
 		method files_prefix : string
 		method imitator_mode : imitator_mode
@@ -79,15 +79,7 @@ class imitator_options :
 		method output_tiles_files : bool
 		method pi_compatible : bool
 		method precomputepi0 : bool
-(* 		method pta2clp : bool *)
-		method pta2hytech : bool
-		method pta2imi : bool
-		method pta2jpg : bool
-		method pta2pdf : bool
-		method pta2png : bool
-		method pta2tikz : bool
-		method pta2uppaal : bool
-		method second_file_name : string
+		method property_file_name : string
 		method states_limit : int option
 		method statistics : bool
 		method step : NumConst.t
