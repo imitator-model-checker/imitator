@@ -52,12 +52,12 @@
 \imitator{} addresses several variants of the following problem:
 ``given a concurrent timed system, what are the values of the timing constants that guarantee that the model of the system satisfies some property?''
 Among other algorithms, \imitator{} implements
-	parametric safety analysis~\cite{AHV93,JLR15},
-	the inverse method \cite{ACEF09,AM15},
-	parametric deadlock-freeness synthesis~\cite{Andre16},
-	the behavioral cartography~\cite{AF10},
-	and
-	parametric reachability preservation~\cite{ALNS15}.
+parametric safety analysis~\cite{AHV93,JLR15},
+the inverse method \cite{ACEF09,AM15},
+parametric deadlock-freeness synthesis~\cite{Andre16},
+the behavioral cartography~\cite{AF10},
+and
+parametric reachability preservation~\cite{ALNS15}.
 Some algorithms can also run distributed on a cluster.
 Numerous analysis options are available.
 
@@ -146,9 +146,9 @@ This model contains two clocks: \styleIMI{x1} is process~1's clock, and \styleIM
 This model contains two parameters: \styleIMI{delta} is the parametric duration specifying how long a process is idle at most, whereas \styleIMI{gamma} is the parametric duration specifying the minimum duration between the time a process checks for the availability of the critical section and the time the same process indeed enters the critical section (if it is still available).
 
 Two discrete variables (\ie{} global, rational-valued variables, see \cref{section:discrete}) are used:
-	\styleIMI{turn} checks which process is attempting to enter the critical section;
-	\styleIMI{counter} records how many processes are in the critical section (this variable will not be used for the verification, but was used in the original \pat{} model, and we choose to keep it).
-	% TODO: use it for verification once IMITATOR supports global variables in properties
+\styleIMI{turn} checks which process is attempting to enter the critical section;
+\styleIMI{counter} records how many processes are in the critical section (this variable will not be used for the verification, but was used in the original \pat{} model, and we choose to keep it).
+% TODO: use it for verification once IMITATOR supports global variables in properties
 
 Finally, a global constant \styleIMI{IDLE} is set to \styleIMI{-1} (just as in the original \pat{} model), and encodes that no process is attempting to enter the critical section.
 
@@ -246,14 +246,14 @@ Assuming this model is input in file \stylePath{fischer.imi} and the property is
 The result of the call to \imitator{} is
 
 \styleTerminalOutput{
- Final positive constraint guaranteeing safety:\\
-  delta >= 0\\
- \& gamma > delta\\
- This positive constraint is exact (sound and complete)
+	Final positive constraint guaranteeing safety:\\
+	delta >= 0\\
+	\& gamma > delta\\
+	This positive constraint is exact (sound and complete)
 }
 
 That is, the system is safe if \styleIMI{O <= delta < gamma}, which is the well-known constraint ensuring mutual exclusion for this protocol.
-	% TODO: ref
+% TODO: ref
 
 
 
@@ -304,24 +304,24 @@ a discrete variable valuation is a function $\dval \colon \DVar \rightarrow \gra
 Let us formalize the set of linear constraints allowed in \imitator{}.
 Given a set of variables~$\Var = \{ \var_1, \dots, \var_\VarCard \}$ (in the following, this set will be instantiated with $\Clock$ and/or $\Param$ and/or $\DVar$), a \emph{linear term} over $\Var$ is an expression of the form
 $$
-\sum_{1 \leq i \leq n} \alpha_i \var_i + d
+	\sum_{1 \leq i \leq n} \alpha_i \var_i + d
 $$
 for some $n \in \grandn$,
-	where
-	$\var_{i} \in \Var$,
-	$\alpha_{i} \in \grandq$, for $1 \leq i \leq n$,
-	and
-	$d \in \grandq$.
+where
+$\var_{i} \in \Var$,
+$\alpha_{i} \in \grandq$, for $1 \leq i \leq n$,
+and
+$d \in \grandq$.
 
 An~\emph{atomic constraint} over $\Var$ is an expression of the form
 % An \emph{inequality} over $\Clock$ and~$\Param$ is $e \bowtie 0$, where , and $e$ is a linear term %of the form
 $
-\lterm \bowtie 0
+	\lterm \bowtie 0
 $
-	where
-	$\lterm$ is a linear term over~$\Var$,
-	and
-	${\bowtie} \in \{ <, \leq, =, \geq, > \}$.
+where
+$\lterm$ is a linear term over~$\Var$,
+and
+${\bowtie} \in \{ <, \leq, =, \geq, > \}$.
 
 A~\emph{constraint} over $\Var$ is a conjunction of atomic constraints.
 We denote by $\LTerm(\Var)$ the set of linear terms over~$\Var$, and by $\LConstraint(\Var)$ the set of constraints over~$\Var$.
@@ -360,12 +360,12 @@ Let $\unobs$ denote the unobservable action.
 		\item $\invariant : \Loc \rightarrow \LConstraintXPD$ assigns to every location~$\loc$ a constraint over all variables, called the \emph{invariant} of~$\loc$;
 		\item $\stopwatches : \Loc \rightarrow \Clock$ assigns to a every location a list of clocks that are stopped in this location;
 		\item $\steps$ is a set of edges $(\loc, \guard, \action, \Cupdates, \Dupdates, \loc')$, where
-			$\loc, \loc' \in \Loc$ are the source and destination locations,
-			$\guard \in \LConstraintXPD$ is a constraint over all variables (called \emph{guard} of the transition),
-			$\action \in \Action \cup \{ \unobs \}$ is the action associated with the transition,
-			$\Cupdates : \Clock \rightharpoonup \LTermXPD$ is the (possibly partial) update function for clocks, and
-			% TODO: sure that we can update to anything??
-			$\Dupdates : \DVar \rightharpoonup \ArithExprD$ is the (possibly partial) update function for discrete variables.
+		      $\loc, \loc' \in \Loc$ are the source and destination locations,
+		      $\guard \in \LConstraintXPD$ is a constraint over all variables (called \emph{guard} of the transition),
+		      $\action \in \Action \cup \{ \unobs \}$ is the action associated with the transition,
+		      $\Cupdates : \Clock \rightharpoonup \LTermXPD$ is the (possibly partial) update function for clocks, and
+		      % TODO: sure that we can update to anything??
+		      $\Dupdates : \DVar \rightharpoonup \ArithExprD$ is the (possibly partial) update function for discrete variables.
 	\end{itemize}
 \end{definition}
 %------------------------------------------------------------
@@ -402,7 +402,7 @@ Since version 2.12, \styleIMI{if}-\styleIMI{then}-\styleIMI{else} conditions are
 There are no distinction between clocks and stopwatches.
 That is, any clock can potentially be stopped in some location.
 \imitator{} will detect whether a model has or not stopwatches; if there is no stopwatch in some model, \imitator{} will apply some optimizations that (may) increase the analysis speed.
-	% TODO: nice box with a ``tip'' title
+% TODO: nice box with a ``tip'' title
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
@@ -413,7 +413,7 @@ That is, any clock can potentially be stopped in some location.
 \begin{definition}[\NIPTA{}]
 	Given a set of \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \DVar_i, \Clock_i, \Param_i, \invariant_i, \stopwatches_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \grandn$,
 	a network of \IPTA{} (\emph{\NIPTA{}}) is a tuple
-		$\tuple{\Action, \DVar, \Clock, \Param, \{ \A_i \mid 1 \leq i \leq N \}, \Cinit}$, where:
+	$\tuple{\Action, \DVar, \Clock, \Param, \{ \A_i \mid 1 \leq i \leq N \}, \Cinit}$, where:
 	\begin{itemize}
 		\item $\Action = \bigcup_{1 \leq i \leq N} \Action_i$ is the set of all actions;
 		\item $\DVar = \bigcup_{1 \leq i \leq N} \DVar_i$ is the set of all discrete variables;
@@ -527,9 +527,9 @@ If an \IPTA{} declares an action \styleIMI{a} that is never used in this \IPTA{}
 
 \imitator{} supports global constants, \ie{} a variable the value of which is known once for all.
 The syntax is the following one:
-	\begin{center}
-		\styleIMI{c = 1: constant;}
-	\end{center}
+\begin{center}
+	\styleIMI{c = 1: constant;}
+\end{center}
 Then, any occurrence of \styleIMI{c} in the model is replaced with \styleIMI{1}.
 
 Constants are (unbounded, exact) rationals.
@@ -605,7 +605,7 @@ The algorithm \EFsynth{} implemented in \imitator{} is a basic breadth-first pro
 Of course, the EF-emptiness problem being undecidable~\cite{AHV93}, the analysis is not guaranteed to terminate.
 
 % The standard command is:
-% 
+%
 % \styleCommand{\binimitator{} model.imi -mode EFunsafe -merge -incl -output-result}
 
 % The option \styleOption{-output-result} is not compulsory, but allows one to
@@ -616,10 +616,10 @@ You may want to use \styleOption{-no-merge} or \styleOption{-no-inclusion} to di
 The option \styleOption{-dynamic-elimination} (not activated by default) can also be used to reduce the state space.
 
 \imitator{} can also
-	output the state space in a graphical form (option \styleOption{-draw-statespace}),
-	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}),
-	or
-	output the text description of all states (option \styleOption{-states-description}).
+output the state space in a graphical form (option \styleOption{-draw-statespace}),
+output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}),
+or
+output the text description of all states (option \styleOption{-states-description}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Safety}\label{ss:mode:EF}
@@ -628,7 +628,7 @@ The option \styleOption{-dynamic-elimination} (not activated by default) can als
 Often, we are rather interested in \emph{safety} synthesis, \ie{} the set of valuations for which the target location is unreachable.
 
 % The standard command is:
-% 
+%
 % \styleCommand{\binimitator{} model.imi -mode EF -merge -incl -output-result}
 
 The property syntax is as follows:
@@ -674,7 +674,7 @@ This algorithm synthesizes the parameter valuations for which a given location i
 Our algorithm uses a priority queue, with priority to the earliest successor for the selection of the next state.
 
 % The standard command is:
-% 
+%
 % \styleCommand{\binimitator{} model.imi -mode EFsynthminpq -merge -incl -output-result}
 
 The property syntax is as follows:
@@ -709,12 +709,12 @@ where \styleIMI{<PROP>} must follow the syntax of the following patterns, where 
 	\item \styleIMI{if a2 then a1 has happened before}
 	\item \styleIMI{everytime a2 then a1 has happened before}
 	\item \styleIMI{everytime a2 then a1 has happened once before}
-% 	\item \styleIMI{if a1 then eventually a2}
-		% TODO
-% 	\item \styleIMI{everytime a1 then eventually a2}
-		% TODO
-% 	\item \styleIMI{everytime a1 then eventually a2 once before next}
-		% TODO
+	      % 	\item \styleIMI{if a1 then eventually a2}
+	      % TODO
+	      % 	\item \styleIMI{everytime a1 then eventually a2}
+	      % TODO
+	      % 	\item \styleIMI{everytime a1 then eventually a2 once before next}
+	      % TODO
 	\item \styleIMI{a within d}
 	\item \styleIMI{if a2 then a1 has happened within d before}
 	\item \styleIMI{everytime a2 then a1 has happened within d before}
@@ -729,9 +729,9 @@ where \styleIMI{<PROP>} must follow the syntax of the following patterns, where 
 The semantics of these properties is detailed in~\cite{Andre13ICECCS}.
 
 % Then, the command to synthesize parameters is the same as for the EF-synthesis:
-% 
+%
 % \styleCommand{\binimitator{} model.imi -mode EF -merge -incl -output-result}
-% 
+%
 % Once more, options \styleOption{-merge} and \styleOption{-incl} are optional, but often improve efficiency and termination.
 
 \imitator{} then translates the selected pattern into an additional observer automaton, and performs some safety or reachability synthesis.
@@ -748,9 +748,9 @@ The property syntax is as follows:
 \styleIMI{property := \#synth deadlockfree;}
 
 As usual, \imitator{} can also
-	output the state space in a graphical form (option \styleOption{-draw-statespace})
-	or
-	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
+output the state space in a graphical form (option \styleOption{-draw-statespace})
+or
+output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
 % 	or
 % 	output the result to a text file using a normalized syntax (option \styleOption{-output-result}).
 
@@ -767,7 +767,7 @@ As usual, \imitator{} can also
 Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, \ie{} an infinite run. % TODO: ~\cite{AL17}
 
 % The command is:
-% 
+%
 % \styleCommand{\binimitator{} model.imi -mode LoopSynth -output-result}
 
 The property syntax is as follows:
@@ -776,9 +776,9 @@ The property syntax is as follows:
 
 
 As usual, \imitator{} can also
-	output the state space in a graphical form (option \styleOption{-draw-statespace})
-	or
-	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
+output the state space in a graphical form (option \styleOption{-draw-statespace})
+or
+output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Accepting loop}\label{ss:accepting-loop}
@@ -817,9 +817,10 @@ These are accessible via the \styleOption{-explOrder} option:
 \begin{description}
 	\item[\styleOption{-explOrder NDFS}]: use standard NDFS to find an accepting cycle;
 	\item[\styleOption{-explOrder NDFSsub}]: standard NDFS with subsumption;
+	\item[\styleOption{-explOrder layerNDFS}]: NDFS with layers;
 	\item[\styleOption{-explOrder layerNDFSsub}]: NDFS with subsumption and layers;
-% 	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
-% 	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
+	      % 	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
+	      % 	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
 \end{description}
 
 At each cycle found, \imitator{} outputs its number (when using the synthesis) and
@@ -836,9 +837,22 @@ the current branch and backtracks when this depth is reached.
 
 
 As usual, \imitator{} can also
-	output the state space in a graphical form (option \styleOption{-draw-statespace})
-	or
-	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
+output the state space in a graphical form (option \styleOption{-draw-statespace})
+or
+output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
+
+The exploration with layers considers different ordering policies for its pending
+list via the \styleOption{-pendingOrder} option:
+\begin{description}
+	\item[\styleOption{-pendingOrder none}]: the states are added to the pending list
+	      without specific policy	(default option);
+	\item[\styleOption{-pendingOrder accepting}]: the accepting states are added at
+	      the head of the pending list, the others at the tail;
+	\item[\styleOption{-pendingOrder param}]: the states are added to the list on
+	      the basis of a largest projection of zone on parameters first;
+	\item[\styleOption{-pendingOrder zone}]: the states are added to the list on
+	      the basis of a largest zone first.
+\end{description}
 
 
 
@@ -861,11 +875,11 @@ Two options are possible in \imitator{}:
 \begin{enumerate}
 	\item a partial method (but slightly faster), that first detects whether the input \NIPTA{} is already a CUB-PTA; if so, it applies non-Zeno checking on this CUB-PTA; otherwise, the returned constraint will be false.
 
-	\styleIMI{property := \#synth NZ\_inf\_cycle\_check;}
+	      \styleIMI{property := \#synth NZ\_inf\_cycle\_check;}
 
 	\item a complete method (though of course without guarantee of termination), that transforms the \NIPTA{} into a network of CUB-PTAs, and applies non-Zeno checking on the transformed CUB-PTA.
 
-	\styleIMI{property := \#synth NZ\_inf\_cycle\_transform;}
+	      \styleIMI{property := \#synth NZ\_inf\_cycle\_transform;}
 
 \end{enumerate}
 
@@ -883,9 +897,9 @@ Two options are possible in \imitator{}:
 \end{warning}
 
 As usual, \imitator{} can also
-	output the state space in a graphical form (option \styleOption{-draw-statespace})
-	or
-	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
+output the state space in a graphical form (option \styleOption{-draw-statespace})
+or
+output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
 
 \begin{remark}
 	The \emph{accepting} cycles are not (yet?) supported for non-Zeno synthesis.
@@ -916,14 +930,14 @@ where \styleIMI{parameter\_valuation} is a reference valuation of the form \styl
 
 
 \imitator{} can also
-	output the state space in a graphical form (option \styleOption{-draw-statespace})
-	or
-	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
-	% TODO
+output the state space in a graphical form (option \styleOption{-draw-statespace})
+or
+output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
+% TODO
 % 	or
 % 	output the result to a text file using a normalized syntax (option \styleOption{-output-result}).
 
-Recall that \imitator{} % option \styleOption{-output-result} is not compulsory, but allows one to obtain 
+Recall that \imitator{} % option \styleOption{-output-result} is not compulsory, but allows one to obtain
 generates
 a result in an external text file (\stylePath{model.res}) and formatted using a standardized manner (see \cref{chapter:result}). %, and therefore easier to parse using an external tool than the terminal output.
 
@@ -937,7 +951,7 @@ a result in an external text file (\stylePath{model.res}) and formatted using a 
 
 Given a \NIPTA{} and a bounded parameter domain, the behavioral cartography~\BC{} synthesizes tiles, \ie{} parameter domains such that for any parameter valuation in that domain, the set of traces is the same~\cite{AF10}.
 The corresponding problem being undecidable, the analysis is not guaranteed to terminate; when it terminates, it may also leave ``holes'', \ie{} parameter domains not covered by any tile.
-	% TODO: cite AM15
+% TODO: cite AM15
 
 The property syntax is of the following form:
 
@@ -949,9 +963,9 @@ where \styleIMI{hyper\_rectangle} is a reference hyper-rectangle of the form \st
 
 
 \imitator{} can also
-	output all state spaces in a graphical form (option \styleOption{-draw-statespace}),
-	or
-	output the constraints synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
+output all state spaces in a graphical form (option \styleOption{-draw-statespace}),
+or
+output the constraints synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
 % 	or
 % 	output the result to a text file using a normalized syntax (option \styleOption{-output-result}).
 
@@ -1043,71 +1057,70 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 \begin{table}[h!]
 	\caption{Summary of the algorithms syntax}
 	{\centering
-	\begin{tabular}{ | l | l | c | c | }
-	
-		% Non-nested CTL
-		\hline
-		\rowHeader{} Algorithm & Syntax & Synth & Witness \\
-		\hline
-		Reachability & \styleIMI{EF(state\_predicate)} & \cellYes{} & \cellYes{} \\
-		\hline
-		Safety & \styleIMI{AGnot(state\_predicate)} & \cellYes{} & \cellYes{} \\
-		
-		% Optimized reachability
-		 
-		\hline
-		Parameter minimization & \styleIMI{EFpmin(state\_predicate, p)} & \cellYes{} & \cellYes{} \\
-		\hline
-		Parameter maximization & \styleIMI{EFpmax(state\_predicate, p)} & \cellYes{} & \cellYes{} \\
-		\hline
-		Minimal-time & \styleIMI{EFtmin(state\_predicate)} & \cellYes{} & \cellYes{} \\
-		
-		% Cycles
-		
-		\hline
-		Cycle & \styleIMI{inf\_cycle} & \cellYes{} & \cellNo{} \\
-		\hline
-		Accepting cycle & \styleIMI{inf\_cycle\_through(state\_predicate)} & \cellYes{} & \cellNo{} \\
-		\hline
-		Accepting cycle (NDFS) & \styleIMI{inf\_cycle} & \cellYes{} & \cellYes{} \\
-		\hline
-		Non-Zeno cycles & \styleIMI{inf\_cycle} & \cellYes{} & \cellNo{} \\
-		
-		% Deadlock-freeness
-		
-		\hline
-		Deadlock-freeness & \styleIMI{deadlockfree} & \cellYes{} & \cellNo{} \\
-		
-		% Inverse method
-		
-		\hline
-		Inverse method & \styleIMI{IM(parameter\_valuation)} & \cellYes{} & \cellNo{} \\
-		\hline
-		Inverse method & \styleIMI{IMK(parameter\_valuation)} & \cellYes{} & \cellNo{} \\
-		\hline
-		Inverse method & \styleIMI{IMunion(parameter\_valuation)} & \cellYes{} & \cellNo{} \\
-		
-		% Cartography
-		
-		\hline
-		Cartography & \styleIMI{BCcover(hyper\_rectangle)} & \cellYes{} & \cellNo{} \\
-		Cartography & \styleIMI{BCrandom(hyper\_rectangle, nb)} & \cellYes{} & \cellNo{} \\
-		Cartography & \styleIMI{BCrandomseq(hyper\_rectangle, nb)} & \cellYes{} & \cellNo{} \\
-		Cartography & \styleIMI{BCshuffle(hyper\_rectangle)} & \cellYes{} & \cellNo{} \\
-		
-		% PRP, PRPC
-		
-		\hline
-		PRP & \styleIMI{PRP(state\_pred, parameter\_val)} & \cellYes{} & \cellNo{} \\
-		\hline
-		PRPC & \styleIMI{PRPC(state\_pred, hyper\_rect)} & \cellYes{} & \cellNo{} \\
-		
-		\hline
+		\begin{tabular}{ | l | l | c | c | }
 
-	\end{tabular}
+			% Non-nested CTL
+			\hline
+			\rowHeader{} Algorithm & Syntax                                           & Synth      & Witness    \\
+			\hline
+			Reachability           & \styleIMI{EF(state\_predicate)}                  & \cellYes{} & \cellYes{} \\
+			\hline
+			Safety                 & \styleIMI{AGnot(state\_predicate)}               & \cellYes{} & \cellYes{} \\
+
+			% Optimized reachability
+
+			\hline
+			Parameter minimization & \styleIMI{EFpmin(state\_predicate, p)}           & \cellYes{} & \cellYes{} \\
+			\hline
+			Parameter maximization & \styleIMI{EFpmax(state\_predicate, p)}           & \cellYes{} & \cellYes{} \\
+			\hline
+			Minimal-time           & \styleIMI{EFtmin(state\_predicate)}              & \cellYes{} & \cellYes{} \\
+
+			% Cycles
+
+			\hline
+			Cycle                  & \styleIMI{inf\_cycle}                            & \cellYes{} & \cellNo{}  \\
+			\hline
+			Accepting cycle        & \styleIMI{inf\_cycle\_through(state\_predicate)} & \cellYes{} & \cellNo{}  \\
+			\hline
+			Accepting cycle (NDFS) & \styleIMI{inf\_cycle}                            & \cellYes{} & \cellYes{} \\
+			\hline
+			Non-Zeno cycles        & \styleIMI{inf\_cycle}                            & \cellYes{} & \cellNo{}  \\
+
+			% Deadlock-freeness
+
+			\hline
+			Deadlock-freeness      & \styleIMI{deadlockfree}                          & \cellYes{} & \cellNo{}  \\
+
+			% Inverse method
+
+			\hline
+			Inverse method         & \styleIMI{IM(parameter\_valuation)}              & \cellYes{} & \cellNo{}  \\
+			\hline
+			Inverse method         & \styleIMI{IMK(parameter\_valuation)}             & \cellYes{} & \cellNo{}  \\
+			\hline
+			Inverse method         & \styleIMI{IMunion(parameter\_valuation)}         & \cellYes{} & \cellNo{}  \\
+
+			% Cartography
+
+			\hline
+			Cartography            & \styleIMI{BCcover(hyper\_rectangle)}             & \cellYes{} & \cellNo{}  \\
+			Cartography            & \styleIMI{BCrandom(hyper\_rectangle, nb)}        & \cellYes{} & \cellNo{}  \\
+			Cartography            & \styleIMI{BCrandomseq(hyper\_rectangle, nb)}     & \cellYes{} & \cellNo{}  \\
+			Cartography            & \styleIMI{BCshuffle(hyper\_rectangle)}           & \cellYes{} & \cellNo{}  \\
+
+			% PRP, PRPC
+
+			\hline
+			PRP                    & \styleIMI{PRP(state\_pred, parameter\_val)}      & \cellYes{} & \cellNo{}  \\
+			\hline
+			PRPC                   & \styleIMI{PRPC(state\_pred, hyper\_rect)}        & \cellYes{} & \cellNo{}  \\
+
+			\hline
+		\end{tabular}
 
 	}
-	
+
 	\label{table:summary:algorithms}
 \end{table}
 
@@ -1173,8 +1186,8 @@ Both parts of the results are then separated using the keyword \styleFileContent
 The resulting constraint comes with two other information:
 \begin{itemize}
 	\item its nature, \ie{} whether it attempts to characterize a good set of valuations, a bad set of valuations, or both a good set and a bad of valuations.
-		``Good'' and ``bad'' must be understood to the property that is being checked (non-reachability of some states, deadlock-freeness, etc.).
-		The constraint nature is only an \emph{attempt}, as the constraint may not always be sound (see below).
+	      ``Good'' and ``bad'' must be understood to the property that is being checked (non-reachability of some states, deadlock-freeness, etc.).
+	      The constraint nature is only an \emph{attempt}, as the constraint may not always be sound (see below).
 	\item its soundness, \ie{} whether the constraint is exact (\imitator{} returned exactly the set of parameter valuations solution to the analysis requested), a possible under-approximation of that result, a possible over-approximation of that result (in some rare cases), or a possibly invalid constraint (in which case the result output by \imitator{} shall not be used).
 \end{itemize}
 Note that in almost all analyses, \imitator{} returns an exact or an under-approximated constraint.
@@ -1246,10 +1259,10 @@ To generate the (discretized) state space of a given computation in a graphical 
 \imitator{} will generate a file \stylePath{model-statespace.pdf}.
 States are made of two part: the left-hand number (\eg{} \styleFileContent{s\_0}) is the number of the symbolic state, which comes from \imitator{} internal representation (\styleFileContent{s\_0} is the first one to be generated, and so on); the right-hand part displays all the discrete part of the symbolic state vertically, that is the current location in each of the NIPTA in parallel, and the value of possible discrete variables (if any).
 Consider state \texttt{s\_1} in \cref{figure:statespace:normal} (and originating from the example in \cref{chapter:syntax-introduction}):
-	the current location of IPTA \styleFileContent{proc\_1} is \styleFileContent{active1},
-	the current location of IPTA \styleFileContent{proc\_2} is \styleFileContent{idle2},
-	while
-	the current location of IPTA \styleFileContent{observer} is \styleFileContent{obs\_waiting}.
+the current location of IPTA \styleFileContent{proc\_1} is \styleFileContent{active1},
+the current location of IPTA \styleFileContent{proc\_2} is \styleFileContent{idle2},
+while
+the current location of IPTA \styleFileContent{observer} is \styleFileContent{obs\_waiting}.
 In addition, the current value of variable \styleFileContent{turn} is $-1$ while the current value of \styleFileContent{counter} is~0.
 The color is chosen according to \imitator{} internal choice: however, two symbolic states with the same color have the same discrete part (location and values of the discrete variables).
 For example, this is the case of \styleFileContent{s\_4} and \styleFileContent{s\_5} in \cref{figure:statespace:normal}.
@@ -1259,7 +1272,7 @@ Note that, beyond about 1,000 states or 1,000 transitions, the \gdot{} utility (
 Using \styleOption{-draw-statespace undetailed} makes a more compact representation, but is also less informative as only the state number and the transition labels are shown.
 
 Conversely, \styleOption{-draw-statespace full} makes a more detailed representation, by also adding to the state space all constraints:
-	the clock and parameter constraints, and below their projection onto the parameters; in addition, if \styleFileContent{projectresult} is defined in the model (see \cref{section:projection}), the projection onto a specific set of parameters is also added.
+the clock and parameter constraints, and below their projection onto the parameters; in addition, if \styleFileContent{projectresult} is defined in the model (see \cref{section:projection}), the projection onto a specific set of parameters is also added.
 This option is mostly suitable for small state spaces.
 
 \begin{example}
@@ -1273,7 +1286,7 @@ This option is mostly suitable for small state spaces.
 \end{example}
 
 \begin{figure}
-\centering
+	\centering
 	\begin{subfigure}[b]{.48\textwidth}
 		\includegraphics[width=\textwidth]{images/fischerPAT_obs-statespace-nodetails.pdf}
 
@@ -1363,13 +1376,13 @@ Our translation tries to preserve \imitator{} semantics, using the following sch
 	\item An action \styleFileContent{a} used in a single \IPTA{} is implemented in \uppaal{} using a broadcast action \styleFileContent{a!}.
 	\item An action \styleFileContent{a} used in exactly two \IPTA{} is implemented in \uppaal{} using a binary action \styleFileContent{a}, where the first (\ie{} declared first in the \imitator{} file) uses \styleFileContent{a!} while the second uses \styleFileContent{a?}.
 	\item An action \styleFileContent{a} used in $n$ \IPTA{} with $n \geq 3$ is implemented in \uppaal{} using a broadcast action \styleFileContent{a} and an additional variable \styleFileContent{nb\_\_a} initially set to~$n$, and that will be responsible to check that all automata can indeed synchronize, as follows:
-		\begin{itemize}
-			\item all invariants contain \styleFileContent{nb\_\_a = n}
-			\item the first automaton (\ie{} declared first in the \imitator{} file) involved in the synchronization synchronizes on \styleFileContent{a!} and performs \styleFileContent{nb\_\_a := 1};
-			\item all other automata involved in the synchronization perform \styleFileContent{nb\_\_a := nb\_\_a + 1}.
-		\end{itemize}
-		From the \uppaal{} official semantics, the discrete variables are updated by first executing the update label given on the \styleFileContent{a!} transition, and then the update labels given on the \styleFileContent{a?} for increasing, which guarantees the correctness of this construction.
-		(This construction was suggested by Jiří~Srba.)
+	      \begin{itemize}
+		      \item all invariants contain \styleFileContent{nb\_\_a = n}
+		      \item the first automaton (\ie{} declared first in the \imitator{} file) involved in the synchronization synchronizes on \styleFileContent{a!} and performs \styleFileContent{nb\_\_a := 1};
+		      \item all other automata involved in the synchronization perform \styleFileContent{nb\_\_a := nb\_\_a + 1}.
+	      \end{itemize}
+	      From the \uppaal{} official semantics, the discrete variables are updated by first executing the update label given on the \styleFileContent{a!} transition, and then the update labels given on the \styleFileContent{a?} for increasing, which guarantees the correctness of this construction.
+	      (This construction was suggested by Jiří~Srba.)
 \end{itemize}
 However, a major difference (which may prevent \uppaal{} to interpret the translated models) is that \uppaal{} forbids guard on receiving actions (of the form \styleFileContent{a?}).
 Therefore, translating an \imitator{} model where an action \styleFileContent{a} is used in two automata (or more) with guards on more than one transition will lead \uppaal{} to not accept the model.
@@ -1396,7 +1409,7 @@ To generate an equivalent \hytech{} model without performing any analysis, use:
 
 \imitator{} will generate a file \stylePath{model.hy}.
 Note that translation of properties is not supported.
-	% TODO
+% TODO
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1521,13 +1534,13 @@ The options available for \imitator{} are explained in the following.
 Note that some more options are available in the current implementation of \imitator{}.
 If these options are not listed here, they are experimental (or deprecated).
 If needed, more information can be obtained by contacting the \imitator{} team.
-	% cartonly
-	% check-iptta
-	% check-point
-	% completeIM
-	% -counterexample
-	% distributedKillIM
-	% precomputepi0
+% cartonly
+% check-iptta
+% check-point
+% completeIM
+% -counterexample
+% distributedKillIM
+% precomputepi0
 
 
 
@@ -1566,18 +1579,18 @@ In contrast, \styleOption{-time-limit} is applied to each call to the inverse me
 % %------------------------------------------------------------
 % \paragraph{\styleOption{-check-ippta} (default: false)}
 % %------------------------------------------------------------
-% 
+%
 % Check that every new symbolic state contains an integer point (\ie{} a point in the $\Clock \cup \Param$ dimension).
 % If not, raises an exception.
-% 
-% 
+%
+%
 % %------------------------------------------------------------
 % \paragraph{\styleOption{-check-point} (default: false)}
 % %------------------------------------------------------------
-% 
+%
 % In the inverse method, checks at each iteration whether the accumulated parameter constraint is restricted to the reference parameter valuation.
 % Note that this option is not implemented as nicely as it could be, and can hence turn very costly.
-% 
+%
 
 % %------------------------------------------------------------
 % \paragraph{\styleOption{-completeIM} (default: false)}
@@ -1598,7 +1611,7 @@ Print the list of contributors and exits.
 % \paragraph{\styleOption{-counterexample}}
 % %------------------------------------------------------------
 % For algorithms \EFsynth{} and \styleOption{AccLoopSynthNDFS}, stops the analysis as soon as one target state is found, and returns the (possibly approximated) result.
-% 
+%
 % This can be a way to solve the \emph{emptiness} instead of the \emph{synthesis} prolem.
 % Nevertheless, note that, instead of returning a Boolean answer, the algorithm still outputs some valuations (typically the valuations associated with the first parametric zone found, that allows to guarantee the violation of the property).
 
@@ -1641,7 +1654,7 @@ This will generate file \stylePath{model\_cart.png}.
 % \stylePath{model\_cart\_bc.png} if the algorithm is \BC{} and its variant,
 % or \stylePath{model\_cart\_patator.png} if the algorithm is the distributed \BC{} and its variants.
 % This option takes an integer which limits the number of generated plots, where each plot represents the projection of the parametric zones on two parameters.
-	% TODO: check
+% TODO: check
 If the model contains more than two parameters, then \code{-draw-cart} will plot the projection of the generated zones on the first two parameters of the model (or on the two \emph{varying} parameters in the case of \BC{}).
 
 This option makes use of the external utility \texttt{graph}, which is
@@ -1691,22 +1704,22 @@ Note that the path and the name of those two files can be changed using the \sty
 Three values for this option are allowed:
 \begin{itemize}
 	\item Use value \styleOption{undetailed} for the structure only (no location names): does \emph{not} provide detailed information on the local locations of the composed \IPTA{}, and instead only outputs the state id.
-	Enabling the option with this value instead of \styleOption{-draw-statespace normal} may yield a smaller graph, which is useful when generating relatively large state spaces.
-	
+	      Enabling the option with this value instead of \styleOption{-draw-statespace normal} may yield a smaller graph, which is useful when generating relatively large state spaces.
+
 	\item Use value \styleOption{normal} for location names.
-	
+
 	\item Use value \styleOption{full} for location names and constraints.
-	This provides very detailed information, by adding to the right of the local locations of the composed \IPTA{} the associated constraint as well.
-In addition, the parametric constraint is printed too.
-Enabling the option with this value instead of \styleOption{-draw-statespace normal} will yield a very large graph, and it is useful (and readable) mostly for very small state spaces.
-	% TODO: show examples in the manual
+	      This provides very detailed information, by adding to the right of the local locations of the composed \IPTA{} the associated constraint as well.
+	      In addition, the parametric constraint is printed too.
+	      Enabling the option with this value instead of \styleOption{-draw-statespace normal} will yield a very large graph, and it is useful (and readable) mostly for very small state spaces.
+	      % TODO: show examples in the manual
 
 \end{itemize}
 
 
 
 
-	
+
 %------------------------------------------------------------
 \paragraph{\styleOption{-dynamic-elimination} (default: false)}
 %------------------------------------------------------------
@@ -1730,10 +1743,11 @@ This framework remains relatively experimental.
 
 Second, for accepting loop synthesis with NDFS exploration~\cite{NPP18} (see \cref{ss:accepting-loop-NDFS}).
 In this latter case, the possible values are:
-\begin{itemize}
-	\item\styleOption{-explOrder NDFS}: use standard NDFS to find an accepting cycle;
-	\item\styleOption{-explOrder NDFSsub}: standard NDFS with subsumption;
-	\item\styleOption{-explOrder layerNDFSsub}: NDFS with subsumption and layers;
+\begin{description}
+\item[\styleOption{-explOrder NDFS}]: use standard NDFS to find an accepting cycle (default option);
+\item[\styleOption{-explOrder NDFSsub}]: standard NDFS with subsumption;
+\item[\styleOption{-explOrder layerNDFS}]: NDFS with layers;
+\item[\styleOption{-explOrder layerNDFSsub}]: NDFS with subsumption and layers;
 % 	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
 % 	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
 \end{itemize}
@@ -1768,26 +1782,26 @@ Regenerates the model into an \imitator{} model, and exits.
 \paragraph{\styleOption{-imi2JPG} (default: false)}
 %------------------------------------------------------------
 Translates the input model to a graphical, human-readable form (in \texttt{.jpg} format), and exits.
-	% TODO add the graphics of the coffee machine
+% TODO add the graphics of the coffee machine
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-imi2PDF} (default: false)}
 %------------------------------------------------------------
 Translates the input model to a graphical, human-readable form (in \texttt{.pdf} format), and exits.
-	% TODO add the graphics of the coffee machine
+% TODO add the graphics of the coffee machine
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-imi2PNG} (default: false)}
 %------------------------------------------------------------
 Translates the input model to a graphical, human-readable form (in \texttt{.png} format), and exits.
-	% TODO add the graphics of the coffee machine
+% TODO add the graphics of the coffee machine
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-imi2TikZ} (default: false)}
 %------------------------------------------------------------
 Translates the input model to a \LaTeX{} representation of the model (using the \texttt{tikz} package) without performing any analysis, and exits.
 Note that node positioning is not (much) supported, so may want to edit manually some positions.
-	% TODO refer to the graphics of the coffee machine
+% TODO refer to the graphics of the coffee machine
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-imi2Uppaal} (default: false)}
@@ -1841,14 +1855,18 @@ When executing \imitator{} without a property, \ie{} in a special mode.
 
 \begin{longtable}{@{} l @{\ \ } p{12cm}}
 	\styleOption{checksyntax} & Simple syntax check and no analysis.
-% Use option \styleOption{-output-result} to generate a simple file with statistics on the model (numbers of variables, automata, L/U-nature, strong determinism…)
-% 		(see \cref{ss:mode:statespace}) %TODO?
+	% Use option \styleOption{-output-result} to generate a simple file with statistics on the model (numbers of variables, automata, L/U-nature, strong determinism…)
+	% 		(see \cref{ss:mode:statespace}) %TODO?
 	\\
 
-	\styleOption{statespace} & Generation of the entire parametric state space \\
-	& (see \cref{ss:mode:statespace}) \\
+	\styleOption{statespace}  & Generation of the entire parametric state space \\
+	                          & (see \cref{ss:mode:statespace})                 \\
 \end{longtable}
 
+%------------------------------------------------------------
+\paragraph{\styleOption{-no-acceptfirst} (default: false)}
+%------------------------------------------------------------
+In \styleOption{AccLoopSynthNDFS}, do not put accepting states at the head of the successors list.
 
 
 %------------------------------------------------------------
@@ -1857,6 +1875,12 @@ When executing \imitator{} without a property, \ie{} in a special mode.
 In \EFsynth{}, no inclusion test of the new states constraints in the already computed constraint is performed when this option is enabled.
 Otherwise, in normal mode, the algorithm checks whether a new state parameter constraint is included into the already computed parameter constraint and, if so, cuts the branch.
 This can save time by cutting branches, but can also slow down the analysis for complex constraints.
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-no-lookahead} (default: false)}
+%------------------------------------------------------------
+In \styleOption{AccLoopSynthNDFS}, do not perform a lookahead for finding successors
+closing an accepting cycle.
 
 
 %------------------------------------------------------------
@@ -1910,7 +1934,23 @@ By default, the path prefix is the \emph{current directory}, \ie{} where the use
 % Writes the result of the analysis to a file named \stylePath{<input\_file>.result} using a normalized syntax, that can be easily parsed, \eg{} using an external script.
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-no-result-file} (default: false)}
+\paragraph{\styleOption{-pendingOrder} (default: \styleOption{none})}
+%------------------------------------------------------------
+Defines the ordering strategy used for the pending list in NDFS exploration with layers.
+The possible values are:
+\begin{longtable}{@{} l @{\ \ } p{12.5cm}}
+	\styleOption{none}      & the states are added to the pending list
+	without specific policy	(default option).                           \\
+	\styleOption{accepting} & the accepting states are added at
+	the head of the pending list, the others at the tail.              \\
+	\styleOption{param}     & the states are added to the list on
+	the basis of a largest projection of zone on parameters first.     \\
+	\styleOption{zone}      & the states are added to the list on
+	the basis of a largest zone first.
+\end{longtable}
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-PRP} (default: false)}
 %------------------------------------------------------------
 Does not write the result of the analysis to a file.
 By default, a file named \stylePath{<input\_file>.res} is created using a normalized syntax, that can be easily parsed, \eg{} using an external script.
@@ -1981,7 +2021,7 @@ When computing a new symbolic state, compute the time elapsing before taking the
 Try to limit the execution time (the value \styleOption{<limit>} is given in seconds).
 Note that, in the current version of \imitator{}, the test of time limit is performed at the end of an iteration only (\ie{} at the end of the exploration of the state space at the current depth).
 In the cartography mode, this option represents a \emph{global} time limit, not a limit for each call to the inverse method.
-	% TODO: really?
+% TODO: really?
 
 
 %------------------------------------------------------------
@@ -2008,14 +2048,14 @@ Give some debugging information, that may also be useful to have more details on
 The admissible values for \styleOption{-verbose} are given below:
 
 \begin{tabular}{@{} l @{\ \ } l}
- \styleOption{mute} & No output (the result is still output to an external file) \\
- \styleOption{warnings} & Prints only warnings \\
- \styleOption{standard} & Give little information (number of steps, computation time)\\
- \styleOption{experiments} & Give some additional information, typically enough for experiments\\
- \styleOption{low} & Give some additional information on what happens internally\\
- \styleOption{medium} & Give quite a lot of information\\
- \styleOption{high} & Give much information\\
- \styleOption{total} & Give really too much information\\
+	\styleOption{mute}        & No output (the result is still output to an external file)         \\
+	\styleOption{warnings}    & Prints only warnings                                               \\
+	\styleOption{standard}    & Give little information (number of steps, computation time)        \\
+	\styleOption{experiments} & Give some additional information, typically enough for experiments \\
+	\styleOption{low}         & Give some additional information on what happens internally        \\
+	\styleOption{medium}      & Give quite a lot of information                                    \\
+	\styleOption{high}        & Give much information                                              \\
+	\styleOption{total}       & Give really too much information                                   \\
 \end{tabular}
 
 
@@ -2056,7 +2096,7 @@ Furthermore, the names of the sets of locations of various \IPTA{} are not-neces
 
 The \imitator{} input model is described by the following grammar.
 Non-terminals appear \nt{within angled parentheses}.
-	% TODO: angled??
+% TODO: angled??
 A non-terminal followed by two colons is defined by the list of immediately following non-blank lines, each of which represents a legal expansion.
 Input characters of terminals appear in \styleIMI{typewritter} font.
 The meta symbol \emptystring{} denotes the empty string.
@@ -2084,7 +2124,7 @@ We define each of those two components below.
 \regleGrammaire{include\_file\_list}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{include\_file} \nt{include\_file\_list} \\
+	\   & \nt{include\_file} \nt{include\_file\_list} \\
 	$|$ & \emptystring
 \end{tabular}
 
@@ -2106,7 +2146,7 @@ We define each of those two components below.
 \regleGrammaire{declarations}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \code{var} \nt{var\_lists} \\
+	\   & \code{var} \nt{var\_lists} \\
 	$|$ & \emptystring
 \end{tabular}
 
@@ -2114,7 +2154,7 @@ We define each of those two components below.
 \regleGrammaire{var\_lists}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{var\_list} \code{:} \nt{var\_type} \code{;} \nt{var\_lists} \\
+	\   & \nt{var\_list} \code{:} \nt{var\_type} \code{;} \nt{var\_lists} \\
 	$|$ & \emptystring
 \end{tabular}
 
@@ -2122,18 +2162,18 @@ We define each of those two components below.
 \regleGrammaire{var\_list}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{<name>} \\
-	$|$ & \styleIMI{<name> =} \nt{rational} \\
-	$|$ & \styleIMI{<name>} \styleIMI{,} \nt{var\_list}\\
-	$|$ & \styleIMI{<name> =} \nt{rational} \styleIMI{,} \nt{var\_list}\\
+	\   & \styleIMI{<name>}                                             \\
+	$|$ & \styleIMI{<name> =} \nt{rational}                             \\
+	$|$ & \styleIMI{<name>} \styleIMI{,} \nt{var\_list}                 \\
+	$|$ & \styleIMI{<name> =} \nt{rational} \styleIMI{,} \nt{var\_list} \\
 \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{var\_type}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{clock} \\
-	$|$ & \styleIMI{discrete} \\
+	\   & \styleIMI{clock}     \\
+	$|$ & \styleIMI{discrete}  \\
 	$|$ & \styleIMI{parameter} \\
 \end{tabular}
 
@@ -2141,9 +2181,9 @@ We define each of those two components below.
 \regleGrammaire{automata}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{automaton} \nt{automata} \\
+	\   & \nt{automaton} \nt{automata}     \\
 	$|$ & \nt{include\_file} \nt{automata} \\
-	$|$ & \emptystring \\
+	$|$ & \emptystring                     \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2158,7 +2198,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	$|$ & \nt{sync\_labels} \\
-	$|$ & \emptystring \\
+	$|$ & \emptystring      \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2172,44 +2212,44 @@ We define each of those two components below.
 \regleGrammaire{name\_list}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{name\_nonempty\_list} \\
-	$|$ & \emptystring \\
+	\   & \nt{name\_nonempty\_list} \\
+	$|$ & \emptystring              \\
 \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{name\_nonempty\_list}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{<name>} \styleIMI{,} \nt{name\_nonempty\_list} \\
-	$|$ & \styleIMI{<name>} \\
+	\   & \styleIMI{<name>} \styleIMI{,} \nt{name\_nonempty\_list} \\
+	$|$ & \styleIMI{<name>}                                        \\
 \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{locations}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{location} \nt{locations} \\
-		% TODO / NOTE: costs are allowed there (but not enough implemented)
-	$|$ & \emptystring \\
+	\   & \nt{location} \nt{locations} \\
+	% TODO / NOTE: costs are allowed there (but not enough implemented)
+	$|$ & \emptystring                 \\
 \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{location}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \nt{transitions} \\
-	$|$ & \styleIMI{urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \nt{transitions} \\
-	$|$ & \styleIMI{accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \nt{transitions} \\
+	\   & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \nt{transitions}                  \\
+	$|$ & \styleIMI{urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \nt{transitions}           \\
+	$|$ & \styleIMI{accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \nt{transitions}        \\
 	$|$ & \styleIMI{accepting urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \nt{transitions} \\
 	$|$ & \styleIMI{urgent accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \nt{transitions} \\
-% 	$|$ & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{while} \nt{convex\_predicate} \nt{transitions} \\
+	% 	$|$ & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{while} \nt{convex\_predicate} \nt{transitions} \\
 \end{tabular}
 
 % \smallskip
-% 
+%
 % NOTE: hidden for sake of simplicity
 % (for backward compatibility with versions $< 2.10.1$ and \hytech{}, replacing ``\styleIMI{invariant}'' with ``\styleIMI{while}'' is still allowed, although it is deprecated)
-% 
+%
 % \smallskip
 
 % NOTE: hidden for sake of simplicity
@@ -2226,8 +2266,8 @@ We define each of those two components below.
 \regleGrammaire{stop\_opt}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\ & \styleIMI{stop\{} \nt{name\_list} \styleIMI{\}} \\
-	$|$ & \emptystring \\
+	\   & \styleIMI{stop\{} \nt{name\_list} \styleIMI{\}} \\
+	$|$ & \emptystring                                    \\
 \end{tabular}
 
 
@@ -2235,8 +2275,8 @@ We define each of those two components below.
 \regleGrammaire{transitions}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{transition} \nt{transitions} \\
-	$|$ & \emptystring \\
+	\   & \nt{transition} \nt{transitions} \\
+	$|$ & \emptystring                     \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2250,11 +2290,11 @@ We define each of those two components below.
 \regleGrammaire{update\_synchronization}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{updates} \\
-	$|$ & \nt{syn\_label} \\
+	\   & \nt{updates}                 \\
+	$|$ & \nt{syn\_label}              \\
 	$|$ & \nt{updates} \nt{syn\_label} \\
 	$|$ & \nt{syn\_label} \nt{updates} \\
-	$|$ & \emptystring \\
+	$|$ & \emptystring                 \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2268,18 +2308,18 @@ We define each of those two components below.
 \regleGrammaire{update\_list}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{update\_nonempty\_list} \\
-	$|$ & \emptystring \\
+	\   & \nt{update\_nonempty\_list} \\
+	$|$ & \emptystring                \\
 \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{update\_nonempty\_list}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{update} \styleIMI{,} \nt{update\_list} \\
+	\   & \nt{update} \styleIMI{,} \nt{update\_list}            \\
 	$|$ & \nt{condition\_update} \styleIMI{,} \nt{update\_list} \\
-	$|$ & \nt{update} \\
-	$|$ & \nt{condition\_update} \\
+	$|$ & \nt{update}                                           \\
+	$|$ & \nt{condition\_update}                                \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2290,26 +2330,26 @@ We define each of those two components below.
 \end{tabular}
 
 % \smallskip
-% 
+%
 % NOTE: hidden for sake of simplicity
 % (for backward compatibility with versions $< 2.10.1$ and \hytech{}, replacing ``\styleIMI{<name>} \styleIMI{:=}'' with ``\styleIMI{<name>} \styleIMI{'} \styleIMI{=}'' is still allowed, although it is deprecated)
-% 
+%
 % \smallskip
 
 %------------------------------------------------------------
 \regleGrammaire{normal\_update\_list}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{update} \styleIMI{,} \nt{normal\_update\_list} \\
-	$|$ & \nt{update} \\
-	$|$ & \emptystring \\
+	\   & \nt{update} \styleIMI{,} \nt{normal\_update\_list} \\
+	$|$ & \nt{update}                                        \\
+	$|$ & \emptystring                                       \\
 \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{conditon\_update}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{if} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \styleIMI{then} \nt{normal\_update\_list} \styleIMI{end} \\
+	\   & \styleIMI{if} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \styleIMI{then} \nt{normal\_update\_list} \styleIMI{end}                                           \\
 	$|$ & \styleIMI{if} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \styleIMI{then} \nt{normal\_update\_list} \styleIMI{else} \nt{normal\_update\_list} \styleIMI{end} \\
 \end{tabular}
 
@@ -2317,11 +2357,11 @@ We define each of those two components below.
 \regleGrammaire{boolean\_expression}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \styleIMI{True} \\
-	$|$ & \styleIMI{False} \\
-	$|$ & \styleIMI{<>} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)} \\
-	$|$ & \nt{boolean\_expression} \styleIMI{\&} \nt{boolean\_expression} \\
-	$|$ & \nt{boolean\_expression} \styleIMI{|} \nt{boolean\_expression} \\
+	\   & \styleIMI{True}                                                    \\
+	$|$ & \styleIMI{False}                                                   \\
+	$|$ & \styleIMI{<>} \styleIMI{(} \nt{boolean\_expression} \styleIMI{)}   \\
+	$|$ & \nt{boolean\_expression} \styleIMI{\&} \nt{boolean\_expression}    \\
+	$|$ & \nt{boolean\_expression} \styleIMI{|} \nt{boolean\_expression}     \\
 	$|$ & \nt{arithmetic\_expression} \nt{relop} \nt{arithmetic\_expression} \\
 \end{tabular}
 
@@ -2337,7 +2377,7 @@ We define each of those two components below.
 \regleGrammaire{arithmetic\_expression}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{arithmetic\_term} \\
+	\   & \nt{arithmetic\_term}                                          \\
 	$|$ & \nt{arithmetic\_expression} \styleIMI{+} \nt{arithmetic\_term} \\
 	$|$ & \nt{arithmetic\_expression} \styleIMI{-} \nt{arithmetic\_term} \\
 \end{tabular}
@@ -2346,11 +2386,11 @@ We define each of those two components below.
 \regleGrammaire{arithmetic\_term}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{arithmetic\_factor} \\
-	$|$ & \nt{rational} \styleIMI{<name>} \\
+	\   & \nt{arithmetic\_factor}                                    \\
+	$|$ & \nt{rational} \styleIMI{<name>}                            \\
 	$|$ & \nt{arithmetic\_term} \styleIMI{*} \nt{arithmetic\_factor} \\
 	$|$ & \nt{arithmetic\_term} \styleIMI{/} \nt{arithmetic\_factor} \\
-	$|$ & \styleIMI{-} \nt{arithmetic\_term} \\
+	$|$ & \styleIMI{-} \nt{arithmetic\_term}                         \\
 \end{tabular}
 
 
@@ -2359,8 +2399,8 @@ We define each of those two components below.
 \regleGrammaire{arithmetic\_factor}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{rational}\\
-	$|$ & \styleIMI{<name>} \\
+	\   & \nt{rational}                                         \\
+	$|$ & \styleIMI{<name>}                                     \\
 	$|$ & \styleIMI{(} \nt{arithmetic\_expression} \styleIMI{)} \\
 \end{tabular}
 
@@ -2371,44 +2411,44 @@ We define each of those two components below.
 \regleGrammaire{convex\_predicate}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{\&} \nt{convex\_predicate\_fol} \\
-	$|$ & \nt{convex\_predicate\_fol} \\
+	\   & \styleIMI{\&} \nt{convex\_predicate\_fol} \\
+	$|$ & \nt{convex\_predicate\_fol}               \\
 \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{convex\_predicate\_fol}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{linear\_constraint} \styleIMI{\&} \nt{convex\_predicate} \\
-	$|$ & \nt{linear\_constraint} \\
+	\   & \nt{linear\_constraint} \styleIMI{\&} \nt{convex\_predicate} \\
+	$|$ & \nt{linear\_constraint}                                      \\
 \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{linear\_constraint}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{linear\_expression} \nt{relop} \nt{linear\_expression} \\
-	$|$ & \styleIMI{True} \\
-	$|$ & \styleIMI{False} \\
+	\   & \nt{linear\_expression} \nt{relop} \nt{linear\_expression} \\
+	$|$ & \styleIMI{True}                                            \\
+	$|$ & \styleIMI{False}                                           \\
 \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{relop}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{<} \\
+	\   & \styleIMI{<}  \\
 	$|$ & \styleIMI{<=} \\
-	$|$ & \styleIMI{=} \\
+	$|$ & \styleIMI{=}  \\
 	$|$ & \styleIMI{>=} \\
-	$|$ & \styleIMI{>} \\
-% 	$|$ & \styleIMI{<>} \\
+	$|$ & \styleIMI{>}  \\
+	% 	$|$ & \styleIMI{<>} \\
 \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{linear\_expression}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{linear\_term} \\
+	\   & \nt{linear\_term}                                      \\
 	$|$ & \nt{linear\_expression} \styleIMI{+} \nt{linear\_term} \\
 	$|$ & \nt{linear\_expression} \styleIMI{-} \nt{linear\_term} \\
 \end{tabular}
@@ -2417,29 +2457,29 @@ We define each of those two components below.
 \regleGrammaire{linear\_term}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{rational} \\
-	$|$ & \nt{rational} \styleIMI{<name>} \\
+	\   & \nt{rational}                                \\
+	$|$ & \nt{rational} \styleIMI{<name>}              \\
 	$|$ & \nt{rational} \styleIMI{*} \styleIMI{<name>} \\
-	$|$ & \styleIMI{-} \styleIMI{<name>} \\
-	$|$ & \styleIMI{<name>} \\
-	$|$ & \styleIMI{(} \nt{linear\_term} \styleIMI{)} \\
+	$|$ & \styleIMI{-} \styleIMI{<name>}               \\
+	$|$ & \styleIMI{<name>}                            \\
+	$|$ & \styleIMI{(} \nt{linear\_term} \styleIMI{)}  \\
 \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{rational}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{integer} \\
-	$|$  & \nt{float} \\
-	$|$ & \nt{integer} \styleIMI{/} \nt{pos\_integer}  \\
+	\   & \nt{integer}                                \\
+	$|$ & \nt{float}                                  \\
+	$|$ & \nt{integer} \styleIMI{/} \nt{pos\_integer} \\
 \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{integer}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{pos\_integer} \\
-	$|$ & \styleIMI{-} \nt{pos\_integer}  \\
+	\   & \nt{pos\_integer}              \\
+	$|$ & \styleIMI{-} \nt{pos\_integer} \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2455,8 +2495,8 @@ We define each of those two components below.
 \regleGrammaire{float}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{pos\_float} \\
-	$|$ & \styleIMI{-} \nt{pos\_float}  \\
+	\   & \nt{pos\_float}              \\
+	$|$ & \styleIMI{-} \nt{pos\_float} \\
 \end{tabular}
 
 
@@ -2476,7 +2516,7 @@ We define each of those two components below.
 \regleGrammaire{init}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	& \nt{init\_definition} \styleIMI{end} \\
+	 & \nt{init\_definition} \styleIMI{end} \\
 \end{tabular}
 
 
@@ -2484,24 +2524,24 @@ We define each of those two components below.
 \regleGrammaire{init\_definition}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{init} \styleIMI{:=} \nt{region\_expression} \styleIMI{;} \\
-	$|$ & \emptystring \\
+	\   & \styleIMI{init} \styleIMI{:=} \nt{region\_expression} \styleIMI{;} \\
+	$|$ & \emptystring                                                       \\
 \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{region\_expression}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{\&} \nt{region\_expression\_fol}\\
-	$|$ & \nt{region\_expression\_fol}\\
+	\   & \styleIMI{\&} \nt{region\_expression\_fol} \\
+	$|$ & \nt{region\_expression\_fol}               \\
 \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{region\_expression\_fol}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{init\_state\_predicate} \\
-	$|$ & \styleIMI{(} \nt{region\_expression\_fol} \styleIMI{)} \\
+	\   & \nt{init\_state\_predicate}                                             \\
+	$|$ & \styleIMI{(} \nt{region\_expression\_fol} \styleIMI{)}                  \\
 	$|$ & \nt{region\_expression\_fol} \styleIMI{\&} \nt{region\_expression\_fol} \\
 \end{tabular}
 
@@ -2510,16 +2550,16 @@ We define each of those two components below.
 \regleGrammaire{init\_state\_predicate}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{init\_loc\_predicate} \\
-	$|$ & \nt{linear\_constraint} \\
+	\   & \nt{init\_loc\_predicate} \\
+	$|$ & \nt{linear\_constraint}   \\
 \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{init\_loc\_predicate}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{loc[ <name> ] = <name>} \\
-	$|$  & \styleIMI{<name> is in <name>} \\
+	\   & \styleIMI{loc[ <name> ] = <name>} \\
+	$|$ & \styleIMI{<name> is in <name>}    \\
 \end{tabular}
 
 
@@ -2527,8 +2567,8 @@ We define each of those two components below.
 \regleGrammaire{discrete\_predicate}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{<name>} \nt{relop} \nt{rational} \\
-	$|$ & \styleIMI{<name>} \styleIMI{in} \styleIMI{[}\nt{rational} \styleIMI{,} \nt{rational} \styleIMI{]} \\
+	\   & \styleIMI{<name>} \nt{relop} \nt{rational}                                                         \\
+	$|$ & \styleIMI{<name>} \styleIMI{in} \styleIMI{[}\nt{rational} \styleIMI{,} \nt{rational} \styleIMI{]}  \\
 	$|$ & \styleIMI{<name>} \styleIMI{in} \styleIMI{[}\nt{rational} \styleIMI{..} \nt{rational} \styleIMI{]} \\
 \end{tabular}
 
@@ -2542,7 +2582,7 @@ We define each of those two components below.
 \regleGrammaire{property\_definition}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{property\_kw\_opt} \nt{quantified\_property}  \\
+	\  & \nt{property\_kw\_opt} \nt{quantified\_property} \\
 \end{tabular}
 
 
@@ -2550,17 +2590,17 @@ We define each of those two components below.
 \regleGrammaire{property\_kw\_opt}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{property :=} \\
-	$|$  & \emptystring \\
+	\   & \styleIMI{property :=} \\
+	$|$ & \emptystring           \\
 \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{quantified\_property}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{\#synth} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt} \\
-	$|$  & \styleIMI{\#exhibit} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt} \\
-	$|$  & \styleIMI{\#witness} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt} \\
+	\   & \styleIMI{\#synth} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt}   \\
+	$|$ & \styleIMI{\#exhibit} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt} \\
+	$|$ & \styleIMI{\#witness} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt} \\
 \end{tabular}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2570,57 +2610,57 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{tabular}{l l}
 
-% 	Non-nested CTL
+	% 	Non-nested CTL
 
-	\  & \styleIMI{EF} \nt{state\_predicate} \\
-	$|$  & \styleIMI{AGnot} \nt{state\_predicate} \\
-	
-% 	Reachability and specification illustration
+	\   & \styleIMI{EF} \nt{state\_predicate}                                                                                  \\
+	$|$ & \styleIMI{AGnot} \nt{state\_predicate}                                                                               \\
+
+	% 	Reachability and specification illustration
 
 	% NOTE: hidden for now
-% 	$|$  & \styleIMI{EFexemplify} \nt{state\_predicate} \\
+	% 	$|$  & \styleIMI{EFexemplify} \nt{state\_predicate} \\
 
 	% Optimized reachability
-	
-	$|$  & \styleIMI{EFpmin} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \styleIMI{<name>} \styleIMI{)} \\
-	$|$  & \styleIMI{EFpmax} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \styleIMI{<name>} \styleIMI{)} \\
-	$|$  & \styleIMI{EFtmin} \nt{state\_predicate} \\
+
+	$|$ & \styleIMI{EFpmin} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \styleIMI{<name>} \styleIMI{)}                     \\
+	$|$ & \styleIMI{EFpmax} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \styleIMI{<name>} \styleIMI{)}                     \\
+	$|$ & \styleIMI{EFtmin} \nt{state\_predicate}                                                                              \\
 
 	% Cycles
-	
-	$|$  & \styleIMI{inf\_cycle} \\
-	$|$  & \styleIMI{inf\_cycle\_through} \nt{state\_predicate} \\
-	$|$  & \styleIMI{NZ\_inf\_cycle\_check} \\
-	$|$  & \styleIMI{NZ\_inf\_cycle\_transform} \\
+
+	$|$ & \styleIMI{inf\_cycle}                                                                                                \\
+	$|$ & \styleIMI{inf\_cycle\_through} \nt{state\_predicate}                                                                 \\
+	$|$ & \styleIMI{NZ\_inf\_cycle\_check}                                                                                     \\
+	$|$ & \styleIMI{NZ\_inf\_cycle\_transform}                                                                                 \\
 	% NOTE: hidden for sake of simplicity
-% 	$|$  & \styleIMI{NZ\_inf\_cycle\_CUB} \\
-	
+	% 	$|$  & \styleIMI{NZ\_inf\_cycle\_CUB} \\
+
 	% Deadlock-freeness
-	
-	$|$  & \styleIMI{deadlockfree} \\
-	
+
+	$|$ & \styleIMI{deadlockfree}                                                                                              \\
+
 	% Inverse method, trace preservation, robustness
-	
-	$|$  & \styleIMI{IM} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)} \\
-	$|$  & \styleIMI{IMconvex} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)} \\
-	$|$  & \styleIMI{IMK} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)} \\
-	$|$  & \styleIMI{IMunion} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)} \\
-	$|$  & \styleIMI{PRP} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)} \\
-	
+
+	$|$ & \styleIMI{IM} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)}                                                    \\
+	$|$ & \styleIMI{IMconvex} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)}                                              \\
+	$|$ & \styleIMI{IMK} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)}                                                   \\
+	$|$ & \styleIMI{IMunion} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)}                                               \\
+	$|$ & \styleIMI{PRP} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)}                                                   \\
+
 	% Cartography algorithms
-	
-	$|$  & \styleIMI{BCcover} \styleIMI{(} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)} \\
+
+	$|$ & \styleIMI{BCcover} \styleIMI{(} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)}                                    \\
 	% NOTE: disabled for now
-% 	$|$  & \styleIMI{BClearn} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)} \\
-	$|$  & \styleIMI{BCshuffle} \styleIMI{(} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)} \\
+	% 	$|$  & \styleIMI{BClearn} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)} \\
+	$|$ & \styleIMI{BCshuffle} \styleIMI{(} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)}                                  \\
 	% NOTE: disabled for now
-% 	$|$  & \styleIMI{BCborder} \styleIMI{(} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)} \\
-	$|$  & \styleIMI{BCrandom} \styleIMI{(} \nt{hyper\_rectangle} \styleIMI{,} \nt{pos\_integer} \nt{step\_opt} \styleIMI{)} \\
-	$|$  & \styleIMI{BCrandomseq} \styleIMI{(} \nt{hyper\_rectangle} \styleIMI{,} \nt{pos\_integer} \nt{step\_opt} \styleIMI{)} \\
-	$|$  & \styleIMI{PRPC} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)} \\
-	
+	% 	$|$  & \styleIMI{BCborder} \styleIMI{(} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)} \\
+	$|$ & \styleIMI{BCrandom} \styleIMI{(} \nt{hyper\_rectangle} \styleIMI{,} \nt{pos\_integer} \nt{step\_opt} \styleIMI{)}    \\
+	$|$ & \styleIMI{BCrandomseq} \styleIMI{(} \nt{hyper\_rectangle} \styleIMI{,} \nt{pos\_integer} \nt{step\_opt} \styleIMI{)} \\
+	$|$ & \styleIMI{PRPC} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)}    \\
+
 	% Observer pattern
-	$|$  & \nt{pattern} \\
+	$|$ & \nt{pattern}                                                                                                         \\
 \end{tabular}
 
 
@@ -2629,26 +2669,26 @@ We define each of those two components below.
 \regleGrammaire{pattern}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	$|$ & \styleIMI{if <name> then <name> has happened before} \\
-	$|$ & \styleIMI{everytime <name> then <name> has happened before} \\
-	$|$ & \styleIMI{everytime <name> then <name> has happened once before} \\
-		% TODO
-% 	$|$ & \styleIMI{if <name> then eventually <name>} \\
-		% TODO
-% 	$|$ & \styleIMI{everytime <name> then eventually <name>} \\
-		% TODO
-% 	$|$ & \styleIMI{everytime <name> then eventually <name> once before next} \\
-	$|$ & \styleIMI{<name> within }\nt{linear\_expression} \styleIMI{} \\
-	$|$ & \styleIMI{if <name> then <name> has happened within }\nt{linear\_expression} \styleIMI{ before} \\
-	$|$ & \styleIMI{everytime <name> then <name> has happened within }\nt{linear\_expression} \styleIMI{ before} \\
-	$|$ & \styleIMI{everytime <name> then <name> has happened once within }\nt{linear\_expression} \styleIMI{ before} \\
-	$|$ & \styleIMI{if <name> then eventually <name> within }\nt{linear\_expression} \styleIMI{} \\
-	$|$ & \styleIMI{everytime <name> then eventually <name> within }\nt{linear\_expression} \styleIMI{} \\
+	$|$ & \styleIMI{if <name> then <name> has happened before}                                                           \\
+	$|$ & \styleIMI{everytime <name> then <name> has happened before}                                                    \\
+	$|$ & \styleIMI{everytime <name> then <name> has happened once before}                                               \\
+	% TODO
+	% 	$|$ & \styleIMI{if <name> then eventually <name>} \\
+	% TODO
+	% 	$|$ & \styleIMI{everytime <name> then eventually <name>} \\
+	% TODO
+	% 	$|$ & \styleIMI{everytime <name> then eventually <name> once before next} \\
+	$|$ & \styleIMI{<name> within }\nt{linear\_expression} \styleIMI{}                                                   \\
+	$|$ & \styleIMI{if <name> then <name> has happened within }\nt{linear\_expression} \styleIMI{ before}                \\
+	$|$ & \styleIMI{everytime <name> then <name> has happened within }\nt{linear\_expression} \styleIMI{ before}         \\
+	$|$ & \styleIMI{everytime <name> then <name> has happened once within }\nt{linear\_expression} \styleIMI{ before}    \\
+	$|$ & \styleIMI{if <name> then eventually <name> within }\nt{linear\_expression} \styleIMI{}                         \\
+	$|$ & \styleIMI{everytime <name> then eventually <name> within }\nt{linear\_expression} \styleIMI{}                  \\
 	$|$ & \styleIMI{everytime <name> then eventually <name> within }\nt{linear\_expression} \styleIMI{ once before next} \\
-	$|$ & \styleIMI{sequence} \nt{var\_list} \\
-	$|$ & \styleIMI{sequence} \styleIMI{(} \nt{var\_list} \styleIMI{)} \\
-	$|$ & \styleIMI{always sequence} \nt{var\_list} \\
-	$|$ & \styleIMI{always sequence} \styleIMI{(} \nt{var\_list} \styleIMI{)} \\
+	$|$ & \styleIMI{sequence} \nt{var\_list}                                                                             \\
+	$|$ & \styleIMI{sequence} \styleIMI{(} \nt{var\_list} \styleIMI{)}                                                   \\
+	$|$ & \styleIMI{always sequence} \nt{var\_list}                                                                      \\
+	$|$ & \styleIMI{always sequence} \styleIMI{(} \nt{var\_list} \styleIMI{)}                                            \\
 \end{tabular}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2658,10 +2698,10 @@ We define each of those two components below.
 \regleGrammaire{state\_predicate}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{state\_predicate} \styleIMI{$| |$} \nt{state\_predicate} \\
-	$|$  & \nt{state\_predicate\_term} \\
-	$|$  & \styleIMI{True} \\
-	$|$  & \styleIMI{False} \\
+	\   & \nt{state\_predicate} \styleIMI{$| |$} \nt{state\_predicate} \\
+	$|$ & \nt{state\_predicate\_term}                                  \\
+	$|$ & \styleIMI{True}                                              \\
+	$|$ & \styleIMI{False}                                             \\
 \end{tabular}
 
 
@@ -2670,8 +2710,8 @@ We define each of those two components below.
 \regleGrammaire{state\_predicate\_term}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{state\_predicate\_term} \styleIMI{$\&\&$} \nt{state\_predicate\_term} \\
-	$|$  & \nt{state\_predicate\_factor} \\
+	\   & \nt{state\_predicate\_term} \styleIMI{$\&\&$} \nt{state\_predicate\_term} \\
+	$|$ & \nt{state\_predicate\_factor}                                             \\
 \end{tabular}
 
 
@@ -2679,9 +2719,9 @@ We define each of those two components below.
 \regleGrammaire{state\_predicate\_factor}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{simple\_predicate}  \\
-	$|$  & \styleIMI{not} \nt{state\_predicate\_factor} \\
-	$|$  & \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
+	\   & \nt{simple\_predicate}                          \\
+	$|$ & \styleIMI{not} \nt{state\_predicate\_factor}    \\
+	$|$ & \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
 \end{tabular}
 
 
@@ -2690,8 +2730,8 @@ We define each of those two components below.
 \regleGrammaire{simple\_predicate}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{discrete\_boolean\_predicate}  \\
-	$|$  & \nt{loc\_predicate} \\
+	\   & \nt{discrete\_boolean\_predicate} \\
+	$|$ & \nt{loc\_predicate}               \\
 \end{tabular}
 
 
@@ -2701,10 +2741,10 @@ We define each of those two components below.
 \regleGrammaire{loc\_predicate}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{loc[ <name> ] = <name>} \\
-	$|$  & \styleIMI{<name> is in <name>} \\
-	$|$  & \styleIMI{loc[ <name> ] <> <name>} \\
-	$|$  & \styleIMI{<name> is not in <name>} \\
+	\   & \styleIMI{loc[ <name> ] = <name>}  \\
+	$|$ & \styleIMI{<name> is in <name>}     \\
+	$|$ & \styleIMI{loc[ <name> ] <> <name>} \\
+	$|$ & \styleIMI{<name> is not in <name>} \\
 \end{tabular}
 
 
@@ -2715,9 +2755,9 @@ We define each of those two components below.
 \regleGrammaire{discrete\_boolean\_predicate}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{discrete\_expression} \nt{op\_bool} \nt{discrete\_expression} \\
-	$|$  & \nt{discrete\_expression} \styleIMI{ in [} \nt{discrete\_expression} \styleIMI{,} \nt{discrete\_expression} \styleIMI{]} \\
-	$|$  & \nt{discrete\_expression} \styleIMI{ in [} \nt{discrete\_expression} \styleIMI{..} \nt{discrete\_expression} \styleIMI{]} \\
+	\   & \nt{discrete\_expression} \nt{op\_bool} \nt{discrete\_expression}                                                         \\
+	$|$ & \nt{discrete\_expression} \styleIMI{ in [} \nt{discrete\_expression} \styleIMI{,} \nt{discrete\_expression} \styleIMI{]}  \\
+	$|$ & \nt{discrete\_expression} \styleIMI{ in [} \nt{discrete\_expression} \styleIMI{..} \nt{discrete\_expression} \styleIMI{]} \\
 \end{tabular}
 
 
@@ -2725,9 +2765,9 @@ We define each of those two components below.
 \regleGrammaire{discrete\_expression}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{discrete\_expression} \styleIMI{+} \nt{discrete\_term} \\
-	$|$  & \nt{discrete\_expression} \styleIMI{-} \nt{discrete\_term} \\
-	$|$  & \nt{discrete\_term} \\
+	\   & \nt{discrete\_expression} \styleIMI{+} \nt{discrete\_term} \\
+	$|$ & \nt{discrete\_expression} \styleIMI{-} \nt{discrete\_term} \\
+	$|$ & \nt{discrete\_term}                                        \\
 \end{tabular}
 
 
@@ -2735,9 +2775,9 @@ We define each of those two components below.
 \regleGrammaire{discrete\_term}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{discrete\_term} \styleIMI{*} \nt{discrete\_factor} \\
-	$|$  & \nt{discrete\_term} \styleIMI{/} \nt{discrete\_factor} \\
-	$|$  & \nt{discrete\_factor} \\
+	\   & \nt{discrete\_term} \styleIMI{*} \nt{discrete\_factor} \\
+	$|$ & \nt{discrete\_term} \styleIMI{/} \nt{discrete\_factor} \\
+	$|$ & \nt{discrete\_factor}                                  \\
 \end{tabular}
 
 
@@ -2745,10 +2785,10 @@ We define each of those two components below.
 \regleGrammaire{discrete\_factor}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{<name>} \\
-	$|$  & \nt{positive\_rational} \\
-	$|$  & \styleIMI{(} \nt{discrete\_expression} \styleIMI{)} \\
-	$|$  & \styleIMI{-} \nt{discrete\_factor} \\
+	\   & \styleIMI{<name>}                                   \\
+	$|$ & \nt{positive\_rational}                             \\
+	$|$ & \styleIMI{(} \nt{discrete\_expression} \styleIMI{)} \\
+	$|$ & \styleIMI{-} \nt{discrete\_factor}                  \\
 \end{tabular}
 
 
@@ -2756,12 +2796,12 @@ We define each of those two components below.
 \regleGrammaire{op\_bool}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{<} \\
-	$|$  & \styleIMI{<=} \\
-	$|$  & \styleIMI{=} \\
-	$|$  & \styleIMI{<>} \\
-	$|$  & \styleIMI{>=} \\
-	$|$  & \styleIMI{>} \\
+	\   & \styleIMI{<}  \\
+	$|$ & \styleIMI{<=} \\
+	$|$ & \styleIMI{=}  \\
+	$|$ & \styleIMI{<>} \\
+	$|$ & \styleIMI{>=} \\
+	$|$ & \styleIMI{>}  \\
 \end{tabular}
 
 
@@ -2770,8 +2810,8 @@ We define each of those two components below.
 \regleGrammaire{positive\_rational}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{pos\_integer} \\
-	$|$  & \nt{pos\_float} \\
+	\   & \nt{pos\_integer} \\
+	$|$ & \nt{pos\_float}   \\
 \end{tabular}
 
 
@@ -2782,8 +2822,8 @@ We define each of those two components below.
 \regleGrammaire{projection\_definition\_opt}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{projectresult( } \nt{name\_nonempty\_list} \styleIMI{)} \nt{semicolon\_opt}  \\
-	$|$ & \emptystring{} \\
+	\   & \styleIMI{projectresult( } \nt{name\_nonempty\_list} \styleIMI{)} \nt{semicolon\_opt} \\
+	$|$ & \emptystring{}                                                                        \\
 \end{tabular}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2809,8 +2849,8 @@ We define each of those two components below.
 \regleGrammaire{parameter\_assignments}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{parameter\_assignment} \nt{parameter\_assignments} \\
-	$|$ & \emptystring{} \\
+	\   & \nt{parameter\_assignment} \nt{parameter\_assignments} \\
+	$|$ & \emptystring{}                                         \\
 \end{tabular}
 
 
@@ -2837,8 +2877,8 @@ We define each of those two components below.
 \regleGrammaire{rectangle\_parameter\_assignments}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{rectangle\_parameter\_assignment} \nt{rectangle\_parameter\_assignments} \\
-	$|$ & \emptystring{} \\
+	\   & \nt{rectangle\_parameter\_assignment} \nt{rectangle\_parameter\_assignments} \\
+	$|$ & \emptystring{}                                                               \\
 \end{tabular}
 
 
@@ -2846,8 +2886,8 @@ We define each of those two components below.
 \regleGrammaire{rectangle\_parameter\_assignment}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{and\_opt} \styleIMI{<name> = } \nt{constant\_arithmetic\_expr} \styleIMI{..} \nt{constant\_arithmetic\_expr} \nt{comma\_opt} \\
-	$|$  & \nt{and\_opt} \styleIMI{<name> = } \nt{constant\_arithmetic\_expr} \nt{comma\_opt} \\
+	\   & \nt{and\_opt} \styleIMI{<name> = } \nt{constant\_arithmetic\_expr} \styleIMI{..} \nt{constant\_arithmetic\_expr} \nt{comma\_opt} \\
+	$|$ & \nt{and\_opt} \styleIMI{<name> = } \nt{constant\_arithmetic\_expr} \nt{comma\_opt}                                               \\
 \end{tabular}
 
 
@@ -2857,9 +2897,9 @@ We define each of those two components below.
 \regleGrammaire{constant\_arithmetic\_expr}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{constant\_arithmetic\_expr} \styleIMI{+} \nt{constant\_expr\_mult} \\
-	$|$  & \nt{constant\_arithmetic\_expr} \styleIMI{-} \nt{constant\_expr\_mult} \\
-	$|$  & \nt{constant\_expr\_mult} \\
+	\   & \nt{constant\_arithmetic\_expr} \styleIMI{+} \nt{constant\_expr\_mult} \\
+	$|$ & \nt{constant\_arithmetic\_expr} \styleIMI{-} \nt{constant\_expr\_mult} \\
+	$|$ & \nt{constant\_expr\_mult}                                              \\
 \end{tabular}
 
 
@@ -2867,9 +2907,9 @@ We define each of those two components below.
 \regleGrammaire{constant\_expr\_mult}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{constant\_expr\_mult} \styleIMI{*} \nt{constant\_neg\_atom} \\
-	$|$  & \nt{constant\_expr\_mult} \styleIMI{/} \nt{constant\_neg\_atom} \\
-	$|$  & \nt{constant\_neg\_atom} \\
+	\   & \nt{constant\_expr\_mult} \styleIMI{*} \nt{constant\_neg\_atom} \\
+	$|$ & \nt{constant\_expr\_mult} \styleIMI{/} \nt{constant\_neg\_atom} \\
+	$|$ & \nt{constant\_neg\_atom}                                        \\
 \end{tabular}
 
 
@@ -2877,8 +2917,8 @@ We define each of those two components below.
 \regleGrammaire{constant\_neg\_atom}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	$|$  & \nt{constant\_atom} \\
-	$|$  & \styleIMI{-} \nt{constant\_atom} \\
+	$|$ & \nt{constant\_atom}              \\
+	$|$ & \styleIMI{-} \nt{constant\_atom} \\
 \end{tabular}
 
 
@@ -2887,8 +2927,8 @@ We define each of those two components below.
 \regleGrammaire{constant\_atom}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	$|$  & \styleIMI{(} \nt{constant\_arithmetic\_expr} \styleIMI{)} \\
-	$|$  & \nt{rational} \\
+	$|$ & \styleIMI{(} \nt{constant\_arithmetic\_expr} \styleIMI{)} \\
+	$|$ & \nt{rational}                                             \\
 \end{tabular}
 
 
@@ -2900,8 +2940,8 @@ We define each of those two components below.
 \regleGrammaire{step\_opt}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	$|$  & \styleIMI{, step=} \nt{pos\_rational} \\
-	$|$  & \emptystring{} \\
+	$|$ & \styleIMI{, step=} \nt{pos\_rational} \\
+	$|$ & \emptystring{}                        \\
 \end{tabular}
 
 
@@ -2915,8 +2955,8 @@ We define each of those two components below.
 \regleGrammaire{and\_opt}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	$|$  & \styleIMI{\&\&} \\
-	$|$  & \emptystring{} \\
+	$|$ & \styleIMI{\&\&} \\
+	$|$ & \emptystring{}  \\
 \end{tabular}
 
 
@@ -2924,8 +2964,8 @@ We define each of those two components below.
 \regleGrammaire{comma\_opt}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	$|$  & \styleIMI{, } \\
-	$|$  & \emptystring{} \\
+	$|$ & \styleIMI{, }  \\
+	$|$ & \emptystring{} \\
 \end{tabular}
 
 
@@ -2933,8 +2973,8 @@ We define each of those two components below.
 \regleGrammaire{semicolon\_opt}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	$|$  & \styleIMI{;} \\
-	$|$  & \emptystring{} \\
+	$|$ & \styleIMI{;}   \\
+	$|$ & \emptystring{} \\
 \end{tabular}
 
 
@@ -3037,7 +3077,7 @@ We enumerate in the following what seems to us to be the ``most missing'' featur
 % to simulate an urgent location \styleIMI{l}, one can add an extra clock (say \styleIMI{x\_urgent}) initialized to 0 on any transition leading \styleIMI{l}; then, the invariant of \styleIMI{l} is \styleIMI{x\_urgent = 0}.
 % Note that a single clock \styleIMI{x\_urgent} is enough to simulate any number of urgent locations.
 
-	% TODO: example
+% TODO: example
 
 
 
@@ -3070,19 +3110,19 @@ For complicated models with many processes, we usually write short scripts to ge
 
 One-to-one synchronization could possibly be simulated by using as many transitions as pairs of \IPTA{} in the model, although this may make the model rather complex.
 
-	% TODO: example
+% TODO: example
 
 
 Broadcast synchronization (``only the \IPTA{} ready to execute a given transition execute it'') is not supported.
 Once more, it could possibly be simulated by using as many transitions as subsets of \IPTA{} in the model, although this will make the model definitely complex.
 
-	% TODO: example
+% TODO: example
 
 
 Message passing is not supported.
 This can be easily simulated using dedicated discrete variables, that would be read / written in the transition.
 
-	% TODO: example
+% TODO: example
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3092,7 +3132,7 @@ This can be easily simulated using dedicated discrete variables, that would be r
 Discrete variables must be set to a constant rational in the \styleIMI{init} definition (\eg{} \styleIMI{i = 0}).
 Setting a variable to an arbitrarily value (\eg{} \styleIMI{i in [0 .. 10]}) is currently not supported.
 This can be simulated using an initialization \IPTA{} that nondeterministically sets \styleIMI{i} to any of the values, in 0 time so as to not disturb the model.
-	% TODO: example
+% TODO: example
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3184,17 +3224,17 @@ The following people contributed to the development of \imitator{}.
 
 
 \begin{tabular}{l l @{ } c @{ } l}
-	Étienne André & 2008 & -- & \\
-	Jaime Arias & 2018 & -- & \\
-	Vincent Bloemen & 2018 & & \\
-	Camille Coti & 2014 & & \\
-	Daphne Dussaud & 2010 & & \\
-	Sami Evangelista & 2014 & & \\
-	Ulrich Kühne & 2010 & -- & 2011 \\
+	Étienne André        & 2008 & -- &      \\
+	Jaime Arias          & 2018 & -- &      \\
+	Vincent Bloemen      & 2018 &    &      \\
+	Camille Coti         & 2014 &    &      \\
+	Daphne Dussaud       & 2010 &    &      \\
+	Sami Evangelista     & 2014 &    &      \\
+	Ulrich Kühne         & 2010 & -- & 2011 \\
 	Nguy\~{ê}n~Hoàng~Gia & 2014 & -- & 2018 \\
-	Laure Petrucci & 2019 & -- & \\
-	Jaco Van de Pol & 2019 & -- & \\
-	Romain Soulat & 2010 & -- & 2013 \\
+	Laure Petrucci       & 2019 & -- &      \\
+	Jaco Van de Pol      & 2019 & -- &      \\
+	Romain Soulat        & 2010 & -- & 2013 \\
 \end{tabular}
 
 \bigskip
@@ -3202,11 +3242,11 @@ The following people contributed to the development of \imitator{}.
 The following people contributed to the compiling, testing and packaging facilities.
 
 \begin{tabular}{l l @{ } c @{ } l}
-	Corentin Guillevic & 2015 & & \\
-	Sarah Hadbi & 2015 & & \\
-	Fabrice Kordon & 2015 & & \\
-	Alban Linard & 2014 & -- & 2015 \\
-	Stéphane Rosse & 2016 & -- & 2017 \\
+	Corentin Guillevic & 2015 &    &      \\
+	Sarah Hadbi        & 2015 &    &      \\
+	Fabrice Kordon     & 2015 &    &      \\
+	Alban Linard       & 2014 & -- & 2015 \\
+	Stéphane Rosse     & 2016 & -- & 2017 \\
 \end{tabular}
 
 
