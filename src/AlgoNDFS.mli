@@ -6,7 +6,8 @@
  * 
  * Module description: NDFS algorithms
  * 
- * File contributors : Laure Petrucci, Étienne André
+ * File contributors : Laure Petrucci, Jaco van de Pol,
+ *						Étienne André
  * Created           : 2019/03/12
  * Last modified     : 2019/07/05
  *
