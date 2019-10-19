@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2019/10/16
+ * Last modified     : 2019/10/17
  *
  ************************************************************)
 
@@ -1976,12 +1976,12 @@ let linear_term_of_parsed_update_arithmetic_expression index_of_variables consta
 (*------------------------------------------------------------*)
 let make_constants constants =
   (* Create hash table *)
-  let hashtable = Hashtbl.create (List.length constants) in
-  (* Manage boolean for checking errors *)
+  let constants_hashtable : (string, NumConst.t) Hashtbl = Hashtbl.create (List.length constants) in
+  (* Manage Boolean for checking errors *)
   let correct = ref true in
   List.iter (fun (name, value) ->
-      if (Hashtbl.mem hashtable name) then (
-        let old_value = Hashtbl.find hashtable name in
+      if (Hashtbl.mem constants_hashtable name) then (
+        let old_value = Hashtbl.find constants_hashtable name in
         (* If same: warning *)
         if(NumConst.equal old_value value) then(
           print_warning ("Constant '" ^ name ^ "' is defined twice.");
@@ -1992,11 +1992,11 @@ let make_constants constants =
         );
       )else(
         (* Otherwise: add it *)
-        Hashtbl.add hashtable name value;
+        Hashtbl.add constants_hashtable name value;
       );
     ) constants;
   (* Return hash table *)
-  hashtable, !correct
+  constants_hashtable, !correct
 
 
 (*------------------------------------------------------------*)
@@ -2958,7 +2958,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* The array of automata names ; index -> automaton name *)
 	let array_of_automata_names = Array.of_list declared_automata_names in
 	(* A (constant) hash table 'automaton name -> index' *)
-	let index_of_automata = Hashtbl.create nb_automata in
+	let index_of_automata : (Automaton.automaton_name, Automaton.automaton_index) Hashtbl = Hashtbl.create nb_automata in
 	for i = 0 to nb_automata - 1 do
 		Hashtbl.add index_of_automata array_of_automata_names.(i) i;
 	done;
@@ -2977,7 +2977,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* The array of variables names ; index -> variable name *)
 	let variables = Array.of_list variable_names in
 	(* A (constant) hash table 'variable name -> index' *)
-	let index_of_variables = Hashtbl.create nb_variables in
+	let index_of_variables : (Automaton.variable_name, Automaton.variable_index) Hashtbl = Hashtbl.create nb_variables in
 	for i = 0 to nb_variables - 1 do
 		Hashtbl.add index_of_variables variables.(i) i;
 	done;
@@ -3891,8 +3891,15 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* Parameter to be minimized or maximized *)
 	optimized_parameter = optimization;
 
-	(* Optional polyhedra *)
-(* 	carto = carto_linear_constraints , (p1_min , p1_max) , (p2_min , p2_max); *)
+	}
+	
+	,
+	
+	(* Also return the useful parsing information (used for property parsing) *)
+	{
+		constants         : constants;
+		index_of_automata : index_of_automata;
+		index_of_variables: index_of_variables;
 	}
 
 
@@ -3912,56 +3919,56 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 let rec check_parsed_discrete_arithmetic_expression = function
 	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression , parsed_discrete_term)
 	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
-		let check1 = check_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression in
-		let check2 = check_parsed_discrete_term parsed_discrete_term in
+		let check1 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression in
+		let check2 = check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term in
 		check1 && check2
-	| Parsed_DAE_term parsed_discrete_term -> check_parsed_discrete_term parsed_discrete_term
+	| Parsed_DAE_term parsed_discrete_term -> check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term
 
-and check_parsed_discrete_term = function
+and check_parsed_discrete_term useful_parsing_model_information = function
 	| Parsed_DT_mul (parsed_discrete_term , parsed_discrete_factor)
 	| Parsed_DT_div (parsed_discrete_term , parsed_discrete_factor) ->
-		let check1 = check_parsed_discrete_term parsed_discrete_term in
-		let check2 = check_parsed_discrete_factor parsed_discrete_factor in
+		let check1 = check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term in
+		let check2 = check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor in
 		check1 && check2
-	| Parsed_DT_factor parsed_discrete_factor -> check_parsed_discrete_factor parsed_discrete_factor
+	| Parsed_DT_factor parsed_discrete_factor -> check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor
 
-and check_parsed_discrete_factor = function
+and check_parsed_discrete_factor useful_parsing_model_information = function
 	| Parsed_DF_variable variable_name ->
-		if not (Hashtbl.mem index_of_variables variable_name then (
+		if not (Hashtbl.mem useful_parsing_model_information.index_of_variables variable_name) && not (Hashtbl.mem useful_parsing_model_information.constants variable_name) then (
 			print_error ("Variable name '" ^ variable_name ^ "' undefined in the property");
 		);
 	| Parsed_DF_constant _ -> true
-	| Parsed_DF_expression parsed_discrete_arithmetic_expression -> check_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression
-	| Parsed_DF_unary_min parsed_discrete_factor -> check_parsed_discrete_factor parsed_discrete_factor
+	| Parsed_DF_expression parsed_discrete_arithmetic_expression -> check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression
+	| Parsed_DF_unary_min parsed_discrete_factor -> check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor
 
 
 (* Check correct variable names in parsed_discrete_boolean_expression *)
-let check_parsed_discrete_boolean_expression = function
+let check_parsed_discrete_boolean_expression useful_parsing_model_information = function
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_expression (parsed_discrete_arithmetic_expression1 , _ , parsed_discrete_arithmetic_expression2) ->
-		let check1 = check_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression1 in
-		let check2 = check_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression2 in
+		let check1 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1 in
+		let check2 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2 in
 		check1 && check2
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Parsed_expression_in (parsed_discrete_arithmetic_expression1 , parsed_discrete_arithmetic_expression2 , parsed_discrete_arithmetic_expression3) ->
-		let check1 = check_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression1 in
-		let check2 = check_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression2 in
-		let check3 = check_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression3 in
+		let check1 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1 in
+		let check2 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2 in
+		let check3 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression3 in
 		check1 && check2 && check3
 
 	
 (* Check correct variable names in parsed_loc_predicate *)
-let check_parsed_loc_predicate = function
+let check_parsed_loc_predicate useful_parsing_model_information = function
 	| Parsed_loc_predicate_EQ (automaton_name, location_name)
 	| Parsed_loc_predicate_NEQ (automaton_name, location_name)
 	->
 		(* Check automaton name *)
-		let check_automaton = Hashtbl.mem index_of_automata automaton_name in
+		let check_automaton = Hashtbl.mem useful_parsing_model_information.index_of_automata automaton_name in
 		if not check_automaton then (
 			print_error ("Automaton name '" ^ automaton_name ^ "' undefined in the property");
 		);
 		(* Check location name *)
-		let check_location = Hashtbl.mem index_of_locations location_name in
+		let check_location = Hashtbl.mem useful_parsing_model_information.index_of_locations location_name in
 		if not check_location then (
 			print_error ("Location name '" ^ location_name ^ "' undefined in the property");
 		);
@@ -3970,34 +3977,34 @@ let check_parsed_loc_predicate = function
 
 
 (* Check correct variable names in parsed_simple_predicate *)
-let check_parsed_simple_predicate = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> check_parsed_discrete_boolean_expression parsed_discrete_boolean_expression
-	| Parsed_loc_predicate parsed_loc_predicate -> check_parsed_loc_predicate parsed_loc_predicate
+let check_parsed_simple_predicate useful_parsing_model_information = function
+	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> check_parsed_discrete_boolean_expression useful_parsing_model_information parsed_discrete_boolean_expression
+	| Parsed_loc_predicate parsed_loc_predicate -> check_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate
 
 
 (* Check correct variable names in parsed_state_predicate *)
-let rec check_parsed_state_predicate_factor = function
-	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor -> check_parsed_state_predicate_factor parsed_state_predicate_factor
-	| Parsed_simple_predicate parsed_simple_predicate -> check_parsed_simple_predicate parsed_simple_predicate
-	| Parsed_state_predicate parsed_state_predicate -> check_parsed_state_predicate parsed_state_predicate
+let rec check_parsed_state_predicate_factor useful_parsing_model_information = function
+	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor -> check_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor
+	| Parsed_simple_predicate parsed_simple_predicate -> check_parsed_simple_predicate useful_parsing_model_information parsed_simple_predicate
+	| Parsed_state_predicate parsed_state_predicate -> check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
 
-and check_parsed_state_predicate_term = function
+and check_parsed_state_predicate_term useful_parsing_model_information = function
 	| Parsed_state_predicate_term_AND (parsed_state_predicate_term1, parsed_state_predicate_term2) ->
-		let check1 = check_parsed_state_predicate_term parsed_state_predicate_term1 in
-		let check2 = check_parsed_state_predicate_term parsed_state_predicate_term2 in
+		let check1 = check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term1 in
+		let check2 = check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term2 in
 		check1 && check2
-	| Parsed_state_predicate_factor parsed_state_predicate_factor -> check_parsed_state_predicate_factor parsed_state_predicate_factor
+	| Parsed_state_predicate_factor parsed_state_predicate_factor -> check_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor
 
-and check_parsed_state_predicate = function
+and check_parsed_state_predicate useful_parsing_model_information = function
 	| Parsed_state_predicate_OR (parsed_state_predicate1, parsed_state_predicate2) ->
-		let check1 = check_parsed_state_predicate parsed_state_predicate1 in
-		let check2 = check_parsed_state_predicate parsed_state_predicate2 in
+		let check1 = check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate1 in
+		let check2 = check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate2 in
 		check1 && check2
-	| Parsed_state_predicate_term parsed_state_predicate_term -> check_parsed_state_predicate_term parsed_state_predicate_term
+	| Parsed_state_predicate_term parsed_state_predicate_term -> check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term
 
 
 	
-let check_property TODO parsed_property : bool =
+let check_property useful_parsing_model_information parsed_property : bool =
 	match parsed_property with
 	(* Reachability *)
 	| EF parsed_state_predicate
@@ -4005,7 +4012,7 @@ let check_property TODO parsed_property : bool =
 	| AF parsed_state_predicate	
 	(* Liveness *)
 	| AG parsed_state_predicate
-		-> check_parsed_state_predicate parsed_state_predicate
+		-> check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
 
 
 
@@ -4014,100 +4021,125 @@ let check_property TODO parsed_property : bool =
 (*------------------------------------------------------------*)
 
 (* Convert parsed_discrete_arithmetic_expression *)
-let rec convert_parsed_discrete_arithmetic_expression = function
+let rec convert_parsed_discrete_arithmetic_expression useful_parsing_model_information = function
 	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
-		DAE_plus ((convert_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression) , (convert_parsed_discrete_term parsed_discrete_term))
+		DAE_plus (
+			(convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
+			,
+			(convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
+		)
 	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
-		DAE_minus ((convert_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression) , (convert_parsed_discrete_term parsed_discrete_term))
-	| Parsed_DAE_term parsed_discrete_term -> DAE_term (convert_parsed_discrete_term parsed_discrete_term)
+		DAE_minus (
+			(convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
+			,
+			(convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
+		)
+	| Parsed_DAE_term parsed_discrete_term -> DAE_term (convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
 
-and convert_parsed_discrete_term = function
+and convert_parsed_discrete_term useful_parsing_model_information = function
 	| Parsed_DT_mul (parsed_discrete_term , parsed_discrete_factor) ->
-		DT_mul ((convert_parsed_discrete_term parsed_discrete_term) , convert_parsed_discrete_factor parsed_discrete_factor))
+		DT_mul ((convert_parsed_discrete_term parsed_discrete_term) , convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor))
 	| Parsed_DT_div (parsed_discrete_term , parsed_discrete_factor) ->
-		DT_div ((convert_parsed_discrete_term parsed_discrete_term) , convert_parsed_discrete_factor parsed_discrete_factor))
-	| Parsed_DT_factor parsed_discrete_factor -> DT_factor (convert_parsed_discrete_factor parsed_discrete_factor)
+		DT_div ((convert_parsed_discrete_term parsed_discrete_term) , convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor))
+	| Parsed_DT_factor parsed_discrete_factor -> DT_factor (convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
 
-and convert_parsed_discrete_factor = function
-		(*** TODO: constants! ***)
-	| Parsed_DF_variable variable_name -> DF_variable (Hashtbl.find index_of_variables variable_name)
+and convert_parsed_discrete_factor useful_parsing_model_information = function
+	| Parsed_DF_variable variable_name ->
+		(* First check whether this is a constant *)
+		if Hashtbl.mem useful_parsing_model_information.constants variable_name then
+			DF_constant (Hashtbl.find useful_parsing_model_information.constants variable_name)
+		(* Otherwise: a variable *)
+		else DF_variable (Hashtbl.find useful_parsing_model_information.index_of_variables variable_name)
 	| Parsed_DF_constant var_value -> DF_constant var_value
-	| Parsed_DF_expression parsed_discrete_arithmetic_expression -> DF_expression (convert_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression)
-	| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (convert_parsed_discrete_factor parsed_discrete_factor)
+	| Parsed_DF_expression parsed_discrete_arithmetic_expression -> DF_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
+	| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
 
 
 (* Convert parsed_discrete_boolean_expression *)
-let convert_parsed_discrete_boolean_expression = function
+let convert_parsed_discrete_boolean_expression useful_parsing_model_information = function
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_expression (parsed_discrete_arithmetic_expression1 , parsed_relop , parsed_discrete_arithmetic_expression2) ->
 		Expression (
-			convert_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression1
+			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1
 			,
 			convert_parsed_relop relop
 			,
-			convert_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression2
+			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2
 		)
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Parsed_expression_in (parsed_discrete_arithmetic_expression1 , parsed_discrete_arithmetic_expression2 , parsed_discrete_arithmetic_expression3) ->
 		Expression_in (
-			convert_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression1
+			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1
 			,
-			convert_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression2
+			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2
 			,
-			convert_parsed_discrete_arithmetic_expression parsed_discrete_arithmetic_expression3
+			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression3
 		)
 
 	
 (* Convert parsed_loc_predicate *)
-let convert_parsed_loc_predicate = function
+let convert_parsed_loc_predicate useful_parsing_model_information = function
 	| Parsed_loc_predicate_EQ (automaton_name, location_name) ->
-		Loc_predicate_EQ ( (Hashtbl.find index_of_automata automaton_name) , (Hashtbl.find index_of_locations location_name))
+		Loc_predicate_EQ ( (Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name) , (Hashtbl.find useful_parsing_model_information.index_of_locations location_name))
 	| Parsed_loc_predicate_NEQ (automaton_name, location_name) ->
-		Loc_predicate_NEQ ( (Hashtbl.find index_of_automata automaton_name) , (Hashtbl.find index_of_locations location_name))
+		Loc_predicate_NEQ ( (Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name) , (Hashtbl.find useful_parsing_model_information.index_of_locations location_name))
 
 
 (* Convert parsed_simple_predicate *)
-let convert_parsed_simple_predicate = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (convert_parsed_discrete_boolean_expression parsed_discrete_boolean_expression)
-	| Parsed_loc_predicate parsed_loc_predicate -> Loc_predicate (convert_parsed_loc_predicate parsed_loc_predicate)
+let convert_parsed_simple_predicate useful_parsing_model_information = function
+	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (convert_parsed_discrete_boolean_expression useful_parsing_model_information parsed_discrete_boolean_expression)
+	| Parsed_loc_predicate parsed_loc_predicate -> Loc_predicate (convert_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate)
 
 
 (* Convert parsed_state_predicate *)
-let rec convert_parsed_state_predicate_factor = function
-	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor -> State_predicate_factor_NOT (convert_parsed_state_predicate_factor parsed_state_predicate_factor)
-	| Parsed_simple_predicate parsed_simple_predicate -> Simple_predicate (convert_parsed_simple_predicate parsed_simple_predicate)
-	| Parsed_state_predicate parsed_state_predicate -> State_predicate (convert_parsed_state_predicate parsed_state_predicate)
+let rec convert_parsed_state_predicate_factor useful_parsing_model_information = function
+	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor -> State_predicate_factor_NOT (convert_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor)
+	| Parsed_simple_predicate parsed_simple_predicate -> Simple_predicate (convert_parsed_simple_predicate useful_parsing_model_information parsed_simple_predicate)
+	| Parsed_state_predicate parsed_state_predicate -> State_predicate (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
 
-and convert_parsed_state_predicate_term = function
+and convert_parsed_state_predicate_term useful_parsing_model_information = function
 	| Parsed_state_predicate_term_AND (parsed_state_predicate_term1, parsed_state_predicate_term2) ->
 		State_predicate_term_AND (
-			convert_parsed_state_predicate_term parsed_state_predicate_term1
+			convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term1
 			,
-			convert_parsed_state_predicate_term parsed_state_predicate_term2
+			convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term2
 		)
-	| Parsed_state_predicate_factor parsed_state_predicate_factor -> State_predicate_factor (convert_parsed_state_predicate_factor parsed_state_predicate_factor)
+	| Parsed_state_predicate_factor parsed_state_predicate_factor -> State_predicate_factor (convert_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor)
 
-and convert_parsed_state_predicate = function
+and convert_parsed_state_predicate useful_parsing_model_information = function
 	| Parsed_state_predicate_OR (parsed_state_predicate1, parsed_state_predicate2) ->
 		State_predicate_OR (
-			convert_parsed_state_predicate parsed_state_predicate1
+			convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate1
 			,
-			convert_parsed_state_predicate parsed_state_predicate2
+			convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate2
 		)
-	| Parsed_state_predicate_term parsed_state_predicate_term -> State_predicate_term (convert_parsed_state_predicate_term parsed_state_predicate_term)
+	| Parsed_state_predicate_term parsed_state_predicate_term -> State_predicate_term (convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term)
 
 
 (* Convert ParsingStructure.parsed_property into AbstractProperty.property *)
-let convert_property TODO parsed_property : AbstractProperty.property =
+let convert_property useful_parsing_model_information parsed_property : AbstractProperty.property =
 	match parsed_property with
 	(* Reachability *)
-	| EF parsed_state_predicate -> EF (convert_parsed_state_predicate parsed_state_predicate)
+	| EF parsed_state_predicate -> EF (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
 (*	(* Unavoidability *)
 	| AF parsed_state_predicate	
 	(* Liveness *)
 	| AG parsed_state_predicate
 		-> convert_parsed_state_predicate parsed_state_predicate*)
+		
+	| raise (NotImplemented "property conversion")
 
+
+
+(** Check and convert the parsing structure into an abstract property *)
+let abstract_model_of_parsed_property (options : Options.imitator_options) (useful_parsing_model_information : useful_parsing_model_information) (parsed_property : ParsingStructure.parsed_property) : ImitatorUtilities.synthesis_algorithm =
+	(* First check *)
+	if not (check_property useful_parsing_model_information parsed_property) then(
+		raise InvalidProperty
+	);
+	
+	(* Now convert *)
+	convert_property useful_parsing_model_information parsed_property
 
 
 (************************************************************)

@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2019/10/16
+ * Last modified     : 2019/10/17
  *
  ************************************************************)
 
@@ -145,7 +145,7 @@ let compile_model options (with_special_reset_clock : bool) =
 	(* Statistics *)
 	converting_counter#start;
 
-	let model =
+	let model, useful_parsing_model_information =
 	try (
 		ModelConverter.abstract_model_of_parsing_structure options with_special_reset_clock parsing_structure
 	) with
@@ -176,13 +176,13 @@ let compile_model options (with_special_reset_clock : bool) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* return *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	model
+	model, useful_parsing_model_information
 
 
 (************************************************************)
 (** Parse the property file and convert it into an abstract representation *)
 (************************************************************)
-let compile_property options =
+let compile_property options useful_parsing_model_information =
 	(* Print some information *)
 	print_message Verbose_low ("Parsing property in file " ^ options#property_file_name ^ "…");
 
@@ -193,7 +193,7 @@ let compile_property options =
 	(* Convert to an abstract representation *)
 	let property =
 	try (
-		ModelConverter.abstract_model_of_parsed_property options parsed_property
+		ModelConverter.abstract_model_of_parsed_property options useful_parsing_model_information parsed_property
 	) with
 		| ModelConverter.InvalidProperty -> (print_error ("The property contains errors. Please check it again."); abort_program (); exit 1)
 		| InternalError e -> (print_error ("Internal error while parsing the property: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)

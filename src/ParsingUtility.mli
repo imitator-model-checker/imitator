@@ -10,15 +10,15 @@
  *
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2019/10/09
+ * Last modified     : 2019/10/17
  *
  ************************************************************)
 
 (** Compile the concrete model and convert it into an abstract model *)
-val compile_model: Options.imitator_options -> bool -> AbstractModel.abstract_model
+val compile_model: Options.imitator_options -> bool -> AbstractModel.abstract_model * AbstractModel.useful_parsing_model_information
 
 (** Parse the property file and convert it into an abstract representation *)
-val compile_property: Options.imitator_options -> ImitatorUtilities.synthesis_algorithm
+val compile_property: Options.imitator_options -> AbstractModel.useful_parsing_model_information -> AbstractProperty.property
 
 (*
 (** Parse the pi0 file and convert it into an abstract representation *)

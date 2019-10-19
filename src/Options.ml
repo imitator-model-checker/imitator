@@ -10,7 +10,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2019/10/16
+ * Last modified     : 2019/10/17
  *
  ************************************************************)
 
@@ -113,7 +113,7 @@ class imitator_options =
 (* 		val mutable completeIM = ref false *)
 		
 		(* imitator mode *)
-		val mutable imitator_mode = Inverse_method
+		val mutable imitator_mode = Algorithm
 		
 		(* Exploration order *)
 		val mutable exploration_order = Exploration_layer_BFS
@@ -336,7 +336,7 @@ class imitator_options =
 			and set_mode mode =
 				(* Case: simple syntax check *)
 				if mode = "checksyntax" then 
-					imitator_mode <- No_analysis
+					imitator_mode <- Syntax_check
 
 (*				(* Case: state space exploration *)
 				else if mode = "statespace" then 

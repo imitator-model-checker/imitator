@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/10/09
+ * Last modified     : 2019/10/17
  *
  ************************************************************)
 
@@ -142,7 +142,7 @@ in
 
 ***)
 
-let model = ParsingUtility.compile_model options with_special_reset_clock in
+let model, useful_parsing_model_information = ParsingUtility.compile_model options with_special_reset_clock in
 
 Input.set_model model;
 
@@ -165,7 +165,7 @@ PVal.set_dimensions model.nb_parameters;
 (*------------------------------------------------------------*)
 
 if property_needed options#imitator_mode then(
-	let property = ParsingUtility.compile_property options in
+	let property = ParsingUtility.compile_property options useful_parsing_model_information in
 	Input.set_property property;
 );
 
@@ -198,8 +198,9 @@ if verbose_mode_greater Verbose_total then(
 (************************************************************)
 (* Debug print: property *)
 (************************************************************)
-if verbose_mode_greater Verbose_low then(
-	print_message Verbose_low ("\nThe property is the following one:\n" ^ (ModelPrinter.string_of_property model model.user_property) ^ "\n");
+if property_needed options#imitator_mode then(
+	let property = Input.get_property in
+	print_message Verbose_low ("\nThe property is the following one:\n" ^ (ModelPrinter.string_of_property model property) ^ "\n");
 );
 
 (* Statistics *)
