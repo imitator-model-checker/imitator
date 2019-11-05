@@ -1,6 +1,3 @@
-(* Merging is not working anymore. But NDFSsub runs as expected *)
-(* potential problem: maybe the "same" locations still hash to a different index? *)
-
 (************************************************************
  *
  *                       IMITATOR
@@ -398,7 +395,7 @@ let get_global_location_index state_space state_index =
 	(* Return the location_index *)
 	location_index
 
-(** return the list of states with the same location (modulo hash collisions) *)
+(** return the list of states with the same location *)
 let get_comparable_states state_space state_index =
         let location_index = get_global_location_index state_space state_index in
         Hashtbl.find_all state_space.states_for_comparison location_index
@@ -1222,12 +1219,11 @@ let new_location_index state_space location =
 	new_index
 
 (** Perform the insertion of a new state in a state space *)
-let insert_state state_space (new_state : state) =
+let insert_state state_space location_index (new_state : state) =
 	(* Compute the new state index *)
 	let new_state_index = !(state_space.next_state_index) in
 	(* Retrieve the location and the constraint *)
 	let location, linear_constraint = new_state.global_location, new_state.px_constraint in
-        let location_index = new_location_index state_space location in
 (*	print_warning "warning: consistency check";
 	(* Consistency check: the state should NOT be present (otherwise this is a duplicate) *)
 	Hashtbl.iter (fun state_index _ ->
@@ -1250,7 +1246,7 @@ let insert_state state_space (new_state : state) =
 	Hashtbl.add state_space.all_states new_state_index {global_location_index = location_index; px_constraint = linear_constraint;};
 	Hashtbl.add state_space.states_for_comparison location_index new_state_index;
 	(* Update next state index *)
-	state_space.next_state_index := new_state_index + 1;
+	state_space.next_state_index := !(state_space.next_state_index) + 1;
 	(* Return state_index *)
 	new_state_index
 
@@ -1325,16 +1321,16 @@ let add_state state_space state_comparison (new_state : state) =
 
 	let result =
 
+        let location_index = new_location_index state_space new_state.global_location in
 	(* If no check requested: does not test anything *)
 	if state_comparison = No_check then (
 		(* Since the state does NOT belong to the state space: insert directly and find the state index *)
-		let new_state_index = insert_state state_space new_state in
+		let new_state_index = insert_state state_space location_index new_state in
 		(* Return state_index  *)
 		New_state new_state_index
 	) else (
 		try (
 			(* use hash table to find all states with same locations*)
-                        let location_index = new_location_index state_space new_state.global_location in
 			let old_states = Hashtbl.find_all state_space.states_for_comparison location_index in
 			if verbose_mode_greater Verbose_total then (
 				let nb_old = List.length old_states in
@@ -1407,7 +1403,7 @@ let add_state state_space state_comparison (new_state : state) =
 			) old_states;
 
 			(* Not found -> insert state *)
-			let new_state_index = insert_state state_space new_state in
+			let new_state_index = insert_state state_space location_index new_state in
 			
 			(* Print some information *)
 			print_message Verbose_total ("Inserted new state #" ^ (string_of_int new_state_index) ^ ".");
@@ -1613,17 +1609,12 @@ let get_siblings state_space si =
         let string_of_intlist l =
                 string_of_list_of_string_with_sep ", " (List.map string_of_int l) in 
         print_message Verbose_high ("Siblings (" ^ string_of_int si ^ "," ^ string_of_int li ^ ") : " ^ string_of_intlist sibs);
-	(* check for exact correspondence (=> hash collisions!), and exclude si *) (* they should be exact now? Drop this? For now added InternalError (Jaco) *)
+	(* lookup px_constraints and exclude si itself *)
 	List.fold_left (fun siblings sj ->
 		if sj = si then siblings else begin
 			let state = get_state state_space sj in
-			let l', c' = state.global_location, state.px_constraint in
-			if (Location.location_equal l l') then
-				(sj, (l',c')) :: siblings
-			else begin
-                                raise (InternalError "Didn't expect to find states with different location");
-				siblings
-                             end
+			let c' = state.px_constraint in
+			(sj,c') :: siblings
 		end
 	) [] sibs
 
@@ -1661,7 +1652,7 @@ let merge state_space new_states =
 			match rest_mc with
 				| [] -> [] (* here, we are really done *)
 				| m :: tail_mc -> begin
-					let sj, (_, c') = m in
+					let sj,c' = m in
 					if are_mergeable c c' then begin
 						(* Statistics *)
 						nb_merged#increment;
