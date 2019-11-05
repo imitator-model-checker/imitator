@@ -1238,6 +1238,7 @@ let insert_state state_space (new_state : state) =
 		);
 	) state_space.all_states;*)
 
+
 	(* Set the initial state if not yet set *)
 	if state_space.initial = None then(
 		print_message Verbose_low ("Initial state set in the reachability state_space.");
@@ -1609,7 +1610,9 @@ let get_siblings state_space si =
 	let l = s.global_location in
         let li = new_location_index state_space l in
 	let sibs = Hashtbl.find_all state_space.states_for_comparison li in
-        print_message Verbose_high ("Siblings:" ^ string_of_int (List.length sibs));
+        let string_of_intlist l =
+                string_of_list_of_string_with_sep ", " (List.map string_of_int l) in 
+        print_message Verbose_high ("Siblings (" ^ string_of_int si ^ "," ^ string_of_int li ^ ") : " ^ string_of_intlist sibs);
 	(* check for exact correspondence (=> hash collisions!), and exclude si *) (* they should be exact now? Drop this? For now added InternalError (Jaco) *)
 	List.fold_left (fun siblings sj ->
 		if sj = si then siblings else begin
@@ -1617,9 +1620,10 @@ let get_siblings state_space si =
 			let l', c' = state.global_location, state.px_constraint in
 			if (Location.location_equal l l') then
 				(sj, (l',c')) :: siblings
-			else
+			else begin
                                 raise (InternalError "Didn't expect to find states with different location");
 				siblings
+                             end
 		end
 	) [] sibs
 
