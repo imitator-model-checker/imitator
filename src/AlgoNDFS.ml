@@ -200,6 +200,17 @@ class algoNDFS =
                 in
 
 
+		(***************************)
+		(* Check inclusion of zone *)
+		(***************************)
+                let smaller_zone state_index1 state_index2 =
+			let state1 = StateSpace.get_state state_space state_index1 in
+			let constr1 = state1.px_constraint in
+                        let state2 = StateSpace.get_state state_space state_index2 in
+                        let constr2 = state2.px_constraint in
+			LinearConstraint.px_is_leq constr1 constr2
+		in
+
 		(*** TODO: factor the following 2 functions!!! ***)
 
 		(***************************************************)
@@ -268,80 +279,25 @@ class algoNDFS =
 		(**************************************************)
 		(* add a state and its depth to the pending queue *)
 		(**************************************************)
+
+                (* add x before the first y in q such that (before x y) holds *)
+                let rec add_ordered x q before =
+                        match q with
+                        | [] -> [x]
+                        | y::q' -> if before x y then x::q else y::(add_ordered x q' before)
+                in
+                let before s t = (* TODO: avoid hash-table lookups for every comparison *)
+                        match options#pending_order with
+                        | Pending_none -> true
+                        | Pending_accept -> State.is_accepting (StateSpace.get_state state_space s)
+                        | Pending_param -> (smaller_parameter_projection s t)
+                        | Pending_zone -> (smaller_zone s t)
+                in
 		let add_pending astate_index astate_depth =
-		begin
-			match options#pending_order with
-			| Pending_none ->
-				(* standard queuing *)
-				pending := (astate_index,astate_depth)::(!pending)
-			| Pending_param ->
-				(* add the state in the right place in the queue: larger parametric projections of zones first *)
-				if (queue_is_empty !pending) then
-					pending := [(astate_index,astate_depth)]
-				else (
-					let newpending = ref [] in
-					while not (queue_is_empty !pending) do
-						match (!pending) with
-							| [] -> raise (InternalError ("Impossible situation in algoNDFS: the queue should not be empty"))
-							| (first_state_index,first_state_depth)::body ->
-								if (smaller_parameter_projection first_state_index astate_index) then (
-									(* insert a state before the current state *)
-									newpending := (!newpending)@[(astate_index,astate_depth)];
-									newpending := (!newpending)@(!pending);
-									pending := [];
-								) else (
-									newpending := (!newpending)@[(first_state_index,first_state_depth)];
-									pending := body;
-									if (queue_is_empty !pending) then
-										(* no more states to compare with *)
-										newpending := (!newpending)@[(astate_index,astate_depth)];
-								)
-					done;
-					pending := !newpending;
-				)
-			| Pending_accept ->
-				(* insert accepting states at the head, others at the tail *)
-				if (State.is_accepting (StateSpace.get_state state_space astate_index)) then (
-						pending := (astate_index,astate_depth)::(!pending);
-				) else (pending := (!pending)@[(astate_index,astate_depth)];
-				)
-			| Pending_zone ->
-				(* add the state in the right place in the queue: larger zones first *)
-				if (queue_is_empty !pending) then
-					pending := [(astate_index,astate_depth)]
-				else (
-					let newpending = ref [] in
-					let astate = StateSpace.get_state state_space astate_index in
-					let astate_loc, astate_constr =
-							astate.global_location, astate.px_constraint in
-					while not (queue_is_empty !pending) do
-						match (!pending) with
-							| [] -> raise (InternalError ("Impossible situation in algoNDFS: the queue should not be empty"))
-							| (first_state_index,first_state_depth)::body ->
-								let state1 =
-										StateSpace.get_state state_space first_state_index in
-								let state1_loc, state1_constr =
-										state1.global_location, state1.px_constraint in
-								if (LinearConstraint.px_is_leq state1_constr astate_constr) then (
-									(* insert a state before the current state *)
-									newpending := (!newpending)@[(astate_index,astate_depth)];
-									newpending := (!newpending)@(!pending);
-									pending := [];
-								) else (
-									newpending :=
-										(!newpending)@[(first_state_index,first_state_depth)];
-									pending := body;
-									if (queue_is_empty !pending) then
-										(* no more states to compare with *)
-										newpending :=
-											(!newpending)@[(astate_index,astate_depth)];
-								)
-					done;
-					pending := !newpending;
-				)
-			end;
+                        let before_pair (astate_index,_) (bstate_index,_) = before astate_index bstate_index in
+                        pending := add_ordered (astate_index,astate_depth) !pending before_pair;
 			printpendingqueue "Pending (state added)" !pending
-		in
+                in
 
 		(**********************************)
 		(* Check the subsumption relation *)
