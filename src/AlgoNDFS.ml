@@ -290,8 +290,8 @@ class algoNDFS =
                         match options#pending_order with
                         | Pending_none -> true
                         | Pending_accept -> State.is_accepting (StateSpace.get_state state_space s)
-                        | Pending_param -> (smaller_parameter_projection s t)
-                        | Pending_zone -> (smaller_zone s t)
+                        | Pending_param -> (smaller_parameter_projection t s)
+                        | Pending_zone -> (smaller_zone t s)
                 in
 		let add_pending astate_index astate_depth =
                         let before_pair (astate_index,_) (bstate_index,_) = before astate_index bstate_index in
