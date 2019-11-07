@@ -1608,15 +1608,16 @@ let get_siblings state_space si =
 	let sibs = Hashtbl.find_all state_space.states_for_comparison li in
         let string_of_intlist l =
                 string_of_list_of_string_with_sep ", " (List.map string_of_int l) in 
-        print_message Verbose_high ("Siblings (" ^ string_of_int si ^ "," ^ string_of_int li ^ ") : " ^ string_of_intlist sibs);
 	(* lookup px_constraints and exclude si itself *)
-	List.fold_left (fun siblings sj ->
+        let result = List.fold_left (fun siblings sj ->
 		if sj = si then siblings else begin
 			let state = get_state state_space sj in
 			let c' = state.px_constraint in
 			(sj,c') :: siblings
 		end
-	) [] sibs
+	) [] sibs in
+        print_message Verbose_high ("Siblings (" ^ string_of_int si ^ ") : " ^ string_of_intlist (List.map fst result));
+        result
 
 
 (*module IntSet = Set.Make(
