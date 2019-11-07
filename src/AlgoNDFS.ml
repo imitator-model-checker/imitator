@@ -183,16 +183,21 @@ class algoNDFS =
 		(* put accepting states first in queue *)
 		(***************************************)
 		let reorderqueue thequeue =
-			if not options#no_acceptfirst then (
-				let newqueue = ref [] in
-				List.iter (fun astate ->
-					if (State.is_accepting (StateSpace.get_state state_space astate)) then (
-						newqueue := astate::(!newqueue);
-					) else (newqueue := (!newqueue)@[astate];)
-				) thequeue;
-				(!newqueue)
-			) else thequeue
-		in
+                        if options#no_acceptfirst
+                        then thequeue
+                        else
+                        (* requ splits the queue in (accepting, notaccepting) states *)
+                        let rec requ q =
+                                match q with
+                                | [] -> ([],[]);
+                                | s::q' -> let (a,b) = requ q' in
+                                        if (State.is_accepting (StateSpace.get_state state_space s))
+                                        then (s::a,b)
+                                        else (a,s::b)
+                        in
+                        let (a,b) = requ thequeue in
+                        a @ b
+                in
 
 
 		(*** TODO: factor the following 2 functions!!! ***)
