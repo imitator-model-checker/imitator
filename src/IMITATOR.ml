@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/10/17
+ * Last modified     : 2019/12/09
  *
  ************************************************************)
 
@@ -25,7 +25,6 @@ open OCamlUtilities
 open ImitatorUtilities
 open AbstractModel
 open Result
-open ModelPrinter
 open Options
 open Statistics
 
@@ -53,10 +52,6 @@ TAGS USED THROUGHOUT THIS PROJECT
 (************************************************************)
 
 
-(* TEST !! *)
-(*LinearConstraint.test_PDBMs();
-terminate_program();*)
-
 (************************************************************)
 (* Start the global counters *)
 (************************************************************)
@@ -76,8 +71,12 @@ let counter_main_algorithm = create_time_counter_and_register "main algorithm" A
 (************************************************************)
 (* BEGIN EXCEPTION MECHANISM *)
 (************************************************************)
-begin
+
+(*** TODO: temporarily disable that ***)
+(*begin
 try(
+
+*)
 
 (************************************************************)
 (* Get the arguments *)
@@ -127,6 +126,12 @@ options#recall();
 (************************************************************)
 let parsing_counter = create_time_counter_and_register "model parsing and converting" Parsing_counter Verbose_standard in
 parsing_counter#start;
+
+
+(*** TODO: temporary end ***)
+exit 1;
+
+(*
 
 (*------------------------------------------------------------*)
 (* Parse the model *)
@@ -212,6 +217,7 @@ counter_main_algorithm#start;
 (************************************************************)
 (************************************************************)
 
+begin
 match options#imitator_mode with
 	| Syntax_check ->
 
@@ -964,3 +970,4 @@ if (try (Input.get_options())#statistics with _ -> false) || verbose_mode_greate
 (************************************************************)
 
 terminate_program()
+*)

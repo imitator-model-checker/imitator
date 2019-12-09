@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2019/10/16
+ * Last modified     : 2019/12/09
  *
  ************************************************************)
 
@@ -24,6 +24,7 @@ open Gc
 (************************************************************)
 (** Internal modules *)
 (************************************************************)
+open Exceptions
 open OCamlUtilities
 
 
@@ -455,9 +456,14 @@ let is_mode_IM = function
 		-> false
 
 
+*)
 let is_mode_cartography = function
-	| No_analysis
-	| Translation
+	| Syntax_check
+	| Translation _
+		-> true
+	| _
+		-> raise (NotImplemented "is_mode_cartography")
+	(*
 	| State_space_exploration
 	| Acc_loop_synthesis_NDFS
 	| EF_synthesis
@@ -489,42 +495,13 @@ let is_mode_cartography = function
 	| RandomSeq_cartography _
 	| PRPC
 		-> true
-*)
+	*)
 
 let cartography_drawing_possible = function
-	| No_analysis
-	| Translation
-	| State_space_exploration
+	| Syntax_check
+	| Translation _
 		-> false
-	| Acc_loop_synthesis_NDFS
-	| EF_synthesis
-	| EFunsafe_synthesis
-	| EF_min
-	| EF_max
-	| EF_synth_min
-	| EF_synth_max
-	| EF_synth_min_priority_queue
-	| EFexemplify
-	| AF_synthesis
-	| Loop_synthesis
-	| Acc_loop_synthesis
-	| Parametric_NZ_CUBcheck
-	| Parametric_NZ_CUBtransform
-	| Parametric_NZ_CUBtransformDistributed
-	| Parametric_NZ_CUB
-	| Parametric_deadlock_checking
-		-> true
-	| Inverse_method
-	| Inverse_method_complete
-	| PRP
-		-> true
-	| Cover_cartography
-	| Learning_cartography
-	| Shuffle_cartography
-	| Border_cartography
-	| Random_cartography _
-	| RandomSeq_cartography _
-	| PRPC
+	| Algorithm (*of synthesis_algorithm*)
 		-> true
 
 

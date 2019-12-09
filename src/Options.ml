@@ -10,7 +10,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2019/10/17
+ * Last modified     : 2019/12/09
  *
  ************************************************************)
 
@@ -49,11 +49,8 @@ class imitator_options =
 		(*** WARNING: why so many mutable ref, although mutable would do ?? ***)
 		
 		(* imitator model input file *)
-		val mutable model_input_file_name = ""
+		val mutable model_input_file_name = "uninitialized model input file name"
 		
-		(* pi0 file *)
-		val mutable second_file_name = ""
-
 		
 	
 		(* OUTPUT OPTIONS *)
@@ -198,6 +195,9 @@ class imitator_options =
 		
 		(* Pre-compute pi0 ? (in PaTATOR mode only) *)
 		val mutable precomputepi0 = ref false
+		
+		(* Name for the file containing the property *)
+		val mutable property_file_name = "uninitialized property file name"
 		
 		(* limit number of states *)
 		val mutable states_limit = ref None
@@ -871,7 +871,7 @@ class imitator_options =
 				(* If 2nd argument: property file *)
 				else if nb_args = 1 then(
 					nb_args <- nb_args + 1;
-					proprety_file_name <- arg;
+					property_file_name <- arg;
 				)
 				(* If more than two arguments : warns *)
 				else (
@@ -989,10 +989,6 @@ class imitator_options =
 			
 			(*** TODO: add warning if Learning_cartography is used with some incompatible options (such as -PRP) ***)
 			
-			if nb_args = 2 && not (is_mode_cartography imitator_mode) && not (is_mode_IM imitator_mode) then(
-					print_warning ("The second file " ^ second_file_name ^ " will be ignored since the analysis is neither the inverse method nor the behavioral cartography or their variants.")
-				;
-			);
 
 			if !acyclic && !tree then (
 				acyclic := false;
@@ -1010,27 +1006,30 @@ class imitator_options =
 			if not (is_mode_cartography imitator_mode) && (NumConst.neq !step NumConst.one) then
 				print_warning (Constants.program_name ^ " is not run in cartography mode; the option regarding to the step of the cartography algorithm will thus be ignored.");
 			
-			(* Options for variants of IM, but not in IM mode *)
+(*			(* Options for variants of IM, but not in IM mode *)
 			if (not (is_mode_IM imitator_mode) && not (is_mode_cartography imitator_mode)) && (!union || !pi_compatible) then
-				print_warning ("Options regarding the variants of the inverse method will be ignored, as " ^ Constants.program_name ^ " is not run in inverse method or cartography.");
+				print_warning ("Options regarding the variants of the inverse method will be ignored, as " ^ Constants.program_name ^ " is not run in inverse method or cartography.");*)
 
 			
 			(* No no_leq_test_in_ef if not EF *)
-			if no_leq_test_in_ef && (imitator_mode <> EF_synthesis && imitator_mode <> EF_min && imitator_mode <> EF_max && imitator_mode <> EF_synth_min && imitator_mode <> EF_synth_max && imitator_mode <> EF_synth_min_priority_queue && imitator_mode <> EFunsafe_synthesis && imitator_mode <> EFexemplify && imitator_mode <> PRP) then(
+			if imitator_mode <> Algorithm && no_leq_test_in_ef then 
+(*			if no_leq_test_in_ef && (imitator_mode <> EF_synthesis && imitator_mode <> EF_min && imitator_mode <> EF_max && imitator_mode <> EF_synth_min && imitator_mode <> EF_synth_max && imitator_mode <> EF_synth_min_priority_queue && imitator_mode <> EFunsafe_synthesis && imitator_mode <> EFexemplify && imitator_mode <> PRP) then*)(
 				print_warning ("The option '-no-inclusion-test-in-EF' is reserved for EF and PRP. It will thus be ignored.");
 			);
 				
-			(* No counterex if not EF *)
+				(*** TODO ***)
+(*			(* No counterex if not EF *)
 			if !counterex && (imitator_mode <> EF_synthesis && imitator_mode <> EFunsafe_synthesis && imitator_mode <> Acc_loop_synthesis_NDFS) then(
 				print_warning ("The option '-counterexample' is reserved for EF and AccLoopSynthNDFS. It will thus be ignored.");
-			);
+			);*)
 			
-			
-			(* AF is not safe with incl or merging *)
+
+			(*** TODO ***)
+(*			(* AF is not safe with incl or merging *)
 			if imitator_mode = AF_synthesis then(
 				if !inclusion then print_warning "The state inclusion option may not preserve the correctness of AFsynth.";
 				if !merge then print_warning "The merging option may not preserve the correctness of AFsynth.";
-			);
+			);*)
 			
 			(*** TODO: add warning if -cart but mode translation or statespace ***)
 
@@ -1069,7 +1068,8 @@ end;
 
 
 
-			(* Variant of the inverse method *)
+			(*** TODO ***)
+(*			(* Variant of the inverse method *)
 			if !inclusion then
 				(*** NOTE: why this test??? better to warn if this option is used in another context ***)
 				begin
@@ -1107,27 +1107,20 @@ end;
 			if !pi_compatible then
 				print_message Verbose_standard ("Considering return variant IMoriginal [AS11].")
 			else
-				print_message Verbose_medium ("No IMoriginal return variant (default).");
+				print_message Verbose_medium ("No IMoriginal return variant (default).");*)
 
 			(* Should add a warning in case of incompatible mode (IMoriginal incompatible with IMunion) + VARIANT ROMAIN *)
 
 
-(*			if !efim then(
-				print_message Verbose_standard ("Considering algorithm PRP [ALNS15].");
-				print_warning ("Option -prp is deprecated. Use '-mode PRP' or '-mode PRPC' instead.");
-			)
-			else
-				print_message Verbose_medium ("No PRP algorithm (default).")
-			;*)
+			(*** TODO ***)
 
-
-			if (imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis) then(
+(*			if (imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis) then(
 				if !counterex then(
 					print_message Verbose_standard ("Counterexample mode: the analysis will stop as soon as a target state is found.");
 				)else(
 					print_message Verbose_medium ("No counterexample mode (default).");
 				);
-			);
+			);*)
 
 			
 			begin
@@ -1290,13 +1283,13 @@ end;
 				print_message Verbose_medium ("No check of the constraint containment of an integer point (default).");
 
 			(*** TODO: check that only in IM/BC mode ***)
-			if !check_point then(
+(*			if !check_point then(
 				print_message Verbose_standard ("At each iteration, it will be checked whether the parameter constraint is restricted to the sole pi0 point (experimental and costly!).");
 				if imitator_mode <> Inverse_method && imitator_mode <> Inverse_method_complete then
 					print_warning("The -check-point option is only valid for the inverse method. It will hence be ignored.");
 			)
 			else
-				print_message Verbose_medium ("No check of the constraint equality with pi0 (default).");
+				print_message Verbose_medium ("No check of the constraint equality with pi0 (default).");*)
 
 			if !early_terminate then
 				print_message Verbose_standard ("Early termination chosen for EFsynthminpq, the algorithm will stop once a single valuation is found that minimizes global_time.")

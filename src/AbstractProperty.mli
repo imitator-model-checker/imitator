@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2019/10/09
+ * Last modified     : 2019/12/09
  *
  ************************************************************)
 
@@ -33,6 +33,7 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 (****************************************************************)
 (** Arithmetic expressions for discrete variables *)
 (****************************************************************)
+(*** TODO: move to new module Discrete??? ***)
 type discrete_arithmetic_expression =
 	| DAE_plus of discrete_arithmetic_expression * discrete_term
 	| DAE_minus of discrete_arithmetic_expression * discrete_term
@@ -44,7 +45,7 @@ and discrete_term =
 	| DT_factor of discrete_factor
 
 and discrete_factor =
-	| DF_variable of variable_name
+	| DF_variable of variable_index
 	| DF_constant of variable_value
 	| DF_expression of discrete_arithmetic_expression
 	| DF_unary_min of discrete_factor
@@ -92,7 +93,40 @@ and state_predicate =
 (************************************************************)
 (** Definition of property *)
 (************************************************************)
-type property = ImitatorUtilities.algorithm
+type abstract_algorithm =
+	(** Reachability *)
+	| Reachability of state_predicate
+	
+
+	
+
+type synthesis_type =
+	(* (tentative) exhibition of at least one valuation for which a property holds *)
+	| Witness
+	(* (tentative) synthesis of all valuations for which a property holds *)
+	| Synthesis
+
+
+(* 	type correctness_condition = reachability_property option *)
+
+type projection = (parameter_index list) option
+
+(*type optimization =
+  | No_optimization
+  | Minimize of parameter_index
+  | Maximize of parameter_index*)
+
+  
+type abstract_property = {
+	(* Emptiness or synthesis *)
+	synthesis_type	: synthesis_type;
+	(* Property *)
+	property		: abstract_algorithm;
+	(* Projection of the result *)
+	projection		: projection;
+}
+
+
 
 (*
 (** predicates for bad definition *)
@@ -149,15 +183,7 @@ type property =
   | Noproperty
 
 
-
-type correctness_condition = reachability_property option
-
-type projection = (parameter_index list) option
-
-type optimization =
-  | No_optimization
-  | Minimize of parameter_index
-  | Maximize of parameter_index*)
+*)
 
 
 (************************************************************)

@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2019/10/16
+ * Last modified     : 2019/12/09
  *
  ************************************************************)
 
@@ -183,18 +183,6 @@ type translation =
 (** Synthesis *)
 (************************************************************)
 
-type synthesis_type =
-	(* (tentative) exhibition of at least one valuation for which a property holds *)
-	| Witness
-	(* (tentative) synthesis of all valuations for which a property holds *)
-	| Synthesis
-
-
-type synthesis_algorithm = {
-	algorithm     : algorithm;
-	synthesis_type: synthesis_type;
-}
-
 
 (** Mode for IMITATOR *)
 type imitator_mode =
@@ -293,8 +281,8 @@ type graphical_state_space =
 (************************************************************)
 
 val property_needed              : imitator_mode -> bool
-(*val is_mode_IM                   : imitator_mode -> bool
-val is_mode_cartography          : imitator_mode -> bool*)
+(*val is_mode_IM                   : imitator_mode -> bool*)
+val is_mode_cartography          : imitator_mode -> bool
 val cartography_drawing_possible : imitator_mode -> bool
 
 

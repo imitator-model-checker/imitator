@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2019/10/17
+ * Last modified     : 2019/12/09
  *
  ************************************************************)
 
@@ -2739,10 +2739,127 @@ let rec get_clocks_in_updates updates : clock_index list =
   (get_clocks updates.clock) @ clocks_in_conditons
 
 
+
+(*------------------------------------------------------------*)
+(* Functions for property conversion *)
+(*------------------------------------------------------------*)
+
+(* Convert parsed_discrete_arithmetic_expression *)
+let rec convert_parsed_discrete_arithmetic_expression useful_parsing_model_information = function
+	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
+		DAE_plus (
+			(convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
+			,
+			(convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
+		)
+	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
+		DAE_minus (
+			(convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
+			,
+			(convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
+		)
+	| Parsed_DAE_term parsed_discrete_term -> DAE_term (convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
+
+and convert_parsed_discrete_term useful_parsing_model_information = function
+	| Parsed_DT_mul (parsed_discrete_term , parsed_discrete_factor) ->
+		DT_mul ((convert_parsed_discrete_term parsed_discrete_term) , convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor))
+	| Parsed_DT_div (parsed_discrete_term , parsed_discrete_factor) ->
+		DT_div ((convert_parsed_discrete_term parsed_discrete_term) , convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor))
+	| Parsed_DT_factor parsed_discrete_factor -> DT_factor (convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
+
+and convert_parsed_discrete_factor useful_parsing_model_information = function
+	| Parsed_DF_variable variable_name ->
+		(* First check whether this is a constant *)
+		if Hashtbl.mem useful_parsing_model_information.constants variable_name then
+			DF_constant (Hashtbl.find useful_parsing_model_information.constants variable_name)
+		(* Otherwise: a variable *)
+		else DF_variable (Hashtbl.find useful_parsing_model_information.index_of_variables variable_name)
+	| Parsed_DF_constant var_value -> DF_constant var_value
+	| Parsed_DF_expression parsed_discrete_arithmetic_expression -> DF_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
+	| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
+
+
+(* Convert parsed_discrete_boolean_expression *)
+let convert_parsed_discrete_boolean_expression useful_parsing_model_information = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Parsed_expression (parsed_discrete_arithmetic_expression1 , parsed_relop , parsed_discrete_arithmetic_expression2) ->
+		Expression (
+			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1
+			,
+			convert_parsed_relop relop
+			,
+			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2
+		)
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| Parsed_expression_in (parsed_discrete_arithmetic_expression1 , parsed_discrete_arithmetic_expression2 , parsed_discrete_arithmetic_expression3) ->
+		Expression_in (
+			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1
+			,
+			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2
+			,
+			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression3
+		)
+
+	
+(* Convert parsed_loc_predicate *)
+let convert_parsed_loc_predicate useful_parsing_model_information = function
+	| Parsed_loc_predicate_EQ (automaton_name, location_name) ->
+		Loc_predicate_EQ ( (Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name) , (Hashtbl.find useful_parsing_model_information.index_of_locations location_name))
+	| Parsed_loc_predicate_NEQ (automaton_name, location_name) ->
+		Loc_predicate_NEQ ( (Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name) , (Hashtbl.find useful_parsing_model_information.index_of_locations location_name))
+
+
+(* Convert parsed_simple_predicate *)
+let convert_parsed_simple_predicate useful_parsing_model_information = function
+	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (convert_parsed_discrete_boolean_expression useful_parsing_model_information parsed_discrete_boolean_expression)
+	| Parsed_loc_predicate parsed_loc_predicate -> Loc_predicate (convert_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate)
+
+
+(* Convert parsed_state_predicate *)
+let rec convert_parsed_state_predicate_factor useful_parsing_model_information = function
+	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor -> State_predicate_factor_NOT (convert_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor)
+	| Parsed_simple_predicate parsed_simple_predicate -> Simple_predicate (convert_parsed_simple_predicate useful_parsing_model_information parsed_simple_predicate)
+	| Parsed_state_predicate parsed_state_predicate -> State_predicate (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+
+and convert_parsed_state_predicate_term useful_parsing_model_information = function
+	| Parsed_state_predicate_term_AND (parsed_state_predicate_term1, parsed_state_predicate_term2) ->
+		State_predicate_term_AND (
+			convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term1
+			,
+			convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term2
+		)
+	| Parsed_state_predicate_factor parsed_state_predicate_factor -> State_predicate_factor (convert_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor)
+
+and convert_parsed_state_predicate useful_parsing_model_information = function
+	| Parsed_state_predicate_OR (parsed_state_predicate1, parsed_state_predicate2) ->
+		State_predicate_OR (
+			convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate1
+			,
+			convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate2
+		)
+	| Parsed_state_predicate_term parsed_state_predicate_term -> State_predicate_term (convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term)
+
+
+(* Convert ParsingStructure.parsed_property into AbstractProperty.property *)
+let convert_property useful_parsing_model_information parsed_property : AbstractProperty.property =
+	match parsed_property with
+	(* Reachability *)
+	| EF parsed_state_predicate -> EF (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+(*	(* Unavoidability *)
+	| AF parsed_state_predicate	
+	(* Liveness *)
+	| AG parsed_state_predicate
+		-> convert_parsed_state_predicate parsed_state_predicate*)
+		
+	| raise (NotImplemented "property conversion")
+
+
+
+
 (*------------------------------------------------------------*)
 (* Convert the parsing structure into an abstract model *)
 (*------------------------------------------------------------*)
-let abstract_model_of_parsing_structure options (with_special_reset_clock : bool) (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_property_definition, parsed_projection_definition, parsed_optimization_definition, parsed_carto_definition) =
+let abstract_model_of_parsing_structure options (with_special_reset_clock : bool) (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_property_definition, parsed_projection_definition, parsed_optimization_definition) =
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4013,121 +4130,6 @@ let check_property useful_parsing_model_information parsed_property : bool =
 	(* Liveness *)
 	| AG parsed_state_predicate
 		-> check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
-
-
-
-(*------------------------------------------------------------*)
-(* Convert the property *)
-(*------------------------------------------------------------*)
-
-(* Convert parsed_discrete_arithmetic_expression *)
-let rec convert_parsed_discrete_arithmetic_expression useful_parsing_model_information = function
-	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
-		DAE_plus (
-			(convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
-			,
-			(convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
-		)
-	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
-		DAE_minus (
-			(convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
-			,
-			(convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
-		)
-	| Parsed_DAE_term parsed_discrete_term -> DAE_term (convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
-
-and convert_parsed_discrete_term useful_parsing_model_information = function
-	| Parsed_DT_mul (parsed_discrete_term , parsed_discrete_factor) ->
-		DT_mul ((convert_parsed_discrete_term parsed_discrete_term) , convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor))
-	| Parsed_DT_div (parsed_discrete_term , parsed_discrete_factor) ->
-		DT_div ((convert_parsed_discrete_term parsed_discrete_term) , convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor))
-	| Parsed_DT_factor parsed_discrete_factor -> DT_factor (convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
-
-and convert_parsed_discrete_factor useful_parsing_model_information = function
-	| Parsed_DF_variable variable_name ->
-		(* First check whether this is a constant *)
-		if Hashtbl.mem useful_parsing_model_information.constants variable_name then
-			DF_constant (Hashtbl.find useful_parsing_model_information.constants variable_name)
-		(* Otherwise: a variable *)
-		else DF_variable (Hashtbl.find useful_parsing_model_information.index_of_variables variable_name)
-	| Parsed_DF_constant var_value -> DF_constant var_value
-	| Parsed_DF_expression parsed_discrete_arithmetic_expression -> DF_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
-	| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
-
-
-(* Convert parsed_discrete_boolean_expression *)
-let convert_parsed_discrete_boolean_expression useful_parsing_model_information = function
-	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Parsed_expression (parsed_discrete_arithmetic_expression1 , parsed_relop , parsed_discrete_arithmetic_expression2) ->
-		Expression (
-			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1
-			,
-			convert_parsed_relop relop
-			,
-			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2
-		)
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Parsed_expression_in (parsed_discrete_arithmetic_expression1 , parsed_discrete_arithmetic_expression2 , parsed_discrete_arithmetic_expression3) ->
-		Expression_in (
-			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1
-			,
-			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2
-			,
-			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression3
-		)
-
-	
-(* Convert parsed_loc_predicate *)
-let convert_parsed_loc_predicate useful_parsing_model_information = function
-	| Parsed_loc_predicate_EQ (automaton_name, location_name) ->
-		Loc_predicate_EQ ( (Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name) , (Hashtbl.find useful_parsing_model_information.index_of_locations location_name))
-	| Parsed_loc_predicate_NEQ (automaton_name, location_name) ->
-		Loc_predicate_NEQ ( (Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name) , (Hashtbl.find useful_parsing_model_information.index_of_locations location_name))
-
-
-(* Convert parsed_simple_predicate *)
-let convert_parsed_simple_predicate useful_parsing_model_information = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (convert_parsed_discrete_boolean_expression useful_parsing_model_information parsed_discrete_boolean_expression)
-	| Parsed_loc_predicate parsed_loc_predicate -> Loc_predicate (convert_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate)
-
-
-(* Convert parsed_state_predicate *)
-let rec convert_parsed_state_predicate_factor useful_parsing_model_information = function
-	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor -> State_predicate_factor_NOT (convert_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor)
-	| Parsed_simple_predicate parsed_simple_predicate -> Simple_predicate (convert_parsed_simple_predicate useful_parsing_model_information parsed_simple_predicate)
-	| Parsed_state_predicate parsed_state_predicate -> State_predicate (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
-
-and convert_parsed_state_predicate_term useful_parsing_model_information = function
-	| Parsed_state_predicate_term_AND (parsed_state_predicate_term1, parsed_state_predicate_term2) ->
-		State_predicate_term_AND (
-			convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term1
-			,
-			convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term2
-		)
-	| Parsed_state_predicate_factor parsed_state_predicate_factor -> State_predicate_factor (convert_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor)
-
-and convert_parsed_state_predicate useful_parsing_model_information = function
-	| Parsed_state_predicate_OR (parsed_state_predicate1, parsed_state_predicate2) ->
-		State_predicate_OR (
-			convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate1
-			,
-			convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate2
-		)
-	| Parsed_state_predicate_term parsed_state_predicate_term -> State_predicate_term (convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term)
-
-
-(* Convert ParsingStructure.parsed_property into AbstractProperty.property *)
-let convert_property useful_parsing_model_information parsed_property : AbstractProperty.property =
-	match parsed_property with
-	(* Reachability *)
-	| EF parsed_state_predicate -> EF (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
-(*	(* Unavoidability *)
-	| AF parsed_state_predicate	
-	(* Liveness *)
-	| AG parsed_state_predicate
-		-> convert_parsed_state_predicate parsed_state_predicate*)
-		
-	| raise (NotImplemented "property conversion")
 
 
 

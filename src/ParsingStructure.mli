@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2019/10/16
+ * Last modified     : 2019/12/09
  *
  ****************************************************************)
 
@@ -17,10 +17,10 @@
 (** Names *)
 (****************************************************************)
 
-type automaton_name = string
-type location_name = string
-type variable_name = string
-type sync_name = string
+type automaton_name	= string
+type location_name	= string
+type variable_name	= string
+type sync_name		= string
 
 
 (****************************************************************)
@@ -252,7 +252,7 @@ type property_definition  = parsed_property option*)
 (** Projection definition *)
 (****************************************************************)
 
-type projection = (variable_name list) option
+type parsed_projection = (variable_name list) option
 
 
 (****************************************************************)
@@ -271,13 +271,11 @@ type parsed_optimization =
 (****************************************************************)
 
 (* TODO: transform to structure *)
-type parsing_structure =
-	variable_declarations
-	* automata
-	* init_definition
-	* property_definition
-	* projection
-	* parsed_optimization
+type parsed_model = {
+	variable_declarations	: variable_declarations;
+	automata				: automata;
+	init_definition			: init_definition;
+}
 
 
 
@@ -336,6 +334,9 @@ type parsed_property_type =
 
 	(* Reachability *)
 	| Parsed_EF of parsed_state_predicate
+	
+	
+	(*** TODO: observers! ***)
 	
 	(* Unavoidability *)
 	| Parsed_AF of parsed_state_predicate
@@ -423,8 +424,10 @@ type parsed_property_type =
 
 type parsed_property = {
 	(* Emptiness or synthesis *)
-	synthesis_type : parsed_synthesis_type;
+	synthesis_type	: parsed_synthesis_type;
 	(* Property *)
-	property       : parsed_property_type;
+	property		: parsed_property_type;
+	(* Projection *)
+	projection		: parsed_projection;
 }
 

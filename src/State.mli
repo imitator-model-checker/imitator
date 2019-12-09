@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Description of a state_index, a symbolic state and sets of states indexes
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2016/05/04
- * Last modified     : 2019/06/14
+ * Last modified     : 2019/12/09
  *
  ************************************************************)
 
@@ -48,7 +49,7 @@ type abstract_state = {
 (** Interrogation on one state *)
 (************************************************************)
 
-val match_unreachable_global_locations : AbstractModel.unreachable_global_location list -> Location.global_location -> bool
+val match_unreachable_global_locations : AbstractProperty.state_predicate -> Location.global_location -> bool
 
 val is_accepting : state -> bool
 
