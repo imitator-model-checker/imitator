@@ -10,7 +10,7 @@
  * File contributors        : Étienne André
  * Created                  : 2010/03/10
  * Renamed from Automaton.ml: 2015/10/22
- * Last modified            : 2019/10/16
+ * Last modified            : 2019/12/10
  *
  ************************************************************)
  
@@ -20,6 +20,7 @@
 (************************************************************)
 open OCamlUtilities
 open Automaton
+open AbstractProperty
 
 
 
@@ -187,6 +188,63 @@ let get_discrete_value location discrete_index =
 	let discrete = get_discrete location in
 	(* Do not forget the offset *)
 	discrete.(discrete_index - !min_discrete_index)
+
+	
+
+
+(************************************************************)
+(** Matching state predicates with a global location *)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(* Matching global_location predicates with a given global_location *)
+(*------------------------------------------------------------*)
+
+let match_loc_predicate loc_predicate global_location =
+	match loc_predicate with
+	| Loc_predicate_EQ (automaton_index, location_index) ->
+		get_location global_location automaton_index = location_index
+	| Loc_predicate_NEQ (automaton_index, location_index) ->
+		get_location global_location automaton_index <> location_index
+
+(*------------------------------------------------------------*)
+(* Matching simple predicates with a given global_location *)
+(*------------------------------------------------------------*)
+
+let match_simple_predicate simple_predicate global_location =
+	match simple_predicate with
+	(* Here convert the global_location to a variable valuation *)
+	| Discrete_boolean_expression discrete_boolean_expression -> DiscreteExpressions.check_discrete_boolean_expression (get_discrete_value global_location) discrete_boolean_expression
+	| Loc_predicate loc_predicate -> match_loc_predicate loc_predicate global_location
+
+
+(*------------------------------------------------------------*)
+(* Matching state predicates with a given global_location *)
+(*------------------------------------------------------------*)
+
+let rec match_state_predicate_factor state_predicate_factor global_location =
+	match state_predicate_factor with
+	| State_predicate_factor_NOT state_predicate_factor_neg -> not (match_state_predicate_factor state_predicate_factor_neg global_location)
+	| Simple_predicate simple_predicate -> match_simple_predicate simple_predicate global_location
+	| State_predicate state_predicate -> match_state_predicate state_predicate global_location
+
+and match_state_predicate_term state_predicate_term global_location =
+	match state_predicate_term with
+	| State_predicate_term_AND (state_predicate_term_1, state_predicate_term_2) ->
+		match_state_predicate_term state_predicate_term_1 global_location
+		&&
+		match_state_predicate_term state_predicate_term_2 global_location
+	| State_predicate_factor state_predicate_factor -> match_state_predicate_factor state_predicate_factor global_location
+
+and match_state_predicate state_predicate global_location =
+	match state_predicate with
+	| State_predicate_OR (state_predicate_1, state_predicate_2) ->
+		match_state_predicate state_predicate_1 global_location
+		||
+		match_state_predicate state_predicate_2 global_location
+	| State_predicate_term state_predicate_term -> match_state_predicate_term state_predicate_term global_location
+
+
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)

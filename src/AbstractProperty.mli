@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2019/12/09
+ * Last modified     : 2019/12/10
  *
  ************************************************************)
 
@@ -22,57 +22,16 @@ open Automaton
 
 
 (****************************************************************)
-(** Operators *)
-(****************************************************************)
-
-(** Boolean operators *)
-
-type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
-
-
-(****************************************************************)
-(** Arithmetic expressions for discrete variables *)
-(****************************************************************)
-(*** TODO: move to new module Discrete??? ***)
-type discrete_arithmetic_expression =
-	| DAE_plus of discrete_arithmetic_expression * discrete_term
-	| DAE_minus of discrete_arithmetic_expression * discrete_term
-	| DAE_term of discrete_term
-
-and discrete_term =
-	| DT_mul of discrete_term * discrete_factor
-	| DT_div of discrete_term * discrete_factor
-	| DT_factor of discrete_factor
-
-and discrete_factor =
-	| DF_variable of variable_index
-	| DF_constant of variable_value
-	| DF_expression of discrete_arithmetic_expression
-	| DF_unary_min of discrete_factor
-
-
-(****************************************************************)
-(** Boolean expressions for discrete variables *)
-(****************************************************************)
-
-type discrete_boolan_expression =
-	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Expression of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
-
-
-(****************************************************************)
 (** Predicates for properties *)
 (****************************************************************)
 
 type loc_predicate =
-	| Loc_predicate_EQ of automaton_name * location_name
-	| Loc_predicate_NEQ of automaton_name * location_name
+	| Loc_predicate_EQ of automaton_index * location_index
+	| Loc_predicate_NEQ of automaton_index * location_index
 
 
 type simple_predicate =
-	| Discrete_boolean_expression of discrete_boolan_expression
+	| Discrete_boolean_expression of DiscreteExpressions.discrete_boolean_expression
 	| Loc_predicate of loc_predicate
 
 

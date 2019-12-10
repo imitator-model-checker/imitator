@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2016/05/04
- * Last modified     : 2019/12/09
+ * Last modified     : 2019/12/10
  *
  ************************************************************)
 
@@ -49,7 +49,8 @@ type abstract_state = {
 (** Interrogation on one state *)
 (************************************************************)
 
-val match_unreachable_global_locations : AbstractProperty.state_predicate -> Location.global_location -> bool
+(* Shortcut, the function is actually called on global locations *)
+val match_state_predicate : AbstractProperty.state_predicate -> state -> bool
 
 val is_accepting : state -> bool
 

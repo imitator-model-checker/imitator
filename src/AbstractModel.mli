@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/11
- * Last modified     : 2019/12/09
+ * Last modified     : 2019/12/10
  *
  ************************************************************)
 
@@ -86,7 +86,7 @@ type clock_updates =
 
 (*** TO OPTIMIZE (in terms of dimensions!) ***)
 
-type discrete_update = discrete_index * AbstractProperty.discrete_arithmetic_expression
+type discrete_update = discrete_index * DiscreteExpressions.discrete_arithmetic_expression
 
 (** Guard: a linear constraint on the sole discrete variables, and a linear constraint on (possibly) all variables *)
 
@@ -118,7 +118,7 @@ type boolean_expression =
   | Not_bool of boolean_expression (** Negation *)
   | And_bool of boolean_expression * boolean_expression (** Conjunction *)
   | Or_bool of boolean_expression * boolean_expression (** Disjunction *)
-  | Expression_bool of AbstractProperty.discrete_arithmetic_expression * op_bool * AbstractProperty.discrete_arithmetic_expression (** Discrete Arithmentic Expression *)
+  | Expression_bool of DiscreteExpressions.discrete_arithmetic_expression * op_bool * DiscreteExpressions.discrete_arithmetic_expression (** Discrete Arithmentic Expression *)
 
 (** Updates *)
 type updates = {

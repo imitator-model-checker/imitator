@@ -85,6 +85,10 @@ val get_discrete_value : global_location -> discrete_index -> discrete_value
 (** Get a hash value for a location, including discrete values *)
 val hash_code : global_location -> int
 
+(** Checks whether a global_location satisfies a state_predicate *)
+val match_state_predicate : AbstractProperty.state_predicate -> global_location -> bool
+
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion} *)
