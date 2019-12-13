@@ -612,10 +612,12 @@ comma_opt:
 	| { }
 ;
 
+/*
 semicolon_opt:
 	| SEMICOLON { }
 	| { }
 ;
+*/
 
 ampersand_opt:
 	| AMPERSAND { }
