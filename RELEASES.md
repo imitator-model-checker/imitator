@@ -5,6 +5,7 @@ MAJOR RELEASE
 ### Syntax
 * Terminate support for HyTech-style comments (`-- comment`) and C-style comments (`/* comment */`)
 * Terminate support for some HyTech-style optional syntax (regions declaration…)
+* Many backward-compatible useless syntactic features now raise warnings (e.g. using `while` instead of `invariant`, using `Wait {}`…)
 
 
 *******************************************************

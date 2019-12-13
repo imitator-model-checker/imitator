@@ -4,12 +4,13 @@
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: Parser for the input model
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/09/14
+ * Last modified     : 2019/12/13
  *
  ************************************************************/
 
@@ -28,18 +29,25 @@ let parse_error s =
 ;;
 
 
-(* TODO: is it included twice ? *)
+(*** TODO (Jaime): is it included twice ? ***)
 let include_list = ref [];;
 
-let f (decl_l, aut_l, init_l, prop_l) (decl,aut,init,prop,_,_,_) = (decl@decl_l,aut@aut_l, init@init_l, prop::prop_l);;
-let unzip l = List.fold_left f ([],[],[], []) (List.rev l);;
-let filter_opt = List.filter (function | None -> false | Some _ -> true);;
+let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
+	{
+		variable_declarations	= List.append parsed_model.variable_declarations parsed_model_list.variable_declarations;
+		automata				= List.append parsed_model.automata parsed_model_list.automata;
+		init_definition			= List.append parsed_model.init_definition parsed_model_list.init_definition;
+	}
+;;
 
-let resolve_property l =
-	match filter_opt l with
-	| [] -> None
-	| [p] -> p
-	| _ -> raise Parsing.Parse_error;
+let unzip l = List.fold_left
+	add_parsed_model_to_parsed_model_list
+	{
+		variable_declarations	= [];
+		automata				= [];
+		init_definition			= [];
+	}
+	(List.rev l)
 ;;
 
 %}
@@ -48,7 +56,7 @@ let resolve_property l =
 %token <string> FLOAT
 %token <string> NAME
 %token <string> STRING
-%token <ParsingStructure.parsing_structure> INCLUDE
+%token <ParsingStructure.parsed_model> INCLUDE
 
 %token OP_PLUS OP_MINUS OP_MUL OP_DIV
 %token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
@@ -94,20 +102,45 @@ let resolve_property l =
 
 
 %start main             /* the entry point */
-%type <ParsingStructure.parsing_structure> main
+%type <ParsingStructure.parsed_model> main
 %%
 
 /************************************************************/
 main:
-	automata_descriptions commands EOF
+	declarations automata init_definition end_opt EOF
 	{
-		let decl, automata = $1 in
-		let incl_decl, incl_automata, incl_init, incl_prop = unzip !include_list in
-		let init_definition, bad, projection_definition, optimization_definition, carto = $2 in
+		let declarations	= $1 in
+		let automata		= $2 in
+		let init_definition	= $3 in
+		
+		let main_model =
+		{
+			variable_declarations	= declarations;
+			automata				= automata;
+			init_definition			= init_definition;
+		}
+		in
+		
+		let included_model = unzip !include_list in
 
-		(List.append incl_decl decl), (List.append incl_automata automata), (List.append incl_init init_definition), resolve_property (bad::incl_prop), projection_definition, optimization_definition, carto
+		(* Return the parsed model *)
+		add_parsed_model_to_parsed_model_list included_model main_model
+(*		{
+			variable_declarations	= (List.append incl_decl declarations);
+			automata				= (List.append incl_automata automata);
+			init_definition			= (List.append incl_init init_definition);
+		}*)
+
+	(*** TODO: cleanup ***)
+(* 		resolve_property (bad::incl_prop), projection_definition, optimization_definition, carto *)
 	}
 ;
+
+end_opt:
+	| CT_END { }
+	| { }
+;
+
 
 /************************************************************
 	INCLUDES
@@ -122,17 +155,13 @@ include_file_list:
 ;
 
 /************************************************************
-  MAIN DEFINITIONS
+  DECLARATIONS
 ************************************************************/
-
-automata_descriptions:
-	include_file_list declarations automata { $2, $3 }
-;
 
 /************************************************************/
 
 declarations:
-	CT_VAR decl_var_lists { $2 }
+	include_file_list CT_VAR decl_var_lists { $3 }
 	| { []}
 ;
 
@@ -165,6 +194,10 @@ var_type:
 	| CT_PARAMETER { Var_type_parameter }
 ;
 
+/************************************************************
+  AUTOMATA
+************************************************************/
+
 /************************************************************/
 
 automata:
@@ -185,9 +218,10 @@ automaton:
 /************************************************************/
 
 prolog:
+	/* Initialization is NOT taken into account, and is only allowed for backward-compatibility with HyTech */
 	| initialization sync_labels { $2 }
 	| sync_labels initialization { $1 }
-	| sync_labels { $1 } /* Initialization is NOT taken into account, and is only allowed for backward-compatibility with HyTech */
+	| sync_labels { $1 }
 	| initialization { [] }
 	| { [] }
 ;
@@ -240,8 +274,12 @@ locations:
 /************************************************************/
 
 while_or_invariant_or_nothing:
-	/* From 2018/02/22, "while" can be replaced with invariant */
-	| CT_WHILE {}
+	/* From 2018/02/22, "while" may be be replaced with invariant */
+	/* From 2019/12, "while" should be be replaced with invariant */
+	| CT_WHILE {
+		print_warning ("The syntax 'while [invariant]' is deprecated; you should use 'invariant [invariant]' instead.");
+		()
+		}
 	| CT_INVARIANT {}
 	| {}
 ;
@@ -283,9 +321,16 @@ location_name_and_costs:
 ;
 
 wait_opt:
-	| CT_WAIT { }
-	| CT_WAIT LBRACE RBRACE { }
-	| LBRACE RBRACE { }
+	| CT_WAIT {
+			print_warning ("The syntax 'wait' in invariants is deprecated.");
+		()
+	}
+	| CT_WAIT LBRACE RBRACE {
+			print_warning ("The syntax 'wait {}' in invariants is deprecated.");
+		()
+	}
+	/* Now deprecated and not accepted anymore */
+/* 	| LBRACE RBRACE { } */
 	| { }
 ;
 
@@ -394,25 +439,25 @@ syn_label:
 /************************************************************/
 
 arithmetic_expression:
-	| arithmetic_term { Parsed_UAE_term $1 }
-	| arithmetic_expression OP_PLUS arithmetic_term { Parsed_UAE_plus ($1, $3) }
-	| arithmetic_expression OP_MINUS arithmetic_term { Parsed_UAE_minus ($1, $3) }
+	| arithmetic_term { Parsed_DAE_term $1 }
+	| arithmetic_expression OP_PLUS arithmetic_term { Parsed_DAE_plus ($1, $3) }
+	| arithmetic_expression OP_MINUS arithmetic_term { Parsed_DAE_minus ($1, $3) }
 ;
 
 /* Term over variables and rationals (includes recursion with arithmetic_expression) */
 arithmetic_term:
-	| arithmetic_factor { Parsed_UT_factor $1 }
+	| arithmetic_factor { Parsed_DT_factor $1 }
 	/* Shortcut for syntax rational NAME without the multiplication operator */
-	| rational NAME { Parsed_UT_mul (Parsed_UT_factor (Parsed_UF_constant $1), Parsed_UF_variable $2) }
-	| arithmetic_term OP_MUL arithmetic_factor { Parsed_UT_mul ($1, $3) }
-	| arithmetic_term OP_DIV arithmetic_factor { Parsed_UT_div ($1, $3) }
-	| OP_MINUS arithmetic_term { Parsed_UT_mul($2, Parsed_UF_constant NumConst.minus_one) }
+	| rational NAME { Parsed_DT_mul (Parsed_DT_factor (Parsed_DF_constant $1), Parsed_DF_variable $2) }
+	| arithmetic_term OP_MUL arithmetic_factor { Parsed_DT_mul ($1, $3) }
+	| arithmetic_term OP_DIV arithmetic_factor { Parsed_DT_div ($1, $3) }
+	| OP_MINUS arithmetic_term { Parsed_DT_mul($2, Parsed_DF_constant NumConst.minus_one) }
 ;
 
 arithmetic_factor:
-	| rational { Parsed_UF_constant $1 }
-	| NAME { Parsed_UF_variable $1 }
-	| LPAREN arithmetic_expression RPAREN { Parsed_UF_expression $2 }
+	| rational { Parsed_DF_constant $1 }
+	| NAME { Parsed_DF_variable $1 }
+	| LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
 ;
 
 
@@ -437,12 +482,12 @@ linear_constraint:
 ;
 
 relop:
-	  OP_L { OP_L }
-	| OP_LEQ { OP_LEQ }
-	| OP_EQ { OP_EQ }
-	| OP_NEQ { OP_NEQ }
-	| OP_GEQ { OP_GEQ }
-	| OP_G { OP_G }
+	  OP_L { PARSED_OP_L }
+	| OP_LEQ { PARSED_OP_LEQ }
+	| OP_EQ { PARSED_OP_EQ }
+	| OP_NEQ { PARSED_OP_NEQ }
+	| OP_GEQ { PARSED_OP_GEQ }
+	| OP_G { PARSED_OP_G }
 ;
 
 /* Linear expression over variables and rationals */
@@ -507,42 +552,44 @@ pos_float:
 /** BOOLEAN EXPRESSIONS */
 /************************************************************/
 boolean_expression:
-	| CT_TRUE { True }
-	| CT_FALSE { False }
-	| OP_NEQ LPAREN boolean_expression RPAREN { Not $3 }
-	| boolean_expression AMPERSAND boolean_expression { And ($1, $3) }
-	| boolean_expression PIPE boolean_expression { Or ($1, $3) }
-	| arithmetic_expression relop arithmetic_expression { Expression ($1, $2, $3) }
-;
-/************************************************************/
-/** ANALYSIS COMMANDS */
-/************************************************************/
-
-commands:
-	| init_definition property_definition projection_definition optimization_definition end_opt { ($1, $2, $3, $4) }
+	| CT_TRUE { Parsed_True }
+	| CT_FALSE { Parsed_False }
+	| OP_NEQ LPAREN boolean_expression RPAREN { Parsed_Not $3 }
+	| boolean_expression AMPERSAND boolean_expression { Parsed_And ($1, $3) }
+	| boolean_expression PIPE boolean_expression { Parsed_Or ($1, $3) }
+	| discrete_boolean_expression { Parsed_Discrete_boolean_expression $1 }
 ;
 
-end_opt:
-	| CT_END { }
-	| { }
+discrete_boolean_expression:
+	/* Discrete arithmetic expression of the form Expr ~ Expr */
+	| arithmetic_expression relop arithmetic_expression { Parsed_expression ($1, $2, $3) }
+
+	/* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' */
+	| arithmetic_expression CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
+	/* allowed for convenience */
+	| arithmetic_expression CT_IN LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
 ;
+
+/************************************************************/
+/** INIT DEFINITION */
+/************************************************************/
 
 init_definition:
-	| CT_INIT OP_ASSIGN region_expression SEMICOLON { $3 }
+	| CT_INIT OP_ASSIGN init_expression SEMICOLON { $3 }
 	| { [ ] }
 ;
 
 
 /* We allow here an optional "&" at the beginning */
-region_expression:
-	| ampersand_opt region_expression_fol { $2 }
+init_expression:
+	| ampersand_opt init_expression_fol { $2 }
 	| { [ ] }
 ;
 
-region_expression_fol:
+init_expression_fol:
 	| init_state_predicate { [ $1 ] }
-	| LPAREN region_expression_fol RPAREN { $2 }
-	| region_expression_fol AMPERSAND region_expression_fol { $1 @ $3 }
+	| LPAREN init_expression_fol RPAREN { $2 }
+	| init_expression_fol AMPERSAND init_expression_fol { $1 @ $3 }
 ;
 
 /* Used in the init definition */
@@ -555,133 +602,10 @@ loc_predicate:
 	| CT_LOC LSQBRA NAME RSQBRA OP_EQ NAME { ($3, $6) }
 ;
 
-discrete_predicate:
-	| NAME OP_L rational { Parsed_discrete_l($1, $3) }
-	| NAME OP_LEQ rational { Parsed_discrete_leq($1, $3) }
-	| NAME OP_EQ rational { Parsed_discrete_equal($1, $3) }
-	| NAME OP_GEQ rational { Parsed_discrete_geq($1, $3) }
-	| NAME OP_G rational { Parsed_discrete_g($1, $3) }
-	/* Two forms allowed for intervals: d in [a, b] or d in [a..b] */
-	| NAME CT_IN LSQBRA rational COMMA rational RSQBRA { Parsed_discrete_interval($1, $4, $6) }
-	| NAME CT_IN LSQBRA rational DOUBLEDOT rational RSQBRA { Parsed_discrete_interval($1, $4, $6) }
-;
 
-
-
-
-
-property_definition:
-/*
-// TODO: improve the bad definitions
-	// NOTE: Old version
-// 	| CT_BAD OP_ASSIGN loc_expression SEMICOLON { $3 }
-
-	// Case: action
-	// TODO: reintroduce
-// 	| CT_BAD OP_ASSIGN CT_EXISTS_ACTION NAME SEMICOLON { [Exists_action $4] }
-
-	// NOTE: only one allowed before version 2.6 and ICECCS paper
-	// Case: location
-	// | CT_BAD OP_ASSIGN CT_EXISTS_LOCATION loc_predicate SEMICOLON { let a,b = $4 in [(Exists_location (a , b))] }
-*/
-	/* Pattern */
-	| CT_PROPERTY OP_ASSIGN pattern semicolon_opt { Some $3 }
-
-	| include_file { let _, _, _, property, _, _, _ = $1 in property }
-
-	/* Case: no property */
-	|  { None }
-
-;
-
-projection_definition:
-	| CT_PROJECTRESULT LPAREN name_nonempty_list RPAREN semicolon_opt { Some $3 }
-
-	/* Case: no projection */
-	|  { None }
-
-;
-
-optimization_definition:
-	| CT_MINIMIZE LPAREN NAME RPAREN semicolon_opt { Parsed_minimize $3 }
-	| CT_MAXIMIZE LPAREN NAME RPAREN semicolon_opt { Parsed_maximize $3 }
-
-	/* Case: no min/max */
-	|  { No_parsed_optimization }
-
-;
-
-
-/* List of patterns */
-pattern:
-	/* Safety */
-	| CT_UNREACHABLE bad_global_predicates { Parsed_unreachable_locations ($2) }
-
-	/* if a2 then a1 has happened before */
-	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Action_precedence_acyclic ($4, $2) }
-	/* everytime a2 then a1 has happened before */
-	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Action_precedence_cyclic ($4, $2) }
-	/* everytime a2 then a1 has happened once before */
-	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_BEFORE { Action_precedence_cyclicstrict ($4, $2) }
-
-/*
-	// PATTERNS NOT IMPLEMENTED
-// 	/* if a1 then eventually a2 */
-// 	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_acyclic ($2, $5) }
-// 	/* everytime a1 then eventually a2 */
-// 	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_cyclic ($2, $5) }
-// 	/* everytime a1 then eventually a2 once before next */
-// 	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_ONCE CT_BEFORE CT_NEXT { Eventual_response_cyclicstrict ($2, $5) }
-*/
-
-	/* a within d */
-	| NAME CT_WITHIN linear_expression { Action_deadline ($1, $3) }
-
-	/* if a2 then a1 happened within d before */
-	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_acyclic ($4, $2, $8) }
-	/* everytime a2 then a1 happened within d before */
-	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_cyclic ($4, $2, $8) }
-	/* everytime a2 then a1 happened once within d before */
-	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_cyclicstrict ($4, $2, $9) }
-
-	/* if a1 then eventually a2 within d */
-	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { TB_response_acyclic ($2, $5, $7) }
-	/* everytime a1 then eventually a2 within d */
-	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { TB_response_cyclic ($2, $5, $7) }
-	/* everytime a1 then eventually a2 within d once before next */
-	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression CT_ONCE CT_BEFORE CT_NEXT { TB_response_cyclicstrict ($2, $5, $7) }
-
-	/* sequence a1, ..., an */
-	| CT_SEQUENCE name_nonempty_list { Sequence_acyclic ($2) }
-	| CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Sequence_acyclic ($3) } /* with parentheses */
-	/* always sequence a1, ..., an */
-	| CT_ALWAYS CT_SEQUENCE name_nonempty_list { Sequence_cyclic ($3) }
-	| CT_ALWAYS CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Sequence_cyclic ($4) } /* with parentheses */
-;
-
-
-/* A single definition of one bad location or one bad discrete definition */
-bad_simple_predicate:
-	| discrete_predicate { Parsed_unreachable_discrete($1) }
-	| loc_predicate { Parsed_unreachable_loc($1) }
-;
-
-/* A global definition of several bad locations and/or bad discrete definitions */
-bad_global_predicate:
-	| bad_global_predicate AMPERSAND bad_global_predicate { List.rev_append $1 $3 }
-	| LPAREN bad_global_predicate RPAREN { $2 }
-	| bad_simple_predicate { [$1] }
-;
-
-bad_global_predicates:
-	| bad_global_predicate CT_OR bad_global_predicates { $1 :: $3 }
-	| bad_global_predicate { [$1] }
-;
-
-
-convex_predicate_with_nature:
-	| convex_predicate { $1, Unknown }
-;
+/************************************************************/
+/** MISC. */
+/************************************************************/
 
 comma_opt:
 	| COMMA { }

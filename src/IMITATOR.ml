@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/12/09
+ * Last modified     : 2019/12/11
  *
  ************************************************************)
 
@@ -128,10 +128,6 @@ let parsing_counter = create_time_counter_and_register "model parsing and conver
 parsing_counter#start;
 
 
-(*** TODO: temporary end ***)
-exit 1;
-
-(*
 
 (*------------------------------------------------------------*)
 (* Parse the model *)
@@ -147,9 +143,14 @@ in
 
 ***)
 
-let model, useful_parsing_model_information = ParsingUtility.compile_model options with_special_reset_clock in
+let model, property_option = ParsingUtility.compile_model_and_property options in
 
 Input.set_model model;
+
+(*** TODO: temporary end ***)
+exit 1;
+
+(*
 
 
 (*------------------------------------------------------------*)

@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2019/10/16
+ * Last modified     : 2019/12/13
  *
  ************************************************************/
 
@@ -257,4 +257,122 @@ and:
 	| CT_AND {}
 	| AMPERSAND {}
 	| DOUBLEAMPERSAND {}
+;
+
+
+
+
+
+
+/*** TODO: taken from ModelParser ***/
+
+
+
+
+property_definition:
+/*
+// TODO: improve the bad definitions
+	// NOTE: Old version
+// 	| CT_BAD OP_ASSIGN loc_expression SEMICOLON { $3 }
+
+	// Case: action
+	// TODO: reintroduce
+// 	| CT_BAD OP_ASSIGN CT_EXISTS_ACTION NAME SEMICOLON { [Exists_action $4] }
+
+	// NOTE: only one allowed before version 2.6 and ICECCS paper
+	// Case: location
+	// | CT_BAD OP_ASSIGN CT_EXISTS_LOCATION loc_predicate SEMICOLON { let a,b = $4 in [(Exists_location (a , b))] }
+*/
+	/* Pattern */
+	| CT_PROPERTY OP_ASSIGN pattern semicolon_opt { Some $3 }
+
+	| include_file { let _, _, _, property, _, _, _ = $1 in property }
+
+	/* Case: no property */
+	|  { None }
+
+;
+
+projection_definition:
+	| CT_PROJECTRESULT LPAREN name_nonempty_list RPAREN semicolon_opt { Some $3 }
+
+	/* Case: no projection */
+	|  { None }
+
+;
+
+optimization_definition:
+	| CT_MINIMIZE LPAREN NAME RPAREN semicolon_opt { Parsed_minimize $3 }
+	| CT_MAXIMIZE LPAREN NAME RPAREN semicolon_opt { Parsed_maximize $3 }
+
+	/* Case: no min/max */
+	|  { No_parsed_optimization }
+
+;
+
+
+/* List of patterns */
+pattern:
+	/* Safety */
+	| CT_UNREACHABLE bad_global_predicates { Parsed_unreachable_locations ($2) }
+
+	/* if a2 then a1 has happened before */
+	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Action_precedence_acyclic ($4, $2) }
+	/* everytime a2 then a1 has happened before */
+	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Action_precedence_cyclic ($4, $2) }
+	/* everytime a2 then a1 has happened once before */
+	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_BEFORE { Action_precedence_cyclicstrict ($4, $2) }
+
+
+	/* PATTERNS NOT IMPLEMENTED */
+/* 	/ * if a1 then eventually a2 * /
+ 	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_acyclic ($2, $5) }
+ 	/ * everytime a1 then eventually a2 * /
+ 	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME { Eventual_response_cyclic ($2, $5) }
+ 	/ * everytime a1 then eventually a2 once before next * /
+ 	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_ONCE CT_BEFORE CT_NEXT { Eventual_response_cyclicstrict ($2, $5) }
+*/
+
+	/* a within d */
+	| NAME CT_WITHIN linear_expression { Action_deadline ($1, $3) }
+
+	/* if a2 then a1 happened within d before */
+	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_acyclic ($4, $2, $8) }
+	/* everytime a2 then a1 happened within d before */
+	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_cyclic ($4, $2, $8) }
+	/* everytime a2 then a1 happened once within d before */
+	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_cyclicstrict ($4, $2, $9) }
+
+	/* if a1 then eventually a2 within d */
+	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { TB_response_acyclic ($2, $5, $7) }
+	/* everytime a1 then eventually a2 within d */
+	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { TB_response_cyclic ($2, $5, $7) }
+	/* everytime a1 then eventually a2 within d once before next */
+	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression CT_ONCE CT_BEFORE CT_NEXT { TB_response_cyclicstrict ($2, $5, $7) }
+
+	/* sequence a1, ..., an */
+	| CT_SEQUENCE name_nonempty_list { Sequence_acyclic ($2) }
+	| CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Sequence_acyclic ($3) } /* with parentheses */
+	/* always sequence a1, ..., an */
+	| CT_ALWAYS CT_SEQUENCE name_nonempty_list { Sequence_cyclic ($3) }
+	| CT_ALWAYS CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Sequence_cyclic ($4) } /* with parentheses */
+;
+
+
+/* A single definition of one bad location or one bad discrete definition */
+bad_simple_predicate:
+	| discrete_predicate { Parsed_unreachable_discrete($1) }
+	| loc_predicate { Parsed_unreachable_loc($1) }
+;
+
+/* A global definition of several bad locations and/or bad discrete definitions */
+bad_global_predicate:
+	| bad_global_predicate AMPERSAND bad_global_predicate { List.rev_append $1 $3 }
+	| LPAREN bad_global_predicate RPAREN { $2 }
+	| bad_simple_predicate { [$1] }
+;
+
+bad_global_predicates:
+	| bad_global_predicate CT_OR bad_global_predicates { $1 :: $3 }
+	| bad_global_predicate { [$1] }
 ;

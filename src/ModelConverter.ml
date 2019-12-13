@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2019/12/09
+ * Last modified     : 2019/12/11
  *
  ************************************************************)
 
@@ -28,7 +28,6 @@ open Options
 open Automaton
 open ParsingStructure
 open AbstractModel
-open ModelPrinter
 
 
 (************************************************************)
@@ -1976,7 +1975,7 @@ let linear_term_of_parsed_update_arithmetic_expression index_of_variables consta
 (*------------------------------------------------------------*)
 let make_constants constants =
   (* Create hash table *)
-  let constants_hashtable : (string, NumConst.t) Hashtbl = Hashtbl.create (List.length constants) in
+  let constants_hashtable : (string, NumConst.t) Hashtbl.t = Hashtbl.create (List.length constants) in
   (* Manage Boolean for checking errors *)
   let correct = ref true in
   List.iter (fun (name, value) ->
@@ -2762,9 +2761,9 @@ let rec convert_parsed_discrete_arithmetic_expression useful_parsing_model_infor
 
 and convert_parsed_discrete_term useful_parsing_model_information = function
 	| Parsed_DT_mul (parsed_discrete_term , parsed_discrete_factor) ->
-		DT_mul ((convert_parsed_discrete_term parsed_discrete_term) , convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor))
+		DT_mul ((convert_parsed_discrete_term parsed_discrete_term) , convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
 	| Parsed_DT_div (parsed_discrete_term , parsed_discrete_factor) ->
-		DT_div ((convert_parsed_discrete_term parsed_discrete_term) , convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor))
+		DT_div ((convert_parsed_discrete_term parsed_discrete_term) , convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
 	| Parsed_DT_factor parsed_discrete_factor -> DT_factor (convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
 
 and convert_parsed_discrete_factor useful_parsing_model_information = function
@@ -2849,17 +2848,20 @@ let convert_property useful_parsing_model_information parsed_property : Abstract
 	| AF parsed_state_predicate	
 	(* Liveness *)
 	| AG parsed_state_predicate
-		-> convert_parsed_state_predicate parsed_state_predicate*)
+		-> convert_parsed_state_predicate parsed_state_predicate
+	*)
 		
-	| raise (NotImplemented "property conversion")
+	| _ -> raise (NotImplemented "property conversion")
 
 
 
 
 (*------------------------------------------------------------*)
-(* Convert the parsing structure into an abstract model *)
+(* Convert the parsed model and the parsed property into an abstract model and an abstract property *)
 (*------------------------------------------------------------*)
-let abstract_model_of_parsing_structure options (with_special_reset_clock : bool) (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_property_definition, parsed_projection_definition, parsed_optimization_definition) =
+let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.parsed_model) (parsed_property_option : ParsingStructure.parsed_property option) =
+	raise (NotImplemented "abstract_structures_of_parsing_structures")
+	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4019,6 +4021,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 		index_of_variables: index_of_variables;
 	}
 
+	*)
 
 
 

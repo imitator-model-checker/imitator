@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/10/08
+ * Last modified     : 2019/12/13
 *****************************************************************)
 
 {
@@ -38,7 +38,7 @@ rule token = parse
 			let lb = Lexing.from_channel c in
 			lb.Lexing.lex_curr_p <- { lb.Lexing.lex_curr_p with Lexing.pos_fname = absolute_filename };
 
-			let p = ModelParser.main token lb in
+			let p : ParsingStructure.parsed_model = ModelParser.main token lb in
 			INCLUDE p
     }
 

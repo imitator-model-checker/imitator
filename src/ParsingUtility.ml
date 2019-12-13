@@ -1,4 +1,4 @@
-(************************************************************
+	(************************************************************
  *
  *                       IMITATOR
  *
@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2019/10/17
+ * Last modified     : 2019/12/11
  *
  ************************************************************)
 
@@ -116,10 +116,104 @@ let parser_lexer_from_string the_parser the_lexer the_string =
 (************************************************************)
 (** Compile the concrete model and convert it into an abstract model *)
 (************************************************************)
+let compile_model_and_property options =
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Parsing the model *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	(* Statistics *)
+	parsing_counter#start;
+
+	(* Parsing the main model *)
+	print_message Verbose_low ("Parsing model file " ^ options#model_input_file_name ^ "…");
+	let parsed_model = parser_lexer_from_file ModelParser.main ModelLexer.token options#model_input_file_name
+	in
+
+	(* Statistics *)
+	parsing_counter#stop;
+
+	print_message Verbose_low ("\nModel parsing completed " ^ (after_seconds ()) ^ ".");
+	
+	(** USELESS, even increases memory x-( **)
+	(* Gc.major (); *)
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Parsing the property *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	let parsed_property_option =
+	if (*** TODO ***) true then(
+		(* Statistics *)
+		parsing_counter#start;
+
+		(* Parsing the main model *)
+		print_message Verbose_low ("Parsing property file " ^ options#property_file_name ^ "…");
+		let parsed_property = parser_lexer_from_file ModelParser.main ModelLexer.token options#property_file_name
+		in
+
+		(* Statistics *)
+		parsing_counter#stop;
+
+		print_message Verbose_low ("\nProperty parsing completed " ^ (after_seconds ()) ^ ".");
+		
+		Some parsed_property
+	)else(
+		None
+	)
+	in
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Conversion to abstract structures *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	(* Statistics *)
+	converting_counter#start;
+
+	let model, property_option =
+	try (
+		ModelConverter.abstract_structures_of_parsing_structures options parsed_model parsed_property_option
+	) with
+		| ModelConverter.InvalidModel		-> (print_error ("The input model contains errors. Please check it again."); abort_program (); exit 1)
+		| ModelConverter.InvalidProperty	-> (print_error ("The property contains errors. Please check it again."); abort_program (); exit 1)
+		| InternalError e					-> (print_error ("Internal error while parsing the input model and the property: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
+		in
+
+	(* Statistics *)
+	converting_counter#stop;
+
+	(* Print some information *)
+	print_message Verbose_experiments ("\nAbstract model built " ^ (after_seconds ()) ^ ".");
+	let gc_stat = Gc.stat () in
+	let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
+	let nb_ko = nb_words *. 4.0 /. 1024.0 in
+	print_message Verbose_experiments ("Memory for abstract model: " ^ (round3_float nb_ko) ^ " KiB (i.e., " ^ (string_of_int (int_of_float nb_words)) ^ " words)");
+
+	(* With or without stopwatches *)
+	if model.has_stopwatches then
+		print_message Verbose_standard ("The model contains stopwatches.")
+	else
+		print_message Verbose_low ("The model is purely timed (no stopwatches).");
+
+	(* Ugly line break *)
+	print_message Verbose_experiments "";
+
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* return *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	model, property_option
+
+
+(*
+(************************************************************)
+(** Compile the concrete model and convert it into an abstract model *)
+(************************************************************)
 let compile_model options (with_special_reset_clock : bool) =
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Parsing *)
+	(* Parsing the property *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	(* Statistics *)
@@ -149,8 +243,9 @@ let compile_model options (with_special_reset_clock : bool) =
 	try (
 		ModelConverter.abstract_model_of_parsing_structure options with_special_reset_clock parsing_structure
 	) with
-		| ModelConverter.InvalidModel -> (print_error ("The input model contains errors. Please check it again."); abort_program (); exit 1)
-		| InternalError e -> (print_error ("Internal error while parsing the input model: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
+		| ModelConverter.InvalidModel		-> (print_error ("The input model contains errors. Please check it again."); abort_program (); exit 1)
+		| ModelConverter.InvalidProperty	-> (print_error ("The property contains errors. Please check it again."); abort_program (); exit 1)
+		| InternalError e					-> (print_error ("Internal error while parsing the input model and the property: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
 		in
 
 	(* Statistics *)
@@ -204,8 +299,6 @@ let compile_property options useful_parsing_model_information =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	property
 
-
-(*
 
 (************************************************************)
 (** Parse the pi0 file and convert it into an abstract representation *)

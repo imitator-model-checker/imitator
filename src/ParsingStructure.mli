@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2019/12/09
+ * Last modified     : 2019/12/13
  *
  ****************************************************************)
 
@@ -99,21 +99,23 @@ type linear_constraint =
 type convex_predicate = linear_constraint list
 
 
-	(** boolean expressions *)
-type boolean_expression =
-	| True (** True *)
-	| False (** False *)
-	| Not of boolean_expression (** Negation *)
-	| And of boolean_expression * boolean_expression (** Conjunction *)
-	| Or of boolean_expression * boolean_expression (** Disjunction *)
-	| Discrete_boolean_expression of parsed_discrete_boolean_expression
-
+(** boolean expressions *)
 
 type parsed_discrete_boolean_expression =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_expression of parsed_discrete_arithmetic_expression * parsed_relop * parsed_discrete_arithmetic_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Parsed_expression_in of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
+
+
+type boolean_expression =
+	| Parsed_True (** True *)
+	| Parsed_False (** False *)
+	| Parsed_Not of boolean_expression (** Negation *)
+	| Parsed_And of boolean_expression * boolean_expression (** Conjunction *)
+	| Parsed_Or of boolean_expression * boolean_expression (** Disjunction *)
+	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
+
 
 
 
@@ -270,7 +272,6 @@ type parsed_optimization =
 (** Input program *)
 (****************************************************************)
 
-(* TODO: transform to structure *)
 type parsed_model = {
 	variable_declarations	: variable_declarations;
 	automata				: automata;
@@ -350,7 +351,7 @@ type parsed_property_type =
 	(*------------------------------------------------------------*)
 	
 	(* Reachability with minimization *)
-	| Parsed_EFmin of parsed_state_predicate * TODO
+	| Parsed_EFmin of parsed_state_predicate * (*** TODO: bool is just random here, to be done ***)bool
 	
 	(*** TODO: EFmin, EFmax, EFsynthmin, EFsynthmax, EF_synth_min_priority_queue ***)
 	
