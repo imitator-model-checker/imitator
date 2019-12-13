@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/11
- * Last modified     : 2019/12/10
+ * Last modified     : 2019/12/13
  *
  ************************************************************)
 
@@ -33,9 +33,9 @@ type v0 = HyperRectangle.hyper_rectangle
 
 (** Type of variable in declarations *)
 type var_type =
-  | Var_type_clock
-  | Var_type_discrete
-  | Var_type_parameter
+	| Var_type_clock
+	| Var_type_discrete
+	| Var_type_parameter
 
 (** Type of sync actions *)
 type action_type =
@@ -58,10 +58,10 @@ type location_accepting =
 	| Location_nonaccepting
 
 type location_urgency =
-  (* Urgent location *)
-  | Location_urgent
-  (* Non-urgent location *)
-  | Location_nonurgent
+	(* Urgent location *)
+	| Location_urgent
+	(* Non-urgent location *)
+	| Location_nonurgent
 
 
 
@@ -73,13 +73,13 @@ type location_urgency =
 type clock_update = clock_index
 
 type clock_updates =
-  (* No update at all *)
-  | No_update
-  (* Reset to 0 only *)
-  | Resets of clock_update list
-  (** TO ADD: reset to constants / discrete and parameters (to allow for support by PDBM) *)
-  (* Reset to arbitrary value (including discrete, parameters and clocks) *)
-  | Updates of (clock_update * LinearConstraint.pxd_linear_term) list
+	(* No update at all *)
+	| No_update
+	(* Reset to 0 only *)
+	| Resets of clock_update list
+	(** TO ADD: reset to constants / discrete and parameters (to allow for support by PDBM) *)
+	(* Reset to arbitrary value (including discrete, parameters and clocks) *)
+	| Updates of (clock_update * LinearConstraint.pxd_linear_term) list
 
 
 (** update: variable_index := linear_term *)
@@ -94,31 +94,28 @@ type discrete_guard = LinearConstraint.d_linear_constraint
 type continuous_guard = LinearConstraint.pxd_linear_constraint
 
 type discrete_continuous_guard = {
-  discrete_guard   : discrete_guard;
-  continuous_guard : continuous_guard;
+	discrete_guard   : discrete_guard;
+	continuous_guard : continuous_guard;
 }
 type guard =
-  | True_guard
-  | False_guard
-  | Discrete_guard of discrete_guard
-  | Continuous_guard of continuous_guard
-  | Discrete_continuous_guard of discrete_continuous_guard
+	| True_guard
+	| False_guard
+	| Discrete_guard of discrete_guard
+	| Continuous_guard of continuous_guard
+	| Discrete_continuous_guard of discrete_continuous_guard
 
 
 (** Invariant: linear constraint *)
 type invariant = LinearConstraint.pxd_linear_constraint
 
-(** Boolean operators *)
-type op_bool = BOOL_L | BOOL_LEQ | BOOL_EQ | BOOL_NEQ | BOOL_GEQ | BOOL_G
-
 (** Boolean expression *)
 type boolean_expression =
-  | True_bool (** True *)
-  | False_bool (** False *)
-  | Not_bool of boolean_expression (** Negation *)
-  | And_bool of boolean_expression * boolean_expression (** Conjunction *)
-  | Or_bool of boolean_expression * boolean_expression (** Disjunction *)
-  | Expression_bool of DiscreteExpressions.discrete_arithmetic_expression * op_bool * DiscreteExpressions.discrete_arithmetic_expression (** Discrete Arithmentic Expression *)
+	| True_bool (** True *)
+	| False_bool (** False *)
+	| Not_bool of boolean_expression (** Negation *)
+	| And_bool of boolean_expression * boolean_expression (** Conjunction *)
+	| Or_bool of boolean_expression * boolean_expression (** Disjunction *)
+	| Discrete_boolean_expression of DiscreteExpressions.discrete_boolean_expression
 
 (** Updates *)
 type updates = {
@@ -146,14 +143,14 @@ type transition_index = int
 (** Subclass of the model *)
 (************************************************************)
 type lu_status =
-  (* General PTA *)
-  | PTA_notLU
-  (* L/U-PTA with parameters partitioned into L- and U-parameters *)
-  | PTA_LU of parameter_index list * parameter_index list
-  (* L-PTA *)
-  | PTA_L
-  (* U-PTA *)
-  | PTA_U
+	(* General PTA *)
+	| PTA_notLU
+	(* L/U-PTA with parameters partitioned into L- and U-parameters *)
+	| PTA_LU of parameter_index list * parameter_index list
+	(* L-PTA *)
+	| PTA_L
+	(* U-PTA *)
+	| PTA_U
 
 
 

@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2019/12/11
+ * Last modified     : 2019/12/13
  *
  ************************************************************)
 
@@ -127,8 +127,7 @@ let compile_model_and_property options =
 
 	(* Parsing the main model *)
 	print_message Verbose_low ("Parsing model file " ^ options#model_input_file_name ^ "…");
-	let parsed_model = parser_lexer_from_file ModelParser.main ModelLexer.token options#model_input_file_name
-	in
+	let parsed_model : ParsingStructure.parsed_model = parser_lexer_from_file ModelParser.main ModelLexer.token options#model_input_file_name in
 
 	(* Statistics *)
 	parsing_counter#stop;
@@ -150,8 +149,7 @@ let compile_model_and_property options =
 
 		(* Parsing the main model *)
 		print_message Verbose_low ("Parsing property file " ^ options#property_file_name ^ "…");
-		let parsed_property = parser_lexer_from_file ModelParser.main ModelLexer.token options#property_file_name
-		in
+		let parsed_property : ParsingStructure.parsed_property = parser_lexer_from_file PropertyParser.main PropertyLexer.token options#property_file_name in
 
 		(* Statistics *)
 		parsing_counter#stop;
@@ -190,6 +188,7 @@ let compile_model_and_property options =
 	let nb_ko = nb_words *. 4.0 /. 1024.0 in
 	print_message Verbose_experiments ("Memory for abstract model: " ^ (round3_float nb_ko) ^ " KiB (i.e., " ^ (string_of_int (int_of_float nb_words)) ^ " words)");
 
+	(*** TODO: move somewhere else! ***)
 	(* With or without stopwatches *)
 	if model.has_stopwatches then
 		print_message Verbose_standard ("The model contains stopwatches.")

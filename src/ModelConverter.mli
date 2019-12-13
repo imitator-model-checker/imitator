@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/09/09
- * Last modified     : 2019/12/11
+ * Last modified     : 2019/12/13
  *
  ************************************************************)
 
@@ -38,12 +38,6 @@ exception InvalidProperty
 (** Types *)
 (****************************************************************)
 
-(* This structure is returned by the model converter, as it can be possibly use when analyzing the property *)
-type useful_parsing_model_information = {
-	constants         : (Automaton.variable_name , NumConst.t) Hashtbl.t;
-	index_of_automata : (Automaton.automaton_name , Automaton.automaton_index) Hashtbl.t;
-	index_of_variables: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
-}
 
 (****************************************************************)
 (** Conversion functions *)

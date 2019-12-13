@@ -108,12 +108,12 @@ type parsed_discrete_boolean_expression =
 	| Parsed_expression_in of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
 
 
-type boolean_expression =
+type parsed_boolean_expression =
 	| Parsed_True (** True *)
 	| Parsed_False (** False *)
-	| Parsed_Not of boolean_expression (** Negation *)
-	| Parsed_And of boolean_expression * boolean_expression (** Conjunction *)
-	| Parsed_Or of boolean_expression * boolean_expression (** Disjunction *)
+	| Parsed_Not of parsed_boolean_expression (** Negation *)
+	| Parsed_And of parsed_boolean_expression * parsed_boolean_expression (** Conjunction *)
+	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
 	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
 
 
@@ -147,7 +147,7 @@ type update =
 (** basic updating *)
 and normal_update = variable_name * parsed_discrete_arithmetic_expression
 (** conditional updating - NOTE: it does not support nested conditions *)
-and condition_update = boolean_expression * normal_update list * normal_update list
+and condition_update = parsed_boolean_expression * normal_update list * normal_update list
 
 (* Transition = Guard * update list * sync label * destination location *)
 type transition = guard * update list * sync * location_name

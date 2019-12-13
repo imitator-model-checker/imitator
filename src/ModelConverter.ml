@@ -27,7 +27,9 @@ open ImitatorUtilities
 open Options
 open Automaton
 open ParsingStructure
+open DiscreteExpressions
 open AbstractModel
+open AbstractProperty
 
 
 (************************************************************)
@@ -65,6 +67,19 @@ let saved_parameters			= ref None
 let saved_parameters_names		= ref None
 let saved_variables				= ref None
 
+
+(************************************************************)
+(************************************************************)
+(** Useful data structure to avoid multiple parameters in functions *)
+(************************************************************)
+(************************************************************)
+
+type useful_parsing_model_information = {
+	constants         : (Automaton.variable_name , NumConst.t) Hashtbl.t;
+	index_of_automata : (Automaton.automaton_name , Automaton.automaton_index) Hashtbl.t;
+	index_of_variables: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
+	index_of_locations: ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array;
+}
 
 
 (************************************************************)
@@ -353,6 +368,7 @@ let rec get_variables_in_parsed_update_factor variables_used_ref = function
 	| Parsed_DF_expression parsed_update_arithmetic_expression ->
 		get_variables_in_parsed_update_arithmetic_expression variables_used_ref parsed_update_arithmetic_expression
 
+	| Parsed_DF_unary_min parsed_discrete_factor -> get_variables_in_parsed_update_factor variables_used_ref parsed_discrete_factor
 
 and get_variables_in_parsed_update_term variables_used_ref = function
 	| Parsed_DT_mul (parsed_update_term, parsed_update_factor)
@@ -382,17 +398,24 @@ and get_variables_in_parsed_update variables_used_ref = function
 			get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expression
 		) (update_list_if@update_list_else)
 and get_variables_in_parsed_boolean_expression variables_used_ref = function
+	| Parsed_True -> ()
+	| Parsed_False -> ()
 	| Parsed_And (bool_expr1, bool_expr2)
 	| Parsed_Or (bool_expr1, bool_expr2) ->
 		get_variables_in_parsed_boolean_expression variables_used_ref bool_expr1;
 		get_variables_in_parsed_boolean_expression variables_used_ref bool_expr2;
 	| Parsed_Not bool_expr -> get_variables_in_parsed_boolean_expression variables_used_ref bool_expr
-	| Parsed_Expression (arithmetic_expr1, _ (* relop *), arithmetic_expr2) ->
+	| Parsed_Discrete_boolean_expression bool_expr -> get_variables_in_parsed_discrete_boolean_expression variables_used_ref bool_expr
+and get_variables_in_parsed_discrete_boolean_expression variables_used_ref  = function
+	| Parsed_expression (arithmetic_expr1, _ (* relop *), arithmetic_expr2) ->
 		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr1;
 		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr2;
-	| _ -> ()  (** add nothing *)
+	| Parsed_expression_in (arithmetic_expr1, arithmetic_expr2, arithmetic_expr3) ->
+		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr1;
+		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr2;
+		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr3
 
-
+	
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a parsed_update_arithmetic_expression *)
 (*------------------------------------------------------------*)
@@ -406,6 +429,7 @@ let rec get_variables_in_parsed_discrete_factor variables_used_ref = function
 	| Parsed_DF_expression parsed_discrete_arithmetic_expression ->
 		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref parsed_discrete_arithmetic_expression
 
+	| Parsed_DF_unary_min parsed_discrete_factor -> get_variables_in_parsed_discrete_factor variables_used_ref parsed_discrete_factor
 
 and get_variables_in_parsed_discrete_term variables_used_ref = function
 	| Parsed_DT_mul (parsed_discrete_term, parsed_discrete_factor)
@@ -468,9 +492,9 @@ let get_variables_in_linear_constraint variables_used_ref = function
 (* Gather all variable names used in the parsed property *)
 (*------------------------------------------------------------*)
 
-let get_variables_in_property = function
+let get_variables_in_property all_variables_used = function
 	(* Reachability *)
-	| EF parsed_state_predicate -> blublu
+	| EF parsed_state_predicate -> raise (NotImplemented "get_variables_in_property")
 
 
 
@@ -686,13 +710,17 @@ let all_locations_different =
 (*------------------------------------------------------------*)
 (*** NOTE: f : variable_name -> bool is the function to check *)
 let rec check_f_in_parsed_update_factor f = function
-  | Parsed_DF_variable variable_name ->
-    f variable_name
+	| Parsed_DF_variable variable_name ->
+		f variable_name
 
-  | Parsed_DF_constant _ -> true
+	| Parsed_DF_constant _ -> true
 
-  | Parsed_DF_expression parsed_update_arithmetic_expression ->
-    check_f_in_parsed_update_arithmetic_expression f parsed_update_arithmetic_expression
+	| Parsed_DF_expression parsed_update_arithmetic_expression ->
+		check_f_in_parsed_update_arithmetic_expression f parsed_update_arithmetic_expression
+	
+	| Parsed_DF_unary_min parsed_discrete_factor ->
+		check_f_in_parsed_update_factor f parsed_discrete_factor
+
 
 
 and check_f_in_parsed_update_term f = function
@@ -752,42 +780,48 @@ let check_only_discretes_in_parsed_update_arithmetic_expression index_of_variabl
     )
 
 
+(*
+(*** WARNING! duplicate code! removed 2019/12/13 ***)
 (*------------------------------------------------------------*)
 (* Check that a parsed_update_arithmetic_expression contains non-constant at only selected parts *)
 (*------------------------------------------------------------*)
 let valuate_parsed_update_arithmetic_expression constants =
 
-  let rec check_constants_in_parsed_update_arithmetic_expression_rec = function
-    | Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term)
-    | Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
-      evaluate_and
-        (check_constants_in_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression)
-        (check_constants_in_parsed_update_term parsed_update_term)
-    | Parsed_DAE_term parsed_update_term ->
-      check_constants_in_parsed_update_term parsed_update_term
+	let rec check_constants_in_parsed_update_arithmetic_expression_rec = function
+		| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term)
+		| Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		evaluate_and
+			(check_constants_in_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression)
+			(check_constants_in_parsed_update_term parsed_update_term)
+		| Parsed_DAE_term parsed_update_term ->
+		check_constants_in_parsed_update_term parsed_update_term
 
-  and check_constants_in_parsed_update_term = function
-    | Parsed_DT_mul (parsed_update_term, parsed_update_factor) ->
-      (* Constants only forbidden in the parsed_update_term *)
-      check_constants_in_parsed_update_term parsed_update_term
-    | Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
-      (* Constants only forbidden in the parsed_update_factor *)
-      check_constants_in_parsed_update_factor parsed_update_factor
-    | Parsed_DT_factor parsed_update_factor -> check_constants_in_parsed_update_factor parsed_update_factor
+	and check_constants_in_parsed_update_term = function
+		| Parsed_DT_mul (parsed_update_term, parsed_update_factor) ->
+		(* Constants only forbidden in the parsed_update_term *)
+		check_constants_in_parsed_update_term parsed_update_term
+		| Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
+		(* Constants only forbidden in the parsed_update_factor *)
+		check_constants_in_parsed_update_factor parsed_update_factor
+		| Parsed_DT_factor parsed_update_factor -> check_constants_in_parsed_update_factor parsed_update_factor
 
-  and check_constants_in_parsed_update_factor = function
-    | Parsed_DF_variable variable_name ->
-      if Hashtbl.mem constants variable_name then (
-        true
-      ) else (
-        print_error ("Variable '" ^ variable_name ^ "' cannot be used at this place in an update.");
-        false
-      )
-    | Parsed_DF_constant var_value -> true
-    | Parsed_DF_expression parsed_update_arithmetic_expression -> check_constants_in_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression
+	and check_constants_in_parsed_update_factor = function
+		| Parsed_DF_variable variable_name ->
+		if Hashtbl.mem constants variable_name then (
+			true
+		) else (
+			print_error ("Variable '" ^ variable_name ^ "' cannot be used at this place in an update.");
+			false
+		)
+		
+		| Parsed_DF_constant var_value -> true
+		
+		| Parsed_DF_unary_min parsed_discrete_factor -> check_constants_in_parsed_update_factor parsed_discrete_factor
+		
+		| Parsed_DF_expression parsed_update_arithmetic_expression -> check_constants_in_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression
 
-  in check_constants_in_parsed_update_arithmetic_expression_rec
-
+	in check_constants_in_parsed_update_arithmetic_expression_rec
+*)
 
 (*------------------------------------------------------------*)
 (* Check that all variables are defined in a linear_term *)
@@ -1199,9 +1233,9 @@ let check_init discrete variable_names removed_variable_names constants index_of
         let discrete_value =
           match (op, expression) with
           (* Simple constant: OK *)
-          | (OP_EQ, Linear_term (Constant c)) -> c
+          | (PARSED_OP_EQ, Linear_term (Constant c)) -> c
           (* Constant: OK *)
-          | (OP_EQ, Linear_term (Variable (coef, variable_name))) ->
+          | (PARSED_OP_EQ, Linear_term (Variable (coef, variable_name))) ->
             (* Get the value of  the variable *)
             let value = Hashtbl.find constants variable_name in
             NumConst.mul coef value
@@ -1245,7 +1279,7 @@ let check_init discrete variable_names removed_variable_names constants index_of
 
 
 
-
+(*
 (************************************************************)
 (** Verification functions dedicated to property declaration *)
 (************************************************************)
@@ -1718,7 +1752,7 @@ let check_and_convert_property index_of_variables type_of_variables discrete var
         		| _ -> raise (InternalError ("In the bad definition, not all possibilities are implemented yet."))*)
     end
 (*	in
-  	[n action_index], !well_formed*)
+  	[n action_index], !well_formed*)*)
 
 
 
@@ -1768,43 +1802,45 @@ let check_optimization parameters_names = function
 
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
 let discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants =
-  let rec discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec = function
-    | Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
-      DAE_plus ((discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (discrete_term_of_parsed_update_term parsed_update_term))
-    | Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
-      DAE_minus ((discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (discrete_term_of_parsed_update_term parsed_update_term))
-    | Parsed_DAE_term parsed_update_term ->
-      DAE_term (discrete_term_of_parsed_update_term parsed_update_term)
+	let rec discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec = function
+		| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		DAE_plus ((discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (discrete_term_of_parsed_update_term parsed_update_term))
+		| Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		DAE_minus ((discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (discrete_term_of_parsed_update_term parsed_update_term))
+		| Parsed_DAE_term parsed_update_term ->
+		DAE_term (discrete_term_of_parsed_update_term parsed_update_term)
 
-  and discrete_term_of_parsed_update_term = function
-    | Parsed_DT_mul (parsed_update_term, parsed_update_factor) ->
-      DT_mul ((discrete_term_of_parsed_update_term parsed_update_term), (discrete_factor_of_parsed_update_factor parsed_update_factor))
-    | Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
-      DT_div ((discrete_term_of_parsed_update_term parsed_update_term), (discrete_factor_of_parsed_update_factor parsed_update_factor))
-    | Parsed_DT_factor parsed_update_factor -> DT_factor (discrete_factor_of_parsed_update_factor parsed_update_factor)
+	and discrete_term_of_parsed_update_term = function
+		| Parsed_DT_mul (parsed_update_term, parsed_discrete_factor) ->
+		DT_mul ((discrete_term_of_parsed_update_term parsed_update_term), (discrete_factor_of_parsed_update_factor parsed_discrete_factor))
+		| Parsed_DT_div (parsed_update_term, parsed_discrete_factor) ->
+		DT_div ((discrete_term_of_parsed_update_term parsed_update_term), (discrete_factor_of_parsed_update_factor parsed_discrete_factor))
+		| Parsed_DT_factor parsed_discrete_factor -> DT_factor (discrete_factor_of_parsed_update_factor parsed_discrete_factor)
 
-  and discrete_factor_of_parsed_update_factor = function
-    | Parsed_DF_variable variable_name ->
-      (* Try to find the variable_index *)
-      if Hashtbl.mem index_of_variables variable_name then (
-        let variable_index = Hashtbl.find index_of_variables variable_name in
-        (* Convert *)
-        DF_variable variable_index
-        (* Try to find a constant *)
-      ) else (
-        if Hashtbl.mem constants variable_name then (
-          (* Retrieve the value of the global constant *)
-          let value = Hashtbl.find constants variable_name in
-          (* Convert *)
-          DF_constant value
-        ) else (
-          raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although this should have been checked before."))
-        )
-      )
-    | Parsed_DF_constant var_value -> DF_constant var_value
-    | Parsed_DF_expression parsed_update_arithmetic_expression -> DF_expression (discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression)
-  in
-  discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec
+	and discrete_factor_of_parsed_update_factor = function
+		| Parsed_DF_variable variable_name ->
+		(* Try to find the variable_index *)
+		if Hashtbl.mem index_of_variables variable_name then (
+			let variable_index = Hashtbl.find index_of_variables variable_name in
+			(* Convert *)
+			DF_variable variable_index
+			(* Try to find a constant *)
+		) else (
+			if Hashtbl.mem constants variable_name then (
+			(* Retrieve the value of the global constant *)
+			let value = Hashtbl.find constants variable_name in
+			(* Convert *)
+			DF_constant value
+			) else (
+			raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although this should have been checked before."))
+			)
+		)
+		| Parsed_DF_constant var_value -> DF_constant var_value
+		(*** TODO: here, we could very easily get rid of the DF_unary_min by negating the inside expression… ***)
+		| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (discrete_factor_of_parsed_update_factor parsed_discrete_factor)
+		| Parsed_DF_expression parsed_update_arithmetic_expression -> DF_expression (discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression)
+	in
+	discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec
 
 
 
@@ -1863,109 +1899,112 @@ let discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression inde
 (*** TODO (though really not critical): try to do some simplifications… ***)
 (* First valuate a parsed_update_arithmetic_expression if requested; raises InternalError if some non-constant variable is met *)
 let rec valuate_parsed_update_arithmetic_expression constants = function
-  | Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
-    NumConst.add
-      (valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression)
-      (valuate_parsed_update_term constants parsed_update_term)
-  | Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
-    NumConst.sub
-      (valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression)
-      (valuate_parsed_update_term constants parsed_update_term)
-  | Parsed_DAE_term parsed_update_term ->
-    valuate_parsed_update_term constants parsed_update_term;
+	| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		NumConst.add
+		(valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression)
+		(valuate_parsed_update_term constants parsed_update_term)
+	| Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		NumConst.sub
+		(valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression)
+		(valuate_parsed_update_term constants parsed_update_term)
+	| Parsed_DAE_term parsed_update_term ->
+		valuate_parsed_update_term constants parsed_update_term;
 
-and valuate_parsed_update_term constants = function
-  | Parsed_DT_mul (parsed_update_term, parsed_update_factor) ->
-    NumConst.mul
-      (valuate_parsed_update_term constants parsed_update_term)
-      (valuate_parsed_update_factor constants parsed_update_factor)
-  | Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
-    NumConst.div
-      (valuate_parsed_update_term constants parsed_update_term)
-      (valuate_parsed_update_factor constants parsed_update_factor)
-  | Parsed_DT_factor parsed_update_factor -> valuate_parsed_update_factor constants parsed_update_factor
+	and valuate_parsed_update_term constants = function
+	| Parsed_DT_mul (parsed_update_term, parsed_update_factor) ->
+		NumConst.mul
+		(valuate_parsed_update_term constants parsed_update_term)
+		(valuate_parsed_update_factor constants parsed_update_factor)
+	| Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
+		NumConst.div
+		(valuate_parsed_update_term constants parsed_update_term)
+		(valuate_parsed_update_factor constants parsed_update_factor)
+	| Parsed_DT_factor parsed_update_factor -> valuate_parsed_update_factor constants parsed_update_factor
 
-and valuate_parsed_update_factor constants = function
-  | Parsed_DF_variable variable_name ->
-    if Hashtbl.mem constants variable_name then (
-      (* Retrieve the value of the global constant *)
-      Hashtbl.find constants variable_name
-    ) else (
-      raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' in function 'valuate_parsed_update_arithmetic_expression' although it should have been checked before."))
-    )
-  | Parsed_DF_constant var_value -> var_value
-  | Parsed_DF_expression parsed_update_arithmetic_expression -> valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression
+	and valuate_parsed_update_factor constants = function
+	| Parsed_DF_variable variable_name ->
+		if Hashtbl.mem constants variable_name then (
+		(* Retrieve the value of the global constant *)
+		Hashtbl.find constants variable_name
+		) else (
+		raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' in function 'valuate_parsed_update_arithmetic_expression' although it should have been checked before."))
+		)
+	| Parsed_DF_constant var_value -> var_value
+	| Parsed_DF_unary_min parsed_discrete_factor -> NumConst.neg (valuate_parsed_update_factor constants parsed_discrete_factor)
+	| Parsed_DF_expression parsed_update_arithmetic_expression -> valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression
 
 
 (*** TODO (though really not critical): try to do some simplifications… ***)
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
 let linear_term_of_parsed_update_arithmetic_expression index_of_variables constants pdae =
-  (* Create an array of coef *)
-  let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
-  (* Create a zero constant *)
-  let constant = ref NumConst.zero in
+	(* Create an array of coef *)
+	let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
+	(* Create a zero constant *)
+	let constant = ref NumConst.zero in
 
-  let rec update_coef_array_in_parsed_update_arithmetic_expression mult_factor = function
-    | Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
-      (* Update coefficients in the arithmetic expression *)
-      update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
-      (* Update coefficients in the term *)
-      update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
-    | Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
-      (* Update coefficients in the arithmetic expression *)
-      update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
-      (* Update coefficients in the term: multiply by -1 for negation *)
-      update_coef_array_in_parsed_update_term (NumConst.neg mult_factor) parsed_update_term;
-    | Parsed_DAE_term parsed_update_term ->
-      update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
+	let rec update_coef_array_in_parsed_update_arithmetic_expression mult_factor = function
+		| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		(* Update coefficients in the arithmetic expression *)
+		update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
+		(* Update coefficients in the term *)
+		update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
+		| Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		(* Update coefficients in the arithmetic expression *)
+		update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
+		(* Update coefficients in the term: multiply by -1 for negation *)
+		update_coef_array_in_parsed_update_term (NumConst.neg mult_factor) parsed_update_term;
+		| Parsed_DAE_term parsed_update_term ->
+		update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
 
-  and update_coef_array_in_parsed_update_term mult_factor = function
-    (* Multiplication is only allowed with a constant multiplier *)
-    | Parsed_DT_mul (parsed_update_term, parsed_update_factor) ->
-      (* Valuate the term *)
-      let valued_term = valuate_parsed_update_term constants parsed_update_term in
-      (* Update coefficients *)
-      update_coef_array_in_parsed_update_factor (NumConst.mul valued_term mult_factor) parsed_update_factor
+	and update_coef_array_in_parsed_update_term mult_factor = function
+		(* Multiplication is only allowed with a constant multiplier *)
+		| Parsed_DT_mul (parsed_update_term, parsed_update_factor) ->
+		(* Valuate the term *)
+		let valued_term = valuate_parsed_update_term constants parsed_update_term in
+		(* Update coefficients *)
+		update_coef_array_in_parsed_update_factor (NumConst.mul valued_term mult_factor) parsed_update_factor
 
-    | Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
-      (* Valuate the discrete factor *)
-      let valued_factor = valuate_parsed_update_factor constants parsed_update_factor in
-      (* Update coefficients *)
-      update_coef_array_in_parsed_update_term (NumConst.div mult_factor valued_factor) parsed_update_term
+		| Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
+		(* Valuate the discrete factor *)
+		let valued_factor = valuate_parsed_update_factor constants parsed_update_factor in
+		(* Update coefficients *)
+		update_coef_array_in_parsed_update_term (NumConst.div mult_factor valued_factor) parsed_update_term
 
-    | Parsed_DT_factor parsed_update_factor ->
-      update_coef_array_in_parsed_update_factor mult_factor parsed_update_factor
+		| Parsed_DT_factor parsed_update_factor ->
+		update_coef_array_in_parsed_update_factor mult_factor parsed_update_factor
 
-  and update_coef_array_in_parsed_update_factor mult_factor = function
-    | Parsed_DF_variable variable_name ->
-      (* Try to find the variable_index *)
-      if Hashtbl.mem index_of_variables variable_name then (
-        let variable_index = Hashtbl.find index_of_variables variable_name in
-        (* Update the array *)
-        array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) (mult_factor);
-        (* Try to find a constant *)
-      ) else (
-        if Hashtbl.mem constants variable_name then (
-          (* Retrieve the value of the global constant *)
-          let value = Hashtbl.find constants variable_name in
-          (* Update the constant *)
-          constant := NumConst.add !constant (NumConst.mul mult_factor value)
-        ) else (
-          raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' in function 'linear_term_of_parsed_update_arithmetic_expression' although this should have been checked before."))
-        )
-      )
-    | Parsed_DF_constant var_value ->
-      (* Update the constant *)
-      constant := NumConst.add !constant (NumConst.mul mult_factor var_value)
-    | Parsed_DF_expression parsed_update_arithmetic_expression ->
-      update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
-  in
+	and update_coef_array_in_parsed_update_factor mult_factor = function
+		| Parsed_DF_variable variable_name ->
+			(* Try to find the variable_index *)
+			if Hashtbl.mem index_of_variables variable_name then (
+				let variable_index = Hashtbl.find index_of_variables variable_name in
+				(* Update the array *)
+				array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) (mult_factor);
+				(* Try to find a constant *)
+			) else (
+				if Hashtbl.mem constants variable_name then (
+				(* Retrieve the value of the global constant *)
+				let value = Hashtbl.find constants variable_name in
+				(* Update the constant *)
+				constant := NumConst.add !constant (NumConst.mul mult_factor value)
+				) else (
+				raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' in function 'linear_term_of_parsed_update_arithmetic_expression' although this should have been checked before."))
+				)
+			)
+		| Parsed_DF_constant var_value ->
+			(* Update the constant *)
+			constant := NumConst.add !constant (NumConst.mul mult_factor var_value)
+		| Parsed_DF_unary_min parsed_discrete_factor ->
+			update_coef_array_in_parsed_update_factor mult_factor parsed_discrete_factor
+		| Parsed_DF_expression parsed_update_arithmetic_expression ->
+			update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
+	in
 
-  (* Call the recursive function updating the coefficients *)
-  update_coef_array_in_parsed_update_arithmetic_expression NumConst.one pdae;
+	(* Call the recursive function updating the coefficients *)
+	update_coef_array_in_parsed_update_arithmetic_expression NumConst.one pdae;
 
-  (* Create the linear term *)
-  linear_term_of_array array_of_coef !constant
+	(* Create the linear term *)
+	linear_term_of_array array_of_coef !constant
 
 
 
@@ -2397,45 +2436,56 @@ let split_to_clock_discrete_updates index_of_variables only_resets type_of_varia
 
 (** Translate a normal parsed update into its abstract model *)
 let convert_normal_updates index_of_variables constants type_of_variables updates_list =
-  (* Flag to check if there are clock resets only to 0 *)
-  let only_resets = ref true in
+	(* Flag to check if there are clock resets only to 0 *)
+	let only_resets = ref true in
 
-  (** split clock and discrete updates *)
-  let parsed_clock_updates, parsed_discrete_updates = split_to_clock_discrete_updates index_of_variables only_resets type_of_variables updates_list in
+	(** split clock and discrete updates *)
+	let parsed_clock_updates, parsed_discrete_updates = split_to_clock_discrete_updates index_of_variables only_resets type_of_variables updates_list in
 
-  (* Convert the discrete updates *)
-  let discrete_updates : discrete_update list = List.map (to_abstract_discrete_update index_of_variables constants) parsed_discrete_updates in
+	(* Convert the discrete updates *)
+	let discrete_updates : discrete_update list = List.map (to_abstract_discrete_update index_of_variables constants) parsed_discrete_updates in
 
-  (* Convert the clock updates *)
-  let converted_clock_updates : clock_updates = to_abstract_clock_update index_of_variables constants only_resets parsed_clock_updates in
+	(* Convert the clock updates *)
+	let converted_clock_updates : clock_updates = to_abstract_clock_update index_of_variables constants only_resets parsed_clock_updates in
 
-  (** update abstract model *)
-  { clock = converted_clock_updates;
-    discrete = discrete_updates;
-    conditional = [] }
+	(** update abstract model *)
+	{
+		clock = converted_clock_updates;
+		discrete = discrete_updates;
+		conditional = [];
+	}
 
 (** Convert a Boolean operator to its abstract model *)
 let convert_parsed_relop = function
-	| PARSED_OP_L -> BOOL_L
-	| PARSED_OP_LEQ -> BOOL_LEQ
-	| PARSED_OP_EQ -> BOOL_EQ
-	| PARSED_OP_NEQ -> BOOL_NEQ
-	| PARSED_OP_GEQ -> BOOL_GEQ
-	| PARSED_OP_G -> BOOL_G
+	| PARSED_OP_L	-> OP_L
+	| PARSED_OP_LEQ	-> OP_LEQ
+	| PARSED_OP_EQ	-> OP_EQ
+	| PARSED_OP_NEQ	-> OP_NEQ
+	| PARSED_OP_GEQ	-> OP_GEQ
+	| PARSED_OP_G 	-> OP_G
 
 
+let convert_discrete_bool_expr index_of_variables constants = function
+	| Parsed_expression (expr1, relop, expr2) -> Expression (
+		(discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr1),
+		(convert_parsed_relop relop),
+		(discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr2)
+		)
+	| Parsed_expression_in (expr1, expr2, expr3) -> Expression_in (
+		(discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr1),
+		(discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr2),
+		(discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr3)
+		)
+		
 (** Convert a boolean expression in its abstract model *)
 let rec convert_bool_expr index_of_variables constants = function
-  | Parsed_True -> True_bool
-  | Parsed_False -> False_bool
-  | Parsed_Not e -> Not_bool (convert_bool_expr index_of_variables constants e)
-  | Parsed_And (e1,e2) -> And_bool ((convert_bool_expr index_of_variables constants e1), (convert_bool_expr index_of_variables constants e2))
-  | Parsed_Or (e1, e2) -> Or_bool ((convert_bool_expr index_of_variables constants e1), (convert_bool_expr index_of_variables constants e2))
-  | Parsed_Expression (expr1, relop, expr2) -> Expression_bool (
-      (discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr1),
-      (convert_parsed_relop relop),
-      (discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr2)
-    )
+	| Parsed_True -> True_bool
+	| Parsed_False -> False_bool
+	| Parsed_Not e -> Not_bool (convert_bool_expr index_of_variables constants e)
+	| Parsed_And (e1,e2) -> And_bool ((convert_bool_expr index_of_variables constants e1), (convert_bool_expr index_of_variables constants e2))
+	| Parsed_Or (e1, e2) -> Or_bool ((convert_bool_expr index_of_variables constants e1), (convert_bool_expr index_of_variables constants e2))
+	| Parsed_Discrete_boolean_expression parsed_discrete_boolean_expression ->
+		Discrete_boolean_expression (convert_discrete_bool_expr index_of_variables constants parsed_discrete_boolean_expression)
 
 (** convert normal and conditional updates *)
 let convert_updates index_of_variables constants type_of_variables updates : updates =
@@ -2678,7 +2728,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
   initial_location, initial_constraint
 
 
-(*------------------------------------------------------------*)
+(*(*------------------------------------------------------------*)
 (** Convert a list of parsed parameters into a list of variable_index *)
 (*------------------------------------------------------------*)
 let convert_projection_definition index_of_variables = function
@@ -2702,7 +2752,7 @@ let convert_optimization_definition index_of_variables = function
       (* No check because this was checked before *)
       Hashtbl.find index_of_variables parameter_name
     )
-
+*)
 
 (*------------------------------------------------------------*)
 (* Find the clocks in a linear_constraint *)
@@ -2761,9 +2811,9 @@ let rec convert_parsed_discrete_arithmetic_expression useful_parsing_model_infor
 
 and convert_parsed_discrete_term useful_parsing_model_information = function
 	| Parsed_DT_mul (parsed_discrete_term , parsed_discrete_factor) ->
-		DT_mul ((convert_parsed_discrete_term parsed_discrete_term) , convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
+		DT_mul ((convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term) , convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
 	| Parsed_DT_div (parsed_discrete_term , parsed_discrete_factor) ->
-		DT_div ((convert_parsed_discrete_term parsed_discrete_term) , convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
+		DT_div ((convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term) , convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
 	| Parsed_DT_factor parsed_discrete_factor -> DT_factor (convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
 
 and convert_parsed_discrete_factor useful_parsing_model_information = function
@@ -2785,7 +2835,7 @@ let convert_parsed_discrete_boolean_expression useful_parsing_model_information 
 		Expression (
 			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1
 			,
-			convert_parsed_relop relop
+			convert_parsed_relop parsed_relop
 			,
 			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2
 		)
@@ -2803,9 +2853,11 @@ let convert_parsed_discrete_boolean_expression useful_parsing_model_information 
 (* Convert parsed_loc_predicate *)
 let convert_parsed_loc_predicate useful_parsing_model_information = function
 	| Parsed_loc_predicate_EQ (automaton_name, location_name) ->
-		Loc_predicate_EQ ( (Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name) , (Hashtbl.find useful_parsing_model_information.index_of_locations location_name))
+		let automaton_index = Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name in
+		Loc_predicate_EQ ( automaton_index , (Hashtbl.find useful_parsing_model_information.index_of_locations.(automaton_index) location_name))
 	| Parsed_loc_predicate_NEQ (automaton_name, location_name) ->
-		Loc_predicate_NEQ ( (Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name) , (Hashtbl.find useful_parsing_model_information.index_of_locations location_name))
+		let automaton_index = Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name in
+		Loc_predicate_NEQ (automaton_index , (Hashtbl.find useful_parsing_model_information.index_of_locations.(automaton_index) location_name))
 
 
 (* Convert parsed_simple_predicate *)
@@ -2840,10 +2892,11 @@ and convert_parsed_state_predicate useful_parsing_model_information = function
 
 
 (* Convert ParsingStructure.parsed_property into AbstractProperty.property *)
-let convert_property useful_parsing_model_information parsed_property : AbstractProperty.property =
-	match parsed_property with
+let convert_property useful_parsing_model_information parsed_property : AbstractProperty.abstract_property =
+	raise (NotImplemented "property conversion")
+(*	match parsed_property with
 	(* Reachability *)
-	| EF parsed_state_predicate -> EF (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+	| EF parsed_state_predicate -> Reachability (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
 (*	(* Unavoidability *)
 	| AF parsed_state_predicate	
 	(* Liveness *)
@@ -2851,7 +2904,7 @@ let convert_property useful_parsing_model_information parsed_property : Abstract
 		-> convert_parsed_state_predicate parsed_state_predicate
 	*)
 		
-	| _ -> raise (NotImplemented "property conversion")
+	| _ -> raise (NotImplemented "property conversion")*)
 
 
 
@@ -4030,7 +4083,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 (** Property conversion *)
 (************************************************************)
 (************************************************************)
-
+(*
 (*------------------------------------------------------------*)
 (* Check the property w.r.t. the model variables *)
 (*------------------------------------------------------------*)
@@ -4088,7 +4141,7 @@ let check_parsed_loc_predicate useful_parsing_model_information = function
 			print_error ("Automaton name '" ^ automaton_name ^ "' undefined in the property");
 		);
 		(* Check location name *)
-		let check_location = Hashtbl.mem useful_parsing_model_information.index_of_locations location_name in
+		let check_location = Hashtbl.mem useful_parsing_model_information.index_of_locations.(automaton_index) location_name in
 		if not check_location then (
 			print_error ("Location name '" ^ location_name ^ "' undefined in the property");
 		);
@@ -4137,16 +4190,16 @@ let check_property useful_parsing_model_information parsed_property : bool =
 
 
 (** Check and convert the parsing structure into an abstract property *)
-let abstract_model_of_parsed_property (options : Options.imitator_options) (useful_parsing_model_information : useful_parsing_model_information) (parsed_property : ParsingStructure.parsed_property) : ImitatorUtilities.synthesis_algorithm =
+let abstract_property_of_parsed_property (options : Options.imitator_options) (useful_parsing_model_information : useful_parsing_model_information) (parsed_property : ParsingStructure.parsed_property) : ImitatorUtilities.synthesis_algorithm =
 	(* First check *)
 	if not (check_property useful_parsing_model_information parsed_property) then(
 		raise InvalidProperty
 	);
 	
 	(* Now convert *)
-	convert_property useful_parsing_model_information parsed_property
+	convert_property useful_parsing_model_information parsed_property*)
 
-
+(*
 (************************************************************)
 (************************************************************)
 (** Pi0 conversion *)
@@ -4358,4 +4411,4 @@ let check_and_make_v0 parsed_v0 =
 
   (* Return the hyper-rectangle *)
   v0
-
+*)
