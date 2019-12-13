@@ -8,11 +8,11 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2019/10/09
+ * Last modified     : 2019/12/13
 *****************************************************************)
 
 {
-open ModelParser
+open PropertyParser
 open Lexing
 
 (* OCaml style comments *)
@@ -26,7 +26,7 @@ rule token = parse
 	  ['\n']             { line := !line + 1 ; token lexbuf }     (* skip new lines *)
 	| [' ' '\t']         { token lexbuf }     (* skip blanks *)
 
-	(* C style include *)
+(*	(* C style include *)
 	| "#include \""   ( [^'"' '\n']* as filename) '"'
     {
 			let top_file = lexbuf.lex_start_p.pos_fname in
@@ -38,7 +38,7 @@ rule token = parse
 
 			let p = ModelParser.main token lb in
 			INCLUDE p
-    }
+    }*)
 
 	(* OCaml style comments *)
 	| "(*"
@@ -67,17 +67,21 @@ rule token = parse
 	| "in"             { CT_IN }
 	| "is"             { CT_IS }
  	| "inversemethod"  { CT_INVERSEMETHOD }
+	| "loc"            { CT_LOC }
 	| "loop"           { CT_LOOP }
+	| "maximize"       { CT_MAXIMIZE }
+	| "minimize"       { CT_MINIMIZE }
 	| "next"           { CT_NEXT }
 	| "not"            { CT_NOT }
  	| "once"           { CT_ONCE }
 	| "or"             { CT_OR }
-	| "parameter"      { CT_PARAMETER }
  	| "projectresult"  { CT_PROJECTRESULT }
+ 	| "property"       { CT_PROPERTY }
 	| "sequence"       { CT_SEQUENCE }
  	| "then"           { CT_THEN }
  	| "tracepreservation" { CT_TRACEPRESERVATION }
 	| "True"           { CT_TRUE }
+ 	| "unreachable"    { CT_UNREACHABLE }
 	| "when"           { CT_WHEN }
 	| "within"         { CT_WITHIN }
 
@@ -99,7 +103,7 @@ rule token = parse
 	| '+'              { OP_PLUS }
 	| '-'              { OP_MINUS }
 	| '/'              { OP_DIV }
-	| '*'              { OP_MULT }
+	| '*'              { OP_MUL }
 
 	| '('              { LPAREN }
 	| ')'              { RPAREN }

@@ -77,15 +77,11 @@ rule token = parse
 	| "invariant"      { CT_INVARIANT }
 	| "loc"            { CT_LOC }
 	| "locations"      { CT_LOCATIONS }
-	| "maximize"       { CT_MAXIMIZE }
-	| "minimize"       { CT_MINIMIZE }
 	| "next"           { CT_NEXT }
 	| "not"            { CT_NOT }
  	| "once"           { CT_ONCE }
 	| "or"             { CT_OR }
 	| "parameter"      { CT_PARAMETER }
- 	| "projectresult"  { CT_PROJECTRESULT }
- 	| "property"       { CT_PROPERTY }
 	| "region"         { CT_REGION }
 	| "sequence"       { CT_SEQUENCE }
 	| "stop"           { CT_STOP }
@@ -93,7 +89,6 @@ rule token = parse
 	| "synclabs"       { CT_SYNCLABS }
  	| "then"           { CT_THEN }
 	| "True"           { CT_TRUE }
- 	| "unreachable"    { CT_UNREACHABLE }
  	| "urgent"         { CT_URGENT }
 	| "var"            { CT_VAR }
 	| "wait"           { CT_WAIT }

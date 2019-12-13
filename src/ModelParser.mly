@@ -63,27 +63,25 @@ let unzip l = List.fold_left
 
 %token LPAREN RPAREN LBRACE RBRACE LSQBRA RSQBRA
 %token AMPERSAND APOSTROPHE COLON COMMA DOUBLEDOT PIPE SEMICOLON
-%token CT_IF CT_THEN CT_ELSE CT_END /* tokens for conditions on transitions*/
 
 %token
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BAD CT_BEFORE
 	CT_CLOCK CT_CONSTANT
 	CT_DISCRETE CT_DO
-	CT_END CT_EVENTUALLY CT_EVERYTIME
+	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE
 	CT_GOTO
 	CT_HAPPENED CT_HAS
 	CT_IF CT_IN CT_INIT CT_INITIALLY CT_INVARIANT
 	CT_LOC CT_LOCATIONS
-	CT_MAXIMIZE CT_MINIMIZE
 	CT_NEXT CT_NOT
 	CT_ONCE CT_OR
-	CT_PARAMETER CT_PROJECTRESULT CT_PROPERTY
+	CT_PARAMETER
 	CT_REGION
 	CT_SEQUENCE CT_STOP CT_SYNC CT_SYNCLABS
 	CT_THEN CT_TRUE
-	CT_UNKNOWN CT_UNREACHABLE CT_URGENT
+	CT_UNKNOWN CT_URGENT
 	CT_VAR
 	CT_WAIT CT_WHEN CT_WHILE CT_WITHIN
 	/* NOTE: just to forbid their use in the input model */
@@ -499,7 +497,7 @@ linear_expression:
 
 /* Linear term over variables and rationals (no recursion, no division) */
 linear_term:
-	rational { Constant $1 }
+	| rational { Constant $1 }
 	| rational NAME { Variable ($1, $2) }
 	| rational OP_MUL NAME { Variable ($1, $3) }
 	| OP_MINUS NAME { Variable (NumConst.minus_one, $2) }
@@ -509,7 +507,7 @@ linear_term:
 
 /* Linear expression over rationals only */
 rational_linear_expression:
-	rational_linear_term { $1 }
+	| rational_linear_term { $1 }
 	| rational_linear_expression OP_PLUS rational_linear_term { NumConst.add $1 $3 }
 	| rational_linear_expression OP_MUL rational_linear_term { NumConst.mul $1 $3 }
 	| rational_linear_expression OP_MINUS rational_linear_term { NumConst.sub $1 $3 } /* linear_term a la deuxieme place */
@@ -518,7 +516,7 @@ rational_linear_expression:
 /* Linear term over rationals only */
 rational_linear_term:
 	| rational { $1 }
-	| OP_MINUS rational { NumConst.sub NumConst.zero $2 }
+	| OP_MINUS rational { NumConst.neg $2 }
 	| LPAREN rational_linear_term RPAREN { $2 }
 ;
 

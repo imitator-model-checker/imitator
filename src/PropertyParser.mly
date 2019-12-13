@@ -30,7 +30,8 @@ let parse_error s =
 (* TODO: is it included twice ? *)
 let include_list = ref [];;
 
-let f (decl_l, aut_l, init_l, prPARSED_OP_L) (decl,aut,init,prop,_,_,_) = (decl@decl_l,aut@aut_l, init@init_l, prop::prPARSED_OP_L);;
+(*
+let f (decl_l, aut_l, init_l, prop) (decl,aut,init,prop,_,_,_) = (decl@decl_l,aut@aut_l, init@init_l, prop::prop);;
 let unzip l = List.fold_left f ([],[],[], []) (List.rev l);;
 let filter_opt = List.filter (function | None -> false | Some _ -> true);;
 
@@ -39,7 +40,7 @@ let resolve_property l =
 	| [] -> None
 	| [p] -> p
 	| _ -> raise Parsing.Parse_error;
-;;
+;;*)
 
 %}
 
@@ -47,27 +48,30 @@ let resolve_property l =
 %token <string> FLOAT
 %token <string> NAME
 %token <string> STRING
-%token <ParsingStructure.parsing_structure> INCLUDE
 
 %token OP_PLUS OP_MINUS OP_MUL OP_DIV
-%token PARSED_OP_L PARSED_OP_LEQ PARSED_OP_EQ PARSED_OP_NEQ PARSED_OP_GEQ PARSED_OP_G /* OP_ASSIGN */
+%token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
 
 %token LPAREN RPAREN LBRACE RBRACE LSQBRA RSQBRA
 %token AMPERSAND COLON COMMA DOUBLEAMPERSAND DOUBLEDOT DOUBLEPIPE PIPE SEMICOLON
-%token CT_IF CT_THEN CT_ELSE CT_END /* tokens for conditions on transitions*/
 
 %token
-	CT_ACCEPTING CT_AG CT_ALWAYS CT_AND
+	CT_ACCEPTING CT_ACCLOOP CT_AG CT_ALWAYS CT_AND
 	CT_BEFORE
-	CT_EF CT_EVENTUALLY CT_EVERYTIME
+	CT_EF CT_EVENTUALLY CT_EVERYTIME CT_EXHIBIT
+	CT_DEADLOCKFREE
 	CT_FALSE
 	CT_HAPPENED CT_HAS
-	CT_IF CT_IN CT_IS
+	CT_IF CT_IN CT_INVERSEMETHOD CT_IS
+	CT_LOC CT_LOOP
+	CT_MAXIMIZE CT_MINIMIZE
 	CT_NEXT CT_NOT
 	CT_ONCE CT_OR
 	CT_PROJECTRESULT
-	CT_SEQUENCE
-	CT_THEN CT_TRUE
+	CT_PROPERTY
+	CT_SEQUENCE CT_SYNTH
+	CT_THEN CT_TRACEPRESERVATION CT_TRUE
+	CT_UNREACHABLE 
 	CT_WHEN CT_WITHIN
 
 
@@ -116,7 +120,7 @@ property:
 	/*------------------------------------------------------------*/
 
 	/* Reachability */
-	| CT_EF state_predicate { Parsed_EF $1 }
+	| CT_EF state_predicate { Parsed_EF $2 }
 
 
 
@@ -140,7 +144,7 @@ state_predicate_term:
 
 state_predicate_factor:
 	| simple_predicate { Parsed_simple_predicate $1 }
-	| NOT state_predicate_factor { Parsed_state_predicate_factor_NOT $2 }
+	| CT_NOT state_predicate_factor { Parsed_state_predicate_factor_NOT $2 }
 	| LPAREN state_predicate RPAREN { Parsed_state_predicate $2 }
 ;
 
@@ -155,12 +159,12 @@ simple_predicate:
 loc_predicate:
 /************************************************************/
 	/* loc[my_pta] = my_loc */
-	| CT_LOC LSQBRA NAME RSQBRA PARSED_OP_EQ NAME { Parsed_loc_predicate_EQ ($3, $6) }
+	| CT_LOC LSQBRA NAME RSQBRA OP_EQ NAME { Parsed_loc_predicate_EQ ($3, $6) }
 	/* my_pta IS IN my_loc */
 	| NAME CT_IS CT_IN NAME { Parsed_loc_predicate_EQ ($1, $4) }
 	
 	/* loc[my_pta] <> my_loc */
-	| CT_LOC LSQBRA NAME RSQBRA PARSED_OP_NEQ NAME { Parsed_loc_predicate_NEQ ($3, $6) }
+	| CT_LOC LSQBRA NAME RSQBRA OP_NEQ NAME { Parsed_loc_predicate_NEQ ($3, $6) }
 	/* my_pta IS NOT IN my_loc */
 	| NAME CT_IS CT_NOT CT_IN NAME { Parsed_loc_predicate_EQ ($1, $5) }
 ;
@@ -219,7 +223,7 @@ rational_linear_term:
 /************************************************************/
 	| positive_rational_with_div { $1 }
 	/*** NOTE: or should it be OP_MINUS rational_with_div? ***/
-	| OP_MINUS rational_linear_term { NumConst.sub NumConst.zero $2 }
+	| OP_MINUS rational_linear_term { NumConst.neg $2 }
 	| LPAREN rational_linear_term RPAREN { $2 }
 ;
 
@@ -264,9 +268,6 @@ and:
 
 
 
-/*** TODO: taken from ModelParser ***/
-
-
 
 
 property_definition:
@@ -286,10 +287,8 @@ property_definition:
 	/* Pattern */
 	| CT_PROPERTY OP_ASSIGN pattern semicolon_opt { Some $3 }
 
-	| include_file { let _, _, _, property, _, _, _ = $1 in property }
-
-	/* Case: no property */
-	|  { None }
+	/*** TODO: re-enable file inclusion ***/
+/* 	| include_file { let _, _, _, property, _, _, _ = $1 in property } */
 
 ;
 
@@ -314,14 +313,14 @@ optimization_definition:
 /* List of patterns */
 pattern:
 	/* Safety */
-	| CT_UNREACHABLE bad_global_predicates { Parsed_unreachable_locations ($2) }
+	| CT_UNREACHABLE state_predicate { Parsed_EF ($2) }
 
 	/* if a2 then a1 has happened before */
-	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Action_precedence_acyclic ($4, $2) }
+/*	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Action_precedence_acyclic ($4, $2) }*/
 	/* everytime a2 then a1 has happened before */
-	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Action_precedence_cyclic ($4, $2) }
+/*	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Action_precedence_cyclic ($4, $2) }*/
 	/* everytime a2 then a1 has happened once before */
-	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_BEFORE { Action_precedence_cyclicstrict ($4, $2) }
+/*	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_BEFORE { Action_precedence_cyclicstrict ($4, $2) }*/
 
 
 	/* PATTERNS NOT IMPLEMENTED */
@@ -334,39 +333,39 @@ pattern:
 */
 
 	/* a within d */
-	| NAME CT_WITHIN linear_expression { Action_deadline ($1, $3) }
+/*	| NAME CT_WITHIN linear_expression { Action_deadline ($1, $3) }*/
 
 	/* if a2 then a1 happened within d before */
-	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_acyclic ($4, $2, $8) }
+/*	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_acyclic ($4, $2, $8) }*/
 	/* everytime a2 then a1 happened within d before */
-	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_cyclic ($4, $2, $8) }
+/*	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_cyclic ($4, $2, $8) }*/
 	/* everytime a2 then a1 happened once within d before */
-	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_cyclicstrict ($4, $2, $9) }
+/*	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_WITHIN linear_expression CT_BEFORE { TB_Action_precedence_cyclicstrict ($4, $2, $9) }*/
 
 	/* if a1 then eventually a2 within d */
-	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { TB_response_acyclic ($2, $5, $7) }
+/*	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { TB_response_acyclic ($2, $5, $7) }*/
 	/* everytime a1 then eventually a2 within d */
-	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { TB_response_cyclic ($2, $5, $7) }
+/*	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { TB_response_cyclic ($2, $5, $7) }*/
 	/* everytime a1 then eventually a2 within d once before next */
-	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression CT_ONCE CT_BEFORE CT_NEXT { TB_response_cyclicstrict ($2, $5, $7) }
+/*	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression CT_ONCE CT_BEFORE CT_NEXT { TB_response_cyclicstrict ($2, $5, $7) }*/
 
-	/* sequence a1, ..., an */
-	| CT_SEQUENCE name_nonempty_list { Sequence_acyclic ($2) }
-	| CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Sequence_acyclic ($3) } /* with parentheses */
-	/* always sequence a1, ..., an */
-	| CT_ALWAYS CT_SEQUENCE name_nonempty_list { Sequence_cyclic ($3) }
-	| CT_ALWAYS CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Sequence_cyclic ($4) } /* with parentheses */
+	/* sequence a1, …, an */
+/*	| CT_SEQUENCE name_nonempty_list { Sequence_acyclic ($2) }
+	| CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Sequence_acyclic ($3) }*/ /* with parentheses */
+	/* always sequence a1, …, an */
+/*	| CT_ALWAYS CT_SEQUENCE name_nonempty_list { Sequence_cyclic ($3) }
+	| CT_ALWAYS CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Sequence_cyclic ($4) } */ /* with parentheses */
 ;
 
 
 /* A single definition of one bad location or one bad discrete definition */
-bad_simple_predicate:
+/*bad_simple_predicate:
 	| discrete_predicate { Parsed_unreachable_discrete($1) }
 	| loc_predicate { Parsed_unreachable_loc($1) }
 ;
-
+*/
 /* A global definition of several bad locations and/or bad discrete definitions */
-bad_global_predicate:
+/*bad_global_predicate:
 	| bad_global_predicate AMPERSAND bad_global_predicate { List.rev_append $1 $3 }
 	| LPAREN bad_global_predicate RPAREN { $2 }
 	| bad_simple_predicate { [$1] }
@@ -375,4 +374,84 @@ bad_global_predicate:
 bad_global_predicates:
 	| bad_global_predicate CT_OR bad_global_predicates { $1 :: $3 }
 	| bad_global_predicate { [$1] }
+;
+*/
+
+	
+	
+	
+
+/************************************************************/
+/** LINEAR EXPRESSIONS */
+/************************************************************/
+
+/*** BADPROG: duplicate code from ModelParser ***/
+
+/* Linear expression over variables and rationals */
+linear_expression:
+	| linear_term { Linear_term $1 }
+	| linear_expression OP_PLUS linear_term { Linear_plus_expression ($1, $3) }
+	| linear_expression OP_MINUS linear_term { Linear_minus_expression ($1, $3) } /* linear_term a la deuxieme place */
+;
+
+/* Linear term over variables and rationals (no recursion, no division) */
+linear_term:
+	| rational { Constant $1 }
+	| rational NAME { Variable ($1, $2) }
+	| rational OP_MUL NAME { Variable ($1, $3) }
+	| OP_MINUS NAME { Variable (NumConst.minus_one, $2) }
+	| NAME { Variable (NumConst.one, $1) }
+	| LPAREN linear_term RPAREN { $2 }
+;
+
+rational:
+	integer { $1 }
+	| float { $1 }
+	| integer OP_DIV pos_integer { (NumConst.div $1 $3) }
+;
+
+integer:
+	pos_integer { $1 }
+	| OP_MINUS pos_integer { NumConst.neg $2 }
+;
+
+pos_integer:
+	INT { $1 }
+;
+
+float:
+  pos_float { $1 }
+	| OP_MINUS pos_float { NumConst.neg $2 }
+;
+
+pos_float:
+  FLOAT {
+		NumConst.numconst_of_string $1
+	}
+;
+
+
+/************************************************************/
+/** NAMES, etc. */
+/************************************************************/
+
+comma_opt:
+	| COMMA { }
+	| { }
+;
+
+
+name_nonempty_list:
+	NAME COMMA name_nonempty_list { $1 :: $3}
+	| NAME comma_opt { [$1] }
+;
+
+
+/************************************************************/
+/** MISC. */
+/************************************************************/
+
+semicolon_opt:
+	| SEMICOLON { }
+	| { }
 ;
