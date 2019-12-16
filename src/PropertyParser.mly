@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2019/12/13
+ * Last modified     : 2019/12/16
  *
  ************************************************************/
 
@@ -102,7 +102,10 @@ quantified_property:
 	synth_or_exhibit property {
 		{
 			synthesis_type	= $1;
-			property		= $2
+			property		= $2;
+			(* Projection *)
+			(*** TODO ***)
+			projection		= None;
 		}
 	}
 ;
@@ -133,13 +136,13 @@ property:
 /************************************************************/
 state_predicate:
 /************************************************************/
-	| state_predicate or state_predicate { Parsed_state_predicate_OR ($1, $3) }
-	| state_predicate_term { Parsed_state_predicate_term ($1) }
+	| state_predicate or_rule state_predicate { Parsed_state_predicate_OR ($1, $3) }
+	| state_predicate_term { Parsed_state_predicate_term $1 }
 ;
 
 state_predicate_term:
-	| state_predicate_term and state_predicate_term { Parsed_state_predicate_term_AND ($1, $3) }
-	| state_predicate_factor { Parsed_state_predicate_factor ($1) }
+	| state_predicate_term and_rule state_predicate_term { Parsed_state_predicate_term_AND ($1, $3) }
+	| state_predicate_factor { Parsed_state_predicate_factor $1 }
 ;
 
 state_predicate_factor:
@@ -250,14 +253,15 @@ pos_float:
 
 
 /************************************************************/
-or:
+/*** WARNING: call these rules "and" or "or" is accepted by OCaml Yak but not by the subsequent OCaml compiler ***/
+or_rule:
 /************************************************************/
 	| CT_OR {}
 	| DOUBLEPIPE {}
 	| PIPE {}
 ;
 
-and:
+and_rule:
 	| CT_AND {}
 	| AMPERSAND {}
 	| DOUBLEAMPERSAND {}
