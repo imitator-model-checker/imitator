@@ -9,12 +9,13 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2019/08/23
+ * Last modified     : 2019/12/17
  *
  ************************************************************)
 
 open OCamlUtilities
 open Result
+open DiscreteExpressions
 open AbstractModel
 open ImitatorUtilities
 open State
@@ -218,6 +219,7 @@ let string_of_arithmetic_expression variable_names =
 	and string_of_factor = function
 		| DF_variable discrete_index -> variable_names discrete_index
 		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
+		| DF_unary_min discrete_factor -> "-" ^ (string_of_factor discrete_factor)
 		| DF_expression discrete_arithmetic_expression ->
 			(*** TODO: simplify a bit? ***)
 			"(" ^ (string_of_arithmetic_expression discrete_arithmetic_expression) ^ ")"
@@ -237,27 +239,27 @@ let string_of_discrete_updates ?(sep=", ") model updates =
 	) updates)
 
 
+let string_of_boolean_operations = function
+	| OP_L -> "<"
+	| OP_LEQ -> "<="
+	| OP_EQ -> "="
+	| OP_NEQ -> "<>"
+	| OP_GEQ -> ">="
+	| OP_G -> ">"
+
+
 (** Convert a logical operation into a string *)
 let string_of_logical_operators lop =
-	let string_of_boolean_operations op =
-		match op with
-		| BOOL_L -> "<"
-		| BOOL_LEQ -> "<="
-		| BOOL_EQ -> "="
-		| BOOL_NEQ -> "<>"
-		| BOOL_GEQ -> ">="
-		| BOOL_G -> ">"
-	in
 	match lop with
 	| True_bool -> "True"
 	| False_bool -> "False"
 	| Not_bool _ -> "<>"
-	| And_bool _ -> " & "
-	| Or_bool _ -> " | "
-	| Expression_bool (_, op, _) -> " " ^ (string_of_boolean_operations op) ^ " "
+	| And_bool _ -> " && "
+	| Or_bool _ -> " || "
+	| Discrete_boolean_expression (_, op, _) -> " " ^ (string_of_boolean_operations op) ^ " "
 
 (** Generic template to convert a boolean expression into a string *)
-let rec string_of_boolean_template variable_names boolean_expr str_lop=
+let rec string_of_boolean_template variable_names boolean_expr str_lop =
 	let symbol = str_lop boolean_expr in
 	match boolean_expr with
 		| True_bool -> "True"

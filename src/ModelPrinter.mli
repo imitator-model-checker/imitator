@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2019/12/11
+ * Last modified     : 2019/12/16
  *
  ************************************************************)
 
@@ -119,5 +119,5 @@ val string_of_v0 : abstract_model -> v0 -> string
 val string_of_model : abstract_model -> string
 
 (** Convert the correctness property to a string *)
-val string_of_property : abstract_model -> property_definition -> string
+(* val string_of_property : abstract_model -> property_definition -> string *)
 

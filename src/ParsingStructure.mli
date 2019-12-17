@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2019/12/13
+ * Last modified     : 2019/12/16
  *
  ****************************************************************)
 
@@ -91,9 +91,9 @@ type linear_expression =
 
 
 type linear_constraint =
-	| True_constraint (** True *)
-	| False_constraint (** False *)
-	| Linear_constraint of linear_expression * parsed_relop * linear_expression
+	| Parsed_true_constraint (** True *)
+	| Parsed_false_constraint (** False *)
+	| Parsed_linear_constraint of linear_expression * parsed_relop * linear_expression
 
 
 type convex_predicate = linear_constraint list
@@ -172,9 +172,9 @@ type parsed_location = {
 
 (* type location = location_name * loc_type * linear_expression option * invariant * (variable_name list) * (transition list) *)
 
-type automaton = automaton_name * sync_name list * parsed_location list
+type parsed_automaton = automaton_name * sync_name list * parsed_location list
 
-type automata = automaton list
+
 
 
 (****************************************************************)
@@ -183,12 +183,12 @@ type automata = automaton list
 
 (** State predicates *)
 
-type state_predicate =
-	| Loc_assignment of automaton_name * location_name
-	| Linear_predicate of linear_constraint
+type parsed_init_state_predicate =
+	| Parsed_loc_assignment of automaton_name * location_name
+	| Parsed_linear_predicate of linear_constraint
 
 
-type init_definition = state_predicate list
+type init_definition = parsed_init_state_predicate list
 
 
 (****************************************************************)
@@ -274,7 +274,7 @@ type parsed_optimization =
 
 type parsed_model = {
 	variable_declarations	: variable_declarations;
-	automata				: automata;
+	automata				: parsed_automaton list;
 	init_definition			: init_definition;
 }
 

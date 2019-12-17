@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/12/13
+ * Last modified     : 2019/12/16
  *
  ************************************************************/
 
@@ -474,9 +474,9 @@ convex_predicate_fol:
 ;
 
 linear_constraint:
-	| linear_expression relop linear_expression { Linear_constraint ($1, $2, $3) }
-	| CT_TRUE { True_constraint }
-	| CT_FALSE { False_constraint }
+	| linear_expression relop linear_expression { Parsed_linear_constraint ($1, $2, $3) }
+	| CT_TRUE { Parsed_true_constraint }
+	| CT_FALSE { Parsed_false_constraint }
 ;
 
 relop:
@@ -592,8 +592,8 @@ init_expression_fol:
 
 /* Used in the init definition */
 init_state_predicate:
-	| loc_predicate { let a,b = $1 in (Loc_assignment (a,b)) }
-	| linear_constraint { Linear_predicate $1 }
+	| loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
+	| linear_constraint { Parsed_linear_predicate $1 }
 ;
 
 loc_predicate:

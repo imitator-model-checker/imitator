@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2019/12/10
+ * Last modified     : 2019/12/16
  *
  ************************************************************)
 
@@ -55,6 +55,8 @@ and state_predicate =
 type abstract_algorithm =
 	(** Reachability *)
 	| Reachability of state_predicate
+	(** Safety *)
+	| Safety of state_predicate
 	
 
 	
