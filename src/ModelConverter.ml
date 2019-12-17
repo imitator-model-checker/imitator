@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2019/12/13
+ * Last modified     : 2019/12/17
  *
  ************************************************************)
 
@@ -184,7 +184,7 @@ let linear_term_of_array array_of_coef constant =
 
 
 (*------------------------------------------------------------*)
-(* Direct conversion of a ParsingStructure.linear_expression into a Linear_constraint.linear_term *)
+(* Direct conversion of a ParsingStructure.linear_expression into a Parsed_linear_constraint.linear_term *)
 (*------------------------------------------------------------*)
 let linear_term_of_linear_expression index_of_variables constants linear_expression =
   let array_of_coef, constant = array_of_coef_of_linear_expression index_of_variables constants linear_expression in
@@ -289,9 +289,9 @@ let linear_constraint_of_convex_predicate index_of_variables constants convex_pr
     let linear_inequalities = List.fold_left
         (fun linear_inequalities linear_inequality ->
            match linear_inequality with
-           | True_constraint -> linear_inequalities
-           | False_constraint -> raise False_exception
-           | Linear_constraint (linexpr1, relop, linexpr2) -> (linear_inequality_of_linear_constraint index_of_variables constants (linexpr1, relop, linexpr2)) :: linear_inequalities
+           | Parsed_true_constraint -> linear_inequalities
+           | Parsed_false_constraint -> raise False_exception
+           | Parsed_linear_constraint (linexpr1, relop, linexpr2) -> (linear_inequality_of_linear_constraint index_of_variables constants (linexpr1, relop, linexpr2)) :: linear_inequalities
         ) [] convex_predicate
     in LinearConstraint.make_pxd_constraint linear_inequalities
     (* Stop if any false constraint is found *)
@@ -480,22 +480,106 @@ let rec get_variables_in_linear_expression variables_used_ref = function
 (* Gather all variable names used in a linear_constraint *)
 (*------------------------------------------------------------*)
 let get_variables_in_linear_constraint variables_used_ref = function
-  | True_constraint -> ()
-  | False_constraint -> ()
-  | Linear_constraint (linear_expression1, (*relop*)_, linear_expression2) ->
+  | Parsed_true_constraint -> ()
+  | Parsed_false_constraint -> ()
+  | Parsed_linear_constraint (linear_expression1, (*relop*)_, linear_expression2) ->
     get_variables_in_linear_expression variables_used_ref linear_expression1;
     get_variables_in_linear_expression variables_used_ref linear_expression2
 
     
+(*------------------------------------------------------------*)
+(* Gather all variable names used in a parsed_init_state_predicate *)
+(*------------------------------------------------------------*)
+let get_variables_in_init_state_predicate variables_used_ref = function
+	| Parsed_loc_assignment _ -> ()
+	| Parsed_linear_predicate linear_constraint -> get_variables_in_linear_constraint variables_used_ref linear_constraint
+
+	
+(*(*------------------------------------------------------------*)
+(* Gather all variable names used in a parsed_loc_predicate *)
+(*------------------------------------------------------------*)
+let get_variables_in_parsed_loc_predicate variables_used_ref = function
+	| Parsed_loc_predicate_EQ of automaton_name * location_name
+	| Parsed_loc_predicate_NEQ of automaton_name * location_name*)
+
 
 (*------------------------------------------------------------*)
-(* Gather all variable names used in the parsed property *)
+(* Gather all variable names used in a Simple_predicate *)
+(*------------------------------------------------------------*)
+let get_variables_in_parsed_simple_predicate variables_used_ref = function
+	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression ->
+		get_variables_in_parsed_discrete_boolean_expression variables_used_ref parsed_discrete_boolean_expression
+		
+	| Parsed_loc_predicate parsed_loc_predicate ->
+		(* No variable in location predicate *)
+		()
+
+
+(*------------------------------------------------------------*)
+(* Gather all variable names used in a parsed_state_predicate_factor *)
+(*------------------------------------------------------------*)
+let rec get_variables_in_parsed_state_predicate_factor variables_used_ref = function
+	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor ->
+		get_variables_in_parsed_state_predicate_factor variables_used_ref parsed_state_predicate_factor
+		
+	| Parsed_simple_predicate parsed_simple_predicate ->
+		get_variables_in_parsed_simple_predicate variables_used_ref parsed_simple_predicate
+		
+	| Parsed_state_predicate parsed_state_predicate ->
+		get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
+
+	
+	
+(*------------------------------------------------------------*)
+(* Gather all variable names used in a parsed_state_predicate_term *)
+(*------------------------------------------------------------*)
+and get_variables_in_parsed_state_predicate_term variables_used_ref = function
+	| Parsed_state_predicate_term_AND ( parsed_state_predicate_term1, parsed_state_predicate_term2) ->
+		get_variables_in_parsed_state_predicate_term variables_used_ref parsed_state_predicate_term1;
+		get_variables_in_parsed_state_predicate_term variables_used_ref parsed_state_predicate_term2;
+			
+	| Parsed_state_predicate_factor parsed_state_predicate_factor ->
+		get_variables_in_parsed_state_predicate_factor variables_used_ref parsed_state_predicate_factor
+
+
+(*------------------------------------------------------------*)
+(* Gather all variable names used in a parsed_state_predicate *)
+(*------------------------------------------------------------*)
+and get_variables_in_parsed_state_predicate variables_used_ref = function
+	| Parsed_state_predicate_OR (parsed_state_predicate1 , parsed_state_predicate2) ->
+		get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate1;
+		get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate2;
+	
+	| Parsed_state_predicate_term parsed_state_predicate_term ->
+		get_variables_in_parsed_state_predicate_term variables_used_ref parsed_state_predicate_term
+
+	
+(*------------------------------------------------------------*)
+(* Gather the set of all variable names used in the parsed property *)
 (*------------------------------------------------------------*)
 
-let get_variables_in_property all_variables_used = function
-	(* Reachability *)
-	| EF parsed_state_predicate -> raise (NotImplemented "get_variables_in_property")
-
+let get_variables_in_property_option (parsed_property_option : ParsingStructure.parsed_property option) =
+	(* First create the set *)
+	let variables_used_ref = ref StringSet.empty in
+	
+	(* Gather variables to the set, passed by reference *)
+	begin
+	match parsed_property_option with
+	| None -> ()
+	| Some parsed_property ->
+		begin
+		match parsed_property.property with
+	
+		(* Reachability *)
+		| Parsed_EF parsed_state_predicate -> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
+		
+		(*** TODO ***)
+		| _ -> raise (NotImplemented "get_variables_in_property")
+	
+		end;
+	end;
+	(* Return the set *)
+	!variables_used_ref
 
 
 
@@ -560,73 +644,64 @@ let get_variables_in_convex_predicate variables_used_ref =
   List.iter (get_variables_in_linear_constraint variables_used_ref)
 
 
-(* Get all variable names used in the parsing structure and return a set *)
-let get_all_variables_used parsed_automata parsed_property_definition =
-  (* Create a set structure for variable names *)
-  let all_variables_used = ref StringSet.empty in
+(* Get the set of all variable names used in the parsed model *)
+let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_model) =
+	(* Create a set structure for variable names *)
+	let all_variables_used = ref StringSet.empty in
 
-  (*** NOTE: we pass this set by reference ***)
+	(*** NOTE: we pass this set by reference ***)
 
-  (* Gather in each automaton *)
-  List.iter (fun (automaton_name, sync_name_list, locations) ->
-      print_message Verbose_total ("      Gathering variables used in automaton " ^ automaton_name);
+	(* Gather in each automaton *)
+	List.iter (fun (automaton_name, sync_name_list, locations) ->
+		print_message Verbose_total ("      Gathering variables used in automaton " ^ automaton_name);
 
-      (* Gather in each location *)
-      List.iter (fun (location : parsed_location) ->
-          print_message Verbose_total ("        Gathering variables used in location " ^ location.name);
+		(* Gather in each location *)
+		List.iter (fun (location : parsed_location) ->
+			print_message Verbose_total ("        Gathering variables used in location " ^ location.name);
 
-          (* Gather in the cost *)
-          begin
-            match location.cost with
-            | Some cost ->
-              print_message Verbose_total ("          Gathering variables in used cost");
-              get_variables_in_linear_expression all_variables_used cost;
-            | None -> ()
-          end;
+			(* Gather in the cost *)
+			begin
+				match location.cost with
+				| Some cost ->
+				print_message Verbose_total ("          Gathering variables in used cost");
+				get_variables_in_linear_expression all_variables_used cost;
+				| None -> ()
+			end;
 
-          (* Gather in the stopwatches *)
-          print_message Verbose_total ("          Gathering variables used in possible stopwatches");
-          List.iter (fun stopwatch_name ->
-              all_variables_used := StringSet.add stopwatch_name !all_variables_used
-            ) location.stopped;
+			(* Gather in the stopwatches *)
+			print_message Verbose_total ("          Gathering variables used in possible stopwatches");
+			List.iter (fun stopwatch_name ->
+				all_variables_used := StringSet.add stopwatch_name !all_variables_used
+				) location.stopped;
 
-          (* Gather in the convex predicate *)
-          print_message Verbose_total ("          Gathering variables in convex predicate");
-          get_variables_in_convex_predicate all_variables_used location.invariant;
+			(* Gather in the convex predicate *)
+			print_message Verbose_total ("          Gathering variables in convex predicate");
+			get_variables_in_convex_predicate all_variables_used location.invariant;
 
-          (* Gather in transitions *)
-          print_message Verbose_total ("          Gathering variables in transitions");
-          List.iter (fun (convex_predicate, updates, (*sync*)_, (*target_location_name*)_) ->
-              (* Gather in the convex predicate (guard) *)
-              print_message Verbose_total ("            Gathering variables in convex predicate");
-              get_variables_in_convex_predicate all_variables_used convex_predicate;
+			(* Gather in transitions *)
+			print_message Verbose_total ("          Gathering variables in transitions");
+			List.iter (fun (convex_predicate, updates, (*sync*)_, (*target_location_name*)_) ->
+				(* Gather in the convex predicate (guard) *)
+				print_message Verbose_total ("            Gathering variables in convex predicate");
+				get_variables_in_convex_predicate all_variables_used convex_predicate;
 
-              (* Gather in the updates *)
-              print_message Verbose_total ("            Gathering variables in updates");
-              (* List.iter (fun (variable_name, arithmetic_expression) -> *)
-              List.iter (fun update_expression ->
-                  (*** NOTE: let us NOT consider that a reset is a 'use' of a variable; it must still be used in a guard, an invariant, in the right-hand side term of a reset, or a property, to be considered 'used' in the model ***)
-                  (* First add the variable to be updated *)
-                  (* 					all_variables_used := StringSet.add variable_name !all_variables_used; *)
-                  (* Second add the variable names in the update expression *)
-                  (* get_variables_in_parsed_update_arithmetic_expression all_variables_used arithmetic_expression; *)
-                  get_variables_in_parsed_update all_variables_used update_expression
-                ) updates;
-            ) location.transitions;
-        ) locations;
-    ) parsed_automata;
-
-  (* Now gather in property *)
-  begin
-    match parsed_property_definition with
-    | None -> ()
-    | Some parsed_property_definition ->
-      get_variables_in_property all_variables_used parsed_property_definition;
-  end;
+				(* Gather in the updates *)
+				print_message Verbose_total ("            Gathering variables in updates");
+				(* List.iter (fun (variable_name, arithmetic_expression) -> *)
+				List.iter (fun update_expression ->
+					(*** NOTE: let us NOT consider that a reset is a 'use' of a variable; it must still be used in a guard, an invariant, in the right-hand side term of a reset, or a property, to be considered 'used' in the model ***)
+					(* First add the variable to be updated *)
+					(* 					all_variables_used := StringSet.add variable_name !all_variables_used; *)
+					(* Second add the variable names in the update expression *)
+					(* get_variables_in_parsed_update_arithmetic_expression all_variables_used arithmetic_expression; *)
+					get_variables_in_parsed_update all_variables_used update_expression
+					) updates;
+				) location.transitions;
+			) locations;
+		) parsed_model.automata;
 
   (* Return the set of variables actually used *)
-  (*StringSet.elements *)!all_variables_used
-
+  !all_variables_used
 
 
 (************************************************************)
@@ -848,9 +923,9 @@ let rec all_variables_defined_in_linear_expression variable_names constants = fu
 (* Check that all variables are defined in a linear_constraint *)
 (*------------------------------------------------------------*)
 let all_variables_defined_in_linear_constraint variable_names constants = function
-  | True_constraint -> true
-  | False_constraint -> true
-  | Linear_constraint (linear_expression1, relop, linear_expression2) ->
+  | Parsed_true_constraint -> true
+  | Parsed_false_constraint -> true
+  | Parsed_linear_constraint (linear_expression1, relop, linear_expression2) ->
     evaluate_and (all_variables_defined_in_linear_expression variable_names constants linear_expression1)
       (all_variables_defined_in_linear_expression variable_names constants linear_expression2)
 
@@ -1116,7 +1191,7 @@ let check_init discrete variable_names removed_variable_names constants index_of
   let well_formed = ref true in
   (* Check that (automaton / location / variable) names exist in each predicate *)
   List.iter (function
-      | Loc_assignment (automaton_name, location_name) ->
+      | Parsed_loc_assignment (automaton_name, location_name) ->
         (* Check that the automaton_name exists *)
         let index, exists = try (Hashtbl.find index_of_automata automaton_name, true) with
             Not_found -> (print_error ("The automaton '" ^ automaton_name ^ "' mentioned in the init definition does not exist."); well_formed := false; 0, false) in
@@ -1124,11 +1199,11 @@ let check_init discrete variable_names removed_variable_names constants index_of
         if exists && not (in_array location_name locations_per_automaton.(index)) then (
           print_error ("The location '" ^ location_name ^ "' mentioned in the init definition does not exist in automaton '" ^ automaton_name ^ "'."); well_formed := false
         )
-      | Linear_predicate linear_constraint ->
+      | Parsed_linear_predicate linear_constraint ->
         begin
           (*** NOTE: do not check linear constraints made of a variable to be removed compared to a linear term ***)
           match linear_constraint with
-          | Linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) when List.mem variable_name removed_variable_names ->
+          | Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) when List.mem variable_name removed_variable_names ->
             print_message Verbose_total ("Variable '" ^ variable_name ^ "' is compared to a linear term, but will be removed: no check." );
             (* Still check the second term *)
             if not (all_variables_defined_in_linear_expression variable_names constants linear_expression) then well_formed := false;
@@ -1137,15 +1212,15 @@ let check_init discrete variable_names removed_variable_names constants index_of
         end
     ) init_definition;
 
-  (* Get all the Loc_assignment *)
+  (* Get all the Parsed_loc_assignment *)
   let loc_assignments, init_inequalities = List.partition (function
-      | Loc_assignment _ -> true
-      | Linear_predicate _ -> false
+      | Parsed_loc_assignment _ -> true
+      | Parsed_linear_predicate _ -> false
     ) init_definition in
   (* Make pairs (automaton_name, location_name) *)
   let initial_locations = List.map (function
-      | Loc_assignment (automaton_name, location_name) -> (automaton_name, location_name)
-      | _ -> raise (InternalError "Something else than a Loc_assignment was found in a Loc_assignment list")
+      | Parsed_loc_assignment (automaton_name, location_name) -> (automaton_name, location_name)
+      | _ -> raise (InternalError "Something else than a Parsed_loc_assignment was found in a Parsed_loc_assignment list")
     ) loc_assignments in
 
   (* Check that every automaton is given at most one initial location *)
@@ -1189,7 +1264,7 @@ let check_init discrete variable_names removed_variable_names constants index_of
 
   (* Remove the inequalities of which the left-hand term is a removed variable *)
   let filtered_init_inequalities = List.filter (function
-      | Linear_predicate (Linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
+      | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
         (* Filter out if the left-hand is in the removed variable names *)
         not (List.mem variable_name removed_variable_names)
       (* Any other combination is OK *)
@@ -1201,7 +1276,7 @@ let check_init discrete variable_names removed_variable_names constants index_of
   (* Partition the init inequalities between the discrete init assignments, and other inequalities *)
   let discrete_init, other_inequalities = List.partition (function
       (* Check if the left part is only a variable name *)
-      | Linear_predicate (Linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
+      | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
         let is_discrete =
           (* Try to get the variable index *)
           if (Hashtbl.mem index_of_variables variable_name) then (
@@ -1224,7 +1299,7 @@ let check_init discrete variable_names removed_variable_names constants index_of
   let init_values_for_discrete = Hashtbl.create (List.length discrete) in
   List.iter (fun lp ->
       match lp with
-      | Linear_predicate (Linear_constraint (Linear_term (Variable (coeff, discrete_name)), op , expression)) ->
+      | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (coeff, discrete_name)), op , expression)) ->
         if NumConst.neq coeff NumConst.one then (
           print_error ("The discrete variable '" ^ discrete_name ^ "' must have a coeff 1 in the init definition.");
           well_formed := false;
@@ -2320,9 +2395,9 @@ let split_convex_predicate_into_discrete_and_continuous index_of_variables type_
   List.partition
     (fun linear_inequality ->
        match linear_inequality with
-       | True_constraint -> true (*** NOTE: we arbitrarily send "true" to the discrete part ***)
-       | False_constraint -> raise False_exception
-       | Linear_constraint (linexpr1, _, linexpr2) -> only_discrete_in_linear_expression index_of_variables type_of_variables constants linexpr1 && only_discrete_in_linear_expression index_of_variables type_of_variables constants linexpr2
+       | Parsed_true_constraint -> true (*** NOTE: we arbitrarily send "true" to the discrete part ***)
+       | Parsed_false_constraint -> raise False_exception
+       | Parsed_linear_constraint (linexpr1, _, linexpr2) -> only_discrete_in_linear_expression index_of_variables type_of_variables constants linexpr1 && only_discrete_in_linear_expression index_of_variables type_of_variables constants linexpr2
     ) convex_predicate
 
 
@@ -2647,13 +2722,13 @@ let convert_transitions nb_transitions nb_actions index_of_variables constants r
 let make_initial_state index_of_automata locations_per_automaton index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs init_definition =
   (* Get the location initialisations and the constraint *)
   let loc_assignments, linear_predicates = List.partition (function
-      | Loc_assignment _ -> true
+      | Parsed_loc_assignment _ -> true
       | _ -> false
     ) init_definition in
   (* Make pairs (automaton_name, location_name) *)
   let initial_locations = List.map (function
-      | Loc_assignment (automaton_name, location_name) -> (automaton_name, location_name)
-      | _ -> raise (InternalError "Something else than a Loc_assignment was found in a Loc_assignment list")
+      | Parsed_loc_assignment (automaton_name, location_name) -> (automaton_name, location_name)
+      | _ -> raise (InternalError "Something else than a Parsed_loc_assignment was found in a Parsed_loc_assignment list")
     ) loc_assignments in
   (* Convert the pairs to automaton_index, location_index *)
   let locations = List.map (fun (automaton_name, location_name) ->
@@ -2670,7 +2745,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
   (* Remove the init definitions for discrete variables *)
   let other_inequalities = List.filter (function
       (* Check if the left part is only a variable name *)
-      | Linear_predicate (Linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
+      | Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
         (* First check whether it was removed *)
         if List.mem variable_name removed_variable_names then false
         else
@@ -2692,8 +2767,8 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
     ) linear_predicates in
   (* Convert the inequalities *)
   let convex_predicate = List.map (function
-      | Linear_predicate lp -> lp
-      | _ -> raise (InternalError "Something else than a Linear_predicate was found in a Linear_predicate list.")
+      | Parsed_linear_predicate lp -> lp
+      | _ -> raise (InternalError "Something else than a Parsed_linear_predicate was found in a Parsed_linear_predicate list.")
     ) other_inequalities in
   let initial_constraint : LinearConstraint.px_linear_constraint =
 
@@ -2913,8 +2988,7 @@ let convert_property useful_parsing_model_information parsed_property : Abstract
 (* Convert the parsed model and the parsed property into an abstract model and an abstract property *)
 (*------------------------------------------------------------*)
 let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.parsed_model) (parsed_property_option : ParsingStructure.parsed_property option) =
-	raise (NotImplemented "abstract_structures_of_parsing_structures")
-	(*
+	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2929,18 +3003,12 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Get names *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get the declared variable names *)
-	let possibly_multiply_defined_clock_names, possibly_multiply_defined_discrete_names, possibly_multiply_defined_parameter_names, constants, unassigned_constants = get_declared_variable_names parsed_variable_declarations in
+	let possibly_multiply_defined_clock_names, possibly_multiply_defined_discrete_names, possibly_multiply_defined_parameter_names, constants, unassigned_constants = get_declared_variable_names parsed_model.variable_declarations in
 	(* Get the declared automata names *)
-	let declared_automata_names = get_declared_automata_names parsed_automata in
+	let declared_automata_names = get_declared_automata_names parsed_model.automata in
 	(* Get the declared synclabs names *)
-	let synclabs_names = get_declared_synclabs_names parsed_automata in
+	let synclabs_names = get_declared_synclabs_names parsed_model.automata in
 
-
-
-	(* Print some information *)
-	if verbose_mode_greater Verbose_total then(
-		print_message Verbose_total ("Automata names : " ^ (string_of_list_of_string_with_sep ", " declared_automata_names));
-	);
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2948,7 +3016,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let synclabs_names, removed_synclab_names = if options#sync_auto_detection then synclabs_names, [] else (
 		(* Keep only the synclabs which are used in ALL the automata where they are declared *)
-		List.partition (synclab_used_everywhere parsed_automata) (*(fun synclab_name -> if synclab_used_everywhere parsed_automata synclab_name then
+		List.partition (synclab_used_everywhere parsed_model.automata) (*(fun synclab_name -> if synclab_used_everywhere parsed_model.automata synclab_name then
 			(* If it is used everywhere: keep *)
 			true
 			(* If there exists an automaton where it is not used : warns and remove *)
@@ -3007,13 +3075,19 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* Stop here if model not well formed *)
  	if not (constants_consistent && all_variables_different && all_automata_different && at_least_one_automaton) then raise InvalidModel;
-
+ 	
+ 	
+ 	
+ 	
+ 	let observer_automaton, observer_clock_option = None, None in
+ 	(*** TODO: reintroduce observers! ***)
+(*
 
  	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add clock and automaton for the observer *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Note that the observer has not been checked yet, but it doesn't matter *)
-	let observer_automaton, observer_clock_option = ObserverPatterns.new_elements parsed_property_definition in
+	let observer_automaton, observer_clock_option = ObserverPatterns.new_elements parsed_property in
 
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
@@ -3029,7 +3103,15 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		end;
 	);
 
+*)
 
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Automata names : " ^ (string_of_list_of_string_with_sep ", " declared_automata_names));
+	);
+
+
+	
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Start building variable lists *)
@@ -3039,6 +3121,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let single_clock_names = list_only_once possibly_multiply_defined_clock_names in
 	let single_discrete_names = list_only_once possibly_multiply_defined_discrete_names in
 	let single_parameter_names = list_only_once possibly_multiply_defined_parameter_names in
+	
+	(*------------------------------------------------------------*)
+	(* Remove unused variables *)
+	(*------------------------------------------------------------*)
 
 	(* Unless a specific option is activated, we first remove all variables declared but unused *)
 	let clock_names, discrete_names, parameter_names, removed_variable_names =
@@ -3047,7 +3133,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		single_clock_names, single_discrete_names, single_parameter_names, []
 	)else (
 		(* Gather all variables used *)
-		let all_variable_used = get_all_variables_used parsed_automata parsed_property_definition in
+		let all_variables_used_in_model = get_all_variables_used_in_model parsed_model in
+		let all_variables_used_in_property = get_variables_in_property_option parsed_property_option in
+		let all_variable_used = StringSet.union all_variables_used_in_model all_variables_used_in_property in
 
 		(* Remove variable unused *)
 		let remove_unused_variables_gen variable_type_name = List.partition (fun variable_name ->
@@ -3074,15 +3162,33 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		single_clock_names, single_discrete_names, single_parameter_names, List.rev_append removed_clock_names (List.rev_append removed_discrete_names removed_parameter_names)
 	)
 	in
+	
+
+	(*------------------------------------------------------------*)
+	(* Special clocks *)
+	(*------------------------------------------------------------*)
 
 	(* First handle the observer clock if any *)
 	let observer_clock_list = match observer_clock_option with
 		| None -> []
 		| Some observer_clock_name -> [observer_clock_name]
 	in
+	
 	(* Second handle the special_reset_clock *)
+	
+	
+	(*** TODO: will depend on the actual algorithm ***)
+	
+	
+	let with_special_reset_clock = false in
+	
 	let special_reset_clock_list = if with_special_reset_clock then [Constants.special_reset_clock_name] else [] in
+	
 
+	(*------------------------------------------------------------*)
+	(* Create lists *)
+	(*------------------------------------------------------------*)
+	
 	let clock_names = list_append (list_append clock_names observer_clock_list) special_reset_clock_list in
 	let discrete_names = discrete_names in
 	let parameters_names = parameter_names in
@@ -3130,7 +3236,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* The array of automata names ; index -> automaton name *)
 	let array_of_automata_names = Array.of_list declared_automata_names in
 	(* A (constant) hash table 'automaton name -> index' *)
-	let index_of_automata : (Automaton.automaton_name, Automaton.automaton_index) Hashtbl = Hashtbl.create nb_automata in
+	let index_of_automata : (Automaton.automaton_name, Automaton.automaton_index) Hashtbl.t = Hashtbl.create nb_automata in
 	for i = 0 to nb_automata - 1 do
 		Hashtbl.add index_of_automata array_of_automata_names.(i) i;
 	done;
@@ -3149,7 +3255,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* The array of variables names ; index -> variable name *)
 	let variables = Array.of_list variable_names in
 	(* A (constant) hash table 'variable name -> index' *)
-	let index_of_variables : (Automaton.variable_name, Automaton.variable_index) Hashtbl = Hashtbl.create nb_variables in
+	let index_of_variables : (Automaton.variable_name, Automaton.variable_index) Hashtbl.t = Hashtbl.create nb_variables in
 	for i = 0 to nb_variables - 1 do
 		Hashtbl.add index_of_variables variables.(i) i;
 	done;
@@ -3201,19 +3307,21 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		(* Variables *)
 		print_message Verbose_total ("\n*** Variable names:");
 		Array.iteri (fun i e ->
-			print_message Verbose_total ((string_of_int i) ^ " -> " ^ e ^ " : " ^ (string_of_var_type (type_of_variables i)))
+			print_message Verbose_total ((string_of_int i) ^ " -> " ^ e ^ " : " ^ (ModelPrinter.string_of_var_type (type_of_variables i)))
 		) variables;
 	);
 
 
+	raise (NotImplemented "abstract_structures_of_parsing_structures")
+	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get all the locations *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check that all the location names of an automaton are different *)
-	if not (all_locations_different parsed_automata) then raise InvalidModel;
+	if not (all_locations_different parsed_model.automata) then raise InvalidModel;
 
 	(* Get all the locations for each automaton: automaton_index -> location_index -> location_name *)
-	let array_of_location_names = make_locations_per_automaton index_of_automata parsed_automata nb_automata in
+	let array_of_location_names = make_locations_per_automaton index_of_automata parsed_model.automata nb_automata in
 	(* Add the observer locations *)
 	begin
 	match observer_automaton with
@@ -3221,7 +3329,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			(*** WARNING: we assume here that observer automaton is the last one ! ***)
 		| Some automaton_index ->
 			print_message Verbose_high ("Adding the observer locations.");
-			array_of_location_names.(automaton_index) <- ObserverPatterns.get_locations parsed_property_definition
+			array_of_location_names.(automaton_index) <- ObserverPatterns.get_locations parsed_property
 	end;
 
 	(* A (constant) array of hash tables 'automaton_index -> location_name -> location_index' *)
@@ -3263,7 +3371,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Check the automata *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Checking automata…");
-	let well_formed_automata = check_automata index_of_variables type_of_variables variable_names removed_variable_names index_of_automata array_of_location_names constants parsed_automata in
+	let well_formed_automata = check_automata index_of_variables type_of_variables variable_names removed_variable_names index_of_automata array_of_location_names constants parsed_model.automata in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3303,7 +3411,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** WARNING: might be a problem if the check_automata test fails ***)
 	let property, well_formed_property =
-		check_and_convert_property index_of_variables type_of_variables discrete variable_names constants index_of_actions index_of_automata index_of_locations parsed_property_definition in
+		check_and_convert_property index_of_variables type_of_variables discrete variable_names constants index_of_actions index_of_automata index_of_locations parsed_property in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3348,7 +3456,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_high ("*** Building automata…");
 	(* Get all the possible actions for every location of every automaton *)
 	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_stopwatches, transitions, nosync_obs =
-		make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions (*removed_variable_names *)removed_synclab_names parsed_automata (observer_automaton != None) in
+		make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions (*removed_variable_names *)removed_synclab_names parsed_model.automata (observer_automaton != None) in
 	let nb_actions = List.length actions in
 
 
