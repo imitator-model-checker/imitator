@@ -338,6 +338,9 @@ type parsed_property_type =
 	
 	
 	(*** TODO: observers! ***)
+	(* Reachability *)
+	| Parsed_Action_deadline of sync_name * duration
+	
 	
 	(* Unavoidability *)
 	| Parsed_AF of parsed_state_predicate

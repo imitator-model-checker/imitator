@@ -3080,14 +3080,16 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
  	
  	
  	let observer_automaton, observer_clock_option = None, None in
- 	(*** TODO: reintroduce observers! ***)
-(*
 
+ 	
  	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add clock and automaton for the observer *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Note that the observer has not been checked yet, but it doesn't matter *)
-	let observer_automaton, observer_clock_option = ObserverPatterns.new_elements parsed_property in
+	let observer_automaton, observer_clock_option = match parsed_property_option with
+		| None -> None, None
+		| Some parsed_property -> ObserverPatterns.new_elements parsed_property
+	in
 
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
@@ -3103,8 +3105,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		end;
 	);
 
-*)
-
+	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total ("Automata names : " ^ (string_of_list_of_string_with_sep ", " declared_automata_names));
@@ -3312,8 +3313,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	);
 
 
-	raise (NotImplemented "abstract_structures_of_parsing_structures")
-	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get all the locations *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3328,6 +3327,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		| None -> ()
 			(*** WARNING: we assume here that observer automaton is the last one ! ***)
 		| Some automaton_index ->
+			(* Get the property *)
+			let parsed_property = match parsed_property_option with
+				| None -> raise (InternalError "A property must be defined at this point since we have an observer automaton")
+				| Some parsed_property -> parsed_property
+			in
 			print_message Verbose_high ("Adding the observer locations.");
 			array_of_location_names.(automaton_index) <- ObserverPatterns.get_locations parsed_property
 	end;
@@ -3367,6 +3371,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
+	raise (NotImplemented "abstract_structures_of_parsing_structures")
+	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the automata *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

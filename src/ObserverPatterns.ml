@@ -1,35 +1,34 @@
-(*****************************************************************
+(************************************************************
  *
  *                       IMITATOR
  *
- * File containing the operations linked to the observer patterns
- *
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
- * Author:        Étienne André
+ * Module description: operations linked to the observer patterns
  *
- * File contributors : Jaime Arias
- * Created           : 2013/02/04
- * Last modified     : 2019/05/29
+ * File contributors : Étienne André, Jaime Arias
+ * Created:       2013/02/04
+ * Last modified: 2019/12/18
  *
- ****************************************************************)
-
-
-(****************************************************************)
+ ************************************************************)
+ 
+(************************************************************)
 (** Modules *)
-(****************************************************************)
+(************************************************************)
 open Exceptions
 open OCamlUtilities
 open ImitatorUtilities
+open ParsingStructure
 open AbstractModel
 
 
-(****************************************************************)
+(************************************************************)
 (** Constants *)
-(****************************************************************)
-let automaton_name = "automatically_generated_observer"
-let clock_name = "automatically_generated_x_obs"
-let location_prefix = "loc_AutoGen_obs_"
+(************************************************************)
+let observer_automaton_name	= "automatically_generated_observer"
+let observer_clock_name		= "automatically_generated_x_obs"
+let location_prefix			= "loc_AutoGen_obs_"
 
 
 let location_name location_index =
@@ -39,9 +38,9 @@ let location_name location_index =
 let truec = LinearConstraint.pxd_true_constraint
 
 
-(****************************************************************)
+(************************************************************)
 (** Useful (parameterized) constants *)
-(****************************************************************)
+(************************************************************)
 
 (** Creates a new update *)
 let create_update clock_updates discrete_updates conditional_updates =
@@ -88,11 +87,20 @@ let lc_x_eq_0 x =
 
 
 
-(****************************************************************)
+(************************************************************)
 (** Functions *)
-(****************************************************************)
+(************************************************************)
 
-(* Create a list of unreachable_global_location from a single bad location *)
+(** Returns true whether the observer requires one clock *)
+let needs_clock (parsed_property : ParsingStructure.parsed_property) =
+	match parsed_property.property with
+	| Parsed_EF _ -> false
+	| Parsed_Action_deadline _ -> true
+	(*** TODO: finish later ***)
+	| _ -> raise (NotImplemented "ObserverPatterns.needs_clock")
+
+
+(*(* Create a list of unreachable_global_location from a single bad location *)
 let single_unreachable_location automaton_index location_index =
 	(* Create the (single) global location *)
 	let unreachable_global_location = {
@@ -100,48 +108,50 @@ let single_unreachable_location automaton_index location_index =
 		discrete_constraints =  [];
 	}
 	in
-	Unreachable [unreachable_global_location]
+	Unreachable [unreachable_global_location]*)
 
 
 (* Create the new automata and new clocks necessary for the observer *)
-let new_elements = function
-	| None -> (None , None)
-	| Some property ->
-	begin
-		match property with
-		(* Not a real observer: does not build anything *)
-		| ParsingStructure.Parsed_unreachable_locations _ -> (None , None)
+let new_elements (parsed_property : ParsingStructure.parsed_property) =
+	match parsed_property.property with
+	(* Not a real observer: does not build anything *)
+	| ParsingStructure.Parsed_EF _ -> (None , None)
+	| Parsed_Action_deadline _
+		-> (Some observer_automaton_name, Some observer_clock_name)
+	(*** TODO: finish later ***)
+	| _ -> raise (NotImplemented "ObserverPatterns.new_elements")
 
-		(* Untimed observers: add automaton, does not add clock *)
-		| ParsingStructure.Action_precedence_acyclic _
-		| ParsingStructure.Action_precedence_cyclic _
-		| ParsingStructure.Action_precedence_cyclicstrict _
-		(*** NOT IMPLEMENTED ***)
+(*	(* Untimed observers: add automaton, does not add clock *)
+	| ParsingStructure.Action_precedence_acyclic _
+	| ParsingStructure.Action_precedence_cyclic _
+	| ParsingStructure.Action_precedence_cyclicstrict _
+	(*** NOT IMPLEMENTED ***)
 (*		| ParsingStructure.Eventual_response_acyclic _
-		| ParsingStructure.Eventual_response_cyclic _
-		| ParsingStructure.Eventual_response_cyclicstrict _*)
-		| ParsingStructure.Sequence_acyclic _
-		| ParsingStructure.Sequence_cyclic _
-			-> (Some automaton_name, None)
+	| ParsingStructure.Eventual_response_cyclic _
+	| ParsingStructure.Eventual_response_cyclicstrict _*)
+	| ParsingStructure.Sequence_acyclic _
+	| ParsingStructure.Sequence_cyclic _
+		-> (Some observer_automaton_name, None)
 
-		(* Timed observers: add automaton, add clock *)
-		| ParsingStructure.Action_deadline _
-		| ParsingStructure.TB_Action_precedence_acyclic _
-		| ParsingStructure.TB_Action_precedence_cyclic _
-		| ParsingStructure.TB_Action_precedence_cyclicstrict _
-		| ParsingStructure.TB_response_acyclic _
-		| ParsingStructure.TB_response_cyclic _
-		| ParsingStructure.TB_response_cyclicstrict _
-			-> (Some automaton_name, Some clock_name)
-
-	end
+	(* Timed observers: add automaton, add clock *)
+	| ParsingStructure.Action_deadline _
+	| ParsingStructure.TB_Action_precedence_acyclic _
+	| ParsingStructure.TB_Action_precedence_cyclic _
+	| ParsingStructure.TB_Action_precedence_cyclicstrict _
+	| ParsingStructure.TB_response_acyclic _
+	| ParsingStructure.TB_response_cyclic _
+	| ParsingStructure.TB_response_cyclicstrict _
+		-> (Some observer_automaton_name, Some observer_clock_name)*)
 
 (* Get the number of locations for this observer *)
-let get_nb_locations = function
-	| None -> 0
-	| Some property ->
-	begin
-		match property with
+let get_nb_locations (parsed_property : ParsingStructure.parsed_property) =
+	match parsed_property.property with
+	(* Not a real observer: does not build anything *)
+	| ParsingStructure.Parsed_EF _ -> 0
+	| Parsed_Action_deadline _ -> 3
+	(*** TODO: finish later ***)
+	| _ -> raise (NotImplemented "ObserverPatterns.get_nb_locations")
+	(*
 		(* Not a real observer: does not build anything *)
 		| ParsingStructure.Parsed_unreachable_locations _ -> 0
 
@@ -162,7 +172,7 @@ let get_nb_locations = function
 		| ParsingStructure.TB_response_cyclicstrict _ -> 3
 		| ParsingStructure.Sequence_acyclic list_of_actions -> (List.length list_of_actions) + 2
 		| ParsingStructure.Sequence_cyclic list_of_actions -> (List.length list_of_actions) + 1
-	end
+			*)
 
 
 (* Create the list of location indexes for this observer *)
@@ -185,7 +195,7 @@ let get_locations property =
 	- Invariants
 *)
 (*------------------------------------------------------------*)
-let get_automaton nb_actions automaton_index nosync_index x_obs property =
+let get_automaton nb_actions automaton_index nosync_index x_obs (parsed_property : ParsingStructure.parsed_property) =
 	(* Create the common structures *)
 	let initialize_structures nb_locations all_actions =
 		(* Array for actions for location *)
@@ -218,13 +228,12 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 			allow_all
 	in
 
-	match property with
-	| Noproperty -> raise (InternalError("The function 'get_automaton' should not be called in case of no observer."))
-	(* Not a real observer: does not build anything *)
-	| Unreachable_locations _ -> raise (InternalError("The function 'get_automaton' should not be called in case of a degenerate observer."))
+	match parsed_property with
+		
+	(*** TODO: finish later ***)
+	| _ -> raise (NotImplemented "ObserverPatterns.get_automaton")
 
-
-	| Action_precedence_acyclic (a1, a2) ->
+(*	| Action_precedence_acyclic (a1, a2) ->
 		let nb_locations = 3 in
 		let all_actions = [a1;a2] in
 		(* Initialize *)
@@ -652,7 +661,5 @@ let get_automaton nb_actions automaton_index nosync_index x_obs property =
 		(* No init constraint *)
 		None,
 		(* Reduce to reachability property *)
-		single_unreachable_location automaton_index lbad
+		single_unreachable_location automaton_index lbad*)
 
-
-(* 	| _ -> raise (InternalError("Not implemented")) *)
