@@ -1482,13 +1482,14 @@ in
 
 (* Get states sharing the same location and discrete values from hash_table, excluding s *)
 let get_siblings state_space si new_states =
+	let options = Input.get_options () in
 	let s = get_state state_space si in
 	let l = s.global_location in
         let li = new_location_index state_space l in
 	let sibs = Hashtbl.find_all state_space.states_for_comparison li in
 	(* lookup px_constraints and exclude si itself *)
         let result = List.fold_left (fun siblings sj ->
-		if sj = si or not(List.mem sj new_states) then siblings else begin
+		if sj = si || (options#mergeq && not(List.mem sj new_states)) then siblings else begin
 			let state = get_state state_space sj in
 			let c' = state.px_constraint in
 			(sj,c') :: siblings
