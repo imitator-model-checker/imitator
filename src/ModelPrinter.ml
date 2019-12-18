@@ -9,11 +9,12 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2019/12/17
+ * Last modified     : 2019/12/18
  *
  ************************************************************)
 
 open OCamlUtilities
+open Exceptions
 open Result
 open DiscreteExpressions
 open AbstractModel
@@ -21,6 +22,13 @@ open ImitatorUtilities
 open State
 open StateSpace
 
+
+
+(************************************************************)
+(** Constants *)
+(************************************************************)
+let string_of_true  = "True"
+let string_of_false = "False"
 
 
 (************************************************************)
@@ -240,30 +248,30 @@ let string_of_discrete_updates ?(sep=", ") model updates =
 
 
 let string_of_boolean_operations = function
-	| OP_L -> "<"
-	| OP_LEQ -> "<="
-	| OP_EQ -> "="
-	| OP_NEQ -> "<>"
-	| OP_GEQ -> ">="
-	| OP_G -> ">"
+	| OP_L		-> "<"
+	| OP_LEQ	-> "<="
+	| OP_EQ		-> "="
+	| OP_NEQ	-> "<>"
+	| OP_GEQ	-> ">="
+	| OP_G		-> ">"
 
 
-(** Convert a logical operation into a string *)
+(*(** Convert a logical operation into a string *)
 let string_of_logical_operators lop =
 	match lop with
-	| True_bool -> "True"
-	| False_bool -> "False"
+	| True_bool -> string_of_true
+	| False_bool -> string_of_false
 	| Not_bool _ -> "<>"
 	| And_bool _ -> " && "
 	| Or_bool _ -> " || "
 	| Discrete_boolean_expression (_, op, _) -> " " ^ (string_of_boolean_operations op) ^ " "
 
-(** Generic template to convert a boolean expression into a string *)
+(** Generic template to convert a Boolean expression into a string *)
 let rec string_of_boolean_template variable_names boolean_expr str_lop =
 	let symbol = str_lop boolean_expr in
 	match boolean_expr with
-		| True_bool -> "True"
-		| False_bool -> "False"
+		| True_bool -> string_of_true
+		| False_bool -> string_of_false
 		| Not_bool b -> symbol ^ "(" ^ (string_of_boolean_template variable_names b str_lop) ^ ")"
 		| And_bool (b1, b2) -> (string_of_boolean_template variable_names b1 str_lop)
 													^ symbol ^ (string_of_boolean_template variable_names b2 str_lop)
@@ -273,9 +281,46 @@ let rec string_of_boolean_template variable_names boolean_expr str_lop =
 																					^ symbol
 																					^ (string_of_arithmetic_expression variable_names expr2)
 
-(** Convert a boolean expression into a string *)
+(** Convert a Boolean expression into a string *)
 let string_of_boolean variable_names boolean_expr =
-	string_of_boolean_template variable_names boolean_expr string_of_logical_operators
+	string_of_boolean_template variable_names boolean_expr string_of_logical_operators*)
+
+
+(** Convert a discrete_boolean_expression into a string *)
+let string_of_discrete_boolean_expression variable_names = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
+		(string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
+		^ " "
+		^ (string_of_boolean_operations relop)
+		^ " "
+		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
+		(string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
+		^ " in ["
+		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+		^ " , "
+		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression3)
+		^ "]"
+
+(** Convert a Boolean expression into a string *)
+let rec string_of_boolean variable_names = function
+	| True_bool -> string_of_true
+	| False_bool -> string_of_false
+	| Not_bool b -> "<> (" ^ (string_of_boolean variable_names b) ^ ")"
+	| And_bool (b1, b2) ->
+		(string_of_boolean variable_names b1)
+		^ " && "
+		^ (string_of_boolean variable_names b2)
+	| Or_bool (b1, b2) ->
+		(string_of_boolean variable_names b1)
+		^ " || "
+		^ (string_of_boolean variable_names b2)
+	| Discrete_boolean_expression discrete_boolean_expression ->
+		string_of_discrete_boolean_expression variable_names discrete_boolean_expression
+
+
 
 (** Return if there is no clock updates *)
 let no_clock_updates clock_updates =
@@ -297,7 +342,7 @@ let string_of_conditional_updates_template model conditional_updates string_of_c
 	string_of_list_of_string_with_sep sep (List.map (fun (boolean_expr, if_updates, else_updates) ->
 		let if_separator, _ = separator_comma if_updates in
 		let empty_else = no_clock_updates else_updates.clock && else_updates.discrete = [] && else_updates.conditional = [] in
-		(** Convert the boolean expression *)
+		(** Convert the Boolean expression *)
 		(wrap_if boolean_expr)
 		(** Convert the if updates *)
 		^ (string_of_clock_updates model if_updates.clock)
@@ -525,7 +570,7 @@ let property_header =
 	^ "\n" ^ ""
 
 
-
+(*
 let string_of_unreachable_location model unreachable_global_location =
 	(* Convert locations *)
 	string_of_list_of_string_with_sep " & " (List.map (fun (automaton_index, location_index) ->
@@ -554,11 +599,13 @@ let string_of_unreachable_location model unreachable_global_location =
 			-> (model.variable_names discrete_index) ^ " in [" ^ (NumConst.string_of_numconst min_discrete_value) ^ " , " ^ (NumConst.string_of_numconst max_discrete_value) ^ "]"
 		) unreachable_global_location.discrete_constraints
 	)
-
+*)
 
 (** Convert the correctness property to a string *)
 let string_of_property model property =
-	match property with
+	(*** TODO ***)
+	raise (NotImplemented "string_of_property")
+(*	match property with
 	(* An "OR" list of global locations *)
 	| Unreachable_locations unreachable_global_location_list ->
 		"property := unreachable " ^ (
@@ -616,24 +663,28 @@ let string_of_property model property =
 		"property := always sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
 
 	(*** NOTE: Would be better to have an "option" type ***)
-	| Noproperty -> "(* no property *)"
+	| Noproperty -> "(* no property *)"*)
 
 (** Convert the projection to a string *)
 let string_of_projection model =
-	match model.projection with
+	(*** TODO ***)
+	raise (NotImplemented "string_of_property")
+(*	match model.projection with
 	| None -> ""
 	| Some parameter_index_list ->
-		"\nprojectresult(" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names parameter_index_list)) ^ ");"
+		"\nprojectresult(" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names parameter_index_list)) ^ ");"*)
 
 
 (** Convert the optimization to a string *)
 let string_of_optimization model =
-	match model.optimized_parameter with
+	(*** TODO ***)
+	raise (NotImplemented "string_of_property")
+(*	match model.optimized_parameter with
 	| No_optimization -> ""
 	| Minimize parameter_index ->
 		"minimize(" ^ (model.variable_names parameter_index) ^ ");"
 	| Maximize parameter_index ->
-		"maximize(" ^ (model.variable_names parameter_index) ^ ");"
+		"maximize(" ^ (model.variable_names parameter_index) ^ ");"*)
 
 
 (************************************************************)
@@ -650,13 +701,13 @@ let string_of_model model =
 	^  "\n" ^ string_of_automata model
 	(* The initial state *)
 	^ "\n" ^ string_of_initial_state ()
-	(* The property *)
+(*	(* The property *)
 	^ property_header
 	^  "\n" ^ string_of_property model model.user_property
 	(* The projection *)
 	^  "\n" ^ string_of_projection model
 	(* The optimization *)
-	^  "\n" ^ string_of_optimization model
+	^  "\n" ^ string_of_optimization model*)
 	(* The footer *)
 	^  "\n" ^ footer
 

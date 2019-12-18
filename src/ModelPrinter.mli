@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2019/12/16
+ * Last modified     : 2019/12/18
  *
  ************************************************************)
 
@@ -81,8 +81,8 @@ val string_of_clock_updates_template : abstract_model -> clock_updates -> (clock
 (** Convert the clock updates into a string *)
 val string_of_clock_updates :  abstract_model -> clock_updates -> string
 
-(** Template to convert a boolean expresion into a string *)
-val string_of_boolean_template : (Automaton.variable_index -> Automaton.variable_name) -> boolean_expression -> (boolean_expression -> string) -> string
+(*(** Template to convert a boolean expresion into a string *)
+val string_of_boolean_template : (Automaton.variable_index -> Automaton.variable_name) -> boolean_expression -> (boolean_expression -> string) -> string*)
 
 (** Convert a boolean expression into a string *)
 val string_of_boolean :  (Automaton.discrete_index -> Automaton.variable_name) -> boolean_expression -> string
