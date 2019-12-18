@@ -87,6 +87,7 @@ let saved_variables				= ref None
 
 type useful_parsing_model_information = {
 	(* The locations for each automaton: automaton_index -> location_index -> location_name *)
+	actions								: action_name array;
 	array_of_location_names				: location_name array array;
 	automata							: automaton_index list;
 	automata_names						: (automaton_index -> automaton_name);
@@ -96,6 +97,7 @@ type useful_parsing_model_information = {
 	index_of_automata					: (Automaton.automaton_name , Automaton.automaton_index) Hashtbl.t;
 	index_of_locations					: ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array;
 	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
+	removed_action_names				: action_name list;
 	type_of_variables					: Automaton.variable_index -> AbstractModel.var_type;
 	variable_names						: variable_name list;
 	removed_variable_names				: variable_name list;
@@ -1128,7 +1130,7 @@ let get_declared_automata_names =
 (* Get all (all different) names of synclabs *)
 (*------------------------------------------------------------*)
 let get_declared_synclabs_names =
-  List.fold_left (fun synclabs_names (_, synclabs, _) -> list_union synclabs_names synclabs) []
+  List.fold_left (fun action_names (_, synclabs, _) -> list_union action_names synclabs) []
 
   
 
@@ -1336,7 +1338,7 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 (*------------------------------------------------------------*)
 let check_sync sync_name_list automaton_name = function
 	| Sync sync_name ->  if not (List.mem sync_name sync_name_list) then (
-		print_error ("The sync label '" ^ sync_name ^ "' used in automaton '" ^ automaton_name ^ "' was not declared for this automaton."); false)
+		print_error ("The sync action '" ^ sync_name ^ "' used in automaton '" ^ automaton_name ^ "' was not declared for this automaton."); false)
 		else true
 	| NoSync -> true
 
@@ -1703,10 +1705,10 @@ let make_actions_per_automaton index_of_actions index_of_automata automata =
       (* Update the array *)
       actions_per_automaton.(automaton_index) <-
         List.map (fun sync_name ->
-            (* Get the index of the label *)
-            let label_index = Hashtbl.find index_of_actions sync_name in
-            (* Return the label index *)
-            label_index
+            (* Get the index of the action *)
+            let action_index = Hashtbl.find index_of_actions sync_name in
+            (* Return the action index *)
+            action_index
           ) sync_name_list;
     ) automata;
   (* Return the array *)
@@ -1774,7 +1776,15 @@ let make_locations_per_automaton index_of_automata parsed_automata nb_automata =
 (*------------------------------------------------------------*)
 (* Get all the possible actions for every location of every automaton *)
 (*------------------------------------------------------------*)
-let make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions (*removed_variable_names*) removed_synclab_names parsed_automata with_observer_action =
+let make_automata useful_parsing_model_information parsed_automata (with_observer_action : bool) =
+	let constants				= useful_parsing_model_information.constants in
+	let index_of_actions		= useful_parsing_model_information.index_of_actions in
+	let index_of_automata		= useful_parsing_model_information.index_of_automata in
+	let index_of_locations		= useful_parsing_model_information.index_of_locations in
+	let index_of_variables		= useful_parsing_model_information.index_of_variables in
+	let actions					= useful_parsing_model_information.actions in
+	let removed_action_names	= useful_parsing_model_information.removed_action_names in
+
 	(* Number of automata *)
 	let nb_automata = Hashtbl.length index_of_automata in
 	(* Create an empty array for the actions of every automaton *)
@@ -1796,7 +1806,7 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 	(* Does the model has any stopwatch? *)
 	let has_stopwatches = ref false in
 	(* Maintain the index of no_sync *)
-	let no_sync_index = ref (Array.length labels) in
+	let no_sync_index = ref (Array.length actions) in
 
 	(* For each automaton (except the observer, if any): *)
 	List.iter
@@ -1835,7 +1845,7 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 					match sync with
 					| ParsingStructure.Sync action_name ->
 					(* If the 'sync' is within the removed actions, do nothing *)
-					if List.mem action_name removed_synclab_names then (
+					if List.mem action_name removed_action_names then (
 						current_list_of_actions, current_list_of_transitions
 						(* Else : *)
 					) else (
@@ -1923,12 +1933,12 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 	(* Create the array of action types (sync / no_sync) *)
 	let array_of_action_types = Array.make nb_actions Action_type_sync in
 	(* Fill the sync actions *)
-	for i = 0 to (Array.length labels) - 1 do
-		array_of_action_names.(i) <- labels.(i);
+	for i = 0 to (Array.length actions) - 1 do
+		array_of_action_names.(i) <- actions.(i);
 	done;
 	(* Fill the no sync actions *)
-	for i = Array.length labels to nb_actions - 1 - (if with_observer_action then 1 else 0) do
-		array_of_action_names.(i) <- ("nosync_" ^ (string_of_int (i - (Array.length labels) + 1)));
+	for i = Array.length actions to nb_actions - 1 - (if with_observer_action then 1 else 0) do
+		array_of_action_names.(i) <- ("nosync_" ^ (string_of_int (i - (Array.length actions) + 1)));
 		array_of_action_types.(i) <- Action_type_nosync;
 	done;
 	(* Fill the array for the observer no_sync *)
@@ -3170,21 +3180,21 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Get the declared automata names *)
 	let declared_automata_names = get_declared_automata_names parsed_model.automata in
 	(* Get the declared synclabs names *)
-	let synclabs_names = get_declared_synclabs_names parsed_model.automata in
+	let action_names = get_declared_synclabs_names parsed_model.automata in
 
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the synclabs declarations *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let synclabs_names, removed_synclab_names = if options#sync_auto_detection then synclabs_names, [] else (
+	let action_names, removed_action_names = if options#sync_auto_detection then action_names, [] else (
 		(* Keep only the synclabs which are used in ALL the automata where they are declared *)
 		List.partition (synclab_used_everywhere parsed_model.automata) (*(fun synclab_name -> if synclab_used_everywhere parsed_model.automata synclab_name then
 			(* If it is used everywhere: keep *)
 			true
 			(* If there exists an automaton where it is not used : warns and remove *)
 			else (print_warning ("The synclab '" ^ synclab_name ^ "' is not used in some of the automata where it is declared: it will thus be removed."); false)
-		)*) synclabs_names
+		)*) action_names
 	) in
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3367,12 +3377,12 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	in
 
 	(* Numbers *)
-	let nb_automata = List.length declared_automata_names in
-	let nb_labels = List.length synclabs_names in
-	let nb_clocks = List.length clock_names in
-	let nb_discrete = List.length discrete_names in
-	let nb_parameters = List.length parameters_names in
-	let nb_variables = List.length variable_names in
+	let nb_automata		= List.length declared_automata_names in
+	let nb_actions		= List.length action_names in
+	let nb_clocks		= List.length clock_names in
+	let nb_discrete		= List.length discrete_names in
+	let nb_parameters	= List.length parameters_names in
+	let nb_variables	= List.length variable_names in
 
 
 	(* Compute the index for the observer automaton *)
@@ -3408,12 +3418,12 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Functional version *)
 	let (automata_names : automaton_index -> automaton_name) = fun automaton_index -> array_of_automata_names.(automaton_index) in
 
-	(* The array of labels ; index -> label name *)
-	let labels = Array.of_list synclabs_names in
-	(* A (constant) hash table 'label name -> index' *)
-	let index_of_actions = Hashtbl.create nb_labels in
-	for i = 0 to nb_labels - 1 do
-		Hashtbl.add index_of_actions labels.(i) i;
+	(* The array of actions ; index -> action name *)
+	let actions : action_name array = Array.of_list action_names in
+	(* A (constant) hash table 'action name -> index' *)
+	let index_of_actions = Hashtbl.create nb_actions in
+	for i = 0 to nb_actions - 1 do
+		Hashtbl.add index_of_actions actions.(i) i;
 	done;
 
 	(* The array of variables names ; index -> variable name *)
@@ -3464,9 +3474,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		print_message Verbose_high ("\n*** Array of automata names:");
 		debug_print_array Verbose_high array_of_automata_names;
 
-		(* Labels *)
+		(* Actions *)
 		print_message Verbose_high ("\n*** Array of declared synchronization action names:");
-		debug_print_array Verbose_high labels;
+		debug_print_array Verbose_high actions;
 
 		(* Variables *)
 		print_message Verbose_total ("\n*** Variable names:");
@@ -3539,18 +3549,20 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	
 	let useful_parsing_model_information = {
-		array_of_location_names				= array_of_location_names;
-		automata_names						= automata_names;
-		automata							= automata;
-		constants							= constants;
-		discrete							= discrete;
-		index_of_actions					= index_of_actions;
-		index_of_automata					= index_of_automata;
-		index_of_locations					= index_of_locations;
-		index_of_variables					= index_of_variables;
-		type_of_variables					= type_of_variables;
-		variable_names						= variable_names;
-		removed_variable_names				= variable_names;
+		actions						= actions;
+		array_of_location_names		= array_of_location_names;
+		automata_names				= automata_names;
+		automata					= automata;
+		constants					= constants;
+		discrete					= discrete;
+		index_of_actions			= index_of_actions;
+		index_of_automata			= index_of_automata;
+		index_of_locations			= index_of_locations;
+		index_of_variables			= index_of_variables;
+		removed_action_names		= removed_action_names;
+		type_of_variables			= type_of_variables;
+		variable_names				= variable_names;
+		removed_variable_names		= variable_names;
 	} in
 
 
@@ -3602,9 +3614,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let property_option, well_formed_property = check_and_convert_property_option useful_parsing_model_information parsed_property_option in
 
 
-	raise (NotImplemented "abstract_structures_of_parsing_structures")
-	(*
-
 	(*	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check polyhedra definition in (optional) carto mode *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3635,7 +3644,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* exit if not well formed *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	if not (check_no_unassigned_constants && well_formed_automata && well_formed_property && well_formed_projection && well_formed_optimization && well_formed_init && !well_formed_carto)
+	if not (check_no_unassigned_constants && well_formed_automata && well_formed_property && well_formed_projection && well_formed_init)
 		then raise InvalidModel;
 
 	print_message Verbose_medium ("Model syntax successfully checked.");
@@ -3646,10 +3655,12 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Building automata…");
 	(* Get all the possible actions for every location of every automaton *)
-	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_stopwatches, transitions, nosync_obs =
-		make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions (*removed_variable_names *)removed_synclab_names parsed_model.automata (observer_automaton != None) in
+	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_stopwatches, transitions, nosync_obs = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton != None) in
 	let nb_actions = List.length actions in
 
+
+	raise (NotImplemented "abstract_structures_of_parsing_structures")
+	(*
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get the observer information here *)
@@ -3893,7 +3904,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			^ ", "
 			^ (string_of_int nb_locations) ^ " location" ^ (s_of_int nb_locations) ^ ", "
 			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ ", "
-			^ (string_of_int nb_labels) ^ " declared synchronization action" ^ (s_of_int nb_labels) ^ ", "
+			^ (string_of_int nb_actions) ^ " declared synchronization action" ^ (s_of_int nb_actions) ^ ", "
 			^ (string_of_int nb_clocks) ^ " clock variable" ^ (s_of_int nb_clocks) ^ ", "
 			^ (string_of_int nb_discrete) ^ " discrete variable" ^ (s_of_int nb_discrete) ^ ", "
 			^ (string_of_int nb_parameters) ^ " parameter" ^ (s_of_int nb_parameters) ^ ", "
@@ -3906,7 +3917,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Detect the strongly deterministic nature of the PTA *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** NOTE: strongly deterministic = for each PTA, for each location, for each VISIBLE (non-silent) action label, at most one outgoing transition with this action label ***)
+	(*** NOTE: strongly deterministic = for each PTA, for each location, for each VISIBLE (non-silent) action action, at most one outgoing transition with this action action ***)
 
 	(* Print some information *)
 	print_message Verbose_high ("*** Detecting the strongly-deterministic nature of the model…");
