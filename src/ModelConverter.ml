@@ -75,14 +75,17 @@ let saved_variables				= ref None
 (************************************************************)
 
 type useful_parsing_model_information = {
-	constants			: (Automaton.variable_name , NumConst.t) Hashtbl.t;
-	discrete			: variable_index list;
-	index_of_actions	: (Automaton.action_name , Automaton.action_index) Hashtbl.t;
-	index_of_automata	: (Automaton.automaton_name , Automaton.automaton_index) Hashtbl.t;
-	index_of_locations	: ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array;
-	index_of_variables	: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
-	type_of_variables	: (Automaton.variable_index , AbstractModel.var_type) Hashtbl.t;
-	variable_names		: (variable_index -> variable_name);
+	(* The locations for each automaton: automaton_index -> location_index -> location_name *)
+	array_of_location_names				: location_name array array;
+	constants							: (Automaton.variable_name , NumConst.t) Hashtbl.t;
+	discrete							: variable_index list;
+	index_of_actions					: (Automaton.action_name , Automaton.action_index) Hashtbl.t;
+	index_of_automata					: (Automaton.automaton_name , Automaton.automaton_index) Hashtbl.t;
+	index_of_locations					: ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array;
+	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
+	type_of_variables					: Automaton.variable_index -> AbstractModel.var_type;
+	variable_names						: variable_name list;
+	removed_variable_names				: variable_name list;
 }
 
 
@@ -1125,68 +1128,76 @@ let check_stopwatches index_of_variables type_of_variables stopwatches =
 (*------------------------------------------------------------*)
 (* Check that the automata are well-formed *)
 (*------------------------------------------------------------*)
-let check_automata index_of_variables type_of_variables variable_names removed_variable_names index_of_automata locations_per_automaton constants automata =
-  let well_formed = ref true in
+let check_automata useful_parsing_model_information automata =
+	let constants				= useful_parsing_model_information.constants in
+	let index_of_automata		= useful_parsing_model_information.index_of_automata in
+	let index_of_variables		= useful_parsing_model_information.index_of_variables in
+	let locations_per_automaton	= useful_parsing_model_information.array_of_location_names in
+	let removed_variable_names	= useful_parsing_model_information.removed_variable_names in
+	let type_of_variables		= useful_parsing_model_information.type_of_variables in
+	let variable_names			= useful_parsing_model_information.variable_names in
 
-  (* Check each automaton *)
-  List.iter (fun (automaton_name, sync_name_list, locations) ->
-      print_message Verbose_total ("      Checking automaton " ^ automaton_name);
-      (* Get the index of the automaton *)
-      let index = try (Hashtbl.find index_of_automata automaton_name) with
-          Not_found -> raise (InternalError ("Impossible to find the index of automaton '" ^ automaton_name ^ "'."))
-      in
-      (* Check each location *)
-      List.iter (fun (location : parsed_location) ->
-          print_message Verbose_total ("        Checking location " ^ location.name);
-          (* Check that the location_name exists (which is obvious) *)
-          if not (in_array location.name locations_per_automaton.(index)) then(
-            print_error ("The location '" ^ location.name ^ "' declared in automaton '" ^ automaton_name ^ "' does not exist.");
-            well_formed := false);
+	let well_formed = ref true in
 
-          (* Check the cost *)
-          begin
-            match location.cost with
-            | Some cost ->
-              print_message Verbose_total ("          Checking cost");
-              if not (all_variables_defined_in_linear_expression variable_names constants cost) then well_formed := false;
-            | None -> ()
-          end;
+	(* Check each automaton *)
+	List.iter (fun (automaton_name, sync_name_list, locations) ->
+		print_message Verbose_total ("      Checking automaton " ^ automaton_name);
+		(* Get the index of the automaton *)
+		let index = try (Hashtbl.find index_of_automata automaton_name) with
+			Not_found -> raise (InternalError ("Impossible to find the index of automaton '" ^ automaton_name ^ "'."))
+		in
+		(* Check each location *)
+		List.iter (fun (location : parsed_location) ->
+			print_message Verbose_total ("        Checking location " ^ location.name);
+			(* Check that the location_name exists (which is obvious) *)
+			if not (in_array location.name locations_per_automaton.(index)) then(
+				print_error ("The location '" ^ location.name ^ "' declared in automaton '" ^ automaton_name ^ "' does not exist.");
+				well_formed := false);
 
-          (* Check the stopwatches *)
-          print_message Verbose_total ("          Checking possible stopwatches");
-          if not (check_stopwatches index_of_variables type_of_variables location.stopped) then well_formed := false;
+			(* Check the cost *)
+			begin
+				match location.cost with
+				| Some cost ->
+				print_message Verbose_total ("          Checking cost");
+				if not (all_variables_defined_in_linear_expression variable_names constants cost) then well_formed := false;
+				| None -> ()
+			end;
 
-
-          (* Check the convex predicate *)
-
-          (*** TODO: preciser quel automate et quelle location en cas d'erreur ***)
-
-          print_message Verbose_total ("          Checking convex predicate");
-          if not (all_variables_defined_in_convex_predicate variable_names constants location.invariant) then well_formed := false;
+			(* Check the stopwatches *)
+			print_message Verbose_total ("          Checking possible stopwatches");
+			if not (check_stopwatches index_of_variables type_of_variables location.stopped) then well_formed := false;
 
 
-          (* Check transitions *)
-          print_message Verbose_total ("          Checking transitions");
-          List.iter (fun (convex_predicate, updates, sync, target_location_name) ->
-              (* Check the convex predicate *)
-              print_message Verbose_total ("            Checking convex predicate");
-              if not (all_variables_defined_in_convex_predicate variable_names constants convex_predicate) then well_formed := false;
-              (* Check the updates *)
-              print_message Verbose_total ("            Checking updates");
-              List.iter (fun update -> if not (check_update index_of_variables type_of_variables variable_names removed_variable_names constants automaton_name update) then well_formed := false) updates;
-              (* Check the sync *)
-              print_message Verbose_total ("            Checking sync name ");
-              if not (check_sync sync_name_list automaton_name sync) then well_formed := false;
-              (* Check that the target location exists for this automaton *)
-              if not (in_array target_location_name locations_per_automaton.(index)) then(
-                print_error ("The target location '" ^ target_location_name ^ "' used in automaton '" ^ automaton_name ^ "' does not exist.");
-                well_formed := false);
-            ) location.transitions;
-        ) locations;
-    ) automata;
+			(* Check the convex predicate *)
 
-  (* Return whether the automata passed the tests *)
-  !well_formed
+			(*** TODO: preciser quel automate et quelle location en cas d'erreur ***)
+
+			print_message Verbose_total ("          Checking convex predicate");
+			if not (all_variables_defined_in_convex_predicate variable_names constants location.invariant) then well_formed := false;
+
+
+			(* Check transitions *)
+			print_message Verbose_total ("          Checking transitions");
+			List.iter (fun (convex_predicate, updates, sync, target_location_name) ->
+				(* Check the convex predicate *)
+				print_message Verbose_total ("            Checking convex predicate");
+				if not (all_variables_defined_in_convex_predicate variable_names constants convex_predicate) then well_formed := false;
+				(* Check the updates *)
+				print_message Verbose_total ("            Checking updates");
+				List.iter (fun update -> if not (check_update index_of_variables type_of_variables variable_names removed_variable_names constants automaton_name update) then well_formed := false) updates;
+				(* Check the sync *)
+				print_message Verbose_total ("            Checking sync name ");
+				if not (check_sync sync_name_list automaton_name sync) then well_formed := false;
+				(* Check that the target location exists for this automaton *)
+				if not (in_array target_location_name locations_per_automaton.(index)) then(
+					print_error ("The target location '" ^ target_location_name ^ "' used in automaton '" ^ automaton_name ^ "' does not exist.");
+					well_formed := false);
+				) location.transitions;
+			) locations;
+		) automata;
+
+	(* Return whether the automata passed the tests *)
+	!well_formed
 
 
 (*------------------------------------------------------------*)
@@ -1746,7 +1757,7 @@ let check_and_convert_property_option useful_parsing_model_information  parsed_p
 	let gen_check_and_convert_list property actions_list =
 		(* Check action names (use a fold_left instead of forall to ensure that all actions will be checked) *)
 		if not (List.fold_left (fun current_result a -> check_action_name index_of_actions a && current_result) true actions_list)
-		then (Noproperty , false)
+		then (None , false)
 		else (
 		(* Get action indexes *)
 		let action_index_list = List.map (Hashtbl.find index_of_actions) actions_list in
@@ -1765,7 +1776,7 @@ let check_and_convert_property_option useful_parsing_model_information  parsed_p
 
 	(* Check and convert *)
 	match parsed_property_definition with
-	| None -> (Noproperty , true)
+	| None -> (None , true)
 	| Some property ->
 		begin
 		match property with
@@ -1815,7 +1826,7 @@ let check_and_convert_property_option useful_parsing_model_information  parsed_p
 						then true
 						else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
 			in
-			if not (check1 && check2 && check3 && check4) then (Noproperty , false)
+			if not (check1 && check2 && check3 && check4) then (None , false)
 			else (
 			(* Get action indexes *)
 			let action_index = Hashtbl.find index_of_actions a in
@@ -3050,7 +3061,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Make the array of constants *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let constants, constants_consistent = make_constants constants in
+	let (constants : string list), constants_consistent = make_constants constants in
 
 	if verbose_mode_greater Verbose_high then(
 		(* Constants *)
@@ -3300,9 +3311,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let type_of_variables = fun variable_index -> type_of_variables.(variable_index) in
 
 	(* Create the lists of different variables *)
-	let parameters = list_of_interval first_parameter_index (first_clock_index - 1) in
-	let clocks     = list_of_interval first_clock_index (first_discrete_index - 1) in
-	let discrete   = list_of_interval first_discrete_index (nb_variables - 1) in
+	let (parameters : parameter_index list)	= list_of_interval first_parameter_index (first_clock_index - 1) in
+	let (clocks : clock_index list)			= list_of_interval first_clock_index (first_discrete_index - 1) in
+	let (discrete : discrete_index list)	= list_of_interval first_discrete_index (nb_variables - 1) in
 
 	(* Create the type check functions *)
 	let is_clock = (fun variable_index -> try (type_of_variables variable_index = Var_type_clock) with Invalid_argument _ ->  false) in
@@ -3343,7 +3354,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	if not (all_locations_different parsed_model.automata) then raise InvalidModel;
 
 	(* Get all the locations for each automaton: automaton_index -> location_index -> location_name *)
-	let array_of_location_names = make_locations_per_automaton index_of_automata parsed_model.automata nb_automata in
+	let (array_of_location_names : location_name array array) = make_locations_per_automaton index_of_automata parsed_model.automata nb_automata in
 	(* Add the observer locations *)
 	begin
 	match observer_automaton with
@@ -3375,7 +3386,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		array_of_locations_per_automaton.(automaton_index) <-
 		Array.to_list (Array.mapi (fun location_index _ -> location_index) array_of_location_names.(automaton_index));
 	done;
-	let locations_per_automaton = fun automaton_index -> array_of_locations_per_automaton.(automaton_index) in
+	let (locations_per_automaton : automaton_index -> location_name array) = fun automaton_index -> array_of_locations_per_automaton.(automaton_index) in
 	(* Create the access function returning a location name *)
 	let location_names = fun automaton_index location_index -> array_of_location_names.(automaton_index).(location_index) in
 
@@ -3395,10 +3406,28 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Create useful parsing structure, used in subsequent functions *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	
+	let useful_parsing_model_information = {
+		array_of_location_names				= array_of_location_names;
+		constants							= constants
+		discrete							= discrete;
+		index_of_actions					= index_of_actions
+		index_of_automata					= index_of_automata;
+		index_of_locations					= index_of_locations;
+		index_of_variables					= index_of_variables;
+		type_of_variables					= type_of_variables;
+		variable_names						= variable_names;
+		removed_variable_names				= variable_names;
+	} in
+
+
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the automata *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Checking automata…");
-	let well_formed_automata = check_automata index_of_variables type_of_variables variable_names removed_variable_names index_of_automata array_of_location_names constants parsed_model.automata in
+	let well_formed_automata = check_automata useful_parsing_model_information parsed_model.automata in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3436,21 +3465,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 	
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Create useful parsing structure, used in subsequent functions *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	
-	let useful_parsing_model_information = {
-		constants			= constants
-		discrete			= discrete;
-		index_of_actions	= index_of_actions
-		index_of_automata	= index_of_automata;
-		index_of_locations	= index_of_locations;
-		index_of_variables	= index_of_variables;
-		type_of_variables	= type_of_variables;
-		variable_names		= variable_names;
-	} in
-
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check property definition *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
