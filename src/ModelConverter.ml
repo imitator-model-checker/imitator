@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2019/12/17
+ * Last modified     : 2019/12/18
  *
  ************************************************************)
 
@@ -3371,8 +3371,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
-	raise (NotImplemented "abstract_structures_of_parsing_structures")
-	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the automata *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3395,19 +3393,19 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Get pairs for the initialisation of the discrete variables, and check the init definition *)
 
 	let init_discrete_pairs, well_formed_init =
-		check_init discrete variable_names removed_variable_names constants index_of_variables type_of_variables automata automata_names index_of_automata array_of_location_names parsed_init_definition observer_automaton in
+		check_init discrete variable_names removed_variable_names constants index_of_variables type_of_variables automata automata_names index_of_automata array_of_location_names parsed_model.init_definition observer_automaton in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check projection definition *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let well_formed_projection = check_projection_definition parameters_names parsed_projection_definition in
+	let well_formed_projection = check_projection_definition parameters_names parsed_property.projection in
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check optimization definition *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let well_formed_optimization = check_optimization parameters_names parsed_optimization_definition in
+	let well_formed_optimization = check_optimization parameters_names parsed_optimization_definition in*)
 
 
 
@@ -3417,15 +3415,18 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** WARNING: might be a problem if the check_automata test fails ***)
 	let property, well_formed_property =
-		check_and_convert_property index_of_variables type_of_variables discrete variable_names constants index_of_actions index_of_automata index_of_locations parsed_property in
+		check_and_convert_property_option index_of_variables type_of_variables discrete variable_names constants index_of_actions index_of_automata index_of_locations parsed_property_option in
 
 
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	raise (NotImplemented "abstract_structures_of_parsing_structures")
+	(*
+
+	(*	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check polyhedra definition in (optional) carto mode *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let well_formed_carto = ref true in
 
-
+*)
 
 	(*** TODO!!! reintroduce differently ***)
 (*	let parsed_constraints , (p1_min , p1_max) , (p2_min , p2_max)  = parsed_carto_definition in
