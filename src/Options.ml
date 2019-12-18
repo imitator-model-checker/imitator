@@ -243,6 +243,7 @@ class imitator_options =
 
 		(* Merging states on the fly *)
 		val mutable merge = ref false
+		val mutable mergeq = ref false
 		(* Merging states on the fly (after pi0-compatibility check) *)
 (* 		val mutable merge_before = ref false *)
 
@@ -290,6 +291,10 @@ class imitator_options =
 		method merge = self#bool_of_option "merge" merge
 		method is_set_merge = merge <> None
 		method set_merge b = merge <- Some b
+
+		method mergeq = self#bool_of_option "mergeq" mergeq
+		method is_set_mergeq = mergeq <> None
+		method set_mergeq b = mergeq <- Some b
 
 (* 		method merge_before = !merge_before *)
 		method merge_heuristic = merge_heuristic
@@ -673,6 +678,9 @@ class imitator_options =
 
 (*				("-merge-before", Set merge_before , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: `false` (disable)");*)
 
+				("-mergeq", Unit (fun () -> mergeq <- Some true; merge <- Some true), "Use the merging technique of [AFS13] on the queue only. Default: 'false' (disable)");
+				("-no-mergeq", Unit (fun () -> mergeq <- Some false), " Do not use the merging technique of [AFS13] on the queue only. Default: 'true");
+
 				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Options are `always`, `targetseen`, `pq10`, `pq100`, `iter10`, `iter100`. Default: iter10.");
 
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
@@ -888,7 +896,7 @@ class imitator_options =
 (*			(* AF is not safe with incl or merging *)
 			if imitator_mode = AF_synthesis then(
 				if !inclusion then print_warning "The state inclusion option may not preserve the correctness of AFsynth.";
-				if !merge then print_warning "The merging option may not preserve the correctness of AFsynth.";
+				if !merge || !mergeq then print_warning "The merging option may not preserve the correctness of AFsynth.";
 			);*)
 
 			if imitator_mode <> Algorithm && draw_cart then print_warning ("The `-draw-cart` option is reserved for synthesis algorithms. Ignored.");
@@ -1033,12 +1041,18 @@ end;
 
 
 			(* OPTIONS *)
-
-			begin match merge with
+			begin match mergeq with
 			| Some true ->
-				print_message Verbose_standard ("Merging technique of [AFS13] enabled.");
+				print_message Verbose_standard ("Merging technique of [AFS13] enabled on queue only.");
 			| Some false ->
-				print_message Verbose_standard ("Merging technique of [AFS13] disabled.")
+				begin match merge with
+				| Some true ->
+					print_message Verbose_standard ("Merging technique of [AFS13] enabled.");
+				| Some false ->
+					print_message Verbose_standard ("Merging technique of [AFS13] disabled.")
+				| None ->
+					print_message Verbose_medium ("Merging technique of [AFS13] enabled if requested by the algorithm.")
+				end;
 			| None ->
 				print_message Verbose_medium ("Merging technique of [AFS13] enabled if requested by the algorithm.")
 			end;
