@@ -1,0 +1,25 @@
+var p,q: parameter;
+
+automaton test
+synclabs: a,b,c,d;
+
+loc l0: while True wait {}
+    when p<=q sync a goto l1;
+	when p>=q sync b goto l2;
+	when p=2 sync c goto l3;
+accepting loc l1: while True wait {}
+    when True goto l1;
+accepting loc l2: while True wait {}
+    when True goto l2;
+loc l3: while True wait {}
+	when True sync d goto l4;
+accepting loc l4: while True wait {}
+    when True goto l4;
+end
+
+
+init :=   
+	loc[test]=l0
+  & p>1 
+  & q>1
+	;
