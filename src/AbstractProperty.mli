@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2019/12/16
+ * Last modified     : 2019/12/18
  *
  ************************************************************)
 
@@ -52,12 +52,112 @@ and state_predicate =
 (************************************************************)
 (** Definition of property *)
 (************************************************************)
-type abstract_algorithm =
+(*type abstract_algorithm =
 	(** Reachability *)
 	| Reachability of state_predicate
 	(** Safety *)
 	| Safety of state_predicate
+	*)
+
+type duration = LinearConstraint.p_linear_term
+
+type property =
+
+	(*------------------------------------------------------------*)
+	(* Non-nested CTL *)
+	(*------------------------------------------------------------*)
+
+	(* Reachability *)
+	| EF of state_predicate
 	
+	
+	(*** TODO: observers! ***)
+	(* Reachability *)
+	| Action_deadline of action_name * duration
+	
+	
+	(* Unavoidability *)
+	| AF of state_predicate
+	
+	(* Liveness *)
+	| AG of state_predicate
+	
+	
+	(*------------------------------------------------------------*)
+	(* Optimized reachability *)
+	(*------------------------------------------------------------*)
+	
+	(* Reachability with minimization *)
+	| EFmin of state_predicate * (*** TODO: bool is just random here, to be done ***)bool
+	
+	(*** TODO: EFmin, EFmax, EFsynthmin, EFsynthmax, EF_synth_min_priority_queue ***)
+	
+	(** EF-synthesis with examples of (un)safe words *)
+	| EFexemplify of state_predicate
+	
+
+	(*------------------------------------------------------------*)
+	(* Cycles *)
+	(*------------------------------------------------------------*)
+	
+	(** Infinite-run (cycle) *)
+	| Cycle
+
+	(** Accepting infinite-run (cycle) *)
+	| Acc_Cycle
+
+	(** Infinite-run (cycle) with non-Zeno assumption *)
+	| NZCycle
+	
+
+	(*------------------------------------------------------------*)
+	(* Deadlock-freeness *)
+	(*------------------------------------------------------------*)
+	
+	(* Deadlock-free synthesis *)
+	| Deadlock_Freeness
+
+	
+	(*------------------------------------------------------------*)
+	(* Inverse method, trace preservation, robustness *)
+	(*------------------------------------------------------------*)
+	
+	(* Inverse method with complete, non-convex result *)
+	| IM of PVal.pval
+
+	(* Non-complete inverse method with convex result *)
+	| ConvexIM of PVal.pval
+
+	(* Parametric reachability preservation *)
+	| PRP of PVal.pval
+
+	
+	(*------------------------------------------------------------*)
+	(* Cartography algorithms *)
+	(*------------------------------------------------------------*)
+	
+	(* Cartography *)
+	| Cover_cartography of HyperRectangle.hyper_rectangle
+
+	
+	(** Cover the whole cartography using learning-based abstractions *)
+	| Learning_cartography of HyperRectangle.hyper_rectangle
+	
+	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+	| Shuffle_cartography of HyperRectangle.hyper_rectangle
+	
+	(** Look for the border using the cartography*)
+	| Border_cartography of HyperRectangle.hyper_rectangle
+	
+	(** Randomly pick up values for a given number of iterations *)
+	| Random_cartography  of HyperRectangle.hyper_rectangle * int
+	
+	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+	| RandomSeq_cartography  of HyperRectangle.hyper_rectangle * int
+
+	(* Parametric reachability preservation *)
+	| PRPC of HyperRectangle.hyper_rectangle
+
 
 	
 
@@ -82,7 +182,7 @@ type abstract_property = {
 	(* Emptiness or synthesis *)
 	synthesis_type	: synthesis_type;
 	(* Property *)
-	property		: abstract_algorithm;
+	property		: property;
 	(* Projection of the result *)
 	projection		: projection;
 }

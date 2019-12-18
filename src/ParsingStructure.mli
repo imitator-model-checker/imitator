@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2019/12/16
+ * Last modified     : 2019/12/18
  *
  ****************************************************************)
 
@@ -195,10 +195,10 @@ type init_definition = parsed_init_state_predicate list
 (** Definition of the property *)
 (****************************************************************)
 
-type duration = linear_expression
+type parsed_duration = linear_expression
 
 (*** NOTE: for now, we restrict to constants (later should be extended to at least constant expressions) *)
-type discrete_value = NumConst.t
+(* type discrete_value = NumConst.t *)
 
 (** Predicates for the definition of the correctness property *)
 
@@ -339,7 +339,7 @@ type parsed_property_type =
 	
 	(*** TODO: observers! ***)
 	(* Reachability *)
-	| Parsed_Action_deadline of sync_name * duration
+	| Parsed_Action_deadline of sync_name * parsed_duration
 	
 	
 	(* Unavoidability *)

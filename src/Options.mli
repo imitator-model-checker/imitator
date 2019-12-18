@@ -10,12 +10,12 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2019/10/16
+ * Last modified: 2019/12/18
  *
  ************************************************************)
  
 
-open ImitatorUtilities
+open AbstractAlgorithm
 
 
 

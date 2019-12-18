@@ -75,11 +75,16 @@ let saved_variables				= ref None
 (************************************************************)
 
 type useful_parsing_model_information = {
-	constants         : (Automaton.variable_name , NumConst.t) Hashtbl.t;
-	index_of_automata : (Automaton.automaton_name , Automaton.automaton_index) Hashtbl.t;
-	index_of_variables: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
-	index_of_locations: ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array;
+	constants			: (Automaton.variable_name , NumConst.t) Hashtbl.t;
+	discrete			: variable_index list;
+	index_of_actions	: (Automaton.action_name , Automaton.action_index) Hashtbl.t;
+	index_of_automata	: (Automaton.automaton_name , Automaton.automaton_index) Hashtbl.t;
+	index_of_locations	: ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array;
+	index_of_variables	: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
+	type_of_variables	: (Automaton.variable_index , AbstractModel.var_type) Hashtbl.t;
+	variable_names		: (variable_index -> variable_name);
 }
+
 
 
 (************************************************************)
@@ -1381,6 +1386,7 @@ let check_location_name index_of_locations automaton_index automaton_name locati
   )
   else true
 
+*)
 (*------------------------------------------------------------*)
 let check_action_name index_of_actions action_name =
   if not (Hashtbl.mem index_of_actions action_name)
@@ -1390,7 +1396,7 @@ let check_action_name index_of_actions action_name =
   )
   else true
 
-
+(*
 (*------------------------------------------------------------*)
 (* Check a list of local location declaration (i.e., of the form 'loc[automaton] = location')
  * Return a list of unreachable_location, and a Boolean encoding whether all checks passed
@@ -1657,177 +1663,194 @@ let check_and_convert_unreachable_global_location index_of_variables type_of_var
   ,
   check1 && check2
 
-
+*)
 (*------------------------------------------------------------*)
 (* Check the correctness property declaration       *)
 (*------------------------------------------------------------*)
-let check_and_convert_property index_of_variables type_of_variables discrete variable_names constants index_of_actions index_of_automata index_of_locations parsed_property_definition =
+let check_and_convert_property_option useful_parsing_model_information  parsed_property =
+	let constants			= useful_parsing_model_information.constants in
+	let discrete			= useful_parsing_model_information.discrete in
+	let index_of_actions	= useful_parsing_model_information.index_of_actions in
+	let index_of_automata	= useful_parsing_model_information.index_of_automata in
+	let index_of_locations	= useful_parsing_model_information.index_of_locations in
+	let index_of_variables	= useful_parsing_model_information.index_of_variables in
+	let type_of_variables	= useful_parsing_model_information.type_of_variables in
+	let variable_names		= useful_parsing_model_information.variable_names in
 
-  (* Generic check and conversion function for 2 actions *)
-  let gen_check_and_convert_2act property a1 a2 =
-    (* Check action names (perform 2 even if one fails) *)
-    let check1 = check_action_name index_of_actions a1 in
-    let check2 = check_action_name index_of_actions a2 in
-    if not (check1 && check2)
-    then (Noproperty , false)
-    else (
-      (* Get action indexes *)
-      let action_index1 = Hashtbl.find index_of_actions a1 in
-      let action_index2 = Hashtbl.find index_of_actions a2 in
-      (*** BADPROG (but couldn't see how to do better!) *)
-      (* Match again and create the property *)
-      match property with
-      | ParsingStructure.Action_precedence_acyclic _ -> AbstractModel.Action_precedence_acyclic (action_index1, action_index2), true
-      | ParsingStructure.Action_precedence_cyclic _ -> AbstractModel.Action_precedence_cyclic (action_index1, action_index2), true
-      | ParsingStructure.Action_precedence_cyclicstrict _ -> AbstractModel.Action_precedence_cyclicstrict (action_index1, action_index2), true
-      (*** NOT IMPLEMENTED ***)
-      (*			| ParsingStructure.Eventual_response_acyclic _ -> AbstractModel.Eventual_response_acyclic (action_index1, action_index2), true
-        			| ParsingStructure.Eventual_response_cyclic _ -> AbstractModel.Eventual_response_cyclic (action_index1, action_index2), true
-        			| ParsingStructure.Eventual_response_cyclicstrict _ -> AbstractModel.Eventual_response_cyclicstrict (action_index1, action_index2), true*)
-      | _ -> raise (InternalError ("Impossible case while looking for properties with 2 actions; all cases should have been taken into account."))
-    )
-  in
+	(* Generic check and conversion function for 2 actions *)
+	let gen_check_and_convert_2act property a1 a2 =
+		(* Check action names (perform 2 even if one fails) *)
+		let check1 = check_action_name index_of_actions a1 in
+		let check2 = check_action_name index_of_actions a2 in
+		if not (check1 && check2)
+		then (None , false)
+		else (
+		(* Get action indexes *)
+		let action_index1 = Hashtbl.find index_of_actions a1 in
+		let action_index2 = Hashtbl.find index_of_actions a2 in
+		(*** BADPROG (but couldn't see how to do better!) *)
+		(* Match again and create the property *)
+		match property with
+		
+		(*** TODO: finish! ***)
+		
+	(*      | ParsingStructure.Action_precedence_acyclic _ -> AbstractModel.Action_precedence_acyclic (action_index1, action_index2), true
+		| ParsingStructure.Action_precedence_cyclic _ -> AbstractModel.Action_precedence_cyclic (action_index1, action_index2), true
+		| ParsingStructure.Action_precedence_cyclicstrict _ -> AbstractModel.Action_precedence_cyclicstrict (action_index1, action_index2), true*)
+		(*** NOT IMPLEMENTED ***)
+		(*			| ParsingStructure.Eventual_response_acyclic _ -> AbstractModel.Eventual_response_acyclic (action_index1, action_index2), true
+						| ParsingStructure.Eventual_response_cyclic _ -> AbstractModel.Eventual_response_cyclic (action_index1, action_index2), true
+						| ParsingStructure.Eventual_response_cyclicstrict _ -> AbstractModel.Eventual_response_cyclicstrict (action_index1, action_index2), true*)
+		| _ -> raise (InternalError ("Impossible case while looking for properties with 2 actions; all cases should have been taken into account."))
+		)
+	in
 
-  (* Generic check and conversion function for 2 actions and one deadline *)
-  let gen_check_and_convert_2actd property a1 a2 d =
-    (* Check action names and deadline (perform 3 even if one fails) *)
-    let check1 = check_action_name index_of_actions a1 in
-    let check2 = check_action_name index_of_actions a2 in
-    let check3 = all_variables_defined_in_linear_expression variable_names constants d in
-    let check4 = (if no_variables_in_linear_expression index_of_variables type_of_variables constants d
-                  then true
-                  else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
-    in
-    if not (check1 && check2 && check3 && check4)
-    then (Noproperty , false)
-    else (
-      (* Get action indexes *)
-      let action_index1 = Hashtbl.find index_of_actions a1 in
-      let action_index2 = Hashtbl.find index_of_actions a2 in
-      (* Convert deadline *)
-      let d = LinearConstraint.cast_p_of_pxd_linear_term (linear_term_of_linear_expression index_of_variables constants d) true in
-
-
-      (*** BADPROG (but couldn't see how to do better!) ***)
-
-      (* Match again and create the property *)
-      match property with
-      | ParsingStructure.TB_Action_precedence_acyclic _ -> AbstractModel.TB_Action_precedence_acyclic (action_index1, action_index2, d), true
-      | ParsingStructure.TB_Action_precedence_cyclic _ -> AbstractModel.TB_Action_precedence_cyclic (action_index1, action_index2, d), true
-      | ParsingStructure.TB_Action_precedence_cyclicstrict _ -> AbstractModel.TB_Action_precedence_cyclicstrict (action_index1, action_index2, d), true
-      | ParsingStructure.TB_response_acyclic _ -> AbstractModel.TB_response_acyclic (action_index1, action_index2, d), true
-      | ParsingStructure.TB_response_cyclic _ -> AbstractModel.TB_response_cyclic (action_index1, action_index2, d), true
-      | ParsingStructure.TB_response_cyclicstrict _ -> AbstractModel.TB_response_cyclicstrict (action_index1, action_index2, d), true
-      | _ -> raise (InternalError ("Impossible case while looking for properties with 2 actions and a deadline; all cases should have been taken into account."))
-    )
-  in
-
-  (* Generic check and conversion function for a list of actions *)
-  let gen_check_and_convert_list property actions_list =
-    (* Check action names (use a fold_left instead of forall to ensure that all actions will be checked) *)
-    if not (List.fold_left (fun current_result a -> check_action_name index_of_actions a && current_result) true actions_list)
-    then (Noproperty , false)
-    else (
-      (* Get action indexes *)
-      let action_index_list = List.map (Hashtbl.find index_of_actions) actions_list in
-      (*** BADPROG (but couldn't see how to do better!) ***)
-      (* Match again and create the property *)
-      match property with
-      | ParsingStructure.Sequence_acyclic _ -> AbstractModel.Sequence_acyclic action_index_list, true
-      | ParsingStructure.Sequence_cyclic _ -> AbstractModel.Sequence_cyclic action_index_list, true
-      | _ -> raise (InternalError ("Impossible case while looking for properties with a sequence; all cases should have been taken into account."))
-    )
-  in
+	(* Generic check and conversion function for 2 actions and one deadline *)
+	let gen_check_and_convert_2actd property a1 a2 d =
+		(* Check action names and deadline (perform 3 even if one fails) *)
+		let check1 = check_action_name index_of_actions a1 in
+		let check2 = check_action_name index_of_actions a2 in
+		let check3 = all_variables_defined_in_linear_expression variable_names constants d in
+		let check4 = (if no_variables_in_linear_expression index_of_variables type_of_variables constants d
+					then true
+					else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
+		in
+		if not (check1 && check2 && check3 && check4)
+		then (None , false)
+		else (
+		(* Get action indexes *)
+		let action_index1 = Hashtbl.find index_of_actions a1 in
+		let action_index2 = Hashtbl.find index_of_actions a2 in
+		(* Convert deadline *)
+		let d = LinearConstraint.cast_p_of_pxd_linear_term (linear_term_of_linear_expression index_of_variables constants d) true in
 
 
-  (* Check and convert *)
-  match parsed_property_definition with
-  | None -> (Noproperty , true)
-  | Some property ->
-    begin
-      match property with
+		(*** BADPROG (but couldn't see how to do better!) ***)
 
-      (* CASE NON-REACHABILITY *)
-      | Parsed_unreachable_locations parsed_unreachable_global_location_list (*(automaton_name , location_name)*) ->
-        (* Global flag for checks *)
-        let checks_passed = ref true in
-        (* Check and convert each global location *)
-        let unreachable_global_location_list = List.map (fun parsed_unreachable_global_location ->
-            (* Check and convert this parsed_unreachable_global_location *)
-            let unreachable_global_location , checked = check_and_convert_unreachable_global_location index_of_variables type_of_variables discrete variable_names index_of_automata index_of_locations parsed_unreachable_global_location in
-            (* Update global variable *)
-            checks_passed := !checks_passed && checked;
-            (* Keep abstract global location *)
-            unreachable_global_location
-          ) parsed_unreachable_global_location_list
-        in
-        (* Return abstract structure and flag for checks *)
-        Unreachable_locations unreachable_global_location_list , !checks_passed
+		(* Match again and create the property *)
+		match property with
+		
+		(*** TODO: finish! ***)
+		
+(*		| ParsingStructure.TB_Action_precedence_acyclic _ -> AbstractModel.TB_Action_precedence_acyclic (action_index1, action_index2, d), true
+		| ParsingStructure.TB_Action_precedence_cyclic _ -> AbstractModel.TB_Action_precedence_cyclic (action_index1, action_index2, d), true
+		| ParsingStructure.TB_Action_precedence_cyclicstrict _ -> AbstractModel.TB_Action_precedence_cyclicstrict (action_index1, action_index2, d), true
+		| ParsingStructure.TB_response_acyclic _ -> AbstractModel.TB_response_acyclic (action_index1, action_index2, d), true
+		| ParsingStructure.TB_response_cyclic _ -> AbstractModel.TB_response_cyclic (action_index1, action_index2, d), true
+		| ParsingStructure.TB_response_cyclicstrict _ -> AbstractModel.TB_response_cyclicstrict (action_index1, action_index2, d), true*)
+		| _ -> raise (InternalError ("Impossible case while looking for properties with 2 actions and a deadline; all cases should have been taken into account."))
+		)
+	in
+
+	(* Generic check and conversion function for a list of actions *)
+	let gen_check_and_convert_list property actions_list =
+		(* Check action names (use a fold_left instead of forall to ensure that all actions will be checked) *)
+		if not (List.fold_left (fun current_result a -> check_action_name index_of_actions a && current_result) true actions_list)
+		then (Noproperty , false)
+		else (
+		(* Get action indexes *)
+		let action_index_list = List.map (Hashtbl.find index_of_actions) actions_list in
+		(*** BADPROG (but couldn't see how to do better!) ***)
+		(* Match again and create the property *)
+		match property with
+		
+		(*** TODO: finish! ***)
+		
+(*		| ParsingStructure.Sequence_acyclic _ -> AbstractModel.Sequence_acyclic action_index_list, true
+		| ParsingStructure.Sequence_cyclic _ -> AbstractModel.Sequence_cyclic action_index_list, true*)
+		| _ -> raise (InternalError ("Impossible case while looking for properties with a sequence; all cases should have been taken into account."))
+		)
+	in
 
 
-      (* CASE TWO ACTIONS *)
-      (* if a2 then a1 has happened before *)
-      | ParsingStructure.Action_precedence_acyclic ( a1 , a2 )
-      (* everytime a2 then a1 has happened before *)
-      | ParsingStructure.Action_precedence_cyclic ( a1 , a2 )
-      (* everytime a2 then a1 has happened exactly once before *)
-      | ParsingStructure.Action_precedence_cyclicstrict ( a1 , a2 )
-        (*** NOT IMPLEMENTED ***)
-        (*		(* if a1 then eventually a2 *)
-          		| ParsingStructure.Eventual_response_acyclic ( a1 , a2 )
-          		(* everytime a1 then eventually a2 *)
-          		| ParsingStructure.Eventual_response_cyclic ( a1 , a2 )
-          		(* everytime a1 then eventually a2 once before next *)
-          		| ParsingStructure.Eventual_response_cyclicstrict ( a1 , a2 )*)
-        -> gen_check_and_convert_2act property a1 a2
+	(* Check and convert *)
+	match parsed_property_definition with
+	| None -> (Noproperty , true)
+	| Some property ->
+		begin
+		match property with
 
-      (* CASE ACTION + DEADLINE *)
-      | ParsingStructure.Action_deadline ( a , d )
-        ->
-        (* Check action name and deadline (perform 2 even if one fails) *)
-        let check1 = check_action_name index_of_actions a in
-        let check2 = all_variables_defined_in_linear_expression variable_names constants d in
-        let check3 = all_variables_defined_in_linear_expression variable_names constants d in
-        let check4 = (if no_variables_in_linear_expression index_of_variables type_of_variables constants d
-                      then true
-                      else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
-        in
-        if not (check1 && check2 && check3 && check4) then (Noproperty , false)
-        else (
-          (* Get action indexes *)
-          let action_index = Hashtbl.find index_of_actions a in
-          (* Convert deadline *)
-          let d = LinearConstraint.cast_p_of_pxd_linear_term (linear_term_of_linear_expression index_of_variables constants d) true in
-          AbstractModel.Action_deadline ( action_index , d ), true
-        )
+		(* CASE NON-REACHABILITY *)
+		| Parsed_unreachable_locations parsed_unreachable_global_location_list (*(automaton_name , location_name)*) ->
+			(* Global flag for checks *)
+			let checks_passed = ref true in
+			(* Check and convert each global location *)
+			let unreachable_global_location_list = List.map (fun parsed_unreachable_global_location ->
+				(* Check and convert this parsed_unreachable_global_location *)
+				let unreachable_global_location , checked = check_and_convert_unreachable_global_location index_of_variables type_of_variables discrete variable_names index_of_automata index_of_locations parsed_unreachable_global_location in
+				(* Update global variable *)
+				checks_passed := !checks_passed && checked;
+				(* Keep abstract global location *)
+				unreachable_global_location
+			) parsed_unreachable_global_location_list
+			in
+			(* Return abstract structure and flag for checks *)
+			Unreachable_locations unreachable_global_location_list , !checks_passed
 
-      (* CASE 2 ACTIONS + DEADLINE *)
-      (* if a2 then a1 happened within d before *)
-      | ParsingStructure.TB_Action_precedence_acyclic (a1, a2, d)
-      (* everytime a2 then a1 happened within d before *)
-      | ParsingStructure.TB_Action_precedence_cyclic (a1, a2, d)
-      (* everytime a2 then a1 happened once within d before *)
-      | ParsingStructure.TB_Action_precedence_cyclicstrict (a1, a2, d)
-      (* if a1 then eventually a2 within d *)
-      | ParsingStructure.TB_response_acyclic (a1, a2, d)
-      (* everytime a1 then eventually a2 within d *)
-      | ParsingStructure.TB_response_cyclic (a1, a2, d)
-      (* everytime a1 then eventually a2 within d once before next *)
-      | ParsingStructure.TB_response_cyclicstrict (a1, a2, d)
-        -> gen_check_and_convert_2actd property a1 a2 d
 
-      (* CASE SEQUENCES (list of actions) *)
-      (* sequence: a1, …, an *)
-      | ParsingStructure.Sequence_acyclic (actions_list)
-      (* sequence: always a1, …, an *)
-      | ParsingStructure.Sequence_cyclic (actions_list)
-        -> gen_check_and_convert_list property actions_list
+		(* CASE TWO ACTIONS *)
+		(* if a2 then a1 has happened before *)
+		| ParsingStructure.Action_precedence_acyclic ( a1 , a2 )
+		(* everytime a2 then a1 has happened before *)
+		| ParsingStructure.Action_precedence_cyclic ( a1 , a2 )
+		(* everytime a2 then a1 has happened exactly once before *)
+		| ParsingStructure.Action_precedence_cyclicstrict ( a1 , a2 )
+			(*** NOT IMPLEMENTED ***)
+			(*		(* if a1 then eventually a2 *)
+					| ParsingStructure.Eventual_response_acyclic ( a1 , a2 )
+					(* everytime a1 then eventually a2 *)
+					| ParsingStructure.Eventual_response_cyclic ( a1 , a2 )
+					(* everytime a1 then eventually a2 once before next *)
+					| ParsingStructure.Eventual_response_cyclicstrict ( a1 , a2 )*)
+			-> gen_check_and_convert_2act property a1 a2
 
-      (*		(* Otherwise : error ! *)
-        		| _ -> raise (InternalError ("In the bad definition, not all possibilities are implemented yet."))*)
-    end
-(*	in
-  	[n action_index], !well_formed*)*)
+		(* CASE ACTION + DEADLINE *)
+		| ParsingStructure.Action_deadline ( a , d )
+			->
+			(* Check action name and deadline (perform 2 even if one fails) *)
+			let check1 = check_action_name index_of_actions a in
+			let check2 = all_variables_defined_in_linear_expression variable_names constants d in
+			let check3 = all_variables_defined_in_linear_expression variable_names constants d in
+			let check4 = (if no_variables_in_linear_expression index_of_variables type_of_variables constants d
+						then true
+						else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
+			in
+			if not (check1 && check2 && check3 && check4) then (Noproperty , false)
+			else (
+			(* Get action indexes *)
+			let action_index = Hashtbl.find index_of_actions a in
+			(* Convert deadline *)
+			let d = LinearConstraint.cast_p_of_pxd_linear_term (linear_term_of_linear_expression index_of_variables constants d) true in
+			AbstractModel.Action_deadline ( action_index , d ), true
+			)
+
+		(* CASE 2 ACTIONS + DEADLINE *)
+		(* if a2 then a1 happened within d before *)
+		| ParsingStructure.TB_Action_precedence_acyclic (a1, a2, d)
+		(* everytime a2 then a1 happened within d before *)
+		| ParsingStructure.TB_Action_precedence_cyclic (a1, a2, d)
+		(* everytime a2 then a1 happened once within d before *)
+		| ParsingStructure.TB_Action_precedence_cyclicstrict (a1, a2, d)
+		(* if a1 then eventually a2 within d *)
+		| ParsingStructure.TB_response_acyclic (a1, a2, d)
+		(* everytime a1 then eventually a2 within d *)
+		| ParsingStructure.TB_response_cyclic (a1, a2, d)
+		(* everytime a1 then eventually a2 within d once before next *)
+		| ParsingStructure.TB_response_cyclicstrict (a1, a2, d)
+			-> gen_check_and_convert_2actd property a1 a2 d
+
+		(* CASE SEQUENCES (list of actions) *)
+		(* sequence: a1, …, an *)
+		| ParsingStructure.Sequence_acyclic (actions_list)
+		(* sequence: always a1, …, an *)
+		| ParsingStructure.Sequence_cyclic (actions_list)
+			-> gen_check_and_convert_list property actions_list
+
+		(*		(* Otherwise : error ! *)
+					| _ -> raise (InternalError ("In the bad definition, not all possibilities are implemented yet."))*)
+		end
+	(*	in
+		[n action_index], !well_formed*)
 
 
 
@@ -3399,7 +3422,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check projection definition *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let well_formed_projection = check_projection_definition parameters_names parsed_property.projection in
+	let well_formed_projection = match parsed_property_option with
+		| None -> true
+		| Some parsed_property -> check_projection_definition parameters_names parsed_property.projection
+	in
 
 
 (*	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3409,13 +3435,28 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Create useful parsing structure, used in subsequent functions *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	
+	let useful_parsing_model_information = {
+		constants			= constants
+		discrete			= discrete;
+		index_of_actions	= index_of_actions
+		index_of_automata	= index_of_automata;
+		index_of_locations	= index_of_locations;
+		index_of_variables	= index_of_variables;
+		type_of_variables	= type_of_variables;
+		variable_names		= variable_names;
+	} in
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check property definition *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** WARNING: might be a problem if the check_automata test fails ***)
-	let property, well_formed_property =
-		check_and_convert_property_option index_of_variables type_of_variables discrete variable_names constants index_of_actions index_of_automata index_of_locations parsed_property_option in
+	let property_option, well_formed_property =
+		check_and_convert_property_option useful_parsing_model_information parsed_property_option in
 
 
 	raise (NotImplemented "abstract_structures_of_parsing_structures")

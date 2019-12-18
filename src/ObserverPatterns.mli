@@ -52,4 +52,4 @@ val get_automaton : int -> automaton_index -> action_index -> clock_index -> Par
 	(* Initial inequalities (if any) *)
 	* LinearConstraint.px_linear_constraint option
 	(* The reduced reachability or safety property *)
-	* AbstractProperty.abstract_algorithm
+	* AbstractAlgorithm.algorithm

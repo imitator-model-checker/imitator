@@ -10,7 +10,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2019/12/09
+ * Last modified     : 2019/12/18
  *
  ************************************************************)
 
@@ -20,20 +20,17 @@
 (* External modules *)
 (************************************************************)
 open Arg
-open OCamlUtilities
 
 
 (************************************************************)
 (* Internal modules *)
 (************************************************************)
 open Exceptions
+open OCamlUtilities
 open ImitatorUtilities
+open AbstractAlgorithm
 
 
-(*let do_unit something =
-	Unit (fun () -> something)*)
-
-			
 
 class imitator_options =
 	object
@@ -92,7 +89,7 @@ class imitator_options =
 		val mutable timed_mode = ref false
 		
 		(* Print graph of reachable states *)
-		val mutable graphical_state_space = Graphical_state_space_none
+		val mutable graphical_state_space = AbstractAlgorithm.Graphical_state_space_none
 		
 		(* Keep the source file used for dot *)
 		val mutable with_graphics_source = ref false
@@ -110,10 +107,10 @@ class imitator_options =
 (* 		val mutable completeIM = ref false *)
 		
 		(* imitator mode *)
-		val mutable imitator_mode = Algorithm
+		val mutable imitator_mode = AbstractAlgorithm.Algorithm
 		
 		(* Exploration order *)
-		val mutable exploration_order = Exploration_layer_BFS
+		val mutable exploration_order = AbstractAlgorithm.Exploration_layer_BFS
 		
 		(* experimental variant for EFsynth *)
 		val mutable new_ef_mode = false
@@ -149,7 +146,7 @@ class imitator_options =
 		val mutable depth_limit = ref None
 		
 		(* Distributed version of IMITATOR *)
-		val mutable distribution_mode = ref Non_distributed
+		val mutable distribution_mode = ref AbstractAlgorithm.Non_distributed
 		
 		(* For distributed version: kill IM heuristics *)
 		val mutable distributedKillIM = ref false
