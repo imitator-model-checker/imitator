@@ -648,6 +648,7 @@ class imitator_options =
         Use `layerNDFSsub` for layered NDFS with subsumption. [NPvdP18]
         Default: layerBFS.
 				");
+<<<<<<< HEAD
 
 				("-graphics-source", Set with_graphics_source, " Keep file(s) used for generating graphical output. Default: false.");
 
@@ -696,6 +697,27 @@ class imitator_options =
 				("-no-mergeq", Unit (fun () -> mergeq <- Some false), " Do not use the merging technique of [AFS13] on the queue only. Default: 'true");
 
 				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Options are `always`, `targetseen`, `pq10`, `pq100`, `iter10`, `iter100`. Default: iter10.");
+=======
+				
+(* 				("-fromGrML", Unit (fun () -> fromGML <- true), "GrML syntax for input files (experimental). Defaut : 'false'"); *)
+				
+				("-IMK", Set pi_compatible, " Algorithm IMoriginal (defined in [AS11]): return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
+				
+				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");
+				
+				("-incl", Set inclusion, " Consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: 'false'");
+				
+				("-incl2", Set inclusion2, " Consider a bidirectional inclusion of symbolic zones (new <= old or old <= new) instead of the equality when checking for a fixpoint. Default: 'false'");
+				
+				("-merge", Set merge, " Use the merging technique of [AFS13]. Default: 'false' (disable)");
+				
+				("-mergeq", Unit (fun () -> mergeq <- ref true; merge <- ref true),
+					" Use the merging technique of [AFS13] on the queue  only. Default: 'false' (disable)");
+				
+(*				("-merge-before", Set merge_before , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");*)
+				
+				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Options are 'always', 'targetseen', 'pq10', 'pq100', 'iter10', 'iter100'. Default: iter10.");
+>>>>>>> fixed the call with and without merge
 
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
         Use `checksyntax` for a simple syntax check and no analysis.
