@@ -175,7 +175,7 @@ type state_space = {
 	nb_generated_states : int ref;
 
 	(** An Array 'state_index' -> 'State.abstract_state'; contains ALL states *)
-	all_states : (state_index, abstract_state) Hashtbl.t;
+	mutable all_states : (state_index, abstract_state) Hashtbl.t;
 
 	(** The id of the initial state *)
 	(*** NOTE: mutable due to the fact that the initial state can be merged with another state *)
@@ -189,10 +189,10 @@ type state_space = {
 
 	(** A hashtable to quickly find states with identical locations (? ; made by Ulrich); only for states to be compared *)
         (* modified by Jaco van de Pol: use global_location_index as key, rather than hash code of global_location *)
-	states_for_comparison : (location_index, state_index) Hashtbl.t;
+	mutable states_for_comparison : (location_index, state_index) Hashtbl.t;
 
 	(** A HashTable state_index -> list of (combined_transition * 'target_state_index') *)
-	transitions_table : (state_index , (combined_transition * state_index) list) Hashtbl.t;
+	mutable transitions_table : (state_index , (combined_transition * state_index) list) Hashtbl.t;
 
 	(** An integer that remembers the next index of state_index (may not be equal to the number of states, if states are removed *)
 	next_state_index : state_index ref;
@@ -588,6 +588,8 @@ let all_state_indexes state_space = hashtbl_get_all_keys state_space.all_states
 			state_index :: current_list)
 		state_space.all_states []*)
 
+(** Test if state index is in the current statespace *)
+let test_state_index state_space state_index = Hashtbl.mem state_space.all_states state_index
 
 
 (*** WARNING: big memory, here! Why not perform intersection on the fly? *)
@@ -1461,172 +1463,12 @@ let add_p_constraint_to_states state_space p_constraint =
 	) state_space
 
 
+(* ---------------------------- *)
+(* Code for Merging starts here *)
+(* ---------------------------- *)
 
-(*
-(** Merge two states by replacing the second one with the first one, in the whole state_space structure (lists of states, and transitions) *)
-let merge_2_states state_space state_index1 state_index2 =
-	(* Retrieve state2 (for hash later *)
-	let location_index2, constr2 = Hashtbl.find state_space.all_states state_index2 in
-	let state2 = get_location state_space location_index2, constr2 in
-
-	(*-------------------------------------------------------------*)
-	(* Replace s2 with s1 in transition table *)
-	(*-------------------------------------------------------------*)
-	(* First copy the table (MEMORY CONSUMING! but necessary in order to avoid unexpected behaviors) *)
-	let transitions_copy = Hashtbl.copy state_space.transitions_table in
-	Hashtbl.iter (fun (source_state_index, action_index) target_state_index ->
-		(* Replace if source *)
-		if source_state_index = state_index2 then (
-			(* Replace target if needed *)
-			let new_target_state_index = if target_state_index = state_index2 then state_index1 else target_state_index in
-			Hashtbl.remove state_space.transitions_table (source_state_index, action_index);
-			if Hashtbl.mem state_space.transitions_table (state_index1, action_index) && (Hashtbl.find state_space.transitions_table (state_index1, action_index)) = new_target_state_index then (
-
-				(* TO RECHECK (exception disabled by Etienne, 16/03/2012 *)
-
-
-				(* Unexpected case *)
-(* 				raise (InternalError ("Error when merging states: a pair '(source_state_index, action_index)' is already bound in the transitions table.")); *)
-			)else
-				Hashtbl.add state_space.transitions_table (state_index1, action_index) new_target_state_index;
-		)
-		(* Replace if target *)
-		else (if target_state_index = state_index2 then (
-			Hashtbl.remove state_space.transitions_table (source_state_index, action_index);
-			if Hashtbl.mem state_space.transitions_table (source_state_index, action_index)  && (Hashtbl.find state_space.transitions_table (source_state_index, action_index)) = state_index1 then (
-
-				(* TO RECHECK (exception disabled by Etienne, 16/03/2012 *)
-
-				(* Unexpected case *)
-(* 				raise (InternalError ("Error when merging states: a pair '(source_state_index, action_index)' is already bound in the transitions table.")); *)
-			)else
-				Hashtbl.add state_space.transitions_table (source_state_index, action_index) state_index1;
-		);
-		(* Else do nothing *)
-		)
-	) transitions_copy;
-
-	(*-------------------------------------------------------------*)
-	(* Remove s2 from state hashtable *)
-	(*-------------------------------------------------------------*)
-	Hashtbl.remove state_space.all_states state_index2;
-
-	(*-------------------------------------------------------------*)
-	(* Replace s2 with s1 in states_for_comparison *)
-	(*-------------------------------------------------------------*)
-	(* Find the hash *)
-	let hash2 = location_hash_code state2 in
-	(* Get all states with that hash *)
-	let all_states_with_hash2 = Hashtbl.find_all state_space.states_for_comparison hash2 in
-	(* Remove them all *)
-	while Hashtbl.mem state_space.states_for_comparison hash2 do
-		Hashtbl.remove state_space.states_for_comparison hash2;
-	done;
-	(* Add them back *)
-	List.iter (fun state_index ->
-		(* Only add if not state2 *)
-		if state_index != state_index2 then Hashtbl.add state_space.states_for_comparison hash2 state_index;
-	) all_states_with_hash2;
-
-
-	(* TO DO: remove merged state from states_for_comparison *)
-
-
-(*	(* First copy the table (MEMORY CONSUMING! but necessary in order to avoid unexpected behaviors) *)
-	let states_for_comparison_copy = Hashtbl.copy state_space.states_for_comparison in
-	(* Empty the original hashtable *)
-	Hashtbl.clear state_space.states_for_comparison;
-	(* Fill it again *)
-	Hashtbl.iter (fun hash state_index ->
-		(* Replace the state if needed *)
-		let new_state_index = if state_index = state_index2 then state_index1 else state_index in
-		(* Add it *)
-		Hashtbl.add hash new_state_index;
-	) states_for_comparison_copy; *)
-	()*)
-
-
-
-(** Merge two states by replacing the second one by the first one, in the whole state_space structure (lists of states, and transitions) *)
-let merge_states_ulrich state_space merger_state_index merged =
-	(* NOTE: 'merged' is usually very small, e.g., 1 or 2, so no need to optimize functions using 'merged *)
-	print_message Verbose_high ("Merging: update tables for state '" ^ (string_of_int merger_state_index) ^ "' with " ^ (string_of_int (List.length merged)) ^ " merged.");
-
-	(* Rebuild transitions table *)
-	if verbose_mode_greater Verbose_high then
-		print_message Verbose_high ("Merging: update transition table, containing " ^ (string_of_int (nb_transitions state_space)) ^ " transitions");
-	let t' = Hashtbl.copy state_space.transitions_table in
-	Hashtbl.clear state_space.transitions_table;
-	Hashtbl.iter (fun src successors ->
-		List.iter (fun (combined_transition, target_state_index) -> 
-			let src' = if (List.mem src merged) then merger_state_index else src
-			and trg' = if (List.mem target_state_index merged) then merger_state_index else target_state_index in
-			(* Add if not *)
-			add_transition state_space (src', combined_transition, trg')
-		) successors;
-	) t';
-
-	(* Remove merged from hash table *)
-	print_message Verbose_high "Merging: update hash table";
-	let location_index = get_global_location_index state_space merger_state_index in
-	(* Get all states with that location *)
-	let bucket = Hashtbl.find_all state_space.states_for_comparison location_index in
-	print_message Verbose_high ("Merging: got " ^ (string_of_int (List.length bucket)) ^ " states with location " ^ (string_of_int location_index));
-	(* Remove them all *)
-	while Hashtbl.mem state_space.states_for_comparison location_index do
-		Hashtbl.remove state_space.states_for_comparison location_index;
-	done;
-	(* Add them back *)
-	List.iter (fun y ->
-		(* Only add if not to be merged *)
-		if not (List.mem y merged) then Hashtbl.add state_space.states_for_comparison location_index y;
-	) bucket;
-
-	(* Remove merged from state table *)
-	print_message Verbose_high "Merging: update state table";
-	List.iter (fun s ->
-		print_message Verbose_high ("Merging: remove state " ^ (string_of_int s));
-(*		while Hashtbl.mem state_space.states s do *)
-			Hashtbl.remove state_space.all_states s;
-
-			(* If the state was the initial state: replace with the merger state_index *)
-			(*** WARNING: situation not much tested ***)
-			if s = (get_initial_state_index state_space) then(
-				print_message Verbose_low ("The initial state in the reachability state_space has been merged with another one.");
-				state_space.initial <- Some merger_state_index;
-			);
-(*		done*)
-	) merged
-
-
-
-(* Get states sharing the same location and discrete values from hash_table, excluding s *)
-let get_siblings state_space si =
-	let s = get_state state_space si in
-	let l = s.global_location in
-        let li = new_location_index state_space l in
-	let sibs = Hashtbl.find_all state_space.states_for_comparison li in
-        let string_of_intlist l =
-                string_of_list_of_string_with_sep ", " (List.map string_of_int l) in 
-	(* lookup px_constraints and exclude si itself *)
-        let result = List.fold_left (fun siblings sj ->
-		if sj = si then siblings else begin
-			let state = get_state state_space sj in
-			let c' = state.px_constraint in
-			(sj,c') :: siblings
-		end
-	) [] sibs in
-        print_message Verbose_high ("Siblings (" ^ string_of_int si ^ ") : " ^ string_of_intlist (List.map fst result));
-        result
-
-
-(*module IntSet = Set.Make(
-	struct
-		type t = state_index
-		let compare a b = compare a b
-	end
-)*)
-
+(* Merges states in queue with states in state space. Removes unreachable states. Returns unmerged part of queue *)
+let merge state_space queue =
 
 (* Check if two states can be merged *)
 (*** NOTE: with side-effects! ***)
@@ -1636,77 +1478,129 @@ let are_mergeable s s' =
 
 	(* Call dedicated function *)
 	LinearConstraint.px_hull_assign_if_exact s s'
+in
 
-
-(* Try to merge new states with existing ones. Returns list of merged states (ULRICH) *)
-let merge state_space new_states =
-
-	(* function for merging one state with its siblings *)
-	let merge_state si =
-		print_message Verbose_total ("[merging] Try to merge state " ^ (string_of_int si));
-		let state = get_state state_space si in
-		let c = state.px_constraint in
-		(* get merge candidates as pairs (index, state) *)
-		let candidates = get_siblings state_space si in
-		(* try to merge with siblings, restart if merge found, return eaten states *)
-		let rec eat all_mc rest_mc = begin
-			match rest_mc with
-				| [] -> [] (* here, we are really done *)
-				| m :: tail_mc -> begin
-					let sj,c' = m in
-					if are_mergeable c c' then begin
-						(* Statistics *)
-						nb_merged#increment;
-
-						(* Print some information *)
-						print_message Verbose_high ("[merging] State " ^ (string_of_int si) ^ " merged with state " ^ (string_of_int sj));
-
-						(* we ate sj, start over with new bigger state, removing sj *)
-						let all_mc' = List.filter (fun (sk, _) -> sk <> sj) all_mc in
-						sj :: eat all_mc' all_mc'
-					end else begin
-						(* try to eat the rest of them *)
-						eat all_mc tail_mc
-					end
-				end
+(* Get states sharing the same location and discrete values from hash_table, excluding s *)
+let get_siblings state_space si =
+	let s = get_state state_space si in
+	let l = s.global_location in
+        let li = new_location_index state_space l in
+	let sibs = Hashtbl.find_all state_space.states_for_comparison li in
+	(* lookup px_constraints and exclude si itself *)
+        let result = List.fold_left (fun siblings sj ->
+		if sj = si then siblings else begin
+			let state = get_state state_space sj in
+			let c' = state.px_constraint in
+			(sj,c') :: siblings
 		end
-		in
-		eat candidates candidates
-	in
+	) [] sibs in
+        print_message Verbose_high ("Siblings (" ^ string_of_int si ^ ") : " ^ string_of_list_of_int (List.map fst result));
+        result
+in
 
-	(* Iterate list of new states and try to merge them, return eaten states *)
+(* function for merging one state with its siblings *)
+let merge_state si =
+	print_message Verbose_total ("[Merge] Try to merge state " ^ (string_of_int si));
+	let state = get_state state_space si in
+	let c = state.px_constraint in
+	(* get merge candidates as pairs (index, state) *)
+	let candidates = get_siblings state_space si in
+	(* try to merge with siblings, restart if merge found, return eaten states *)
+	let rec eat all_mc rest_mc = begin
+		match rest_mc with
+			| [] -> [] (* here, we are really done *)
+			| m :: tail_mc -> begin
+				let sj,c' = m in
+				if are_mergeable c c' then begin
+					(* Statistics *)
+					nb_merged#increment;
+
+					(* Print some information *)
+					print_message Verbose_high ("[Merge] State " ^ (string_of_int si) ^ " merged with state " ^ (string_of_int sj));
+
+					(* we ate sj, start over with new bigger state, removing sj *)
+					let all_mc' = List.filter (fun (sk, _) -> sk <> sj) all_mc in
+					sj :: eat all_mc' all_mc'
+				end else begin
+					(* try to eat the rest of them *)
+					eat all_mc tail_mc
+				end
+			end
+	end
+	in
+	eat candidates candidates
+in
+
+(* make a copy of the reachable part of the state space with the eaten states replaced by the merger_state *)
+let copy_and_reduce state_space merger_state eaten =
+	let new_states = Hashtbl.create 1024 in
+	let new_trans = Hashtbl.create 1024 in
+	let new_compare = Hashtbl.create 1024 in
+	let add_state s = (* adds s to new_states *)
+		let state = Hashtbl.find state_space.all_states s in
+		let loc = state.global_location_index in
+		Hashtbl.replace new_states s state;
+		Hashtbl.add new_compare loc s in
+	let add_trans s a t = (* adds s --a--> t to new_transitions *)
+		let transitions = hashtbl_get_or_default new_trans s [] in
+		if not (List.mem (a,t) transitions)
+		then Hashtbl.replace new_trans s ((a,t)::transitions) in
+	let rec crs s = (* depth-first copy of reachable part of the state space *)
+		if not (Hashtbl.mem new_states s || List.mem s eaten) then begin
+			(* s has not been visited and is not eaten, so continue with successors *)
+			print_message Verbose_total ("[Merge] Visiting new state " ^ (string_of_int s));
+			add_state s;
+			List.iter (fun (trans,target) ->
+				if (List.mem target eaten)
+				then add_trans s trans merger_state
+				else begin
+					add_trans s trans target;
+					crs target
+				end
+			) (get_successors_with_combined_transitions state_space s)
+		end
+		else if (Hashtbl.mem new_states s) then
+			print_message Verbose_total ("[Merge] State " ^ (string_of_int s) ^ " was already visited")
+		else if (List.mem s eaten) then
+			print_message Verbose_total ("[Merge] State " ^ (string_of_int s) ^ " has been merged")
+		in
+	let init = get_initial_state_index state_space in
+	print_message Verbose_medium ("[Merge] Merging " ^ (string_of_list_of_int eaten) ^ " into state " ^ (string_of_int merger_state));
+	crs init;
+	add_state merger_state;
+	if List.mem init eaten then state_space.initial <- Some merger_state;
+	state_space.all_states <- new_states;
+	state_space.transitions_table <- new_trans;
+	state_space.states_for_comparison <- new_compare
+in
+	(* Iterate list of states and try to merge them in the state space *)
 	let rec main_merger states =
 		match states with
-			| [] -> []
+			| [] -> ()
 			| s :: ss -> begin
+					main_merger ss;
+					if Hashtbl.mem state_space.all_states s then (* treat s only if it is still reachable *)
 					let eaten = merge_state s in
-					if eaten = [] then
-						(* nothing merged -> go on with the rest *)
-						main_merger ss
-					else begin
-						(* update transitions and state table *)
-						merge_states_ulrich state_space s eaten;
-(*						List.iter (fun state_to_be_eaten ->
-							merge_2_states state_space s state_to_be_eaten
-						) eaten;*)
-
-						(* go on, skipping eaten states from the rest of the list *)
-						(* Optimization: does not care of the order (otherwise use list_append *)
-						List.rev_append eaten (main_merger (list_diff ss eaten))
-					end
-				end in
-
-	(* Do it! *)
-	let eaten = main_merger new_states in
-	let nb_eaten = List.length eaten in
-	let nb_orig = List.length new_states in
-	if nb_eaten > 0 then
-		print_message Verbose_standard ("  " ^ (string_of_int nb_eaten) ^ " state" ^ (s_of_int nb_eaten) ^ " merged within " ^ (string_of_int nb_orig) ^ " state" ^ (s_of_int nb_orig) ^ ".");
-
-	(* return eaten states *)
-	(*list_diff new_states*) eaten
-
-
+					if eaten <> [] then copy_and_reduce state_space s eaten
+				     end
+in
+	(* Do it! main function of StateSpace.merge *)
+	let orig_nb_states = nb_states state_space in
+	let orig_nb_queue = List.length queue in
+	main_merger queue;
+	let new_queue = List.filter (test_state_index state_space) queue in
+	let new_nb_states = nb_states state_space in
+	let new_nb_queue = List.length new_queue in
+	if (orig_nb_states <> new_nb_states || orig_nb_queue <> new_nb_queue)
+	then print_message Verbose_standard (
+		let diff_queue = (orig_nb_queue-new_nb_queue) in
+		let diff_states = (orig_nb_states-new_nb_states) in
+		let diff_explored =  diff_states - diff_queue in
+		"[Merge] " ^ (string_of_int diff_states) ^ " states merged ("
+		^ (string_of_int diff_explored) ^ " explored, " ^ (string_of_int diff_queue) ^ " queued), out of "
+		^ (string_of_int orig_nb_states) ^ " states (" ^ (string_of_int orig_nb_queue) ^ " in queue)");
+	(* return *)
+	new_queue
 
 (** Empties the hash table giving the set of states for a given location; optimization for the jobshop example, where one is not interested in comparing  a state of iteration n with states of iterations < n *)
 let empty_states_for_comparison state_space =

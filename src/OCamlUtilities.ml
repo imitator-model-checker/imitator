@@ -318,6 +318,9 @@ let hashtbl_get_or_default hashtbl key default_value =
 	if not (Hashtbl.mem hashtbl key) then default_value
 	else Hashtbl.find hashtbl key
 
+(** function to filter hash table with a predicate on keys *)
+let hashtbl_filter pred =
+	Hashtbl.filter_map_inplace (fun k v -> if pred k then Some v else None)
 
 (************************************************************)
 (** Useful functions on string *)
@@ -349,6 +352,9 @@ let string_of_array_of_string_with_sep sep a =
 let string_of_list_of_string_with_sep sep l =
 	string_of_array_of_string_with_sep sep (Array.of_list l)
 
+(** Convert a list of int into a string with , separator *)
+let string_of_list_of_int l =
+        "[" ^ (string_of_list_of_string_with_sep ", " (List.map string_of_int l)) ^ "]"
 
 (* Returns a list of substrings splitted using sep *)
 (*** WARNING: the behavior of this function is odd (when sep=";;" or "£"; bug hidden here? ***)
