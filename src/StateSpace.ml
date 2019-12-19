@@ -1505,7 +1505,7 @@ let merge_state si =
 	let state = get_state state_space si in
 	let c = state.px_constraint in
 	(* get merge candidates as pairs (index, state) *)
-	let candidates = get_siblings state_space si new_states in
+	let candidates = get_siblings state_space si queue in
 	(* try to merge with siblings, restart if merge found, return eaten states *)
 	let rec eat all_mc rest_mc = begin
 		match rest_mc with
