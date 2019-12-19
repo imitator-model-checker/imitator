@@ -134,6 +134,9 @@ val hashtbl_get_all_keys : ('a , 'b) Hashtbl.t -> 'a list
 (** Get the binding associated to a key, or the default binding if key is not associated to any binding *)
 val hashtbl_get_or_default : ('a , 'b) Hashtbl.t -> 'a -> 'b -> 'b
 
+(** function to filter hash table with a predicate on keys *)
+val hashtbl_filter : ('a -> bool) -> ('a,'b) Hashtbl.t -> unit 
+
 (************************************************************)
 (** Useful functions on string *)
 (************************************************************)
@@ -151,6 +154,9 @@ val string_of_array_of_string_with_sep : string -> string array -> string
 
 (** Convert a list of string into a string with separators (uses an internal conversion to array) *)
 val string_of_list_of_string_with_sep : string -> string list -> string
+
+(** Convert a list of int into a string with , separator *)
+val string_of_list_of_int : int list -> string
 
 (* Returns a list of substrings splitted using sep *)
 (*** WARNING: the behavior of this function is odd (when sep=";;" or "£"; bug hidden here? ***)

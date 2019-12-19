@@ -243,6 +243,10 @@ val get_transitions_table : state_space -> (state_index , ((combined_transition 
 (*------------------------------------------------------------*)
 val all_state_indexes : state_space -> state_index list
 
+(*------------------------------------------------------------*)
+(** Test if state index is in the current statespace *)
+(*------------------------------------------------------------*)
+val test_state_index : state_space -> state_index -> bool
 
 (*------------------------------------------------------------*)
 (*** WARNING: big memory, here! Why not perform intersection on the fly? *)
@@ -329,10 +333,7 @@ val add_p_constraint_to_states : state_space -> LinearConstraint.p_linear_constr
 (** Replace the constraint of a state in a state space by another one (the constraint is copied to avoid side-effects later) *)
 (* val replace_constraint : state_space -> LinearConstraint.linear_constraint -> state_index -> unit *)
 
-(** Merge two states by replacing the second one by the first one, in the whole state space structure (lists of states, and transitions) *)
-(* val merge_2_states : state_space -> state_index -> state_index -> unit *)
-
-(* Try to merge new states with existing ones. Returns updated list of new states (ULRICH) *)
+(* Merges states in queue with states in state space. Removes unreachable states. Returns unmerged part of queue *)
 val merge : state_space -> state_index list -> state_index list
 
 (** Empties the hash table giving the set of states for a given location; optimization for the jobshop example, where one is not interested in comparing  a state of iteration n with states of iterations < n *)
