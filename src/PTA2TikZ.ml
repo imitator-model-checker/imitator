@@ -106,6 +106,25 @@ let string_of_discrete_updates model updates =
 			^ "$\\\\% "
 	) updates)
 
+(** Convert a discrete_boolean_expression into a string *)
+let string_of_discrete_boolean_expression variable_names = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
+		(ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
+		^ " "
+		^ (string_of_boolean_operations relop)
+		^ " "
+		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
+		(ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
+		^ " \\in ["
+		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+		^ " , "
+		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression3)
+		^ "]"
+
+
 (** Convert logical operators into a string *)
 let string_of_logical_operators lop =
 	let string_of_boolean_operations op =
@@ -123,7 +142,8 @@ let string_of_logical_operators lop =
 	| Not_bool _ -> " \\neg "
 	| And_bool _ -> " \\land "
 	| Or_bool _ -> " \\lor "
-	| Expression_bool (_, op, _)->  " " ^ (string_of_boolean_operations op) ^ " "
+	| Discrete_boolean_expression discrete_boolean_expression ->
+		string_of_discrete_boolean_expression variable_names discrete_boolean_expression
 
 (** Convert a boolean expression into a string *)
 let rec string_of_boolean variable_names boolean_expr =
