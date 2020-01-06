@@ -9,15 +9,16 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/03/01
- * Last modified     : 2019/05/29
+ * Last modified     : 2020/01/06
  *
  ************************************************************)
 
 open OCamlUtilities
-open Result
-open AbstractModel
 open ImitatorUtilities
 open LinearConstraint
+open DiscreteExpressions
+open AbstractModel
+open Result
 
 
 (************************************************************)
