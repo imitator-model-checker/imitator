@@ -235,22 +235,117 @@ match options#imitator_mode with
 	(************************************************************)
 	(* Case translation *)
 	(************************************************************)
-	(* Translation to IMITATOR *)
-	| Translation IMI ->
+	(* Translation to text language (IMITATOR, other model checker, TikZ) *)
+	| Translation IMI | Translation HyTech | Translation TikZ | Translation Uppaal ->
+	
+		(*** NOTE: not super nice… ***)
+		let printer = match options#imitator_mode with
+			| Translation IMI		-> ModelPrinter.string_of_model
+			| Translation HyTech	-> PTA2HyTech.string_of_model
+			| Translation TikZ		-> PTA2TikZ.tikz_string_of_model
+			| Translation Uppaal	-> PTA2Uppaal.string_of_model
+			| _						-> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
+		in
+	
+		(*** NOTE: not super nice… ***)
+		let suffix = match options#imitator_mode with
+			| Translation IMI		-> "-regenerated" ^ Constants.model_extension
+			| Translation HyTech	-> ".hy"
+			| Translation TikZ		-> ".tex"
+			| Translation Uppaal	->  "-uppaal.xml"
+			| _						-> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
+		in
+	
 		print_message Verbose_standard ("Regenerating the input model to a new model.");
-		let translated_model = ModelPrinter.string_of_model model in
-		let imi_file = options#files_prefix ^ "-regenerated.imi" in
+		let translated_model = printer model in
+		let target_language_file = options#files_prefix ^ suffix in
 		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total ("\n" ^ translated_model ^ "\n");
 		);
 		(* Write *)
-		write_to_file imi_file translated_model;
-		print_message Verbose_standard ("File '" ^ imi_file ^ "' successfully created.");
+		write_to_file target_language_file translated_model;
+		print_message Verbose_standard ("File '" ^ target_language_file ^ "' successfully created.");
 		
 		(* Create a file with some statistics on the origina model if requested *)
-		ResultProcessor.process_result Translation_result "translation to IMITATOR" None;
+		ResultProcessor.process_result Translation_result ("translation to " ^ (AbstractAlgorithm.string_of_translation
+			(match options#imitator_mode with Translation translation -> translation | _ -> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
+			)) ) None;
 
 		terminate_program()
+
+(*	(* Translation to HyTech *)
+		print_message Verbose_standard ("Translating model to a HyTech input model.");
+		let translated_model = PTA2HyTech.string_of_model model in
+		let hytech_file = options#files_prefix ^ ".hy" in
+		if verbose_mode_greater Verbose_total then(
+			print_message Verbose_total ("\n" ^ translated_model ^ "\n");
+		);
+		(* Write *)
+		write_to_file hytech_file translated_model;
+		print_message Verbose_standard ("File '" ^ hytech_file ^ "' successfully created.");
+		
+		(* Create a file with some statistics on the origina model if requested *)
+		ResultProcessor.process_result Translation_result "translation to HyTech" None;
+
+		terminate_program()*)
+
+	(* Translation to a graphics *)
+	| Translation JPG | Translation PDF | Translation PNG ->
+		print_message Verbose_standard ("Translating model to a graphics.");
+		let translated_model = PTA2JPG.string_of_model model in
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high ("\n" ^ translated_model ^ "\n");
+		);
+		(*** NOTE: not so nice… ***)
+		let extension = match options#imitator_mode with
+			| Translation JPG	-> "jpg"
+			| Translation PDF	-> "pdf"
+			| Translation PNG	-> "png"
+			| _					-> raise (InternalError ("Impossible situation: No graphic extension found although JPG/PDF/PNG was expected"))
+		in
+		Graphics.dot extension (options#files_prefix ^ "-pta") translated_model;
+		print_message Verbose_standard ("File successfully created."); (*** TODO: add file name in a proper manner ***)
+		
+		(* Create a file with some statistics on the origina model if requested *)
+		ResultProcessor.process_result Translation_result "translation to graphics" None;
+
+		terminate_program()
+
+(*	(* Translation to TikZ *)
+	| Translation TikZ ->
+		print_message Verbose_standard ("Translating model to LaTeX TikZ code.");
+		let translated_model = PTA2TikZ.tikz_string_of_model model in
+		let latex_file = options#files_prefix ^ ".tex" in
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high ("\n" ^ translated_model ^ "\n");
+		);
+		(* Write *)
+		write_to_file latex_file translated_model;
+		print_message Verbose_standard ("File '" ^ latex_file ^ "' successfully created.");
+		
+		(* Create a file with some statistics on the origina model if requested *)
+		ResultProcessor.process_result Translation_result "translation to TikZ" None;
+
+		terminate_program()
+
+	(* Translation to Uppaal *)
+	| Translation Uppaal ->
+		print_message Verbose_standard ("Translating model to an Uppaal input model.");
+		let translated_model = PTA2Uppaal.string_of_model model in
+		let output_file = options#files_prefix ^ "-uppaal.xml" in
+			(*** NOTE: for testing purpose ***)
+		if verbose_mode_greater Verbose_total then(
+			print_message Verbose_total ("\n" ^ translated_model ^ "\n");
+		);
+		(* Write *)
+		write_to_file output_file translated_model;
+		print_message Verbose_standard ("File '" ^ output_file ^ "' successfully created.");
+		
+		(* Create a file with some statistics on the origina model if requested *)
+		ResultProcessor.process_result Translation_result "translation to Uppaal" None;
+
+		terminate_program()*)
+
 
 	| _ ->
 		(*** TODO: temporary end ***)
@@ -258,86 +353,6 @@ match options#imitator_mode with
 		exit 1;
 
 (*
-		(* Translation to HyTech *)
-		if options#pta2hytech then(
-			print_message Verbose_standard ("Translating model to a HyTech input model.");
-			let translated_model = PTA2HyTech.string_of_model model in
-			let hytech_file = options#files_prefix ^ ".hy" in
-			if verbose_mode_greater Verbose_total then(
-				print_message Verbose_total ("\n" ^ translated_model ^ "\n");
-			);
-			(* Write *)
-			write_to_file hytech_file translated_model;
-			print_message Verbose_standard ("File '" ^ hytech_file ^ "' successfully created.");
-			
-			(* Create a file with some statistics on the origina model if requested *)
-			ResultProcessor.process_result Syntax_check "translation to HyTech" None;
-
-			terminate_program()
-		);
-
-		(* Translation to a graphics *)
-		if options#pta2jpg || options#pta2pdf || options#pta2png then(
-			print_message Verbose_standard ("Translating model to a graphics.");
-			let translated_model = PTA2JPG.string_of_model model in
-			if verbose_mode_greater Verbose_high then(
-				print_message Verbose_high ("\n" ^ translated_model ^ "\n");
-			);
-			(*** NOTE: not so nice… ***)
-			let extension =
-				if options#pta2jpg then "jpg" else
-				if options#pta2pdf then "pdf" else
-				if options#pta2png then "png"
-				else raise (InternalError ("No graphic extension found"))
-			in
-			Graphics.dot extension (options#files_prefix ^ "-pta") translated_model;
-			print_message Verbose_standard ("File successfully created."); (*** TODO: add file name in a proper manner ***)
-			
-			(* Create a file with some statistics on the origina model if requested *)
-			ResultProcessor.process_result Syntax_check "translation to graphics" None;
-
-			terminate_program()
-		);
-
-		(* Translation to TikZ *)
-		if options#pta2tikz then(
-			print_message Verbose_standard ("Translating model to LaTeX TikZ code.");
-			let translated_model = PTA2TikZ.tikz_string_of_model model in
-			let latex_file = options#files_prefix ^ ".tex" in
-			if verbose_mode_greater Verbose_high then(
-				print_message Verbose_high ("\n" ^ translated_model ^ "\n");
-			);
-			(* Write *)
-			write_to_file latex_file translated_model;
-			print_message Verbose_standard ("File '" ^ latex_file ^ "' successfully created.");
-			
-			(* Create a file with some statistics on the origina model if requested *)
-			ResultProcessor.process_result Syntax_check "translation to TikZ" None;
-
-			terminate_program()
-		);
-
-		(* Translation to Uppaal *)
-		if options#pta2uppaal then(
-			print_message Verbose_standard ("Translating model to an Uppaal input model.");
-			let translated_model = PTA2Uppaal.string_of_model model in
-			let output_file = options#files_prefix ^ "-uppaal.xml" in
-				(*** NOTE: for testing purpose ***)
-			if verbose_mode_greater Verbose_total then(
-				print_message Verbose_total ("\n" ^ translated_model ^ "\n");
-			);
-			(* Write *)
-			write_to_file output_file translated_model;
-			print_message Verbose_standard ("File '" ^ output_file ^ "' successfully created.");
-			
-			(* Create a file with some statistics on the origina model if requested *)
-			ResultProcessor.process_result Syntax_check "translation to Uppaal" None;
-
-			terminate_program()
-		);
-
-
-
 	(************************************************************)
 	(* Some algorithm *)
 	(************************************************************)

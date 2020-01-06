@@ -8,13 +8,15 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2015/03/24
- * Last modified     : 2019/07/05
+ * Last modified     : 2020/01/06
  *
  ****************************************************************)
 
+open OCamlUtilities
 open Exceptions
 open AbstractModel
-open OCamlUtilities
+open AbstractProperty
+open DiscreteExpressions
 
 
 
@@ -108,12 +110,12 @@ let string_of_discrete_updates model updates =
 let string_of_logical_operators lop =
 	let string_of_boolean_operations op =
 		match op with
-		| BOOL_L -> "<"
-		| BOOL_LEQ -> "\\leq"
-		| BOOL_EQ -> "="
-		| BOOL_NEQ -> "\\neq"
-		| BOOL_GEQ -> "\\geq"
-		| BOOL_G -> ">"
+		| OP_L -> "<"
+		| OP_LEQ -> "\\leq"
+		| OP_EQ -> "="
+		| OP_NEQ -> "\\neq"
+		| OP_GEQ -> "\\geq"
+		| OP_G -> ">"
 	in
 	match lop with
 	| True_bool -> "True"

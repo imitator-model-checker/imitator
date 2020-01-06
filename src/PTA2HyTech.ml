@@ -11,14 +11,16 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2016/01/26
- * Last modified     : 2019/05/29
+ * Last modified     : 2020/01/06
  *
  ************************************************************)
 
 open OCamlUtilities
 open ImitatorUtilities
+open Exceptions
 open Result
 open AbstractModel
+open AbstractProperty
 
 
 
@@ -394,7 +396,9 @@ let property_header =
 
 
 let string_of_unreachable_location model unreachable_global_location =
-	(* Convert locations *)
+	(*** TODO***)
+	raise (NotImplemented "HyTech.string_of_unreachable_location")
+(*	(* Convert locations *)
 	string_of_list_of_string_with_sep " & " (List.map (fun (automaton_index, location_index) ->
 			"loc[" ^ (model.automata_names automaton_index) ^ "]" ^ " = " ^ (model.location_names automaton_index location_index)
 		) unreachable_global_location.unreachable_locations
@@ -422,12 +426,14 @@ let string_of_unreachable_location model unreachable_global_location =
 		| Discrete_interval (discrete_index , min_discrete_value, max_discrete_value)
 			-> (model.variable_names discrete_index) ^ " in [" ^ (NumConst.string_of_numconst min_discrete_value) ^ " , " ^ (NumConst.string_of_numconst max_discrete_value) ^ "]"
 		) unreachable_global_location.discrete_constraints
-	)
+	)*)
 
 
 (** Convert the correctness property to a string *)
 let string_of_property model property =
-	match property with
+	(*** TODO***)
+	raise (NotImplemented "HyTech.string_of_property")
+(*	match property with
 	(* An "OR" list of global locations *)
 	| Unreachable_locations unreachable_global_location_list ->
 		"property := unreachable " ^ (
@@ -485,13 +491,13 @@ let string_of_property model property =
 		"property := always sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
 
 	(*** NOTE: Would be better to have an "option" type ***)
-	| Noproperty -> "-- (no property)"
+	| Noproperty -> "-- (no property)"*)
 
 
 
-(** Convert the projection to a string *)
-let string_of_projection model =
-	match model.projection with
+(*(** Convert the projection to a string *)
+let string_of_projection property =
+	match property.projection with
 	| None -> ""
 	| Some parameter_index_list ->
 		"\n-- projectresult(" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names parameter_index_list)) ^ "); (NOT CONSIDERED BY HyTech)"
@@ -504,7 +510,7 @@ let string_of_optimization model =
 	| Minimize parameter_index ->
 		"-- minimize(" ^ (model.variable_names parameter_index) ^ "); (NOT CONSIDERED BY HyTech)"
 	| Maximize parameter_index ->
-		"-- maximize(" ^ (model.variable_names parameter_index) ^ "); (NOT CONSIDERED BY HyTech)"
+		"-- maximize(" ^ (model.variable_names parameter_index) ^ "); (NOT CONSIDERED BY HyTech)"*)
 
 
 
@@ -531,7 +537,9 @@ let string_of_model model =
 	(* The initial state *)
 	^ "\n" ^ string_of_initial_state ()
 
-	(* The property *)
+(*	
+	(*** TODO !!! ***)
+(* The property *)
 	(*** TODO: encode reachability properties! ***)
 	^ property_header
 	^  "\n" ^ "--" ^ string_of_property model model.user_property ^ " (NOT CONSIDERED BY HYTECH)"
@@ -540,7 +548,7 @@ let string_of_model model =
 	^  "\n" ^ string_of_projection model
 
 	(* The optimization *)
-	^  "\n" ^ string_of_optimization model
+	^  "\n" ^ string_of_optimization model*)
 
 	(* The footer *)
 	^  "\n" ^ footer
