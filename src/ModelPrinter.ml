@@ -27,8 +27,8 @@ open StateSpace
 (************************************************************)
 (** Constants *)
 (************************************************************)
-let string_of_true  = "True"
-let string_of_false = "False"
+let string_of_true	= "True"
+let string_of_false	= "False"
 
 
 (************************************************************)

@@ -21,6 +21,14 @@ open DiscreteExpressions
 
 
 
+(************************************************************)
+(** Constants *)
+(************************************************************)
+let string_of_true	= "True"
+let string_of_false	= "False"
+
+
+
 (************************************************************
  Functions
 ************************************************************)
@@ -106,6 +114,16 @@ let string_of_discrete_updates model updates =
 			^ "$\\\\% "
 	) updates)
 
+let string_of_boolean_operations op =
+	match op with
+	| OP_L -> "<"
+	| OP_LEQ -> "\\leq"
+	| OP_EQ -> "="
+	| OP_NEQ -> "\\neq"
+	| OP_GEQ -> "\\geq"
+	| OP_G -> ">"
+
+
 (** Convert a discrete_boolean_expression into a string *)
 let string_of_discrete_boolean_expression variable_names = function
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
@@ -125,29 +143,23 @@ let string_of_discrete_boolean_expression variable_names = function
 		^ "]"
 
 
-(** Convert logical operators into a string *)
-let string_of_logical_operators lop =
-	let string_of_boolean_operations op =
-		match op with
-		| OP_L -> "<"
-		| OP_LEQ -> "\\leq"
-		| OP_EQ -> "="
-		| OP_NEQ -> "\\neq"
-		| OP_GEQ -> "\\geq"
-		| OP_G -> ">"
-	in
-	match lop with
-	| True_bool -> "True"
-	| False_bool -> "False"
-	| Not_bool _ -> " \\neg "
-	| And_bool _ -> " \\land "
-	| Or_bool _ -> " \\lor "
+(** Convert a Boolean expression into a string *)
+let rec string_of_boolean variable_names = function
+	| True_bool -> string_of_true
+	| False_bool -> string_of_false
+	| Not_bool b -> "\\neg (" ^ (string_of_boolean variable_names b) ^ ")"
+	| And_bool (b1, b2) ->
+		(string_of_boolean variable_names b1)
+		^ " \\land "
+		^ (string_of_boolean variable_names b2)
+	| Or_bool (b1, b2) ->
+		(string_of_boolean variable_names b1)
+		^ " \\lor "
+		^ (string_of_boolean variable_names b2)
 	| Discrete_boolean_expression discrete_boolean_expression ->
 		string_of_discrete_boolean_expression variable_names discrete_boolean_expression
 
-(** Convert a boolean expression into a string *)
-let rec string_of_boolean variable_names boolean_expr =
-	ModelPrinter.string_of_boolean_template variable_names boolean_expr string_of_logical_operators
+
 
 
 (** Convert a list of conditional updates into a string *)
