@@ -3337,7 +3337,7 @@ let convert_optimization_definition index_of_variables = function
 (*------------------------------------------------------------*)
 (* Convert the parsed model and the parsed property into an abstract model and an abstract property *)
 (*------------------------------------------------------------*)
-let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.parsed_model) (parsed_property_option : ParsingStructure.parsed_property option) =
+let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.parsed_model) (parsed_property_option : ParsingStructure.parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *)
@@ -4250,8 +4250,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let optimization = convert_optimization_definition index_of_variables parsed_property_option in
 
 
-	raise (NotImplemented "abstract_structures_of_parsing_structures")
-	(*
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug prints *)
@@ -4397,11 +4395,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** HACK (big big hack): save some data structures to be used by the parsing and checking of additional file (pi0 or v0), if any ***)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	saved_index_of_variables	:= Some index_of_variables;
+(*	saved_index_of_variables	:= Some index_of_variables;
 	saved_nb_parameters			:= Some nb_parameters;
 	saved_parameters			:= Some parameters;
 	saved_parameters_names		:= Some parameters_names;
-	saved_variables				:= Some variables;
+	saved_variables				:= Some variables;*)
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4514,28 +4512,31 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Initial constraint of the model projected onto P and all clocks non-negative *)
 	px_clocks_non_negative_and_initial_p_constraint = px_clocks_non_negative_and_initial_p_constraint;
 
-
-	(* Property defined by the user *)
-	user_property = property;
-	(* Property defined by the model *)
-	correctness_condition = correctness_condition;
-	(* List of parameters to project the result onto *)
-	projection = projection;
-	(* Parameter to be minimized or maximized *)
-	optimized_parameter = optimization;
-
 	}
 	
-	,
+(*	,
 	
 	(* Also return the useful parsing information (used for property parsing) *)
 	{
 		constants         : constants;
 		index_of_automata : index_of_automata;
 		index_of_variables: index_of_variables;
-	}
+	}*)
 
-	*)
+
+	,
+	
+	None
+	(*** TODO: handle property! ***)
+
+	(*type abstract_property = {
+	(* Emptiness or synthesis *)
+	synthesis_type	: synthesis_type;
+	(* Property *)
+	property		: property;
+	(* Projection of the result *)
+	projection		: projection;
+}*)
 
 
 

@@ -178,6 +178,10 @@ type projection = (parameter_index list) option
   | Maximize of parameter_index*)
 
   
+(************************************************************)
+(** The actual property *)
+(************************************************************)
+
 type abstract_property = {
 	(* Emptiness or synthesis *)
 	synthesis_type	: synthesis_type;
@@ -246,8 +250,4 @@ type property =
 
 *)
 
-
-(************************************************************)
-(** The actual property *)
-(************************************************************)
 

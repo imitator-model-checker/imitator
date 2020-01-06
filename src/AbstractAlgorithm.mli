@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/18
- * Last modified     : 2019/12/18
+ * Last modified     : 2020/01/06
  *
  ************************************************************)
 
@@ -129,7 +129,7 @@ type imitator_mode =
 	| Translation of translation
 	
 	(** Full state space exploration, until fully explored or some preliminary termination *)
-(* 	| State_space_exploration *)
+	| State_space_exploration
 	
 	(** Synthesis algorithm *)
 	| Algorithm (*of synthesis_algorithm*)

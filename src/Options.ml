@@ -10,7 +10,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2019/12/18
+ * Last modified     : 2020/01/06
  *
  ************************************************************)
 
@@ -335,11 +335,11 @@ class imitator_options =
 				if mode = "checksyntax" then 
 					imitator_mode <- Syntax_check
 
-(*				(* Case: state space exploration *)
+				(* Case: state space exploration *)
 				else if mode = "statespace" then 
 					imitator_mode <- State_space_exploration
 
-				(* Case: old version of EF-synthesis using a list of constraints *)
+(*				(* Case: old version of EF-synthesis using a list of constraints *)
 				else if mode = "EFold" then 
 					imitator_mode <- EF_synthesis
 					
@@ -759,12 +759,11 @@ class imitator_options =
 				
 				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Options are 'always', 'targetseen', 'pq10', 'pq100', 'iter10', 'iter100'. Default: iter10.");
 
-(*				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
+				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
         Use 'checksyntax' for a simple syntax check and no analysis.
         
-        Use 'statespace' for the generation of the entire parametric state space.
-        
-        Use 'EF' for a parametric non-reachability analysis. [AHV93,JLR15]
+        Use 'statespace' for the generation of the entire parametric state space."
+			(*        "Use 'EF' for a parametric non-reachability analysis. [AHV93,JLR15]
         Use 'EFmin' for a parametric non-reachability analysis with parameter minimization. [ABPP19]
         Use 'EFmax' for a parametric non-reachability analysis with parameter maximization. [ABPP19]
         Use 'EFsynthminpq' for a parametric non-reachability analysis with global time minimization. [ABPP19]
@@ -781,7 +780,8 @@ class imitator_options =
         Use 'PRP' for parametric reachability preservation. [ALNS15]
         Use 'PRPC' for parametric reachability preservation cartography. [ALNS15]
         For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). [AF10]
-        Default: 'inversemethod'.");*)
+        Default: 'inversemethod'."
+        *));
 				(*** NOTE: hidden option! 'shuffle' to cover all the points within v0 after shuffling the array. (Reason for hiding: only useful in the distributed cartography) ***)
 				(*** NOTE: hidden option! or 'randomseqXX' where XX is a number to iterate random calls to IM followed by a sequential check (e.g., randomseq5 or randomseq10000) (Reason for hiding: only useful in the distributed cartography) ***)
 				("-no-acceptfirst", Set no_acceptfirst, "In NDFS, do not put accepting states at the head of the successors list. Default: false.");

@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/12/11
+ * Last modified     : 2020/01/06
  *
  ************************************************************)
 
@@ -147,10 +147,6 @@ let model, property_option = ParsingUtility.compile_model_and_property options i
 
 Input.set_model model;
 
-(*** TODO: temporary end ***)
-exit 1;
-
-(*
 
 
 (*------------------------------------------------------------*)
@@ -166,14 +162,14 @@ HyperRectangle.set_dimensions model.nb_parameters;
 PVal.set_dimensions model.nb_parameters;
 
 
-(*------------------------------------------------------------*)
+(*(*------------------------------------------------------------*)
 (* Parse property *)
 (*------------------------------------------------------------*)
 
 if property_needed options#imitator_mode then(
 	let property = ParsingUtility.compile_property options useful_parsing_model_information in
 	Input.set_property property;
-);
+);*)
 
 
 (*(*------------------------------------------------------------*)
@@ -204,13 +200,22 @@ if verbose_mode_greater Verbose_total then(
 (************************************************************)
 (* Debug print: property *)
 (************************************************************)
-if property_needed options#imitator_mode then(
+if AbstractAlgorithm.property_needed options#imitator_mode then(
 	let property = Input.get_property in
-	print_message Verbose_low ("\nThe property is the following one:\n" ^ (ModelPrinter.string_of_property model property) ^ "\n");
+	
+	(*** TODO ***)
+(* 	print_message Verbose_low ("\nThe property is the following one:\n" ^ (ModelPrinter.string_of_property model property) ^ "\n"); *)
+	raise (NotImplemented ("IMITATOR >> string_of_property"))
 );
 
 (* Statistics *)
 counter_main_algorithm#start;
+
+(*** TODO: temporary end ***)
+raise (NotImplemented ("IMITATOR says temporarily bye!"));
+exit 1;
+
+(*
 
 (************************************************************)
 (************************************************************)
