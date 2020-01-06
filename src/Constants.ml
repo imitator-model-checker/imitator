@@ -25,7 +25,7 @@ let program_name = "IMITATOR"
 
 let version_string = "3.0 alpha"
 
-let version_name = "Cheese Andouille"
+let version_name = "Cheese Andouillette"
 
 (* Path ending with "/" *)
 let path_to_program =
