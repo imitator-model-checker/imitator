@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2019/10/09
+ * Last modified     : 2020/01/06
  *
  ************************************************************)
 
@@ -697,6 +697,13 @@ let export_to_file_cartography_result file_name (cartography_result : Result.car
 	
 	(* Prepare the string to write *)
 	let file_content =
+	
+	
+	
+		(*** TODO: ***)
+		raise (NotImplemented ("get_vo in result processor"))
+		
+		(*
 		let v0 = Input.get_v0 () in
 
 		(* 1) The file header *)
@@ -728,6 +735,7 @@ let export_to_file_cartography_result file_name (cartography_result : Result.car
 		^ "\n" ^ (Statistics.string_of_all_counters())
 		^ "\n------------------------------------------------------------"
 		^ "\n"
+		*)
 	in
 	(* Write to file *)
 	write_to_file file_name file_content;
@@ -985,7 +993,7 @@ let process_result result algorithm_name prefix_option =
 	
 	
 	match result with
-	| Syntax_check ->
+	| No_analysis ->
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
@@ -1001,10 +1009,10 @@ let process_result result algorithm_name prefix_option =
 		()
 
 
-	| PostStar_result poststar_result ->
+	| State_space_computation_result state_space_computation ->
 		print_message Verbose_low (
 			"Computation time: "
-			^ (string_of_seconds poststar_result.computation_time) ^ "."
+			^ (string_of_seconds state_space_computation.computation_time) ^ "."
 		);
 
 		(* Write to file if requested *)
@@ -1016,14 +1024,14 @@ let process_result result algorithm_name prefix_option =
 		);
 
 		(* Print statistics *)
-		print_state_space_statistics poststar_result.computation_time poststar_result.state_space;
+		print_state_space_statistics state_space_computation.computation_time state_space_computation.state_space;
 		print_memory_statistics ();
 		
 		print_message Verbose_high "Drawing state space…";
 	
 		(* Draw state space *)
 		let radical = file_prefix ^ "-statespace" in
-		Graphics.draw_statespace poststar_result.state_space algorithm_name radical;
+		Graphics.draw_statespace state_space_computation.state_space algorithm_name radical;
 		
 		(* The end *)
 		()
