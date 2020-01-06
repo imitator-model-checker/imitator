@@ -343,9 +343,12 @@ type runs_exhibition_result = {
 (************************************************************)
 
 type imitator_result =
-	(* No analysis, syntactic check only (+ generation of the result file with syntactic information if requested) *)
-	| No_analysis
+	(* No analysis: syntactic check only (+ generation of the result file with syntactic information if requested) *)
+	| Syntax_check_result
 
+	(* No analysis: syntactic check only (+ generation of the result file with syntactic information if requested) *)
+	| Translation_result
+	
 	(* Result for Post* *)
 	| State_space_computation_result of state_space_computation_result
 

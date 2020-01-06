@@ -3722,7 +3722,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		removed_action_names		= removed_action_names;
 		type_of_variables			= type_of_variables;
 		variable_names				= variable_names;
-		removed_variable_names		= variable_names;
+		removed_variable_names		= removed_variable_names;
 	} in
 
 

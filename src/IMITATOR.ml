@@ -223,10 +223,34 @@ match options#imitator_mode with
 	(************************************************************)
 	(* Case no analysis *)
 	(************************************************************)
-	(* Generate directly the "empty" result *)
-	ResultProcessor.process_result No_analysis "syntax check" None;
+	(* Generate directly the "empty" result for syntax check *)
+	ResultProcessor.process_result Syntax_check_result "syntax check" None;
+	
+	(* If arrived here, syntax is correct *)
+	print_message Verbose_standard "Syntax is correct. Have fun!";
 	
 	terminate_program()
+
+
+	(************************************************************)
+	(* Case translation *)
+	(************************************************************)
+	(* Translation to IMITATOR *)
+	| Translation IMI ->
+		print_message Verbose_standard ("Regenerating the input model to a new model.");
+		let translated_model = ModelPrinter.string_of_model model in
+		let imi_file = options#files_prefix ^ "-regenerated.imi" in
+		if verbose_mode_greater Verbose_total then(
+			print_message Verbose_total ("\n" ^ translated_model ^ "\n");
+		);
+		(* Write *)
+		write_to_file imi_file translated_model;
+		print_message Verbose_standard ("File '" ^ imi_file ^ "' successfully created.");
+		
+		(* Create a file with some statistics on the origina model if requested *)
+		ResultProcessor.process_result Translation_result "translation to IMITATOR" None;
+
+		terminate_program()
 
 	| _ ->
 		(*** TODO: temporary end ***)
@@ -234,14 +258,7 @@ match options#imitator_mode with
 		exit 1;
 
 (*
-
-	(************************************************************)
-	(* Case translation *)
-	(************************************************************)
-	| Translation ->
-		raise (Not_implemented "work in progress")
-
-(*		(* Translation to HyTech *)
+		(* Translation to HyTech *)
 		if options#pta2hytech then(
 			print_message Verbose_standard ("Translating model to a HyTech input model.");
 			let translated_model = PTA2HyTech.string_of_model model in
@@ -255,24 +272,6 @@ match options#imitator_mode with
 			
 			(* Create a file with some statistics on the origina model if requested *)
 			ResultProcessor.process_result Syntax_check "translation to HyTech" None;
-
-			terminate_program()
-		);
-
-		(* Translation to IMITATOR *)
-		if options#pta2imi then(
-			print_message Verbose_standard ("Regenerating the input model to a new model.");
-			let translated_model = ModelPrinter.string_of_model model in
-			let imi_file = options#files_prefix ^ "-regenerated.imi" in
-			if verbose_mode_greater Verbose_total then(
-				print_message Verbose_total ("\n" ^ translated_model ^ "\n");
-			);
-			(* Write *)
-			write_to_file imi_file translated_model;
-			print_message Verbose_standard ("File '" ^ imi_file ^ "' successfully created.");
-			
-			(* Create a file with some statistics on the origina model if requested *)
-			ResultProcessor.process_result Syntax_check "translation to IMITATOR" None;
 
 			terminate_program()
 		);
@@ -335,7 +334,7 @@ match options#imitator_mode with
 			ResultProcessor.process_result Syntax_check "translation to Uppaal" None;
 
 			terminate_program()
-		);*)
+		);
 
 
 

@@ -993,7 +993,7 @@ let process_result result algorithm_name prefix_option =
 	
 	
 	match result with
-	| No_analysis ->
+	| Syntax_check_result | Translation_result ->
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
