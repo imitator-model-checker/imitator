@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2012/06/15
- * Last modified     : 2019/10/16
+ * Last modified     : 2020/01/06
  *
  ************************************************************)
  
@@ -33,7 +33,7 @@ let set_model model =
 	model_ref := Some model
 
 
-let get_model _ =
+let get_model () =
 	match !model_ref with
 		| None ->
 			raise (InternalError "Input model not yet available");
@@ -43,11 +43,13 @@ let set_property property =
 	property_ref := Some property
 
 
-let get_property _ =
+let get_property () =
 	match !property_ref with
 		| None ->
 			raise (InternalError "Input property not yet available");
 		| Some property -> property
+
+let has_property () = !property_ref <> None
 
 (*let get_pi0 _ =
 	match !pi0_ref with
@@ -67,7 +69,7 @@ let get_v0 _ =
 let set_v0 v0 =
 	v0_ref := Some v0*)
 
-let get_options _ =
+let get_options () =
 	match !options_ref with
 		| None ->
 			raise (InternalError "Options not yet available");

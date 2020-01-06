@@ -133,7 +133,7 @@ type imitator_mode =
 	| Translation of translation
 	
 	(** Full state space exploration, until fully explored or some preliminary termination *)
-	| State_space_exploration
+	| State_space_computation
 	
 	(** Synthesis algorithm *)
 	| Algorithm (*of synthesis_algorithm*)
@@ -223,7 +223,7 @@ type graphical_state_space =
 (*** NOTE: explicit definition to avoid to forget a new algorithm (which would raise a warning upon compiling) ***)
 let property_needed = function
 	| Syntax_check
-	| State_space_exploration
+	| State_space_computation
 	| Translation _
 		-> false
 	| Algorithm (*_*)
@@ -234,7 +234,7 @@ let property_needed = function
 let is_mode_IM = function
 	| No_analysis
 	| Translation
-	| State_space_exploration
+	| State_space_computation
 	| Acc_loop_synthesis_NDFS
 	| EF_synthesis
 	| EFunsafe_synthesis
@@ -270,13 +270,13 @@ let is_mode_IM = function
 *)
 let is_mode_cartography = function
 	| Syntax_check
-	| State_space_exploration
+	| State_space_computation
 	| Translation _
 		-> false
 	| _
 		-> raise (NotImplemented "is_mode_cartography")
 	(*
-	| State_space_exploration
+	| State_space_computation
 	| Acc_loop_synthesis_NDFS
 	| EF_synthesis
 	| EFunsafe_synthesis
@@ -311,7 +311,7 @@ let is_mode_cartography = function
 
 let cartography_drawing_possible = function
 	| Syntax_check
-	| State_space_exploration
+	| State_space_computation
 	| Translation _
 		-> false
 	| Algorithm (*of synthesis_algorithm*)
@@ -340,13 +340,13 @@ let string_of_mode (imitator_mode : imitator_mode) : string = match imitator_mod
 	| Translation translation -> "translation to " ^ (string_of_translation translation)
 	
 	(** Translation to another language: no analysis *)
-	| State_space_exploration -> "full symbolic state space exploration "
+	| State_space_computation -> "full symbolic state space exploration "
 	
 	(** Synthesis algorithm *)
 	| Algorithm (*synthesis_algorithm*) -> "algorithm" (*** TODO: not so precise! ***)
 
 (*
-				| State_space_exploration -> "parametric state space exploration"
+				| State_space_computation -> "parametric state space exploration"
 				| EF_synthesis -> "EF-synthesis"
 				| EFunsafe_synthesis -> "EFunsafe-synthesis"
 				| EF_min -> "EF-minimization"

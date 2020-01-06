@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2019/12/13
+ * Last modified     : 2020/01/06
  *
  ************************************************************)
 
@@ -143,7 +143,7 @@ let compile_model_and_property options =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	let parsed_property_option =
-	if (*** TODO ***) true then(
+	if AbstractAlgorithm.property_needed options#imitator_mode then(
 		(* Statistics *)
 		parsing_counter#start;
 

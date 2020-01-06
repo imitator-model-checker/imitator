@@ -337,7 +337,7 @@ class imitator_options =
 
 				(* Case: state space exploration *)
 				else if mode = "statespace" then 
-					imitator_mode <- State_space_exploration
+					imitator_mode <- State_space_computation
 
 (*				(* Case: old version of EF-synthesis using a list of constraints *)
 				else if mode = "EFold" then 

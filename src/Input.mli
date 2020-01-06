@@ -10,18 +10,19 @@
  * 
  * File contributors : Étienne André
  * Created           : 2012/06/15
- * Last modified     : 2019/10/16
+ * Last modified     : 2020/01/06
  *
  ************************************************************)
 
 
 open Options
 
-val get_model: unit -> AbstractModel.abstract_model
 val set_model: AbstractModel.abstract_model -> unit
+val get_model: unit -> AbstractModel.abstract_model
 
-val get_property: unit -> AbstractProperty.abstract_property
 val set_property: AbstractProperty.abstract_property -> unit
+val has_property: unit -> bool
+val get_property: unit -> AbstractProperty.abstract_property
 
 (*val get_pi0: unit -> PVal.pval
 val set_pi0: PVal.pval -> unit

@@ -72,11 +72,9 @@ let counter_main_algorithm = create_time_counter_and_register "main algorithm" A
 (* BEGIN EXCEPTION MECHANISM *)
 (************************************************************)
 
-(*** TODO: temporarily disable that ***)
-(*begin
+begin
 try(
 
-*)
 
 (************************************************************)
 (* Get the arguments *)
@@ -211,11 +209,6 @@ if AbstractAlgorithm.property_needed options#imitator_mode then(
 (* Statistics *)
 counter_main_algorithm#start;
 
-(*** TODO: temporary end ***)
-raise (NotImplemented ("IMITATOR says temporarily bye!"));
-exit 1;
-
-(*
 
 (************************************************************)
 (************************************************************)
@@ -231,10 +224,16 @@ match options#imitator_mode with
 	(* Case no analysis *)
 	(************************************************************)
 	(* Generate directly the "empty" result *)
-	ResultProcessor.process_result Syntax_check "syntax check" None;
+	ResultProcessor.process_result No_analysis "syntax check" None;
 	
 	terminate_program()
 
+	| _ ->
+		(*** TODO: temporary end ***)
+		raise (NotImplemented ("IMITATOR says temporarily bye!"));
+		exit 1;
+
+(*
 
 	(************************************************************)
 	(* Case translation *)
@@ -457,7 +456,7 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 	(*		(************************************************************)
 			(* Exploration *)
 			(************************************************************)
-			| State_space_exploration ->
+			| State_space_computation ->
 					(*** NOTE: this is static subclass coercition; see https://ocaml.org/learn/tutorials/objects.html ***)
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoPostStar.algoPostStar in myalgo*)
 
@@ -915,7 +914,7 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 
 		(* Process *)
 		ResultProcessor.process_result result algorithm#algorithm_name None;
-
+*)
 
 (************************************************************)
 (************************************************************)
@@ -976,4 +975,4 @@ if (try (Input.get_options())#statistics with _ -> false) || verbose_mode_greate
 (************************************************************)
 
 terminate_program()
-*)
+

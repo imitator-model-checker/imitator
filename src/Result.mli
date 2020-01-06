@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2019/08/21
+ * Last modified     : 2020/01/06
  *
  ************************************************************)
 
@@ -131,7 +131,7 @@ type bc_coverage =
 (* BFS algorithms *)
 (*------------------------------------------------------------*)
 
-type poststar_result = {
+type state_space_computation_result = {
 	(* Explored state space *)
 	state_space			: StateSpace.state_space;
 	
@@ -347,7 +347,7 @@ type imitator_result =
 	| No_analysis
 
 	(* Result for Post* *)
-	| PostStar_result of poststar_result
+	| State_space_computation_result of state_space_computation_result
 
 	(* Result for old version of EFsynth *)
 	| Deprecated_efsynth_result of deprecated_efsynth_result

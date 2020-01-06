@@ -128,8 +128,8 @@ type imitator_mode =
 	(** Translation to another language: no analysis *)
 	| Translation of translation
 	
-	(** Full state space exploration, until fully explored or some preliminary termination *)
-	| State_space_exploration
+	(** Full state space computation, until fully explored or some preliminary termination *)
+	| State_space_computation
 	
 	(** Synthesis algorithm *)
 	| Algorithm (*of synthesis_algorithm*)

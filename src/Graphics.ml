@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2019/08/21
+ * Last modified     : 2020/01/06
  *
  ************************************************************)
  
@@ -24,6 +24,7 @@ open Constants
 open ImitatorUtilities
 open Statistics
 open AbstractModel
+open AbstractProperty
 open StateSpace
 open Result
 open State
@@ -112,11 +113,12 @@ let make_cartography_tile_file_name cartography_file_prefix file_index =
 let graph_color_of_int tile_index statespace_nature dotted =
 	(* Retrieve model *)
 	let model = Input.get_model() in
+	let property = Input.get_property() in
 	
 	(* Definition of the color *)
 	let color_index =
 	(* If bad state defined *)
-	if model.correctness_condition <> None then(
+	if Input.has_property() then(
 		(* Go for a good / bad coloring *)
 		match statespace_nature with
 		| StateSpace.Good -> 2 (* green *)
@@ -155,7 +157,7 @@ try(
 	let options = Input.get_options () in
 	
 	(* No reason to draw a cartography: exception! *)
-	if not (cartography_drawing_possible options#imitator_mode) then(
+	if not (AbstractAlgorithm.cartography_drawing_possible options#imitator_mode) then(
 		print_error "Cartography cannot be drawn in this mode.";
 		raise CartographyError
 	);
@@ -223,8 +225,16 @@ try(
 
 	(* If cartography: find indices of first two variables with a parameter range *)
 	(*** TODO: take the projection into account! ***)
-	if is_mode_cartography options#imitator_mode then(
-		(* Retrieve the V0 *)
+	
+	
+	
+	(*** TODO: disabled for now ***)
+	
+	
+	
+	if AbstractAlgorithm.is_mode_cartography options#imitator_mode then(
+		raise (NotImplemented "drawing v0")
+(*		(* Retrieve the V0 *)
 		(*** NOTE: only retrieve here because, in other mode (e.g., EF or IM) this object is not defined ***)
 		let v0 = Input.get_v0 () in
 		
@@ -249,7 +259,7 @@ try(
 
 		(* Update bounds *)
 		!bounds.(x_index) <- v0#get_min (List.nth !range_params 0), v0#get_max (List.nth !range_params 0);
-		!bounds.(y_index) <- v0#get_min (List.nth !range_params 1), v0#get_max (List.nth !range_params 1);
+		!bounds.(y_index) <- v0#get_min (List.nth !range_params 1), v0#get_max (List.nth !range_params 1);*)
 
 	)else(
 	(* If EF-synthesis / IM: choose the first two parameters *)
@@ -536,7 +546,7 @@ try(
 		(* Comments at the end of the graph file *)
 		let comments = (draw_comments (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv))
 		(*** WARNING: This line is used by Giuseppe Lipari: do not change without prior agreement ***)
-		^ (if model.correctness_condition <> None then(
+		^ (if Input.has_property() then(
 			"\n# Tile nature: " ^ (StateSpace.string_of_statespace_nature statespace_nature) ^ ""
 		) else "")
 		in
@@ -1200,13 +1210,17 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 	
 	let is_bad_location = fun global_location ->
 		(* If BAD location: red *)
-		match model.correctness_condition with
-		(* If normal location: pick color from array *)
-		| None -> false
-		| Some (Unreachable unreachable_global_locations) ->
-			(* Check whether the current location matches one of the unreachable global locations *)
-			State.match_unreachable_global_locations unreachable_global_locations global_location
-		| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))
+		if Input.has_property() then(
+			(*** TODO ***)
+			raise (NotImplemented ("coloring bad location"))
+	(*		| Some (Unreachable unreachable_global_locations) ->
+				(* Check whether the current location matches one of the unreachable global locations *)
+				State.match_unreachable_global_locations unreachable_global_locations global_location
+			| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))*)
+		)else(
+			false
+		)
+
 	in
 	
 	(* Coloring function for each location *)
@@ -1300,17 +1314,22 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 				^
 				(* Add the projection onto selected parameters, if any *)
 				(
-				match model.projection with
+				if Input.has_property() then(
+				match (Input.get_property()).projection with
 					| None -> ""
-					| Some parameters ->
+					| Some parameter_indices_to_be_projected_onto ->
 						(* Compute variables to eliminate *)
 						(*** TODO: do only once for all… ***)
-						let all_but_projectparameters = list_diff model.parameters parameters in
+						let all_but_projectparameters = list_diff model.parameters parameter_indices_to_be_projected_onto in
 						(* Project *)
 						let projected_constraint = LinearConstraint.p_hide all_but_projectparameters parametric_constraint in
 						(* Print *)
-						"\n\n  Projection onto selected parameters {" ^ (string_of_list_of_string_with_sep "," (List.map model.variable_names parameters)) ^ "}:"
+						"\n\n  Projection onto selected parameters {" ^ (string_of_list_of_string_with_sep "," (List.map model.variable_names parameter_indices_to_be_projected_onto)) ^ "}:"
 						^ "\n  " ^ (LinearConstraint.string_of_p_linear_constraint model.variable_names projected_constraint);
+				)else(
+					(* No property, no projection: empty string *)
+					""
+				)
 				)
 				;
 			) state_indexes;
@@ -1491,17 +1510,22 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 					^
 					(* Add the projection onto selected parameters, if any *)
 					(
-					match model.projection with
-						| None -> ""
-						| Some parameters ->
-							(* Compute variables to eliminate *)
-							(*** TODO: do only once for all… ***)
-							let all_but_projectparameters = list_diff model.parameters parameters in
-							(* Project *)
-							(*** WARNING: already done earlier; hence loss of efficiency ***)
-							let projected_constraint = LinearConstraint.p_hide all_but_projectparameters parametric_constraint in
-							(* Print *)
-							"|" ^ (escape_string_for_dot (LinearConstraint.string_of_p_linear_constraint model.variable_names projected_constraint));
+					if Input.has_property() then(
+						match (Input.get_property()).projection with
+							| None -> ""
+							| Some parameters ->
+								(* Compute variables to eliminate *)
+								(*** TODO: do only once for all… ***)
+								let all_but_projectparameters = list_diff model.parameters parameters in
+								(* Project *)
+								(*** WARNING: already done earlier; hence loss of efficiency ***)
+								let projected_constraint = LinearConstraint.p_hide all_but_projectparameters parametric_constraint in
+								(* Print *)
+								"|" ^ (escape_string_for_dot (LinearConstraint.string_of_p_linear_constraint model.variable_names projected_constraint));
+					)else(
+						(* No property, no projection: empty string *)
+						""
+					)
 					)
 					^ "}"
 					) else ""

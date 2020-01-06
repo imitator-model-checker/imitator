@@ -3305,23 +3305,6 @@ let convert_projection_definition (index_of_variables : (Automaton.variable_name
 			) parsed_parameters)
 	end
 
-(*------------------------------------------------------------*)
-(** Convert the optimization definition *)
-(*------------------------------------------------------------*)
-let convert_optimization_definition index_of_variables = function
-(* 	| No_parsed_optimization -> No_parsed_optimization *)
-	| _ -> raise (NotImplemented("convert_optimization_definition: need to check/MODIFY the algorithm due to the optimization; to do earlier!"))
-(*	| Parsed_minimize parameter_name -> Parsed_minimize (
-		(* No check because this was checked before *)
-		Hashtbl.find index_of_variables parameter_name
-		)
-	| Parsed_maximize parameter_name -> Parsed_maximize (
-		(* No check because this was checked before *)
-		Hashtbl.find index_of_variables parameter_name
-		)*)
-
-
-
 
 
 
@@ -4241,14 +4224,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_total ("*** Building the projection definition…");
 	let projection = convert_projection_definition index_of_variables parsed_property_option in
-
-	
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Convert the optimization definition *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	print_message Verbose_total ("*** Building the optimization definition…");
-	let optimization = convert_optimization_definition index_of_variables parsed_property_option in
-
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
