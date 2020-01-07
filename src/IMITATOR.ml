@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/01/06
+ * Last modified     : 2020/01/07
  *
  ************************************************************)
 
@@ -273,22 +273,6 @@ match options#imitator_mode with
 
 		terminate_program()
 
-(*	(* Translation to HyTech *)
-		print_message Verbose_standard ("Translating model to a HyTech input model.");
-		let translated_model = PTA2HyTech.string_of_model model in
-		let hytech_file = options#files_prefix ^ ".hy" in
-		if verbose_mode_greater Verbose_total then(
-			print_message Verbose_total ("\n" ^ translated_model ^ "\n");
-		);
-		(* Write *)
-		write_to_file hytech_file translated_model;
-		print_message Verbose_standard ("File '" ^ hytech_file ^ "' successfully created.");
-		
-		(* Create a file with some statistics on the origina model if requested *)
-		ResultProcessor.process_result Translation_result "translation to HyTech" None;
-
-		terminate_program()*)
-
 	(* Translation to a graphics *)
 	| Translation JPG | Translation PDF | Translation PNG ->
 		print_message Verbose_standard ("Translating model to a graphics.");
@@ -310,42 +294,6 @@ match options#imitator_mode with
 		ResultProcessor.process_result Translation_result "translation to graphics" None;
 
 		terminate_program()
-
-(*	(* Translation to TikZ *)
-	| Translation TikZ ->
-		print_message Verbose_standard ("Translating model to LaTeX TikZ code.");
-		let translated_model = PTA2TikZ.tikz_string_of_model model in
-		let latex_file = options#files_prefix ^ ".tex" in
-		if verbose_mode_greater Verbose_high then(
-			print_message Verbose_high ("\n" ^ translated_model ^ "\n");
-		);
-		(* Write *)
-		write_to_file latex_file translated_model;
-		print_message Verbose_standard ("File '" ^ latex_file ^ "' successfully created.");
-		
-		(* Create a file with some statistics on the origina model if requested *)
-		ResultProcessor.process_result Translation_result "translation to TikZ" None;
-
-		terminate_program()
-
-	(* Translation to Uppaal *)
-	| Translation Uppaal ->
-		print_message Verbose_standard ("Translating model to an Uppaal input model.");
-		let translated_model = PTA2Uppaal.string_of_model model in
-		let output_file = options#files_prefix ^ "-uppaal.xml" in
-			(*** NOTE: for testing purpose ***)
-		if verbose_mode_greater Verbose_total then(
-			print_message Verbose_total ("\n" ^ translated_model ^ "\n");
-		);
-		(* Write *)
-		write_to_file output_file translated_model;
-		print_message Verbose_standard ("File '" ^ output_file ^ "' successfully created.");
-		
-		(* Create a file with some statistics on the origina model if requested *)
-		ResultProcessor.process_result Translation_result "translation to Uppaal" None;
-
-		terminate_program()*)
-
 
 	| _ ->
 		(*** TODO: temporary end ***)
