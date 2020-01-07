@@ -3,6 +3,7 @@
  *                       IMITATOR
  *
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: main virtual class to explore the state space: only
  * defines post-related function, i.e., to compute the successor states of ONE
@@ -10,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/09/10
+ * Last modified     : 2020/01/07
  *
  ************************************************************)
 
@@ -22,7 +23,10 @@ open OCamlUtilities
 open Exceptions
 open ImitatorUtilities
 open Statistics
+open AbstractAlgorithm
 open AbstractModel
+open AbstractProperty
+open DiscreteExpressions
 open AlgoGeneric
 open State
 open Result
@@ -263,7 +267,7 @@ let predecessors_of_location_via_action (automaton_index : Automaton.automaton_i
 (************************************************************)
 
 
-
+(*
 (* Evaluate a discrete_arithmetic_expression using a discrete variable valuation *)
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
 let evaluate_discrete_arithmetic_expression v =
@@ -290,9 +294,10 @@ let evaluate_discrete_arithmetic_expression v =
 	and evaluate_discrete_factor = function
 		| DF_variable discrete_index -> v discrete_index
 		| DF_constant discrete_value -> discrete_value
+		| DF_unary_min discrete_factor -> NumConst.neg (evaluate_discrete_factor discrete_factor)
 		| DF_expression discrete_arithmetic_expression -> evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression
 	in
-	evaluate_discrete_arithmetic_expression_rec
+	evaluate_discrete_arithmetic_expression_rec*)
 
 
 
@@ -1155,14 +1160,14 @@ let compute_possible_actions source_location =
 	true_indexes possible_actions
 
 (* interface with the NumConst module for discrete comparisons *)
-let compute_discrete_comparisons (op : AbstractModel.op_bool)  =
-  match op with
-  | BOOL_L -> NumConst.l
-  | BOOL_LEQ -> NumConst.le
-  | BOOL_EQ ->  NumConst.equal
-  | BOOL_NEQ -> NumConst.neq
-  | BOOL_GEQ -> NumConst.ge
-  | BOOL_G -> NumConst.g
+let compute_discrete_comparisons (relop : DiscreteExpressions.relop) =
+	match relop with
+	| OP_L		-> NumConst.l
+	| OP_LEQ	-> NumConst.le
+	| OP_EQ		->  NumConst.equal
+	| OP_NEQ	-> NumConst.neq
+	| OP_GEQ	-> NumConst.ge
+	| OP_G		-> NumConst.g
 
 (** Check if a boolean expression is satisfied *)
 let is_boolean_expression_satisfied location (boolean_expr : AbstractModel.boolean_expression) : bool =
@@ -1172,10 +1177,7 @@ let is_boolean_expression_satisfied location (boolean_expr : AbstractModel.boole
     | Not_bool b -> not (is_boolean_expression_satisfied_rec b) (* negation *)
     | And_bool (b1, b2) -> (is_boolean_expression_satisfied_rec b1) && (is_boolean_expression_satisfied_rec b2) (* conjunction *)
     | Or_bool (b1, b2) -> (is_boolean_expression_satisfied_rec b1) || (is_boolean_expression_satisfied_rec b2) (* disjunction *)
-    | Expression_bool (expr1, op, expr2) ->
-      let evaluation_expr1 = evaluate_discrete_arithmetic_expression (Location.get_discrete_value location) expr1 in
-      let evaluation_expr2 = evaluate_discrete_arithmetic_expression (Location.get_discrete_value location) expr2 in
-      (compute_discrete_comparisons op) evaluation_expr1 evaluation_expr2
+    | Discrete_boolean_expression dbe -> DiscreteExpressions.check_discrete_boolean_expression (Location.get_discrete_value location) dbe
   in
   is_boolean_expression_satisfied_rec boolean_expr
 
@@ -1268,7 +1270,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 			(* Compute its new value *)
 (* 			let new_value = LinearConstraint.evaluate_pxd_linear_term (Location.get_discrete_value source_location) linear_term in *)
 			let new_value = try(
-				evaluate_discrete_arithmetic_expression (Location.get_discrete_value source_location) arithmetic_expression)
+				DiscreteExpressions.eval_discrete_arithmetic_expression (Location.get_discrete_value source_location) arithmetic_expression)
 				with Division_by_0_while_evaluating_discrete -> (
 					(*** NOTE: we could still go on with the computation by setting the discrete to, e.g., 0 but this seems really not good for a model checker ***)
 					raise (Division_by_0 ("Division by 0 encountered when evaluating the successor of the discrete variables!"))
@@ -2450,15 +2452,24 @@ class virtual algoStateBased =
 	(* Update the nature of the trace set *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method update_statespace_nature (state : state) =
-		match model.correctness_condition with
-		| None -> ()
-		| Some (Unreachable unreachable_global_locations) ->
-			(* Check whether the current location matches one of the unreachable global locations *)
-			if State.match_unreachable_global_locations unreachable_global_locations state.global_location then(
-				statespace_nature <- StateSpace.Bad;
-			);
-		| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))
-
+		if Input.has_property() then(
+			let property = Input.get_property() in
+			
+			match property.property with
+				(* Reachability *)
+				| EF state_predicate ->
+					(* Check whether the current state matches the state predicate *)
+					if State.match_state_predicate state_predicate state then(
+						statespace_nature <- StateSpace.Bad;
+					);
+	
+(*		| Some (Unreachable unreachable_global_locations) ->
+				(* Check whether the current location matches one of the unreachable global locations *)
+				if State.match_unreachable_global_locations unreachable_global_locations state.global_location then(
+					statespace_nature <- StateSpace.Bad;
+				);*)
+			| _ -> raise (NotImplemented("IMITATOR currently ony implements EF in update_statespace_nature."))
+		)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)

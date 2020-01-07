@@ -24,6 +24,8 @@ open OCamlUtilities
 
 open ImitatorUtilities
 open AbstractModel
+open AbstractAlgorithm
+open AbstractProperty
 open Result
 open Options
 open Statistics
@@ -295,17 +297,24 @@ match options#imitator_mode with
 
 		terminate_program()
 
-	| _ ->
-		(*** TODO: temporary end ***)
-		raise (NotImplemented ("IMITATOR says temporarily bye!"));
-		exit 1;
-
-(*
 	(************************************************************)
 	(* Some algorithm *)
 	(************************************************************)
 	(** Synthesis algorithm *)
-	| Algorithm algorithm ->
+	| Algorithm ->
+	begin
+		(* Retrieve the algorithm *)
+		(*** NOTE: at this stage, we are sure to have defined a property ***)
+		let abstract_property = Input.get_property() in
+		
+		(* Determine the right algorithm depending on the property *)
+		let abstract_algorithm = match abstract_property.property with
+			(* Reachability *)
+			| EF state_predicate -> EFsynth state_predicate
+			
+			| _ -> raise (NotImplemented ("algorithm_of_property"))
+		in
+
 
 
 (*** TODO: check if needed in the new version (probably not) ***)
@@ -400,7 +409,7 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 		(************************************************************)
 		(************************************************************)
 
-		(* Generic method for the cartography to create either a new IM instance, or a new PRP instance *)
+(*		(* Generic method for the cartography to create either a new IM instance, or a new PRP instance *)
 		(*** TODO: also add IMK, etc., if needed ***)
 		let new_im_or_prp =
 			if options#efim then
@@ -408,11 +417,10 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 				let myalgo :> AlgoStateBased.algoStateBased = new AlgoPRP.algoPRP in myalgo
 			else
 				fun () -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM in myalgo
-		in
+		in*)
 
-
-		(* Find the correct algorithm to execute *)
-		let algorithm : AlgoGeneric.algoGeneric = match algorithm.algorithm with
+			(* Find the correct concrete algorithm to execute *)
+			let concrete_algorithm : AlgoGeneric.algoGeneric = match abstract_algorithm with
 
 			
 	(*		(************************************************************)
@@ -427,8 +435,9 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			(* EF-synthesis *)
 			(************************************************************)
 			(* New version with PointSetPowerSet *)
-			| EF when options#new_ef_mode ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGsafeSynth.algoAGsafeSynth in myalgo
+			| EFsynth _ ->
+(* 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGsafeSynth.algoAGsafeSynth in myalgo *)
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFunsafeSynth.algoEFunsafeSynth in myalgo
 
 (*			(* Old version (with list of constraints) *)
 			| EF_synthesis (*when not options#new_ef_mode*) ->
@@ -863,20 +872,27 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 				myalgo
 *)
 
+		| _ ->
+			(*** TODO: temporary end ***)
+			raise (NotImplemented ("IMITATOR says temporarily bye!"));
+			exit 1;
+
+
 		in
 
 
 
 		(* Run! *)
-		let result = algorithm#run() in
+		let result = concrete_algorithm#run() in
 
 		(* Stop the main algorithm counters *)
 		counter_algorithm_and_parsing#stop;
 		counter_main_algorithm#stop;
 
 		(* Process *)
-		ResultProcessor.process_result result algorithm#algorithm_name None;
-*)
+		ResultProcessor.process_result result concrete_algorithm#algorithm_name None;
+
+	end; (* match type of abstract algorithm *)
 
 (************************************************************)
 (************************************************************)

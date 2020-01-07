@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/10
- * Last modified     : 2019/12/10
+ * Last modified     : 2020/01/07
  *
  ************************************************************)
 
@@ -142,5 +142,3 @@ let check_discrete_boolean_expression discrete_valuation = function
 			expr1_evaluated
 			<= 
 			(eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression_3)
-
-

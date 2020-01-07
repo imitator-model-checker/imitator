@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2019/12/18
+ * Last modified: 2020/01/07
  *
  ************************************************************)
  
@@ -53,7 +53,7 @@ class imitator_options :
 		method files_prefix : string
 		method imitator_mode : imitator_mode
 		(* experimental variant for EFsynth *)
-		method new_ef_mode : bool
+(* 		method new_ef_mode : bool *)
 		method inclusion : bool
 		method inclusion2 : bool
 		method merge : bool

@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: EFsynth algorithm [JLR15]
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2019/06/13
+ * Last modified     : 2020/01/07
  *
  ************************************************************)
 
@@ -38,7 +39,10 @@ class virtual algoEFsynth :
 		(*** WARNING: these lines are copied from AlgoDeadlockFree ***)
 		val init_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint
 
+		(* The state predicate to look for in reachability analysis *)
+		val state_predicate : AbstractProperty.state_predicate
 
+		
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)

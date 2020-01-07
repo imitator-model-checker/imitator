@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: All graphics handling (cartography, trace set…)
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/01/06
+ * Last modified     : 2020/01/07
  *
  ************************************************************)
  
@@ -23,6 +24,7 @@ open Exceptions
 open Constants
 open ImitatorUtilities
 open Statistics
+open AbstractAlgorithm
 open AbstractModel
 open AbstractProperty
 open StateSpace
@@ -112,8 +114,8 @@ let make_cartography_tile_file_name cartography_file_prefix file_index =
 (*------------------------------------------------------------*)
 let graph_color_of_int tile_index statespace_nature dotted =
 	(* Retrieve model *)
-	let model = Input.get_model() in
-	let property = Input.get_property() in
+(*	let model = Input.get_model() in
+	let property = Input.get_property() in*)
 	
 	(* Definition of the color *)
 	let color_index =

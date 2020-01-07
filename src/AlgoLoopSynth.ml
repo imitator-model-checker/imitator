@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: LoopSynth algorithm [AL16] (synthesizes valuations for which there exists a loop in the PTA)
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2019/08/08
+ * Last modified     : 2020/01/07
  *
  ************************************************************)
 
@@ -161,26 +162,28 @@ class algoLoopSynth =
 		
 		(* Projecting onto SOME parameters if required *)
 		(*** BADPROG: Duplicate code (AlgoEF / AlgoPRP) ***)
-		begin
-		match model.projection with
-		(* Unchanged *)
-		| None -> ()
-		(* Project *)
-		| Some parameters ->
-			(* Print some information *)
-			self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
+		if Input.has_property() then(
+			let abstract_property = Input.get_property() in
+			match abstract_property.projection with
+			(* Unchanged *)
+			| None -> ()
+			(* Project *)
+			| Some parameters ->
+				(* Print some information *)
+				if verbose_mode_greater Verbose_high then
+					self#print_algo_message Verbose_high "Projecting onto some of the parameters…";
 
-			(*** TODO! do only once for all… ***)
-			let all_but_projectparameters = list_diff model.parameters parameters in
-			
-			(* Eliminate other parameters *)
-			LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
+				(*** TODO! do only once for all… ***)
+				let all_but_projectparameters = list_diff model.parameters parameters in
+				
+				(* Eliminate other parameters *)
+				LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
 
-			(* Print some information *)
-			if verbose_mode_greater Verbose_medium then(
-				print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-			);
-		end;
+				(* Print some information *)
+				if verbose_mode_greater Verbose_medium then(
+					print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+				);
+		); (* end if projection *)
 
 		(* Update the loop constraint using the current constraint *)
 		LinearConstraint.p_nnconvex_p_union_assign loop_constraint p_constraint;

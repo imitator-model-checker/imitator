@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: EFsynth algorithm [JLR15]
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2019/08/08
+ * Last modified     : 2020/01/07
  *
  ************************************************************)
 
@@ -22,6 +23,7 @@ open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
+open AbstractProperty
 open Result
 open AlgoStateBased
 open Statistics
@@ -44,6 +46,19 @@ class virtual algoEFsynth =
 	
 	(* Non-necessarily convex constraint allowing the reachability of the bad location *)
 	val mutable bad_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
+	
+	(*** NOTE: dummy initialization ***)
+	val state_predicate : AbstractProperty.state_predicate =
+		(*** TODO: pass as a PARAMETER of the algorithm ***)
+		(*** UGLY!!! ***)
+		match (Input.get_property()).property with
+			| EF state_predicate -> state_predicate
+			
+			(*** TODO ***)
+			
+			| _ -> raise (NotImplemented ("getting the state predicate when initializing EFsynth"))
+		
+	
 
 	
 	(* Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is used at the end of the algorithm) *)
@@ -92,6 +107,7 @@ class virtual algoEFsynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize_variables =
 		super#initialize_variables;
+		
 		(*** NOTE: duplicate operation ***)
 		bad_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
 
@@ -113,14 +129,11 @@ class virtual algoEFsynth =
 			self#print_algo_message Verbose_medium "Entering process_state…";
 		);
 
-		let state_location, state_constraint = state.global_location, state.px_constraint in
+		let state_constraint = state.px_constraint in
 		
-		let to_be_added = match model.correctness_condition with
-		| None -> raise (InternalError("A correctness property must be defined to perform EF-synthesis or PRP. This should have been checked before."))
-		| Some (Unreachable unreachable_global_locations) ->
-			
+		let to_be_added =
 			(* Check whether the current location matches one of the unreachable global locations *)
-			if State.match_unreachable_global_locations unreachable_global_locations state_location then(
+			if State.match_state_predicate state_predicate state then(
 			
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then(
@@ -133,26 +146,28 @@ class virtual algoEFsynth =
 
 				(* Projecting onto SOME parameters if required *)
 				(*** BADPROG: Duplicate code (AlgoLoopSynth / AlgoPRP) ***)
-				begin
-				match model.projection with
-				(* Unchanged *)
-				| None -> ()
-				(* Project *)
-				| Some parameters ->
-					(* Print some information *)
-					self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
+				if Input.has_property() then(
+					let abstract_property = Input.get_property() in
+					match abstract_property.projection with
+					(* Unchanged *)
+					| None -> ()
+					(* Project *)
+					| Some parameters ->
+						(* Print some information *)
+						if verbose_mode_greater Verbose_high then
+							self#print_algo_message Verbose_high "Projecting onto some of the parameters…";
 
-					(*** TODO! do only once for all… ***)
-					let all_but_projectparameters = list_diff model.parameters parameters in
-					
-					(* Eliminate other parameters *)
-					LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
+						(*** TODO! do only once for all… ***)
+						let all_but_projectparameters = list_diff model.parameters parameters in
+						
+						(* Eliminate other parameters *)
+						LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
 
-					(* Print some information *)
-					if verbose_mode_greater Verbose_medium then(
-						print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-					);
-				end;
+						(* Print some information *)
+						if verbose_mode_greater Verbose_medium then(
+							print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+						);
+				); (* end if projection *)
 
 				(* Statistics *)
 				counter_found_bad#increment;
@@ -187,13 +202,13 @@ class virtual algoEFsynth =
 				(* Do NOT compute its successors; cut the branch *)
 				false
 				
-			)else(
+			) (* end if match state predicate *)
+			else(
 				self#print_algo_message Verbose_medium "State not corresponding to the one wanted.";
 				
 				(* Keep the state as it is not a bad state *)
 				true
-			)
-		| _ -> raise (InternalError("[EFsynth/PRP] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
+			) (* end if not match state predicate *)
 		
 		in
 		

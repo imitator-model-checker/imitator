@@ -4,13 +4,14 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: define global locations
  * 
  * File contributors        : Étienne André
  * Created                  : 2010/03/10
  * Renamed from Automaton.ml: 2015/10/22
- * Last modified            : 2019/12/10
+ * Last modified            : 2020/01/07
  *
  ************************************************************)
  
@@ -222,13 +223,13 @@ let match_simple_predicate simple_predicate global_location =
 (* Matching state predicates with a given global_location *)
 (*------------------------------------------------------------*)
 
-let rec match_state_predicate_factor state_predicate_factor global_location =
+let rec match_state_predicate_factor state_predicate_factor global_location : bool =
 	match state_predicate_factor with
 	| State_predicate_factor_NOT state_predicate_factor_neg -> not (match_state_predicate_factor state_predicate_factor_neg global_location)
 	| Simple_predicate simple_predicate -> match_simple_predicate simple_predicate global_location
 	| State_predicate state_predicate -> match_state_predicate state_predicate global_location
 
-and match_state_predicate_term state_predicate_term global_location =
+and match_state_predicate_term state_predicate_term global_location : bool =
 	match state_predicate_term with
 	| State_predicate_term_AND (state_predicate_term_1, state_predicate_term_2) ->
 		match_state_predicate_term state_predicate_term_1 global_location
@@ -236,13 +237,14 @@ and match_state_predicate_term state_predicate_term global_location =
 		match_state_predicate_term state_predicate_term_2 global_location
 	| State_predicate_factor state_predicate_factor -> match_state_predicate_factor state_predicate_factor global_location
 
-and match_state_predicate state_predicate global_location =
+and match_state_predicate state_predicate global_location : bool =
 	match state_predicate with
 	| State_predicate_OR (state_predicate_1, state_predicate_2) ->
 		match_state_predicate state_predicate_1 global_location
 		||
 		match_state_predicate state_predicate_2 global_location
 	| State_predicate_term state_predicate_term -> match_state_predicate_term state_predicate_term global_location
+	| State_predicate_true -> true
 
 
 

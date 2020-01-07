@@ -8,29 +8,36 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/10
- * Last modified     : 2019/12/10
+ * Last modified     : 2020/01/07
  *
  ************************************************************)
 
 
 
-(****************************************************************)
+(************************************************************)
+(************************************************************)
 (** Operators *)
-(****************************************************************)
+(************************************************************)
+(************************************************************)
 
 (** Boolean operators *)
 
 type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 
-(****************************************************************)
+
+(************************************************************)
+(************************************************************)
 (** Valuation *)
-(****************************************************************)
+(************************************************************)
+(************************************************************)
 type discrete_valuation = Automaton.discrete_index -> Automaton.discrete_value
 
 
-(****************************************************************)
+(************************************************************)
+(************************************************************)
 (** Arithmetic expressions for discrete variables *)
-(****************************************************************)
+(************************************************************)
+(************************************************************)
 type discrete_arithmetic_expression =
 	| DAE_plus of discrete_arithmetic_expression * discrete_term
 	| DAE_minus of discrete_arithmetic_expression * discrete_term
@@ -47,10 +54,19 @@ and discrete_factor =
 	| DF_expression of discrete_arithmetic_expression
 	| DF_unary_min of discrete_factor
 
+(************************************************************)
+(** Evaluate a discrete arithmetic expression with a valuation *)
+(************************************************************)
 
-(****************************************************************)
+val eval_discrete_arithmetic_expression : discrete_valuation -> discrete_arithmetic_expression -> Automaton.discrete_value
+
+
+(************************************************************)
+(************************************************************)
+(************************************************************)
 (** Boolean expressions for discrete variables *)
-(****************************************************************)
+(************************************************************)
+(************************************************************)
 
 type discrete_boolean_expression =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
@@ -63,5 +79,5 @@ type discrete_boolean_expression =
 (** Check whether a Boolean expression evaluates to true when valuated with a valuation *)
 (************************************************************)
 
-
 val check_discrete_boolean_expression : discrete_valuation -> discrete_boolean_expression -> bool
+

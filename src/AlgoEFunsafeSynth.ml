@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: "EF" algorithm (unsafe w.r.t. a set of bad states) [JLR15]
  * 
  * File contributors : Étienne André
  * Created           : 2017/02/03
- * Last modified     : 2019/07/11
+ * Last modified     : 2020/01/07
  *
  ************************************************************)
 
@@ -66,33 +67,39 @@ class algoEFunsafeSynth =
 		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
 				
 		(* Projecting onto SOME parameters if required *)
-		let result =
-		match model.projection with
-		(* No projection: copy the initial p constraint *)
-		| None -> bad_constraint
-		(* Project *)
-		| Some parameters ->
-			(* Print some information *)
-			if verbose_mode_greater Verbose_medium then(
-				self#print_algo_message Verbose_medium "Projecting the bad constraint onto some of the parameters.";
-				self#print_algo_message Verbose_medium "Before projection:";
-				print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
-			);
+		let result = if Input.has_property() then(
+			let abstract_property = Input.get_property() in
+			match abstract_property.projection with
+				(* No projection: copy the initial p constraint *)
+				| None -> bad_constraint
+				(* Project *)
+				| Some parameters ->
+					(* Print some information *)
+					if verbose_mode_greater Verbose_medium then(
+						self#print_algo_message Verbose_medium "Projecting the bad constraint onto some of the parameters.";
+						self#print_algo_message Verbose_medium "Before projection:";
+						print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
+					);
 
-			(*** TODO! do only once for all... ***)
-			let all_but_projectparameters = list_diff model.parameters parameters in
-			
-			(* Eliminate other parameters *)
-			let projected_init_p_nnconvex_constraint = LinearConstraint.p_nnconvex_hide all_but_projectparameters bad_constraint in
+					(*** TODO! do only once for all… ***)
+					let all_but_projectparameters = list_diff model.parameters parameters in
+					
+					(* Eliminate other parameters *)
+					let projected_init_p_nnconvex_constraint = LinearConstraint.p_nnconvex_hide all_but_projectparameters bad_constraint in
 
-			(* Print some information *)
-			if verbose_mode_greater Verbose_medium then(
-				self#print_algo_message Verbose_medium "After projection:";
-				print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names projected_init_p_nnconvex_constraint);
-			);
-			
-			(* Return *)
-			projected_init_p_nnconvex_constraint
+					(* Print some information *)
+					if verbose_mode_greater Verbose_medium then(
+						self#print_algo_message Verbose_medium "After projection:";
+						print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names projected_init_p_nnconvex_constraint);
+					);
+					
+					(* Return *)
+					projected_init_p_nnconvex_constraint
+				
+		)else(
+			(* No projection: copy the initial p constraint *)
+			bad_constraint
+		) (* end if has property *)
 		in
 		
 		(* Get the termination status *)

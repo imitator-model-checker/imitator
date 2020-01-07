@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: PRP algorithm [ALNS15]
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/11
- * Last modified     : 2019/08/08
+ * Last modified     : 2020/01/07
  *
  ************************************************************)
 
@@ -104,18 +105,28 @@ class algoPRP =
 				
 				(* Projecting onto SOME parameters if required *)
 				(*** BADPROG: Duplicate code (EFsynth / AlgoLoopSynth) ***)
-				begin
-				match model.projection with
-				(* Unchanged *)
-				| None -> ()
-				(* Project *)
-				| Some parameters ->
-					self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
-					(*** TODO! do only once for all... ***)
-					let all_but_projectparameters = list_diff model.parameters parameters in
-					(* Eliminate other parameters *)
-					LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
-				end;
+				if Input.has_property() then(
+					let abstract_property = Input.get_property() in
+					match abstract_property.projection with
+					(* Unchanged *)
+					| None -> ()
+					(* Project *)
+					| Some parameters ->
+						(* Print some information *)
+						if verbose_mode_greater Verbose_high then
+							self#print_algo_message Verbose_high "Projecting onto some of the parameters…";
+
+						(*** TODO! do only once for all… ***)
+						let all_but_projectparameters = list_diff model.parameters parameters in
+						
+						(* Eliminate other parameters *)
+						LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
+
+						(* Print some information *)
+						if verbose_mode_greater Verbose_medium then(
+							print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+						);
+				); (* end if projection *)
 				
 				(* Print some information *)
 				self#print_algo_message Verbose_standard "Found a state violating the property.";

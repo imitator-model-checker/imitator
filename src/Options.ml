@@ -10,7 +10,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/01/06
+ * Last modified     : 2020/01/07
  *
  ************************************************************)
 
@@ -107,13 +107,14 @@ class imitator_options =
 (* 		val mutable completeIM = ref false *)
 		
 		(* imitator mode *)
-		val mutable imitator_mode = AbstractAlgorithm.Algorithm
+		(*** NOTE: arbitrary initialization ***)
+		val mutable imitator_mode = Syntax_check
 		
 		(* Exploration order *)
 		val mutable exploration_order = AbstractAlgorithm.Exploration_layer_BFS
 		
 		(* experimental variant for EFsynth *)
-		val mutable new_ef_mode = false
+(* 		val mutable new_ef_mode = false *)
 
 		(* Best worst-case clock value for EFsynthminpq *)
 (* 		val mutable best_worst_case = ref false *)
@@ -256,7 +257,7 @@ class imitator_options =
 		method exploration_order = exploration_order
 		method files_prefix = !files_prefix
 		method imitator_mode = imitator_mode
-		method new_ef_mode = new_ef_mode
+(* 		method new_ef_mode = new_ef_mode *)
 		method inclusion = !inclusion
 		method inclusion2 = !inclusion2
 		method merge = !merge
