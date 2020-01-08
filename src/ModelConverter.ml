@@ -3158,9 +3158,21 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 (************************************************************)
 (** Converting the property  *)
 (************************************************************)
+type converted_observer_structure = {
+	(*  observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions *)
+	observer_structure			: Automaton.action_index list * (Automaton.action_index list) array * AbstractModel.location_urgency array * LinearConstraint.pxd_linear_constraint array * AbstractModel.transition list array array;
+	
+	nb_transitions_for_observer	: int;
+	initial_observer_constraint	: LinearConstraint.px_linear_constraint;
+}
+
+(*type converted_observer =
+	| No_converted_observer
+	| Converted_observer of converted_observer_structure*)
+
 
 (* Convert ParsingStructure.parsed_property into AbstractProperty.property *)
-let convert_property_option useful_parsing_model_information (parsed_property_option : ParsingStructure.parsed_property option) =
+let convert_property_option useful_parsing_model_information (parsed_property_option : ParsingStructure.parsed_property option) : (AbstractProperty.property option * converted_observer_structure option) =
 	let constants			= useful_parsing_model_information.constants in
 	let discrete			= useful_parsing_model_information.discrete in
 	let index_of_actions	= useful_parsing_model_information.index_of_actions in
@@ -3218,7 +3230,7 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 	
 	*)
 	(* Generic check and conversion function for 2 actions *)
-	let gen_check_and_convert_2act property a1 a2 =
+	let gen_convert_2act property a1 a2 =
 		(* Check action names (perform 2 even if one fails) *)
 		let check1 = check_action_name index_of_actions a1 in
 		let check2 = check_action_name index_of_actions a2 in
@@ -3246,7 +3258,7 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 	in
 
 	(* Generic check and conversion function for 2 actions and one deadline *)
-	let gen_check_and_convert_2actd property a1 a2 d =
+	let gen_convert_2actd property a1 a2 d =
 		(* Check action names and deadline (perform 3 even if one fails) *)
 		let check1 = check_action_name index_of_actions a1 in
 		let check2 = check_action_name index_of_actions a2 in
@@ -3283,7 +3295,7 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 	in
 
 	(* Generic check and conversion function for a list of actions *)
-	let gen_check_and_convert_list property actions_list =
+	let gen_convert_list property actions_list =
 		(* Check action names (use a fold_left instead of forall to ensure that all actions will be checked) *)
 		if not (List.fold_left (fun current_result a -> check_action_name index_of_actions a && current_result) true actions_list)
 		then (None , false)
@@ -3305,17 +3317,24 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 
 	(* Check and convert *)
 	match parsed_property_option with
-	| None -> (None , 0, None, None)
+	(* No property, no observer *)
+	| None -> None, None
 	| Some parsed_property ->
 		begin
 		match parsed_property.property with
 
 		(*** TODO ***)
-		| Parsed_EF _
+		| Parsed_EF parsed_state_predicate ->
+			(* Return a property and no observer *)
+			Some (EF (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)),
+			None
+			
+			
+			
 		| Parsed_Action_deadline _
 		| _
 			->
-			raise (NotImplemented "convert_property_option")
+			raise (NotImplemented "ModelConverter.convert_property_option")
 		end
 		
 		
@@ -3942,7 +3961,20 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	
 	(* We may need to create additional structures for the observer, if any *)
-	let observer_structure_option, nb_transitions_for_observer, initial_observer_constraint_option, abstract_property_option = convert_property_option useful_parsing_model_information parsed_property_option in
+	
+	let abstract_property_option, converted_observer_structure_option = convert_property_option useful_parsing_model_information parsed_property_option in
+	
+	(* Convert some variables to catch up with older code below *)
+	let observer_structure_option, nb_transitions_for_observer, initial_observer_constraint_option = match converted_observer_structure_option with
+		| None -> None, 0, None
+		| Some converted_observer_structure ->
+			Some converted_observer_structure.observer_structure,
+			converted_observer_structure.nb_transitions_for_observer,
+			Some converted_observer_structure.initial_observer_constraint
+	in
+	
+	
+(* 	let observer_structure_option, nb_transitions_for_observer, initial_observer_constraint_option, abstract_property_option = convert_property_option useful_parsing_model_information parsed_property_option in *)
 
 	
 
@@ -3986,6 +4018,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		begin
 		match observer_structure_option with
 		| None -> raise (InternalError ("No observer structure saved although it should have been set at that point"))
+		
+		(*** TODO: create a structure !!! ***)
+		
 		| Some (observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions) ->
 			print_message Verbose_high ("*** Adding observer data to automata…");
 			(* Retrieve the number of locations of the observer *)

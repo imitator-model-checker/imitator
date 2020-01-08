@@ -4,12 +4,13 @@
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: Convert an abstract model to the input syntax of IMITATOR
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2019/12/18
+ * Last modified     : 2020/01/08
  *
  ************************************************************)
 
@@ -119,5 +120,5 @@ val string_of_v0 : abstract_model -> v0 -> string
 val string_of_model : abstract_model -> string
 
 (** Convert the correctness property to a string *)
-(* val string_of_property : abstract_model -> property_definition -> string *)
+val string_of_property : abstract_model -> AbstractProperty.abstract_property -> string
 

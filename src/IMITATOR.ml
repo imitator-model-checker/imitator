@@ -201,11 +201,10 @@ if verbose_mode_greater Verbose_total then(
 (* Debug print: property *)
 (************************************************************)
 if AbstractAlgorithm.property_needed options#imitator_mode then(
-	let property = Input.get_property in
+	let property = Input.get_property() in
 	
 	(*** TODO ***)
-(* 	print_message Verbose_low ("\nThe property is the following one:\n" ^ (ModelPrinter.string_of_property model property) ^ "\n"); *)
-	raise (NotImplemented ("IMITATOR >> string_of_property"))
+	print_message Verbose_low ("\nThe property is the following one:\n" ^ (ModelPrinter.string_of_property model property) ^ "\n");
 );
 
 (* Statistics *)
