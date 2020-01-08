@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/01/06
+ * Last modified     : 2020/01/08
  *
  ************************************************************)
 
@@ -2558,9 +2558,6 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 
 
 (*
-(************************************************************)
-(** Verification functions dedicated to property declaration *)
-(************************************************************)
 
 (*------------------------------------------------------------*)
 (* Local functions checking existence of a name in property specifications
@@ -2587,12 +2584,12 @@ let check_location_name index_of_locations automaton_index automaton_name locati
 *)
 (*------------------------------------------------------------*)
 let check_action_name index_of_actions action_name =
-  if not (Hashtbl.mem index_of_actions action_name)
-  then (
-    print_error ("The action '" ^ action_name ^ "' used in the correctness property does not exist in this model.");
-    false
-  )
-  else true
+	if not (Hashtbl.mem index_of_actions action_name)
+	then (
+		print_error ("The action '" ^ action_name ^ "' used in the property does not exist in this model.");
+		false
+	)
+	else true
 
 (*
 (*------------------------------------------------------------*)
@@ -2863,6 +2860,122 @@ let check_and_convert_unreachable_global_location index_of_variables type_of_var
 
 *)
 
+(*------------------------------------------------------------*)
+(** Check a discrete Boolean expression *)
+(*------------------------------------------------------------*)
+
+let rec check_parsed_discrete_arithmetic_expression useful_parsing_model_information = function
+	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression , parsed_discrete_term)
+	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
+		let check1 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression in
+		let check2 = check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term in
+		check1 && check2
+	| Parsed_DAE_term parsed_discrete_term -> check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term
+
+and check_parsed_discrete_term useful_parsing_model_information = function
+	| Parsed_DT_mul (parsed_discrete_term , parsed_discrete_factor)
+	| Parsed_DT_div (parsed_discrete_term , parsed_discrete_factor) ->
+		let check1 = check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term in
+		let check2 = check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor in
+		check1 && check2
+	| Parsed_DT_factor parsed_discrete_factor ->
+		check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor
+
+and check_parsed_discrete_factor useful_parsing_model_information = function
+	| Parsed_DF_variable variable_name ->
+		if not (Hashtbl.mem useful_parsing_model_information.index_of_variables variable_name) && not (Hashtbl.mem useful_parsing_model_information.constants variable_name) then (
+			print_error ("Undefined variable name '" ^ variable_name ^ "' in the property");
+			false
+		)else(
+			true
+		)
+	| Parsed_DF_constant _ -> true
+	| Parsed_DF_expression parsed_discrete_arithmetic_expression ->
+		check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression
+	| Parsed_DF_unary_min parsed_discrete_factor ->
+		check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor
+
+
+(* Check correct variable names in parsed_discrete_boolean_expression *)
+let check_parsed_discrete_boolean_expression useful_parsing_model_information = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Parsed_expression (parsed_discrete_arithmetic_expression1 , _ , parsed_discrete_arithmetic_expression2) ->
+		let check1 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1 in
+		let check2 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2 in
+		check1 && check2
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| Parsed_expression_in (parsed_discrete_arithmetic_expression1 , parsed_discrete_arithmetic_expression2 , parsed_discrete_arithmetic_expression3) ->
+		let check1 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1 in
+		let check2 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2 in
+		let check3 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression3 in
+		check1 && check2 && check3
+
+
+		
+(*------------------------------------------------------------*)
+(** Check a state predicate *)
+(*------------------------------------------------------------*)
+let check_parsed_loc_predicate useful_parsing_model_information = function
+	| Parsed_loc_predicate_EQ (automaton_name , location_name)
+	| Parsed_loc_predicate_NEQ (automaton_name , location_name)
+		->
+		(* Useful variables *)
+		let index_of_automata  = useful_parsing_model_information.index_of_automata  in
+		let index_of_locations : ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array = useful_parsing_model_information.index_of_locations in
+		
+		(* Find the automaton *)
+		if not (Hashtbl.mem index_of_automata automaton_name) then(
+			print_error ("Unknown automaton name '" ^ automaton_name ^ "' in the property.");
+			false
+		)else(
+			let automaton_index : Automaton.automaton_index = Hashtbl.find index_of_automata automaton_name in
+			(* Find the location *)
+			if not (Hashtbl.mem index_of_locations.(automaton_index) location_name) then(
+				print_error ("Unknown location name '" ^ location_name ^ "' in automaton '" ^ automaton_name ^ "' in the property.");
+				false
+			)else(
+				(* Both checks passed *)
+				true
+			)
+		)
+
+
+let check_parsed_simple_predicate useful_parsing_model_information = function
+	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression ->
+		check_parsed_discrete_boolean_expression useful_parsing_model_information parsed_discrete_boolean_expression
+	| Parsed_loc_predicate parsed_loc_predicate ->
+		check_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate
+
+
+let rec check_parsed_state_predicate useful_parsing_model_information = function
+	| Parsed_state_predicate_OR (parsed_state_predicate_1 , parsed_state_predicate_2) ->
+		(* Check both even if one fails, so as to provide users with more errors at once *)
+		let check_1 = check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_1 in
+		let check_2 = check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_2 in
+		check_1 && check_2
+		
+	| Parsed_state_predicate_term parsed_state_predicate_term ->
+		check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term
+
+and check_parsed_state_predicate_term useful_parsing_model_information = function
+	| Parsed_state_predicate_term_AND (parsed_state_predicate_term_1 , parsed_state_predicate_term_2) ->
+		(* Check both even if one fails, so as to provide users with more errors at once *)
+		let check_1 = check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term_1 in
+		let check_2 = check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term_2 in
+		check_1 && check_2
+	| Parsed_state_predicate_factor parsed_state_predicate_factor ->
+		check_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor
+
+and check_parsed_state_predicate_factor useful_parsing_model_information = function
+	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor ->
+		check_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor
+	| Parsed_simple_predicate parsed_simple_predicate ->
+		check_parsed_simple_predicate useful_parsing_model_information parsed_simple_predicate
+	| Parsed_state_predicate parsed_state_predicate ->
+		check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+
+
+
 
 (*------------------------------------------------------------*)
 (** Check that all parameters in the projection definition are valid *)
@@ -2943,11 +3056,15 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		match parsed_property.property with
 
 		(*** TODO ***)
-		| Parsed_EF _
+		| Parsed_EF parsed_state_predicate ->
+			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+		
+		
+		
 		| Parsed_Action_deadline _
 		| _
 			->
-			raise (NotImplemented "check_property_option")
+			raise (NotImplemented "ModelConverter : check_property_option")
 		end
 		
 		
@@ -4526,46 +4643,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 (*------------------------------------------------------------*)
 
 (* Check correct variable names in parsed_discrete_arithmetic_expression *)
-let rec check_parsed_discrete_arithmetic_expression = function
-	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression , parsed_discrete_term)
-	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
-		let check1 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression in
-		let check2 = check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term in
-		check1 && check2
-	| Parsed_DAE_term parsed_discrete_term -> check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term
-
-and check_parsed_discrete_term useful_parsing_model_information = function
-	| Parsed_DT_mul (parsed_discrete_term , parsed_discrete_factor)
-	| Parsed_DT_div (parsed_discrete_term , parsed_discrete_factor) ->
-		let check1 = check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term in
-		let check2 = check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor in
-		check1 && check2
-	| Parsed_DT_factor parsed_discrete_factor -> check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor
-
-and check_parsed_discrete_factor useful_parsing_model_information = function
-	| Parsed_DF_variable variable_name ->
-		if not (Hashtbl.mem useful_parsing_model_information.index_of_variables variable_name) && not (Hashtbl.mem useful_parsing_model_information.constants variable_name) then (
-			print_error ("Variable name '" ^ variable_name ^ "' undefined in the property");
-		);
-	| Parsed_DF_constant _ -> true
-	| Parsed_DF_expression parsed_discrete_arithmetic_expression -> check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression
-	| Parsed_DF_unary_min parsed_discrete_factor -> check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor
-
-
-(* Check correct variable names in parsed_discrete_boolean_expression *)
-let check_parsed_discrete_boolean_expression useful_parsing_model_information = function
-	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Parsed_expression (parsed_discrete_arithmetic_expression1 , _ , parsed_discrete_arithmetic_expression2) ->
-		let check1 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1 in
-		let check2 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2 in
-		check1 && check2
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Parsed_expression_in (parsed_discrete_arithmetic_expression1 , parsed_discrete_arithmetic_expression2 , parsed_discrete_arithmetic_expression3) ->
-		let check1 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1 in
-		let check2 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2 in
-		let check3 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression3 in
-		check1 && check2 && check3
-
 	
 (* Check correct variable names in parsed_loc_predicate *)
 let check_parsed_loc_predicate useful_parsing_model_information = function
