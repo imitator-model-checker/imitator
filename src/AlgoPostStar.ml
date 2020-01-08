@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
- * Module description: PostStar algorithm, i.e., simple computation of all symbolic states
+ * Module description: PostStar algorithm, i.e., simple forward computation of all symbolic states
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2019/06/13
+ * Last modified     : 2020/01/08
  *
  ************************************************************)
 
@@ -154,7 +155,7 @@ class algoPostStar =
 		in
 
 		(* Return result *)
-		PostStar_result
+		State_space_computation_result
 		{
 			(* Explored state space *)
 			state_space			= state_space;

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/02/03
- * Last modified     : 2020/01/07
+ * Last modified     : 2020/01/08
  *
  ************************************************************)
 
@@ -22,7 +22,9 @@
 open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
+open AbstractAlgorithm
 open AbstractModel
+open AbstractProperty
 open Result
 open AlgoEFsynth
 

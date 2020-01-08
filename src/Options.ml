@@ -10,7 +10,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/01/07
+ * Last modified     : 2020/01/08
  *
  ************************************************************)
 
@@ -870,6 +870,8 @@ class imitator_options =
 				else if nb_args = 1 then(
 					nb_args <- nb_args + 1;
 					property_file_name <- arg;
+					(* Property => mode = algorithm *)
+					imitator_mode <- Algorithm;
 				)
 				(* If more than two arguments : warns *)
 				else (
@@ -945,7 +947,9 @@ class imitator_options =
 			(* Force options *) 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			
-			(* If a time limit is defined for BC but NOT for IM, then define it for IM too (otherwise may yield an infinite loop in IM…) *)
+			(*** TODO : reintroduce ***)
+			
+(*			(* If a time limit is defined for BC but NOT for IM, then define it for IM too (otherwise may yield an infinite loop in IM…) *)
 			if is_mode_cartography imitator_mode && carto_time_limit <> None && !time_limit = None then(
 				print_warning ("A time limit is defined for BC but not for IM: forcing time limit for IM too.");
 				let limit = match carto_time_limit with
@@ -974,7 +978,7 @@ class imitator_options =
 					if not !output_tiles_files then output_result := false
 				);
 			
-			);
+			);*)
 			
 			
 			
@@ -999,10 +1003,11 @@ class imitator_options =
 
 			
 			(* No cart options if not in cartography *)
-			if not (is_mode_cartography imitator_mode) && carto_tiles_limit <> None then print_warning ("A maximum number of tiles has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
+			(*** TODO : reintroduce ***)
+(*			if not (is_mode_cartography imitator_mode) && carto_tiles_limit <> None then print_warning ("A maximum number of tiles has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
 			if not (is_mode_cartography imitator_mode) && carto_time_limit <> None then print_warning ("A maximum computation for the cartography has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
 			if not (is_mode_cartography imitator_mode) && (NumConst.neq !step NumConst.one) then
-				print_warning (Constants.program_name ^ " is not run in cartography mode; the option regarding to the step of the cartography algorithm will thus be ignored.");
+				print_warning (Constants.program_name ^ " is not run in cartography mode; the option regarding to the step of the cartography algorithm will thus be ignored.");*)
 			
 (*			(* Options for variants of IM, but not in IM mode *)
 			if (not (is_mode_IM imitator_mode) && not (is_mode_cartography imitator_mode)) && (!union || !pi_compatible) then
@@ -1121,7 +1126,9 @@ end;
 			);*)
 
 			
-			begin
+						(*** TODO : reintroduce ***)
+
+(*			begin
 			match !distribution_mode with
 			| Non_distributed -> 
 				print_message Verbose_medium ("Non-distributed mode (default).");
@@ -1177,7 +1184,7 @@ end;
 				);
 			)else
 				print_message Verbose_medium ("No killIM heuristics (default).")
-			;
+			;*)
 
 			if !precomputepi0 then(
 				print_message Verbose_standard ("Compute the next pi0 before the next reception of a constraint.");

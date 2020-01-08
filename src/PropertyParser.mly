@@ -53,7 +53,7 @@ let resolve_property l =
 %token OP_L OP_LEQ OP_EQ OP_NEQ OP_GEQ OP_G OP_ASSIGN
 
 %token LPAREN RPAREN LBRACE RBRACE LSQBRA RSQBRA
-%token AMPERSAND COLON COMMA DOUBLEAMPERSAND DOUBLEDOT DOUBLEPIPE PIPE SEMICOLON
+%token COLON COMMA DOUBLEDOT SEMICOLON SYMBOL_AND SYMBOL_OR
 
 %token
 	CT_ACCEPTING CT_ACCLOOP CT_AG CT_ALWAYS CT_AND
@@ -77,8 +77,8 @@ let resolve_property l =
 
 %token EOF
 
-%left DOUBLEPIPE PIPE CT_OR  /* lowest precedence */
-%left AMPERSAND CT_AND       /* medium precedence */
+%left SYMBOL_OR              /* lowest precedence */
+%left SYMBOL_AND             /* medium precedence */
 %left DOUBLEDOT              /* high precedence */
 %nonassoc CT_NOT             /* highest precedence */
 
@@ -93,7 +93,7 @@ let resolve_property l =
 /************************************************************/
 main:
 /************************************************************/
-	property_kw_opt quantified_property EOF { $2 }
+	property_kw_opt quantified_property semicolon_opt EOF { $2 }
 ;
 
 /************************************************************/
@@ -143,12 +143,12 @@ property:
 /************************************************************/
 state_predicate:
 /************************************************************/
-	| state_predicate or_rule state_predicate { Parsed_state_predicate_OR ($1, $3) }
+	| state_predicate SYMBOL_OR state_predicate { Parsed_state_predicate_OR ($1, $3) }
 	| state_predicate_term { Parsed_state_predicate_term $1 }
 ;
 
 state_predicate_term:
-	| state_predicate_term and_rule state_predicate_term { Parsed_state_predicate_term_AND ($1, $3) }
+	| state_predicate_term SYMBOL_AND state_predicate_term { Parsed_state_predicate_term_AND ($1, $3) }
 	| state_predicate_factor { Parsed_state_predicate_factor $1 }
 ;
 
@@ -261,18 +261,14 @@ pos_float:
 
 /************************************************************/
 /*** WARNING: call these rules "and" or "or" is accepted by OCaml Yak but not by the subsequent OCaml compiler ***/
-or_rule:
+/* or_rule:*/
 /************************************************************/
-	| CT_OR {}
-	| DOUBLEPIPE {}
-	| PIPE {}
+/*	| SYMBOL_OR {}
 ;
 
 and_rule:
-	| CT_AND {}
-	| AMPERSAND {}
-	| DOUBLEAMPERSAND {}
-;
+	| SYMBOL_AND {}
+;*/
 
 
 

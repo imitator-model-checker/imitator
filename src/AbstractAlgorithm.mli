@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/18
- * Last modified     : 2020/01/06
+ * Last modified     : 2020/01/08
  *
  ************************************************************)
 
@@ -99,7 +99,10 @@ type algorithm =
 
 	(** Synthesis using iterative calls to PRP *)
 	| PRPC*)
-	
+
+(* Predicate on algorithms *)
+val is_algorithm_cartography     : algorithm -> bool
+
 
 (************************************************************)
 (** Available translations *)
@@ -218,7 +221,6 @@ type graphical_state_space =
 
 val property_needed              : imitator_mode -> bool
 (*val is_mode_IM                   : imitator_mode -> bool*)
-val is_mode_cartography          : imitator_mode -> bool
 val cartography_drawing_possible : imitator_mode -> bool
 
 

@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/18
- * Last modified     : 2020/01/06
+ * Last modified     : 2020/01/08
  *
  ************************************************************)
 
@@ -103,7 +103,14 @@ type algorithm =
 
 	(** Synthesis using iterative calls to PRP *)
 	| PRPC*)
-	
+
+let is_algorithm_cartography = function
+	(** Reachability *)
+	| EFsynth _
+		-> false
+	| _
+		-> raise (NotImplemented "AbstractAlgorithm.is_algorithm_cartography")
+
 
 (************************************************************)
 (** Available translations *)
@@ -268,46 +275,6 @@ let is_mode_IM = function
 
 
 *)
-let is_mode_cartography = function
-	| Syntax_check
-	| State_space_computation
-	| Translation _
-		-> false
-	| _
-		-> raise (NotImplemented "is_mode_cartography")
-	(*
-	| State_space_computation
-	| Acc_loop_synthesis_NDFS
-	| EF_synthesis
-	| EFunsafe_synthesis
-	| EF_min
-	| EF_max
-	| EF_synth_min
-	| EF_synth_max
-	| EF_synth_min_priority_queue
-	| EFexemplify
-	| AF_synthesis
-	| Loop_synthesis
-	| Acc_loop_synthesis
-	| Parametric_NZ_CUBcheck
-	| Parametric_NZ_CUBtransform
-	| Parametric_NZ_CUBtransformDistributed
-	| Parametric_NZ_CUB
-	| Parametric_deadlock_checking
-		-> false
-	| Inverse_method
-	| Inverse_method_complete
-	| PRP
-		-> false
-	| Cover_cartography
-	| Learning_cartography
-	| Shuffle_cartography
-	| Border_cartography
-	| Random_cartography _
-	| RandomSeq_cartography _
-	| PRPC
-		-> true
-	*)
 
 let cartography_drawing_possible = function
 	| Syntax_check

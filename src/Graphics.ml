@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/01/07
+ * Last modified     : 2020/01/08
  *
  ************************************************************)
  
@@ -234,7 +234,7 @@ try(
 	
 	
 	
-	if AbstractAlgorithm.is_mode_cartography options#imitator_mode then(
+	if (raise (NotImplemented "testing whether we are in cartography mode")) (*AbstractAlgorithm.is_algorithm_cartography options#imitator_mode*) then(
 		raise (NotImplemented "drawing v0")
 (*		(* Retrieve the V0 *)
 		(*** NOTE: only retrieve here because, in other mode (e.g., EF or IM) this object is not defined ***)

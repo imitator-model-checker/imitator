@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2019/12/13
+ * Last modified     : 2020/01/08
 *****************************************************************)
 
 {
@@ -112,12 +112,12 @@ rule token = parse
 	| '['              { LSQBRA }
 	| ']'              { RSQBRA }
 
-	| '&'              { AMPERSAND }
-	| "&&"             { DOUBLEAMPERSAND }
+	| '&'              { SYMBOL_AND }
+	| "&&"             { SYMBOL_AND }
 	| ".."             { DOUBLEDOT }
 	| ','              { COMMA }
-	| '|'              { PIPE }
-	| "||"             { DOUBLEPIPE }
+	| '|'              { SYMBOL_OR }
+	| "||"             { SYMBOL_OR }
 	| ':'              { COLON }
 	| ';'              { SEMICOLON }
 

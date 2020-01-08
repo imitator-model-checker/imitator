@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/01/07
+ * Last modified     : 2020/01/08
  *
  ************************************************************)
 
@@ -298,6 +298,27 @@ match options#imitator_mode with
 		terminate_program()
 
 	(************************************************************)
+	(* Computation of the whole state space *)
+	(************************************************************)
+	| State_space_computation ->
+	
+		(*** NOTE: this is static subclass coercition; see https://ocaml.org/learn/tutorials/objects.html ***)
+		let concrete_algorithm :> AlgoGeneric.algoGeneric = new AlgoPostStar.algoPostStar in
+		
+		(*** NOTE: duplicate code with what follows ***)
+		
+		let result = concrete_algorithm#run() in
+
+		(* Stop the main algorithm counters *)
+		counter_algorithm_and_parsing#stop;
+		counter_main_algorithm#stop;
+
+		(* Process *)
+		ResultProcessor.process_result result concrete_algorithm#algorithm_name None;
+	
+		()
+
+	(************************************************************)
 	(* Some algorithm *)
 	(************************************************************)
 	(** Synthesis algorithm *)
@@ -421,14 +442,6 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 
 			(* Find the correct concrete algorithm to execute *)
 			let concrete_algorithm : AlgoGeneric.algoGeneric = match abstract_algorithm with
-
-			
-	(*		(************************************************************)
-			(* Exploration *)
-			(************************************************************)
-			| State_space_computation ->
-					(*** NOTE: this is static subclass coercition; see https://ocaml.org/learn/tutorials/objects.html ***)
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoPostStar.algoPostStar in myalgo*)
 
 			
 			(************************************************************)
