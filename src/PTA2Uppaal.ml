@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/03/01
- * Last modified     : 2020/01/06
+ * Last modified     : 2020/01/08
  *
  ************************************************************)
 
@@ -398,6 +398,7 @@ let string_of_arithmetic_expression variable_names =
 	and string_of_factor = function
 		| DF_variable discrete_index -> variable_names discrete_index
 		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
+		| DF_unary_min discrete_factor -> "-(" ^ (string_of_factor discrete_factor) ^ ")"
 		| DF_expression discrete_arithmetic_expression ->
 			(*** TODO: simplify a bit? ***)
 			"(" ^ (string_of_arithmetic_expression discrete_arithmetic_expression) ^ ")"
