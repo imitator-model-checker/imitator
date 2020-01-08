@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2019/12/18
+ * Last modified     : 2020/01/08
  *
  ************************************************************)
 
@@ -333,23 +333,24 @@ let print_header_string () =
 	
 	(* Build info *)
 	let build_info = "Build: " ^ BuildInfo.build_number ^ " (" ^ BuildInfo.build_time ^ ")" in
+	(* Lenght minus the starting "*  " and the ending "  *" *)
 	let length_header = 57 in
 	
 	let imi_name = program_name_and_version_and_nickname() in
 	
-	"***************************************************************\n"
+	  "***" ^ (string_n_times length_header "*") ^ "***" ^ "\n"
 	^ "*  " ^ (shell_code_of_shell_highlighting_type Shell_bold) ^ imi_name ^ (shell_code_of_shell_highlighting_type Shell_normal) ^  (string_n_times (length_header - (String.length imi_name)) " ") ^ "  *\n"
 	^ "*                                                             *\n"
-	^ "*                                    Étienne André et al.     *\n"
-	^ "*                                             2009 - " ^ (BuildInfo.build_year) ^ "  *\n"
-	^ "*                       LSV, ENS de Cachan & CNRS, France     *\n"
-	^ "*                       LIPN, Université Paris 13, France     *\n"
+	^ "*                                       Étienne André et al.  *\n"
+	^ "*                                                2009 - " ^ (BuildInfo.build_year) ^ "  *\n"
+	^ "*                          LSV, ENS de Cachan & CNRS, France  *\n"
+	^ "*                          LIPN, Université Paris 13, France  *\n"
 	^ "*  Université de Lorraine, CNRS, Inria, LORIA, Nancy, France  *\n"
-	^ "*  " ^ (string_n_times (length_header - (String.length imitator_url)) " ") ^ imitator_url ^ "     *\n"
+	^ "*  " ^ (string_n_times (length_header - (String.length imitator_url)) " ") ^ imitator_url ^ "  *\n"
 	^ "*                                                             *\n"
-	^ "*  " ^ (string_n_times (length_header - (String.length build_info)) " ") ^ build_info ^ "     *\n"
-	^ "*  " ^ (string_n_times (length_header - (String.length git_branch_and_hash)) " ") ^ git_branch_and_hash ^ "     *\n"
-	^ "***************************************************************"
+	^ "*  " ^ (string_n_times (length_header - (String.length build_info)) " ") ^ build_info ^ "  *\n"
+	^ "*  " ^ (string_n_times (length_header - (String.length git_branch_and_hash)) " ") ^ git_branch_and_hash ^ "  *\n"
+	^ "***" ^ (string_n_times length_header "*") ^ "***"
 	
 	in print_message Verbose_standard header_string
 
