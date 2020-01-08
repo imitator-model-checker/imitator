@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2020/01/06
+ * Last modified     : 2020/01/08
  *
  ************************************************************)
 
@@ -250,9 +250,9 @@ let file_header () =
 	    "(************************************************************" 
 	(* Program version *)
 	^ "\n * Result output by " ^ Constants.program_name ^ ""
-	^ "\n * Version  : " ^ (ImitatorUtilities.program_name_and_version_and_nickname_and_build())
+	^ "\n * Version  : " ^ (ImitatorUtilities.program_name_and_version_and_nickname_and_build)
 	^ "\n * Git      : " ^ (ImitatorUtilities.git_branch_and_hash)
-	^ "\n * Model    : '" ^ options#model_input_file_name ^ "'"
+	^ "\n * Model    : '" ^ options#model_file_name ^ "'"
 	(* Date *)
 	^ "\n * Generated: " ^ (now()) ^ ""
 	(* Command *)

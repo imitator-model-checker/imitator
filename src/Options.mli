@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2020/01/07
+ * Last modified: 2020/01/08
  *
  ************************************************************)
  
@@ -59,7 +59,7 @@ class imitator_options :
 		method merge : bool
 (* 		method merge_before : bool *)
 		method merge_heuristic : merge_heuristic
-		method model_input_file_name : string
+		method model_file_name : string
 		method no_acceptfirst : bool
 		method nb_args : int
 		method no_leq_test_in_ef : bool

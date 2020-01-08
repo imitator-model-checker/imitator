@@ -145,6 +145,8 @@ state_predicate:
 /************************************************************/
 	| state_predicate SYMBOL_OR state_predicate { Parsed_state_predicate_OR ($1, $3) }
 	| state_predicate_term { Parsed_state_predicate_term $1 }
+	| CT_TRUE { Parsed_state_predicate_true }
+	| CT_FALSE { Parsed_state_predicate_false }
 ;
 
 state_predicate_term:

@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/01/07
+ * Last modified     : 2020/01/08
  *
  ************************************************************)
 
@@ -49,6 +49,7 @@ and state_predicate =
 	| State_predicate_term of state_predicate_term
 	(*** NOTE: added for conveniency, notably to create 'dummy' predicates ***)
 	| State_predicate_true
+	| State_predicate_false
 
 
 (************************************************************)

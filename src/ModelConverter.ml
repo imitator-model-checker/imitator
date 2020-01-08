@@ -620,6 +620,8 @@ and convert_parsed_state_predicate useful_parsing_model_information = function
 			convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate2
 		)
 	| Parsed_state_predicate_term parsed_state_predicate_term -> State_predicate_term (convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term)
+	| Parsed_state_predicate_true -> State_predicate_true
+	| Parsed_state_predicate_false -> State_predicate_false
 
 
 
@@ -737,6 +739,8 @@ and get_variables_in_parsed_state_predicate variables_used_ref = function
 	| Parsed_state_predicate_term parsed_state_predicate_term ->
 		get_variables_in_parsed_state_predicate_term variables_used_ref parsed_state_predicate_term
 
+	| Parsed_state_predicate_true | Parsed_state_predicate_false
+		-> ()
 
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a convex predicate *)
@@ -2956,6 +2960,9 @@ let rec check_parsed_state_predicate useful_parsing_model_information = function
 		
 	| Parsed_state_predicate_term parsed_state_predicate_term ->
 		check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term
+
+	| Parsed_state_predicate_true | Parsed_state_predicate_false ->
+		true
 
 and check_parsed_state_predicate_term useful_parsing_model_information = function
 	| Parsed_state_predicate_term_AND (parsed_state_predicate_term_1 , parsed_state_predicate_term_2) ->

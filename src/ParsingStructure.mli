@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2019/12/18
+ * Last modified     : 2020/01/08
  *
  ****************************************************************)
 
@@ -315,6 +315,8 @@ and parsed_state_predicate_term =
 and parsed_state_predicate =
 	| Parsed_state_predicate_OR of parsed_state_predicate * parsed_state_predicate
 	| Parsed_state_predicate_term of parsed_state_predicate_term
+	| Parsed_state_predicate_true
+	| Parsed_state_predicate_false
 
 	
 (****************************************************************)

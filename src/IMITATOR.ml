@@ -204,7 +204,7 @@ if AbstractAlgorithm.property_needed options#imitator_mode then(
 	let property = Input.get_property() in
 	
 	(*** TODO ***)
-	print_message Verbose_low ("\nThe property is the following one:\n" ^ (ModelPrinter.string_of_property model property) ^ "\n");
+	print_message Verbose_low ("\nThe property is the following one:\n" ^ (ModelPrinter.string_of_abstract_property model property) ^ "\n");
 );
 
 (* Statistics *)

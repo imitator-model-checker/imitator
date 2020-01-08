@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2020/01/06
+ * Last modified     : 2020/01/08
  *
  ************************************************************)
 
@@ -126,8 +126,8 @@ let compile_model_and_property options =
 	parsing_counter#start;
 
 	(* Parsing the main model *)
-	print_message Verbose_low ("Parsing model file " ^ options#model_input_file_name ^ "…");
-	let parsed_model : ParsingStructure.parsed_model = parser_lexer_from_file ModelParser.main ModelLexer.token options#model_input_file_name in
+	print_message Verbose_low ("Parsing model file " ^ options#model_file_name ^ "…");
+	let parsed_model : ParsingStructure.parsed_model = parser_lexer_from_file ModelParser.main ModelLexer.token options#model_file_name in
 
 	(* Statistics *)
 	parsing_counter#stop;
@@ -219,8 +219,8 @@ let compile_model options (with_special_reset_clock : bool) =
 	parsing_counter#start;
 
 	(* Parsing the main model *)
-	print_message Verbose_low ("Parsing file " ^ options#model_input_file_name ^ "…");
-	let parsing_structure = parser_lexer_from_file ModelParser.main ModelLexer.token options#model_input_file_name
+	print_message Verbose_low ("Parsing file " ^ options#model_file_name ^ "…");
+	let parsing_structure = parser_lexer_from_file ModelParser.main ModelLexer.token options#model_file_name
 	in
 
 	(* Statistics *)

@@ -21,16 +21,16 @@
 (************************************************************)
 
 (* Name + version *)
-val program_name_and_version : unit -> string
+val program_name_and_version : string
 
 (* Name + version + nickname *)
-val program_name_and_version_and_nickname : unit -> string
+val program_name_and_version_and_nickname : string
 
 (* Name + version + build *)
-val program_name_and_version_and_build : unit -> string
+val program_name_and_version_and_build : string
 
 (* Name + version + nickname + build number *)
-val program_name_and_version_and_nickname_and_build : unit -> string
+val program_name_and_version_and_nickname_and_build : string
 
 (* Name + version + nickname + build number + build time *)
 val program_name_and_version_and_nickname_and_build_time : unit -> string

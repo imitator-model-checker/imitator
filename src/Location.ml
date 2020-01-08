@@ -11,7 +11,7 @@
  * File contributors        : Étienne André
  * Created                  : 2010/03/10
  * Renamed from Automaton.ml: 2015/10/22
- * Last modified            : 2020/01/07
+ * Last modified            : 2020/01/08
  *
  ************************************************************)
  
@@ -245,6 +245,7 @@ and match_state_predicate state_predicate global_location : bool =
 		match_state_predicate state_predicate_2 global_location
 	| State_predicate_term state_predicate_term -> match_state_predicate_term state_predicate_term global_location
 	| State_predicate_true -> true
+	| State_predicate_false -> false
 
 
 

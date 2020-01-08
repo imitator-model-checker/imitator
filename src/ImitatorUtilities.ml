@@ -42,14 +42,14 @@ let counter = ref (Unix.gettimeofday())
 (************************************************************)
 
 (* Name + version *)
-let program_name_and_version () =
+let program_name_and_version =
 	Constants.program_name
 	^ " "
 	^ Constants.version_string
 
 
 (* Name + version + nickname *)
-let program_name_and_version_and_nickname () =
+let program_name_and_version_and_nickname =
 	Constants.program_name
 	^ " "
 	^ Constants.version_string
@@ -59,7 +59,7 @@ let program_name_and_version_and_nickname () =
 
 
 (* Name + version + build number *)
-let program_name_and_version_and_build () =
+let program_name_and_version_and_build =
 	Constants.program_name
 	^ " "
 	^ Constants.version_string
@@ -69,7 +69,7 @@ let program_name_and_version_and_build () =
 
 
 (* Name + version + nickname + build number *)
-let program_name_and_version_and_nickname_and_build () =
+let program_name_and_version_and_nickname_and_build =
 	Constants.program_name
 	^ " "
 	^ Constants.version_string
@@ -336,7 +336,7 @@ let print_header_string () =
 	(* Lenght minus the starting "*  " and the ending "  *" *)
 	let length_header = 57 in
 	
-	let imi_name = program_name_and_version_and_nickname() in
+	let imi_name = program_name_and_version_and_nickname in
 	
 	  "***" ^ (string_n_times length_header "*") ^ "***" ^ "\n"
 	^ "*  " ^ (shell_code_of_shell_highlighting_type Shell_bold) ^ imi_name ^ (shell_code_of_shell_highlighting_type Shell_normal) ^  (string_n_times (length_header - (String.length imi_name)) " ") ^ "  *\n"

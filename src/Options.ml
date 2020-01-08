@@ -46,7 +46,7 @@ class imitator_options =
 		(*** WARNING: why so many mutable ref, although mutable would do ?? ***)
 		
 		(* imitator model input file *)
-		val mutable model_input_file_name = "uninitialized model input file name"
+		val mutable model_file_name = "uninitialized model input file name"
 		
 		
 	
@@ -263,7 +263,7 @@ class imitator_options =
 		method merge = !merge
 (* 		method merge_before = !merge_before *)
 		method merge_heuristic = merge_heuristic
-		method model_input_file_name = model_input_file_name
+		method model_file_name = model_file_name
 		method nb_args = nb_args
 		method no_acceptfirst = !no_acceptfirst
 		method no_leq_test_in_ef = no_leq_test_in_ef
@@ -305,7 +305,7 @@ class imitator_options =
 		(*** NOTE: set methods are only used for the learning-based abstraction construction ***)
 		
 		method set_file file_name =
-			model_input_file_name <- file_name
+			model_file_name <- file_name
 
 		method set_files_prefix file_name =
 			files_prefix <- ref file_name
@@ -864,7 +864,7 @@ class imitator_options =
 				(* If 1st argument: main file *)
 				if nb_args = 0 then(
 					nb_args <- nb_args + 1;
-					model_input_file_name <- arg;
+					model_file_name <- arg;
 				)
 				(* If 2nd argument: property file *)
 				else if nb_args = 1 then(
@@ -905,7 +905,7 @@ class imitator_options =
 			(* Set prefix for files *)
 			if !files_prefix = "" then
 				(*** WHAT ? ***)
-			  files_prefix := model_input_file_name
+			  files_prefix := model_file_name
 			;
 			  
 			(* Remove the ".imi" at the end of the program prefix, if any *)
@@ -928,7 +928,7 @@ class imitator_options =
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method recall() =
 			(* File *)
-			print_message Verbose_standard ("Model: " ^ model_input_file_name);
+			print_message Verbose_standard ("Model: " ^ model_file_name);
 			(* File prefix *)
 			print_message Verbose_low ("Prefix for output files: " ^ !files_prefix);
 			(* Print full command *)
