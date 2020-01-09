@@ -2490,7 +2490,10 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		match parsed_property.property with
 	
 		(* Reachability *)
-		| Parsed_EF parsed_state_predicate -> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
+		| Parsed_EF parsed_state_predicate
+		(* Safety *)
+		| Parsed_AGnot parsed_state_predicate
+			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
 		
 		(*** TODO ***)
 		| _ -> raise (NotImplemented "get_variables_in_property")
@@ -3062,12 +3065,16 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		begin
 		match parsed_property.property with
 
-		(*** TODO ***)
-		| Parsed_EF parsed_state_predicate ->
+		(* Reachability *)
+		| Parsed_EF parsed_state_predicate
+		(* Safety *)
+		| Parsed_AGnot parsed_state_predicate
+			->
 			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
 		
 		
 		
+		(*** TODO ***)
 		| Parsed_Action_deadline _
 		| _
 			->
@@ -3339,14 +3346,21 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		let property , converted_observer_structure_option =
 		match parsed_property.property with
 
-		(*** TODO ***)
+		(* Reachability *)
 		| Parsed_EF parsed_state_predicate ->
 			(* Return a property and no observer *)
 			EF (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate),
 			None
 			
+		(* Safety *)
+		| Parsed_AGnot parsed_state_predicate ->
+			(* Return a property and no observer *)
+			AGnot (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate),
+			None
 			
 			
+			
+		(*** TODO ***)
 		| Parsed_Action_deadline _
 		| _
 			->

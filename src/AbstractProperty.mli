@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/01/08
+ * Last modified     : 2020/01/09
  *
  ************************************************************)
 
@@ -72,6 +72,9 @@ type property =
 
 	(* Reachability *)
 	| EF of state_predicate
+	
+	(* Safety *)
+	| AGnot of state_predicate
 	
 	
 	(*** TODO: observers! ***)

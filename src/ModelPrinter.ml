@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/01/08
+ * Last modified     : 2020/01/09
  *
  ************************************************************)
 
@@ -689,6 +689,8 @@ let string_of_abstract_property model property =
 	match property.property with
 		(* Reachability *)
 		| EF state_predicate -> "EF(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+		(* Safety *)
+		| AGnot state_predicate -> "AGnot(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 
 	
 		(*** TODO ***)

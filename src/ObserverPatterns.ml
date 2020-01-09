@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created:       2013/02/04
- * Last modified: 2019/12/18
+ * Last modified: 2020/01/09
  *
  ************************************************************)
  
@@ -114,8 +114,11 @@ let single_unreachable_location automaton_index location_index =
 (* Create the new automata and new clocks necessary for the observer *)
 let new_elements (parsed_property : ParsingStructure.parsed_property) =
 	match parsed_property.property with
-	(* Not a real observer: does not build anything *)
-	| ParsingStructure.Parsed_EF _ -> (None , None)
+	(* No observer required: does not build anything *)
+	| ParsingStructure.Parsed_EF _
+	| ParsingStructure.Parsed_AGnot _
+		-> (None , None)
+	
 	| Parsed_Action_deadline _
 		-> (Some observer_automaton_name, Some observer_clock_name)
 	(*** TODO: finish later ***)

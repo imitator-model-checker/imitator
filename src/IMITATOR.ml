@@ -332,13 +332,15 @@ match options#imitator_mode with
 		(*** NOTE: at this stage, we are sure to have defined a property ***)
 		let abstract_property = Input.get_property() in
 		
-		(* Determine the right algorithm depending on the property *)
+(*		(* Determine the right algorithm depending on the property *)
 		let abstract_algorithm = match abstract_property.property with
 			(* Reachability *)
 			| EF state_predicate -> EFsynth state_predicate
+			(* Safety *)
+			| AGnot state_predicate -> EFsynth state_predicate
 			
 			| _ -> raise (NotImplemented ("algorithm_of_property"))
-		in
+		in*)
 
 
 
@@ -445,24 +447,36 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 		in*)
 
 			(* Find the correct concrete algorithm to execute *)
-			let concrete_algorithm : AlgoGeneric.algoGeneric = match abstract_algorithm with
+			let concrete_algorithm : AlgoGeneric.algoGeneric = match abstract_property.property with
 
 			
 			(************************************************************)
-			(* EF-synthesis *)
+			(* Reachability *)
 			(************************************************************)
-			(* New version with PointSetPowerSet *)
-			| EFsynth _ ->
-(* 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGsafeSynth.algoAGsafeSynth in myalgo *)
+			| EF _ ->
+				
+				(*** TODO some day: pass the state predicate as a parameter of the algorithm! ***)
+				
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFunsafeSynth.algoEFunsafeSynth in myalgo
-
+			
+			
+			(************************************************************)
+			(* Safety *)
+			(************************************************************)
+			| AGnot _ ->
+			
+				(*** NOTE: witness not supported (we need to compute everything to make sure the system is safe) ***)
+				if abstract_property.synthesis_type = Witness then(
+					print_warning "Exhibition of a subset of parameter valuations is not yet supported by this algorithm; either the whole set of valuations will be computed, or an over-approximation of this set.";
+				);
+			
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGsafeSynth.algoAGsafeSynth in myalgo
+				
+			(*** TODO: allow for old version with list of constraints ***)
 (*			(* Old version (with list of constraints) *)
 			| EF_synthesis (*when not options#new_ef_mode*) ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFsynthOld.algoEFsynth in myalgo
-
-			(* EF-synthesis w.r.t. a set of bad states (unsafe result) *)
-			| EFunsafe_synthesis ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFunsafeSynth.algoEFunsafeSynth in myalgo*)
+				*)
 
 (*
 			(************************************************************)

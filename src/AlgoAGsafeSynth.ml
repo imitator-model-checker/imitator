@@ -23,6 +23,7 @@ open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
+open AbstractProperty
 open Result
 open AlgoEFsynth
 
@@ -73,7 +74,7 @@ class algoAGsafeSynth =
 		
 		(* Projecting onto SOME parameters if required *)
 		let result =
-		match model.projection with
+		match (Input.get_property()).projection with
 		(* No projection: copy the initial p constraint *)
 		| None -> LinearConstraint.p_nnconvex_copy init_p_nnconvex_constraint
 		(* Project *)

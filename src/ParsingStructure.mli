@@ -338,6 +338,9 @@ type parsed_property_type =
 	(* Reachability *)
 	| Parsed_EF of parsed_state_predicate
 	
+	(* Safety *)
+	| Parsed_AGnot of parsed_state_predicate
+	
 	
 	(*** TODO: observers! ***)
 	(* Reachability *)

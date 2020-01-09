@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/01/07
+ * Last modified     : 2020/01/09
  *
  ************************************************************)
 
@@ -2463,12 +2463,17 @@ class virtual algoStateBased =
 						statespace_nature <- StateSpace.Bad;
 					);
 	
-(*		| Some (Unreachable unreachable_global_locations) ->
+				(* Safety *)
+				| AGnot _->
+					(* Cannot conclude anything from a single state yet *)
+					()
+
+			(*		| Some (Unreachable unreachable_global_locations) ->
 				(* Check whether the current location matches one of the unreachable global locations *)
 				if State.match_unreachable_global_locations unreachable_global_locations state.global_location then(
 					statespace_nature <- StateSpace.Bad;
 				);*)
-			| _ -> raise (NotImplemented("IMITATOR currently ony implements EF in update_statespace_nature."))
+			| _ -> raise (NotImplemented("AlgoStateBased > IMITATOR currently only implements selected algorithms in update_statespace_nature."))
 		)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

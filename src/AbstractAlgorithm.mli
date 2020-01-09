@@ -8,19 +8,22 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/18
- * Last modified     : 2020/01/08
+ * Last modified     : 2020/01/09
  *
  ************************************************************)
 
 
-
+(*
 (************************************************************)
 (** Available algorithms *)
 (************************************************************)
 
 type algorithm =
 	(** Reachability *)
-	| EFsynth of AbstractProperty.state_predicate
+	| Algo_EF of AbstractProperty.state_predicate
+	
+	(** Safety *)
+	| AGnotsynth of AbstractProperty.state_predicate
 	
 (*	(** EF-synthesis w.r.t. unsafe locations *)
 	| EFunsafe_synthesis
@@ -101,7 +104,7 @@ type algorithm =
 	| PRPC*)
 
 (* Predicate on algorithms *)
-val is_algorithm_cartography     : algorithm -> bool
+val is_algorithm_cartography     : algorithm -> bool*)
 
 
 (************************************************************)

@@ -52,11 +52,13 @@ class virtual algoEFsynth =
 		(*** TODO: pass as a PARAMETER of the algorithm ***)
 		(*** UGLY!!! ***)
 		match (Input.get_property()).property with
-			| EF state_predicate -> state_predicate
+			| EF state_predicate
+			| AGnot state_predicate
+				-> state_predicate
 			
 			(*** TODO ***)
 			
-			| _ -> raise (NotImplemented ("getting the state predicate when initializing EFsynth"))
+			| _ -> raise (NotImplemented ("algoEFsynth > getting the state predicate when initializing EFsynth"))
 		
 	
 

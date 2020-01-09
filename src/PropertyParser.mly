@@ -56,7 +56,7 @@ let resolve_property l =
 %token COLON COMMA DOUBLEDOT SEMICOLON SYMBOL_AND SYMBOL_OR
 
 %token
-	CT_ACCEPTING CT_ACCLOOP CT_AG CT_ALWAYS CT_AND
+	CT_ACCEPTING CT_ACCLOOP CT_AG CT_AGnot CT_ALWAYS CT_AND
 	CT_BEFORE
 	CT_EF CT_EVENTUALLY CT_EVERYTIME CT_EXHIBIT
 	CT_DEADLOCKFREE
@@ -131,6 +131,9 @@ property:
 
 	/* Reachability */
 	| CT_EF state_predicate { Parsed_EF $2 }
+
+	/* Reachability */
+	| CT_AGnot state_predicate { Parsed_AGnot $2 }
 
 
 
