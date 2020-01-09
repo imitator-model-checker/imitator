@@ -26,33 +26,23 @@ rule token = parse
 	  ['\n']             { line := !line + 1 ; token lexbuf }     (* skip new lines *)
 	| [' ' '\t']         { token lexbuf }     (* skip blanks *)
 
-(*	(* C style include *)
-	| "#include \""   ( [^'"' '\n']* as filename) '"'
-    {
-			let top_file = lexbuf.lex_start_p.pos_fname in
-			let absolute_filename = FilePath.make_absolute (FilePath.dirname top_file) filename in
-
-			let c = open_in absolute_filename in
-			let lb = Lexing.from_channel c in
-			lb.Lexing.lex_curr_p <- { lb.Lexing.lex_curr_p with Lexing.pos_fname = absolute_filename };
-
-			let p = ModelParser.main token lb in
-			INCLUDE p
-    }*)
-
 	(* OCaml style comments *)
 	| "(*"
 		{ comment_depth := 1;
 		comment_ocaml lexbuf;
 		token lexbuf }
 
+	(* Synthesis type *)
  	| "#exhibit"       { CT_EXHIBIT }
  	| "#witness"       { CT_EXHIBIT }
  	| "#synth"         { CT_SYNTH }
  	
-	| "EF"             { CT_EF }
+ 	(* Keywords for properties *)
 	| "AG"             { CT_AG }
 	| "AGnot"          { CT_AGnot }
+	| "EF"             { CT_EF }
+ 	| "inversemethod"  { CT_TRACEPRESERVATION }
+ 	| "tracepreservation" { CT_TRACEPRESERVATION }
 
 	| "accloop"        { CT_ACCLOOP }
 	| "always"         { CT_ALWAYS }
@@ -67,7 +57,6 @@ rule token = parse
 	| "if"             { CT_IF }
 	| "in"             { CT_IN }
 	| "is"             { CT_IS }
- 	| "inversemethod"  { CT_INVERSEMETHOD }
 	| "loc"            { CT_LOC }
 	| "loop"           { CT_LOOP }
 	| "maximize"       { CT_MAXIMIZE }
@@ -80,7 +69,6 @@ rule token = parse
  	| "property"       { CT_PROPERTY }
 	| "sequence"       { CT_SEQUENCE }
  	| "then"           { CT_THEN }
- 	| "tracepreservation" { CT_TRACEPRESERVATION }
 	| "True"           { CT_TRUE }
  	| "unreachable"    { CT_UNREACHABLE }
 	| "when"           { CT_WHEN }

@@ -72,11 +72,11 @@ module StringSet = Set.Make(String)
 (************************************************************)
 
 (*** HACK: at the end of model parsing, we will backup some data structures that will be used for reference valuation (pi0) / reference hyper-rectangle (v0) parsing and checking ***)
-let saved_index_of_variables	= ref None
+(*let saved_index_of_variables	= ref None
 let saved_nb_parameters			= ref None
 let saved_parameters			= ref None
 let saved_parameters_names		= ref None
-let saved_variables				= ref None
+let saved_variables				= ref None*)
 
 
 (************************************************************)
@@ -97,9 +97,12 @@ type useful_parsing_model_information = {
 	index_of_automata					: (Automaton.automaton_name , Automaton.automaton_index) Hashtbl.t;
 	index_of_locations					: ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array;
 	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
+	nb_parameters						: int;
+	parameter_names						: variable_name list;
 	removed_action_names				: action_name list;
 	type_of_variables					: Automaton.variable_index -> AbstractModel.var_type;
 	variable_names						: variable_name list;
+	variables							: variable_name array;
 	removed_variable_names				: variable_name list;
 }
 
@@ -2474,6 +2477,15 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 (************************************************************)
 
 (*------------------------------------------------------------*)
+(* Gather the set of all variable names used in a parsed reference valuation *)
+(*------------------------------------------------------------*)
+let get_variables_in_parsed_pval (parsed_pval : ParsingStructure.parsed_pval) : variable_name list =
+	(* Return the left part of all pairs *)
+	let left, _ = List.split parsed_pval in
+	left
+
+
+(*------------------------------------------------------------*)
 (* Gather the set of all variable names used in the parsed property *)
 (*------------------------------------------------------------*)
 
@@ -2489,11 +2501,22 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		begin
 		match parsed_property.property with
 	
+		(*------------------------------------------------------------*)
+		(* Non-nested CTL *)
+		(*------------------------------------------------------------*)
 		(* Reachability *)
 		| Parsed_EF parsed_state_predicate
 		(* Safety *)
 		| Parsed_AGnot parsed_state_predicate
 			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
+		
+		(*------------------------------------------------------------*)
+		(* Inverse method, trace preservation, robustness *)
+		(*------------------------------------------------------------*)
+		
+		(* Inverse method with complete, non-convex result *)
+		| Parsed_IM parsed_pval ->
+			variables_used_ref := StringSet.of_list (get_variables_in_parsed_pval parsed_pval);
 		
 		(*** TODO ***)
 		| _ -> raise (NotImplemented "get_variables_in_property")
@@ -3015,6 +3038,47 @@ let check_optimization parameters_names = function
     ) else true
 
 
+(*------------------------------------------------------------*)
+(* Check the parsed_pval w.r.t. the model parameters *)
+(*------------------------------------------------------------*)
+let check_parsed_pval useful_parsing_model_information (parsed_pval : ParsingStructure.parsed_pval) =
+	(* Compute the list of variable names *)
+	(**** TO OPTIMIZE: not tail recursvie ****)
+	let list_of_variables, _ = List.split parsed_pval in
+
+	(* Compute the multiply defined variables *)
+	let multiply_defined_variables = elements_existing_several_times list_of_variables in
+	(* Print an error for each of them *)
+	List.iter (fun variable_name -> print_error ("The parameter '" ^ variable_name ^ "' was assigned several times a valuation in parsed_pval.")) multiply_defined_variables;
+
+	(*** TODO: only warns if it is always defined to the same value ***)
+
+		(* Check if the variables are all defined *)
+		let all_defined = List.fold_left
+				(fun all_defined variable_name ->
+					if List.mem variable_name list_of_variables then all_defined
+					else (
+					print_error ("The parameter '" ^ variable_name ^ "' was not assigned a valuation in parsed_pval.");
+					false
+					)
+				)
+				true
+				useful_parsing_model_information.parameter_names
+		in
+
+	(* Check if some defined variables are not parameters (and warn) *)
+	List.iter
+		(fun variable_name ->
+		if not (List.mem variable_name useful_parsing_model_information.parameter_names) then (
+			print_warning ("'" ^ variable_name ^ "', which is assigned a valuation in parsed_pval, is not a valid parameter name.")
+		)
+		)
+		list_of_variables
+	;
+	
+	(* If something went wrong: launch an error *)
+	multiply_defined_variables = [] && all_defined
+
 
 
 (*------------------------------------------------------------*)
@@ -3065,6 +3129,9 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		begin
 		match parsed_property.property with
 
+		(*------------------------------------------------------------*)
+		(* Non-nested CTL *)
+		(*------------------------------------------------------------*)
 		(* Reachability *)
 		| Parsed_EF parsed_state_predicate
 		(* Safety *)
@@ -3072,7 +3139,13 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 			->
 			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
 		
+		(*------------------------------------------------------------*)
+		(* Inverse method, trace preservation, robustness *)
+		(*------------------------------------------------------------*)
 		
+		(* Inverse method with complete, non-convex result *)
+		| Parsed_IM parsed_pval ->
+			check_parsed_pval useful_parsing_model_information parsed_pval
 		
 		(*** TODO ***)
 		| Parsed_Action_deadline _
@@ -3172,6 +3245,24 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 (************************************************************)
 (** Converting the property  *)
 (************************************************************)
+
+
+(*------------------------------------------------------------*)
+(* Convert the parsed parsed_pval into a valid parsed_pval *)
+(*------------------------------------------------------------*)
+let convert_parsed_pval useful_parsing_model_information (parsed_pval : ParsingStructure.parsed_pval) : PVal.pval =
+	let pval = new PVal.pval in
+	for i = 0 to useful_parsing_model_information.nb_parameters - 1 do
+		let parameter_name = useful_parsing_model_information.variables.(i) in
+		let valuation = try(
+			List.assoc parameter_name parsed_pval
+		) with Not_found ->
+		raise (InternalError ("The parameter name '" ^ parameter_name ^ "' was not found in parsed_pval although checks should have been performed before."))
+		in
+		pval#set_value i valuation
+	done;
+	(* Return the parameter valuation *)
+	pval
 
 
 let convert_synthesis_type = function
@@ -3346,18 +3437,32 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		let property , converted_observer_structure_option =
 		match parsed_property.property with
 
+		(*------------------------------------------------------------*)
+		(* Non-nested CTL *)
+		(*------------------------------------------------------------*)
 		(* Reachability *)
 		| Parsed_EF parsed_state_predicate ->
 			(* Return a property and no observer *)
-			EF (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate),
+			EF (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+			,
 			None
 			
 		(* Safety *)
 		| Parsed_AGnot parsed_state_predicate ->
 			(* Return a property and no observer *)
-			AGnot (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate),
+			AGnot (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+			,
 			None
 			
+		(*------------------------------------------------------------*)
+		(* Inverse method, trace preservation, robustness *)
+		(*------------------------------------------------------------*)
+		
+		(* Inverse method with complete, non-convex result *)
+		| Parsed_IM parsed_pval ->
+			IM (convert_parsed_pval useful_parsing_model_information parsed_pval)
+			,
+			None
 			
 			
 		(*** TODO ***)
@@ -3714,10 +3819,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	
 	let clock_names = list_append (list_append clock_names observer_clock_list) special_reset_clock_list in
 	let discrete_names = discrete_names in
-	let parameters_names = parameter_names in
 
 	(* Make only one list for all variables *)
-	let variable_names = list_append (list_append parameters_names clock_names) discrete_names in
+	let variable_names = list_append (list_append parameter_names clock_names) discrete_names in
 
 	(* Update automata names with the observer automaton *)
 	let declared_automata_names = match observer_automaton with
@@ -3730,7 +3834,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let nb_actions		= List.length action_names in
 	let nb_clocks		= List.length clock_names in
 	let nb_discrete		= List.length discrete_names in
-	let nb_parameters	= List.length parameters_names in
+	let nb_parameters	= List.length parameter_names in
 	let nb_variables	= List.length variable_names in
 
 
@@ -3908,9 +4012,12 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		index_of_automata			= index_of_automata;
 		index_of_locations			= index_of_locations;
 		index_of_variables			= index_of_variables;
+		nb_parameters				= nb_parameters;
+		parameter_names				= parameter_names;
 		removed_action_names		= removed_action_names;
 		type_of_variables			= type_of_variables;
 		variable_names				= variable_names;
+		variables					= variables;
 		removed_variable_names		= removed_variable_names;
 	} in
 
@@ -3944,14 +4051,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let well_formed_projection = match parsed_property_option with
 		| None -> true
-		| Some parsed_property -> check_projection_definition parameters_names parsed_property.projection
+		| Some parsed_property -> check_projection_definition parameter_names parsed_property.projection
 	in
 
 
 (*	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check optimization definition *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let well_formed_optimization = check_optimization parameters_names parsed_optimization_definition in*)
+	let well_formed_optimization = check_optimization parameter_names parsed_optimization_definition in*)
 
 
 
@@ -4578,7 +4685,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 (*	saved_index_of_variables	:= Some index_of_variables;
 	saved_nb_parameters			:= Some nb_parameters;
 	saved_parameters			:= Some parameters;
-	saved_parameters_names		:= Some parameters_names;
+	saved_parameter_names		:= Some parameter_names;
 	saved_variables				:= Some variables;*)
 
 
@@ -4807,65 +4914,6 @@ let abstract_property_of_parsed_property (options : Options.imitator_options) (u
 (** Pi0 conversion *)
 (************************************************************)
 (************************************************************)
-
-(*------------------------------------------------------------*)
-(* Check the pi0 w.r.t. the model parameters *)
-(*------------------------------------------------------------*)
-let check_pi0 pi0 parameters_names =
-  (* Compute the list of variable names *)
-  (**** TO OPTIMIZE: not tail recursvie ****)
-  let list_of_variables, _ = List.split pi0 in
-
-  (* Compute the multiply defined variables *)
-  let multiply_defined_variables = elements_existing_several_times list_of_variables in
-  (* Print an error for each of them *)
-  List.iter (fun variable_name -> print_error ("The parameter '" ^ variable_name ^ "' was assigned several times a valuation in pi0.")) multiply_defined_variables;
-
-  (*** TODO: only warns if it is always defined to the same value ***)
-
-	(* Check if the variables are all defined *)
-	let all_defined = List.fold_left
-			(fun all_defined variable_name ->
-				if List.mem variable_name list_of_variables then all_defined
-				else (
-				print_error ("The parameter '" ^ variable_name ^ "' was not assigned a valuation in pi0.");
-				false
-				)
-			)
-			true
-			parameters_names
-	in
-
-  (* Check if some defined variables are not parameters (and warn) *)
-  List.iter
-    (fun variable_name ->
-       if not (List.mem variable_name parameters_names) then (
-         print_warning ("'" ^ variable_name ^ "', which is assigned a valuation in pi0, is not a valid parameter name.")
-       )
-    )
-    list_of_variables
-  ;
-
-  (* If something went wrong: launch an error *)
-  multiply_defined_variables = [] && all_defined
-
-
-
-(*------------------------------------------------------------*)
-(* Convert the parsed pi0 into a valid pi0 *)
-(*------------------------------------------------------------*)
-let make_pi0 parsed_pi0 variables nb_parameters =
-  let pi0 = new PVal.pval in
-  for i = 0 to nb_parameters - 1 do
-    let parameter_name = variables.(i) in
-    let value = try(
-      List.assoc parameter_name parsed_pi0
-    ) with Not_found ->
-      raise (InternalError ("The parameter name '" ^ parameter_name ^ "' was not found in pi0 although checks should have been performed before."))
-    in
-    pi0#set_value i value
-  done;
-  pi0
 
 
 (*------------------------------------------------------------*)

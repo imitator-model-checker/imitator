@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/03/21
- * Last modified     : 2019/08/22
+ * Last modified     : 2020/01/09
  *
  ************************************************************)
 
@@ -51,7 +51,7 @@ class algoIMcomplete =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "IM complete"
+	method algorithm_name = "IM"
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -77,7 +77,7 @@ class algoIMcomplete =
 		(* Retrieve the input options *)
 (* 		let options = Input.get_options () in *)
 		(* Retrieve the pi0 (dynamic!) *)
-		let pi0 = Input.get_pi0 () in
+		let pi0 = self#get_reference_pval in
 		
 		self#print_algo_message_newline Verbose_medium ("Sarting pi0-compatibility check…");
 		
@@ -185,7 +185,7 @@ class algoIMcomplete =
 		Point_based_result
 		{
 			(* Reference valuation *)
-			reference_val		= Input.get_pi0();
+			reference_val		= self#get_reference_pval;
 			
 			(* Result of the algorithm *)
 			result				= result;

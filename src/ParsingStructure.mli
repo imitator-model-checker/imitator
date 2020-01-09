@@ -284,9 +284,9 @@ type parsed_model = {
 (** Parsed valuation and valuation domains *)
 (****************************************************************)
 
-type pi0 = (string *  NumConst.t) list
+type parsed_pval = (string *  NumConst.t) list
 
-type v0 = (string * NumConst.t * NumConst.t) list
+type parsed_pdomain = (string * NumConst.t * NumConst.t) list
 
 
 (****************************************************************)
@@ -394,13 +394,13 @@ type parsed_property_type =
 	(*------------------------------------------------------------*)
 	
 	(* Inverse method with complete, non-convex result *)
-	| Parsed_IM of pi0
+	| Parsed_IM of parsed_pval
 
 	(* Non-complete inverse method with convex result *)
-	| Parsed_ConvexIM of pi0
+	| Parsed_ConvexIM of parsed_pval
 
 	(* Parametric reachability preservation *)
-	| Parsed_PRP of pi0
+	| Parsed_PRP of parsed_pval
 
 	
 	(*------------------------------------------------------------*)
@@ -408,26 +408,26 @@ type parsed_property_type =
 	(*------------------------------------------------------------*)
 	
 	(* Cartography *)
-	| Parsed_Cover_cartography of v0
+	| Parsed_Cover_cartography of parsed_pdomain
 
 	
 	(** Cover the whole cartography using learning-based abstractions *)
-	| Parsed_Learning_cartography of v0
+	| Parsed_Learning_cartography of parsed_pdomain
 	
 	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
-	| Parsed_Shuffle_cartography of v0
+	| Parsed_Shuffle_cartography of parsed_pdomain
 	
 	(** Look for the border using the cartography*)
-	| Parsed_Border_cartography of v0
+	| Parsed_Border_cartography of parsed_pdomain
 	
 	(** Randomly pick up values for a given number of iterations *)
-	| Parsed_Random_cartography  of v0 * int
+	| Parsed_Random_cartography  of parsed_pdomain * int
 	
 	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
-	| Parsed_RandomSeq_cartography  of v0 * int
+	| Parsed_RandomSeq_cartography  of parsed_pdomain * int
 
 	(* Parametric reachability preservation *)
-	| Parsed_PRPC of v0
+	| Parsed_PRPC of parsed_pdomain
 
 
 

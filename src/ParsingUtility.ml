@@ -42,14 +42,24 @@ let converting_counter = create_time_counter_and_register "model converting" Par
 (* Generic parser that returns the abstract structure *)
 let parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name =
 	(* Parsing *)
+	print_message Verbose_total ("Preparing actual parsing…");
 	let parsing_structure = try (
 		let absolute_filename = FilePath.make_absolute (FileUtil.pwd ()) file_name in
+		print_message Verbose_total ("Created absolute file name '" ^ absolute_filename ^ "'.");
+		print_message Verbose_total ("Assigning lex_curr_p…");
 		lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with Lexing.pos_fname = absolute_filename };
+		print_message Verbose_total ("Assigning lex_start_p…");
 		lexbuf.Lexing.lex_start_p <- { lexbuf.Lexing.lex_start_p with Lexing.pos_fname = absolute_filename };
 
-		the_parser the_lexer lexbuf
+		print_message Verbose_total ("Starting actual parsing of '" ^ absolute_filename ^ "'…");
+		
+		let parsing_structure = the_parser the_lexer lexbuf in
+		print_message Verbose_total ("Parsing structure created");
+		parsing_structure
 	) with
 		| ParsingError (symbol_start, symbol_end) ->
+			print_message Verbose_total ("Parsing error detected. Processing…");
+			
 			(* Convert the in_channel into a string *)
 			let file_string = string_of_input () in
 			(* Create the error message *)
@@ -73,8 +83,14 @@ let parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name =
 			in
 			(* Print the error message *)
 			print_error ("Parsing error in file " ^ file_name ^ " " ^ error_message); abort_program (); exit(1)
-		| UnexpectedToken c -> print_error ("Parsing error in file " ^ file_name ^ ": unexpected token '" ^ (Char.escaped c) ^ "'."); abort_program (); exit(1)
-		| Failure f -> print_error ("Parsing error ('failure') in file " ^ file_name ^ ": " ^ f); abort_program (); exit(1)
+
+		| UnexpectedToken c ->
+			print_message Verbose_total ("Parsing error detected 'UnexpectedToken'. Processing…");
+			print_error ("Parsing error in file " ^ file_name ^ ": unexpected token '" ^ (Char.escaped c) ^ "'."); abort_program (); exit(1)
+		
+		| Failure f ->
+			print_message Verbose_total ("Parsing error detected 'Failure'. Processing…");
+			print_error ("Parsing error ('failure') in file " ^ file_name ^ ": " ^ f); abort_program (); exit(1)
 	in
 	parsing_structure
 
@@ -82,10 +98,12 @@ let parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name =
 (* Parse a file and return the abstract structure *)
 let parser_lexer_from_file the_parser the_lexer file_name =
 	(* Open file *)
+	print_message Verbose_total ("Opening in_channel…");
 	let in_channel = try (open_in file_name) with
 		| Sys_error e -> print_error ("The file '" ^ file_name ^ "' could not be opened.\n" ^ e); abort_program (); exit(1)
 	in
 	(* Lexing *)
+	print_message Verbose_total ("Lexing…");
 	let lexbuf = try (Lexing.from_channel in_channel) with
 		| Failure f -> print_error ("Lexing error in file " ^ file_name ^ ": " ^ f); abort_program (); exit(1)
 	in
@@ -96,10 +114,11 @@ let parser_lexer_from_file the_parser the_lexer file_name =
 			IO.read_all extlib_input
 	in
 	(* Generic function *)
+	print_message Verbose_total ("Calling parser lexer…");
 	parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name
 
 
-(* Parse a string and return the abstract structure *)
+(*(* Parse a string and return the abstract structure *)
 let parser_lexer_from_string the_parser the_lexer the_string =
 	(* Lexing *)
 	let lexbuf = try (Lexing.from_string the_string) with
@@ -109,7 +128,7 @@ let parser_lexer_from_string the_parser the_lexer the_string =
 	(* Function to convert a in_channel to a string (in case of parsing error) *)
 	let string_of_input () = the_string in
 	(* Generic function *)
-	parser_lexer_gen the_parser the_lexer lexbuf string_of_input the_string
+	parser_lexer_gen the_parser the_lexer lexbuf string_of_input the_string*)
 
 
 
@@ -147,9 +166,12 @@ let compile_model_and_property options =
 		(* Statistics *)
 		parsing_counter#start;
 
-		(* Parsing the main model *)
+		(* Parsing the property *)
+		let property_file_name = options#property_file_name in
+		
 		print_message Verbose_low ("Parsing property file " ^ options#property_file_name ^ "…");
-		let parsed_property : ParsingStructure.parsed_property = parser_lexer_from_file PropertyParser.main PropertyLexer.token options#property_file_name in
+		
+		let parsed_property : ParsingStructure.parsed_property = parser_lexer_from_file PropertyParser.main PropertyLexer.token property_file_name in
 
 		(* Statistics *)
 		parsing_counter#stop;

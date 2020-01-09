@@ -472,6 +472,15 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGsafeSynth.algoAGsafeSynth in myalgo
 				
+			(************************************************************)
+			(* Inverse method, trace preservation, robustness *)
+			(************************************************************)
+			
+			(* Inverse method with complete, non-convex result *)
+			| IM _ ->
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMcomplete.algoIMcomplete in myalgo
+
+
 			(*** TODO: allow for old version with list of constraints ***)
 (*			(* Old version (with list of constraints) *)
 			| EF_synthesis (*when not options#new_ef_mode*) ->

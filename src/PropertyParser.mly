@@ -62,7 +62,7 @@ let resolve_property l =
 	CT_DEADLOCKFREE
 	CT_FALSE
 	CT_HAPPENED CT_HAS
-	CT_IF CT_IN CT_INVERSEMETHOD CT_IS
+	CT_IF CT_IN CT_IS
 	CT_LOC CT_LOOP
 	CT_MAXIMIZE CT_MINIMIZE
 	CT_NEXT CT_NOT
@@ -93,7 +93,8 @@ let resolve_property l =
 /************************************************************/
 main:
 /************************************************************/
-	property_kw_opt quantified_property semicolon_opt EOF { $2 }
+/*	| property_kw_opt quantified_property semicolon_opt EOF { $2 }*/
+	| CT_WHEN EOF { (*$2*)raise (Failure "ploop") }
 ;
 
 /************************************************************/
@@ -114,6 +115,15 @@ quantified_property:
 			(*** TODO ***)
 			projection		= None;
 		}
+		
+	
+		(*** Dummy result for testing ***)
+		
+	(*	{
+			synthesis_type	= Parsed_witness;
+			property		= Parsed_EF Parsed_state_predicate_true;
+			projection		= None;
+		}*)
 	}
 ;
 
@@ -136,6 +146,11 @@ property:
 	| CT_AGnot state_predicate { Parsed_AGnot $2 }
 
 
+	/*------------------------------------------------------------*/
+	/* Inverse method, trace preservation, robustness */
+	/*------------------------------------------------------------*/
+	
+	| CT_TRACEPRESERVATION LPAREN reference_valuation RPAREN { Parsed_IM $3 }
 
 	/** TODO **/
 
@@ -265,46 +280,8 @@ pos_float:
 
 
 /************************************************************/
-/*** WARNING: call these rules "and" or "or" is accepted by OCaml Yak but not by the subsequent OCaml compiler ***/
-/* or_rule:*/
-/************************************************************/
-/*	| SYMBOL_OR {}
-;
-
-and_rule:
-	| SYMBOL_AND {}
-;*/
-
-
-
-
-
-
-
-
-property_definition:
-/*
-// TODO: improve the bad definitions
-	// NOTE: Old version
-// 	| CT_BAD OP_ASSIGN loc_expression SEMICOLON { $3 }
-
-	// Case: action
-	// TODO: reintroduce
-// 	| CT_BAD OP_ASSIGN CT_EXISTS_ACTION NAME SEMICOLON { [Exists_action $4] }
-
-	// NOTE: only one allowed before version 2.6 and ICECCS paper
-	// Case: location
-	// | CT_BAD OP_ASSIGN CT_EXISTS_LOCATION loc_predicate SEMICOLON { let a,b = $4 in [(Exists_location (a , b))] }
-*/
-	/* Pattern */
-	| CT_PROPERTY OP_ASSIGN pattern semicolon_opt { Some $3 }
-
-	/*** TODO: re-enable file inclusion ***/
-/* 	| include_file { let _, _, _, property, _, _, _ = $1 in property } */
-
-;
-
 projection_definition:
+/************************************************************/
 	| CT_PROJECTRESULT LPAREN name_nonempty_list RPAREN semicolon_opt { Some $3 }
 
 	/* Case: no projection */
@@ -312,7 +289,9 @@ projection_definition:
 
 ;
 
+/************************************************************/
 optimization_definition:
+/************************************************************/
 	| CT_MINIMIZE LPAREN NAME RPAREN semicolon_opt { Parsed_minimize $3 }
 	| CT_MAXIMIZE LPAREN NAME RPAREN semicolon_opt { Parsed_maximize $3 }
 
@@ -417,7 +396,7 @@ linear_term:
 ;
 
 rational:
-	integer { $1 }
+	| integer { $1 }
 	| float { $1 }
 	| integer OP_DIV pos_integer { (NumConst.div $1 $3) }
 ;
@@ -437,9 +416,7 @@ float:
 ;
 
 pos_float:
-  FLOAT {
-		NumConst.numconst_of_string $1
-	}
+  FLOAT { NumConst.numconst_of_string $1 }
 ;
 
 
@@ -447,21 +424,72 @@ pos_float:
 /** NAMES, etc. */
 /************************************************************/
 
-comma_opt:
-	| COMMA { }
-	| { }
-;
-
 
 name_nonempty_list:
 	NAME COMMA name_nonempty_list { $1 :: $3}
 	| NAME comma_opt { [$1] }
 ;
 
+/************************************************************/
+/** PARAMETER VALUATION ("pi0") */
+/************************************************************/
+
+reference_valuation:
+	| parameter_assignments semicolon_opt { $1 }
+;
+
+parameter_assignments:
+	| parameter_assignment parameter_assignments {$1 :: $2}
+	| { [] }
+;
+
+/* Form: param = [constant arithmetic expression] */
+parameter_assignment:
+	and_opt NAME OP_EQ constant_arithmetic_expr comma_opt { ($2, $4) }
+;
+
 
 /************************************************************/
-/** MISC. */
+/** CONSTANT ARITHMETIC EXPRESSIONS */
 /************************************************************/
+
+constant_arithmetic_expr:
+	| constant_arithmetic_expr OP_PLUS constant_expr_mult { NumConst.add $1 $3 }
+	| constant_arithmetic_expr OP_MINUS constant_expr_mult { NumConst.sub $1 $3 }
+	| constant_expr_mult { $1 }
+;
+
+constant_expr_mult:
+	| constant_expr_mult OP_MUL constant_neg_atom { NumConst.mul $1 $3 }
+	| constant_expr_mult OP_DIV constant_neg_atom { NumConst.div $1 $3 } /** TODO: check division by zero somewhere! */
+	| constant_neg_atom { $1 }
+;
+
+constant_neg_atom:
+	| constant_atom { $1 }
+	| OP_MINUS constant_atom { NumConst.neg $2 }
+;
+
+constant_atom:
+	| LPAREN constant_arithmetic_expr RPAREN { $2 }
+	| rational { $1 }
+;
+
+
+/************************************************************/
+/** OPTIONAL SYMBOLS */
+/************************************************************/
+
+and_opt:
+	| SYMBOL_AND {}
+	| {}
+;
+
+comma_opt:
+	| COMMA { }
+	| { }
+;
+
 
 semicolon_opt:
 	| SEMICOLON { }
