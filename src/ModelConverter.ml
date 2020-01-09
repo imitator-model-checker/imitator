@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/01/08
+ * Last modified     : 2020/01/09
  *
  ************************************************************)
 
@@ -3165,6 +3165,13 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 (************************************************************)
 (** Converting the property  *)
 (************************************************************)
+
+
+let convert_synthesis_type = function
+	| Parsed_witness	-> Witness
+	| Parsed_synthesis	-> Synthesis
+
+
 type converted_observer_structure = {
 	(*  observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions *)
 	observer_structure			: Automaton.action_index list * (Automaton.action_index list) array * AbstractModel.location_urgency array * LinearConstraint.pxd_linear_constraint array * AbstractModel.transition list array array;
@@ -3179,7 +3186,7 @@ type converted_observer_structure = {
 
 
 (* Convert ParsingStructure.parsed_property into AbstractProperty.property *)
-let convert_property_option useful_parsing_model_information (parsed_property_option : ParsingStructure.parsed_property option) : (AbstractProperty.property option * converted_observer_structure option) =
+let convert_property_option useful_parsing_model_information (parsed_property_option : ParsingStructure.parsed_property option) : (AbstractProperty.abstract_property option * converted_observer_structure option) =
 	let constants			= useful_parsing_model_information.constants in
 	let discrete			= useful_parsing_model_information.discrete in
 	let index_of_actions	= useful_parsing_model_information.index_of_actions in
@@ -3322,18 +3329,20 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 	in
 
 
-	(* Check and convert *)
+	(* Convert *)
 	match parsed_property_option with
 	(* No property, no observer *)
 	| None -> None, None
+	
+	(* Some property *)
 	| Some parsed_property ->
-		begin
+		let property , converted_observer_structure_option =
 		match parsed_property.property with
 
 		(*** TODO ***)
 		| Parsed_EF parsed_state_predicate ->
 			(* Return a property and no observer *)
-			Some (EF (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)),
+			EF (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate),
 			None
 			
 			
@@ -3342,7 +3351,6 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		| _
 			->
 			raise (NotImplemented "ModelConverter.convert_property_option")
-		end
 		
 		
 		
@@ -3430,6 +3438,30 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		[n action_index], !well_formed*)
 
 	*)
+	
+		in
+		
+		(* Get the synthesis or emptiness type *)
+		let synthesis_type = convert_synthesis_type parsed_property.synthesis_type in
+		
+		(* Get the projection *)
+		
+		(*** TODO: !!! ***)
+		
+		let projection = None in
+		
+		(* Return the property *)
+		Some {
+			(* Emptiness or synthesis *)
+			synthesis_type	= synthesis_type;
+			(* Property *)
+			property		= property;
+			(* Projection of the result *)
+			projection		= projection;
+		}
+		,
+		converted_observer_structure_option
+
 
 (*------------------------------------------------------------*)
 (** Convert a list of parsed parameters into a list of variable_index *)
@@ -4660,7 +4692,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	,
 	
-	None
+	abstract_property_option
 	(*** TODO: handle property! ***)
 
 	(*type abstract_property = {

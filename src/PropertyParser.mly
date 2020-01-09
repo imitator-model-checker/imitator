@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/01/08
+ * Last modified     : 2020/01/09
  *
  ************************************************************/
 
@@ -118,7 +118,7 @@ quantified_property:
 ;
 
 synth_or_exhibit:
-	| CT_EXHIBIT { Parsed_exhibition }
+	| CT_EXHIBIT { Parsed_witness }
 	| CT_SYNTH   { Parsed_synthesis }
 ;
 

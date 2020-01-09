@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/01/08
+ * Last modified     : 2020/01/09
  *
  ****************************************************************)
 
@@ -324,7 +324,7 @@ and parsed_state_predicate =
 (****************************************************************)
 
 type parsed_synthesis_type =
-	| Parsed_exhibition
+	| Parsed_witness
 	| Parsed_synthesis
 
 

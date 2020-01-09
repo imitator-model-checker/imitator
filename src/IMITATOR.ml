@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/01/08
+ * Last modified     : 2020/01/09
  *
  ************************************************************)
 
@@ -130,7 +130,7 @@ parsing_counter#start;
 
 
 (*------------------------------------------------------------*)
-(* Parse the model *)
+(* Parse the model and the property *)
 (*------------------------------------------------------------*)
 
 (*** TODO !!! 
@@ -145,8 +145,22 @@ in
 
 let model, property_option = ParsingUtility.compile_model_and_property options in
 
+(*------------------------------------------------------------*)
+(* Set both abstract structures *)
+(*------------------------------------------------------------*)
+
+print_message Verbose_low "Set the model.";
 Input.set_model model;
 
+begin
+match property_option with
+	| None ->
+		print_message Verbose_low "No property to set.";
+		()
+	| Some property ->
+		print_message Verbose_low "Set the property.";
+		Input.set_property property;
+end;
 
 
 (*------------------------------------------------------------*)
@@ -161,15 +175,6 @@ HyperRectangle.set_dimensions model.nb_parameters;
 (* Set dimensions for parameter valuations *)
 PVal.set_dimensions model.nb_parameters;
 
-
-(*(*------------------------------------------------------------*)
-(* Parse property *)
-(*------------------------------------------------------------*)
-
-if property_needed options#imitator_mode then(
-	let property = ParsingUtility.compile_property options useful_parsing_model_information in
-	Input.set_property property;
-);*)
 
 
 (*(*------------------------------------------------------------*)
