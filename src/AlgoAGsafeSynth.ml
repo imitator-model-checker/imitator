@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: "AG not" algorithm (safety from a set of bad states) [JLR15]
  * 
  * File contributors : Étienne André
  * Created           : 2017/02/03
- * Last modified     : 2019/08/08
+ * Last modified     : 2020/01/09
  *
  ************************************************************)
 
@@ -42,7 +43,7 @@ class algoAGsafeSynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "AGsafe"
+	method algorithm_name = "AG"
 	
 	
 	
