@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2020/01/08
+ * Last modified: 2020/01/09
  *
  ************************************************************)
  
@@ -41,7 +41,7 @@ class imitator_options :
 		method carto_time_limit : int option
 		method check_ippta : bool
 		method check_point : bool
-		method counterex : bool
+(* 		method counterex : bool *)
 		method depth_limit : int option
 		method distribution_mode : distribution_mode
 		method distributedKillIM : bool

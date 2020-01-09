@@ -10,7 +10,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/01/08
+ * Last modified     : 2020/01/09
  *
  ************************************************************)
 
@@ -135,7 +135,7 @@ class imitator_options =
 		val mutable carto_time_limit = None
 		
 		(* stop the analysis as soon as a counterexample is found *)
-		val mutable counterex = ref false
+(* 		val mutable counterex = ref false *)
 
 		(* Check whether each constraint contains an integer point *)
 		val mutable check_ippta = ref false
@@ -246,7 +246,7 @@ class imitator_options =
 (* 		method cartonly = cartonly *)
 		method check_ippta = !check_ippta
 		method check_point = !check_point
-		method counterex = !counterex
+(* 		method counterex = !counterex *)
 		method depth_limit = !depth_limit
 		method distribution_mode = !distribution_mode
 		method distributedKillIM = !distributedKillIM
@@ -679,7 +679,7 @@ class imitator_options =
 					print_contributors();
 					exit 0), " Print contributors and exit.");
 				
-				("-counterexample", Set counterex, " For EF, stop the analysis as soon as a bad state is discovered. Default: false.");
+(* 				("-counterexample", Set counterex, " For EF, stop the analysis as soon as a bad state is discovered. Default: false."); *)
 				
 				("-depth-limit", Int (fun i -> depth_limit := Some i), " Limits the depth of the exploration of the state space. Default: no limit.");
 
@@ -1051,8 +1051,8 @@ class imitator_options =
 				| Exploration_queue_BFS_PRIOR -> print_message Verbose_standard ("Exploration order: queue-based BFS with priority [ACN17].")
 				
 				| Exploration_NDFS -> print_message Verbose_standard ("Exploration order: standard NDFS [NPvdP18].")
-				| Exploration_NDFS_sub when !counterex = true -> print_message Verbose_standard ("Exploration order: NDFS with subsumption [NPvdP18]; emptiness only.")
-				| Exploration_layer_NDFS_sub when !counterex = true -> print_message Verbose_standard ("Exploration order: layerd NDFS with subsumption [NPvdP18]; emptiness only.")
+(*				| Exploration_NDFS_sub when !counterex = true -> print_message Verbose_standard ("Exploration order: NDFS with subsumption [NPvdP18]; emptiness only.")
+				| Exploration_layer_NDFS_sub when !counterex = true -> print_message Verbose_standard ("Exploration order: layerd NDFS with subsumption [NPvdP18]; emptiness only.")*)
 				| Exploration_NDFS_sub (*when !counterex = false*) -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption [NPvdP18].")
 				| Exploration_layer_NDFS_sub (*when !counterex = false*) -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption and layers [NPvdP18].")
 (* 				| Exploration_syn_mixed_NDFS -> print_message Verbose_standard ("Exploration order: NDFS with mix of subsumption and layers.") *)

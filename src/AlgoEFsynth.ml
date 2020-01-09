@@ -274,7 +274,8 @@ class virtual algoEFsynth =
 
 	method process_counterexample target_state_index =
 	(* Only process counterexample if needed *)
-		if options#counterex then(
+		let property = Input.get_property() in
+		if property.synthesis_type = Witness then(
 			
 			(*** NOTE: so far, the reconstruction needs an absolute time clock ***)
 			begin
@@ -290,7 +291,7 @@ class virtual algoEFsynth =
 		);
 		
 		(* If the state is a target state (i.e., process_state returned false) AND the option to stop the analysis as soon as a counterexample is found is activated, then we will throw an exception *)
-		if options#counterex (*&& !is_target*) then(
+		if property.synthesis_type = Witness (*&& !is_target*) then(
 			(* Update termination status *)
 			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
 			self#print_algo_message Verbose_standard "Target state found! Terminating…";

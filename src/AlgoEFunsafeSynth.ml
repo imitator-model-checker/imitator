@@ -69,6 +69,7 @@ class algoEFunsafeSynth =
 		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
 				
 		(* Projecting onto SOME parameters if required *)
+		(*** NOTE: Useless test as we are in EF, so there is a property ***)
 		let result = if Input.has_property() then(
 			let abstract_property = Input.get_property() in
 			match abstract_property.projection with
@@ -124,7 +125,7 @@ class algoEFunsafeSynth =
 		(* Return the result *)
 		Single_synthesis_result
 		{
-			(* Non-necessarily convex constraint guaranteeing the reachability of the bad location *)
+			(* Non-necessarily convex constraint guaranteeing the reachability of the desired states *)
 			result				= Good_constraint (result, soundness);
 			
 			(* English description of the constraint *)
