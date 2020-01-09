@@ -11,9 +11,9 @@
  * Input by        : Etienne Andre
  *
  * Created         : 2007/11
- * Last modified   : 2010/03/30
+ * Last modified   : 2020/01/09
  *
- * IMITATOR version: 2.7.1
+ * IMITATOR version: 3.0
  ************************************************************)
  
 (*
@@ -35,6 +35,7 @@
 
 
 ----- IJFCS [ACEF09] -----
+property := IM(
 	& tHI    = 24
 	& tLO    = 15
 	& tSetup = 10
@@ -47,7 +48,9 @@
 	& dG3_u  = 10
 	& dG4_l  = 3
 	& dG4_u  = 7
+)
 
+(*
 -- 	& tHI    = 24
 -- 	& tLO    = 15
 -- 	& tSetup = 10
@@ -60,3 +63,4 @@
 -- 	& dG3_u  = 16.9
 -- 	& dG4_l  = 3
 -- 	& dG4_u  = 7.8
+*)
