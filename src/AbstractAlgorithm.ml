@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/18
- * Last modified     : 2020/01/08
+ * Last modified     : 2020/01/11
  *
  ************************************************************)
 
@@ -21,7 +21,7 @@ open Exceptions
 (************************************************************)
 (** Available algorithms *)
 (************************************************************)
-
+(*
 type algorithm =
 	(** Reachability *)
 	| EFsynth of AbstractProperty.state_predicate
@@ -109,7 +109,7 @@ let is_algorithm_cartography = function
 	| EFsynth _
 		-> false
 	| _
-		-> raise (NotImplemented "AbstractAlgorithm.is_algorithm_cartography")
+		-> raise (NotImplemented "AbstractAlgorithm.is_algorithm_cartography")*)
 
 
 (************************************************************)

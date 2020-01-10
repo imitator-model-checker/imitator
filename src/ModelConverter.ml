@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/01/09
+ * Last modified     : 2020/01/10
  *
  ************************************************************)
 
@@ -2515,8 +2515,8 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		(*------------------------------------------------------------*)
 		
 		(* Inverse method with complete, non-convex result *)
-		| Parsed_IM parsed_pval ->
-			variables_used_ref := StringSet.of_list (get_variables_in_parsed_pval parsed_pval);
+(*		| Parsed_IM parsed_pval ->
+			variables_used_ref := StringSet.of_list (get_variables_in_parsed_pval parsed_pval);*)
 		
 		(*** TODO ***)
 		| _ -> raise (NotImplemented "get_variables_in_property")
@@ -3144,8 +3144,8 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		(*------------------------------------------------------------*)
 		
 		(* Inverse method with complete, non-convex result *)
-		| Parsed_IM parsed_pval ->
-			check_parsed_pval useful_parsing_model_information parsed_pval
+(*		| Parsed_IM parsed_pval ->
+			check_parsed_pval useful_parsing_model_information parsed_pval*)
 		
 		(*** TODO ***)
 		| Parsed_Action_deadline _
@@ -3459,10 +3459,10 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		(*------------------------------------------------------------*)
 		
 		(* Inverse method with complete, non-convex result *)
-		| Parsed_IM parsed_pval ->
+(*		| Parsed_IM parsed_pval ->
 			IM (convert_parsed_pval useful_parsing_model_information parsed_pval)
 			,
-			None
+			None*)
 			
 			
 		(*** TODO ***)

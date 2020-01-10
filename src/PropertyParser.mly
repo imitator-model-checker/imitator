@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/01/09
+ * Last modified     : 2020/01/10
  *
  ************************************************************/
 
@@ -93,8 +93,9 @@ let resolve_property l =
 /************************************************************/
 main:
 /************************************************************/
-/*	| property_kw_opt quantified_property semicolon_opt EOF { $2 }*/
-	| CT_WHEN EOF { (*$2*)raise (Failure "ploop") }
+	| property_kw_opt quantified_property semicolon_opt EOF { $2 }
+	/* Dummy command for testing */
+/* 	| CT_WHEN EOF { (*$2*)raise (Failure "ploop") } */
 ;
 
 /************************************************************/
@@ -152,6 +153,9 @@ property:
 	
 	| CT_TRACEPRESERVATION LPAREN reference_valuation RPAREN { Parsed_IM $3 }
 
+	
+	
+	
 	/** TODO **/
 
 

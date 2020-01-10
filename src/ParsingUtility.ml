@@ -46,8 +46,10 @@ let parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name =
 	let parsing_structure = try (
 		let absolute_filename = FilePath.make_absolute (FileUtil.pwd ()) file_name in
 		print_message Verbose_total ("Created absolute file name '" ^ absolute_filename ^ "'.");
+		
 		print_message Verbose_total ("Assigning lex_curr_p…");
 		lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with Lexing.pos_fname = absolute_filename };
+		
 		print_message Verbose_total ("Assigning lex_start_p…");
 		lexbuf.Lexing.lex_start_p <- { lexbuf.Lexing.lex_start_p with Lexing.pos_fname = absolute_filename };
 

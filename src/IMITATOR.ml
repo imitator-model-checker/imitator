@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/01/09
+ * Last modified     : 2020/01/10
  *
  ************************************************************)
 
@@ -477,8 +477,8 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			(************************************************************)
 			
 			(* Inverse method with complete, non-convex result *)
-			| IM _ ->
-					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMcomplete.algoIMcomplete in myalgo
+(*			| IM _ ->
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMcomplete.algoIMcomplete in myalgo*)
 
 
 			(*** TODO: allow for old version with list of constraints ***)
