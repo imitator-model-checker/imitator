@@ -2510,13 +2510,33 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_AGnot parsed_state_predicate
 			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
 		
+		
+		(*------------------------------------------------------------*)
+		(* Optimized reachability *)
+		(*------------------------------------------------------------*)
+		
+		(* Reachability with minimization of a parameter valuation *)
+		| Parsed_EFpmin (parsed_state_predicate , parameter_name)
+			(* First get the variables in the state predicate *)
+			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate;
+			(* Then add the parameter name *)
+			variables_used_ref := StringSet.add parameter_name !variables_used_ref
+		
+		(* Reachability with minimal-time *)
+		| Parsed_EFtmin parsed_state_predicate
+			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
+
+		
 		(*------------------------------------------------------------*)
 		(* Inverse method, trace preservation, robustness *)
 		(*------------------------------------------------------------*)
 		
 		(* Inverse method with complete, non-convex result *)
-(*		| Parsed_IM parsed_pval ->
-			variables_used_ref := StringSet.of_list (get_variables_in_parsed_pval parsed_pval);*)
+		| Parsed_IM parsed_pval ->
+			variables_used_ref := StringSet.of_list (get_variables_in_parsed_pval parsed_pval);
+		
+		
+		
 		
 		(*** TODO ***)
 		| _ -> raise (NotImplemented "get_variables_in_property")
@@ -3134,18 +3154,34 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		(*------------------------------------------------------------*)
 		(* Reachability *)
 		| Parsed_EF parsed_state_predicate
+		
 		(* Safety *)
 		| Parsed_AGnot parsed_state_predicate
 			->
 			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+		
+		
+		(*------------------------------------------------------------*)
+		(* Optimized reachability *)
+		(*------------------------------------------------------------*)
+		
+		(*(* Reachability with minimization of a parameter valuation *)
+		| Parsed_EFpmin (parsed_state_predicate , parameter_name)
+		
+		(* Reachability with minimal-time *)
+		| Parsed_EFtmin parsed_state_predicate*)
+		
 		
 		(*------------------------------------------------------------*)
 		(* Inverse method, trace preservation, robustness *)
 		(*------------------------------------------------------------*)
 		
 		(* Inverse method with complete, non-convex result *)
-(*		| Parsed_IM parsed_pval ->
-			check_parsed_pval useful_parsing_model_information parsed_pval*)
+		| Parsed_IM parsed_pval ->
+			check_parsed_pval useful_parsing_model_information parsed_pval
+		
+		
+		
 		
 		(*** TODO ***)
 		| Parsed_Action_deadline _
@@ -3453,17 +3489,31 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 			AGnot (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
-			
+		
+		
+		(*------------------------------------------------------------*)
+		(* Optimized reachability *)
+		(*------------------------------------------------------------*)
+		
+		(*(* Reachability with minimization of a parameter valuation *)
+		| Parsed_EFpmin (parsed_state_predicate , parameter_name)
+		
+		(* Reachability with minimal-time *)
+		| Parsed_EFtmin parsed_state_predicate*)
+		
+		
 		(*------------------------------------------------------------*)
 		(* Inverse method, trace preservation, robustness *)
 		(*------------------------------------------------------------*)
 		
 		(* Inverse method with complete, non-convex result *)
-(*		| Parsed_IM parsed_pval ->
+		| Parsed_IM parsed_pval ->
 			IM (convert_parsed_pval useful_parsing_model_information parsed_pval)
 			,
-			None*)
+			None
 			
+			
+
 			
 		(*** TODO ***)
 		| Parsed_Action_deadline _

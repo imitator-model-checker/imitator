@@ -58,8 +58,8 @@ let resolve_property l =
 %token
 	CT_ACCEPTING CT_ACCLOOP CT_AG CT_AGnot CT_ALWAYS CT_AND
 	CT_BEFORE
-	CT_EF CT_EVENTUALLY CT_EVERYTIME CT_EXHIBIT
 	CT_DEADLOCKFREE
+	CT_EF CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXHIBIT
 	CT_FALSE
 	CT_HAPPENED CT_HAS
 	CT_IF CT_IN CT_IS
@@ -147,6 +147,17 @@ property:
 	| CT_AGnot state_predicate { Parsed_AGnot $2 }
 
 
+	/*------------------------------------------------------------*/
+	/* Optimized reachability */
+	/*------------------------------------------------------------*/
+	
+	/* Reachability with minimization of a parameter valuation */
+	| CT_EFpmin state_predicate NAME { Parsed_EFpmin ($2, $3) }
+	
+	/* Reachability with minimal-time */
+	| CT_EFtmin state_predicate { Parsed_EFtmin ($2) }
+
+	
 	/*------------------------------------------------------------*/
 	/* Inverse method, trace preservation, robustness */
 	/*------------------------------------------------------------*/

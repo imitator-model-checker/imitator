@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/01/09
+ * Last modified     : 2020/01/10
  *
  ************************************************************)
 
@@ -93,8 +93,11 @@ type property =
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
 	
-	(* Reachability with minimization *)
-	| EFmin of state_predicate * (*** TODO: bool is just random here, to be done ***)bool
+	(* Reachability with minimization of a parameter valuation *)
+	| EFpmin of state_predicate * parameter_index
+	
+	(* Reachability with minimal-time *)
+	| EFtmin of state_predicate
 	
 	(*** TODO: EFmin, EFmax, EFsynthmin, EFsynthmax, EF_synth_min_priority_queue ***)
 	

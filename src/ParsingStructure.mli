@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/01/09
+ * Last modified     : 2020/01/10
  *
  ****************************************************************)
 
@@ -358,9 +358,12 @@ type parsed_property_type =
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
 	
-	(* Reachability with minimization *)
-	| Parsed_EFmin of parsed_state_predicate * (*** TODO: bool is just random here, to be done ***)bool
+	(* Reachability with minimization of a parameter *)
+	| Parsed_EFpmin of parsed_state_predicate * variable_name
 	
+	(* Reachability with minimal-time *)
+	| Parsed_EFtmin of parsed_state_predicate
+
 	(*** TODO: EFmin, EFmax, EFsynthmin, EFsynthmax, EF_synth_min_priority_queue ***)
 	
 	(** EF-synthesis with examples of (un)safe words *)
