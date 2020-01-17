@@ -11,7 +11,7 @@
  * Input by        : Etienne Andre
  *
  * Created         : 2007/11
- * Last modified   : 2020/01/09
+ * Last modified   : 2020/01/17
  *
  * IMITATOR version: 3.0
  ************************************************************)
@@ -34,8 +34,12 @@
 
 
 
------ IJFCS [ACEF09] -----
-property := IM(
+(* ----- IJFCS [ACEF09] ----- *)
+
+(** Dummy property to test syntax *)
+(* property := #synth EF (loc[input] = Input4); *)
+
+property := #synth IM(
 	& tHI    = 24
 	& tLO    = 15
 	& tSetup = 10
@@ -48,7 +52,7 @@ property := IM(
 	& dG3_u  = 10
 	& dG4_l  = 3
 	& dG4_u  = 7
-)
+);
 
 (*
 -- 	& tHI    = 24

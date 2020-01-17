@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/01/09
+ * Last modified     : 2020/01/17
  *
  ************************************************************)
 
@@ -31,6 +31,47 @@ open StateSpace
 (************************************************************)
 let string_of_true	= "True"
 let string_of_false	= "False"
+
+
+
+(************************************************************)
+(** Parameter valuation (PVal.pval) *)
+(************************************************************)
+(* Convert a parameter valuation (PVal.pval) into a string *)
+let string_of_pval model pval =
+	"  " ^ (
+	string_of_list_of_string_with_sep "\n& " (
+		List.map (fun parameter ->
+			(model.variable_names parameter)
+			^ " = "
+			^ (NumConst.string_of_numconst (pval#get_value parameter))
+		) model.parameters
+	)
+	)
+
+
+(************************************************************)
+(** V0 *)
+(************************************************************)
+(* Convert a V0 into a string *)
+let string_of_v0 model v0 =
+	"  " ^ (
+	string_of_list_of_string_with_sep "\n& " (
+		List.map (fun parameter ->
+			(model.variable_names parameter)
+			^ " = "
+			^ (
+(* 				let min_bound, max_bound = v0.(parameter) in *)
+				let min_bound = v0#get_min parameter in
+				let max_bound = v0#get_max parameter in
+				if min_bound = max_bound
+					then NumConst.string_of_numconst min_bound
+					else (NumConst.string_of_numconst min_bound) ^ ".." ^ (NumConst.string_of_numconst max_bound)
+			)
+		) model.parameters
+	)
+	)
+
 
 
 (************************************************************)
@@ -687,12 +728,23 @@ let string_of_abstract_property model property =
 	(
 	(* Handle the actual property *)
 	match property.property with
+		(*------------------------------------------------------------*)
+		(* Non-nested CTL *)
+		(*------------------------------------------------------------*)
 		(* Reachability *)
 		| EF state_predicate -> "EF(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 		(* Safety *)
 		| AGnot state_predicate -> "AGnot(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 
-	
+
+		(*------------------------------------------------------------*)
+		(* Inverse method, trace preservation, robustness *)
+		(*------------------------------------------------------------*)
+		
+		(* Inverse method with complete, non-convex result *)
+		| IM pval -> "tracepreservation(" ^ (string_of_pval model pval) ^ ")"
+
+		
 		(*** TODO ***)
 		| _ -> raise (NotImplemented "ModelPrinter.string_of_property for any other algorithm")
 	)
@@ -827,45 +879,6 @@ let string_of_px_valuation model = string_of_valuation model.parameters_and_cloc
 
 (* Convert an x-valuation into a string *)
 let string_of_x_valuation model = string_of_valuation model.clocks model.variable_names
-
-
-(************************************************************)
-(** Pi0 *)
-(************************************************************)
-(* Convert a parameter valuation (PVal.pval) into a string *)
-let string_of_pval model pval =
-	"  " ^ (
-	string_of_list_of_string_with_sep "\n& " (
-		List.map (fun parameter ->
-			(model.variable_names parameter)
-			^ " = "
-			^ (NumConst.string_of_numconst (pval#get_value parameter))
-		) model.parameters
-	)
-	)
-
-
-(************************************************************)
-(** V0 *)
-(************************************************************)
-(* Convert a V0 into a string *)
-let string_of_v0 model v0 =
-	"  " ^ (
-	string_of_list_of_string_with_sep "\n& " (
-		List.map (fun parameter ->
-			(model.variable_names parameter)
-			^ " = "
-			^ (
-(* 				let min_bound, max_bound = v0.(parameter) in *)
-				let min_bound = v0#get_min parameter in
-				let max_bound = v0#get_max parameter in
-				if min_bound = max_bound
-					then NumConst.string_of_numconst min_bound
-					else (NumConst.string_of_numconst min_bound) ^ ".." ^ (NumConst.string_of_numconst max_bound)
-			)
-		) model.parameters
-	)
-	)
 
 
 

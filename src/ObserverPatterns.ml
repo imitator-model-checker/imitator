@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created:       2013/02/04
- * Last modified: 2020/01/09
+ * Last modified: 2020/01/17
  *
  ************************************************************)
  
@@ -117,6 +117,7 @@ let new_elements (parsed_property : ParsingStructure.parsed_property) =
 	(* No observer required: does not build anything *)
 	| ParsingStructure.Parsed_EF _
 	| ParsingStructure.Parsed_AGnot _
+	| ParsingStructure.Parsed_IM _
 		-> (None , None)
 	
 	| Parsed_Action_deadline _

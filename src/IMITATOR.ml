@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/01/10
+ * Last modified     : 2020/01/17
  *
  ************************************************************)
 
@@ -161,19 +161,6 @@ match property_option with
 		print_message Verbose_low "Set the property.";
 		Input.set_property property;
 end;
-
-
-(*------------------------------------------------------------*)
-(* Set the parameter dimensions *)
-(*------------------------------------------------------------*)
-
-(*** NOTE: must be done one and exactly one time ***)
-
-(* Set dimensions for hyper rectangles *)
-HyperRectangle.set_dimensions model.nb_parameters;
-
-(* Set dimensions for parameter valuations *)
-PVal.set_dimensions model.nb_parameters;
 
 
 
@@ -477,8 +464,8 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			(************************************************************)
 			
 			(* Inverse method with complete, non-convex result *)
-(*			| IM _ ->
-					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMcomplete.algoIMcomplete in myalgo*)
+			| IM _ ->
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMcomplete.algoIMcomplete in myalgo
 
 
 			(*** TODO: allow for old version with list of constraints ***)

@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/01/10
+ * Last modified     : 2020/01/17
  *
  ************************************************************)
 
@@ -3901,6 +3901,22 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("\nSetting dimensions…");
 	LinearConstraint.set_dimensions nb_parameters nb_clocks nb_discrete;
+	
+	
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Set the parameter dimensions *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	(*** NOTE: must be done one and exactly one time ***)
+
+	(* Set dimensions for hyper rectangles *)
+	HyperRectangle.set_dimensions nb_parameters;
+
+	(* Set dimensions for parameter valuations *)
+	PVal.set_dimensions nb_parameters;
+
+
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
