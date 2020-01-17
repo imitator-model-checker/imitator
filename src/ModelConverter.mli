@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/09/09
- * Last modified     : 2019/12/13
+ * Last modified     : 2020/01/17
  *
  ************************************************************)
 
@@ -23,11 +23,6 @@
 (****************************************************************)
 (** Exceptions *)
 (****************************************************************)
-
-(* When checking pi0 *)
-exception InvalidPi0
-(* When checking v0 *)
-exception InvalidV0
 
 exception InvalidModel
 

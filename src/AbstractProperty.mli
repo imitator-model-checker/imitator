@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/01/10
+ * Last modified     : 2020/01/17
  *
  ************************************************************)
 
@@ -77,7 +77,7 @@ type property =
 	| AGnot of state_predicate
 	
 	
-	(*** TODO: observers! ***)
+(*	(*** TODO: observers! ***)
 	(* Reachability *)
 	| Action_deadline of action_name * duration
 	
@@ -86,7 +86,7 @@ type property =
 	| AF of state_predicate
 	
 	(* Liveness *)
-	| AG of state_predicate
+	| AG of state_predicate*)
 	
 	
 	(*------------------------------------------------------------*)
@@ -101,7 +101,7 @@ type property =
 	
 	(*** TODO: EFmin, EFmax, EFsynthmin, EFsynthmax, EF_synth_min_priority_queue ***)
 	
-	(** EF-synthesis with examples of (un)safe words *)
+(*	(** EF-synthesis with examples of (un)safe words *)
 	| EFexemplify of state_predicate
 	
 
@@ -124,7 +124,7 @@ type property =
 	(*------------------------------------------------------------*)
 	
 	(* Deadlock-free synthesis *)
-	| Deadlock_Freeness
+	| Deadlock_Freeness*)
 
 	
 	(*------------------------------------------------------------*)
@@ -134,18 +134,18 @@ type property =
 	(* Inverse method with complete, non-convex result *)
 	| IM of PVal.pval
 
-	(* Non-complete inverse method with convex result *)
+(*	(* Non-complete inverse method with convex result *)
 	| ConvexIM of PVal.pval
 
 	(* Parametric reachability preservation *)
-	| PRP of PVal.pval
+	| PRP of PVal.pval*)
 
 	
 	(*------------------------------------------------------------*)
 	(* Cartography algorithms *)
 	(*------------------------------------------------------------*)
 	
-	(* Cartography *)
+(*	(* Cartography *)
 	| Cover_cartography of HyperRectangle.hyper_rectangle
 
 	
@@ -165,7 +165,7 @@ type property =
 	| RandomSeq_cartography  of HyperRectangle.hyper_rectangle * int
 
 	(* Parametric reachability preservation *)
-	| PRPC of HyperRectangle.hyper_rectangle
+	| PRPC of HyperRectangle.hyper_rectangle*)
 
 
 	

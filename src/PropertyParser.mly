@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/01/10
+ * Last modified     : 2020/01/17
  *
  ************************************************************/
 
@@ -304,22 +304,11 @@ projection_definition:
 
 ;
 
-/************************************************************/
-optimization_definition:
-/************************************************************/
-	| CT_MINIMIZE LPAREN NAME RPAREN semicolon_opt { Parsed_minimize $3 }
-	| CT_MAXIMIZE LPAREN NAME RPAREN semicolon_opt { Parsed_maximize $3 }
-
-	/* Case: no min/max */
-	|  { No_parsed_optimization }
-
-;
-
 
 /* List of patterns */
-pattern:
+/*pattern:*/
 	/* Safety */
-	| CT_UNREACHABLE state_predicate { Parsed_EF ($2) }
+/*	| CT_UNREACHABLE state_predicate { Parsed_EF ($2) }*/
 
 	/* if a2 then a1 has happened before */
 /*	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Action_precedence_acyclic ($4, $2) }*/
@@ -361,7 +350,7 @@ pattern:
 	/* always sequence a1, …, an */
 /*	| CT_ALWAYS CT_SEQUENCE name_nonempty_list { Sequence_cyclic ($3) }
 	| CT_ALWAYS CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Sequence_cyclic ($4) } */ /* with parentheses */
-;
+/*;*/
 
 
 /* A single definition of one bad location or one bad discrete definition */

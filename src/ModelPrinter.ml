@@ -712,6 +712,8 @@ let string_of_abstract_property model property =
 	let header = property_header() in
 	let prefix = "property := " in
 	
+	header
+	^
 	prefix
 	
 	^
@@ -738,6 +740,19 @@ let string_of_abstract_property model property =
 
 
 		(*------------------------------------------------------------*)
+		(* Optimized reachability *)
+		(*------------------------------------------------------------*)
+		
+		(* Reachability with minimization of a parameter valuation *)
+		| EFpmin (state_predicate , parameter_index) ->
+			"EFpmin(" ^ (string_of_state_predicate model state_predicate) ^ ", " ^ (model.variable_names parameter_index) ^ ")"
+		
+		(* Reachability with minimal-time *)
+		| EFtmin state_predicate ->
+			"EFpmin(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+		
+
+		(*------------------------------------------------------------*)
 		(* Inverse method, trace preservation, robustness *)
 		(*------------------------------------------------------------*)
 		
@@ -746,7 +761,7 @@ let string_of_abstract_property model property =
 
 		
 		(*** TODO ***)
-		| _ -> raise (NotImplemented "ModelPrinter.string_of_property for any other algorithm")
+(* 		| _ -> raise (NotImplemented "ModelPrinter.string_of_property for any other algorithm") *)
 	)
 	
 	^

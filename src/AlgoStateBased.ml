@@ -2457,7 +2457,10 @@ class virtual algoStateBased =
 			
 			match property.property with
 				(* Reachability *)
-				| EF state_predicate ->
+				| EF state_predicate
+				| EFpmin (state_predicate, _)
+				| EFtmin state_predicate
+				->
 					(* Check whether the current state matches the state predicate *)
 					if State.match_state_predicate state_predicate state then(
 						statespace_nature <- StateSpace.Bad;
@@ -2476,7 +2479,7 @@ class virtual algoStateBased =
 				if State.match_unreachable_global_locations unreachable_global_locations state.global_location then(
 					statespace_nature <- StateSpace.Bad;
 				);*)
-			| _ -> raise (NotImplemented("AlgoStateBased > IMITATOR currently only implements selected algorithms in update_statespace_nature."))
+(* 				| _ -> raise (NotImplemented("AlgoStateBased > IMITATOR currently only implements selected algorithms in update_statespace_nature.")) *)
 		)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

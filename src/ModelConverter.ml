@@ -37,11 +37,6 @@ open AbstractProperty
 (** Exceptions *)
 (************************************************************)
 (************************************************************)
-(* When checking pi0 *)
-exception InvalidPi0
-(* When checking V0 *)
-exception InvalidV0
-
 (* For constraint conversion *)
 exception False_exception
 
@@ -2538,8 +2533,8 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		
 		
 		
-		(*** TODO ***)
-		| _ -> raise (NotImplemented "get_variables_in_property")
+(*		(*** TODO ***)
+		| _ -> raise (NotImplemented "get_variables_in_property")*)
 	
 		end;
 	end;
@@ -2917,17 +2912,17 @@ let check_and_convert_unreachable_global_location index_of_variables type_of_var
 let rec check_parsed_discrete_arithmetic_expression useful_parsing_model_information = function
 	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression , parsed_discrete_term)
 	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
-		let check1 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression in
-		let check2 = check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term in
-		check1 && check2
+		evaluate_and
+			(check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
+			(check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
 	| Parsed_DAE_term parsed_discrete_term -> check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term
 
 and check_parsed_discrete_term useful_parsing_model_information = function
 	| Parsed_DT_mul (parsed_discrete_term , parsed_discrete_factor)
 	| Parsed_DT_div (parsed_discrete_term , parsed_discrete_factor) ->
-		let check1 = check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term in
-		let check2 = check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor in
-		check1 && check2
+		evaluate_and
+			(check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
+			(check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
 	| Parsed_DT_factor parsed_discrete_factor ->
 		check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor
 
@@ -2950,9 +2945,9 @@ and check_parsed_discrete_factor useful_parsing_model_information = function
 let check_parsed_discrete_boolean_expression useful_parsing_model_information = function
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_expression (parsed_discrete_arithmetic_expression1 , _ , parsed_discrete_arithmetic_expression2) ->
-		let check1 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1 in
-		let check2 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2 in
-		check1 && check2
+		evaluate_and
+			(check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1)
+			(check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2)
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Parsed_expression_in (parsed_discrete_arithmetic_expression1 , parsed_discrete_arithmetic_expression2 , parsed_discrete_arithmetic_expression3) ->
 		let check1 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1 in
@@ -3000,9 +2995,9 @@ let check_parsed_simple_predicate useful_parsing_model_information = function
 let rec check_parsed_state_predicate useful_parsing_model_information = function
 	| Parsed_state_predicate_OR (parsed_state_predicate_1 , parsed_state_predicate_2) ->
 		(* Check both even if one fails, so as to provide users with more errors at once *)
-		let check_1 = check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_1 in
-		let check_2 = check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_2 in
-		check_1 && check_2
+		evaluate_and
+			(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_1)
+			(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_2)
 		
 	| Parsed_state_predicate_term parsed_state_predicate_term ->
 		check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term
@@ -3013,9 +3008,9 @@ let rec check_parsed_state_predicate useful_parsing_model_information = function
 and check_parsed_state_predicate_term useful_parsing_model_information = function
 	| Parsed_state_predicate_term_AND (parsed_state_predicate_term_1 , parsed_state_predicate_term_2) ->
 		(* Check both even if one fails, so as to provide users with more errors at once *)
-		let check_1 = check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term_1 in
-		let check_2 = check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term_2 in
-		check_1 && check_2
+		evaluate_and
+			(check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term_1)
+			(check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term_2)
 	| Parsed_state_predicate_factor parsed_state_predicate_factor ->
 		check_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor
 
@@ -3029,33 +3024,47 @@ and check_parsed_state_predicate_factor useful_parsing_model_information = funct
 
 
 
+(*------------------------------------------------------------*)
+(** Generic function checking whether a name is a valid parameter name *)
+(*------------------------------------------------------------*)
+let check_parameter_name suffix_explanation_string useful_parsing_model_information parameter_name =
+	(* First check it is a variable *)
+	if not(Hashtbl.mem useful_parsing_model_information.index_of_variables parameter_name) then(
+		print_error ("Parameter " ^ parameter_name ^ " is not a defined variable" ^ suffix_explanation_string);
+		false
+	) else(
+		let parameter_index = Hashtbl.find useful_parsing_model_information.index_of_variables parameter_name in
+		if not(useful_parsing_model_information.type_of_variables parameter_index = Var_type_parameter) then(
+			print_error ("Variable " ^ parameter_name ^ " is not a parameter" ^ suffix_explanation_string);
+			false
+		)else true
+	)
 
 (*------------------------------------------------------------*)
 (** Check that all parameters in the projection definition are valid *)
 (*------------------------------------------------------------*)
-let check_projection_definition parameters_names = function
-  | None -> true
-  | Some parsed_parameters -> (
-      let well_formed = ref true in
-      List.iter (fun parsed_parameter ->
-          if not (List.mem parsed_parameter parameters_names) then(
-            print_error ("Parameter " ^ parsed_parameter  ^ " is not a valid parameter in the projection definition.");
-            well_formed := false
-          );
-        ) parsed_parameters;
-      !well_formed
-    )
+let check_projection_definition useful_parsing_model_information = function
+	| None -> true
+	| Some parsed_parameters -> (
+		let well_formed = ref true in
+		List.iter (fun parsed_parameter ->
+			if not (check_parameter_name " in the projection definition" useful_parsing_model_information parsed_parameter) then
+				well_formed := false
+			) parsed_parameters;
+		!well_formed
+		)
 
 (*------------------------------------------------------------*)
 (** Check that the optimization definition is valid *)
 (*------------------------------------------------------------*)
-let check_optimization parameters_names = function
-  | No_parsed_optimization -> true
-  | Parsed_minimize parameter_name | Parsed_maximize parameter_name ->
-    if not (List.mem parameter_name parameters_names) then(
-      print_error ("Parameter " ^ parameter_name  ^ " is not a valid parameter in the optimization definition.");
-      false
-    ) else true
+(*let check_optimization parameters_names = function
+	| No_parsed_optimization -> true
+	
+	| Parsed_minimize parameter_name | Parsed_maximize parameter_name ->
+		if not (List.mem parameter_name parameters_names) then(
+		print_error ("Parameter " ^ parameter_name  ^ " is not a valid parameter in the optimization definition.");
+		false
+		) else true*)
 
 
 (*------------------------------------------------------------*)
@@ -3117,9 +3126,9 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 	(* Generic check function for 2 actions *)
 	let gen_check_2act property a1 a2 =
 		(* Check action names (perform 2 even if one fails) *)
-		let check1 = check_action_name index_of_actions a1 in
-		let check2 = check_action_name index_of_actions a2 in
-		check1 && check2
+		evaluate_and
+			(check_action_name index_of_actions a1)
+			(check_action_name index_of_actions a2)
 	in
 
 	(* Generic check function for 2 actions and one deadline *)
@@ -3165,11 +3174,17 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		(* Optimized reachability *)
 		(*------------------------------------------------------------*)
 		
-		(*(* Reachability with minimization of a parameter valuation *)
-		| Parsed_EFpmin (parsed_state_predicate , parameter_name)
+		(* Reachability with minimization of a parameter valuation *)
+		| Parsed_EFpmin (parsed_state_predicate , parameter_name) ->
+			(*** NOTE: two checks to allow to check both side of the equality whatever happens ***)
+			evaluate_and
+				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+				(check_parameter_name " in the optimization definition" useful_parsing_model_information parameter_name)
+
 		
 		(* Reachability with minimal-time *)
-		| Parsed_EFtmin parsed_state_predicate*)
+		| Parsed_EFtmin parsed_state_predicate ->
+			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
 		
 		
 		(*------------------------------------------------------------*)
@@ -3183,11 +3198,11 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		
 		
 		
-		(*** TODO ***)
+(*		(*** TODO ***)
 		| Parsed_Action_deadline _
 		| _
 			->
-			raise (NotImplemented "ModelConverter : check_property_option")
+			raise (NotImplemented "ModelConverter : check_property_option")*)
 		end
 		
 		
@@ -3293,7 +3308,7 @@ let convert_parsed_pval useful_parsing_model_information (parsed_pval : ParsingS
 		let valuation = try(
 			List.assoc parameter_name parsed_pval
 		) with Not_found ->
-		raise (InternalError ("The parameter name '" ^ parameter_name ^ "' was not found in parsed_pval although checks should have been performed before."))
+			raise (InternalError ("The parameter name '" ^ parameter_name ^ "' was not found in parsed_pval although checks should have been performed before."))
 		in
 		pval#set_value i valuation
 	done;
@@ -3495,11 +3510,21 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		(* Optimized reachability *)
 		(*------------------------------------------------------------*)
 		
-		(*(* Reachability with minimization of a parameter valuation *)
-		| Parsed_EFpmin (parsed_state_predicate , parameter_name)
+		(* Reachability with minimization of a parameter valuation *)
+		| Parsed_EFpmin (parsed_state_predicate , parameter_name) ->
+			EFpmin (
+				convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+				,
+				Hashtbl.find useful_parsing_model_information.index_of_variables parameter_name
+			)
+			,
+			None
 		
 		(* Reachability with minimal-time *)
-		| Parsed_EFtmin parsed_state_predicate*)
+		| Parsed_EFtmin parsed_state_predicate ->
+			EFtmin (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+			,
+			None
 		
 		
 		(*------------------------------------------------------------*)
@@ -3516,10 +3541,10 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 
 			
 		(*** TODO ***)
-		| Parsed_Action_deadline _
+(*		| Parsed_Action_deadline _
 		| _
 			->
-			raise (NotImplemented "ModelConverter.convert_property_option")
+			raise (NotImplemented "ModelConverter.convert_property_option")*)
 		
 		
 		
@@ -4117,7 +4142,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	let well_formed_projection = match parsed_property_option with
 		| None -> true
-		| Some parsed_property -> check_projection_definition parameter_names parsed_property.projection
+		| Some parsed_property -> check_projection_definition useful_parsing_model_information parsed_property.projection
 	in
 
 

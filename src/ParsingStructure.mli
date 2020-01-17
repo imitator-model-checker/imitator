@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/01/10
+ * Last modified     : 2020/01/17
  *
  ****************************************************************)
 
@@ -258,17 +258,6 @@ type parsed_projection = (variable_name list) option
 
 
 (****************************************************************)
-(** Optimization of a parameter *)
-(****************************************************************)
-
-type parsed_optimization =
-	| No_parsed_optimization
-	| Parsed_minimize of variable_name
-	| Parsed_maximize of variable_name
-
-
-
-(****************************************************************)
 (** Input model *)
 (****************************************************************)
 
@@ -342,7 +331,7 @@ type parsed_property_type =
 	| Parsed_AGnot of parsed_state_predicate
 	
 	
-	(*** TODO: observers! ***)
+(*	(*** TODO: observers! ***)
 	(* Reachability *)
 	| Parsed_Action_deadline of sync_name * parsed_duration
 	
@@ -351,7 +340,7 @@ type parsed_property_type =
 	| Parsed_AF of parsed_state_predicate
 	
 	(* Liveness *)
-	| Parsed_AG of parsed_state_predicate
+	| Parsed_AG of parsed_state_predicate*)
 	
 	
 	(*------------------------------------------------------------*)
@@ -367,10 +356,10 @@ type parsed_property_type =
 	(*** TODO: EFmin, EFmax, EFsynthmin, EFsynthmax, EF_synth_min_priority_queue ***)
 	
 	(** EF-synthesis with examples of (un)safe words *)
-	| Parsed_EFexemplify of parsed_state_predicate
+(* 	| Parsed_EFexemplify of parsed_state_predicate *)
 	
 
-	(*------------------------------------------------------------*)
+	(*(*------------------------------------------------------------*)
 	(* Cycles *)
 	(*------------------------------------------------------------*)
 	
@@ -395,11 +384,11 @@ type parsed_property_type =
 	(*------------------------------------------------------------*)
 	(* Inverse method, trace preservation, robustness *)
 	(*------------------------------------------------------------*)
-	
+	*)
 	(* Inverse method with complete, non-convex result *)
 	| Parsed_IM of parsed_pval
 
-	(* Non-complete inverse method with convex result *)
+(*	(* Non-complete inverse method with convex result *)
 	| Parsed_ConvexIM of parsed_pval
 
 	(* Parametric reachability preservation *)
@@ -430,7 +419,7 @@ type parsed_property_type =
 	| Parsed_RandomSeq_cartography  of parsed_pdomain * int
 
 	(* Parametric reachability preservation *)
-	| Parsed_PRPC of parsed_pdomain
+	| Parsed_PRPC of parsed_pdomain*)
 
 
 

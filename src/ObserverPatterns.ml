@@ -94,10 +94,19 @@ let lc_x_eq_0 x =
 (** Returns true whether the observer requires one clock *)
 let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 	match parsed_property.property with
-	| Parsed_EF _ -> false
-	| Parsed_Action_deadline _ -> true
+	| Parsed_EF _
+	| Parsed_AGnot _
+
+	| Parsed_EFpmin _
+	| Parsed_EFtmin _
+
+	| Parsed_IM _
+
+		->
+	false
+(* 	| Parsed_Action_deadline _ -> true *)
 	(*** TODO: finish later ***)
-	| _ -> raise (NotImplemented "ObserverPatterns.needs_clock")
+(* 	| _ -> raise (NotImplemented "ObserverPatterns.needs_clock") *)
 
 
 (*(* Create a list of unreachable_global_location from a single bad location *)
@@ -117,13 +126,17 @@ let new_elements (parsed_property : ParsingStructure.parsed_property) =
 	(* No observer required: does not build anything *)
 	| ParsingStructure.Parsed_EF _
 	| ParsingStructure.Parsed_AGnot _
+	
+	| ParsingStructure.Parsed_EFpmin _
+	| ParsingStructure.Parsed_EFtmin _
+
 	| ParsingStructure.Parsed_IM _
 		-> (None , None)
 	
-	| Parsed_Action_deadline _
+(*	| Parsed_Action_deadline _
 		-> (Some observer_automaton_name, Some observer_clock_name)
 	(*** TODO: finish later ***)
-	| _ -> raise (NotImplemented "ObserverPatterns.new_elements")
+	| _ -> raise (NotImplemented "ObserverPatterns.new_elements")*)
 
 (*	(* Untimed observers: add automaton, does not add clock *)
 	| ParsingStructure.Action_precedence_acyclic _
@@ -151,10 +164,18 @@ let new_elements (parsed_property : ParsingStructure.parsed_property) =
 let get_nb_locations (parsed_property : ParsingStructure.parsed_property) =
 	match parsed_property.property with
 	(* Not a real observer: does not build anything *)
-	| ParsingStructure.Parsed_EF _ -> 0
-	| Parsed_Action_deadline _ -> 3
+	| ParsingStructure.Parsed_EF _
+	| ParsingStructure.Parsed_AGnot _
+	
+	| ParsingStructure.Parsed_EFpmin _
+	| ParsingStructure.Parsed_EFtmin _
+	
+	| ParsingStructure.Parsed_IM _
+	
+		-> 0
+(* 	| Parsed_Action_deadline _ -> 3 *)
 	(*** TODO: finish later ***)
-	| _ -> raise (NotImplemented "ObserverPatterns.get_nb_locations")
+(* 	| _ -> raise (NotImplemented "ObserverPatterns.get_nb_locations") *)
 	(*
 		(* Not a real observer: does not build anything *)
 		| ParsingStructure.Parsed_unreachable_locations _ -> 0

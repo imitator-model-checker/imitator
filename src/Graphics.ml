@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/01/08
+ * Last modified     : 2020/01/17
  *
  ************************************************************)
  
@@ -1214,7 +1214,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 		(* If BAD location: red *)
 		if Input.has_property() then(
 			(*** TODO ***)
-			raise (NotImplemented ("coloring bad location"))
+			raise (NotImplemented ("Graphics > coloring bad location"))
 	(*		| Some (Unreachable unreachable_global_locations) ->
 				(* Check whether the current location matches one of the unreachable global locations *)
 				State.match_unreachable_global_locations unreachable_global_locations global_location
