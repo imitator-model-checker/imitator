@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/12/13
+ * Last modified     : 2020/01/20
 *****************************************************************)
 
 {
@@ -48,10 +48,12 @@ rule token = parse
 		comment_ocaml lexbuf;
 		token lexbuf }
 
+	(* NOTE: just to forbid their use in the input model *)
  	| "automatically_generated_observer"       { CT_OBSERVER } (* to forbid this keyword, potentially used in the observer *)
  	| "automatically_generated_x_obs"       { CT_OBSERVER_CLOCK } (* to forbid this keyword, potentially used in the observer *)
  	| "special_0_clock" {CT_SPECIAL_RESET_CLOCK_NAME} (* to forbid this keyword, used when a special reset clock is defined *)
 
+ 	(* All keywords *)
  	| "accepting"      { CT_ACCEPTING }
 	| "always"         { CT_ALWAYS }
 	| "and"            { CT_AND }
@@ -101,7 +103,7 @@ rule token = parse
 	| ['a'-'z''A'-'Z']['a'-'z''A'-'Z''_''0'-'9']* as lxm { NAME lxm }
 	| ['0'-'9']*'.'['0'-'9']+ as lxm { FLOAT lxm }
 	| ['0'-'9']+ as lxm { INT(NumConst.numconst_of_string lxm) }
-	| '"' [^'"']* '"' as lxm { STRING lxm } (* a string between double quotes *)
+(*	| '"' [^'"']* '"' as lxm { STRING lxm } *) (* a string between double quotes *)
 
 	| "<="             { OP_LEQ }
 	| ">="             { OP_GEQ }

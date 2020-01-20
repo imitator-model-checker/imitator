@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2019/12/16
+ * Last modified     : 2020/01/20
  *
  ************************************************************/
 
@@ -55,7 +55,7 @@ let unzip l = List.fold_left
 %token <NumConst.t> INT
 %token <string> FLOAT
 %token <string> NAME
-%token <string> STRING
+/* %token <string> STRING */
 %token <ParsingStructure.parsed_model> INCLUDE
 
 %token OP_PLUS OP_MINUS OP_MUL OP_DIV
@@ -159,7 +159,7 @@ include_file_list:
 /************************************************************/
 
 declarations:
-	include_file_list CT_VAR decl_var_lists { $3 }
+	| include_file_list CT_VAR decl_var_lists { $3 }
 	| { []}
 ;
 
@@ -169,7 +169,7 @@ declarations:
 /************************************************************/
 
 decl_var_lists:
-	decl_var_list COLON var_type SEMICOLON decl_var_lists { (($3, $1) :: $5) }
+	| decl_var_list COLON var_type SEMICOLON decl_var_lists { (($3, $1) :: $5) }
 	| { [] }
 ;
 
@@ -199,7 +199,7 @@ var_type:
 /************************************************************/
 
 automata:
-	automaton automata { $1 :: $2 }
+	| automaton automata { $1 :: $2 }
 	| include_file automata { include_list := $1 :: !include_list; $2 }
 	| { [] }
 ;
@@ -207,7 +207,7 @@ automata:
 /************************************************************/
 
 automaton:
-	CT_AUTOMATON NAME prolog locations CT_END
+	| CT_AUTOMATON NAME prolog locations CT_END
 	{
 		($2, $3, $4)
 	}
@@ -238,20 +238,20 @@ initialization:
 /************************************************************/
 
 state_initialization:
-	AMPERSAND convex_predicate {}
+	| AMPERSAND convex_predicate {}
 	| {}
 ;
 
 /************************************************************/
 
 sync_labels:
-	CT_SYNCLABS COLON name_list SEMICOLON { $3 }
+	| CT_SYNCLABS COLON name_list SEMICOLON { $3 }
 ;
 
 /************************************************************/
 
 name_list:
-	name_nonempty_list { $1 }
+	| name_nonempty_list { $1 }
 	| { [] }
 ;
 
@@ -342,14 +342,14 @@ stopwatches:
 /************************************************************/
 
 transitions:
-	transition transitions { $1 :: $2 }
+	| transition transitions { $1 :: $2 }
 	| { [] }
 ;
 
 /************************************************************/
 
 transition:
-	CT_WHEN convex_predicate update_synchronization CT_GOTO NAME SEMICOLON
+	| CT_WHEN convex_predicate update_synchronization CT_GOTO NAME SEMICOLON
 	{
 		let update_list, sync = $3 in
 			$2, update_list, sync, $5
@@ -370,20 +370,20 @@ update_synchronization:
 /************************************************************/
 
 updates:
-	CT_DO LBRACE update_list RBRACE { $3 }
+	| CT_DO LBRACE update_list RBRACE { $3 }
 ;
 
 /************************************************************/
 
 update_list:
-	update_nonempty_list { $1 }
+	| update_nonempty_list { $1 }
 	| { [] }
 ;
 
 /************************************************************/
 
 update_nonempty_list:
-	update COMMA update_list { Normal $1 :: $3}
+	| update COMMA update_list { Normal $1 :: $3}
 	| update { [Normal $1] }
 	| condition_update COMMA update_list { Condition $1 :: $3}
 	| condition_update { [Condition $1] }
@@ -465,7 +465,7 @@ arithmetic_factor:
 
 /* We allow an optional "&" at the beginning of a convex predicate (sometimes useful) */
 convex_predicate:
-	ampersand_opt convex_predicate_fol { $2 }
+	| ampersand_opt convex_predicate_fol { $2 }
 ;
 
 convex_predicate_fol:
@@ -480,7 +480,7 @@ linear_constraint:
 ;
 
 relop:
-	  OP_L { PARSED_OP_L }
+	| OP_L { PARSED_OP_L }
 	| OP_LEQ { PARSED_OP_LEQ }
 	| OP_EQ { PARSED_OP_EQ }
 	| OP_NEQ { PARSED_OP_NEQ }
@@ -521,22 +521,22 @@ rational_linear_term:
 ;
 
 rational:
-	integer { $1 }
+	| integer { $1 }
 	| float { $1 }
 	| integer OP_DIV pos_integer { (NumConst.div $1 $3) }
 ;
 
 integer:
-	pos_integer { $1 }
+	| pos_integer { $1 }
 	| OP_MINUS pos_integer { NumConst.neg $2 }
 ;
 
 pos_integer:
-	INT { $1 }
+	| INT { $1 }
 ;
 
 float:
-  pos_float { $1 }
+	| pos_float { $1 }
 	| OP_MINUS pos_float { NumConst.neg $2 }
 ;
 
