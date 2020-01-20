@@ -51,14 +51,20 @@
 
 \imitator{} addresses several variants of the following problem:
 ``given a concurrent timed system, what are the values of the timing constants that guarantee that the model of the system satisfies some property?''
-Specifically, \imitator{} implements parametric safety analysis~\cite{AHV93,JLR15}, the inverse method \cite{ACEF09,AM15}, the behavioral cartography~\cite{AF10}, and parametric reachability preservation~\cite{ALNS15}.
+Among other algorithms, \imitator{} implements
+	parametric safety analysis~\cite{AHV93,JLR15},
+	the inverse method \cite{ACEF09,AM15},
+	parametric deadlock-freeness synthesis~\cite{Andre16},
+	the behavioral cartography~\cite{AF10},
+	and
+	parametric reachability preservation~\cite{ALNS15}.
 Some algorithms can also run distributed on a cluster.
 Numerous analysis options are available.
 
 \imitator{} is a command-line only tool, but that can output results in graphical form.
 % Furthermore, a graphical user interface is available in the \CosyVerif{} platform~\cite{AHHKLLP13}.
 
-\imitator{} was able to verify numerous case studies from the literature and from the industry, such as communication protocols, hardware asynchronous circuits, schedulability problems and various other systems such as coffee machines (probably the most critical systems from a researcher point of view).
+\imitator{} was able to verify numerous case studies from the literature and from the industry, such as communication protocols, hardware asynchronous circuits, schedulability problems and various other systems such as models of coffee machines (probably the most critical systems from a researcher point of view).
 Numerous benchmarks are available at \imitator{} Web page~\cite{imitator}.
 
 In this document, we present the input syntax, we formally define the input model of \imitator{}, and we explain how to perform various analyses using the numerous options.
@@ -77,13 +83,17 @@ We first briefly introduce the syntax using a simple example for readers familia
 A formal (and nearly exhaustive) definition of \imitator{} parametric timed automata (\NIPTA{}) can be found in \cref{section:IPTA}.
 The complete syntax is given in \cref{chapter:grammar}.
 
-\paragraph{Generalities}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Generalities}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \imitator{} performs parametric verification of models specified using networks of \imitator{} parametric timed automata (hereafter \NIPTA{}).
 An \imitator{} parametric timed automaton (hereafter \IPTA{}) is a variant of parametric automata (as introduced in~\cite{AHV93}).
 \IPTA{} and \NIPTA{} are formalized in \cref{section:NIPTA}.
 
 The input syntax of \imitator{} is originally based on the syntax of \hytech{}~\cite{HHW95}, with several improvements.
-Actually, all standard \hytech{} files describing only PTA (and not more general systems like linear hybrid automata \cite{ACHH92}) can be analyzed directly by \imitator{} (sometimes with very minor changes).
+%
+Still nowadays, the syntax of \hytech{} (and \phaverLite{}, reusing itself in part the \hytech{}) models is remarkably close to \imitator{}.
+% Actually, all standard \hytech{} files describing only PTA (and not more general systems like linear hybrid automata \cite{ACHH92}) can be analyzed directly by \imitator{} (sometimes with very minor changes).
 
 Comments are OCaml-like comments starting with \styleIMI{(*} and ending with \styleIMI{*)}.
 As in OCaml, comments can be nested.
@@ -99,7 +109,10 @@ Fischer mutual exclusion protocol is a protocol that guarantees the mutual exclu
 %
 % \IncludeIMIfile{../examples/Coffee/coffeeDrinker.imi}
 
-\paragraph{Input syntax}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Model syntax}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 We give below this model using the \imitator{} syntax.
 This model is given in graphical form in \cref{figure:fischer}.\footnote{%
 	This \LaTeX{} representation, that makes use of the \LaTeX{} TikZ library, was automatically output by \imitator{}, using option \styleOption{-PTA2TikZ}, followed by some manual positioning optimization.
@@ -198,24 +211,27 @@ Finally, parameters are bound to be positive or null (this is not assumed by def
 
 Note that the initial definition can introduce more complex constraints on clocks, parameters and discrete variables; see \cref{section:init} for details.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Property syntax}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \paragraph{Property specification}
 In this model, the correctness property is that two processes cannot be in the critical section at the same time; as explained above, this is equivalent to the fact that the \styleIMI{obs\_violation} location of the \styleIMI{observer} \IPTA{} is unreachable.
 This is input in the model as follows:
 \begin{center}
-	\styleIMI{property := unreachable loc[observer] = obs\_violation;}
+	\styleIMI{property := \#synth EF(loc[observer] = obs\_violation);}
 \end{center}
-More elaborate properties are detailed in \cref{ss:mode:prop} (however, they all \emph{reduce} to reachability, so more complex properties such as Büchi-like properties or fairness are not yet supported by \imitator{}).
+More elaborate properties are detailed in \cref{ss:mode:prop} (however, most properties in \imitator{} \emph{reduce} to reachability, and more complex properties such as Büchi-like properties or fairness are not yet supported by \imitator{}).
 
 
 \paragraph{Parameter synthesis}
 Finally, let us run \imitator{} on this case study.
 Quite naturally, what we would be interested in is knowing for which parameter valuations this protocol is correct, \ie{} no more than one process can be present in the critical section at one time.
-Assuming this model is input in file \stylePath{fischer.imi}, the command calling \imitator{} is as follows:
+Assuming this model is input in file \stylePath{fischer.imi} and the property is in file \stylePath{fischer.imiprop}, the command calling \imitator{} is as follows:
 
-\styleCommand{\binimitator{} fischer.imi -mode EF -merge}
+\styleCommand{\binimitator{} fischer.imi fischer.imiprop}
 
-In this command, \styleOption{-mode EF} calls the algorithm \EFsynth{} that synthesizes valuations reaching a given location (see \cref{ss:mode:EFsynth}); and \styleOption{-merge} is a merging technique reducing the state space that, for this model, ensures termination (see \cite{AFS13atva} for more details on merging).
+% In this command, \styleOption{-mode EF} calls the algorithm \EFsynth{} that synthesizes valuations reaching a given location (see \cref{ss:mode:EFsynth}); and \styleOption{-merge} is a merging technique reducing the state space that, for this model, ensures termination (see \cite{AFS13atva} for more details on merging).
 
 The result of the call to \imitator{} is
 
@@ -536,46 +552,50 @@ We give here the commands corresponding to the main analysis features of \imitat
 We only give the most useful options.
 For more detailed commands, and a complete list of options, see \cref{chapter:options}.
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Symbolic state space computation}\label{ss:mode:statespace}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\imitator{} can compute the entire symbolic state space (``parametric zone graph'').
-Of course, the state space may be infinite, and this analysis is not guaranteed to terminate.
-
-The standard command is:
-
-\styleCommand{\binimitator{} model.imi -mode statespace -output-states}
-
-The option \styleOption{-output-states} generates a file with a textual description of all states (without this option, \imitator{} will not output anything).
-Each state is represented with its discrete part (location and values of the discrete variables), the clock and parameter constraints, and below their projection onto the parameters; in addition, if \styleFileContent{projectresult} is defined in the model (see \cref{section:projection}), the projection onto a specific set of parameters is also added.
-
-\imitator{} can also output the trace set in a graphical form using option \styleOption{-output-trace-set}.
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{EF-synthesis}\label{ss:mode:EFsynth}
+\section{Synthesis and emptiness}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Reachability}\label{ss:mode:EFunsafe}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\paragraph{Main command}
+The standard \imitator{} command for all algorithms is:
+
+\styleCommand{\binimitator{} model.imi property.imiprop}
+
+\paragraph{Synthesis and emptiness}
+\imitator{} features two modes for properties:
+
+\begin{itemize}
+	\item synthesis (\styleIMI{\#synth}): synthesizing all valuations such that a property holds;
+	\item witness (\styleIMI{\#exhibit}): find (at least) one valuation such that a property holds.
+\end{itemize}
+
+While the ``witness'' mode is close to (the contrary of) emptiness-checking, the ``witness'' mode is not strictly speaking an emptiness check: rather, the algorithm stops as soon as it finds some valuations, but there may be more than one, so the result can still be symbolic.
+For example, in the case of reachability-checking, \imitator{} would output the parameter valuations associated with the first target symbolic state found.
+
+
+While all properties implement synthesis, not all of them implement emptiness; a warning would then be raised.
+
+In the following, we now describe the algorithms implemented in \imitator{}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Reachability}\label{ss:mode:EFsynth}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 A main problem in parametric timed automata is to compute the set of parameter valuations for which some location (for instance, an error location) is reachable.
 
-The property must be specified as follows, at the end of the model (after the initial state definition):
+The property syntax is as follows:\footnote{%
+	\imitator{} uses the TCTL syntax, where EF notably denotes reachability.
+}
 
-\styleIMI{property := unreachable loc[AUTOMATON] = LOCATION;}\\
-where \styleIMI{AUTOMATON} is an automaton name, and \styleIMI{LOCATION} is a location name.
+\styleIMI{property := \#synth EF(statepredicate);}\\
+where \styleIMI{statepredicate} is a state predicate, for example of the form \styleIMI{loc[AUTOMATON] = LOCATION}, where \styleIMI{AUTOMATON} is an automaton name, and \styleIMI{LOCATION} is a location name.
 
 The algorithm \EFsynth{} implemented in \imitator{} is a basic breadth-first procedure, close to the one described in \cite{JLR15}.
 Of course, the EF-emptiness problem being undecidable~\cite{AHV93}, the analysis is not guaranteed to terminate.
 
-The standard command is:
-
-\styleCommand{\binimitator{} model.imi -mode EFunsafe -merge -incl -output-result}
-
+% The standard command is:
+% 
+% \styleCommand{\binimitator{} model.imi -mode EFunsafe -merge -incl -output-result}
 
 The option \styleOption{-output-result} is not compulsory, but allows one to obtain a result in an external text file (\stylePath{model.res}) formatted using a standardized manner (see \cref{chapter:result}), and therefore easier to parse using an external tool than the terminal output.
 
@@ -589,16 +609,19 @@ The option \styleOption{-dynamic-elimination} can also be used to reduce the sta
 	output the result to a text file using a normalized syntax (option \styleOption{-output-result}), that can be then scripted from external programs.
 
 
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Safety}\label{ss:mode:EF}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Safety}\label{ss:mode:EF}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Often, we are rather interested in \emph{safety} synthesis, \ie{} the set of valuations for which the target location is unreachable.
 
-The standard command is:
+% The standard command is:
+% 
+% \styleCommand{\binimitator{} model.imi -mode EF -merge -incl -output-result}
 
-\styleCommand{\binimitator{} model.imi -mode EF -merge -incl -output-result}
+The property syntax is as follows:
 
+\styleIMI{property := \#synth AGnot(statepredicate);}
 
 Internally, this algorithm works exactly the same as the reachability-synthesis, and at the end the obtained constraint is \emph{negated} (with parameters being constrained to be included in the initial state valuations).
 
@@ -617,16 +640,14 @@ Internally, this algorithm works exactly the same as the reachability-synthesis,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 This algorithm synthesizes the minimum valuation for a given parameter for which a given location is reachable.
-The property must be specified as for \EFsynth{} (see \cref{ss:mode:EFsynth}).
+% The property must be specified as for \EFsynth{} (see \cref{ss:mode:EFsynth}).
 This algorithm is briefly mentioned in~\cite{ABPV19}.
 
-In addition, the parameter to be minimized must be specified at the end of the model as follows:
+The property syntax is as follows:
 
-\styleIMI{minimize(parameter\_name)}\\
+\styleIMI{property := \#synth EFpmin(statepredicate, p);}\\
+where \styleIMI{p} is the parameter the value of which must be minimized.
 
-The standard command is:
-
-\styleCommand{\binimitator{} model.imi -mode EFmin -merge -incl -output-result}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -635,73 +656,75 @@ The standard command is:
 
 This algorithm is the dual of EF-minimization (see \cref{ss:mode:EFmin}).
 
-The parameter to be maximized must be specified at the end of the model as follows:
+The property syntax is as follows:
 
-\styleIMI{maximize(parameter\_name)}\\
-
-The standard command is:
-
-\styleCommand{\binimitator{} model.imi -mode EFmax -merge -incl -output-result}
+\styleIMI{property := \#synth EFpmax(statepredicate, p);}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{EF with optimal time reachability}\label{ss:mode:EFopt}
+\section{EF with minimal time reachability}\label{ss:mode:EFopt}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 This algorithm synthesizes the parameter valuations for which a given location is reachable in minimal time~\cite{ABPV19}.
-The property must be specified as for \EFsynth{} (see \cref{ss:mode:EFsynth}).
+% The property must be specified as for \EFsynth{} (see \cref{ss:mode:EFsynth}).
 
 Our algorithm uses a priority queue, with priority to the earliest successor for the selection of the next state.
 
-The standard command is:
+% The standard command is:
+% 
+% \styleCommand{\binimitator{} model.imi -mode EFsynthminpq -merge -incl -output-result}
 
-\styleCommand{\binimitator{} model.imi -mode EFsynthminpq -merge -incl -output-result}
+The property syntax is as follows:
+
+\styleIMI{property := \#synth EFtmin(statepredicate);}\\
+where \styleIMI{p} is the parameter the value of which must be minimized.
+
+\emph{The maximum time reachability is currently not implemented.}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Parameter synthesis using properties}\label{ss:mode:prop}
+\section{Parameter synthesis using patterns}\label{ss:mode:prop}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \imitator{} basically only supports bad state reachability synthesis on the one hand, and algorithms such as the inverse method and the cartography on the other hand.
 However, many correctness properties can be encoded using reachability using \emph{observers} (see \cite{ABL98,ABBL98,ABBL03,Andre13ICECCS}).
 
-Encoding observers can be done manually (using \adhoc{} \IPTA{}), or using predefined correctness properties commonly met in the literature.
+Encoding observers can be done manually (using \adhoc{} \IPTA{}), or using predefined correctness property patterns commonly met in the literature.
 
-If using a predefined property, the property must be specified as follows, at the end of the model (after the initial state definition):
+If using a predefined property pattern, the property pattern must be specified as follows:
 
-\styleIMI{property := [PROP]}
-
-\styleIMI{[PROP]} must conform to one of the following patterns, where \styleIMI{AUTOMATON} is an automaton name, \styleIMI{LOCATION} is a location name, \styleIMI{a}, \styleIMI{a1}, \styleIMI{a2} are actions, and the deadline \styleIMI{d} is a (possibly parametric) linear expression:
+\styleIMI{property := \#synth [PROP]}
+\\
+where \styleIMI{[PROP]} must conform to one of the following patterns, where  \styleIMI{a}, \styleIMI{a1}, \styleIMI{a2} are actions, and the deadline \styleIMI{d} is a (possibly parametric) linear expression:
 
 \begin{itemize}
-	\item \styleIMI{property := unreachable loc[AUTOMATON] = LOCATION}
-	\item \styleIMI{property := if a2 then a1 has happened before}
-	\item \styleIMI{property := everytime a2 then a1 has happened before}
-	\item \styleIMI{property := everytime a2 then a1 has happened once before}
-% 	\item \styleIMI{property := if a1 then eventually a2}
+	\item \styleIMI{if a2 then a1 has happened before}
+	\item \styleIMI{everytime a2 then a1 has happened before}
+	\item \styleIMI{everytime a2 then a1 has happened once before}
+% 	\item \styleIMI{if a1 then eventually a2}
 		% TODO
-% 	\item \styleIMI{property := everytime a1 then eventually a2}
+% 	\item \styleIMI{everytime a1 then eventually a2}
 		% TODO
-% 	\item \styleIMI{property := everytime a1 then eventually a2 once before next}
+% 	\item \styleIMI{everytime a1 then eventually a2 once before next}
 		% TODO
-	\item \styleIMI{property := a within d}
-	\item \styleIMI{property := if a2 then a1 has happened within d before}
-	\item \styleIMI{property := everytime a2 then a1 has happened within d before}
-	\item \styleIMI{property := everytime a2 then a1 has happened once within d before}
-	\item \styleIMI{property := if a1 then eventually a2 within d}
-	\item \styleIMI{property := everytime a1 then eventually a2 within~d}
-	\item \styleIMI{property := if a1 then eventually a2 within d once before next}
-	\item \styleIMI{property := sequence a1, \dots, an}
-	\item \styleIMI{property := always sequence a1, \dots, an}
+	\item \styleIMI{a within d}
+	\item \styleIMI{if a2 then a1 has happened within d before}
+	\item \styleIMI{everytime a2 then a1 has happened within d before}
+	\item \styleIMI{everytime a2 then a1 has happened once within d before}
+	\item \styleIMI{if a1 then eventually a2 within d}
+	\item \styleIMI{everytime a1 then eventually a2 within~d}
+	\item \styleIMI{if a1 then eventually a2 within d once before next}
+	\item \styleIMI{sequence a1, \dots, an}
+	\item \styleIMI{always sequence a1, \dots, an}
 \end{itemize}
 
 The semantics of these properties is detailed in~\cite{Andre13ICECCS}.
 
-Then, the command to synthesize parameters is the same as for the EF-synthesis:
-
-\styleCommand{\binimitator{} model.imi -mode EF -merge -incl -output-result}
-
-Once more, options \styleOption{-merge} and \styleOption{-incl} are optional, but often improve efficiency and termination.
+% Then, the command to synthesize parameters is the same as for the EF-synthesis:
+% 
+% \styleCommand{\binimitator{} model.imi -mode EF -merge -incl -output-result}
+% 
+% Once more, options \styleOption{-merge} and \styleOption{-incl} are optional, but often improve efficiency and termination.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -729,6 +752,7 @@ As usual, \imitator{} can also
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Any loop synthesis}\label{ss:loop}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
 
 Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, \ie{} an infinite run. % TODO: ~\cite{AL17}
 
@@ -972,6 +996,25 @@ Again, a bad location (as in \cref{ss:mode:EFsynth}) or a property (as in \cref{
 
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Symbolic state space computation}\label{ss:mode:statespace}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Finally, instead of synthesizing parameter valuations or checking for emptiness,
+\imitator{} can also compute the entire symbolic state space (``parametric zone graph'').
+Of course, the state space may be infinite, and this analysis is not guaranteed to terminate.
+
+The standard command is:
+
+\styleCommand{\binimitator{} model.imi -mode statespace -output-states}
+
+The option \styleOption{-output-states} generates a file with a textual description of all states (without this option, \imitator{} will not output anything).
+Each state is represented with its discrete part (location and values of the discrete variables), the clock and parameter constraints, and below their projection onto the parameters.
+% ; in addition, if \styleFileContent{projectresult} is defined in the model (see \cref{section:projection}), the projection onto a specific set of parameters is also added.
+
+\imitator{} can also output the trace set in a graphical form using option \styleOption{-output-trace-set}.
+% TODO: example
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1055,6 +1098,9 @@ The result can be projected onto selected parameters, by using the following syn
 In that case, all parameters not in that set are eliminated using variable elimination, and the result in the result file only contains the selected parameters.
 
 This projection is also added to the states description (see option \styleOption{-output-states}) and to the graphical state space output (see option \styleOption{-output-trace-set-verbose}).
+
+
+
 
 
 
@@ -1279,6 +1325,8 @@ The node positioning is not yet supported (locations are depicted vertically), s
 \begin{example}
 	Consider again the case study given in \cref{chapter:syntax-introduction}: a TikZ export was given in \cref{figure:fischer}, with some manual positioning.
 \end{example}
+
+
 
 
 
@@ -2550,6 +2598,12 @@ We define each of those two components below.
 % \end{tabular}
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Grammar of the property file}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% TODO
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Grammar of the reference valuation file}
@@ -2606,8 +2660,6 @@ The following words are reserved keywords and cannot be used as names for automa
 \styleIMI{eventually},
 \styleIMI{everytime},
 \styleIMI{False},
-% \styleIMI{forward},
-% \styleIMI{from},
 \styleIMI{goto},
 \styleIMI{happened},
 \styleIMI{has},
@@ -2627,7 +2679,6 @@ The following words are reserved keywords and cannot be used as names for automa
 \styleIMI{parameter},
 \styleIMI{projectresult},
 \styleIMI{property},
-% \styleIMI{reach},
 \styleIMI{region},
 \styleIMI{sequence},
 \styleIMI{special\_0\_clock},
