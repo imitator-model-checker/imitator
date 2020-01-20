@@ -367,8 +367,8 @@ let print_contributors()  =
 	print_string ("    * Ulrich Kühne        (2010 - 2011)\n");
 	print_string ("    * Nguyễn Hoàng Gia    (2014 - 2016)\n");
 	print_string ("    * Laure Petrucci      (2019 - " ^ (BuildInfo.build_year) ^ ")\n");
+	print_string ("    * Jaco van de Pol     (2019 - " ^ (BuildInfo.build_year) ^ ")\n");
 	print_string ("    * Romain Soulat       (2010 - 2013)\n");
-	print_string ("    * Jaco Van de Pol     (2019 - " ^ (BuildInfo.build_year) ^ ")\n");
 	print_string "\n";
 	print_string "    Compiling, testing and packaging:\n";
 	print_string "    * Corentin Guillevic  (2015)\n";
