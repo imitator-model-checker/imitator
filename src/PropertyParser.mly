@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/01/17
+ * Last modified     : 2020/01/22
  *
  ************************************************************/
 
@@ -62,7 +62,7 @@ let resolve_property l =
 	CT_EF CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXHIBIT
 	CT_FALSE
 	CT_HAPPENED CT_HAS
-	CT_IF CT_IN CT_IS
+	CT_IF CT_IN CT_INFCYCLE CT_INFCYCLETHROUGH CT_IS
 	CT_LOC CT_LOOP
 	CT_MAXIMIZE CT_MINIMIZE
 	CT_NEXT CT_NOT
@@ -158,6 +158,17 @@ property:
 	| CT_EFtmin state_predicate { Parsed_EFtmin ($2) }
 
 	
+	/*------------------------------------------------------------*/
+	/* Cycles */
+	/*------------------------------------------------------------*/
+	
+	/* Infinite-run (cycle) */
+	| CT_INFCYCLE { Parsed_Cycle }
+
+	/* Accepting infinite-run (cycle) */
+	| CT_INFCYCLETHROUGH state_predicate { Parsed_Acc_Cycle $2 }
+
+
 	/*------------------------------------------------------------*/
 	/* Inverse method, trace preservation, robustness */
 	/*------------------------------------------------------------*/

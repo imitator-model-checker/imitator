@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2020/01/07
+ * Last modified     : 2020/01/22
  *
  ************************************************************)
 
@@ -30,7 +30,7 @@ class virtual algoEFsynth :
 		(* Class variables *)
 		(************************************************************)
 
-		method algorithm_name : string
+		method virtual algorithm_name : string
 		
 		(* Non-necessarily convex constraint allowing the reachability of the bad location *)
 		val mutable bad_constraint : LinearConstraint.p_nnconvex_constraint

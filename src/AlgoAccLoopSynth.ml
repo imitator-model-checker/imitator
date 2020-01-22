@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/17
- * Last modified     : 2019/07/22
+ * Last modified     : 2020/01/22
  *
  ************************************************************)
 
@@ -40,9 +40,21 @@ class algoAccLoopSynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "AccLoopSynth"
+	method algorithm_name = "AcceptingCycle"
 	
 	
+	(*** NOTE: dummy initialization ***)
+	val state_predicate : AbstractProperty.state_predicate =
+		(*** TODO: pass as a PARAMETER of the algorithm ***)
+		(*** UGLY!!! ***)
+		match (Input.get_property()).property with
+			| Accepting_cycle state_predicate
+				-> state_predicate
+			
+			(*** TODO ***)
+			
+			| _ -> raise (InternalError ("Problem when getting the state predicate when initializing AcceptingCycle"))
+		
 	(************************************************************)
 	(* Class methods *)
 	(************************************************************)
@@ -54,17 +66,9 @@ class algoAccLoopSynth =
 		(* Retrieve the model *)
 		let model = Input.get_model() in
 
-		(* Get unreachable locations *)
-		let unreachable_locations = match model.correctness_condition with
-			| Some (Unreachable unreachable_global_locations)
-			| Some (Reachable unreachable_global_locations)
-				-> unreachable_global_locations
-			| _ -> raise (InternalError "Reachability property expected in AccLoopSynth.is_accepting scc")
-		in
-
-		(* Accepting if at least one state matches the reachability condition *)
+		(* Accepting if at least one state in the SCC matches the state predicate *)
 		List.exists (fun state_index -> 
-			State.match_unreachable_global_locations unreachable_locations (StateSpace.get_location state_space (StateSpace.get_global_location_index state_space state_index))
+			State.match_state_predicate state_predicate (StateSpace.get_state state_space state_index)
 		) scc
 
 

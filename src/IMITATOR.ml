@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/01/17
+ * Last modified     : 2020/01/22
  *
  ************************************************************)
 
@@ -524,16 +524,17 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			(************************************************************)
 			| AF_synthesis ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAF.algoAFsynth in myalgo
-
+*)
 			(************************************************************)
 			(* Parametric loop synthesis *)
 			(************************************************************)
-			| Loop_synthesis ->
+			| Cycle ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoLoopSynth.algoLoopSynth in myalgo
 
-			| Acc_loop_synthesis ->
+			| Accepting_cycle _ ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth in myalgo
 
+				(*
 			| Acc_loop_synthesis_NDFS ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS in myalgo
 

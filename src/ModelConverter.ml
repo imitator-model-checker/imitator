@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/01/17
+ * Last modified     : 2020/01/22
  *
  ************************************************************)
 
@@ -2523,6 +2523,17 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 
 		
 		(*------------------------------------------------------------*)
+		(* Cycles *)
+		(*------------------------------------------------------------*)
+		
+		(** Infinite-run (cycle) *)
+		| Parsed_Cycle -> ()
+
+		(** Accepting infinite-run (cycle) *)
+		| Parsed_Acc_Cycle parsed_state_predicate
+			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
+		
+		(*------------------------------------------------------------*)
 		(* Inverse method, trace preservation, robustness *)
 		(*------------------------------------------------------------*)
 		
@@ -3188,6 +3199,18 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		
 		
 		(*------------------------------------------------------------*)
+		(* Cycles *)
+		(*------------------------------------------------------------*)
+		
+		(** Infinite-run (cycle) *)
+		| Parsed_Cycle -> true
+
+		(** Accepting infinite-run (cycle) *)
+		| Parsed_Acc_Cycle parsed_state_predicate ->
+			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+		
+		
+		(*------------------------------------------------------------*)
 		(* Inverse method, trace preservation, robustness *)
 		(*------------------------------------------------------------*)
 		
@@ -3523,6 +3546,20 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		(* Reachability with minimal-time *)
 		| Parsed_EFtmin parsed_state_predicate ->
 			EFtmin (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+			,
+			None
+		
+		
+		(*------------------------------------------------------------*)
+		(* Cycles *)
+		(*------------------------------------------------------------*)
+		
+		(** Infinite-run (cycle) *)
+		| Parsed_Cycle -> Cycle, None
+
+		(** Accepting infinite-run (cycle) *)
+		| Parsed_Acc_Cycle parsed_state_predicate ->
+			Accepting_cycle (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
 		

@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/01/17
+ * Last modified     : 2020/01/22
 *****************************************************************)
 
 {
@@ -59,6 +59,11 @@ rule token = parse
  	| "has"            { CT_HAS }
 	| "if"             { CT_IF }
 	| "in"             { CT_IN }
+	| "inf_cycle"      { CT_INFCYCLE }
+	| "infcycle"       { CT_INFCYCLE }
+	| "inf_cycle_through" { CT_INFCYCLETHROUGH }
+	| "infcyclethrough"{ CT_INFCYCLETHROUGH }
+	| "loopthrough"    { CT_INFCYCLETHROUGH }
 	| "is"             { CT_IS }
 	| "loc"            { CT_LOC }
 	| "loop"           { CT_LOOP }

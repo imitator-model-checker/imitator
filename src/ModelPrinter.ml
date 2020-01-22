@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/01/17
+ * Last modified     : 2020/01/22
  *
  ************************************************************)
 
@@ -752,6 +752,18 @@ let string_of_abstract_property model property =
 			"EFpmin(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 		
 
+		(*------------------------------------------------------------*)
+		(* Cycles *)
+		(*------------------------------------------------------------*)
+		
+		(** Infinite-run (cycle) *)
+		| Cycle -> "inf_cycle"
+
+		(** Accepting infinite-run (cycle) *)
+		| Accepting_cycle state_predicate ->
+		"inf_cycle_through(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+
+		
 		(*------------------------------------------------------------*)
 		(* Inverse method, trace preservation, robustness *)
 		(*------------------------------------------------------------*)

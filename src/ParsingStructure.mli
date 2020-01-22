@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/01/17
+ * Last modified     : 2020/01/22
  *
  ****************************************************************)
 
@@ -359,7 +359,7 @@ type parsed_property_type =
 (* 	| Parsed_EFexemplify of parsed_state_predicate *)
 	
 
-	(*(*------------------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	(* Cycles *)
 	(*------------------------------------------------------------*)
 	
@@ -367,9 +367,9 @@ type parsed_property_type =
 	| Parsed_Cycle
 
 	(** Accepting infinite-run (cycle) *)
-	| Parsed_Acc_Cycle
+	| Parsed_Acc_Cycle of parsed_state_predicate
 
-	(** Infinite-run (cycle) with non-Zeno assumption *)
+	(*(** Infinite-run (cycle) with non-Zeno assumption *)
 	| Parsed_NZCycle
 	
 

@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/01/17
+ * Last modified     : 2020/01/22
  *
  ************************************************************)
 
@@ -104,6 +104,8 @@ type property =
 (*	(** EF-synthesis with examples of (un)safe words *)
 	| EFexemplify of state_predicate
 	
+	*)
+	
 
 	(*------------------------------------------------------------*)
 	(* Cycles *)
@@ -113,9 +115,9 @@ type property =
 	| Cycle
 
 	(** Accepting infinite-run (cycle) *)
-	| Acc_Cycle
+	| Accepting_cycle of state_predicate
 
-	(** Infinite-run (cycle) with non-Zeno assumption *)
+(*	(** Infinite-run (cycle) with non-Zeno assumption *)
 	| NZCycle
 	
 

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2020/01/09
+ * Last modified     : 2020/01/22
  *
  ************************************************************)
 
@@ -58,7 +58,7 @@ class virtual algoEFsynth =
 			
 			(*** TODO ***)
 			
-			| _ -> raise (NotImplemented ("algoEFsynth > getting the state predicate when initializing EFsynth"))
+			| _ -> raise (InternalError ("Unexpected error when getting the state predicate when initializing EF"))
 		
 	
 
@@ -96,7 +96,7 @@ class virtual algoEFsynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "EF virtual"
+(* 	method algorithm_name = "EF virtual" *)
 	
 	
 	

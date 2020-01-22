@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/01/17
+ * Last modified     : 2020/01/22
  *
  ************************************************************)
 
@@ -2460,6 +2460,7 @@ class virtual algoStateBased =
 				| EF state_predicate
 				| EFpmin (state_predicate, _)
 				| EFtmin state_predicate
+				| Accepting_cycle state_predicate
 				->
 					(* Check whether the current state matches the state predicate *)
 					if State.match_state_predicate state_predicate state then(
@@ -2468,6 +2469,9 @@ class virtual algoStateBased =
 	
 				(* Safety *)
 				| AGnot _
+				
+				| Cycle
+				
 				(* Inverse method *)
 				| IM _
 					->

@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created:       2013/02/04
- * Last modified: 2020/01/17
+ * Last modified: 2020/01/22
  *
  ************************************************************)
  
@@ -100,6 +100,9 @@ let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_EFpmin _
 	| Parsed_EFtmin _
 
+	| Parsed_Cycle
+	| Parsed_Acc_Cycle _
+
 	| Parsed_IM _
 
 		->
@@ -124,13 +127,16 @@ let single_unreachable_location automaton_index location_index =
 let new_elements (parsed_property : ParsingStructure.parsed_property) =
 	match parsed_property.property with
 	(* No observer required: does not build anything *)
-	| ParsingStructure.Parsed_EF _
-	| ParsingStructure.Parsed_AGnot _
+	| Parsed_EF _
+	| Parsed_AGnot _
 	
-	| ParsingStructure.Parsed_EFpmin _
-	| ParsingStructure.Parsed_EFtmin _
+	| Parsed_EFpmin _
+	| Parsed_EFtmin _
 
-	| ParsingStructure.Parsed_IM _
+	| Parsed_Cycle
+	| Parsed_Acc_Cycle _
+
+	| Parsed_IM _
 		-> (None , None)
 	
 (*	| Parsed_Action_deadline _
@@ -164,13 +170,16 @@ let new_elements (parsed_property : ParsingStructure.parsed_property) =
 let get_nb_locations (parsed_property : ParsingStructure.parsed_property) =
 	match parsed_property.property with
 	(* Not a real observer: does not build anything *)
-	| ParsingStructure.Parsed_EF _
-	| ParsingStructure.Parsed_AGnot _
+	| Parsed_EF _
+	| Parsed_AGnot _
 	
-	| ParsingStructure.Parsed_EFpmin _
-	| ParsingStructure.Parsed_EFtmin _
+	| Parsed_EFpmin _
+	| Parsed_EFtmin _
 	
-	| ParsingStructure.Parsed_IM _
+	| Parsed_Cycle
+	| Parsed_Acc_Cycle _
+
+	| Parsed_IM _
 	
 		-> 0
 (* 	| Parsed_Action_deadline _ -> 3 *)
