@@ -84,6 +84,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % TIKZ
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[svgnames,table]{xcolor}
+
 \usepackage{pgf}
 \usepackage{tikz}
 \usetikzlibrary{arrows,automata,decorations.pathmorphing}
@@ -401,6 +403,22 @@
 }
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% COLORS AND TABLES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\cellHeader}[1]{\cellcolor{blue!20}\textbf{#1}}
+\newcommand{\rowHeader}{\rowcolor{blue!20}}
+
+\definecolor{vertfonce}{rgb}{0.0, 0.5, 0.0}
+\definecolor{rougefonce}{rgb}{1, 0.0, 0.0}
+\newcommand{\compyes}{$\textcolor{vertfonce}{\mathbf{\surd}}$}
+\newcommand{\compno}{$\textcolor{rougefonce}{\mathbf{\times}}$}
+
+\newcommand{\cellYes}{\cellcolor{green!20}\textbf{\compyes}}
+\newcommand{\cellYesNo}{\cellcolor{orange!20}\textbf{\compyes/\compno}}
+\newcommand{\cellNo}{\cellcolor{red!20}\textbf{\compno}}
+\newcommand{\cellNA}{\cellcolor{black!20}N/A}
+\newcommand{\cellUnclear}{\cellcolor{yellow!20}\textbf{?}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % I.E. / E.G. / W.R.T.

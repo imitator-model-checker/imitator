@@ -756,9 +756,14 @@ As usual, \imitator{} can also
 
 Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, \ie{} an infinite run. % TODO: ~\cite{AL17}
 
-The command is:
+% The command is:
+% 
+% \styleCommand{\binimitator{} model.imi -mode LoopSynth -output-result}
 
-\styleCommand{\binimitator{} model.imi -mode LoopSynth -output-result}
+The property syntax is as follows:
+
+\styleIMI{property := \#synth inf\_cycle;}
+
 
 As usual, \imitator{} can also
 	output the trace set in a graphical form (option \styleOption{-output-trace-set})
@@ -770,18 +775,9 @@ As usual, \imitator{} can also
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one \emph{accepting} cycle, \ie{} an infinite run passing infinitely often by an accepting location.
 
-The accepting location is defined as usual using the following syntax:
+The property syntax is as follows:
 
-\begin{center}
-	\styleIMI{property := unreachable loc[pta] = …;}
-\end{center}
-
-…which can be misleading as the property is defined using \styleIMI{unreachable} while the location should actually be reachable.
-Patterns (see \cref{ss:mode:prop}) can also be used. % NOTE: not tested
-
-The command for accepting cycle synthesis is:
-
-\styleCommand{\binimitator{} model.imi -mode AccLoopSynth -output-result}
+\styleIMI{property := \#synth inf\_cycle\_through(statepredicate);}
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -985,7 +981,7 @@ Note that a bad location (as in \cref{ss:mode:EFsynth}) or a property (as in \cr
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 An extension of $\PRP$ to the cartography (named \PRPC{}) is also available: \PRPC{} synthesizes parameter constraints in which the (non-)reachability of $\loc$ is uniform.
-\PRPC{} was showed in~\cite{ALNS15} to be a good alternative to \EFsynth{}, especially when distributed (see option \styleOption{-distributed}).
+\PRPC{} was showed in~\cite{ALNS15} to be a suitable alternative to \EFsynth{}, especially when distributed (see option \styleOption{-distributed}).
 
 This algorithm~$\PRPC$ is called as follows:
 
@@ -993,6 +989,28 @@ This algorithm~$\PRPC$ is called as follows:
 
 Again, a bad location (as in \cref{ss:mode:EFsynth}) or a property (as in \cref{ss:mode:prop}) must be defined in the model.
 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Summary}\label{ss:mode:summary}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{table}[h]
+	{\centering
+	\begin{tabular}{ | l | l | c | c | }
+		\hline
+		\rowHeader{} Algorithm & Syntax & Synth & Witness \\
+		\hline
+		Reachability & \styleIMI{EF(statepredicate)} & \cellYes{} & \cellYes{} \\
+		\hline
+		Safety & \styleIMI{AGnot(statepredicate)} & \cellYes{} & \cellYes{} \\
+		\hline
+	\end{tabular}
+
+	}
+	\label{table:summary:algorithms}
+	\caption{Summary of the algorithms syntax}
+\end{table}
 
 
 
@@ -2641,7 +2659,10 @@ Again, arithmetic expressions (using integers and rationals) can even be used in
 
 The following words are reserved keywords and cannot be used as names for automata, variables, actions or locations.
 
+\styleIMI{\#exhibit},
 \styleIMI{\#include},
+\styleIMI{\#synth},
+\styleIMI{\#witness},
 \styleIMI{accepting},
 \styleIMI{always},
 \styleIMI{and},
