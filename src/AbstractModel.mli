@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/11
- * Last modified     : 2019/12/13
+ * Last modified     : 2020/01/23
  *
  ************************************************************)
 
@@ -35,7 +35,11 @@ type v0 = HyperRectangle.hyper_rectangle
 type var_type =
 	| Var_type_clock
 	| Var_type_discrete
-	| Var_type_parameter
+	| Var_type_discrete of var_type_discrete
+
+type var_type_discrete =
+	| Rational
+	| Boolean
 
 (** Type of sync actions *)
 type action_type =

@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/01/22
+ * Last modified     : 2020/01/23
  *
  ****************************************************************)
 
@@ -36,18 +36,28 @@ type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ |
 (** Declarations *)
 (****************************************************************)
 (* Type of variable in declarations *)
-type var_type =
-	| Var_type_clock
-	| Var_type_constant
-	| Var_type_discrete
-	| Var_type_parameter
+type parsed_var_type =
+	| Parsed_var_type_clock
+	| Parsed_var_type_constant
+	| Parsed_var_type_discrete of parsed_var_type_discrete
+	| Parsed_var_type_parameter
+
+type parsed_var_type_discrete =
+	| Parsed_rational
+	| Parsed_boolean
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
-type var_value = NumConst.t
+type constant_value = NumConst.t
 
-type variable_declaration = var_type * (variable_name * var_value option) list
+type variable_declaration =
+	| Parsed_variable_declaration of variable_name
+	| Parsed_constant_declaration of variable_name * constant_value
 
-type variable_declarations = variable_declaration list
+type variables_declarations = (parsed_var_type , variable_declaration) Hashtbl.t
+
+(*type typed_variable_declarations = parsed_var_type * variable_declaration list
+
+type variable_declarations = typed_variable_declarations list*)
 
 
 (****************************************************************)
@@ -65,7 +75,7 @@ and parsed_discrete_term =
 
 and parsed_discrete_factor =
 	| Parsed_DF_variable of variable_name
-	| Parsed_DF_constant of var_value
+	| Parsed_DF_constant of constant_value
 	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
 	| Parsed_DF_unary_min of parsed_discrete_factor
 
@@ -262,7 +272,7 @@ type parsed_projection = (variable_name list) option
 (****************************************************************)
 
 type parsed_model = {
-	variable_declarations	: variable_declarations;
+	variable_declarations	: variables_declarations;
 	automata				: parsed_automaton list;
 	init_definition			: init_definition;
 }

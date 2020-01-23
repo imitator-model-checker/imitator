@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/01/20
+ * Last modified     : 2020/01/23
 *****************************************************************)
 
 {
@@ -62,7 +62,6 @@ rule token = parse
  	| "before"         { CT_BEFORE }
 	| "clock"          { CT_CLOCK }
 	| "constant"       { CT_CONSTANT }
-	| "discrete"       { CT_DISCRETE }
 	| "do"             { CT_DO }
 	| "else"           { CT_ELSE }
 	| "end"            { CT_END }
@@ -84,6 +83,7 @@ rule token = parse
  	| "once"           { CT_ONCE }
 	| "or"             { CT_OR }
 	| "parameter"      { CT_PARAMETER }
+	| "rational"       { CT_RATIONAL }
 	| "region"         { CT_REGION }
 	| "sequence"       { CT_SEQUENCE }
 	| "stop"           { CT_STOP }

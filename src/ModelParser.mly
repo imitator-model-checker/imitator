@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/01/20
+ * Last modified     : 2020/01/23
  *
  ************************************************************/
 
@@ -50,6 +50,11 @@ let unzip l = List.fold_left
 	(List.rev l)
 ;;
 
+
+(* Hash table for variable declarations *)
+(*** NOTE: the initial size is (an upper bound on) the number of all possible types, including constants ***)
+let variables_declarations : ParsingStructure.variables_declarations = Hashtbl.create 10;;
+
 %}
 
 %token <NumConst.t> INT
@@ -68,7 +73,7 @@ let unzip l = List.fold_left
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
 	CT_BAD CT_BEFORE
 	CT_CLOCK CT_CONSTANT
-	CT_DISCRETE CT_DO
+	CT_DO
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
 	CT_FALSE
 	CT_GOTO
@@ -78,7 +83,7 @@ let unzip l = List.fold_left
 	CT_NEXT CT_NOT
 	CT_ONCE CT_OR
 	CT_PARAMETER
-	CT_REGION
+	CT_RATIONAL CT_REGION
 	CT_SEQUENCE CT_STOP CT_SYNC CT_SYNCLABS
 	CT_THEN CT_TRUE
 	CT_UNKNOWN CT_URGENT
@@ -159,8 +164,11 @@ include_file_list:
 /************************************************************/
 
 declarations:
-	| include_file_list CT_VAR decl_var_lists { $3 }
-	| { []}
+	| include_file_list CT_VAR decl_var_lists {
+		(* Return the built hash table and the constants *)
+		variables_declarations , $3
+	}
+	| { variables_declarations , $3 }
 ;
 
 
@@ -169,27 +177,55 @@ declarations:
 /************************************************************/
 
 decl_var_lists:
-	| decl_var_list COLON var_type SEMICOLON decl_var_lists { (($3, $1) :: $5) }
-	| { [] }
+	| decl_var_list COLON var_type SEMICOLON decl_var_lists {
+(* 		(($3, $1) :: $5) *)
+		
+		let current_type = $3 in
+		let current_list_of_declarations = $1 in
+		let constants = $5 in
+		
+		(* Special case: constants *)
+		if current_type = Parsed_var_type_constant then(
+			(* Update the list of constants with or without values *)
+			List.rev_append current_list_of_declarations constants
+		)else(
+		
+			(* Get the list of variables already declared and corresponding to this type 'var_type' *)
+			let already_declared_variables_for_this_type = try (Hashtbl.find variables_declarations current_type)
+				with Not_found -> []
+			in
+			
+			(* Add the list *)
+			Hashtbl.replace variables_declarations current_type (List.rev_append current_list_of_declarations already_declared_variables_for_this_type);
+			
+			(*** NOTE: the actions related to 'decl_var_lists' work with side-effects on the variables_declarations hashtable *)
+			(* Return unchanged constants *)
+			
+			(*** TODO: only return the actual constants, and put the others in the unassigned constants list ***)
+			
+			constants
+		)
+	}
+	| { () }
 ;
 
 /************************************************************/
 
 decl_var_list:
-	| NAME comma_opt { [($1, None)] }
-	| NAME OP_EQ rational_linear_expression comma_opt { [($1, Some $3)] }
+	| NAME comma_opt { [Parsed_variable_declaration $1] }
+	| NAME OP_EQ rational_linear_expression comma_opt { [Parsed_constant_declaration ($1, $3)] }
 
-	| NAME COMMA decl_var_list { ($1, None) :: $3 }
-	| NAME OP_EQ rational_linear_expression COMMA decl_var_list { ($1, Some $3) :: $5 }
+	| NAME COMMA decl_var_list { (Parsed_variable_declaration $1) :: $3 }
+	| NAME OP_EQ rational_linear_expression COMMA decl_var_list { (Parsed_constant_declaration ($1, $3)) :: $5 }
 ;
 
 /************************************************************/
 
 var_type:
-	| CT_CLOCK { Var_type_clock }
-	| CT_CONSTANT { Var_type_constant }
-	| CT_DISCRETE { Var_type_discrete }
-	| CT_PARAMETER { Var_type_parameter }
+	| CT_CLOCK { Parsed_var_type_clock }
+	| CT_CONSTANT { Parsed_var_type_constant }
+	| CT_RATIONAL { Parsed_var_type_discrete Parsed_rational }
+	| CT_PARAMETER { Parsed_var_type_parameter }
 ;
 
 /************************************************************

@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/01/22
+ * Last modified     : 2020/01/23
  *
  ************************************************************)
 
@@ -283,7 +283,7 @@ let check_only_discretes_in_parsed_update_arithmetic_expression index_of_variabl
           let variable_index =
             Hashtbl.find index_of_variables variable_name
           in
-          type_of_variables variable_index = Var_type_discrete
+          match type_of_variables variable_index with | Var_type_discrete _ -> true | _ -> false
         ) with Not_found -> (
             (* Variable not found! *)
             (*** TODO: why is this checked here…? It should have been checked before ***)
@@ -859,7 +859,7 @@ let only_discrete_in_linear_term index_of_variables type_of_variables constants 
       let variable_index =
         Hashtbl.find index_of_variables variable_name
       in
-      type_of_variables variable_index = Var_type_discrete
+      match type_of_variables variable_index with | Var_type_discrete _ -> true | _ -> false
     ) with Not_found -> (
         (* Variable not found! *)
         (*** TODO: why is this checked here…? It should have been checked before ***)
@@ -1092,34 +1092,95 @@ let linear_constraint_of_convex_predicate index_of_variables constants convex_pr
 (************************************************************)
 
 (*------------------------------------------------------------*)
+(* A structure to collect declared variable names *)
+(*------------------------------------------------------------*)
+type declared_variable_names = {
+	declared_parameters	: variable_name list;
+	declared_clocks		: variable_name list;
+	(* Associative list, keys are parsed_var_type_discrete, and values are variable names for this parsed_var_type_discrete *)
+	declared_discrete	: (parsed_var_type_discrete, variable_name) list;
+	declared_constants	: (variable_name, variable_value) list;
+	unassigned_constant	: variable_name list;
+}
+
+(*(*------------------------------------------------------------*)
 (* Get all (possibly identical) names of variables in the header *)
 (*------------------------------------------------------------*)
 let get_declared_variable_names variable_declarations =
-  let get_variables_and_constants =
-    List.fold_left (fun (current_list, constants) (name, possible_value) ->
-        match possible_value with
-        (* If no value: add to names *)
-        | None -> (name :: current_list , constants)
-        (* Otherwise: add to constants *)
-        | Some value -> (current_list , (name, value) :: constants)
-      ) ([], [])
-  in
-  (* Get all (possibly identical) names of variables in one variable declaration and add it to the computed n-uple *)
-  let get_variables_in_variable_declaration (clocks, discrete, parameters, constants, unassigned_constants) (var_type, list_of_names) =
-    let new_list, new_constants = get_variables_and_constants list_of_names in
-    match var_type with
-    | ParsingStructure.Var_type_clock ->
-      (List.rev_append new_list clocks, discrete, parameters, List.rev_append new_constants constants, unassigned_constants)
-    | ParsingStructure.Var_type_constant ->
-      (clocks, discrete, parameters, List.rev_append new_constants constants, List.rev_append new_list unassigned_constants)
-    | ParsingStructure.Var_type_discrete ->
-      (clocks, List.rev_append new_list discrete, parameters, List.rev_append new_constants constants, unassigned_constants)
-    | ParsingStructure.Var_type_parameter ->
-      (clocks, discrete, List.rev_append new_list parameters, List.rev_append new_constants constants, unassigned_constants)
-  in
-  let (clocks, discrete, parameters, constants, unassigned_constants) = List.fold_left get_variables_in_variable_declaration ([], [], [], [], []) variable_declarations in
-  (* Do not reverse lists *)
-  (clocks, discrete, parameters, constants, unassigned_constants)
+	let get_variables_and_constants =
+		List.fold_left (fun (current_list, constants) (name, possible_value) ->
+			match variable_declaration with
+			(* If no value: add to names *)
+			| Parsed_variable_declaration variable_name -> (variable_name :: current_list , constants)
+			(* Otherwise: add to constants *)
+			| Parsed_constant_declaration constant_name, constant_value -> (current_list , (constant_name, constant_value) :: constants)
+		) ([], [])
+	in
+	(* Get all (possibly identical) names of variables in one variable declaration and add it to the computed n-uple *)
+	(*** NOTE: perhaps imperative programming with references would be smarter… ***)
+	let get_variables_in_variable_declaration collected_variable_names(*(clocks, discrete, parameters, constants, unassigned_constants)*) (var_type, list_of_names) =
+		let new_list, new_constants = get_variables_and_constants list_of_names in
+		match var_type with
+		| ParsingStructure.Parsed_var_type_clock ->
+			{
+				declared_parameters	= collected_variable_names.declared_parameters;
+				declared_clocks		= List.rev_append new_list collected_variable_names.declared_clocks;
+				declared_discrete	= collected_variable_names.declared_discrete;
+				declared_constants	= List.rev_append new_constants collected_variable_names.declared_constants;
+				unassigned_constant	= collected_variable_names.unassigned_constant;
+			}
+			
+		| ParsingStructure.Parsed_var_type_constant ->
+			{
+				declared_parameters	= collected_variable_names.declared_parameters;
+				declared_clocks		= collected_variable_names.declared_clocks;
+				declared_discrete	= collected_variable_names.declared_discrete;
+				declared_constants	= List.rev_append new_constants collected_variable_names.declared_constants;
+				unassigned_constant	= List.rev_append new_list collected_variable_names.unassigned_constant;
+			}
+		
+		| ParsingStructure.Parsed_var_type_parameter ->
+			{
+				declared_parameters	= List.rev_append new_list collected_variable_names.declared_parameters;
+				declared_clocks		= collected_variable_names.declared_clocks;
+				declared_discrete	= collected_variable_names.declared_discrete;
+				declared_constants	= List.rev_append new_constants collected_variable_names.declared_constants;
+				unassigned_constant	= collected_variable_names.unassigned_constant;
+			}
+
+		| ParsingStructure.Parsed_var_type_discrete parsed_var_type_discrete ->
+			(* Try to find the variable names already collected for this parsed_var_type_discrete *)
+			let list_of_variable_names_for_this_type = try(
+				List.assoc parsed_var_type_discrete collected_variable_names.declared_discrete
+			) with Not_found -> []
+			in
+			(* Remove the binding (if any) *)
+			let all_discrete_variables_except_for_this_type = List.remove_assoc parsed_var_type_discrete collected_variable_names.declared_discrete in
+			(* Add the binding back *)
+			let updated_discrete_variables = (parsed_var_type_discrete , List.rev_append new_list all_discrete_variables_except_for_this_type) :: all_discrete_variables_except_for_this_type in
+			
+			{
+				declared_parameters	= collected_variable_names.declared_parameters;
+				declared_clocks		= collected_variable_names.declared_clocks;
+				declared_discrete	= updated_discrete_variables;
+				declared_constants	= List.rev_append new_constants collected_variable_names.declared_constants;
+				unassigned_constant	= collected_variable_names.unassigned_constant;
+			}
+	in
+	let collected_variable_names =
+		List.fold_left
+			get_variables_in_variable_declaration
+			{
+				declared_parameters	= [];
+				declared_clocks		= [];
+				declared_discrete	= [];
+				declared_constants	= [];
+				unassigned_constant	= [];
+			}
+			variable_declarations
+		in
+	(* Do not reverse lists *)
+	collected_variable_names*)
 
 
 (*------------------------------------------------------------*)
@@ -1203,7 +1264,11 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 (*------------------------------------------------------------*)
 (* Check that variable names are all different, return false otherwise; warns if a variable is defined twice as the same type *)
 (*------------------------------------------------------------*)
-let check_variable_names clock_names discrete_names parameters_names constants =
+let check_variable_names collected_variable_names =
+	let clock_names			= collected_variable_names.declared_clocks in
+	let discrete_names		= collected_variable_names.declared_discrete in
+	let parameters_names	= collected_variable_names.declared_parameters in
+	let constants 			= collected_variable_names.declared_clocks in
 	(* Warn if a variable is defined twice as the same type *)
 	let warn_for_multiply_defined_variables list_of_variables =
 		(* Compute the multiply defined variables *)
@@ -1310,11 +1375,11 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 			all_variables_defined_in_parsed_update_arithmetic_expression variable_names constants arithmetic_expression
 
 			(* Case of a discrete var.: allow only an arithmetic expression of constants and discrete *)
-			| AbstractModel.Var_type_discrete ->
-			print_message Verbose_total ("                A discrete!");
+			| AbstractModel.Var_type_discrete Rational ->
+			print_message Verbose_total ("                A discrete rational!");
 			let result = check_only_discretes_in_parsed_update_arithmetic_expression index_of_variables type_of_variables constants arithmetic_expression in
 			if not result then
-				(print_error ("The variable '" ^ variable_name ^ "' is a discrete and its update can only be an arithmetic expression over constants and discrete variables in automaton '" ^ automaton_name ^ "'."); false)
+				(print_error ("The variable '" ^ variable_name ^ "' is a discrete rational and its update can only be an arithmetic expression over constants and discrete rationals in automaton '" ^ automaton_name ^ "'."); false)
 			else (
 				print_message Verbose_total ("                Check passed.");
 				true
@@ -1577,7 +1642,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			if (Hashtbl.mem index_of_variables variable_name) then (
 				let variable_index =  Hashtbl.find index_of_variables variable_name in
 				(* Keep if this is a discrete *)
-				type_of_variables variable_index = Var_type_discrete
+				match type_of_variables variable_index with | Var_type_discrete _ -> true | _ -> false
 			) else (
 				(* Case constant *)
 				if (Hashtbl.mem constants variable_name) then false
@@ -2410,7 +2475,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 				if (Hashtbl.mem index_of_variables variable_name) then (
 				let variable_index =  Hashtbl.find index_of_variables variable_name in
 				(* Keep if this is a discrete *)
-				type_of_variables variable_index = Var_type_discrete
+				match type_of_variables variable_index with | Var_type_discrete _ -> true | _ -> false
 				) else (
 				(* Case constant *)
 				if (Hashtbl.mem constants variable_name) then false
@@ -3742,7 +3807,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Get names *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get the declared variable names *)
-	let possibly_multiply_defined_clock_names, possibly_multiply_defined_discrete_names, possibly_multiply_defined_parameter_names, constants, unassigned_constants = get_declared_variable_names parsed_model.variable_declarations in
+	let collected_variable_names = get_declared_variable_names parsed_model.variable_declarations in
+
+	let possibly_multiply_defined_clock_names		= collected_variable_names.declared_parameters in
+	let possibly_multiply_defined_discrete_names	= collected_variable_names.declared_clocks in
+	let possibly_multiply_defined_parameter_names	= collected_variable_names.declared_discrete in
+	let constants									= collected_variable_names.declared_constants in
+	let unassigned_constants						= collected_variable_names.unassigned_constant in
+
 	(* Get the declared automata names *)
 	let declared_automata_names = get_declared_automata_names parsed_model.automata in
 	(* Get the declared synclabs names *)
@@ -3782,7 +3854,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Check the variable_declarations *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check that all variable names are different (and print warnings for multiply-defined variables if same type) *)
-	let all_variables_different = check_variable_names possibly_multiply_defined_clock_names possibly_multiply_defined_discrete_names possibly_multiply_defined_parameter_names constants in
+	let all_variables_different = check_variable_names collected_variable_names in
 	(* Check that all automata names are different *)
 	let all_automata_different = check_declared_automata_names declared_automata_names in
 
@@ -4025,7 +4097,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		type_of_variables.(i) <- AbstractModel.Var_type_clock;
 	done;
 	for i = first_discrete_index to nb_variables - 1 do
-		type_of_variables.(i) <- AbstractModel.Var_type_discrete;
+		(*** TODO! ***)
+		type_of_variables.(i) <- AbstractModel.Var_type_discrete Rational;
 	done;
 	(* Functional representation *)
 	let type_of_variables = fun variable_index -> type_of_variables.(variable_index) in
@@ -4037,7 +4110,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* Create the type check functions *)
 	let is_clock = (fun variable_index -> try (type_of_variables variable_index = Var_type_clock) with Invalid_argument _ ->  false) in
-	let is_discrete = (fun variable_index -> try (type_of_variables variable_index = Var_type_discrete) with Invalid_argument _ ->  false) in
+	let is_discrete = (fun variable_index -> try (match type_of_variables variable_index with | Var_type_discrete _ -> true | _ -> false) with Invalid_argument _ ->  false) in
 
 
 	(* Detect the clock with a special global time name, if any *)
