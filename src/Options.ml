@@ -10,7 +10,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/01/09
+ * Last modified     : 2020/01/23
  *
  ************************************************************)
 
@@ -59,7 +59,7 @@ class imitator_options =
 		val mutable cartonly = false
 		
 		(* prefix for output files *)
-		val mutable files_prefix = ref ""
+		val mutable files_prefix = ""
 		
 		(* plot cartography for BC; this options means that the global cartography of all tiles will be generated (activated if -cart is true) *)
 		val mutable output_bc_cart = ref false
@@ -255,7 +255,7 @@ class imitator_options =
 		method early_terminate = !early_terminate
 (* 		method (*efim*) = !efim *)
 		method exploration_order = exploration_order
-		method files_prefix = !files_prefix
+		method files_prefix = files_prefix
 		method imitator_mode = imitator_mode
 (* 		method new_ef_mode = new_ef_mode *)
 		method inclusion = !inclusion
@@ -308,7 +308,7 @@ class imitator_options =
 			model_file_name <- file_name
 
 		method set_files_prefix file_name =
-			files_prefix <- ref file_name
+			files_prefix <- file_name
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Parse method *)
@@ -809,7 +809,7 @@ class imitator_options =
 				
 				("-output-graphics-source", Set with_graphics_source, " Keep file(s) used for generating graphical output. Default: false.");
 
-				("-output-prefix", Set_string files_prefix, " Set the prefix for output files. Default: [model].");
+				("-output-prefix", String (fun new_prefix -> files_prefix <- new_prefix), " Set the prefix for output files. Default: [./model-name].");
 				
 				("-output-float", Set output_float, " Approximates the value of discrete variables as floats. Default: false.");
 				
@@ -903,20 +903,20 @@ class imitator_options =
 			);
 			
 			(* Set prefix for files *)
-			if !files_prefix = "" then
+			if files_prefix = "" then
 				(*** WHAT ? ***)
-			  files_prefix := model_file_name
+				files_prefix <- model_file_name
 			;
-			  
+			
 			(* Remove the ".imi" at the end of the program prefix, if any *)
 			let model_extension_size = String.length Constants.model_extension in
-			if String.length !files_prefix > model_extension_size then(
+			if String.length files_prefix > model_extension_size then(
 				(* Get the last signs *)
-				let last = String.sub !files_prefix ((String.length !files_prefix) - model_extension_size) model_extension_size in
+				let last = String.sub files_prefix ((String.length files_prefix) - model_extension_size) model_extension_size in
 				(* Check if it corresponds to ".imi" *)
 				if last = Constants.model_extension then(
 					(* Remove the last signs *)
-					files_prefix := String.sub !files_prefix 0 ((String.length !files_prefix) - model_extension_size);
+					files_prefix <- String.sub files_prefix 0 ((String.length files_prefix) - model_extension_size);
 				);
 			);
 
@@ -930,7 +930,7 @@ class imitator_options =
 			(* File *)
 			print_message Verbose_standard ("Model: " ^ model_file_name);
 			(* File prefix *)
-			print_message Verbose_low ("Prefix for output files: " ^ !files_prefix);
+			print_message Verbose_low ("Prefix for output files: " ^ files_prefix);
 			(* Print full command *)
 			(*** WARNING: this command drops the "" or '' (if any) ***)
 			print_message Verbose_low ("Command: " ^ (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv));
