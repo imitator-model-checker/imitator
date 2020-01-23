@@ -1720,7 +1720,7 @@ If the model contains more than two parameters, then \code{-output-cart} will pl
 This option makes use of the external utility \texttt{graph}, which is
 part of the \emph{GNU plotting utils}, available on most Linux
 platforms.
-The generated files will be located in the same directory as the source files, unless option \styleOption{-output-prefix} is used.
+The generated files will be located in the current directory, unless option \styleOption{-output-prefix} is used.
 
 Additional useful options are
 \styleOption{-output-cart-x-min},
@@ -1776,6 +1776,8 @@ Examples:
 	\item \styleOption{-output-prefix ./log}
 	\item \styleOption{-output-prefix /home/imitator/outputs}
 \end{itemize}
+
+By default, the path prefix is the \emph{current directory}, \ie{} where the user is (therefore not necessarily the model directory).
 
 
 %------------------------------------------------------------

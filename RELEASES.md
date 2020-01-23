@@ -8,6 +8,10 @@ MAJOR RELEASE
 * Many backward-compatible useless syntactic features now raise warnings (e.g. using `while` instead of `invariant`, using `Wait {}`…)
 
 
+### Export
+* By default, all files are now exported in the current directory instead of the model directory. Option `-output-prefix` can still be used to change the directory.
+
+
 *******************************************************
 # release 2.12.1 (2019-10-01)
 minor release

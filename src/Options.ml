@@ -903,10 +903,20 @@ class imitator_options =
 			);
 			
 			(* Set prefix for files *)
-			if files_prefix = "" then
-				(*** WHAT ? ***)
-				files_prefix <- model_file_name
-			;
+			(* Case the file prefix is not overwritten by the user *)
+			if files_prefix = "" then(
+			
+				(* Remove the beginning of the path, and set the prefix to the current directory, i.e., output the files in the current directory *)
+				
+				(* Split the string according to "/" *)
+				let split_file_prefix = Str.split (Str.regexp "/") model_file_name in
+				
+				(* Keep the last one *)
+				let last_part_path = list_last split_file_prefix in
+		
+				(* Update *)
+				files_prefix <- last_part_path
+			);
 			
 			(* Remove the ".imi" at the end of the program prefix, if any *)
 			let model_extension_size = String.length Constants.model_extension in
