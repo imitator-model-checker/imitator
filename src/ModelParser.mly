@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/01/23
+ * Last modified     : 2020/01/24
  *
  ************************************************************/
 
@@ -53,7 +53,17 @@ let unzip l = List.fold_left
 
 (* Hash table for variable declarations *)
 (*** NOTE: the initial size is (an upper bound on) the number of all possible types, including constants ***)
-let variables_declarations : ParsingStructure.variables_declarations = Hashtbl.create 10;;
+let variables_hashtbl : ParsingStructure.variables_declarations = Hashtbl.create 10;;
+
+let constants : (variable_name * constant_value) list ref = ref [];;
+
+let unassigned_constants: variable_name list ref = ref [];;
+
+(** We also defined two types to differentiate assigned and unassigned constants *)
+type variable_declaration = 
+	| Parsed_variable_declaration of variable_name
+	| Parsed_constant_declaration of variable_name * constant_value
+
 
 %}
 
@@ -180,9 +190,28 @@ decl_var_lists:
 	| decl_var_list COLON var_type SEMICOLON decl_var_lists {
 (* 		(($3, $1) :: $5) *)
 		
-		let current_type = $3 in
-		let current_list_of_declarations = $1 in
-		let constants = $5 in
+		(*** NOTE: an exception to the usual parsing customs here: we already simplify the way variables and constants declarations are passed to the ModelConverter ***)
+		
+		let var_type		= $3 in
+		let decl_var_list	= $1 in
+(* 		let decl_var_lists = $5 in *)
+		
+		(* First differentiate between assigned and unassigned variable names *)
+		let assiged_variables, unassigned_variables = List.partition
+			(function 
+				| Parsed_constant_declaration _ -> true
+				| _ -> false
+			)
+			decl_var_list
+		in
+		
+		(* Filter out constants (assigned names) and add them to the constants list *)
+		
+		(* If current type is constants *)
+		
+		(* Unassigned variable names are ill-formed: add to unassigned constants *)
+		
+		(*  *)
 		
 		(* Special case: constants *)
 		if current_type = Parsed_var_type_constant then(
@@ -212,12 +241,22 @@ decl_var_lists:
 /************************************************************/
 
 decl_var_list:
-	| NAME comma_opt { [Parsed_variable_declaration $1] }
-	| NAME OP_EQ rational_linear_expression comma_opt { [Parsed_constant_declaration ($1, $3)] }
+	/* Last element */
+	| variable_declaration comma_opt { [$1] }
 
-	| NAME COMMA decl_var_list { (Parsed_variable_declaration $1) :: $3 }
-	| NAME OP_EQ rational_linear_expression COMMA decl_var_list { (Parsed_constant_declaration ($1, $3)) :: $5 }
+	/* Not last element */
+	| variable_declaration COMMA decl_var_list { $1 :: $3 }
 ;
+
+/************************************************************/
+
+/* Single variable declaration with or without assignment */
+variable_declaration:
+	| NAME { [Parsed_variable_declaration $1] }
+	/* TODO: add type for this constant! */
+	| NAME OP_EQ rational_linear_expression { [Parsed_constant_declaration ($1, $3)] }
+;
+
 
 /************************************************************/
 

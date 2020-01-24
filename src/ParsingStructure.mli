@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/01/23
+ * Last modified     : 2020/01/24
  *
  ****************************************************************)
 
@@ -49,11 +49,18 @@ type parsed_var_type_discrete =
 (* We allow for some variables (i.e., parameters and constants) a value *)
 type constant_value = NumConst.t
 
-type variable_declaration =
+(*type variable_declaration =
 	| Parsed_variable_declaration of variable_name
-	| Parsed_constant_declaration of variable_name * constant_value
+	| Parsed_constant_declaration of variable_name * constant_value*)
 
-type variables_declarations = (parsed_var_type , variable_declaration) Hashtbl.t
+type variables_declarations = {
+	(* Normal variable names: only name, stored in a hash table with their type as key *)
+	variables			: (parsed_var_type , variable_name) Hashtbl.t;
+	(* Properly defined constants 'name=value', either in the 'constants' type, or in another type *)
+	constants			: (variable_name * constant_value) list;
+	(* Improperly defined constants 'name' without value, in the 'constants' type *)
+	unassigned_constants: variable_name list;
+}
 
 (*type typed_variable_declarations = parsed_var_type * variable_declaration list
 
