@@ -58,7 +58,7 @@ type constant_value = NumConst.t
 
 type variables_declarations = {
 	(* Normal variable names: only name, stored in a hash table with their type as key *)
-	variables_per_type	: (parsed_var_type , variable_name) Hashtbl.t;
+	variables_per_type	: (parsed_var_type , variable_name list) Hashtbl.t;
 	(* Properly defined constants 'name=value', either in the 'constants' type, or in another type *)
 	constants			: (variable_name * constant_value) list;
 	(* Improperly defined constants 'name' without value, in the 'constants' type *)

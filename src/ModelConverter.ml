@@ -68,14 +68,19 @@ module StringSet = Set.Make(String)
 
 (* Maintain lists of all (parsed) types *)
 
-let all_discrete_types = [
+let all_concrete_parsed_discrete_types = [
+	Parsed_rational ;
+	Parsed_boolean ;
+	]
+
+let all_parsed_discrete_types = [
 	Parsed_var_type_discrete Parsed_rational ;
 	Parsed_var_type_discrete Parsed_boolean ;
 	]
 
-let all_types = List.rev_append
+let all_parsed_types = List.rev_append
 	[Parsed_var_type_clock ; Parsed_var_type_parameter]
-	all_discrete_types
+	all_parsed_discrete_types
 
 (************************************************************)
 (************************************************************)
@@ -1199,6 +1204,20 @@ let get_declared_variable_names variable_declarations =
 	(* Do not reverse lists *)
 	collected_variable_names*)
 
+(*------------------------------------------------------------*)
+(* Get all discrete variables *)
+(*------------------------------------------------------------*)
+let get_all_discrete_variables variables_per_type =
+	(* Collect for each discrete type *)
+	List.fold_left
+		(fun current_list discrete_type -> 
+			try (
+				let list_of_variables_for_this_type = Hashtbl.find variables_per_type discrete_type in
+				List.rev_append list_of_variables_for_this_type current_list
+			(* If not found: keep the list unchanged *)
+			) with Not_found -> current_list
+		)
+		[] all_parsed_discrete_types
 
 (*------------------------------------------------------------*)
 (* Get all (possibly identical) names of automata *)
@@ -1281,22 +1300,16 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 (*------------------------------------------------------------*)
 (* Check that variable names are all different, return false otherwise; warns if a variable is defined twice as the same type *)
 (*------------------------------------------------------------*)
-let check_variable_names collected_variable_names =
-	let clock_names			= collected_variable_names.declared_clocks in
-	let discrete_names		= collected_variable_names.declared_discrete in
-	let parameters_names	= collected_variable_names.declared_parameters in
-	let constants 			= collected_variable_names.declared_clocks in
-	(* Warn if a variable is defined twice as the same type *)
+let check_variable_names variables_per_type constants =
+	(* Function to warn if a variable is defined twice as the same type *)
 	let warn_for_multiply_defined_variables list_of_variables =
 		(* Compute the multiply defined variables *)
 		let multiply_defined_variables = elements_existing_several_times list_of_variables in
 		(* Print a warning for each of them *)
 		List.iter (fun variable_name -> print_warning ("Multiply-declared variable '" ^ variable_name ^"'")) multiply_defined_variables;
 	in
-	warn_for_multiply_defined_variables clock_names;
-	warn_for_multiply_defined_variables discrete_names;
-	warn_for_multiply_defined_variables parameters_names;
-	(* Check different from constants *)
+
+	(* Function to warn if a variable is also defined as a constant *)
 	let different_from_constants l =
 		try(
 		List.iter (fun name ->
@@ -1308,20 +1321,48 @@ let check_variable_names collected_variable_names =
 		true
 		) with False_exception -> false
 	in
-	(* Error for variables defined as different types *)
+	
+	(* Function to detect errors where a variable is defined as different types *)
 	let error_for_multiply_defined_variables l1 l2 =
 		let inter = list_inter l1 l2 in
 		match inter with
 		| [] -> true
 		| _ -> List.iter (fun variable_name -> print_error ("The variable '" ^ variable_name ^ "' is defined twice as two different types.")) inter; false
 	in
-	let check1 = error_for_multiply_defined_variables clock_names discrete_names in
-	let check2 = error_for_multiply_defined_variables clock_names parameters_names in
-	let check3 = error_for_multiply_defined_variables discrete_names parameters_names in
-	let check4 = different_from_constants clock_names in
-	let check5 = different_from_constants discrete_names in
-	let check6 = different_from_constants parameters_names in
-	check1 && check2 && check3 && check4 && check5 && check6
+
+	(* Boolean flag to check whether all tests passed *)
+	let all_correct = ref true in
+	
+	(* Maintain a list of already considered types to check equality with the yet to come types *)
+	let types_for_comparison = ref [] in
+	
+	(* Iterate on all types *)
+	List.iter (fun var_type -> 
+		(* Get variables *)
+		let list_of_variables_for_this_type = try (Hashtbl.find variables_per_type var_type) with Not_found -> [] in
+		
+		(* Check all variables are defined only once, and warn otherwise *)
+		warn_for_multiply_defined_variables list_of_variables_for_this_type;
+		
+		(* Check all variables are different from constants *)
+		if not (different_from_constants list_of_variables_for_this_type) then (all_correct := false);
+		
+		(* Compare with all previous types whether the variable is also defined for that type *)
+		List.iter (fun former_type ->
+			(* Get variables *)
+			let list_of_variables_for_former_type = try (Hashtbl.find variables_per_type former_type) with Not_found -> [] in
+			
+			(* Compare *)
+			if not (error_for_multiply_defined_variables list_of_variables_for_this_type list_of_variables_for_former_type) then (all_correct := false);
+		) !types_for_comparison;
+		
+		(* Add this type for comparison with the yet to come types *)
+		types_for_comparison := var_type :: !types_for_comparison;
+
+	) all_parsed_types;
+
+	(* Return the flag *)
+	!all_correct
 
 
 (*------------------------------------------------------------*)
@@ -1401,6 +1442,12 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 				print_message Verbose_total ("                Check passed.");
 				true
 			)
+
+			(* Type boolean: TODO *)
+			| AbstractModel.Var_type_discrete Boolean ->
+			print_message Verbose_total ("                A Boolean!");
+			raise (NotImplemented "ModelConverter: Booleans in check_update")
+
 			(* Case of a parameter: forbidden! *)
 			| AbstractModel.Var_type_parameter -> print_error ("The variable '" ^ variable_name ^ "' is a parameter and cannot be updated in automaton '" ^ automaton_name ^ "'."); false
 		)
@@ -1775,6 +1822,53 @@ let make_constants constants =
   (* Return hash table *)
   constants_hashtable, !correct
 
+
+(*------------------------------------------------------------*)
+(* Translate the discrete types *)
+(*------------------------------------------------------------*)
+
+let abstract_discrete_type_of_parsed_discrete_type = function
+	| Parsed_rational	-> Rational
+	| Parsed_boolean	-> Boolean
+
+let parsed_discrete_type_of_abstract_discrete_type = function
+	| Rational	-> Parsed_rational
+	| Boolean	-> Parsed_boolean
+
+
+(*------------------------------------------------------------*)
+(* Get the exact type of a discrete variable *)
+(*------------------------------------------------------------*)
+
+exception Found_type of parsed_var_type_discrete
+
+let get_type_of_discrete_variable (variable_names : variable_name array) (variables_per_type :  (parsed_var_type , variable_name list) Hashtbl.t) (variable_index : variable_index) =
+	(* Get the name of the variable *)
+	let variable_name = variable_names.(variable_index) in
+	
+	(*** BADPROG: check for every type if we find the type (perhaps implement something more efficient??) ***)
+	try(
+	List.iter (fun discrete_type : ParsingStructure.parsed_var_type_discrete ->
+		(* Get all variables for this type *)
+		let all_variables_for_this_type = try (Hashtbl.find variables_per_type (Parsed_var_type_discrete discrete_type)) with Not_found -> [] in
+		
+		(* Check whether our variable belongs to this list *)
+		if List.mem variable_name all_variables_for_this_type then(
+			(* If yes, stop *)
+			raise (Found_type discrete_type)
+		);
+		()
+	
+	) all_concrete_parsed_discrete_types;
+	
+	(* If still there: variable not found, impossible situation *)
+	raise (InternalError ("Discrete type not found for variable " ^ variable_name ^ " although it should have been checked before.")) 
+	
+	) with Found_type discrete_type -> (
+		(* Convert parsed type to abstract type *)
+		abstract_discrete_type_of_parsed_discrete_type discrete_type
+	)
+	
 
 (*------------------------------------------------------------*)
 (* Get all the declared actions for every automaton *)
@@ -3830,18 +3924,16 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Get the constants and unassigned constants *)
 	let constants : (variable_name * constant_value) list	= variables_declarations.constants in
 	let unassigned_constants : variable_name list			= variables_declarations.unassigned_constants in
+	let variables_per_type : (parsed_var_type , variable_name list) Hashtbl.t = variables_declarations.variables_per_type in
 	
 	(* Get the declared variable names *)
 (* 	let collected_variable_names = get_declared_variable_names parsed_model.variable_declarations in *)
 
-	let possibly_multiply_defined_clock_names		= try (Hashtbl.find variables_declarations.variables_per_type Parsed_var_type_clock) with Not_found -> [] in
-	let possibly_multiply_defined_parameter_names	= try (Hashtbl.find variables_declarations.variables_per_type Parsed_var_type_parameter) with Not_found -> [] in
+	let possibly_multiply_defined_clock_names		: variable_name list = try (Hashtbl.find variables_per_type Parsed_var_type_clock) with Not_found -> [] in
+	let possibly_multiply_defined_parameter_names	: variable_name list = try (Hashtbl.find variables_per_type Parsed_var_type_parameter) with Not_found -> [] in
 
-	(*** TODO ***)
-	let possibly_multiply_defined_discrete_names	= try (Hashtbl.find variables_declarations.variables_per_type Parsed_var_type_discrete) with Not_found -> [] in
-
-	(*	let constants									= collected_variable_names.declared_constants in
-	let unassigned_constants						= collected_variable_names.unassigned_constant in*)
+	(* Discrete request a slightly more expensive treatment as we get them for each type *)
+	let possibly_multiply_defined_discrete_names	: variable_name list = get_all_discrete_variables variables_per_type in
 
 	(* Get the declared automata names *)
 	let declared_automata_names = get_declared_automata_names parsed_model.automata in
@@ -3882,7 +3974,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Check the variable_declarations *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check that all variable names are different (and print warnings for multiply-defined variables if same type) *)
-	let all_variables_different = check_variable_names collected_variable_names in
+	let all_variables_different = check_variable_names variables_per_type constants in
+	
 	(* Check that all automata names are different *)
 	let all_automata_different = check_declared_automata_names declared_automata_names in
 
@@ -4125,8 +4218,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		type_of_variables.(i) <- AbstractModel.Var_type_clock;
 	done;
 	for i = first_discrete_index to nb_variables - 1 do
-		(*** TODO! ***)
-		type_of_variables.(i) <- AbstractModel.Var_type_discrete Rational;
+		type_of_variables.(i) <- AbstractModel.Var_type_discrete (get_type_of_discrete_variable variables variables_per_type i);
 	done;
 	(* Functional representation *)
 	let type_of_variables = fun variable_index -> type_of_variables.(variable_index) in
