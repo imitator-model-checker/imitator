@@ -53,7 +53,7 @@ let unzip l = List.fold_left
 
 (* Hash table for variable declarations *)
 (*** NOTE: the initial size is (an upper bound on) the number of all possible types, including constants ***)
-let variables_hashtbl : ParsingStructure.variables_declarations = Hashtbl.create 10;;
+let variables_per_type : ParsingStructure.variables_declarations = Hashtbl.create 10;;
 
 let constants : (variable_name * constant_value) list ref = ref [];;
 
@@ -176,9 +176,29 @@ include_file_list:
 declarations:
 	| include_file_list CT_VAR decl_var_lists {
 		(* Return the built hash table and the constants *)
-		variables_declarations , $3
+		
+		{
+			(* Normal variable names: only name, stored in a hash table with their type as key *)
+			variables_per_type	= variables_per_type;
+			(* Properly defined constants 'name=value', either in the 'constants' type, or in another type *)
+			constants			= !constants;
+			(* Improperly defined constants 'name' without value, in the 'constants' type *)
+			unassigned_constants= !unassigned_constants;
+		}
+	
 	}
-	| { variables_declarations , $3 }
+	
+	| {
+		(* Empty list: still return the (empty) structures *)
+		{
+			(* Normal variable names: only name, stored in a hash table with their type as key *)
+			variables_per_type	= variables_per_type;
+			(* Properly defined constants 'name=value', either in the 'constants' type, or in another type *)
+			constants			= !constants;
+			(* Improperly defined constants 'name' without value, in the 'constants' type *)
+			unassigned_constants= !unassigned_constants;
+		}
+	}
 ;
 
 
@@ -197,7 +217,7 @@ decl_var_lists:
 (* 		let decl_var_lists = $5 in *)
 		
 		(* First differentiate between assigned and unassigned variable names *)
-		let assiged_variables, unassigned_variables = List.partition
+		let assigned_variables, unassigned_variables = List.partition
 			(function 
 				| Parsed_constant_declaration _ -> true
 				| _ -> false
@@ -205,36 +225,48 @@ decl_var_lists:
 			decl_var_list
 		in
 		
+		(* Remove the tags *)
+		let assigned_variables = List.map
+			(function 
+				| Parsed_constant_declaration pair -> pair
+				| _ -> raise (InternalError "Something different from Parsed_constant_declaration was found in a list in ModelParser.mly, although it was filtered before")
+			)
+			assigned_variables
+		in
+		let unassigned_variables = List.map
+			(function 
+				| Parsed_variable_declaration variable_name -> variable_name
+				| _ -> raise (InternalError "Something different from Parsed_variable_declaration was found in a list in ModelParser.mly, although it was filtered before")
+			)
+			unassigned_variables
+		in
+
 		(* Filter out constants (assigned names) and add them to the constants list *)
+		constants := List.rev_append assigned_variables !constants;
 		
 		(* If current type is constants *)
-		
-		(* Unassigned variable names are ill-formed: add to unassigned constants *)
-		
-		(*  *)
-		
-		(* Special case: constants *)
-		if current_type = Parsed_var_type_constant then(
-			(* Update the list of constants with or without values *)
-			List.rev_append current_list_of_declarations constants
+		if var_type = Parsed_var_type_constant then(
+			(* Unassigned variable names are ill-formed: add to unassigned constants *)
+			unassigned_constants := List.rev_append unassigned_variables unassigned_constants;
+			
+		(* Otherwise: normal type => add the variables to the proper type *)
 		)else(
-		
 			(* Get the list of variables already declared and corresponding to this type 'var_type' *)
-			let already_declared_variables_for_this_type = try (Hashtbl.find variables_declarations current_type)
+			let already_declared_variables_for_this_type = try (Hashtbl.find variables_per_type var_type)
 				with Not_found -> []
 			in
 			
 			(* Add the list *)
-			Hashtbl.replace variables_declarations current_type (List.rev_append current_list_of_declarations already_declared_variables_for_this_type);
+			Hashtbl.replace variables_per_type var_type (List.rev_append unassigned_variables already_declared_variables_for_this_type);
 			
-			(*** NOTE: the actions related to 'decl_var_lists' work with side-effects on the variables_declarations hashtable *)
-			(* Return unchanged constants *)
-			
-			(*** TODO: only return the actual constants, and put the others in the unassigned constants list ***)
-			
-			constants
 		)
+		;
+		
+		(* Return nothing for this rule *)
+		()
+		
 	}
+	
 	| { () }
 ;
 

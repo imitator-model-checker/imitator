@@ -35,16 +35,19 @@ type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ |
 (****************************************************************)
 (** Declarations *)
 (****************************************************************)
+
+(* The types for global, discrete variables *)
+type parsed_var_type_discrete =
+	| Parsed_rational
+	| Parsed_boolean
+
+
 (* Type of variable in declarations *)
 type parsed_var_type =
 	| Parsed_var_type_clock
 	| Parsed_var_type_constant
 	| Parsed_var_type_discrete of parsed_var_type_discrete
 	| Parsed_var_type_parameter
-
-type parsed_var_type_discrete =
-	| Parsed_rational
-	| Parsed_boolean
 
 (* We allow for some variables (i.e., parameters and constants) a value *)
 type constant_value = NumConst.t
@@ -55,7 +58,7 @@ type constant_value = NumConst.t
 
 type variables_declarations = {
 	(* Normal variable names: only name, stored in a hash table with their type as key *)
-	variables			: (parsed_var_type , variable_name) Hashtbl.t;
+	variables_per_type	: (parsed_var_type , variable_name) Hashtbl.t;
 	(* Properly defined constants 'name=value', either in the 'constants' type, or in another type *)
 	constants			: (variable_name * constant_value) list;
 	(* Improperly defined constants 'name' without value, in the 'constants' type *)

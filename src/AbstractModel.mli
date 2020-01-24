@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/11
- * Last modified     : 2020/01/23
+ * Last modified     : 2020/01/24
  *
  ************************************************************)
 
@@ -31,15 +31,16 @@ type v0 = HyperRectangle.hyper_rectangle
 (** Types *)
 (************************************************************)
 
-(** Type of variable in declarations *)
-type var_type =
-	| Var_type_clock
-	| Var_type_discrete
-	| Var_type_discrete of var_type_discrete
-
+(* The types for global, discrete variables *)
 type var_type_discrete =
 	| Rational
 	| Boolean
+
+(** Type of variable in declarations *)
+type var_type =
+	| Var_type_clock
+	| Var_type_parameter
+	| Var_type_discrete of var_type_discrete
 
 (** Type of sync actions *)
 type action_type =

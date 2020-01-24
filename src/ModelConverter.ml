@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/01/23
+ * Last modified     : 2020/01/24
  *
  ************************************************************)
 
@@ -59,6 +59,23 @@ exception InvalidProperty
 (* Define a string set structure to gather sets of variables *)
 module StringSet = Set.Make(String)
 
+
+(************************************************************)
+(************************************************************)
+(** Constants *)
+(************************************************************)
+(************************************************************)
+
+(* Maintain lists of all (parsed) types *)
+
+let all_discrete_types = [
+	Parsed_var_type_discrete Parsed_rational ;
+	Parsed_var_type_discrete Parsed_boolean ;
+	]
+
+let all_types = List.rev_append
+	[Parsed_var_type_clock ; Parsed_var_type_parameter]
+	all_discrete_types
 
 (************************************************************)
 (************************************************************)
@@ -1094,14 +1111,14 @@ let linear_constraint_of_convex_predicate index_of_variables constants convex_pr
 (*------------------------------------------------------------*)
 (* A structure to collect declared variable names *)
 (*------------------------------------------------------------*)
-type declared_variable_names = {
+(*type declared_variable_names = {
 	declared_parameters	: variable_name list;
 	declared_clocks		: variable_name list;
 	(* Associative list, keys are parsed_var_type_discrete, and values are variable names for this parsed_var_type_discrete *)
 	declared_discrete	: (parsed_var_type_discrete, variable_name) list;
 	declared_constants	: (variable_name, variable_value) list;
 	unassigned_constant	: variable_name list;
-}
+}*)
 
 (*(*------------------------------------------------------------*)
 (* Get all (possibly identical) names of variables in the header *)
@@ -3806,14 +3823,25 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get names *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	
+	(* Get the parsed structure *)
+	let variables_declarations = parsed_model.variable_declarations in
+	
+	(* Get the constants and unassigned constants *)
+	let constants : (variable_name * constant_value) list	= variables_declarations.constants in
+	let unassigned_constants : variable_name list			= variables_declarations.unassigned_constants in
+	
 	(* Get the declared variable names *)
-	let collected_variable_names = get_declared_variable_names parsed_model.variable_declarations in
+(* 	let collected_variable_names = get_declared_variable_names parsed_model.variable_declarations in *)
 
-	let possibly_multiply_defined_clock_names		= collected_variable_names.declared_parameters in
-	let possibly_multiply_defined_discrete_names	= collected_variable_names.declared_clocks in
-	let possibly_multiply_defined_parameter_names	= collected_variable_names.declared_discrete in
-	let constants									= collected_variable_names.declared_constants in
-	let unassigned_constants						= collected_variable_names.unassigned_constant in
+	let possibly_multiply_defined_clock_names		= try (Hashtbl.find variables_declarations.variables_per_type Parsed_var_type_clock) with Not_found -> [] in
+	let possibly_multiply_defined_parameter_names	= try (Hashtbl.find variables_declarations.variables_per_type Parsed_var_type_parameter) with Not_found -> [] in
+
+	(*** TODO ***)
+	let possibly_multiply_defined_discrete_names	= try (Hashtbl.find variables_declarations.variables_per_type Parsed_var_type_discrete) with Not_found -> [] in
+
+	(*	let constants									= collected_variable_names.declared_constants in
+	let unassigned_constants						= collected_variable_names.unassigned_constant in*)
 
 	(* Get the declared automata names *)
 	let declared_automata_names = get_declared_automata_names parsed_model.automata in

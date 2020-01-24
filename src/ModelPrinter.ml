@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/01/22
+ * Last modified     : 2020/01/24
  *
  ************************************************************)
 
@@ -121,10 +121,14 @@ let footer = "\n"
 (** Variable declarations *)
 (************************************************************)
 
+let string_of_discrete_type = function
+	| Rational	-> "rational"
+	| Boolean	-> "boolean"
+
 (* Convert a var_type into a string *)
 let string_of_var_type = function
 	| Var_type_clock -> "clock"
-	| Var_type_discrete -> "discrete"
+	| Var_type_discrete discrete_type -> string_of_discrete_type discrete_type
 	| Var_type_parameter -> "parameter"
 
 
