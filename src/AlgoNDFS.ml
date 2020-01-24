@@ -108,8 +108,7 @@ class algoNDFS =
 	(* Main method to run NDFS exploration [WORK IN PROGRESS] *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method explore_layer_bfs init_state_index =
-
-
+	
 		(* Statistics *)
 		counter_explore_using_strategy#increment;
 		counter_explore_using_strategy#start;
@@ -303,47 +302,54 @@ class algoNDFS =
 		(* Check the subsumption relation *)
 		(**********************************)
 		let subsumes bigstate_index smallstate_index =
-			(* Does bigstate subsume smallstate? *)
+			(* Does bigstate subsume (or equal) smallstate? *)
+			(* Precondition: the states have already the same location *)
 			print_message Verbose_high "Compare (big?) state:";
 			print_message Verbose_high (ModelPrinter.string_of_state model
 						(StateSpace.get_state state_space bigstate_index));
 			print_message Verbose_high "with (small?) state:";
 			print_message Verbose_high (ModelPrinter.string_of_state model
 						(StateSpace.get_state state_space smallstate_index));
-			(* get the big state *)
-			let bigstate = StateSpace.get_state state_space bigstate_index in
-			let stateb_loc, stateb_constr = bigstate.global_location, bigstate.px_constraint in
-			(* get the small state *)
-			let smallstate = StateSpace.get_state state_space smallstate_index in
-			let states_loc, states_constr = smallstate.global_location, smallstate.px_constraint in
-			(* check that the location is the same *)
-			if not (Location.location_equal stateb_loc states_loc) then false
-			else (LinearConstraint.px_is_leq states_constr stateb_constr) (* check the inclusion of constraints *)
+			let bigstate_constr = (StateSpace.get_state state_space bigstate_index).px_constraint in
+			let smallstate_constr = (StateSpace.get_state state_space smallstate_index).px_constraint in
+			(LinearConstraint.px_is_leq smallstate_constr bigstate_constr)
 		in
 
 		let setsubsumes setbig smallstate =
 			(* Does an element of the set subsume smallstate? *)
+			if table_test setbig smallstate then true (* quick pre-check *)
                         (* we traverse all states with the same location modulo hash collision *)
-                        let similar_states = StateSpace.get_comparable_states state_space smallstate in
-                        let check_sub bigstate = (table_test setbig bigstate) && (subsumes bigstate smallstate) in
+                        else let similar_states = StateSpace.get_comparable_states state_space smallstate
+                        and check_sub bigstate = (table_test setbig bigstate) && (subsumes bigstate smallstate)
+			in begin
+                        print_message Verbose_high ("setsubsumes with " ^ string_of_int (List.length similar_states) ^ " states");
 			List.exists check_sub similar_states
+			end
 		in
 
 		let subsumesset bigstate setsmall =
 			(* Does bigstate subsume some element of the set? *)
+			if table_test setsmall bigstate then true (* quick pre-check *)
                         (* we traverse all states with the same location modulo hash collision *)
-                        let similar_states = StateSpace.get_comparable_states state_space bigstate in
-                        let check_sub smallstate = (table_test setsmall smallstate) && (subsumes bigstate smallstate) in
+                        else let similar_states = StateSpace.get_comparable_states state_space bigstate
+                        and check_sub smallstate = (table_test setsmall smallstate) && (subsumes bigstate smallstate)
+			in begin
+			print_message Verbose_high ("subsumesset with " ^ string_of_int (List.length similar_states) ^ " states");
 			List.exists check_sub similar_states
+			end
 		in
 
 		let layersetsubsumes setbig smallstate =
 			(* Does an element of the set subsume smallstate and is in the same layer? *)
+			if table_test setbig smallstate then true (* quick pre-check *)
                         (* we traverse all states with the same location modulo hash collision *)
-                        let similar_states = StateSpace.get_comparable_states state_space smallstate in
-                        let check_sub bigstate =
-                                (table_test setbig bigstate) && (subsumes bigstate smallstate) && (same_parameter_projection bigstate smallstate) in
+                        else let similar_states = StateSpace.get_comparable_states state_space smallstate
+                        and check_sub bigstate = (table_test setbig bigstate) && (subsumes bigstate smallstate)
+				&& (same_parameter_projection bigstate smallstate)
+			in begin
+			print_message Verbose_high ("layersetsubsumes with " ^ string_of_int (List.length similar_states) ^ " states");
 			List.exists check_sub similar_states
+			end
 		in
 
 		(******************************************)
@@ -505,8 +511,8 @@ class algoNDFS =
 					| _ -> print_message Verbose_standard "Error popping from cyan";
 				in
 				let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-					if (not (table_test blue astate) &&
-						not (List.mem astate !cyan)) then true else false in
+					not (table_test blue astate) && not (table_test cyan astate)
+				in
 				let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 					false in
 				let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
@@ -544,12 +550,14 @@ class algoNDFS =
 						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 							true in
 						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-							if (List.mem astate !cyan) then true else false in
+							(table_test cyan astate)
+						in
 						let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
 							cyclefound astate astate
 						in
 						let testrecursivedfs (astate : State.state_index) : bool =
-							if (not (List.mem astate !red)) then true else false in
+							not (table_test red astate)
+						in
 						let postdfs (astate : State.state_index) (astate_depth : int) : unit =
 							() in
 						rundfs enterdfs predfs noLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
@@ -614,9 +622,8 @@ class algoNDFS =
 					| _ -> print_message Verbose_standard "Error popping from cyan";
 				in
 				let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-					if (not (table_test blue astate) &&
-						not (List.mem astate !cyan) &&
-						not (setsubsumes !red astate)) then true else false in
+					not (table_test blue astate) && not (table_test cyan astate) && not (setsubsumes red astate)
+				in
 				let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 					false in
 				let alternativedfs (astate: State.state_index) (astate_depth : int) : unit =
@@ -654,15 +661,17 @@ class algoNDFS =
 							if (options#counterex = true) then raise TerminateAnalysis;
 						in
 						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-							if (same_parameter_projection thestate astate) then true
-							else false in
+							(same_parameter_projection thestate astate)
+						in
 						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-							if (subsumesset astate !cyan) then true else false in
+							(subsumesset astate cyan)
+						in
 						let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
 							cyclefound astate astate
 						in
 						let testrecursivedfs (astate : State.state_index) : bool =
-							if (not (setsubsumes !red astate)) then true else false in
+							not (setsubsumes red astate)
+						in
 						let postdfs (astate : State.state_index) (astate_depth : int) : unit =
 							() in
 						rundfs enterdfs predfs noLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
@@ -738,11 +747,11 @@ class algoNDFS =
 							| _ -> print_message Verbose_standard "Error popping from cyan";
 						in
 						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-							if (not (table_test blue astate) &&
-								not (List.mem astate !cyan)) then true else false in
+							not (table_test blue astate) && not (table_test cyan astate)
+						in
 						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-							if (not (same_parameter_projection thestate astate)) then true
-							else false in
+							not (same_parameter_projection thestate astate)
+						in
 						let alternativedfs (astate: State.state_index) (astate_depth : int) : unit =
 							add_pending astate (astate_depth + 1) in
 						let testrecursivedfs (astate: State.state_index) : bool =
@@ -778,17 +787,17 @@ class algoNDFS =
 								if (options#counterex = true) then raise TerminateAnalysis;
 								in
 								let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-									if (same_parameter_projection thestate astate) then true
-									else false in
+									(same_parameter_projection thestate astate)
+								in
 								let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-									if (List.mem astate !cyan) then true
-									else false in
+									(table_test cyan astate)
+								in
 								let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
 									cyclefound astate astate
 								in
 								let testrecursivedfs (astate : State.state_index) : bool =
-									if (not (List.mem astate !red)) then true
-									else false in
+									not (table_test red astate)
+								in
 								let postdfs (astate : State.state_index) (astate_depth : int) : unit =
 									() in
 								rundfs enterdfs predfs noLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
@@ -867,12 +876,13 @@ class algoNDFS =
 							| _ -> print_message Verbose_standard "Error popping from cyan";
 						in
 						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-							if (not (table_test blue astate) &&
-								not (List.mem astate !cyan) &&
-								not (layersetsubsumes !red astate)) then true else false in
+							not (table_test blue astate) &&
+							not (table_test cyan astate) &&
+							not (layersetsubsumes red astate)
+						in
 						let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-							if (not (same_parameter_projection thestate astate)) then true
-							else false in
+							not (same_parameter_projection thestate astate)
+						in
 						let alternativedfs (astate: State.state_index) (astate_depth : int) : unit =
 							add_pending astate (astate_depth + 1) in
 						let testrecursivedfs (astate: State.state_index) : bool =
@@ -908,17 +918,17 @@ class algoNDFS =
 								if (options#counterex = true) then raise TerminateAnalysis;
 								in
 								let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-									if (same_parameter_projection thestate astate) then true
-									else false in
+									(same_parameter_projection thestate astate)
+								in
 								let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
-									if (subsumesset astate !cyan) then true
-									else false in
+									(subsumesset astate cyan)
+								in
 								let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
 									cyclefound astate astate
 								in
 								let testrecursivedfs (astate : State.state_index) : bool =
-									if (not (layersetsubsumes !red astate)) then true
-									else false in
+									not (layersetsubsumes red astate)
+								in
 								let postdfs (astate : State.state_index) (astate_depth : int) : unit =
 									() in
 								rundfs enterdfs predfs noLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs astate astate_depth
@@ -938,7 +948,7 @@ class algoNDFS =
 							with TerminateAnalysis -> ());
 				print_message Verbose_low("Finished the calls")
 
-			| _ -> raise (InternalError ("Unknown exploration order in NDFS"))
+                       | _ -> raise (InternalError ("Unknown exploration order in NDFS"))
 		end;
 
 		(* combine the linear constraints *)
