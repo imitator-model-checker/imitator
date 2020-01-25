@@ -3,12 +3,23 @@
 ###########################################
 # Script for generating experiments table #
 # Author: Laure Petrucci                  #
-# Version: 2.0                            #
+# Version: 2.1                            #
 # Date: 25/01/2020                        #
 ###########################################
 
 function usage {
-	echo -e "\033[1;31musage\033[0m: $0 -t timeout -o table_filename [-s | -i input_models]"
+	echo -e "\033[1;31musage\033[0m: $0 [-h | [-t timeout] -o table_filename [-s | -i input_models]]"
+}
+
+function help {
+	echo -e ""
+	usage
+	echo -e "\nExecutes the experiments on all models (takes approximately 37 minutes). The result is written in the file specified with the \033[1m-o\033[0m option"
+	echo -e "\n\033[1m-h\033[0m\t\t\tThis help"
+	echo -e "\n\033[1m-t timeout\033[0m\t\tUses a specified value for the timeout (in seconds) \033[4m[default: 90]\033[0m"
+	echo -e "\n\033[1m-o table_filename\033[0m\tOutputs the results in a csv file (with separator ;) named \033[4mtable_filename\033[0m"
+	echo -e "\n\033[1m-s\033[0m\t\t\tUses a subset of the models (takes approximately 22 minutes)"
+	echo -e "\n\033[1m-i input_models\033[0m\t\tOnly the models in \033[4minput_models\033[0m are used"
 	exit
 }
 
@@ -26,7 +37,7 @@ function process_results {
 # main part of the script
 
 # get the options
-timeout=60 # 1 minute by default
+timeout=90 # 1.5 minute by default
 output_file=
 exp_dir="tests/acceptingExamples"
 input_files="BRP coffee \
@@ -40,27 +51,24 @@ input_files="BRP coffee \
 		Sched2.50.2 simop \
 		spsmall tgcTogether2 \
 		WFAS-BBLS15-det"
-while getopts "t:o:si:'" opt; do
+while getopts "ht:o:si:'" opt; do
 case $opt in
+	h) help ;;
 	t) timeout=$OPTARG ;;
 	o) output_file=$OPTARG ;;
-	s) input_files="BRP coffee \
-		critical-region critical-region4 F3 F4 FDDI4 FischerAHV93 flipflop fmtv1A1-v2 \
-		fmtv1A3-v2 JLR-TACAS13 \
+	s) input_files="critical-region critical-region4 F3 F4 FDDI4 FischerAHV93 flipflop fmtv1A1-v2 \
 		lynch lynch5 \
-		Pipeline-KP12-2-3 Pipeline-KP12-2-5 Pipeline-KP12-3-3 \
+		Pipeline-KP12-2-3 \
 		RCP Sched2.100.0 \
-		Sched2.100.2 \
 		Sched2.50.0 \
-		Sched2.50.2 simop \
-		spsmall tgcTogether2 \
-		WFAS-BBLS15-det" ;;
+		spsmall tgcTogether2" ;;
 	i) input_files=$OPTARG ;;
 esac
 done
 
 if [ -z "$output_file" ]
 then usage
+	exit
 fi
 
 extension=".${output_file##*.}"
