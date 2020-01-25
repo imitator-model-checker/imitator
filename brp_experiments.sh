@@ -10,10 +10,11 @@
 exp_dir="tests/BRP"
 # experiments of section 6.1
 echo -e '\e[42mExperiments of section 6.1\e[0m'
-bin/imitator -mode EF -incl -merge $exp_dir/brp_Channels.imi
-bin/imitator -mode EF -merge -incl $exp_dir/brp_RC.imi
-bin/imitator -mode EF -merge -incl $exp_dir/brp_RC_MAX3.imi
-bin/imitator -mode EF -merge -incl $exp_dir/brp_RC_MAX4.imi
+bin/imitator -mode EF -mergeq -incl $exp_dir/brp_Channels.imi
+bin/imitator -mode EF -mergeq -incl $exp_dir/brp_RC.imi
+bin/imitator -mode EF -mergeq -incl $exp_dir/brp_RC_MAX3.imi
+bin/imitator -mode EF -mergeq -incl $exp_dir/brp_RC_MAX4.imi
+bin/imitator -mode EF -mergeq -incl $exp_dir/brp_RC_MAX20.imi
 # experiments of section 6.2
 echo -e '\e[42mExperiments of section 6.2\e[0m'
 bin/imitator -mode AccLoopSynthNDFS -explOrder=NDFSsub $exp_dir/brp_RC.imi -depth-limit=20
