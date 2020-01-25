@@ -4,7 +4,7 @@
 # Script for generating experiments table #
 # Author: Laure Petrucci                  #
 # Version: 2.1                            #
-# Date: 25/01/2020                        #
+# Date: 2020-01-25                        #
 ###########################################
 
 function usage {
