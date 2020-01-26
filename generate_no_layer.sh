@@ -89,32 +89,32 @@ for f in $input_files
 			| sed -e 's/ parameters/ \;/' | sed -e 's/ parameter/ \; /' ` >> $output_file
 	# no strategy
 		echo -e "\twithout strategy"
-		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFS -no-lookahead -no-acceptfirst -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
+		bin/imitator -mode AccLoopSynthNDFS -explOrder NDFS -no-lookahead -no-acceptfirst -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
 		process_results
 		echo -n ' ; ' >> $output_file
 	# subsumption
 		echo -e "\tsubsumption only"
-		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFSsub -no-lookahead -no-acceptfirst -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
+		bin/imitator -mode AccLoopSynthNDFS -explOrder NDFSsub -no-lookahead -no-acceptfirst -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
 		process_results
 		echo -n ' ; ' >> $output_file
 	# ordering
 		echo -e "\tordering only"
-		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFS -no-lookahead -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
+		bin/imitator -mode AccLoopSynthNDFS -explOrder NDFS -no-lookahead -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
 		process_results
 		echo -n ' ; ' >> $output_file
 	# lookahead
 		echo -e "\tlookahead only"
-		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFS -no-acceptfirst -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
+		bin/imitator -mode AccLoopSynthNDFS -explOrder NDFS -no-acceptfirst -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
 		process_results
 		echo -n ' ; ' >> $output_file
 	# lookahead + ordering
 		echo -e "\tlookahead and ordering"
-		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFS -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
+		bin/imitator -mode AccLoopSynthNDFS -explOrder NDFS -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
 		process_results
 		echo -n ' ; ' >> $output_file
 	# lookahead + ordering + subsumption
 		echo -e "\tsubsumption, lookahead and ordering"
-		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFSsub -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
+		bin/imitator -mode AccLoopSynthNDFS -explOrder NDFSsub -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
 		process_results
 		echo '' >> $output_file
 	done
