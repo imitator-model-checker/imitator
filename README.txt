@@ -1,28 +1,22 @@
-The artefact provides the source files as well as a compiled version of imitator.
-
-*********************************
-0. Move to the imitator directory
-*********************************
-
-All files are in the directory named imitator.
-
-cd imitator
-
 The specific implementation of NDFS source code is in the file: src/AlgoNDFS.ml
 
-********************************
-1. The executable file
-********************************
-The executable of the tool is:
+**************************************
+1. The executable file and compilation
+**************************************
+The executable of the tool is provided:
 
 bin/imitator
 
 The execution without options/automata file provides a summary of usage of the tool.
-The full detailed manual is in docs/IMITATOR-user-manual.pdf
+The full detailed manual is in doc/IMITATOR-user-manual.pdf
 
-********************************
+The tool can also be compiled in the provided environment using:
+
+./build.sh
+
+**************************
 2. Running the experiments
-********************************
+**************************
 Two scripts are provided that were used for the experiments in the paper:
 
 - generate_table.sh generates table 2 contents in csv format which can be viewed in a spreadsheet tool (the delimitor used is ; which is standard).

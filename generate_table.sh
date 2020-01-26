@@ -14,7 +14,7 @@ function usage {
 function help {
 	echo -e ""
 	usage
-	echo -e "\nExecutes the experiments on all models (takes approximately 37 minutes). The result is written in the file specified with the \033[1m-o\033[0m option"
+	echo -e "\nExecutes the experiments on all models (takes approximately 112 minutes). The result is written in the file specified with the \033[1m-o\033[0m option"
 	echo -e "\n\033[1m-h\033[0m\t\t\tThis help"
 	echo -e "\n\033[1m-t timeout\033[0m\t\tUses a specified value for the timeout (in seconds) \033[4m[default: 90]\033[0m"
 	echo -e "\n\033[1m-o table_filename\033[0m\tOutputs the results in a csv file (with separator ;) named \033[4mtable_filename\033[0m"
