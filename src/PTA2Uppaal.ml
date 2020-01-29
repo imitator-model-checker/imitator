@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/03/01
- * Last modified     : 2020/01/08
+ * Last modified     : 2020/01/29
  *
  ************************************************************)
 
@@ -78,7 +78,9 @@ let footer = ""
 (* Convert a var_type into a string *)
 let string_of_var_type = function
 	| Var_type_clock -> "clock"
-	| Var_type_discrete -> "int"
+	| Var_type_discrete Rational -> "int"
+	(*** TODO: check that Booleans are indeed supported! ***)
+	| Var_type_discrete Boolean -> "bool"
 	| Var_type_parameter -> "parameter"
 
 

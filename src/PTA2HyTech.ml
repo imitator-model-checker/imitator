@@ -12,7 +12,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2016/01/26
- * Last modified     : 2020/01/08
+ * Last modified     : 2020/01/29
  *
  ************************************************************)
 
@@ -64,7 +64,10 @@ let footer = "\n"
 (* Convert a var_type into a string *)
 let string_of_var_type = function
 	| Var_type_clock -> "clock"
-	| Var_type_discrete -> "discrete"
+	| Var_type_discrete Rational -> "discrete"
+	| Var_type_discrete Boolean ->
+		print_warning "Boolean detected: this is unsupported by HyTech";
+		"boolean -- unsupported by HyTech! \n"
 	| Var_type_parameter -> "parameter"
 
 

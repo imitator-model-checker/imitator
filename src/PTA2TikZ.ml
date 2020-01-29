@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2015/03/24
- * Last modified     : 2020/01/08
+ * Last modified     : 2020/01/29
  *
  ****************************************************************)
 
@@ -45,7 +45,7 @@ let variable_names_with_style variable_index =
 	let name = escape_latex (model.variable_names variable_index) in
 	match model.type_of_variables variable_index with
 	| Var_type_clock -> "\\styleclock{" ^ name ^ "}"
-	| Var_type_discrete -> "\\styledisc{" ^ name ^ "}"
+	| Var_type_discrete _ -> "\\styledisc{" ^ name ^ "}"
 	| Var_type_parameter -> "\\styleparam{" ^ name ^ "}"
 
 

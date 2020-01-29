@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/01/24
+ * Last modified     : 2020/01/29
  *
  ************************************************************)
 
@@ -1848,9 +1848,9 @@ let get_type_of_discrete_variable (variable_names : variable_name array) (variab
 	
 	(*** BADPROG: check for every type if we find the type (perhaps implement something more efficient??) ***)
 	try(
-	List.iter (fun discrete_type : ParsingStructure.parsed_var_type_discrete ->
+	List.iter (fun (discrete_type : ParsingStructure.parsed_var_type_discrete) : unit ->
 		(* Get all variables for this type *)
-		let all_variables_for_this_type = try (Hashtbl.find variables_per_type (Parsed_var_type_discrete discrete_type)) with Not_found -> [] in
+		let all_variables_for_this_type : variable_name list = try (Hashtbl.find variables_per_type (Parsed_var_type_discrete discrete_type)) with Not_found -> [] in
 		
 		(* Check whether our variable belongs to this list *)
 		if List.mem variable_name all_variables_for_this_type then(
@@ -1862,7 +1862,7 @@ let get_type_of_discrete_variable (variable_names : variable_name array) (variab
 	) all_concrete_parsed_discrete_types;
 	
 	(* If still there: variable not found, impossible situation *)
-	raise (InternalError ("Discrete type not found for variable " ^ variable_name ^ " although it should have been checked before.")) 
+	raise (InternalError ("Discrete type not found for variable " ^ variable_name ^ " although it should have been checked before."));
 	
 	) with Found_type discrete_type -> (
 		(* Convert parsed type to abstract type *)

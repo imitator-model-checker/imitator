@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/01/24
+ * Last modified     : 2020/01/29
  *
  ************************************************************/
 
@@ -29,35 +29,77 @@ let parse_error s =
 ;;
 
 
+(*------------------------------------------------------------*)
+(* Hash table for variable declarations *)
+(*------------------------------------------------------------*)
+(*** NOTE: the initial size is (an upper bound on) the number of all possible types, including constants ***)
+let variables_per_type : (parsed_var_type , variable_name list) Hashtbl.t = Hashtbl.create 10;;
+
+let constants : (variable_name * constant_value) list ref = ref [];;
+
+let unassigned_constants: variable_name list ref = ref [];;
+
+
+(*------------------------------------------------------------*)
 (*** TODO (Jaime): is it included twice ? ***)
 let include_list = ref [];;
 
-let add_parsed_model_to_parsed_model_list parsed_model_list parsed_model =
+let add_parsed_model_to_parsed_model_unified parsed_model_unified parsed_model =
+	(* We need to fuse variable declarations *)
+
+	(* Easy part: append lists *)
+	let constants = List.append parsed_model.variable_declarations.constants parsed_model_unified.variable_declarations.constants in
+	let unassigned_constants = List.append parsed_model.variable_declarations.unassigned_constants parsed_model_unified.variable_declarations.unassigned_constants in
+
+	
+	(* Less easy part: fuse Hashtable *)
+	
+	(* Get the unified hash table *)
+	let unified_hashtable = parsed_model_unified.variable_declarations.variables_per_type in
+	
+	(* Iterate on the smaller model to fuse into the unified model *)
+	Hashtbl.iter (fun parsed_var_type variable_names ->
+		(* Try to get the previous list *)
+		let existing_list = try (
+			Hashtbl.find unified_hashtable parsed_var_type
+		) with Not_found -> [] in
+		
+		(* Replace with the new list *)
+		Hashtbl.replace unified_hashtable parsed_var_type (List.rev_append existing_list variable_names);
+		
+	) parsed_model.variable_declarations.variables_per_type;
+	
+	let variables_declarations = {
+		variables_per_type	= unified_hashtable;
+		constants			= constants;
+		unassigned_constants= unassigned_constants;
+	} in
+
+
+
 	{
-		variable_declarations	= List.append parsed_model.variable_declarations parsed_model_list.variable_declarations;
-		automata				= List.append parsed_model.automata parsed_model_list.automata;
-		init_definition			= List.append parsed_model.init_definition parsed_model_list.init_definition;
+		variable_declarations	= variables_declarations;
+		automata				= List.append parsed_model.automata parsed_model_unified.automata;
+		init_definition			= List.append parsed_model.init_definition parsed_model_unified.init_definition;
 	}
 ;;
 
 let unzip l = List.fold_left
-	add_parsed_model_to_parsed_model_list
+	add_parsed_model_to_parsed_model_unified
 	{
-		variable_declarations	= [];
+		variable_declarations	= {
+			variables_per_type	= variables_per_type;
+			constants			= [];
+			unassigned_constants= [];
+		};
 		automata				= [];
 		init_definition			= [];
 	}
 	(List.rev l)
 ;;
+(*------------------------------------------------------------*)
 
 
-(* Hash table for variable declarations *)
-(*** NOTE: the initial size is (an upper bound on) the number of all possible types, including constants ***)
-let variables_per_type : ParsingStructure.variables_declarations = Hashtbl.create 10;;
-
-let constants : (variable_name * constant_value) list ref = ref [];;
-
-let unassigned_constants: variable_name list ref = ref [];;
 
 (** We also defined two types to differentiate assigned and unassigned constants *)
 type variable_declaration = 
@@ -137,7 +179,7 @@ main:
 		let included_model = unzip !include_list in
 
 		(* Return the parsed model *)
-		add_parsed_model_to_parsed_model_list included_model main_model
+		add_parsed_model_to_parsed_model_unified included_model main_model
 (*		{
 			variable_declarations	= (List.append incl_decl declarations);
 			automata				= (List.append incl_automata automata);
@@ -228,7 +270,7 @@ decl_var_lists:
 		(* Remove the tags *)
 		let assigned_variables = List.map
 			(function 
-				| Parsed_constant_declaration pair -> pair
+				| Parsed_constant_declaration (constant_name, value) -> (constant_name, value)
 				| _ -> raise (InternalError "Something different from Parsed_constant_declaration was found in a list in ModelParser.mly, although it was filtered before")
 			)
 			assigned_variables
@@ -247,7 +289,7 @@ decl_var_lists:
 		(* If current type is constants *)
 		if var_type = Parsed_var_type_constant then(
 			(* Unassigned variable names are ill-formed: add to unassigned constants *)
-			unassigned_constants := List.rev_append unassigned_variables unassigned_constants;
+			unassigned_constants := List.rev_append unassigned_variables !unassigned_constants;
 			
 		(* Otherwise: normal type => add the variables to the proper type *)
 		)else(
@@ -284,9 +326,9 @@ decl_var_list:
 
 /* Single variable declaration with or without assignment */
 variable_declaration:
-	| NAME { [Parsed_variable_declaration $1] }
+	| NAME { Parsed_variable_declaration $1 }
 	/* TODO: add type for this constant! */
-	| NAME OP_EQ rational_linear_expression { [Parsed_constant_declaration ($1, $3)] }
+	| NAME OP_EQ rational_linear_expression { Parsed_constant_declaration ($1, $3) }
 ;
 
 

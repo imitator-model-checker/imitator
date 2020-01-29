@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/01/17
+ * Last modified     : 2020/01/29
  *
  ************************************************************)
  
@@ -698,8 +698,10 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 			);
 			(* Get value *)
 			let zero_value = match model.type_of_variables variable_index with
-				| Var_type_discrete ->
+				| Var_type_discrete Rational ->
 					Location.get_discrete_value initial_state.global_location variable_index
+				| Var_type_discrete Boolean ->
+					raise (NotImplemented "Boolean type in Graphics.ml")
 				| Var_type_clock ->
 					initial_state.px_valuation variable_index
 				| _ -> raise (InternalError "Clock or discrete variable expected in draw_concrete_run")
@@ -743,7 +745,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 					match model.type_of_variables variable_index with
 					
 				(* If discrete: the previous value is still valid right before the current transition *)
-					| Var_type_discrete ->
+					| Var_type_discrete Rational ->
 					
 						(* Get the discrete value *)
 						let value = Location.get_discrete_value step_target.global_location variable_index in
@@ -777,6 +779,9 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 							^ "\n"
 							,value
 						)
+
+					| Var_type_discrete Boolean ->
+						raise (NotImplemented "Boolean type in Graphics.ml")
 
 				(* If clock: the previous value must be incremented by the timed elapsed since the last point *)
 					| Var_type_clock -> 
