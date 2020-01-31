@@ -193,8 +193,8 @@ and get_variables_in_parsed_boolean_expression variables_used_ref = function
 		get_variables_in_parsed_boolean_expression variables_used_ref bool_expr1;
 		get_variables_in_parsed_boolean_expression variables_used_ref bool_expr2;
 	| Parsed_Not bool_expr -> get_variables_in_parsed_boolean_expression variables_used_ref bool_expr
-	| Parsed_Discrete_boolean_expression bool_expr -> get_variables_in_parsed_discrete_boolean_expression variables_used_ref bool_expr
-and get_variables_in_parsed_discrete_boolean_expression variables_used_ref  = function
+	| Parsed_rational_boolean_expression bool_expr -> get_variables_in_parsed_rational_boolean_expression variables_used_ref bool_expr
+and get_variables_in_parsed_rational_boolean_expression variables_used_ref  = function
 	| Parsed_expression (arithmetic_expr1, _ (* relop *), arithmetic_expr2) ->
 		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr1;
 		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr2;
@@ -540,8 +540,8 @@ let rec convert_bool_expr index_of_variables constants = function
 	| Parsed_Not e -> Not_bool (convert_bool_expr index_of_variables constants e)
 	| Parsed_And (e1,e2) -> And_bool ((convert_bool_expr index_of_variables constants e1), (convert_bool_expr index_of_variables constants e2))
 	| Parsed_Or (e1, e2) -> Or_bool ((convert_bool_expr index_of_variables constants e1), (convert_bool_expr index_of_variables constants e2))
-	| Parsed_Discrete_boolean_expression parsed_discrete_boolean_expression ->
-		Discrete_boolean_expression (convert_discrete_bool_expr index_of_variables constants parsed_discrete_boolean_expression)
+	| Parsed_rational_boolean_expression parsed_rational_boolean_expression ->
+		Discrete_boolean_expression (convert_discrete_bool_expr index_of_variables constants parsed_rational_boolean_expression)
 
 
 
@@ -584,8 +584,8 @@ and convert_parsed_discrete_factor useful_parsing_model_information = function
 	| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
 
 
-(* Convert parsed_discrete_boolean_expression *)
-let convert_parsed_discrete_boolean_expression useful_parsing_model_information = function
+(* Convert parsed_rational_boolean_expression *)
+let convert_parsed_rational_boolean_expression useful_parsing_model_information = function
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_expression (parsed_discrete_arithmetic_expression1 , parsed_relop , parsed_discrete_arithmetic_expression2) ->
 		Expression (
@@ -618,7 +618,7 @@ let convert_parsed_loc_predicate useful_parsing_model_information = function
 
 (* Convert parsed_simple_predicate *)
 let convert_parsed_simple_predicate useful_parsing_model_information = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (convert_parsed_discrete_boolean_expression useful_parsing_model_information parsed_discrete_boolean_expression)
+	| Parsed_discrete_boolean_expression parsed_rational_boolean_expression -> Discrete_boolean_expression (convert_parsed_rational_boolean_expression useful_parsing_model_information parsed_rational_boolean_expression)
 	| Parsed_loc_predicate parsed_loc_predicate -> Loc_predicate (convert_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate)
 
 
@@ -718,8 +718,8 @@ let get_variables_in_parsed_loc_predicate variables_used_ref = function
 (* Gather all variable names used in a Simple_predicate *)
 (*------------------------------------------------------------*)
 let get_variables_in_parsed_simple_predicate variables_used_ref = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression ->
-		get_variables_in_parsed_discrete_boolean_expression variables_used_ref parsed_discrete_boolean_expression
+	| Parsed_discrete_boolean_expression parsed_rational_boolean_expression ->
+		get_variables_in_parsed_rational_boolean_expression variables_used_ref parsed_rational_boolean_expression
 		
 	| Parsed_loc_predicate parsed_loc_predicate ->
 		(* No variable in location predicate *)
@@ -3152,8 +3152,8 @@ and check_parsed_discrete_factor useful_parsing_model_information = function
 		check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor
 
 
-(* Check correct variable names in parsed_discrete_boolean_expression *)
-let check_parsed_discrete_boolean_expression useful_parsing_model_information = function
+(* Check correct variable names in parsed_rational_boolean_expression *)
+let check_parsed_rational_boolean_expression useful_parsing_model_information = function
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_expression (parsed_discrete_arithmetic_expression1 , _ , parsed_discrete_arithmetic_expression2) ->
 		evaluate_and
@@ -3197,8 +3197,8 @@ let check_parsed_loc_predicate useful_parsing_model_information = function
 
 
 let check_parsed_simple_predicate useful_parsing_model_information = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression ->
-		check_parsed_discrete_boolean_expression useful_parsing_model_information parsed_discrete_boolean_expression
+	| Parsed_discrete_boolean_expression parsed_rational_boolean_expression ->
+		check_parsed_rational_boolean_expression useful_parsing_model_information parsed_rational_boolean_expression
 	| Parsed_loc_predicate parsed_loc_predicate ->
 		check_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate
 
@@ -5205,7 +5205,7 @@ let check_parsed_loc_predicate useful_parsing_model_information = function
 
 (* Check correct variable names in parsed_simple_predicate *)
 let check_parsed_simple_predicate useful_parsing_model_information = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> check_parsed_discrete_boolean_expression useful_parsing_model_information parsed_discrete_boolean_expression
+	| Parsed_discrete_boolean_expression parsed_rational_boolean_expression -> check_parsed_rational_boolean_expression useful_parsing_model_information parsed_rational_boolean_expression
 	| Parsed_loc_predicate parsed_loc_predicate -> check_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate
 
 

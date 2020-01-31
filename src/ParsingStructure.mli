@@ -136,7 +136,7 @@ type parsed_boolean_expression =
 	| Parsed_Not of parsed_boolean_expression (** Negation *)
 	| Parsed_And of parsed_boolean_expression * parsed_boolean_expression (** Conjunction *)
 	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
-	| Parsed_Discrete_boolean_expression of parsed_rational_boolean_expression
+	| Parsed_rational_boolean_expression of parsed_rational_boolean_expression
 
 
 

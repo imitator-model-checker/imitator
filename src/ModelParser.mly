@@ -721,10 +721,10 @@ boolean_expression:
 	| OP_NEQ LPAREN boolean_expression RPAREN { Parsed_Not $3 }
 	| boolean_expression AMPERSAND boolean_expression { Parsed_And ($1, $3) }
 	| boolean_expression PIPE boolean_expression { Parsed_Or ($1, $3) }
-	| discrete_boolean_expression { Parsed_Discrete_boolean_expression $1 }
+	| rational_boolean_expression { Parsed_rational_boolean_expression $1 }
 ;
 
-discrete_boolean_expression:
+rational_boolean_expression:
 	/* Discrete arithmetic expression of the form Expr ~ Expr */
 	| arithmetic_expression relop arithmetic_expression { Parsed_expression ($1, $2, $3) }
 

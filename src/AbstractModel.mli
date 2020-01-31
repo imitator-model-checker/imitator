@@ -52,7 +52,7 @@ type action_type =
 	| Action_type_nosync
 
 
-type discrete_value = NumConst.t
+type discrete_rational_value = NumConst.t
 
 
 (************************************************************)
