@@ -97,7 +97,7 @@ type clock_updates =
 type string_term = string
 
 type discrete_term =
-	| Rational_term of DiscreteExpressions.discrete_arithmetic_expression
+	| Rational_term of RationalExpressions.rational_arithmetic_expression
 	| String_term of string_term
 
 type discrete_update = discrete_index * discrete_term
@@ -130,7 +130,7 @@ type boolean_expression =
 	| Not_bool of boolean_expression (** Negation *)
 	| And_bool of boolean_expression * boolean_expression (** Conjunction *)
 	| Or_bool of boolean_expression * boolean_expression (** Disjunction *)
-	| Discrete_boolean_expression of DiscreteExpressions.discrete_boolean_expression
+	| Rational_boolean_expression of RationalExpressions.rational_boolean_expression
 
 (** Updates *)
 type updates = {

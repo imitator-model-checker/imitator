@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/10
- * Last modified     : 2020/01/07
+ * Last modified     : 2020/01/31
  *
  ************************************************************)
 
@@ -30,7 +30,7 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 (** Valuation *)
 (************************************************************)
 (************************************************************)
-type discrete_valuation = Automaton.discrete_index -> Automaton.discrete_value
+type rational_valuation = Automaton.rational_index -> Automaton.rational_value
 
 
 (************************************************************)
@@ -38,27 +38,27 @@ type discrete_valuation = Automaton.discrete_index -> Automaton.discrete_value
 (** Arithmetic expressions for discrete variables *)
 (************************************************************)
 (************************************************************)
-type discrete_arithmetic_expression =
-	| DAE_plus of discrete_arithmetic_expression * discrete_term
-	| DAE_minus of discrete_arithmetic_expression * discrete_term
-	| DAE_term of discrete_term
+type rational_arithmetic_expression =
+	| DAE_plus of rational_arithmetic_expression * rational_term
+	| DAE_minus of rational_arithmetic_expression * rational_term
+	| DAE_term of rational_term
 
-and discrete_term =
-	| DT_mul of discrete_term * discrete_factor
-	| DT_div of discrete_term * discrete_factor
-	| DT_factor of discrete_factor
+and rational_term =
+	| DT_mul of rational_term * rational_factor
+	| DT_div of rational_term * rational_factor
+	| DT_factor of rational_factor
 
-and discrete_factor =
+and rational_factor =
 	| DF_variable of Automaton.variable_index
 	| DF_constant of Automaton.variable_value
-	| DF_expression of discrete_arithmetic_expression
-	| DF_unary_min of discrete_factor
+	| DF_expression of rational_arithmetic_expression
+	| DF_unary_min of rational_factor
 
 (************************************************************)
 (** Evaluate a discrete arithmetic expression with a valuation *)
 (************************************************************)
 
-val eval_discrete_arithmetic_expression : discrete_valuation -> discrete_arithmetic_expression -> Automaton.discrete_value
+val eval_rational_arithmetic_expression : rational_valuation -> rational_arithmetic_expression -> Automaton.rational_value
 
 
 (************************************************************)
@@ -68,16 +68,16 @@ val eval_discrete_arithmetic_expression : discrete_valuation -> discrete_arithme
 (************************************************************)
 (************************************************************)
 
-type discrete_boolean_expression =
+type rational_boolean_expression =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Expression of discrete_arithmetic_expression * relop * discrete_arithmetic_expression
+	| Expression of rational_arithmetic_expression * relop * rational_arithmetic_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
+	| Expression_in of rational_arithmetic_expression * rational_arithmetic_expression * rational_arithmetic_expression
 
 
 (************************************************************)
 (** Check whether a Boolean expression evaluates to true when valuated with a valuation *)
 (************************************************************)
 
-val check_discrete_boolean_expression : discrete_valuation -> discrete_boolean_expression -> bool
+val check_rational_boolean_expression : rational_valuation -> rational_boolean_expression -> bool
 

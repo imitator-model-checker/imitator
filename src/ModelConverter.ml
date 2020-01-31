@@ -27,7 +27,7 @@ open ImitatorUtilities
 open Options
 open Automaton
 open ParsingStructure
-open DiscreteExpressions
+open RationalExpressions
 open AbstractModel
 open AbstractProperty
 
@@ -214,8 +214,8 @@ let rec get_variables_in_parsed_discrete_factor variables_used_ref = function
 
 	| Parsed_DF_constant _ -> ()
 
-	| Parsed_DF_expression parsed_discrete_arithmetic_expression ->
-		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref parsed_discrete_arithmetic_expression
+	| Parsed_DF_expression parsed_rational_arithmetic_expression ->
+		get_variables_in_parsed_rational_arithmetic_expression variables_used_ref parsed_rational_arithmetic_expression
 
 	| Parsed_DF_unary_min parsed_discrete_factor -> get_variables_in_parsed_discrete_factor variables_used_ref parsed_discrete_factor
 
@@ -229,10 +229,10 @@ and get_variables_in_parsed_discrete_term variables_used_ref = function
 		get_variables_in_parsed_discrete_factor variables_used_ref parsed_discrete_factor
 
 (** Add variables names in the discrete expression *)
-and get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref = function
-	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression, parsed_discrete_term)
-	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
-		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref parsed_discrete_arithmetic_expression;
+and get_variables_in_parsed_rational_arithmetic_expression variables_used_ref = function
+	| Parsed_DAE_plus (parsed_rational_arithmetic_expression, parsed_discrete_term)
+	| Parsed_DAE_minus (parsed_rational_arithmetic_expression , parsed_discrete_term) ->
+		get_variables_in_parsed_rational_arithmetic_expression variables_used_ref parsed_rational_arithmetic_expression;
 		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term
 
 	| Parsed_DAE_term parsed_discrete_term ->
@@ -370,18 +370,18 @@ let valuate_parsed_update_arithmetic_expression constants =
 (************************************************************)
 
 (*------------------------------------------------------------*)
-(* Convert a parsed_update_arithmetic_expression into a discrete_arithmetic_expression*)
+(* Convert a parsed_update_arithmetic_expression into a rational_arithmetic_expression*)
 (*------------------------------------------------------------*)
 
 (*** TODO (though really not critical): try to do some simplifications… ***)
 
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
-let discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants =
-	let rec discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec = function
+let rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants =
+	let rec rational_arithmetic_expression_of_parsed_update_arithmetic_expression_rec = function
 		| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
-		DAE_plus ((discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (discrete_term_of_parsed_update_term parsed_update_term))
+		DAE_plus ((rational_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (discrete_term_of_parsed_update_term parsed_update_term))
 		| Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
-		DAE_minus ((discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (discrete_term_of_parsed_update_term parsed_update_term))
+		DAE_minus ((rational_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (discrete_term_of_parsed_update_term parsed_update_term))
 		| Parsed_DAE_term parsed_update_term ->
 		DAE_term (discrete_term_of_parsed_update_term parsed_update_term)
 
@@ -413,9 +413,9 @@ let discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_
 		| Parsed_DF_constant var_value -> DF_constant var_value
 		(*** TODO: here, we could very easily get rid of the DF_unary_min by negating the inside expression… ***)
 		| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (discrete_factor_of_parsed_update_factor parsed_discrete_factor)
-		| Parsed_DF_expression parsed_update_arithmetic_expression -> DF_expression (discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression)
+		| Parsed_DF_expression parsed_update_arithmetic_expression -> DF_expression (rational_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression)
 	in
-	discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec
+	rational_arithmetic_expression_of_parsed_update_arithmetic_expression_rec
 
 
 
@@ -423,12 +423,12 @@ let discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_
 (*** TODO (though really not critical): try to do some simplifications… ***)
 
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
-let discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression index_of_variables constants =
-	let rec discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec = function
-		| Parsed_DAE_plus (parsed_discrete_arithmetic_expression, parsed_discrete_term) ->
-			DAE_plus ((discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec parsed_discrete_arithmetic_expression), (discrete_term_of_parsed_discrete_term parsed_discrete_term))
-		| Parsed_DAE_minus (parsed_discrete_arithmetic_expression, parsed_discrete_term) ->
-			DAE_minus ((discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec parsed_discrete_arithmetic_expression), (discrete_term_of_parsed_discrete_term parsed_discrete_term))
+let rational_arithmetic_expression_of_parsed_rational_arithmetic_expression index_of_variables constants =
+	let rec rational_arithmetic_expression_of_parsed_rational_arithmetic_expression_rec = function
+		| Parsed_DAE_plus (parsed_rational_arithmetic_expression, parsed_discrete_term) ->
+			DAE_plus ((rational_arithmetic_expression_of_parsed_rational_arithmetic_expression_rec parsed_rational_arithmetic_expression), (discrete_term_of_parsed_discrete_term parsed_discrete_term))
+		| Parsed_DAE_minus (parsed_rational_arithmetic_expression, parsed_discrete_term) ->
+			DAE_minus ((rational_arithmetic_expression_of_parsed_rational_arithmetic_expression_rec parsed_rational_arithmetic_expression), (discrete_term_of_parsed_discrete_term parsed_discrete_term))
 		| Parsed_DAE_term parsed_discrete_term ->
 			DAE_term (discrete_term_of_parsed_discrete_term parsed_discrete_term)
 
@@ -458,11 +458,11 @@ let discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression inde
 			)
 		)
 		| Parsed_DF_constant var_value -> DF_constant var_value
-		| Parsed_DF_expression parsed_discrete_arithmetic_expression -> DF_expression (discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec parsed_discrete_arithmetic_expression)
+		| Parsed_DF_expression parsed_rational_arithmetic_expression -> DF_expression (rational_arithmetic_expression_of_parsed_rational_arithmetic_expression_rec parsed_rational_arithmetic_expression)
 		| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor)
 	in
 	(* Call high-level function *)
-	discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec
+	rational_arithmetic_expression_of_parsed_rational_arithmetic_expression_rec
 
 
 
@@ -523,14 +523,14 @@ let convert_parsed_relop = function
 
 let convert_discrete_bool_expr index_of_variables constants = function
 	| Parsed_expression (expr1, relop, expr2) -> Expression (
-		(discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr1),
+		(rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr1),
 		(convert_parsed_relop relop),
-		(discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr2)
+		(rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr2)
 		)
 	| Parsed_expression_in (expr1, expr2, expr3) -> Expression_in (
-		(discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr1),
-		(discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr2),
-		(discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr3)
+		(rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr1),
+		(rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr2),
+		(rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr3)
 		)
 		
 (** Convert a boolean expression in its abstract model *)
@@ -541,7 +541,7 @@ let rec convert_bool_expr index_of_variables constants = function
 	| Parsed_And (e1,e2) -> And_bool ((convert_bool_expr index_of_variables constants e1), (convert_bool_expr index_of_variables constants e2))
 	| Parsed_Or (e1, e2) -> Or_bool ((convert_bool_expr index_of_variables constants e1), (convert_bool_expr index_of_variables constants e2))
 	| Parsed_rational_boolean_expression parsed_rational_boolean_expression ->
-		Discrete_boolean_expression (convert_discrete_bool_expr index_of_variables constants parsed_rational_boolean_expression)
+		Rational_boolean_expression (convert_discrete_bool_expr index_of_variables constants parsed_rational_boolean_expression)
 
 
 
@@ -549,17 +549,17 @@ let rec convert_bool_expr index_of_variables constants = function
 (* Functions for property conversion *)
 (*------------------------------------------------------------*)
 
-(* Convert parsed_discrete_arithmetic_expression *)
-let rec convert_parsed_discrete_arithmetic_expression useful_parsing_model_information = function
-	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
+(* Convert parsed_rational_arithmetic_expression *)
+let rec convert_parsed_rational_arithmetic_expression useful_parsing_model_information = function
+	| Parsed_DAE_plus (parsed_rational_arithmetic_expression , parsed_discrete_term) ->
 		DAE_plus (
-			(convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
+			(convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression)
 			,
 			(convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
 		)
-	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
+	| Parsed_DAE_minus (parsed_rational_arithmetic_expression , parsed_discrete_term) ->
 		DAE_minus (
-			(convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
+			(convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression)
 			,
 			(convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
 		)
@@ -580,29 +580,29 @@ and convert_parsed_discrete_factor useful_parsing_model_information = function
 		(* Otherwise: a variable *)
 		else DF_variable (Hashtbl.find useful_parsing_model_information.index_of_variables variable_name)
 	| Parsed_DF_constant var_value -> DF_constant var_value
-	| Parsed_DF_expression parsed_discrete_arithmetic_expression -> DF_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
+	| Parsed_DF_expression parsed_rational_arithmetic_expression -> DF_expression (convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression)
 	| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
 
 
 (* Convert parsed_rational_boolean_expression *)
 let convert_parsed_rational_boolean_expression useful_parsing_model_information = function
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Parsed_expression (parsed_discrete_arithmetic_expression1 , parsed_relop , parsed_discrete_arithmetic_expression2) ->
+	| Parsed_expression (parsed_rational_arithmetic_expression1 , parsed_relop , parsed_rational_arithmetic_expression2) ->
 		Expression (
-			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1
+			convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression1
 			,
 			convert_parsed_relop parsed_relop
 			,
-			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2
+			convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression2
 		)
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Parsed_expression_in (parsed_discrete_arithmetic_expression1 , parsed_discrete_arithmetic_expression2 , parsed_discrete_arithmetic_expression3) ->
+	| Parsed_expression_in (parsed_rational_arithmetic_expression1 , parsed_rational_arithmetic_expression2 , parsed_rational_arithmetic_expression3) ->
 		Expression_in (
-			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1
+			convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression1
 			,
-			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2
+			convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression2
 			,
-			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression3
+			convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression3
 		)
 
 	
@@ -2335,7 +2335,7 @@ let to_abstract_discrete_update index_of_variables constants (variable_name, (pa
 	let variable_index = Hashtbl.find index_of_variables variable_name in
 	match parsed_discrete_term with
 	| Parsed_rational_term parsed_update_arithmetic_expression ->
-		let arithmetic_expression = discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
+		let arithmetic_expression = rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
 		(variable_index, Rational_term arithmetic_expression)
 	| _ -> raise (NotImplemented "non-rational discrete terms in ModelConverter.to_abstract_discrete_update")
 
@@ -3120,11 +3120,11 @@ let check_and_convert_unreachable_global_location index_of_variables type_of_var
 (** Check a discrete Boolean expression *)
 (*------------------------------------------------------------*)
 
-let rec check_parsed_discrete_arithmetic_expression useful_parsing_model_information = function
-	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression , parsed_discrete_term)
-	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
+let rec check_parsed_rational_arithmetic_expression useful_parsing_model_information = function
+	| Parsed_DAE_plus (parsed_rational_arithmetic_expression , parsed_discrete_term)
+	| Parsed_DAE_minus (parsed_rational_arithmetic_expression , parsed_discrete_term) ->
 		evaluate_and
-			(check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
+			(check_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression)
 			(check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
 	| Parsed_DAE_term parsed_discrete_term -> check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term
 
@@ -3146,8 +3146,8 @@ and check_parsed_discrete_factor useful_parsing_model_information = function
 			true
 		)
 	| Parsed_DF_constant _ -> true
-	| Parsed_DF_expression parsed_discrete_arithmetic_expression ->
-		check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression
+	| Parsed_DF_expression parsed_rational_arithmetic_expression ->
+		check_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression
 	| Parsed_DF_unary_min parsed_discrete_factor ->
 		check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor
 
@@ -3155,15 +3155,15 @@ and check_parsed_discrete_factor useful_parsing_model_information = function
 (* Check correct variable names in parsed_rational_boolean_expression *)
 let check_parsed_rational_boolean_expression useful_parsing_model_information = function
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Parsed_expression (parsed_discrete_arithmetic_expression1 , _ , parsed_discrete_arithmetic_expression2) ->
+	| Parsed_expression (parsed_rational_arithmetic_expression1 , _ , parsed_rational_arithmetic_expression2) ->
 		evaluate_and
-			(check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1)
-			(check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2)
+			(check_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression1)
+			(check_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression2)
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Parsed_expression_in (parsed_discrete_arithmetic_expression1 , parsed_discrete_arithmetic_expression2 , parsed_discrete_arithmetic_expression3) ->
-		let check1 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1 in
-		let check2 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2 in
-		let check3 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression3 in
+	| Parsed_expression_in (parsed_rational_arithmetic_expression1 , parsed_rational_arithmetic_expression2 , parsed_rational_arithmetic_expression3) ->
+		let check1 = check_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression1 in
+		let check2 = check_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression2 in
+		let check3 = check_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression3 in
 		check1 && check2 && check3
 
 
@@ -5182,7 +5182,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 (* Check the property w.r.t. the model variables *)
 (*------------------------------------------------------------*)
 
-(* Check correct variable names in parsed_discrete_arithmetic_expression *)
+(* Check correct variable names in parsed_rational_arithmetic_expression *)
 	
 (* Check correct variable names in parsed_loc_predicate *)
 let check_parsed_loc_predicate useful_parsing_model_information = function
