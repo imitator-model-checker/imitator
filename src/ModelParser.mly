@@ -44,7 +44,7 @@ let unassigned_constants: variable_name list ref = ref [];;
 (*** TODO (Jaime): is it included twice ? ***)
 let include_list = ref [];;
 
-let add_parsed_model_to_parsed_model_unified parsed_model_unified parsed_model =
+(*let add_parsed_model_to_parsed_model_unified parsed_model_unified parsed_model =
 	(* We need to fuse variable declarations *)
 
 	(* Easy part: append lists *)
@@ -97,7 +97,7 @@ let unzip l = List.fold_left
 	}
 	(List.rev l)
 ;;
-(*------------------------------------------------------------*)
+(*------------------------------------------------------------*)*)
 
 
 
@@ -176,15 +176,19 @@ main:
 		}
 		in
 		
-		let included_model = unzip !include_list in
+(*		let included_model = unzip !include_list in
 
 		(* Return the parsed model *)
-		add_parsed_model_to_parsed_model_unified included_model main_model
+		add_parsed_model_to_parsed_model_unified included_model main_model*)
 (*		{
 			variable_declarations	= (List.append incl_decl declarations);
 			automata				= (List.append incl_automata automata);
 			init_definition			= (List.append incl_init init_definition);
 		}*)
+		
+		
+		(*** NOTE: Temporarily disable file inclusion ***)
+		main_model
 
 	(*** TODO: cleanup ***)
 (* 		resolve_property (bad::incl_prop), projection_definition, optimization_definition, carto *)
@@ -359,7 +363,10 @@ var_type:
 
 automata:
 	| automaton automata { $1 :: $2 }
-	| include_file automata { include_list := $1 :: !include_list; $2 }
+	| include_file automata {
+		include_list := $1 :: !include_list;
+		$2
+		}
 	| { [] }
 ;
 
