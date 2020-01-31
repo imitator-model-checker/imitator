@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/01/24
+ * Last modified     : 2020/01/31
  *
  ************************************************************)
 
@@ -297,13 +297,18 @@ let string_of_arithmetic_expression variable_names =
 
 
 (* Convert a list of discrete updates into a string *)
-let string_of_discrete_updates ?(sep=", ") model updates =
-	string_of_list_of_string_with_sep sep (List.map (fun (variable_index, arithmetic_expression) ->
+let string_of_discrete_updates ?(sep=", ") model (updates : discrete_update list) =
+	string_of_list_of_string_with_sep sep (List.map (fun (variable_index, discrete_term) ->
 		(* Convert the variable name *)
 		(model.variable_names variable_index)
 		^ " := "
-		(* Convert the arithmetic_expression *)
-		^ (string_of_arithmetic_expression model.variable_names arithmetic_expression)
+		(* Iterate on type *)
+		^ (match discrete_term with 
+			| Rational_term arithmetic_expression ->
+				(* Convert the arithmetic_expression *)
+				(string_of_arithmetic_expression model.variable_names arithmetic_expression)
+			| _ -> raise (NotImplemented "ModelPrinter: non-rational discrete update")
+		)
 	) updates)
 
 

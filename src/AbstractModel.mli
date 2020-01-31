@@ -93,7 +93,15 @@ type clock_updates =
 
 (*** TO OPTIMIZE (in terms of dimensions!) ***)
 
-type discrete_update = discrete_index * DiscreteExpressions.discrete_arithmetic_expression
+(*** TODO ***)
+type string_term = string
+
+type discrete_term =
+	| Rational_term of DiscreteExpressions.discrete_arithmetic_expression
+	| String_term of string_term
+
+type discrete_update = discrete_index * discrete_term
+
 
 (** Guard: a linear constraint on the sole discrete variables, and a linear constraint on (possibly) all variables *)
 

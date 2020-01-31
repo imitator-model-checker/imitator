@@ -173,12 +173,18 @@ and get_variables_in_parsed_update_arithmetic_expression variables_used_ref = fu
 
 (** Add variables names in normal and conditional updates *)
 and get_variables_in_parsed_update variables_used_ref = function
-	| Normal (_, arithmetic_expression) -> get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expression
+	| Normal (_, Parsed_rational_term arithmetic_expression) -> get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expression
+	| Normal (_, _) -> raise (NotImplemented "ModelConverter.get_variables_in_parsed_update")
+	
 	| Condition (bool_expr, update_list_if, update_list_else) -> (** recolect in bool exprs *)
 		get_variables_in_parsed_boolean_expression variables_used_ref bool_expr;
-		List.iter (fun (_, arithmetic_expression) ->
-			get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expression
-		) (update_list_if@update_list_else)
+		List.iter (fun (_, parsed_discrete_term) ->
+			match parsed_discrete_term with
+			| Parsed_rational_term arithmetic_expression ->
+				get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expression
+			| _ -> raise (NotImplemented "ModelConverter.get_variables_in_parsed_update")
+	
+		) (update_list_if @ update_list_else)
 and get_variables_in_parsed_boolean_expression variables_used_ref = function
 	| Parsed_True -> ()
 	| Parsed_False -> ()
@@ -1400,7 +1406,9 @@ let all_locations_different =
 (*------------------------------------------------------------*)
 let check_update index_of_variables type_of_variables variable_names removed_variable_names constants automaton_name update =
 
-	let check_update_normal (variable_name, arithmetic_expression) =
+	let check_update_normal (variable_name, parsed_discrete_term) =
+	match parsed_discrete_term with
+	| Parsed_rational_term arithmetic_expression ->
 		(* Check whether this variable is to be removed because unused elswhere than in resets *)
 		let to_be_removed = List.mem variable_name removed_variable_names in
 
@@ -1451,6 +1459,9 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 			| AbstractModel.Var_type_parameter -> print_error ("The variable '" ^ variable_name ^ "' is a parameter and cannot be updated in automaton '" ^ automaton_name ^ "'."); false
 		)
 		)
+	
+	| _ -> raise (NotImplemented "non-rational discrete in ModelConverter.check_update")
+	
 	in
 	(* Print some information *)
 	print_message Verbose_total ("              Checking one update");
@@ -1460,7 +1471,7 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 	| Condition (_, updates_if, updates_else) ->
 		List.fold_left (fun acc u ->
 			(check_update_normal u) && acc
-		) true (updates_if@updates_else)
+		) true (updates_if @ updates_else)
 
 
 (*------------------------------------------------------------*)
@@ -2320,58 +2331,70 @@ let filtered_updates removed_variable_names updates =
 
 
 (** Translate a parsed discrete update into its abstract model *)
-let to_abstract_discrete_update index_of_variables constants (variable_name, parsed_update_arithmetic_expression) =
-  let variable_index = Hashtbl.find index_of_variables variable_name in
-  let arithmetic_expression = discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
-  (variable_index, arithmetic_expression)
+let to_abstract_discrete_update index_of_variables constants (variable_name, (parsed_discrete_term : parsed_discrete_term)) : discrete_update=
+	let variable_index = Hashtbl.find index_of_variables variable_name in
+	match parsed_discrete_term with
+	| Parsed_rational_term parsed_update_arithmetic_expression ->
+		let arithmetic_expression = discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
+		(variable_index, Rational_term arithmetic_expression)
+	| _ -> raise (NotImplemented "non-rational discrete terms in ModelConverter.to_abstract_discrete_update")
 
 
 (** Translate a parsed clock update into its abstract model *)
 let to_abstract_clock_update index_of_variables constants only_resets updates_list =
 
-  (** Translate parsed clock updte into the tuple clock_index, linear_term *)
-  let to_intermediate_abstract_clock_update (variable_name, parsed_update_arithmetic_expression)=
-    let variable_index = Hashtbl.find index_of_variables variable_name in
-    let linear_term = linear_term_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
-    (variable_index, linear_term)
-  in
+	(** Translate parsed clock updte into the tuple clock_index, linear_term *)
+	let to_intermediate_abstract_clock_update (variable_name, parsed_discrete_term) =
+		match parsed_discrete_term with
+		| Parsed_rational_term parsed_update_arithmetic_expression ->
+			let variable_index = Hashtbl.find index_of_variables variable_name in
+			let linear_term = linear_term_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
+			(variable_index, linear_term)
+		| Parsed_string_term _ -> raise (InternalError "Parsed_string_term found in ModelConverter.to_abstract_clock_update but this should not have happened for a clock update")
+	in
 
-  let converted_clock_updates = List.map to_intermediate_abstract_clock_update updates_list in
+	let converted_clock_updates = List.map to_intermediate_abstract_clock_update updates_list in
 
-  (* Differentiate between different kinds of clock updates *)
-  let clock_updates : clock_updates =
-    (* Case 1: no update *)
-    if converted_clock_updates = [] then No_update
-    else (
-      (* Case 2: resets only *)
-      if !only_resets then (
-        (* Keep only the clock ids, not the linear terms *)
-        let clocks_to_reset, _ = List.split converted_clock_updates in
-        Resets (List.rev clocks_to_reset)
-      ) else
-        (* Case 3: complex with linear terms *)
-        Updates (List.rev converted_clock_updates)
-    )
-  in
+	(* Differentiate between different kinds of clock updates *)
+	let clock_updates : clock_updates =
+		(* Case 1: no update *)
+		if converted_clock_updates = [] then No_update
+		else (
+		(* Case 2: resets only *)
+		if !only_resets then (
+			(* Keep only the clock ids, not the linear terms *)
+			let clocks_to_reset, _ = List.split converted_clock_updates in
+			Resets (List.rev clocks_to_reset)
+		) else
+			(* Case 3: complex with linear terms *)
+			Updates (List.rev converted_clock_updates)
+		)
+	in
 
-  (** abstract clock updates *)
-  clock_updates
+	(** abstract clock updates *)
+	clock_updates
 
 (** Split normal updates into clock, discrete updates *)
 let split_to_clock_discrete_updates index_of_variables only_resets type_of_variables updates =
   (** Check if a normal update is a clock update *)
-  let is_clock_update (variable_name, parsed_update_arithmetic_expression) =
-    (* Retrieve variable type *)
-    if type_of_variables (Hashtbl.find index_of_variables variable_name) = Var_type_clock then (
-      (* Update flag *)
-      if parsed_update_arithmetic_expression <> Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant NumConst.zero)) then (
-        only_resets := false;
-      );
-      true
-    ) else
-      false
-  in
-  List.partition is_clock_update updates
+	let is_clock_update (variable_name, parsed_discrete_term) =
+		match parsed_discrete_term with
+		| Parsed_rational_term parsed_update_arithmetic_expression ->
+			(* Retrieve variable type *)
+			if type_of_variables (Hashtbl.find index_of_variables variable_name) = Var_type_clock then (
+				(* Update flag *)
+				if parsed_update_arithmetic_expression <> Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant NumConst.zero)) then (
+					only_resets := false;
+				);
+				true
+			) else
+			false
+		(* A string term cannot be assigned to a clock *)
+		| Parsed_string_term _ -> false
+(* 		| _ -> raise (NotImplemented "non-rational discrete terms in ModelConverter.split_to_clock_discrete_updates") *)
+	in
+	List.partition is_clock_update updates
+
 
 (** Translate a normal parsed update into its abstract model *)
 let convert_normal_updates index_of_variables constants type_of_variables updates_list =

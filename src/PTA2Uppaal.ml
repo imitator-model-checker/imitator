@@ -10,12 +10,13 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/03/01
- * Last modified     : 2020/01/29
+ * Last modified     : 2020/01/31
  *
  ************************************************************)
 
 open OCamlUtilities
 open ImitatorUtilities
+open Exceptions
 open LinearConstraint
 open DiscreteExpressions
 open AbstractModel
@@ -412,12 +413,15 @@ let string_of_arithmetic_expression variable_names =
 
 (* Convert a list of updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (variable_index, arithmetic_expression) ->
-		(* Convert the variable name *)
-		(model.variable_names variable_index)
-		^ uppaal_assignment
-		(* Convert the arithmetic_expression *)
-		^ (string_of_arithmetic_expression model.variable_names arithmetic_expression)
+	string_of_list_of_string_with_sep uppaal_update_separator (List.map (fun (variable_index, discrete_factor) ->
+		match discrete_factor with
+		| Rational_term arithmetic_expression ->
+			(* Convert the variable name *)
+			(model.variable_names variable_index)
+			^ uppaal_assignment
+			(* Convert the arithmetic_expression *)
+			^ (string_of_arithmetic_expression model.variable_names arithmetic_expression)
+		| String_term _ -> raise (NotImplemented "PTA2Uppaal.string_of_discrete_updates: String_term not yet supported")
 	) updates)
 
 

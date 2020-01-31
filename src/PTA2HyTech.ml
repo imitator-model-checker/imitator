@@ -12,7 +12,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2016/01/26
- * Last modified     : 2020/01/29
+ * Last modified     : 2020/01/31
  *
  ************************************************************)
 
@@ -219,12 +219,15 @@ let string_of_clock_updates model = function
 (*** WARNING: calling string_of_arithmetic_expression might yield a syntax incompatible with HyTech for models more expressive than its input syntax! ***)
 (*** TODO: fix or print warning ***)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, arithmetic_expression) ->
-		(* Convert the variable name *)
-		(model.variable_names variable_index)
-		^ "' = "
-		(* Convert the arithmetic_expression *)
-		^ (ModelPrinter.string_of_arithmetic_expression model.variable_names arithmetic_expression)
+	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, discrete_factor) ->
+		match discrete_factor with
+		| Rational_term arithmetic_expression ->
+			(* Convert the variable name *)
+			(model.variable_names variable_index)
+			^ "' = "
+			(* Convert the arithmetic_expression *)
+			^ (ModelPrinter.string_of_arithmetic_expression model.variable_names arithmetic_expression)
+		| String_term _ -> raise (NotImplemented "PTA2HyTech.string_of_discrete_updates")
 	) updates)
 
 

@@ -73,23 +73,23 @@ type variable_declarations = typed_variable_declarations list*)
 
 
 (****************************************************************)
-(** Arithmetic expressions for discrete variables *)
+(** Arithmetic expressions for rational-valued discrete variables *)
 (****************************************************************)
-type parsed_discrete_arithmetic_expression =
-	| Parsed_DAE_plus of parsed_discrete_arithmetic_expression * parsed_discrete_term
-	| Parsed_DAE_minus of parsed_discrete_arithmetic_expression * parsed_discrete_term
-	| Parsed_DAE_term of parsed_discrete_term
+type parsed_rational_arithmetic_expression =
+	| Parsed_DAE_plus of parsed_rational_arithmetic_expression * parsed_rational_term
+	| Parsed_DAE_minus of parsed_rational_arithmetic_expression * parsed_rational_term
+	| Parsed_DAE_term of parsed_rational_term
 
-and parsed_discrete_term =
-	| Parsed_DT_mul of parsed_discrete_term * parsed_discrete_factor
-	| Parsed_DT_div of parsed_discrete_term * parsed_discrete_factor
-	| Parsed_DT_factor of parsed_discrete_factor
+and parsed_rational_term =
+	| Parsed_DT_mul of parsed_rational_term * parsed_rational_factor
+	| Parsed_DT_div of parsed_rational_term * parsed_rational_factor
+	| Parsed_DT_factor of parsed_rational_factor
 
-and parsed_discrete_factor =
+and parsed_rational_factor =
 	| Parsed_DF_variable of variable_name
 	| Parsed_DF_constant of constant_value
-	| Parsed_DF_expression of parsed_discrete_arithmetic_expression
-	| Parsed_DF_unary_min of parsed_discrete_factor
+	| Parsed_DF_expression of parsed_rational_arithmetic_expression
+	| Parsed_DF_unary_min of parsed_rational_factor
 
 
 
@@ -123,11 +123,11 @@ type convex_predicate = linear_constraint list
 
 (** boolean expressions *)
 
-type parsed_discrete_boolean_expression =
+type parsed_rational_boolean_expression =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Parsed_expression of parsed_discrete_arithmetic_expression * parsed_relop * parsed_discrete_arithmetic_expression
+	| Parsed_expression of parsed_rational_arithmetic_expression * parsed_relop * parsed_rational_arithmetic_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Parsed_expression_in of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
+	| Parsed_expression_in of parsed_rational_arithmetic_expression * parsed_rational_arithmetic_expression * parsed_rational_arithmetic_expression
 
 
 type parsed_boolean_expression =
@@ -136,7 +136,7 @@ type parsed_boolean_expression =
 	| Parsed_Not of parsed_boolean_expression (** Negation *)
 	| Parsed_And of parsed_boolean_expression * parsed_boolean_expression (** Conjunction *)
 	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
-	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
+	| Parsed_Discrete_boolean_expression of parsed_rational_boolean_expression
 
 
 
@@ -164,12 +164,21 @@ type invariant = convex_predicate
 
 (** Updates on transitions *)
 type update =
-	| Normal of normal_update (** Updates withput conditions *)
+	| Normal of normal_update (** Updates without conditions *)
 	| Condition of condition_update (** Updates with conditions *)
+
 (** basic updating *)
-and normal_update = variable_name * parsed_discrete_arithmetic_expression
+and normal_update = variable_name * parsed_discrete_term
+
 (** conditional updating - NOTE: it does not support nested conditions *)
 and condition_update = parsed_boolean_expression * normal_update list * normal_update list
+
+and parsed_discrete_term =
+	(*** NOTE: for parsing, this includes normal clock updates ***)
+	| Parsed_rational_term of parsed_rational_arithmetic_expression
+	(*** TODO ***)
+	| Parsed_string_term of string
+
 
 (* Transition = Guard * update list * sync label * destination location *)
 type transition = guard * update list * sync * location_name
@@ -310,7 +319,7 @@ type parsed_loc_predicate =
 
 
 type parsed_simple_predicate =
-	| Parsed_discrete_boolean_expression of parsed_discrete_boolean_expression
+	| Parsed_discrete_boolean_expression of parsed_rational_boolean_expression
 	| Parsed_loc_predicate of parsed_loc_predicate
 
 

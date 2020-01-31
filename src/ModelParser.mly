@@ -559,13 +559,13 @@ update_nonempty_list:
 
 /** Normal updates */
 update:
-	| NAME APOSTROPHE OP_EQ arithmetic_expression { ($1, $4) }
+	| NAME APOSTROPHE OP_EQ arithmetic_expression { ($1, Parsed_rational_term $4) }
 	/** NOTE: from 2018/02/22: assign becomes recommended */
-	| NAME APOSTROPHE OP_ASSIGN arithmetic_expression { ($1, $4) }
+	| NAME APOSTROPHE OP_ASSIGN arithmetic_expression { ($1, Parsed_rational_term $4) }
 	/** NOTE: from 2018/02/22: apostrophe becomes optional */
-	| NAME OP_EQ arithmetic_expression { ($1, $3) }
+	| NAME OP_EQ arithmetic_expression { ($1, Parsed_rational_term $3) }
 	/** NOTE: from 2018/02/22: assign becomes recommended */
-	| NAME OP_ASSIGN arithmetic_expression { ($1, $3) }
+	| NAME OP_ASSIGN arithmetic_expression { ($1, Parsed_rational_term $3) }
 ;
 
 /** List containing only normal updates.

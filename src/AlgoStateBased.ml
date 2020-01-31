@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/01/29
+ * Last modified     : 2020/01/31
  *
  ************************************************************)
 
@@ -1266,16 +1266,21 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 		let clock_updates, discrete_updates = get_updates source_location updates in
       
 		(* Update discrete *)
-		List.iter (fun (discrete_index, arithmetic_expression) ->
+		List.iter (fun (discrete_index, discrete_term) ->
 			(* Compute its new value *)
-(* 			let new_value = LinearConstraint.evaluate_pxd_linear_term (Location.get_discrete_value source_location) linear_term in *)
-			let new_value = try(
-				DiscreteExpressions.eval_discrete_arithmetic_expression (Location.get_discrete_value source_location) arithmetic_expression)
-				with Division_by_0_while_evaluating_discrete -> (
-					(*** NOTE: we could still go on with the computation by setting the discrete to, e.g., 0 but this seems really not good for a model checker ***)
-					raise (Division_by_0 ("Division by 0 encountered when evaluating the successor of the discrete variables!"))
-					(*** TODO: give more info (i.e., "Value of the current variables: TODO Update: TODO ") ****)
-				)
+			let new_value = match discrete_term with
+				| Rational_term arithmetic_expression ->
+				let new_value = try(
+					DiscreteExpressions.eval_discrete_arithmetic_expression (Location.get_discrete_value source_location) arithmetic_expression)
+					with Division_by_0_while_evaluating_discrete -> (
+						(*** NOTE: we could still go on with the computation by setting the discrete to, e.g., 0 but this seems really not good for a model checker ***)
+						raise (Division_by_0 ("Division by 0 encountered when evaluating the successor of the discrete variables!"))
+						(*** TODO: give more info (i.e., "Value of the current variables: TODO Update: TODO ") ****)
+					)
+				in new_value
+			
+				| String_term _ -> raise (NotImplemented "AlgoStateBased.compute_new_location_guards_updates")
+				
 			in
 
 			(* Check if already updated *)

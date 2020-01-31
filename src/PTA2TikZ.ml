@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2015/03/24
- * Last modified     : 2020/01/29
+ * Last modified     : 2020/01/31
  *
  ****************************************************************)
 
@@ -104,7 +104,9 @@ let string_of_clock_updates model clock_updates =
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, arithmetic_expression) ->
+	string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, discrete_factor) ->
+		match discrete_factor with
+		| Rational_term arithmetic_expression ->
 			"\n\t\t & $"
 			(* Convert the variable name *)
 			^ (variable_names_with_style variable_index)
@@ -113,6 +115,7 @@ let string_of_discrete_updates model updates =
 			^ (ModelPrinter.string_of_arithmetic_expression variable_names_with_style arithmetic_expression)
 			(*** HACK!!! without the "%", a strange "\n" that occurs immediately after leads to a LaTeX compiling error when strictly >= 2 updates ***)
 			^ "$\\\\% "
+		| String_term _ -> raise (NotImplemented "PTA2TIkZ.string_of_discrete_updates")
 	) updates)
 
 let string_of_boolean_operations op =
