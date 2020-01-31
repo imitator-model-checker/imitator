@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/01/24
+ * Last modified     : 2020/01/31
  *
  ****************************************************************)
 
@@ -38,8 +38,10 @@ type parsed_relop = PARSED_OP_L | PARSED_OP_LEQ | PARSED_OP_EQ | PARSED_OP_NEQ |
 
 (* The types for global, discrete variables *)
 type parsed_var_type_discrete =
-	| Parsed_rational
 	| Parsed_boolean
+	| Parsed_rational
+	| Parsed_string
+	| Parsed_stringset
 
 
 (* Type of variable in declarations *)

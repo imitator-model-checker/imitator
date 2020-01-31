@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/01/29
+ * Last modified     : 2020/01/31
  *
  ************************************************************/
 
@@ -123,7 +123,7 @@ type variable_declaration =
 
 %token
 	CT_ACCEPTING CT_ALWAYS CT_AND CT_AUTOMATON
-	CT_BAD CT_BEFORE
+	CT_BAD CT_BEFORE CT_BOOLEAN
 	CT_CLOCK CT_CONSTANT
 	CT_DO
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
@@ -136,7 +136,7 @@ type variable_declaration =
 	CT_ONCE CT_OR
 	CT_PARAMETER
 	CT_RATIONAL CT_REGION
-	CT_SEQUENCE CT_STOP CT_SYNC CT_SYNCLABS
+	CT_SEQUENCE CT_STOP CT_STRING CT_STRINGSET CT_SYNC CT_SYNCLABS
 	CT_THEN CT_TRUE
 	CT_UNKNOWN CT_URGENT
 	CT_VAR
@@ -335,10 +335,20 @@ variable_declaration:
 /************************************************************/
 
 var_type:
+	/* Clocks */
 	| CT_CLOCK { Parsed_var_type_clock }
+
+	/* Constants */
 	| CT_CONSTANT { Parsed_var_type_constant }
-	| CT_RATIONAL { Parsed_var_type_discrete Parsed_rational }
+	
+	/* Parameters */
 	| CT_PARAMETER { Parsed_var_type_parameter }
+	
+	/* Discrete variables */
+	| CT_BOOLEAN	{ Parsed_var_type_discrete Parsed_boolean }
+	| CT_RATIONAL	{ Parsed_var_type_discrete Parsed_rational }
+	| CT_STRING		{ Parsed_var_type_discrete Parsed_string }
+	| CT_STRINGSET	{ Parsed_var_type_discrete Parsed_stringset }
 ;
 
 /************************************************************

@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/01/23
+ * Last modified     : 2020/01/31
 *****************************************************************)
 
 {
@@ -60,6 +60,7 @@ rule token = parse
 	| "automaton"      { CT_AUTOMATON }
 	| "bad"            { CT_BAD }
  	| "before"         { CT_BEFORE }
+	| "boolean"        { CT_BOOLEAN }
 	| "clock"          { CT_CLOCK }
 	| "constant"       { CT_CONSTANT }
 	| "do"             { CT_DO }
@@ -87,6 +88,8 @@ rule token = parse
 	| "region"         { CT_REGION }
 	| "sequence"       { CT_SEQUENCE }
 	| "stop"           { CT_STOP }
+	| "string"         { CT_STRING }
+	| "stringset"      { CT_STRINGSET }
 	| "sync"           { CT_SYNC }
 	| "synclabs"       { CT_SYNCLABS }
  	| "then"           { CT_THEN }

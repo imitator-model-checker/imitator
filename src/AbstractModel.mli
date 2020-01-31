@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/11
- * Last modified     : 2020/01/24
+ * Last modified     : 2020/01/31
  *
  ************************************************************)
 
@@ -33,8 +33,10 @@ type v0 = HyperRectangle.hyper_rectangle
 
 (* The types for global, discrete variables *)
 type var_type_discrete =
-	| Rational
 	| Boolean
+	| Rational
+	| String
+	| StringSet
 
 (** Type of variable in declarations *)
 type var_type =

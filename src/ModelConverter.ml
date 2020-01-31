@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/01/29
+ * Last modified     : 2020/01/31
  *
  ************************************************************)
 
@@ -69,14 +69,13 @@ module StringSet = Set.Make(String)
 (* Maintain lists of all (parsed) types *)
 
 let all_concrete_parsed_discrete_types = [
-	Parsed_rational ;
 	Parsed_boolean ;
+	Parsed_rational ;
+	Parsed_string ;
+	Parsed_stringset ;
 	]
 
-let all_parsed_discrete_types = [
-	Parsed_var_type_discrete Parsed_rational ;
-	Parsed_var_type_discrete Parsed_boolean ;
-	]
+let all_parsed_discrete_types = List.map (fun parsed_type -> Parsed_var_type_discrete parsed_type) all_concrete_parsed_discrete_types
 
 let all_parsed_types = List.rev_append
 	[Parsed_var_type_clock ; Parsed_var_type_parameter]
@@ -1828,12 +1827,14 @@ let make_constants constants =
 (*------------------------------------------------------------*)
 
 let abstract_discrete_type_of_parsed_discrete_type = function
-	| Parsed_rational	-> Rational
 	| Parsed_boolean	-> Boolean
+	| Parsed_rational	-> Rational
+	| Parsed_string		-> String
+	| Parsed_stringset	-> StringSet
 
-let parsed_discrete_type_of_abstract_discrete_type = function
+(*let parsed_discrete_type_of_abstract_discrete_type = function
 	| Rational	-> Parsed_rational
-	| Boolean	-> Parsed_boolean
+	| Boolean	-> Parsed_boolean*)
 
 
 (*------------------------------------------------------------*)
