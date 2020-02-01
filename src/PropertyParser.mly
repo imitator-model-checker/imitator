@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/01/22
+ * Last modified     : 2020/02/01
  *
  ************************************************************/
 
@@ -206,7 +206,7 @@ state_predicate_factor:
 
 /* A single definition of one bad location or one bad discrete definition */
 simple_predicate:
-	| discrete_boolean_predicate { Parsed_discrete_boolean_expression($1) }
+	| discrete_boolean_predicate { Parsed_rational_boolean_predicate ($1) }
 	| loc_predicate { Parsed_loc_predicate ($1) }
 ;
 

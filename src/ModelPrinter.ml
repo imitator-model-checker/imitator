@@ -10,14 +10,14 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/01/31
+ * Last modified     : 2020/02/01
  *
  ************************************************************)
 
 open OCamlUtilities
 open Exceptions
 open Result
-open DiscreteExpressions
+open RationalExpressions
 open AbstractModel
 open AbstractProperty
 open ImitatorUtilities
@@ -242,26 +242,26 @@ let string_of_clock_updates model clock_updates =
 let string_of_arithmetic_expression variable_names =
 	let rec string_of_arithmetic_expression = function
 		(* Shortcut: Remove the "+0" / -"0" cases *)
-		| DAE_plus (discrete_arithmetic_expression, DT_factor (DF_constant c))
-		| DAE_minus (discrete_arithmetic_expression, DT_factor (DF_constant c)) when NumConst.equal c NumConst.zero ->
-			string_of_arithmetic_expression discrete_arithmetic_expression
+		| DAE_plus (rational_arithmetic_expression, DT_factor (DF_constant c))
+		| DAE_minus (rational_arithmetic_expression, DT_factor (DF_constant c)) when NumConst.equal c NumConst.zero ->
+			string_of_arithmetic_expression rational_arithmetic_expression
 
-		| DAE_plus (discrete_arithmetic_expression, discrete_term) ->
-			(string_of_arithmetic_expression discrete_arithmetic_expression)
+		| DAE_plus (rational_arithmetic_expression, rational_term) ->
+			(string_of_arithmetic_expression rational_arithmetic_expression)
 			^ " + "
-			^ (string_of_term discrete_term)
+			^ (string_of_term rational_term)
 
-		| DAE_minus (discrete_arithmetic_expression, discrete_term) ->
-			(string_of_arithmetic_expression discrete_arithmetic_expression)
+		| DAE_minus (rational_arithmetic_expression, rational_term) ->
+			(string_of_arithmetic_expression rational_arithmetic_expression)
 			^ " - "
-			^ (string_of_term discrete_term)
+			^ (string_of_term rational_term)
 
-		| DAE_term discrete_term -> string_of_term discrete_term
+		| DAE_term rational_term -> string_of_term rational_term
 
 	and string_of_term = function
 		(* Eliminate the '1' coefficient *)
-		| DT_mul (DT_factor (DF_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
-			string_of_factor discrete_factor
+		| DT_mul (DT_factor (DF_constant c), rational_factor) when NumConst.equal c NumConst.one ->
+			string_of_factor rational_factor
 		(* No parentheses for constant * variable *)
 		| DT_mul (DT_factor (DF_constant c), DF_variable v) ->
 			(string_of_factor (DF_constant c))
@@ -269,28 +269,28 @@ let string_of_arithmetic_expression variable_names =
 			^ (string_of_factor (DF_variable v))
 		(*** TODO: No parentheses on the left for constant or variable * something ***)
 		(* Otherwise: parentheses on the left *)
-		| DT_mul (discrete_term, discrete_factor) ->
-			"(" ^ (string_of_term discrete_term) ^ ")"
+		| DT_mul (rational_term, rational_factor) ->
+			"(" ^ (string_of_term rational_term) ^ ")"
 			^ " * "
-			^ (string_of_factor discrete_factor)
+			^ (string_of_factor rational_factor)
 
 		(*** TODO: No parentheses on the left for constant or variable / something ***)
 		(*** TODO: No parentheses on the left for something / constant or variable ***)
 		(* Otherwise: parentheses on the left *)
-		| DT_div (discrete_term, discrete_factor) ->
-			"(" ^ (string_of_term discrete_term) ^ ")"
+		| DT_div (rational_term, rational_factor) ->
+			"(" ^ (string_of_term rational_term) ^ ")"
 			^ " / "
-			^ (string_of_factor discrete_factor)
+			^ (string_of_factor rational_factor)
 
-		| DT_factor discrete_factor -> string_of_factor discrete_factor
+		| DT_factor rational_factor -> string_of_factor rational_factor
 
 	and string_of_factor = function
 		| DF_variable discrete_index -> variable_names discrete_index
 		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
-		| DF_unary_min discrete_factor -> "-" ^ (string_of_factor discrete_factor)
-		| DF_expression discrete_arithmetic_expression ->
+		| DF_unary_min rational_factor -> "-" ^ (string_of_factor rational_factor)
+		| DF_expression rational_arithmetic_expression ->
 			(*** TODO: simplify a bit? ***)
-			"(" ^ (string_of_arithmetic_expression discrete_arithmetic_expression) ^ ")"
+			"(" ^ (string_of_arithmetic_expression rational_arithmetic_expression) ^ ")"
 	(* Call top-level *)
 	in string_of_arithmetic_expression
 
@@ -298,12 +298,12 @@ let string_of_arithmetic_expression variable_names =
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates ?(sep=", ") model (updates : discrete_update list) =
-	string_of_list_of_string_with_sep sep (List.map (fun (variable_index, discrete_term) ->
+	string_of_list_of_string_with_sep sep (List.map (fun (variable_index, rational_term) ->
 		(* Convert the variable name *)
 		(model.variable_names variable_index)
 		^ " := "
 		(* Iterate on type *)
-		^ (match discrete_term with 
+		^ (match rational_term with 
 			| Rational_term arithmetic_expression ->
 				(* Convert the arithmetic_expression *)
 				(string_of_arithmetic_expression model.variable_names arithmetic_expression)
@@ -351,22 +351,22 @@ let string_of_boolean variable_names boolean_expr =
 	string_of_boolean_template variable_names boolean_expr string_of_logical_operators*)
 
 
-(** Convert a discrete_boolean_expression into a string *)
-let string_of_discrete_boolean_expression variable_names = function
+(** Convert a rational_boolean_expression into a string *)
+let string_of_rational_boolean_expression variable_names = function
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
-		(string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
+	| Expression (rational_arithmetic_expression1, relop, rational_arithmetic_expression2) ->
+		(string_of_arithmetic_expression variable_names rational_arithmetic_expression1)
 		^ " "
 		^ (string_of_boolean_operations relop)
 		^ " "
-		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+		^ (string_of_arithmetic_expression variable_names rational_arithmetic_expression2)
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
-		(string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
+	| Expression_in (rational_arithmetic_expression1, rational_arithmetic_expression2, rational_arithmetic_expression3) ->
+		(string_of_arithmetic_expression variable_names rational_arithmetic_expression1)
 		^ " in ["
-		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+		^ (string_of_arithmetic_expression variable_names rational_arithmetic_expression2)
 		^ " , "
-		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression3)
+		^ (string_of_arithmetic_expression variable_names rational_arithmetic_expression3)
 		^ "]"
 
 (** Convert a Boolean expression into a string *)
@@ -382,8 +382,8 @@ let rec string_of_boolean variable_names = function
 		(string_of_boolean variable_names b1)
 		^ " || "
 		^ (string_of_boolean variable_names b2)
-	| Discrete_boolean_expression discrete_boolean_expression ->
-		string_of_discrete_boolean_expression variable_names discrete_boolean_expression
+	| Rational_boolean_expression rational_boolean_expression ->
+		string_of_rational_boolean_expression variable_names rational_boolean_expression
 
 
 
@@ -671,8 +671,8 @@ let string_of_loc_predicate (model : AbstractModel.abstract_model) = function
 
 
 let string_of_simple_predicate (model : AbstractModel.abstract_model) = function
-	| Discrete_boolean_expression discrete_boolean_expression ->
-		string_of_discrete_boolean_expression model.variable_names discrete_boolean_expression
+	| Rational_boolean_expression rational_boolean_expression ->
+		string_of_rational_boolean_expression model.variable_names rational_boolean_expression
 	| Loc_predicate loc_predicate ->
 		string_of_loc_predicate model loc_predicate
 

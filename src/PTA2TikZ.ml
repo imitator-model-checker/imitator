@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2015/03/24
- * Last modified     : 2020/01/31
+ * Last modified     : 2020/02/01
  *
  ****************************************************************)
 
@@ -17,7 +17,7 @@ open OCamlUtilities
 open Exceptions
 open AbstractModel
 open AbstractProperty
-open DiscreteExpressions
+open RationalExpressions
 
 
 
@@ -160,7 +160,7 @@ let rec string_of_boolean variable_names = function
 		(string_of_boolean variable_names b1)
 		^ " \\lor "
 		^ (string_of_boolean variable_names b2)
-	| Discrete_boolean_expression discrete_boolean_expression ->
+	| Rational_boolean_expression discrete_boolean_expression ->
 		string_of_discrete_boolean_expression variable_names discrete_boolean_expression
 
 

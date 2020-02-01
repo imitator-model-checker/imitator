@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/10
- * Last modified     : 2019/12/10
+ * Last modified     : 2020/02/01
  *
  ************************************************************)
 
@@ -33,5 +33,6 @@ type clock_index		= variable_index
 type parameter_index	= variable_index
 type discrete_index		= variable_index
 type discrete_value		= NumConst.t
+type rational_value		= NumConst.t
 type variable_value		= NumConst.t
 type variable_name		= string

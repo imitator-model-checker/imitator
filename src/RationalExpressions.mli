@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/10
- * Last modified     : 2020/01/31
+ * Last modified     : 2020/02/01
  *
  ************************************************************)
 
@@ -30,7 +30,7 @@ type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 (** Valuation *)
 (************************************************************)
 (************************************************************)
-type rational_valuation = Automaton.rational_index -> Automaton.rational_value
+type rational_valuation = Automaton.discrete_index -> Automaton.rational_value
 
 
 (************************************************************)

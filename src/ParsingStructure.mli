@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/01/31
+ * Last modified     : 2020/02/01
  *
  ****************************************************************)
 
@@ -319,7 +319,7 @@ type parsed_loc_predicate =
 
 
 type parsed_simple_predicate =
-	| Parsed_discrete_boolean_expression of parsed_rational_boolean_expression
+	| Parsed_rational_boolean_predicate of parsed_rational_boolean_expression
 	| Parsed_loc_predicate of parsed_loc_predicate
 
 

@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/01/31
+ * Last modified     : 2020/02/01
  *
  ************************************************************)
 
@@ -68,18 +68,18 @@ module StringSet = Set.Make(String)
 
 (* Maintain lists of all (parsed) types *)
 
-let all_concrete_parsed_discrete_types = [
+let all_concrete_parsed_rational_types = [
 	Parsed_boolean ;
 	Parsed_rational ;
 	Parsed_string ;
 	Parsed_stringset ;
 	]
 
-let all_parsed_discrete_types = List.map (fun parsed_type -> Parsed_var_type_discrete parsed_type) all_concrete_parsed_discrete_types
+let all_parsed_rational_types = List.map (fun parsed_type -> Parsed_var_type_discrete parsed_type) all_concrete_parsed_rational_types
 
 let all_parsed_types = List.rev_append
 	[Parsed_var_type_clock ; Parsed_var_type_parameter]
-	all_parsed_discrete_types
+	all_parsed_rational_types
 
 (************************************************************)
 (************************************************************)
@@ -150,7 +150,7 @@ let rec get_variables_in_parsed_update_factor variables_used_ref = function
 	| Parsed_DF_expression parsed_update_arithmetic_expression ->
 		get_variables_in_parsed_update_arithmetic_expression variables_used_ref parsed_update_arithmetic_expression
 
-	| Parsed_DF_unary_min parsed_discrete_factor -> get_variables_in_parsed_update_factor variables_used_ref parsed_discrete_factor
+	| Parsed_DF_unary_min parsed_rational_factor -> get_variables_in_parsed_update_factor variables_used_ref parsed_rational_factor
 
 and get_variables_in_parsed_update_term variables_used_ref = function
 	| Parsed_DT_mul (parsed_update_term, parsed_update_factor)
@@ -178,8 +178,8 @@ and get_variables_in_parsed_update variables_used_ref = function
 	
 	| Condition (bool_expr, update_list_if, update_list_else) -> (** recolect in bool exprs *)
 		get_variables_in_parsed_boolean_expression variables_used_ref bool_expr;
-		List.iter (fun (_, parsed_discrete_term) ->
-			match parsed_discrete_term with
+		List.iter (fun (_, parsed_rational_term) ->
+			match parsed_rational_term with
 			| Parsed_rational_term arithmetic_expression ->
 				get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expression
 			| _ -> raise (NotImplemented "ModelConverter.get_variables_in_parsed_update")
@@ -207,7 +207,7 @@ and get_variables_in_parsed_rational_boolean_expression variables_used_ref  = fu
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a parsed_update_arithmetic_expression *)
 (*------------------------------------------------------------*)
-let rec get_variables_in_parsed_discrete_factor variables_used_ref = function
+let rec get_variables_in_parsed_rational_factor variables_used_ref = function
 	| Parsed_DF_variable variable_name ->
 		(* Add the variable name to the set and discrete the reference *)
 		variables_used_ref := StringSet.add variable_name !variables_used_ref
@@ -217,26 +217,26 @@ let rec get_variables_in_parsed_discrete_factor variables_used_ref = function
 	| Parsed_DF_expression parsed_rational_arithmetic_expression ->
 		get_variables_in_parsed_rational_arithmetic_expression variables_used_ref parsed_rational_arithmetic_expression
 
-	| Parsed_DF_unary_min parsed_discrete_factor -> get_variables_in_parsed_discrete_factor variables_used_ref parsed_discrete_factor
+	| Parsed_DF_unary_min parsed_rational_factor -> get_variables_in_parsed_rational_factor variables_used_ref parsed_rational_factor
 
-and get_variables_in_parsed_discrete_term variables_used_ref = function
-	| Parsed_DT_mul (parsed_discrete_term, parsed_discrete_factor)
-	| Parsed_DT_div (parsed_discrete_term, parsed_discrete_factor) ->
-		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term;
-		get_variables_in_parsed_discrete_factor variables_used_ref parsed_discrete_factor
+and get_variables_in_parsed_rational_term variables_used_ref = function
+	| Parsed_DT_mul (parsed_rational_term, parsed_rational_factor)
+	| Parsed_DT_div (parsed_rational_term, parsed_rational_factor) ->
+		get_variables_in_parsed_rational_term variables_used_ref parsed_rational_term;
+		get_variables_in_parsed_rational_factor variables_used_ref parsed_rational_factor
 
-	| Parsed_DT_factor parsed_discrete_factor ->
-		get_variables_in_parsed_discrete_factor variables_used_ref parsed_discrete_factor
+	| Parsed_DT_factor parsed_rational_factor ->
+		get_variables_in_parsed_rational_factor variables_used_ref parsed_rational_factor
 
 (** Add variables names in the discrete expression *)
 and get_variables_in_parsed_rational_arithmetic_expression variables_used_ref = function
-	| Parsed_DAE_plus (parsed_rational_arithmetic_expression, parsed_discrete_term)
-	| Parsed_DAE_minus (parsed_rational_arithmetic_expression , parsed_discrete_term) ->
+	| Parsed_DAE_plus (parsed_rational_arithmetic_expression, parsed_rational_term)
+	| Parsed_DAE_minus (parsed_rational_arithmetic_expression , parsed_rational_term) ->
 		get_variables_in_parsed_rational_arithmetic_expression variables_used_ref parsed_rational_arithmetic_expression;
-		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term
+		get_variables_in_parsed_rational_term variables_used_ref parsed_rational_term
 
-	| Parsed_DAE_term parsed_discrete_term ->
-		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term
+	| Parsed_DAE_term parsed_rational_term ->
+		get_variables_in_parsed_rational_term variables_used_ref parsed_rational_term
 
 
 
@@ -259,8 +259,8 @@ let rec check_f_in_parsed_update_factor f = function
 	| Parsed_DF_expression parsed_update_arithmetic_expression ->
 		check_f_in_parsed_update_arithmetic_expression f parsed_update_arithmetic_expression
 	
-	| Parsed_DF_unary_min parsed_discrete_factor ->
-		check_f_in_parsed_update_factor f parsed_discrete_factor
+	| Parsed_DF_unary_min parsed_rational_factor ->
+		check_f_in_parsed_update_factor f parsed_rational_factor
 
 
 
@@ -357,7 +357,7 @@ let valuate_parsed_update_arithmetic_expression constants =
 		
 		| Parsed_DF_constant var_value -> true
 		
-		| Parsed_DF_unary_min parsed_discrete_factor -> check_constants_in_parsed_update_factor parsed_discrete_factor
+		| Parsed_DF_unary_min parsed_rational_factor -> check_constants_in_parsed_update_factor parsed_rational_factor
 		
 		| Parsed_DF_expression parsed_update_arithmetic_expression -> check_constants_in_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression
 
@@ -379,20 +379,20 @@ let valuate_parsed_update_arithmetic_expression constants =
 let rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants =
 	let rec rational_arithmetic_expression_of_parsed_update_arithmetic_expression_rec = function
 		| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
-		DAE_plus ((rational_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (discrete_term_of_parsed_update_term parsed_update_term))
+		DAE_plus ((rational_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (rational_term_of_parsed_update_term parsed_update_term))
 		| Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
-		DAE_minus ((rational_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (discrete_term_of_parsed_update_term parsed_update_term))
+		DAE_minus ((rational_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (rational_term_of_parsed_update_term parsed_update_term))
 		| Parsed_DAE_term parsed_update_term ->
-		DAE_term (discrete_term_of_parsed_update_term parsed_update_term)
+		DAE_term (rational_term_of_parsed_update_term parsed_update_term)
 
-	and discrete_term_of_parsed_update_term = function
-		| Parsed_DT_mul (parsed_update_term, parsed_discrete_factor) ->
-		DT_mul ((discrete_term_of_parsed_update_term parsed_update_term), (discrete_factor_of_parsed_update_factor parsed_discrete_factor))
-		| Parsed_DT_div (parsed_update_term, parsed_discrete_factor) ->
-		DT_div ((discrete_term_of_parsed_update_term parsed_update_term), (discrete_factor_of_parsed_update_factor parsed_discrete_factor))
-		| Parsed_DT_factor parsed_discrete_factor -> DT_factor (discrete_factor_of_parsed_update_factor parsed_discrete_factor)
+	and rational_term_of_parsed_update_term = function
+		| Parsed_DT_mul (parsed_update_term, parsed_rational_factor) ->
+		DT_mul ((rational_term_of_parsed_update_term parsed_update_term), (rational_factor_of_parsed_update_factor parsed_rational_factor))
+		| Parsed_DT_div (parsed_update_term, parsed_rational_factor) ->
+		DT_div ((rational_term_of_parsed_update_term parsed_update_term), (rational_factor_of_parsed_update_factor parsed_rational_factor))
+		| Parsed_DT_factor parsed_rational_factor -> DT_factor (rational_factor_of_parsed_update_factor parsed_rational_factor)
 
-	and discrete_factor_of_parsed_update_factor = function
+	and rational_factor_of_parsed_update_factor = function
 		| Parsed_DF_variable variable_name ->
 		(* Try to find the variable_index *)
 		if Hashtbl.mem index_of_variables variable_name then (
@@ -412,7 +412,7 @@ let rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_
 		)
 		| Parsed_DF_constant var_value -> DF_constant var_value
 		(*** TODO: here, we could very easily get rid of the DF_unary_min by negating the inside expression… ***)
-		| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (discrete_factor_of_parsed_update_factor parsed_discrete_factor)
+		| Parsed_DF_unary_min parsed_rational_factor -> DF_unary_min (rational_factor_of_parsed_update_factor parsed_rational_factor)
 		| Parsed_DF_expression parsed_update_arithmetic_expression -> DF_expression (rational_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression)
 	in
 	rational_arithmetic_expression_of_parsed_update_arithmetic_expression_rec
@@ -425,21 +425,21 @@ let rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
 let rational_arithmetic_expression_of_parsed_rational_arithmetic_expression index_of_variables constants =
 	let rec rational_arithmetic_expression_of_parsed_rational_arithmetic_expression_rec = function
-		| Parsed_DAE_plus (parsed_rational_arithmetic_expression, parsed_discrete_term) ->
-			DAE_plus ((rational_arithmetic_expression_of_parsed_rational_arithmetic_expression_rec parsed_rational_arithmetic_expression), (discrete_term_of_parsed_discrete_term parsed_discrete_term))
-		| Parsed_DAE_minus (parsed_rational_arithmetic_expression, parsed_discrete_term) ->
-			DAE_minus ((rational_arithmetic_expression_of_parsed_rational_arithmetic_expression_rec parsed_rational_arithmetic_expression), (discrete_term_of_parsed_discrete_term parsed_discrete_term))
-		| Parsed_DAE_term parsed_discrete_term ->
-			DAE_term (discrete_term_of_parsed_discrete_term parsed_discrete_term)
+		| Parsed_DAE_plus (parsed_rational_arithmetic_expression, parsed_rational_term) ->
+			DAE_plus ((rational_arithmetic_expression_of_parsed_rational_arithmetic_expression_rec parsed_rational_arithmetic_expression), (rational_term_of_parsed_rational_term parsed_rational_term))
+		| Parsed_DAE_minus (parsed_rational_arithmetic_expression, parsed_rational_term) ->
+			DAE_minus ((rational_arithmetic_expression_of_parsed_rational_arithmetic_expression_rec parsed_rational_arithmetic_expression), (rational_term_of_parsed_rational_term parsed_rational_term))
+		| Parsed_DAE_term parsed_rational_term ->
+			DAE_term (rational_term_of_parsed_rational_term parsed_rational_term)
 
-	and discrete_term_of_parsed_discrete_term = function
-		| Parsed_DT_mul (parsed_discrete_term, parsed_discrete_factor) ->
-			DT_mul ((discrete_term_of_parsed_discrete_term parsed_discrete_term), (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor))
-		| Parsed_DT_div (parsed_discrete_term, parsed_discrete_factor) ->
-			DT_div ((discrete_term_of_parsed_discrete_term parsed_discrete_term), (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor))
-		| Parsed_DT_factor parsed_discrete_factor -> DT_factor (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor)
+	and rational_term_of_parsed_rational_term = function
+		| Parsed_DT_mul (parsed_rational_term, parsed_rational_factor) ->
+			DT_mul ((rational_term_of_parsed_rational_term parsed_rational_term), (rational_factor_of_parsed_rational_factor parsed_rational_factor))
+		| Parsed_DT_div (parsed_rational_term, parsed_rational_factor) ->
+			DT_div ((rational_term_of_parsed_rational_term parsed_rational_term), (rational_factor_of_parsed_rational_factor parsed_rational_factor))
+		| Parsed_DT_factor parsed_rational_factor -> DT_factor (rational_factor_of_parsed_rational_factor parsed_rational_factor)
 
-	and discrete_factor_of_parsed_discrete_factor = function
+	and rational_factor_of_parsed_rational_factor = function
 		| Parsed_DF_variable variable_name ->
 		(* Try to find the variable_index *)
 		if Hashtbl.mem index_of_variables variable_name then (
@@ -459,7 +459,7 @@ let rational_arithmetic_expression_of_parsed_rational_arithmetic_expression inde
 		)
 		| Parsed_DF_constant var_value -> DF_constant var_value
 		| Parsed_DF_expression parsed_rational_arithmetic_expression -> DF_expression (rational_arithmetic_expression_of_parsed_rational_arithmetic_expression_rec parsed_rational_arithmetic_expression)
-		| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor)
+		| Parsed_DF_unary_min parsed_rational_factor -> DF_unary_min (rational_factor_of_parsed_rational_factor parsed_rational_factor)
 	in
 	(* Call high-level function *)
 	rational_arithmetic_expression_of_parsed_rational_arithmetic_expression_rec
@@ -505,7 +505,7 @@ let rec valuate_parsed_update_arithmetic_expression constants = function
 		raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' in function 'valuate_parsed_update_arithmetic_expression' although it should have been checked before."))
 		)
 	| Parsed_DF_constant var_value -> var_value
-	| Parsed_DF_unary_min parsed_discrete_factor -> NumConst.neg (valuate_parsed_update_factor constants parsed_discrete_factor)
+	| Parsed_DF_unary_min parsed_rational_factor -> NumConst.neg (valuate_parsed_update_factor constants parsed_rational_factor)
 	| Parsed_DF_expression parsed_update_arithmetic_expression -> valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression
 
 
@@ -521,7 +521,7 @@ let convert_parsed_relop = function
 	| PARSED_OP_G 	-> OP_G
 
 
-let convert_discrete_bool_expr index_of_variables constants = function
+let convert_rational_bool_expr index_of_variables constants = function
 	| Parsed_expression (expr1, relop, expr2) -> Expression (
 		(rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr1),
 		(convert_parsed_relop relop),
@@ -541,7 +541,7 @@ let rec convert_bool_expr index_of_variables constants = function
 	| Parsed_And (e1,e2) -> And_bool ((convert_bool_expr index_of_variables constants e1), (convert_bool_expr index_of_variables constants e2))
 	| Parsed_Or (e1, e2) -> Or_bool ((convert_bool_expr index_of_variables constants e1), (convert_bool_expr index_of_variables constants e2))
 	| Parsed_rational_boolean_expression parsed_rational_boolean_expression ->
-		Rational_boolean_expression (convert_discrete_bool_expr index_of_variables constants parsed_rational_boolean_expression)
+		Rational_boolean_expression (convert_rational_bool_expr index_of_variables constants parsed_rational_boolean_expression)
 
 
 
@@ -551,28 +551,28 @@ let rec convert_bool_expr index_of_variables constants = function
 
 (* Convert parsed_rational_arithmetic_expression *)
 let rec convert_parsed_rational_arithmetic_expression useful_parsing_model_information = function
-	| Parsed_DAE_plus (parsed_rational_arithmetic_expression , parsed_discrete_term) ->
+	| Parsed_DAE_plus (parsed_rational_arithmetic_expression , parsed_rational_term) ->
 		DAE_plus (
 			(convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression)
 			,
-			(convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
+			(convert_parsed_rational_term useful_parsing_model_information parsed_rational_term)
 		)
-	| Parsed_DAE_minus (parsed_rational_arithmetic_expression , parsed_discrete_term) ->
+	| Parsed_DAE_minus (parsed_rational_arithmetic_expression , parsed_rational_term) ->
 		DAE_minus (
 			(convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression)
 			,
-			(convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
+			(convert_parsed_rational_term useful_parsing_model_information parsed_rational_term)
 		)
-	| Parsed_DAE_term parsed_discrete_term -> DAE_term (convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
+	| Parsed_DAE_term parsed_rational_term -> DAE_term (convert_parsed_rational_term useful_parsing_model_information parsed_rational_term)
 
-and convert_parsed_discrete_term useful_parsing_model_information = function
-	| Parsed_DT_mul (parsed_discrete_term , parsed_discrete_factor) ->
-		DT_mul ((convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term) , convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
-	| Parsed_DT_div (parsed_discrete_term , parsed_discrete_factor) ->
-		DT_div ((convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term) , convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
-	| Parsed_DT_factor parsed_discrete_factor -> DT_factor (convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
+and convert_parsed_rational_term useful_parsing_model_information = function
+	| Parsed_DT_mul (parsed_rational_term , parsed_rational_factor) ->
+		DT_mul ((convert_parsed_rational_term useful_parsing_model_information parsed_rational_term) , convert_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
+	| Parsed_DT_div (parsed_rational_term , parsed_rational_factor) ->
+		DT_div ((convert_parsed_rational_term useful_parsing_model_information parsed_rational_term) , convert_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
+	| Parsed_DT_factor parsed_rational_factor -> DT_factor (convert_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
 
-and convert_parsed_discrete_factor useful_parsing_model_information = function
+and convert_parsed_rational_factor useful_parsing_model_information = function
 	| Parsed_DF_variable variable_name ->
 		(* First check whether this is a constant *)
 		if Hashtbl.mem useful_parsing_model_information.constants variable_name then
@@ -581,7 +581,7 @@ and convert_parsed_discrete_factor useful_parsing_model_information = function
 		else DF_variable (Hashtbl.find useful_parsing_model_information.index_of_variables variable_name)
 	| Parsed_DF_constant var_value -> DF_constant var_value
 	| Parsed_DF_expression parsed_rational_arithmetic_expression -> DF_expression (convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression)
-	| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
+	| Parsed_DF_unary_min parsed_rational_factor -> DF_unary_min (convert_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
 
 
 (* Convert parsed_rational_boolean_expression *)
@@ -618,7 +618,7 @@ let convert_parsed_loc_predicate useful_parsing_model_information = function
 
 (* Convert parsed_simple_predicate *)
 let convert_parsed_simple_predicate useful_parsing_model_information = function
-	| Parsed_discrete_boolean_expression parsed_rational_boolean_expression -> Discrete_boolean_expression (convert_parsed_rational_boolean_expression useful_parsing_model_information parsed_rational_boolean_expression)
+	| Parsed_rational_boolean_predicate parsed_rational_boolean_expression -> Rational_boolean_expression (convert_parsed_rational_boolean_expression useful_parsing_model_information parsed_rational_boolean_expression)
 	| Parsed_loc_predicate parsed_loc_predicate -> Loc_predicate (convert_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate)
 
 
@@ -718,7 +718,7 @@ let get_variables_in_parsed_loc_predicate variables_used_ref = function
 (* Gather all variable names used in a Simple_predicate *)
 (*------------------------------------------------------------*)
 let get_variables_in_parsed_simple_predicate variables_used_ref = function
-	| Parsed_discrete_boolean_expression parsed_rational_boolean_expression ->
+	| Parsed_rational_boolean_predicate parsed_rational_boolean_expression ->
 		get_variables_in_parsed_rational_boolean_expression variables_used_ref parsed_rational_boolean_expression
 		
 	| Parsed_loc_predicate parsed_loc_predicate ->
@@ -874,7 +874,7 @@ let rec check_f_in_linear_expression f index_of_variables type_of_variables cons
 (*------------------------------------------------------------*)
 (* Check that a linear expression contains only discrete variables and constants *)
 (*------------------------------------------------------------*)
-let only_discrete_in_linear_term index_of_variables type_of_variables constants = function
+let only_rational_in_linear_term index_of_variables type_of_variables constants = function
   | Constant _ -> true
   | Variable (_, variable_name) ->
     (* Constants are allowed *)
@@ -894,7 +894,7 @@ let only_discrete_in_linear_term index_of_variables type_of_variables constants 
         false
       )
 
-let only_discrete_in_linear_expression = check_f_in_linear_expression only_discrete_in_linear_term
+let only_rational_in_linear_expression = check_f_in_linear_expression only_rational_in_linear_term
 
 (*------------------------------------------------------------*)
 (* Check that a linear expression contains no variables (neither discrete nor clock) *)
@@ -1182,14 +1182,14 @@ let get_declared_variable_names variable_declarations =
 			) with Not_found -> []
 			in
 			(* Remove the binding (if any) *)
-			let all_discrete_variables_except_for_this_type = List.remove_assoc parsed_var_type_discrete collected_variable_names.declared_discrete in
+			let all_rational_variables_except_for_this_type = List.remove_assoc parsed_var_type_discrete collected_variable_names.declared_discrete in
 			(* Add the binding back *)
-			let updated_discrete_variables = (parsed_var_type_discrete , List.rev_append new_list all_discrete_variables_except_for_this_type) :: all_discrete_variables_except_for_this_type in
+			let updated_rational_variables = (parsed_var_type_discrete , List.rev_append new_list all_rational_variables_except_for_this_type) :: all_rational_variables_except_for_this_type in
 			
 			{
 				declared_parameters	= collected_variable_names.declared_parameters;
 				declared_clocks		= collected_variable_names.declared_clocks;
-				declared_discrete	= updated_discrete_variables;
+				declared_discrete	= updated_rational_variables;
 				declared_constants	= List.rev_append new_constants collected_variable_names.declared_constants;
 				unassigned_constant	= collected_variable_names.unassigned_constant;
 			}
@@ -1212,17 +1212,17 @@ let get_declared_variable_names variable_declarations =
 (*------------------------------------------------------------*)
 (* Get all discrete variables *)
 (*------------------------------------------------------------*)
-let get_all_discrete_variables variables_per_type =
+let get_all_rational_variables variables_per_type =
 	(* Collect for each discrete type *)
 	List.fold_left
-		(fun current_list discrete_type -> 
+		(fun current_list rational_type -> 
 			try (
-				let list_of_variables_for_this_type = Hashtbl.find variables_per_type discrete_type in
+				let list_of_variables_for_this_type = Hashtbl.find variables_per_type rational_type in
 				List.rev_append list_of_variables_for_this_type current_list
 			(* If not found: keep the list unchanged *)
 			) with Not_found -> current_list
 		)
-		[] all_parsed_discrete_types
+		[] all_parsed_rational_types
 
 (*------------------------------------------------------------*)
 (* Get all (possibly identical) names of automata *)
@@ -1406,8 +1406,8 @@ let all_locations_different =
 (*------------------------------------------------------------*)
 let check_update index_of_variables type_of_variables variable_names removed_variable_names constants automaton_name update =
 
-	let check_update_normal (variable_name, parsed_discrete_term) =
-	match parsed_discrete_term with
+	let check_update_normal (variable_name, parsed_rational_term) =
+	match parsed_rational_term with
 	| Parsed_rational_term arithmetic_expression ->
 		(* Check whether this variable is to be removed because unused elswhere than in resets *)
 		let to_be_removed = List.mem variable_name removed_variable_names in
@@ -1708,7 +1708,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 	in
 
 	(* Partition the init inequalities between the discrete init assignments, and other inequalities *)
-	let discrete_init, other_inequalities = List.partition (function
+	let rational_init, other_inequalities = List.partition (function
 		(* Check if the left part is only a variable name *)
 		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
 			let is_discrete =
@@ -1733,13 +1733,13 @@ let check_init useful_parsing_model_information init_definition observer_automat
 	let init_values_for_discrete = Hashtbl.create (List.length discrete) in
 	List.iter (fun lp ->
 		match lp with
-		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (coeff, discrete_name)), op , expression)) ->
+		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (coeff, rational_name)), op , expression)) ->
 			if NumConst.neq coeff NumConst.one then (
-			print_error ("The discrete variable '" ^ discrete_name ^ "' must have a coeff 1 in the init definition.");
+			print_error ("The discrete variable '" ^ rational_name ^ "' must have a coeff 1 in the init definition.");
 			well_formed := false;
 			);
 			(* Check if the assignment is well formed, and keep the discrete value *)
-			let discrete_value =
+			let rational_value =
 			match (op, expression) with
 			(* Simple constant: OK *)
 			| (PARSED_OP_EQ, Linear_term (Constant c)) -> c
@@ -1748,35 +1748,35 @@ let check_init useful_parsing_model_information init_definition observer_automat
 				(* Get the value of  the variable *)
 				let value = Hashtbl.find constants variable_name in
 				NumConst.mul coef value
-			| _ -> print_error ("The initial value for discrete variable '" ^ discrete_name ^ "' must be given in the form '" ^ discrete_name ^ " = c', where c is an integer, a rational or a constant.");
+			| _ -> print_error ("The initial value for discrete variable '" ^ rational_name ^ "' must be given in the form '" ^ rational_name ^ " = c', where c is an integer, a rational or a constant.");
 				well_formed := false;
 				NumConst.zero
 			in
 			(* Get the variable index *)
-			let discret_index =  Hashtbl.find index_of_variables discrete_name in
+			let discret_index =  Hashtbl.find index_of_variables rational_name in
 			(* Check if it was already declared *)
 			if Hashtbl.mem init_values_for_discrete discret_index then(
-			print_error ("The discrete variable '" ^ discrete_name ^ "' is given an initial value several times in the init definition.");
+			print_error ("The discrete variable '" ^ rational_name ^ "' is given an initial value several times in the init definition.");
 			well_formed := false;
 			) else (
 			(* Else add it *)
-			Hashtbl.add init_values_for_discrete discret_index discrete_value;
+			Hashtbl.add init_values_for_discrete discret_index rational_value;
 			);
 		| _ -> raise (InternalError ("Must have this form since it was checked before."))
-		) discrete_init;
+		) rational_init;
 
 	(* Check that every discrete variable is given at least one (rational) initial value (if not: warns) *)
-	List.iter (fun discrete_index ->
-		if not (Hashtbl.mem init_values_for_discrete discrete_index) then(
-			print_warning ("The discrete variable '" ^ (List.nth variable_names discrete_index) ^ "' was not given an initial value in the init definition: it will be assigned to 0.");
-			Hashtbl.add init_values_for_discrete discrete_index NumConst.zero
+	List.iter (fun rational_index ->
+		if not (Hashtbl.mem init_values_for_discrete rational_index) then(
+			print_warning ("The discrete variable '" ^ (List.nth variable_names rational_index) ^ "' was not given an initial value in the init definition: it will be assigned to 0.");
+			Hashtbl.add init_values_for_discrete rational_index NumConst.zero
 		);
 		) discrete;
 
-	(* Convert the Hashtbl to pairs (discrete_index, init_value) *)
-	let discrete_values_pairs =
-		List.map (fun discrete_index ->
-			discrete_index, Hashtbl.find init_values_for_discrete discrete_index
+	(* Convert the Hashtbl to pairs (rational_index, init_value) *)
+	let rational_values_pairs =
+		List.map (fun rational_index ->
+			rational_index, Hashtbl.find init_values_for_discrete rational_index
 		) discrete
 	in
 
@@ -1784,7 +1784,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 	(**** TO DO ****) (*use 'other_inequalities' *)
 
 	(* Return whether the init declaration passed the tests *)
-	discrete_values_pairs, !well_formed
+	rational_values_pairs, !well_formed
 
 
 
@@ -1837,13 +1837,13 @@ let make_constants constants =
 (* Translate the discrete types *)
 (*------------------------------------------------------------*)
 
-let abstract_discrete_type_of_parsed_discrete_type = function
+let abstract_rational_type_of_parsed_rational_type = function
 	| Parsed_boolean	-> Boolean
 	| Parsed_rational	-> Rational
 	| Parsed_string		-> String
 	| Parsed_stringset	-> StringSet
 
-(*let parsed_discrete_type_of_abstract_discrete_type = function
+(*let parsed_rational_type_of_abstract_rational_type = function
 	| Rational	-> Parsed_rational
 	| Boolean	-> Parsed_boolean*)
 
@@ -1854,31 +1854,31 @@ let abstract_discrete_type_of_parsed_discrete_type = function
 
 exception Found_type of parsed_var_type_discrete
 
-let get_type_of_discrete_variable (variable_names : variable_name array) (variables_per_type :  (parsed_var_type , variable_name list) Hashtbl.t) (variable_index : variable_index) =
+let get_type_of_rational_variable (variable_names : variable_name array) (variables_per_type :  (parsed_var_type , variable_name list) Hashtbl.t) (variable_index : variable_index) =
 	(* Get the name of the variable *)
 	let variable_name = variable_names.(variable_index) in
 	
 	(*** BADPROG: check for every type if we find the type (perhaps implement something more efficient??) ***)
 	try(
-	List.iter (fun (discrete_type : ParsingStructure.parsed_var_type_discrete) : unit ->
+	List.iter (fun (rational_type : ParsingStructure.parsed_var_type_discrete) : unit ->
 		(* Get all variables for this type *)
-		let all_variables_for_this_type : variable_name list = try (Hashtbl.find variables_per_type (Parsed_var_type_discrete discrete_type)) with Not_found -> [] in
+		let all_variables_for_this_type : variable_name list = try (Hashtbl.find variables_per_type (Parsed_var_type_discrete rational_type)) with Not_found -> [] in
 		
 		(* Check whether our variable belongs to this list *)
 		if List.mem variable_name all_variables_for_this_type then(
 			(* If yes, stop *)
-			raise (Found_type discrete_type)
+			raise (Found_type rational_type)
 		);
 		()
 	
-	) all_concrete_parsed_discrete_types;
+	) all_concrete_parsed_rational_types;
 	
 	(* If still there: variable not found, impossible situation *)
 	raise (InternalError ("Discrete type not found for variable " ^ variable_name ^ " although it should have been checked before."));
 	
-	) with Found_type discrete_type -> (
+	) with Found_type rational_type -> (
 		(* Convert parsed type to abstract type *)
-		abstract_discrete_type_of_parsed_discrete_type discrete_type
+		abstract_rational_type_of_parsed_rational_type rational_type
 	)
 	
 
@@ -2168,14 +2168,14 @@ let make_automata_per_action actions_per_automaton nb_automata nb_actions =
 (*------------------------------------------------------------*)
 (** Split between the discrete and continuous inequalities of a convex predicate; raises False_exception if a false linear expression is found *)
 (*------------------------------------------------------------*)
-let split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants convex_predicate =
+let split_convex_predicate_into_rational_and_continuous index_of_variables type_of_variables constants convex_predicate =
   (* Compute a list of inequalities *)
   List.partition
     (fun linear_inequality ->
        match linear_inequality with
        | Parsed_true_constraint -> true (*** NOTE: we arbitrarily send "true" to the discrete part ***)
        | Parsed_false_constraint -> raise False_exception
-       | Parsed_linear_constraint (linexpr1, _, linexpr2) -> only_discrete_in_linear_expression index_of_variables type_of_variables constants linexpr1 && only_discrete_in_linear_expression index_of_variables type_of_variables constants linexpr2
+       | Parsed_linear_constraint (linexpr1, _, linexpr2) -> only_rational_in_linear_expression index_of_variables type_of_variables constants linexpr1 && only_rational_in_linear_expression index_of_variables type_of_variables constants linexpr2
     ) convex_predicate
 
 
@@ -2186,7 +2186,7 @@ let convert_guard index_of_variables type_of_variables constants guard_convex_pr
 
   try(
     (* Separate the guard into a discrete guard (on discrete variables) and a continuous guard (on all variables) *)
-    let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_discrete_and_continuous index_of_variables type_of_variables constants guard_convex_predicate in
+    let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_rational_and_continuous index_of_variables type_of_variables constants guard_convex_predicate in
 
     match discrete_guard_convex_predicate, continuous_guard_convex_predicate with
     (* No inequalities: true *)
@@ -2299,8 +2299,8 @@ let linear_term_of_parsed_update_arithmetic_expression index_of_variables consta
 		| Parsed_DF_constant var_value ->
 			(* Update the constant *)
 			constant := NumConst.add !constant (NumConst.mul mult_factor var_value)
-		| Parsed_DF_unary_min parsed_discrete_factor ->
-			update_coef_array_in_parsed_update_factor mult_factor parsed_discrete_factor
+		| Parsed_DF_unary_min parsed_rational_factor ->
+			update_coef_array_in_parsed_update_factor mult_factor parsed_rational_factor
 		| Parsed_DF_expression parsed_update_arithmetic_expression ->
 			update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
 	in
@@ -2331,7 +2331,7 @@ let filtered_updates removed_variable_names updates =
 
 
 (** Translate a parsed discrete update into its abstract model *)
-let to_abstract_discrete_update index_of_variables constants (variable_name, (parsed_discrete_term : parsed_discrete_term)) : discrete_update=
+let to_abstract_discrete_update index_of_variables constants (variable_name, (parsed_discrete_term : parsed_discrete_term)) : discrete_update =
 	let variable_index = Hashtbl.find index_of_variables variable_name in
 	match parsed_discrete_term with
 	| Parsed_rational_term parsed_update_arithmetic_expression ->
@@ -2344,8 +2344,8 @@ let to_abstract_discrete_update index_of_variables constants (variable_name, (pa
 let to_abstract_clock_update index_of_variables constants only_resets updates_list =
 
 	(** Translate parsed clock updte into the tuple clock_index, linear_term *)
-	let to_intermediate_abstract_clock_update (variable_name, parsed_discrete_term) =
-		match parsed_discrete_term with
+	let to_intermediate_abstract_clock_update (variable_name, parsed_rational_term) =
+		match parsed_rational_term with
 		| Parsed_rational_term parsed_update_arithmetic_expression ->
 			let variable_index = Hashtbl.find index_of_variables variable_name in
 			let linear_term = linear_term_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
@@ -2377,8 +2377,8 @@ let to_abstract_clock_update index_of_variables constants only_resets updates_li
 (** Split normal updates into clock, discrete updates *)
 let split_to_clock_discrete_updates index_of_variables only_resets type_of_variables updates =
   (** Check if a normal update is a clock update *)
-	let is_clock_update (variable_name, parsed_discrete_term) =
-		match parsed_discrete_term with
+	let is_clock_update (variable_name, parsed_rational_term) =
+		match parsed_rational_term with
 		| Parsed_rational_term parsed_update_arithmetic_expression ->
 			(* Retrieve variable type *)
 			if type_of_variables (Hashtbl.find index_of_variables variable_name) = Var_type_clock then (
@@ -2575,7 +2575,7 @@ let convert_transitions nb_transitions nb_actions index_of_variables constants r
 (*------------------------------------------------------------*)
 (* Create the initial state *)
 (*------------------------------------------------------------*)
-let make_initial_state index_of_automata locations_per_automaton index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs init_definition =
+let make_initial_state index_of_automata locations_per_automaton index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_rational_pairs init_definition =
 	(* Get the location initialisations and the constraint *)
 	let loc_assignments, linear_predicates = List.partition (function
 		| Parsed_loc_assignment _ -> true
@@ -2596,7 +2596,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 		) initial_locations in
 
 	(* Construct the initial location *)
-	let initial_location = Location.make_location locations init_discrete_pairs in
+	let initial_location = Location.make_location locations init_rational_pairs in
 
 	(* Remove the init definitions for discrete variables *)
 	let other_inequalities = List.filter (function
@@ -2629,10 +2629,10 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 	let initial_constraint : LinearConstraint.px_linear_constraint =
 
 		(* Create pairs of (index , value) for discrete variables *)
-		(* 		let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value initial_location discrete_index)) model.discrete in *)
+		(* 		let rational_values = List.map (fun rational_index -> rational_index, (Location.get_rational_value initial_location rational_index)) model.discrete in *)
 
 		(* Create a constraint encoding the value of the discretes *)
-		let discretes = LinearConstraint.pxd_constraint_of_discrete_values init_discrete_pairs in
+		let discretes = LinearConstraint.pxd_constraint_of_discrete_values init_rational_pairs in
 
 		(* Create initial constraint (through parsing) *)
 		let initial_constraint = (linear_constraint_of_convex_predicate index_of_variables constants convex_predicate) in
@@ -2758,16 +2758,16 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
   | Parsed_unreachable_locations (parsed_unreachable_global_location_list) ->
     List.iter (fun parsed_unreachable_global_location ->
         List.iter (function
-            | Parsed_unreachable_discrete parsed_discrete_constraint ->
+            | Parsed_unreachable_discrete parsed_rational_constraint ->
               begin
-                match parsed_discrete_constraint with
-                | Parsed_discrete_l (variable_name, (*discrete_value*)_)
-                | Parsed_discrete_leq (variable_name, (*discrete_value*)_)
-                | Parsed_discrete_equal (variable_name, (*discrete_value*)_)
-                | Parsed_discrete_geq (variable_name, (*discrete_value*)_)
-                | Parsed_discrete_g (variable_name, (*discrete_value*)_)
+                match parsed_rational_constraint with
+                | Parsed_rational_l (variable_name, (*rational_value*)_)
+                | Parsed_rational_leq (variable_name, (*rational_value*)_)
+                | Parsed_rational_equal (variable_name, (*rational_value*)_)
+                | Parsed_rational_geq (variable_name, (*rational_value*)_)
+                | Parsed_rational_g (variable_name, (*rational_value*)_)
                   -> variables_used_ref := StringSet.add variable_name !variables_used_ref
-                | Parsed_discrete_interval (variable_name, (*discrete_value*)_, (*discrete_value*)_)
+                | Parsed_rational_interval (variable_name, (*rational_value*)_, (*rational_value*)_)
                   -> variables_used_ref := StringSet.add variable_name !variables_used_ref
               end
             | Parsed_unreachable_loc _ -> ()
@@ -2930,27 +2930,27 @@ let check_and_convert_unreachable_local_locations index_of_automata index_of_loc
 
 (*------------------------------------------------------------*)
 (* Check a list of discrete constraints declaration (i.e., of the form 'd ~ constant(s)')
- * Return a list of discrete_constraint, and a Boolean encoding whether all checks passed
+ * Return a list of rational_constraint, and a Boolean encoding whether all checks passed
  * May print warnings or errors
 *)
 (*------------------------------------------------------------*)
-let check_and_convert_unreachable_discrete_constraints index_of_variables type_of_variables variable_names discrete parsed_unreachable_locations =
+let check_and_convert_unreachable_rational_constraints index_of_variables type_of_variables variable_names discrete parsed_unreachable_locations =
   (* Create a hash table to check for double declarations *)
   let hashtable = Hashtbl.create (List.length discrete) in
 
   (*(* Horrible hack: store not the constants, but their string representation (to allow for a quick representation of single constants and pairs of constants in intervals) *)
-    	let string_of_parsed_discrete_constraint = function
-    		| Parsed_discrete_l (_ , v)
+    	let string_of_parsed_rational_constraint = function
+    		| Parsed_rational_l (_ , v)
     			-> "<" ^ (NumConst.string_of_numconst v)
-    		| Parsed_discrete_leq (_ , v)
+    		| Parsed_rational_leq (_ , v)
     			-> "<=" ^ (NumConst.string_of_numconst v)
-    		| Parsed_discrete_equal (_ , v)
+    		| Parsed_rational_equal (_ , v)
     			-> "=" ^ (NumConst.string_of_numconst v)
-    		| Parsed_discrete_geq (_ , v)
+    		| Parsed_rational_geq (_ , v)
     			-> ">=" ^ (NumConst.string_of_numconst v)
-    		| Parsed_discrete_g (_ , v)
+    		| Parsed_rational_g (_ , v)
     			-> ">" ^ (NumConst.string_of_numconst v)
-    		| Parsed_discrete_interval (_ , min_bound, max_bound)
+    		| Parsed_rational_interval (_ , min_bound, max_bound)
     			-> " in [" ^ (NumConst.string_of_numconst min_bound)
     					^ " .. "
     					^ (NumConst.string_of_numconst max_bound)
@@ -2959,19 +2959,19 @@ let check_and_convert_unreachable_discrete_constraints index_of_variables type_o
 
   (* Local function to convert a parsed constraint into an abstract discrete constraint *)
   (*** NOTE: will only be called once the discrete variable name has been checked for name and type ***)
-  let convert_discrete_constraint = function
-    | Parsed_discrete_l (discrete_name , v)
-      -> Discrete_l (Hashtbl.find index_of_variables discrete_name , v)
-    | Parsed_discrete_leq (discrete_name , v)
-      -> Discrete_leq (Hashtbl.find index_of_variables discrete_name , v)
-    | Parsed_discrete_equal (discrete_name , v)
-      -> Discrete_equal (Hashtbl.find index_of_variables discrete_name , v)
-    | Parsed_discrete_geq (discrete_name , v)
-      -> Discrete_geq (Hashtbl.find index_of_variables discrete_name , v)
-    | Parsed_discrete_g (discrete_name , v)
-      -> Discrete_g (Hashtbl.find index_of_variables discrete_name , v)
-    | Parsed_discrete_interval (discrete_name , min_bound, max_bound)
-      -> Discrete_interval (Hashtbl.find index_of_variables discrete_name , min_bound, max_bound)
+  let convert_rational_constraint = function
+    | Parsed_rational_l (rational_name , v)
+      -> Discrete_l (Hashtbl.find index_of_variables rational_name , v)
+    | Parsed_rational_leq (rational_name , v)
+      -> Discrete_leq (Hashtbl.find index_of_variables rational_name , v)
+    | Parsed_rational_equal (rational_name , v)
+      -> Discrete_equal (Hashtbl.find index_of_variables rational_name , v)
+    | Parsed_rational_geq (rational_name , v)
+      -> Discrete_geq (Hashtbl.find index_of_variables rational_name , v)
+    | Parsed_rational_g (rational_name , v)
+      -> Discrete_g (Hashtbl.find index_of_variables rational_name , v)
+    | Parsed_rational_interval (rational_name , min_bound, max_bound)
+      -> Discrete_interval (Hashtbl.find index_of_variables rational_name , min_bound, max_bound)
   in
 
   (* Global check *)
@@ -2979,42 +2979,42 @@ let check_and_convert_unreachable_discrete_constraints index_of_variables type_o
 
   (* Iterate on parsed_unreachable_predicate and check for names and values *)
   List.iter(fun parsed_unreachable_predicate ->
-      let parsed_discrete_constraint =
+      let parsed_rational_constraint =
         match parsed_unreachable_predicate with
-        | Parsed_unreachable_discrete parsed_discrete_constraint -> parsed_discrete_constraint
+        | Parsed_unreachable_discrete parsed_rational_constraint -> parsed_rational_constraint
         | _ -> raise (InternalError("Expecting a Parsed_unreachable_discrete, which should have been checked earlier."))
       in
 
       (* Get discrete variable name *)
-      let discrete_name = match parsed_discrete_constraint with
-        | Parsed_discrete_l (variable_name , _)
-        | Parsed_discrete_leq (variable_name , _)
-        | Parsed_discrete_equal (variable_name , _)
-        | Parsed_discrete_geq (variable_name , _)
-        | Parsed_discrete_g (variable_name , _)
+      let rational_name = match parsed_rational_constraint with
+        | Parsed_rational_l (variable_name , _)
+        | Parsed_rational_leq (variable_name , _)
+        | Parsed_rational_equal (variable_name , _)
+        | Parsed_rational_geq (variable_name , _)
+        | Parsed_rational_g (variable_name , _)
           -> variable_name
-        | Parsed_discrete_interval (variable_name , _, _)
+        | Parsed_rational_interval (variable_name , _, _)
           -> variable_name
       in
 
       (* Check discrete name and type *)
       let check1 =
         (* 1a. Check for name *)
-        if not (Hashtbl.mem index_of_variables discrete_name) then(
+        if not (Hashtbl.mem index_of_variables rational_name) then(
           (* Print error *)
-          print_error ("The discrete variable '" ^ discrete_name ^ "' used in the correctness property does not exist in this model.");
+          print_error ("The discrete variable '" ^ rational_name ^ "' used in the correctness property does not exist in this model.");
           (* Problem *)
           false
           (* 1b. Check for type *)
         )else(
           (* Get variable index *)
           (*** NOTE: safe because Hashtbl.mem was checked in test 1a ***)
-          let variable_index = Hashtbl.find index_of_variables discrete_name in
+          let variable_index = Hashtbl.find index_of_variables rational_name in
           (* Check type *)
           let variable_type = type_of_variables variable_index in
           if variable_type <> Var_type_discrete then(
             (* Print error *)
-            print_error ("The variable '" ^ discrete_name ^ "' used in the correctness property must be a discrete variable (clocks and parameters are not allowed at this stage).");
+            print_error ("The variable '" ^ rational_name ^ "' used in the correctness property must be a discrete variable (clocks and parameters are not allowed at this stage).");
             (* Problem *)
             false
           )else true
@@ -3022,14 +3022,14 @@ let check_and_convert_unreachable_discrete_constraints index_of_variables type_o
       in
 
       (* Check value1 <= value2 *)
-      let check2 = match parsed_discrete_constraint with
-        | Parsed_discrete_l _
-        | Parsed_discrete_leq _
-        | Parsed_discrete_equal _
-        | Parsed_discrete_geq _
-        | Parsed_discrete_g _
+      let check2 = match parsed_rational_constraint with
+        | Parsed_rational_l _
+        | Parsed_rational_leq _
+        | Parsed_rational_equal _
+        | Parsed_rational_geq _
+        | Parsed_rational_g _
           -> true
-        | Parsed_discrete_interval (_ , min_bound , max_bound )
+        | Parsed_rational_interval (_ , min_bound , max_bound )
           -> if NumConst.g min_bound max_bound then(
             print_error ("The interval '[" ^ (NumConst.string_of_numconst min_bound) ^ " , " ^ (NumConst.string_of_numconst max_bound) ^ "]' used in the correctness property is not well-formed.");
             (* Problem *)
@@ -3042,26 +3042,26 @@ let check_and_convert_unreachable_discrete_constraints index_of_variables type_o
         (* Only perform this if further checks passed *)
         if not (check1 && check2) then false else(
           (* Compute abstract constraint *)
-          let abstract_constraint = convert_discrete_constraint parsed_discrete_constraint in
+          let abstract_constraint = convert_rational_constraint parsed_rational_constraint in
           (* Check whether another value was declared for this discrete *)
-          if Hashtbl.mem hashtable discrete_name then(
+          if Hashtbl.mem hashtable rational_name then(
             (* Retrieve former value *)
-            let old_constraint = Hashtbl.find hashtable discrete_name in
+            let old_constraint = Hashtbl.find hashtable rational_name in
             (* If same name: just warning *)
             if old_constraint = abstract_constraint then(
               (* Warning *)
-              print_warning ("Discrete variable '" ^ discrete_name ^ "' is compared several times to the same constant in the correctness property.");
+              print_warning ("Discrete variable '" ^ rational_name ^ "' is compared several times to the same constant in the correctness property.");
               (* No problem *)
               true
             )else(
               (* Otherwise: error *)
-              print_warning ("Discrete variable '" ^ discrete_name ^ "' is compared several times to different constants in the correctness property.");
+              print_warning ("Discrete variable '" ^ rational_name ^ "' is compared several times to different constants in the correctness property.");
               (* Problem *)
               false
             )
           ) else (
             (* Add to hash table *)
-            Hashtbl.add hashtable discrete_name abstract_constraint;
+            Hashtbl.add hashtable rational_name abstract_constraint;
             (* No problem *)
             true
           )
@@ -3080,7 +3080,7 @@ let check_and_convert_unreachable_discrete_constraints index_of_variables type_o
     (* Return all abstract constraints *)
     let abstract_constraints = Hashtbl.fold (fun _ abstract_constraint former_abstract_constraints ->
         (*			(* Retrieve automaton index (no test because was tested earlier) *)
-          			let discrete_index = Hashtbl.find index_of_variables discrete_name in*)
+          			let rational_index = Hashtbl.find index_of_variables rational_name in*)
         (* Add new abstract_constraint *)
         abstract_constraint :: former_abstract_constraints
       ) hashtable [] in
@@ -3096,7 +3096,7 @@ let check_and_convert_unreachable_discrete_constraints index_of_variables type_o
 (*------------------------------------------------------------*)
 let check_and_convert_unreachable_global_location index_of_variables type_of_variables discrete variable_names index_of_automata index_of_locations parsed_unreachable_global_location =
   (* Split the predicates in location and discrete *)
-  let parsed_unreachable_locations, parsed_discrete_constraints = List.partition (function
+  let parsed_unreachable_locations, parsed_rational_constraints = List.partition (function
       | Parsed_unreachable_loc _ -> true
       | _ -> false
     ) parsed_unreachable_global_location
@@ -3104,12 +3104,12 @@ let check_and_convert_unreachable_global_location index_of_variables type_of_var
 
   (* Call dedicated functions *)
   let unreachable_locations, check1 = check_and_convert_unreachable_local_locations index_of_automata index_of_locations parsed_unreachable_locations in
-  let discrete_constraints, check2 = check_and_convert_unreachable_discrete_constraints index_of_variables type_of_variables variable_names discrete parsed_discrete_constraints in
+  let rational_constraints, check2 = check_and_convert_unreachable_rational_constraints index_of_variables type_of_variables variable_names discrete parsed_rational_constraints in
 
   (* Return *)
   {
     unreachable_locations = unreachable_locations;
-    discrete_constraints  = discrete_constraints;
+    rational_constraints  = rational_constraints;
   }
   ,
   check1 && check2
@@ -3121,23 +3121,23 @@ let check_and_convert_unreachable_global_location index_of_variables type_of_var
 (*------------------------------------------------------------*)
 
 let rec check_parsed_rational_arithmetic_expression useful_parsing_model_information = function
-	| Parsed_DAE_plus (parsed_rational_arithmetic_expression , parsed_discrete_term)
-	| Parsed_DAE_minus (parsed_rational_arithmetic_expression , parsed_discrete_term) ->
+	| Parsed_DAE_plus (parsed_rational_arithmetic_expression , parsed_rational_term)
+	| Parsed_DAE_minus (parsed_rational_arithmetic_expression , parsed_rational_term) ->
 		evaluate_and
 			(check_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression)
-			(check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
-	| Parsed_DAE_term parsed_discrete_term -> check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term
+			(check_parsed_rational_term useful_parsing_model_information parsed_rational_term)
+	| Parsed_DAE_term parsed_rational_term -> check_parsed_rational_term useful_parsing_model_information parsed_rational_term
 
-and check_parsed_discrete_term useful_parsing_model_information = function
-	| Parsed_DT_mul (parsed_discrete_term , parsed_discrete_factor)
-	| Parsed_DT_div (parsed_discrete_term , parsed_discrete_factor) ->
+and check_parsed_rational_term useful_parsing_model_information = function
+	| Parsed_DT_mul (parsed_rational_term , parsed_rational_factor)
+	| Parsed_DT_div (parsed_rational_term , parsed_rational_factor) ->
 		evaluate_and
-			(check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
-			(check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
-	| Parsed_DT_factor parsed_discrete_factor ->
-		check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor
+			(check_parsed_rational_term useful_parsing_model_information parsed_rational_term)
+			(check_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
+	| Parsed_DT_factor parsed_rational_factor ->
+		check_parsed_rational_factor useful_parsing_model_information parsed_rational_factor
 
-and check_parsed_discrete_factor useful_parsing_model_information = function
+and check_parsed_rational_factor useful_parsing_model_information = function
 	| Parsed_DF_variable variable_name ->
 		if not (Hashtbl.mem useful_parsing_model_information.index_of_variables variable_name) && not (Hashtbl.mem useful_parsing_model_information.constants variable_name) then (
 			print_error ("Undefined variable name '" ^ variable_name ^ "' in the property");
@@ -3148,8 +3148,8 @@ and check_parsed_discrete_factor useful_parsing_model_information = function
 	| Parsed_DF_constant _ -> true
 	| Parsed_DF_expression parsed_rational_arithmetic_expression ->
 		check_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression
-	| Parsed_DF_unary_min parsed_discrete_factor ->
-		check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor
+	| Parsed_DF_unary_min parsed_rational_factor ->
+		check_parsed_rational_factor useful_parsing_model_information parsed_rational_factor
 
 
 (* Check correct variable names in parsed_rational_boolean_expression *)
@@ -3197,7 +3197,7 @@ let check_parsed_loc_predicate useful_parsing_model_information = function
 
 
 let check_parsed_simple_predicate useful_parsing_model_information = function
-	| Parsed_discrete_boolean_expression parsed_rational_boolean_expression ->
+	| Parsed_rational_boolean_predicate parsed_rational_boolean_expression ->
 		check_parsed_rational_boolean_expression useful_parsing_model_information parsed_rational_boolean_expression
 	| Parsed_loc_predicate parsed_loc_predicate ->
 		check_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate
@@ -3957,7 +3957,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let possibly_multiply_defined_parameter_names	: variable_name list = try (Hashtbl.find variables_per_type Parsed_var_type_parameter) with Not_found -> [] in
 
 	(* Discrete request a slightly more expensive treatment as we get them for each type *)
-	let possibly_multiply_defined_discrete_names	: variable_name list = get_all_discrete_variables variables_per_type in
+	let possibly_multiply_defined_rational_names	: variable_name list = get_all_rational_variables variables_per_type in
 
 	(* Get the declared automata names *)
 	let declared_automata_names = get_declared_automata_names parsed_model.automata in
@@ -4076,7 +4076,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* First remove multiply defined variable names *)
 	let single_clock_names = list_only_once possibly_multiply_defined_clock_names in
-	let single_discrete_names = list_only_once possibly_multiply_defined_discrete_names in
+	let single_rational_names = list_only_once possibly_multiply_defined_rational_names in
 	let single_parameter_names = list_only_once possibly_multiply_defined_parameter_names in
 	
 	(*------------------------------------------------------------*)
@@ -4084,10 +4084,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*------------------------------------------------------------*)
 
 	(* Unless a specific option is activated, we first remove all variables declared but unused *)
-	let clock_names, discrete_names, parameter_names, removed_variable_names =
+	let clock_names, rational_names, parameter_names, removed_variable_names =
 	if options#no_variable_autoremove then(
 		(* Nothing to do *)
-		single_clock_names, single_discrete_names, single_parameter_names, []
+		single_clock_names, single_rational_names, single_parameter_names, []
 	)else (
 		(* Gather all variables used *)
 		let all_variables_used_in_model = get_all_variables_used_in_model parsed_model in
@@ -4113,10 +4113,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		) in
 		(* Create all three lists *)
 		let single_clock_names, removed_clock_names = remove_unused_variables_gen "clock" single_clock_names in
-		let single_discrete_names, removed_discrete_names = remove_unused_variables_gen "discrete" single_discrete_names in
+		let single_rational_names, removed_rational_names = remove_unused_variables_gen "discrete" single_rational_names in
 		let single_parameter_names, removed_parameter_names = remove_unused_variables_gen "parameter" single_parameter_names in
 		(* Return and append removed variable names *)
-		single_clock_names, single_discrete_names, single_parameter_names, List.rev_append removed_clock_names (List.rev_append removed_discrete_names removed_parameter_names)
+		single_clock_names, single_rational_names, single_parameter_names, List.rev_append removed_clock_names (List.rev_append removed_rational_names removed_parameter_names)
 	)
 	in
 	
@@ -4147,10 +4147,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*------------------------------------------------------------*)
 	
 	let clock_names = list_append (list_append clock_names observer_clock_list) special_reset_clock_list in
-	let discrete_names = discrete_names in
+	let rational_names = rational_names in
 
 	(* Make only one list for all variables *)
-	let variable_names = list_append (list_append parameter_names clock_names) discrete_names in
+	let variable_names = list_append (list_append parameter_names clock_names) rational_names in
 
 	(* Update automata names with the observer automaton *)
 	let declared_automata_names = match observer_automaton with
@@ -4162,7 +4162,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let nb_automata		= List.length declared_automata_names in
 	let nb_actions		= List.length action_names in
 	let nb_clocks		= List.length clock_names in
-	let nb_discrete		= List.length discrete_names in
+	let nb_discrete		= List.length rational_names in
 	let nb_parameters	= List.length parameter_names in
 	let nb_variables	= List.length variable_names in
 
@@ -4234,23 +4234,23 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	let first_parameter_index = 0 in
 	let first_clock_index    = first_parameter_index + nb_parameters in
-	let first_discrete_index  = first_clock_index + nb_clocks in
+	let first_rational_index  = first_clock_index + nb_clocks in
 
 	(* An array 'variable index -> AbstractModel.var_type' *)
 	let type_of_variables = Array.make nb_variables AbstractModel.Var_type_parameter in
-	for i = first_clock_index to first_discrete_index - 1 do
+	for i = first_clock_index to first_rational_index - 1 do
 		type_of_variables.(i) <- AbstractModel.Var_type_clock;
 	done;
-	for i = first_discrete_index to nb_variables - 1 do
-		type_of_variables.(i) <- AbstractModel.Var_type_discrete (get_type_of_discrete_variable variables variables_per_type i);
+	for i = first_rational_index to nb_variables - 1 do
+		type_of_variables.(i) <- AbstractModel.Var_type_discrete (get_type_of_rational_variable variables variables_per_type i);
 	done;
 	(* Functional representation *)
 	let type_of_variables = fun variable_index -> type_of_variables.(variable_index) in
 
 	(* Create the lists of different variables *)
 	let (parameters : parameter_index list)	= list_of_interval first_parameter_index (first_clock_index - 1) in
-	let (clocks : clock_index list)			= list_of_interval first_clock_index (first_discrete_index - 1) in
-	let (discrete : discrete_index list)	= list_of_interval first_discrete_index (nb_variables - 1) in
+	let (clocks : clock_index list)			= list_of_interval first_clock_index (first_rational_index - 1) in
+	let (discrete : discrete_index list)	= list_of_interval first_rational_index (nb_variables - 1) in
 
 	(* Create the type check functions *)
 	let is_clock = (fun variable_index -> try (type_of_variables variable_index = Var_type_clock) with Invalid_argument _ ->  false) in
@@ -4388,7 +4388,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_high ("*** Checking init definition…");
 	(* Get pairs for the initialisation of the discrete variables, and check the init definition *)
 
-	let init_discrete_pairs, well_formed_init = check_init useful_parsing_model_information parsed_model.init_definition observer_automaton in
+	let init_rational_pairs, well_formed_init = check_init useful_parsing_model_information parsed_model.init_definition observer_automaton in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4644,9 +4644,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Set the number of discrete variables *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let min_discrete_index = first_discrete_index in
-	let max_discrete_index = nb_variables - 1 in
-	Location.initialize nb_automata min_discrete_index max_discrete_index;
+	let min_rational_index = first_rational_index in
+	let max_rational_index = nb_variables - 1 in
+	Location.initialize nb_automata min_rational_index max_rational_index;
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4773,7 +4773,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		| False_guard -> LinearConstraint.pxd_false_constraint()
 		| Discrete_guard discrete_guard -> LinearConstraint.pxd_true_constraint()
 		| Continuous_guard continuous_guard -> continuous_guard
-		| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard
+		| Discrete_continuous_guard rational_continuous_guard -> rational_continuous_guard.continuous_guard
 	in
 
 	(* 1) Get ALL constraints of guards and invariants *)
@@ -4835,7 +4835,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_high ("*** Building initial state…");
 	
 	let (initial_location, initial_constraint) =
-		make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs parsed_model.init_definition in
+		make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_rational_pairs parsed_model.init_definition in
 
 	(* Add the observer initial constraint *)
 	begin
@@ -5205,7 +5205,7 @@ let check_parsed_loc_predicate useful_parsing_model_information = function
 
 (* Check correct variable names in parsed_simple_predicate *)
 let check_parsed_simple_predicate useful_parsing_model_information = function
-	| Parsed_discrete_boolean_expression parsed_rational_boolean_expression -> check_parsed_rational_boolean_expression useful_parsing_model_information parsed_rational_boolean_expression
+	| Parsed_rational_boolean_expression parsed_rational_boolean_expression -> check_parsed_rational_boolean_expression useful_parsing_model_information parsed_rational_boolean_expression
 	| Parsed_loc_predicate parsed_loc_predicate -> check_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate
 
 

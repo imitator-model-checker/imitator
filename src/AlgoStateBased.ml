@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/01/31
+ * Last modified     : 2020/02/01
  *
  ************************************************************)
 
@@ -26,7 +26,7 @@ open Statistics
 open AbstractAlgorithm
 open AbstractModel
 open AbstractProperty
-open DiscreteExpressions
+open RationalExpressions
 open AlgoGeneric
 open State
 open Result
@@ -1160,7 +1160,7 @@ let compute_possible_actions source_location =
 	true_indexes possible_actions
 
 (* interface with the NumConst module for discrete comparisons *)
-let compute_discrete_comparisons (relop : DiscreteExpressions.relop) =
+let compute_discrete_comparisons (relop : RationalExpressions.relop) =
 	match relop with
 	| OP_L		-> NumConst.l
 	| OP_LEQ	-> NumConst.le
@@ -1172,12 +1172,12 @@ let compute_discrete_comparisons (relop : DiscreteExpressions.relop) =
 (** Check if a boolean expression is satisfied *)
 let is_boolean_expression_satisfied location (boolean_expr : AbstractModel.boolean_expression) : bool =
   let rec is_boolean_expression_satisfied_rec = function
-    | True_bool -> true
-    | False_bool -> false
-    | Not_bool b -> not (is_boolean_expression_satisfied_rec b) (* negation *)
-    | And_bool (b1, b2) -> (is_boolean_expression_satisfied_rec b1) && (is_boolean_expression_satisfied_rec b2) (* conjunction *)
-    | Or_bool (b1, b2) -> (is_boolean_expression_satisfied_rec b1) || (is_boolean_expression_satisfied_rec b2) (* disjunction *)
-    | Discrete_boolean_expression dbe -> DiscreteExpressions.check_discrete_boolean_expression (Location.get_discrete_value location) dbe
+    | True_bool							-> true
+    | False_bool						-> false
+    | Not_bool b						-> not (is_boolean_expression_satisfied_rec b) (* negation *)
+    | And_bool (b1, b2)					-> (is_boolean_expression_satisfied_rec b1) && (is_boolean_expression_satisfied_rec b2) (* conjunction *)
+    | Or_bool (b1, b2)					-> (is_boolean_expression_satisfied_rec b1) || (is_boolean_expression_satisfied_rec b2) (* disjunction *)
+    | Rational_boolean_expression dbe	-> RationalExpressions.check_rational_boolean_expression (Location.get_discrete_value location) dbe
   in
   is_boolean_expression_satisfied_rec boolean_expr
 
@@ -1271,7 +1271,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 			let new_value = match discrete_term with
 				| Rational_term arithmetic_expression ->
 				let new_value = try(
-					DiscreteExpressions.eval_discrete_arithmetic_expression (Location.get_discrete_value source_location) arithmetic_expression)
+					RationalExpressions.eval_rational_arithmetic_expression (Location.get_discrete_value source_location) arithmetic_expression)
 					with Division_by_0_while_evaluating_discrete -> (
 						(*** NOTE: we could still go on with the computation by setting the discrete to, e.g., 0 but this seems really not good for a model checker ***)
 						raise (Division_by_0 ("Division by 0 encountered when evaluating the successor of the discrete variables!"))

@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/03/01
- * Last modified     : 2020/01/31
+ * Last modified     : 2020/02/01
  *
  ************************************************************)
 
@@ -18,7 +18,7 @@ open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open LinearConstraint
-open DiscreteExpressions
+open RationalExpressions
 open AbstractModel
 open Result
 
