@@ -50,7 +50,7 @@ and rational_term =
 
 and rational_factor =
 	| DF_variable of Automaton.variable_index
-	| DF_constant of Automaton.variable_value
+	| DF_constant of Automaton.constant_value
 	| DF_expression of rational_arithmetic_expression
 	| DF_unary_min of rational_factor
 

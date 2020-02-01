@@ -73,8 +73,94 @@ type location_urgency =
 
 
 (************************************************************)
-(** Transitions *)
+(** Guards and invariants *)
 (************************************************************)
+
+(** Boolean expression on discrete variables *)
+type discrete_boolean_expression =
+	| True_bool (** True *)
+	| False_bool (** False *)
+	| Not_bool of discrete_boolean_expression (** Negation *)
+	| And_bool of discrete_boolean_expression * discrete_boolean_expression (** Conjunction *)
+	| Or_bool of discrete_boolean_expression * discrete_boolean_expression (** Disjunction *)
+	| Rational_boolean_expression of RationalExpressions.rational_boolean_expression
+
+
+type convex_continuous_expression =
+	| CCE_plus of convex_continuous_expression * convex_continuous_term
+	| CCE_minus of convex_continuous_expression * convex_continuous_term
+	| CCE_term of convex_continuous_term
+
+and convex_continuous_term =
+	| CCT_mul of convex_continuous_term * convex_continuous_factor
+	| CCT_div of convex_continuous_term * convex_continuous_factor
+	| CCT_factor of convex_continuous_factor
+
+and convex_continuous_factor =
+	| CCF_variable of Automaton.variable_index
+	| CCF_constant of Automaton.constant_value
+	| CCF_expression of convex_continuous_expression
+	| CCF_unary_min of convex_continuous_factor
+
+type ccb_relop = CCB_OP_L | CCB_OP_LEQ | CCB_OP_EQ | CCB_OP_GEQ | CCB_OP_G
+
+type convex_continuous_boolean_inequality = convex_continuous_expression * ccb_relop * convex_continuous_expression
+
+(** Convex Boolean expression on discrete and continuous variables *)
+type convex_continuous_boolean_expression =
+	| True_bool (** True *)
+	| False_bool (** False *)
+	| And_bool of convex_continuous_boolean_inequality * convex_continuous_boolean_expression (** Conjunction *)
+
+
+
+(*type discrete_continuous_guard = {
+	discrete_guard   : discrete_guard;
+	continuous_guard : continuous_guard;
+}
+type guard =
+	| True_guard
+	| False_guard
+	| Discrete_guard of discrete_guard
+	| Continuous_guard of continuous_guard
+	| Discrete_continuous_guard of discrete_continuous_guard*)
+
+type discrete_guard				= discrete_boolean_expression
+type prebuilt_continuous_guard	= LinearConstraint.px_linear_constraint
+type continuous_guard			= LinearConstraint.pxd_linear_constraint
+
+type discrete_continuous_guard = {
+	(* Only involves discrete variable, no polyhedra *)
+	discrete_guard   			: discrete_guard option;
+	(* Only involves continuous variables, can be stored in memory as a prebuilt polyhedra *)
+	prebuilt_continuous_guard	: prebuilt_continuous_guard option;
+	(* Involves continuous and discrete variables, polyhedra cannot be prebuilt *)
+	continuous_guard			: continuous_guard option;
+}
+
+type guard =
+	| True_guard
+	| False_guard
+	| Discrete_continuous_guard of discrete_continuous_guard
+
+
+
+(** Invariant: technically a guard *)
+type invariant = guard
+
+(************************************************************)
+(** Updates *)
+(************************************************************)
+
+(*** TODO ***)
+type string_term = string
+
+type discrete_term =
+	| Rational_term of RationalExpressions.rational_arithmetic_expression
+	| String_term of string_term
+
+type discrete_update = discrete_index * discrete_term
+
 
 (** update: variable_index := linear_term *)
 type clock_update = clock_index
@@ -91,55 +177,19 @@ type clock_updates =
 
 (** update: variable_index := linear_term *)
 
-(*** TO OPTIMIZE (in terms of dimensions!) ***)
-
-(*** TODO ***)
-type string_term = string
-
-type discrete_term =
-	| Rational_term of RationalExpressions.rational_arithmetic_expression
-	| String_term of string_term
-
-type discrete_update = discrete_index * discrete_term
-
-
-(** Guard: a linear constraint on the sole discrete variables, and a linear constraint on (possibly) all variables *)
-
-type discrete_guard = LinearConstraint.d_linear_constraint
-type continuous_guard = LinearConstraint.pxd_linear_constraint
-
-type discrete_continuous_guard = {
-	discrete_guard   : discrete_guard;
-	continuous_guard : continuous_guard;
-}
-type guard =
-	| True_guard
-	| False_guard
-	| Discrete_guard of discrete_guard
-	| Continuous_guard of continuous_guard
-	| Discrete_continuous_guard of discrete_continuous_guard
-
-
-(** Invariant: linear constraint *)
-type invariant = LinearConstraint.pxd_linear_constraint
-
-(** Boolean expression *)
-type boolean_expression =
-	| True_bool (** True *)
-	| False_bool (** False *)
-	| Not_bool of boolean_expression (** Negation *)
-	| And_bool of boolean_expression * boolean_expression (** Conjunction *)
-	| Or_bool of boolean_expression * boolean_expression (** Disjunction *)
-	| Rational_boolean_expression of RationalExpressions.rational_boolean_expression
-
 (** Updates *)
 type updates = {
-  clock      : clock_updates;           (** Clock updates *)
-  discrete   : discrete_update list;    (** List of discrete updates *)
-  conditional: conditional_update list; (** List of conditional updates *)
+	clock      : clock_updates;           (** Clock updates *)
+	discrete   : discrete_update list;    (** List of discrete updates *)
+	conditional: conditional_update list; (** List of conditional updates *)
 }
 (** Conditional updates *)
-and conditional_update = boolean_expression * updates * updates
+and conditional_update = discrete_boolean_expression * updates * updates
+
+
+(************************************************************)
+(** Transitions *)
+(************************************************************)
 
 (** Transition: guard, action, list of updates, destination location *)
 type transition = {

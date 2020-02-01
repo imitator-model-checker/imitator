@@ -35,4 +35,5 @@ type discrete_index		= variable_index
 type discrete_value		= NumConst.t
 type rational_value		= NumConst.t
 type variable_value		= NumConst.t
+type constant_value		= NumConst.t
 type variable_name		= string
