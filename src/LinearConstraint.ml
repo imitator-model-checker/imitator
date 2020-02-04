@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Common definitions for linear terms and constraints (interface to PPL)
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/08/28
+ * Last modified     : 2020/02/03
  *
  ************************************************************)
 
@@ -1719,7 +1720,7 @@ let find_variables variables_list linear_constraint =
 	) variables_list
 
 
-let pxd_find_variables = find_variables
+let px_find_variables = find_variables
 
 
 
@@ -2938,24 +2939,24 @@ let parameter_constraint_of_p_linear_constraint parameter_index p_linear_constra
 
 (** "cast_p_of_pxd_linear_term p c" converts a PXD-constraint p to a P-constraint ; if c then a test if performed to check casting validity *)
 (*** WARNING: in fact, for now NO TEST IS EVER PERFORMED ***)
-let cast_p_of_pxd_linear_term p check = p (*** WARNING! should be copied here! ***)
+let cast_p_of_px_linear_term p check = p (*** WARNING! should be copied here! ***)
 
 (*** WARNING: in fact, for now NO TEST IS EVER PERFORMED ***)
-let cast_p_of_pxd_linear_constraint pxd_linear_constraint check =
+let cast_p_of_px_linear_constraint px_linear_constraint check =
 	(* First copy *)
-	let p_constraint = copy pxd_linear_constraint in
+	let p_constraint = copy px_linear_constraint in
 	(* Decrease number of dimensions *)
 	ippl_remove_higher_dimensions p_constraint !p_dim;
 	(* Return *)
 	p_constraint
 
 
-(*** WARNING: in fact, for now NO TEST IS EVER PERFORMED ***)
+(*(*** WARNING: in fact, for now NO TEST IS EVER PERFORMED ***)
 let cast_d_of_pxd_linear_constraint check pxd_linear_constraint =
 	(* Just copy *)
 	let d_constraint = copy pxd_linear_constraint in
 	(* Return *)
-	d_constraint
+	d_constraint*)
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

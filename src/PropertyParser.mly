@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/02/01
+ * Last modified     : 2020/02/04
  *
  ************************************************************/
 
@@ -242,22 +242,22 @@ discrete_boolean_predicate:
 ;
 
 discrete_expression:
-	| discrete_expression OP_PLUS discrete_term { Parsed_DAE_plus ($1, $3) }
-	| discrete_expression OP_MINUS discrete_term { Parsed_DAE_minus ($1, $3) }
-	| discrete_term { Parsed_DAE_term $1 }
+	| discrete_expression OP_PLUS discrete_term { Parsed_CAE_plus ($1, $3) }
+	| discrete_expression OP_MINUS discrete_term { Parsed_CAE_minus ($1, $3) }
+	| discrete_term { Parsed_CAE_term $1 }
 ;
 
 discrete_term:
-	| discrete_term OP_MUL discrete_factor { Parsed_DT_mul ($1, $3) }
-	| discrete_term OP_DIV discrete_factor { Parsed_DT_div ($1, $3) }
-	| discrete_factor { Parsed_DT_factor $1 }
+	| discrete_term OP_MUL discrete_factor { Parsed_CT_mul ($1, $3) }
+	| discrete_term OP_DIV discrete_factor { Parsed_CT_div ($1, $3) }
+	| discrete_factor { Parsed_CT_factor $1 }
 ;
 
 discrete_factor:
-	| NAME { Parsed_DF_variable $1 }
-	| positive_rational { Parsed_DF_constant $1 }
-	| RPAREN discrete_expression LPAREN { Parsed_DF_expression $2 }
-	| OP_MINUS discrete_factor { Parsed_DF_unary_min $2 }
+	| NAME { Parsed_CF_variable $1 }
+	| positive_rational { Parsed_CF_constant $1 }
+	| RPAREN discrete_expression LPAREN { Parsed_CF_expression $2 }
+	| OP_MINUS discrete_factor { Parsed_CF_unary_min $2 }
 ;
 
 

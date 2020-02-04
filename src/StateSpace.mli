@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Description of the symbolic states and of the state space
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2019/08/09
+ * Last modified     : 2020/02/03
  *
  ************************************************************)
 
@@ -277,7 +278,7 @@ val last_states: AbstractModel.abstract_model -> state_space -> state_index list
 (*------------------------------------------------------------*)
 (* Get the (full) guard associated with a transition *)
 (*------------------------------------------------------------*)
-val get_guard : state_space -> state_index -> combined_transition -> state_index -> LinearConstraint.pxd_linear_constraint
+val get_guard : state_space -> state_index -> combined_transition -> state_index -> LinearConstraint.px_linear_constraint
 
 (*** NOTE: the function only works for regular resets (it raises NotImplemented for other updates) ***)
 val get_resets : state_space -> state_index -> combined_transition -> state_index -> Automaton.clock_index list

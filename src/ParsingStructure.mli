@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/02/01
+ * Last modified     : 2020/02/04
  *
  ****************************************************************)
 
@@ -73,33 +73,33 @@ type variable_declarations = typed_variable_declarations list*)
 
 
 (****************************************************************)
-(** Arithmetic expressions for rational-valued discrete variables *)
+(** Arithmetic expressions *)
 (****************************************************************)
-type parsed_rational_arithmetic_expression =
-	| Parsed_DAE_plus of parsed_rational_arithmetic_expression * parsed_rational_term
-	| Parsed_DAE_minus of parsed_rational_arithmetic_expression * parsed_rational_term
-	| Parsed_DAE_term of parsed_rational_term
+type parsed_continuous_arithmetic_expression =
+	| Parsed_CAE_plus of parsed_continuous_arithmetic_expression * parsed_continuous_term
+	| Parsed_CAE_minus of parsed_continuous_arithmetic_expression * parsed_continuous_term
+	| Parsed_CAE_term of parsed_continuous_term
 
-and parsed_rational_term =
-	| Parsed_DT_mul of parsed_rational_term * parsed_rational_factor
-	| Parsed_DT_div of parsed_rational_term * parsed_rational_factor
-	| Parsed_DT_factor of parsed_rational_factor
+and parsed_continuous_term =
+	| Parsed_CT_mul of parsed_continuous_term * parsed_continuous_factor
+	| Parsed_CT_div of parsed_continuous_term * parsed_continuous_factor
+	| Parsed_CT_factor of parsed_continuous_factor
 
-and parsed_rational_factor =
-	| Parsed_DF_variable of variable_name
-	| Parsed_DF_constant of constant_value
-	| Parsed_DF_expression of parsed_rational_arithmetic_expression
-	| Parsed_DF_unary_min of parsed_rational_factor
+and parsed_continuous_factor =
+	| Parsed_CF_variable of variable_name
+	| Parsed_CF_constant of constant_value
+	| Parsed_CF_expression of parsed_continuous_arithmetic_expression
+	| Parsed_CF_unary_min of parsed_continuous_factor
 
 
 
 (****************************************************************)
-(** Convex predicates and linear expressions *)
+(** Boolean expressions *)
 (****************************************************************)
 
 
 
-(** Linear expressions *)
+(*(** Linear expressions *)
 
 type linear_term =
 	| Constant of  NumConst.t
@@ -118,16 +118,16 @@ type linear_constraint =
 	| Parsed_linear_constraint of linear_expression * parsed_relop * linear_expression
 
 
-type convex_predicate = linear_constraint list
+type convex_predicate = linear_constraint list*)
 
 
-(** boolean expressions *)
+(** Boolean expressions *)
 
-type parsed_rational_boolean_expression =
+type parsed_continuous_boolean_expression =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Parsed_expression of parsed_rational_arithmetic_expression * parsed_relop * parsed_rational_arithmetic_expression
+	| Parsed_expression of parsed_continuous_arithmetic_expression * parsed_relop * parsed_continuous_arithmetic_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Parsed_expression_in of parsed_rational_arithmetic_expression * parsed_rational_arithmetic_expression * parsed_rational_arithmetic_expression
+	| Parsed_expression_in of parsed_continuous_arithmetic_expression * parsed_continuous_arithmetic_expression * parsed_continuous_arithmetic_expression
 
 
 type parsed_boolean_expression =
@@ -136,9 +136,16 @@ type parsed_boolean_expression =
 	| Parsed_Not of parsed_boolean_expression (** Negation *)
 	| Parsed_And of parsed_boolean_expression * parsed_boolean_expression (** Conjunction *)
 	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
-	| Parsed_rational_boolean_expression of parsed_rational_boolean_expression
+	| Parsed_continuous_boolean_expression of parsed_continuous_boolean_expression
 
 
+(** Convex Boolean expression on discrete and/or continuous variables *)
+type parsed_convex_continuous_boolean_expression =
+	| Parsed_CCBE_True (** True *)
+	| Parsed_CCBE_False (** False *)
+	| Parsed_CCBE_continuous_arithmetic_expression of parsed_continuous_boolean_expression
+
+type parsed_convex_continuous_boolean_expressions = parsed_convex_continuous_boolean_expression list
 
 
 (****************************************************************)
@@ -158,9 +165,6 @@ type sync =
 	| Sync of sync_name
 	| NoSync
 
-type guard = convex_predicate
-type invariant = convex_predicate
-
 
 (** Updates on transitions *)
 type update =
@@ -175,13 +179,16 @@ and condition_update = parsed_boolean_expression * normal_update list * normal_u
 
 and parsed_discrete_term =
 	(*** NOTE: for parsing, this includes normal clock updates ***)
-	| Parsed_rational_term of parsed_rational_arithmetic_expression
+	| Parsed_continuous_term of parsed_continuous_arithmetic_expression
 	(*** TODO ***)
 	| Parsed_string_term of string
 
+type parsed_guard		= parsed_convex_continuous_boolean_expressions
+type parsed_invariant	= parsed_convex_continuous_boolean_expressions
+
 
 (* Transition = Guard * update list * sync label * destination location *)
-type transition = guard * update list * sync * location_name
+type transition = parsed_guard * update list * sync * location_name
 
 (* Location = Name * Urgent type * Accepting type * Cost * Invariant * list of stopped clocks * transitions *)
 type parsed_location = {
@@ -192,9 +199,9 @@ type parsed_location = {
 	(* Accepting or not? *)
 	acceptance  : parsed_acceptance;
 	(* Cost *)
-	cost        : linear_expression option;
+(* 	cost        : linear_expression option; *)
 	(* Invariant *)
-	invariant   : invariant;
+	invariant   : parsed_invariant;
 	(* List of stopped clocks *)
 	stopped     : (variable_name list);
 	(* Transitions starting from this location *)
@@ -216,7 +223,7 @@ type parsed_automaton = automaton_name * sync_name list * parsed_location list
 
 type parsed_init_state_predicate =
 	| Parsed_loc_assignment of automaton_name * location_name
-	| Parsed_linear_predicate of linear_constraint
+	| Parsed_linear_predicate of parsed_continuous_boolean_expression
 
 
 type init_definition = parsed_init_state_predicate list
@@ -226,7 +233,9 @@ type init_definition = parsed_init_state_predicate list
 (** Definition of the property *)
 (****************************************************************)
 
-type parsed_duration = linear_expression
+(*** TODO: reintroduce ***)
+(* type parsed_duration = linear_expression *)
+
 
 (*** NOTE: for now, we restrict to constants (later should be extended to at least constant expressions) *)
 (* type discrete_value = NumConst.t *)
@@ -319,7 +328,7 @@ type parsed_loc_predicate =
 
 
 type parsed_simple_predicate =
-	| Parsed_rational_boolean_predicate of parsed_rational_boolean_expression
+	| Parsed_rational_boolean_predicate of parsed_continuous_boolean_expression
 	| Parsed_loc_predicate of parsed_loc_predicate
 
 

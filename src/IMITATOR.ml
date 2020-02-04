@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/01/22
+ * Last modified     : 2020/02/03
  *
  ************************************************************)
 
@@ -145,6 +145,10 @@ in
 
 let model, property_option = ParsingUtility.compile_model_and_property options in
 
+
+raise (NotImplemented "temporary disabling everything except parsing ")
+
+(*
 (*------------------------------------------------------------*)
 (* Set both abstract structures *)
 (*------------------------------------------------------------*)
@@ -930,7 +934,7 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 end;
 
 
-
+*)
 (************************************************************)
 (* END EXCEPTION MECHANISM *)
 (************************************************************)

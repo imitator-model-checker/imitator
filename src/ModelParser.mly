@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/01/31
+ * Last modified     : 2020/02/04
  *
  ************************************************************/
 
@@ -332,7 +332,7 @@ decl_var_list:
 variable_declaration:
 	| NAME { Parsed_variable_declaration $1 }
 	/* TODO: add type for this constant! */
-	| NAME OP_EQ rational_linear_expression { Parsed_constant_declaration ($1, $3) }
+	| NAME OP_EQ rational_expression { Parsed_constant_declaration ($1, $3) }
 ;
 
 
@@ -382,17 +382,18 @@ automaton:
 /************************************************************/
 
 prolog:
-	/* Initialization is NOT taken into account, and is only allowed for backward-compatibility with HyTech */
-	| initialization sync_labels { $2 }
-	| sync_labels initialization { $1 }
 	| sync_labels { $1 }
-	| initialization { [] }
 	| { [] }
+	/* Initialization is NOT taken into account anymore */
+/* 	| initialization sync_labels { $2 } */
+/* 	| sync_labels initialization { $1 } */
+/* 	| initialization { [] } */
 ;
 
 /************************************************************/
 
-/* WARNING: deprecated syntax */
+/*** NOTE: syntax removed from version 3 */
+/*
 initialization:
 	| CT_INITIALLY NAME state_initialization SEMICOLON {
 		(* Print a warning because this syntax is deprecated and not taken into account! *)
@@ -401,12 +402,11 @@ initialization:
 	}
 ;
 
-/************************************************************/
-
 state_initialization:
 	| AMPERSAND convex_predicate {}
 	| {}
 ;
+*/
 
 /************************************************************/
 
@@ -437,7 +437,7 @@ locations:
 
 /************************************************************/
 
-while_or_invariant_or_nothing:
+whilekw_or_invariantkw_or_nothing:
 	/* From 2018/02/22, "while" may be be replaced with invariant */
 	/* From 2019/12, "while" should be be replaced with invariant */
 	| CT_WHILE {
@@ -449,27 +449,32 @@ while_or_invariant_or_nothing:
 ;
 
 location:
-	| loc_urgency_accepting_type location_name_and_costs COLON while_or_invariant_or_nothing convex_predicate stopwatches wait_opt transitions {
+	| loc_urgency_accepting_type location_name_and_costs COLON whilekw_or_invariantkw_or_nothing invariant stopwatches wait_opt transitions {
 		let urgency, accepting = $1 in
 		let name, cost = $2 in
 		{
 			(* Name *)
-			name = name;
+			name			= name;
 			(* Urgent or not? *)
-			urgency = urgency;
+			urgency			= urgency;
 			(* Accepting or not? *)
-			acceptance = accepting;
+			acceptance		= accepting;
 			(* Cost *)
-			cost = cost;
+(* 			cost = cost; *)
 			(* Invariant *)
-			invariant = $5;
+			invariant		= $5;
 			(* List of stopped clocks *)
-			stopped = $6;
+			stopped			= $6;
 			(* Transitions starting from this location *)
-			transitions = $8;
+			transitions		= $8;
 		}
 	}
 ;
+
+invariant:
+	| convex_continuous_boolean_expressions { $1 }
+;
+
 
 loc_urgency_accepting_type:
 	| CT_LOC { Parsed_location_nonurgent, Parsed_location_nonaccepting }
@@ -481,7 +486,9 @@ loc_urgency_accepting_type:
 
 location_name_and_costs:
 	| NAME { $1, None }
+	/*** NOTE: costs temporarily disabled
 	| NAME LSQBRA linear_expression RSQBRA { $1, Some $3 }
+	*/
 ;
 
 wait_opt:
@@ -495,6 +502,8 @@ wait_opt:
 	}
 	/* Now deprecated and not accepted anymore */
 /* 	| LBRACE RBRACE { } */
+
+	/* Default: nothing */
 	| { }
 ;
 
@@ -515,11 +524,18 @@ transitions:
 /************************************************************/
 
 transition:
-	| CT_WHEN convex_predicate update_synchronization CT_GOTO NAME SEMICOLON
+	| CT_WHEN guard update_synchronization CT_GOTO NAME SEMICOLON
 	{
 		let update_list, sync = $3 in
 			$2, update_list, sync, $5
 	}
+;
+
+
+/************************************************************/
+
+guard:
+	| convex_continuous_boolean_expressions { $1 }
 ;
 
 /************************************************************/
@@ -559,13 +575,26 @@ update_nonempty_list:
 
 /** Normal updates */
 update:
-	| NAME APOSTROPHE OP_EQ arithmetic_expression { ($1, Parsed_rational_term $4) }
-	/** NOTE: from 2018/02/22: assign becomes recommended */
-	| NAME APOSTROPHE OP_ASSIGN arithmetic_expression { ($1, Parsed_rational_term $4) }
-	/** NOTE: from 2018/02/22: apostrophe becomes optional */
-	| NAME OP_EQ arithmetic_expression { ($1, Parsed_rational_term $3) }
-	/** NOTE: from 2018/02/22: assign becomes recommended */
-	| NAME OP_ASSIGN arithmetic_expression { ($1, Parsed_rational_term $3) }
+	/** NOTE: from 2018/02/22: assign becomes recommended; main syntax from version 3 */
+	| NAME OP_ASSIGN continuous_arithmetic_expression { ($1, Parsed_continuous_term $3) }
+
+	/* Deprecated since version 3 */
+	| NAME APOSTROPHE OP_EQ continuous_arithmetic_expression {
+		print_warning ("The update syntax \"" ^ $1 ^ "' = …\" is deprecated. Consider using \"" ^ $1 ^ " := …\" instead.");
+		($1, Parsed_continuous_term $4)
+	}
+	
+	/** NOTE: from 2018/02/22: assign becomes recommended; deprecated since version 3 */
+	| NAME APOSTROPHE OP_ASSIGN continuous_arithmetic_expression {
+		print_warning ("The update syntax \"" ^ $1 ^ "' := …\" is deprecated. Consider using \"" ^ $1 ^ " := …\" instead.");
+		($1, Parsed_continuous_term $4)
+	}
+	
+	/** NOTE: from 2018/02/22: apostrophe becomes optional; deprecated since version 3  */
+	| NAME OP_EQ continuous_arithmetic_expression {
+		print_warning ("The update syntax \"" ^ $1 ^ " = …\" is deprecated. Consider using \"" ^ $1 ^ " := …\" instead.");
+		($1, Parsed_continuous_term $3)
+	}
 ;
 
 /** List containing only normal updates.
@@ -602,26 +631,26 @@ syn_label:
 /** ARITHMETIC EXPRESSIONS */
 /************************************************************/
 
-arithmetic_expression:
-	| arithmetic_term { Parsed_DAE_term $1 }
-	| arithmetic_expression OP_PLUS arithmetic_term { Parsed_DAE_plus ($1, $3) }
-	| arithmetic_expression OP_MINUS arithmetic_term { Parsed_DAE_minus ($1, $3) }
+continuous_arithmetic_expression:
+	| continuous_arithmetic_term { Parsed_CAE_term $1 }
+	| continuous_arithmetic_expression OP_PLUS continuous_arithmetic_term { Parsed_CAE_plus ($1, $3) }
+	| continuous_arithmetic_expression OP_MINUS continuous_arithmetic_term { Parsed_CAE_minus ($1, $3) }
 ;
 
-/* Term over variables and rationals (includes recursion with arithmetic_expression) */
-arithmetic_term:
-	| arithmetic_factor { Parsed_DT_factor $1 }
+/* Term over variables and rationals (includes recursion with continuous_arithmetic_expression) */
+continuous_arithmetic_term:
+	| continuous_arithmetic_factor { Parsed_CT_factor $1 }
 	/* Shortcut for syntax rational NAME without the multiplication operator */
-	| rational NAME { Parsed_DT_mul (Parsed_DT_factor (Parsed_DF_constant $1), Parsed_DF_variable $2) }
-	| arithmetic_term OP_MUL arithmetic_factor { Parsed_DT_mul ($1, $3) }
-	| arithmetic_term OP_DIV arithmetic_factor { Parsed_DT_div ($1, $3) }
-	| OP_MINUS arithmetic_term { Parsed_DT_mul($2, Parsed_DF_constant NumConst.minus_one) }
+	| rational NAME { Parsed_CT_mul (Parsed_CT_factor (Parsed_CF_constant $1), Parsed_CF_variable $2) }
+	| continuous_arithmetic_term OP_MUL continuous_arithmetic_factor { Parsed_CT_mul ($1, $3) }
+	| continuous_arithmetic_term OP_DIV continuous_arithmetic_factor { Parsed_CT_div ($1, $3) }
+	| OP_MINUS continuous_arithmetic_term { Parsed_CT_mul($2, Parsed_CF_constant NumConst.minus_one) }
 ;
 
-arithmetic_factor:
-	| rational { Parsed_DF_constant $1 }
-	| NAME { Parsed_DF_variable $1 }
-	| LPAREN arithmetic_expression RPAREN { Parsed_DF_expression $2 }
+continuous_arithmetic_factor:
+	| rational { Parsed_CF_constant $1 }
+	| NAME { Parsed_CF_variable $1 }
+	| LPAREN continuous_arithmetic_expression RPAREN { Parsed_CF_expression $2 }
 ;
 
 
@@ -630,6 +659,23 @@ arithmetic_factor:
 /************************************************************/
 
 /* We allow an optional "&" at the beginning of a convex predicate (sometimes useful) */
+convex_continuous_boolean_expressions:
+	| ampersand_opt convex_continuous_boolean_expressions_fol { $2 }
+;
+
+convex_continuous_boolean_expressions_fol:
+	| convex_continuous_boolean_expression AMPERSAND convex_continuous_boolean_expressions_fol { $1 :: $3 }
+	| convex_continuous_boolean_expression { [$1] }
+;
+
+
+convex_continuous_boolean_expression:
+	| CT_TRUE { Parsed_CCBE_True }
+	| CT_FALSE { Parsed_CCBE_False }
+	| rational_boolean_expression { Parsed_CCBE_continuous_arithmetic_expression $1 }
+;
+
+/*
 convex_predicate:
 	| ampersand_opt convex_predicate_fol { $2 }
 ;
@@ -644,24 +690,36 @@ linear_constraint:
 	| CT_TRUE { Parsed_true_constraint }
 	| CT_FALSE { Parsed_false_constraint }
 ;
+*/
 
 relop:
-	| OP_L { PARSED_OP_L }
+	| OP_L   { PARSED_OP_L }
 	| OP_LEQ { PARSED_OP_LEQ }
-	| OP_EQ { PARSED_OP_EQ }
+	| OP_EQ  { PARSED_OP_EQ }
 	| OP_NEQ { PARSED_OP_NEQ }
 	| OP_GEQ { PARSED_OP_GEQ }
-	| OP_G { PARSED_OP_G }
+	| OP_G   { PARSED_OP_G }
+;
+
+convex_relop:
+	| OP_L   { PARSED_OP_L }
+	| OP_LEQ { PARSED_OP_LEQ }
+	| OP_EQ  { PARSED_OP_EQ }
+	| OP_GEQ { PARSED_OP_GEQ }
+	| OP_G   { PARSED_OP_G }
 ;
 
 /* Linear expression over variables and rationals */
+/*
 linear_expression:
 	| linear_term { Linear_term $1 }
 	| linear_expression OP_PLUS linear_term { Linear_plus_expression ($1, $3) }
-	| linear_expression OP_MINUS linear_term { Linear_minus_expression ($1, $3) } /* linear_term a la deuxieme place */
+	| linear_expression OP_MINUS linear_term { Linear_minus_expression ($1, $3) }
 ;
+*/
 
 /* Linear term over variables and rationals (no recursion, no division) */
+/*
 linear_term:
 	| rational { Constant $1 }
 	| rational NAME { Variable ($1, $2) }
@@ -670,13 +728,14 @@ linear_term:
 	| NAME { Variable (NumConst.one, $1) }
 	| LPAREN linear_term RPAREN { $2 }
 ;
+*/
 
 /* Linear expression over rationals only */
-rational_linear_expression:
+rational_expression:
 	| rational_linear_term { $1 }
-	| rational_linear_expression OP_PLUS rational_linear_term { NumConst.add $1 $3 }
-	| rational_linear_expression OP_MUL rational_linear_term { NumConst.mul $1 $3 }
-	| rational_linear_expression OP_MINUS rational_linear_term { NumConst.sub $1 $3 } /* linear_term a la deuxieme place */
+	| rational_expression OP_PLUS rational_linear_term { NumConst.add $1 $3 }
+	| rational_expression OP_MUL rational_linear_term { NumConst.mul $1 $3 }
+	| rational_expression OP_MINUS rational_linear_term { NumConst.sub $1 $3 } /* linear term at second position */
 ;
 
 /* Linear term over rationals only */
@@ -721,17 +780,17 @@ boolean_expression:
 	| OP_NEQ LPAREN boolean_expression RPAREN { Parsed_Not $3 }
 	| boolean_expression AMPERSAND boolean_expression { Parsed_And ($1, $3) }
 	| boolean_expression PIPE boolean_expression { Parsed_Or ($1, $3) }
-	| rational_boolean_expression { Parsed_rational_boolean_expression $1 }
+	| rational_boolean_expression { Parsed_continuous_boolean_expression $1 }
 ;
 
 rational_boolean_expression:
 	/* Discrete arithmetic expression of the form Expr ~ Expr */
-	| arithmetic_expression relop arithmetic_expression { Parsed_expression ($1, $2, $3) }
+	| continuous_arithmetic_expression relop continuous_arithmetic_expression { Parsed_expression ($1, $2, $3) }
 
 	/* Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' */
-	| arithmetic_expression CT_IN LSQBRA arithmetic_expression COMMA arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
+	| continuous_arithmetic_expression CT_IN LSQBRA continuous_arithmetic_expression COMMA continuous_arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
 	/* allowed for convenience */
-	| arithmetic_expression CT_IN LSQBRA arithmetic_expression SEMICOLON arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
+	| continuous_arithmetic_expression CT_IN LSQBRA continuous_arithmetic_expression SEMICOLON continuous_arithmetic_expression RSQBRA { Parsed_expression_in ($1, $4, $6) }
 ;
 
 /************************************************************/
@@ -759,7 +818,7 @@ init_expression_fol:
 /* Used in the init definition */
 init_state_predicate:
 	| loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
-	| linear_constraint { Parsed_linear_predicate $1 }
+	| rational_boolean_expression { Parsed_linear_predicate $1 }
 ;
 
 loc_predicate:

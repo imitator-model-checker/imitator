@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/11
- * Last modified     : 2020/01/31
+ * Last modified     : 2020/02/03
  *
  ************************************************************)
 
@@ -76,16 +76,6 @@ type location_urgency =
 (** Guards and invariants *)
 (************************************************************)
 
-(** Boolean expression on discrete variables *)
-type discrete_boolean_expression =
-	| True_bool (** True *)
-	| False_bool (** False *)
-	| Not_bool of discrete_boolean_expression (** Negation *)
-	| And_bool of discrete_boolean_expression * discrete_boolean_expression (** Conjunction *)
-	| Or_bool of discrete_boolean_expression * discrete_boolean_expression (** Disjunction *)
-	| Rational_boolean_expression of RationalExpressions.rational_boolean_expression
-
-
 type convex_continuous_expression =
 	| CCE_plus of convex_continuous_expression * convex_continuous_term
 	| CCE_minus of convex_continuous_expression * convex_continuous_term
@@ -102,6 +92,23 @@ and convex_continuous_factor =
 	| CCF_expression of convex_continuous_expression
 	| CCF_unary_min of convex_continuous_factor
 
+
+(** Boolean expression on discrete variables (for updates) *)
+type discrete_boolean_expression =
+	| DBE_True (** True *)
+	| DBE_False (** False *)
+	| DBE_Not of discrete_boolean_expression (** Negation *)
+	| DBE_And of discrete_boolean_expression * discrete_boolean_expression (** Conjunction *)
+	| DBE_Or of discrete_boolean_expression * discrete_boolean_expression (** Disjunction *)
+	| DBE_Rational_boolean_expression of RationalExpressions.rational_boolean_expression
+
+(** Convec Boolean expression on discrete variables (for guards) *)
+type convex_discrete_boolean_expression =
+	| CDBE_True (** True *)
+	| CDBE_False (** False *)
+	| CDBE_conjunction of convex_continuous_expression list (** Conjunction *)
+
+
 type ccb_relop = CCB_OP_L | CCB_OP_LEQ | CCB_OP_EQ | CCB_OP_GEQ | CCB_OP_G
 
 type convex_continuous_boolean_inequality = convex_continuous_expression * ccb_relop * convex_continuous_expression
@@ -110,7 +117,7 @@ type convex_continuous_boolean_inequality = convex_continuous_expression * ccb_r
 type convex_continuous_boolean_expression =
 	| True_bool (** True *)
 	| False_bool (** False *)
-	| And_bool of convex_continuous_boolean_inequality * convex_continuous_boolean_expression (** Conjunction *)
+	| CCBE_conjunction of convex_continuous_boolean_inequality list (** Conjunction *)
 
 
 
@@ -125,9 +132,9 @@ type guard =
 	| Continuous_guard of continuous_guard
 	| Discrete_continuous_guard of discrete_continuous_guard*)
 
-type discrete_guard				= discrete_boolean_expression
+type discrete_guard				= convex_discrete_boolean_expression
 type prebuilt_continuous_guard	= LinearConstraint.px_linear_constraint
-type continuous_guard			= LinearConstraint.pxd_linear_constraint
+type continuous_guard			= convex_continuous_boolean_expression
 
 type discrete_continuous_guard = {
 	(* Only involves discrete variable, no polyhedra *)
@@ -163,23 +170,23 @@ type discrete_update = discrete_index * discrete_term
 
 
 (** update: variable_index := linear_term *)
-type clock_update = clock_index
+(* type clock_update = clock_index *)
 
-type clock_updates =
-	(* No update at all *)
-	| No_update
-	(* Reset to 0 only *)
-	| Resets of clock_update list
-	(** TO ADD: reset to constants / discrete and parameters (to allow for support by PDBM) *)
-	(* Reset to arbitrary value (including discrete, parameters and clocks) *)
-	| Updates of (clock_update * LinearConstraint.pxd_linear_term) list
+type clock_update =
+	(* Reset to linear constraints over constants, clocks and parameters: can use prebuilt polyhedra *)
+	| Prebuilt_reset of clock_index * LinearConstraint.px_linear_term
+
+	(*** TODO: add reset to constants / discrete and parameters (to allow for support by PDBM) ***)
+	
+	(* Reset to arbitrary linear constraints over discrete, constants, clocks and parameters: cannot use prebuilt polyhedra *)
+	| Reset of clock_index * convex_continuous_expression
 
 
 (** update: variable_index := linear_term *)
 
 (** Updates *)
 type updates = {
-	clock      : clock_updates;           (** Clock updates *)
+	clock      : clock_update list;       (** Clock updates *)
 	discrete   : discrete_update list;    (** List of discrete updates *)
 	conditional: conditional_update list; (** List of conditional updates *)
 }

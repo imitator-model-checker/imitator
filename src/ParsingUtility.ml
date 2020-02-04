@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2020/01/09
+ * Last modified     : 2020/02/03
  *
  ************************************************************)
 
@@ -190,6 +190,9 @@ let compile_model_and_property options =
 	(* Conversion to abstract structures *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+	raise (NotImplemented "temporary disabling everything except parsing ")
+
+(*
 	(* Statistics *)
 	converting_counter#start;
 
@@ -221,7 +224,7 @@ let compile_model_and_property options =
 
 	(* Ugly line break *)
 	print_message Verbose_experiments "";
-
+	*)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* return *)
