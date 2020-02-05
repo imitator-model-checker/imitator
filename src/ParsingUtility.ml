@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2020/02/03
+ * Last modified     : 2020/02/04
  *
  ************************************************************)
 
@@ -224,10 +224,10 @@ let compile_model_and_property options =
 
 	(* Ugly line break *)
 	print_message Verbose_experiments "";
-	*)
+	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* return *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	model, property_option
-
+	*)

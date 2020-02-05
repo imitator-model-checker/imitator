@@ -394,13 +394,15 @@ bad_global_predicates:
 /*** BADPROG: duplicate code from ModelParser ***/
 
 /* Linear expression over variables and rationals */
+/*
 linear_expression:
 	| linear_term { Linear_term $1 }
 	| linear_expression OP_PLUS linear_term { Linear_plus_expression ($1, $3) }
-	| linear_expression OP_MINUS linear_term { Linear_minus_expression ($1, $3) } /* linear_term a la deuxieme place */
+	| linear_expression OP_MINUS linear_term { Linear_minus_expression ($1, $3) }
 ;
-
+*/
 /* Linear term over variables and rationals (no recursion, no division) */
+/*
 linear_term:
 	| rational { Constant $1 }
 	| rational NAME { Variable ($1, $2) }
@@ -408,6 +410,22 @@ linear_term:
 	| OP_MINUS NAME { Variable (NumConst.minus_one, $2) }
 	| NAME { Variable (NumConst.one, $1) }
 	| LPAREN linear_term RPAREN { $2 }
+;
+*/
+
+/* Linear expression over rationals only */
+rational_expression:
+	| rational_linear_term { $1 }
+	| rational_expression OP_PLUS rational_linear_term { NumConst.add $1 $3 }
+	| rational_expression OP_MUL rational_linear_term { NumConst.mul $1 $3 }
+	| rational_expression OP_MINUS rational_linear_term { NumConst.sub $1 $3 } /* linear term at second position */
+;
+
+/* Linear term over rationals only */
+rational_linear_term:
+	| rational { $1 }
+	| OP_MINUS rational { NumConst.neg $2 }
+	| LPAREN rational_linear_term RPAREN { $2 }
 ;
 
 rational:
@@ -417,23 +435,24 @@ rational:
 ;
 
 integer:
-	pos_integer { $1 }
+	| pos_integer { $1 }
 	| OP_MINUS pos_integer { NumConst.neg $2 }
 ;
 
 pos_integer:
-	INT { $1 }
+	| INT { $1 }
 ;
 
 float:
-  pos_float { $1 }
+	| pos_float { $1 }
 	| OP_MINUS pos_float { NumConst.neg $2 }
 ;
 
 pos_float:
-  FLOAT { NumConst.numconst_of_string $1 }
+  FLOAT {
+		NumConst.numconst_of_string $1
+	}
 ;
-
 
 /************************************************************/
 /** NAMES, etc. */

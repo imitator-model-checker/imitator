@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/02/01
+ * Last modified     : 2020/02/04
  *
  ************************************************************)
 
@@ -22,7 +22,7 @@ open AbstractModel
 open AbstractProperty
 open ImitatorUtilities
 open State
-open StateSpace
+(* open StateSpace *)
 
 
 
@@ -946,7 +946,7 @@ let string_of_concrete_state model (state : State.concrete_state) =
 	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names options#output_float state.global_location) ^ " ==> \n" ^ (string_of_px_valuation model state.px_valuation) ^ ""
 	
 
-
+(*
 (************************************************************)
 (** Debug-print for runs *)
 (************************************************************)
@@ -1042,4 +1042,4 @@ let debug_string_of_impossible_concrete_run model (impossible_concrete_run : Sta
 	
 	(* Iterate on following impossible steps *)
 	^ (string_of_impossible_concrete_steps model impossible_concrete_run.impossible_steps)
-	
+	*)

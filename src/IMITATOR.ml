@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/02/03
+ * Last modified     : 2020/02/04
  *
  ************************************************************)
 
@@ -24,9 +24,9 @@ open OCamlUtilities
 
 open ImitatorUtilities
 open AbstractModel
-open AbstractAlgorithm
+(* open AbstractAlgorithm *)
 open AbstractProperty
-open Result
+(* open Result *)
 open Options
 open Statistics
 

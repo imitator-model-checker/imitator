@@ -55,13 +55,13 @@ val string_of_guard : (Automaton.variable_index -> Automaton.variable_name) -> A
 val debug_string_of_transition : AbstractModel.abstract_model -> Automaton.automaton_index -> AbstractModel.transition -> string
 
 
-(************************************************************)
+(*(************************************************************)
 (** Debug-print for symbolic run *)
 (************************************************************)
 
 val debug_string_of_symbolic_run : AbstractModel.abstract_model -> StateSpace.state_space -> StateSpace.symbolic_run -> string
 val debug_string_of_concrete_run : AbstractModel.abstract_model -> StateSpace.concrete_run -> string
-val debug_string_of_impossible_concrete_run : AbstractModel.abstract_model -> StateSpace.impossible_concrete_run -> string
+val debug_string_of_impossible_concrete_run : AbstractModel.abstract_model -> StateSpace.impossible_concrete_run -> string*)
 
 
 (************************************************************)
