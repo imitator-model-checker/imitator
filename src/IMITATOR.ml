@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/02/04
+ * Last modified     : 2020/02/05
  *
  ************************************************************)
 
@@ -146,7 +146,7 @@ in
 let model, property_option = ParsingUtility.compile_model_and_property options in
 
 
-raise (NotImplemented "temporary disabling everything except parsing ")
+raise (NotImplemented "temporarily disabling everything except parsing ")
 
 (*
 (*------------------------------------------------------------*)
