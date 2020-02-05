@@ -190,9 +190,6 @@ let compile_model_and_property options =
 	(* Conversion to abstract structures *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-	raise (NotImplemented "temporary disabling everything except parsing ")
-
-(*
 	(* Statistics *)
 	converting_counter#start;
 
@@ -230,4 +227,4 @@ let compile_model_and_property options =
 	(* return *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	model, property_option
-	*)
+

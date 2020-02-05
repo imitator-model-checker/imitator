@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/02/01
+ * Last modified     : 2020/02/05
  *
  ************************************************************)
 
@@ -136,7 +136,7 @@ type useful_parsing_model_information = {
 
 (*** TODO: these 'get' functions could be merged with the 'check' functions 'check_automata' ***)
 
-
+(*
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a parsed_update_arithmetic_expression *)
 (*------------------------------------------------------------*)
@@ -318,7 +318,7 @@ let check_only_discretes_in_parsed_update_arithmetic_expression index_of_variabl
             false
           )
       )
-    )
+    )*)
 
 
 (*
@@ -374,7 +374,7 @@ let valuate_parsed_update_arithmetic_expression constants =
 (*------------------------------------------------------------*)
 
 (*** TODO (though really not critical): try to do some simplifications… ***)
-
+(*
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
 let rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants =
 	let rec rational_arithmetic_expression_of_parsed_update_arithmetic_expression_rec = function
@@ -648,7 +648,7 @@ and convert_parsed_state_predicate useful_parsing_model_information = function
 	| Parsed_state_predicate_true -> State_predicate_true
 	| Parsed_state_predicate_false -> State_predicate_false
 
-
+*)
 
 
 
@@ -662,7 +662,7 @@ and convert_parsed_state_predicate useful_parsing_model_information = function
 (** Getting variables *)
 (************************************************************)
 
-
+(*
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a linear_term *)
 (*------------------------------------------------------------*)
@@ -912,11 +912,12 @@ let no_variables_in_linear_term index_of_variables type_of_variables constants =
 let no_variables_in_linear_expression = check_f_in_linear_expression no_variables_in_linear_term
 
 
-
+*)
 (************************************************************)
 (** Converting linear constraints *)
 (************************************************************)
 
+(*
 
 
 (*------------------------------------------------------------*)
@@ -951,7 +952,6 @@ let array_of_coef_of_linear_expression index_of_variables constants linear_expre
         )
       );
   in
-
   (* Internal function to update the array for a linear expression *)
   let rec update_array_linear_expression = function
     | Linear_term lt -> update_array_linear_term NumConst.one lt
@@ -1102,7 +1102,7 @@ let linear_constraint_of_convex_predicate index_of_variables constants convex_pr
     in LinearConstraint.make_pxd_constraint linear_inequalities
     (* Stop if any false constraint is found *)
   ) with False_exception -> LinearConstraint.pxd_false_constraint ()
-
+*)
 
 
 
@@ -1237,7 +1237,7 @@ let get_declared_synclabs_names =
   List.fold_left (fun action_names (_, synclabs, _) -> list_union action_names synclabs) []
 
   
-
+(*
 (* Get the set of all variable names used in the parsed model *)
 let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_model) =
 	(* Create a set structure for variable names *)
@@ -1297,7 +1297,7 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
   (* Return the set of variables actually used *)
   !all_variables_used
 
-  
+  *)
 (************************************************************)
 (** Checking the model *)
 (************************************************************)
@@ -1400,7 +1400,7 @@ let all_locations_different =
 		true
 
 
-
+(*
 (*------------------------------------------------------------*)
 (* Check that an update is well formed *)
 (*------------------------------------------------------------*)
@@ -1472,7 +1472,7 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 		List.fold_left (fun acc u ->
 			(check_update_normal u) && acc
 		) true (updates_if @ updates_else)
-
+*)
 
 (*------------------------------------------------------------*)
 (* Check that a sync is well formed *)
@@ -1486,8 +1486,9 @@ let check_sync sync_name_list automaton_name = function
 (*------------------------------------------------------------*)
 (* Check that a sync is used in all the automata where it is declared *)
 (*------------------------------------------------------------*)
+(*** WARNING: this function is inefficient! it is called for EACH action ***)
 let synclab_used_everywhere automata synclab_name =
-	(* Try to find the synclab in all the automaton where it is declared *)
+	(* Try to find the synclab in each of the automata where it is declared *)
 	try(
 		(* Check each automaton *)
 		List.iter (fun (automaton_name, sync_name_list, locations) ->
@@ -1531,7 +1532,7 @@ let check_stopwatches index_of_variables type_of_variables stopwatches =
 		) stopwatches;
 	!ok
 
-
+(*
 (*------------------------------------------------------------*)
 (* Check that the automata are well-formed *)
 (*------------------------------------------------------------*)
@@ -1605,8 +1606,8 @@ let check_automata useful_parsing_model_information automata =
 
 	(* Return whether the automata passed the tests *)
 	!well_formed
-
-
+*)
+(*
 (*------------------------------------------------------------*)
 (* Check that the init_definition are well-formed *)
 (*------------------------------------------------------------*)
@@ -1784,7 +1785,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 	(**** TO DO ****) (*use 'other_inequalities' *)
 
 	(* Return whether the init declaration passed the tests *)
-	rational_values_pairs, !well_formed
+	rational_values_pairs, !well_formed*)
 
 
 
@@ -1962,7 +1963,7 @@ let make_locations_per_automaton index_of_automata parsed_automata nb_automata =
   	(* Functional representation *)
   	fun automaton_index location_index -> invariants.(automaton_index).(location_index)*)
 
-
+(*
 (*------------------------------------------------------------*)
 (* Get all the possible actions for every location of every automaton *)
 (*------------------------------------------------------------*)
@@ -2142,7 +2143,7 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 
 	(* Return all the structures in a functional representation *)
 	actions, array_of_action_names, array_of_action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, !has_stopwatches, transitions, (if with_observer_action then Some (nb_actions - 1) else None)
-
+*)
 
 
 (*------------------------------------------------------------*)
@@ -2164,7 +2165,7 @@ let make_automata_per_action actions_per_automaton nb_automata nb_actions =
   (* Return a functional representation *)
   fun automaton_index -> automata_per_action.(automaton_index)
 
-
+(*
 (*------------------------------------------------------------*)
 (** Split between the discrete and continuous inequalities of a convex predicate; raises False_exception if a false linear expression is found *)
 (*------------------------------------------------------------*)
@@ -2177,9 +2178,9 @@ let split_convex_predicate_into_rational_and_continuous index_of_variables type_
        | Parsed_false_constraint -> raise False_exception
        | Parsed_linear_constraint (linexpr1, _, linexpr2) -> only_rational_in_linear_expression index_of_variables type_of_variables constants linexpr1 && only_rational_in_linear_expression index_of_variables type_of_variables constants linexpr2
     ) convex_predicate
+*)
 
-
-(*------------------------------------------------------------*)
+(*(*------------------------------------------------------------*)
 (* Convert a guard *)
 (*------------------------------------------------------------*)
 let convert_guard index_of_variables type_of_variables constants guard_convex_predicate =
@@ -2216,7 +2217,7 @@ let convert_guard index_of_variables type_of_variables constants guard_convex_pr
 
     (* If some false construct found: false guard *)
   ) with False_exception -> False_guard
-
+*)
 
 (*------------------------------------------------------------*)
 (* Convert updates *)
@@ -2238,7 +2239,7 @@ let get_conditional_update_value = function
   | _ -> assert false
 
 
-
+(*
 (*** TODO (though really not critical): try to do some simplifications… ***)
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
 let linear_term_of_parsed_update_arithmetic_expression index_of_variables constants pdae =
@@ -2310,7 +2311,7 @@ let linear_term_of_parsed_update_arithmetic_expression index_of_variables consta
 
 	(* Create the linear term *)
 	linear_term_of_array array_of_coef !constant
-
+*)
 
 
   
@@ -2330,7 +2331,7 @@ let filtered_updates removed_variable_names updates =
     ) [] updates
 
 
-(** Translate a parsed discrete update into its abstract model *)
+(*(** Translate a parsed discrete update into its abstract model *)
 let to_abstract_discrete_update index_of_variables constants (variable_name, (parsed_discrete_term : parsed_discrete_term)) : discrete_update =
 	let variable_index = Hashtbl.find index_of_variables variable_name in
 	match parsed_discrete_term with
@@ -2394,7 +2395,6 @@ let split_to_clock_discrete_updates index_of_variables only_resets type_of_varia
 (* 		| _ -> raise (NotImplemented "non-rational discrete terms in ModelConverter.split_to_clock_discrete_updates") *)
 	in
 	List.partition is_clock_update updates
-
 
 (** Translate a normal parsed update into its abstract model *)
 let convert_normal_updates index_of_variables constants type_of_variables updates_list =
@@ -2659,6 +2659,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 	initial_location, initial_constraint
 
 
+*)
 
 
 (************************************************************)
@@ -2683,7 +2684,7 @@ let get_variables_in_parsed_pval (parsed_pval : ParsingStructure.parsed_pval) : 
 (*------------------------------------------------------------*)
 (* Gather the set of all variable names used in the parsed property *)
 (*------------------------------------------------------------*)
-
+(*
 let get_variables_in_property_option (parsed_property_option : ParsingStructure.parsed_property option) =
 	(* First create the set *)
 	let variables_used_ref = ref StringSet.empty in
@@ -2751,10 +2752,14 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 	end;
 	(* Return the set *)
 	!variables_used_ref
+*)
 
 
+(*
+	
+	OLD CODE
 
-(*let get_variables_in_property variables_used_ref = function
+et get_variables_in_property variables_used_ref = function
   | Parsed_unreachable_locations (parsed_unreachable_global_location_list) ->
     List.iter (fun parsed_unreachable_global_location ->
         List.iter (function
@@ -3119,7 +3124,7 @@ let check_and_convert_unreachable_global_location index_of_variables type_of_var
 (*------------------------------------------------------------*)
 (** Check a discrete Boolean expression *)
 (*------------------------------------------------------------*)
-
+(*
 let rec check_parsed_rational_arithmetic_expression useful_parsing_model_information = function
 	| Parsed_DAE_plus (parsed_rational_arithmetic_expression , parsed_rational_term)
 	| Parsed_DAE_minus (parsed_rational_arithmetic_expression , parsed_rational_term) ->
@@ -3232,7 +3237,7 @@ and check_parsed_state_predicate_factor useful_parsing_model_information = funct
 		check_parsed_simple_predicate useful_parsing_model_information parsed_simple_predicate
 	| Parsed_state_predicate parsed_state_predicate ->
 		check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
-
+*)
 
 
 (*------------------------------------------------------------*)
@@ -3320,7 +3325,7 @@ let check_parsed_pval useful_parsing_model_information (parsed_pval : ParsingStr
 	multiply_defined_variables = [] && all_defined
 
 
-
+(*
 (*------------------------------------------------------------*)
 (* Check the correctness property declaration       *)
 (*------------------------------------------------------------*)
@@ -3513,7 +3518,7 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 	(*	in
 		[n action_index], !well_formed*)
 
-	*)
+	*)*)
 
 
 (************************************************************)
@@ -3544,6 +3549,7 @@ let convert_synthesis_type = function
 	| Parsed_synthesis	-> Synthesis
 
 
+(*
 type converted_observer_structure = {
 	(*  observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions *)
 	observer_structure			: Automaton.action_index list * (Automaton.action_index list) array * AbstractModel.location_urgency array * LinearConstraint.pxd_linear_constraint array * AbstractModel.transition list array array;
@@ -3551,11 +3557,6 @@ type converted_observer_structure = {
 	nb_transitions_for_observer	: int;
 	initial_observer_constraint	: LinearConstraint.px_linear_constraint;
 }
-
-(*type converted_observer =
-	| No_converted_observer
-	| Converted_observer of converted_observer_structure*)
-
 
 (* Convert ParsingStructure.parsed_property into AbstractProperty.property *)
 let convert_property_option useful_parsing_model_information (parsed_property_option : ParsingStructure.parsed_property option) : (AbstractProperty.abstract_property option * converted_observer_structure option) =
@@ -3892,7 +3893,7 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		}
 		,
 		converted_observer_structure_option
-
+*)
 
 (*------------------------------------------------------------*)
 (** Convert a list of parsed parameters into a list of variable_index *)
@@ -3979,6 +3980,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		)*) action_names
 	) in
 
+	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Make the array of constants *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4032,16 +4034,18 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Stop here if model not well formed *)
  	if not (constants_consistent && all_variables_different && all_automata_different && at_least_one_automaton) then raise InvalidModel;
  	
- 	
- 	
- 	
- 	let observer_automaton, observer_clock_option = None, None in
 
+ 	
+ 	raise (NotImplemented "ModelConverted")
+ 	(*
  	
  	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add clock and automaton for the observer *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Note that the observer has not been checked yet, but it doesn't matter *)
+ 	
+ 	let observer_automaton, observer_clock_option = None, None in
+
+ 	(* Note that the observer has not been checked yet, but it doesn't matter *)
 	let observer_automaton, observer_clock_option = match parsed_property_option with
 		| None -> None, None
 		| Some parsed_property -> ObserverPatterns.new_elements parsed_property
@@ -5169,6 +5173,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Projection of the result *)
 	projection		: projection;
 }*)
+	*)
 
 
 
