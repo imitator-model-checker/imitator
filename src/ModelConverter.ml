@@ -136,110 +136,105 @@ type useful_parsing_model_information = {
 
 (*** TODO: these 'get' functions could be merged with the 'check' functions 'check_automata' ***)
 
-(*
-(*------------------------------------------------------------*)
-(* Gather all variable names used in a parsed_update_arithmetic_expression *)
-(*------------------------------------------------------------*)
-let rec get_variables_in_parsed_update_factor variables_used_ref = function
-	| Parsed_DF_variable variable_name ->
-		(* Add the variable name to the set and update the reference *)
-		variables_used_ref := StringSet.add variable_name !variables_used_ref
 
-	| Parsed_DF_constant _ -> ()
-
-	| Parsed_DF_expression parsed_update_arithmetic_expression ->
-		get_variables_in_parsed_update_arithmetic_expression variables_used_ref parsed_update_arithmetic_expression
-
-	| Parsed_DF_unary_min parsed_rational_factor -> get_variables_in_parsed_update_factor variables_used_ref parsed_rational_factor
-
-and get_variables_in_parsed_update_term variables_used_ref = function
-	| Parsed_DT_mul (parsed_update_term, parsed_update_factor)
-	| Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
-		get_variables_in_parsed_update_term variables_used_ref parsed_update_term;
-		get_variables_in_parsed_update_factor variables_used_ref parsed_update_factor
-
-	| Parsed_DT_factor parsed_update_factor ->
-		get_variables_in_parsed_update_factor variables_used_ref parsed_update_factor
 
 (** Add variables names in the update expression *)
-and get_variables_in_parsed_update_arithmetic_expression variables_used_ref = function
-	| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term)
-	| Parsed_DAE_minus (parsed_update_arithmetic_expression , parsed_update_term) ->
-		get_variables_in_parsed_update_arithmetic_expression variables_used_ref parsed_update_arithmetic_expression;
-		get_variables_in_parsed_update_term variables_used_ref parsed_update_term
+let rec get_variables_in_parsed_continuous_arithmetic_expression variables_used_ref = function
+	| Parsed_CAE_plus (parsed_continuous_arithmetic_expression, parsed_continuous_term)
+	| Parsed_CAE_minus (parsed_continuous_arithmetic_expression , parsed_continuous_term) ->
+		get_variables_in_parsed_continuous_arithmetic_expression variables_used_ref parsed_continuous_arithmetic_expression;
+		get_variables_in_parsed_continuous_term variables_used_ref parsed_continuous_term
 
-	| Parsed_DAE_term parsed_update_term ->
-		get_variables_in_parsed_update_term variables_used_ref parsed_update_term
+	| Parsed_CAE_term parsed_continuous_term ->
+		get_variables_in_parsed_continuous_term variables_used_ref parsed_continuous_term
+
+and get_variables_in_parsed_continuous_term variables_used_ref = function
+	| Parsed_CT_mul (parsed_continuous_term, parsed_continuous_factor)
+	| Parsed_CT_div (parsed_continuous_term, parsed_continuous_factor) ->
+		get_variables_in_parsed_continuous_term variables_used_ref parsed_continuous_term;
+		get_variables_in_parsed_continuous_factor variables_used_ref parsed_continuous_factor
+
+	| Parsed_CT_factor parsed_continuous_factor ->
+		get_variables_in_parsed_continuous_factor variables_used_ref parsed_continuous_factor
+
+and get_variables_in_parsed_continuous_factor variables_used_ref = function
+	| Parsed_CF_variable variable_name ->
+		(* Add the variable name to the set and update the reference *)
+		if verbose_mode_greater Verbose_total then(
+			print_message Verbose_total ("  New variable found: '" ^ variable_name ^ "'.");
+		);
+		variables_used_ref := StringSet.add variable_name !variables_used_ref
+
+	| Parsed_CF_constant _ -> ()
+
+	| Parsed_CF_expression parsed_continuous_arithmetic_expression ->
+		get_variables_in_parsed_continuous_arithmetic_expression variables_used_ref parsed_continuous_arithmetic_expression
+
+	| Parsed_CF_unary_min parsed_rational_factor -> get_variables_in_parsed_continuous_factor variables_used_ref parsed_rational_factor
+
+
+
+let get_variables_in_parsed_continuous_inequality variables_used_ref = function
+	| Parsed_expression (arithmetic_expr1, _ (* relop *), arithmetic_expr2) ->
+		get_variables_in_parsed_continuous_arithmetic_expression variables_used_ref arithmetic_expr1;
+		get_variables_in_parsed_continuous_arithmetic_expression variables_used_ref arithmetic_expr2;
+	| Parsed_expression_in (arithmetic_expr1, arithmetic_expr2, arithmetic_expr3) ->
+		get_variables_in_parsed_continuous_arithmetic_expression variables_used_ref arithmetic_expr1;
+		get_variables_in_parsed_continuous_arithmetic_expression variables_used_ref arithmetic_expr2;
+		get_variables_in_parsed_continuous_arithmetic_expression variables_used_ref arithmetic_expr3
+
+
+let get_variables_in_parsed_convex_continuous_boolean_expression all_variables_used = function
+	| Parsed_CCBE_True
+	| Parsed_CCBE_False
+		-> ()
+		
+	| Parsed_CCBE_continuous_inequality parsed_continuous_inequality ->
+		get_variables_in_parsed_continuous_inequality all_variables_used parsed_continuous_inequality
+
+
+let get_variables_in_parsed_convex_continuous_boolean_expressions all_variables_used =
+	List.iter (get_variables_in_parsed_convex_continuous_boolean_expression all_variables_used)
+
+
+
+(*------------------------------------------------------------*)
+(* Gather all variable names used in an update expression *)
+(*------------------------------------------------------------*)
 
 (** Add variables names in normal and conditional updates *)
-and get_variables_in_parsed_update variables_used_ref = function
-	| Normal (_, Parsed_rational_term arithmetic_expression) -> get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expression
-	| Normal (_, _) -> raise (NotImplemented "ModelConverter.get_variables_in_parsed_update")
+let rec get_variables_in_parsed_update variables_used_ref = function
+	| Normal_update (_, Parsed_continuous_term parsed_continuous_arithmetic_expression) -> get_variables_in_parsed_continuous_arithmetic_expression variables_used_ref parsed_continuous_arithmetic_expression
+	| Normal_update (_, _) -> raise (NotImplemented "ModelConverter.get_variables_in_parsed_update")
 	
-	| Condition (bool_expr, update_list_if, update_list_else) -> (** recolect in bool exprs *)
-		get_variables_in_parsed_boolean_expression variables_used_ref bool_expr;
+	| Condition_update (parsed_continuous_boolean_expression, update_list_if, update_list_else) -> (** recolect in bool exprs *)
+		get_variables_in_parsed_continuous_boolean_expression variables_used_ref parsed_continuous_boolean_expression;
 		List.iter (fun (_, parsed_rational_term) ->
 			match parsed_rational_term with
-			| Parsed_rational_term arithmetic_expression ->
-				get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expression
+			| Parsed_continuous_term parsed_continuous_arithmetic_expression ->
+				get_variables_in_parsed_continuous_arithmetic_expression variables_used_ref parsed_continuous_arithmetic_expression
 			| _ -> raise (NotImplemented "ModelConverter.get_variables_in_parsed_update")
 	
 		) (update_list_if @ update_list_else)
-and get_variables_in_parsed_boolean_expression variables_used_ref = function
-	| Parsed_True -> ()
-	| Parsed_False -> ()
-	| Parsed_And (bool_expr1, bool_expr2)
-	| Parsed_Or (bool_expr1, bool_expr2) ->
-		get_variables_in_parsed_boolean_expression variables_used_ref bool_expr1;
-		get_variables_in_parsed_boolean_expression variables_used_ref bool_expr2;
-	| Parsed_Not bool_expr -> get_variables_in_parsed_boolean_expression variables_used_ref bool_expr
-	| Parsed_rational_boolean_expression bool_expr -> get_variables_in_parsed_rational_boolean_expression variables_used_ref bool_expr
-and get_variables_in_parsed_rational_boolean_expression variables_used_ref  = function
-	| Parsed_expression (arithmetic_expr1, _ (* relop *), arithmetic_expr2) ->
-		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr1;
-		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr2;
-	| Parsed_expression_in (arithmetic_expr1, arithmetic_expr2, arithmetic_expr3) ->
-		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr1;
-		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr2;
-		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr3
 
+
+and get_variables_in_parsed_continuous_boolean_expression variables_used_ref = function
+	| Parsed_CBE_True
+	| Parsed_CBE_False
+		-> ()
 	
-(*------------------------------------------------------------*)
-(* Gather all variable names used in a parsed_update_arithmetic_expression *)
-(*------------------------------------------------------------*)
-let rec get_variables_in_parsed_rational_factor variables_used_ref = function
-	| Parsed_DF_variable variable_name ->
-		(* Add the variable name to the set and discrete the reference *)
-		variables_used_ref := StringSet.add variable_name !variables_used_ref
+	| Parsed_CBE_And (bool_expr1, bool_expr2)
+	| Parsed_CBE_Or (bool_expr1, bool_expr2)
+		->
+		get_variables_in_parsed_continuous_boolean_expression variables_used_ref bool_expr1;
+		get_variables_in_parsed_continuous_boolean_expression variables_used_ref bool_expr2;
+	
+	| Parsed_CBE_Not bool_expr -> get_variables_in_parsed_continuous_boolean_expression variables_used_ref bool_expr
+	
+	| Parsed_CBE_continuous_inequality parsed_continuous_inequality -> get_variables_in_parsed_continuous_inequality variables_used_ref parsed_continuous_inequality
+	
 
-	| Parsed_DF_constant _ -> ()
-
-	| Parsed_DF_expression parsed_rational_arithmetic_expression ->
-		get_variables_in_parsed_rational_arithmetic_expression variables_used_ref parsed_rational_arithmetic_expression
-
-	| Parsed_DF_unary_min parsed_rational_factor -> get_variables_in_parsed_rational_factor variables_used_ref parsed_rational_factor
-
-and get_variables_in_parsed_rational_term variables_used_ref = function
-	| Parsed_DT_mul (parsed_rational_term, parsed_rational_factor)
-	| Parsed_DT_div (parsed_rational_term, parsed_rational_factor) ->
-		get_variables_in_parsed_rational_term variables_used_ref parsed_rational_term;
-		get_variables_in_parsed_rational_factor variables_used_ref parsed_rational_factor
-
-	| Parsed_DT_factor parsed_rational_factor ->
-		get_variables_in_parsed_rational_factor variables_used_ref parsed_rational_factor
-
-(** Add variables names in the discrete expression *)
-and get_variables_in_parsed_rational_arithmetic_expression variables_used_ref = function
-	| Parsed_DAE_plus (parsed_rational_arithmetic_expression, parsed_rational_term)
-	| Parsed_DAE_minus (parsed_rational_arithmetic_expression , parsed_rational_term) ->
-		get_variables_in_parsed_rational_arithmetic_expression variables_used_ref parsed_rational_arithmetic_expression;
-		get_variables_in_parsed_rational_term variables_used_ref parsed_rational_term
-
-	| Parsed_DAE_term parsed_rational_term ->
-		get_variables_in_parsed_rational_term variables_used_ref parsed_rational_term
-
-
-
+(*
 		
 (************************************************************)
 (** Checking discrete arithmetic expressions *)
@@ -250,47 +245,47 @@ and get_variables_in_parsed_rational_arithmetic_expression variables_used_ref = 
 (* Generic function to test something in discrete updates *)
 (*------------------------------------------------------------*)
 (*** NOTE: f : variable_name -> bool is the function to check *)
-let rec check_f_in_parsed_update_factor f = function
-	| Parsed_DF_variable variable_name ->
+let rec check_f_in_parsed_continuous_factor f = function
+	| Parsed_CF_variable variable_name ->
 		f variable_name
 
-	| Parsed_DF_constant _ -> true
+	| Parsed_CF_constant _ -> true
 
-	| Parsed_DF_expression parsed_update_arithmetic_expression ->
-		check_f_in_parsed_update_arithmetic_expression f parsed_update_arithmetic_expression
+	| Parsed_CF_expression parsed_continuous_arithmetic_expression ->
+		check_f_in_parsed_continuous_arithmetic_expression f parsed_continuous_arithmetic_expression
 	
-	| Parsed_DF_unary_min parsed_rational_factor ->
-		check_f_in_parsed_update_factor f parsed_rational_factor
+	| Parsed_CF_unary_min parsed_rational_factor ->
+		check_f_in_parsed_continuous_factor f parsed_rational_factor
 
 
 
-and check_f_in_parsed_update_term f = function
-  | Parsed_DT_mul (parsed_update_term, parsed_update_factor)
-  | Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
+and check_f_in_parsed_continuous_term f = function
+  | Parsed_CT_mul (parsed_continuous_term, parsed_continuous_factor)
+  | Parsed_CT_div (parsed_continuous_term, parsed_continuous_factor) ->
     evaluate_and
-      (check_f_in_parsed_update_term f parsed_update_term)
-      (check_f_in_parsed_update_factor f parsed_update_factor)
+      (check_f_in_parsed_continuous_term f parsed_continuous_term)
+      (check_f_in_parsed_continuous_factor f parsed_continuous_factor)
 
-  | Parsed_DT_factor parsed_update_factor ->
-    check_f_in_parsed_update_factor f parsed_update_factor
+  | Parsed_CT_factor parsed_continuous_factor ->
+    check_f_in_parsed_continuous_factor f parsed_continuous_factor
 
 
-and check_f_in_parsed_update_arithmetic_expression f = function
-  | Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term)
-  | Parsed_DAE_minus (parsed_update_arithmetic_expression , parsed_update_term) ->
+and check_f_in_parsed_continuous_arithmetic_expression f = function
+  | Parsed_CAE_plus (parsed_continuous_arithmetic_expression, parsed_continuous_term)
+  | Parsed_CAE_minus (parsed_continuous_arithmetic_expression , parsed_continuous_term) ->
     evaluate_and
-      (check_f_in_parsed_update_arithmetic_expression f parsed_update_arithmetic_expression)
-      (check_f_in_parsed_update_term f parsed_update_term)
+      (check_f_in_parsed_continuous_arithmetic_expression f parsed_continuous_arithmetic_expression)
+      (check_f_in_parsed_continuous_term f parsed_continuous_term)
 
-  | Parsed_DAE_term parsed_update_term ->
-    check_f_in_parsed_update_term f parsed_update_term
+  | Parsed_CAE_term parsed_continuous_term ->
+    check_f_in_parsed_continuous_term f parsed_continuous_term
 
 
 (*------------------------------------------------------------*)
 (* Check that all variables are defined in a discrete update *)
 (*------------------------------------------------------------*)
-let all_variables_defined_in_parsed_update_arithmetic_expression variable_names constants =
-  check_f_in_parsed_update_arithmetic_expression (fun variable_name ->
+let all_variables_defined_in_parsed_continuous_arithmetic_expression variable_names constants =
+  check_f_in_parsed_continuous_arithmetic_expression (fun variable_name ->
       if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
         print_error ("The variable '" ^ variable_name ^ "' used in an arithmetic expression was not declared."); false
       ) else true
@@ -300,8 +295,8 @@ let all_variables_defined_in_parsed_update_arithmetic_expression variable_names 
 (*------------------------------------------------------------*)
 (* Check that only discrete variables are used in a discrete update *)
 (*------------------------------------------------------------*)
-let check_only_discretes_in_parsed_update_arithmetic_expression index_of_variables type_of_variables constants =
-  check_f_in_parsed_update_arithmetic_expression (fun variable_name ->
+let check_only_discretes_in_parsed_continuous_arithmetic_expression index_of_variables type_of_variables constants =
+  check_f_in_parsed_continuous_arithmetic_expression (fun variable_name ->
       (* Case constant: no problem *)
       if Hashtbl.mem constants variable_name then true
       else (
@@ -324,30 +319,30 @@ let check_only_discretes_in_parsed_update_arithmetic_expression index_of_variabl
 (*
 (*** WARNING! duplicate code! removed 2019/12/13 ***)
 (*------------------------------------------------------------*)
-(* Check that a parsed_update_arithmetic_expression contains non-constant at only selected parts *)
+(* Check that a parsed_continuous_arithmetic_expression contains non-constant at only selected parts *)
 (*------------------------------------------------------------*)
-let valuate_parsed_update_arithmetic_expression constants =
+let valuate_parsed_continuous_arithmetic_expression constants =
 
-	let rec check_constants_in_parsed_update_arithmetic_expression_rec = function
-		| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term)
-		| Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
+	let rec check_constants_in_parsed_continuous_arithmetic_expression_rec = function
+		| Parsed_CAE_plus (parsed_continuous_arithmetic_expression, parsed_continuous_term)
+		| Parsed_CAE_minus (parsed_continuous_arithmetic_expression, parsed_continuous_term) ->
 		evaluate_and
-			(check_constants_in_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression)
-			(check_constants_in_parsed_update_term parsed_update_term)
-		| Parsed_DAE_term parsed_update_term ->
-		check_constants_in_parsed_update_term parsed_update_term
+			(check_constants_in_parsed_continuous_arithmetic_expression_rec parsed_continuous_arithmetic_expression)
+			(check_constants_in_parsed_continuous_term parsed_continuous_term)
+		| Parsed_CAE_term parsed_continuous_term ->
+		check_constants_in_parsed_continuous_term parsed_continuous_term
 
-	and check_constants_in_parsed_update_term = function
-		| Parsed_DT_mul (parsed_update_term, parsed_update_factor) ->
-		(* Constants only forbidden in the parsed_update_term *)
-		check_constants_in_parsed_update_term parsed_update_term
-		| Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
-		(* Constants only forbidden in the parsed_update_factor *)
-		check_constants_in_parsed_update_factor parsed_update_factor
-		| Parsed_DT_factor parsed_update_factor -> check_constants_in_parsed_update_factor parsed_update_factor
+	and check_constants_in_parsed_continuous_term = function
+		| Parsed_CT_mul (parsed_continuous_term, parsed_continuous_factor) ->
+		(* Constants only forbidden in the parsed_continuous_term *)
+		check_constants_in_parsed_continuous_term parsed_continuous_term
+		| Parsed_CT_div (parsed_continuous_term, parsed_continuous_factor) ->
+		(* Constants only forbidden in the parsed_continuous_factor *)
+		check_constants_in_parsed_continuous_factor parsed_continuous_factor
+		| Parsed_CT_factor parsed_continuous_factor -> check_constants_in_parsed_continuous_factor parsed_continuous_factor
 
-	and check_constants_in_parsed_update_factor = function
-		| Parsed_DF_variable variable_name ->
+	and check_constants_in_parsed_continuous_factor = function
+		| Parsed_CF_variable variable_name ->
 		if Hashtbl.mem constants variable_name then (
 			true
 		) else (
@@ -355,13 +350,13 @@ let valuate_parsed_update_arithmetic_expression constants =
 			false
 		)
 		
-		| Parsed_DF_constant var_value -> true
+		| Parsed_CF_constant var_value -> true
 		
-		| Parsed_DF_unary_min parsed_rational_factor -> check_constants_in_parsed_update_factor parsed_rational_factor
+		| Parsed_CF_unary_min parsed_rational_factor -> check_constants_in_parsed_continuous_factor parsed_rational_factor
 		
-		| Parsed_DF_expression parsed_update_arithmetic_expression -> check_constants_in_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression
+		| Parsed_CF_expression parsed_continuous_arithmetic_expression -> check_constants_in_parsed_continuous_arithmetic_expression_rec parsed_continuous_arithmetic_expression
 
-	in check_constants_in_parsed_update_arithmetic_expression_rec
+	in check_constants_in_parsed_continuous_arithmetic_expression_rec
 *)
 
 
@@ -370,30 +365,30 @@ let valuate_parsed_update_arithmetic_expression constants =
 (************************************************************)
 
 (*------------------------------------------------------------*)
-(* Convert a parsed_update_arithmetic_expression into a rational_arithmetic_expression*)
+(* Convert a parsed_continuous_arithmetic_expression into a rational_arithmetic_expression*)
 (*------------------------------------------------------------*)
 
 (*** TODO (though really not critical): try to do some simplifications… ***)
 (*
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
-let rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants =
-	let rec rational_arithmetic_expression_of_parsed_update_arithmetic_expression_rec = function
-		| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
-		DAE_plus ((rational_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (rational_term_of_parsed_update_term parsed_update_term))
-		| Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
-		DAE_minus ((rational_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (rational_term_of_parsed_update_term parsed_update_term))
-		| Parsed_DAE_term parsed_update_term ->
-		DAE_term (rational_term_of_parsed_update_term parsed_update_term)
+let rational_arithmetic_expression_of_parsed_continuous_arithmetic_expression index_of_variables constants =
+	let rec rational_arithmetic_expression_of_parsed_continuous_arithmetic_expression_rec = function
+		| Parsed_CAE_plus (parsed_continuous_arithmetic_expression, parsed_continuous_term) ->
+		DAE_plus ((rational_arithmetic_expression_of_parsed_continuous_arithmetic_expression_rec parsed_continuous_arithmetic_expression), (rational_term_of_parsed_continuous_term parsed_continuous_term))
+		| Parsed_CAE_minus (parsed_continuous_arithmetic_expression, parsed_continuous_term) ->
+		DAE_minus ((rational_arithmetic_expression_of_parsed_continuous_arithmetic_expression_rec parsed_continuous_arithmetic_expression), (rational_term_of_parsed_continuous_term parsed_continuous_term))
+		| Parsed_CAE_term parsed_continuous_term ->
+		DAE_term (rational_term_of_parsed_continuous_term parsed_continuous_term)
 
-	and rational_term_of_parsed_update_term = function
-		| Parsed_DT_mul (parsed_update_term, parsed_rational_factor) ->
-		DT_mul ((rational_term_of_parsed_update_term parsed_update_term), (rational_factor_of_parsed_update_factor parsed_rational_factor))
-		| Parsed_DT_div (parsed_update_term, parsed_rational_factor) ->
-		DT_div ((rational_term_of_parsed_update_term parsed_update_term), (rational_factor_of_parsed_update_factor parsed_rational_factor))
-		| Parsed_DT_factor parsed_rational_factor -> DT_factor (rational_factor_of_parsed_update_factor parsed_rational_factor)
+	and rational_term_of_parsed_continuous_term = function
+		| Parsed_CT_mul (parsed_continuous_term, parsed_rational_factor) ->
+		DT_mul ((rational_term_of_parsed_continuous_term parsed_continuous_term), (rational_factor_of_parsed_continuous_factor parsed_rational_factor))
+		| Parsed_CT_div (parsed_continuous_term, parsed_rational_factor) ->
+		DT_div ((rational_term_of_parsed_continuous_term parsed_continuous_term), (rational_factor_of_parsed_continuous_factor parsed_rational_factor))
+		| Parsed_CT_factor parsed_rational_factor -> DT_factor (rational_factor_of_parsed_continuous_factor parsed_rational_factor)
 
-	and rational_factor_of_parsed_update_factor = function
-		| Parsed_DF_variable variable_name ->
+	and rational_factor_of_parsed_continuous_factor = function
+		| Parsed_CF_variable variable_name ->
 		(* Try to find the variable_index *)
 		if Hashtbl.mem index_of_variables variable_name then (
 			let variable_index = Hashtbl.find index_of_variables variable_name in
@@ -410,12 +405,12 @@ let rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_
 			raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although this should have been checked before."))
 			)
 		)
-		| Parsed_DF_constant var_value -> DF_constant var_value
+		| Parsed_CF_constant var_value -> DF_constant var_value
 		(*** TODO: here, we could very easily get rid of the DF_unary_min by negating the inside expression… ***)
-		| Parsed_DF_unary_min parsed_rational_factor -> DF_unary_min (rational_factor_of_parsed_update_factor parsed_rational_factor)
-		| Parsed_DF_expression parsed_update_arithmetic_expression -> DF_expression (rational_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression)
+		| Parsed_CF_unary_min parsed_rational_factor -> DF_unary_min (rational_factor_of_parsed_continuous_factor parsed_rational_factor)
+		| Parsed_CF_expression parsed_continuous_arithmetic_expression -> DF_expression (rational_arithmetic_expression_of_parsed_continuous_arithmetic_expression_rec parsed_continuous_arithmetic_expression)
 	in
-	rational_arithmetic_expression_of_parsed_update_arithmetic_expression_rec
+	rational_arithmetic_expression_of_parsed_continuous_arithmetic_expression_rec
 
 
 
@@ -425,22 +420,22 @@ let rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
 let rational_arithmetic_expression_of_parsed_rational_arithmetic_expression index_of_variables constants =
 	let rec rational_arithmetic_expression_of_parsed_rational_arithmetic_expression_rec = function
-		| Parsed_DAE_plus (parsed_rational_arithmetic_expression, parsed_rational_term) ->
+		| Parsed_CAE_plus (parsed_rational_arithmetic_expression, parsed_rational_term) ->
 			DAE_plus ((rational_arithmetic_expression_of_parsed_rational_arithmetic_expression_rec parsed_rational_arithmetic_expression), (rational_term_of_parsed_rational_term parsed_rational_term))
-		| Parsed_DAE_minus (parsed_rational_arithmetic_expression, parsed_rational_term) ->
+		| Parsed_CAE_minus (parsed_rational_arithmetic_expression, parsed_rational_term) ->
 			DAE_minus ((rational_arithmetic_expression_of_parsed_rational_arithmetic_expression_rec parsed_rational_arithmetic_expression), (rational_term_of_parsed_rational_term parsed_rational_term))
-		| Parsed_DAE_term parsed_rational_term ->
+		| Parsed_CAE_term parsed_rational_term ->
 			DAE_term (rational_term_of_parsed_rational_term parsed_rational_term)
 
 	and rational_term_of_parsed_rational_term = function
-		| Parsed_DT_mul (parsed_rational_term, parsed_rational_factor) ->
+		| Parsed_CT_mul (parsed_rational_term, parsed_rational_factor) ->
 			DT_mul ((rational_term_of_parsed_rational_term parsed_rational_term), (rational_factor_of_parsed_rational_factor parsed_rational_factor))
-		| Parsed_DT_div (parsed_rational_term, parsed_rational_factor) ->
+		| Parsed_CT_div (parsed_rational_term, parsed_rational_factor) ->
 			DT_div ((rational_term_of_parsed_rational_term parsed_rational_term), (rational_factor_of_parsed_rational_factor parsed_rational_factor))
-		| Parsed_DT_factor parsed_rational_factor -> DT_factor (rational_factor_of_parsed_rational_factor parsed_rational_factor)
+		| Parsed_CT_factor parsed_rational_factor -> DT_factor (rational_factor_of_parsed_rational_factor parsed_rational_factor)
 
 	and rational_factor_of_parsed_rational_factor = function
-		| Parsed_DF_variable variable_name ->
+		| Parsed_CF_variable variable_name ->
 		(* Try to find the variable_index *)
 		if Hashtbl.mem index_of_variables variable_name then (
 			let variable_index = Hashtbl.find index_of_variables variable_name in
@@ -457,9 +452,9 @@ let rational_arithmetic_expression_of_parsed_rational_arithmetic_expression inde
 			raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although this should have been checked before."))
 			)
 		)
-		| Parsed_DF_constant var_value -> DF_constant var_value
-		| Parsed_DF_expression parsed_rational_arithmetic_expression -> DF_expression (rational_arithmetic_expression_of_parsed_rational_arithmetic_expression_rec parsed_rational_arithmetic_expression)
-		| Parsed_DF_unary_min parsed_rational_factor -> DF_unary_min (rational_factor_of_parsed_rational_factor parsed_rational_factor)
+		| Parsed_CF_constant var_value -> DF_constant var_value
+		| Parsed_CF_expression parsed_rational_arithmetic_expression -> DF_expression (rational_arithmetic_expression_of_parsed_rational_arithmetic_expression_rec parsed_rational_arithmetic_expression)
+		| Parsed_CF_unary_min parsed_rational_factor -> DF_unary_min (rational_factor_of_parsed_rational_factor parsed_rational_factor)
 	in
 	(* Call high-level function *)
 	rational_arithmetic_expression_of_parsed_rational_arithmetic_expression_rec
@@ -467,46 +462,46 @@ let rational_arithmetic_expression_of_parsed_rational_arithmetic_expression inde
 
 
 (*------------------------------------------------------------*)
-(* Convert a parsed_update_arithmetic_expression into a linear_term *)
+(* Convert a parsed_continuous_arithmetic_expression into a linear_term *)
 (*------------------------------------------------------------*)
 
 
 (*** TODO (though really not critical): try to do some simplifications… ***)
-(* First valuate a parsed_update_arithmetic_expression if requested; raises InternalError if some non-constant variable is met *)
-let rec valuate_parsed_update_arithmetic_expression constants = function
-	| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
+(* First valuate a parsed_continuous_arithmetic_expression if requested; raises InternalError if some non-constant variable is met *)
+let rec valuate_parsed_continuous_arithmetic_expression constants = function
+	| Parsed_CAE_plus (parsed_continuous_arithmetic_expression, parsed_continuous_term) ->
 		NumConst.add
-		(valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression)
-		(valuate_parsed_update_term constants parsed_update_term)
-	| Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		(valuate_parsed_continuous_arithmetic_expression constants parsed_continuous_arithmetic_expression)
+		(valuate_parsed_continuous_term constants parsed_continuous_term)
+	| Parsed_CAE_minus (parsed_continuous_arithmetic_expression, parsed_continuous_term) ->
 		NumConst.sub
-		(valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression)
-		(valuate_parsed_update_term constants parsed_update_term)
-	| Parsed_DAE_term parsed_update_term ->
-		valuate_parsed_update_term constants parsed_update_term;
+		(valuate_parsed_continuous_arithmetic_expression constants parsed_continuous_arithmetic_expression)
+		(valuate_parsed_continuous_term constants parsed_continuous_term)
+	| Parsed_CAE_term parsed_continuous_term ->
+		valuate_parsed_continuous_term constants parsed_continuous_term;
 
-	and valuate_parsed_update_term constants = function
-	| Parsed_DT_mul (parsed_update_term, parsed_update_factor) ->
+	and valuate_parsed_continuous_term constants = function
+	| Parsed_CT_mul (parsed_continuous_term, parsed_continuous_factor) ->
 		NumConst.mul
-		(valuate_parsed_update_term constants parsed_update_term)
-		(valuate_parsed_update_factor constants parsed_update_factor)
-	| Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
+		(valuate_parsed_continuous_term constants parsed_continuous_term)
+		(valuate_parsed_continuous_factor constants parsed_continuous_factor)
+	| Parsed_CT_div (parsed_continuous_term, parsed_continuous_factor) ->
 		NumConst.div
-		(valuate_parsed_update_term constants parsed_update_term)
-		(valuate_parsed_update_factor constants parsed_update_factor)
-	| Parsed_DT_factor parsed_update_factor -> valuate_parsed_update_factor constants parsed_update_factor
+		(valuate_parsed_continuous_term constants parsed_continuous_term)
+		(valuate_parsed_continuous_factor constants parsed_continuous_factor)
+	| Parsed_CT_factor parsed_continuous_factor -> valuate_parsed_continuous_factor constants parsed_continuous_factor
 
-	and valuate_parsed_update_factor constants = function
-	| Parsed_DF_variable variable_name ->
+	and valuate_parsed_continuous_factor constants = function
+	| Parsed_CF_variable variable_name ->
 		if Hashtbl.mem constants variable_name then (
 		(* Retrieve the value of the global constant *)
 		Hashtbl.find constants variable_name
 		) else (
-		raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' in function 'valuate_parsed_update_arithmetic_expression' although it should have been checked before."))
+		raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' in function 'valuate_parsed_continuous_arithmetic_expression' although it should have been checked before."))
 		)
-	| Parsed_DF_constant var_value -> var_value
-	| Parsed_DF_unary_min parsed_rational_factor -> NumConst.neg (valuate_parsed_update_factor constants parsed_rational_factor)
-	| Parsed_DF_expression parsed_update_arithmetic_expression -> valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression
+	| Parsed_CF_constant var_value -> var_value
+	| Parsed_CF_unary_min parsed_rational_factor -> NumConst.neg (valuate_parsed_continuous_factor constants parsed_rational_factor)
+	| Parsed_CF_expression parsed_continuous_arithmetic_expression -> valuate_parsed_continuous_arithmetic_expression constants parsed_continuous_arithmetic_expression
 
 
 
@@ -523,14 +518,14 @@ let convert_parsed_relop = function
 
 let convert_rational_bool_expr index_of_variables constants = function
 	| Parsed_expression (expr1, relop, expr2) -> Expression (
-		(rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr1),
+		(rational_arithmetic_expression_of_parsed_continuous_arithmetic_expression index_of_variables constants expr1),
 		(convert_parsed_relop relop),
-		(rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr2)
+		(rational_arithmetic_expression_of_parsed_continuous_arithmetic_expression index_of_variables constants expr2)
 		)
 	| Parsed_expression_in (expr1, expr2, expr3) -> Expression_in (
-		(rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr1),
-		(rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr2),
-		(rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr3)
+		(rational_arithmetic_expression_of_parsed_continuous_arithmetic_expression index_of_variables constants expr1),
+		(rational_arithmetic_expression_of_parsed_continuous_arithmetic_expression index_of_variables constants expr2),
+		(rational_arithmetic_expression_of_parsed_continuous_arithmetic_expression index_of_variables constants expr3)
 		)
 		
 (** Convert a boolean expression in its abstract model *)
@@ -551,37 +546,37 @@ let rec convert_bool_expr index_of_variables constants = function
 
 (* Convert parsed_rational_arithmetic_expression *)
 let rec convert_parsed_rational_arithmetic_expression useful_parsing_model_information = function
-	| Parsed_DAE_plus (parsed_rational_arithmetic_expression , parsed_rational_term) ->
+	| Parsed_CAE_plus (parsed_rational_arithmetic_expression , parsed_rational_term) ->
 		DAE_plus (
 			(convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression)
 			,
 			(convert_parsed_rational_term useful_parsing_model_information parsed_rational_term)
 		)
-	| Parsed_DAE_minus (parsed_rational_arithmetic_expression , parsed_rational_term) ->
+	| Parsed_CAE_minus (parsed_rational_arithmetic_expression , parsed_rational_term) ->
 		DAE_minus (
 			(convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression)
 			,
 			(convert_parsed_rational_term useful_parsing_model_information parsed_rational_term)
 		)
-	| Parsed_DAE_term parsed_rational_term -> DAE_term (convert_parsed_rational_term useful_parsing_model_information parsed_rational_term)
+	| Parsed_CAE_term parsed_rational_term -> DAE_term (convert_parsed_rational_term useful_parsing_model_information parsed_rational_term)
 
 and convert_parsed_rational_term useful_parsing_model_information = function
-	| Parsed_DT_mul (parsed_rational_term , parsed_rational_factor) ->
+	| Parsed_CT_mul (parsed_rational_term , parsed_rational_factor) ->
 		DT_mul ((convert_parsed_rational_term useful_parsing_model_information parsed_rational_term) , convert_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
-	| Parsed_DT_div (parsed_rational_term , parsed_rational_factor) ->
+	| Parsed_CT_div (parsed_rational_term , parsed_rational_factor) ->
 		DT_div ((convert_parsed_rational_term useful_parsing_model_information parsed_rational_term) , convert_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
-	| Parsed_DT_factor parsed_rational_factor -> DT_factor (convert_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
+	| Parsed_CT_factor parsed_rational_factor -> DT_factor (convert_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
 
 and convert_parsed_rational_factor useful_parsing_model_information = function
-	| Parsed_DF_variable variable_name ->
+	| Parsed_CF_variable variable_name ->
 		(* First check whether this is a constant *)
 		if Hashtbl.mem useful_parsing_model_information.constants variable_name then
 			DF_constant (Hashtbl.find useful_parsing_model_information.constants variable_name)
 		(* Otherwise: a variable *)
 		else DF_variable (Hashtbl.find useful_parsing_model_information.index_of_variables variable_name)
-	| Parsed_DF_constant var_value -> DF_constant var_value
-	| Parsed_DF_expression parsed_rational_arithmetic_expression -> DF_expression (convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression)
-	| Parsed_DF_unary_min parsed_rational_factor -> DF_unary_min (convert_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
+	| Parsed_CF_constant var_value -> DF_constant var_value
+	| Parsed_CF_expression parsed_rational_arithmetic_expression -> DF_expression (convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression)
+	| Parsed_CF_unary_min parsed_rational_factor -> DF_unary_min (convert_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
 
 
 (* Convert parsed_rational_boolean_expression *)
@@ -712,14 +707,14 @@ let get_variables_in_init_state_predicate variables_used_ref = function
 let get_variables_in_parsed_loc_predicate variables_used_ref = function
 	| Parsed_loc_predicate_EQ of automaton_name * location_name
 	| Parsed_loc_predicate_NEQ of automaton_name * location_name*)
-
+*)
 
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a Simple_predicate *)
 (*------------------------------------------------------------*)
 let get_variables_in_parsed_simple_predicate variables_used_ref = function
-	| Parsed_rational_boolean_predicate parsed_rational_boolean_expression ->
-		get_variables_in_parsed_rational_boolean_expression variables_used_ref parsed_rational_boolean_expression
+	| Parsed_rational_boolean_predicate parsed_continuous_inequality ->
+		get_variables_in_parsed_continuous_inequality variables_used_ref parsed_continuous_inequality
 		
 	| Parsed_loc_predicate parsed_loc_predicate ->
 		(* No variable in location predicate *)
@@ -767,6 +762,7 @@ and get_variables_in_parsed_state_predicate variables_used_ref = function
 	| Parsed_state_predicate_true | Parsed_state_predicate_false
 		-> ()
 
+(*
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a convex predicate *)
 (*------------------------------------------------------------*)
@@ -1212,7 +1208,7 @@ let get_declared_variable_names variable_declarations =
 (*------------------------------------------------------------*)
 (* Get all discrete variables *)
 (*------------------------------------------------------------*)
-let get_all_rational_variables variables_per_type =
+let get_all_discrete_variables variables_per_type =
 	(* Collect for each discrete type *)
 	List.fold_left
 		(fun current_list rational_type -> 
@@ -1223,6 +1219,7 @@ let get_all_rational_variables variables_per_type =
 			) with Not_found -> current_list
 		)
 		[] all_parsed_rational_types
+
 
 (*------------------------------------------------------------*)
 (* Get all (possibly identical) names of automata *)
@@ -1237,8 +1234,9 @@ let get_declared_synclabs_names =
   List.fold_left (fun action_names (_, synclabs, _) -> list_union action_names synclabs) []
 
   
-(*
+(*------------------------------------------------------------*)
 (* Get the set of all variable names used in the parsed model *)
+(*------------------------------------------------------------*)
 let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_model) =
 	(* Create a set structure for variable names *)
 	let all_variables_used = ref StringSet.empty in
@@ -1254,13 +1252,14 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 			print_message Verbose_total ("        Gathering variables used in location " ^ location.name);
 
 			(* Gather in the cost *)
-			begin
+			(*** TODO: reintroduce cost ***)
+(*			begin
 				match location.cost with
 				| Some cost ->
 				print_message Verbose_total ("          Gathering variables in used cost");
 				get_variables_in_linear_expression all_variables_used cost;
 				| None -> ()
-			end;
+			end;*)
 
 			(* Gather in the stopwatches *)
 			print_message Verbose_total ("          Gathering variables used in possible stopwatches");
@@ -1268,16 +1267,16 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 				all_variables_used := StringSet.add stopwatch_name !all_variables_used
 				) location.stopped;
 
-			(* Gather in the convex predicate *)
-			print_message Verbose_total ("          Gathering variables in convex predicate");
-			get_variables_in_convex_predicate all_variables_used location.invariant;
+			(* Gather in the invariant *)
+			print_message Verbose_total ("          Gathering variables in invariant");
+			get_variables_in_parsed_convex_continuous_boolean_expressions all_variables_used location.invariant;
 
 			(* Gather in transitions *)
 			print_message Verbose_total ("          Gathering variables in transitions");
-			List.iter (fun (convex_predicate, updates, (*sync*)_, (*target_location_name*)_) ->
+			List.iter (fun (transition : parsed_transition) ->
 				(* Gather in the convex predicate (guard) *)
-				print_message Verbose_total ("            Gathering variables in convex predicate");
-				get_variables_in_convex_predicate all_variables_used convex_predicate;
+				print_message Verbose_total ("            Gathering variables in guard");
+				get_variables_in_parsed_convex_continuous_boolean_expressions all_variables_used transition.guard;
 
 				(* Gather in the updates *)
 				print_message Verbose_total ("            Gathering variables in updates");
@@ -1287,17 +1286,18 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 					(* First add the variable to be updated *)
 					(* 					all_variables_used := StringSet.add variable_name !all_variables_used; *)
 					(* Second add the variable names in the update expression *)
-					(* get_variables_in_parsed_update_arithmetic_expression all_variables_used arithmetic_expression; *)
+					(* get_variables_in_parsed_continuous_arithmetic_expression all_variables_used arithmetic_expression; *)
 					get_variables_in_parsed_update all_variables_used update_expression
-					) updates;
+					) transition.updates;
 				) location.transitions;
 			) locations;
 		) parsed_model.automata;
 
-  (* Return the set of variables actually used *)
-  !all_variables_used
+	(* Return the set of variables actually used *)
+	!all_variables_used
 
-  *)
+
+
 (************************************************************)
 (** Checking the model *)
 (************************************************************)
@@ -1408,7 +1408,7 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 
 	let check_update_normal (variable_name, parsed_rational_term) =
 	match parsed_rational_term with
-	| Parsed_rational_term arithmetic_expression ->
+	| Parsed_continuous_term arithmetic_expression ->
 		(* Check whether this variable is to be removed because unused elswhere than in resets *)
 		let to_be_removed = List.mem variable_name removed_variable_names in
 
@@ -1437,12 +1437,12 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 			(* Type clock: allow any linear term in updates: so just check that variables have been declared *)
 			| AbstractModel.Var_type_clock ->
 			print_message Verbose_total ("                A clock!");
-			all_variables_defined_in_parsed_update_arithmetic_expression variable_names constants arithmetic_expression
+			all_variables_defined_in_parsed_continuous_arithmetic_expression variable_names constants arithmetic_expression
 
 			(* Case of a discrete var.: allow only an arithmetic expression of constants and discrete *)
 			| AbstractModel.Var_type_discrete Rational ->
 			print_message Verbose_total ("                A discrete rational!");
-			let result = check_only_discretes_in_parsed_update_arithmetic_expression index_of_variables type_of_variables constants arithmetic_expression in
+			let result = check_only_discretes_in_parsed_continuous_arithmetic_expression index_of_variables type_of_variables constants arithmetic_expression in
 			if not result then
 				(print_error ("The variable '" ^ variable_name ^ "' is a discrete rational and its update can only be an arithmetic expression over constants and discrete rationals in automaton '" ^ automaton_name ^ "'."); false)
 			else (
@@ -1467,8 +1467,8 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 	print_message Verbose_total ("              Checking one update");
 
 	match update with
-	| Normal update -> check_update_normal update
-	| Condition (_, updates_if, updates_else) ->
+	| Normal_update update -> check_update_normal update
+	| Condition_update (_, updates_if, updates_else) ->
 		List.fold_left (fun acc u ->
 			(check_update_normal u) && acc
 		) true (updates_if @ updates_else)
@@ -1497,7 +1497,7 @@ let synclab_used_everywhere automata synclab_name =
 			(* Check that at least one location contains the synclab *)
 			if not (List.exists (fun (location : parsed_location) ->
 				(* Check that at least one transition contains the synclab *)
-				List.exists (fun (_, _, sync, _) -> sync = (Sync synclab_name)) location.transitions
+				List.exists (fun transition -> transition.label = (Sync synclab_name)) location.transitions
 				) locations ) then (
 				(* No location contains the synclab: warning and exception (to save a bit of time) *)
 				(*** TODO: perform exhaustive search, i.e., remove the exception mechanism ***)
@@ -2225,62 +2225,62 @@ let convert_guard index_of_variables type_of_variables constants guard_convex_pr
 
 (** Checks if a update is a normal update *)
 let is_normal_update = function
-  | Normal _ -> true
+  | Normal_update _ -> true
   | _ -> false
 
 (** Returns the value of a normal update *)
 let get_normal_update_value = function
-  | Normal u -> u
+  | Normal_update u -> u
   | _ -> assert false
 
 (** Returns the value of a conditonal update *)
 let get_conditional_update_value = function
-  | Condition u -> u
+  | Condition_update u -> u
   | _ -> assert false
 
 
 (*
 (*** TODO (though really not critical): try to do some simplifications… ***)
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
-let linear_term_of_parsed_update_arithmetic_expression index_of_variables constants pdae =
+let linear_term_of_parsed_continuous_arithmetic_expression index_of_variables constants pdae =
 	(* Create an array of coef *)
 	let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
 	(* Create a zero constant *)
 	let constant = ref NumConst.zero in
 
-	let rec update_coef_array_in_parsed_update_arithmetic_expression mult_factor = function
-		| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
+	let rec update_coef_array_in_parsed_continuous_arithmetic_expression mult_factor = function
+		| Parsed_CAE_plus (parsed_continuous_arithmetic_expression, parsed_continuous_term) ->
 		(* Update coefficients in the arithmetic expression *)
-		update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
+		update_coef_array_in_parsed_continuous_arithmetic_expression mult_factor parsed_continuous_arithmetic_expression;
 		(* Update coefficients in the term *)
-		update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
-		| Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		update_coef_array_in_parsed_continuous_term mult_factor parsed_continuous_term;
+		| Parsed_CAE_minus (parsed_continuous_arithmetic_expression, parsed_continuous_term) ->
 		(* Update coefficients in the arithmetic expression *)
-		update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
+		update_coef_array_in_parsed_continuous_arithmetic_expression mult_factor parsed_continuous_arithmetic_expression;
 		(* Update coefficients in the term: multiply by -1 for negation *)
-		update_coef_array_in_parsed_update_term (NumConst.neg mult_factor) parsed_update_term;
-		| Parsed_DAE_term parsed_update_term ->
-		update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
+		update_coef_array_in_parsed_continuous_term (NumConst.neg mult_factor) parsed_continuous_term;
+		| Parsed_CAE_term parsed_continuous_term ->
+		update_coef_array_in_parsed_continuous_term mult_factor parsed_continuous_term;
 
-	and update_coef_array_in_parsed_update_term mult_factor = function
+	and update_coef_array_in_parsed_continuous_term mult_factor = function
 		(* Multiplication is only allowed with a constant multiplier *)
-		| Parsed_DT_mul (parsed_update_term, parsed_update_factor) ->
+		| Parsed_CT_mul (parsed_continuous_term, parsed_continuous_factor) ->
 		(* Valuate the term *)
-		let valued_term = valuate_parsed_update_term constants parsed_update_term in
+		let valued_term = valuate_parsed_continuous_term constants parsed_continuous_term in
 		(* Update coefficients *)
-		update_coef_array_in_parsed_update_factor (NumConst.mul valued_term mult_factor) parsed_update_factor
+		update_coef_array_in_parsed_continuous_factor (NumConst.mul valued_term mult_factor) parsed_continuous_factor
 
-		| Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
+		| Parsed_CT_div (parsed_continuous_term, parsed_continuous_factor) ->
 		(* Valuate the discrete factor *)
-		let valued_factor = valuate_parsed_update_factor constants parsed_update_factor in
+		let valued_factor = valuate_parsed_continuous_factor constants parsed_continuous_factor in
 		(* Update coefficients *)
-		update_coef_array_in_parsed_update_term (NumConst.div mult_factor valued_factor) parsed_update_term
+		update_coef_array_in_parsed_continuous_term (NumConst.div mult_factor valued_factor) parsed_continuous_term
 
-		| Parsed_DT_factor parsed_update_factor ->
-		update_coef_array_in_parsed_update_factor mult_factor parsed_update_factor
+		| Parsed_CT_factor parsed_continuous_factor ->
+		update_coef_array_in_parsed_continuous_factor mult_factor parsed_continuous_factor
 
-	and update_coef_array_in_parsed_update_factor mult_factor = function
-		| Parsed_DF_variable variable_name ->
+	and update_coef_array_in_parsed_continuous_factor mult_factor = function
+		| Parsed_CF_variable variable_name ->
 			(* Try to find the variable_index *)
 			if Hashtbl.mem index_of_variables variable_name then (
 				let variable_index = Hashtbl.find index_of_variables variable_name in
@@ -2294,20 +2294,20 @@ let linear_term_of_parsed_update_arithmetic_expression index_of_variables consta
 				(* Update the constant *)
 				constant := NumConst.add !constant (NumConst.mul mult_factor value)
 				) else (
-				raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' in function 'linear_term_of_parsed_update_arithmetic_expression' although this should have been checked before."))
+				raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' in function 'linear_term_of_parsed_continuous_arithmetic_expression' although this should have been checked before."))
 				)
 			)
-		| Parsed_DF_constant var_value ->
+		| Parsed_CF_constant var_value ->
 			(* Update the constant *)
 			constant := NumConst.add !constant (NumConst.mul mult_factor var_value)
-		| Parsed_DF_unary_min parsed_rational_factor ->
-			update_coef_array_in_parsed_update_factor mult_factor parsed_rational_factor
-		| Parsed_DF_expression parsed_update_arithmetic_expression ->
-			update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
+		| Parsed_CF_unary_min parsed_rational_factor ->
+			update_coef_array_in_parsed_continuous_factor mult_factor parsed_rational_factor
+		| Parsed_CF_expression parsed_continuous_arithmetic_expression ->
+			update_coef_array_in_parsed_continuous_arithmetic_expression mult_factor parsed_continuous_arithmetic_expression
 	in
 
 	(* Call the recursive function updating the coefficients *)
-	update_coef_array_in_parsed_update_arithmetic_expression NumConst.one pdae;
+	update_coef_array_in_parsed_continuous_arithmetic_expression NumConst.one pdae;
 
 	(* Create the linear term *)
 	linear_term_of_array array_of_coef !constant
@@ -2322,12 +2322,12 @@ let filtered_updates removed_variable_names updates =
   in
   List.fold_left (fun acc u ->
       match u with
-      | Normal (update) ->
+      | Normal_update (update) ->
         if (not_removed_variable update) then u::acc else acc
-      | Condition (bool, updates_if, updates_else) ->
+      | Condition_update (bool, updates_if, updates_else) ->
         let filtered_if = List.filter (not_removed_variable) updates_if in
         let filtered_else = List.filter (not_removed_variable) updates_else in
-        Condition (bool, filtered_if, filtered_else)::acc
+        Condition_update (bool, filtered_if, filtered_else)::acc
     ) [] updates
 
 
@@ -2335,8 +2335,8 @@ let filtered_updates removed_variable_names updates =
 let to_abstract_discrete_update index_of_variables constants (variable_name, (parsed_discrete_term : parsed_discrete_term)) : discrete_update =
 	let variable_index = Hashtbl.find index_of_variables variable_name in
 	match parsed_discrete_term with
-	| Parsed_rational_term parsed_update_arithmetic_expression ->
-		let arithmetic_expression = rational_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
+	| Parsed_continuous_term parsed_continuous_arithmetic_expression ->
+		let arithmetic_expression = rational_arithmetic_expression_of_parsed_continuous_arithmetic_expression index_of_variables constants parsed_continuous_arithmetic_expression in
 		(variable_index, Rational_term arithmetic_expression)
 	| _ -> raise (NotImplemented "non-rational discrete terms in ModelConverter.to_abstract_discrete_update")
 
@@ -2347,9 +2347,9 @@ let to_abstract_clock_update index_of_variables constants only_resets updates_li
 	(** Translate parsed clock updte into the tuple clock_index, linear_term *)
 	let to_intermediate_abstract_clock_update (variable_name, parsed_rational_term) =
 		match parsed_rational_term with
-		| Parsed_rational_term parsed_update_arithmetic_expression ->
+		| Parsed_continuous_term parsed_continuous_arithmetic_expression ->
 			let variable_index = Hashtbl.find index_of_variables variable_name in
-			let linear_term = linear_term_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
+			let linear_term = linear_term_of_parsed_continuous_arithmetic_expression index_of_variables constants parsed_continuous_arithmetic_expression in
 			(variable_index, linear_term)
 		| Parsed_string_term _ -> raise (InternalError "Parsed_string_term found in ModelConverter.to_abstract_clock_update but this should not have happened for a clock update")
 	in
@@ -2380,11 +2380,11 @@ let split_to_clock_discrete_updates index_of_variables only_resets type_of_varia
   (** Check if a normal update is a clock update *)
 	let is_clock_update (variable_name, parsed_rational_term) =
 		match parsed_rational_term with
-		| Parsed_rational_term parsed_update_arithmetic_expression ->
+		| Parsed_continuous_term parsed_continuous_arithmetic_expression ->
 			(* Retrieve variable type *)
 			if type_of_variables (Hashtbl.find index_of_variables variable_name) = Var_type_clock then (
 				(* Update flag *)
-				if parsed_update_arithmetic_expression <> Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant NumConst.zero)) then (
+				if parsed_continuous_arithmetic_expression <> Parsed_CAE_term (Parsed_CT_factor (Parsed_CF_constant NumConst.zero)) then (
 					only_resets := false;
 				);
 				true
@@ -2524,9 +2524,9 @@ let convert_transitions nb_transitions nb_actions index_of_variables constants r
               let converted_updates = convert_updates index_of_variables constants type_of_variables filtered_updates in
 
               (* Convert the updates *)
-              (* let converted_updates = List.map (fun (variable_name, parsed_update_arithmetic_expression) ->
+              (* let converted_updates = List.map (fun (variable_name, parsed_continuous_arithmetic_expression) ->
                  					let variable_index = Hashtbl.find index_of_variables variable_name in
-                 					let linear_term = linear_term_of_parsed_update_arithmetic_expression index_of_variables constants parsed_update_arithmetic_expression in
+                 					let linear_term = linear_term_of_parsed_continuous_arithmetic_expression index_of_variables constants parsed_continuous_arithmetic_expression in
                  					(variable_index, linear_term)
                  				) filtered_updates in*)
 
@@ -2684,7 +2684,6 @@ let get_variables_in_parsed_pval (parsed_pval : ParsingStructure.parsed_pval) : 
 (*------------------------------------------------------------*)
 (* Gather the set of all variable names used in the parsed property *)
 (*------------------------------------------------------------*)
-(*
 let get_variables_in_property_option (parsed_property_option : ParsingStructure.parsed_property option) =
 	(* First create the set *)
 	let variables_used_ref = ref StringSet.empty in
@@ -2752,7 +2751,62 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 	end;
 	(* Return the set *)
 	!variables_used_ref
-*)
+
+
+
+(*------------------------------------------------------------*)
+(* Gathers all (unique) variable names in both model and property *)
+(* Returns clock_names, discrete_names, parameter_names, removed_variable_names *)
+(*------------------------------------------------------------*)
+let build_variables_lists parsed_model parsed_property_option options possibly_multiply_defined_clock_names possibly_multiply_defined_discrete_names possibly_multiply_defined_parameter_names =
+
+	(* First remove multiply defined variable names *)
+	let single_clock_names = list_only_once possibly_multiply_defined_clock_names in
+	let single_discrete_names = list_only_once possibly_multiply_defined_discrete_names in
+	let single_parameter_names = list_only_once possibly_multiply_defined_parameter_names in
+	
+	(*------------------------------------------------------------*)
+	(* Remove unused variables *)
+	(*------------------------------------------------------------*)
+
+	(* Unless a specific option is activated, we first remove all variables declared but unused *)
+	let clock_names, discrete_names, parameter_names, removed_variable_names =
+	if options#no_variable_autoremove then(
+		(* Nothing to do *)
+		single_clock_names, single_discrete_names, single_parameter_names, []
+	)else (
+		(* Gather all variables used *)
+		let all_variables_used_in_model = get_all_variables_used_in_model parsed_model in
+		let all_variables_used_in_property = get_variables_in_property_option parsed_property_option in
+		let all_variable_used = StringSet.union all_variables_used_in_model all_variables_used_in_property in
+
+		(* Remove variable unused *)
+		let remove_unused_variables_gen variable_type_name = List.partition (fun variable_name ->
+			(* The variable is kept if… *)
+			if
+				(* Either it is used somewhere *)
+				(StringSet.mem variable_name all_variable_used)
+				(* Or it is a clock with the special global_time name *)
+				||
+				(variable_name = Constants.global_time_clock_name && List.mem variable_name single_clock_names)
+			then true
+			else (
+				(* First print a warning *)
+				print_warning ("The " ^ variable_type_name ^ " '" ^ variable_name ^ "' is declared but never used in the model; it is therefore removed from the model. Use option -no-var-autoremove to keep it.");
+				(* Filter out *)
+				false
+			)
+		) in
+		(* Create all three lists *)
+		let single_clock_names, removed_clock_names = remove_unused_variables_gen "clock" single_clock_names in
+		let single_discrete_names, removed_discrete_names = remove_unused_variables_gen "discrete" single_discrete_names in
+		let single_parameter_names, removed_parameter_names = remove_unused_variables_gen "parameter" single_parameter_names in
+		(* Return and append removed variable names *)
+		single_clock_names, single_discrete_names, single_parameter_names, List.rev_append removed_clock_names (List.rev_append removed_discrete_names removed_parameter_names)
+	) in
+	clock_names, discrete_names, parameter_names, removed_variable_names
+
+
 
 
 (*
@@ -3126,34 +3180,34 @@ let check_and_convert_unreachable_global_location index_of_variables type_of_var
 (*------------------------------------------------------------*)
 (*
 let rec check_parsed_rational_arithmetic_expression useful_parsing_model_information = function
-	| Parsed_DAE_plus (parsed_rational_arithmetic_expression , parsed_rational_term)
-	| Parsed_DAE_minus (parsed_rational_arithmetic_expression , parsed_rational_term) ->
+	| Parsed_CAE_plus (parsed_rational_arithmetic_expression , parsed_rational_term)
+	| Parsed_CAE_minus (parsed_rational_arithmetic_expression , parsed_rational_term) ->
 		evaluate_and
 			(check_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression)
 			(check_parsed_rational_term useful_parsing_model_information parsed_rational_term)
-	| Parsed_DAE_term parsed_rational_term -> check_parsed_rational_term useful_parsing_model_information parsed_rational_term
+	| Parsed_CAE_term parsed_rational_term -> check_parsed_rational_term useful_parsing_model_information parsed_rational_term
 
 and check_parsed_rational_term useful_parsing_model_information = function
-	| Parsed_DT_mul (parsed_rational_term , parsed_rational_factor)
-	| Parsed_DT_div (parsed_rational_term , parsed_rational_factor) ->
+	| Parsed_CT_mul (parsed_rational_term , parsed_rational_factor)
+	| Parsed_CT_div (parsed_rational_term , parsed_rational_factor) ->
 		evaluate_and
 			(check_parsed_rational_term useful_parsing_model_information parsed_rational_term)
 			(check_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
-	| Parsed_DT_factor parsed_rational_factor ->
+	| Parsed_CT_factor parsed_rational_factor ->
 		check_parsed_rational_factor useful_parsing_model_information parsed_rational_factor
 
 and check_parsed_rational_factor useful_parsing_model_information = function
-	| Parsed_DF_variable variable_name ->
+	| Parsed_CF_variable variable_name ->
 		if not (Hashtbl.mem useful_parsing_model_information.index_of_variables variable_name) && not (Hashtbl.mem useful_parsing_model_information.constants variable_name) then (
 			print_error ("Undefined variable name '" ^ variable_name ^ "' in the property");
 			false
 		)else(
 			true
 		)
-	| Parsed_DF_constant _ -> true
-	| Parsed_DF_expression parsed_rational_arithmetic_expression ->
+	| Parsed_CF_constant _ -> true
+	| Parsed_CF_expression parsed_rational_arithmetic_expression ->
 		check_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression
-	| Parsed_DF_unary_min parsed_rational_factor ->
+	| Parsed_CF_unary_min parsed_rational_factor ->
 		check_parsed_rational_factor useful_parsing_model_information parsed_rational_factor
 
 
@@ -3958,7 +4012,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let possibly_multiply_defined_parameter_names	: variable_name list = try (Hashtbl.find variables_per_type Parsed_var_type_parameter) with Not_found -> [] in
 
 	(* Discrete request a slightly more expensive treatment as we get them for each type *)
-	let possibly_multiply_defined_rational_names	: variable_name list = get_all_rational_variables variables_per_type in
+	let possibly_multiply_defined_discrete_names	: variable_name list = get_all_discrete_variables variables_per_type in
 
 	(* Get the declared automata names *)
 	let declared_automata_names = get_declared_automata_names parsed_model.automata in
@@ -4036,8 +4090,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
  	
 
  	
- 	raise (NotImplemented "ModelConverted")
- 	(*
  	
  	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add clock and automaton for the observer *)
@@ -4045,7 +4097,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
  	
  	let observer_automaton, observer_clock_option = None, None in
 
- 	(* Note that the observer has not been checked yet, but it doesn't matter *)
+(*
+	(*** TODO: reintroduce observers! ***)
+(* Note that the observer has not been checked yet, but it doesn't matter *)
 	let observer_automaton, observer_clock_option = match parsed_property_option with
 		| None -> None, None
 		| Some parsed_property -> ObserverPatterns.new_elements parsed_property
@@ -4069,7 +4123,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total ("Automata names : " ^ (string_of_list_of_string_with_sep ", " declared_automata_names));
-	);
+	);*)
 
 
 	
@@ -4077,55 +4131,13 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Start building variable lists *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-	(* First remove multiply defined variable names *)
-	let single_clock_names = list_only_once possibly_multiply_defined_clock_names in
-	let single_rational_names = list_only_once possibly_multiply_defined_rational_names in
-	let single_parameter_names = list_only_once possibly_multiply_defined_parameter_names in
 	
-	(*------------------------------------------------------------*)
-	(* Remove unused variables *)
-	(*------------------------------------------------------------*)
+	let clock_names, discrete_names, parameter_names, removed_variable_names = build_variables_lists parsed_model parsed_property_option options possibly_multiply_defined_clock_names possibly_multiply_defined_discrete_names possibly_multiply_defined_parameter_names in
 
-	(* Unless a specific option is activated, we first remove all variables declared but unused *)
-	let clock_names, rational_names, parameter_names, removed_variable_names =
-	if options#no_variable_autoremove then(
-		(* Nothing to do *)
-		single_clock_names, single_rational_names, single_parameter_names, []
-	)else (
-		(* Gather all variables used *)
-		let all_variables_used_in_model = get_all_variables_used_in_model parsed_model in
-		let all_variables_used_in_property = get_variables_in_property_option parsed_property_option in
-		let all_variable_used = StringSet.union all_variables_used_in_model all_variables_used_in_property in
+ 	raise (NotImplemented "ModelConverted")
+ 	(*
 
-		(* Remove variable unused *)
-		let remove_unused_variables_gen variable_type_name = List.partition (fun variable_name ->
-			(* The variable is kept if… *)
-			if
-				(* Either it is used somewhere *)
-				(StringSet.mem variable_name all_variable_used)
-				(* Or it is a clock with the special global_time name *)
-				||
-				(variable_name = Constants.global_time_clock_name && List.mem variable_name single_clock_names)
-			then true
-			else (
-				(* First print a warning *)
-				print_warning ("The " ^ variable_type_name ^ " '" ^ variable_name ^ "' is declared but never used in the model; it is therefore removed from the model. Use option -no-var-autoremove to keep it.");
-				(* Filter out *)
-				false
-			)
-		) in
-		(* Create all three lists *)
-		let single_clock_names, removed_clock_names = remove_unused_variables_gen "clock" single_clock_names in
-		let single_rational_names, removed_rational_names = remove_unused_variables_gen "discrete" single_rational_names in
-		let single_parameter_names, removed_parameter_names = remove_unused_variables_gen "parameter" single_parameter_names in
-		(* Return and append removed variable names *)
-		single_clock_names, single_rational_names, single_parameter_names, List.rev_append removed_clock_names (List.rev_append removed_rational_names removed_parameter_names)
-	)
-	in
-	
-
-	(*------------------------------------------------------------*)
+ 	(*------------------------------------------------------------*)
 	(* Special clocks *)
 	(*------------------------------------------------------------*)
 
@@ -4151,10 +4163,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(*------------------------------------------------------------*)
 	
 	let clock_names = list_append (list_append clock_names observer_clock_list) special_reset_clock_list in
-	let rational_names = rational_names in
+	let discrete_names = discrete_names in
 
 	(* Make only one list for all variables *)
-	let variable_names = list_append (list_append parameter_names clock_names) rational_names in
+	let variable_names = list_append (list_append parameter_names clock_names) discrete_names in
 
 	(* Update automata names with the observer automaton *)
 	let declared_automata_names = match observer_automaton with
@@ -4166,7 +4178,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let nb_automata		= List.length declared_automata_names in
 	let nb_actions		= List.length action_names in
 	let nb_clocks		= List.length clock_names in
-	let nb_discrete		= List.length rational_names in
+	let nb_discrete		= List.length discrete_names in
 	let nb_parameters	= List.length parameter_names in
 	let nb_variables	= List.length variable_names in
 

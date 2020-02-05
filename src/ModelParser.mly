@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/02/04
+ * Last modified     : 2020/02/05
  *
  ************************************************************/
 
@@ -527,7 +527,13 @@ transition:
 	| CT_WHEN guard update_synchronization CT_GOTO NAME SEMICOLON
 	{
 		let update_list, sync = $3 in
-			$2, update_list, sync, $5
+		(* Create structure *)
+		{
+			guard		= $2;
+			updates		= update_list;
+			label		= sync;
+			target		= $5;
+		}
 	}
 ;
 
@@ -565,10 +571,10 @@ update_list:
 /************************************************************/
 
 update_nonempty_list:
-	| update COMMA update_list { Normal $1 :: $3}
-	| update { [Normal $1] }
-	| condition_update COMMA update_list { Condition $1 :: $3}
-	| condition_update { [Condition $1] }
+	| update COMMA update_list { Normal_update $1 :: $3}
+	| update { [Normal_update $1] }
+	| condition_update COMMA update_list { Condition_update $1 :: $3}
+	| condition_update { [Condition_update $1] }
 ;
 
 /************************************************************/
@@ -672,7 +678,7 @@ convex_continuous_boolean_expressions_fol:
 convex_continuous_boolean_expression:
 	| CT_TRUE { Parsed_CCBE_True }
 	| CT_FALSE { Parsed_CCBE_False }
-	| rational_boolean_expression { Parsed_CCBE_continuous_arithmetic_expression $1 }
+	| continuous_inequality { Parsed_CCBE_continuous_inequality $1 }
 ;
 
 /*
@@ -775,15 +781,15 @@ pos_float:
 /** BOOLEAN EXPRESSIONS */
 /************************************************************/
 boolean_expression:
-	| CT_TRUE { Parsed_True }
-	| CT_FALSE { Parsed_False }
-	| OP_NEQ LPAREN boolean_expression RPAREN { Parsed_Not $3 }
-	| boolean_expression AMPERSAND boolean_expression { Parsed_And ($1, $3) }
-	| boolean_expression PIPE boolean_expression { Parsed_Or ($1, $3) }
-	| rational_boolean_expression { Parsed_continuous_boolean_expression $1 }
+	| CT_TRUE { Parsed_CBE_True }
+	| CT_FALSE { Parsed_CBE_False }
+	| OP_NEQ LPAREN boolean_expression RPAREN { Parsed_CBE_Not $3 }
+	| boolean_expression AMPERSAND boolean_expression { Parsed_CBE_And ($1, $3) }
+	| boolean_expression PIPE boolean_expression { Parsed_CBE_Or ($1, $3) }
+	| continuous_inequality { Parsed_CBE_continuous_inequality $1 }
 ;
 
-rational_boolean_expression:
+continuous_inequality:
 	/* Discrete arithmetic expression of the form Expr ~ Expr */
 	| continuous_arithmetic_expression relop continuous_arithmetic_expression { Parsed_expression ($1, $2, $3) }
 
@@ -818,7 +824,7 @@ init_expression_fol:
 /* Used in the init definition */
 init_state_predicate:
 	| loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
-	| rational_boolean_expression { Parsed_linear_predicate $1 }
+	| continuous_inequality { Parsed_linear_predicate $1 }
 ;
 
 loc_predicate:

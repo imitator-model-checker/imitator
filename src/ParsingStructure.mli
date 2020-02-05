@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/02/04
+ * Last modified     : 2020/02/05
  *
  ****************************************************************)
 
@@ -123,27 +123,27 @@ type convex_predicate = linear_constraint list*)
 
 (** Boolean expressions *)
 
-type parsed_continuous_boolean_expression =
+type parsed_continuous_inequality =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_expression of parsed_continuous_arithmetic_expression * parsed_relop * parsed_continuous_arithmetic_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Parsed_expression_in of parsed_continuous_arithmetic_expression * parsed_continuous_arithmetic_expression * parsed_continuous_arithmetic_expression
 
 
-type parsed_boolean_expression =
-	| Parsed_True (** True *)
-	| Parsed_False (** False *)
-	| Parsed_Not of parsed_boolean_expression (** Negation *)
-	| Parsed_And of parsed_boolean_expression * parsed_boolean_expression (** Conjunction *)
-	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
-	| Parsed_continuous_boolean_expression of parsed_continuous_boolean_expression
+type parsed_continuous_boolean_expression =
+	| Parsed_CBE_True (** True *)
+	| Parsed_CBE_False (** False *)
+	| Parsed_CBE_Not of parsed_continuous_boolean_expression (** Negation *)
+	| Parsed_CBE_And of parsed_continuous_boolean_expression * parsed_continuous_boolean_expression (** Conjunction *)
+	| Parsed_CBE_Or of parsed_continuous_boolean_expression * parsed_continuous_boolean_expression (** Disjunction *)
+	| Parsed_CBE_continuous_inequality of parsed_continuous_inequality
 
 
 (** Convex Boolean expression on discrete and/or continuous variables *)
 type parsed_convex_continuous_boolean_expression =
 	| Parsed_CCBE_True (** True *)
 	| Parsed_CCBE_False (** False *)
-	| Parsed_CCBE_continuous_arithmetic_expression of parsed_continuous_boolean_expression
+	| Parsed_CCBE_continuous_inequality of parsed_continuous_inequality
 
 type parsed_convex_continuous_boolean_expressions = parsed_convex_continuous_boolean_expression list
 
@@ -161,21 +161,21 @@ type parsed_acceptance =
 	| Parsed_location_accepting
 	| Parsed_location_nonaccepting
 
-type sync =
+type parsed_sync =
 	| Sync of sync_name
 	| NoSync
 
 
 (** Updates on transitions *)
-type update =
-	| Normal of normal_update (** Updates without conditions *)
-	| Condition of condition_update (** Updates with conditions *)
+type parsed_update =
+	| Normal_update of normal_update (** Updates without conditions *)
+	| Condition_update of condition_update (** Updates with conditions *)
 
 (** basic updating *)
 and normal_update = variable_name * parsed_discrete_term
 
 (** conditional updating - NOTE: it does not support nested conditions *)
-and condition_update = parsed_boolean_expression * normal_update list * normal_update list
+and condition_update = parsed_continuous_boolean_expression * normal_update list * normal_update list
 
 and parsed_discrete_term =
 	(*** NOTE: for parsing, this includes normal clock updates ***)
@@ -188,7 +188,12 @@ type parsed_invariant	= parsed_convex_continuous_boolean_expressions
 
 
 (* Transition = Guard * update list * sync label * destination location *)
-type transition = parsed_guard * update list * sync * location_name
+type parsed_transition = {
+	guard		: parsed_guard;
+	updates		: parsed_update list;
+	label		: parsed_sync;
+	target		: location_name;
+}
 
 (* Location = Name * Urgent type * Accepting type * Cost * Invariant * list of stopped clocks * transitions *)
 type parsed_location = {
@@ -205,7 +210,7 @@ type parsed_location = {
 	(* List of stopped clocks *)
 	stopped     : (variable_name list);
 	(* Transitions starting from this location *)
-	transitions : transition list;
+	transitions : parsed_transition list;
 }
 
 (* type location = location_name * loc_type * linear_expression option * invariant * (variable_name list) * (transition list) *)
@@ -223,7 +228,7 @@ type parsed_automaton = automaton_name * sync_name list * parsed_location list
 
 type parsed_init_state_predicate =
 	| Parsed_loc_assignment of automaton_name * location_name
-	| Parsed_linear_predicate of parsed_continuous_boolean_expression
+	| Parsed_linear_predicate of parsed_continuous_inequality
 
 
 type init_definition = parsed_init_state_predicate list
@@ -328,7 +333,7 @@ type parsed_loc_predicate =
 
 
 type parsed_simple_predicate =
-	| Parsed_rational_boolean_predicate of parsed_continuous_boolean_expression
+	| Parsed_rational_boolean_predicate of parsed_continuous_inequality
 	| Parsed_loc_predicate of parsed_loc_predicate
 
 
