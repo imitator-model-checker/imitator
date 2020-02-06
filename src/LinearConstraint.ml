@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2020/02/03
+ * Last modified     : 2020/02/06
  *
  ************************************************************)
 
@@ -361,10 +361,12 @@ type d_valuation = (variable -> coef)
 (* Dimensions by type *)
 let nb_parameters	= ref 0
 let nb_clocks		= ref 0
+(*** TODO: remove ***)
 let nb_discrete		= ref 0
 (* Total numbers of dimensions *)
 let p_dim			= ref 0
 let px_dim			= ref 0
+(*** TODO: remove ***)
 let pxd_dim			= ref 0
 
 
@@ -1467,21 +1469,17 @@ let substitute_variables sub linear_inequality =
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Set the number of dimensions *)
-let set_dimensions nb_p nb_c nb_d =
+let set_dimensions nb_p nb_c =
 	nb_parameters	:= nb_p;
 	nb_clocks 		:= nb_c;
-	nb_discrete		:= nb_d;
 	p_dim			:= nb_p;
 	px_dim			:= nb_p + nb_c;
-	pxd_dim			:= nb_p + nb_c + nb_d;
 	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("\nDimensions set");
 		print_message Verbose_high ("  nb_parameters := " ^ (string_of_int !nb_parameters));
 		print_message Verbose_high ("  nb_clocks := " ^ (string_of_int !nb_clocks));
-		print_message Verbose_high ("  nb_discrete := " ^ (string_of_int !nb_discrete));
 		print_message Verbose_high ("  p_dim := " ^ (string_of_int !p_dim));
 		print_message Verbose_high ("  px_dim := " ^ (string_of_int !px_dim));
-		print_message Verbose_high ("  pxd_dim := " ^ (string_of_int !pxd_dim));
 	);
 	()
 
@@ -3458,7 +3456,7 @@ let test_PDBMs () =
 	let test_nb_parameters = 3 in
 	
 	(* Set dimensions *)
-	set_dimensions test_nb_parameters test_nb_clocks 0;
+	set_dimensions test_nb_parameters test_nb_clocks;
 	
 	(* Make variable names *)
 	let variable_names variable_index =

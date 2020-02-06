@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2020/02/03
+ * Last modified     : 2020/02/06
  *
  ************************************************************)
 
@@ -213,7 +213,7 @@ type px_linear_constraint
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Set the number of dimensions *)
-val set_dimensions : int -> int -> int -> unit
+val set_dimensions : int -> int -> unit
 
 
 

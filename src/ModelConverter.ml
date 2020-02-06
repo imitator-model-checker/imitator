@@ -4134,8 +4134,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	
 	let clock_names, discrete_names, parameter_names, removed_variable_names = build_variables_lists parsed_model parsed_property_option options possibly_multiply_defined_clock_names possibly_multiply_defined_discrete_names possibly_multiply_defined_parameter_names in
 
- 	raise (NotImplemented "ModelConverted")
- 	(*
 
  	(*------------------------------------------------------------*)
 	(* Special clocks *)
@@ -4195,9 +4193,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Set the LinearConstraint dimensions *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("\nSetting dimensions…");
-	LinearConstraint.set_dimensions nb_parameters nb_clocks nb_discrete;
+	LinearConstraint.set_dimensions nb_parameters nb_clocks;
 	
 	
+ 	raise (NotImplemented "ModelConverted")
+ 	(*
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Set the parameter dimensions *)
