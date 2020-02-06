@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/02/04
+ * Last modified     : 2020/02/06
  *
  ************************************************************)
 
@@ -40,7 +40,7 @@ let string_of_false	= "False"
 (* Convert a parameter valuation (PVal.pval) into a string *)
 let string_of_pval model pval =
 	"  " ^ (
-	string_of_list_of_string_with_sep "\n& " (
+	string_of_list_of_string_with_sep LinearConstraint.string_of_and (
 		List.map (fun parameter ->
 			(model.variable_names parameter)
 			^ " = "
@@ -56,7 +56,7 @@ let string_of_pval model pval =
 (* Convert a V0 into a string *)
 let string_of_v0 model v0 =
 	"  " ^ (
-	string_of_list_of_string_with_sep "\n& " (
+	string_of_list_of_string_with_sep LinearConstraint.string_of_and (
 		List.map (fun parameter ->
 			(model.variable_names parameter)
 			^ " = "
@@ -149,12 +149,199 @@ let string_of_declarations model =
 	(if model.nb_parameters > 0 then
 		("\n\t" ^ (string_of_variables model.parameters) ^ "\n\t\t: parameter;\n") else "")
 
+
+
+
 (************************************************************)
-(** Guard *)
+(** Rational expressions *)
 (************************************************************)
 
+let string_of_ccb_relop = function
+	| OP_L		-> "<"
+	| OP_LEQ	-> "<="
+	| OP_EQ		-> "="
+	| OP_NEQ	-> "<>"
+	| OP_GEQ	-> ">="
+	| OP_G		-> ">"
+
+
+(** Convert a rational_boolean_expression into a string *)
+let string_of_rational_boolean_expression variable_names = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| RBE_Expression (convex_continuous_expression1, relop, convex_continuous_expression2) ->
+		(string_of_convex_continuous_expression variable_names convex_continuous_expression1)
+		^ " "
+		^ (string_of_boolean_operations relop)
+		^ " "
+		^ (string_of_convex_continuous_expression variable_names convex_continuous_expression2)
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| RBE_Expression_in (convex_continuous_expression1, convex_continuous_expression2, convex_continuous_expression3) ->
+		(string_of_convex_continuous_expression variable_names convex_continuous_expression1)
+		^ " in ["
+		^ (string_of_convex_continuous_expression variable_names convex_continuous_expression2)
+		^ " , "
+		^ (string_of_convex_continuous_expression variable_names convex_continuous_expression3)
+		^ "]"
+
+
+
+(************************************************************)
+(** Guards and invariants *)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(* Continuous expressions (for guards) *)
+(*------------------------------------------------------------*)
+
+let string_of_ccb_relop = function
+	| CCB_OP_L		-> "<"
+	| CCB_OP_LEQ	-> "<="
+	| CCB_OP_EQ		-> "="
+	| CCB_OP_NEQ	-> "<>"
+	| CCB_OP_GEQ	-> ">="
+	| CCB_OP_G		-> ">"
+
+
+(* Convert an arithmetic expression into a string *)
+(*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
+let string_of_convex_continuous_expression variable_names =
+	let rec string_of_convex_continuous_expression = function
+		(* Shortcut: Remove the "+0" / -"0" cases *)
+		| CCE_plus (convex_continuous_expression, CCT_factor (CCF_constant c))
+		| CCE_minus (convex_continuous_expression, CCT_factor (CCF_constant c))
+			when NumConst.equal c NumConst.zero
+			->
+			string_of_convex_continuous_expression convex_continuous_expression
+
+		| CCE_plus (convex_continuous_expression, convex_continuous_term) ->
+			(string_of_convex_continuous_expression convex_continuous_expression)
+			^ " + "
+			^ (string_of_term convex_continuous_term)
+
+		| CCE_minus (convex_continuous_expression, convex_continuous_term) ->
+			(string_of_convex_continuous_expression convex_continuous_expression)
+			^ " - "
+			^ (string_of_term convex_continuous_term)
+
+		| CCE_term convex_continuous_term -> string_of_term convex_continuous_term
+
+	and string_of_term = function
+		(* Eliminate the '1' coefficient *)
+		| CCT_mul (CCT_factor (CCF_constant c), convex_continuous_factor)
+			when NumConst.equal c NumConst.one
+			->
+			string_of_factor convex_continuous_factor
+		(* No parentheses for constant * variable *)
+		| CCT_mul (CCT_factor (CCF_constant c), CCF_variable v) ->
+			(string_of_factor (CCF_constant c))
+			^ " * "
+			^ (string_of_factor (CCF_variable v))
+		(*** TODO: No parentheses on the left for constant or variable * something ***)
+		(* Otherwise: parentheses on the left *)
+		| CCT_mul (convex_continuous_term, convex_continuous_factor) ->
+			"(" ^ (string_of_term convex_continuous_term) ^ ")"
+			^ " * "
+			^ (string_of_factor convex_continuous_factor)
+
+		(*** TODO: No parentheses on the left for constant or variable / something ***)
+		(*** TODO: No parentheses on the left for something / constant or variable ***)
+		(* Otherwise: parentheses on the left *)
+		| CCT_div (convex_continuous_term, convex_continuous_factor) ->
+			"(" ^ (string_of_term convex_continuous_term) ^ ")"
+			^ " / "
+			^ (string_of_factor convex_continuous_factor)
+
+		| CCT_factor convex_continuous_factor -> string_of_factor convex_continuous_factor
+
+	and string_of_factor = function
+		| CCF_variable discrete_index -> variable_names discrete_index
+		| CCF_constant discrete_value -> NumConst.string_of_numconst discrete_value
+		| CCF_unary_min convex_continuous_factor -> "-" ^ (string_of_factor convex_continuous_factor)
+		| CCF_expression convex_continuous_expression ->
+			(*** TODO: simplify a bit? ***)
+			"(" ^ (string_of_convex_continuous_expression convex_continuous_expression) ^ ")"
+	(* Call top-level *)
+	in string_of_convex_continuous_expression
+
+
+
+
+let string_of_convex_continuous_boolean_inequality variable_names (convex_continuous_expression_l , ccb_relop , convex_continuous_expression_r) =
+	(string_of_convex_continuous_expression convex_continuous_expression_l)
+	^ " " ^
+	(string_of_ccb_relop ccb_relop)
+	^ " " ^
+	(string_of_convex_continuous_expression convex_continuous_expression_r)
+
+
+
+(** Convex Boolean expression on discrete and continuous variables *)
+let string_of_convex_continuous_boolean_expression variable_names = function
+	| CCBE_True -> string_of_true (** True *)
+	| CCBE_False -> string_of_false (** False *)
+	| CCBE_conjunction convex_continuous_boolean_inequality_list ->
+		string_of_list_of_string_with_sep LinearConstraint.string_of_and (List.map string_of_convex_continuous_boolean_inequality convex_continuous_boolean_inequality_list) (** Conjunction *)
+
+
+(*------------------------------------------------------------*)
+(** Convec Boolean expression on discrete variables (for guards) *)
+(*------------------------------------------------------------*)
+
+(* A discrete Boolean expression is just a continuous Boolean expression without clock variables in it *)
+let string_of_convex_discrete_boolean_expression = string_of_convex_continuous_boolean_expression
+
+
+(*------------------------------------------------------------*)
+(* Guards and invariants *)
+(*------------------------------------------------------------*)
+
+let string_of_discrete_continuous_guard variable_names discrete_continuous_guard =
+	(* Convert the discrete part of the guard *)
+	(
+	match discrete_continuous_guard.discrete_guard with
+		| None -> ""
+		| Some discrete_guard -> string_of_convex_discrete_boolean_expression variable_names discrete_guard
+	)
+	^
+	
+	(* Separator between 1 and (2 or 3) *)
+	(
+	match discrete_continuous_guard.discrete_guard, discrete_continuous_guard.prebuilt_continuous_guard, discrete_continuous_guard.continuous_guard with
+		| Some _, Some _, _
+		| Some _, _, Some _
+			-> LinearConstraint.string_of_and
+		| _ -> ""
+	)
+	^
+	
+	(* Convert the prebuilt continuous part of the guard *)
+	(
+	match discrete_continuous_guard.prebuilt_continuous_guard with
+		| None -> ""
+		| Some prebuilt_continuous_guard -> string_of_px_linear_constraint variable_names prebuilt_continuous_guard
+	)
+	^
+	
+	(* Separator between 2 and 3 *)
+	(
+	match discrete_continuous_guard.prebuilt_continuous_guard, discrete_continuous_guard.continuous_guard with
+		| Some _, Some _
+			-> LinearConstraint.string_of_and
+		| _ -> ""
+	)
+	^
+	
+	(* Convert the continuous part of the guard *)
+	(
+	match discrete_continuous_guard.continuous_guard with
+		| None -> ""
+		| Some continuous_guard -> string_of_convex_continuous_boolean_expression variable_names discrete_guard
+	)
+
+
+(*
+TO DELETE
 (*** NOTE: special handling as we have a discrete and a continuous guard that must be handled homogeneously ***)
-
 (** Convert a guard into a string *)
 let string_of_guard variable_names = function
 	| True_guard -> LinearConstraint.string_of_true
@@ -165,6 +352,94 @@ let string_of_guard variable_names = function
 		(LinearConstraint.string_of_d_linear_constraint variable_names discrete_continuous_guard.discrete_guard)
 		^ LinearConstraint.string_of_and ^
 		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
+*)
+
+(** Convert a guard into a string *)
+let string_of_guard variable_names = function
+	| True_guard > LinearConstraint.string_of_true
+	| False_guard -> LinearConstraint.string_of_false
+	| Discrete_continuous_guard discrete_continuous_guard -> string_of_discrete_continuous_guard discrete_continuous_guard
+
+
+(** Invariant: technically a guard *)
+let string_of_invariant = string_of_guard
+
+
+(************************************************************)
+(** Updates *)
+(************************************************************)
+
+
+(*------------------------------------------------------------*)
+(* Discrete Boolean expressions (for conditional expressions in updates) *)
+(*------------------------------------------------------------*)
+
+(** Boolean expression on discrete variables (for updates) *)
+let rec string_of_discrete_boolean_expression variable_names =
+	| DBE_True -> string_of_true (** True *)
+	
+	| DBE_False -> string_of_false  (** False *)
+	
+	| DBE_Not discrete_boolean_expression -> "not(" ^ (string_of_discrete_boolean_expression variable_names discrete_boolean_expression) ^ ")" (** Negation *)
+	
+	| DBE_And (discrete_boolean_expression_1 , discrete_boolean_expression_2) (** Conjunction *) ->
+		(string_of_discrete_boolean_expression variable_names discrete_boolean_expression_1)
+		^
+		" & "
+		^
+		(string_of_discrete_boolean_expression variable_names discrete_boolean_expression_2)
+	
+	| DBE_Or (discrete_boolean_expression_1 , discrete_boolean_expression_2) (** Disjunction *)
+		(string_of_discrete_boolean_expression variable_names discrete_boolean_expression_1)
+		^
+		" | "
+		^
+		(string_of_discrete_boolean_expression variable_names discrete_boolean_expression_2)
+
+	| DBE_Rational_boolean_expression rational_boolean_expression ->
+		string_of_rational_boolean_expression variable_names rational_boolean_expression
+
+
+
+
+
+
+let rec string_of_state_predicate_factor model = function
+	| State_predicate_factor_NOT state_predicate_factor ->
+		"not(" ^ (string_of_state_predicate_factor model state_predicate_factor) ^ ")"
+	| Simple_predicate simple_predicate ->
+		string_of_simple_predicate model simple_predicate
+	| State_predicate state_predicate ->
+		string_of_state_predicate model state_predicate
+
+and string_of_state_predicate_term model = function
+	| State_predicate_term_AND (state_predicate_term_1 , state_predicate_term_2) ->
+		(string_of_state_predicate_term model state_predicate_term_1)
+		^
+		" && "
+		^
+		(string_of_state_predicate_term model state_predicate_term_2)
+	| State_predicate_factor state_predicate_factor ->
+		string_of_state_predicate_factor model state_predicate_factor
+
+
+and string_of_state_predicate model = function
+	| State_predicate_OR (state_predicate_1 , state_predicate_2) ->
+		(string_of_state_predicate model state_predicate_1)
+		^
+		" || "
+		^
+		(string_of_state_predicate model state_predicate_2)
+		
+	| State_predicate_term state_predicate_term ->
+		string_of_state_predicate_term model state_predicate_term
+		
+	| State_predicate_true -> string_of_true
+	
+	| State_predicate_false -> string_of_false
+
+
+
 
 
 
@@ -237,88 +512,23 @@ let string_of_clock_updates model clock_updates =
 			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term) in
 	string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
 
-(* Convert an arithmetic expression into a string *)
-(*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
-let string_of_arithmetic_expression variable_names =
-	let rec string_of_arithmetic_expression = function
-		(* Shortcut: Remove the "+0" / -"0" cases *)
-		| DAE_plus (rational_arithmetic_expression, DT_factor (DF_constant c))
-		| DAE_minus (rational_arithmetic_expression, DT_factor (DF_constant c)) when NumConst.equal c NumConst.zero ->
-			string_of_arithmetic_expression rational_arithmetic_expression
-
-		| DAE_plus (rational_arithmetic_expression, rational_term) ->
-			(string_of_arithmetic_expression rational_arithmetic_expression)
-			^ " + "
-			^ (string_of_term rational_term)
-
-		| DAE_minus (rational_arithmetic_expression, rational_term) ->
-			(string_of_arithmetic_expression rational_arithmetic_expression)
-			^ " - "
-			^ (string_of_term rational_term)
-
-		| DAE_term rational_term -> string_of_term rational_term
-
-	and string_of_term = function
-		(* Eliminate the '1' coefficient *)
-		| DT_mul (DT_factor (DF_constant c), rational_factor) when NumConst.equal c NumConst.one ->
-			string_of_factor rational_factor
-		(* No parentheses for constant * variable *)
-		| DT_mul (DT_factor (DF_constant c), DF_variable v) ->
-			(string_of_factor (DF_constant c))
-			^ " * "
-			^ (string_of_factor (DF_variable v))
-		(*** TODO: No parentheses on the left for constant or variable * something ***)
-		(* Otherwise: parentheses on the left *)
-		| DT_mul (rational_term, rational_factor) ->
-			"(" ^ (string_of_term rational_term) ^ ")"
-			^ " * "
-			^ (string_of_factor rational_factor)
-
-		(*** TODO: No parentheses on the left for constant or variable / something ***)
-		(*** TODO: No parentheses on the left for something / constant or variable ***)
-		(* Otherwise: parentheses on the left *)
-		| DT_div (rational_term, rational_factor) ->
-			"(" ^ (string_of_term rational_term) ^ ")"
-			^ " / "
-			^ (string_of_factor rational_factor)
-
-		| DT_factor rational_factor -> string_of_factor rational_factor
-
-	and string_of_factor = function
-		| DF_variable discrete_index -> variable_names discrete_index
-		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
-		| DF_unary_min rational_factor -> "-" ^ (string_of_factor rational_factor)
-		| DF_expression rational_arithmetic_expression ->
-			(*** TODO: simplify a bit? ***)
-			"(" ^ (string_of_arithmetic_expression rational_arithmetic_expression) ^ ")"
-	(* Call top-level *)
-	in string_of_arithmetic_expression
-
 
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates ?(sep=", ") model (updates : discrete_update list) =
-	string_of_list_of_string_with_sep sep (List.map (fun (variable_index, rational_term) ->
+	string_of_list_of_string_with_sep sep (List.map (fun (variable_index, convex_continuous_term) ->
 		(* Convert the variable name *)
 		(model.variable_names variable_index)
 		^ " := "
 		(* Iterate on type *)
-		^ (match rational_term with 
+		^ (match convex_continuous_term with 
 			| Rational_term arithmetic_expression ->
 				(* Convert the arithmetic_expression *)
-				(string_of_arithmetic_expression model.variable_names arithmetic_expression)
+				(string_of_convex_continuous_expression model.variable_names arithmetic_expression)
 			| _ -> raise (NotImplemented "ModelPrinter: non-rational discrete update")
 		)
 	) updates)
 
-
-let string_of_boolean_operations = function
-	| OP_L		-> "<"
-	| OP_LEQ	-> "<="
-	| OP_EQ		-> "="
-	| OP_NEQ	-> "<>"
-	| OP_GEQ	-> ">="
-	| OP_G		-> ">"
 
 
 (*(** Convert a logical operation into a string *)
@@ -342,32 +552,14 @@ let rec string_of_boolean_template variable_names boolean_expr str_lop =
 													^ symbol ^ (string_of_boolean_template variable_names b2 str_lop)
 		| Or_bool (b1, b2) -> (string_of_boolean_template variable_names b1 str_lop)
 												^ symbol ^ (string_of_boolean_template variable_names b2 str_lop)
-		| Expression_bool (expr1, op, expr2) -> (string_of_arithmetic_expression variable_names expr1)
+		| Expression_bool (expr1, op, expr2) -> (string_of_convex_continuous_expression variable_names expr1)
 																					^ symbol
-																					^ (string_of_arithmetic_expression variable_names expr2)
+																					^ (string_of_convex_continuous_expression variable_names expr2)
 
 (** Convert a Boolean expression into a string *)
 let string_of_boolean variable_names boolean_expr =
 	string_of_boolean_template variable_names boolean_expr string_of_logical_operators*)
 
-
-(** Convert a rational_boolean_expression into a string *)
-let string_of_rational_boolean_expression variable_names = function
-	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Expression (rational_arithmetic_expression1, relop, rational_arithmetic_expression2) ->
-		(string_of_arithmetic_expression variable_names rational_arithmetic_expression1)
-		^ " "
-		^ (string_of_boolean_operations relop)
-		^ " "
-		^ (string_of_arithmetic_expression variable_names rational_arithmetic_expression2)
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Expression_in (rational_arithmetic_expression1, rational_arithmetic_expression2, rational_arithmetic_expression3) ->
-		(string_of_arithmetic_expression variable_names rational_arithmetic_expression1)
-		^ " in ["
-		^ (string_of_arithmetic_expression variable_names rational_arithmetic_expression2)
-		^ " , "
-		^ (string_of_arithmetic_expression variable_names rational_arithmetic_expression3)
-		^ "]"
 
 (** Convert a Boolean expression into a string *)
 let rec string_of_boolean variable_names = function

@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2020/02/01
+ * Last modified     : 2020/02/06
  *
  ************************************************************)
 
@@ -77,10 +77,10 @@ val separator_comma : updates -> bool * bool
 val string_of_discrete_updates : ?sep:string -> AbstractModel.abstract_model -> discrete_update list -> string
 
 (** Template to convert clock updates into a string *)
-val string_of_clock_updates_template : AbstractModel.abstract_model -> clock_updates -> (clock_update -> string) -> (clock_update -> LinearConstraint.pxd_linear_term -> string) -> string -> string
+val string_of_clock_updates_template : AbstractModel.abstract_model -> clock_update list -> (clock_update -> string) -> (clock_update -> LinearConstraint.pxd_linear_term -> string) -> string -> string
 
 (** Convert the clock updates into a string *)
-val string_of_clock_updates :  AbstractModel.abstract_model -> clock_updates -> string
+val string_of_clock_updates :  AbstractModel.abstract_model -> clock_update list -> string
 
 (*(** Template to convert a boolean expresion into a string *)
 val string_of_boolean_template : (Automaton.variable_index -> Automaton.variable_name) -> boolean_expression -> (boolean_expression -> string) -> string*)
@@ -89,7 +89,7 @@ val string_of_boolean_template : (Automaton.variable_index -> Automaton.variable
 val string_of_boolean :  (Automaton.discrete_index -> Automaton.variable_name) -> boolean_expression -> string
 
 (** Template to convert conditional updates into a string *)
-val string_of_conditional_updates_template : AbstractModel.abstract_model -> conditional_update list -> (abstract_model -> clock_updates -> string) -> (abstract_model -> discrete_update list -> string) -> (boolean_expression -> string) -> string -> string -> string -> string
+val string_of_conditional_updates_template : AbstractModel.abstract_model -> conditional_update list -> (abstract_model -> clock_update list -> string) -> (abstract_model -> discrete_update list -> string) -> (boolean_expression -> string) -> string -> string -> string -> string
 
 (** Convert conditional updates into a string *)
 val string_of_conditional_updates : AbstractModel.abstract_model -> conditional_update list -> string
