@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/02/05
+ * Last modified     : 2020/02/06
  *
  ************************************************************)
 
@@ -2811,7 +2811,7 @@ let build_variables_lists parsed_model parsed_property_option options possibly_m
 
 (*
 	
-	OLD CODE
+	TO DELETE
 
 et get_variables_in_property variables_used_ref = function
   | Parsed_unreachable_locations (parsed_unreachable_global_location_list) ->
@@ -3625,7 +3625,7 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 
 	
 	(*
-	(*** BEGIN old code below ***)
+	(*** BEGIN old code TO DELETE below ***)
 	match observer_automaton with
 
 	(* First handle observer-free user-defined properties *)
@@ -3665,7 +3665,7 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		),
 		Some correctness_condition,
 		initial_observer_constraint
-	(*** END old code below ***)
+	(*** END old code TO DELETE below ***)
 	in
 
 	
@@ -4196,8 +4196,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	LinearConstraint.set_dimensions nb_parameters nb_clocks;
 	
 	
- 	raise (NotImplemented "ModelConverted")
- 	(*
 	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Set the parameter dimensions *)
@@ -4280,6 +4278,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	in
 
 
+ 	raise (NotImplemented "ModelConverted")
+ 	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug prints *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

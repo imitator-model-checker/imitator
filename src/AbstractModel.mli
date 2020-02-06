@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/11
- * Last modified     : 2020/02/03
+ * Last modified     : 2020/02/06
  *
  ************************************************************)
 
@@ -76,6 +76,12 @@ type location_urgency =
 (** Guards and invariants *)
 (************************************************************)
 
+(*------------------------------------------------------------*)
+(* Continuous expressions (for guards) *)
+(*------------------------------------------------------------*)
+
+type ccb_relop = CCB_OP_L | CCB_OP_LEQ | CCB_OP_EQ | CCB_OP_GEQ | CCB_OP_G
+
 type convex_continuous_expression =
 	| CCE_plus of convex_continuous_expression * convex_continuous_term
 	| CCE_minus of convex_continuous_expression * convex_continuous_term
@@ -92,34 +98,27 @@ and convex_continuous_factor =
 	| CCF_expression of convex_continuous_expression
 	| CCF_unary_min of convex_continuous_factor
 
-
-(** Boolean expression on discrete variables (for updates) *)
-type discrete_boolean_expression =
-	| DBE_True (** True *)
-	| DBE_False (** False *)
-	| DBE_Not of discrete_boolean_expression (** Negation *)
-	| DBE_And of discrete_boolean_expression * discrete_boolean_expression (** Conjunction *)
-	| DBE_Or of discrete_boolean_expression * discrete_boolean_expression (** Disjunction *)
-	| DBE_Rational_boolean_expression of RationalExpressions.rational_boolean_expression
-
-(** Convec Boolean expression on discrete variables (for guards) *)
-type convex_discrete_boolean_expression =
-	| CDBE_True (** True *)
-	| CDBE_False (** False *)
-	| CDBE_conjunction of convex_continuous_expression list (** Conjunction *)
-
-
-type ccb_relop = CCB_OP_L | CCB_OP_LEQ | CCB_OP_EQ | CCB_OP_GEQ | CCB_OP_G
-
 type convex_continuous_boolean_inequality = convex_continuous_expression * ccb_relop * convex_continuous_expression
 
 (** Convex Boolean expression on discrete and continuous variables *)
 type convex_continuous_boolean_expression =
-	| True_bool (** True *)
-	| False_bool (** False *)
+	| CCBE_True (** True *)
+	| CCBE_False (** False *)
 	| CCBE_conjunction of convex_continuous_boolean_inequality list (** Conjunction *)
 
 
+(*------------------------------------------------------------*)
+(** Convec Boolean expression on discrete variables (for guards) *)
+(*------------------------------------------------------------*)
+
+(* A discrete Boolean expression is just a continuous Boolean expression without clock variables in it *)
+type convex_discrete_boolean_expression = convex_continuous_boolean_expression
+
+
+
+(*------------------------------------------------------------*)
+(* Guards and invariants *)
+(*------------------------------------------------------------*)
 
 (*type discrete_continuous_guard = {
 	discrete_guard   : discrete_guard;
@@ -159,8 +158,31 @@ type invariant = guard
 (** Updates *)
 (************************************************************)
 
+
+(*------------------------------------------------------------*)
+(* Discrete Boolean expressions (for conditional expressions in updates) *)
+(*------------------------------------------------------------*)
+
+(** Boolean expression on discrete variables (for updates) *)
+type discrete_boolean_expression =
+	| DBE_True (** True *)
+	| DBE_False (** False *)
+	| DBE_Not of discrete_boolean_expression (** Negation *)
+	| DBE_And of discrete_boolean_expression * discrete_boolean_expression (** Conjunction *)
+	| DBE_Or of discrete_boolean_expression * discrete_boolean_expression (** Disjunction *)
+	| DBE_Rational_boolean_expression of RationalExpressions.rational_boolean_expression
+
+
+(*------------------------------------------------------------*)
 (*** TODO ***)
+(*------------------------------------------------------------*)
 type string_term = string
+
+
+(*------------------------------------------------------------*)
+(* Updates *)
+(*------------------------------------------------------------*)
+
 
 type discrete_term =
 	| Rational_term of RationalExpressions.rational_arithmetic_expression
