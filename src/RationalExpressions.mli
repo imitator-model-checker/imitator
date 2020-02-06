@@ -22,6 +22,7 @@
 
 (** Boolean operators *)
 
+(*** WARNING! similar operators are defined in AbstractModel! ***)
 type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 
 
