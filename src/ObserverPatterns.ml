@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created:       2013/02/04
- * Last modified: 2020/01/22
+ * Last modified: 2020/02/10
  *
  ************************************************************)
  
@@ -35,7 +35,14 @@ let location_name location_index =
 	location_prefix ^ (string_of_int location_index)
 
 (** Shortcuts *)
-let truec = LinearConstraint.pxd_true_constraint
+(* let truec = LinearConstraint.pxd_true_constraint *)
+(*** NOTE: "()" to force execution of the constructor at each call ***)
+let true_discrete_continuous_guard () = {
+	discrete_guard   			= None;
+	prebuilt_continuous_guard	= Some (LinearConstraint.px_true_constraint ());
+	continuous_guard			= None;
+}
+
 
 
 (************************************************************)
@@ -53,18 +60,25 @@ let untimedt action_index target_index =
 	[{
 		guard		= True_guard;
 		action		= action_index;
-		updates		= create_update No_update [] [];
+		updates		= create_update [] [] [];
 		target		= target_index;
 	}]
 
 (* Constraint x <= d, with 'd' a LinearConstraint.p_linear_term : d - x >= 0 *)
-let ct_x_leq_d x d =
-	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d true
+let ct_x_leq_d x d = {
+	discrete_guard   			= None;
+	prebuilt_continuous_guard	= Some (LinearConstraint.px_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d true);
+	continuous_guard			= None;
+}
 
 
 (* Constraint x >= d, with 'd' a LinearConstraint.p_linear_term : x - d >= 0 *)
-let ct_x_geq_d x d =
-	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d false
+let ct_x_geq_d x d = {
+	discrete_guard   			= None;
+	prebuilt_continuous_guard	= Some (LinearConstraint.px_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d false);
+	continuous_guard			= None;
+}
+	
 
 
 (*(* Linear inequality x = d, with d LinearConstraint.p_linear_term : d - x = 0 *)
@@ -76,14 +90,22 @@ let lt_x_eq_d x d =
 
 
 (* Constraint x = d, with d LinearConstraint.p_linear_term : d - x = 0 *)
-let ct_x_eq_d x d =
-	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_eq d false
+let ct_x_eq_d x d = {
+	discrete_guard   			= None;
+	prebuilt_continuous_guard	= Some (LinearConstraint.px_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_eq d false);
+	continuous_guard			= None;
+}
+	
 
 
 (* Linear constraint x = 0 *)
 let lc_x_eq_0 x =
 	let d = LinearConstraint.make_p_linear_term [] NumConst.zero in
-	LinearConstraint.px_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d false
+	{
+	discrete_guard   			= None;
+	prebuilt_continuous_guard	= Some (LinearConstraint.px_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d false);
+	continuous_guard			= None;
+}
 
 
 
@@ -245,7 +267,7 @@ let get_automaton nb_actions automaton_index nosync_index x_obs (parsed_property
 		(* Urgency *)
 		observer_location_urgency,
 		(* Array for invariants *)
-		Array.make nb_locations (truec ()),
+		Array.make nb_locations (true_discrete_continuous_guard ()),
 		(* Array for transitions *)
 		(let transitions = Array.make nb_locations (Array.make nb_actions []) in
 			(* Initialize transitions ! Otherwise pointers problems *)

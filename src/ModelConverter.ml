@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/02/06
+ * Last modified     : 2020/02/10
  *
  ************************************************************)
 
@@ -4097,8 +4097,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
  	
  	let observer_automaton, observer_clock_option = None, None in
 
-(*
-	(*** TODO: reintroduce observers! ***)
 (* Note that the observer has not been checked yet, but it doesn't matter *)
 	let observer_automaton, observer_clock_option = match parsed_property_option with
 		| None -> None, None
@@ -4123,7 +4121,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total ("Automata names : " ^ (string_of_list_of_string_with_sep ", " declared_automata_names));
-	);*)
+	);
 
 
 	
@@ -4297,8 +4295,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		) variables;
 	);
 
- 	raise (NotImplemented "ModelConverted")
- 	(*
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get all the locations *)
@@ -4358,6 +4354,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
+ 	raise (NotImplemented "ModelConverted")
+ 	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create useful parsing structure, used in subsequent functions *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
