@@ -80,8 +80,7 @@ type location_urgency =
 (* Continuous expressions (for guards) *)
 (*------------------------------------------------------------*)
 
-(*** WARNING! similar operators are defined in RationalExpressions! ***)
-type relop = OP_L | OP_LEQ | OP_EQ | OP_GEQ | OP_G
+type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 
 type convex_continuous_expression =
 	| CCE_plus of convex_continuous_expression * convex_continuous_term

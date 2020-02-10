@@ -4278,8 +4278,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	in
 
 
- 	raise (NotImplemented "ModelConverted")
- 	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug prints *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4299,6 +4297,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		) variables;
 	);
 
+ 	raise (NotImplemented "ModelConverted")
+ 	(*
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get all the locations *)

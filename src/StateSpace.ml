@@ -4,12 +4,13 @@
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: Description of the symbolic states and of the state space
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2019/08/09
+ * Last modified     : 2020/02/10
  *
  ************************************************************)
 
@@ -695,7 +696,8 @@ let is_bad program state_space =
 (*------------------------------------------------------------*)
 
 let get_guard state_space state_index combined_transition state_index' =
-	(* Retrieve the model *)
+	raise (NotImplemented ("get_guard"))
+(*	(* Retrieve the model *)
 	let model = Input.get_model () in
 
 	(* Retrieve source and target locations *)
@@ -729,10 +731,10 @@ let get_guard state_space state_index combined_transition state_index' =
 	let discrete_constraint = LinearConstraint.pxd_constraint_of_point discrete_values in
 
 	(* Create the constraint guard ^ D_i = d_i *)
-	LinearConstraint.pxd_intersection (discrete_constraint :: continuous_guards)
+	LinearConstraint.pxd_intersection (discrete_constraint :: continuous_guards)*)
 
 
-(*** NOTE: the function only works for regular resets (it raises NotImplemented for other updates) ***)
+(*(*** NOTE: the function only works for regular resets (it raises NotImplemented for other updates) ***)
 (*** TODO: allow for all resets ***)
 let get_resets state_space state_index combined_transition state_index' =
 	(* Retrieve the model *)
@@ -755,7 +757,7 @@ let get_resets state_space state_index combined_transition state_index' =
 	in
 	
 	(* Keep each clock once *)
-	list_only_once resets
+	list_only_once resets*)
 
 
 (************************************************************)

@@ -10,14 +10,13 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/02/06
+ * Last modified     : 2020/02/10
  *
  ************************************************************)
 
 open OCamlUtilities
 open Exceptions
 open Result
-open RationalExpressions
 open AbstractModel
 open AbstractProperty
 open ImitatorUtilities
@@ -156,7 +155,7 @@ let string_of_declarations model =
 (** Rational expressions *)
 (************************************************************)
 
-let string_of_ccb_relop = function
+let string_of_relop : AbstractModel.relop -> string = function
 	| OP_L		-> "<"
 	| OP_LEQ	-> "<="
 	| OP_EQ		-> "="
@@ -165,46 +164,10 @@ let string_of_ccb_relop = function
 	| OP_G		-> ">"
 
 
-(** Convert a rational_boolean_expression into a string *)
-let string_of_rational_boolean_expression variable_names = function
-	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| RBE_Expression (convex_continuous_expression1, relop, convex_continuous_expression2) ->
-		(string_of_convex_continuous_expression variable_names convex_continuous_expression1)
-		^ " "
-		^ (string_of_boolean_operations relop)
-		^ " "
-		^ (string_of_convex_continuous_expression variable_names convex_continuous_expression2)
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| RBE_Expression_in (convex_continuous_expression1, convex_continuous_expression2, convex_continuous_expression3) ->
-		(string_of_convex_continuous_expression variable_names convex_continuous_expression1)
-		^ " in ["
-		^ (string_of_convex_continuous_expression variable_names convex_continuous_expression2)
-		^ " , "
-		^ (string_of_convex_continuous_expression variable_names convex_continuous_expression3)
-		^ "]"
-
-
-
-(************************************************************)
-(** Guards and invariants *)
-(************************************************************)
-
-(*------------------------------------------------------------*)
-(* Continuous expressions (for guards) *)
-(*------------------------------------------------------------*)
-
-let string_of_ccb_relop = function
-	| CCB_OP_L		-> "<"
-	| CCB_OP_LEQ	-> "<="
-	| CCB_OP_EQ		-> "="
-	| CCB_OP_NEQ	-> "<>"
-	| CCB_OP_GEQ	-> ">="
-	| CCB_OP_G		-> ">"
-
 
 (* Convert an arithmetic expression into a string *)
 (*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
-let string_of_convex_continuous_expression variable_names =
+let rec string_of_convex_continuous_expression variable_names =
 	let rec string_of_convex_continuous_expression = function
 		(* Shortcut: Remove the "+0" / -"0" cases *)
 		| CCE_plus (convex_continuous_expression, CCT_factor (CCF_constant c))
@@ -265,13 +228,40 @@ let string_of_convex_continuous_expression variable_names =
 
 
 
+(** Convert a rational_boolean_expression into a string *)
+let string_of_rational_boolean_expression variable_names = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| RBE_Expression (convex_continuous_expression1, relop, convex_continuous_expression2) ->
+		(string_of_convex_continuous_expression variable_names convex_continuous_expression1)
+		^ " "
+		^ (string_of_relop relop)
+		^ " "
+		^ (string_of_convex_continuous_expression variable_names convex_continuous_expression2)
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| RBE_Expression_in (convex_continuous_expression1, convex_continuous_expression2, convex_continuous_expression3) ->
+		(string_of_convex_continuous_expression variable_names convex_continuous_expression1)
+		^ " in ["
+		^ (string_of_convex_continuous_expression variable_names convex_continuous_expression2)
+		^ " , "
+		^ (string_of_convex_continuous_expression variable_names convex_continuous_expression3)
+		^ "]"
+
+
+
+(************************************************************)
+(** Guards and invariants *)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(* Continuous expressions (for guards) *)
+(*------------------------------------------------------------*)
 
 let string_of_convex_continuous_boolean_inequality variable_names (convex_continuous_expression_l , ccb_relop , convex_continuous_expression_r) =
-	(string_of_convex_continuous_expression convex_continuous_expression_l)
+	(string_of_convex_continuous_expression variable_names convex_continuous_expression_l)
 	^ " " ^
-	(string_of_ccb_relop ccb_relop)
+	(string_of_relop ccb_relop)
 	^ " " ^
-	(string_of_convex_continuous_expression convex_continuous_expression_r)
+	(string_of_convex_continuous_expression variable_names convex_continuous_expression_r)
 
 
 
@@ -280,7 +270,7 @@ let string_of_convex_continuous_boolean_expression variable_names = function
 	| CCBE_True -> string_of_true (** True *)
 	| CCBE_False -> string_of_false (** False *)
 	| CCBE_conjunction convex_continuous_boolean_inequality_list ->
-		string_of_list_of_string_with_sep LinearConstraint.string_of_and (List.map string_of_convex_continuous_boolean_inequality convex_continuous_boolean_inequality_list) (** Conjunction *)
+		string_of_list_of_string_with_sep LinearConstraint.string_of_and (List.map (string_of_convex_continuous_boolean_inequality variable_names) convex_continuous_boolean_inequality_list) (** Conjunction *)
 
 
 (*------------------------------------------------------------*)
@@ -318,7 +308,7 @@ let string_of_discrete_continuous_guard variable_names discrete_continuous_guard
 	(
 	match discrete_continuous_guard.prebuilt_continuous_guard with
 		| None -> ""
-		| Some prebuilt_continuous_guard -> string_of_px_linear_constraint variable_names prebuilt_continuous_guard
+		| Some prebuilt_continuous_guard -> LinearConstraint.string_of_px_linear_constraint variable_names prebuilt_continuous_guard
 	)
 	^
 	
@@ -335,7 +325,7 @@ let string_of_discrete_continuous_guard variable_names discrete_continuous_guard
 	(
 	match discrete_continuous_guard.continuous_guard with
 		| None -> ""
-		| Some continuous_guard -> string_of_convex_continuous_boolean_expression variable_names discrete_guard
+		| Some continuous_guard -> string_of_convex_continuous_boolean_expression variable_names continuous_guard
 	)
 
 
@@ -356,9 +346,10 @@ let string_of_guard variable_names = function
 
 (** Convert a guard into a string *)
 let string_of_guard variable_names = function
-	| True_guard > LinearConstraint.string_of_true
-	| False_guard -> LinearConstraint.string_of_false
-	| Discrete_continuous_guard discrete_continuous_guard -> string_of_discrete_continuous_guard discrete_continuous_guard
+	| True_guard ->		LinearConstraint.string_of_true
+	| False_guard ->	LinearConstraint.string_of_false
+	| Discrete_continuous_guard discrete_continuous_guard ->
+		string_of_discrete_continuous_guard variable_names discrete_continuous_guard
 
 
 (** Invariant: technically a guard *)
@@ -375,7 +366,7 @@ let string_of_invariant = string_of_guard
 (*------------------------------------------------------------*)
 
 (** Boolean expression on discrete variables (for updates) *)
-let rec string_of_discrete_boolean_expression variable_names =
+let rec string_of_discrete_boolean_expression variable_names = function
 	| DBE_True -> string_of_true (** True *)
 	
 	| DBE_False -> string_of_false  (** False *)
@@ -389,7 +380,7 @@ let rec string_of_discrete_boolean_expression variable_names =
 		^
 		(string_of_discrete_boolean_expression variable_names discrete_boolean_expression_2)
 	
-	| DBE_Or (discrete_boolean_expression_1 , discrete_boolean_expression_2) (** Disjunction *)
+	| DBE_Or (discrete_boolean_expression_1 , discrete_boolean_expression_2) (** Disjunction *) ->
 		(string_of_discrete_boolean_expression variable_names discrete_boolean_expression_1)
 		^
 		" | "
@@ -403,7 +394,7 @@ let rec string_of_discrete_boolean_expression variable_names =
 
 
 
-
+(*
 let rec string_of_state_predicate_factor model = function
 	| State_predicate_factor_NOT state_predicate_factor ->
 		"not(" ^ (string_of_state_predicate_factor model state_predicate_factor) ^ ")"
@@ -437,7 +428,7 @@ and string_of_state_predicate model = function
 	| State_predicate_true -> string_of_true
 	
 	| State_predicate_false -> string_of_false
-
+*)
 
 
 
@@ -470,7 +461,7 @@ let string_of_synclabs model automaton_index =
 let string_of_invariant model automaton_index location_index =
 	(* Invariant *)
 	"invariant "
-	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index))
+	^ (string_of_invariant model.variable_names (model.invariants automaton_index location_index))
 
 
 	(* Handle stopwatches *)
@@ -492,7 +483,8 @@ let string_of_sync model action_index =
 
 (** generic template for converting clock updates into string *)
 let string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep =
-	match clock_updates with
+	raise (NotImplemented "string_of_clock_updates_template")
+(*	match clock_updates with
 		| No_update -> ""
 		| Resets list_of_clocks ->
 			string_of_list_of_string_with_sep sep (List.map (fun variable_index ->
@@ -501,16 +493,17 @@ let string_of_clock_updates_template model clock_updates wrap_reset wrap_expr se
 		| Updates list_of_clocks_lt ->
 			string_of_list_of_string_with_sep sep (List.map (fun (variable_index, linear_term) ->
 				wrap_expr variable_index linear_term
-			) list_of_clocks_lt)
+			) list_of_clocks_lt)*)
 
 (** Convert a clock update into a string *)
 let string_of_clock_updates model clock_updates =
-	let sep = ", " in
+	raise (NotImplemented "string_of_clock_updates")
+(*	let sep = ", " in
 	let wrap_reset variable_index =  (model.variable_names variable_index) ^ " := 0" in
 	let wrap_expr variable_index linear_term = (model.variable_names variable_index)
 			^ " := "
 			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term) in
-	string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
+	string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep*)
 
 
 
@@ -539,49 +532,50 @@ let string_of_logical_operators lop =
 	| Not_bool _ -> "<>"
 	| And_bool _ -> " && "
 	| Or_bool _ -> " || "
-	| Discrete_boolean_expression (_, op, _) -> " " ^ (string_of_boolean_operations op) ^ " "
+	| Discrete_boolean_expression (_, op, _) -> " " ^ (string_of_discrete_boolean_expression_operations op) ^ " "
 
 (** Generic template to convert a Boolean expression into a string *)
-let rec string_of_boolean_template variable_names boolean_expr str_lop =
+let rec string_of_discrete_boolean_expression_template variable_names boolean_expr str_lop =
 	let symbol = str_lop boolean_expr in
 	match boolean_expr with
 		| True_bool -> string_of_true
 		| False_bool -> string_of_false
-		| Not_bool b -> symbol ^ "(" ^ (string_of_boolean_template variable_names b str_lop) ^ ")"
-		| And_bool (b1, b2) -> (string_of_boolean_template variable_names b1 str_lop)
-													^ symbol ^ (string_of_boolean_template variable_names b2 str_lop)
-		| Or_bool (b1, b2) -> (string_of_boolean_template variable_names b1 str_lop)
-												^ symbol ^ (string_of_boolean_template variable_names b2 str_lop)
+		| Not_bool b -> symbol ^ "(" ^ (string_of_discrete_boolean_expression_template variable_names b str_lop) ^ ")"
+		| And_bool (b1, b2) -> (string_of_discrete_boolean_expression_template variable_names b1 str_lop)
+													^ symbol ^ (string_of_discrete_boolean_expression_template variable_names b2 str_lop)
+		| Or_bool (b1, b2) -> (string_of_discrete_boolean_expression_template variable_names b1 str_lop)
+												^ symbol ^ (string_of_discrete_boolean_expression_template variable_names b2 str_lop)
 		| Expression_bool (expr1, op, expr2) -> (string_of_convex_continuous_expression variable_names expr1)
 																					^ symbol
 																					^ (string_of_convex_continuous_expression variable_names expr2)
 
 (** Convert a Boolean expression into a string *)
-let string_of_boolean variable_names boolean_expr =
-	string_of_boolean_template variable_names boolean_expr string_of_logical_operators*)
+let string_of_discrete_boolean_expression variable_names boolean_expr =
+	string_of_discrete_boolean_expression_template variable_names boolean_expr string_of_logical_operators*)
 
-
+(*
 (** Convert a Boolean expression into a string *)
-let rec string_of_boolean variable_names = function
-	| True_bool -> string_of_true
-	| False_bool -> string_of_false
-	| Not_bool b -> "<> (" ^ (string_of_boolean variable_names b) ^ ")"
+let rec string_of_discrete_boolean_expression variable_names = function
+	| DBE_True -> string_of_true
+	| DBE_False -> string_of_false
+	| Not_bool b -> "<> (" ^ (string_of_discrete_boolean_expression variable_names b) ^ ")"
 	| And_bool (b1, b2) ->
-		(string_of_boolean variable_names b1)
+		(string_of_discrete_boolean_expression variable_names b1)
 		^ " && "
-		^ (string_of_boolean variable_names b2)
+		^ (string_of_discrete_boolean_expression variable_names b2)
 	| Or_bool (b1, b2) ->
-		(string_of_boolean variable_names b1)
+		(string_of_discrete_boolean_expression variable_names b1)
 		^ " || "
-		^ (string_of_boolean variable_names b2)
+		^ (string_of_discrete_boolean_expression variable_names b2)
 	| Rational_boolean_expression rational_boolean_expression ->
 		string_of_rational_boolean_expression variable_names rational_boolean_expression
-
+*)
 
 
 (** Return if there is no clock updates *)
 let no_clock_updates clock_updates =
-	clock_updates = No_update || clock_updates = Resets [] || clock_updates = Updates []
+	raise (NotImplemented "no_clock_updates")
+(* 	clock_updates = No_update || clock_updates = Resets [] || clock_updates = Updates [] *)
 
 (** Returns when add comma separators between clock and discrete updates and
 between discrete and conditional updates *)
@@ -617,7 +611,7 @@ let string_of_conditional_updates_template model conditional_updates string_of_c
 
 (** Convert a list of conditional updates into a string *)
 let string_of_conditional_updates model conditional_updates =
-	let wrap_if boolean_expr  = "if (" ^ (string_of_boolean model.variable_names boolean_expr) ^  ") then " in
+	let wrap_if boolean_expr  = "if (" ^ (string_of_discrete_boolean_expression model.variable_names boolean_expr) ^  ") then " in
 	let wrap_else = " else " in
 	let wrap_end = " end" in
 	let sep = ", " in
@@ -864,7 +858,8 @@ let string_of_loc_predicate (model : AbstractModel.abstract_model) = function
 
 let string_of_simple_predicate (model : AbstractModel.abstract_model) = function
 	| Rational_boolean_expression rational_boolean_expression ->
-		string_of_rational_boolean_expression model.variable_names rational_boolean_expression
+		raise (NotImplemented "string_of_simple_predicate")
+(* 		string_of_rational_boolean_expression model.variable_names rational_boolean_expression *)
 	| Loc_predicate loc_predicate ->
 		string_of_loc_predicate model loc_predicate
 
