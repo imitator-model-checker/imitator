@@ -4559,24 +4559,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 *)
 
-	(*** TODO!!! reintroduce differently ***)
-(*	let parsed_constraints , (p1_min , p1_max) , (p2_min , p2_max)  = parsed_carto_definition in
-	let carto_linear_constraints = List.map (fun (parsed_convex_predicate , tile_nature) ->
-		(* Check well-formedness *)
-		if all_variables_defined_in_convex_predicate variable_names constants parsed_convex_predicate then(
-			(* Convert to a AbstractModel.linear_constraint *)
-			LinearConstraint.cast_p_of_pxd_linear_constraint (linear_constraint_of_convex_predicate index_of_variables constants parsed_convex_predicate) true
-			,
-			(* Convert the tile nature *)
-			convert_tile_nature tile_nature
-		)else(
-			(* Set well-formedness to false *)
-			well_formed_carto := false;
-			(* Return anything *)
-			LinearConstraint.p_false_constraint () , AbstractModel.Unknown
-		)
-	) parsed_constraints in*)
-	(*** TODO!!! reintroduce differently ***)
+
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
