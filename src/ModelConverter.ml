@@ -4557,9 +4557,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let well_formed_optimization = check_optimization parameter_names parsed_optimization_definition in*)
 
 
-*)
-
-
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
