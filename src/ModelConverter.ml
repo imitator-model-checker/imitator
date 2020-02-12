@@ -1484,7 +1484,6 @@ let all_locations_different =
 		true
 
 
-(*
 (*------------------------------------------------------------*)
 (* Check that an update is well formed *)
 (*------------------------------------------------------------*)
@@ -1556,7 +1555,6 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 		List.fold_left (fun acc u ->
 			(check_update_normal u) && acc
 		) true (updates_if @ updates_else)
-*)
 
 (*------------------------------------------------------------*)
 (* Check that a sync is well formed *)

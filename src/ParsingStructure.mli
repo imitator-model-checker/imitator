@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/02/05
+ * Last modified     : 2020/02/12
  *
  ****************************************************************)
 
@@ -151,40 +151,43 @@ type parsed_convex_continuous_boolean_expressions = parsed_convex_continuous_boo
 (****************************************************************)
 (** Automata *)
 (****************************************************************)
-(* Type of locations: urgent or not *)
-type parsed_urgency =
-	| Parsed_location_urgent
-	| Parsed_location_nonurgent
 
-(* Type of locations: accepting or not *)
-type parsed_acceptance =
-	| Parsed_location_accepting
-	| Parsed_location_nonaccepting
+(*------------------------------------------------------------*)
+(* Updates *)
+(*------------------------------------------------------------*)
 
-type parsed_sync =
-	| Sync of sync_name
-	| NoSync
+type parsed_discrete_term =
+	(*** NOTE: for parsing, this includes normal clock updates ***)
+	| Parsed_continuous_term of parsed_continuous_arithmetic_expression
+	(*** TODO ***)
+	| Parsed_string_term of string
 
+(** basic updating *)
+type normal_update = variable_name * parsed_discrete_term
+
+(** conditional updating - NOTE: it does not support nested conditions *)
+type condition_update = parsed_continuous_boolean_expression * normal_update list * normal_update list
 
 (** Updates on transitions *)
 type parsed_update =
 	| Normal_update of normal_update (** Updates without conditions *)
 	| Condition_update of condition_update (** Updates with conditions *)
 
-(** basic updating *)
-and normal_update = variable_name * parsed_discrete_term
 
-(** conditional updating - NOTE: it does not support nested conditions *)
-and condition_update = parsed_continuous_boolean_expression * normal_update list * normal_update list
-
-and parsed_discrete_term =
-	(*** NOTE: for parsing, this includes normal clock updates ***)
-	| Parsed_continuous_term of parsed_continuous_arithmetic_expression
-	(*** TODO ***)
-	| Parsed_string_term of string
+(*------------------------------------------------------------*)
+(* Guards and invariants *)
+(*------------------------------------------------------------*)
 
 type parsed_guard		= parsed_convex_continuous_boolean_expressions
 type parsed_invariant	= parsed_convex_continuous_boolean_expressions
+
+(*------------------------------------------------------------*)
+(* Transitions *)
+(*------------------------------------------------------------*)
+
+type parsed_sync =
+	| Sync of sync_name
+	| NoSync
 
 
 (* Transition = Guard * update list * sync label * destination location *)
@@ -194,6 +197,20 @@ type parsed_transition = {
 	label		: parsed_sync;
 	target		: location_name;
 }
+
+(*------------------------------------------------------------*)
+(* Locations *)
+(*------------------------------------------------------------*)
+
+(* Type of locations: urgent or not *)
+type parsed_urgency =
+	| Parsed_location_urgent
+	| Parsed_location_nonurgent
+
+(* Type of locations: accepting or not *)
+type parsed_acceptance =
+	| Parsed_location_accepting
+	| Parsed_location_nonaccepting
 
 (* Location = Name * Urgent type * Accepting type * Cost * Invariant * list of stopped clocks * transitions *)
 type parsed_location = {
