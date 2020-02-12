@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/02/05
+ * Last modified     : 2020/02/12
  *
  ************************************************************/
 
@@ -529,10 +529,10 @@ transition:
 		let update_list, sync = $3 in
 		(* Create structure *)
 		{
-			guard		= $2;
-			updates		= update_list;
-			label		= sync;
-			target		= $5;
+			parsed_guard		= $2;
+			parsed_updates		= update_list;
+			parsed_label		= sync;
+			target_name			= $5;
 		}
 	}
 ;

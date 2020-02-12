@@ -192,10 +192,10 @@ type parsed_sync =
 
 (* Transition = Guard * update list * sync label * destination location *)
 type parsed_transition = {
-	guard		: parsed_guard;
-	updates		: parsed_update list;
-	label		: parsed_sync;
-	target		: location_name;
+	parsed_guard		: parsed_guard;
+	parsed_updates		: parsed_update list;
+	parsed_label		: parsed_sync;
+	target_name			: location_name;
 }
 
 (*------------------------------------------------------------*)
