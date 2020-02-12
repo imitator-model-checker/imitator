@@ -4557,14 +4557,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let well_formed_optimization = check_optimization parameter_names parsed_optimization_definition in*)
 
 
-
-	
-
-	(*	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Check polyhedra definition in (optional) carto mode *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let well_formed_carto = ref true in
-
 *)
 
 	(*** TODO!!! reintroduce differently ***)
