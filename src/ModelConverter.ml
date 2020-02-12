@@ -1360,7 +1360,7 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 			List.iter (fun (transition : parsed_transition) ->
 				(* Gather in the convex predicate (guard) *)
 				print_message Verbose_total ("            Gathering variables in guard");
-				get_variables_in_parsed_convex_continuous_boolean_expressions all_variables_used transition.guard;
+				get_variables_in_parsed_convex_continuous_boolean_expressions all_variables_used transition.parsed_guard;
 
 				(* Gather in the updates *)
 				print_message Verbose_total ("            Gathering variables in updates");
@@ -1372,7 +1372,7 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 					(* Second add the variable names in the update expression *)
 					(* get_variables_in_parsed_continuous_arithmetic_expression all_variables_used arithmetic_expression; *)
 					get_variables_in_parsed_update all_variables_used update_expression
-					) transition.updates;
+					) transition.parsed_updates;
 				) location.transitions;
 			) locations;
 		) parsed_model.automata;
@@ -1487,21 +1487,51 @@ let all_locations_different =
 (*------------------------------------------------------------*)
 (* Check that an update is well formed *)
 (*------------------------------------------------------------*)
-let check_update index_of_variables type_of_variables variable_names removed_variable_names constants automaton_name update =
 
-	let check_update_normal (variable_name, parsed_rational_term) =
-	match parsed_rational_term with
-	| Parsed_continuous_term arithmetic_expression ->
-		(* Check whether this variable is to be removed because unused elswhere than in resets *)
-		let to_be_removed = List.mem variable_name removed_variable_names in
+
+(*type parsed_discrete_term =
+	(*** NOTE: for parsing, this includes normal clock updates ***)
+	| Parsed_continuous_term of parsed_continuous_arithmetic_expression
+	(*** TODO ***)
+	| Parsed_string_term of string
+
+
+let check_update error_details useful_parsing_model_information = function
+	| Normal_update (variable_name, parsed_discrete_term) ->
+
+		(* 1. Check variable name *)
+		
+		(* Check existence *)
+		let check1 =
+			if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
+				print_error ("The variable `" ^ variable_name ^ "` updated " ^ error_details ^ " was not declared."); false
+			) else true
+		in
+		
+		(* Check type *)
+		
+		(* 2. Check discrete term *)
+		
+	
+	| Condition_update condition_update ->*)
+
+
+let check_update error_details useful_parsing_model_information update =
+
+	let check_update_normal (variable_name, parsed_discrete_term) =
+	
+	match parsed_discrete_term with
+	| Parsed_continuous_term continuous_arithmetic_expression ->
+		(* Check whether this variable is to be removed because unused elsewhere than in resets *)
+		let to_be_removed = List.mem variable_name useful_parsing_model_information.removed_variable_names in
 
 		(* Get the index of the variable *)
-		let index, declared = try (Hashtbl.find index_of_variables variable_name, true)
+		let index, declared = try (Hashtbl.find useful_parsing_model_information.index_of_variables variable_name, true)
 		with Not_found -> (
 			if to_be_removed then 0, true else (
-				print_error ("The variable `" ^ variable_name ^ "` used in an update in automaton `" ^ automaton_name ^ "` was not declared."); 0, false
+				print_error ("The variable `" ^ variable_name ^ "` updated " ^ error_details ^ " was not declared."); 0, false
 			)
-			)
+		)
 		in
 
 		if not declared then false else (
@@ -1510,36 +1540,44 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 			(* Get the type of the variable *)
 			print_message Verbose_total ("                Getting the type of the variable`" ^ variable_name ^ "`");
 
-			let type_of_variable = try (type_of_variables index)
+			let type_of_variable = try (useful_parsing_model_information.type_of_variables index)
 			with Invalid_argument comment -> (
-				raise (InternalError ("The variable `" ^ variable_name ^ "` was not found in `" ^ automaton_name ^ "`, although this has been checked before. OCaml says: " ^ comment ^ "."))
-				) in
+				raise (InternalError ("The variable `" ^ variable_name ^ "` " ^ error_details ^ " was not found, although this has been checked just before. OCaml says: " ^ comment ^ "."))
+				)
+			in
 
 			print_message Verbose_total ("                Checking the type of the variable `" ^ variable_name ^ "`");
 			match type_of_variable with
+
 			(* Type clock: allow any linear term in updates: so just check that variables have been declared *)
 			| AbstractModel.Var_type_clock ->
-			print_message Verbose_total ("                A clock!");
-			all_variables_defined_in_parsed_continuous_arithmetic_expression variable_names constants arithmetic_expression
+				print_message Verbose_total ("                A clock!");
+				
+				(*** TODO: Check linearity! ***)
+			
+				check_all_variables_defined_in_continuous_arithmetic_expression error_details useful_parsing_model_information.variable_names useful_parsing_model_information.constants continuous_arithmetic_expression
 
 			(* Case of a discrete var.: allow only an arithmetic expression of constants and discrete *)
 			| AbstractModel.Var_type_discrete Rational ->
-			print_message Verbose_total ("                A discrete rational!");
-			let result = check_only_discretes_in_parsed_continuous_arithmetic_expression index_of_variables type_of_variables constants arithmetic_expression in
-			if not result then
-				(print_error ("The variable `" ^ variable_name ^ "` is a discrete rational and its update can only be an arithmetic expression over constants and discrete rationals in automaton `" ^ automaton_name ^ "`."); false)
-			else (
-				print_message Verbose_total ("                Check passed.");
-				true
-			)
+				print_message Verbose_total ("                A discrete rational!");
+				
+				(*** TODO: check only discrete + variables all declared ***)
+				
+				let result = raise (NotImplemented ("discrete variables in check_updates")) (*check_only_discretes_in_parsed_continuous_arithmetic_expression index_of_variables type_of_variables constants continuous_arithmetic_expression*) in
+				if not result then
+					(print_error ("The variable `" ^ variable_name ^ "` is a discrete rational and its update can only be an arithmetic expression over constants and discrete rationals " ^ error_details ^ "."); false)
+				else (
+					print_message Verbose_total ("                Check passed.");
+					true
+				)
 
 			(* Type boolean: TODO *)
 			| AbstractModel.Var_type_discrete Boolean ->
-			print_message Verbose_total ("                A Boolean!");
-			raise (NotImplemented "ModelConverter: Booleans in check_update")
+				print_message Verbose_total ("                A Boolean!");
+				raise (NotImplemented "ModelConverter: Booleans in check_update")
 
 			(* Case of a parameter: forbidden! *)
-			| AbstractModel.Var_type_parameter -> print_error ("The variable `" ^ variable_name ^ "` is a parameter and cannot be updated in automaton `" ^ automaton_name ^ "`."); false
+			| AbstractModel.Var_type_parameter -> print_error ("The variable `" ^ variable_name ^ "` updated " ^ error_details ^ " is a parameter and therefore should not be updated."); false
 		)
 		)
 	
@@ -1551,10 +1589,23 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 
 	match update with
 	| Normal_update update -> check_update_normal update
-	| Condition_update (_, updates_if, updates_else) ->
-		List.fold_left (fun acc u ->
-			(check_update_normal u) && acc
-		) true (updates_if @ updates_else)
+	
+	| Condition_update (update_condition, updates_if, updates_else) ->
+		(* Check that all variables are defined in the condition, and that only discrete variables are involved *)
+		evaluate_and
+		(raise (NotImplemented "check all variables defined and only discrete variables involved"))
+		
+		
+		(* Check all updates are well-formed using the above-function *)
+		(
+			List.fold_left (fun acc u ->
+				evaluate_and
+				(check_update_normal u)
+				acc
+			) true (updates_if @ updates_else)
+		)
+
+
 
 (*------------------------------------------------------------*)
 (* Check that a sync is well formed *)
@@ -1579,7 +1630,7 @@ let synclab_used_everywhere automata synclab_name =
 			(* Check that at least one location contains the synclab *)
 			if not (List.exists (fun (location : parsed_location) ->
 				(* Check that at least one transition contains the synclab *)
-				List.exists (fun transition -> transition.label = (Sync synclab_name)) location.transitions
+				List.exists (fun transition -> transition.parsed_label = (Sync synclab_name)) location.transitions
 				) locations ) then (
 				(* No location contains the synclab: warning and exception (to save a bit of time) *)
 				(*** TODO: perform exhaustive search, i.e., remove the exception mechanism ***)
@@ -1660,28 +1711,31 @@ let check_automata useful_parsing_model_information automata =
 
 
 			(* Check the invariant *)
-
-			(*** TODO: preciser quel automate et quelle location en cas d'erreur ***)
-
 			print_message Verbose_total ("          Checking invariant");
 			if not (check_all_variables_defined_in_convex_continuous_boolean_expressions ("in invariant of location `" ^ location.name ^ "` in automaton `" ^ automaton_name ^ "`") variable_names constants location.invariant) then well_formed := false;
 
 
 			(* Check transitions *)
 			print_message Verbose_total ("          Checking transitions");
-			List.iter (fun (convex_predicate, updates, sync, target_location_name) ->
+			List.iter (fun transition ->
 				(* Check the guard *)
 				print_message Verbose_total ("            Checking guard");
-				if not (check_all_variables_defined_in_convex_continuous_boolean_expressions ("in guard leaving location `" ^ location.name ^ "` in automaton `" ^ automaton_name ^ "`") variable_names constants convex_predicate) then well_formed := false;
+				
+				(*** TODO: check linearity over clock variables! ***)
+				
+				if not (check_all_variables_defined_in_convex_continuous_boolean_expressions ("in guard leaving location `" ^ location.name ^ "` in automaton `" ^ automaton_name ^ "`") variable_names constants transition.parsed_guard) then well_formed := false;
+				
 				(* Check the updates *)
 				print_message Verbose_total ("            Checking updates");
-				List.iter (fun update -> if not (check_update index_of_variables type_of_variables variable_names removed_variable_names constants automaton_name update) then well_formed := false) updates;
+				List.iter (fun update -> if not (check_update ("in update leaving location `" ^ location.name ^ "` in automaton `" ^ automaton_name ^ "`") useful_parsing_model_information update) then well_formed := false) transition.parsed_updates;
+				
 				(* Check the sync *)
-				print_message Verbose_total ("            Checking sync name ");
-				if not (check_sync sync_name_list automaton_name sync) then well_formed := false;
+				print_message Verbose_total ("            Checking synchronization label name ");
+				if not (check_sync sync_name_list automaton_name transition.parsed_label) then well_formed := false;
+				
 				(* Check that the target location exists for this automaton *)
-				if not (in_array target_location_name array_of_location_names.(index)) then(
-					print_error ("The target location `" ^ target_location_name ^ "` used in automaton `" ^ automaton_name ^ "` does not exist.");
+				if not (in_array transition.target_name array_of_location_names.(index)) then(
+					print_error ("The target location `" ^ transition.target_name ^ "` used in automaton `" ^ automaton_name ^ "` does not exist.");
 					well_formed := false);
 				) location.transitions;
 			) locations;
@@ -4477,7 +4531,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		then raise InvalidModel;
 
 
- 	raise (NotImplemented "ModelConverted")
+ 	raise (NotImplemented "ModelConverter: work in progress…")
  	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the init_definition *)
