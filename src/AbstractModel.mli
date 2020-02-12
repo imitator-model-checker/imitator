@@ -108,7 +108,7 @@ type convex_continuous_boolean_expression =
 
 
 (*------------------------------------------------------------*)
-(** Convec Boolean expression on discrete variables (for guards) *)
+(** Convex Boolean expression on discrete variables (for guards) *)
 (*------------------------------------------------------------*)
 
 (* A discrete Boolean expression is just a continuous Boolean expression without clock variables in it *)

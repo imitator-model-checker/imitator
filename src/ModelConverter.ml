@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/02/10
+ * Last modified     : 2020/02/12
  *
  ************************************************************)
 
@@ -126,7 +126,7 @@ type useful_parsing_model_information = {
 
 (************************************************************)
 (************************************************************)
-(** Checking and converting discrete arithmetic expressions *)
+(** Checking and converting continuous expressions *)
 (************************************************************)
 (************************************************************)
 
@@ -161,7 +161,7 @@ and get_variables_in_parsed_continuous_factor variables_used_ref = function
 	| Parsed_CF_variable variable_name ->
 		(* Add the variable name to the set and update the reference *)
 		if verbose_mode_greater Verbose_total then(
-			print_message Verbose_total ("  New variable found: '" ^ variable_name ^ "'.");
+			print_message Verbose_total ("  New variable found: `" ^ variable_name ^ "`.");
 		);
 		variables_used_ref := StringSet.add variable_name !variables_used_ref
 
@@ -234,13 +234,86 @@ and get_variables_in_parsed_continuous_boolean_expression variables_used_ref = f
 	| Parsed_CBE_continuous_inequality parsed_continuous_inequality -> get_variables_in_parsed_continuous_inequality variables_used_ref parsed_continuous_inequality
 	
 
+(************************************************************)
+(** Checking continuous arithmetic expressions *)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(* Getting variables in continuous expressions (for guards) *)
+(*------------------------------------------------------------*)
+	
+
+let rec check_all_variables_defined_in_continuous_arithmetic_expression error_details variable_names constants = function
+	| Parsed_CAE_plus (parsed_continuous_arithmetic_expression, parsed_continuous_term)
+	| Parsed_CAE_minus (parsed_continuous_arithmetic_expression, parsed_continuous_term)
+		->
+		evaluate_and
+		(check_all_variables_defined_in_continuous_arithmetic_expression error_details variable_names constants  parsed_continuous_arithmetic_expression)
+		(check_all_variables_defined_in_continuous_term error_details variable_names constants parsed_continuous_term)
+		
+	| Parsed_CAE_term parsed_continuous_term
+		->
+		(check_all_variables_defined_in_continuous_term error_details variable_names constants parsed_continuous_term)
+
+and check_all_variables_defined_in_continuous_term error_details variable_names constants = function
+	| Parsed_CT_mul (parsed_continuous_term, parsed_continuous_factor)
+	| Parsed_CT_div (parsed_continuous_term, parsed_continuous_factor)
+		->
+		evaluate_and
+		(check_all_variables_defined_in_continuous_term error_details variable_names constants  parsed_continuous_term)
+		(check_all_variables_defined_in_continuous_factor error_details variable_names constants parsed_continuous_factor)
+
+	| Parsed_CT_factor parsed_continuous_factor ->
+	check_all_variables_defined_in_continuous_factor error_details variable_names constants parsed_continuous_factor
+
+and check_all_variables_defined_in_continuous_factor error_details variable_names constants = function
+	| Parsed_CF_variable variable_name ->
+		if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
+			print_error ("The variable `" ^ variable_name ^ "` used in an arithmetic expression " ^ error_details ^ " was not declared."); false
+		) else true
+	
+	(* No check for constants *)
+	| Parsed_CF_constant _ -> true
+	
+	| Parsed_CF_expression parsed_continuous_arithmetic_expression -> check_all_variables_defined_in_continuous_arithmetic_expression error_details variable_names constants parsed_continuous_arithmetic_expression
+		
+	| Parsed_CF_unary_min parsed_continuous_factor -> check_all_variables_defined_in_continuous_factor error_details variable_names constants parsed_continuous_factor
+
+
+let check_all_variables_defined_in_continuous_inequality error_details variable_names constants = function
+	| Parsed_expression (parsed_continuous_arithmetic_expression_l , _ , parsed_continuous_arithmetic_expression_r) ->
+		(* Check both sides; relop isn't relevant *)
+		evaluate_and
+		(check_all_variables_defined_in_continuous_arithmetic_expression error_details variable_names constants parsed_continuous_arithmetic_expression_l)
+		(check_all_variables_defined_in_continuous_arithmetic_expression error_details variable_names constants parsed_continuous_arithmetic_expression_r)
+		
+	| Parsed_expression_in (parsed_continuous_arithmetic_expression_1, parsed_continuous_arithmetic_expression_2, parsed_continuous_arithmetic_expression_3) ->
+		(* Check all expressions *)
+		let check1 = check_all_variables_defined_in_continuous_arithmetic_expression error_details variable_names constants parsed_continuous_arithmetic_expression_1 in
+		let check2 = check_all_variables_defined_in_continuous_arithmetic_expression error_details variable_names constants parsed_continuous_arithmetic_expression_2 in
+		let check3 = check_all_variables_defined_in_continuous_arithmetic_expression error_details variable_names constants parsed_continuous_arithmetic_expression_3 in
+		check1 && check2 && check3
+
+
+let check_all_variables_defined_in_convex_continuous_boolean_expression error_details variable_names constants = function
+	| Parsed_CCBE_True (** True *)
+	| Parsed_CCBE_False (** False *)
+		-> true
+	| Parsed_CCBE_continuous_inequality parsed_continuous_inequality
+		-> check_all_variables_defined_in_continuous_inequality error_details variable_names constants parsed_continuous_inequality
+
+let check_all_variables_defined_in_convex_continuous_boolean_expressions (error_details : string) (variable_names : string list) (constants : (Automaton.variable_name , NumConst.t) Hashtbl.t) =
+	(* `List.fold_left` instead of List.for_all to make sure we do check all members, better for user feedback *)
+	List.fold_left (fun current_check convex_continuous_boolean_expression ->
+		evaluate_and
+		current_check
+		(check_all_variables_defined_in_convex_continuous_boolean_expression error_details variable_names constants convex_continuous_boolean_expression)
+	)
+	true
+
+
 (*
 		
-(************************************************************)
-(** Checking discrete arithmetic expressions *)
-(************************************************************)
-
-
 (*------------------------------------------------------------*)
 (* Generic function to test something in discrete updates *)
 (*------------------------------------------------------------*)
@@ -287,7 +360,7 @@ and check_f_in_parsed_continuous_arithmetic_expression f = function
 let all_variables_defined_in_parsed_continuous_arithmetic_expression variable_names constants =
   check_f_in_parsed_continuous_arithmetic_expression (fun variable_name ->
       if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
-        print_error ("The variable '" ^ variable_name ^ "' used in an arithmetic expression was not declared."); false
+        print_error ("The variable `" ^ variable_name ^ "` used in an arithmetic expression was not declared."); false
       ) else true
     )
 
@@ -309,7 +382,7 @@ let check_only_discretes_in_parsed_continuous_arithmetic_expression index_of_var
         ) with Not_found -> (
             (* Variable not found! *)
             (*** TODO: why is this checked here…? It should have been checked before ***)
-            print_error ("The variable '" ^ variable_name ^ "' used in an update was not declared.");
+            print_error ("The variable `" ^ variable_name ^ "` used in an update was not declared.");
             false
           )
       )
@@ -346,7 +419,7 @@ let valuate_parsed_continuous_arithmetic_expression constants =
 		if Hashtbl.mem constants variable_name then (
 			true
 		) else (
-			print_error ("Variable '" ^ variable_name ^ "' cannot be used at this place in an update.");
+			print_error ("Variable `" ^ variable_name ^ "` cannot be used at this place in an update.");
 			false
 		)
 		
@@ -402,7 +475,7 @@ let rational_arithmetic_expression_of_parsed_continuous_arithmetic_expression in
 			(* Convert *)
 			DF_constant value
 			) else (
-			raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although this should have been checked before."))
+			raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` although this should have been checked before."))
 			)
 		)
 		| Parsed_CF_constant var_value -> DF_constant var_value
@@ -449,7 +522,7 @@ let rational_arithmetic_expression_of_parsed_rational_arithmetic_expression inde
 			(* Convert *)
 			DF_constant value
 			) else (
-			raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although this should have been checked before."))
+			raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` although this should have been checked before."))
 			)
 		)
 		| Parsed_CF_constant var_value -> DF_constant var_value
@@ -497,7 +570,7 @@ let rec valuate_parsed_continuous_arithmetic_expression constants = function
 		(* Retrieve the value of the global constant *)
 		Hashtbl.find constants variable_name
 		) else (
-		raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' in function 'valuate_parsed_continuous_arithmetic_expression' although it should have been checked before."))
+		raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'valuate_parsed_continuous_arithmetic_expression' although it should have been checked before."))
 		)
 	| Parsed_CF_constant var_value -> var_value
 	| Parsed_CF_unary_min parsed_rational_factor -> NumConst.neg (valuate_parsed_continuous_factor constants parsed_rational_factor)
@@ -816,7 +889,7 @@ let rec get_clocks_in_updates updates : clock_index list =
 let all_variables_defined_in_linear_term variable_names constants = function
   | Constant _ -> true
   | Variable (_, variable_name) -> if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
-      print_error ("The variable '" ^ variable_name ^ "' used in a linear constraint was not declared."); false
+      print_error ("The variable `" ^ variable_name ^ "` used in a linear constraint was not declared."); false
     ) else true
 
 
@@ -886,7 +959,7 @@ let only_rational_in_linear_term index_of_variables type_of_variables constants 
     ) with Not_found -> (
         (* Variable not found! *)
         (*** TODO: why is this checked here…? It should have been checked before ***)
-        print_error ("The variable '" ^ variable_name ^ "' used in an update was not declared.");
+        print_error ("The variable `" ^ variable_name ^ "` used in an update was not declared.");
         false
       )
 
@@ -944,7 +1017,7 @@ let array_of_coef_of_linear_expression index_of_variables constants linear_expre
           (* Update the NumConst *)
           constant := NumConst.add !constant (NumConst.mul (NumConst.mul value coef) mul_coef);
         ) else (
-          raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although this should have been checked before."))
+          raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` although this should have been checked before."))
         )
       );
   in
@@ -1100,8 +1173,19 @@ let linear_constraint_of_convex_predicate index_of_variables constants convex_pr
   ) with False_exception -> LinearConstraint.pxd_false_constraint ()
 *)
 
+(************************************************************)
+(************************************************************)
+(** Checking and converting guards (and invariants) *)
+(************************************************************)
+(************************************************************)
 
+(************************************************************)
+(** Converting guards *)
+(************************************************************)
 
+(*------------------------------------------------------------*)
+(* TODO *)
+(*------------------------------------------------------------*)
 
 
 (************************************************************)
@@ -1311,7 +1395,7 @@ let check_variable_names variables_per_type constants =
 		(* Compute the multiply defined variables *)
 		let multiply_defined_variables = elements_existing_several_times list_of_variables in
 		(* Print a warning for each of them *)
-		List.iter (fun variable_name -> print_warning ("Multiply-declared variable '" ^ variable_name ^"'")) multiply_defined_variables;
+		List.iter (fun variable_name -> print_warning ("Multiply-declared variable `" ^ variable_name ^"`")) multiply_defined_variables;
 	in
 
 	(* Function to warn if a variable is also defined as a constant *)
@@ -1319,7 +1403,7 @@ let check_variable_names variables_per_type constants =
 		try(
 		List.iter (fun name ->
 			if Hashtbl.mem constants name then (
-				print_error ("Constant '" ^ name ^ "' is also defined as a variable.");
+				print_error ("Constant `" ^ name ^ "` is also defined as a variable.");
 				raise False_exception;
 			)
 			) l;
@@ -1332,7 +1416,7 @@ let check_variable_names variables_per_type constants =
 		let inter = list_inter l1 l2 in
 		match inter with
 		| [] -> true
-		| _ -> List.iter (fun variable_name -> print_error ("The variable '" ^ variable_name ^ "' is defined twice as two different types.")) inter; false
+		| _ -> List.iter (fun variable_name -> print_error ("The variable `" ^ variable_name ^ "` is defined twice as two different types.")) inter; false
 	in
 
 	(* Boolean flag to check whether all tests passed *)
@@ -1394,7 +1478,7 @@ let all_locations_different =
 			List.map (fun (location : parsed_location) -> location.name) locations in
 		(* Look for multiply declared locations *)
 		let multiply_declared_locations = elements_existing_several_times locations in
-		List.iter (fun location_name -> print_error ("Several locations have name '" ^ location_name ^ "' in automaton '" ^ automaton_name ^ "'.")) multiply_declared_locations;
+		List.iter (fun location_name -> print_error ("Several locations have name `" ^ location_name ^ "` in automaton `" ^ automaton_name ^ "`.")) multiply_declared_locations;
 		if multiply_declared_locations = [] then all_different else false
 		)
 		true
@@ -1416,7 +1500,7 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 		let index, declared = try (Hashtbl.find index_of_variables variable_name, true)
 		with Not_found -> (
 			if to_be_removed then 0, true else (
-				print_error ("The variable '" ^ variable_name ^ "' used in an update in automaton '" ^ automaton_name ^ "' was not declared."); 0, false
+				print_error ("The variable `" ^ variable_name ^ "` used in an update in automaton `" ^ automaton_name ^ "` was not declared."); 0, false
 			)
 			)
 		in
@@ -1425,14 +1509,14 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 		(* Only check the rest if the variable is not to be removed *)
 		if to_be_removed then true else (
 			(* Get the type of the variable *)
-			print_message Verbose_total ("                Getting the type of the variable'" ^ variable_name ^ "'");
+			print_message Verbose_total ("                Getting the type of the variable`" ^ variable_name ^ "`");
 
 			let type_of_variable = try (type_of_variables index)
 			with Invalid_argument comment -> (
-				raise (InternalError ("The variable '" ^ variable_name ^ "' was not found in '" ^ automaton_name ^ "', although this has been checked before. OCaml says: " ^ comment ^ "."))
+				raise (InternalError ("The variable `" ^ variable_name ^ "` was not found in `" ^ automaton_name ^ "`, although this has been checked before. OCaml says: " ^ comment ^ "."))
 				) in
 
-			print_message Verbose_total ("                Checking the type of the variable '" ^ variable_name ^ "'");
+			print_message Verbose_total ("                Checking the type of the variable `" ^ variable_name ^ "`");
 			match type_of_variable with
 			(* Type clock: allow any linear term in updates: so just check that variables have been declared *)
 			| AbstractModel.Var_type_clock ->
@@ -1444,7 +1528,7 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 			print_message Verbose_total ("                A discrete rational!");
 			let result = check_only_discretes_in_parsed_continuous_arithmetic_expression index_of_variables type_of_variables constants arithmetic_expression in
 			if not result then
-				(print_error ("The variable '" ^ variable_name ^ "' is a discrete rational and its update can only be an arithmetic expression over constants and discrete rationals in automaton '" ^ automaton_name ^ "'."); false)
+				(print_error ("The variable `" ^ variable_name ^ "` is a discrete rational and its update can only be an arithmetic expression over constants and discrete rationals in automaton `" ^ automaton_name ^ "`."); false)
 			else (
 				print_message Verbose_total ("                Check passed.");
 				true
@@ -1456,7 +1540,7 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 			raise (NotImplemented "ModelConverter: Booleans in check_update")
 
 			(* Case of a parameter: forbidden! *)
-			| AbstractModel.Var_type_parameter -> print_error ("The variable '" ^ variable_name ^ "' is a parameter and cannot be updated in automaton '" ^ automaton_name ^ "'."); false
+			| AbstractModel.Var_type_parameter -> print_error ("The variable `" ^ variable_name ^ "` is a parameter and cannot be updated in automaton `" ^ automaton_name ^ "`."); false
 		)
 		)
 	
@@ -1479,7 +1563,7 @@ let check_update index_of_variables type_of_variables variable_names removed_var
 (*------------------------------------------------------------*)
 let check_sync sync_name_list automaton_name = function
 	| Sync sync_name ->  if not (List.mem sync_name sync_name_list) then (
-		print_error ("The sync action '" ^ sync_name ^ "' used in automaton '" ^ automaton_name ^ "' was not declared for this automaton."); false)
+		print_error ("The sync action `" ^ sync_name ^ "` used in automaton `" ^ automaton_name ^ "` was not declared for this automaton."); false)
 		else true
 	| NoSync -> true
 
@@ -1501,7 +1585,7 @@ let synclab_used_everywhere automata synclab_name =
 				) locations ) then (
 				(* No location contains the synclab: warning and exception (to save a bit of time) *)
 				(*** TODO: perform exhaustive search, i.e., remove the exception mechanism ***)
-				print_warning ("The synclab '" ^ synclab_name ^ "' is not used in (at least) the automaton '" ^ automaton_name ^ "' where it is declared: it will thus be removed from the whole model.");
+				print_warning ("The synclab `" ^ synclab_name ^ "` is not used in (at least) the automaton `" ^ automaton_name ^ "` where it is declared: it will thus be removed from the whole model.");
 				raise Not_found;
 			);
 			);
@@ -1522,17 +1606,17 @@ let check_stopwatches index_of_variables type_of_variables stopwatches =
 		try (
 			let variable_index = Hashtbl.find index_of_variables stopwatch in
 			if type_of_variables variable_index != Var_type_clock then (
-			print_error ("The variable '" ^ stopwatch ^ "' that should be stopped is not defined as a clock.");
+			print_error ("The variable `" ^ stopwatch ^ "` that should be stopped is not defined as a clock.");
 			ok := false;
 			);
 		) with Not_found -> (
-			print_error ("The variable '" ^ stopwatch ^ "' that should be stopped is not defined.");
+			print_error ("The variable `" ^ stopwatch ^ "` that should be stopped is not defined.");
 			ok := false;
 			);
 		) stopwatches;
 	!ok
 
-(*
+
 (*------------------------------------------------------------*)
 (* Check that the automata are well-formed *)
 (*------------------------------------------------------------*)
@@ -1552,44 +1636,45 @@ let check_automata useful_parsing_model_information automata =
 		print_message Verbose_total ("      Checking automaton " ^ automaton_name);
 		(* Get the index of the automaton *)
 		let index = try (Hashtbl.find index_of_automata automaton_name) with
-			Not_found -> raise (InternalError ("Impossible to find the index of automaton '" ^ automaton_name ^ "'."))
+			Not_found -> raise (InternalError ("Impossible to find the index of automaton `" ^ automaton_name ^ "`."))
 		in
 		(* Check each location *)
 		List.iter (fun (location : parsed_location) ->
 			print_message Verbose_total ("        Checking location " ^ location.name);
 			(* Check that the location_name exists (which is obvious) *)
 			if not (in_array location.name array_of_location_names.(index)) then(
-				print_error ("The location '" ^ location.name ^ "' declared in automaton '" ^ automaton_name ^ "' does not exist.");
+				print_error ("The location `" ^ location.name ^ "` declared in automaton `" ^ automaton_name ^ "` does not exist.");
 				well_formed := false);
 
 			(* Check the cost *)
-			begin
+			(*** TODO: costs temporarily (?) disabled ***)
+(*			begin
 				match location.cost with
 				| Some cost ->
 				print_message Verbose_total ("          Checking cost");
 				if not (all_variables_defined_in_linear_expression variable_names constants cost) then well_formed := false;
 				| None -> ()
-			end;
+			end;*)
 
 			(* Check the stopwatches *)
 			print_message Verbose_total ("          Checking possible stopwatches");
 			if not (check_stopwatches index_of_variables type_of_variables location.stopped) then well_formed := false;
 
 
-			(* Check the convex predicate *)
+			(* Check the invariant *)
 
 			(*** TODO: preciser quel automate et quelle location en cas d'erreur ***)
 
-			print_message Verbose_total ("          Checking convex predicate");
-			if not (all_variables_defined_in_convex_predicate variable_names constants location.invariant) then well_formed := false;
+			print_message Verbose_total ("          Checking invariant");
+			if not (check_all_variables_defined_in_convex_continuous_boolean_expressions ("in invariant of location `" ^ location.name ^ "` in automaton `" ^ automaton_name ^ "`") variable_names constants location.invariant) then well_formed := false;
 
 
 			(* Check transitions *)
 			print_message Verbose_total ("          Checking transitions");
 			List.iter (fun (convex_predicate, updates, sync, target_location_name) ->
-				(* Check the convex predicate *)
-				print_message Verbose_total ("            Checking convex predicate");
-				if not (all_variables_defined_in_convex_predicate variable_names constants convex_predicate) then well_formed := false;
+				(* Check the guard *)
+				print_message Verbose_total ("            Checking guard");
+				if not (check_all_variables_defined_in_convex_continuous_boolean_expressions ("in guard leaving location `" ^ location.name ^ "` in automaton `" ^ automaton_name ^ "`") variable_names constants convex_predicate) then well_formed := false;
 				(* Check the updates *)
 				print_message Verbose_total ("            Checking updates");
 				List.iter (fun update -> if not (check_update index_of_variables type_of_variables variable_names removed_variable_names constants automaton_name update) then well_formed := false) updates;
@@ -1598,7 +1683,7 @@ let check_automata useful_parsing_model_information automata =
 				if not (check_sync sync_name_list automaton_name sync) then well_formed := false;
 				(* Check that the target location exists for this automaton *)
 				if not (in_array target_location_name array_of_location_names.(index)) then(
-					print_error ("The target location '" ^ target_location_name ^ "' used in automaton '" ^ automaton_name ^ "' does not exist.");
+					print_error ("The target location `" ^ target_location_name ^ "` used in automaton `" ^ automaton_name ^ "` does not exist.");
 					well_formed := false);
 				) location.transitions;
 			) locations;
@@ -1606,7 +1691,7 @@ let check_automata useful_parsing_model_information automata =
 
 	(* Return whether the automata passed the tests *)
 	!well_formed
-*)
+
 (*
 (*------------------------------------------------------------*)
 (* Check that the init_definition are well-formed *)
@@ -1629,17 +1714,17 @@ let check_init useful_parsing_model_information init_definition observer_automat
 		| Parsed_loc_assignment (automaton_name, location_name) ->
 			(* Check that the automaton_name exists *)
 			let index, exists = try (Hashtbl.find index_of_automata automaton_name, true) with
-				Not_found -> (print_error ("The automaton '" ^ automaton_name ^ "' mentioned in the init definition does not exist."); well_formed := false; 0, false) in
+				Not_found -> (print_error ("The automaton `" ^ automaton_name ^ "` mentioned in the init definition does not exist."); well_formed := false; 0, false) in
 			(* Check that the location_name exists (only if the automaton_name exists) *)
 			if exists && not (in_array location_name array_of_location_names.(index)) then (
-			print_error ("The location '" ^ location_name ^ "' mentioned in the init definition does not exist in automaton '" ^ automaton_name ^ "'."); well_formed := false
+			print_error ("The location `" ^ location_name ^ "` mentioned in the init definition does not exist in automaton `" ^ automaton_name ^ "`."); well_formed := false
 			)
 		| Parsed_linear_predicate linear_constraint ->
 			begin
 			(*** NOTE: do not check linear constraints made of a variable to be removed compared to a linear term ***)
 			match linear_constraint with
 			| Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) when List.mem variable_name removed_variable_names ->
-				print_message Verbose_total ("Variable '" ^ variable_name ^ "' is compared to a linear term, but will be removed: no check." );
+				print_message Verbose_total ("Variable `" ^ variable_name ^ "` is compared to a linear term, but will be removed: no check." );
 				(* Still check the second term *)
 				if not (all_variables_defined_in_linear_expression variable_names constants linear_expression) then well_formed := false;
 				(* General case: check *)
@@ -1667,10 +1752,10 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			let previous_location = Hashtbl.find init_locations_for_automata automaton_name in
 			(* If identical : only warns *)
 			if location_name = previous_location then (
-			print_warning ("The automaton '" ^ automaton_name ^ "' is assigned twice the initial location '" ^ location_name ^ "' in the init definition.");
+			print_warning ("The automaton `" ^ automaton_name ^ "` is assigned twice the initial location `" ^ location_name ^ "` in the init definition.");
 			(* If different : error *)
 			) else (
-			print_error ("The automaton '" ^ automaton_name ^ "' is assigned several different locations in the init definition.");
+			print_error ("The automaton `" ^ automaton_name ^ "` is assigned several different locations in the init definition.");
 			well_formed := false;
 			);
 			(* If not already given : add it *)
@@ -1691,7 +1776,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			(* Look for it in the hash table *)
 			if not (Hashtbl.mem init_locations_for_automata automaton_name) then (
 			(* Error *)
-			print_error ("The automaton '" ^ automaton_name ^ "' is not given any initial location in the init definition.");
+			print_error ("The automaton `" ^ automaton_name ^ "` is not given any initial location in the init definition.");
 			well_formed := false;
 			);
 		);
@@ -1723,7 +1808,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 				if (Hashtbl.mem constants variable_name) then false
 				else (
 				(* Otherwise: problem! *)
-				raise (InternalError ("The variable '" ^ variable_name ^ "' mentioned in the init definition does not exist."));
+				raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."));
 				))
 			in is_discrete
 		(* Otherwise false *)
@@ -1736,7 +1821,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 		match lp with
 		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (coeff, rational_name)), op , expression)) ->
 			if NumConst.neq coeff NumConst.one then (
-			print_error ("The discrete variable '" ^ rational_name ^ "' must have a coeff 1 in the init definition.");
+			print_error ("The discrete variable `" ^ rational_name ^ "` must have a coeff 1 in the init definition.");
 			well_formed := false;
 			);
 			(* Check if the assignment is well formed, and keep the discrete value *)
@@ -1749,7 +1834,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 				(* Get the value of  the variable *)
 				let value = Hashtbl.find constants variable_name in
 				NumConst.mul coef value
-			| _ -> print_error ("The initial value for discrete variable '" ^ rational_name ^ "' must be given in the form '" ^ rational_name ^ " = c', where c is an integer, a rational or a constant.");
+			| _ -> print_error ("The initial value for discrete variable `" ^ rational_name ^ "` must be given in the form `" ^ rational_name ^ " = c', where c is an integer, a rational or a constant.");
 				well_formed := false;
 				NumConst.zero
 			in
@@ -1757,7 +1842,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			let discret_index =  Hashtbl.find index_of_variables rational_name in
 			(* Check if it was already declared *)
 			if Hashtbl.mem init_values_for_discrete discret_index then(
-			print_error ("The discrete variable '" ^ rational_name ^ "' is given an initial value several times in the init definition.");
+			print_error ("The discrete variable `" ^ rational_name ^ "` is given an initial value several times in the init definition.");
 			well_formed := false;
 			) else (
 			(* Else add it *)
@@ -1769,7 +1854,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 	(* Check that every discrete variable is given at least one (rational) initial value (if not: warns) *)
 	List.iter (fun rational_index ->
 		if not (Hashtbl.mem init_values_for_discrete rational_index) then(
-			print_warning ("The discrete variable '" ^ (List.nth variable_names rational_index) ^ "' was not given an initial value in the init definition: it will be assigned to 0.");
+			print_warning ("The discrete variable `" ^ (List.nth variable_names rational_index) ^ "` was not given an initial value in the init definition: it will be assigned to 0.");
 			Hashtbl.add init_values_for_discrete rational_index NumConst.zero
 		);
 		) discrete;
@@ -1819,10 +1904,10 @@ let make_constants constants =
         let old_value = Hashtbl.find constants_hashtable name in
         (* If same: warning *)
         if(NumConst.equal old_value value) then(
-          print_warning ("Constant '" ^ name ^ "' is defined twice.");
+          print_warning ("Constant `" ^ name ^ "` is defined twice.");
         )else(
           (* If different: error *)
-          print_error ("Constant '" ^ name ^ "' is given different values.");
+          print_error ("Constant `" ^ name ^ "` is given different values.");
           correct := false;
         );
       )else(
@@ -1917,7 +2002,7 @@ let make_locations_per_automaton index_of_automata parsed_automata nb_automata =
     (fun (automaton_name, _, transitions) ->
        (* Get the index of the automaton *)
        let index = try(Hashtbl.find index_of_automata automaton_name)
-         with Not_found -> raise (InternalError ("Automaton name '" ^ automaton_name ^ "' not found in function 'make_locations_per_automaton' although this had been checked before."))
+         with Not_found -> raise (InternalError ("Automaton name `" ^ automaton_name ^ "` not found in function 'make_locations_per_automaton' although this had been checked before."))
        in
        (* Get the location names *)
        let location_names = List.map (fun (location : parsed_location) -> location.name) transitions in
@@ -2004,7 +2089,7 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 		(fun (automaton_name, _, locations) ->
 		(* Get the index of the automaton *)
 		print_message Verbose_total ("    - Building automaton " ^ automaton_name);
-		let automaton_index = try (Hashtbl.find index_of_automata automaton_name) with Not_found -> raise (InternalError ("Impossible to find the index of automaton '" ^ automaton_name ^ "'.")) in
+		let automaton_index = try (Hashtbl.find index_of_automata automaton_name) with Not_found -> raise (InternalError ("Impossible to find the index of automaton `" ^ automaton_name ^ "`.")) in
 		(* Get the number of locations *)
 		let nb_locations = List.length locations in
 		(* Create the array of lists of actions for this automaton *)
@@ -2026,12 +2111,12 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 		List.iter
 			(fun (location : parsed_location) ->
 				(* Get the index of the location *)
-				let location_index = try (Hashtbl.find index_of_locations.(automaton_index) location.name) with Not_found -> raise (InternalError ("Impossible to find the index of location '" ^ location.name ^ "'.")) in
+				let location_index = try (Hashtbl.find index_of_locations.(automaton_index) location.name) with Not_found -> raise (InternalError ("Impossible to find the index of location `" ^ location.name ^ "`.")) in
 
 				(* Create the list of actions for this location, by iterating on parsed_transitions *)
 				let list_of_actions, list_of_transitions =  List.fold_left (fun (current_list_of_actions, current_list_of_transitions) (guard, updates, sync, target_location_name) ->
 					(* Get the index of the target location *)
-					let target_location_index = try (Hashtbl.find index_of_locations.(automaton_index) target_location_name) with Not_found -> raise (InternalError ("Impossible to find the index of location '" ^ target_location_name ^ "'.")) in
+					let target_location_index = try (Hashtbl.find index_of_locations.(automaton_index) target_location_name) with Not_found -> raise (InternalError ("Impossible to find the index of location `" ^ target_location_name ^ "`.")) in
 					(* Depend on the action type *)
 					match sync with
 					| ParsingStructure.Sync action_name ->
@@ -2042,7 +2127,7 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 					) else (
 						(* Get the action index *)
 						let action_index =
-						try (Hashtbl.find index_of_actions action_name) with Not_found -> raise (InternalError ("Impossible to find the index of action '" ^ action_name ^ "'."))
+						try (Hashtbl.find index_of_actions action_name) with Not_found -> raise (InternalError ("Impossible to find the index of action `" ^ action_name ^ "`."))
 						in
 						(* Compute the list of actions *)
 						(action_index :: current_list_of_actions)
@@ -2294,7 +2379,7 @@ let linear_term_of_parsed_continuous_arithmetic_expression index_of_variables co
 				(* Update the constant *)
 				constant := NumConst.add !constant (NumConst.mul mult_factor value)
 				) else (
-				raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' in function 'linear_term_of_parsed_continuous_arithmetic_expression' although this should have been checked before."))
+				raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'linear_term_of_parsed_continuous_arithmetic_expression' although this should have been checked before."))
 				)
 			)
 		| Parsed_CF_constant var_value ->
@@ -2616,7 +2701,7 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 				if (Hashtbl.mem constants variable_name) then false
 				else (
 					(* Otherwise: problem! *)
-					raise (InternalError ("The variable '" ^ variable_name ^ "' mentioned in the init definition does not exist, although this should have been checked before."));
+					raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist, although this should have been checked before."));
 				))
 			in not is_discrete
 		| _ -> true
@@ -2648,11 +2733,11 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 	(* Check that all parameters are bound to be >= 0 *)
 	List.iter (fun parameter_id ->
 		(* Print some information *)
-		print_message Verbose_low ("Checking that parameter '" ^ (variable_names parameter_id) ^ "' is >= 0 in the initial constraint…");
+		print_message Verbose_low ("Checking that parameter `" ^ (variable_names parameter_id) ^ "` is >= 0 in the initial constraint…");
 
 		(* Check *)
 		if not (LinearConstraint.px_is_positive_in parameter_id initial_constraint) then
-			print_warning ("Parameter '" ^ (variable_names parameter_id) ^ "' is not necessarily positive in the initial constraint. The behavior of " ^ Constants.program_name ^ " is unspecified in this case. You are advised to add inequality '" ^ (variable_names parameter_id) ^ " >= 0' to the initial state of the model.");
+			print_warning ("Parameter `" ^ (variable_names parameter_id) ^ "` is not necessarily positive in the initial constraint. The behavior of " ^ Constants.program_name ^ " is unspecified in this case. You are advised to add inequality `" ^ (variable_names parameter_id) ^ " >= 0' to the initial state of the model.");
 		) parameters;
 
 	(* Return the initial state *)
@@ -2792,7 +2877,7 @@ let build_variables_lists parsed_model parsed_property_option options possibly_m
 			then true
 			else (
 				(* First print a warning *)
-				print_warning ("The " ^ variable_type_name ^ " '" ^ variable_name ^ "' is declared but never used in the model; it is therefore removed from the model. Use option -no-var-autoremove to keep it.");
+				print_warning ("The " ^ variable_type_name ^ " `" ^ variable_name ^ "` is declared but never used in the model; it is therefore removed from the model. Use option -no-var-autoremove to keep it.");
 				(* Filter out *)
 				false
 			)
@@ -2882,7 +2967,7 @@ et get_variables_in_property variables_used_ref = function
 let check_automaton_name index_of_automata automaton_name =
   if not (Hashtbl.mem index_of_automata automaton_name)
   then (
-    print_error ("The automaton name '" ^ automaton_name ^ "' used in the correctness property does not exist.");
+    print_error ("The automaton name `" ^ automaton_name ^ "` used in the correctness property does not exist.");
     false
   )
   else true
@@ -2891,7 +2976,7 @@ let check_automaton_name index_of_automata automaton_name =
 let check_location_name index_of_locations automaton_index automaton_name location_name =
   if not (Hashtbl.mem index_of_locations.(automaton_index) location_name)
   then (
-    print_error ("The location name '" ^ location_name ^ "' used in the correctness property does not exist in automaton '" ^ automaton_name ^ "'.");
+    print_error ("The location name `" ^ location_name ^ "` used in the correctness property does not exist in automaton `" ^ automaton_name ^ "`.");
     false
   )
   else true
@@ -2901,7 +2986,7 @@ let check_location_name index_of_locations automaton_index automaton_name locati
 let check_action_name index_of_actions action_name =
 	if not (Hashtbl.mem index_of_actions action_name)
 	then (
-		print_error ("The action '" ^ action_name ^ "' used in the property does not exist in this model.");
+		print_error ("The action `" ^ action_name ^ "` used in the property does not exist in this model.");
 		false
 	)
 	else true
@@ -2948,12 +3033,12 @@ let check_and_convert_unreachable_local_locations index_of_automata index_of_loc
           (* If same name: just warning *)
           if old_name = location_name then(
             (* Warning *)
-            print_warning ("Automaton '" ^ automaton_name ^ "' is assigned several times to location name '" ^ location_name ^ "' in the correctness property.");
+            print_warning ("Automaton `" ^ automaton_name ^ "` is assigned several times to location name `" ^ location_name ^ "` in the correctness property.");
             (* No problem *)
             true
           )else(
             (* Otherwise: error *)
-            print_warning ("Automaton '" ^ automaton_name ^ "' is assigned to several different location names (e.g., '" ^ location_name ^ "' and '" ^ old_name ^ "') in the correctness property.");
+            print_warning ("Automaton `" ^ automaton_name ^ "` is assigned to several different location names (e.g., `" ^ location_name ^ "` and `" ^ old_name ^ "`) in the correctness property.");
             (* Problem *)
             false
           )
@@ -3061,7 +3146,7 @@ let check_and_convert_unreachable_rational_constraints index_of_variables type_o
         (* 1a. Check for name *)
         if not (Hashtbl.mem index_of_variables rational_name) then(
           (* Print error *)
-          print_error ("The discrete variable '" ^ rational_name ^ "' used in the correctness property does not exist in this model.");
+          print_error ("The discrete variable `" ^ rational_name ^ "` used in the correctness property does not exist in this model.");
           (* Problem *)
           false
           (* 1b. Check for type *)
@@ -3073,7 +3158,7 @@ let check_and_convert_unreachable_rational_constraints index_of_variables type_o
           let variable_type = type_of_variables variable_index in
           if variable_type <> Var_type_discrete then(
             (* Print error *)
-            print_error ("The variable '" ^ rational_name ^ "' used in the correctness property must be a discrete variable (clocks and parameters are not allowed at this stage).");
+            print_error ("The variable `" ^ rational_name ^ "` used in the correctness property must be a discrete variable (clocks and parameters are not allowed at this stage).");
             (* Problem *)
             false
           )else true
@@ -3109,12 +3194,12 @@ let check_and_convert_unreachable_rational_constraints index_of_variables type_o
             (* If same name: just warning *)
             if old_constraint = abstract_constraint then(
               (* Warning *)
-              print_warning ("Discrete variable '" ^ rational_name ^ "' is compared several times to the same constant in the correctness property.");
+              print_warning ("Discrete variable `" ^ rational_name ^ "` is compared several times to the same constant in the correctness property.");
               (* No problem *)
               true
             )else(
               (* Otherwise: error *)
-              print_warning ("Discrete variable '" ^ rational_name ^ "' is compared several times to different constants in the correctness property.");
+              print_warning ("Discrete variable `" ^ rational_name ^ "` is compared several times to different constants in the correctness property.");
               (* Problem *)
               false
             )
@@ -3199,7 +3284,7 @@ and check_parsed_rational_term useful_parsing_model_information = function
 and check_parsed_rational_factor useful_parsing_model_information = function
 	| Parsed_CF_variable variable_name ->
 		if not (Hashtbl.mem useful_parsing_model_information.index_of_variables variable_name) && not (Hashtbl.mem useful_parsing_model_information.constants variable_name) then (
-			print_error ("Undefined variable name '" ^ variable_name ^ "' in the property");
+			print_error ("Undefined variable name `" ^ variable_name ^ "` in the property");
 			false
 		)else(
 			true
@@ -3240,13 +3325,13 @@ let check_parsed_loc_predicate useful_parsing_model_information = function
 		
 		(* Find the automaton *)
 		if not (Hashtbl.mem index_of_automata automaton_name) then(
-			print_error ("Unknown automaton name '" ^ automaton_name ^ "' in the property.");
+			print_error ("Unknown automaton name `" ^ automaton_name ^ "` in the property.");
 			false
 		)else(
 			let automaton_index : Automaton.automaton_index = Hashtbl.find index_of_automata automaton_name in
 			(* Find the location *)
 			if not (Hashtbl.mem index_of_locations.(automaton_index) location_name) then(
-				print_error ("Unknown location name '" ^ location_name ^ "' in automaton '" ^ automaton_name ^ "' in the property.");
+				print_error ("Unknown location name `" ^ location_name ^ "` in automaton `" ^ automaton_name ^ "` in the property.");
 				false
 			)else(
 				(* Both checks passed *)
@@ -3348,7 +3433,7 @@ let check_parsed_pval useful_parsing_model_information (parsed_pval : ParsingStr
 	(* Compute the multiply defined variables *)
 	let multiply_defined_variables = elements_existing_several_times list_of_variables in
 	(* Print an error for each of them *)
-	List.iter (fun variable_name -> print_error ("The parameter '" ^ variable_name ^ "' was assigned several times a valuation in parsed_pval.")) multiply_defined_variables;
+	List.iter (fun variable_name -> print_error ("The parameter `" ^ variable_name ^ "` was assigned several times a valuation in parsed_pval.")) multiply_defined_variables;
 
 	(*** TODO: only warns if it is always defined to the same value ***)
 
@@ -3357,7 +3442,7 @@ let check_parsed_pval useful_parsing_model_information (parsed_pval : ParsingStr
 				(fun all_defined variable_name ->
 					if List.mem variable_name list_of_variables then all_defined
 					else (
-					print_error ("The parameter '" ^ variable_name ^ "' was not assigned a valuation in parsed_pval.");
+					print_error ("The parameter `" ^ variable_name ^ "` was not assigned a valuation in parsed_pval.");
 					false
 					)
 				)
@@ -3369,7 +3454,7 @@ let check_parsed_pval useful_parsing_model_information (parsed_pval : ParsingStr
 	List.iter
 		(fun variable_name ->
 		if not (List.mem variable_name useful_parsing_model_information.parameter_names) then (
-			print_warning ("'" ^ variable_name ^ "', which is assigned a valuation in parsed_pval, is not a valid parameter name.")
+			print_warning ("`" ^ variable_name ^ "`, which is assigned a valuation in parsed_pval, is not a valid parameter name.")
 		)
 		)
 		list_of_variables
@@ -3590,7 +3675,7 @@ let convert_parsed_pval useful_parsing_model_information (parsed_pval : ParsingS
 		let valuation = try(
 			List.assoc parameter_name parsed_pval
 		) with Not_found ->
-			raise (InternalError ("The parameter name '" ^ parameter_name ^ "' was not found in parsed_pval although checks should have been performed before."))
+			raise (InternalError ("The parameter name `" ^ parameter_name ^ "` was not found in parsed_pval although checks should have been performed before."))
 		in
 		pval#set_value i valuation
 	done;
@@ -4030,7 +4115,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			(* If it is used everywhere: keep *)
 			true
 			(* If there exists an automaton where it is not used : warns and remove *)
-			else (print_warning ("The synclab '" ^ synclab_name ^ "' is not used in some of the automata where it is declared: it will thus be removed."); false)
+			else (print_warning ("The synclab `" ^ synclab_name ^ "` is not used in some of the automata where it is declared: it will thus be removed."); false)
 		)*) action_names
 	) in
 
@@ -4068,7 +4153,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		else
 		(
 			List.iter (fun unassigned_constant ->
-				print_error("Constant '" ^ unassigned_constant ^ "' is not assigned a value in the variable declarations.");
+				print_error("Constant `" ^ unassigned_constant ^ "` is not assigned a value in the variable declarations.");
 			) unassigned_constants;
 			(* Check failed *)
 			false;
@@ -4108,12 +4193,12 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		begin
 			match observer_automaton with
 			| None -> ()
-			| Some observer_automaton -> print_message Verbose_high ("Adding extra automaton '" ^ observer_automaton ^ "' for the observer.");
+			| Some observer_automaton -> print_message Verbose_high ("Adding extra automaton `" ^ observer_automaton ^ "` for the observer.");
 		end;
 		begin
 			match observer_clock_option with
 			| None -> ()
-			| Some observer_clock_name -> print_message Verbose_high ("Adding extra clock '" ^ observer_clock_name ^ "' for the observer.");
+			| Some observer_clock_name -> print_message Verbose_high ("Adding extra clock `" ^ observer_clock_name ^ "` for the observer.");
 		end;
 	);
 
@@ -4354,8 +4439,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
- 	raise (NotImplemented "ModelConverted")
- 	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create useful parsing structure, used in subsequent functions *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4396,6 +4479,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		then raise InvalidModel;
 
 
+ 	raise (NotImplemented "ModelConverted")
+ 	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the init_definition *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4579,7 +4664,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 							(* Update automaton of transition *)
 							automaton_of_transition.(current_transition_index) <- observer_id;
 						) with
-							| Invalid_argument e -> raise (InternalError ("Invalid argument '" ^ e ^ "' when updating observer transitions (current index: " ^ (string_of_int current_transition_index) ^ " max size: " ^ (string_of_int (Array.length transitions_description)) ^ ")"))
+							| Invalid_argument e -> raise (InternalError ("Invalid argument `" ^ e ^ "` when updating observer transitions (current index: " ^ (string_of_int current_transition_index) ^ " max size: " ^ (string_of_int (Array.length transitions_description)) ^ ")"))
 						;
 						end;
 						
@@ -4745,7 +4830,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 				if List.length transitions_for_this_location > 1 then(
 					(* Write a message *)
 					if verbose_mode_greater Verbose_high then(
-						print_message Verbose_high ("This network of PTAs is not strongly deterministic: in automaton '" ^ (automata_names automaton_index) ^ "', in location '" ^ (location_names automaton_index location_index) ^ "', there are " ^ (string_of_int (List.length transitions_for_this_location)) ^ "outgoing transitions labeled with action '" ^ (action_names action_index) ^ "'.");
+						print_message Verbose_high ("This network of PTAs is not strongly deterministic: in automaton `" ^ (automata_names automaton_index) ^ "`, in location `" ^ (location_names automaton_index location_index) ^ "`, there are " ^ (string_of_int (List.length transitions_for_this_location)) ^ "outgoing transitions labeled with action `" ^ (action_names action_index) ^ "`.");
 					);
 
 					(* Update flag *)
@@ -4988,7 +5073,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			let transition = transitions_description transition_index in
 			(* Print automaton + action *)
 				(*** TODO: print source too (and guard, and reset?!) ***)
-			print_message Verbose_total ("Transition " ^ (string_of_int transition_index) ^ ": in automaton '" ^ (automata_names automaton_index) ^ "' via action '" ^ (action_names (transition.action)) ^ "' to location '" ^ (location_names automaton_index (transition.target)) ^ "'")
+			print_message Verbose_total ("Transition " ^ (string_of_int transition_index) ^ ": in automaton `" ^ (automata_names automaton_index) ^ "` via action `" ^ (action_names (transition.action)) ^ "` to location `" ^ (location_names automaton_index (transition.target)) ^ "`")
 		done;
 		
 		print_message Verbose_total ("");
@@ -5016,8 +5101,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Debug print: special global clock *)
 	begin
 	match global_time_clock with
-		| Some name -> print_message Verbose_standard ("A global time clock '" ^ Constants.global_time_clock_name ^ "' has been detected.");
-		| None -> print_message Verbose_medium ("No global time clock '" ^ Constants.global_time_clock_name ^ "' detected.");
+		| Some name -> print_message Verbose_standard ("A global time clock `" ^ Constants.global_time_clock_name ^ "` has been detected.");
+		| None -> print_message Verbose_medium ("No global time clock `" ^ Constants.global_time_clock_name ^ "` detected.");
 	end;
 
 	
@@ -5207,12 +5292,12 @@ let check_parsed_loc_predicate useful_parsing_model_information = function
 		(* Check automaton name *)
 		let check_automaton = Hashtbl.mem useful_parsing_model_information.index_of_automata automaton_name in
 		if not check_automaton then (
-			print_error ("Automaton name '" ^ automaton_name ^ "' undefined in the property");
+			print_error ("Automaton name `" ^ automaton_name ^ "` undefined in the property");
 		);
 		(* Check location name *)
 		let check_location = Hashtbl.mem useful_parsing_model_information.index_of_locations.(automaton_index) location_name in
 		if not check_location then (
-			print_error ("Location name '" ^ location_name ^ "' undefined in the property");
+			print_error ("Location name `" ^ location_name ^ "` undefined in the property");
 		);
 		(* Return *)
 		check_automaton && check_location
@@ -5325,7 +5410,7 @@ let check_v0 parsed_v0 parameters_names =
   (* Compute the multiply defined variables *)
   let multiply_defined_variables = elements_existing_several_times list_of_variables in
   (* Print an error for each of them *)
-  List.iter (fun variable_name -> print_error ("The parameter '" ^ variable_name ^ "' was assigned several times a valuation in v0.")) multiply_defined_variables;
+  List.iter (fun variable_name -> print_error ("The parameter `" ^ variable_name ^ "` was assigned several times a valuation in v0.")) multiply_defined_variables;
 
   (*** TODO: only warns if it is always defined to the same value ***)
 
@@ -5334,7 +5419,7 @@ let check_v0 parsed_v0 parameters_names =
       (fun all_defined variable_name ->
          if List.mem variable_name list_of_variables then all_defined
          else (
-           print_error ("The parameter '" ^ variable_name ^ "' was not assigned a valuation in v0.");
+           print_error ("The parameter `" ^ variable_name ^ "` was not assigned a valuation in v0.");
            false
          )
       )
@@ -5347,7 +5432,7 @@ let check_v0 parsed_v0 parameters_names =
       (fun all_intervals_ok (variable_name, a, b) ->
          if NumConst.le a b then all_intervals_ok
          else (
-           print_error ("The interval [" ^ (NumConst.string_of_numconst a) ^ ", " ^ (NumConst.string_of_numconst b) ^ "] is null for parameter '" ^ variable_name ^ "' in v0.");
+           print_error ("The interval [" ^ (NumConst.string_of_numconst a) ^ ", " ^ (NumConst.string_of_numconst b) ^ "] is null for parameter `" ^ variable_name ^ "` in v0.");
            false
          )
       )
@@ -5359,7 +5444,7 @@ let check_v0 parsed_v0 parameters_names =
   List.iter
     (fun variable_name ->
        if not (List.mem variable_name parameters_names) then (
-         print_warning ("'" ^ variable_name ^ "', which is assigned a valuation in v0, is not a valid parameter name.")
+         print_warning ("`" ^ variable_name ^ "`, which is assigned a valuation in v0, is not a valid parameter name.")
        )
     )
     list_of_variables
@@ -5384,7 +5469,7 @@ let make_v0 parsed_v0 index_of_variables =
       with Not_found ->
         (* No problem: this must be an invalid parameter name (which is ignored) *)
         ()
-        (* 			raise (InternalError ("The variable name '" ^ variable_name ^ "' was not found in the list of variables although checks should have been performed before.")) *)
+        (* 			raise (InternalError ("The variable name `" ^ variable_name ^ "` was not found in the list of variables although checks should have been performed before.")) *)
     ) parsed_v0;
   v0
 

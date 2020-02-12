@@ -73,7 +73,7 @@ type variable_declarations = typed_variable_declarations list*)
 
 
 (****************************************************************)
-(** Arithmetic expressions *)
+(** Continuous arithmetic expressions *)
 (****************************************************************)
 type parsed_continuous_arithmetic_expression =
 	| Parsed_CAE_plus of parsed_continuous_arithmetic_expression * parsed_continuous_term
@@ -94,7 +94,7 @@ and parsed_continuous_factor =
 
 
 (****************************************************************)
-(** Boolean expressions *)
+(** Continuous Boolean expressions *)
 (****************************************************************)
 
 
