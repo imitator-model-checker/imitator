@@ -1744,7 +1744,6 @@ let check_automata useful_parsing_model_information automata =
 	(* Return whether the automata passed the tests *)
 	!well_formed
 
-(*
 (*------------------------------------------------------------*)
 (* Check that the init_definition are well-formed *)
 (*------------------------------------------------------------*)
@@ -1771,16 +1770,39 @@ let check_init useful_parsing_model_information init_definition observer_automat
 			if exists && not (in_array location_name array_of_location_names.(index)) then (
 			print_error ("The location `" ^ location_name ^ "` mentioned in the init definition does not exist in automaton `" ^ automaton_name ^ "`."); well_formed := false
 			)
-		| Parsed_linear_predicate linear_constraint ->
+		| Parsed_linear_predicate parsed_continuous_inequality ->
 			begin
 			(*** NOTE: do not check linear constraints made of a variable to be removed compared to a linear term ***)
-			match linear_constraint with
-			| Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) when List.mem variable_name removed_variable_names ->
-				print_message Verbose_total ("Variable `" ^ variable_name ^ "` is compared to a linear term, but will be removed: no check." );
-				(* Still check the second term *)
-				if not (all_variables_defined_in_linear_expression variable_names constants linear_expression) then well_formed := false;
-				(* General case: check *)
-			| _ -> if not (all_variables_defined_in_linear_constraint variable_names constants linear_constraint) then well_formed := false;
+			match parsed_continuous_inequality with
+					(*** OLD CODE ***)
+(*				| (Parsed_expression (Parsed_CAE_term (Parsed_CT_factor (Parsed_CF_variable variable_name) )) , _, _)
+				| (Parsed_expression_in (Parsed_CAE_term (Parsed_CT_factor (Parsed_CF_variable variable_name) )) , _, _)
+					when List.mem variable_name removed_variable_names 
+(* 			| Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) when List.mem variable_name removed_variable_names -> *)
+					print_message Verbose_total ("Variable `" ^ variable_name ^ "` is compared to a linear term, but will be removed: no check." );
+					(* Still check the second term *)
+					if not (all_variables_defined_in_linear_expression variable_names constants linear_expression) then well_formed := false;
+					(* General case: check *)
+			| _ -> if not (all_variables_defined_in_linear_constraint variable_names constants parsed_continuous_inequality) then well_formed := false;*)
+					
+					(*** TODO: check linearity for clocks! ***)
+					
+				| Parsed_expression  (parsed_continuous_arithmetic_expression_l, _, parsed_continuous_arithmetic_expression_r) ->
+					let check =
+					evaluate_and
+						(check_all_variables_defined_in_continuous_arithmetic_expression ("in the init definition") variable_names constants parsed_continuous_arithmetic_expression_l)
+						(check_all_variables_defined_in_continuous_arithmetic_expression ("in the init definition") variable_names constants parsed_continuous_arithmetic_expression_r)
+					in
+					if not check then well_formed := false
+					
+					(*** TODO: check linearity for clocks! ***)
+					
+				| Parsed_expression_in (parsed_continuous_arithmetic_expression_1 , parsed_continuous_arithmetic_expression_2 , parsed_continuous_arithmetic_expression_3) ->
+					let check_1 = check_all_variables_defined_in_continuous_arithmetic_expression ("in the init definition") variable_names constants parsed_continuous_arithmetic_expression_1 in
+					let check_2 = check_all_variables_defined_in_continuous_arithmetic_expression ("in the init definition") variable_names constants parsed_continuous_arithmetic_expression_2 in
+					let check_3 = check_all_variables_defined_in_continuous_arithmetic_expression ("in the init definition") variable_names constants parsed_continuous_arithmetic_expression_3 in
+					if not (check_1 && check_2 && check_3) then well_formed := false
+				
 			end
 		) init_definition;
 
@@ -1834,7 +1856,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 		);
 		) automata;
 
-	(* Remove the inequalities of which the left-hand term is a removed variable *)
+(*	(* Remove the inequalities of which the left-hand term is a removed variable *)
 	let filtered_init_inequalities = List.filter (function
 		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
 			(* Filter out if the left-hand is in the removed variable names *)
@@ -1843,12 +1865,15 @@ let check_init useful_parsing_model_information init_definition observer_automat
 		| _ ->
 			true
 		) init_inequalities
-	in
+	in*)
+	(*** NOTE: so far, we rather check all inequalities ***)
+	let filtered_init_inequalities = init_inequalities in
 
 	(* Partition the init inequalities between the discrete init assignments, and other inequalities *)
 	let rational_init, other_inequalities = List.partition (function
 		(* Check if the left part is only a variable name *)
-		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
+		| Parsed_linear_predicate (Parsed_expression (Parsed_CAE_term (Parsed_CT_factor (Parsed_CF_variable (variable_name))), _, _))
+			(*(Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _))*) ->
 			let is_discrete =
 			(* Try to get the variable index *)
 			if (Hashtbl.mem index_of_variables variable_name) then (
@@ -1871,36 +1896,45 @@ let check_init useful_parsing_model_information init_definition observer_automat
 	let init_values_for_discrete = Hashtbl.create (List.length discrete) in
 	List.iter (fun lp ->
 		match lp with
-		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (coeff, rational_name)), op , expression)) ->
-			if NumConst.neq coeff NumConst.one then (
-			print_error ("The discrete variable `" ^ rational_name ^ "` must have a coeff 1 in the init definition.");
+		| Parsed_linear_predicate (Parsed_expression (Parsed_CAE_term (Parsed_CT_factor (Parsed_CF_variable (variable_name))), relop , continuous_arithmetic_expression))
+				(* (Parsed_linear_constraint (Linear_term (Variable (coeff, variable_name)), op , expression))*) ->
+
+(*			if NumConst.neq coeff NumConst.one then (
+			print_error ("The discrete variable `" ^ variable_name ^ "` must have a coeff 1 in the init definition.");
 			well_formed := false;
-			);
+			);*)
+			
 			(* Check if the assignment is well formed, and keep the discrete value *)
 			let rational_value =
-			match (op, expression) with
+			match (relop, continuous_arithmetic_expression) with
 			(* Simple constant: OK *)
-			| (PARSED_OP_EQ, Linear_term (Constant c)) -> c
+(* 			| (PARSED_OP_EQ, Linear_term (Constant c)) -> c *)
+			| (PARSED_OP_EQ, Parsed_CAE_term (Parsed_CT_factor (Parsed_CF_constant c))) -> c
+	
 			(* Constant: OK *)
-			| (PARSED_OP_EQ, Linear_term (Variable (coef, variable_name))) ->
+			(*** TODO: allow again constants ***)
+(*			| (PARSED_OP_EQ, Linear_term (Variable (coef, variable_name))) ->
 				(* Get the value of  the variable *)
 				let value = Hashtbl.find constants variable_name in
-				NumConst.mul coef value
-			| _ -> print_error ("The initial value for discrete variable `" ^ rational_name ^ "` must be given in the form `" ^ rational_name ^ " = c', where c is an integer, a rational or a constant.");
+				NumConst.mul coef value*)
+
+			| _ -> print_error ("The initial value for discrete variable `" ^ variable_name ^ "` must be given in the form `" ^ variable_name ^ " = c', where c is an integer, a rational or a constant.");
 				well_formed := false;
 				NumConst.zero
 			in
+			
 			(* Get the variable index *)
-			let discret_index =  Hashtbl.find index_of_variables rational_name in
+			let discret_index =  Hashtbl.find index_of_variables variable_name in
 			(* Check if it was already declared *)
 			if Hashtbl.mem init_values_for_discrete discret_index then(
-			print_error ("The discrete variable `" ^ rational_name ^ "` is given an initial value several times in the init definition.");
-			well_formed := false;
+				print_error ("The discrete variable `" ^ variable_name ^ "` is given an initial value several times in the init definition.");
+				well_formed := false;
 			) else (
-			(* Else add it *)
-			Hashtbl.add init_values_for_discrete discret_index rational_value;
+				(* Else add it *)
+				Hashtbl.add init_values_for_discrete discret_index rational_value;
 			);
-		| _ -> raise (InternalError ("Must have this form since it was checked before."))
+			
+		| _ -> raise (InternalError ("check_init: Must have this form since it was checked before."))
 		) rational_init;
 
 	(* Check that every discrete variable is given at least one (rational) initial value (if not: warns) *)
@@ -1922,7 +1956,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 	(**** TO DO ****) (*use 'other_inequalities' *)
 
 	(* Return whether the init declaration passed the tests *)
-	rational_values_pairs, !well_formed*)
+	rational_values_pairs, !well_formed
 
 
 
@@ -4531,8 +4565,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		then raise InvalidModel;
 
 
- 	raise (NotImplemented "ModelConverter: work in progress…")
- 	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the init_definition *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4542,6 +4574,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let init_rational_pairs, well_formed_init = check_init useful_parsing_model_information parsed_model.init_definition observer_automaton in
 
 
+ 	raise (NotImplemented "ModelConverter: work in progress…")
+ 	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check projection definition *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
