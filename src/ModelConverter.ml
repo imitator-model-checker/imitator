@@ -3397,7 +3397,7 @@ let check_parsed_rational_boolean_expression useful_parsing_model_information = 
 		check1 && check2 && check3
 
 
-		
+*)
 (*------------------------------------------------------------*)
 (** Check a state predicate *)
 (*------------------------------------------------------------*)
@@ -3427,8 +3427,11 @@ let check_parsed_loc_predicate useful_parsing_model_information = function
 
 
 let check_parsed_simple_predicate useful_parsing_model_information = function
-	| Parsed_rational_boolean_predicate parsed_rational_boolean_expression ->
-		check_parsed_rational_boolean_expression useful_parsing_model_information parsed_rational_boolean_expression
+	| Parsed_rational_boolean_predicate parsed_continuous_inequality ->
+(* 		check_parsed_rational_boolean_expression useful_parsing_model_information parsed_rational_boolean_expression *)
+	(*** TODO: check for linearity! ***)
+		check_all_variables_defined_in_continuous_inequality "in property state predicate" useful_parsing_model_information.variable_names useful_parsing_model_information.constants parsed_continuous_inequality
+		
 	| Parsed_loc_predicate parsed_loc_predicate ->
 		check_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate
 
@@ -3458,11 +3461,13 @@ and check_parsed_state_predicate_term useful_parsing_model_information = functio
 and check_parsed_state_predicate_factor useful_parsing_model_information = function
 	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor ->
 		check_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor
+		
 	| Parsed_simple_predicate parsed_simple_predicate ->
 		check_parsed_simple_predicate useful_parsing_model_information parsed_simple_predicate
+		
 	| Parsed_state_predicate parsed_state_predicate ->
 		check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
-*)
+
 
 
 (*------------------------------------------------------------*)
@@ -3550,7 +3555,6 @@ let check_parsed_pval useful_parsing_model_information (parsed_pval : ParsingStr
 	multiply_defined_variables = [] && all_defined
 
 
-(*
 (*------------------------------------------------------------*)
 (* Check the correctness property declaration       *)
 (*------------------------------------------------------------*)
@@ -3564,7 +3568,8 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 	let type_of_variables	= useful_parsing_model_information.type_of_variables in
 	let variable_names		= useful_parsing_model_information.variable_names in
 
-	(* Generic check function for 2 actions *)
+	(*** TODO: temporarily disable observers ***)
+(*	(* Generic check function for 2 actions *)
 	let gen_check_2act property a1 a2 =
 		(* Check action names (perform 2 even if one fails) *)
 		evaluate_and
@@ -3589,7 +3594,7 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 	let gen_list property actions_list =
 		(* Check action names (use a fold_left instead of forall to ensure that all actions will be checked) *)
 		List.fold_left (fun current_result a -> current_result && (check_action_name index_of_actions a)) true actions_list
-	in
+	in*)
 
 
 	(* Check *)
@@ -3743,7 +3748,7 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 	(*	in
 		[n action_index], !well_formed*)
 
-	*)*)
+	*)
 
 
 (************************************************************)
@@ -4583,8 +4588,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	in
 
 
- 	raise (NotImplemented "ModelConverter: work in progress…")
- 	(*
 (*	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check optimization definition *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4609,6 +4612,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_medium ("Model syntax successfully checked.");
 
 
+ 	raise (NotImplemented "ModelConverter: work in progress…")
+ 	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the automata without the observer, and with the transitions in a non-finalized form *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
