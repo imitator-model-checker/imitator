@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/02/12
+ * Last modified     : 2020/02/14
  *
  ************************************************************)
 
@@ -4574,8 +4574,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let init_rational_pairs, well_formed_init = check_init useful_parsing_model_information parsed_model.init_definition observer_automaton in
 
 
- 	raise (NotImplemented "ModelConverter: work in progress…")
- 	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check projection definition *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4585,6 +4583,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	in
 
 
+ 	raise (NotImplemented "ModelConverter: work in progress…")
+ 	(*
 (*	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check optimization definition *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
