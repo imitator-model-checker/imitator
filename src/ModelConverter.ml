@@ -311,6 +311,74 @@ let check_all_variables_defined_in_convex_continuous_boolean_expressions (error_
 	)
 	true
 
+(*------------------------------------------------------------*)
+(* Checking only discrete in parsed_continuous_inequality *)
+(*------------------------------------------------------------*)
+
+let rec check_only_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information = function
+	| Parsed_CAE_plus (parsed_continuous_arithmetic_expression, parsed_continuous_term)
+	| Parsed_CAE_minus (parsed_continuous_arithmetic_expression, parsed_continuous_term)
+		->
+		(check_only_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression)
+		&&
+		(check_only_discrete_in_parsed_continuous_term useful_parsing_model_information parsed_continuous_term)
+		
+	| Parsed_CAE_term parsed_continuous_term ->
+		(check_only_discrete_in_parsed_continuous_term useful_parsing_model_information parsed_continuous_term)
+
+and check_only_discrete_in_parsed_continuous_term useful_parsing_model_information = function
+	| Parsed_CT_mul (parsed_continuous_term, parsed_continuous_factor)
+	| Parsed_CT_div (parsed_continuous_term, parsed_continuous_factor)
+		->
+		(check_only_discrete_in_parsed_continuous_term useful_parsing_model_information parsed_continuous_term)
+		&&
+		(check_only_discrete_in_parsed_continuous_factor useful_parsing_model_information parsed_continuous_factor)
+		
+	| Parsed_CT_factor parsed_continuous_factor ->
+		(check_only_discrete_in_parsed_continuous_factor useful_parsing_model_information parsed_continuous_factor)
+
+and check_only_discrete_in_parsed_continuous_factor useful_parsing_model_information = function
+	| Parsed_CF_variable variable_name ->
+		(* Case constant: no problem *)
+		if Hashtbl.mem useful_parsing_model_information.constants variable_name then true
+		else (
+			(* Get the type of the variable *)
+			try(
+			let variable_index =
+				Hashtbl.find useful_parsing_model_information.index_of_variables variable_name
+			in
+			match useful_parsing_model_information.type_of_variables variable_index with | Var_type_discrete _ -> true | _ -> false
+			) with Not_found -> (
+				(* Variable not found! *)
+				(*** TODO: why is this checked here…? It should have been checked before ***)
+				print_error ("The variable `" ^ variable_name ^ "` used in an update was not declared.");
+				false
+			)
+		)
+	
+	| Parsed_CF_constant _ ->
+		true
+	
+	| Parsed_CF_expression parsed_continuous_arithmetic_expression ->
+		check_only_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression
+	
+	| Parsed_CF_unary_min parsed_continuous_factor ->
+		check_only_discrete_in_parsed_continuous_factor useful_parsing_model_information parsed_continuous_factor
+
+
+let check_only_discrete_in_parsed_continuous_inequality useful_parsing_model_information = function
+	| Parsed_expression (parsed_continuous_arithmetic_expression_l , _ , parsed_continuous_arithmetic_expression_r) ->
+		(check_only_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_l)
+		&&
+		(check_only_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_r)
+
+	| Parsed_expression_in (parsed_continuous_arithmetic_expression_1, parsed_continuous_arithmetic_expression_2, parsed_continuous_arithmetic_expression_3) ->
+		(check_only_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_1)
+		&&
+		(check_only_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_2)
+		&&
+		(check_only_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_3)
+
 
 (*
 		
@@ -717,6 +785,53 @@ and convert_parsed_state_predicate useful_parsing_model_information = function
 	| Parsed_state_predicate_false -> State_predicate_false
 
 *)
+
+(************************************************************)
+(** Converting convex continuous Boolean expressions (for guards) *)
+(************************************************************)
+
+exception False_guard_detected
+
+let guard_of_convex_continuous_boolean_expressions useful_parsing_model_information (convex_continuous_boolean_expressions : parsed_convex_continuous_boolean_expressions) : guard =
+
+	try(
+	let guard_triple =
+	List.fold_left (fun (current_discrete_guard, current_prebuilt_continuous_guard, current_continuous_guard) parsed_convex_continuous_boolean_expression ->
+		match parsed_convex_continuous_boolean_expression with
+			(* True: unchanged *)
+			| Parsed_CCBE_True -> current_discrete_guard, current_prebuilt_continuous_guard, current_continuous_guard
+			
+			(* If "false" belongs to the conjunction, the guard is false anyway *)
+			| Parsed_CCBE_False -> raise False_guard_detected
+			
+			| Parsed_CCBE_continuous_inequality parsed_continuous_inequality ->
+				(* If only discrete *)
+				if check_only_discrete_in_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality then () (*** TODO ***);
+				
+				(* Convert *)
+				
+				(* If clocks and discrete *)
+			
+			
+			
+			raise (NotImplemented "guard_of_convex_continuous_boolean_expressions")
+		
+	) (None, None, None) convex_continuous_boolean_expressions
+	in
+	
+	(* If "empty" guard: simplify to true *)
+	if guard_triple = (None, None, None) then True_guard else
+		let discrete_guard, prebuilt_continuous_guard, continuous_guard = guard_triple in
+		Discrete_continuous_guard {
+			discrete_guard   			= discrete_guard;
+			prebuilt_continuous_guard	= prebuilt_continuous_guard;
+			continuous_guard			= continuous_guard;
+		}
+	
+	) with False_guard_detected -> False_guard
+	
+
+
 
 
 
@@ -2134,7 +2249,6 @@ let make_locations_per_automaton index_of_automata parsed_automata nb_automata =
   	(* Functional representation *)
   	fun automaton_index location_index -> invariants.(automaton_index).(location_index)*)
 
-(*
 (*------------------------------------------------------------*)
 (* Get all the possible actions for every location of every automaton *)
 (*------------------------------------------------------------*)
@@ -2162,8 +2276,8 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 	(* Create an empty array for the transitions *)
 	let transitions = Array.make nb_automata (Array.make 0 []) in
 	(* Create an empty array for the invariants *)
-	let invariants = Array.make nb_automata (Array.make 0 (LinearConstraint.pxd_false_constraint ())) in
-	(* Create an empty array for the invariants *)
+	let invariants = Array.make nb_automata (Array.make 0 False_guard) in
+	(* Create an empty array for the stopwatches *)
 	let stopwatches_array = Array.make nb_automata (Array.make 0 []) in
 	(* Does the model has any stopwatch? *)
 	let has_stopwatches = ref false in
@@ -2189,7 +2303,7 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 		(* Create the array of list of transitions for this automaton *)
 		transitions.(automaton_index) <- Array.make nb_locations [];
 		(* Create the array of invariants for this automaton *)
-		invariants.(automaton_index) <- Array.make nb_locations (LinearConstraint.pxd_false_constraint ());
+		invariants.(automaton_index) <- Array.make nb_locations False_guard;
 		(* Create the array of stopwatches for this automaton *)
 		stopwatches_array.(automaton_index) <- Array.make nb_locations [];
 
@@ -2200,11 +2314,11 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 				let location_index = try (Hashtbl.find index_of_locations.(automaton_index) location.name) with Not_found -> raise (InternalError ("Impossible to find the index of location `" ^ location.name ^ "`.")) in
 
 				(* Create the list of actions for this location, by iterating on parsed_transitions *)
-				let list_of_actions, list_of_transitions =  List.fold_left (fun (current_list_of_actions, current_list_of_transitions) (guard, updates, sync, target_location_name) ->
+				let list_of_actions, list_of_transitions =  List.fold_left (fun (current_list_of_actions, current_list_of_transitions) parsed_transition ->
 					(* Get the index of the target location *)
-					let target_location_index = try (Hashtbl.find index_of_locations.(automaton_index) target_location_name) with Not_found -> raise (InternalError ("Impossible to find the index of location `" ^ target_location_name ^ "`.")) in
+					let target_location_index = try (Hashtbl.find index_of_locations.(automaton_index) parsed_transition.target_name) with Not_found -> raise (InternalError ("Impossible to find the index of location `" ^ parsed_transition.target_name ^ "`.")) in
 					(* Depend on the action type *)
-					match sync with
+					match parsed_transition.parsed_label with
 					| ParsingStructure.Sync action_name ->
 					(* If the 'sync' is within the removed actions, do nothing *)
 					if List.mem action_name removed_action_names then (
@@ -2219,7 +2333,7 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 						(action_index :: current_list_of_actions)
 						,
 						(* Compute the list of transitions *)
-						((action_index, guard, updates, target_location_index) :: current_list_of_transitions)
+						((action_index, parsed_transition.parsed_guard, parsed_transition.parsed_updates, target_location_index) :: current_list_of_transitions)
 					)
 					| ParsingStructure.NoSync ->
 					(* Get the action index *)
@@ -2230,14 +2344,17 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 					(action_index :: current_list_of_actions)
 					,
 					(* Compute the list of transitions *)
-					((action_index, guard, updates, target_location_index) :: current_list_of_transitions)
+					(*** NOTE: ugly! Go through a hybrid structure mixing parsed and converted information! ***)
+					let transition = (action_index, parsed_transition.parsed_guard, parsed_transition.parsed_updates, target_location_index) in
+					transition :: current_list_of_transitions
 				) ([], []) location.transitions in
 
 				(* Update the array of actions per location *)
 				actions_per_location.(automaton_index).(location_index) <- (List.rev (list_only_once list_of_actions));
 
 				(* Update the array of costs per location *)
-				begin
+				(*** TODO: temporarily remove costs ***)
+(*				begin
 				match location.cost with
 				| Some cost ->
 					costs.(automaton_index).(location_index) <- Some (
@@ -2246,7 +2363,7 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 						true
 					);
 				| None -> ()
-				end;
+				end;*)
 
 				(* Update the array of urgency *)
 				let urgency =
@@ -2268,7 +2385,8 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 				transitions.(automaton_index).(location_index) <- (List.rev list_of_transitions);
 
 				(* Update the array of invariants *)
-				invariants.(automaton_index).(location_index) <- linear_constraint_of_convex_predicate index_of_variables constants location.invariant;
+				invariants.(automaton_index).(location_index) <- guard_of_convex_continuous_boolean_expressions useful_parsing_model_information location.invariant
+					(*linear_constraint_of_convex_predicate index_of_variables constants location.invariant*);
 
 				(* Does the model has stopwatches? *)
 				if location.stopped != [] then has_stopwatches := true;
@@ -2314,7 +2432,6 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 
 	(* Return all the structures in a functional representation *)
 	actions, array_of_action_names, array_of_action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, !has_stopwatches, transitions, (if with_observer_action then Some (nb_actions - 1) else None)
-*)
 
 
 (*------------------------------------------------------------*)
@@ -4612,8 +4729,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_medium ("Model syntax successfully checked.");
 
 
- 	raise (NotImplemented "ModelConverter: work in progress…")
- 	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the automata without the observer, and with the transitions in a non-finalized form *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4623,6 +4738,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let nb_actions = List.length actions in
 
 
+ 	raise (NotImplemented "ModelConverter: work in progress…")
+ 	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create the abstract property from the parsed property *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
