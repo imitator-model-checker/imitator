@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/02/14
+ * Last modified     : 2020/02/17
  *
  ************************************************************)
 
@@ -242,6 +242,8 @@ and get_variables_in_parsed_continuous_boolean_expression variables_used_ref = f
 (* Getting variables in continuous expressions (for guards) *)
 (*------------------------------------------------------------*)
 	
+(*** TODO: merge check_all_variables_defined_in_continuous_arithmetic_expression and check_only_discrete_in_parsed_continuous_arithmetic_expression and check_some_discrete_in_parsed_continuous_arithmetic_expression using a generic function ***)
+
 
 let rec check_all_variables_defined_in_continuous_arithmetic_expression error_details variable_names constants = function
 	| Parsed_CAE_plus (parsed_continuous_arithmetic_expression, parsed_continuous_term)
@@ -315,6 +317,8 @@ let check_all_variables_defined_in_convex_continuous_boolean_expressions (error_
 (* Checking only discrete in parsed_continuous_inequality *)
 (*------------------------------------------------------------*)
 
+
+(*** TODO: use exception mechanism to speed up? (but then we probably work on very small structures?) ***)
 let rec check_only_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information = function
 	| Parsed_CAE_plus (parsed_continuous_arithmetic_expression, parsed_continuous_term)
 	| Parsed_CAE_minus (parsed_continuous_arithmetic_expression, parsed_continuous_term)
@@ -378,6 +382,78 @@ let check_only_discrete_in_parsed_continuous_inequality useful_parsing_model_inf
 		(check_only_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_2)
 		&&
 		(check_only_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_3)
+
+
+
+
+(*------------------------------------------------------------*)
+(* Checking some discrete in parsed_continuous_inequality *)
+(*------------------------------------------------------------*)
+
+(*** TODO: use exception mechanism to speed up? (but then we probably work on very small structures?) ***)
+let rec check_some_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information = function
+	| Parsed_CAE_plus (parsed_continuous_arithmetic_expression, parsed_continuous_term)
+	| Parsed_CAE_minus (parsed_continuous_arithmetic_expression, parsed_continuous_term)
+		->
+		(check_some_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression)
+		||
+		(check_some_discrete_in_parsed_continuous_term useful_parsing_model_information parsed_continuous_term)
+		
+	| Parsed_CAE_term parsed_continuous_term ->
+		(check_some_discrete_in_parsed_continuous_term useful_parsing_model_information parsed_continuous_term)
+
+and check_some_discrete_in_parsed_continuous_term useful_parsing_model_information = function
+	| Parsed_CT_mul (parsed_continuous_term, parsed_continuous_factor)
+	| Parsed_CT_div (parsed_continuous_term, parsed_continuous_factor)
+		->
+		(check_some_discrete_in_parsed_continuous_term useful_parsing_model_information parsed_continuous_term)
+		||
+		(check_some_discrete_in_parsed_continuous_factor useful_parsing_model_information parsed_continuous_factor)
+		
+	| Parsed_CT_factor parsed_continuous_factor ->
+		(check_some_discrete_in_parsed_continuous_factor useful_parsing_model_information parsed_continuous_factor)
+
+and check_some_discrete_in_parsed_continuous_factor useful_parsing_model_information = function
+	| Parsed_CF_variable variable_name ->
+		(* Case constant: no problem *)
+		if Hashtbl.mem useful_parsing_model_information.constants variable_name then true
+		else (
+			(* Get the type of the variable *)
+			try(
+			let variable_index =
+				Hashtbl.find useful_parsing_model_information.index_of_variables variable_name
+			in
+			match useful_parsing_model_information.type_of_variables variable_index with | Var_type_discrete _ -> true | _ -> false
+			) with Not_found -> (
+				(* Variable not found! *)
+				(*** TODO: why is this checked here…? It should have been checked before ***)
+				print_error ("The variable `" ^ variable_name ^ "` used in an update was not declared.");
+				false
+			)
+		)
+	
+	| Parsed_CF_constant _ ->
+		true
+	
+	| Parsed_CF_expression parsed_continuous_arithmetic_expression ->
+		check_some_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression
+	
+	| Parsed_CF_unary_min parsed_continuous_factor ->
+		check_some_discrete_in_parsed_continuous_factor useful_parsing_model_information parsed_continuous_factor
+
+
+let check_some_discrete_in_parsed_continuous_inequality useful_parsing_model_information = function
+	| Parsed_expression (parsed_continuous_arithmetic_expression_l , _ , parsed_continuous_arithmetic_expression_r) ->
+		(check_some_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_l)
+		||
+		(check_some_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_r)
+
+	| Parsed_expression_in (parsed_continuous_arithmetic_expression_1, parsed_continuous_arithmetic_expression_2, parsed_continuous_arithmetic_expression_3) ->
+		(check_some_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_1)
+		||
+		(check_some_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_2)
+		||
+		(check_some_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_3)
 
 
 (*
@@ -646,9 +722,9 @@ let rec valuate_parsed_continuous_arithmetic_expression constants = function
 
 
 
-
+*)
 (** Convert a Boolean operator to its abstract model *)
-let convert_parsed_relop = function
+let relop_of_parsed_relop = function
 	| PARSED_OP_L	-> OP_L
 	| PARSED_OP_LEQ	-> OP_LEQ
 	| PARSED_OP_EQ	-> OP_EQ
@@ -657,6 +733,7 @@ let convert_parsed_relop = function
 	| PARSED_OP_G 	-> OP_G
 
 
+(*
 let convert_rational_bool_expr index_of_variables constants = function
 	| Parsed_expression (expr1, relop, expr2) -> Expression (
 		(rational_arithmetic_expression_of_parsed_continuous_arithmetic_expression index_of_variables constants expr1),
@@ -790,6 +867,129 @@ and convert_parsed_state_predicate useful_parsing_model_information = function
 (** Converting convex continuous Boolean expressions (for guards) *)
 (************************************************************)
 
+(*------------------------------------------------------------*)
+(* Convert parsed_continuous_inequality to convex_continuous_boolean_inequalities *)
+(*------------------------------------------------------------*)
+
+let rec convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information = function
+	| Parsed_CAE_plus (parsed_continuous_arithmetic_expression , parsed_continuous_term) ->
+		CCE_plus
+			(convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression)
+			(convex_continuous_term_of_parsed_continuous_term useful_parsing_model_information parsed_continuous_term)
+
+	| Parsed_CAE_minus (parsed_continuous_arithmetic_expression , parsed_continuous_term) ->
+		CCE_minus
+			(convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression)
+			(convex_continuous_term_of_parsed_continuous_term useful_parsing_model_information parsed_continuous_term)
+
+	| Parsed_CAE_term parsed_continuous_term ->
+		CCE_term
+			(convex_continuous_term_of_parsed_continuous_term useful_parsing_model_information parsed_continuous_term)
+
+
+and convex_continuous_term_of_parsed_continuous_term useful_parsing_model_information = function
+	| Parsed_CT_mul (parsed_continuous_term, parsed_continuous_factor) ->
+		(*** TODO: simplify with 1/0 ***)
+		CCT_mul
+			(convex_continuous_term_of_parsed_continuous_term useful_parsing_model_information parsed_continuous_term)
+			(convex_continuous_expression_of_parsed_continuous_factor useful_parsing_model_information parsed_continuous_factor)
+	
+	| Parsed_CT_div (parsed_continuous_term, parsed_continuous_factor) ->
+		(*** TODO: simplify with 1/0 ***)
+		CCT_div
+			(convex_continuous_term_of_parsed_continuous_term useful_parsing_model_information parsed_continuous_term)
+			(convex_continuous_expression_of_parsed_continuous_factor useful_parsing_model_information parsed_continuous_factor)
+	
+	| Parsed_CT_factor parsed_continuous_factor ->
+		CCT_factor (convex_continuous_expression_of_parsed_continuous_factor useful_parsing_model_information parsed_continuous_factor)
+
+
+and convex_continuous_expression_of_parsed_continuous_factor useful_parsing_model_information = function
+	| Parsed_CF_variable variable_name ->
+		(* Try to find the variable_index *)
+		if Hashtbl.mem useful_parsing_model_information.index_of_variables variable_name then (
+			let variable_index = Hashtbl.find useful_parsing_model_information.index_of_variables variable_name in
+			(* Convert *)
+			CCF_variable variable_index
+			(* Try to find a constant *)
+		) else (
+			if Hashtbl.mem useful_parsing_model_information.constants variable_name then (
+			(* Retrieve the value of the global constant *)
+			let value = Hashtbl.find useful_parsing_model_information.constants variable_name in
+			(* Convert *)
+			CCF_constant value
+			) else (
+				raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` although this should have been checked before."))
+			)
+	
+	| Parsed_CF_constant constant_value -> CCF_constant constant_value
+	
+	| Parsed_CF_expression parsed_continuous_arithmetic_expression ->
+		CCF_expression (convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression)
+	
+	| Parsed_CF_unary_min parsed_continuous_factor ->
+		CCF_unary_min (convex_continuous_expression_of_parsed_continuous_factor useful_parsing_model_information parsed_continuous_factor)
+
+
+
+(*** NOTE: result can be 1 or 2 inequalities (if IN) ***)
+let convex_continuous_boolean_inequalities_of_parsed_continuous_inequality useful_parsing_model_information = function
+	| Parsed_expression (parsed_continuous_arithmetic_expression_l, parsed_relop, parsed_continuous_arithmetic_expression_r) ->
+		[
+			(convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_l)
+			,
+			(relop_of_parsed_relop)
+			,
+			(convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_r)
+		]
+
+	| Parsed_expression_in (parsed_continuous_arithmetic_expression_1, parsed_continuous_arithmetic_expression_2, parsed_continuous_arithmetic_expression_3) ->
+		let convex_continuous_expression_1 = convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_1 in
+		let convex_continuous_expression_2 = convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_2 in
+		let convex_continuous_expression_3 = convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_3 in
+		[
+			convex_continuous_expression_1, OP_LEQ, convex_continuous_expression_2
+			;
+			convex_continuous_expression_2, OP_LEQ, convex_continuous_expression_3
+		]
+
+
+(*------------------------------------------------------------*)
+(* Convert convex_continuous_boolean_expression to px_linear_constraint *)
+(*------------------------------------------------------------*)
+
+let px_linear_constraint_of_convex_continuous_boolean_inequality convex_continuous_boolean_inequality =
+	let convex_continuous_expression_l , relop , convex_continuous_expression_r = convex_continuous_boolean_inequality in
+	(* Convert left *)
+	
+	(* Convert right *)
+	
+	(* Build linear constraint *)
+	JE SUIS LÀ Iamhere
+
+
+(*** TODO: simplify List.map ***)
+let px_linear_constraints_of_convex_continuous_boolean_inequalities convex_continuous_boolean_inequalities =
+	List.map (fun convex_continuous_boolean_inequality -> 
+		px_linear_constraint_of_convex_continuous_boolean_inequality convex_continuous_boolean_inequality
+	) convex_continuous_boolean_inequalities
+	
+
+let px_linear_constraints_of_convex_continuous_boolean_expression = function
+	| CCBE_True -> LinearConstraint.px_true_constraint()
+	(*** NOTE: this case might be possible at runtime! ***)
+	| CCBE_False -> LinearConstraint.px_false_constraint()
+	
+	(* Convert *)
+	| CCBE_conjunction convex_continuous_boolean_inequalities -> px_linear_constraints_of_convex_continuous_boolean_inequalities convex_continuous_boolean_inequalities
+
+
+let px_linear_constraint_of_convex_continuous_boolean_expression = function
+	(*** TODO ***)
+
+(*------------------------------------------------------------*)
+(* Convert guard *)
+(*------------------------------------------------------------*)
 exception False_guard_detected
 
 let guard_of_convex_continuous_boolean_expressions useful_parsing_model_information (convex_continuous_boolean_expressions : parsed_convex_continuous_boolean_expressions) : guard =
@@ -805,16 +1005,42 @@ let guard_of_convex_continuous_boolean_expressions useful_parsing_model_informat
 			| Parsed_CCBE_False -> raise False_guard_detected
 			
 			| Parsed_CCBE_continuous_inequality parsed_continuous_inequality ->
-				(* If only discrete *)
-				if check_only_discrete_in_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality then () (*** TODO ***);
+				(* Case 1: If only discrete *)
+				if check_only_discrete_in_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality then (
+					(* Convert to convex_continuous_boolean_inequalities *)
+					let convex_continuous_boolean_inequalities = convex_continuous_boolean_inequalities_of_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality in
+					
+					(* Add them to the current list *)
+					let updated_discrete_guard =
+					match current_discrete_guard with
+						| Some (CCBE_conjunction current_discrete_guard) -> Some (CCBE_conjunction (list_append current_discrete_guard convex_continuous_boolean_inequalities))
+						| None -> Some (CCBE_conjunction convex_continuous_boolean_inequalities)
+						(* We do not want these cases here *)
+						| Some CCBE_True | Some CCBE_False ->
+							raise (InternalError "Unexpected CCBE_True or CCBE_False in guard_of_convex_continuous_boolean_expressions")
+					in
+					updated_discrete_guard, current_prebuilt_continuous_guard, current_continuous_guard
+				)
+				(* Else: If clocks and discrete *)
+				else (
+					(* Case 2: if discrete and (parameters or clocks) *)
+					if check_some_discrete_in_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality then (
+						(* First convert to convex_continuous_boolean_inequalities *)
+						(*** NOTE: allows to reuse existing functions! ***)
+						let convex_continuous_boolean_inequalities = convex_continuous_boolean_inequalities_of_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality in
+
+						(* Convert to px_linear_constraint *)
+						let px_linear_constraints_of_parsed_continuous_inequality
+						
+					
+					)
+					
+					raise (NotImplemented "guard_of_convex_continuous_boolean_expressions")
 				
-				(* Convert *)
-				
-				(* If clocks and discrete *)
+				)
 			
 			
 			
-			raise (NotImplemented "guard_of_convex_continuous_boolean_expressions")
 		
 	) (None, None, None) convex_continuous_boolean_expressions
 	in
