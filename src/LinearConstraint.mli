@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2020/02/06
+ * Last modified     : 2020/02/17
  *
  ************************************************************)
 
@@ -239,7 +239,7 @@ val px_constraint_of_point : (variable * coef) list -> px_linear_constraint
 (** Create a false constraint *)
 (* val false_constraint : unit -> linear_constraint *)
 val p_false_constraint : unit -> p_linear_constraint
-(* val pxd_false_constraint : unit -> pxd_linear_constraint *)
+val px_false_constraint : unit -> px_linear_constraint
 
 (** Create a true constraint *)
 (* val true_constraint : unit -> linear_constraint *)
