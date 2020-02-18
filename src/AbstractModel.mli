@@ -83,20 +83,20 @@ type location_urgency =
 type relop = OP_L | OP_LEQ | OP_EQ | OP_NEQ | OP_GEQ | OP_G
 
 type convex_continuous_expression =
-	| CCE_plus of convex_continuous_expression * convex_continuous_term
+	| CCE_plus  of convex_continuous_expression * convex_continuous_term
 	| CCE_minus of convex_continuous_expression * convex_continuous_term
-	| CCE_term of convex_continuous_term
+	| CCE_term  of convex_continuous_term
 
 and convex_continuous_term =
-	| CCT_mul of convex_continuous_term * convex_continuous_factor
-	| CCT_div of convex_continuous_term * convex_continuous_factor
+	| CCT_mul    of convex_continuous_term * convex_continuous_factor
+	| CCT_div    of convex_continuous_term * convex_continuous_factor
 	| CCT_factor of convex_continuous_factor
 
 and convex_continuous_factor =
-	| CCF_variable of Automaton.variable_index
-	| CCF_constant of Automaton.constant_value
+	| CCF_variable   of Automaton.variable_index
+	| CCF_constant   of Automaton.constant_value
 	| CCF_expression of convex_continuous_expression
-	| CCF_unary_min of convex_continuous_factor
+	| CCF_unary_min  of convex_continuous_factor
 
 type convex_continuous_boolean_inequality = convex_continuous_expression * relop * convex_continuous_expression
 
@@ -160,7 +160,7 @@ type invariant = guard
 
 type rational_boolean_expression =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| RBE_Expression of convex_continuous_expression * relop * convex_continuous_expression
+	| RBE_Expression    of convex_continuous_expression * relop * convex_continuous_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| RBE_Expression_in of convex_continuous_expression * convex_continuous_expression * (*rational_arithmetic_expression*)convex_continuous_expression
 
@@ -177,7 +177,7 @@ type discrete_boolean_expression =
 	| DBE_False (** False *)
 	| DBE_Not of discrete_boolean_expression (** Negation *)
 	| DBE_And of discrete_boolean_expression * discrete_boolean_expression (** Conjunction *)
-	| DBE_Or of discrete_boolean_expression * discrete_boolean_expression (** Disjunction *)
+	| DBE_Or  of discrete_boolean_expression * discrete_boolean_expression (** Disjunction *)
 	| DBE_Rational_boolean_expression of rational_boolean_expression
 
 
@@ -194,7 +194,7 @@ type string_term = string
 
 type discrete_term =
 	| Rational_term of convex_continuous_expression
-	| String_term of string_term
+	| String_term   of string_term
 
 type discrete_update = discrete_index * discrete_term
 
