@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/02/17
+ * Last modified     : 2020/02/18
  *
  ************************************************************)
 
@@ -114,6 +114,7 @@ type useful_parsing_model_information = {
 	index_of_locations					: ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array;
 	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
 	nb_parameters						: int;
+	nb_variables						: int;
 	parameter_names						: variable_name list;
 	removed_action_names				: action_name list;
 	type_of_variables					: Automaton.variable_index -> AbstractModel.var_type;
@@ -874,13 +875,18 @@ and convert_parsed_state_predicate useful_parsing_model_information = function
 let rec convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information = function
 	| Parsed_CAE_plus (parsed_continuous_arithmetic_expression , parsed_continuous_term) ->
 		CCE_plus
+		(
 			(convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression)
+			,
 			(convex_continuous_term_of_parsed_continuous_term useful_parsing_model_information parsed_continuous_term)
+		)
 
 	| Parsed_CAE_minus (parsed_continuous_arithmetic_expression , parsed_continuous_term) ->
-		CCE_minus
+		CCE_minus(
 			(convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression)
+			,
 			(convex_continuous_term_of_parsed_continuous_term useful_parsing_model_information parsed_continuous_term)
+		)
 
 	| Parsed_CAE_term parsed_continuous_term ->
 		CCE_term
@@ -890,15 +896,19 @@ let rec convex_continuous_expression_of_parsed_continuous_arithmetic_expression 
 and convex_continuous_term_of_parsed_continuous_term useful_parsing_model_information = function
 	| Parsed_CT_mul (parsed_continuous_term, parsed_continuous_factor) ->
 		(*** TODO: simplify with 1/0 ***)
-		CCT_mul
+		CCT_mul(
 			(convex_continuous_term_of_parsed_continuous_term useful_parsing_model_information parsed_continuous_term)
+			,
 			(convex_continuous_expression_of_parsed_continuous_factor useful_parsing_model_information parsed_continuous_factor)
+		)
 	
 	| Parsed_CT_div (parsed_continuous_term, parsed_continuous_factor) ->
 		(*** TODO: simplify with 1/0 ***)
-		CCT_div
+		CCT_div(
 			(convex_continuous_term_of_parsed_continuous_term useful_parsing_model_information parsed_continuous_term)
+			,
 			(convex_continuous_expression_of_parsed_continuous_factor useful_parsing_model_information parsed_continuous_factor)
+		)
 	
 	| Parsed_CT_factor parsed_continuous_factor ->
 		CCT_factor (convex_continuous_expression_of_parsed_continuous_factor useful_parsing_model_information parsed_continuous_factor)
@@ -914,13 +924,14 @@ and convex_continuous_expression_of_parsed_continuous_factor useful_parsing_mode
 			(* Try to find a constant *)
 		) else (
 			if Hashtbl.mem useful_parsing_model_information.constants variable_name then (
-			(* Retrieve the value of the global constant *)
-			let value = Hashtbl.find useful_parsing_model_information.constants variable_name in
-			(* Convert *)
-			CCF_constant value
+				(* Retrieve the value of the global constant *)
+				let value = Hashtbl.find useful_parsing_model_information.constants variable_name in
+				(* Convert *)
+				CCF_constant value
 			) else (
 				raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` although this should have been checked before."))
 			)
+		)
 	
 	| Parsed_CF_constant constant_value -> CCF_constant constant_value
 	
@@ -938,7 +949,7 @@ let convex_continuous_boolean_inequalities_of_parsed_continuous_inequality usefu
 		[
 			(convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_l)
 			,
-			(relop_of_parsed_relop)
+			(relop_of_parsed_relop parsed_relop)
 			,
 			(convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_r)
 		]
@@ -948,9 +959,9 @@ let convex_continuous_boolean_inequalities_of_parsed_continuous_inequality usefu
 		let convex_continuous_expression_2 = convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_2 in
 		let convex_continuous_expression_3 = convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_3 in
 		[
-			convex_continuous_expression_1, OP_LEQ, convex_continuous_expression_2
+			convex_continuous_expression_1, AbstractModel.OP_LEQ, convex_continuous_expression_2
 			;
-			convex_continuous_expression_2, OP_LEQ, convex_continuous_expression_3
+			convex_continuous_expression_2, AbstractModel.OP_LEQ, convex_continuous_expression_3
 		]
 
 
@@ -958,45 +969,213 @@ let convex_continuous_boolean_inequalities_of_parsed_continuous_inequality usefu
 (* Convert convex_continuous_boolean_expression to px_linear_constraint *)
 (*------------------------------------------------------------*)
 
-let px_linear_constraint_of_convex_continuous_boolean_inequality convex_continuous_boolean_inequality =
+let coef_array_of_convex_continuous_expression nb_variables convex_continuous_expression =
+	(* Create an array of coef *)
+	let array_of_coef = Array.make nb_variables NumConst.zero in
+	(* Create a zero constant_term *)
+	let constant_term = ref NumConst.zero in
+	
+	let rec update_array_for_convex_continuous_expression = function
+	| CCE_plus  (convex_continuous_expression , convex_continuous_term) ->
+		update_array_for_convex_continuous_expression convex_continuous_expression;
+		(* Update the term with coefficient 1 *)
+		update_array_for_convex_continuous_term NumConst.one convex_continuous_term;
+
+	| CCE_minus (convex_continuous_expression , convex_continuous_term) ->
+		update_array_for_convex_continuous_expression convex_continuous_expression;
+		(* Update the term with coefficient -1 *)
+		update_array_for_convex_continuous_term NumConst.minus_one convex_continuous_term;
+	
+	| CCE_term  convex_continuous_term ->
+		(* Update the term with coefficient 1 *)
+		update_array_for_convex_continuous_term NumConst.one convex_continuous_term;
+		
+	and update_array_for_convex_continuous_term mul_coef = function
+		| CCT_mul    (CCT_factor (CCF_variable variable_index) , CCF_constant constant_value)
+		| CCT_mul    (CCT_factor (CCF_constant constant_value) , CCF_variable variable_index)
+			->
+			(* Update the variable with its coef *)
+			array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) (NumConst.mul constant_value mul_coef);
+
+		| CCT_mul    _ ->
+			raise (InternalError "Disallowed multiplication found in coef_array_of_convex_continuous_expression!")
+		
+		
+		| CCT_div    (CCT_factor (CCF_variable variable_index) , CCF_constant constant_value) ->
+			(* Update the variable with its coef *)
+			array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) (NumConst.div mul_coef constant_value);
+
+		| CCT_div    _ ->
+			raise (InternalError "Disallowed division found in coef_array_of_convex_continuous_expression!")
+		
+		
+		| CCT_factor (CCF_constant constant_value) ->
+			constant_term := NumConst.add !constant_term (NumConst.mul constant_value mul_coef);
+
+		| CCT_factor (CCF_variable variable_index) ->
+			(* Update the variable with its coef *)
+			array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) mul_coef;
+		
+		| CCT_factor _ ->
+			raise (InternalError "Disallowed complex factor found in coef_array_of_convex_continuous_expression!")
+	
+	in
+	(* Call the recursive function *)
+	update_array_for_convex_continuous_expression convex_continuous_expression;
+	(* Return the array of coef and the constant term *)
+	array_of_coef, !constant_term
+	
+
+(*------------------------------------------------------------*)
+(* Convert an array of variable coef into a linear term *)
+(*------------------------------------------------------------*)
+let linear_term_of_coef_array array_of_coef constant_term =
+	(* Create an empty list of terms *)
+	let terms = ref [] in
+	
+	(* Iterate on the coefficients *)
+	Array.iteri (fun variable_index coef ->
+		if NumConst.neq coef NumConst.zero then (
+			(* Add the term *)
+			terms := (coef, variable_index) :: !terms;
+		);
+	) array_of_coef;
+
+	(* Create the linear term *)
+	LinearConstraint.make_px_linear_term !terms constant_term
+
+
+
+let px_linear_term_of_convex_continuous_expression nb_variables convex_continuous_expression =
+	(* Build the array *)
+	let coef_array, constant_term = coef_array_of_convex_continuous_expression nb_variables convex_continuous_expression in
+	(* Convert the px_linear_term *)
+	linear_term_of_coef_array coef_array constant_term
+
+(*------------------------------------------------------------*)
+(* Perform the substraction of 2 NumConst array of same size *)
+(*------------------------------------------------------------*)
+let sub_array array1 array2 =
+	(* Create the result *)
+	let result = Array.make (Array.length array1) NumConst.zero in
+	(* Iterate on both arrays *)
+	for i = 0 to (Array.length array1) - 1 do
+		(* Perform array1 - array2 *)
+		result.(i) <- NumConst.sub array1.(i) array2.(i);
+	done;
+	(* Return the result *)
+	result
+
+
+
+let px_linear_inequality_of_convex_continuous_boolean_inequality nb_variables convex_continuous_boolean_inequality : LinearConstraint.px_linear_inequality =
 	let convex_continuous_expression_l , relop , convex_continuous_expression_r = convex_continuous_boolean_inequality in
-	(* Convert left *)
+
+	(* Build the array of variables and constant associated to the convex_continuous_expression s *)
+	let array1, constant1 = coef_array_of_convex_continuous_expression nb_variables convex_continuous_expression_l in
+	let array2, constant2 = coef_array_of_convex_continuous_expression nb_variables convex_continuous_expression_r in
+	(*(* Convert left *)
+	let px_linear_term_l = px_linear_term_of_convex_continuous_expression convex_continuous_expression_l in
 	
 	(* Convert right *)
-	
-	(* Build linear constraint *)
-	JE SUIS LÀ Iamhere
+	let px_linear_term_r = px_linear_term_of_convex_continuous_expression convex_continuous_expression_r in*)
 
+	(* Build left - right *)
+(* 	let left_minus_right = sub_px_linear_terms px_linear_term_l px_linear_term_r in *)
+
+	
+	(* Consider the operator *)
+	match relop with
+	(* a < b <=> b - a > 0 *)
+	| OP_L ->
+		(* Create the array *)
+		let array12 = sub_array array2 array1 in
+		(* Create the constant *)
+		let constant12 = NumConst.sub constant2 constant1 in
+		(* Create the linear_term *)
+		let linear_term = linear_term_of_coef_array array12 constant12 in
+		(* Return the linear_inequality *)
+		LinearConstraint.make_px_linear_inequality linear_term LinearConstraint.Op_g
+
+	(* a <= b <=> b - a >= 0 *)
+	| OP_LEQ ->
+		(* Create the array *)
+		let array12 = sub_array array2 array1 in
+		(* Create the constant *)
+		let constant12 = NumConst.sub constant2 constant1 in
+		(* Create the linear_term *)
+		let linear_term = linear_term_of_coef_array array12 constant12 in
+		(* Return the linear_inequality *)
+		LinearConstraint.make_px_linear_inequality linear_term LinearConstraint.Op_ge
+
+	(* a = b <=> b - a = 0 *)
+	| OP_EQ ->
+		(* Create the array *)
+		let array12 = sub_array array2 array1 in
+		(* Create the constant *)
+		let constant12 = NumConst.sub constant2 constant1 in
+		(* Create the linear_term *)
+		let linear_term = linear_term_of_coef_array array12 constant12 in
+		(* Return the linear_inequality *)
+		LinearConstraint.make_px_linear_inequality linear_term LinearConstraint.Op_eq
+
+	(* a >= b <=> a - b >= 0 *)
+	| OP_GEQ ->
+		(* Create the array *)
+		let array12 = sub_array array1 array2 in
+		(* Create the constant *)
+		let constant12 = NumConst.sub constant1 constant2 in
+		(* Create the linear_term *)
+		let linear_term = linear_term_of_coef_array array12 constant12 in
+		(* Return the linear_inequality *)
+		LinearConstraint.make_px_linear_inequality linear_term LinearConstraint.Op_ge
+
+	(* a > b <=> a - b > 0 *)
+	| OP_G ->
+		(* Create the array *)
+		let array12 = sub_array array1 array2 in
+		(* Create the constant *)
+		let constant12 = NumConst.sub constant1 constant2 in
+		(* Create the linear_term *)
+		let linear_term = linear_term_of_coef_array array12 constant12 in
+		(* Return the linear_inequality *)
+		LinearConstraint.make_px_linear_inequality linear_term LinearConstraint.Op_g
+
+	| OP_NEQ ->
+		raise (InternalError("Inequality <> not yet supported in `px_linear_inequality_of_convex_continuous_boolean_inequality`"))
+		
 
 (*** TODO: simplify List.map ***)
-let px_linear_constraints_of_convex_continuous_boolean_inequalities convex_continuous_boolean_inequalities =
+let px_linear_inequalities_of_convex_continuous_boolean_inequalities nb_variables convex_continuous_boolean_inequalities =
 	List.map (fun convex_continuous_boolean_inequality -> 
-		px_linear_constraint_of_convex_continuous_boolean_inequality convex_continuous_boolean_inequality
+		px_linear_inequality_of_convex_continuous_boolean_inequality nb_variables convex_continuous_boolean_inequality
 	) convex_continuous_boolean_inequalities
 	
 
-let px_linear_constraints_of_convex_continuous_boolean_expression = function
+let px_linear_constraint_of_convex_continuous_boolean_expression nb_variables = function
 	| CCBE_True -> LinearConstraint.px_true_constraint()
 	(*** NOTE: this case might be possible at runtime! ***)
 	| CCBE_False -> LinearConstraint.px_false_constraint()
 	
 	(* Convert *)
-	| CCBE_conjunction convex_continuous_boolean_inequalities -> px_linear_constraints_of_convex_continuous_boolean_inequalities convex_continuous_boolean_inequalities
+	| CCBE_conjunction convex_continuous_boolean_inequalities ->
+		let px_linear_inequalities : LinearConstraint.px_linear_inequality list = px_linear_inequalities_of_convex_continuous_boolean_inequalities nb_variables convex_continuous_boolean_inequalities in
+		(* Make the actual constraint *)
+		LinearConstraint.make_px_constraint px_linear_inequalities
 
-
-let px_linear_constraint_of_convex_continuous_boolean_expression = function
-	(*** TODO ***)
 
 (*------------------------------------------------------------*)
 (* Convert guard *)
 (*------------------------------------------------------------*)
+
 exception False_guard_detected
 
+(* Converts a parsed_convex_continuous_boolean_expressions into a proper guard, by separating the various inequalities into static discrete inequalities, static continuous inequalities (to be evaluated at runtime), and prebuilt px_linear_constraint *)
 let guard_of_convex_continuous_boolean_expressions useful_parsing_model_information (convex_continuous_boolean_expressions : parsed_convex_continuous_boolean_expressions) : guard =
 
 	try(
 	let guard_triple =
-	List.fold_left (fun (current_discrete_guard, current_prebuilt_continuous_guard, current_continuous_guard) parsed_convex_continuous_boolean_expression ->
+	List.fold_left (fun (current_discrete_guard, (current_prebuilt_continuous_guard : LinearConstraint.px_linear_constraint list option), current_continuous_guard) parsed_convex_continuous_boolean_expression ->
 		match parsed_convex_continuous_boolean_expression with
 			(* True: unchanged *)
 			| Parsed_CCBE_True -> current_discrete_guard, current_prebuilt_continuous_guard, current_continuous_guard
@@ -1008,7 +1187,8 @@ let guard_of_convex_continuous_boolean_expressions useful_parsing_model_informat
 				(* Case 1: If only discrete *)
 				if check_only_discrete_in_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality then (
 					(* Convert to convex_continuous_boolean_inequalities *)
-					let convex_continuous_boolean_inequalities = convex_continuous_boolean_inequalities_of_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality in
+					(*** NOTE: may result of 1 or 2 inequalities due to the IN ***)
+					let convex_continuous_boolean_inequalities : AbstractModel.convex_continuous_boolean_inequality list = convex_continuous_boolean_inequalities_of_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality in
 					
 					(* Add them to the current list *)
 					let updated_discrete_guard =
@@ -1021,41 +1201,75 @@ let guard_of_convex_continuous_boolean_expressions useful_parsing_model_informat
 					in
 					updated_discrete_guard, current_prebuilt_continuous_guard, current_continuous_guard
 				)
+				
 				(* Else: If clocks and discrete *)
 				else (
 					(* Case 2: if discrete and (parameters or clocks) *)
 					if check_some_discrete_in_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality then (
-						(* First convert to convex_continuous_boolean_inequalities *)
-						(*** NOTE: allows to reuse existing functions! ***)
-						let convex_continuous_boolean_inequalities = convex_continuous_boolean_inequalities_of_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality in
-
-						(* Convert to px_linear_constraint *)
-						let px_linear_constraints_of_parsed_continuous_inequality
+					
+						(* Convert to convex_continuous_boolean_inequalities *)
+						(*** NOTE: may result of 1 or 2 inequalities due to the IN ***)
+						let convex_continuous_boolean_inequalities : AbstractModel.convex_continuous_boolean_inequality list = convex_continuous_boolean_inequalities_of_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality in
 						
+						(* Add them to the current list *)
+						let updated_continuous_guard =
+						match current_continuous_guard with
+							| Some (CCBE_conjunction current_continuous_guard) -> Some (CCBE_conjunction (list_append current_continuous_guard convex_continuous_boolean_inequalities))
+							| None -> Some (CCBE_conjunction convex_continuous_boolean_inequalities)
+							(* We do not want these cases here *)
+							| Some CCBE_True | Some CCBE_False ->
+								raise (InternalError "Unexpected CCBE_True or CCBE_False in guard_of_convex_continuous_boolean_expressions")
+						in
+						current_discrete_guard, current_prebuilt_continuous_guard, updated_continuous_guard
+					
+					)else(
+					(* Case 3: only parameters and clocks *)
+						
+						(*** NOTE: we first transform into convex_continuous_boolean_inequalities: allows to reuse existing functions! ***)
+						
+						(* First convert to convex_continuous_boolean_inequalities *)
+						(*** NOTE: may result of 1 or 2 inequalities due to the IN ***)
+						let convex_continuous_boolean_inequalities : AbstractModel.convex_continuous_boolean_inequality list = convex_continuous_boolean_inequalities_of_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality in
+
+						(* Transform to convex_continuous_boolean_expression *)
+						let convex_continuous_boolean_expression = CCBE_conjunction convex_continuous_boolean_inequalities in
+						
+						(* Convert to px_linear_constraint *)
+						let px_linear_constraint : LinearConstraint.px_linear_constraint = px_linear_constraint_of_convex_continuous_boolean_expression useful_parsing_model_information.nb_variables convex_continuous_boolean_expression in
+						
+						(* Add it to the current list *)
+						let updated_prebuilt_continuous_guard =
+						match current_prebuilt_continuous_guard with
+							| Some list_of_px_linear_constraints -> Some (px_linear_constraint :: list_of_px_linear_constraints)
+							| None -> Some [px_linear_constraint]
+						in
+						current_discrete_guard, updated_prebuilt_continuous_guard, current_continuous_guard
 					
 					)
-					
-					raise (NotImplemented "guard_of_convex_continuous_boolean_expressions")
-				
 				)
-			
-			
-			
-		
+
 	) (None, None, None) convex_continuous_boolean_expressions
 	in
 	
 	(* If "empty" guard: simplify to true *)
 	if guard_triple = (None, None, None) then True_guard else
+		(* Split the triple *)
 		let discrete_guard, prebuilt_continuous_guard, continuous_guard = guard_triple in
+		(* Collapse the list of px_linear_constraint into a single px_linear_constraint *)
+		let collapsed_prebuilt_continuous_guard = match prebuilt_continuous_guard with
+			| None -> None
+			| Some list_of_px_linear_constraints -> Some (LinearConstraint.px_intersection list_of_px_linear_constraints)
+		in
+		
+		(* Build the guard *)
 		Discrete_continuous_guard {
 			discrete_guard   			= discrete_guard;
-			prebuilt_continuous_guard	= prebuilt_continuous_guard;
+			prebuilt_continuous_guard	= collapsed_prebuilt_continuous_guard;
 			continuous_guard			= continuous_guard;
 		}
 	
 	) with False_guard_detected -> False_guard
-	
+
 
 
 
@@ -4889,6 +5103,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		index_of_locations			= index_of_locations;
 		index_of_variables			= index_of_variables;
 		nb_parameters				= nb_parameters;
+		nb_variables				= nb_variables;
 		parameter_names				= parameter_names;
 		removed_action_names		= removed_action_names;
 		type_of_variables			= type_of_variables;
