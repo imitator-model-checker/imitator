@@ -76,8 +76,8 @@ type px_linear_term
 
 (** Create a linear term using a list of coef and variables, and a constant *)
 (* val make_linear_term : (coef * variable) list -> coef -> linear_term *)
-val make_p_linear_term : (coef * variable) list -> coef -> p_linear_term
-(* val make_pxd_linear_term : (coef * variable) list -> coef -> pxd_linear_term *)
+val make_p_linear_term	: (coef * variable) list -> coef -> p_linear_term
+val make_px_linear_term	: (coef * variable) list -> coef -> px_linear_term
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -92,9 +92,8 @@ val make_p_linear_term : (coef * variable) list -> coef -> p_linear_term
 (** Perform linear_term1 - linear_term2 *)
 (* val sub_linear_terms : linear_term -> linear_term -> linear_term *)
 
-val sub_p_linear_terms : p_linear_term -> p_linear_term -> p_linear_term
-(*val sub_px_linear_terms : px_linear_term -> px_linear_term -> px_linear_term*)
-(* val sub_pxd_linear_terms : pxd_linear_term -> pxd_linear_term -> pxd_linear_term *)
+val sub_p_linear_terms	: p_linear_term		-> p_linear_term	-> p_linear_term
+val sub_px_linear_terms	: px_linear_term	-> px_linear_term	-> px_linear_term
 
 (** Evaluate a linear term with a function assigning a value to each variable. *)
 val evaluate_p_linear_term : p_valuation -> p_linear_term -> coef
@@ -144,7 +143,7 @@ type px_linear_inequality
 (** Create a linear inequality using linear term and an operator *)
 (* val make_linear_inequality : linear_term -> op -> linear_inequality *)
 val make_p_linear_inequality : p_linear_term -> op -> p_linear_inequality
-(* val make_pxd_linear_inequality : pxd_linear_term -> op -> pxd_linear_inequality *)
+val make_px_linear_inequality : px_linear_term -> op -> px_linear_inequality
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

@@ -272,9 +272,10 @@ type coef = NumConst.t
 (* the linear_term is a generalization of the corresponding  *)
 (* PPL data structure Ppl.linear_expression, using rationals *)
 (* instead of integers. *)
-(*** WARNING: probably useless construction (by Ulrich Kuehne, around 2010) ***)
+(*** NOTE: construction by Ulrich Kühne, around 2010 ***)
+(*** NOTE: useful to encode non-integer coefficients! ***)
 type linear_term =
-	  Var of variable
+	| Var of variable
 	| Coef of coef
 	| Pl of linear_term * linear_term
 	| Mi of linear_term * linear_term
@@ -285,7 +286,8 @@ type px_linear_term = linear_term
 type pxd_linear_term = linear_term
 
 
-(*** WARNING: probably useless construction (by Ulrich) ***)
+(*** NOTE: construction by Ulrich Kühne, around 2010 ***)
+(*** NOTE: useful to encode non-integer coefficients! ***)
 type op =
 	| Op_g
 	| Op_ge
@@ -700,7 +702,7 @@ let make_linear_term members coef =
 
 let make_p_linear_term = make_linear_term
 let make_px_linear_term = make_linear_term
-let make_pxd_linear_term = make_linear_term
+(* let make_pxd_linear_term = make_linear_term *)
 
 
 
@@ -722,7 +724,7 @@ let sub_linear_terms lt1 lt2 =
 
 let sub_p_linear_terms = sub_linear_terms
 let sub_px_linear_terms = sub_linear_terms
-let sub_pxd_linear_terms = sub_linear_terms
+(* let sub_pxd_linear_terms = sub_linear_terms *)
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1079,15 +1081,15 @@ let make_linear_inequality linear_term op =
 	(* Build zero term for comparison with the operator *)
 	let zero_term = Coefficient Gmp.Z.zero in
 	match op with
-		| Op_g -> Greater_Than (linear_expression, zero_term)
-		| Op_ge -> Greater_Or_Equal (linear_expression, zero_term)
-		| Op_eq -> Equal (linear_expression, zero_term)
-		| Op_le -> Less_Or_Equal (linear_expression, zero_term)
-		| Op_l -> Less_Than (linear_expression, zero_term)
+		| Op_g	-> Ppl.Greater_Than		(linear_expression, zero_term)
+		| Op_ge	-> Ppl.Greater_Or_Equal	(linear_expression, zero_term)
+		| Op_eq	-> Ppl.Equal			(linear_expression, zero_term)
+		| Op_le	-> Ppl.Less_Or_Equal	(linear_expression, zero_term)
+		| Op_l	-> Ppl.Less_Than		(linear_expression, zero_term)
 
 let make_p_linear_inequality = make_linear_inequality
 let make_px_linear_inequality = make_linear_inequality
-let make_pxd_linear_inequality = make_linear_inequality
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Functions} *)
