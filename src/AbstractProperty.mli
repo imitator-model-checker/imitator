@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/02/01
+ * Last modified     : 2020/02/19
  *
  ************************************************************)
 
@@ -30,7 +30,7 @@ type loc_predicate =
 
 
 type simple_predicate =
-	| Rational_boolean_expression of RationalExpressions.rational_boolean_expression
+	| Rational_boolean_expression of Expressions.rational_boolean_expression
 	| Loc_predicate of loc_predicate
 
 
