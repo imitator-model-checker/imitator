@@ -113,6 +113,7 @@ type useful_parsing_model_information = {
 	index_of_automata					: (Automaton.automaton_name , Automaton.automaton_index) Hashtbl.t;
 	index_of_locations					: ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array;
 	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
+	nb_actions							: int;
 	nb_parameters						: int;
 	nb_variables						: int;
 	parameter_names						: variable_name list;
@@ -2893,59 +2894,58 @@ let make_automata_per_action actions_per_automaton nb_automata nb_actions =
   (* Return a functional representation *)
   fun automaton_index -> automata_per_action.(automaton_index)
 
-(*
 (*------------------------------------------------------------*)
 (** Split between the discrete and continuous inequalities of a convex predicate; raises False_exception if a false linear expression is found *)
 (*------------------------------------------------------------*)
-let split_convex_predicate_into_rational_and_continuous index_of_variables type_of_variables constants convex_predicate =
-  (* Compute a list of inequalities *)
-  List.partition
-    (fun linear_inequality ->
-       match linear_inequality with
-       | Parsed_true_constraint -> true (*** NOTE: we arbitrarily send "true" to the discrete part ***)
-       | Parsed_false_constraint -> raise False_exception
-       | Parsed_linear_constraint (linexpr1, _, linexpr2) -> only_rational_in_linear_expression index_of_variables type_of_variables constants linexpr1 && only_rational_in_linear_expression index_of_variables type_of_variables constants linexpr2
-    ) convex_predicate
-*)
+let split_convex_predicate_into_rational_and_continuous useful_parsing_model_information convex_predicate =
+	(* Compute a list of inequalities *)
+	List.partition
+		(fun linear_inequality ->
+		match linear_inequality with
+		| Parsed_true_constraint -> true (*** NOTE: we arbitrarily send "true" to the discrete part ***)
+		| Parsed_false_constraint -> raise False_exception
+		| Parsed_linear_constraint (linexpr1, _, linexpr2) -> only_rational_in_linear_expression index_of_variables useful_parsing_model_information.type_of_variables useful_parsing_model_information.constants linexpr1 && only_rational_in_linear_expression index_of_variables useful_parsing_model_information.type_of_variables useful_parsing_model_information.constants linexpr2
+		) convex_predicate
 
-(*(*------------------------------------------------------------*)
+
+(*------------------------------------------------------------*)
 (* Convert a guard *)
 (*------------------------------------------------------------*)
-let convert_guard index_of_variables type_of_variables constants guard_convex_predicate =
+let convert_guard useful_parsing_model_information guard_convex_predicate =
 
-  try(
-    (* Separate the guard into a discrete guard (on discrete variables) and a continuous guard (on all variables) *)
-    let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_rational_and_continuous index_of_variables type_of_variables constants guard_convex_predicate in
+	try(
+		(* Separate the guard into a discrete guard (on discrete variables) and a continuous guard (on all variables) *)
+		let discrete_guard_convex_predicate, continuous_guard_convex_predicate = split_convex_predicate_into_rational_and_continuous useful_parsing_model_information guard_convex_predicate in
 
-    match discrete_guard_convex_predicate, continuous_guard_convex_predicate with
-    (* No inequalities: true *)
-    | [] , [] -> True_guard
-    (* Only discrete inequalities: discrete *)
-    | discrete_guard_convex_predicate , [] -> Discrete_guard (LinearConstraint.cast_d_of_pxd_linear_constraint (verbose_mode_greater Verbose_low) (linear_constraint_of_convex_predicate index_of_variables constants discrete_guard_convex_predicate))
-    (* Only continuous inequalities: continuous *)
-    | [] , continuous_guard_convex_predicate -> Continuous_guard (linear_constraint_of_convex_predicate index_of_variables constants continuous_guard_convex_predicate)
-    (* Otherwise: both *)
-    | discrete_guard_convex_predicate , continuous_guard_convex_predicate ->
-      (* Convert both parts *)
-      let discrete_guard = LinearConstraint.cast_d_of_pxd_linear_constraint (verbose_mode_greater Verbose_low) (linear_constraint_of_convex_predicate index_of_variables constants discrete_guard_convex_predicate) in
-      let continuous_guard = linear_constraint_of_convex_predicate index_of_variables constants continuous_guard_convex_predicate in
+		match discrete_guard_convex_predicate, continuous_guard_convex_predicate with
+		(* No inequalities: true *)
+		| [] , [] -> True_guard
+		(* Only discrete inequalities: discrete *)
+		| discrete_guard_convex_predicate , [] -> Discrete_guard (LinearConstraint.cast_d_of_pxd_linear_constraint (verbose_mode_greater Verbose_low) (linear_constraint_of_convex_predicate index_of_variables useful_parsing_model_information.constants discrete_guard_convex_predicate))
+		(* Only continuous inequalities: continuous *)
+		| [] , continuous_guard_convex_predicate -> Continuous_guard (linear_constraint_of_convex_predicate useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants continuous_guard_convex_predicate)
+		(* Otherwise: both *)
+		| discrete_guard_convex_predicate , continuous_guard_convex_predicate ->
+		(* Convert both parts *)
+		let discrete_guard = LinearConstraint.cast_d_of_pxd_linear_constraint (verbose_mode_greater Verbose_low) (linear_constraint_of_convex_predicate useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants discrete_guard_convex_predicate) in
+		let continuous_guard = linear_constraint_of_convex_predicate useful_parsing_model_information.index_of_variables useful_parsing_model_information.constants continuous_guard_convex_predicate in
 
-      (*** NOTE: try to simplify a bit if possible (costly, but would save a lot of time later if checks are successful) ***)
-      let intersection = LinearConstraint.pxd_intersection_with_d continuous_guard discrete_guard in
+		(*** NOTE: try to simplify a bit if possible (costly, but would save a lot of time later if checks are successful) ***)
+		let intersection = LinearConstraint.pxd_intersection_with_d continuous_guard discrete_guard in
 
-      if LinearConstraint.pxd_is_true intersection then True_guard
-      else if LinearConstraint.pxd_is_false intersection then False_guard
-      else
-        (* Else create mixed guard as planned *)
-        Discrete_continuous_guard
-          {
-            discrete_guard		= discrete_guard;
-            continuous_guard	= continuous_guard;
-          }
+		if LinearConstraint.pxd_is_true intersection then True_guard
+		else if LinearConstraint.pxd_is_false intersection then False_guard
+		else
+			(* Else create mixed guard as planned *)
+			Discrete_continuous_guard
+			{
+				discrete_guard		= discrete_guard;
+				continuous_guard	= continuous_guard;
+			}
 
-    (* If some false construct found: false guard *)
-  ) with False_exception -> False_guard
-*)
+		(* If some false construct found: false guard *)
+	) with False_exception -> False_guard
+
 
 (*------------------------------------------------------------*)
 (* Convert updates *)
@@ -3167,7 +3167,7 @@ let convert_updates index_of_variables constants type_of_variables updates : upd
   (** updates abstract model *)
   { converted_updates with conditional = conditional_updates_values }
 
-
+*)
 (*------------------------------------------------------------*)
 (* Convert the transitions *)
 (*------------------------------------------------------------*)
@@ -3177,9 +3177,17 @@ let convert_updates index_of_variables constants type_of_variables updates : upd
 	and creates a structure transition_index -> (guard, action_index, resets, target_state)
 	and creates a structure transition_index -> automaton_index
 *)
-let convert_transitions nb_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions
+let convert_transitions (useful_parsing_model_information : useful_parsing_model_information) (nb_transitions : int) transitions
 	: (((AbstractModel.transition_index list) array) array) array * (AbstractModel.transition array) * (Automaton.automaton_index array)
 	=
+	
+	let nb_actions				= useful_parsing_model_information.nb_actions in
+	let index_of_variables		= useful_parsing_model_information.index_of_variables in
+	let constants				= useful_parsing_model_information.constants in
+	let removed_variable_names	= useful_parsing_model_information.removed_variable_names in
+	let type_of_variables		= useful_parsing_model_information.type_of_variables in
+	
+	
   (* Create the empty array of transitions automaton_index -> location_index -> action_index -> list of (transition_index) *)
   
   (*** NOTE/TODO: why (Array.length transitions) ?! ***)
@@ -3189,7 +3197,7 @@ let convert_transitions nb_transitions nb_actions index_of_variables constants r
   let dummy_transition = {
 	guard		= True_guard;
 	action		= -1;
-	updates		= { clock = No_update; discrete = [] ; conditional = []};
+	updates		= { clock = []; discrete = [] ; conditional = []};
 	target		= -1;
 	} in
   let transitions_description : AbstractModel.transition array = Array.make nb_transitions dummy_transition in
@@ -3218,7 +3226,7 @@ let convert_transitions nb_transitions nb_actions index_of_variables constants r
           List.iter (fun (action_index, guard, updates, target_location_index) ->
 
               (* Convert the guard *)
-              let converted_guard = convert_guard index_of_variables type_of_variables constants guard in
+              let converted_guard = convert_guard useful_parsing_model_information guard in
 
               (* Filter the updates that should assign some variable name to be removed to any expression *)
               (* let filtered_updates = List.filter (fun (variable_name, (*linear_expression*)_) ->
@@ -3299,7 +3307,7 @@ let convert_transitions nb_transitions nb_actions index_of_variables constants r
 
 
 
-
+(*
 (*------------------------------------------------------------*)
 (* Create the initial state *)
 (*------------------------------------------------------------*)
@@ -5102,6 +5110,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		index_of_automata			= index_of_automata;
 		index_of_locations			= index_of_locations;
 		index_of_variables			= index_of_variables;
+		nb_actions					= nb_actions;
 		nb_parameters				= nb_parameters;
 		nb_variables				= nb_variables;
 		parameter_names				= parameter_names;
@@ -5202,8 +5211,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	
 
 
- 	raise (NotImplemented "ModelConverter: work in progress…")
- 	(*
 
 	
 
@@ -5229,9 +5236,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(* Convert transitions *)
 	(*** TODO: integrate inside 'make_automata' (?) ***)
-	let transitions, transitions_description, automaton_of_transition = convert_transitions nb_transitions nb_actions index_of_variables constants removed_variable_names type_of_variables transitions in
+	let transitions, transitions_description, automaton_of_transition = convert_transitions useful_parsing_model_information nb_transitions transitions in
 
 	
+ 	raise (NotImplemented "ModelConverter: work in progress…")
+ 	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add the observer structure to the automata *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
