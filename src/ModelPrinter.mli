@@ -10,12 +10,13 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2020/02/10
+ * Last modified     : 2020/02/19
  *
  ************************************************************)
 
 
 open AbstractModel
+open Expressions
 
 (****************************************************************)
 (** Local printings *)

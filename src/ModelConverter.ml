@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/02/18
+ * Last modified     : 2020/02/19
  *
  ************************************************************)
 
@@ -27,7 +27,7 @@ open ImitatorUtilities
 open Options
 open Automaton
 open ParsingStructure
-open RationalExpressions
+open Expressions
 open AbstractModel
 open AbstractProperty
 
@@ -726,12 +726,12 @@ let rec valuate_parsed_continuous_arithmetic_expression constants = function
 *)
 (** Convert a Boolean operator to its abstract model *)
 let relop_of_parsed_relop = function
-	| PARSED_OP_L	-> OP_L
-	| PARSED_OP_LEQ	-> OP_LEQ
-	| PARSED_OP_EQ	-> OP_EQ
-	| PARSED_OP_NEQ	-> OP_NEQ
-	| PARSED_OP_GEQ	-> OP_GEQ
-	| PARSED_OP_G 	-> OP_G
+	| PARSED_OP_L	-> Expressions.OP_L
+	| PARSED_OP_LEQ	-> Expressions.OP_LEQ
+	| PARSED_OP_EQ	-> Expressions.OP_EQ
+	| PARSED_OP_NEQ	-> Expressions.OP_NEQ
+	| PARSED_OP_GEQ	-> Expressions.OP_GEQ
+	| PARSED_OP_G 	-> Expressions.OP_G
 
 
 (*
@@ -757,7 +757,7 @@ let rec convert_bool_expr index_of_variables constants = function
 	| Parsed_rational_boolean_expression parsed_rational_boolean_expression ->
 		Rational_boolean_expression (convert_rational_bool_expr index_of_variables constants parsed_rational_boolean_expression)
 
-
+*)
 
 (*------------------------------------------------------------*)
 (* Functions for property conversion *)
@@ -766,52 +766,52 @@ let rec convert_bool_expr index_of_variables constants = function
 (* Convert parsed_rational_arithmetic_expression *)
 let rec convert_parsed_rational_arithmetic_expression useful_parsing_model_information = function
 	| Parsed_CAE_plus (parsed_rational_arithmetic_expression , parsed_rational_term) ->
-		DAE_plus (
+		CCE_plus (
 			(convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression)
 			,
 			(convert_parsed_rational_term useful_parsing_model_information parsed_rational_term)
 		)
 	| Parsed_CAE_minus (parsed_rational_arithmetic_expression , parsed_rational_term) ->
-		DAE_minus (
+		CCE_minus (
 			(convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression)
 			,
 			(convert_parsed_rational_term useful_parsing_model_information parsed_rational_term)
 		)
-	| Parsed_CAE_term parsed_rational_term -> DAE_term (convert_parsed_rational_term useful_parsing_model_information parsed_rational_term)
+	| Parsed_CAE_term parsed_rational_term -> CCE_term (convert_parsed_rational_term useful_parsing_model_information parsed_rational_term)
 
 and convert_parsed_rational_term useful_parsing_model_information = function
 	| Parsed_CT_mul (parsed_rational_term , parsed_rational_factor) ->
-		DT_mul ((convert_parsed_rational_term useful_parsing_model_information parsed_rational_term) , convert_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
+		CCT_mul ((convert_parsed_rational_term useful_parsing_model_information parsed_rational_term) , convert_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
 	| Parsed_CT_div (parsed_rational_term , parsed_rational_factor) ->
-		DT_div ((convert_parsed_rational_term useful_parsing_model_information parsed_rational_term) , convert_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
-	| Parsed_CT_factor parsed_rational_factor -> DT_factor (convert_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
+		CCT_div ((convert_parsed_rational_term useful_parsing_model_information parsed_rational_term) , convert_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
+	| Parsed_CT_factor parsed_rational_factor -> CCT_factor (convert_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
 
 and convert_parsed_rational_factor useful_parsing_model_information = function
 	| Parsed_CF_variable variable_name ->
 		(* First check whether this is a constant *)
 		if Hashtbl.mem useful_parsing_model_information.constants variable_name then
-			DF_constant (Hashtbl.find useful_parsing_model_information.constants variable_name)
+			CCF_constant (Hashtbl.find useful_parsing_model_information.constants variable_name)
 		(* Otherwise: a variable *)
-		else DF_variable (Hashtbl.find useful_parsing_model_information.index_of_variables variable_name)
-	| Parsed_CF_constant var_value -> DF_constant var_value
-	| Parsed_CF_expression parsed_rational_arithmetic_expression -> DF_expression (convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression)
-	| Parsed_CF_unary_min parsed_rational_factor -> DF_unary_min (convert_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
+		else CCF_variable (Hashtbl.find useful_parsing_model_information.index_of_variables variable_name)
+	| Parsed_CF_constant var_value -> CCF_constant var_value
+	| Parsed_CF_expression parsed_rational_arithmetic_expression -> CCF_expression (convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression)
+	| Parsed_CF_unary_min parsed_rational_factor -> CCF_unary_min (convert_parsed_rational_factor useful_parsing_model_information parsed_rational_factor)
 
 
 (* Convert parsed_rational_boolean_expression *)
 let convert_parsed_rational_boolean_expression useful_parsing_model_information = function
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_expression (parsed_rational_arithmetic_expression1 , parsed_relop , parsed_rational_arithmetic_expression2) ->
-		Expression (
+		RBE_Expression (
 			convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression1
 			,
-			convert_parsed_relop parsed_relop
+			relop_of_parsed_relop parsed_relop
 			,
 			convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression2
 		)
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Parsed_expression_in (parsed_rational_arithmetic_expression1 , parsed_rational_arithmetic_expression2 , parsed_rational_arithmetic_expression3) ->
-		Expression_in (
+		RBE_Expression_in (
 			convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression1
 			,
 			convert_parsed_rational_arithmetic_expression useful_parsing_model_information parsed_rational_arithmetic_expression2
@@ -862,7 +862,7 @@ and convert_parsed_state_predicate useful_parsing_model_information = function
 	| Parsed_state_predicate_true -> State_predicate_true
 	| Parsed_state_predicate_false -> State_predicate_false
 
-*)
+
 
 (************************************************************)
 (** Converting convex continuous Boolean expressions (for guards) *)
@@ -959,9 +959,9 @@ let convex_continuous_boolean_inequalities_of_parsed_continuous_inequality usefu
 		let convex_continuous_expression_2 = convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_2 in
 		let convex_continuous_expression_3 = convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression_3 in
 		[
-			convex_continuous_expression_1, AbstractModel.OP_LEQ, convex_continuous_expression_2
+			convex_continuous_expression_1, Expressions.OP_LEQ, convex_continuous_expression_2
 			;
-			convex_continuous_expression_2, AbstractModel.OP_LEQ, convex_continuous_expression_3
+			convex_continuous_expression_2, Expressions.OP_LEQ, convex_continuous_expression_3
 		]
 
 
@@ -1188,7 +1188,7 @@ let guard_of_convex_continuous_boolean_expressions useful_parsing_model_informat
 				if check_only_discrete_in_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality then (
 					(* Convert to convex_continuous_boolean_inequalities *)
 					(*** NOTE: may result of 1 or 2 inequalities due to the IN ***)
-					let convex_continuous_boolean_inequalities : AbstractModel.convex_continuous_boolean_inequality list = convex_continuous_boolean_inequalities_of_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality in
+					let convex_continuous_boolean_inequalities : Expressions.convex_continuous_boolean_inequality list = convex_continuous_boolean_inequalities_of_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality in
 					
 					(* Add them to the current list *)
 					let updated_discrete_guard =
@@ -1209,7 +1209,7 @@ let guard_of_convex_continuous_boolean_expressions useful_parsing_model_informat
 					
 						(* Convert to convex_continuous_boolean_inequalities *)
 						(*** NOTE: may result of 1 or 2 inequalities due to the IN ***)
-						let convex_continuous_boolean_inequalities : AbstractModel.convex_continuous_boolean_inequality list = convex_continuous_boolean_inequalities_of_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality in
+						let convex_continuous_boolean_inequalities : Expressions.convex_continuous_boolean_inequality list = convex_continuous_boolean_inequalities_of_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality in
 						
 						(* Add them to the current list *)
 						let updated_continuous_guard =
@@ -1229,7 +1229,7 @@ let guard_of_convex_continuous_boolean_expressions useful_parsing_model_informat
 						
 						(* First convert to convex_continuous_boolean_inequalities *)
 						(*** NOTE: may result of 1 or 2 inequalities due to the IN ***)
-						let convex_continuous_boolean_inequalities : AbstractModel.convex_continuous_boolean_inequality list = convex_continuous_boolean_inequalities_of_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality in
+						let convex_continuous_boolean_inequalities : Expressions.convex_continuous_boolean_inequality list = convex_continuous_boolean_inequalities_of_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality in
 
 						(* Transform to convex_continuous_boolean_expression *)
 						let convex_continuous_boolean_expression = CCBE_conjunction convex_continuous_boolean_inequalities in
@@ -4336,10 +4336,10 @@ let convert_synthesis_type = function
 	| Parsed_synthesis	-> Synthesis
 
 
-(*
+
 type converted_observer_structure = {
 	(*  observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions *)
-	observer_structure			: Automaton.action_index list * (Automaton.action_index list) array * AbstractModel.location_urgency array * LinearConstraint.pxd_linear_constraint array * AbstractModel.transition list array array;
+	observer_structure			: Automaton.action_index list * (Automaton.action_index list) array * AbstractModel.location_urgency array * AbstractModel.guard array * AbstractModel.transition list array array;
 	
 	nb_transitions_for_observer	: int;
 	initial_observer_constraint	: LinearConstraint.px_linear_constraint;
@@ -4431,7 +4431,7 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		)
 	in
 
-	(* Generic check and conversion function for 2 actions and one deadline *)
+(*	(* Generic check and conversion function for 2 actions and one deadline *)
 	let gen_convert_2actd property a1 a2 d =
 		(* Check action names and deadline (perform 3 even if one fails) *)
 		let check1 = check_action_name index_of_actions a1 in
@@ -4486,7 +4486,7 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		| ParsingStructure.Sequence_cyclic _ -> AbstractModel.Sequence_cyclic action_index_list, true*)
 		| _ -> raise (InternalError ("Impossible case while looking for properties with a sequence; all cases should have been taken into account."))
 		)
-	in
+	in*)
 
 
 	(* Convert *)
@@ -4680,7 +4680,7 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		}
 		,
 		converted_observer_structure_option
-*)
+
 
 (*------------------------------------------------------------*)
 (** Convert a list of parsed parameters into a list of variable_index *)
@@ -5179,8 +5179,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let nb_actions = List.length actions in
 
 
- 	raise (NotImplemented "ModelConverter: work in progress…")
- 	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create the abstract property from the parsed property *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -5204,6 +5202,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	
 
 
+ 	raise (NotImplemented "ModelConverter: work in progress…")
+ 	(*
 
 	
 

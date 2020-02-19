@@ -10,18 +10,18 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/02/10
+ * Last modified     : 2020/02/19
  *
  ************************************************************)
 
 open OCamlUtilities
 open Exceptions
 open Result
+open Expressions
 open AbstractModel
 open AbstractProperty
 open ImitatorUtilities
 open State
-(* open StateSpace *)
 
 
 
@@ -155,7 +155,7 @@ let string_of_declarations model =
 (** Rational expressions *)
 (************************************************************)
 
-let string_of_relop : AbstractModel.relop -> string = function
+let string_of_relop : Expressions.relop -> string = function
 	| OP_L		-> "<"
 	| OP_LEQ	-> "<="
 	| OP_EQ		-> "="

@@ -11,7 +11,7 @@
  * File contributors        : Étienne André
  * Created                  : 2010/03/10
  * Renamed from Automaton.ml: 2015/10/22
- * Last modified            : 2020/02/01
+ * Last modified            : 2020/02/19
  *
  ************************************************************)
  
@@ -215,7 +215,7 @@ let match_loc_predicate loc_predicate global_location =
 let match_simple_predicate simple_predicate global_location =
 	match simple_predicate with
 	(* Here convert the global_location to a variable valuation *)
-	| Rational_boolean_expression rational_boolean_expression -> RationalExpressions.check_rational_boolean_expression (get_discrete_value global_location) rational_boolean_expression
+	| Rational_boolean_expression rational_boolean_expression -> ExpressionsEvaluator.check_rational_boolean_expression (get_discrete_value global_location) rational_boolean_expression
 	| Loc_predicate loc_predicate -> match_loc_predicate loc_predicate global_location
 
 
