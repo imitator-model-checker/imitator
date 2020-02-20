@@ -76,20 +76,20 @@ type variable_declarations = typed_variable_declarations list*)
 (** Continuous arithmetic expressions *)
 (****************************************************************)
 type parsed_continuous_arithmetic_expression =
-	| Parsed_CAE_plus of parsed_continuous_arithmetic_expression * parsed_continuous_term
+	| Parsed_CAE_plus  of parsed_continuous_arithmetic_expression * parsed_continuous_term
 	| Parsed_CAE_minus of parsed_continuous_arithmetic_expression * parsed_continuous_term
-	| Parsed_CAE_term of parsed_continuous_term
+	| Parsed_CAE_term  of parsed_continuous_term
 
 and parsed_continuous_term =
-	| Parsed_CT_mul of parsed_continuous_term * parsed_continuous_factor
-	| Parsed_CT_div of parsed_continuous_term * parsed_continuous_factor
+	| Parsed_CT_mul    of parsed_continuous_term * parsed_continuous_factor
+	| Parsed_CT_div    of parsed_continuous_term * parsed_continuous_factor
 	| Parsed_CT_factor of parsed_continuous_factor
 
 and parsed_continuous_factor =
-	| Parsed_CF_variable of variable_name
-	| Parsed_CF_constant of constant_value
+	| Parsed_CF_variable   of variable_name
+	| Parsed_CF_constant   of constant_value
 	| Parsed_CF_expression of parsed_continuous_arithmetic_expression
-	| Parsed_CF_unary_min of parsed_continuous_factor
+	| Parsed_CF_unary_min  of parsed_continuous_factor
 
 
 
@@ -125,23 +125,23 @@ type convex_predicate = linear_constraint list*)
 
 type parsed_continuous_inequality =
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Parsed_expression of parsed_continuous_arithmetic_expression * parsed_relop * parsed_continuous_arithmetic_expression
+	| Parsed_expression    of parsed_continuous_arithmetic_expression * parsed_relop * parsed_continuous_arithmetic_expression
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Parsed_expression_in of parsed_continuous_arithmetic_expression * parsed_continuous_arithmetic_expression * parsed_continuous_arithmetic_expression
 
 
 type parsed_continuous_boolean_expression =
-	| Parsed_CBE_True (** True *)
+	| Parsed_CBE_True  (** True *)
 	| Parsed_CBE_False (** False *)
 	| Parsed_CBE_Not of parsed_continuous_boolean_expression (** Negation *)
 	| Parsed_CBE_And of parsed_continuous_boolean_expression * parsed_continuous_boolean_expression (** Conjunction *)
-	| Parsed_CBE_Or of parsed_continuous_boolean_expression * parsed_continuous_boolean_expression (** Disjunction *)
+	| Parsed_CBE_Or  of parsed_continuous_boolean_expression * parsed_continuous_boolean_expression (** Disjunction *)
 	| Parsed_CBE_continuous_inequality of parsed_continuous_inequality
 
 
 (** Convex Boolean expression on discrete and/or continuous variables *)
 type parsed_convex_continuous_boolean_expression =
-	| Parsed_CCBE_True (** True *)
+	| Parsed_CCBE_True  (** True *)
 	| Parsed_CCBE_False (** False *)
 	| Parsed_CCBE_continuous_inequality of parsed_continuous_inequality
 
@@ -357,14 +357,14 @@ type parsed_simple_predicate =
 type parsed_state_predicate_factor =
 	| Parsed_state_predicate_factor_NOT of parsed_state_predicate_factor
 	| Parsed_simple_predicate of parsed_simple_predicate
-	| Parsed_state_predicate of parsed_state_predicate
+	| Parsed_state_predicate  of parsed_state_predicate
 
 and parsed_state_predicate_term =
 	| Parsed_state_predicate_term_AND of parsed_state_predicate_term * parsed_state_predicate_term
-	| Parsed_state_predicate_factor of parsed_state_predicate_factor
+	| Parsed_state_predicate_factor   of parsed_state_predicate_factor
 
 and parsed_state_predicate =
-	| Parsed_state_predicate_OR of parsed_state_predicate * parsed_state_predicate
+	| Parsed_state_predicate_OR   of parsed_state_predicate * parsed_state_predicate
 	| Parsed_state_predicate_term of parsed_state_predicate_term
 	| Parsed_state_predicate_true
 	| Parsed_state_predicate_false
