@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/02/19
+ * Last modified     : 2020/02/20
  *
  ************************************************************)
 
@@ -206,10 +206,10 @@ let get_variables_in_parsed_convex_continuous_boolean_expressions all_variables_
 
 (** Add variables names in normal and conditional updates *)
 let rec get_variables_in_parsed_update variables_used_ref = function
-	| Normal_update (_, Parsed_continuous_term parsed_continuous_arithmetic_expression) -> get_variables_in_parsed_continuous_arithmetic_expression variables_used_ref parsed_continuous_arithmetic_expression
-	| Normal_update (_, _) -> raise (NotImplemented "ModelConverter.get_variables_in_parsed_update")
+	| Parsed_normal_update (_, Parsed_continuous_term parsed_continuous_arithmetic_expression) -> get_variables_in_parsed_continuous_arithmetic_expression variables_used_ref parsed_continuous_arithmetic_expression
+	| Parsed_normal_update (_, _) -> raise (NotImplemented "ModelConverter.get_variables_in_parsed_update")
 	
-	| Condition_update (parsed_continuous_boolean_expression, update_list_if, update_list_else) -> (** recolect in bool exprs *)
+	| Parsed_condition_update (parsed_continuous_boolean_expression, update_list_if, update_list_else) -> (** recolect in bool exprs *)
 		get_variables_in_parsed_continuous_boolean_expression variables_used_ref parsed_continuous_boolean_expression;
 		List.iter (fun (_, parsed_rational_term) ->
 			match parsed_rational_term with
@@ -764,6 +764,9 @@ let rec convert_bool_expr index_of_variables constants = function
 (* Functions for property conversion *)
 (*------------------------------------------------------------*)
 
+(*** TODO: merge with convex_continuous_expression_of_parsed_continuous_arithmetic_expression ??? ***)
+
+
 (* Convert parsed_rational_arithmetic_expression *)
 let rec convert_parsed_rational_arithmetic_expression useful_parsing_model_information = function
 	| Parsed_CAE_plus (parsed_rational_arithmetic_expression , parsed_rational_term) ->
@@ -800,7 +803,8 @@ and convert_parsed_rational_factor useful_parsing_model_information = function
 
 
 (* Convert parsed_rational_boolean_expression *)
-let convert_parsed_rational_boolean_expression useful_parsing_model_information = function
+let rational_boolean_expression_of_parsed_continuous_inequality useful_parsing_model_information (parsed_continuous_inequality : parsed_continuous_inequality) : rational_boolean_expression =
+	match parsed_continuous_inequality with
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Parsed_expression (parsed_rational_arithmetic_expression1 , parsed_relop , parsed_rational_arithmetic_expression2) ->
 		RBE_Expression (
@@ -833,7 +837,7 @@ let convert_parsed_loc_predicate useful_parsing_model_information = function
 
 (* Convert parsed_simple_predicate *)
 let convert_parsed_simple_predicate useful_parsing_model_information = function
-	| Parsed_rational_boolean_predicate parsed_rational_boolean_expression -> Rational_boolean_expression (convert_parsed_rational_boolean_expression useful_parsing_model_information parsed_rational_boolean_expression)
+	| Parsed_rational_boolean_predicate parsed_rational_boolean_expression -> Rational_boolean_expression (rational_boolean_expression_of_parsed_continuous_inequality useful_parsing_model_information parsed_rational_boolean_expression)
 	| Parsed_loc_predicate parsed_loc_predicate -> Loc_predicate (convert_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate)
 
 
@@ -1047,11 +1051,12 @@ let linear_term_of_coef_array array_of_coef constant_term =
 
 
 
-let px_linear_term_of_convex_continuous_expression nb_variables convex_continuous_expression =
+let px_linear_term_of_convex_continuous_expression nb_variables (convex_continuous_expression : Expressions.convex_continuous_expression) =
 	(* Build the array *)
 	let coef_array, constant_term = coef_array_of_convex_continuous_expression nb_variables convex_continuous_expression in
 	(* Convert the px_linear_term *)
 	linear_term_of_coef_array coef_array constant_term
+
 
 (*------------------------------------------------------------*)
 (* Perform the substraction of 2 NumConst array of same size *)
@@ -1744,6 +1749,45 @@ let linear_constraint_of_convex_predicate index_of_variables constants convex_pr
 (*------------------------------------------------------------*)
 
 
+
+
+
+
+
+(************************************************************)
+(************************************************************)
+(** Checking and converting updates *)
+(************************************************************)
+(************************************************************)
+
+(************************************************************)
+(** Converting updates *)
+(************************************************************)
+let rec discrete_boolean_expression_of_parsed_continuous_boolean_expression useful_parsing_model_information (parsed_continuous_boolean_expression : parsed_continuous_boolean_expression) : discrete_boolean_expression = 
+	match parsed_continuous_boolean_expression with
+	| Parsed_CBE_True  -> DBE_True
+	
+	| Parsed_CBE_False -> DBE_False
+	
+	| Parsed_CBE_Not parsed_continuous_boolean_expression -> DBE_Not (discrete_boolean_expression_of_parsed_continuous_boolean_expression useful_parsing_model_information parsed_continuous_boolean_expression)
+	
+	| Parsed_CBE_And (parsed_continuous_boolean_expression_1, parsed_continuous_boolean_expression_2) ->
+		DBE_And
+			(discrete_boolean_expression_of_parsed_continuous_boolean_expression useful_parsing_model_information parsed_continuous_boolean_expression_1
+			,
+			discrete_boolean_expression_of_parsed_continuous_boolean_expression useful_parsing_model_information parsed_continuous_boolean_expression_2)
+	
+	| Parsed_CBE_Or (parsed_continuous_boolean_expression_1, parsed_continuous_boolean_expression_2) ->
+		DBE_Or
+			(discrete_boolean_expression_of_parsed_continuous_boolean_expression useful_parsing_model_information parsed_continuous_boolean_expression_1
+			,
+			discrete_boolean_expression_of_parsed_continuous_boolean_expression useful_parsing_model_information parsed_continuous_boolean_expression_2)
+	
+	| Parsed_CBE_continuous_inequality parsed_continuous_inequality ->
+		DBE_Rational_boolean_expression (rational_boolean_expression_of_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality)
+
+
+
 (************************************************************)
 (************************************************************)
 (** Checking and converting model *)
@@ -2053,7 +2097,7 @@ let all_locations_different =
 
 
 let check_update error_details useful_parsing_model_information = function
-	| Normal_update (variable_name, parsed_discrete_term) ->
+	| Parsed_normal_update (variable_name, parsed_update_term) ->
 
 		(* 1. Check variable name *)
 		
@@ -2069,14 +2113,14 @@ let check_update error_details useful_parsing_model_information = function
 		(* 2. Check discrete term *)
 		
 	
-	| Condition_update condition_update ->*)
+	| Parsed_condition_update condition_update ->*)
 
 
 let check_update error_details useful_parsing_model_information update =
 
-	let check_update_normal (variable_name, parsed_discrete_term) =
+	let check_update_normal (variable_name, parsed_update_term) =
 	
-	match parsed_discrete_term with
+	match parsed_update_term with
 	| Parsed_continuous_term continuous_arithmetic_expression ->
 		(* Check whether this variable is to be removed because unused elsewhere than in resets *)
 		let to_be_removed = List.mem variable_name useful_parsing_model_information.removed_variable_names in
@@ -2144,9 +2188,9 @@ let check_update error_details useful_parsing_model_information update =
 	print_message Verbose_total ("              Checking one update");
 
 	match update with
-	| Normal_update update -> check_update_normal update
+	| Parsed_normal_update update -> check_update_normal update
 	
-	| Condition_update (update_condition, updates_if, updates_else) ->
+	| Parsed_condition_update (update_condition, updates_if, updates_else) ->
 		(* Check that all variables are defined in the condition, and that only discrete variables are involved *)
 		evaluate_and
 		(raise (NotImplemented "check all variables defined and only discrete variables involved"))
@@ -2774,6 +2818,7 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 						(action_index :: current_list_of_actions)
 						,
 						(* Compute the list of transitions *)
+						(*** NOTE: guards and updates are still parsed, i.e., not yet converted; they will be converted in convert_transitions ***)
 						((action_index, parsed_transition.parsed_guard, parsed_transition.parsed_updates, target_location_index) :: current_list_of_transitions)
 					)
 					| ParsingStructure.NoSync ->
@@ -2809,16 +2854,16 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 				(* Update the array of urgency *)
 				let urgency =
 				match location.urgency with
-				| Parsed_location_urgent -> Location_urgent
-				| Parsed_location_nonurgent -> Location_nonurgent
+					| Parsed_location_urgent -> Location_urgent
+					| Parsed_location_nonurgent -> Location_nonurgent
 				in
 				location_urgency.(automaton_index).(location_index) <- urgency;
 
 				(* Update the array of acceptance *)
 				let acceptance =
 				match location.acceptance with
-				| Parsed_location_accepting -> Location_accepting
-				| Parsed_location_nonaccepting -> Location_nonaccepting
+					| Parsed_location_accepting -> Location_accepting
+					| Parsed_location_nonaccepting -> Location_nonaccepting
 				in
 				location_acceptance.(automaton_index).(location_index) <- acceptance;
 
@@ -2894,7 +2939,7 @@ let make_automata_per_action actions_per_automaton nb_automata nb_actions =
   (* Return a functional representation *)
   fun automaton_index -> automata_per_action.(automaton_index)
 
-(*------------------------------------------------------------*)
+(*(*------------------------------------------------------------*)
 (** Split between the discrete and continuous inequalities of a convex predicate; raises False_exception if a false linear expression is found *)
 (*------------------------------------------------------------*)
 let split_convex_predicate_into_rational_and_continuous useful_parsing_model_information convex_predicate =
@@ -2944,26 +2989,26 @@ let convert_guard useful_parsing_model_information guard_convex_predicate =
 			}
 
 		(* If some false construct found: false guard *)
-	) with False_exception -> False_guard
+	) with False_exception -> False_guard*)
 
 
 (*------------------------------------------------------------*)
 (* Convert updates *)
 (*------------------------------------------------------------*)
 
-(** Checks if a update is a normal update *)
+(** Checks if a parsed update is a normal update *)
 let is_normal_update = function
-  | Normal_update _ -> true
-  | _ -> false
+	| Parsed_normal_update _		-> true
+	| Parsed_condition_update _	-> false
 
 (** Returns the value of a normal update *)
 let get_normal_update_value = function
-  | Normal_update u -> u
+  | Parsed_normal_update u -> u
   | _ -> assert false
 
 (** Returns the value of a conditonal update *)
 let get_conditional_update_value = function
-  | Condition_update u -> u
+  | Parsed_condition_update u -> u
   | _ -> assert false
 
 
@@ -3044,47 +3089,71 @@ let linear_term_of_parsed_continuous_arithmetic_expression index_of_variables co
 
   
 (* Filter the updates that should assign some variable name to be removed to any expression *)
-let filtered_updates removed_variable_names updates =
+let filtered_updates useful_parsing_model_information updates =
   let not_removed_variable (variable_name, _) =
-    not (List.mem variable_name removed_variable_names)
+    not (List.mem variable_name useful_parsing_model_information.removed_variable_names)
   in
   List.fold_left (fun acc u ->
       match u with
-      | Normal_update (update) ->
+      | Parsed_normal_update (update) ->
         if (not_removed_variable update) then u::acc else acc
-      | Condition_update (bool, updates_if, updates_else) ->
+      | Parsed_condition_update (bool, updates_if, updates_else) ->
         let filtered_if = List.filter (not_removed_variable) updates_if in
         let filtered_else = List.filter (not_removed_variable) updates_else in
-        Condition_update (bool, filtered_if, filtered_else)::acc
+        Parsed_condition_update (bool, filtered_if, filtered_else)::acc
     ) [] updates
 
 
-(*(** Translate a parsed discrete update into its abstract model *)
-let to_abstract_discrete_update index_of_variables constants (variable_name, (parsed_discrete_term : parsed_discrete_term)) : discrete_update =
-	let variable_index = Hashtbl.find index_of_variables variable_name in
-	match parsed_discrete_term with
+(** Translate a parsed discrete update into its abstract model equivalent *)
+let convert_discrete_update useful_parsing_model_information ((variable_name : variable_name), (parsed_update_term : parsed_update_term)) : discrete_update =
+	(* Get the index *)
+	let variable_index = Hashtbl.find useful_parsing_model_information.index_of_variables variable_name in
+	match parsed_update_term with
 	| Parsed_continuous_term parsed_continuous_arithmetic_expression ->
-		let arithmetic_expression = rational_arithmetic_expression_of_parsed_continuous_arithmetic_expression index_of_variables constants parsed_continuous_arithmetic_expression in
-		(variable_index, Rational_term arithmetic_expression)
-	| _ -> raise (NotImplemented "non-rational discrete terms in ModelConverter.to_abstract_discrete_update")
+		(* Convert the expression *)
+		let convex_continuous_expression = convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression in
+		(* Create the actual update *)
+		(variable_index, Rational_term convex_continuous_expression)
+	| _ -> raise (NotImplemented "non-rational discrete terms in ModelConverter.convert_discrete_update")
 
 
-(** Translate a parsed clock update into its abstract model *)
-let to_abstract_clock_update index_of_variables constants only_resets updates_list =
+(** Translate a parsed clock update into its abstract model equivalent *)
+let convert_clock_update useful_parsing_model_information (*only_resets*) updates_list : clock_update list =
 
 	(** Translate parsed clock updte into the tuple clock_index, linear_term *)
-	let to_intermediate_abstract_clock_update (variable_name, parsed_rational_term) =
-		match parsed_rational_term with
+	let to_intermediate_abstract_clock_update (variable_name, parsed_update_term) =
+		match parsed_update_term with
 		| Parsed_continuous_term parsed_continuous_arithmetic_expression ->
-			let variable_index = Hashtbl.find index_of_variables variable_name in
-			let linear_term = linear_term_of_parsed_continuous_arithmetic_expression index_of_variables constants parsed_continuous_arithmetic_expression in
-			(variable_index, linear_term)
-		| Parsed_string_term _ -> raise (InternalError "Parsed_string_term found in ModelConverter.to_abstract_clock_update but this should not have happened for a clock update")
+			(* Convert the variable to its index *)
+			let variable_index = Hashtbl.find useful_parsing_model_information.index_of_variables variable_name in
+			
+			(* Convert the linear term *)
+			
+			(* If it has discrete variables: convert to Reset, and convert to PPL at runtime *)
+			if check_some_discrete_in_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression then(
+				(* Convert to Reset (convex_continuous_expression)  *)
+				let convex_continuous_expression : Expressions.convex_continuous_expression = convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression in
+				(* Build reset *)
+				Reset  (variable_index, convex_continuous_expression)
+			
+			(* Otherwise: directly convert to Prebuilt_reset *)
+			)else(
+				(* First convert to convex_continuous_expression *)
+				let convex_continuous_expression : Expressions.convex_continuous_expression = convex_continuous_expression_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression in
+				(* Then convert to PPL *)
+				let px_linear_term : LinearConstraint.px_linear_term = px_linear_term_of_convex_continuous_expression useful_parsing_model_information.nb_variables convex_continuous_expression in
+				(* Build reset *)
+				Prebuilt_reset (variable_index, px_linear_term)
+			)
+(*			let linear_term = linear_term_of_parsed_continuous_arithmetic_expression useful_parsing_model_information parsed_continuous_arithmetic_expression in
+			(variable_index, linear_term)*)
+		| Parsed_string_term _ -> raise (InternalError "Parsed_string_term found in ModelConverter.convert_clock_update but this should not have happened for a clock update")
 	in
 
-	let converted_clock_updates = List.map to_intermediate_abstract_clock_update updates_list in
+	(* let converted_clock_updates = *)
+	List.map to_intermediate_abstract_clock_update updates_list
 
-	(* Differentiate between different kinds of clock updates *)
+(*	(* Differentiate between different kinds of clock updates *)
 	let clock_updates : clock_updates =
 		(* Case 1: no update *)
 		if converted_clock_updates = [] then No_update
@@ -3101,73 +3170,80 @@ let to_abstract_clock_update index_of_variables constants only_resets updates_li
 	in
 
 	(** abstract clock updates *)
-	clock_updates
+	clock_updates*)
+
 
 (** Split normal updates into clock, discrete updates *)
-let split_to_clock_discrete_updates index_of_variables only_resets type_of_variables updates =
+let split_between_clock_and_discrete_updates useful_parsing_model_information (updates : normal_update list) =
   (** Check if a normal update is a clock update *)
-	let is_clock_update (variable_name, parsed_rational_term) =
-		match parsed_rational_term with
+	let is_clock_update (variable_name, parsed_update_term) =
+		match parsed_update_term with
 		| Parsed_continuous_term parsed_continuous_arithmetic_expression ->
 			(* Retrieve variable type *)
-			if type_of_variables (Hashtbl.find index_of_variables variable_name) = Var_type_clock then (
-				(* Update flag *)
+			(*** TODO: simplify / remove commented code ***)
+			if useful_parsing_model_information.type_of_variables (Hashtbl.find useful_parsing_model_information.index_of_variables variable_name) = Var_type_clock then (
+(*				(* Update flag *)
 				if parsed_continuous_arithmetic_expression <> Parsed_CAE_term (Parsed_CT_factor (Parsed_CF_constant NumConst.zero)) then (
 					only_resets := false;
-				);
+				);*)
 				true
 			) else
 			false
 		(* A string term cannot be assigned to a clock *)
 		| Parsed_string_term _ -> false
-(* 		| _ -> raise (NotImplemented "non-rational discrete terms in ModelConverter.split_to_clock_discrete_updates") *)
+(* 		| _ -> raise (NotImplemented "non-rational discrete terms in ModelConverter.split_between_clock_and_discrete_updates") *)
 	in
 	List.partition is_clock_update updates
 
+
 (** Translate a normal parsed update into its abstract model *)
-let convert_normal_updates index_of_variables constants type_of_variables updates_list =
+let convert_normal_updates useful_parsing_model_information (updates_list : normal_update list) : AbstractModel.updates =
 	(* Flag to check if there are clock resets only to 0 *)
-	let only_resets = ref true in
+(* 	let only_resets = ref true in *)
 
 	(** split clock and discrete updates *)
-	let parsed_clock_updates, parsed_discrete_updates = split_to_clock_discrete_updates index_of_variables only_resets type_of_variables updates_list in
+	let (parsed_clock_updates : normal_update list), (parsed_discrete_updates : normal_update list) = split_between_clock_and_discrete_updates useful_parsing_model_information updates_list in
 
 	(* Convert the discrete updates *)
-	let discrete_updates : discrete_update list = List.map (to_abstract_discrete_update index_of_variables constants) parsed_discrete_updates in
+	let discrete_updates : discrete_update list = List.map (convert_discrete_update useful_parsing_model_information) parsed_discrete_updates in
 
 	(* Convert the clock updates *)
-	let converted_clock_updates : clock_updates = to_abstract_clock_update index_of_variables constants only_resets parsed_clock_updates in
+	let converted_clock_updates : clock_update list = convert_clock_update useful_parsing_model_information parsed_clock_updates in
 
-	(** update abstract model *)
+	(** Return an update structure *)
 	{
-		clock = converted_clock_updates;
-		discrete = discrete_updates;
-		conditional = [];
+		clock		= converted_clock_updates;
+		discrete	= discrete_updates;
+		conditional	= [];
 	}
 
 
 (** convert normal and conditional updates *)
-let convert_updates index_of_variables constants type_of_variables updates : updates =
+let convert_updates useful_parsing_model_information updates : updates =
 
-  (** split normal and conditional updates *)
-  let normal_updates, conditional_updates = List.partition is_normal_update updates in
+	(** split normal and conditional updates *)
+	let normal_updates, conditional_updates = List.partition is_normal_update updates in
 
-  (** convert normal parsed updates *)
-  let converted_updates = convert_normal_updates index_of_variables constants type_of_variables (List.map get_normal_update_value normal_updates) in
+	(** convert normal parsed updates *)
+	let converted_updates = convert_normal_updates useful_parsing_model_information (List.map get_normal_update_value normal_updates) in
 
-  (** convert normal parsed updates inside conditional updates *)
-  let conditional_updates_values : conditional_update list = List.map (fun u ->
-      let boolean_value, if_updates, else_updates = get_conditional_update_value u in
-      let convert_boolean = convert_bool_expr index_of_variables constants boolean_value in
-      let convert_if_updates = convert_normal_updates index_of_variables constants type_of_variables if_updates in
-      let convert_else_updates = convert_normal_updates index_of_variables constants type_of_variables else_updates in
-      (convert_boolean, convert_if_updates, convert_else_updates)
-    ) conditional_updates in
+	(** convert normal parsed updates inside conditional updates *)
+	let conditional_updates_values : conditional_update list = List.map (fun u ->
+		let parsed_continuous_boolean_expression, if_updates, else_updates = get_conditional_update_value u in
+		
+		let discrete_boolean_expression = discrete_boolean_expression_of_parsed_continuous_boolean_expression useful_parsing_model_information parsed_continuous_boolean_expression in
+		
+		let converted_if_updates = convert_normal_updates useful_parsing_model_information if_updates in
+		
+		let converted_else_updates = convert_normal_updates useful_parsing_model_information else_updates in
+		
+		(discrete_boolean_expression, converted_if_updates, converted_else_updates)
+	) conditional_updates in
 
-  (** updates abstract model *)
-  { converted_updates with conditional = conditional_updates_values }
+	(** Modify the update structure *)
+	{ converted_updates with conditional = conditional_updates_values }
 
-*)
+
 (*------------------------------------------------------------*)
 (* Convert the transitions *)
 (*------------------------------------------------------------*)
@@ -3223,10 +3299,10 @@ let convert_transitions (useful_parsing_model_information : useful_parsing_model
           array_of_transitions.(automaton_index).(location_index) <- Array.make nb_actions [];
 
           (* Iterate on transitions *)
-          List.iter (fun (action_index, guard, updates, target_location_index) ->
+          List.iter (fun (action_index, parsed_guard, parsed_updates, target_location_index) ->
 
               (* Convert the guard *)
-              let converted_guard = convert_guard useful_parsing_model_information guard in
+              let converted_guard : AbstractModel.guard = guard_of_convex_continuous_boolean_expressions useful_parsing_model_information parsed_guard in
 
               (* Filter the updates that should assign some variable name to be removed to any expression *)
               (* let filtered_updates = List.filter (fun (variable_name, (*linear_expression*)_) ->
@@ -3234,7 +3310,7 @@ let convert_transitions (useful_parsing_model_information : useful_parsing_model
                  				) updates
                  				in *)
 
-              let filtered_updates = filtered_updates removed_variable_names updates in
+              let filtered_updates = filtered_updates useful_parsing_model_information parsed_updates in
 
               (* Flag to check if there are clock resets only to 0 *)
               (* let only_resets = ref true in *)
@@ -3257,7 +3333,7 @@ let convert_transitions (useful_parsing_model_information : useful_parsing_model
                  				in *)
 
               (* translate parsed updates into their abstract model *)
-              let converted_updates = convert_updates index_of_variables constants type_of_variables filtered_updates in
+              let converted_updates = convert_updates useful_parsing_model_information filtered_updates in
 
               (* Convert the updates *)
               (* let converted_updates = List.map (fun (variable_name, parsed_continuous_arithmetic_expression) ->
