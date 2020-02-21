@@ -5393,9 +5393,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
- 	raise (NotImplemented "ModelConverter: work in progress…")
- 	(*
-
 
 
 
@@ -5452,6 +5449,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let min_rational_index = first_rational_index in
 	let max_rational_index = nb_variables - 1 in
 	Location.initialize nb_automata min_rational_index max_rational_index;
+
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -5574,6 +5572,24 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 	(*** NOTE/HACK: duplicate function in StateSpace ***)
 	let continuous_part_of_guard (*: LinearConstraint.pxd_linear_constraint*) = function
+		(*** NOTE: quite horrible to handle that many PPL constraints! ***)
+		| True_guard -> LinearConstraint.pxd_true_constraint()
+		| False_guard -> LinearConstraint.pxd_false_constraint()
+		| Discrete_continuous_guard discrete_continuous_guard ->
+			let prebuilt_continuous_guard = match discrete_continuous_guard.prebuilt_continuous_guard with
+				| Some prebuilt_continuous_guard -> prebuilt_continuous_guard
+				| None -> LinearConstraint.pxd_true_constraint()
+			in
+			let continuous_guard = match discrete_continuous_guard.continuous_guard with
+				| Some continuous_guard -> continuous_guard
+					
+					
+					(*** TODO: convert to PPL *)
+					
+					
+				| None -> LinearConstraint.pxd_true_constraint()
+			in
+
 		| True_guard -> LinearConstraint.pxd_true_constraint()
 		| False_guard -> LinearConstraint.pxd_false_constraint()
 		| Discrete_guard discrete_guard -> LinearConstraint.pxd_true_constraint()
@@ -5632,6 +5648,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
+ 	raise (NotImplemented "ModelConverter: work in progress…")
+ 	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the initial state *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
