@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/02/12
+ * Last modified     : 2020/02/21
  *
  ****************************************************************)
 
@@ -170,8 +170,8 @@ type condition_update = parsed_continuous_boolean_expression * normal_update lis
 
 (** Updates on transitions *)
 type parsed_update =
-	| Normal_update of normal_update (** Updates without conditions *)
-	| Condition_update of condition_update (** Updates with conditions *)
+	| Parsed_normal_update    of normal_update    (** Updates without conditions *)
+	| Parsed_condition_update of condition_update (** Updates with conditions *)
 
 
 (*------------------------------------------------------------*)

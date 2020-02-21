@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/02/12
+ * Last modified     : 2020/02/21
  *
  ************************************************************/
 
@@ -571,10 +571,10 @@ update_list:
 /************************************************************/
 
 update_nonempty_list:
-	| update COMMA update_list { Normal_update $1 :: $3}
-	| update { [Normal_update $1] }
-	| condition_update COMMA update_list { Condition_update $1 :: $3}
-	| condition_update { [Condition_update $1] }
+	| update COMMA update_list { Parsed_normal_update $1 :: $3}
+	| update { [Parsed_normal_update $1] }
+	| condition_update COMMA update_list { Parsed_condition_update $1 :: $3}
+	| condition_update { [Parsed_condition_update $1] }
 ;
 
 /************************************************************/
