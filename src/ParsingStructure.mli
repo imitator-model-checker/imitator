@@ -156,14 +156,14 @@ type parsed_convex_continuous_boolean_expressions = parsed_convex_continuous_boo
 (* Updates *)
 (*------------------------------------------------------------*)
 
-type parsed_discrete_term =
+type parsed_update_term =
 	(*** NOTE: for parsing, this includes normal clock updates ***)
 	| Parsed_continuous_term of parsed_continuous_arithmetic_expression
 	(*** TODO ***)
 	| Parsed_string_term of string
 
 (** basic updating *)
-type normal_update = variable_name * parsed_discrete_term
+type normal_update = variable_name * parsed_update_term
 
 (** conditional updating - NOTE: it does not support nested conditions *)
 type condition_update = parsed_continuous_boolean_expression * normal_update list * normal_update list
