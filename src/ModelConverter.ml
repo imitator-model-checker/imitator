@@ -5315,8 +5315,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let transitions, transitions_description, automaton_of_transition = convert_transitions useful_parsing_model_information nb_transitions transitions in
 
 	
- 	raise (NotImplemented "ModelConverter: work in progress…")
- 	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add the observer structure to the automata *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -5395,6 +5393,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
+ 	raise (NotImplemented "ModelConverter: work in progress…")
+ 	(*
 
 
 
