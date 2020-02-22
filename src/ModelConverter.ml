@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/02/20
+ * Last modified     : 2020/02/22
  *
  ************************************************************)
 
@@ -1750,7 +1750,24 @@ let linear_constraint_of_convex_predicate index_of_variables constants convex_pr
 
 
 
+(************************************************************)
+(** Converging guards at runtime *)
+(************************************************************)
 
+
+let valuate_continuous_guard rational_variables rational_valuation (convex_continuous_boolean_expression : convex_continuous_boolean_expression) : convex_continuous_boolean_expression =
+	ExpressionsEvaluator.valuate_rationals_in_convex_continuous_boolean_expression rational_variables rational_valuation convex_continuous_boolean_expression
+
+
+(* Transform a guard into a px_linear_constraint *)
+(*`discrete_variables` is the list of discrete variables to valuate, and `discrete_valuation` is their valuation *)
+let px_linear_constraint_of_continuous_guard nb_variables (rational_variables : variable_index list) (rational_valuation : variable_index -> variable_value ) (continuous_guard : continuous_guard) : LinearConstraint.px_linear_constraint =
+
+	(* First valuate, i.e., remove discrete rational variables *)
+	let valuated_convex_continuous_boolean_expression = valuate_continuous_guard rational_variables rational_valuation continuous_guard in
+	
+	(* Then transform to px_linear_constraint *)
+	px_linear_constraint_of_convex_continuous_boolean_expression nb_variables valuated_convex_continuous_boolean_expression
 
 
 
@@ -5079,7 +5096,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Create the lists of different variables *)
 	let (parameters : parameter_index list)	= list_of_interval first_parameter_index (first_clock_index - 1) in
 	let (clocks : clock_index list)			= list_of_interval first_clock_index (first_rational_index - 1) in
-	let (discrete : discrete_index list)	= list_of_interval first_rational_index (nb_variables - 1) in
+	let (rationals : discrete_index list)	= list_of_interval first_rational_index (nb_variables - 1) in
 
 	(* Create the type check functions *)
 	let is_clock = (fun variable_index -> try (type_of_variables variable_index = Var_type_clock) with Invalid_argument _ ->  false) in
@@ -5181,7 +5198,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		automata_names				= automata_names;
 		automata					= automata;
 		constants					= constants;
-		discrete					= discrete;
+		discrete					= rationals;
 		index_of_actions			= index_of_actions;
 		index_of_automata			= index_of_automata;
 		index_of_locations			= index_of_locations;
@@ -5497,7 +5514,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ ", "
 			^ (string_of_int nb_actions) ^ " declared synchronization action" ^ (s_of_int nb_actions) ^ ", "
 			^ (string_of_int nb_clocks) ^ " clock variable" ^ (s_of_int nb_clocks) ^ ", "
-			^ (string_of_int nb_discrete) ^ " discrete variable" ^ (s_of_int nb_discrete) ^ ", "
+			^ (string_of_int nb_discrete) ^ " discrete rational variable" ^ (s_of_int nb_discrete) ^ ", "
 			^ (string_of_int nb_parameters) ^ " parameter" ^ (s_of_int nb_parameters) ^ ", "
 			^ (string_of_int nb_variables) ^ " variable" ^ (s_of_int nb_variables) ^ ", "
 			^ (string_of_int (Hashtbl.length constants)) ^ " constant" ^ (s_of_int (Hashtbl.length constants)) ^ "."
@@ -5569,32 +5586,41 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Detect the L/U nature of the PTA *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	
+	(*** NOTE/HACK: dummy function to valuate discrete to zero ***)
+	let dummy_rational_valuation = fun discrete_index -> NumConst.zero in
 
 	(*** NOTE/HACK: duplicate function in StateSpace ***)
-	let continuous_part_of_guard (*: LinearConstraint.pxd_linear_constraint*) = function
+	let continuous_part_of_guard (guard : guard) : LinearConstraint.px_linear_constraint =
+		match guard with
+		
 		(*** NOTE: quite horrible to handle that many PPL constraints! ***)
-		| True_guard -> LinearConstraint.pxd_true_constraint()
-		| False_guard -> LinearConstraint.pxd_false_constraint()
+		
+		| True_guard -> LinearConstraint.px_true_constraint()
+		
+		| False_guard -> LinearConstraint.px_false_constraint()
+		
 		| Discrete_continuous_guard discrete_continuous_guard ->
 			let prebuilt_continuous_guard = match discrete_continuous_guard.prebuilt_continuous_guard with
 				| Some prebuilt_continuous_guard -> prebuilt_continuous_guard
-				| None -> LinearConstraint.pxd_true_constraint()
+				| None -> LinearConstraint.px_true_constraint()
 			in
 			let continuous_guard = match discrete_continuous_guard.continuous_guard with
-				| Some continuous_guard -> continuous_guard
+				| Some continuous_guard ->
+					(* Convert to PPL *)
+					px_linear_constraint_of_continuous_guard nb_variables rationals dummy_rational_valuation continuous_guard
 					
-					
-					(*** TODO: convert to PPL *)
-					
-					
-				| None -> LinearConstraint.pxd_true_constraint()
+				| None -> LinearConstraint.px_true_constraint()
 			in
+			
+			(* Perform intersection *)
+			LinearConstraint.px_intersection [prebuilt_continuous_guard; continuous_guard]
 
-		| True_guard -> LinearConstraint.pxd_true_constraint()
+(*		| True_guard -> LinearConstraint.pxd_true_constraint()
 		| False_guard -> LinearConstraint.pxd_false_constraint()
 		| Discrete_guard discrete_guard -> LinearConstraint.pxd_true_constraint()
 		| Continuous_guard continuous_guard -> continuous_guard
-		| Discrete_continuous_guard rational_continuous_guard -> rational_continuous_guard.continuous_guard
+		| Discrete_continuous_guard rational_continuous_guard -> rational_continuous_guard.continuous_guard*)
 	in
 
 	(* 1) Get ALL constraints of guards and invariants *)
@@ -5603,7 +5629,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_total ("*** Retrieving all constraints to detect the L/U nature of the model…");
 	
 	(*** BADPROG ***)
-	let all_constraints = ref [] in
+	let all_constraints : LinearConstraint.px_linear_constraint list ref = ref [] in
 	(* For all PTA *)
 	List.iter (fun automaton_index ->
 		let locations_for_this_automaton = locations_per_automaton automaton_index in
@@ -5612,7 +5638,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			let invariant = invariants automaton_index location_index in
 
 			(* Add invariant *)
-			all_constraints := invariant :: !all_constraints;
+			all_constraints := (continuous_part_of_guard invariant) :: !all_constraints;
 
 			let actions_for_this_location = actions_per_location automaton_index location_index in
 			(* For all actions *)
@@ -5622,7 +5648,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 				List.iter (fun transition ->
 
 					(* Add guard *)
-					(*** NOTE: quite inefficient as we create a lot of pxd_true_constraint() although we just want to know whether they are L/U or not (but OK because prior to model analysis) ***)
+					(*** NOTE: quite inefficient because we create a lot of px_true_constraint() although we just want to know whether they are L/U or not (but OK because prior to model analysis) ***)
 					all_constraints := (continuous_part_of_guard transition.guard) :: !all_constraints;
 				) transitions_for_this_location;
 			) actions_for_this_location;
@@ -5899,16 +5925,16 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	global_time_clock = global_time_clock;
 	(* The list of clock indexes except the reset clock (used, e.g., to print the model *)
 	clocks_without_special_reset_clock = clocks_without_special_reset_clock;
-	(* The list of discrete indexes *)
-	discrete = discrete;
-	(* True for discrete, false otherwise *)
+	(* The list of rationals indexes *)
+	discrete = rationals;
+	(* True for rationals, false otherwise *)
 	is_discrete = is_discrete;
 	(* The list of parameter indexes *)
 	parameters = parameters;
-	(* The non parameters (clocks and discrete) *)
-	clocks_and_discrete = list_append clocks discrete;
-	(* The non clocks (parameters and discrete) *)
-	parameters_and_discrete = list_append parameters discrete;
+	(* The non parameters (clocks and rationals) *)
+	clocks_and_discrete = list_append clocks rationals;
+	(* The non clocks (parameters and rationals) *)
+	parameters_and_discrete = list_append parameters rationals;
 	(* The non discrete (clocks and parameters) *)
 	parameters_and_clocks = list_append parameters clocks;
 	(* The function : variable_index -> variable name *)
