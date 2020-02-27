@@ -5729,8 +5729,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	end;
 
 
- 	raise (NotImplemented "ModelConverter: work in progress…")
- 	(*
 
 	(* Build the K0 constraint *)
 	let initial_p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse initial_constraint in
@@ -6055,7 +6053,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Projection of the result *)
 	projection		: projection;
 }*)
-	*)
+
+
+(* 	raise (NotImplemented "ModelConverter: work in progress…")
+ 	(*
+	*)*)
 
 
 
