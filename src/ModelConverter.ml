@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/02/22
+ * Last modified     : 2020/02/27
  *
  ************************************************************)
 
@@ -114,8 +114,10 @@ type useful_parsing_model_information = {
 	index_of_locations					: ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array;
 	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
 	nb_actions							: int;
+	nb_discrete							: int;
 	nb_parameters						: int;
 	nb_variables						: int;
+	parameters							: variable_index list;
 	parameter_names						: variable_name list;
 	removed_action_names				: action_name list;
 	type_of_variables					: Automaton.variable_index -> AbstractModel.var_type;
@@ -1177,7 +1179,7 @@ let px_linear_constraint_of_convex_continuous_boolean_expression nb_variables = 
 exception False_guard_detected
 
 (* Converts a parsed_convex_continuous_boolean_expressions into a proper guard, by separating the various inequalities into static discrete inequalities, static continuous inequalities (to be evaluated at runtime), and prebuilt px_linear_constraint *)
-let guard_of_convex_continuous_boolean_expressions useful_parsing_model_information (convex_continuous_boolean_expressions : parsed_convex_continuous_boolean_expressions) : guard =
+let guard_of_parsed_convex_continuous_boolean_expressions useful_parsing_model_information (convex_continuous_boolean_expressions : parsed_convex_continuous_boolean_expressions) : guard =
 
 	try(
 	let guard_triple =
@@ -1203,7 +1205,7 @@ let guard_of_convex_continuous_boolean_expressions useful_parsing_model_informat
 						| None -> Some (CCBE_conjunction convex_continuous_boolean_inequalities)
 						(* We do not want these cases here *)
 						| Some CCBE_True | Some CCBE_False ->
-							raise (InternalError "Unexpected CCBE_True or CCBE_False in guard_of_convex_continuous_boolean_expressions")
+							raise (InternalError "Unexpected CCBE_True or CCBE_False in guard_of_parsed_convex_continuous_boolean_expressions")
 					in
 					updated_discrete_guard, current_prebuilt_continuous_guard, current_continuous_guard
 				)
@@ -1224,7 +1226,7 @@ let guard_of_convex_continuous_boolean_expressions useful_parsing_model_informat
 							| None -> Some (CCBE_conjunction convex_continuous_boolean_inequalities)
 							(* We do not want these cases here *)
 							| Some CCBE_True | Some CCBE_False ->
-								raise (InternalError "Unexpected CCBE_True or CCBE_False in guard_of_convex_continuous_boolean_expressions")
+								raise (InternalError "Unexpected CCBE_True or CCBE_False in guard_of_parsed_convex_continuous_boolean_expressions")
 						in
 						current_discrete_guard, current_prebuilt_continuous_guard, updated_continuous_guard
 					
@@ -1241,6 +1243,7 @@ let guard_of_convex_continuous_boolean_expressions useful_parsing_model_informat
 						let convex_continuous_boolean_expression = CCBE_conjunction convex_continuous_boolean_inequalities in
 						
 						(* Convert to px_linear_constraint *)
+								(*** WARNING: nb_variables should be nb_clocks + nb_parameters only! ***)
 						let px_linear_constraint : LinearConstraint.px_linear_constraint = px_linear_constraint_of_convex_continuous_boolean_expression useful_parsing_model_information.nb_variables convex_continuous_boolean_expression in
 						
 						(* Add it to the current list *)
@@ -1760,7 +1763,7 @@ let valuate_continuous_guard rational_variables rational_valuation (convex_conti
 
 
 (* Transform a guard into a px_linear_constraint *)
-(*`discrete_variables` is the list of discrete variables to valuate, and `discrete_valuation` is their valuation *)
+(*`rational_variables` is the list of discrete variables to valuate, and `rational_valuation` is their valuation *)
 let px_linear_constraint_of_continuous_guard nb_variables (rational_variables : variable_index list) (rational_valuation : variable_index -> variable_value ) (continuous_guard : continuous_guard) : LinearConstraint.px_linear_constraint =
 
 	(* First valuate, i.e., remove discrete rational variables *)
@@ -2888,7 +2891,7 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 				transitions.(automaton_index).(location_index) <- (List.rev list_of_transitions);
 
 				(* Update the array of invariants *)
-				invariants.(automaton_index).(location_index) <- guard_of_convex_continuous_boolean_expressions useful_parsing_model_information location.invariant
+				invariants.(automaton_index).(location_index) <- guard_of_parsed_convex_continuous_boolean_expressions useful_parsing_model_information location.invariant
 					(*linear_constraint_of_convex_predicate index_of_variables constants location.invariant*);
 
 				(* Does the model has stopwatches? *)
@@ -3319,7 +3322,7 @@ let convert_transitions (useful_parsing_model_information : useful_parsing_model
           List.iter (fun (action_index, parsed_guard, parsed_updates, target_location_index) ->
 
               (* Convert the guard *)
-              let converted_guard : AbstractModel.guard = guard_of_convex_continuous_boolean_expressions useful_parsing_model_information parsed_guard in
+              let converted_guard : AbstractModel.guard = guard_of_parsed_convex_continuous_boolean_expressions useful_parsing_model_information parsed_guard in
 
               (* Filter the updates that should assign some variable name to be removed to any expression *)
               (* let filtered_updates = List.filter (fun (variable_name, (*linear_expression*)_) ->
@@ -3400,11 +3403,10 @@ let convert_transitions (useful_parsing_model_information : useful_parsing_model
 
 
 
-(*
 (*------------------------------------------------------------*)
 (* Create the initial state *)
 (*------------------------------------------------------------*)
-let make_initial_state index_of_automata locations_per_automaton index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_rational_pairs init_definition =
+let make_initial_state useful_parsing_model_information variable_names init_rational_pairs init_definition =
 	(* Get the location initialisations and the constraint *)
 	let loc_assignments, linear_predicates = List.partition (function
 		| Parsed_loc_assignment _ -> true
@@ -3418,31 +3420,33 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 	(* Convert the pairs to automaton_index, location_index *)
 	let locations = List.map (fun (automaton_name, location_name) ->
 		(* Find the automaton index *)
-		let automaton_index = Hashtbl.find index_of_automata automaton_name in
+		let automaton_index = Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name in
 		(* Find the location index *)
 		automaton_index,
-		Hashtbl.find index_of_locations.(automaton_index) location_name
+		Hashtbl.find useful_parsing_model_information.index_of_locations.(automaton_index) location_name
 		) initial_locations in
 
 	(* Construct the initial location *)
 	let initial_location = Location.make_location locations init_rational_pairs in
 
 	(* Remove the init definitions for discrete variables *)
-	let other_inequalities = List.filter (function
+	let nondiscrete_inequalities = List.filter (function
 		(* Check if the left part is only a variable name *)
-		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
+(* 		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) -> *)
+		| Parsed_linear_predicate (Parsed_expression (Parsed_CAE_term (Parsed_CT_factor (Parsed_CF_variable variable_name)), PARSED_OP_EQ, _))
+			->
 			(* First check whether it was removed *)
-			if List.mem variable_name removed_variable_names then false
+			if List.mem variable_name useful_parsing_model_information.removed_variable_names then false
 			else
 			let is_discrete =
 				(* Try to get the variable index *)
-				if (Hashtbl.mem index_of_variables variable_name) then (
-				let variable_index =  Hashtbl.find index_of_variables variable_name in
+				if (Hashtbl.mem useful_parsing_model_information.index_of_variables variable_name) then (
+				let variable_index =  Hashtbl.find useful_parsing_model_information.index_of_variables variable_name in
 				(* Keep if this is a discrete *)
-				match type_of_variables variable_index with | Var_type_discrete _ -> true | _ -> false
+				match useful_parsing_model_information.type_of_variables variable_index with | Var_type_discrete _ -> true | _ -> false
 				) else (
 				(* Case constant *)
-				if (Hashtbl.mem constants variable_name) then false
+				if (Hashtbl.mem useful_parsing_model_information.constants variable_name) then false
 				else (
 					(* Otherwise: problem! *)
 					raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist, although this should have been checked before."));
@@ -3450,27 +3454,59 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 			in not is_discrete
 		| _ -> true
 		) linear_predicates in
+	
 	(* Convert the inequalities *)
-	let convex_predicate = List.map (function
+	
+	let parsed_continuous_inequalities : parsed_continuous_inequality list = List.map (function
 		| Parsed_linear_predicate lp -> lp
 		| _ -> raise (InternalError "Something else than a Parsed_linear_predicate was found in a Parsed_linear_predicate list.")
-		) other_inequalities in
+		) nondiscrete_inequalities in
 	let initial_constraint : LinearConstraint.px_linear_constraint =
+		
+		(* Create discrete valuation *)
+		
+		let rational_hashtable : (variable_index, variable_value) Hashtbl.t = Hashtbl.create useful_parsing_model_information.nb_discrete in
+		List.iter (fun (rational_index, rational_value) ->
+			Hashtbl.add rational_hashtable rational_index rational_value
+		) init_rational_pairs;
+		let rational_valuation rational_index = try Hashtbl.find rational_hashtable rational_index with
+			| Not_found -> raise (InternalError "Discrete valuation not found in make_initial_state")
+		in
+		
+		(* Convert *)
+		let convex_continuous_boolean_inequalities : convex_continuous_boolean_inequality list = List.fold_left (fun current_list parsed_continuous_inequality ->
+			(* Convert parsed_continuous_inequality to 1 or 2 convex_continuous_boolean_inequality *)
+			let convex_continuous_boolean_inequalities : Expressions.convex_continuous_boolean_inequality list = convex_continuous_boolean_inequalities_of_parsed_continuous_inequality useful_parsing_model_information parsed_continuous_inequality in
+			
+			(* Add to current list *)
+			List.rev_append convex_continuous_boolean_inequalities current_list
+		) [] parsed_continuous_inequalities
+		in
+		
+		(* Make it a convex_continuous_boolean_expression *)
+		let convex_continuous_boolean_expression : convex_continuous_boolean_expression = CCBE_conjunction convex_continuous_boolean_inequalities in
 
-		(* Create pairs of (index , value) for discrete variables *)
-		(* 		let rational_values = List.map (fun rational_index -> rational_index, (Location.get_rational_value initial_location rational_index)) model.discrete in *)
+		(* Valuate constraint *)
+		let valuated_convex_continuous_boolean_expression = ExpressionsEvaluator.valuate_rationals_in_convex_continuous_boolean_expression useful_parsing_model_information.discrete rational_valuation convex_continuous_boolean_expression in
+		
+		(* Convert to px_linear_constraint *)
+				(*** WARNING: nb_variables should be nb_clocks + nb_parameters only! ***)
+		let px_linear_constraint : LinearConstraint.px_linear_constraint = px_linear_constraint_of_convex_continuous_boolean_expression useful_parsing_model_information.nb_variables convex_continuous_boolean_expression in
+						
+		px_linear_constraint
+		
 
-		(* Create a constraint encoding the value of the discretes *)
+(*		(* Create a constraint encoding the value of the discretes *)
 		let discretes = LinearConstraint.pxd_constraint_of_discrete_values init_rational_pairs in
 
 		(* Create initial constraint (through parsing) *)
-		let initial_constraint = (linear_constraint_of_convex_predicate index_of_variables constants convex_predicate) in
+		let initial_constraint = (linear_constraint_of_convex_predicate index_of_variables constants parsed_continuous_inequalities) in
 
 		(* Intersects initial constraint with discretes *)
 		LinearConstraint.pxd_intersection_assign initial_constraint [discretes];
 
 		(* Remove discretes *)
-		LinearConstraint.pxd_hide_discrete_and_collapse initial_constraint
+		LinearConstraint.pxd_hide_discrete_and_collapse initial_constraint*)
 	in
 
 	(* PERFORM VERIFICATIONS *)
@@ -3482,13 +3518,12 @@ let make_initial_state index_of_automata locations_per_automaton index_of_locati
 		(* Check *)
 		if not (LinearConstraint.px_is_positive_in parameter_id initial_constraint) then
 			print_warning ("Parameter `" ^ (variable_names parameter_id) ^ "` is not necessarily positive in the initial constraint. The behavior of " ^ Constants.program_name ^ " is unspecified in this case. You are advised to add inequality `" ^ (variable_names parameter_id) ^ " >= 0' to the initial state of the model.");
-		) parameters;
+		) useful_parsing_model_information.parameters;
 
 	(* Return the initial state *)
 	initial_location, initial_constraint
 
 
-*)
 
 
 (************************************************************)
@@ -5204,8 +5239,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		index_of_locations			= index_of_locations;
 		index_of_variables			= index_of_variables;
 		nb_actions					= nb_actions;
+		nb_discrete					= nb_discrete;
 		nb_parameters				= nb_parameters;
 		nb_variables				= nb_variables;
+		parameters					= parameters;
 		parameter_names				= parameter_names;
 		removed_action_names		= removed_action_names;
 		type_of_variables			= type_of_variables;
@@ -5674,8 +5711,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 
- 	raise (NotImplemented "ModelConverter: work in progress…")
- 	(*
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the initial state *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -5684,7 +5719,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_high ("*** Building initial state…");
 	
 	let (initial_location, initial_constraint) =
-		make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_rational_pairs parsed_model.init_definition in
+		make_initial_state useful_parsing_model_information variable_names init_rational_pairs parsed_model.init_definition in
 
 	(* Add the observer initial constraint *)
 	begin
@@ -5694,6 +5729,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	end;
 
 
+ 	raise (NotImplemented "ModelConverter: work in progress…")
+ 	(*
 
 	(* Build the K0 constraint *)
 	let initial_p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse initial_constraint in
