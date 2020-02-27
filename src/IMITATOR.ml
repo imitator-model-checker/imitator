@@ -226,9 +226,6 @@ match options#imitator_mode with
 	
 	terminate_program()
 
-;
-	raise (NotImplemented "temporarily disabling everything except parsing ")
-(*
 
 	(************************************************************)
 	(* Case translation *)
@@ -270,6 +267,10 @@ match options#imitator_mode with
 			)) ) None;
 
 		terminate_program()
+
+
+	; raise (NotImplemented "temporarily disabling everything except parsing ") (*
+
 
 	(* Translation to a graphics *)
 	| Translation JPG | Translation PDF | Translation PNG ->
