@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/02/05
+ * Last modified     : 2020/02/27
  *
  ************************************************************)
 
@@ -146,9 +146,6 @@ in
 let model, property_option = ParsingUtility.compile_model_and_property options in
 
 
-raise (NotImplemented "temporarily disabling everything except parsing ")
-
-(*
 (*------------------------------------------------------------*)
 (* Set both abstract structures *)
 (*------------------------------------------------------------*)
@@ -165,6 +162,7 @@ match property_option with
 		print_message Verbose_low "Set the property.";
 		Input.set_property property;
 end;
+
 
 
 
@@ -228,6 +226,9 @@ match options#imitator_mode with
 	
 	terminate_program()
 
+;
+	raise (NotImplemented "temporarily disabling everything except parsing ")
+(*
 
 	(************************************************************)
 	(* Case translation *)
@@ -926,6 +927,8 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 
 	end; (* match type of abstract algorithm *)
 
+*) (*** END NotImplemented ***)
+
 (************************************************************)
 (************************************************************)
 (* End branching depending on the algorithm *)
@@ -934,7 +937,6 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 end;
 
 
-*)
 (************************************************************)
 (* END EXCEPTION MECHANISM *)
 (************************************************************)
