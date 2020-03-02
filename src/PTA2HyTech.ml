@@ -91,11 +91,11 @@ let find_stopwatches () =
 	List.iter (fun automaton_index ->
 		let locations = model.locations_per_automaton automaton_index in
 
-		print_message Verbose_high ("Gathering stopwatches in automaton '" ^ (model.automata_names automaton_index)  ^ "'...");
+		print_message Verbose_high ("Gathering stopwatches in automaton '" ^ (model.automata_names automaton_index)  ^ "'…");
 
 		(* Iterate on each location *)
 		List.iter (fun location_index ->
-			print_message Verbose_high ("  Gathering stopwatches in location '" ^ (model.location_names automaton_index location_index)  ^ 	"'...");
+			print_message Verbose_high ("  Gathering stopwatches in location '" ^ (model.location_names automaton_index location_index)  ^ 	"'…");
 			let stopwatches = model.stopwatches automaton_index location_index in
 			(* Add to list *)
 			list_of_stopwatches := List.rev_append !list_of_stopwatches stopwatches;
@@ -178,7 +178,7 @@ let string_of_invariant model automaton_index location_index stopwatches clocks 
 		) stopped
 	) in
 
-	(*** NOTE: it seems HyTech requests the rate of ALL stopwatches to be explicitly defined in all invariants... ***)
+	(*** NOTE: it seems HyTech requests the rate of ALL stopwatches to be explicitly defined in all invariants… ***)
 	let running_str = string_of_list_of_string_with_sep ","
 		(List.map (fun clock_index ->
 			" d" ^ (model.variable_names clock_index) ^ " = 1"
@@ -257,7 +257,7 @@ let string_of_transition model automaton_index transition =
 	let clock_updates = transition.updates.clock in
 	let discrete_updates = transition.updates.discrete in
 	let conditional_updates = transition.updates.conditional in
-	(if conditional_updates <> [] then print_message Verbose_standard "Conditions are not supported by HyTech. Ignoring..." );
+	(if conditional_updates <> [] then print_message Verbose_standard "Conditions are not supported by HyTech. Ignoring…" );
 	"\n\t" ^ "when "
 	(* Convert the guard *)
 	^ (ModelPrinter.string_of_guard model.variable_names transition.guard)
@@ -319,7 +319,7 @@ let string_of_locations model automaton_index stopwatches clocks =
 (* Convert an automaton into a string *)
 let string_of_automaton model automaton_index stopwatches clocks =
 	(* Print some information *)
-	print_message Verbose_low ("Translating automaton '" ^ (model.automata_names automaton_index) ^ "'...");
+	print_message Verbose_low ("Translating automaton '" ^ (model.automata_names automaton_index) ^ "'…");
 
 	"\n--************************************************************"
 	^ "\n automaton " ^ (model.automata_names automaton_index)
@@ -351,7 +351,7 @@ let string_of_initial_state () =
 	let model = Input.get_model () in
 
 	(* Print some information *)
-	print_message Verbose_low "Translating the initial state...";
+	print_message Verbose_low "Translating the initial state…";
 
 	(* Header of initial state *)
 	"\n"
@@ -510,10 +510,10 @@ let string_of_property model property =
 	| TB_response_cyclicstrict (a1 , a2, d) ->
 		"property := if " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " once before next;"
 
-	(* sequence a1, ..., an *)
+	(* sequence a1, …, an *)
 	| Sequence_acyclic action_index_list ->
 		"property := sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
-	(* always sequence a1, ..., an *)
+	(* always sequence a1, …, an *)
 	| Sequence_cyclic action_index_list ->
 		"property := always sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
 
