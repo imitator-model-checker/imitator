@@ -12,7 +12,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2016/01/26
- * Last modified     : 2020/01/31
+ * Last modified     : 2020/03/02
  *
  ************************************************************)
 
@@ -164,7 +164,8 @@ let string_of_initially model automaton_index =
 let string_of_invariant model automaton_index location_index stopwatches clocks =
 	(* Invariant *)
 	"while "
-	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index))
+(* 	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index)) *)
+	^ (ModelPrinter.string_of_guard model.variable_names (model.invariants automaton_index location_index))
 
 	(* Handle stopwatches *)
 	^
@@ -199,7 +200,7 @@ let string_of_sync model action_index =
 
 
 
-let string_of_clock_updates model = function
+(*let string_of_clock_updates model = function
 	| No_update -> ""
 	| Resets list_of_clocks ->
 		string_of_list_of_string_with_sep ", " (List.map (fun variable_index ->
@@ -211,7 +212,26 @@ let string_of_clock_updates model = function
 			(model.variable_names variable_index)
 			^ "' = "
 			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term)
-		) list_of_clocks_lt)
+		) list_of_clocks_lt)*)
+
+
+let string_of_clock_update model = function
+	(* Reset to linear constraints over constants, clocks and parameters: can use prebuilt polyhedra *)
+	| Prebuilt_reset (clock_index , px_linear_term) ->
+		(model.variable_names clock_index)
+			^ "' = "
+			^ (LinearConstraint.string_of_px_linear_term model.variable_names px_linear_term)
+
+	(* Reset to arbitrary linear constraints over discrete, constants, clocks and parameters: cannot use prebuilt polyhedra *)
+	| Reset (clock_index , convex_continuous_expression) ->
+		(model.variable_names clock_index)
+			^ "' = "
+			^ (ModelPrinter.string_of_convex_continuous_expression model.variable_names convex_continuous_expression)
+
+let string_of_clock_updates model clock_updates =
+	string_of_list_of_string_with_sep ", " (List.map (fun clock_update ->
+				string_of_clock_update model clock_update
+			) clock_updates)
 
 
 
@@ -219,14 +239,14 @@ let string_of_clock_updates model = function
 (*** WARNING: calling string_of_arithmetic_expression might yield a syntax incompatible with HyTech for models more expressive than its input syntax! ***)
 (*** TODO: fix or print warning ***)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, discrete_factor) ->
-		match discrete_factor with
-		| Rational_term arithmetic_expression ->
+	string_of_list_of_string_with_sep ", " (List.map (fun (variable_index, discrete_term) ->
+		match discrete_term with
+		| Rational_term convex_continuous_expression ->
 			(* Convert the variable name *)
 			(model.variable_names variable_index)
 			^ "' = "
-			(* Convert the arithmetic_expression *)
-			^ (ModelPrinter.string_of_arithmetic_expression model.variable_names arithmetic_expression)
+			(* Convert the convex_continuous_expression *)
+			^ (ModelPrinter.string_of_convex_continuous_expression model.variable_names convex_continuous_expression)
 		| String_term _ -> raise (NotImplemented "PTA2HyTech.string_of_discrete_updates")
 	) updates)
 
@@ -247,7 +267,7 @@ let string_of_transition model automaton_index transition =
 	(* Clock updates *)
 	^ (string_of_clock_updates model clock_updates)
 	(* Add a coma in case of both clocks and discrete *)
-	^ (if clock_updates != No_update && discrete_updates != [] then ", " else "")
+	^ (if clock_updates != [] && discrete_updates != [] then ", " else "")
 	(* Discrete updates *)
 	^ (string_of_discrete_updates model discrete_updates)
 	^ "} "
