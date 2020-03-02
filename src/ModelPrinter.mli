@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/12/02
- * Last modified     : 2020/02/27
+ * Last modified     : 2020/03/02
  *
  ************************************************************)
 
@@ -30,6 +30,8 @@ val string_of_var_type : var_type -> string
 (************************************************************)
 (** Convert a discrete_arithmetic_expression into a string *)
 (* val string_of_arithmetic_expression : (Automaton.variable_index -> Automaton.variable_name) -> RationalExpressions.rational_arithmetic_expression -> string *)
+
+val string_of_convex_continuous_expression : (Automaton.variable_index -> Automaton.variable_name) -> Expressions.convex_continuous_expression -> string
 
 
 (************************************************************)
