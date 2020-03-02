@@ -52,9 +52,12 @@ bin/patator
 doc/build
 doc/*.aux
 doc/*.bbl
+doc/*.bcf
 doc/*.blg
 doc/*.brf
 doc/*.log
+doc/*.run.xml
+doc/*.synctex.gz
 doc/*.toc
 doc/IMITATOR-not-developer-manual.out
 doc/IMITATOR-not-developer-manual.pdf
