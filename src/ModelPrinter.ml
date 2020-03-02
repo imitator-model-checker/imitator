@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/02/27
+ * Last modified     : 2020/03/02
  *
  ************************************************************)
 
@@ -495,10 +495,9 @@ let string_of_clock_updates_template model clock_updates wrap_reset wrap_expr se
 				wrap_expr variable_index linear_term
 			) list_of_clocks_lt)*)
 
-(** Convert a clock update into a string *)
+(*(** Convert a clock update into a string *)
 let string_of_clock_updates model clock_updates =
-	raise (NotImplemented "string_of_clock_updates")
-(*	let sep = ", " in
+	let sep = ", " in
 	let wrap_reset variable_index =  (model.variable_names variable_index) ^ " := 0" in
 	let wrap_expr variable_index linear_term = (model.variable_names variable_index)
 			^ " := "
@@ -519,7 +518,10 @@ let string_of_clock_update model = function
 			^ (string_of_convex_continuous_expression model.variable_names convex_continuous_expression)
 
 
-(* let string_of_clock_updates clock_updates = *)
+let string_of_clock_updates model clock_updates =
+	string_of_list_of_string_with_sep ", " (List.map (fun clock_update ->
+				string_of_clock_update model clock_update
+			) clock_updates)
 
 
 (* Convert a list of discrete updates into a string *)
