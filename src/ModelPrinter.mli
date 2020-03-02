@@ -89,7 +89,7 @@ val string_of_clock_updates :  AbstractModel.abstract_model -> clock_update list
 val string_of_discrete_boolean_expression : (Automaton.discrete_index -> Automaton.variable_name) -> discrete_boolean_expression -> string
 
 (** Template to convert conditional updates into a string *)
-(* val string_of_conditional_updates_template : AbstractModel.abstract_model -> conditional_update list -> (abstract_model -> clock_update list -> string) -> (abstract_model -> discrete_update list -> string) -> (boolean_expression -> string) -> string -> string -> string -> string *)
+val string_of_conditional_updates_template : AbstractModel.abstract_model -> conditional_update list -> (abstract_model -> clock_update list -> string) -> (abstract_model -> discrete_update list -> string) -> (discrete_boolean_expression -> string) -> string -> string -> string -> string
 
 (** Convert conditional updates into a string *)
 val string_of_conditional_updates : AbstractModel.abstract_model -> conditional_update list -> string

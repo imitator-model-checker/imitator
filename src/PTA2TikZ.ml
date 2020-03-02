@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2015/03/24
- * Last modified     : 2020/02/01
+ * Last modified     : 2020/03/02
  *
  ****************************************************************)
 
@@ -17,7 +17,7 @@ open OCamlUtilities
 open Exceptions
 open AbstractModel
 open AbstractProperty
-open RationalExpressions
+open Expressions
 
 
 
@@ -61,7 +61,7 @@ let tikz_string_of_lc_gen lc_fun lc =
 
 (** Proper form for constraints *)
 let tikz_string_of_linear_constraint =
-	tikz_string_of_lc_gen LinearConstraint.string_of_pxd_linear_constraint
+	tikz_string_of_lc_gen LinearConstraint.string_of_px_linear_constraint
 
 
 (** Proper form for constraints *)
@@ -92,7 +92,7 @@ let string_of_sync model action_index =
 	| Action_type_nosync -> ""
 
 
-(** Convert clock updates into a string *)
+(*(** Convert clock updates into a string *)
 let string_of_clock_updates model clock_updates =
 	let sep = "\\n" in
 	let wrap_reset variable_index =  "\n\t\t & $" ^ (variable_names_with_style variable_index) ^ ":=0$\\\\" in
@@ -100,19 +100,42 @@ let string_of_clock_updates model clock_updates =
 		^ (variable_names_with_style variable_index)
 			^ ":= "
 			^ (LinearConstraint.string_of_pxd_linear_term variable_names_with_style linear_term)^"$\\\\% " in
-	ModelPrinter.string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep
+	ModelPrinter.string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep*)
+
+
+let string_of_clock_update model = function
+	(* Reset to linear constraints over constants, clocks and parameters: can use prebuilt polyhedra *)
+	| Prebuilt_reset (clock_index , px_linear_term) ->
+		"\n\t\t & $" ^ (variable_names_with_style clock_index)
+			^ " := "
+			^ (LinearConstraint.string_of_px_linear_term model.variable_names px_linear_term)
+			^ "$\\\\% "
+
+	(* Reset to arbitrary linear constraints over discrete, constants, clocks and parameters: cannot use prebuilt polyhedra *)
+	| Reset (clock_index , convex_continuous_expression) ->
+		"\n\t\t & $" ^ (variable_names_with_style clock_index)
+			^ " := "
+			^ (ModelPrinter.string_of_convex_continuous_expression model.variable_names convex_continuous_expression)
+			^ "$\\\\% "
+
+
+let string_of_clock_updates model clock_updates =
+	string_of_list_of_string_with_sep "\\n" (List.map (fun clock_update ->
+				string_of_clock_update model clock_update
+			) clock_updates)
+
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates model updates =
-	string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, discrete_factor) ->
-		match discrete_factor with
-		| Rational_term arithmetic_expression ->
+	string_of_list_of_string_with_sep "\\n" (List.map (fun (variable_index, discrete_term) ->
+		match discrete_term with
+		| Rational_term convex_continuous_expression ->
 			"\n\t\t & $"
 			(* Convert the variable name *)
 			^ (variable_names_with_style variable_index)
 			^ ":="
-			(* Convert the arithmetic_expression *)
-			^ (ModelPrinter.string_of_arithmetic_expression variable_names_with_style arithmetic_expression)
+			(* Convert the convex_continuous_expression *)
+			^ (ModelPrinter.string_of_convex_continuous_expression variable_names_with_style convex_continuous_expression)
 			(*** HACK!!! without the "%", a strange "\n" that occurs immediately after leads to a LaTeX compiling error when strictly >= 2 updates ***)
 			^ "$\\\\% "
 		| String_term _ -> raise (NotImplemented "PTA2TIkZ.string_of_discrete_updates")
@@ -129,39 +152,39 @@ let string_of_boolean_operations op =
 
 
 (** Convert a discrete_boolean_expression into a string *)
-let string_of_discrete_boolean_expression variable_names = function
+let string_of_rational_boolean_expression variable_names = function
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
-		(ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
+	| RBE_Expression (convex_continuous_expression_1, relop, convex_continuous_expression_2) ->
+		(ModelPrinter.string_of_convex_continuous_expression variable_names convex_continuous_expression_1)
 		^ " "
 		^ (string_of_boolean_operations relop)
 		^ " "
-		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+		^ (ModelPrinter.string_of_convex_continuous_expression variable_names convex_continuous_expression_2)
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
-		(ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
+	| RBE_Expression_in (convex_continuous_expression_1, convex_continuous_expression_2, discrete_arithmetic_expression3) ->
+		(ModelPrinter.string_of_convex_continuous_expression variable_names convex_continuous_expression_1)
 		^ " \\in ["
-		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+		^ (ModelPrinter.string_of_convex_continuous_expression variable_names convex_continuous_expression_2)
 		^ " , "
-		^ (ModelPrinter.string_of_arithmetic_expression variable_names discrete_arithmetic_expression3)
+		^ (ModelPrinter.string_of_convex_continuous_expression variable_names discrete_arithmetic_expression3)
 		^ "]"
 
 
 (** Convert a Boolean expression into a string *)
 let rec string_of_boolean variable_names = function
-	| True_bool -> string_of_true
-	| False_bool -> string_of_false
-	| Not_bool b -> "\\neg (" ^ (string_of_boolean variable_names b) ^ ")"
-	| And_bool (b1, b2) ->
+	| DBE_True -> string_of_true
+	| DBE_False -> string_of_false
+	| DBE_Not b -> "\\neg (" ^ (string_of_boolean variable_names b) ^ ")"
+	| DBE_And (b1, b2) ->
 		(string_of_boolean variable_names b1)
 		^ " \\land "
 		^ (string_of_boolean variable_names b2)
-	| Or_bool (b1, b2) ->
+	| DBE_Or (b1, b2) ->
 		(string_of_boolean variable_names b1)
 		^ " \\lor "
 		^ (string_of_boolean variable_names b2)
-	| Rational_boolean_expression discrete_boolean_expression ->
-		string_of_discrete_boolean_expression variable_names discrete_boolean_expression
+	| DBE_Rational_boolean_expression discrete_boolean_expression ->
+		string_of_rational_boolean_expression variable_names discrete_boolean_expression
 
 
 
