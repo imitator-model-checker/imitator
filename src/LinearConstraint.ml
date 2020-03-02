@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2020/02/17
+ * Last modified     : 2020/03/02
  *
  ************************************************************)
 
@@ -934,7 +934,8 @@ let rec string_of_linear_term names linear_term =
 					| _ -> fstr ^ " * (" ^ tstr ^ ")" )
 
 let string_of_p_linear_term = string_of_linear_term 
-let string_of_pxd_linear_term = string_of_linear_term 
+let string_of_px_linear_term = string_of_linear_term 
+(* let string_of_pxd_linear_term = string_of_linear_term  *)
 
 (** Convert a linear term (PPL) into a string *)
 let rec string_of_linear_term_ppl names linear_term =

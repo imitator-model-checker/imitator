@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2020/02/17
+ * Last modified     : 2020/03/02
  *
  ************************************************************)
 
@@ -107,7 +107,7 @@ val evaluate_p_linear_term : p_valuation -> p_linear_term -> coef
 (** Convert a linear term into a string *)
 (* val string_of_linear_term : (variable -> string) -> linear_term -> string *)
 val string_of_p_linear_term : (variable -> string) -> p_linear_term -> string
-(* val string_of_pxd_linear_term : (variable -> string) -> pxd_linear_term -> string *)
+val string_of_px_linear_term : (variable -> string) -> px_linear_term -> string
 
 
 (************************************************************)
