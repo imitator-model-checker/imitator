@@ -505,6 +505,21 @@ let string_of_clock_updates model clock_updates =
 			^ (LinearConstraint.string_of_pxd_linear_term model.variable_names linear_term) in
 	string_of_clock_updates_template model clock_updates wrap_reset wrap_expr sep*)
 
+let string_of_clock_update model = function
+	(* Reset to linear constraints over constants, clocks and parameters: can use prebuilt polyhedra *)
+	| Prebuilt_reset (clock_index , px_linear_term) ->
+		(model.variable_names clock_index)
+			^ " := "
+			^ (LinearConstraint.string_of_px_linear_term model.variable_names px_linear_term)
+
+	(* Reset to arbitrary linear constraints over discrete, constants, clocks and parameters: cannot use prebuilt polyhedra *)
+	| Reset (clock_index , convex_continuous_expression) ->
+		(model.variable_names clock_index)
+			^ " := "
+			^ (string_of_convex_continuous_expression model.variable_names convex_continuous_expression)
+
+
+(* let string_of_clock_updates clock_updates = *)
 
 
 (* Convert a list of discrete updates into a string *)
