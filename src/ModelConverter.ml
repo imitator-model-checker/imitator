@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/02/27
+ * Last modified     : 2020/03/03
  *
  ************************************************************)
 
@@ -1423,9 +1423,24 @@ let get_clocks_in_linear_constraint clocks =
     	list_only_once list_of_clocks*)
   LinearConstraint.pxd_find_variables clocks
 
+*)
+
+let get_clock_in_clock_update = function      
+	| Prebuilt_reset (clock_index , _)
+	| Reset (clock_index , _)
+		-> clock_index
+
 
 (*** WARNING: duplicate function in ClockElimination ***)
 let rec get_clocks_in_updates updates : clock_index list =
+	let get_clocks (clock_updates : clock_update list) : clock_index list =
+		List.fold_left (fun current_list clock_update ->
+			(get_clock_in_clock_update clock_update)
+			::
+			current_list
+		) [] clock_updates
+	in
+(*
   let get_clocks: clock_updates -> clock_index list = function
     (* No update at all *)
     | No_update -> []
@@ -1435,12 +1450,15 @@ let rec get_clocks_in_updates updates : clock_index list =
     | Updates clock_update_list ->
       let result, _ = List.split clock_update_list in result
   in
+  *)
   let clocks_in_conditons = List.flatten (List.map
     (fun (b, u1, u2) -> (get_clocks_in_updates u1) @ (get_clocks_in_updates u2) )
     updates.conditional)
   in
   (get_clocks updates.clock) @ clocks_in_conditons
 
+
+(*
 
 (************************************************************)
 (** Checking linear constraints *)

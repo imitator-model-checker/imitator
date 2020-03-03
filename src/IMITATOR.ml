@@ -270,11 +270,10 @@ match options#imitator_mode with
 		terminate_program()
 
 
-	; raise (NotImplemented "temporarily disabling everything except parsing ") (*
 
-
+			(*** TODO: temporarily disable ***)
 	(* Translation to a graphics *)
-	| Translation JPG | Translation PDF | Translation PNG ->
+(*	| Translation JPG | Translation PDF | Translation PNG ->
 		print_message Verbose_standard ("Translating model to a graphics.");
 		let translated_model = PTA2JPG.string_of_model model in
 		if verbose_mode_greater Verbose_high then(
@@ -293,7 +292,8 @@ match options#imitator_mode with
 		(* Create a file with some statistics on the origina model if requested *)
 		ResultProcessor.process_result Translation_result "translation to graphics" None;
 
-		terminate_program()
+		terminate_program()*)
+
 
 	(************************************************************)
 	(* Computation of the whole state space *)
@@ -316,6 +316,7 @@ match options#imitator_mode with
 	
 		()
 
+	; raise (NotImplemented "temporarily disabling everything except parsing ") (*
 	(************************************************************)
 	(* Some algorithm *)
 	(************************************************************)

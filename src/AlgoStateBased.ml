@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/02/01
+ * Last modified     : 2020/03/03
  *
  ************************************************************)
 
@@ -304,20 +304,20 @@ let evaluate_discrete_arithmetic_expression v =
 (*------------------------------------------------------------*)
 (* Create a PXD constraint of the form D_i = d_i for the discrete variables *)
 (*------------------------------------------------------------*)
-let discrete_constraint_of_global_location (global_location : Location.global_location) : LinearConstraint.pxd_linear_constraint =
+(*let discrete_constraint_of_global_location (global_location : Location.global_location) : LinearConstraint.pxd_linear_constraint =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
 	let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value global_location discrete_index)) model.discrete in
 
 	(* Constraint of the form D_i = d_i *)
-	LinearConstraint.pxd_constraint_of_point discrete_values
+	LinearConstraint.pxd_constraint_of_point discrete_values*)
 
 
 (*------------------------------------------------------------*)
 (* Compute the invariant associated to a location   *)
 (*------------------------------------------------------------*)
-let compute_plain_invariant (location : Location.global_location) : LinearConstraint.pxd_linear_constraint =
+let compute_plain_invariant (location : Location.global_location) : LinearConstraint.px_linear_constraint =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -329,7 +329,7 @@ let compute_plain_invariant (location : Location.global_location) : LinearConstr
 		model.invariants automaton_index location_index
 	) model.automata in
 	(* Perform the intersection *)
-	LinearConstraint.pxd_intersection invariants
+	LinearConstraint.px_intersection invariants
 
 
 (*------------------------------------------------------------*)
@@ -1049,10 +1049,11 @@ let create_initial_state () : state =
 
 
 	(* Remove useless clocks (if option activated) *)
-	if options#dynamic_clock_elimination then(
+	(*** TODO! temporarily disable ***)
+(*	if options#dynamic_clock_elimination then(
 		ClocksElimination.dynamic_clock_elimination initial_location current_constraint;
 	);
-
+*)
 
 	(* Return the initial state *)
 	{global_location = initial_location; px_constraint = current_constraint}
@@ -1517,9 +1518,11 @@ let compute_new_constraint (source_constraint : LinearConstraint.px_linear_const
 
 		(* Remove useless clocks (if option activated) *)
 		(*** WARNING: code duplication!!! ***)
-		if options#dynamic_clock_elimination then(
+			(*** TODO! temporarily disable ***)
+
+(*		if options#dynamic_clock_elimination then(
 			ClocksElimination.dynamic_clock_elimination target_location current_constraint;
-		);
+		);*)
 
 
 		(* return the final constraint *)

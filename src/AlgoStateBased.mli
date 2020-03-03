@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: main virtual class to explore the state space: only defines post-related function, i.e., to compute the successor states of ONE state
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2019/08/23
+ * Last modified     : 2020/03/03
  *
  ************************************************************)
 
@@ -17,6 +18,7 @@
 (* Modules *)
 (**************************************************************)
 open ImitatorUtilities
+open AbstractModel
 open AlgoGeneric
 open State
 
@@ -87,7 +89,7 @@ val compute_stopwatches : Location.global_location -> (Automaton.clock_index lis
 (*------------------------------------------------------------------*)
 (* Returns a pair of the list of clock updates and discrete updates *)
 (*------------------------------------------------------------------*)
-val get_updates : Location.global_location -> AbstractModel.updates -> AbstractModel.clock_updates * (AbstractModel.discrete_update list)
+val get_updates : Location.global_location -> AbstractModel.updates -> AbstractModel.clock_update list * (AbstractModel.discrete_update list)
 
 
 
@@ -99,7 +101,7 @@ val get_updates : Location.global_location -> AbstractModel.updates -> AbstractM
 (*------------------------------------------------------------------*)
 (* Returns a pair of the list of clock updates and discrete updates *)
 (*------------------------------------------------------------------*)
-val get_updates_in_combined_transition : Location.global_location -> StateSpace.combined_transition -> AbstractModel.clock_updates * (AbstractModel.discrete_update list)
+val get_updates_in_combined_transition : Location.global_location -> StateSpace.combined_transition -> AbstractModel.clock_update list * (AbstractModel.discrete_update list)
 
 
 (*------------------------------------------------------------------*)
@@ -107,9 +109,9 @@ val get_updates_in_combined_transition : Location.global_location -> StateSpace.
 (* combined_transition: the transition involved                     *)
 (* source_location    : the source location                         *)
 (*------------------------------------------------------------------*)
-(* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of pxd_linear_constraint) and the updates *)
+(* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of px_linear_constraint) and the updates *)
 (*------------------------------------------------------------------*)
-val compute_new_location_guards_updates : Location.global_location -> StateSpace.combined_transition -> (Location.global_location * LinearConstraint.d_linear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list)
+val compute_new_location_guards_updates : Location.global_location -> StateSpace.combined_transition -> (Location.global_location * discrete_guard * LinearConstraint.px_linear_constraint list * AbstractModel.clock_update list list)
 
 
 (*------------------------------------------------------------*)
@@ -120,7 +122,7 @@ val compute_new_location_guards_updates : Location.global_location -> StateSpace
 (*------------------------------------------------------------*)
 (** Apply time past in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
-val apply_time_past : Location.global_location -> LinearConstraint.pxd_linear_constraint -> unit
+val apply_time_past : Location.global_location -> LinearConstraint.px_linear_constraint -> unit
 
 
 (*------------------------------------------------------------*)

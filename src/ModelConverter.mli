@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/09/09
- * Last modified     : 2020/02/05
+ * Last modified     : 2020/03/03
  *
  ************************************************************)
 
@@ -50,4 +50,4 @@ val check_and_make_pi0 : ParsingStructure.pi0 -> (*Options.imitator_options ->*)
 val check_and_make_v0 : ParsingStructure.v0 -> (*Options.imitator_options ->*) HyperRectangle.hyper_rectangle*)
 
 (** Get clocks index used on the updates *)
-(* val get_clocks_in_updates : AbstractModel.updates -> Automaton.clock_index list *)
+val get_clocks_in_updates : AbstractModel.updates -> Automaton.clock_index list
