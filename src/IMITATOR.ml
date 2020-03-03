@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/02/27
+ * Last modified     : 2020/03/03
  *
  ************************************************************)
 
@@ -237,8 +237,9 @@ match options#imitator_mode with
 		let printer = match options#imitator_mode with
 			| Translation IMI		-> ModelPrinter.string_of_model
 			| Translation HyTech	-> PTA2HyTech.string_of_model
-			| Translation TikZ		-> PTA2TikZ.tikz_string_of_model
-			| Translation Uppaal	-> PTA2Uppaal.string_of_model
+			(*** TODO: temporarily disable ***)
+(*			| Translation TikZ		-> PTA2TikZ.tikz_string_of_model
+			| Translation Uppaal	-> PTA2Uppaal.string_of_model*)
 			| _						-> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
 		in
 	
