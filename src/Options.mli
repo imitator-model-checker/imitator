@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2019/05/29
+ * Last modified: 2020/03/04
  *
  ************************************************************)
  
@@ -81,6 +81,7 @@ class imitator_options :
 		method precomputepi0 : bool
 (* 		method pta2clp : bool *)
 		method pta2hytech : bool
+		method pta2phaver : bool
 		method pta2imi : bool
 		method pta2jpg : bool
 		method pta2pdf : bool

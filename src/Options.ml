@@ -9,7 +9,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2019/08/22
+ * Last modified     : 2020/03/04
  *
  ************************************************************)
 
@@ -226,6 +226,9 @@ class imitator_options =
 		(* Translate PTA model into a HyTech file *)
 		val mutable pta2hytech = ref false
 
+		(* Translate PTA model into a Phaver file *)
+		val mutable pta2phaver = ref false
+
 		(* Translate PTA model into a new IMITATOR file *)
 		val mutable pta2imi = ref false
 
@@ -311,6 +314,7 @@ class imitator_options =
 (* 		method pta2clp = !pta2clp *)
 		method pta2imi = !pta2imi
 		method pta2hytech = !pta2hytech
+		method pta2phaver = !pta2phaver
 		method pta2jpg = !pta2jpg
 		method pta2pdf = !pta2pdf
 		method pta2png = !pta2png
@@ -837,6 +841,8 @@ class imitator_options =
 				("-PRP", Set efim, " Reachability-preservation algorithm mixing IM and EFsynth [ALNS15]. Default: false. WARNING: deprecated option (use -mode PRP or -mode PRPC)");
 				
 				("-PTA2HyTech", Unit (fun _ -> pta2hytech := true; imitator_mode <- Translation), "Translate the model into a HyTech model, and exit without performing any analysis. Defaut : 'false'");
+				
+				("-PTA2PHAVer", Unit (fun _ -> pta2phaver := true; imitator_mode <- Translation), "Translate the model into a PHAVerLite model, and exit without performing any analysis. Defaut : 'false'");
 				
 				("-PTA2IMI", Unit (fun _ -> pta2imi := true; imitator_mode <- Translation), "Regenerate the model into a IMITATOR model, and exit without performing any analysis. Defaut : 'false'");
 				

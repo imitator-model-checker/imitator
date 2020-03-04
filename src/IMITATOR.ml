@@ -240,8 +240,26 @@ if options#pta2hytech then(
 	write_to_file hytech_file translated_model;
 	print_message Verbose_standard ("File '" ^ hytech_file ^ "' successfully created.");
 	
-	(* Create a file with some statistics on the origina model if requested *)
+	(* Create a file with some statistics on the original model if requested *)
 	ResultProcessor.process_result No_analysis "translation to HyTech" None;
+
+	terminate_program()
+);
+
+(* Translation to HyTech *)
+if options#pta2phaver then(
+	print_message Verbose_standard ("Translating model to a PHAVerLite input model.");
+	let translated_model = PTA2PHAVer.string_of_model model in
+	let phaver_file = options#files_prefix ^ ".ph" in
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("\n" ^ translated_model ^ "\n");
+	);
+	(* Write *)
+	write_to_file phaver_file translated_model;
+	print_message Verbose_standard ("File '" ^ phaver_file ^ "' successfully created.");
+	
+	(* Create a file with some statistics on the original model if requested *)
+	ResultProcessor.process_result No_analysis "translation to PHAVer" None;
 
 	terminate_program()
 );
