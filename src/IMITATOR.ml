@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/03/03
+ * Last modified     : 2020/03/05
  *
  ************************************************************)
 
@@ -294,6 +294,7 @@ match options#imitator_mode with
 
 		terminate_program()*)
 
+	; raise (NotImplemented "temporarily disabling everything except parsing ") (*
 
 	(************************************************************)
 	(* Computation of the whole state space *)
@@ -316,7 +317,6 @@ match options#imitator_mode with
 	
 		()
 
-	; raise (NotImplemented "temporarily disabling everything except parsing ") (*
 	(************************************************************)
 	(* Some algorithm *)
 	(************************************************************)

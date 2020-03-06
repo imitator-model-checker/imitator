@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/10
- * Last modified     : 2020/02/01
+ * Last modified     : 2020/03/05
  *
  ************************************************************)
 
@@ -32,8 +32,11 @@ type variable_index		= int
 type clock_index		= variable_index
 type parameter_index	= variable_index
 type discrete_index		= variable_index
+type rational_index		= variable_index
 type discrete_value		= NumConst.t
 type rational_value		= NumConst.t
 type variable_value		= NumConst.t
 type constant_value		= NumConst.t
 type variable_name		= string
+
+type rational_valuation = rational_index -> rational_value

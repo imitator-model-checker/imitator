@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created           : 2009/09/09
- * Last modified     : 2020/03/03
+ * Last modified     : 2020/03/05
  *
  ************************************************************)
 
@@ -37,6 +37,11 @@ exception InvalidProperty
 (****************************************************************)
 (** Conversion functions *)
 (****************************************************************)
+
+(* Transform a continuous guard into a px_linear_constraint *)
+(*`rational_variables` is the list of discrete variables to valuate, and `rational_valuation` is their valuation *)
+val px_linear_constraint_of_continuous_guard : int -> Automaton.rational_index list -> Automaton.rational_valuation -> AbstractModel.continuous_guard -> LinearConstraint.px_linear_constraint
+
 (** Convert the parsed model and the parsed property into an abstract model and an abstract property *)
 val abstract_structures_of_parsing_structures : Options.imitator_options -> ParsingStructure.parsed_model -> (ParsingStructure.parsed_property option) -> AbstractModel.abstract_model * (AbstractProperty.abstract_property option)
 

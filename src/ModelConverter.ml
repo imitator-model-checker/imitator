@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/03/03
+ * Last modified     : 2020/03/06
  *
  ************************************************************)
 
@@ -1780,9 +1780,9 @@ let valuate_continuous_guard rational_variables rational_valuation (convex_conti
 	ExpressionsEvaluator.valuate_rationals_in_convex_continuous_boolean_expression rational_variables rational_valuation convex_continuous_boolean_expression
 
 
-(* Transform a guard into a px_linear_constraint *)
+(* Transform a continuous guard into a px_linear_constraint *)
 (*`rational_variables` is the list of discrete variables to valuate, and `rational_valuation` is their valuation *)
-let px_linear_constraint_of_continuous_guard nb_variables (rational_variables : variable_index list) (rational_valuation : variable_index -> variable_value ) (continuous_guard : continuous_guard) : LinearConstraint.px_linear_constraint =
+let px_linear_constraint_of_continuous_guard nb_variables (rational_variables : Automaton.rational_index list) (rational_valuation : Automaton.rational_valuation) (continuous_guard : AbstractModel.continuous_guard) : LinearConstraint.px_linear_constraint =
 
 	(* First valuate, i.e., remove discrete rational variables *)
 	let valuated_convex_continuous_boolean_expression = valuate_continuous_guard rational_variables rational_valuation continuous_guard in
