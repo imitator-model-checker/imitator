@@ -5643,7 +5643,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	
 	(*** NOTE/HACK: dummy function to valuate discrete to zero ***)
-	let dummy_rational_valuation = fun discrete_index -> NumConst.zero in
+	let dummy_rational_valuation = fun rational_index -> NumConst.zero in
 
 	(*** NOTE/HACK: duplicate function in StateSpace ***)
 	let continuous_part_of_guard (guard : guard) : LinearConstraint.px_linear_constraint =

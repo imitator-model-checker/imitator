@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/03/03
+ * Last modified     : 2020/03/06
  *
  ************************************************************)
 
@@ -312,6 +312,55 @@ let evaluate_discrete_arithmetic_expression v =
 
 	(* Constraint of the form D_i = d_i *)
 	LinearConstraint.pxd_constraint_of_point discrete_values*)
+
+
+(*------------------------------------------------------------*)
+(* Transform (the continuous part of) a guard into a linear constraint   *)
+(*** NOTE: the discrete part is not considered here ***)
+(*------------------------------------------------------------*)
+let make_continuous_guard (rational_valuation : Automaton.rational_valuation) (discrete_continuous_guard : AbstractModel.discrete_continuous_guard) : LinearConstraint.px_linear_constraint =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+
+	(* Transform the continuous_guard using the rational_valuation *)
+	let built_linear_constraint_option =
+	match discrete_continuous_guard.continuous_guard with
+		| None -> None
+		| Some convex_continuous_boolean_expression ->
+			(* Convert to px_linear_constraint *)
+			let px_linear_constraint = ModelConverter.px_linear_constraint_of_continuous_guard model.nb_variables model.discrete rational_valuation convex_continuous_boolean_expression in
+			
+			Some px_linear_constraint
+	in
+	
+	(* Intersect (if any) *)
+	match built_linear_constraint_option with
+	| None ->
+		begin
+		match discrete_continuous_guard.prebuilt_continuous_guard with
+		(*** NOTE: costly! simplify? ***)
+		| None -> LinearConstraint.px_true_constraint()
+		| Some prebuilt_continuous_guard
+		(* Copy to be safe *)
+		(*** NOTE: costly! simplify? ***)
+		LinearConstraint.px_copy prebuilt_continuous_guard
+		
+		(*** I am here / blublu ***)
+		
+		end
+	| Some px_linear_constraint ->
+		(* Intersect *)
+			raise (NotImplemented "work in progress")
+
+
+type discrete_continuous_guard = {
+	(* Only involves discrete variable, no polyhedra *)
+	discrete_guard   			: discrete_guard option;
+	(* Only involves continuous variables, can be stored in memory as a prebuilt polyhedra *)
+	prebuilt_continuous_guard	: prebuilt_continuous_guard option;
+	(* Involves continuous and discrete variables, polyhedra cannot be prebuilt *)
+	continuous_guard			: continuous_guard option;
+}
 
 
 (*------------------------------------------------------------*)

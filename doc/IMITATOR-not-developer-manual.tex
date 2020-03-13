@@ -94,6 +94,27 @@ In \imitator{}, the variables are numbered as follows in the constraint, startin
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{State computation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+Here is a tentative scheme to compute the successor of a symbolic state.
+The idea is to first compute as many things on the \emph{discrete} side, as it is computationally cheap, as opposed to \emph{continuous} constraints encoded in~PPL.
+
+\begin{enumerate}
+	\item collect and evaluate the discrete parts of the guards; if unsatisfiable, stop
+	\item compute the successor location, including the updated discrete variables;
+	\item collect and evaluate the discrete parts of the target invariants; if unsatisfiable, stop
+	\item collect and evaluate the continuous part of the guards; if unsatisfiable, stop
+	\item collect and evaluate the continuous part of the target invariants; if unsatisfiable, stop
+\end{enumerate}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Algorithms class diagrams}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
