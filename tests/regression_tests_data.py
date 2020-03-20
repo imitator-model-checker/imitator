@@ -7,13 +7,14 @@
 #             Data for non-regression tests
 #
 # Université Paris 13, LIPN, CNRS, France
+# Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
 #
-# File description: non-regression tests data
+# File description  : non-regression tests data
 #
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2019/09/10
+# Last modified     : 2020/03/20
 #************************************************************
 
 
@@ -636,7 +637,7 @@ end
   /************************************************************/
   INITIAL
   STATE 0:
-  input: Input0, g1: G10011, g2: G2101, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==>
+  input: Input0, g1: G10011, g2: G2101, g3: G30011, g4: G410 ==>
 & 5 >= s
 & dG3_u >= 8
 & dG4_u >= 3
@@ -652,7 +653,7 @@ end
 
   /************************************************************/
   STATE 1:
-  input: Input1, g1: G11011, g2: G2101, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==>
+  input: Input1, g1: G11011, g2: G2101, g3: G30011, g4: G410 ==>
 & 12 >= s
 & dG3_u >= 8
 & dG4_u >= 3
@@ -668,7 +669,7 @@ end
 
   /************************************************************/
   STATE 2:
-  input: Input1, g1: G11010, g2: G2001, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==>
+  input: Input1, g1: G11010, g2: G2001, g3: G30011, g4: G410 ==>
 & 15 >= s
 & dG3_u >= 8
 & dG4_u >= 3
@@ -684,7 +685,7 @@ end
 
   /************************************************************/
   STATE 3:
-  input: Input2, g1: G11110, g2: G2011, g3: G30111, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==>
+  input: Input2, g1: G11110, g2: G2011, g3: G30111, g4: G410 ==>
 & dG3_u + 15 >= s
 & 32 >= s
 & dG3_u >= 8
@@ -701,7 +702,7 @@ end
 
   /************************************************************/
   STATE 4:
-  input: Input3, g1: G10110, g2: G2011, g3: G30111, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==>
+  input: Input3, g1: G10110, g2: G2011, g3: G30111, g4: G410 ==>
 & 39 >= s
 & dG3_u + 15 >= s
 & dG4_u >= 3
@@ -717,7 +718,7 @@ end
 
   /************************************************************/
   STATE 5:
-  input: Input2, g1: G11110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==>
+  input: Input2, g1: G11110, g2: G2011, g3: G30110, g4: G400 ==>
 & 32 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
@@ -734,7 +735,7 @@ end
 
   /************************************************************/
   STATE 6:
-  input: Input4, g1: G10010, g2: G2001, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_2 ==>
+  input: Input4, g1: G10010, g2: G2001, g3: G30011, g4: G410 ==>
 & dG3_u >= 24
 & dG4_u >= 3
 & ckG2 >= 39
@@ -749,7 +750,7 @@ end
 
   /************************************************************/
   STATE 7:
-  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==>
+  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400 ==>
 & 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
@@ -766,7 +767,7 @@ end
 
   /************************************************************/
   STATE 8:
-  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==>
+  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400 ==>
 & 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= ckG4
@@ -785,7 +786,7 @@ end
 
   /************************************************************/
   STATE 9:
-  input: Input2, g1: G11110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
+  input: Input2, g1: G11110, g2: G2011, g3: G31110, g4: G401 ==>
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 23 + ckG4
@@ -801,7 +802,7 @@ end
 
   /************************************************************/
   STATE 10:
-  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, automatically_generated_observer: loc_AutoGen_obs_2 ==>
+  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400 ==>
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & dG4_u >= 3
@@ -819,7 +820,7 @@ end
 
   /************************************************************/
   STATE 11:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
+  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401 ==>
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 32 + ckG4
@@ -835,7 +836,7 @@ end
 
   /************************************************************/
   STATE 12:
-  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, automatically_generated_observer: loc_AutoGen_obs_2 ==>
+  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400 ==>
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & ckG2 >= 39
@@ -852,7 +853,7 @@ end
 
   /************************************************************/
   STATE 13:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
+  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401 ==>
 & 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u + s >= 32 + ckG4
@@ -872,7 +873,7 @@ end
 
   /************************************************************/
   STATE 14:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
+  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401 ==>
 & 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
@@ -889,7 +890,7 @@ end
 
   /************************************************************/
   STATE 15:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401 ==>
 & dG3_u + ckG4 >= 24
 & dG4_u + 7 >= ckG4
 & dG4_u >= 3
@@ -907,7 +908,7 @@ end
 
   /************************************************************/
   STATE 16:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_2 ==>
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401 ==>
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & ckG2 >= 39
@@ -924,7 +925,7 @@ end
 
   /************************************************************/
   STATE 17:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401 ==>
 & dG3_u + ckG4 >= 24
 & dG4_u >= 3
 & ckG2 >= 39
@@ -940,7 +941,7 @@ end
 
   /************************************************************/
   STATE 18:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_2 ==>
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401 ==>
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & ckG2 >= 39
@@ -957,7 +958,7 @@ end
 
   /************************************************************/
   STATE 19:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401 ==>
 & dG3_u + ckG4 >= 24
 & dG4_u >= 3
 & ckG2 >= 39
@@ -996,194 +997,196 @@ end
 		] # end expectations
 	} # end test case
 	,
-	#------------------------------------------------------------
-	{
-		# Test version: 2.11
-		# Test since  : 2019/03/07
-		'purpose'    : 'Test state space with projection',
-		'input_files': ['testProjectP.imi'],
-		'options'    : '-mode statespace -output-states',
-		'expectations' : [
-			{'file': 'testProjectP-statespace.states' , 'content' : """
-  DESCRIPTION OF THE STATES
+	##------------------------------------------------------------
+	#{
+		## Test version: 2.11
+		## Test since  : 2019/03/07
+		## Test until  : 2020/03/20
+		## Reason for removal: projectresult is now in the property, so a state space cannot be projected
+		#'purpose'    : 'Test state space with projection',
+		#'input_files': ['testProjectP.imi'],
+		#'options'    : '-mode statespace -output-states',
+		#'expectations' : [
+			#{'file': 'testProjectP-statespace.states' , 'content' : """
+  #DESCRIPTION OF THE STATES
 
-  /************************************************************/
-  INITIAL
-  STATE 0:
-  pta: l1 ==>
-& pabs >= 0
-& p1 >= x
-& p3 >= 0
-& x >= 0
-& x = xabs
+  #/************************************************************/
+  #INITIAL
+  #STATE 0:
+  #pta: l1 ==>
+#& pabs >= 0
+#& p1 >= x
+#& p3 >= 0
+#& x >= 0
+#& x = xabs
 
-  Projection onto the parameters:
-   p3 >= 0
-& p1 >= 0
-& pabs >= 0
+  #Projection onto the parameters:
+   #p3 >= 0
+#& p1 >= 0
+#& pabs >= 0
 
-  Projection onto selected parameters {pabs}:
-   pabs >= 0
+  #Projection onto selected parameters {pabs}:
+   #pabs >= 0
 
-  /************************************************************/
-  STATE 1:
-  pta: l2 ==>
-& pabs >= 0
-& p1 >= 0
-& p3 >= x
-& x >= 0
-& p1 + x = xabs
+  #/************************************************************/
+  #STATE 1:
+  #pta: l2 ==>
+#& pabs >= 0
+#& p1 >= 0
+#& p3 >= x
+#& x >= 0
+#& p1 + x = xabs
 
-  Projection onto the parameters:
-   p3 >= 0
-& p1 >= 0
-& pabs >= 0
+  #Projection onto the parameters:
+   #p3 >= 0
+#& p1 >= 0
+#& pabs >= 0
 
-  Projection onto selected parameters {pabs}:
-   pabs >= 0
+  #Projection onto selected parameters {pabs}:
+   #pabs >= 0
 
-  /************************************************************/
-  STATE 2:
-  pta: lfinal ==>
-& pabs >= 0
-& p3 >= 0
-& pabs = p1
-& x = 0
-& pabs = xabs
+  #/************************************************************/
+  #STATE 2:
+  #pta: lfinal ==>
+#& pabs >= 0
+#& p3 >= 0
+#& pabs = p1
+#& x = 0
+#& pabs = xabs
 
-  Projection onto the parameters:
-   p3 >= 0
-& p1 >= 0
-& pabs = p1
+  #Projection onto the parameters:
+   #p3 >= 0
+#& p1 >= 0
+#& pabs = p1
 
-  Projection onto selected parameters {pabs}:
-   pabs >= 0
+  #Projection onto selected parameters {pabs}:
+   #pabs >= 0
 
-  /************************************************************/
-  STATE 3:
-  pta: l3 ==>
-& 2 >= x
-& pabs >= 0
-& p1 >= 0
-& p3 >= 0
-& x >= 0
-& p1 + p3 + x = xabs
+  #/************************************************************/
+  #STATE 3:
+  #pta: l3 ==>
+#& 2 >= x
+#& pabs >= 0
+#& p1 >= 0
+#& p3 >= 0
+#& x >= 0
+#& p1 + p3 + x = xabs
 
-  Projection onto the parameters:
-   p3 >= 0
-& p1 >= 0
-& pabs >= 0
+  #Projection onto the parameters:
+   #p3 >= 0
+#& p1 >= 0
+#& pabs >= 0
 
-  Projection onto selected parameters {pabs}:
-   pabs >= 0
+  #Projection onto selected parameters {pabs}:
+   #pabs >= 0
 
-  /************************************************************/
-  STATE 4:
-  pta: lfinal ==>
-& pabs >= p1
-& p1 >= 0
-& pabs = p1 + p3
-& x = 0
-& pabs = xabs
+  #/************************************************************/
+  #STATE 4:
+  #pta: lfinal ==>
+#& pabs >= p1
+#& p1 >= 0
+#& pabs = p1 + p3
+#& x = 0
+#& pabs = xabs
 
-  Projection onto the parameters:
-   p3 >= 0
-& p1 >= 0
-& pabs = p1 + p3
+  #Projection onto the parameters:
+   #p3 >= 0
+#& p1 >= 0
+#& pabs = p1 + p3
 
-  Projection onto selected parameters {pabs}:
-   pabs >= 0
+  #Projection onto selected parameters {pabs}:
+   #pabs >= 0
 
-  /************************************************************/
-  STATE 5:
-  pta: l4 ==>
-& 2 >= x
-& pabs >= 0
-& p1 >= 0
-& p3 >= 2
-& x >= 0
-& p1 + x + 2 = xabs
+  #/************************************************************/
+  #STATE 5:
+  #pta: l4 ==>
+#& 2 >= x
+#& pabs >= 0
+#& p1 >= 0
+#& p3 >= 2
+#& x >= 0
+#& p1 + x + 2 = xabs
 
-  Projection onto the parameters:
-   p3 >= 2
-& p1 >= 0
-& pabs >= 0
+  #Projection onto the parameters:
+   #p3 >= 2
+#& p1 >= 0
+#& pabs >= 0
 
-  Projection onto selected parameters {pabs}:
-   pabs >= 0
+  #Projection onto selected parameters {pabs}:
+   #pabs >= 0
 
-  /************************************************************/
-  STATE 6:
-  pta: lfinal ==>
-& pabs >= 2
-& p3 >= 2
-& pabs = 2 + p1
-& x = 0
-& pabs = xabs
+  #/************************************************************/
+  #STATE 6:
+  #pta: lfinal ==>
+#& pabs >= 2
+#& p3 >= 2
+#& pabs = 2 + p1
+#& x = 0
+#& pabs = xabs
 
-  Projection onto the parameters:
-   p3 >= 2
-& pabs >= 2
-& pabs = 2 + p1
+  #Projection onto the parameters:
+   #p3 >= 2
+#& pabs >= 2
+#& pabs = 2 + p1
 
-  Projection onto selected parameters {pabs}:
-   pabs >= 2
+  #Projection onto selected parameters {pabs}:
+   #pabs >= 2
 
-  /************************************************************/
-  STATE 7:
-  pta: l4 ==>
-& 2 >= x
-& pabs >= 0
-& p1 + p3 + x + 2 >= xabs
-& p1 >= 0
-& p3 >= 0
-& x >= 0
-& xabs >= p1 + p3 + x
+  #/************************************************************/
+  #STATE 7:
+  #pta: l4 ==>
+#& 2 >= x
+#& pabs >= 0
+#& p1 + p3 + x + 2 >= xabs
+#& p1 >= 0
+#& p3 >= 0
+#& x >= 0
+#& xabs >= p1 + p3 + x
 
-  Projection onto the parameters:
-   p3 >= 0
-& p1 >= 0
-& pabs >= 0
+  #Projection onto the parameters:
+   #p3 >= 0
+#& p1 >= 0
+#& pabs >= 0
 
-  Projection onto selected parameters {pabs}:
-   pabs >= 0
+  #Projection onto selected parameters {pabs}:
+   #pabs >= 0
 
-  /************************************************************/
-  STATE 8:
-  pta: lfinal ==>
-& p1 + p3 + 2 >= pabs
-& pabs >= p1 + p3
-& p1 >= 0
-& p3 >= 0
-& x = 0
-& pabs = xabs
+  #/************************************************************/
+  #STATE 8:
+  #pta: lfinal ==>
+#& p1 + p3 + 2 >= pabs
+#& pabs >= p1 + p3
+#& p1 >= 0
+#& p3 >= 0
+#& x = 0
+#& pabs = xabs
 
-  Projection onto the parameters:
-   p1 + p3 + 2 >= pabs
-& pabs >= p1 + p3
-& p3 >= 0
-& p1 >= 0
+  #Projection onto the parameters:
+   #p1 + p3 + 2 >= pabs
+#& pabs >= p1 + p3
+#& p3 >= 0
+#& p1 >= 0
 
-  Projection onto selected parameters {pabs}:
-   pabs >= 0
+  #Projection onto selected parameters {pabs}:
+   #pabs >= 0
 
-  DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_1 via "a"
-  s_0 -> s_2 via "a"
-  s_1 -> s_3 via "a"
-  s_1 -> s_4 via "a"
-  s_1 -> s_5 via "b"
-  s_1 -> s_6 via "b"
-  s_3 -> s_7 via "a"
-  s_3 -> s_8 via "a"
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
+  #DESCRIPTION OF THE TRANSITIONS
+  #s_0 -> s_1 via "a"
+  #s_0 -> s_2 via "a"
+  #s_1 -> s_3 via "a"
+  #s_1 -> s_4 via "a"
+  #s_1 -> s_5 via "b"
+  #s_1 -> s_6 via "b"
+  #s_3 -> s_7 via "a"
+  #s_3 -> s_8 via "a"
+#"""
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
 
-	,
+	#,
 
 	#------------------------------------------------------------
 	{
@@ -1272,7 +1275,7 @@ end
 	{
 		'purpose'    : 'Test updates (printing)',
 		'input_files': ['testUpdates.imi'],
-		'options'    : '-PTA2IMI',
+		'options'    : '-imi2IMI',
 		'expectations' : [
 			{'file': 'testUpdates-regenerated.imi' , 'content' : """
   urgent loc idle: invariant True
@@ -1419,39 +1422,39 @@ end
 
 	,
 
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test EF (old version) with bad initial state',
-		'input_files': ['testEFdegenerate1.imi'],
-		'options'    : '-mode EFold -merge -incl -output-result',
-		'expectations' : [
-			{'file': 'testEFdegenerate1.res' , 'content' : """
-BEGIN CONSTRAINT
- p2 >= 0
-& p1 >= 0
-END CONSTRAINT
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test EF (old version) with bad initial state',
+		#'input_files': ['testEFdegenerate1.imi', 'testEFdegenerate1.imiprop'],
+		#'options'    : '-merge -incl -output-result',
+		#'expectations' : [
+			#{'file': 'testEFdegenerate1.res' , 'content' : """
+#BEGIN CONSTRAINT
+ #p2 >= 0
+#& p1 >= 0
+#END CONSTRAINT
 
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Number of states                        : 0
-Number of transitions                   : 0
-Number of computed states               : 0
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
+#------------------------------------------------------------
+#Constraint soundness                    : exact
+#Termination                             : regular termination
+#Constraint nature                       : good
+#------------------------------------------------------------
+#Number of states                        : 0
+#Number of transitions                   : 0
+#Number of computed states               : 0
+#"""
+			#} #end result file
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
 
-	,
+	#,
 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with bad initial state',
-		'input_files': ['testEFdegenerate1.imi'],
-		'options'    : '-mode EF -merge -incl -output-result',
+		'input_files': ['testEFdegenerate1.imi', 'testEFdegenerate1.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFdegenerate1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1474,39 +1477,39 @@ Number of computed states               : 0
 
 	,
 
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test EF (old version) with bad initial state and some constrained valuations',
-		'input_files': ['testEFdegenerate2.imi'],
-		'options'    : '-mode EFold -merge -incl -output-result',
-		'expectations' : [
-			{'file': 'testEFdegenerate2.res' , 'content' : """
-BEGIN CONSTRAINT
- p1 >= p2
-& p2 >= 0
-END CONSTRAINT
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test EF (old version) with bad initial state and some constrained valuations',
+		#'input_files': ['testEFdegenerate2.imi'],
+		#'options'    : '-mode EFold -merge -incl -output-result',
+		#'expectations' : [
+			#{'file': 'testEFdegenerate2.res' , 'content' : """
+#BEGIN CONSTRAINT
+ #p1 >= p2
+#& p2 >= 0
+#END CONSTRAINT
 
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Number of states                        : 0
-Number of transitions                   : 0
-Number of computed states               : 0
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
+#------------------------------------------------------------
+#Constraint soundness                    : exact
+#Termination                             : regular termination
+#Constraint nature                       : good
+#------------------------------------------------------------
+#Number of states                        : 0
+#Number of transitions                   : 0
+#Number of computed states               : 0
+#"""
+			#} #end result file
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
 
-	,
+	#,
 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with bad initial state and some constrained valuations',
-		'input_files': ['testEFdegenerate2.imi'],
-		'options'    : '-mode EF -merge -incl -output-result',
+		'input_files': ['testEFdegenerate2.imi', 'testEFdegenerate2.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFdegenerate2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1532,8 +1535,8 @@ Number of computed states               : 0
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with the new syntax from 2.10.1',
-		'input_files': ['fischer_2.imi'],
-		'options'    : '-mode EF -merge -incl -output-result',
+		'input_files': ['fischer_2.imi', 'fischer_2.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'fischer_2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1554,31 +1557,31 @@ Constraint nature                       : good
 
 	,
 
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test EF (old version) with basic unreachability property for Fischer:3',
-		'input_files': ['F3.imi'],
-		'options'    : '-mode EFold -merge -incl -output-result',
-		'expectations' : [
-			{'file': 'F3.res' , 'content' : """
-BEGIN CONSTRAINT
- Delta > delta
-& delta >= 0
- OR
- Delta > 2*delta
-& delta >= 0
-END CONSTRAINT
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-	,
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test EF (old version) with basic unreachability property for Fischer:3',
+		#'input_files': ['F3.imi'],
+		#'options'    : '-mode EFold -merge -incl -output-result',
+		#'expectations' : [
+			#{'file': 'F3.res' , 'content' : """
+#BEGIN CONSTRAINT
+ #Delta > delta
+#& delta >= 0
+ #OR
+ #Delta > 2*delta
+#& delta >= 0
+#END CONSTRAINT
+#"""
+			#} #end result file
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+	#,
 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with basic unreachability property for Fischer:3',
-		'input_files': ['F3.imi'],
+		'input_files': ['F3.imi', 'F3.imiprop'],
 		'options'    : '-mode EF -merge -incl -output-result',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
@@ -1603,8 +1606,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (double-directional inclusion)',
-		'input_files': ['F3.imi'],
-		'options'    : '-mode EF -merge -incl2 -output-result',
+		'input_files': ['F3.imi', 'F3.imiprop'],
+		'options'    : '-merge -incl2 -output-result',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1628,8 +1631,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (queueBFS exploration order)',
-		'input_files': ['F3.imi'],
-		'options'    : '-mode EF -merge -incl -explOrder queueBFS -output-result',
+		'input_files': ['F3.imi', 'F3.imiprop'],
+		'options'    : '-merge -incl -explOrder queueBFS -output-result',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1653,8 +1656,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (layerBFS exploration order) with counterexample',
-		'input_files': ['F3.imi'],
-		'options'    : '-mode EF -merge -incl -explOrder layerBFS -counterexample -output-result',
+		'input_files': ['F3.imi', 'F3.imiprop'],
+		'options'    : '-merge -incl -explOrder layerBFS -counterexample -output-result',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1678,8 +1681,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (queueBFS exploration order) with counterexample',
-		'input_files': ['F3.imi'],
-		'options'    : '-mode EF -merge -incl -explOrder queueBFS -counterexample -output-result',
+		'input_files': ['F3.imi', 'F3.imiprop'],
+		'options'    : '-merge -incl -explOrder queueBFS -counterexample -output-result',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1700,85 +1703,85 @@ Constraint nature                       : good
 
 	,
 
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test EF (old version) with complex unreachability property',
-		'input_files': ['coffeeDrinker-TACAS.imi'],
-		'options'    : '-mode EFold -merge -output-result',
-		'expectations' : [
-			{'file': 'coffeeDrinker-TACAS.res' , 'content' : """
-BEGIN CONSTRAINT
- 15 >= p_add_sugar
-& p_button > 0
-& p_add_sugar + p_coffee >= 15
-& p_add_sugar >= 3*p_button
-& p_coffee > 0
- OR
- p_add_sugar + p_coffee >= 15
-& p_button >= 5
-& 15 >= p_add_sugar
-& p_coffee > 0
-& p_add_sugar >= 2*p_button
- OR
- 3*p_button >= p_add_sugar + p_coffee
-& p_add_sugar >= 2*p_button
-& 15 >= p_add_sugar + p_coffee
-& p_coffee > 0
- OR
- 5 >= p_button
-& p_button > 0
-& p_add_sugar >= 15
-& p_coffee > 0
- OR
- 15 >= 2*p_button
-& p_button >= 5
-& p_add_sugar >= 15
-& p_coffee > 0
- OR
- p_add_sugar + p_coffee >= 15
-& p_add_sugar >= p_button
-& 15 >= p_add_sugar
-& p_coffee > 0
-& 2*p_button >= 15
- OR
- p_add_sugar >= p_button
-& p_coffee > 0
-& 15 >= p_add_sugar + p_coffee
-& 2*p_button >= p_add_sugar + p_coffee
- OR
- p_coffee > 0
-& 15 >= p_add_sugar
-& p_add_sugar > 0
-& p_add_sugar + p_coffee >= 15
-& p_button >= 15
- OR
- p_add_sugar > 0
-& 15 >= p_add_sugar + p_coffee
-& p_coffee > 0
-& p_button >= p_add_sugar + p_coffee
- OR
- 2*p_button >= 15
-& 15 >= p_button
-& p_add_sugar >= 15
-& p_coffee > 0
- OR
- p_button >= 15
-& p_coffee > 0
-& p_add_sugar >= 15
-END CONSTRAINT
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-	,
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test EF (old version) with complex unreachability property',
+		#'input_files': ['coffeeDrinker.imi'],
+		#'options'    : '-mode EFold -merge -output-result',
+		#'expectations' : [
+			#{'file': 'coffeeDrinker.res' , 'content' : """
+#BEGIN CONSTRAINT
+ #15 >= p_add_sugar
+#& p_button > 0
+#& p_add_sugar + p_coffee >= 15
+#& p_add_sugar >= 3*p_button
+#& p_coffee > 0
+ #OR
+ #p_add_sugar + p_coffee >= 15
+#& p_button >= 5
+#& 15 >= p_add_sugar
+#& p_coffee > 0
+#& p_add_sugar >= 2*p_button
+ #OR
+ #3*p_button >= p_add_sugar + p_coffee
+#& p_add_sugar >= 2*p_button
+#& 15 >= p_add_sugar + p_coffee
+#& p_coffee > 0
+ #OR
+ #5 >= p_button
+#& p_button > 0
+#& p_add_sugar >= 15
+#& p_coffee > 0
+ #OR
+ #15 >= 2*p_button
+#& p_button >= 5
+#& p_add_sugar >= 15
+#& p_coffee > 0
+ #OR
+ #p_add_sugar + p_coffee >= 15
+#& p_add_sugar >= p_button
+#& 15 >= p_add_sugar
+#& p_coffee > 0
+#& 2*p_button >= 15
+ #OR
+ #p_add_sugar >= p_button
+#& p_coffee > 0
+#& 15 >= p_add_sugar + p_coffee
+#& 2*p_button >= p_add_sugar + p_coffee
+ #OR
+ #p_coffee > 0
+#& 15 >= p_add_sugar
+#& p_add_sugar > 0
+#& p_add_sugar + p_coffee >= 15
+#& p_button >= 15
+ #OR
+ #p_add_sugar > 0
+#& 15 >= p_add_sugar + p_coffee
+#& p_coffee > 0
+#& p_button >= p_add_sugar + p_coffee
+ #OR
+ #2*p_button >= 15
+#& 15 >= p_button
+#& p_add_sugar >= 15
+#& p_coffee > 0
+ #OR
+ #p_button >= 15
+#& p_coffee > 0
+#& p_add_sugar >= 15
+#END CONSTRAINT
+#"""
+			#} #end result file
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+	#,
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with complex unreachability property',
-		'input_files': ['coffeeDrinker-TACAS.imi'],
-		'options'    : '-mode EF -merge -output-result',
+		'input_files': ['coffeeDrinker.imi', 'coffeeDrinker.imiprop'],
+		'options'    : '-merge -output-result',
 		'expectations' : [
-			{'file': 'coffeeDrinker-TACAS.res' , 'content' : """
+			{'file': 'coffeeDrinker.res' , 'content' : """
 BEGIN CONSTRAINT
  p_add_sugar > 0
 & 2*p_button > p_add_sugar
@@ -1813,31 +1816,35 @@ END CONSTRAINT
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+
 	,
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test EF (old version) with observer + depth-limit + project-result (quite basic)',
-		'input_files': ['coffeeDrinker-TACAS-within.imi'],
-		'options'    : '-mode EFold -merge -depth-limit 10 -output-result',
-		'expectations' : [
-			{'file': 'coffeeDrinker-TACAS-within.res' , 'content' : """
-BEGIN CONSTRAINT
- p_coffee > 0
-END CONSTRAINT
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-	,
+	
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test EF (old version) with observer + depth-limit + project-result (quite basic)',
+		#'input_files': ['coffeeDrinker-within.imi'],
+		#'options'    : '-mode EFold -merge -depth-limit 10 -output-result',
+		#'expectations' : [
+			#{'file': 'coffeeDrinker-within.res' , 'content' : """
+#BEGIN CONSTRAINT
+ #p_coffee > 0
+#END CONSTRAINT
+#"""
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+	
+	#,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with observer + depth-limit + project-result (quite basic)',
-		'input_files': ['coffeeDrinker-TACAS-within.imi'],
-		'options'    : '-mode EF -merge -depth-limit 10 -output-result',
+		'input_files': ['coffeeDrinker.imi', 'coffeeDrinker-within.imiprop'],
+		'options'    : '-merge -depth-limit 10 -output-result',
 		'expectations' : [
-			{'file': 'coffeeDrinker-TACAS-within.res' , 'content' : """
+			{'file': 'coffeeDrinker.res' , 'content' : """
 BEGIN CONSTRAINT
  False
 END CONSTRAINT
@@ -1857,8 +1864,8 @@ END CONSTRAINT
 		# Test since               : 2019/05/30
 		# Test for IMITATOR version: 2.11
 		'purpose'    : 'Test EFunsafe',
-		'input_files': ['testEFcounterex.imi'],
-		'options'    : '-mode EFunsafe -merge -incl -output-result',
+		'input_files': ['testEFcounterex.imi', 'testEFcounterex.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFcounterex.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1886,8 +1893,8 @@ Constraint nature                       : good
 		# Test since               : 2019/05/30
 		# Test for IMITATOR version: 2.11
 		'purpose'    : 'Test EFunsafe with counterexample',
-		'input_files': ['testEFcounterex.imi'],
-		'options'    : '-mode EFunsafe -merge -incl -counterexample -output-result',
+		'input_files': ['testEFcounterex.imi', 'testEFcounterex-witness.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFcounterex.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1910,8 +1917,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFmin on a toy example',
-		'input_files': ['testEFmin.imi'],
-		'options'    : '-mode EFmin -merge -incl -output-result',
+		'input_files': ['testEFmin.imi', 'testEFmin.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFmin.res' , 'content' : """
 BEGIN CONSTRAINT

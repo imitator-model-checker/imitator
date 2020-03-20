@@ -1,0 +1,3 @@
+
+property := #witness EF(loc[pta] = lbad);
+

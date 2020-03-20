@@ -1,0 +1,6 @@
+
+(* property := unreachable loc[researcher] = mad; *)
+(* property := unreachable loc[researcher] = mad or loc[machine] = cdone & nb_sugar < 3; *)
+property := #synth( if press then eventually coffee within 20);
+projectresult(p_coffee);
+
