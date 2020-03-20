@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/01/22
+ * Last modified     : 2020/03/20
  *
  ************************************************************)
 
@@ -633,13 +633,15 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB in myalgo
 
 
+				*)
 			(************************************************************)
 			(* Parametric deadlock checking *)
 			(************************************************************)
-			| Parametric_deadlock_checking ->
+			| Deadlock_Freeness ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoDeadlockFree.algoDeadlockFree in myalgo
 
 
+				(*
 			(************************************************************)
 			(* Inverse method and variants *)
 			(************************************************************)
