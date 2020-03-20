@@ -4,13 +4,14 @@
 #
 #                       IMITATOR
 # 
-# LIPN, Université Paris 13 (France)
+# Université Paris 13, LIPN, CNRS, France
+# Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
 # 
 # Script description: TESTATOR (script for non-regression tests)
 # 
 # File contributors : Étienne André
 # Created           : 2012/05/??
-# Last modified     : 2017/03/21
+# Last modified     : 2020/03/20
 # ************************************************************
 
 
@@ -74,6 +75,9 @@ def make_binary(binary):
 
 def make_file(file_name):
     return os.path.join(EXAMPLE_PATH, file_name)
+
+def make_output_file(file_name):
+    return os.path.join(file_name)
 
 
 def fail_with(text):
@@ -201,8 +205,8 @@ def test(binary_name, tests, logfile, logfile_name):
         # Check the expectations
         for expectation_id, expectation in enumerate(test_case['expectations']):
             # Build file
-            output_file = make_file(expectation['file'])
-
+            output_file = make_output_file(expectation['file'])
+            
             test_expectation_id = '{}.{}'.format(benchmark_id, expectation_id)
 
             # Check existence of the output file
@@ -321,7 +325,8 @@ print_to_screen('{0.BOLD} TESTATOR{0.NORMAL}                                    
 print_to_log(' TESTATOR                                              v0.1')
 print_to_screen_and_log('')
 print_to_screen_and_log(' Étienne André')
-print_to_screen_and_log(' LIPN, Université Paris 13 (France)')
+print_to_screen_and_log(' Université Paris 13, LIPN, CNRS, France')
+print_to_screen_and_log(' Université de Lorraine, CNRS, Inria, LORIA, Nancy, France')
 print_to_screen_and_log('############################################################')
 now = datetime.datetime.now()
 print_to_screen_and_log(now.strftime("%A %d. %B %Y %H:%M:%S %z"))
