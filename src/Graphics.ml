@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/01/17
+ * Last modified     : 2020/03/20
  *
  ************************************************************)
  
@@ -1210,16 +1210,42 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 	(* Create the array of dot colors *)
 	let dot_colors = Array.of_list dot_colors in
 	
-	let is_bad_location = fun global_location ->
+	(* Local function checking whether a state is bad *)
+	let is_bad_state (state : state) : bool =
 		(* If BAD location: red *)
 		if Input.has_property() then(
-			(*** TODO ***)
-			raise (NotImplemented ("Graphics > coloring bad location"))
+			
+			(* Try to get the state predicate*)
+			let state_predicate_option : state_predicate option =
+			
+			match (Input.get_property()).property with
+				| EF state_predicate
+				| AGnot state_predicate
+				| EFpmin (state_predicate , _)
+				| EFtmin state_predicate
+				| Accepting_cycle state_predicate
+					-> Some state_predicate
+					
+				| Cycle
+				| Deadlock_Freeness
+				| IM _
+					-> None
+			in
+			
+			begin
+			match state_predicate_option with
+			| Some state_predicate ->
+				(* Check whether the current state matches ths state predicate *)
+				State.match_state_predicate state_predicate state
+			| None -> false
+
+			end
 	(*		| Some (Unreachable unreachable_global_locations) ->
 				(* Check whether the current location matches one of the unreachable global locations *)
 				State.match_unreachable_global_locations unreachable_global_locations global_location
 			| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))*)
 		)else(
+			(* No property: no bad state *)
 			false
 		)
 
@@ -1463,7 +1489,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 			let location_index = StateSpace.get_global_location_index state_space state_index in
 			
 			(* Check whether is bad *)
-			let is_bad = is_bad_location global_location in
+			let is_bad = is_bad_state state in
 			
 			(* Find the location color *)
 			let location_color = get_location_color location_index is_bad in
