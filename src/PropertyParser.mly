@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/01/22
+ * Last modified     : 2020/03/20
  *
  ************************************************************/
 
@@ -152,7 +152,8 @@ property:
 	/*------------------------------------------------------------*/
 	
 	/* Reachability with minimization of a parameter valuation */
-	| CT_EFpmin state_predicate NAME { Parsed_EFpmin ($2, $3) }
+	| CT_EFpmin state_predicate COMMA NAME { Parsed_EFpmin ($2, $4) }
+	| CT_EFpmin LPAREN state_predicate COMMA NAME RPAREN { Parsed_EFpmin ($3, $5) }
 	
 	/* Reachability with minimal-time */
 	| CT_EFtmin state_predicate { Parsed_EFtmin ($2) }
