@@ -3,12 +3,13 @@
  *                       IMITATOR
  *
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: (Constant) LaTeX header for translation to LaTeX/TikZ
  *
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2015/03/24
- * Last modified     : 2019/07/05
+ * Last modified     : 2020/03/18
  *
  ************************************************************)
 
@@ -76,7 +77,7 @@ let latex_header = "
 \\newcommand{\\styleloc}[1]{\\ensuremath{\\textcolor{colorloc}{\\mathrm{#1}}}}
 \\newcommand{\\styleparam}[1]{\\ensuremath{\\textcolor{colorparam}{\\mathrm{#1}}}}
 
-\\newcommand{\\imitator}{\\textsc{Imitator}}
+\\newcommand{\\imitator}{\\textsf{IMITATOR}}
 
 \\title{An IMITATOR model}
 \\author{" ^ Constants.program_name ^ "}
