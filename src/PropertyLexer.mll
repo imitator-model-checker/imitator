@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/01/22
+ * Last modified     : 2020/03/26
 *****************************************************************)
 
 {
@@ -41,6 +41,7 @@ rule token = parse
 	| "AG"             { CT_AG }
 	| "AGnot"          { CT_AGnot }
 	| "EF"             { CT_EF }
+	| "EFpmax"         { CT_EFpmax }
 	| "EFpmin"         { CT_EFpmin }
 	| "EFtmin"         { CT_EFtmin }
  	| "IM"             { CT_TRACEPRESERVATION }

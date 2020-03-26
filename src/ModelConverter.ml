@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/01/22
+ * Last modified     : 2020/03/26
  *
  ************************************************************)
 
@@ -2512,6 +2512,7 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		
 		(* Reachability with minimization of a parameter valuation *)
 		| Parsed_EFpmin (parsed_state_predicate , parameter_name)
+		| Parsed_EFpmax (parsed_state_predicate , parameter_name)
 			(* First get the variables in the state predicate *)
 			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate;
 			(* Then add the parameter name *)
@@ -3186,7 +3187,9 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		(*------------------------------------------------------------*)
 		
 		(* Reachability with minimization of a parameter valuation *)
-		| Parsed_EFpmin (parsed_state_predicate , parameter_name) ->
+		| Parsed_EFpmin (parsed_state_predicate , parameter_name)
+		| Parsed_EFpmax (parsed_state_predicate , parameter_name)
+			->
 			(*** NOTE: two checks to allow to check both side of the equality whatever happens ***)
 			evaluate_and
 				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
@@ -3536,6 +3539,16 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		(* Reachability with minimization of a parameter valuation *)
 		| Parsed_EFpmin (parsed_state_predicate , parameter_name) ->
 			EFpmin (
+				convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+				,
+				Hashtbl.find useful_parsing_model_information.index_of_variables parameter_name
+			)
+			,
+			None
+		
+		(* Reachability with maximization of a parameter valuation *)
+		| Parsed_EFpmax (parsed_state_predicate , parameter_name) ->
+			EFpmax (
 				convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
 				,
 				Hashtbl.find useful_parsing_model_information.index_of_variables parameter_name

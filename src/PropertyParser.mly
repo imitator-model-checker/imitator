@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/03/20
+ * Last modified     : 2020/03/26
  *
  ************************************************************/
 
@@ -59,7 +59,7 @@ let resolve_property l =
 	CT_ACCEPTING CT_ACCLOOP CT_AG CT_AGnot CT_ALWAYS CT_AND
 	CT_BEFORE
 	CT_DEADLOCKFREE
-	CT_EF CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXHIBIT
+	CT_EF CT_EFpmax CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXHIBIT
 	CT_FALSE
 	CT_HAPPENED CT_HAS
 	CT_IF CT_IN CT_INFCYCLE CT_INFCYCLETHROUGH CT_IS
@@ -154,6 +154,10 @@ property:
 	/* Reachability with minimization of a parameter valuation */
 	| CT_EFpmin state_predicate COMMA NAME { Parsed_EFpmin ($2, $4) }
 	| CT_EFpmin LPAREN state_predicate COMMA NAME RPAREN { Parsed_EFpmin ($3, $5) }
+	
+	/* Reachability with maximization of a parameter valuation */
+	| CT_EFpmax state_predicate COMMA NAME { Parsed_EFpmax ($2, $4) }
+	| CT_EFpmax LPAREN state_predicate COMMA NAME RPAREN { Parsed_EFpmax ($3, $5) }
 	
 	/* Reachability with minimal-time */
 	| CT_EFtmin state_predicate { Parsed_EFtmin ($2) }

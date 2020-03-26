@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/01/22
+ * Last modified     : 2020/03/26
  *
  ****************************************************************)
 
@@ -349,6 +349,9 @@ type parsed_property_type =
 	
 	(* Reachability with minimization of a parameter *)
 	| Parsed_EFpmin of parsed_state_predicate * variable_name
+	
+	(* Reachability with maximization of a parameter *)
+	| Parsed_EFpmax of parsed_state_predicate * variable_name
 	
 	(* Reachability with minimal-time *)
 	| Parsed_EFtmin of parsed_state_predicate

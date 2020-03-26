@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/03/20
+ * Last modified     : 2020/03/26
  *
  ************************************************************)
 
@@ -95,6 +95,9 @@ type property =
 	
 	(* Reachability with minimization of a parameter valuation *)
 	| EFpmin of state_predicate * parameter_index
+	
+	(* Reachability with maximization of a parameter valuation *)
+	| EFpmax of state_predicate * parameter_index
 	
 	(* Reachability with minimal-time *)
 	| EFtmin of state_predicate
