@@ -437,6 +437,9 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			let concrete_algorithm : AlgoGeneric.algoGeneric = match abstract_property.property with
 
 			
+		(*------------------------------------------------------------*)
+		(* Non-nested CTL *)
+		(*------------------------------------------------------------*)
 			(************************************************************)
 			(* Reachability *)
 			(************************************************************)
@@ -458,9 +461,46 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 				);
 			
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGsafeSynth.algoAGsafeSynth in myalgo
-				
+
+
+		(*------------------------------------------------------------*)
+		(* Optimized reachability *)
+		(*------------------------------------------------------------*)
 			(************************************************************)
-			(* Inverse method, trace preservation, robustness *)
+			(* Reachability with minimization of a parameter valuation *)
+			(************************************************************)
+			| EFpmin _ ->
+				let efopt_algo = new AlgoEFmin.algoEFmin in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				efopt_algo#set_synthesize_valuations false; (* NO synthesis of valuations out of the desired parameter *)
+				let myalgo :> AlgoGeneric.algoGeneric = efopt_algo in
+				myalgo
+
+		
+			(************************************************************)
+			(* Reachability with maximization of a parameter valuation *)
+			(************************************************************)
+			| EFpmax _ ->
+				let efopt_algo = new AlgoEFmax.algoEFmax in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				efopt_algo#set_synthesize_valuations false; (* NO synthesis of valuations out of the desired parameter *)
+				let myalgo :> AlgoGeneric.algoGeneric = efopt_algo in
+				myalgo
+
+		
+			(************************************************************)
+			(* Reachability with minimal-time *)
+			(************************************************************)
+		
+		
+		
+		
+		(*------------------------------------------------------------*)
+		(* Inverse method, trace preservation, robustness *)
+		(*------------------------------------------------------------*)
+		
+			(************************************************************)
+			(* Inverse method *)
 			(************************************************************)
 			
 			(* Inverse method with complete, non-convex result *)
