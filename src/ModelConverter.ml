@@ -2546,6 +2546,13 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_ConvexIM parsed_pval ->
 			variables_used_ref := StringSet.of_list (get_variables_in_parsed_pval parsed_pval);
 		
+		(* Non-complete, non-deterministic inverse method with convex result *)
+		| Parsed_PRP (parsed_state_predicate , parsed_pval) ->
+			(* First get the variables in the state predicate *)
+			get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate;
+			(* Then add the pval *)
+			variables_used_ref := StringSet.union !variables_used_ref (StringSet.of_list (get_variables_in_parsed_pval parsed_pval))
+		
 		
 		
 		
@@ -3229,6 +3236,13 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		| Parsed_ConvexIM parsed_pval ->
 			check_parsed_pval useful_parsing_model_information parsed_pval
 		
+		(* PRP *)
+		| Parsed_PRP (parsed_state_predicate, parsed_pval) ->
+			(*** NOTE: two checks to allow to check both side of the equality whatever happens ***)
+			evaluate_and
+				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+				(check_parsed_pval useful_parsing_model_information parsed_pval)
+		
 		
 		
 		
@@ -3598,6 +3612,12 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		(* Non-complete, non-deterministic inverse method with convex result *)
 		| Parsed_ConvexIM parsed_pval ->
 			ConvexIM (convert_parsed_pval useful_parsing_model_information parsed_pval)
+			,
+			None
+
+		(* PRP *)
+		| Parsed_PRP (parsed_state_predicate , parsed_pval) ->
+			PRP (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_pval useful_parsing_model_information parsed_pval)
 			,
 			None
 
