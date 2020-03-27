@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/03/26
+ * Last modified     : 2020/03/27
  *
  ************************************************************)
 
@@ -2542,6 +2542,10 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_IM parsed_pval ->
 			variables_used_ref := StringSet.of_list (get_variables_in_parsed_pval parsed_pval);
 		
+		(* Non-complete, non-deterministic inverse method with convex result *)
+		| Parsed_ConvexIM parsed_pval ->
+			variables_used_ref := StringSet.of_list (get_variables_in_parsed_pval parsed_pval);
+		
 		
 		
 		
@@ -3221,6 +3225,10 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		| Parsed_IM parsed_pval ->
 			check_parsed_pval useful_parsing_model_information parsed_pval
 		
+		(* Non-complete, non-deterministic inverse method with convex result *)
+		| Parsed_ConvexIM parsed_pval ->
+			check_parsed_pval useful_parsing_model_information parsed_pval
+		
 		
 		
 		
@@ -3587,7 +3595,11 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 			,
 			None
 			
-			
+		(* Non-complete, non-deterministic inverse method with convex result *)
+		| Parsed_ConvexIM parsed_pval ->
+			ConvexIM (convert_parsed_pval useful_parsing_model_information parsed_pval)
+			,
+			None
 
 			
 		(*** TODO ***)

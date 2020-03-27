@@ -515,6 +515,14 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			| IM _ ->
 					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMcomplete.algoIMcomplete in myalgo
 
+			(* Non-complete, non-deterministic inverse method with convex result *)
+			| ConvexIM _ ->
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIM.algoIM in myalgo
+
+(*			(* Parametric reachability preservation *)
+			| PRP _ ->
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRP.algoPRP in myalgo*)
+
 
 			(*** TODO: allow for old version with list of constraints ***)
 (*			(* Old version (with list of constraints) *)
@@ -523,41 +531,6 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 				*)
 
 (*
-			(************************************************************)
-			(* EF-optimization *)
-			(************************************************************)
-			| EF_min ->
-				let efopt_algo = new AlgoEFmin.algoEFmin in
-				(*** NOTE: very important: must set NOW the parameters ***)
-				efopt_algo#set_synthesize_valuations false; (* NO synthesis of valuations out of the desired parameter *)
-				let myalgo :> AlgoGeneric.algoGeneric = efopt_algo in
-				myalgo
-
-			| EF_max ->
-				let efopt_algo = new AlgoEFmax.algoEFmax in
-				(*** NOTE: very important: must set NOW the parameters ***)
-				efopt_algo#set_synthesize_valuations false; (* NO synthesis of valuations out of the desired parameter *)
-				let myalgo :> AlgoGeneric.algoGeneric = efopt_algo in
-				myalgo
-
-			| EF_synth_min ->
-				let efopt_algo = new AlgoEFmin.algoEFmin in
-				(*** NOTE: very important: must set NOW the parameters ***)
-				efopt_algo#set_synthesize_valuations true; (* synthesis of valuations out of the desired parameter *)
-				let myalgo :> AlgoGeneric.algoGeneric = efopt_algo in
-				myalgo
-
-			| EF_synth_max ->
-				let efopt_algo = new AlgoEFmax.algoEFmax in
-				(*** NOTE: very important: must set NOW the parameters ***)
-				efopt_algo#set_synthesize_valuations true; (* synthesis of valuations out of the desired parameter *)
-				let myalgo :> AlgoGeneric.algoGeneric = efopt_algo in
-				myalgo
-
-			| EF_synth_min_priority_queue ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFoptQueue.algoEFoptQueue in myalgo
-
-
 
 			(************************************************************)
 			(* EF-exemplification *)

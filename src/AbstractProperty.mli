@@ -139,11 +139,11 @@ type property =
 	(* Inverse method with complete, non-convex result *)
 	| IM of PVal.pval
 
-	(* Non-complete inverse method with convex result *)
+	(* Non-complete, non-deterministic inverse method with convex result *)
 	| ConvexIM of PVal.pval
 
 	(* Parametric reachability preservation *)
-	| PRP of PVal.pval
+	| PRP of state_predicate * PVal.pval
 
 	
 	(*------------------------------------------------------------*)
