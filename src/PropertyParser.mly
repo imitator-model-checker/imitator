@@ -182,7 +182,7 @@ property:
 
 	| CT_IMCONVEX LPAREN reference_valuation RPAREN { Parsed_ConvexIM $3 }
 
-	| CT_PRP LPAREN reference_valuation RPAREN { Parsed_PRP $3 }
+	| CT_PRP LPAREN state_predicate COMMA reference_valuation RPAREN { Parsed_PRP ($3 , $5) }
 
 	
 	

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2020/01/17
+ * Last modified     : 2020/03/27
  *
  ************************************************************)
 
@@ -77,7 +77,10 @@ class algoIMK =
 		let abstract_property = Input.get_property() in
 		(* Get the valuation *)
 		match abstract_property.property with
-		| IM pval -> pval
+		| IM pval
+		| ConvexIM pval
+			-> pval
+		| PRP (_ , pval) -> pval
 		| _ -> raise (InternalError("Impossible situation in AlgoIMK#get_reference_pval(): the parameter valuation should be stored in the Input module in the form of a property of the form IM, or its variants" ))
 
 	

@@ -519,9 +519,9 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			| ConvexIM _ ->
 					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIM.algoIM in myalgo
 
-(*			(* Parametric reachability preservation *)
+			(* Parametric reachability preservation *)
 			| PRP _ ->
-					let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRP.algoPRP in myalgo*)
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRP.algoPRP in myalgo
 
 
 			(*** TODO: allow for old version with list of constraints ***)

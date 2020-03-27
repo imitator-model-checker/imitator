@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/11
- * Last modified     : 2020/01/07
+ * Last modified     : 2020/03/27
  *
  ************************************************************)
 
@@ -23,6 +23,7 @@ open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
+open AbstractProperty
 open Result
 open AlgoIMK
 open State
@@ -48,8 +49,18 @@ class algoPRP =
 	
 	(* Non-necessarily convex constraint ensuring reachability of at least one bad state *)
 	val mutable bad_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
+
+	(* Shortcut *)
+	val state_predicate : AbstractProperty.state_predicate =
+		(*** TODO: pass as a PARAMETER of the algorithm ***)
+		(*** UGLY!!! ***)
+		match (Input.get_property()).property with
+			| PRP (state_predicate , _)
+				-> state_predicate
+			
+			| _ -> raise (InternalError ("Unexpected error when getting the state predicate when initializing PRP"))
 	
-	
+
 	(************************************************************)
 	(* Class methods *)
 	(************************************************************)
@@ -91,17 +102,12 @@ class algoPRP =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 		
-		let state_location, state_constraint = state.global_location, state.px_constraint in
-		
-		let to_be_added = match model.correctness_condition with
-		| None -> raise (InternalError("A correctness property must be defined to perform PRP. This should have been checked before."))
-		| Some (Unreachable unreachable_global_locations) ->
-			
+		let to_be_added = 
 			(* Check whether the current location matches one of the unreachable global locations *)
-			if State.match_unreachable_global_locations unreachable_global_locations state_location then(
+			if State.match_state_predicate state_predicate state then(
 			
 				(* Project onto the parameters *)
-				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state_constraint in
+				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state.px_constraint in
 				
 				(* Projecting onto SOME parameters if required *)
 				(*** BADPROG: Duplicate code (EFsynth / AlgoLoopSynth) ***)
@@ -159,7 +165,6 @@ class algoPRP =
 				(* Keep the state as it is not a bad state *)
 				true
 			)
-		| _ -> raise (InternalError("[PRP] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
 
 		in
 		
@@ -344,7 +349,7 @@ class algoPRP =
 		Point_based_result
 		{
 			(* Reference valuation *)
-			reference_val		= Input.get_pi0();
+			reference_val		= self#get_reference_pval;
 			
 			(* Result of the algorithm *)
 			result				= result;

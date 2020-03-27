@@ -389,11 +389,11 @@ type parsed_property_type =
 	(* Inverse method with complete, non-convex result *)
 	| Parsed_IM of parsed_pval
 
-	(* Non-complete inverse method with convex result *)
+	(* Non-complete, non-deterministic inverse method with convex result *)
 	| Parsed_ConvexIM of parsed_pval
 
 	(* Parametric reachability preservation *)
-	| Parsed_PRP of parsed_pval
+	| Parsed_PRP of parsed_state_predicate * parsed_pval
 
 	
 (*	(*------------------------------------------------------------*)
