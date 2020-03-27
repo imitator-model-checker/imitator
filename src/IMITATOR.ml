@@ -497,6 +497,8 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			(************************************************************)
 			(* Reachability with minimal-time *)
 			(************************************************************)
+			| EFtmin _ ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFoptQueue.algoEFoptQueue in myalgo
 
 		
 		

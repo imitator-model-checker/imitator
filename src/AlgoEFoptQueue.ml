@@ -8,7 +8,7 @@
  * 
  * File contributors : Vincent Bloemen, Étienne André
  * Created           : 2018/10/08
- * Last modified     : 2019/07/11
+ * Last modified     : 2020/03/27
  *
  ************************************************************)
 
@@ -67,6 +67,15 @@ class algoEFoptQueue =
 	(*------------------------------------------------------------*)
 	(* Shortcuts *)
 	(*------------------------------------------------------------*)
+	(* Retrieve the goal state predicate *)
+		(*** TODO: pass as a PARAMETER of the algorithm ***)
+		(*** UGLY!!! ***)
+	val state_predicate : AbstractProperty.state_predicate =
+		match (Input.get_property ()).property with
+		(* Shortcut for both algorithms *)
+		| EFtmin state_predicate -> state_predicate
+		| _ -> raise (InternalError("A state_predicate should be defined in the property to run EFtmin"))
+		
 	
 
 	(*------------------------------------------------------------*)
@@ -372,14 +381,14 @@ class algoEFoptQueue =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Returns whether the given state is a target state *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private is_target_state state_location =
-        match model.correctness_condition with
-            | None -> raise (InternalError("A correctness property must be defined to perform optTimeQueue"))
-            | Some (Unreachable unreachable_global_locations) ->
-                (* Check whether the current location matches one of the unreachable global locations *)
-                if State.match_unreachable_global_locations unreachable_global_locations state_location then true
-                else false;
-            | _ -> raise (InternalError("We only allow (un)reachability properties in optTimeQueue"));
+	method private is_target_state state =
+		
+		(* Print some information *)
+		self#print_algo_message Verbose_total "Entering EFtmin:is_target_state";
+		
+		(* Check the state_predicate *)
+
+		State.match_state_predicate state_predicate state
    
 
 
@@ -610,7 +619,7 @@ class algoEFoptQueue =
                 (* Check if this is the target location *)
                 let state = StateSpace.get_state state_space source_id in
                 let source_location, source_constraint = state.global_location, state.px_constraint in
-                if self#is_target_state source_location then (
+                if self#is_target_state state then (
                     (* Target state found ! (NB: assert time = upper_bound) *)
                     (* NB: We update best_time_bound in the successor part, so we should never see time < best_time_bound *)
                     		(* (temporarily?) Removed best-worst case algorithm *)
@@ -706,8 +715,8 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
                                 (* Only add states if the time to reach does not exceed the minimum time *)
                                 if suc_time <= !best_time_bound then (
                                     (* Check if the suc state is the target location, and possibly update minimum time *)
-                                    let suc_location = (StateSpace.get_state state_space suc_id).global_location in
-                                    if self#is_target_state suc_location then (
+                                    let suc_state = StateSpace.get_state state_space suc_id in
+                                    if self#is_target_state suc_state then (
 										
 										if options#merge && (options#merge_heuristic = Merge_targetseen) then can_merge := true;
 
