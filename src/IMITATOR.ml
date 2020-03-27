@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/03/20
+ * Last modified     : 2020/03/27
  *
  ************************************************************)
 
@@ -319,6 +319,12 @@ match options#imitator_mode with
 		(*** NOTE: at this stage, we are sure to have defined a property ***)
 		let abstract_property = Input.get_property() in
 		
+		let emptiness_only =
+			match abstract_property.synthesis_type with
+			| Witness   -> true
+			| Synthesis -> false
+		in
+		
 (*		(* Determine the right algorithm depending on the property *)
 		let abstract_algorithm = match abstract_property.property with
 			(* Reachability *)
@@ -472,7 +478,7 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			| EFpmin _ ->
 				let efopt_algo = new AlgoEFmin.algoEFmin in
 				(*** NOTE: very important: must set NOW the parameters ***)
-				efopt_algo#set_synthesize_valuations false; (* NO synthesis of valuations out of the desired parameter *)
+				efopt_algo#set_synthesize_valuations (not emptiness_only); (* Synthesis of valuations out of the desired parameter *)
 				let myalgo :> AlgoGeneric.algoGeneric = efopt_algo in
 				myalgo
 
@@ -483,7 +489,7 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			| EFpmax _ ->
 				let efopt_algo = new AlgoEFmax.algoEFmax in
 				(*** NOTE: very important: must set NOW the parameters ***)
-				efopt_algo#set_synthesize_valuations false; (* NO synthesis of valuations out of the desired parameter *)
+				efopt_algo#set_synthesize_valuations (not emptiness_only); (* Synthesis of valuations out of the desired parameter *)
 				let myalgo :> AlgoGeneric.algoGeneric = efopt_algo in
 				myalgo
 
@@ -491,7 +497,7 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			(************************************************************)
 			(* Reachability with minimal-time *)
 			(************************************************************)
-		
+
 		
 		
 		
