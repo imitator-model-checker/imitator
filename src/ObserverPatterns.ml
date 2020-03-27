@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created:       2013/02/04
- * Last modified: 2020/01/22
+ * Last modified: 2020/03/27
  *
  ************************************************************)
  
@@ -97,6 +97,7 @@ let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_EF _
 	| Parsed_AGnot _
 
+	| Parsed_EFpmax _
 	| Parsed_EFpmin _
 	| Parsed_EFtmin _
 
@@ -104,6 +105,8 @@ let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_Acc_Cycle _
 
 	| Parsed_IM _
+	| Parsed_ConvexIM _
+	| Parsed_PRP _
 
 		->
 	false
@@ -131,12 +134,15 @@ let new_elements (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_AGnot _
 	
 	| Parsed_EFpmin _
+	| Parsed_EFpmax _
 	| Parsed_EFtmin _
 
 	| Parsed_Cycle
 	| Parsed_Acc_Cycle _
 
 	| Parsed_IM _
+	| Parsed_ConvexIM _
+	| Parsed_PRP _
 		-> (None , None)
 	
 (*	| Parsed_Action_deadline _
@@ -174,12 +180,15 @@ let get_nb_locations (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_AGnot _
 	
 	| Parsed_EFpmin _
+	| Parsed_EFpmax _
 	| Parsed_EFtmin _
 	
 	| Parsed_Cycle
 	| Parsed_Acc_Cycle _
 
 	| Parsed_IM _
+	| Parsed_ConvexIM _
+	| Parsed_PRP _
 	
 		-> 0
 (* 	| Parsed_Action_deadline _ -> 3 *)

@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/01/22
+ * Last modified     : 2020/03/27
  *
  ************************************************************)
 
@@ -747,6 +747,10 @@ let string_of_abstract_property model property =
 		| EFpmin (state_predicate , parameter_index) ->
 			"EFpmin(" ^ (string_of_state_predicate model state_predicate) ^ ", " ^ (model.variable_names parameter_index) ^ ")"
 		
+		(* Reachability with maximization of a parameter valuation *)
+		| EFpmax (state_predicate , parameter_index) ->
+			"EFpmax(" ^ (string_of_state_predicate model state_predicate) ^ ", " ^ (model.variable_names parameter_index) ^ ")"
+		
 		(* Reachability with minimal-time *)
 		| EFtmin state_predicate ->
 			"EFpmin(" ^ (string_of_state_predicate model state_predicate) ^ ")"
@@ -765,11 +769,25 @@ let string_of_abstract_property model property =
 
 		
 		(*------------------------------------------------------------*)
+		(* Deadlock-freeness *)
+		(*------------------------------------------------------------*)
+		
+		(* Deadlock-free synthesis *)
+		| Deadlock_Freeness -> "deadlockfree"
+		
+		
+		(*------------------------------------------------------------*)
 		(* Inverse method, trace preservation, robustness *)
 		(*------------------------------------------------------------*)
 		
 		(* Inverse method with complete, non-convex result *)
 		| IM pval -> "tracepreservation(" ^ (string_of_pval model pval) ^ ")"
+
+		(* Non-complete, non-deterministic inverse method with convex result *)
+		| ConvexIM pval -> "IMconvex(" ^ (string_of_pval model pval) ^ ")"
+
+		
+		| PRP (state_predicate, pval) -> "PRP(" ^ (string_of_state_predicate model state_predicate) ^ " , " ^ (string_of_pval model pval) ^ ")"
 
 		
 		(*** TODO ***)

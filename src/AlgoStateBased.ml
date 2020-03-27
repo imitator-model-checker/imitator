@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/01/22
+ * Last modified     : 2020/03/27
  *
  ************************************************************)
 
@@ -2459,8 +2459,10 @@ class virtual algoStateBased =
 				(* Reachability *)
 				| EF state_predicate
 				| EFpmin (state_predicate, _)
+				| EFpmax (state_predicate, _)
 				| EFtmin state_predicate
 				| Accepting_cycle state_predicate
+				| PRP (state_predicate , _)
 				->
 					(* Check whether the current state matches the state predicate *)
 					if State.match_state_predicate state_predicate state then(
@@ -2472,8 +2474,11 @@ class virtual algoStateBased =
 				
 				| Cycle
 				
+				| Deadlock_Freeness
+				
 				(* Inverse method *)
 				| IM _
+				| ConvexIM _
 					->
 					(* Cannot conclude anything from a single state yet *)
 					()

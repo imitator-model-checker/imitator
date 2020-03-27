@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/03/20
+ * Last modified     : 2020/03/27
  *
  ************************************************************)
  
@@ -1222,13 +1222,16 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 				| EF state_predicate
 				| AGnot state_predicate
 				| EFpmin (state_predicate , _)
+				| EFpmax (state_predicate , _)
 				| EFtmin state_predicate
 				| Accepting_cycle state_predicate
+				| PRP (state_predicate, _)
 					-> Some state_predicate
 					
 				| Cycle
 				| Deadlock_Freeness
 				| IM _
+				| ConvexIM _
 					-> None
 			in
 			
