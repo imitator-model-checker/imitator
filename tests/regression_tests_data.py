@@ -1946,10 +1946,10 @@ Number of computed states               : 12
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFmax on a toy example',
-		'input_files': ['testEFmax.imi'],
-		'options'    : '-mode EFmax -merge -incl -output-result',
+		'input_files': ['testEFmin.imi', 'testEFmax.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
-			{'file': 'testEFmax.res' , 'content' : """
+			{'file': 'testEFmin.res' , 'content' : """
 BEGIN CONSTRAINT
  p >= 0
 & 11 >= p

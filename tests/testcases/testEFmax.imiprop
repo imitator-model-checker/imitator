@@ -3,4 +3,4 @@
 (* Property specification *)
 (************************************************************)
 
-property := #witness EFpmin(loc[pta] = lbad, p);
+property := #witness EFpmax(loc[pta] = lbad, p);
