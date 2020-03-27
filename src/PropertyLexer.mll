@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/03/26
+ * Last modified     : 2020/03/27
 *****************************************************************)
 
 {
@@ -45,7 +45,9 @@ rule token = parse
 	| "EFpmin"         { CT_EFpmin }
 	| "EFtmin"         { CT_EFtmin }
  	| "IM"             { CT_TRACEPRESERVATION }
+ 	| "IMconvex"       { CT_IMCONVEX }
  	| "inversemethod"  { CT_TRACEPRESERVATION }
+ 	| "PRP"            { CT_PRP }
  	| "tracepreservation" { CT_TRACEPRESERVATION }
 
 	| "accloop"        { CT_ACCLOOP }

@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/03/26
+ * Last modified     : 2020/03/27
  *
  ************************************************************)
 
@@ -139,11 +139,11 @@ type property =
 	(* Inverse method with complete, non-convex result *)
 	| IM of PVal.pval
 
-(*	(* Non-complete inverse method with convex result *)
+	(* Non-complete inverse method with convex result *)
 	| ConvexIM of PVal.pval
 
 	(* Parametric reachability preservation *)
-	| PRP of PVal.pval*)
+	| PRP of PVal.pval
 
 	
 	(*------------------------------------------------------------*)

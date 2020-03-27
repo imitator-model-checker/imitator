@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/03/26
+ * Last modified     : 2020/03/27
  *
  ************************************************************/
 
@@ -62,12 +62,12 @@ let resolve_property l =
 	CT_EF CT_EFpmax CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXHIBIT
 	CT_FALSE
 	CT_HAPPENED CT_HAS
-	CT_IF CT_IN CT_INFCYCLE CT_INFCYCLETHROUGH CT_IS
+	CT_IF CT_IMCONVEX CT_IN CT_INFCYCLE CT_INFCYCLETHROUGH CT_IS
 	CT_LOC CT_LOOP
 	CT_MAXIMIZE CT_MINIMIZE
 	CT_NEXT CT_NOT
 	CT_ONCE CT_OR
-	CT_PROJECTRESULT
+	CT_PROJECTRESULT CT_PRP
 	CT_PROPERTY
 	CT_SEQUENCE CT_SYNTH
 	CT_THEN CT_TRACEPRESERVATION CT_TRUE
@@ -179,6 +179,10 @@ property:
 	/*------------------------------------------------------------*/
 	
 	| CT_TRACEPRESERVATION LPAREN reference_valuation RPAREN { Parsed_IM $3 }
+
+	| CT_IMCONVEX LPAREN reference_valuation RPAREN { Parsed_ConvexIM $3 }
+
+	| CT_PRP LPAREN reference_valuation RPAREN { Parsed_PRP $3 }
 
 	
 	

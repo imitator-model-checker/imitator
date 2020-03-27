@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/03/26
+ * Last modified     : 2020/03/27
  *
  ****************************************************************)
 
@@ -356,8 +356,6 @@ type parsed_property_type =
 	(* Reachability with minimal-time *)
 	| Parsed_EFtmin of parsed_state_predicate
 
-	(*** TODO: EFmin, EFmax, EFsynthmin, EFsynthmax, EF_synth_min_priority_queue ***)
-	
 	(** EF-synthesis with examples of (un)safe words *)
 (* 	| Parsed_EFexemplify of parsed_state_predicate *)
 	
@@ -391,14 +389,14 @@ type parsed_property_type =
 	(* Inverse method with complete, non-convex result *)
 	| Parsed_IM of parsed_pval
 
-(*	(* Non-complete inverse method with convex result *)
+	(* Non-complete inverse method with convex result *)
 	| Parsed_ConvexIM of parsed_pval
 
 	(* Parametric reachability preservation *)
 	| Parsed_PRP of parsed_pval
 
 	
-	(*------------------------------------------------------------*)
+(*	(*------------------------------------------------------------*)
 	(* Cartography algorithms *)
 	(*------------------------------------------------------------*)
 	
