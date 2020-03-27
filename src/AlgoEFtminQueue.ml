@@ -4,7 +4,7 @@
  * 
  * Université Paris 13, LIPN, CNRS, France
  * 
- * Module description: "EF optimized" algorithm: minimization or minimization of a parameter valuation for which there exists a run leading to some states. Algorithm with a priority queue. [ABPP19]
+ * Module description: "EF optimized" algorithm: minimization of a parameter valuation for which there exists a run leading to some states. Algorithm with a priority queue. [ABPP19]
  * 
  * File contributors : Vincent Bloemen, Étienne André
  * Created           : 2018/10/08
@@ -41,7 +41,7 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoEFoptQueue =
+class algoEFtminQueue =
 	object (self) inherit algoStateBased as super
 	
 	(************************************************************)
