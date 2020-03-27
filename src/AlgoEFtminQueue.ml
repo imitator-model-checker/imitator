@@ -22,6 +22,8 @@ open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
+open AbstractAlgorithm
+open AbstractProperty
 open Result
 open AlgoStateBased
 open Statistics

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/17
- * Last modified     : 2020/01/22
+ * Last modified     : 2020/03/27
  *
  ************************************************************)
 
@@ -22,6 +22,7 @@ open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
+open AbstractProperty
 open AlgoLoopSynth
 
 
