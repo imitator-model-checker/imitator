@@ -102,8 +102,6 @@ type property =
 	(* Reachability with minimal-time *)
 	| EFtmin of state_predicate
 	
-	(*** TODO: EFmin, EFmax, EFsynthmin, EFsynthmax, EF_synth_min_priority_queue ***)
-	
 (*	(** EF-synthesis with examples of (un)safe words *)
 	| EFexemplify of state_predicate
 	
