@@ -40,6 +40,7 @@ rule token = parse
  	(* Keywords for properties *)
 	| "AG"             { CT_AG }
 	| "AGnot"          { CT_AGnot }
+ 	| "deadlockfree"   { CT_DEADLOCKFREE }
 	| "EF"             { CT_EF }
 	| "EFpmax"         { CT_EFpmax }
 	| "EFpmin"         { CT_EFpmin }
@@ -54,7 +55,6 @@ rule token = parse
 	| "always"         { CT_ALWAYS }
 	| "and"            { CT_AND }
 	| "before"         { CT_BEFORE }
- 	| "deadlockfree"   { CT_DEADLOCKFREE }
  	| "eventually"     { CT_EVENTUALLY }
  	| "everytime"      { CT_EVERYTIME }
 	| "False"          { CT_FALSE }
