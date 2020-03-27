@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2020/01/07
+ * Last modified     : 2020/03/27
  *
  ************************************************************)
 
@@ -23,6 +23,7 @@ open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
+open AbstractProperty
 open Result
 open AlgoStateBased
 open State
