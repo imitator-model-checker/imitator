@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/03/20
+# Last modified     : 2020/03/31
 #************************************************************
 
 
@@ -360,7 +360,7 @@ Is strongly deterministic?              : false
 	{
 		'purpose'    : 'Test include files [1]',
 		'input_files': ['tests_include_model/example-include-1a.imi'],
-		'options'    : '-PTA2IMI -no-var-autoremove',
+		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
 			{'file': 'tests_include_model/example-include-1a-regenerated.imi' , 'content' : """
 var
@@ -446,7 +446,7 @@ end
 	{
 		'purpose'    : 'Test include files [2]',
 		'input_files': ['tests_include_model/example-include-2a.imi'],
-		'options'    : '-PTA2IMI -no-var-autoremove',
+		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
 			{'file': 'tests_include_model/example-include-2a-regenerated.imi' , 'content' : """
 var
@@ -534,7 +534,7 @@ end
 	{
 		'purpose'    : 'Test include files [3]',
 		'input_files': ['tests_include_model/example-include-3a.imi'],
-		'options'    : '-PTA2IMI -no-var-autoremove',
+		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
 			{'file': 'tests_include_model/example-include-3a-regenerated.imi' , 'content' : """
 var
@@ -1976,8 +1976,8 @@ Number of computed states               : 20
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmin on a clock-free toy example 1',
-		'input_files': ['testEFsynthminParams1.imi'],
-		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'input_files': ['testEFsynthminParams1.imi', 'testEFsynthminParams1.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFsynthminParams1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2009,8 +2009,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmin on a clock-free toy example 2',
-		'input_files': ['testEFsynthminParams2.imi'],
-		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'input_files': ['testEFsynthminParams2.imi', 'testEFsynthminParams1.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFsynthminParams2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2045,8 +2045,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmin on a clock-free toy example 3',
-		'input_files': ['testEFsynthminParams3.imi'],
-		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'input_files': ['testEFsynthminParams3.imi', 'testEFsynthminParams1.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFsynthminParams3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2073,8 +2073,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmin on a clock-free toy example 4',
-		'input_files': ['testEFsynthminParams4.imi'],
-		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'input_files': ['testEFsynthminParams4.imi', 'testEFsynthminParams1.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFsynthminParams4.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2101,8 +2101,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmin on a clock-free toy example 5',
-		'input_files': ['testEFsynthminParams5.imi'],
-		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'input_files': ['testEFsynthminParams5.imi', 'testEFsynthminParams1.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFsynthminParams5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2128,8 +2128,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmin on a clock-free toy example 6',
-		'input_files': ['testEFsynthminParams6.imi'],
-		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'input_files': ['testEFsynthminParams6.imi', 'testEFsynthminParams1.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFsynthminParams6.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2155,8 +2155,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmin on a toy example',
-		'input_files': ['testEFsynthmin.imi'],
-		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'input_files': ['testEFsynthmin.imi', 'testEFsynthmin.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFsynthmin.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2186,8 +2186,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmax on a clock-free toy example 1',
-		'input_files': ['testEFsynthmaxParams1.imi'],
-		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'input_files': ['testEFsynthmaxParams1.imi', 'testEFsynthmaxParams1.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFsynthmaxParams1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2218,8 +2218,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmax on a clock-free toy example 2',
-		'input_files': ['testEFsynthmaxParams2.imi'],
-		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'input_files': ['testEFsynthmaxParams2.imi', 'testEFsynthmaxParams1.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFsynthmaxParams2.res' , 'content' : """
 
@@ -2254,8 +2254,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmax on a clock-free toy example 3',
-		'input_files': ['testEFsynthmaxParams3.imi'],
-		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'input_files': ['testEFsynthmaxParams3.imi', 'testEFsynthmaxParams1.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFsynthmaxParams3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2281,8 +2281,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmax on a clock-free toy example 4',
-		'input_files': ['testEFsynthmaxParams4.imi'],
-		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'input_files': ['testEFsynthmaxParams4.imi', 'testEFsynthmaxParams1.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFsynthmaxParams4.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2308,8 +2308,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmax on a clock-free toy example 5',
-		'input_files': ['testEFsynthmaxParams5.imi'],
-		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'input_files': ['testEFsynthmaxParams5.imi', 'testEFsynthmaxParams1.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFsynthmaxParams5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2337,8 +2337,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmax on a clock-free toy example 6',
-		'input_files': ['testEFsynthmaxParams6.imi'],
-		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'input_files': ['testEFsynthmaxParams6.imi', 'testEFsynthmaxParams1.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFsynthmaxParams6.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2368,8 +2368,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmax on a toy example',
-		'input_files': ['testEFsynthmax.imi'],
-		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'input_files': ['testEFsynthmax.imi', 'testEFsynthmax.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFsynthmax.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -10062,7 +10062,7 @@ end
 	{
 		'purpose'    : 'Test translation to HyTech',
 		'input_files': ['flipflop.imi'],
-		'options'    : '-PTA2HyTech -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'options'    : '-imi2HyTech -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'flipflop.hy' , 'content' : """
  -- Created to be compatible with 'hytech-v1.04f-Linux_static'
@@ -10415,7 +10415,7 @@ init := True
 	{
 		'purpose'    : 'Test translation to Uppaal with synchronization model',
 		'input_files': ['testSynchroUppaal.imi'],
-		'options'    : '-PTA2Uppaal',
+		'options'    : '-imi2Uppaal',
 		'expectations' : [
 			{'file': 'testSynchroUppaal-uppaal.xml' , 'content' : """
 /* Clocks declarations */
@@ -10541,8 +10541,8 @@ system pta1, pta2, pta3;
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'FMTV challenge: Test EF with project-result -verbose mute',
-		'input_files': ['fmtv1A1-v2.imi'],
-		'options'    : '-mode EF -merge -incl -output-result',
+		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-EF.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'fmtv1A1-v2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -10564,10 +10564,10 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'FMTV challenge: Test EFmin',
-		'input_files': ['fmtv1A1-v2-min.imi'],
-		'options'    : '-mode EFmin -merge -incl -output-result -verbose mute',
+		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-min.imiprop'],
+		'options'    : '-merge -incl -output-result -verbose mute',
 		'expectations' : [
-			{'file': 'fmtv1A1-v2-min.res' , 'content' : """
+			{'file': 'fmtv1A1-v2.res' , 'content' : """
 BEGIN CONSTRAINT
  e2e >= 63
 END CONSTRAINT
@@ -10589,10 +10589,10 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'FMTV challenge: Test EFmax',
-		'input_files': ['fmtv1A1-v2-max.imi'],
-		'options'    : '-mode EFmax -merge -incl -output-result -verbose mute',
+		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-max.imiprop'],
+		'options'    : '-merge -incl -output-result -verbose mute',
 		'expectations' : [
-			{'file': 'fmtv1A1-v2-max.res' , 'content' : """
+			{'file': 'fmtv1A1-v2.res' , 'content' : """
 BEGIN CONSTRAINT
  e2e >= 0
 & 18126 >= 125*e2e
