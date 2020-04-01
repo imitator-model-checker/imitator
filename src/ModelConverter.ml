@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/03/27
+ * Last modified     : 2020/04/01
  *
  ************************************************************)
 
@@ -2535,6 +2535,14 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
 		
 		(*------------------------------------------------------------*)
+		(* Deadlock-freeness *)
+		(*------------------------------------------------------------*)
+		
+		(* Deadlock-free synthesis *)
+		| Parsed_Deadlock_Freeness -> ()
+		
+		
+		(*------------------------------------------------------------*)
 		(* Inverse method, trace preservation, robustness *)
 		(*------------------------------------------------------------*)
 		
@@ -3225,6 +3233,14 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		
 		
 		(*------------------------------------------------------------*)
+		(* Deadlock-freeness *)
+		(*------------------------------------------------------------*)
+		
+		(* Deadlock-free synthesis *)
+		| Parsed_Deadlock_Freeness -> true
+		
+		
+		(*------------------------------------------------------------*)
 		(* Inverse method, trace preservation, robustness *)
 		(*------------------------------------------------------------*)
 		
@@ -3597,6 +3613,14 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 			Accepting_cycle (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
 			,
 			None
+		
+		
+		(*------------------------------------------------------------*)
+		(* Deadlock-freeness *)
+		(*------------------------------------------------------------*)
+		
+		(* Deadlock-free synthesis *)
+		| Parsed_Deadlock_Freeness -> Deadlock_Freeness, None
 		
 		
 		(*------------------------------------------------------------*)

@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/03/27
+ * Last modified     : 2020/04/01
  *
  ****************************************************************)
 
@@ -373,6 +373,7 @@ type parsed_property_type =
 	(*(** Infinite-run (cycle) with non-Zeno assumption *)
 	| Parsed_NZCycle
 	
+	*)
 
 	(*------------------------------------------------------------*)
 	(* Deadlock-freeness *)
@@ -385,7 +386,6 @@ type parsed_property_type =
 	(*------------------------------------------------------------*)
 	(* Inverse method, trace preservation, robustness *)
 	(*------------------------------------------------------------*)
-	*)
 	(* Inverse method with complete, non-convex result *)
 	| Parsed_IM of parsed_pval
 
