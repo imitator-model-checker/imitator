@@ -395,7 +395,13 @@ type parsed_property_type =
 	(* Parametric reachability preservation *)
 	| Parsed_PRP of parsed_state_predicate * parsed_pval
 
+	(* Variant IMK of the Inverse method *)
+	| Parsed_IMK of parsed_pval
+
+	(* Variant IMunion of the Inverse method *)
+	| Parsed_IMunion of parsed_pval
 	
+
 (*	(*------------------------------------------------------------*)
 	(* Cartography algorithms *)
 	(*------------------------------------------------------------*)

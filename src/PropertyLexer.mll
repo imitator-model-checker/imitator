@@ -47,6 +47,8 @@ rule token = parse
 	| "EFtmin"         { CT_EFtmin }
  	| "IM"             { CT_TRACEPRESERVATION }
  	| "IMconvex"       { CT_IMCONVEX }
+ 	| "IMK"            { CT_IMK }
+ 	| "IMunion"        { CT_IMUNION }
 	| "inf_cycle"      { CT_INFCYCLE }
 	| "infcycle"       { CT_INFCYCLE }
 	| "inf_cycle_through" { CT_INFCYCLETHROUGH }

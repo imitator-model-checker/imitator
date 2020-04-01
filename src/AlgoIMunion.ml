@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: IMKunion algorithm [AS11]
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/08
- * Last modified     : 2019/08/08
+ * Last modified     : 2020/04/01
  *
  ************************************************************)
 
@@ -156,7 +157,7 @@ class algoIMunion =
 		Point_based_result
 		{
 			(* Reference valuation *)
-			reference_val		= Input.get_pi0();
+			reference_val		= self#get_reference_pval;
 			
 			(* Result of the algorithm *)
 			result				= result;

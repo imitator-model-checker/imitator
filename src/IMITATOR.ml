@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/03/27
+ * Last modified     : 2020/04/01
  *
  ************************************************************)
 
@@ -522,6 +522,14 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			(* Parametric reachability preservation *)
 			| PRP _ ->
 					let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRP.algoPRP in myalgo
+
+			(* Variant IMK of the Inverse method *)
+			| IMK _ ->
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMK.algoIMK in myalgo
+
+			(* Variant IMunion of the Inverse method *)
+			| IMunion _ ->
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMunion.algoIMunion in myalgo
 
 
 			(*** TODO: allow for old version with list of constraints ***)

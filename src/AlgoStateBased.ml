@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/03/27
+ * Last modified     : 2020/04/01
  *
  ************************************************************)
 
@@ -2479,6 +2479,8 @@ class virtual algoStateBased =
 				(* Inverse method *)
 				| IM _
 				| ConvexIM _
+				| IMK _
+				| IMunion _
 					->
 					(* Cannot conclude anything from a single state yet *)
 					()

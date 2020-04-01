@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/03/27
+ * Last modified     : 2020/04/01
  *
  ************************************************************)
  
@@ -1232,6 +1232,8 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 				| Deadlock_Freeness
 				| IM _
 				| ConvexIM _
+				| IMK _
+				| IMunion _
 					-> None
 			in
 			

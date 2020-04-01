@@ -109,6 +109,8 @@ let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_IM _
 	| Parsed_ConvexIM _
 	| Parsed_PRP _
+	| Parsed_IMK _
+	| Parsed_IMunion _
 
 		->
 	false
@@ -147,6 +149,8 @@ let new_elements (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_IM _
 	| Parsed_ConvexIM _
 	| Parsed_PRP _
+	| Parsed_IMK _
+	| Parsed_IMunion _
 		-> (None , None)
 	
 (*	| Parsed_Action_deadline _
@@ -195,6 +199,8 @@ let get_nb_locations (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_IM _
 	| Parsed_ConvexIM _
 	| Parsed_PRP _
+	| Parsed_IMK _
+	| Parsed_IMunion _
 	
 		-> 0
 (* 	| Parsed_Action_deadline _ -> 3 *)

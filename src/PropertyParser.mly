@@ -62,7 +62,7 @@ let resolve_property l =
 	CT_EF CT_EFpmax CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXHIBIT
 	CT_FALSE
 	CT_HAPPENED CT_HAS
-	CT_IF CT_IMCONVEX CT_IN CT_INFCYCLE CT_INFCYCLETHROUGH CT_IS
+	CT_IF CT_IMCONVEX CT_IMK CT_IMUNION CT_IN CT_INFCYCLE CT_INFCYCLETHROUGH CT_IS
 	CT_LOC CT_LOOP
 	CT_MAXIMIZE CT_MINIMIZE
 	CT_NEXT CT_NOT
@@ -191,6 +191,9 @@ property:
 
 	| CT_PRP LPAREN state_predicate COMMA reference_valuation RPAREN { Parsed_PRP ($3 , $5) }
 
+	| CT_IMK LPAREN reference_valuation RPAREN { Parsed_IMK $3 }
+
+	| CT_IMUNION LPAREN reference_valuation RPAREN { Parsed_IMunion $3 }
 	
 	
 	

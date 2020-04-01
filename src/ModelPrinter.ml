@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/03/27
+ * Last modified     : 2020/04/01
  *
  ************************************************************)
 
@@ -786,8 +786,11 @@ let string_of_abstract_property model property =
 		(* Non-complete, non-deterministic inverse method with convex result *)
 		| ConvexIM pval -> "IMconvex(" ^ (string_of_pval model pval) ^ ")"
 
-		
 		| PRP (state_predicate, pval) -> "PRP(" ^ (string_of_state_predicate model state_predicate) ^ " , " ^ (string_of_pval model pval) ^ ")"
+
+		| IMK pval -> "IMK(" ^ (string_of_pval model pval) ^ ")"
+
+		| IMunion pval -> "IMunion(" ^ (string_of_pval model pval) ^ ")"
 
 		
 		(*** TODO ***)

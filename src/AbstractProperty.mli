@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/03/27
+ * Last modified     : 2020/04/01
  *
  ************************************************************)
 
@@ -142,6 +142,12 @@ type property =
 
 	(* Parametric reachability preservation *)
 	| PRP of state_predicate * PVal.pval
+
+	(* Variant IMK of the Inverse method *)
+	| IMK of PVal.pval
+
+	(* Variant IMunion of the Inverse method *)
+	| IMunion of PVal.pval
 
 	
 	(*------------------------------------------------------------*)

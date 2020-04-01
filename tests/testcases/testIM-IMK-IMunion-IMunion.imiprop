@@ -1,22 +1,24 @@
 (************************************************************
  *                      IMITATOR MODEL                      
  *
- * Toy example for which IM [ACEF09] does not output a complete result
+ * Small example to show the differences between IM, IMK and IMunion
  *
- * Description     : Toy example for which IM [ACEF09] does not output a complete result
- * Correctness     : Same untimed language as pi0
+ * Description     : Small example to show the differences between IM, IMK and IMunion. Starting from p=2:
+	- IM will output p=2
+	- IMK will output p>1
+	- IMunion will output 1 <= p <= 4
+ * Correctness     : N/A
  * Source          : Own work
  * Author          : Étienne André
  * Modeling        : Étienne André
  * Input by        : Étienne André
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
  *
- * Created         : 2017/03/21
- * Last modified   : 2017/03/21
+ * Created         : 2015/12/04
+ * Last modified   : 2020/04/01
  *
- * IMITATOR version: 2.9
+ * IMITATOR version: 8
  ************************************************************)
 
-p1 = 1
-p2 = 2
-p3 = 3
+property := #synth IMunion(p = 2);

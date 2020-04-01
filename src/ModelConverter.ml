@@ -2547,11 +2547,14 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		(*------------------------------------------------------------*)
 		
 		(* Inverse method with complete, non-convex result *)
-		| Parsed_IM parsed_pval ->
-			variables_used_ref := StringSet.of_list (get_variables_in_parsed_pval parsed_pval);
-		
+		| Parsed_IM parsed_pval
 		(* Non-complete, non-deterministic inverse method with convex result *)
-		| Parsed_ConvexIM parsed_pval ->
+		| Parsed_ConvexIM parsed_pval
+		(* IMK *)
+		| Parsed_IMK parsed_pval
+		(* IMunion *)
+		| Parsed_IMunion parsed_pval
+			->
 			variables_used_ref := StringSet.of_list (get_variables_in_parsed_pval parsed_pval);
 		
 		(* Non-complete, non-deterministic inverse method with convex result *)
@@ -3245,11 +3248,14 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		(*------------------------------------------------------------*)
 		
 		(* Inverse method with complete, non-convex result *)
-		| Parsed_IM parsed_pval ->
-			check_parsed_pval useful_parsing_model_information parsed_pval
-		
+		| Parsed_IM parsed_pval
 		(* Non-complete, non-deterministic inverse method with convex result *)
-		| Parsed_ConvexIM parsed_pval ->
+		| Parsed_ConvexIM parsed_pval
+		(* IMK *)
+		| Parsed_IMK parsed_pval
+		(* IMunion *)
+		| Parsed_IMunion parsed_pval
+			->
 			check_parsed_pval useful_parsing_model_information parsed_pval
 		
 		(* PRP *)
@@ -3642,6 +3648,18 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		(* PRP *)
 		| Parsed_PRP (parsed_state_predicate , parsed_pval) ->
 			PRP (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_pval useful_parsing_model_information parsed_pval)
+			,
+			None
+
+		(* IMK *)
+		| Parsed_IMK parsed_pval ->
+			IMK (convert_parsed_pval useful_parsing_model_information parsed_pval)
+			,
+			None
+
+		(* IMunion *)
+		| Parsed_IMunion parsed_pval ->
+			IMunion (convert_parsed_pval useful_parsing_model_information parsed_pval)
 			,
 			None
 

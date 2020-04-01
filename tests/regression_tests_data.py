@@ -5156,8 +5156,8 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test variants of IM: here IMK',
-		'input_files': ['testIM-IMK-IMunion.imi', 'testIM-IMK-IMunion.pi0'],
-		'options'    : '-IMK -output-result',
+		'input_files': ['testIM-IMK-IMunion.imi', 'testIM-IMK-IMunion-IMK.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testIM-IMK-IMunion.res' , 'content' : """
 		 p > 1
@@ -5171,8 +5171,8 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test variants of IM: here IMunion',
-		'input_files': ['testIM-IMK-IMunion.imi', 'testIM-IMK-IMunion.pi0'],
-		'options'    : '-IMunion -output-result',
+		'input_files': ['testIM-IMK-IMunion.imi', 'testIM-IMK-IMunion-IMunion.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testIM-IMK-IMunion.res' , 'content' : """
 		4 >= p & p > 1
@@ -5186,7 +5186,22 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test variants of IM (bis): here IM',
-		'input_files': ['exVariantes.imi', 'exVariantes.pi0'],
+		'input_files': ['exVariantes.imi', 'exVariantes-IM.imiprop'],
+		'options'    : '-output-result',
+		'expectations' : [
+			{'file': 'exVariantes.res' , 'content' : """
+	p2 >= 3 & 5*p1 > p2 & p2 >= 4*p1
+		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test variants of IM (bis): here IMconvex',
+		'input_files': ['exVariantes.imi', 'exVariantes-IMconvex.imiprop'],
 		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'exVariantes.res' , 'content' : """
@@ -5201,8 +5216,8 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test variants of IM (bis): here IMK',
-		'input_files': ['exVariantes.imi', 'exVariantes.pi0'],
-		'options'    : '-IMK -output-result -no-random',
+		'input_files': ['exVariantes.imi', 'exVariantes-IMK.imiprop'],
+		'options'    : '-output-result -no-random',
 		'expectations' : [
 			{'file': 'exVariantes.res' , 'content' : """
  p2 > 2
@@ -5217,8 +5232,8 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test variants of IM (bis): here IMunion',
-		'input_files': ['exVariantes.imi', 'exVariantes.pi0'],
-		'options'    : '-IMunion -output-result -no-random',
+		'input_files': ['exVariantes.imi', 'exVariantes-IMunion.imiprop'],
+		'options'    : '-output-result -no-random',
 		'expectations' : [
 			{'file': 'exVariantes.res' , 'content' : """
 		 5*p1 > p2 & p2 >= 3 OR 5*p1 > p2 & p2 > 2 & p2 >= 4*p1
@@ -5232,7 +5247,7 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM on an incomplete example',
-		'input_files': ['exIMnoncomplete.imi', 'exIMnoncomplete.pi0'],
+		'input_files': ['exIMnoncomplete.imi', 'exIMnoncomplete-IMconvex.imiprop'],
 		'options'    : '-output-result -no-random',
 		'expectations' : [
 			{'file': 'exIMnoncomplete.res' , 'content' : """
@@ -5250,8 +5265,8 @@ END CONSTRAINT		  """
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IMcomplete on an incomplete example',
-		'input_files': ['exIMnoncomplete.imi', 'exIMnoncomplete.pi0'],
-		'options'    : '-mode IMcomplete -output-result -no-random',
+		'input_files': ['exIMnoncomplete.imi', 'exIMnoncomplete-IM.imiprop'],
+		'options'    : '-output-result -no-random',
 		'expectations' : [
 			{'file': 'exIMnoncomplete.res' , 'content' : """
 BEGIN CONSTRAINT
