@@ -21,4 +21,4 @@
  * IMITATOR version: 8
  ************************************************************)
 
-property := #synth IM(p = 2);
+property := #synth IMconvex(p = 2);
