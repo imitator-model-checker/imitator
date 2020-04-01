@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/03/27
+ * Last modified     : 2020/04/01
 *****************************************************************)
 
 {
@@ -47,13 +47,18 @@ rule token = parse
 	| "EFtmin"         { CT_EFtmin }
  	| "IM"             { CT_TRACEPRESERVATION }
  	| "IMconvex"       { CT_IMCONVEX }
+	| "inf_cycle"      { CT_INFCYCLE }
+	| "infcycle"       { CT_INFCYCLE }
+	| "inf_cycle_through" { CT_INFCYCLETHROUGH }
+	| "infcyclethrough"{ CT_INFCYCLETHROUGH }
  	| "inversemethod"  { CT_TRACEPRESERVATION }
+	| "loopthrough"    { CT_INFCYCLETHROUGH }
  	| "PRP"            { CT_PRP }
  	| "tracepreservation" { CT_TRACEPRESERVATION }
 
 	| "accloop"        { CT_ACCLOOP }
 	| "always"         { CT_ALWAYS }
-	| "and"            { CT_AND }
+	| "and"            { SYMBOL_AND }
 	| "before"         { CT_BEFORE }
  	| "eventually"     { CT_EVENTUALLY }
  	| "everytime"      { CT_EVERYTIME }
@@ -62,11 +67,6 @@ rule token = parse
  	| "has"            { CT_HAS }
 	| "if"             { CT_IF }
 	| "in"             { CT_IN }
-	| "inf_cycle"      { CT_INFCYCLE }
-	| "infcycle"       { CT_INFCYCLE }
-	| "inf_cycle_through" { CT_INFCYCLETHROUGH }
-	| "infcyclethrough"{ CT_INFCYCLETHROUGH }
-	| "loopthrough"    { CT_INFCYCLETHROUGH }
 	| "is"             { CT_IS }
 	| "loc"            { CT_LOC }
 	| "loop"           { CT_LOOP }
@@ -75,7 +75,7 @@ rule token = parse
 	| "next"           { CT_NEXT }
 	| "not"            { CT_NOT }
  	| "once"           { CT_ONCE }
-	| "or"             { CT_OR }
+	| "or"             { SYMBOL_OR }
  	| "projectresult"  { CT_PROJECTRESULT }
  	| "property"       { CT_PROPERTY }
 	| "sequence"       { CT_SEQUENCE }

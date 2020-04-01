@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/03/27
+ * Last modified     : 2020/04/01
  *
  ************************************************************/
 
@@ -56,7 +56,7 @@ let resolve_property l =
 %token COLON COMMA DOUBLEDOT SEMICOLON SYMBOL_AND SYMBOL_OR
 
 %token
-	CT_ACCEPTING CT_ACCLOOP CT_AG CT_AGnot CT_ALWAYS CT_AND
+	CT_ACCEPTING CT_ACCLOOP CT_AG CT_AGnot CT_ALWAYS
 	CT_BEFORE
 	CT_DEADLOCKFREE
 	CT_EF CT_EFpmax CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXHIBIT
@@ -66,7 +66,7 @@ let resolve_property l =
 	CT_LOC CT_LOOP
 	CT_MAXIMIZE CT_MINIMIZE
 	CT_NEXT CT_NOT
-	CT_ONCE CT_OR
+	CT_ONCE
 	CT_PROJECTRESULT CT_PRP
 	CT_PROPERTY
 	CT_SEQUENCE CT_SYNTH
