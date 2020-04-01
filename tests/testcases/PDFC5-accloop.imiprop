@@ -1,0 +1,1 @@
+property := #synth inf_cycle_through(loc[pta] = l2);

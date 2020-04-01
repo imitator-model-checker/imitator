@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2019/07/18
- * Last modified   : 2019/07/18
+ * Last modified   : 2020/04/01
  *
- * IMITATOR version: 2.12
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -66,13 +66,6 @@ init :=
 	& p >= 0
 ;
 
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-(*** NOTE: we use both the 'accepting' syntax (for NDFS) and the usual IMITATOR syntax for LoopSynth ***)
-property := unreachable loc[pta] = l2;
 
 
 (************************************************************)

@@ -3688,8 +3688,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: flip-flop (no loop)',
-		'input_files': ['flipflop.imi'],
-		'options'    : '-mode LoopSynth -output-result',
+		'input_files': ['flipflop.imi', 'flipflop-loop.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -3715,8 +3715,8 @@ Number of computed states               : 20
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop',
-		'input_files': ['PDFC4.imi'],
-		'options'    : '-mode LoopSynth -output-result',
+		'input_files': ['PDFC4.imi', 'PDFC-loop.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'PDFC4.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -3745,8 +3745,8 @@ Number of computed states               : 3
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation',
-		'input_files': ['PDFC5.imi'],
-		'options'    : '-mode LoopSynth -output-result',
+		'input_files': ['PDFC5.imi', 'PDFC-loop.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -3774,8 +3774,8 @@ Number of computed states               : 7
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test AccLoopSynth: flipflop (no loop)',
-		'input_files': ['flipflop.imi'],
-		'options'    : '-mode AccLoopSynth -output-result',
+		'input_files': ['flipflop.imi', 'flipflop-accloop.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -3800,11 +3800,11 @@ Number of computed states               : 20
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1
+		# Test version             : 2
 		# Test since               : 2019/07/22
-		# Test for IMITATOR version: 2.12
+		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example 1',
-		'input_files': ['testNDFS-1.imi'],
+		'input_files': ['testNDFS-1.imi', 'testNDFS1-accloop.imiprop'],
 		'options'    : '-mode AccLoopSynth -output-result',
 		'expectations' : [
 			{'file': 'testNDFS-1.res' , 'content' : """
@@ -3830,12 +3830,12 @@ Number of computed states               : 5
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1
+		# Test version             : 2
 		# Test since               : 2019/07/22
-		# Test for IMITATOR version: 2.12
+		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example 2',
-		'input_files': ['testNDFS-2.imi'],
-		'options'    : '-mode AccLoopSynth -output-result',
+		'input_files': ['testNDFS-2.imi', 'testNDFS2-accloop.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testNDFS-2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -3864,12 +3864,12 @@ Number of computed states               : 14
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1
+		# Test version             : 2
 		# Test since               : 2019/07/22
-		# Test for IMITATOR version: 2.12
+		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example 3 (accepting for all valuations)',
-		'input_files': ['PDFC5.imi'],
-		'options'    : '-mode AccLoopSynth -output-result',
+		'input_files': ['PDFC5.imi', 'PDFC5-accloop.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4170,8 +4170,8 @@ Number of computed states               : 15
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example without clocks',
-		'input_files': ['PDFC1.imi'],
-		'options'    : '-mode PDFC -output-result -output-states',
+		'input_files': ['PDFC1.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-output-result -output-states',
 		'expectations' : [
 			{'file': 'PDFC1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4228,8 +4228,8 @@ Number of computed states     : 3
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (false result)',
-		'input_files': ['PDFC3.imi'],
-		'options'    : '-mode PDFC -output-result  -output-states',
+		'input_files': ['PDFC3.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-output-result  -output-states',
 		'expectations' : [
 			{'file': 'PDFC3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4291,8 +4291,8 @@ Number of computed states     : 2
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (normal result)',
-		'input_files': ['PDFC4.imi'],
-		'options'    : '-mode PDFC -output-result  -output-states',
+		'input_files': ['PDFC4.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-output-result  -output-states',
 		'expectations' : [
 			{'file': 'PDFC4.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4358,8 +4358,8 @@ Number of computed states     : 3
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (false result)',
-		'input_files': ['PDFC6.imi'],
-		'options'    : '-mode PDFC -output-result  -output-states -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'input_files': ['PDFC6.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-output-result  -output-states -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC6.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4410,8 +4410,8 @@ Number of computed states     : 2
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (true result)',
-		'input_files': ['PDFC7.imi'],
-		'options'    : '-mode PDFC -output-result  -output-states',
+		'input_files': ['PDFC7.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-output-result  -output-states',
 		'expectations' : [
 			{'file': 'PDFC7.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4464,8 +4464,8 @@ Number of computed states     : 3
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: basic example with disjunction',
-		'input_files': ['PDFC5.imi'],
-		'options'    : '-mode PDFC -output-result  -output-states',
+		'input_files': ['PDFC5.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-output-result  -output-states',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4978,8 +4978,8 @@ Number of computed states     : 20
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: example with basic backward under-approximation',
-		'input_files': ['PDFC8.imi'],
-		'options'    : '-mode PDFC -output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'input_files': ['PDFC8.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC8.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5012,8 +5012,8 @@ Number of computed states     : 8
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: example with basic backward under-approximation and exact result',
-		'input_files': ['PDFC8b.imi'],
-		'options'    : '-mode PDFC -output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'input_files': ['PDFC8b.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC8b.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5040,8 +5040,8 @@ Number of computed states     : 8
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: another example with basic backward under-approximation',
-		'input_files': ['PDFC9.imi'],
-		'options'    : '-mode PDFC -output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'input_files': ['PDFC9.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC9.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5067,8 +5067,8 @@ Number of computed states     : 9
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: again another example with basic backward under-approximation',
-		'input_files': ['PDFC9b.imi'],
-		'options'    : '-mode PDFC -output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'input_files': ['PDFC9b.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC9b.res' , 'content' : """
 BEGIN CONSTRAINT
