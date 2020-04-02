@@ -10,7 +10,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/01/23
+ * Last modified     : 2020/04/02
  *
  ************************************************************)
 
@@ -62,25 +62,25 @@ class imitator_options =
 		val mutable files_prefix = ""
 		
 		(* plot cartography for BC; this options means that the global cartography of all tiles will be generated (activated if -cart is true) *)
-		val mutable output_bc_cart = ref false
+		val mutable output_bc_cart = false
 		
 		(* Output result for BC to a file *)
-		val mutable output_bc_result = ref false
+		val mutable output_bc_result = false
 		
 		(* min/max values for the cartography *)
-		val mutable output_cart_x_min = ref None
-		val mutable output_cart_x_max = ref None
-		val mutable output_cart_y_min = ref None
-		val mutable output_cart_y_max = ref None
+		val mutable output_cart_x_min = None
+		val mutable output_cart_x_max = None
+		val mutable output_cart_y_min = None
+		val mutable output_cart_y_max = None
 
 		(* Output the approximate float value of discrete variables *)
-		val output_float = ref false
+		val mutable output_float = false
 		
 		(* Output result to a file *)
-		val mutable output_result = ref false
+		val mutable output_result = false
 		
 		(* In cartography mode, output all tiles to files *)
-		val mutable output_tiles_files = ref false
+		val mutable output_tiles_files = false
 
 		(* Gives statistics on number of calls *)
 		val mutable statistics = ref false
@@ -272,15 +272,15 @@ class imitator_options =
 		method no_time_elapsing = !no_time_elapsing
 		method no_random = !no_random
 		method no_variable_autoremove = !no_variable_autoremove
-		method output_bc_cart = !output_bc_cart
-		method output_bc_result = !output_bc_result
-		method output_cart_x_min = !output_cart_x_min
-		method output_cart_x_max = !output_cart_x_max
-		method output_cart_y_min = !output_cart_y_min
-		method output_cart_y_max = !output_cart_y_max
-		method output_float = !output_float
-		method output_result = !output_result
-		method output_tiles_files = !output_tiles_files
+		method output_bc_cart = output_bc_cart
+		method output_bc_result = output_bc_result
+		method output_cart_x_min = output_cart_x_min
+		method output_cart_x_max = output_cart_x_max
+		method output_cart_y_min = output_cart_y_min
+		method output_cart_y_max = output_cart_y_max
+		method output_float = output_float
+		method output_result = output_result
+		method output_tiles_files = output_tiles_files
 		method pi_compatible = !pi_compatible
 		method precomputepi0 = !precomputepi0
 		method property_file_name = property_file_name
@@ -309,12 +309,13 @@ class imitator_options =
 
 		method set_files_prefix file_name =
 			files_prefix <- file_name
-		
+			
+				
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Parse method *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-		
+
 		method parse =
 			let usage_msg = "Usage: " ^ (Sys.argv.(0)) ^ " model" ^ Constants.model_extension ^ " [property." ^ Constants.property_extension ^ "] [options]" in
 
@@ -590,7 +591,6 @@ class imitator_options =
 					exit(1);
 				)
 			
-
 			(* Very useful option (April fool 2017) *)
 			and call_romeo () =
 				(*** HACK: print header now ***)
@@ -717,7 +717,7 @@ class imitator_options =
 				
 				("-imi2IMI", Unit (fun _ ->
 					imitator_mode <- Translation IMI
-				), "Regenerate the model into a IMITATOR model, and exit without performing any analysis. Defaut : 'false'");
+				), "Regenerate the model into an IMITATOR model, and exit without performing any analysis. Defaut : 'false'");
 				
 				("-imi2JPG", Unit (fun _ ->
 					(*** HACK ***)
@@ -802,22 +802,22 @@ class imitator_options =
 				("-output-cart", Unit (fun () -> cart <- true), " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false.");
 				
 				(*** WARNING: only works partially ***)
-				("-output-cart-x-min", Int (fun n -> output_cart_x_min := Some n), " Set minimum value for the x axis when plotting the cartography (not entirely functional yet). Default: 0.");
-				("-output-cart-x-max", Int (fun n -> output_cart_x_max := Some n), " Set maximum value for the x axis when plotting the cartography (not entirely functional yet). Default: automatic.");
-				("-output-cart-y-min", Int (fun n -> output_cart_y_min := Some n), " Set minimum value for the y axis when plotting the cartography (not entirely functional yet). Default: 0.");
-				("-output-cart-y-max", Int (fun n -> output_cart_y_max := Some n), " Set maximum value for the y axis when plotting the cartography (not entirely functional yet). Default: automatic.");
+				("-output-cart-x-min", Int (fun n -> output_cart_x_min <- Some n), " Set minimum value for the x axis when plotting the cartography (not entirely functional yet). Default: 0.");
+				("-output-cart-x-max", Int (fun n -> output_cart_x_max <- Some n), " Set maximum value for the x axis when plotting the cartography (not entirely functional yet). Default: automatic.");
+				("-output-cart-y-min", Int (fun n -> output_cart_y_min <- Some n), " Set minimum value for the y axis when plotting the cartography (not entirely functional yet). Default: 0.");
+				("-output-cart-y-max", Int (fun n -> output_cart_y_max <- Some n), " Set maximum value for the y axis when plotting the cartography (not entirely functional yet). Default: automatic.");
 				
 				("-output-graphics-source", Set with_graphics_source, " Keep file(s) used for generating graphical output. Default: false.");
 
 				("-output-prefix", String (fun new_prefix -> files_prefix <- new_prefix), " Set the prefix for output files. Default: [./model-name].");
 				
-				("-output-float", Set output_float, " Approximates the value of discrete variables as floats. Default: false.");
+				("-output-float", Unit (fun () -> output_float <- true), " Approximates the value of discrete variables as floats. Default: false.");
 				
-				("-output-result", Set output_result, " Write the result to a file. Default: false.");
+				("-output-result", Unit (fun () -> output_float <- true), " Write the result to a file. Default: false.");
 				
 				("-output-states", Set with_log, " Generate the description of all reachable states in a file. Default: false.");
 				
-				("-output-tiles-files", Set output_tiles_files, " In cartography, generate the required files for each tile (works together with -output-cart, -output-result). Default: false.");
+				("-output-tiles-files", Unit (fun () -> output_tiles_files <- true), " In cartography, generate the required files for each tile (works together with -output-cart, -output-result). Default: false.");
 				
 				(*** TODO: merge these 3 options using "-output-trace-set nodetails", "-output-trace-set normal", "-output-trace-set verbose" ***)
 				("-output-trace-set", Unit (fun _ -> graphical_state_space <- Graphical_state_space_normal), " Output trace set under a graphical form (using 'dot') with location names. Default: none.");
@@ -975,7 +975,7 @@ class imitator_options =
 				(* Case cartograpy output requested *)
 				if cart then(
 					(* Enable cartography for BC *)
-					output_bc_cart := true;
+					output_bc_cart <- true;
 					(* Disable cartography for instances unless requested *)
 					if not !output_tiles_files then cart <- false
 				);
@@ -983,7 +983,7 @@ class imitator_options =
 				(* Case result output requested *)
 				if !output_result then(
 					(* Enable result for BC *)
-					output_bc_result := true;
+					output_bc_result <- true;
 					(* Disable cartography for instances unless requested *)
 					if not !output_tiles_files then output_result := false
 				);
@@ -1324,40 +1324,40 @@ end;
 			(* Check that if output_cart_x_max / etc. are defined, then cart should be active too *)
 			
 			begin
-			match !output_cart_x_min with
+			match output_cart_x_min with
 				| None -> print_message Verbose_medium ("No specified minimum value for the x axis for the cartography (default).");
 				| Some n ->
 					if not cart then (print_warning "A minimum value for the x axis for the cartography is specified, but no cartography will be output. Ignored.")
 					else print_message Verbose_low ("The minimum value for the x axis for the cartography will be " ^ (string_of_int n) ^ ".");
 			end;
 			begin
-			match !output_cart_x_max with
+			match output_cart_x_max with
 				| None -> print_message Verbose_medium ("No specified minimum value for the x axis for the cartography (default).");
 				| Some n ->
 					if not cart then (print_warning "A maximum value for the x axis for the cartography is specified, but no cartography will be output. Ignored.")
 					else print_message Verbose_low ("The maximum value for the x axis for the cartography will be " ^ (string_of_int n) ^ ".");
 			end;
 			begin
-			match !output_cart_y_min with
+			match output_cart_y_min with
 				| None -> print_message Verbose_medium ("No specified minimum value for the y axis for the cartography (default).");
 				| Some n ->
 					if not cart then (print_warning "A minimum value for the y axis for the cartography is specified, but no cartography will be output. Ignored.")
 					else print_message Verbose_low ("The minimum value for the y axis for the cartography will be " ^ (string_of_int n) ^ ".");
 			end;
 			begin
-			match !output_cart_y_max with
+			match output_cart_y_max with
 				| None -> print_message Verbose_medium ("No specified minimum value for the y axis for the cartography (default).");
 				| Some n -> print_message Verbose_low ("The maximum value for the y axis for the cartography will be " ^ (string_of_int n) ^ ".");
 			end;
 			
 			
-			if !output_float then
+			if output_float then
 				print_message Verbose_standard ("The approximate value of all discrete variables will be given.")
 			else
 				print_message Verbose_medium ("No approximate value of discrete variables will be given (default).")
 			;
 			
-			if !output_result then
+			if output_result then
 				print_message Verbose_standard ("The result will be written to a file.")
 			else
 				print_message Verbose_medium ("No result written into a file (default).")
