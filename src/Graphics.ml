@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/04/01
+ * Last modified     : 2020/04/02
  *
  ************************************************************)
  
@@ -1221,6 +1221,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 			match (Input.get_property()).property with
 				| EF state_predicate
 				| AGnot state_predicate
+				| EFexemplify state_predicate
 				| EFpmin (state_predicate , _)
 				| EFpmax (state_predicate , _)
 				| EFtmin state_predicate

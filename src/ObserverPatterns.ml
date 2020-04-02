@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created:       2013/02/04
- * Last modified: 2020/04/01
+ * Last modified: 2020/04/02
  *
  ************************************************************)
  
@@ -97,6 +97,8 @@ let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_EF _
 	| Parsed_AGnot _
 
+	| Parsed_EFexemplify _
+
 	| Parsed_EFpmax _
 	| Parsed_EFpmin _
 	| Parsed_EFtmin _
@@ -137,6 +139,8 @@ let new_elements (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_EF _
 	| Parsed_AGnot _
 	
+	| Parsed_EFexemplify _
+
 	| Parsed_EFpmin _
 	| Parsed_EFpmax _
 	| Parsed_EFtmin _
@@ -187,6 +191,8 @@ let get_nb_locations (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_EF _
 	| Parsed_AGnot _
 	
+	| Parsed_EFexemplify _
+
 	| Parsed_EFpmin _
 	| Parsed_EFpmax _
 	| Parsed_EFtmin _

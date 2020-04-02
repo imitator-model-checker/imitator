@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/04/01
+ * Last modified     : 2020/04/02
  *
  ************************************************************)
 
@@ -2504,6 +2504,15 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		(* Safety *)
 		| Parsed_AGnot parsed_state_predicate
 			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
+			
+		
+		(*------------------------------------------------------------*)
+		(* Reachability and specification illustration *)
+		(*------------------------------------------------------------*)
+		
+		(** EF-synthesis with examples of (un)safe words *)
+		| Parsed_EFexemplify parsed_state_predicate
+			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
 		
 		
 		(*------------------------------------------------------------*)
@@ -3205,6 +3214,15 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		
 		
 		(*------------------------------------------------------------*)
+		(* Reachability and specification illustration *)
+		(*------------------------------------------------------------*)
+		
+		(** EF-synthesis with examples of (un)safe words *)
+		| Parsed_EFexemplify parsed_state_predicate
+			-> check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+
+		
+		(*------------------------------------------------------------*)
 		(* Optimized reachability *)
 		(*------------------------------------------------------------*)
 		
@@ -3575,6 +3593,17 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 			,
 			None
 		
+		
+		(*------------------------------------------------------------*)
+		(* Reachability and specification illustration *)
+		(*------------------------------------------------------------*)
+		
+		(** EF-synthesis with examples of (un)safe words *)
+		| Parsed_EFexemplify parsed_state_predicate ->
+			EFexemplify (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+			,
+			None
+
 		
 		(*------------------------------------------------------------*)
 		(* Optimized reachability *)

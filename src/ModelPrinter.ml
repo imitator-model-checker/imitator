@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/04/01
+ * Last modified     : 2020/04/02
  *
  ************************************************************)
 
@@ -737,6 +737,14 @@ let string_of_abstract_property model property =
 		| EF state_predicate -> "EF(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 		(* Safety *)
 		| AGnot state_predicate -> "AGnot(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+
+		
+		(*------------------------------------------------------------*)
+		(* Reachability and specification illustration *)
+		(*------------------------------------------------------------*)
+		
+		(** EF-synthesis with examples of (un)safe words *)
+		| EFexemplify state_predicate -> "EFexemplify(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 
 
 		(*------------------------------------------------------------*)

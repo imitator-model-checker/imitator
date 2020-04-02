@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/04/01
+ * Last modified     : 2020/04/02
  *
  ************************************************************/
 
@@ -59,7 +59,7 @@ let resolve_property l =
 	CT_ACCEPTING CT_ACCLOOP CT_AG CT_AGnot CT_ALWAYS
 	CT_BEFORE
 	CT_DEADLOCKFREE
-	CT_EF CT_EFpmax CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXHIBIT
+	CT_EF CT_EFEXEMPLIFY CT_EFpmax CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXHIBIT
 	CT_FALSE
 	CT_HAPPENED CT_HAS
 	CT_IF CT_IMCONVEX CT_IMK CT_IMUNION CT_IN CT_INFCYCLE CT_INFCYCLETHROUGH CT_IS
@@ -148,6 +148,14 @@ property:
 
 
 	/*------------------------------------------------------------*/
+	/* Reachability and specification illustration */
+	/*------------------------------------------------------------*/
+	
+	/* EF-synthesis with examples of (un)safe words */
+	| CT_EFEXEMPLIFY state_predicate { Parsed_EFexemplify $2 }
+
+
+	/*------------------------------------------------------------*/
 	/* Optimized reachability */
 	/*------------------------------------------------------------*/
 	
@@ -162,7 +170,7 @@ property:
 	/* Reachability with minimal-time */
 	| CT_EFtmin state_predicate { Parsed_EFtmin ($2) }
 
-	
+
 	/*------------------------------------------------------------*/
 	/* Cycles */
 	/*------------------------------------------------------------*/

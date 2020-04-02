@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/04/01
+ * Last modified     : 2020/04/02
  *
  ************************************************************)
 
@@ -467,6 +467,13 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 				);
 			
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGsafeSynth.algoAGsafeSynth in myalgo
+
+
+		(*------------------------------------------------------------*)
+		(* Reachability and specification illustration *)
+		(*------------------------------------------------------------*)
+			| EFexemplify _ ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFexemplify.algoEFexemplify in myalgo
 
 
 		(*------------------------------------------------------------*)

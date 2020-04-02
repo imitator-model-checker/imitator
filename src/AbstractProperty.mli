@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/04/01
+ * Last modified     : 2020/04/02
  *
  ************************************************************)
 
@@ -88,6 +88,12 @@ type property =
 	(* Liveness *)
 	| AG of state_predicate*)
 	
+	(*------------------------------------------------------------*)
+	(* Reachability and specification illustration *)
+	(*------------------------------------------------------------*)
+	
+	(** EF-synthesis with examples of (un)safe words *)
+	| EFexemplify of state_predicate
 	
 	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
@@ -101,11 +107,6 @@ type property =
 	
 	(* Reachability with minimal-time *)
 	| EFtmin of state_predicate
-	
-(*	(** EF-synthesis with examples of (un)safe words *)
-	| EFexemplify of state_predicate
-	
-	*)
 	
 
 	(*------------------------------------------------------------*)

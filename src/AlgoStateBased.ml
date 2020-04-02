@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/04/01
+ * Last modified     : 2020/04/02
  *
  ************************************************************)
 
@@ -2458,6 +2458,8 @@ class virtual algoStateBased =
 			match property.property with
 				(* Reachability *)
 				| EF state_predicate
+				| AGnot state_predicate
+				| EFexemplify state_predicate
 				| EFpmin (state_predicate, _)
 				| EFpmax (state_predicate, _)
 				| EFtmin state_predicate
@@ -2469,8 +2471,6 @@ class virtual algoStateBased =
 						statespace_nature <- StateSpace.Bad;
 					);
 	
-				(* Safety *)
-				| AGnot _
 				
 				| Cycle
 				

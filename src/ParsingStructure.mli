@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/04/01
+ * Last modified     : 2020/04/02
  *
  ****************************************************************)
 
@@ -344,6 +344,14 @@ type parsed_property_type =
 	
 	
 	(*------------------------------------------------------------*)
+	(* Reachability and specification illustration *)
+	(*------------------------------------------------------------*)
+	
+	(** EF-synthesis with examples of (un)safe words *)
+ 	| Parsed_EFexemplify of parsed_state_predicate
+	
+
+	(*------------------------------------------------------------*)
 	(* Optimized reachability *)
 	(*------------------------------------------------------------*)
 	
@@ -356,9 +364,6 @@ type parsed_property_type =
 	(* Reachability with minimal-time *)
 	| Parsed_EFtmin of parsed_state_predicate
 
-	(** EF-synthesis with examples of (un)safe words *)
-(* 	| Parsed_EFexemplify of parsed_state_predicate *)
-	
 
 	(*------------------------------------------------------------*)
 	(* Cycles *)
