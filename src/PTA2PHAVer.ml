@@ -81,11 +81,12 @@ let string_of_declarations model =
 		("\n\t" ^ (string_of_variables model.discrete) ^ "\n\t\t: discrete;\n") else "")*****)
 	^
 	(if model.nb_parameters > 0 then
-        (**/////////////////////// code ajouts*)
+(*        (**/////////////////////// code ajouts*)
         for i = 1 to nb_parameters do
-        ("\n\t" ^ (string_of_variables model.parameters.(i)) ^"" ) 
-        done;;
-        (**/////////////////////// code ajouts*)  
+			("\n\t" ^ (string_of_variables model.parameters.(i)) ^"" ) 
+        done;
+        (**/////////////////////// code ajouts*)  *)
+        ""
     else "")
     ^
     "// --------------------------------------------------------
