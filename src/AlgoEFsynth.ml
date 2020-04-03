@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2020/01/22
+ * Last modified     : 2020/04/03
  *
  ************************************************************)
 
@@ -54,6 +54,7 @@ class virtual algoEFsynth =
 		match (Input.get_property()).property with
 			| EF state_predicate
 			| AGnot state_predicate
+			| EFexemplify state_predicate
 				-> state_predicate
 			
 			(*** TODO ***)
