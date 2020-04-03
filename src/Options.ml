@@ -10,7 +10,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/04/02
+ * Last modified     : 2020/04/03
  *
  ************************************************************)
 
@@ -813,7 +813,7 @@ class imitator_options =
 				
 				("-output-float", Unit (fun () -> output_float <- true), " Approximates the value of discrete variables as floats. Default: false.");
 				
-				("-output-result", Unit (fun () -> output_float <- true), " Write the result to a file. Default: false.");
+				("-output-result", Unit (fun () -> output_result <- true), " Write the result to a file. Default: false.");
 				
 				("-output-states", Set with_log, " Generate the description of all reachable states in a file. Default: false.");
 				
