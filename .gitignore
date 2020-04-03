@@ -42,6 +42,8 @@ tests/**/*.sh
 tests/**/*.pdf
 tests/**/*.ps
 tests/**/*.xml
+*.pdf
+*.ps
 
 # binaries
 *.native
