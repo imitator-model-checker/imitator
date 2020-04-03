@@ -216,12 +216,20 @@ Note that the initial definition can introduce more complex constraints on clock
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \paragraph{Property specification}
-In this model, the correctness property is that two processes cannot be in the critical section at the same time; as explained above, this is equivalent to the fact that the \styleIMI{obs\_violation} location of the \styleIMI{observer} \IPTA{} is unreachable.
-This is input in the model as follows:
+For this model, the correctness property is that two processes cannot be in the critical section at the same time; as explained above, this is equivalent to the fact that the \styleIMI{obs\_violation} location of the \styleIMI{observer} \IPTA{} is unreachable.
+This is input in the property as follows:
 \begin{center}
-	\styleIMI{property := \#synth EF(loc[observer] = obs\_violation);}
+	\styleIMI{property := \#synth AGnot(loc[observer] = obs\_violation);}
 \end{center}
-More elaborate properties are detailed in \cref{ss:mode:prop} (however, most properties in \imitator{} \emph{reduce} to reachability, and more complex properties such as Büchi-like properties or fairness are not yet supported by \imitator{}).
+Here, \styleIMI{AGnot} stands for safety.
+More elaborate properties are detailed in \cref{ss:mode:prop} (however, most properties in \imitator{} \emph{reduce} to safety or reachability, and more complex properties such as Büchi-like properties or fairness are not yet supported by \imitator{}).
+
+We give below the whole property file:
+
+%------------------------------------------------------------
+\IncludeIMIfile{include/fischerPAT_obs.imiprop}
+%------------------------------------------------------------
+
 
 
 \paragraph{Parameter synthesis}
@@ -230,16 +238,17 @@ Quite naturally, what we would be interested in is knowing for which parameter v
 Assuming this model is input in file \stylePath{fischer.imi} and the property is in file \stylePath{fischer.imiprop}, the command calling \imitator{} is as follows:
 
 \styleCommand{\binimitator{} fischer.imi fischer.imiprop}
+% TODO: so far, we need to add -merge manually
 
 % In this command, \styleOption{-mode EF} calls the algorithm \EFsynth{} that synthesizes valuations reaching a given location (see \cref{ss:mode:EFsynth}); and \styleOption{-merge} is a merging technique reducing the state space that, for this model, ensures termination (see \cite{AFS13atva} for more details on merging).
 
 The result of the call to \imitator{} is
 
 \styleTerminalOutput{
- Final constraint such that the system is correct:\\
+ Final positive constraint guaranteeing safety:\\
   delta >= 0\\
  \& gamma > delta\\
- This good constraint is exact (sound and complete)
+ This positive constraint is exact (sound and complete)
 }
 
 That is, the system is safe if \styleIMI{O <= delta < gamma}, which is the well-known constraint ensuring mutual exclusion for this protocol.
