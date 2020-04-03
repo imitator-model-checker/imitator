@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/04/01
+# Last modified     : 2020/04/03
 #************************************************************
 
 
@@ -2398,8 +2398,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example',
-		'input_files': ['testCounterExSimple-3.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple-3.imi', 'testCounterExSimple-3.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testCounterExSimple-3.res' , 'content' : """
 BEGIN RESULT
@@ -2498,8 +2498,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (clock initially non-zero, strict constraints)',
-		'input_files': ['testCounterExSimple-4.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple-4.imi', 'testCounterExSimple-4.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testCounterExSimple-4.res' , 'content' : """
 BEGIN RESULT
@@ -2600,8 +2600,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only in the initial state)',
-		'input_files': ['testCounterExSimple-5.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple-5.imi', 'testCounterExSimple-5.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5.res' , 'content' : """
 BEGIN RESULT
@@ -2737,8 +2737,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only at position 2)',
-		'input_files': ['testCounterExSimple-5b.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple-5b.imi', 'testCounterExSimple-5b.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5b.res' , 'content' : """
 BEGIN RESULT
@@ -2872,8 +2872,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only at last position)',
-		'input_files': ['testCounterExSimple-5c.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple-5c.imi', 'testCounterExSimple-5c.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5c.res' , 'content' : """
 BEGIN RESULT
@@ -3006,8 +3006,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter valuation derived)',
-		'input_files': ['testCounterExSimple-6.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple-6.imi', 'testCounterExSimple-6.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testCounterExSimple-6.res' , 'content' : """
 BEGIN RESULT
@@ -3103,8 +3103,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter nor clock valuation derived)',
-		'input_files': ['testCounterExSimple-7.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple-7.imi', 'testCounterExSimple-7.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testCounterExSimple-7.res' , 'content' : """
 
@@ -3163,8 +3163,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter nor clock valuation derived)',
-		'input_files': ['testCounterExSimple-8.imi'],
-		'options'    : '-mode EFexemplify -output-result -output-cart',
+		'input_files': ['testCounterExSimple-8.imi', 'testCounterExSimple-8.imiprop'],
+		'options'    : '-output-result -output-cart',
 		'expectations' : [
 			{'file': 'testCounterExSimple-8.res' , 'content' : """
 
@@ -3317,8 +3317,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy monitoring-style example',
-		'input_files': ['testCounterExSimple-9.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple-9.imi', 'testCounterExSimple-9.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testCounterExSimple-9.res' , 'content' : """
 
@@ -3414,8 +3414,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example without parameter',
-		'input_files': ['testCounterExSimple.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple.imi', 'testCounterExSimple.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testCounterExSimple.res' , 'content' : """
 
@@ -3527,8 +3527,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example with parameters and discrete variables',
-		'input_files': ['testCounterExSimple-2.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple-2.imi', 'testCounterExSimple-2.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testCounterExSimple-2.res' , 'content' : """
 

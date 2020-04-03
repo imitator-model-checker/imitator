@@ -1,0 +1,1 @@
+property := #synth EFexemplify(loc[pta] = ltarget);
