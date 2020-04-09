@@ -69,31 +69,16 @@ let string_of_declarations model =
 	let string_of_variables list_of_variables =
 		string_of_list_of_string_with_sep ", " (List.map model.variable_names list_of_variables) in
 
-		"// --------------------------------------------------------
-         // System Parameters 
-         // --------------------------------------------------------
-         "
-	(**^
+		"var "
+	^
 	(if model.nb_clocks > 0 then
 		("\n\t" ^ (string_of_variables model.clocks_without_special_reset_clock) ^ "\n\t\t: clock;\n") else "")
-	   ^
+	^
 	(if model.nb_discrete > 0 then
-		("\n\t" ^ (string_of_variables model.discrete) ^ "\n\t\t: discrete;\n") else "")*****)
+		("\n\t" ^ (string_of_variables model.discrete) ^ "\n\t\t: discrete;\n") else "")
 	^
 	(if model.nb_parameters > 0 then
-(*        (**/////////////////////// code ajouts*)
-        for i = 1 to nb_parameters do
-			("\n\t" ^ (string_of_variables model.parameters.(i)) ^"" ) 
-        done;
-        (**/////////////////////// code ajouts*)  *)
-        ""
-    else "")
-    ^
-    "// --------------------------------------------------------
-     // Analysis Parameters 
-     // --------------------------------------------------------
-    "
-
+		("\n\t" ^ (string_of_variables model.parameters) ^ "\n\t\t: parameter;\n") else "")
 
 (************************************************************)
 (** Guard *)
