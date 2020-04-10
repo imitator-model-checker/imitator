@@ -1,20 +1,26 @@
 (************************************************************
  *                      IMITATOR MODEL                      
  *
- * Toy example to test PRP with counterexample
+ * Empty template of a case study
  *
- * Description     : Toy example to test PRP with counterexample
- * Correctness     : lbad unreachable
+ * Description     : Sample PTA to test PRP
+ * Correctness     : locBad1 and locBad2 unreachable
  * Source          : Own work
  * Author          : Étienne André
  * Modeling        : Étienne André
  * Input by        : Étienne André
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
  *
- * Created         : 2019/05/30
- * Last modified   : 2019/05/30
+ * Created         : 2016/01/15
+ * Last modified   : 2020/04/10
  *
- * IMITATOR version: 2.11
+ * IMITATOR version: 3
  ************************************************************)
 
-p = 0
+property := #synth PRP(
+	loc[pta] = locBad1 or loc[pta] = locBad2
+,
+	& p1 = 6
+	& p2 = 6
+);

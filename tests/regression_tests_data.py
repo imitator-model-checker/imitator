@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/04/03
+# Last modified     : 2020/04/10
 #************************************************************
 
 
@@ -5289,12 +5289,12 @@ END CONSTRAINT		  """
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1
+		# Test version             : 2
 		# Test since               : 2019/05/30
 		# Test for IMITATOR version: 2.11
 		'purpose'    : 'Test PRP on a very simple example',
-		'input_files': ['testEFcounterex.imi', 'testEFcounterex.pi0'],
-		'options'    : '-mode PRP -merge -incl -output-result',
+		'input_files': ['testEFcounterex.imi', 'testEFcounterex-prp.imiprop'],
+		'options'    : '-merge -incl -output-result',
 		'expectations' : [
 			{'file': 'testEFcounterex.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5315,93 +5315,93 @@ Constraint nature                       : good
 
 	,
 
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test PRP (old version) on a simple example (good reference valuation)',
-		'input_files': ['testPRP.imi', 'testPRP.pigood'],
-		'options'    : '-PRP -output-result -output-states',
-		'expectations' : [
-			{'file': 'testPRP.res' , 'content' : """
-BEGIN CONSTRAINT
-	4 > p2
-    & 3 > p1
-    & p1 >= 0
-    & p2 >= 0
-END CONSTRAINT
-		  """
-			} # end result file
-			,
-			{'file': 'testPRP-statespace.states' , 'content' : """
-  DESCRIPTION OF THE STATES
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test PRP (old version) on a simple example (good reference valuation)',
+		#'input_files': ['testPRP.imi', 'testPRP.pigood'],
+		#'options'    : '-PRP -output-result -output-states',
+		#'expectations' : [
+			#{'file': 'testPRP.res' , 'content' : """
+#BEGIN CONSTRAINT
+	#4 > p2
+    #& 3 > p1
+    #& p1 >= 0
+    #& p2 >= 0
+#END CONSTRAINT
+		  #"""
+			#} # end result file
+			#,
+			#{'file': 'testPRP-statespace.states' , 'content' : """
+  #DESCRIPTION OF THE STATES
 
-  /************************************************************/
-  INITIAL
-  STATE 0:
-  pta: l1 ==>
-& p1 >= 0
-& p2 >= 0
-& y >= 0
-& x = y
+  #/************************************************************/
+  #INITIAL
+  #STATE 0:
+  #pta: l1 ==>
+#& p1 >= 0
+#& p2 >= 0
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 0
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 0
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 1:
-  pta: l2 ==>
-& p1 >= 0
-& p2 >= 0
-& x >= 0
-& x = y
+  #/************************************************************/
+  #STATE 1:
+  #pta: l2 ==>
+#& p1 >= 0
+#& p2 >= 0
+#& x >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 0
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 0
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 2:
-  pta: l3 ==>
-& p1 >= x
-& p2 >= 0
-& x >= 0
-& 1 >= p2
-& x = y
+  #/************************************************************/
+  #STATE 2:
+  #pta: l3 ==>
+#& p1 >= x
+#& p2 >= 0
+#& x >= 0
+#& 1 >= p2
+#& x = y
 
-  Projection onto the parameters:
-   1 >= p2
-& p2 >= 0
-& p1 >= 0
+  #Projection onto the parameters:
+   #1 >= p2
+#& p2 >= 0
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 3:
-  pta: l4 ==>
-& p1 >= p2
-& p2 >= 0
-& y >= 0
-& x = y
+  #/************************************************************/
+  #STATE 3:
+  #pta: l4 ==>
+#& p1 >= p2
+#& p2 >= 0
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p1 >= p2
-& p2 >= 0
+  #Projection onto the parameters:
+   #p1 >= p2
+#& p2 >= 0
 
-  DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_1
-  s_1 -> s_2
-  s_1 -> s_3
-  s_2 -> s_2
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-	,
+  #DESCRIPTION OF THE TRANSITIONS
+  #s_0 -> s_1
+  #s_1 -> s_2
+  #s_1 -> s_3
+  #s_2 -> s_2
+#"""
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+	#,
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PRP on a simple example (good reference valuation)',
-		'input_files': ['testPRP.imi', 'testPRP.pigood'],
-		'options'    : '-mode PRP -output-result -output-states',
+		'input_files': ['testPRP.imi', 'testPRP-good.imiprop'],
+		'options'    : '-output-result -output-states',
 		'expectations' : [
 			{'file': 'testPRP.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5479,101 +5479,101 @@ END CONSTRAINT
 	} # end test case
 	#------------------------------------------------------------
 	,
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test PRP (old version) on a simple example (bad reference valuation)',
-		'input_files': ['testPRP.imi', 'testPRP.pibad'],
-		'options'    : '-PRP -output-result -output-states',
-		'expectations' : [
-			{'file': 'testPRP.res' , 'content' : """
-		 & p1 >= 0
-OR
-  p2 >= 0
-& p1 >= 3
-		  """
-			} # end result file
-			,
-			{'file': 'testPRP-statespace.states' , 'content' : """
-  DESCRIPTION OF THE STATES
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test PRP (old version) on a simple example (bad reference valuation)',
+		#'input_files': ['testPRP.imi', 'testPRP.pibad'],
+		#'options'    : '-PRP -output-result -output-states',
+		#'expectations' : [
+			#{'file': 'testPRP.res' , 'content' : """
+		 #& p1 >= 0
+#OR
+  #p2 >= 0
+#& p1 >= 3
+		  #"""
+			#} # end result file
+			#,
+			#{'file': 'testPRP-statespace.states' , 'content' : """
+  #DESCRIPTION OF THE STATES
 
-  /************************************************************/
-  INITIAL
-  STATE 0:
-  pta: l1 ==>
-& p1 >= 0
-& p2 >= 0
-& y >= 0
-& x = y
+  #/************************************************************/
+  #INITIAL
+  #STATE 0:
+  #pta: l1 ==>
+#& p1 >= 0
+#& p2 >= 0
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 0
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 0
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 1:
-  pta: l2 ==>
-& p1 >= 0
-& p2 >= 0
-& x >= 0
-& x = y
+  #/************************************************************/
+  #STATE 1:
+  #pta: l2 ==>
+#& p1 >= 0
+#& p2 >= 0
+#& x >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 0
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 0
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 2:
-  pta: locBad1 ==>
-& p1 >= 0
-& p2 >= 4
-& y >= 0
-& x = y
+  #/************************************************************/
+  #STATE 2:
+  #pta: locBad1 ==>
+#& p1 >= 0
+#& p2 >= 4
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 4
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 4
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 3:
-  pta: l4 ==>
-& p1 >= p2
-& p2 >= 0
-& y >= 0
-& x = y
+  #/************************************************************/
+  #STATE 3:
+  #pta: l4 ==>
+#& p1 >= p2
+#& p2 >= 0
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p1 >= p2
-& p2 >= 0
+  #Projection onto the parameters:
+   #p1 >= p2
+#& p2 >= 0
 
-  /************************************************************/
-  STATE 4:
-  pta: locBad2 ==>
-& p1 >= 3
-& p2 >= 0
-& y >= 0
-& x = y
+  #/************************************************************/
+  #STATE 4:
+  #pta: locBad2 ==>
+#& p1 >= 3
+#& p2 >= 0
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 0
-& p1 >= 3
+  #Projection onto the parameters:
+   #p2 >= 0
+#& p1 >= 3
 
-  DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_1
-  s_0 -> s_2
-  s_1 -> s_3
-  s_1 -> s_4
-		  """
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-	,
+  #DESCRIPTION OF THE TRANSITIONS
+  #s_0 -> s_1
+  #s_0 -> s_2
+  #s_1 -> s_3
+  #s_1 -> s_4
+		  #"""
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+	#,
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PRP on a simple example (bad reference valuation)',
-		'input_files': ['testPRP.imi', 'testPRP.pibad'],
-		'options'    : '-mode PRP -output-result -output-states',
+		'input_files': ['testPRP.imi', 'testPRP-bad.imiprop'],
+		'options'    : '-output-result -output-states',
 		'expectations' : [
 			{'file': 'testPRP.res' , 'content' : """
 		 & p1 >= 0
@@ -5659,232 +5659,232 @@ OR
 	} # end test case
 	#------------------------------------------------------------
 	,
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test PRP (old version) on a simple example (looping reference valuation)',
-		'input_files': ['testPRP.imi', 'testPRP.piloop'],
-		'options'    : '-PRP -output-result -depth-limit 10 -output-states',
-		'expectations' : [
-			{'file': 'testPRP.res' , 'content' : """
- p2 >= 4
-    & p1 >= 0
-    OR
-      p2 >= 0
-    & p1 >= 3
-		  """
-			} # end result file
-			,
-			{'file': 'testPRP-statespace.states' , 'content' : """
-  DESCRIPTION OF THE STATES
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test PRP (old version) on a simple example (looping reference valuation)',
+		#'input_files': ['testPRP.imi', 'testPRP.piloop'],
+		#'options'    : '-PRP -output-result -depth-limit 10 -output-states',
+		#'expectations' : [
+			#{'file': 'testPRP.res' , 'content' : """
+ #p2 >= 4
+    #& p1 >= 0
+    #OR
+      #p2 >= 0
+    #& p1 >= 3
+		  #"""
+			#} # end result file
+			#,
+			#{'file': 'testPRP-statespace.states' , 'content' : """
+  #DESCRIPTION OF THE STATES
 
-  /************************************************************/
-  INITIAL
-  STATE 0:
-  pta: l1 ==>
-& p1 >= 0
-& p2 >= 0
-& y >= 0
-& x = y
+  #/************************************************************/
+  #INITIAL
+  #STATE 0:
+  #pta: l1 ==>
+#& p1 >= 0
+#& p2 >= 0
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 0
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 0
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 1:
-  pta: l2 ==>
-& p1 >= 0
-& p2 >= 0
-& x >= 0
-& x = y
+  #/************************************************************/
+  #STATE 1:
+  #pta: l2 ==>
+#& p1 >= 0
+#& p2 >= 0
+#& x >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 0
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 0
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 2:
-  pta: locBad1 ==>
-& p1 >= 0
-& p2 >= 4
-& y >= 0
-& x = y
+  #/************************************************************/
+  #STATE 2:
+  #pta: locBad1 ==>
+#& p1 >= 0
+#& p2 >= 4
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 4
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 4
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 3:
-  pta: infiniteLoop ==>
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x = y
+  #/************************************************************/
+  #STATE 3:
+  #pta: infiniteLoop ==>
+#& 1 >= x
+#& p1 >= 0
+#& p2 >= 5
+#& x >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 5
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 4:
-  pta: l4 ==>
-& p1 >= p2
-& p2 >= 0
-& y >= 0
-& x = y
+  #/************************************************************/
+  #STATE 4:
+  #pta: l4 ==>
+#& p1 >= p2
+#& p2 >= 0
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p1 >= p2
-& p2 >= 0
+  #Projection onto the parameters:
+   #p1 >= p2
+#& p2 >= 0
 
-  /************************************************************/
-  STATE 5:
-  pta: locBad2 ==>
-& p1 >= 3
-& p2 >= 0
-& y >= 0
-& x = y
+  #/************************************************************/
+  #STATE 5:
+  #pta: locBad2 ==>
+#& p1 >= 3
+#& p2 >= 0
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 0
-& p1 >= 3
+  #Projection onto the parameters:
+   #p2 >= 0
+#& p1 >= 3
 
-  /************************************************************/
-  STATE 6:
-  pta: infiniteLoop ==>
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x + 1 = y
+  #/************************************************************/
+  #STATE 6:
+  #pta: infiniteLoop ==>
+#& 1 >= x
+#& p1 >= 0
+#& p2 >= 5
+#& x >= 0
+#& x + 1 = y
 
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 5
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 7:
-  pta: infiniteLoop ==>
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x + 2 = y
+  #/************************************************************/
+  #STATE 7:
+  #pta: infiniteLoop ==>
+#& 1 >= x
+#& p1 >= 0
+#& p2 >= 5
+#& x >= 0
+#& x + 2 = y
 
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 5
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 8:
-  pta: infiniteLoop ==>
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x + 3 = y
+  #/************************************************************/
+  #STATE 8:
+  #pta: infiniteLoop ==>
+#& 1 >= x
+#& p1 >= 0
+#& p2 >= 5
+#& x >= 0
+#& x + 3 = y
 
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 5
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 9:
-  pta: infiniteLoop ==>
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x + 4 = y
+  #/************************************************************/
+  #STATE 9:
+  #pta: infiniteLoop ==>
+#& 1 >= x
+#& p1 >= 0
+#& p2 >= 5
+#& x >= 0
+#& x + 4 = y
 
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 5
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 10:
-  pta: infiniteLoop ==>
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x + 5 = y
+  #/************************************************************/
+  #STATE 10:
+  #pta: infiniteLoop ==>
+#& 1 >= x
+#& p1 >= 0
+#& p2 >= 5
+#& x >= 0
+#& x + 5 = y
 
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 5
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 11:
-  pta: infiniteLoop ==>
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x + 6 = y
+  #/************************************************************/
+  #STATE 11:
+  #pta: infiniteLoop ==>
+#& 1 >= x
+#& p1 >= 0
+#& p2 >= 5
+#& x >= 0
+#& x + 6 = y
 
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 5
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 12:
-  pta: infiniteLoop ==>
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x + 7 = y
+  #/************************************************************/
+  #STATE 12:
+  #pta: infiniteLoop ==>
+#& 1 >= x
+#& p1 >= 0
+#& p2 >= 5
+#& x >= 0
+#& x + 7 = y
 
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 5
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 13:
-  pta: infiniteLoop ==>
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x + 8 = y
+  #/************************************************************/
+  #STATE 13:
+  #pta: infiniteLoop ==>
+#& 1 >= x
+#& p1 >= 0
+#& p2 >= 5
+#& x >= 0
+#& x + 8 = y
 
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 5
+#& p1 >= 0
 
-  DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_1
-  s_0 -> s_2
-  s_0 -> s_3
-  s_1 -> s_4
-  s_1 -> s_5
-  s_3 -> s_6
-  s_6 -> s_7
-  s_7 -> s_8
-  s_8 -> s_9
-  s_9 -> s_10
-  s_10 -> s_11
-  s_11 -> s_12
-  s_12 -> s_13
+  #DESCRIPTION OF THE TRANSITIONS
+  #s_0 -> s_1
+  #s_0 -> s_2
+  #s_0 -> s_3
+  #s_1 -> s_4
+  #s_1 -> s_5
+  #s_3 -> s_6
+  #s_6 -> s_7
+  #s_7 -> s_8
+  #s_8 -> s_9
+  #s_9 -> s_10
+  #s_10 -> s_11
+  #s_11 -> s_12
+  #s_12 -> s_13
 
 
-		  """
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
+		  #"""
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
 
-	,
+	#,
 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PRP on a simple example (looping reference valuation)',
-		'input_files': ['testPRP.imi', 'testPRP.piloop'],
-		'options'    : '-mode PRP -output-result -depth-limit 10 -output-states',
+		'input_files': ['testPRP.imi', 'testPRP-loop.imiprop'],
+		'options'    : '-output-result -depth-limit 10 -output-states',
 		'expectations' : [
 			{'file': 'testPRP.res' , 'content' : """
  p2 >= 4
@@ -9214,7 +9214,7 @@ Average number of transitions           : 6.0
 	{
 		'purpose'    : 'Test the model printer',
 		'input_files': ['Sched5.imi'],
-		'options'    : '-PTA2IMI',
+		'options'    : '-imi2IMI',
 		'expectations' : [
 			{'file': 'Sched5-regenerated.imi' , 'content' : """
  ************************************************************)
@@ -9948,12 +9948,6 @@ init := True
 
 ;
 
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[OBS_dline] = dline_loc_miss
-
 
 (************************************************************)
 (* The end *)
@@ -10054,39 +10048,40 @@ end
 	} # end test case
 	#------------------------------------------------------------
 	,
-	#------------------------------------------------------------
-	{
-		# Test version: 2.11
-		# Test since  : 2019/03/07
-		'purpose'    : 'Test the graphical state space generation (verbose with projection)',
-		'input_files': ['CUBPTA1project.imi'],
-		'options'    : '-mode statespace -output-trace-set-verbose -output-graphics-source',
-		'expectations' : [
-			{'file': 'CUBPTA1project-statespace.dot' , 'content' : """
-  s_0 -> s_1 [label="a"];
-  s_1 -> s_2 [label="a"];
-  s_2 -> s_3 [label="a"];
-  s_3 -> s_2 [label="a"];
+	##------------------------------------------------------------
+	#{
+		## Test version: 2.11
+		## Test since  : 2019/03/07
+		## Test until  : 2020/04/10
+		#'purpose'    : 'Test the graphical state space generation (verbose with projection)',
+		#'input_files': ['CUBPTA1project.imi'],
+		#'options'    : '-mode statespace -output-trace-set-verbose -output-graphics-source',
+		#'expectations' : [
+			#{'file': 'CUBPTA1project-statespace.dot' , 'content' : """
+  #s_0 -> s_1 [label="a"];
+  #s_1 -> s_2 [label="a"];
+  #s_2 -> s_3 [label="a"];
+  #s_3 -> s_2 [label="a"];
 
-/* Initial state */
-  s_init [shape=none, label="init"];
-  s_init -> s_0;
+#/* Initial state */
+  #s_init [shape=none, label="init"];
+  #s_init -> s_0;
 
-/* Colors */
+#/* Colors */
 
-  s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 0 \\n \& x \>= 0 \\n \& x = y| p2 \>= 0 \\n \& p1 \>= 0| p2 \>= 0}"];
-  s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& x \>= 0 \\n \& y \>= x| p2 \>= 0 \\n \& p1 \>= 0| p2 \>= 0}"];
-  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& x = y| p2 \>= 1 \\n \& p1 \>= 0| p2 \>= 1}"];
-  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1| p2 \>= 1}"];
-		"""
-			} # end result file
-			# NOTE (ÉA, 2019/03/07): I had to manually replace '\n' with '\\n' to make this test pass
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
+  #s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 0 \\n \& x \>= 0 \\n \& x = y| p2 \>= 0 \\n \& p1 \>= 0| p2 \>= 0}"];
+  #s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& x \>= 0 \\n \& y \>= x| p2 \>= 0 \\n \& p1 \>= 0| p2 \>= 0}"];
+  #s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& x = y| p2 \>= 1 \\n \& p1 \>= 0| p2 \>= 1}"];
+  #s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1| p2 \>= 1}"];
+		#"""
+			#} # end result file
+			## NOTE (ÉA, 2019/03/07): I had to manually replace '\n' with '\\n' to make this test pass
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
 
-	,
+	#,
 
 	#------------------------------------------------------------
 	{
@@ -10420,12 +10415,6 @@ init := True
 & dG3_u >= 8
 & s = 0
 ;
-
---************************************************************
---* Property specification
---************************************************************
-
---property := if ckDown then qUp has happened before; (NOT CONSIDERED BY HYTECH)
 
 
 --************************************************************

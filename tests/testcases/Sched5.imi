@@ -13,8 +13,8 @@
  *                 Etienne Andre, Giuseppe Lipari, Hoang Gia Nguyen and Youcheng Sun; Sched5
  *             ''Toward Parametric Timed Interfaces for Real-Time Components'' (2014) by 
  *                 Youcheng Sun, Giuseppe Lipari, Etienne Andre and Lanrent Fribourg
- * Last modified: 2015/10/30
- * IMITATOR version: 2.7.3-working "Butter Guéméné" 
+ * Last modified: 2020/04/10
+ * IMITATOR version: 3
  ************************************************************)
 
 
@@ -518,7 +518,7 @@ loc dline_loc_miss : while t1_d=0 stop{t1_d} wait {}
 end
 
 
-var init: region;
+(* var init: region; *)
 
 init :=     loc[Task_t1] = t1_loc_idle &
     t1_C >= 0 &    t1_urgent = 0 &    t1_c = 0 & t1_d = 0&
@@ -547,4 +547,4 @@ init :=     loc[Task_t1] = t1_loc_idle &
     	& t5_C <= 50
 ;
     
-property := unreachable loc[OBS_dline] = dline_loc_miss
+(* property := unreachable loc[OBS_dline] = dline_loc_miss *)

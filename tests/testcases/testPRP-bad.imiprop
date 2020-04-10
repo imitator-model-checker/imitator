@@ -13,10 +13,16 @@
 
  *
  * Created         : 2016/01/15
- * Last modified   : 2016/01/15
+ * Last modified   : 2020/04/10
  *
- * IMITATOR version: 2.7.4-working
+ * IMITATOR version: 3
  ************************************************************)
 
-	& p1 = 2
-	& p2 = 1
+property := #synth PRP(
+	loc[pta] = locBad1 or loc[pta] = locBad2
+,
+	& p1 = 4
+	& p2 = 4
+);
+
+ 
