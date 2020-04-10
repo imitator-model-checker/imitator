@@ -67,18 +67,18 @@ let string_of_var_type = function
 (* Convert the initial variable declarations into a string *)
 let string_of_declarations model =
 	let string_of_variables list_of_variables =
-		string_of_list_of_string_with_sep ", " (List.map model.variable_names list_of_variables) in
+		string_of_list_of_string_with_sep "," (List.map model.variable_names list_of_variables) in
 
-		"var "
+		"contr_var:"
 	^
 	(if model.nb_clocks > 0 then
-		("\nclock: " ^ (string_of_variables model.clocks_without_special_reset_clock) ^ ";\n") else "")
+		( (string_of_variables model.clocks_without_special_reset_clock) ) else "")
 	^
 	(if model.nb_discrete > 0 then
-		("\ndiscrete: " ^ (string_of_variables model.discrete) ^ ";\n") else "")
-	^
+		((string_of_variables model.discrete) ) else ";")
+	(*^
 	(if model.nb_parameters > 0 then
-		("\nparameter: " ^ (string_of_variables model.parameters) ^ ";\n") else "")
+		("\nparameter: " ^ (string_of_variables model.parameters) ) else ";")*)
 
 (************************************************************)
 (** Guard *)
@@ -400,11 +400,11 @@ let string_of_automaton model automaton_index =
 	  "\n// ----------------------------------------------------------"
     ^ "\n// System Description"
     ^ "\n// ----------------------------------------------------------"
-	^ "\n automaton " ^ (model.automata_names automaton_index)
-	^ "\n// ----------------------------------------------------------"
-	^ "\n " ^ (string_of_synclabs model automaton_index)
-	^ "\n " ^ (string_of_locations model automaton_index)
-	^ "\n end // \n(* " ^ (model.automata_names automaton_index) ^ " *)"
+	^ "\nautomaton " ^ (model.automata_names automaton_index)
+    ^ "\n" ^ (string_of_declarations model)
+	^ "\n" ^ (string_of_synclabs model automaton_index)
+	^ "\n" ^ (string_of_locations model automaton_index)
+	^ "\nend //(* " ^ (model.automata_names automaton_index) ^ " *)"
 	^ "\n// ----------------------------------------------------------"
 
 
@@ -514,7 +514,7 @@ let string_of_unreachable_location model unreachable_global_location =
 		| Discrete_leq (discrete_index , discrete_value)
 			-> (model.variable_names discrete_index) ^ " <= " ^ (NumConst.string_of_numconst discrete_value)
 		| Discrete_equal (discrete_index , discrete_value)
-			-> (model.variable_names discrete_index) ^ " = " ^ (NumConst.string_of_numconst discrete_value)
+			-> (model.variable_names discrete_index) ^ " == " ^ (NumConst.string_of_numconst discrete_value)
 		| Discrete_neq (discrete_index , discrete_value)
 			-> (model.variable_names discrete_index) ^ " <> " ^ (NumConst.string_of_numconst discrete_value)
 		| Discrete_geq (discrete_index , discrete_value)
@@ -616,7 +616,7 @@ let string_of_model model =
 	(* The header *)
 	string_of_header model
 	(* The variable declarations *)
-	^  "\n" ^ string_of_declarations model
+	(*^  "\n" ^ string_of_declarations model/*)
 	(* The initial state *)
 	^ "\n" ^ string_of_initial_state ()
 	(* All automata *)
