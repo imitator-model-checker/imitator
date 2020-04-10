@@ -93,7 +93,7 @@ let resolve_property l =
 /************************************************************/
 main:
 /************************************************************/
-	| property_kw_opt quantified_property semicolon_opt EOF { $2 }
+	| property_kw_opt quantified_property EOF { $2 }
 	/* Dummy command for testing */
 /* 	| CT_WHEN EOF { (*$2*)raise (Failure "ploop") } */
 ;
@@ -108,12 +108,12 @@ property_kw_opt:
 /************************************************************/
 quantified_property:
 /************************************************************/
-	synth_or_exhibit property projection_definition {
+	synth_or_exhibit property semicolon_opt projection_definition {
 		{
 			synthesis_type	= $1;
 			property		= $2;
 			(* Projection *)
-			projection		= $3;
+			projection		= $4;
 		}
 		
 	
