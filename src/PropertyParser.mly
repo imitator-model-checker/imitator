@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/04/02
+ * Last modified     : 2020/04/10
  *
  ************************************************************/
 
@@ -108,13 +108,12 @@ property_kw_opt:
 /************************************************************/
 quantified_property:
 /************************************************************/
-	synth_or_exhibit property {
+	synth_or_exhibit property projection_definition {
 		{
 			synthesis_type	= $1;
 			property		= $2;
 			(* Projection *)
-			(*** TODO ***)
-			projection		= None;
+			projection		= $3;
 		}
 		
 	
