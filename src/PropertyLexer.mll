@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/04/02
+ * Last modified     : 2020/04/10
 *****************************************************************)
 
 {
@@ -41,6 +41,7 @@ rule token = parse
 	| "AG"             { CT_AG }
 	| "AGnot"          { CT_AGnot }
  	| "deadlockfree"   { CT_DEADLOCKFREE }
+ 	| "BCcover"        { CT_COVERCARTOGRAPHY }
 	| "EF"             { CT_EF }
 	| "EFexemplify"    { CT_EFEXEMPLIFY }
 	| "EFpmax"         { CT_EFpmax }

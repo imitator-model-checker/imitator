@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/04/02
+ * Last modified     : 2020/04/10
  *
  ************************************************************)
 
@@ -2481,6 +2481,9 @@ class virtual algoStateBased =
 				| ConvexIM _
 				| IMK _
 				| IMunion _
+				
+				(* Cartography *)
+				| Cover_cartography _
 					->
 					(* Cannot conclude anything from a single state yet *)
 					()

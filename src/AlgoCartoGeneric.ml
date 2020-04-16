@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2019/08/22
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -23,6 +23,7 @@ open ImitatorUtilities
 open Exceptions
 open Statistics
 open AbstractModel
+open AbstractProperty
 open Result
 open AlgoGeneric
 open State
@@ -292,6 +293,21 @@ class virtual algoCartoGeneric =
 	(* Class methods to simulate class parameters *)
 	(************************************************************)
 	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Get the reference hyperrectangle *)
+	(*** HACK: for now, it is obtained from the property, stored in the Input module ***)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method get_v0 : HyperRectangle.hyper_rectangle =
+		(* Get the property *)
+		let abstract_property = Input.get_property() in
+		(* Get the rectangle *)
+		match abstract_property.property with
+		| Cover_cartography v0
+			-> v0
+(* 		| PRP (_ , pval) -> pval *)
+		| _ -> raise (InternalError("Impossible situation in AlgoCartoGeneric#get_v0(): the hyperrectangle should be stored in the Input module in the form of a property of the form Cover_cartography, or its variants" ))
+
+
 	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
 	(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
 	method set_algo_instance_function (f : unit -> AlgoStateBased.algoStateBased) : unit =
@@ -460,7 +476,7 @@ class virtual algoCartoGeneric =
 
 	method one_random_pi0 : PVal.pval =
 	(* Get the v0 *)
-	let v0 = Input.get_v0() in
+	let v0 = self#get_v0 in
 	
 	(*** WARNING! Does not work with step <> 1 !!!! ***)
 	if options#step <> NumConst.one then
@@ -546,7 +562,7 @@ class virtual algoCartoGeneric =
 		start_time <- Unix.gettimeofday();
 
 		(* Retrieve the v0 *)
-		let v0 = Input.get_v0() in
+		let v0 = self#get_v0 in
 
 		(* 		super#initialize_variables; *)
 
@@ -710,7 +726,7 @@ class virtual algoCartoGeneric =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize_cartography =
 		(* Retrieve the v0 *)
-		let v0 = Input.get_v0() in
+		let v0 = self#get_v0 in
 
 		(* Print some information *)
 		self#print_algo_message Verbose_standard ("Starting running cartography…\n"); (* " ^ self#algorithm_name ^ " *)
@@ -988,7 +1004,12 @@ class virtual algoCartoGeneric =
 			self#print_algo_message Verbose_low ("Setting new pi0…");
 
 			(* Set the new pi0 *)
-			Input.set_pi0 (pi0);
+			
+			
+			(*** TODO ! ***)
+
+			
+(* 			Input.set_pi0 (pi0); *)
 			
 			(* Actual call to IM/PRP (or whatever) *)
 			let imitator_result = self#call_point in

@@ -58,6 +58,7 @@ let resolve_property l =
 %token
 	CT_ACCEPTING CT_ACCLOOP CT_AG CT_AGnot CT_ALWAYS
 	CT_BEFORE
+	CT_COVERCARTOGRAPHY
 	CT_DEADLOCKFREE
 	CT_EF CT_EFEXEMPLIFY CT_EFpmax CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXHIBIT
 	CT_FALSE
@@ -203,6 +204,12 @@ property:
 	| CT_IMUNION LPAREN reference_valuation RPAREN { Parsed_IMunion $3 }
 	
 	
+	/*------------------------------------------------------------*/
+	/* Cartography algorithms */
+	/*------------------------------------------------------------*/
+	
+	/* Cartography */
+	| CT_COVERCARTOGRAPHY LPAREN reference_rectangle RPAREN { Parsed_Cover_cartography $3 }
 	
 	/** TODO **/
 
@@ -487,6 +494,26 @@ parameter_assignments:
 /* Form: param = [constant arithmetic expression] */
 parameter_assignment:
 	and_opt NAME OP_EQ constant_arithmetic_expr comma_opt { ($2, $4) }
+;
+
+/************************************************************/
+/** HYPER RECTANGLE VALUATION ("v0") */
+/************************************************************/
+
+reference_rectangle:
+	| rectangle_parameter_assignments semicolon_opt { $1 }
+;
+
+rectangle_parameter_assignments:
+	| rectangle_parameter_assignment rectangle_parameter_assignments {$1 :: $2}
+	| { [] }
+;
+
+/* Form: param = [constant arithmetic expression] */
+rectangle_parameter_assignment:
+	| and_opt NAME OP_EQ constant_arithmetic_expr DOUBLEDOT constant_arithmetic_expr comma_opt { ($2, $4, $6) }
+	| and_opt NAME OP_EQ constant_arithmetic_expr comma_opt { ($2, $4, $4) }
+
 ;
 
 

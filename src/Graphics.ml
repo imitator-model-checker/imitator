@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/04/02
+ * Last modified     : 2020/04/10
  *
  ************************************************************)
  
@@ -1235,6 +1235,9 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 				| ConvexIM _
 				| IMK _
 				| IMunion _
+				
+				| Cover_cartography _
+				
 					-> None
 			in
 			

@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2017/03/08
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -102,6 +102,12 @@ class virtual algoCartoGeneric :
 		(************************************************************)
 		(* Class methods to simulate class parameters *)
 		(************************************************************)
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Get the reference hyperrectangle *)
+		(*** HACK: for now, it is obtained from the property, stored in the Input module ***)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method get_v0 : HyperRectangle.hyper_rectangle
 		
 		(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
 		method set_algo_instance_function : (unit -> AlgoStateBased.algoStateBased) -> unit

@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/04/02
+ * Last modified     : 2020/04/10
  *
  ************************************************************)
 
@@ -155,11 +155,11 @@ type property =
 	(* Cartography algorithms *)
 	(*------------------------------------------------------------*)
 	
-(*	(* Cartography *)
+	(* Cartography *)
 	| Cover_cartography of HyperRectangle.hyper_rectangle
 
 	
-	(** Cover the whole cartography using learning-based abstractions *)
+(*	(** Cover the whole cartography using learning-based abstractions *)
 	| Learning_cartography of HyperRectangle.hyper_rectangle
 	
 	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)

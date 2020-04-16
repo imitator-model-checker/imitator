@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created:       2013/02/04
- * Last modified: 2020/04/02
+ * Last modified: 2020/04/16
  *
  ************************************************************)
  
@@ -114,6 +114,8 @@ let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_IMK _
 	| Parsed_IMunion _
 
+	| Parsed_Cover_cartography _
+
 		->
 	false
 (* 	| Parsed_Action_deadline _ -> true *)
@@ -155,6 +157,9 @@ let new_elements (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_PRP _
 	| Parsed_IMK _
 	| Parsed_IMunion _
+
+	| Parsed_Cover_cartography _
+	
 		-> (None , None)
 	
 (*	| Parsed_Action_deadline _
@@ -208,6 +213,7 @@ let get_nb_locations (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_IMK _
 	| Parsed_IMunion _
 	
+	| Parsed_Cover_cartography _
 		-> 0
 (* 	| Parsed_Action_deadline _ -> 3 *)
 	(*** TODO: finish later ***)

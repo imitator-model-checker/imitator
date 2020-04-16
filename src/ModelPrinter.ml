@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/04/02
+ * Last modified     : 2020/04/10
  *
  ************************************************************)
 
@@ -799,6 +799,14 @@ let string_of_abstract_property model property =
 		| IMK pval -> "IMK(" ^ (string_of_pval model pval) ^ ")"
 
 		| IMunion pval -> "IMunion(" ^ (string_of_pval model pval) ^ ")"
+
+		
+		(*------------------------------------------------------------*)
+		(* Cartography algorithms *)
+		(*------------------------------------------------------------*)
+		
+		(* Cartography *)
+		| Cover_cartography hyper_rectangle -> "BCcover(" ^ (string_of_v0 model hyper_rectangle) ^ ")"
 
 		
 		(*** TODO ***)

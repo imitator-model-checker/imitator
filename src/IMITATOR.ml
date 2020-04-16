@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/04/02
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -509,7 +509,29 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 
 		
 		
+		(*------------------------------------------------------------*)
+		(* Cycles *)
+		(*------------------------------------------------------------*)
 		
+			(************************************************************)
+			(* Parametric loop synthesis *)
+			(************************************************************)
+			| Cycle ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoLoopSynth.algoLoopSynth in myalgo
+
+			| Accepting_cycle _ ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth in myalgo
+
+		(*------------------------------------------------------------*)
+		(* Deadlock-freeness *)
+		(*------------------------------------------------------------*)
+
+			(************************************************************)
+			(* Parametric deadlock checking *)
+			(************************************************************)
+			| Deadlock_Freeness ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoDeadlockFree.algoDeadlockFree in myalgo
+
 		(*------------------------------------------------------------*)
 		(* Inverse method, trace preservation, robustness *)
 		(*------------------------------------------------------------*)
@@ -545,7 +567,20 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFsynthOld.algoEFsynth in myalgo
 				*)
 
-(*
+		(*------------------------------------------------------------*)
+		(* Cartography algorithms *)
+		(*------------------------------------------------------------*)
+	
+			(* Cartography *)
+			| Cover_cartography hyper_rectangle ->
+				let bc_algo = new AlgoBCCover.algoBCCover in
+				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_algo_instance_function (fun () -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM in myalgo);
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
+	
+	(*
 
 			(************************************************************)
 			(* EF-exemplification *)
@@ -561,15 +596,6 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			| AF_synthesis ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAF.algoAFsynth in myalgo
 *)
-			(************************************************************)
-			(* Parametric loop synthesis *)
-			(************************************************************)
-			| Cycle ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoLoopSynth.algoLoopSynth in myalgo
-
-			| Accepting_cycle _ ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth in myalgo
-
 				(*
 			| Acc_loop_synthesis_NDFS ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS in myalgo
@@ -670,12 +696,6 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 
 
 				*)
-			(************************************************************)
-			(* Parametric deadlock checking *)
-			(************************************************************)
-			| Deadlock_Freeness ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoDeadlockFree.algoDeadlockFree in myalgo
-
 
 				(*
 			(************************************************************)
