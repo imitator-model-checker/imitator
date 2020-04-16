@@ -6104,8 +6104,8 @@ OR
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode cover (grid)',
-		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4.v0'],
-		'options'    : '-mode cover -output-result',
+		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4-cover.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'testBC-grid-plain.res' , 'content' : """
