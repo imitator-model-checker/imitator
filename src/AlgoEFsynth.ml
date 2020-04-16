@@ -37,7 +37,7 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoEFsynth =
+class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 	object (self) inherit algoStateBased as super
 	
 	(************************************************************)
@@ -46,22 +46,7 @@ class virtual algoEFsynth =
 	
 	(* Non-necessarily convex constraint allowing the reachability of the bad location *)
 	val mutable bad_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
-	
-	(*** NOTE: dummy initialization ***)
-	val state_predicate : AbstractProperty.state_predicate =
-		(*** TODO: pass as a PARAMETER of the algorithm ***)
-		(*** UGLY!!! ***)
-		match (Input.get_property()).property with
-			| EF state_predicate
-			| AGnot state_predicate
-			| EFexemplify state_predicate
-				-> state_predicate
-			
-			(*** TODO ***)
-			
-			| _ -> raise (InternalError ("Unexpected error when getting the state predicate when initializing EF"))
 		
-	
 
 	
 	(* Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is used at the end of the algorithm) *)

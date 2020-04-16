@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2020/01/22
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -24,7 +24,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoEFsynth :
+class virtual algoEFsynth : AbstractProperty.state_predicate ->
 	object inherit algoStateBased
 		(************************************************************)
 		(* Class variables *)
@@ -38,9 +38,6 @@ class virtual algoEFsynth :
 		(* Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is used at the end of the algorithm) *)
 		(*** WARNING: these lines are copied from AlgoDeadlockFree ***)
 		val init_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint
-
-		(* The state predicate to look for in reachability analysis *)
-		val state_predicate : AbstractProperty.state_predicate
 
 		
 		(************************************************************)

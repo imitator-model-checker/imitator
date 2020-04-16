@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: "EF optimized" algorithm: minimization of a parameter valuation for which there exists a run leading to some states. Algorithm with a priority queue. [ABPP19]
  * 
  * File contributors : Vincent Bloemen, Étienne André
  * Created           : 2018/10/08
- * Last modified     : 2020/03/27
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -23,7 +24,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoEFtminQueue :
+class algoEFtminQueue : AbstractProperty.state_predicate ->
 	object inherit algoStateBased
 
 		(************************************************************)

@@ -31,7 +31,6 @@ open Options
 open Statistics
 
 
-
 (**************************************************
 TAGS USED THROUGHOUT THIS PROJECT
 - (*** BADPROG ***)
@@ -449,31 +448,29 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			(************************************************************)
 			(* Reachability *)
 			(************************************************************)
-			| EF _ ->
+			| EF state_predicate ->
 				
-				(*** TODO some day: pass the state predicate as a parameter of the algorithm! ***)
-				
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFunsafeSynth.algoEFunsafeSynth in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFunsafeSynth.algoEFunsafeSynth state_predicate in myalgo
 			
 			
 			(************************************************************)
 			(* Safety *)
 			(************************************************************)
-			| AGnot _ ->
+			| AGnot state_predicate ->
 			
 				(*** NOTE: witness not supported (we need to compute everything to make sure the system is safe) ***)
 				if abstract_property.synthesis_type = Witness then(
 					print_warning "Exhibition of a subset of parameter valuations is not yet supported by this algorithm; either the whole set of valuations will be computed, or an over-approximation of this set.";
 				);
 			
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGsafeSynth.algoAGsafeSynth in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGsafeSynth.algoAGsafeSynth state_predicate in myalgo
 
 
 		(*------------------------------------------------------------*)
 		(* Reachability and specification illustration *)
 		(*------------------------------------------------------------*)
-			| EFexemplify _ ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFexemplify.algoEFexemplify in myalgo
+			| EFexemplify state_predicate ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFexemplify.algoEFexemplify state_predicate in myalgo
 
 
 		(*------------------------------------------------------------*)
@@ -482,8 +479,8 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			(************************************************************)
 			(* Reachability with minimization of a parameter valuation *)
 			(************************************************************)
-			| EFpmin _ ->
-				let efopt_algo = new AlgoEFmin.algoEFmin in
+			| EFpmin (state_predicate , parameter_index) ->
+				let efopt_algo = new AlgoEFmin.algoEFmin state_predicate parameter_index in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				efopt_algo#set_synthesize_valuations (not emptiness_only); (* Synthesis of valuations out of the desired parameter *)
 				let myalgo :> AlgoGeneric.algoGeneric = efopt_algo in
@@ -493,8 +490,8 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			(************************************************************)
 			(* Reachability with maximization of a parameter valuation *)
 			(************************************************************)
-			| EFpmax _ ->
-				let efopt_algo = new AlgoEFmax.algoEFmax in
+			| EFpmax (state_predicate , parameter_index) ->
+				let efopt_algo = new AlgoEFmax.algoEFmax state_predicate parameter_index  in
 				(*** NOTE: very important: must set NOW the parameters ***)
 				efopt_algo#set_synthesize_valuations (not emptiness_only); (* Synthesis of valuations out of the desired parameter *)
 				let myalgo :> AlgoGeneric.algoGeneric = efopt_algo in
@@ -504,8 +501,8 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			(************************************************************)
 			(* Reachability with minimal-time *)
 			(************************************************************)
-			| EFtmin _ ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFtminQueue.algoEFtminQueue in myalgo
+			| EFtmin state_predicate ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFtminQueue.algoEFtminQueue state_predicate in myalgo
 
 		
 		
@@ -541,24 +538,24 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			(************************************************************)
 			
 			(* Inverse method with complete, non-convex result *)
-			| IM _ ->
-					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMcomplete.algoIMcomplete in myalgo
+			| IM pval ->
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMcomplete.algoIMcomplete pval in myalgo
 
 			(* Non-complete, non-deterministic inverse method with convex result *)
-			| ConvexIM _ ->
-					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIM.algoIM in myalgo
+			| ConvexIM pval ->
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIM.algoIM pval in myalgo
 
 			(* Parametric reachability preservation *)
-			| PRP _ ->
-					let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRP.algoPRP in myalgo
+			| PRP (state_predicate, pval) ->
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoPRP.algoPRP pval state_predicate in myalgo
 
 			(* Variant IMK of the Inverse method *)
-			| IMK _ ->
-					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMK.algoIMK in myalgo
+			| IMK pval ->
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMK.algoIMK pval in myalgo
 
 			(* Variant IMunion of the Inverse method *)
-			| IMunion _ ->
-					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMunion.algoIMunion in myalgo
+			| IMunion pval ->
+					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMunion.algoIMunion pval in myalgo
 
 
 			(*** TODO: allow for old version with list of constraints ***)
@@ -570,7 +567,7 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 		(*------------------------------------------------------------*)
 		(* Cartography algorithms *)
 		(*------------------------------------------------------------*)
-	
+(*	
 			(* Cartography *)
 			| Cover_cartography hyper_rectangle ->
 				let bc_algo = new AlgoBCCover.algoBCCover in
@@ -578,7 +575,7 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 				bc_algo#set_algo_instance_function (fun () -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM in myalgo);
 				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
-				myalgo
+				myalgo*)
 	
 	(*
 

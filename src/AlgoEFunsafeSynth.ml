@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/02/03
- * Last modified     : 2020/01/09
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -35,8 +35,8 @@ open AlgoEFsynth
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoEFunsafeSynth =
-	object (self) inherit algoEFsynth as super
+class algoEFunsafeSynth (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoEFsynth state_predicate as super
 	
 	(************************************************************)
 	(* Class variables *)

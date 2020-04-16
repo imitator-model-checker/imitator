@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: PRP algorithm [ALNS15]
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/11
- * Last modified     : 2019/06/13
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -23,7 +24,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoPRP :
+class algoPRP : PVal.pval -> AbstractProperty.state_predicate ->
 	object inherit algoIMK
 		(************************************************************)
 		(* Class variables *)

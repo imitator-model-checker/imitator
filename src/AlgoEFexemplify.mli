@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: EFexemplify algorithm [work in progress]
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/08
- * Last modified     : 2019/07/08
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -23,7 +24,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoEFexemplify :
+class algoEFexemplify : AbstractProperty.state_predicate ->
 	object inherit algoEFsynth
 		(************************************************************)
 		(* Class variables *)

@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: EFexemplify algorithm [work in progress]. Structurally identical to EFsynth (at the beginning), so the code processes with simple add-ons
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/08
- * Last modified     : 2019/09/09
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -39,8 +40,8 @@ open StateSpace
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoEFexemplify =
-	object (self) inherit algoEFsynth as super
+class algoEFexemplify (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoEFsynth state_predicate as super
 	
 	(************************************************************)
 	(* Class variables *)

@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: "EF optimized" algorithm: minimization of a parameter valuation for which there exists a run leading to some states. Algorithm with a priority queue. [ABPP19]
  * 
  * File contributors : Vincent Bloemen, Étienne André
  * Created           : 2018/10/08
- * Last modified     : 2020/03/27
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -43,7 +44,7 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoEFtminQueue =
+class algoEFtminQueue (state_predicate : AbstractProperty.state_predicate) =
 	object (self) inherit algoStateBased as super
 	
 	(************************************************************)
@@ -66,20 +67,7 @@ class algoEFtminQueue =
     (* NB: Don't make epsilon too small, because that causes weird behavior... *)
 	val epsilon = 0.0001
 	
-	(*------------------------------------------------------------*)
-	(* Shortcuts *)
-	(*------------------------------------------------------------*)
-	(* Retrieve the goal state predicate *)
-		(*** TODO: pass as a PARAMETER of the algorithm ***)
-		(*** UGLY!!! ***)
-	val state_predicate : AbstractProperty.state_predicate =
-		match (Input.get_property ()).property with
-		(* Shortcut for both algorithms *)
-		| EFtmin state_predicate -> state_predicate
-		| _ -> raise (InternalError("A state_predicate should be defined in the property to run EFtmin"))
-		
 	
-
 	(*------------------------------------------------------------*)
 	(* Counters *)
 	(*------------------------------------------------------------*)

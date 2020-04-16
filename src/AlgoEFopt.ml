@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: "EF optimized" algorithm: minimization or minimization of a parameter valuation for which there exists a run leading to some states [ABPP19]
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2020/03/26
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -34,7 +35,7 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoEFopt =
+class virtual algoEFopt (state_predicate : AbstractProperty.state_predicate) (parameter_index : Automaton.parameter_index) =
 	object (self) inherit algoStateBased as super
 	
 	(************************************************************)
@@ -69,34 +70,15 @@ class virtual algoEFopt =
 	(* Shortcuts *)
 	(*------------------------------------------------------------*)
 	
-	(* Retrieve the parameter to be projected onto *)
-		(*** TODO: pass as a PARAMETER of the algorithm ***)
-		(*** UGLY!!! ***)
-	val parameter_index = match (Input.get_property ()).property with
-		(* Shortcut for both algorithms *)
-		| EFpmin (_, parameter_index) -> parameter_index
-		| EFpmax (_, parameter_index) -> parameter_index
-		| _ -> raise (InternalError("An optimized parameter should be defined in the property to run EFopt"))
-	
-	(* Retrieve the goal state predicate *)
-		(*** TODO: pass as a PARAMETER of the algorithm ***)
-		(*** UGLY!!! ***)
-	val state_predicate : AbstractProperty.state_predicate =
-		match (Input.get_property ()).property with
-		(* Shortcut for both algorithms *)
-		| EFpmin (state_predicate, _) -> state_predicate
-		| EFpmax (state_predicate, _) -> state_predicate
-		| _ -> raise (InternalError("A state_predicate should be defined in the property to run EFopt"))
-		
 	val parameters_to_hide =
-		(* First retrieve the parameter index (OCaml does not let us use the 'parameter_index' variable *)
+(*		(* First retrieve the parameter index (OCaml does not let us use the 'parameter_index' variable *)
 		let parameter_index =
 		match (Input.get_property ()).property with
 		(* Shortcut for both algorithms *)
 		| EFpmin (_, parameter_index) -> parameter_index
 		| EFpmax (_, parameter_index) -> parameter_index
 		| _ -> raise (InternalError("An optimized parameter should be defined in the property to run EFopt"))
-		in
+		in*)
 			OCamlUtilities.list_remove_first_occurence parameter_index (Input.get_model ()).parameters
 	
 

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/06
- * Last modified     : 2020/01/09
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -35,8 +35,8 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoIM =
-	object (self) inherit algoIMK as super
+class algoIM (pval : PVal.pval) =
+	object (self) inherit algoIMK pval as super
 	
 	(************************************************************)
 	(* Class variables *)

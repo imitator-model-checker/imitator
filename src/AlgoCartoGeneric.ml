@@ -3,6 +3,7 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Generic class for cartography-style algorithms
  * 
@@ -215,7 +216,7 @@ let print_warnings_limit_for = function
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoCartoGeneric =
+class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (unit -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
 	object (self) inherit algoGeneric as super
 	
 	
@@ -223,7 +224,7 @@ class virtual algoCartoGeneric =
 	(* Class variables *)
 	(************************************************************)
 	
-	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
+(*	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
 	(* The function creating a new instance of the algorithm to call (typically IM or PRP). Initially None, to be updated immediatly after the object creation. *)
 	(*** NOTE: this should be a parameter of the class; but cannot due to inheritance from AlgoGeneric ***)
 	val mutable algo_instance_function = None
@@ -231,7 +232,7 @@ class virtual algoCartoGeneric =
 	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
 	(* The type of the tiles manager *)
 	(*** NOTE: must be initialized first (and should be in the future passed as a class paramater) ***)
-	val mutable tiles_manager_type : tiles_storage option = None
+	val mutable tiles_manager_type : tiles_storage option = None*)
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -261,7 +262,8 @@ class virtual algoCartoGeneric =
 	(* The current algorithm instance *)
 	(*** NOTE: this initialiation is useless (and time consuming?), as a new instance will be overwritten when needed ***)
 	val mutable current_algo_instance : AlgoStateBased.algoStateBased =
-		let myalgo :> AlgoStateBased.algoStateBased = new AlgoIMK.algoIMK in myalgo
+		let dummy_pval = new PVal.pval in
+		let myalgo :> AlgoStateBased.algoStateBased = new AlgoIMK.algoIMK dummy_pval in myalgo
 	
 (*	(* List of im_results *)
 	val mutable im_results : abstract_point_based_result list = []*)
@@ -292,23 +294,8 @@ class virtual algoCartoGeneric =
 	(************************************************************)
 	(* Class methods to simulate class parameters *)
 	(************************************************************)
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Get the reference hyperrectangle *)
-	(*** HACK: for now, it is obtained from the property, stored in the Input module ***)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method get_v0 : HyperRectangle.hyper_rectangle =
-		(* Get the property *)
-		let abstract_property = Input.get_property() in
-		(* Get the rectangle *)
-		match abstract_property.property with
-		| Cover_cartography v0
-			-> v0
-(* 		| PRP (_ , pval) -> pval *)
-		| _ -> raise (InternalError("Impossible situation in AlgoCartoGeneric#get_v0(): the hyperrectangle should be stored in the Input module in the form of a property of the form Cover_cartography, or its variants" ))
 
-
-	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
+(*	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
 	(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
 	method set_algo_instance_function (f : unit -> AlgoStateBased.algoStateBased) : unit =
 		match algo_instance_function with
@@ -323,7 +310,7 @@ class virtual algoCartoGeneric =
 		match algo_instance_function with
 		| Some f -> f
 		| None ->
-			raise (InternalError("algo_instance_function not yet set in AlgoCartoGeneric."))
+			raise (InternalError("algo_instance_function not yet set in AlgoCartoGeneric."))*)
 		
 (*	(* Sets the coverage evaluation function *)
 	method set_coverage_evaluation_function : (f : Result.bc_algorithm_termination -> Result.abstract_point_based_result list -> Result.bc_coverage) =
@@ -333,7 +320,7 @@ class virtual algoCartoGeneric =
 		| None ->
 			coverage_evaluation_function <- f*)
 	
-	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
+(*	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
 	(* Set the tiles_manager type *)
 	method set_tiles_manager_type new_tiles_manager_type =
 		tiles_manager_type <- Some new_tiles_manager_type
@@ -343,7 +330,7 @@ class virtual algoCartoGeneric =
 	method private get_tiles_manager_type =
 	match tiles_manager_type with
 		| Some t -> t
-		| None -> raise (InternalError("tiles_manager_type not yet set in AlgoCartoGeneric."))
+		| None -> raise (InternalError("tiles_manager_type not yet set in AlgoCartoGeneric."))*)
 
 	
 	(************************************************************)
@@ -475,8 +462,8 @@ class virtual algoCartoGeneric =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	method one_random_pi0 : PVal.pval =
-	(* Get the v0 *)
-	let v0 = self#get_v0 in
+(*	(* Get the v0 *)
+	let v0 = self#get_v0 in*)
 	
 	(*** WARNING! Does not work with step <> 1 !!!! ***)
 	if options#step <> NumConst.one then
@@ -561,8 +548,8 @@ class virtual algoCartoGeneric =
 		(* Time counter for the algorithm *)
 		start_time <- Unix.gettimeofday();
 
-		(* Retrieve the v0 *)
-		let v0 = self#get_v0 in
+(*		(* Retrieve the v0 *)
+		let v0 = self#get_v0 in*)
 
 		(* 		super#initialize_variables; *)
 
@@ -613,9 +600,8 @@ class virtual algoCartoGeneric =
 		im_results <- [];*)
 
 		(* First create the tiles manager *)
-		(*** NOTE: the get function takes care of the Some/None cases (and may raise an exception if not properly initialized) ***)
 		begin
-		match self#get_tiles_manager_type with
+		match tiles_manager_type with
 			| Tiles_list -> tiles_manager <- new TilesManagerList.tilesManagerList
 			| Tiles_good_bad_constraint -> tiles_manager <- new TilesManagerConstraint.tilesManagerConstraint
 		end;
@@ -725,8 +711,8 @@ class virtual algoCartoGeneric =
 	(* Initializing cartography algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize_cartography =
-		(* Retrieve the v0 *)
-		let v0 = self#get_v0 in
+(*		(* Retrieve the v0 *)
+		let v0 = self#get_v0 in*)
 
 		(* Print some information *)
 		self#print_algo_message Verbose_standard ("Starting running cartography…\n"); (* " ^ self#algorithm_name ^ " *)
@@ -929,7 +915,7 @@ class virtual algoCartoGeneric =
 					
 		(* Call the algorithm to be iterated on (typically IM or PRP) *)
 		(*** NOTE: the bc time limit is NOT checked inside one execution of the algorithm to be iterated (but also note that the max execution time of the algorithm to be iterated is set to that of BC, in the Options pre-processing) ***)
-		current_algo_instance <- self#get_algo_instance_function ();
+		current_algo_instance <- self#algo_instance_function ();
 		let imitator_result : imitator_result = current_algo_instance#run() in
 
 		(** Create auxiliary files with the proper file prefix, if requested *)

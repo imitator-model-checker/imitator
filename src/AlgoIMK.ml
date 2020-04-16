@@ -35,7 +35,7 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoIMK =
+class algoIMK (pval : PVal.pval) =
 	object (self) inherit algoStateBased as super
 	
 	(************************************************************)
@@ -43,8 +43,7 @@ class algoIMK =
 	(************************************************************)
 	
 	val mutable nb_random_selections = 0
-
-	
+		
 	
 	(************************************************************)
 	(* Class methods *)
@@ -73,17 +72,7 @@ class algoIMK =
 	(*** HACK: for now, it is obtained from the property, stored in the Input module ***)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method get_reference_pval : PVal.pval =
-		(* Get the property *)
-		let abstract_property = Input.get_property() in
-		(* Get the valuation *)
-		match abstract_property.property with
-		| IM pval
-		| ConvexIM pval
-		| IMK pval
-		| IMunion pval
-			-> pval
-		| PRP (_ , pval) -> pval
-		| _ -> raise (InternalError("Impossible situation in AlgoIMK#get_reference_pval(): the parameter valuation should be stored in the Input module in the form of a property of the form IM, or its variants" ))
+		pval
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

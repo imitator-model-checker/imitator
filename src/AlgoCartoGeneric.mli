@@ -3,6 +3,7 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Generic class for cartography-style algorithms
  * 
@@ -62,7 +63,7 @@ val print_warnings_limit_for : Result.bc_algorithm_termination -> unit
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoCartoGeneric :
+class virtual algoCartoGeneric : HyperRectangle.hyper_rectangle -> (unit -> AlgoStateBased.algoStateBased) -> tiles_storage ->
 	object inherit algoGeneric
 		(************************************************************)
 		(* Class variables *)
@@ -99,7 +100,7 @@ class virtual algoCartoGeneric :
 		val mutable termination_status : Result.bc_algorithm_termination option
 
 		
-		(************************************************************)
+(*		(************************************************************)
 		(* Class methods to simulate class parameters *)
 		(************************************************************)
 		
@@ -116,7 +117,7 @@ class virtual algoCartoGeneric :
 		method get_algo_instance_function : (unit -> AlgoStateBased.algoStateBased)
 
 		(* Set the tiles_manager type *)
-		method set_tiles_manager_type : tiles_storage -> unit
+		method set_tiles_manager_type : tiles_storage -> unit*)
 		
 		
 		(************************************************************)

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/11
- * Last modified     : 2020/03/27
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -35,8 +35,8 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoPRP =
-	object (self) inherit algoIMK as super
+class algoPRP (pval : PVal.pval) (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoIMK pval as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -50,16 +50,6 @@ class algoPRP =
 	(* Non-necessarily convex constraint ensuring reachability of at least one bad state *)
 	val mutable bad_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
 
-	(* Shortcut *)
-	val state_predicate : AbstractProperty.state_predicate =
-		(*** TODO: pass as a PARAMETER of the algorithm ***)
-		(*** UGLY!!! ***)
-		match (Input.get_property()).property with
-			| PRP (state_predicate , _)
-				-> state_predicate
-			
-			| _ -> raise (InternalError ("Unexpected error when getting the state predicate when initializing PRP"))
-	
 
 	(************************************************************)
 	(* Class methods *)

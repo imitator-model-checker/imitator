@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: IMKunion algorithm [AS11]
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/08
- * Last modified     : 2016/05/04
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -22,7 +23,7 @@ open AlgoIMK
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoIMunion :
+class algoIMunion : PVal.pval ->
 	object inherit algoIMK
 		(************************************************************)
 		(* Class variables *)

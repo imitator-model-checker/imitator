@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2020/01/09
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -23,7 +23,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoIMK :
+class algoIMK : PVal.pval ->
 	object inherit algoStateBased
 		(************************************************************)
 		(* Class variables *)
