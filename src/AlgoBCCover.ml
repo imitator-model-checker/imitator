@@ -106,7 +106,7 @@ class algoBCCover (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function 
 		let tiles_manager = self#get_tiles_manager in
 		
 		(* Ask the tiles manager to process the result itself, by passing the appropriate arguments *)
-		tiles_manager#process_result start_time nb_points nb_unsuccessful_points termination_status None
+		tiles_manager#process_result start_time v0 nb_points nb_unsuccessful_points termination_status None
 
 
 (************************************************************)

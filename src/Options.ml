@@ -10,7 +10,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/04/03
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -953,46 +953,7 @@ class imitator_options =
 			(*** TODO : print the property, if any ***)
 			
 			
-			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-			(* Force options *) 
-			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-			
-			(*** TODO : reintroduce ***)
-			
-(*			(* If a time limit is defined for BC but NOT for IM, then define it for IM too (otherwise may yield an infinite loop in IM…) *)
-			if is_mode_cartography imitator_mode && carto_time_limit <> None && !time_limit = None then(
-				print_warning ("A time limit is defined for BC but not for IM: forcing time limit for IM too.");
-				let limit = match carto_time_limit with
-					| None -> raise (InternalError ("Impossible situation in options, carto_time_limit is set at that point"))
-					| Some limit -> limit
-				in
-				time_limit := Some limit;
-			);
-			
-			
-			(* Handling BC tiles files output *)
-			if is_mode_cartography imitator_mode then(
-				(* Case cartograpy output requested *)
-				if cart then(
-					(* Enable cartography for BC *)
-					output_bc_cart <- true;
-					(* Disable cartography for instances unless requested *)
-					if not !output_tiles_files then cart <- false
-				);
-			
-				(* Case result output requested *)
-				if !output_result then(
-					(* Enable result for BC *)
-					output_bc_result <- true;
-					(* Disable cartography for instances unless requested *)
-					if not !output_tiles_files then output_result := false
-				);
-			
-			);*)
-			
-			
-			
-			(*** TODO: warning if output_tiles_files but no cartography ***)
+
 			
 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -1432,4 +1393,50 @@ end;
 
 
 		;
+		
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Force some options when the mode is cartography *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method set_options_for_cartography is_cartography =
+			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			(* Force options *) 
+			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			
+			(* If a time limit is defined for BC but NOT for IM, then define it for IM too (otherwise may yield an infinite loop in IM…) *)
+			if is_cartography && carto_time_limit <> None && !time_limit = None then(
+				print_warning ("A time limit is defined for BC but not for IM: forcing time limit for IM too.");
+				let limit = match carto_time_limit with
+					| None -> raise (InternalError ("Impossible situation in options, carto_time_limit is set at that point"))
+					| Some limit -> limit
+				in
+				time_limit := Some limit;
+			);
+			
+			
+			(* Handling BC tiles files output *)
+			if is_cartography then(
+				(* Case cartograpy output requested *)
+				if cart then(
+					(* Enable cartography for BC *)
+					output_bc_cart <- true;
+					(* Disable cartography for instances unless requested *)
+					if not output_tiles_files then cart <- false
+				);
+			
+				(* Case result output requested *)
+				if output_result then(
+					(* Enable result for BC *)
+					output_bc_result <- true;
+					(* Disable cartography for instances unless requested *)
+					if not output_tiles_files then output_result <- false
+				);
+			
+			);
+			
+			
+			()
+			(*** TODO: warning if output_tiles_files but no cartography ***)
+		
+		
 	end

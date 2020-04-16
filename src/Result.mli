@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: description of the result output by IMITATOR
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2020/01/06
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -244,6 +245,9 @@ type abstract_point_based_result = {
 
 (** Result for the original behavioral cartography and its variants: a list of tiles *)
 type cartography_result = {
+	(* Parameter domain *)
+	parameter_domain	: HyperRectangle.hyper_rectangle;
+	
 	(* Number of points in V0 *)
 	(*** NOTE: not technically part of the result, but useful to have it here *)
 	size_v0				: NumConst.t;
@@ -272,6 +276,9 @@ type cartography_result = {
 
 (** Result for the cartography-based algorithms for which mainly the resulting constraint (and not the list of tiles) is important: PRPC *)
 type multiple_synthesis_result = {
+	(* Parameter domain *)
+	parameter_domain	: HyperRectangle.hyper_rectangle;
+	
 	(* Number of points in V0 *)
 	(*** NOTE: not technically part of the result, but useful to have it here *)
 	size_v0				: NumConst.t;

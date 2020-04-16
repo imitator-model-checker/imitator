@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Abstract tiles manager class to manage the tiles received in the cartography algorithms.
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/15
- * Last modified     : 2019/08/08
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -191,7 +192,7 @@ class virtual tilesManager =
 	(* Process the result of the cartography *)
 	(* If forced_coverage_option <> None, then the coverage is set to this argument; otherwise, it is computed as exepected (*** NOTE: used in Random to force the coverage to Unknown ***) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method virtual process_result : float -> NumConst.t -> int -> Result.bc_algorithm_termination -> Result.bc_coverage option -> Result.imitator_result
+	method virtual process_result : float -> HyperRectangle.hyper_rectangle -> NumConst.t -> int -> Result.bc_algorithm_termination -> Result.bc_coverage option -> Result.imitator_result
 
 
 (************************************************************)

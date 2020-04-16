@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2020/01/09
+ * Last modified: 2020/04/16
  *
  ************************************************************)
  
@@ -111,5 +111,11 @@ class imitator_options :
 		
 		(* Recall options *)
 		method recall : unit -> unit
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Force some options when the mode is cartography *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method set_options_for_cartography : bool -> unit
+
 		
 end

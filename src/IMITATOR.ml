@@ -181,6 +181,24 @@ parsing_counter#stop;
 
 
 (************************************************************)
+(* Set some options *)
+(************************************************************)
+
+(* Set some options depending on the IMITATOR mode *)
+(*** A bit a HACK ***)
+let is_cartography = match property_option with
+	| None -> false
+	| Some property -> (
+		match property.property with
+		| Cover_cartography _ -> true
+		| _ -> false
+	)
+in
+options#set_options_for_cartography is_cartography;
+
+
+
+(************************************************************)
 (* Debug print: model *)
 (************************************************************)
 if verbose_mode_greater Verbose_total then(
@@ -198,8 +216,8 @@ if AbstractAlgorithm.property_needed options#imitator_mode then(
 	print_message Verbose_low ("\nThe property is the following one:\n" ^ (ModelPrinter.string_of_abstract_property model property) ^ "\n");
 );
 
-(* Statistics *)
-counter_main_algorithm#start;
+
+
 
 
 (************************************************************)
@@ -207,6 +225,10 @@ counter_main_algorithm#start;
 (* Start branching depending on the algorithm *)
 (************************************************************)
 (************************************************************)
+
+(* Statistics *)
+counter_main_algorithm#start;
+
 
 begin
 match options#imitator_mode with

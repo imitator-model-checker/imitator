@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2020/01/08
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -698,13 +698,7 @@ let export_to_file_cartography_result file_name (cartography_result : Result.car
 	(* Prepare the string to write *)
 	let file_content =
 	
-	
-	
-		(*** TODO: ***)
-		raise (NotImplemented ("get_vo in result processor"))
-		
-		(*
-		let v0 = Input.get_v0 () in
+		let v0 = cartography_result.parameter_domain in
 
 		(* 1) The file header *)
 		file_header ()
@@ -735,7 +729,7 @@ let export_to_file_cartography_result file_name (cartography_result : Result.car
 		^ "\n" ^ (Statistics.string_of_all_counters())
 		^ "\n------------------------------------------------------------"
 		^ "\n"
-		*)
+
 	in
 	(* Write to file *)
 	write_to_file file_name file_content;
