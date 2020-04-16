@@ -6518,8 +6518,8 @@ Average number of transitions : 7.0
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode cover (grid2)',
-		'input_files': ['testBC-grid2-plain.imi', 'testBC-grid5x5.v0'],
-		'options'    : '-mode cover -output-result',
+		'input_files': ['testBC-grid2-plain.imi', 'testBC-grid5x5-cover.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'testBC-grid2-plain.res' , 'content' : """
@@ -6763,8 +6763,8 @@ Average number of transitions : 4.0
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode cover + depth-limit (grid)',
-		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4.v0'],
-		'options'    : '-mode cover -depth-limit 5 -output-result',
+		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4-cover.imiprop'],
+		'options'    : '-depth-limit 5 -output-result',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			#{'file': 'testBC-grid-plain.res' , 'content' : """
@@ -6918,8 +6918,8 @@ Number of unsuccessful points           : 16
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode cover with depth limit (JLR15)',
-		'input_files': ['JLR-TACAS13.imi', 'JLR-TACAS13.v0'],
-		'options'    : '-mode cover -depth-limit 10 -output-result',
+		'input_files': ['JLR-TACAS13.imi', 'JLR-TACAS13-cover.imiprop'],
+		'options'    : '-depth-limit 10 -output-result',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'JLR-TACAS13.res' , 'content' : """

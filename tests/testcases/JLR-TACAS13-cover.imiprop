@@ -1,0 +1,20 @@
+--************************************************************--
+--************************************************************--
+--
+--   Example fro Figure 1 in "Integer Parameter Synthesis for Timed Automata"
+--         by Jovanovic, Lime, Roux (TACAS, 2013)
+
+--
+--   Etienne ANDRE
+--   Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+--
+--                                Created : 2014/06/06
+--                          Last modified : 2020/04/16
+--                       IMITATOR version : 3
+--************************************************************--
+--************************************************************--
+
+property := #synth BCcover(
+	a = 0..10
+	b = 0..10
+);
