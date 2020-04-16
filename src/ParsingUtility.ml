@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2020/01/09
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -89,6 +89,11 @@ let parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name =
 		| UnexpectedToken c ->
 			print_message Verbose_total ("Parsing error detected 'UnexpectedToken'. Processing…");
 			print_error ("Parsing error in file " ^ file_name ^ ": unexpected token '" ^ (Char.escaped c) ^ "'."); abort_program (); exit(1)
+
+		(*** HACK: added because of some mysterious exception raised during parsing (2020/04/16) ***)
+		| Invalid_argument "index out of bounds" ->
+			print_message Verbose_total ("Parsing error detected 'index out of bounds'. Processing…");
+			print_error ("Mysterious parsing error in file " ^ file_name ^ ", maybe at the very beginning."); abort_program (); exit(1)
 		
 		| Failure f ->
 			print_message Verbose_total ("Parsing error detected 'Failure'. Processing…");
