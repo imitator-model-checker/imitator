@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/04/10
+# Last modified     : 2020/04/16
 #************************************************************
 
 
@@ -7184,7 +7184,7 @@ Average number of transitions           : 6.0
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode cover + graphical output (flip-flop)',
-		'input_files': ['flipflop.imi', 'flipflop.v0'],
+		'input_files': ['flipflop.imi', 'flipflop-cover.imiprop'],
 		'options'    : '-mode cover -output-result -output-cart -output-graphics-source',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
