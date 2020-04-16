@@ -63,7 +63,7 @@ val print_warnings_limit_for : Result.bc_algorithm_termination -> unit
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoCartoGeneric : HyperRectangle.hyper_rectangle -> (unit -> AlgoStateBased.algoStateBased) -> tiles_storage ->
+class virtual algoCartoGeneric : HyperRectangle.hyper_rectangle -> (PVal.pval -> AlgoStateBased.algoStateBased) -> tiles_storage ->
 	object inherit algoGeneric
 		(************************************************************)
 		(* Class variables *)
@@ -99,25 +99,6 @@ class virtual algoCartoGeneric : HyperRectangle.hyper_rectangle -> (unit -> Algo
 		(* Status of the analysis *)
 		val mutable termination_status : Result.bc_algorithm_termination option
 
-		
-(*		(************************************************************)
-		(* Class methods to simulate class parameters *)
-		(************************************************************)
-		
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Get the reference hyperrectangle *)
-		(*** HACK: for now, it is obtained from the property, stored in the Input module ***)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method get_v0 : HyperRectangle.hyper_rectangle
-		
-		(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-		method set_algo_instance_function : (unit -> AlgoStateBased.algoStateBased) -> unit
-
-		(* Get the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-		method get_algo_instance_function : (unit -> AlgoStateBased.algoStateBased)
-
-		(* Set the tiles_manager type *)
-		method set_tiles_manager_type : tiles_storage -> unit*)
 		
 		
 		(************************************************************)
@@ -253,7 +234,7 @@ class virtual algoCartoGeneric : HyperRectangle.hyper_rectangle -> (unit -> Algo
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Call the algorithm on the current point (typically call IM or PRP) *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method call_point : Result.imitator_result
+		method call_point : PVal.pval -> Result.imitator_result
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Update termination condition, depending on the limit reached *)

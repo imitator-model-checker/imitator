@@ -567,15 +567,15 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 		(*------------------------------------------------------------*)
 		(* Cartography algorithms *)
 		(*------------------------------------------------------------*)
-(*	
+	
 			(* Cartography *)
 			| Cover_cartography hyper_rectangle ->
-				let bc_algo = new AlgoBCCover.algoBCCover in
-				(*** NOTE: very important: must set NOW the parameters ***)
-				bc_algo#set_algo_instance_function (fun () -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM in myalgo);
-				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
+				let bc_algo = new AlgoBCCover.algoBCCover hyper_rectangle (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
+(*				(*** NOTE: very important: must set NOW the parameters ***)
+				bc_algo#set_algo_instance_function ;
+				bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;*)
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
-				myalgo*)
+				myalgo
 	
 	(*
 

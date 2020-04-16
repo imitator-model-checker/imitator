@@ -216,23 +216,13 @@ let print_warnings_limit_for = function
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (unit -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
+class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
 	object (self) inherit algoGeneric as super
 	
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	
-(*	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
-	(* The function creating a new instance of the algorithm to call (typically IM or PRP). Initially None, to be updated immediatly after the object creation. *)
-	(*** NOTE: this should be a parameter of the class; but cannot due to inheritance from AlgoGeneric ***)
-	val mutable algo_instance_function = None
-	
-	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
-	(* The type of the tiles manager *)
-	(*** NOTE: must be initialized first (and should be in the future passed as a class paramater) ***)
-	val mutable tiles_manager_type : tiles_storage option = None*)
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -290,48 +280,6 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (algo_insta
 	val mutable termination_status = None
 	
 	
-	
-	(************************************************************)
-	(* Class methods to simulate class parameters *)
-	(************************************************************)
-
-(*	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
-	(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-	method set_algo_instance_function (f : unit -> AlgoStateBased.algoStateBased) : unit =
-		match algo_instance_function with
-		| Some _ -> 
-			raise (InternalError("algo_instance_function was already set in AlgoCartoGeneric."))
-		| None ->
-			algo_instance_function <- Some f
-	
-	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
-	(* Get the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-	method get_algo_instance_function =
-		match algo_instance_function with
-		| Some f -> f
-		| None ->
-			raise (InternalError("algo_instance_function not yet set in AlgoCartoGeneric."))*)
-		
-(*	(* Sets the coverage evaluation function *)
-	method set_coverage_evaluation_function : (f : Result.bc_algorithm_termination -> Result.abstract_point_based_result list -> Result.bc_coverage) =
-		match coverage_evaluation_function with
-		| Some _ -> 
-			raise (InternalError("coverage_evaluation_function was already set in AlgoCartoGeneric."))
-		| None ->
-			coverage_evaluation_function <- f*)
-	
-(*	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
-	(* Set the tiles_manager type *)
-	method set_tiles_manager_type new_tiles_manager_type =
-		tiles_manager_type <- Some new_tiles_manager_type
-
-	(*** BADPROG: code shared with AlgoBCCoverDistributed ***)
-	(* Get the tiles_manager type *)
-	method private get_tiles_manager_type =
-	match tiles_manager_type with
-		| Some t -> t
-		| None -> raise (InternalError("tiles_manager_type not yet set in AlgoCartoGeneric."))*)
-
 	
 	(************************************************************)
 	(* Class methods: methods used in subclasses as building blocks *)
@@ -904,7 +852,7 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (algo_insta
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Call the algorithm on the current point (typically call IM or PRP) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method call_point =
+	method call_point pval =
 		(* Save the verbose mode as it may be modified *)
 		let global_verbose_mode = get_verbose_mode() in
 
@@ -915,7 +863,7 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (algo_insta
 					
 		(* Call the algorithm to be iterated on (typically IM or PRP) *)
 		(*** NOTE: the bc time limit is NOT checked inside one execution of the algorithm to be iterated (but also note that the max execution time of the algorithm to be iterated is set to that of BC, in the Options pre-processing) ***)
-		current_algo_instance <- self#algo_instance_function ();
+		current_algo_instance <- algo_instance_function pval;
 		let imitator_result : imitator_result = current_algo_instance#run() in
 
 		(** Create auxiliary files with the proper file prefix, if requested *)
@@ -989,16 +937,8 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (algo_insta
 			(* Print some information *)
 			self#print_algo_message Verbose_low ("Setting new pi0…");
 
-			(* Set the new pi0 *)
-			
-			
-			(*** TODO ! ***)
-
-			
-(* 			Input.set_pi0 (pi0); *)
-			
 			(* Actual call to IM/PRP (or whatever) *)
-			let imitator_result = self#call_point in
+			let imitator_result = self#call_point pi0 in
 			
 			(* Create the abstraction of the result *)
 			let abstract_result = self#abstract_result imitator_result pi0 in

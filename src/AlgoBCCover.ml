@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/08/15
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -32,8 +33,8 @@ open AlgoCartoGeneric
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCCover =
-	object (self) inherit algoCartoGeneric as super
+class algoBCCover (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
+	object (self) inherit algoCartoGeneric v0 algo_instance_function tiles_manager_type as super
 	
 	(************************************************************)
 	(* Class variables *)

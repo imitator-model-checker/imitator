@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/04/10
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -2479,6 +2479,15 @@ let get_variables_in_parsed_pval (parsed_pval : ParsingStructure.parsed_pval) : 
 	let left, _ = List.split parsed_pval in
 	left
 
+(*------------------------------------------------------------*)
+(* Gather the set of all variable names used in a parsed reference valuation *)
+(*------------------------------------------------------------*)
+let get_variables_in_parsed_hyper_rectangle (parsed_hyper_rectangle : ParsingStructure.parsed_pdomain) : variable_name list =
+	(* Return the left part of all triples *)
+	List.map (fun (parameter_name, _, _) -> parameter_name) parsed_hyper_rectangle
+
+
+
 
 (*------------------------------------------------------------*)
 (* Gather the set of all variable names used in the parsed property *)
@@ -2574,6 +2583,14 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 			variables_used_ref := StringSet.union !variables_used_ref (StringSet.of_list (get_variables_in_parsed_pval parsed_pval))
 		
 		
+		(*------------------------------------------------------------*)
+		(* Cartography algorithms *)
+		(*------------------------------------------------------------*)
+		
+		(* Cartography *)
+		| Parsed_Cover_cartography parsed_hyper_rectangle
+			->
+			variables_used_ref := StringSet.of_list (get_variables_in_parsed_hyper_rectangle parsed_hyper_rectangle);
 		
 		
 (*		(*** TODO ***)
@@ -3115,13 +3132,12 @@ let check_projection_definition useful_parsing_model_information = function
 (*------------------------------------------------------------*)
 let check_parsed_pval useful_parsing_model_information (parsed_pval : ParsingStructure.parsed_pval) =
 	(* Compute the list of variable names *)
-	(**** TO OPTIMIZE: not tail recursvie ****)
 	let list_of_variables, _ = List.split parsed_pval in
 
 	(* Compute the multiply defined variables *)
 	let multiply_defined_variables = elements_existing_several_times list_of_variables in
 	(* Print an error for each of them *)
-	List.iter (fun variable_name -> print_error ("The parameter '" ^ variable_name ^ "' was assigned several times a valuation in parsed_pval.")) multiply_defined_variables;
+	List.iter (fun variable_name -> print_error ("The parameter '" ^ variable_name ^ "' was assigned several times a valuation in the reference valuation.")) multiply_defined_variables;
 
 	(*** TODO: only warns if it is always defined to the same value ***)
 
@@ -3130,7 +3146,7 @@ let check_parsed_pval useful_parsing_model_information (parsed_pval : ParsingStr
 				(fun all_defined variable_name ->
 					if List.mem variable_name list_of_variables then all_defined
 					else (
-					print_error ("The parameter '" ^ variable_name ^ "' was not assigned a valuation in parsed_pval.");
+					print_error ("The parameter '" ^ variable_name ^ "' was not assigned a valuation in the reference valuation.");
 					false
 					)
 				)
@@ -3142,15 +3158,68 @@ let check_parsed_pval useful_parsing_model_information (parsed_pval : ParsingStr
 	List.iter
 		(fun variable_name ->
 		if not (List.mem variable_name useful_parsing_model_information.parameter_names) then (
-			print_warning ("'" ^ variable_name ^ "', which is assigned a valuation in parsed_pval, is not a valid parameter name.")
+			print_warning ("'" ^ variable_name ^ "', which is assigned a valuation in the reference valuation, is not a valid parameter name.")
 		)
 		)
 		list_of_variables
 	;
 	
-	(* If something went wrong: launch an error *)
+	(* If something went wrong: raise an error *)
 	multiply_defined_variables = [] && all_defined
 
+
+(*------------------------------------------------------------*)
+(* Check the parsed_pval w.r.t. the model parameters *)
+(*------------------------------------------------------------*)
+let check_parsed_hyper_rectangle useful_parsing_model_information (parsed_hyper_rectangle : ParsingStructure.parsed_pdomain) =
+	(* Compute the list of variable names *)
+	let list_of_variables = List.map (fun (parameter_name, _, _) -> parameter_name) parsed_hyper_rectangle in
+
+	(* Compute the multiply defined variables *)
+	let multiply_defined_variables = elements_existing_several_times list_of_variables in
+	(* Print an error for each of them *)
+	List.iter (fun variable_name -> print_error ("The parameter '" ^ variable_name ^ "' was assigned several times a valuation in the reference parameter domain.")) multiply_defined_variables;
+
+	(*** TODO: only warns if it is always defined to the same value ***)
+
+		(* Check if the variables are all defined *)
+		let all_defined = List.fold_left
+				(fun all_defined variable_name ->
+					if List.mem variable_name list_of_variables then all_defined
+					else (
+					print_error ("The parameter '" ^ variable_name ^ "' was not assigned a valuation in the reference parameter domain.");
+					false
+					)
+				)
+				true
+				useful_parsing_model_information.parameter_names
+		in
+
+	(* Check that the intervals are not null *)
+	let all_intervals_ok = List.fold_left
+		(fun all_intervals_ok (variable_name, a, b) ->
+			if NumConst.le a b then all_intervals_ok
+			else (
+			print_error ("The interval [" ^ (NumConst.string_of_numconst a) ^ ", " ^ (NumConst.string_of_numconst b) ^ "] is empty for parameter '" ^ variable_name ^ "' in the reference parameter domain.");
+			false
+			)
+		)
+		true
+		parsed_hyper_rectangle
+	in
+
+	(* Check if some defined variables are not parameters (and warn) *)
+	List.iter
+		(fun variable_name ->
+		if not (List.mem variable_name useful_parsing_model_information.parameter_names) then (
+			print_warning ("'" ^ variable_name ^ "', which is assigned a valuation in the reference parameter domain, is not a valid parameter name.")
+		)
+		)
+		list_of_variables
+	;
+	
+	(* If something went wrong: raise an error *)
+	multiply_defined_variables = [] && all_defined && all_intervals_ok
 
 
 (*------------------------------------------------------------*)
@@ -3284,6 +3353,14 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 				(check_parsed_pval useful_parsing_model_information parsed_pval)
 		
 		
+		(*------------------------------------------------------------*)
+		(* Cartography algorithms *)
+		(*------------------------------------------------------------*)
+		
+		(* Cartography *)
+		| Parsed_Cover_cartography parsed_hyper_rectangle ->
+			check_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle
+		
 		
 		
 (*		(*** TODO ***)
@@ -3402,6 +3479,28 @@ let convert_parsed_pval useful_parsing_model_information (parsed_pval : ParsingS
 	done;
 	(* Return the parameter valuation *)
 	pval
+
+
+(*------------------------------------------------------------*)
+(* Convert the parsed hyper_rectangle into a valid hyper_rectangle *)
+(*------------------------------------------------------------*)
+let convert_parsed_hyper_rectangle useful_parsing_model_information (parsed_hyper_rectangle : ParsingStructure.parsed_pdomain) : HyperRectangle.hyper_rectangle =
+	
+	let hyper_rectangle = new HyperRectangle.hyper_rectangle in
+	
+	List.iter (fun (variable_name, a, b) ->
+		try
+			(* Get the variable index *)
+			let variable_index = Hashtbl.find useful_parsing_model_information.index_of_variables variable_name in
+			(* Update the variable value *)
+			hyper_rectangle#set_min variable_index a;
+			hyper_rectangle#set_max variable_index b;
+		with Not_found ->
+			(* No problem: this must be an invalid parameter name (which is ignored) *)
+			()
+			(* 			raise (InternalError ("The variable name '" ^ variable_name ^ "' was not found in the list of variables although checks should have been performed before.")) *)
+		) parsed_hyper_rectangle;
+	hyper_rectangle
 
 
 let convert_synthesis_type = function
@@ -3693,6 +3792,18 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 			None
 
 			
+		(*------------------------------------------------------------*)
+		(* Cartography algorithms *)
+		(*------------------------------------------------------------*)
+		
+		(* Cartography *)
+		| Parsed_Cover_cartography parsed_hyper_rectangle ->
+			Cover_cartography (convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle)
+			,
+			None
+		
+
+
 		(*** TODO ***)
 (*		| Parsed_Action_deadline _
 		| _
