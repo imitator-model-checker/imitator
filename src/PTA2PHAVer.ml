@@ -36,6 +36,7 @@ let string_of_header model =
 	^ "\n" ^ "// Generated: " ^ (now()) ^ ""
 	^ "\n" ^ "// --------------------------------------------------------"
     ^ "\n" ^ "//Note on parameters:" ^""
+    ^ "\n" ^ "// --------------------------------------------------------"  
     ^ "\n" ^ "// --------------------------------------------------------"
 
 
@@ -69,16 +70,17 @@ let string_of_declarations model =
 	let string_of_variables list_of_variables =
 		string_of_list_of_string_with_sep "," (List.map model.variable_names list_of_variables) in
 
-		"contr_var:"
+		"contr_var: "
 	^
 	(if model.nb_clocks > 0 then
-		( (string_of_variables model.clocks_without_special_reset_clock) ) else "")
+		( (string_of_variables model.clocks_without_special_reset_clock)  ^",") else "")
 	^
 	(if model.nb_discrete > 0 then
-		((string_of_variables model.discrete) ) else ";")
-	(*^
+		(" " ^(string_of_variables model.discrete) ) else "")
+	^
 	(if model.nb_parameters > 0 then
-		("\nparameter: " ^ (string_of_variables model.parameters) ) else ";")*)
+		("" ^(string_of_variables model.parameters) ) else "")
+    ^" ;" 
 
 (************************************************************)
 (** Guard *)
@@ -125,10 +127,9 @@ let string_of_synclabs model automaton_index =
 (* Convert the invariant of a location into a string *)
 let string_of_invariant model automaton_index location_index =
 	(* Invariant *)
-	"invariant "
-	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index))
-
-
+	"while true"
+	(*^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index))*)
+    ^ " wait { true }" 
 	(* Handle stopwatches *)
 	^
 	let stopped = model.stopwatches automaton_index location_index in
@@ -251,7 +252,7 @@ let string_of_logical_operators lop =
 		| BOOL_G -> ">"
 	in
 	match lop with
-	| True_bool -> "True"
+	| True_bool -> "true"
 	| False_bool -> "False"
 	| Not_bool _ -> "<>"
 	| And_bool _ -> " & "
@@ -263,7 +264,7 @@ let string_of_logical_operators lop =
 let rec string_of_boolean_template variable_names boolean_expr str_lop=
 	let symbol = str_lop boolean_expr in
 	match boolean_expr with
-		| True_bool -> "True"
+		| True_bool -> "true"
 		| False_bool -> "False"
 		| Not_bool b -> symbol ^ "(" ^ (string_of_boolean_template variable_names b str_lop) ^ ")"
 		| And_bool (b1, b2) -> (string_of_boolean_template variable_names b1 str_lop)
@@ -332,7 +333,8 @@ let string_of_transition model automaton_index transition =
 	"\n\t" ^ "when "
 	(* Convert the guard *)
 	^ (string_of_guard model.variable_names transition.guard)
-
+	(* Convert the sync *)
+	^ (string_of_sync model transition.action)
 	(* Convert the updates *)
 	^ " do {"
 	(* Clock updates *)
@@ -346,9 +348,6 @@ let string_of_transition model automaton_index transition =
 	(* Conditional updates *)
 	^ (string_of_conditional_updates model conditional_updates)
 	^ "} "
-
-	(* Convert the sync *)
-	^ (string_of_sync model transition.action)
 	(* Convert the destination location *)
 	^ " goto " ^ (model.location_names automaton_index transition.target)
 	^ ";"
@@ -386,6 +385,11 @@ let string_of_location model automaton_index location_index =
 	^ (string_of_invariant model automaton_index location_index) (* bug here! *)
 	^ (string_of_transitions model automaton_index location_index)
 
+let explode s =
+  let rec exp i l =
+    if i < 0 then l else exp (i - 1) (s.[i] :: l) in
+  exp (String.length s - 1) []
+
 
 (* Convert the locations of an automaton into a string *)
 let string_of_locations model automaton_index =
@@ -395,37 +399,32 @@ let string_of_locations model automaton_index =
 	) (model.locations_per_automaton automaton_index))
 
 
-(* Convert an automaton into a string *)
-let string_of_automaton model automaton_index =
-	  "\n// ----------------------------------------------------------"
-    ^ "\n// System Description"
-    ^ "\n// ----------------------------------------------------------"
-	^ "\nautomaton " ^ (model.automata_names automaton_index)
-    ^ "\n" ^ (string_of_declarations model)
-	^ "\n" ^ (string_of_synclabs model automaton_index)
-	^ "\n" ^ (string_of_locations model automaton_index)
-	^ "\nend //(* " ^ (model.automata_names automaton_index) ^ " *)"
-	^ "\n// ----------------------------------------------------------"
+
+(**********************************************)
+(* added fonctions *)
+
+let explode s =
+  let rec exp i l =
+    if i < 0 then l else exp (i - 1) (s.[i] :: l) in
+  exp (String.length s - 1) [] ;;
+
+let rec string_lst_change_egale = function
+  | [] -> let a =' ' in a::[]
+  | (h::t) when h = '<' || h = '>' || h = '\n'-> ' '::(string_lst_change_egale t) 
+  | (h::t) ->  h::(string_lst_change_egale t);;
 
 
-(* Convert the automata into a string *)
-let string_of_automata model =
-	(*** WARNING: Do not print the observer ***)
-	let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
-	in
 
-	(* Print all (other) PTA *)
-	string_of_list_of_string_with_sep "\n\n" (
-		List.map (fun automaton_index -> string_of_automaton model automaton_index
-	) pta_without_obs)
-
-
+let string_of_chars chars = 
+  let buf = Buffer.create 16 in
+  List.iter (Buffer.add_char buf) chars;
+  Buffer.contents buf ;;
 
 
 (************************************************************)
 (** Initial state *)
 (************************************************************)
-let string_of_initial_state ()=
+let rec  string_of_initial_state () =
 	(* Retrieve the model *)
 	let model = Input.get_model () in
 
@@ -435,7 +434,7 @@ let string_of_initial_state ()=
 	^ "\n" ^ "//  Initial state "
 	^ "\n" ^ "// ----------------------------------------------------------"
 	^ "\n" ^ ""
-	^ "\n" ^ "init := True"
+	^ "\n" ^ ""
 
 	(* Initial location *)
 	^ "\n" ^ "// ------------------------------------------------------------"
@@ -453,7 +452,7 @@ let string_of_initial_state ()=
 		(* Finding the initial location for this automaton *)
 		let initial_location = Location.get_location inital_global_location automaton_index in
 		(* '& loc[pta] = location' *)
-		"\n& loc[" ^ (model.automata_names automaton_index) ^ "] = " ^ (model.location_names automaton_index initial_location)
+		"" 
 	) pta_without_obs
 	in string_of_list_of_string initial_automata
 
@@ -477,11 +476,38 @@ let string_of_initial_state ()=
 	^ "\n" ^ "// ------------------------------------------------------------"
 	^ "\n" ^ "//  Initial constraint "
 	^ "\n" ^ "// ------------------------------------------------------------"
-	^ "\n  " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint)
-
+	^ "\n  " ^ string_of_chars (string_lst_change_egale (explode (LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint)))
+    ^ " & true"
 	(* Footer of initial state *)
-	^ "\n" ^ ""
-	^ "\n" ^ ";"
+	^ "" ^ ";";;
+
+
+(* Convert an automaton into a string *)
+let string_of_automaton model automaton_index =
+	  "\n// ----------------------------------------------------------"
+    ^ "\n// System Description"
+    ^ "\n// ----------------------------------------------------------"
+	^ "\nautomaton " ^ (model.automata_names automaton_index)
+    ^ "\n" ^ (string_of_declarations model)
+	^ "\n" ^ (string_of_synclabs model automaton_index)
+	^ "\n" ^ (string_of_locations model automaton_index)
+    ^ "\n" ^ "\ninitially : " ^ (string_of_initial_state () )
+	^ "\n\nend // " ^ (model.automata_names automaton_index) ^ " "
+	^ "\n// ----------------------------------------------------------"
+
+
+(* Convert the automata into a string *)
+let string_of_automata model =
+	(*** WARNING: Do not print the observer ***)
+	let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
+	in
+
+	(* Print all (other) PTA *)
+	string_of_list_of_string_with_sep "\n\n" (
+		List.map (fun automaton_index -> string_of_automaton model automaton_index
+	) pta_without_obs)
+
+
 
 
 
@@ -525,6 +551,7 @@ let string_of_unreachable_location model unreachable_global_location =
 			-> (model.variable_names discrete_index) ^ " in [" ^ (NumConst.string_of_numconst min_discrete_value) ^ " , " ^ (NumConst.string_of_numconst max_discrete_value) ^ "]"
 		) unreachable_global_location.discrete_constraints
 	)
+    ^ ";"
 
 
 (** Convert the correctness property to a string *)
@@ -618,7 +645,7 @@ let string_of_model model =
 	(* The variable declarations *)
 	(*^  "\n" ^ string_of_declarations model/*)
 	(* The initial state *)
-	^ "\n" ^ string_of_initial_state ()
+	(*^ "\n" ^ string_of_initial_state ()*)
 	(* All automata *)
 	^  "\n" ^ string_of_automata model
 	(* The property *)
