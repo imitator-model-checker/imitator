@@ -90,7 +90,7 @@ let string_of_declarations model =
 
 (** Convert a guard into a string *)
 let string_of_guard variable_names = function
-	| True_guard -> LinearConstraint.string_of_true
+	| True_guard -> "true"
 	| False_guard -> LinearConstraint.string_of_false
 	| Discrete_guard discrete_guard -> LinearConstraint.string_of_d_linear_constraint variable_names discrete_guard
 	| Continuous_guard continuous_guard -> LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard
@@ -492,7 +492,7 @@ let string_of_automaton model automaton_index =
 	^ "\n" ^ (string_of_synclabs model automaton_index)
 	^ "\n" ^ (string_of_locations model automaton_index)
     ^ "\n" ^ "\ninitially : " ^ (string_of_initial_state () )
-	^ "\n\nend // " ^ (model.automata_names automaton_index) ^ " "
+	^ "\nend // " ^ (model.automata_names automaton_index) ^ " "
 	^ "\n// ----------------------------------------------------------"
 
 
@@ -525,11 +525,11 @@ let property_header =
 
 let string_of_unreachable_location model unreachable_global_location =
 	(* Convert locations *)
-	string_of_list_of_string_with_sep " & " (List.map (fun (automaton_index, location_index) ->
+	(*string_of_list_of_string_with_sep " & " (List.map (fun (automaton_index, location_index) ->
 			"loc[" ^ (model.automata_names automaton_index) ^ "]" ^ " = " ^ (model.location_names automaton_index location_index)
 		) unreachable_global_location.unreachable_locations
-	)
-	^
+	)*)
+	(*^*)
 	(* Separator *)
 	(if unreachable_global_location.unreachable_locations <> [] && unreachable_global_location.discrete_constraints <> [] then " & " else "")
 	^
@@ -559,19 +559,19 @@ let string_of_property model property =
 	match property with
 	(* An "OR" list of global locations *)
 	| Unreachable_locations unreachable_global_location_list ->
-		"property := unreachable " ^ (
+		"reg = unreachable" ^ (
 			string_of_list_of_string_with_sep "\n or \n " (List.map (string_of_unreachable_location model) unreachable_global_location_list)
 		)
 
 	(* if a2 then a1 has happened before *)
 	| Action_precedence_acyclic (a1 , a2) ->
-		"property := if " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened before;"
+		"reg = if " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened before;"
 	(* everytime a2 then a1 has happened before *)
 	| Action_precedence_cyclic (a1 , a2) ->
-		"property := everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened before;"
+		"reg = everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened before;"
 	(* everytime a2 then a1 has happened exactly once before *)
 	| Action_precedence_cyclicstrict (a1 , a2) ->
-		"property := everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened exactly once before;"
+		"reg = everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened exactly once before;"
 
 	(*** NOTE: not implemented ***)
 (*	(* if a1 then eventually a2 *)
@@ -584,34 +584,34 @@ let string_of_property model property =
 
 	(* a no later than d *)
 	| Action_deadline (a, d) ->
-		"property := " ^ (model.action_names a) ^ " no later than " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ ";"
+		"reg = " ^ (model.action_names a) ^ " no later than " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ ";"
 
 	(* if a2 then a1 happened within d before *)
 	| TB_Action_precedence_acyclic (a1 , a2, d) ->
-		"property := if " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " before;"
+		"reg = if " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " before;"
 	(* everytime a2 then a1 happened within d before *)
 	| TB_Action_precedence_cyclic (a1 , a2, d) ->
-		"property := everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " before;"
+		"reg = everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " before;"
 	(* everytime a2 then a1 happened once within d before *)
 	| TB_Action_precedence_cyclicstrict (a1 , a2, d) ->
-		"property := everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened once within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " before;"
+		"reg = everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened once within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " before;"
 
 	(* if a1 then eventually a2 within d *)
 	| TB_response_acyclic (a1 , a2, d) ->
-		"property := if " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ ";"
+		"reg = if " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ ";"
 	(* everytime a1 then eventually a2 within d *)
 	| TB_response_cyclic (a1 , a2, d) ->
-		"property := everytime " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ ";"
+		"reg = everytime " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ ";"
 	(* everytime a1 then eventually a2 within d once before next *)
 	| TB_response_cyclicstrict (a1 , a2, d) ->
-		"property := if " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " once before next;"
+		"reg = if " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " once before next;"
 
 	(* sequence a1, …, an *)
 	| Sequence_acyclic action_index_list ->
-		"property := sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
+		"reg = sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
 	(* always sequence a1, …, an *)
 	| Sequence_cyclic action_index_list ->
-		"property := always sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
+		"reg = always sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
 
 	(*** NOTE: Would be better to have an "option" type ***)
 	| Noproperty -> "(* no property *)"
