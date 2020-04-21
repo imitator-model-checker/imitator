@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/04/10
+ * Last modified     : 2020/04/21
  *
  ************************************************************/
 
@@ -44,7 +44,7 @@ let resolve_property l =
 
 %}
 
-%token <NumConst.t> INT
+%token <int> INT
 %token <string> FLOAT
 %token <string> NAME
 %token <string> STRING
@@ -57,7 +57,7 @@ let resolve_property l =
 
 %token
 	CT_ACCEPTING CT_ACCLOOP CT_AG CT_AGnot CT_ALWAYS
-	CT_BEFORE
+	CT_BCBORDER CT_BCLEARN CT_BCRANDOM CT_BCRANDOMSEQ CT_BCSHUFFLE CT_BEFORE
 	CT_COVERCARTOGRAPHY
 	CT_DEADLOCKFREE
 	CT_EF CT_EFEXEMPLIFY CT_EFpmax CT_EFpmin CT_EFtmin CT_EVENTUALLY CT_EVERYTIME CT_EXHIBIT
@@ -68,14 +68,14 @@ let resolve_property l =
 	CT_MAXIMIZE CT_MINIMIZE
 	CT_NEXT CT_NOT
 	CT_ONCE
-	CT_PROJECTRESULT CT_PRP
+	CT_PROJECTRESULT CT_PRP CT_PRPC
 	CT_PROPERTY
 	CT_SEQUENCE CT_SYNTH
 	CT_THEN CT_TRACEPRESERVATION CT_TRUE
 	CT_UNREACHABLE 
 	CT_WHEN CT_WITHIN
 
-
+ 	
 %token EOF
 
 %left SYMBOL_OR              /* lowest precedence */
@@ -95,8 +95,6 @@ let resolve_property l =
 main:
 /************************************************************/
 	| property_kw_opt quantified_property EOF { $2 }
-	/* Dummy command for testing */
-/* 	| CT_WHEN EOF { (*$2*)raise (Failure "ploop") } */
 ;
 
 /************************************************************/
@@ -117,14 +115,6 @@ quantified_property:
 			projection		= $4;
 		}
 		
-	
-		(*** Dummy result for testing ***)
-		
-	(*	{
-			synthesis_type	= Parsed_witness;
-			property		= Parsed_EF Parsed_state_predicate_true;
-			projection		= None;
-		}*)
 	}
 ;
 
@@ -211,9 +201,17 @@ property:
 	/* Cartography */
 	| CT_COVERCARTOGRAPHY LPAREN reference_rectangle RPAREN { Parsed_Cover_cartography $3 }
 	
-	/** TODO **/
-
-
+	| CT_BCLEARN LPAREN reference_rectangle RPAREN { Parsed_Learning_cartography $3 }
+	
+	| CT_BCSHUFFLE LPAREN reference_rectangle RPAREN { Parsed_Shuffle_cartography $3 }
+	
+	| CT_BCBORDER LPAREN reference_rectangle RPAREN { Parsed_Border_cartography $3 }
+	
+	| CT_BCRANDOM LPAREN reference_rectangle COMMA pos_integer RPAREN { Parsed_Random_cartography ($3, $5) }
+	
+	| CT_BCRANDOMSEQ LPAREN reference_rectangle COMMA pos_integer RPAREN { Parsed_RandomSeq_cartography ($3, $5) }
+	
+	| CT_PRPC LPAREN state_predicate COMMA reference_rectangle RPAREN { Parsed_PRPC ($3,$5) }
 
 ;
 
@@ -317,13 +315,13 @@ rational_linear_term:
 ;
 
 positive_rational_with_div:
-	| pos_integer { $1 }
+	| pos_integer { NumConst.numconst_of_int $1 }
 	| pos_float { $1 }
-	| pos_integer OP_DIV pos_integer { (NumConst.div $1 $3) }
+	| pos_integer OP_DIV pos_integer { (NumConst.div (NumConst.numconst_of_int $1) (NumConst.numconst_of_int $3)) }
 ;
 
 positive_rational:
-	| pos_integer { $1 }
+	| pos_integer { NumConst.numconst_of_int $1 }
 	| pos_float { $1 }
 ;
 
@@ -446,26 +444,20 @@ linear_term:
 rational:
 	| integer { $1 }
 	| float { $1 }
-	| integer OP_DIV pos_integer { (NumConst.div $1 $3) }
+	| integer OP_DIV pos_integer { (NumConst.div $1 (NumConst.numconst_of_int $3)) }
 ;
 
 integer:
-	pos_integer { $1 }
-	| OP_MINUS pos_integer { NumConst.neg $2 }
+	| pos_integer { (NumConst.numconst_of_int $1) }
+	| OP_MINUS pos_integer { NumConst.neg (NumConst.numconst_of_int $2) }
 ;
 
-pos_integer:
-	INT { $1 }
-;
 
 float:
-  pos_float { $1 }
+	| pos_float { $1 }
 	| OP_MINUS pos_float { NumConst.neg $2 }
 ;
 
-pos_float:
-  FLOAT { NumConst.numconst_of_string $1 }
-;
 
 
 /************************************************************/

@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/04/10
+ * Last modified     : 2020/04/21
 *****************************************************************)
 
 {
@@ -42,6 +42,11 @@ rule token = parse
 	| "AGnot"          { CT_AGnot }
  	| "deadlockfree"   { CT_DEADLOCKFREE }
  	| "BCcover"        { CT_COVERCARTOGRAPHY }
+ 	| "BClearn"        { CT_BCLEARN }
+ 	| "BCshuffle"      { CT_BCSHUFFLE }
+ 	| "BCborder"       { CT_BCBORDER }
+ 	| "BCrandom"       { CT_BCRANDOM }
+ 	| "BCrandomseq"    { CT_BCRANDOMSEQ }
 	| "EF"             { CT_EF }
 	| "EFexemplify"    { CT_EFEXEMPLIFY }
 	| "EFpmax"         { CT_EFpmax }
@@ -58,6 +63,7 @@ rule token = parse
  	| "inversemethod"  { CT_TRACEPRESERVATION }
 	| "loopthrough"    { CT_INFCYCLETHROUGH }
  	| "PRP"            { CT_PRP }
+ 	| "PRPC"           { CT_PRPC }
  	| "tracepreservation" { CT_TRACEPRESERVATION }
 
 	| "accloop"        { CT_ACCLOOP }
@@ -93,7 +99,7 @@ rule token = parse
 
 	| ['a'-'z''A'-'Z']['a'-'z''A'-'Z''_''0'-'9']* as lxm { NAME lxm }
 	| ['0'-'9']*'.'['0'-'9']+ as lxm { FLOAT lxm }
-	| ['0'-'9']+ as lxm { INT(NumConst.numconst_of_string lxm) }
+	| ['0'-'9']+ as lxm { INT(int_of_string lxm) }
 	| '"' [^'"']* '"' as lxm { STRING lxm } (* a string between double quotes *)
 
 	| "<="             { OP_LEQ }
