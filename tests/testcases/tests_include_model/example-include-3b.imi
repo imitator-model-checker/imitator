@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2019/05/14
- * Last modified   : 2019/05/14
+ * Last modified   : 2020/04/21
  *
- * IMITATOR version: 2.11
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -67,11 +67,4 @@ init :=
 	& p >= 1
 ;
 
-
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-property := unreachable loc[pta1] = l1 & loc[pta2] = l1;
 
