@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: AccLoopSynth algorithm (synthesizes valuations for which there exists an accepting loop in the PTA)
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/17
- * Last modified     : 2020/03/27
+ * Last modified     : 2020/04/21
  *
  ************************************************************)
 
@@ -31,7 +32,7 @@ open AlgoLoopSynth
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoAccLoopSynth =
+class algoAccLoopSynth (state_predicate : AbstractProperty.state_predicate) =
 	object (self) inherit algoLoopSynth as super
 	
 	(************************************************************)
@@ -43,19 +44,7 @@ class algoAccLoopSynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method algorithm_name = "AcceptingCycle"
 	
-	
-	(*** NOTE: dummy initialization ***)
-	val state_predicate : AbstractProperty.state_predicate =
-		(*** TODO: pass as a PARAMETER of the algorithm ***)
-		(*** UGLY!!! ***)
-		match (Input.get_property()).property with
-			| Accepting_cycle state_predicate
-				-> state_predicate
 			
-			(*** TODO ***)
-			
-			| _ -> raise (InternalError ("Problem when getting the state predicate when initializing AcceptingCycle"))
-		
 	(************************************************************)
 	(* Class methods *)
 	(************************************************************)

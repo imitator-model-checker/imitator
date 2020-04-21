@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/04/16
+ * Last modified     : 2020/04/21
  *
  ************************************************************)
 
@@ -538,8 +538,8 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			| Cycle ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoLoopSynth.algoLoopSynth in myalgo
 
-			| Accepting_cycle _ ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth in myalgo
+			| Accepting_cycle state_predicate ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth state_predicate in myalgo
 
 		(*------------------------------------------------------------*)
 		(* Deadlock-freeness *)
