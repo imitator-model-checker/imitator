@@ -61,15 +61,6 @@ class algoBCCover (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function 
 		(* The end *)
 		()
 
-
-      
-(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_instance =
-		(* Create a new instance of IM *)
-		new AlgoIM.algoIM*)
-
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create the initial point for the analysis *)
