@@ -220,15 +220,27 @@ if AbstractAlgorithm.property_needed options#imitator_mode then(
 
 
 
+
+(* Statistics *)
+counter_main_algorithm#start;
+
+
+(************************************************************)
+(* Dynamic clock elimination *)
+(************************************************************)
+(* Need to be called before initial state is created! *)
+if options#dynamic_clock_elimination then (
+	print_message Verbose_low "Initializing clock elimination…";
+	ClocksElimination.prepare_clocks_elimination ()
+);
+
+
+
 (************************************************************)
 (************************************************************)
 (* Start branching depending on the algorithm *)
 (************************************************************)
 (************************************************************)
-
-(* Statistics *)
-counter_main_algorithm#start;
-
 
 begin
 match options#imitator_mode with
@@ -420,16 +432,6 @@ match options#imitator_mode with
 		);*)
 
 
-
-		(*** TODO: reintroduce
-		(************************************************************)
-		(* Dynamic clock elimination *)
-		(************************************************************)
-		(* Need to be called before initial state is created! *)
-		if options#dynamic_clock_elimination then (
-			ClocksElimination.prepare_clocks_elimination ()
-		);
-	***)
 
 
 (*(************************************************************)
