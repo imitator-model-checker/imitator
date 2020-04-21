@@ -415,7 +415,7 @@ type parsed_property_type =
 	| Parsed_Cover_cartography of parsed_pdomain
 
 	(** Cover the whole cartography using learning-based abstractions *)
-	| Parsed_Learning_cartography of parsed_pdomain
+	| Parsed_Learning_cartography of parsed_state_predicate * parsed_pdomain
 	
 	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 	| Parsed_Shuffle_cartography of parsed_pdomain

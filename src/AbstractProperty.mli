@@ -159,7 +159,7 @@ type property =
 	| Cover_cartography of HyperRectangle.hyper_rectangle
 
 	(** Cover the whole cartography using learning-based abstractions *)
-	| Learning_cartography of HyperRectangle.hyper_rectangle
+	| Learning_cartography of state_predicate * HyperRectangle.hyper_rectangle
 	
 	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 	| Shuffle_cartography of HyperRectangle.hyper_rectangle

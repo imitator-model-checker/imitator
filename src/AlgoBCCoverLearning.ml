@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Behavioral Cartography with exhaustive coverage of integer points and learning-based abstraction.
  * 
  * File contributors : Étienne André
  * Created           : 2016/07/22
- * Last modified     : 2019/08/22
+ * Last modified     : 2020/04/21
  *
  ************************************************************)
 
@@ -54,8 +55,8 @@ type learning_result =
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCCoverLearning =
-	object (self) inherit algoBCCover as super
+class algoBCCoverLearning (state_predicate : AbstractProperty.state_predicate) (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit algoBCCover v0 algo_instance_function tiles_manager_type as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -64,7 +65,7 @@ class algoBCCoverLearning =
 	(* Backup the original model (for final postprocessing) *)
 	val original_model = Input.get_model ()
 	(* Backup the original model file names *)
-	val original_file = (Input.get_options ())#model_input_file_name
+	val original_file = (Input.get_options ())#model_file_name
 	val original_files_prefix = (Input.get_options ())#files_prefix
 	
 	val counter_interface = create_hybrid_counter_and_register "learning" Algorithm_counter Verbose_standard
@@ -84,12 +85,12 @@ class algoBCCoverLearning =
 	method algorithm_name = "BC (full coverage with learning-based abstraction)"
 
 	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Safety redefinition *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** NOTE: safety redefinition: this cartography algorithm should NOT be parameterized by a method, as the method to be called on each point is statically chosen (it will be either EFsynth or PRP, depending on the abstraction) ***)
 	method set_algo_instance_function _ : unit =
-		raise (InternalError "Method 'set_algo_instance_function' should NOT be used in BCCoverlearning")
+		raise (InternalError "Method 'set_algo_instance_function' should NOT be used in BCCoverlearning")*)
 
 			
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -105,7 +106,7 @@ class algoBCCoverLearning =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Call the algorithm on the current point: 1) run the abstraction 2) call either EFsynth or PRP depending on the result *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method call_point =
+	method call_point pval =
 		(* Retrieve the current point *)
 		let current_point = self#get_current_point_option in
 
@@ -164,7 +165,7 @@ class algoBCCoverLearning =
 		(* Prepare command *)
 		let script_line = "python " ^ interface_script_path
 			(* 1st argument: input model *)
-			^ " " ^ options#model_input_file_name
+			^ " " ^ options#model_file_name
 			(* 2nd argument: output model name *)
 			^ " " ^ learning_based_model_filename
 			(* 3rd argument: pi0 *)

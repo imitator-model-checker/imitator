@@ -809,7 +809,7 @@ let string_of_abstract_property model property =
 		| Cover_cartography hyper_rectangle -> "BCcover(" ^ (string_of_v0 model hyper_rectangle) ^ ")"
 
 		(** Cover the whole cartography using learning-based abstractions *)
-		| Learning_cartography hyper_rectangle -> "BClearn(" ^ (string_of_v0 model hyper_rectangle) ^ ")"
+		| Learning_cartography (state_predicate, hyper_rectangle) -> "BClearn(" ^ (string_of_state_predicate model state_predicate) ^ " , " ^ (string_of_v0 model hyper_rectangle) ^ ")"
 		
 		(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 		| Shuffle_cartography hyper_rectangle -> "BCshuffle(" ^ (string_of_v0 model hyper_rectangle) ^ ")"

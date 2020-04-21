@@ -201,7 +201,7 @@ property:
 	/* Cartography */
 	| CT_COVERCARTOGRAPHY LPAREN reference_rectangle RPAREN { Parsed_Cover_cartography $3 }
 	
-	| CT_BCLEARN LPAREN reference_rectangle RPAREN { Parsed_Learning_cartography $3 }
+	| CT_BCLEARN LPAREN state_predicate COMMA reference_rectangle RPAREN { Parsed_Learning_cartography ($3, $5) }
 	
 	| CT_BCSHUFFLE LPAREN reference_rectangle RPAREN { Parsed_Shuffle_cartography $3 }
 	
