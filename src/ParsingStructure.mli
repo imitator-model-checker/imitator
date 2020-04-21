@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/04/02
+ * Last modified     : 2020/04/21
  *
  ****************************************************************)
 
@@ -414,8 +414,7 @@ type parsed_property_type =
 	(* Cartography *)
 	| Parsed_Cover_cartography of parsed_pdomain
 
-	
-(*	(** Cover the whole cartography using learning-based abstractions *)
+	(** Cover the whole cartography using learning-based abstractions *)
 	| Parsed_Learning_cartography of parsed_pdomain
 	
 	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
@@ -425,13 +424,13 @@ type parsed_property_type =
 	| Parsed_Border_cartography of parsed_pdomain
 	
 	(** Randomly pick up values for a given number of iterations *)
-	| Parsed_Random_cartography  of parsed_pdomain * int
+	| Parsed_Random_cartography of parsed_pdomain * int
 	
 	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
-	| Parsed_RandomSeq_cartography  of parsed_pdomain * int
+	| Parsed_RandomSeq_cartography of parsed_pdomain * int
 
 	(* Parametric reachability preservation *)
-	| Parsed_PRPC of parsed_pdomain*)
+	| Parsed_PRPC of parsed_state_predicate * parsed_pdomain
 
 
 

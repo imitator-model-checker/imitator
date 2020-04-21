@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/04/10
+ * Last modified     : 2020/04/21
  *
  ************************************************************)
 
@@ -808,6 +808,23 @@ let string_of_abstract_property model property =
 		(* Cartography *)
 		| Cover_cartography hyper_rectangle -> "BCcover(" ^ (string_of_v0 model hyper_rectangle) ^ ")"
 
+		(** Cover the whole cartography using learning-based abstractions *)
+		| Learning_cartography hyper_rectangle -> "BClearn(" ^ (string_of_v0 model hyper_rectangle) ^ ")"
+		
+		(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+		| Shuffle_cartography hyper_rectangle -> "BCshuffle(" ^ (string_of_v0 model hyper_rectangle) ^ ")"
+		
+		(** Look for the border using the cartography*)
+		| Border_cartography hyper_rectangle -> "BCborder(" ^ (string_of_v0 model hyper_rectangle) ^ ")"
+		
+		(** Randomly pick up values for a given number of iterations *)
+		| Random_cartography (hyper_rectangle, nb) -> "BCrandom(" ^ (string_of_v0 model hyper_rectangle) ^ ", " ^ (string_of_int nb)  ^ ")"
+		
+		(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+		| RandomSeq_cartography (hyper_rectangle, nb) -> "BCrandomseq(" ^ (string_of_v0 model hyper_rectangle) ^ ", " ^ (string_of_int nb)  ^ ")"
+
+		(* Parametric reachability preservation *)
+		| PRPC (state_predicate , hyper_rectangle) -> "PRPC(" ^ (string_of_state_predicate model state_predicate) ^ " , " ^ (string_of_v0 model hyper_rectangle) ^ ")"
 		
 		(*** TODO ***)
 (* 		| _ -> raise (NotImplemented "ModelPrinter.string_of_property for any other algorithm") *)

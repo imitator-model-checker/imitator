@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/04/10
+ * Last modified     : 2020/04/21
  *
  ************************************************************)
  
@@ -1237,6 +1237,12 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 				| IMunion _
 				
 				| Cover_cartography _
+				| Learning_cartography _
+				| Shuffle_cartography _
+				| Border_cartography _
+				| Random_cartography _
+				| RandomSeq_cartography _
+				| PRPC _
 				
 					-> None
 			in

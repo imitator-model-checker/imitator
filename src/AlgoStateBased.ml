@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/04/10
+ * Last modified     : 2020/04/21
  *
  ************************************************************)
 
@@ -2465,6 +2465,7 @@ class virtual algoStateBased =
 				| EFtmin state_predicate
 				| Accepting_cycle state_predicate
 				| PRP (state_predicate , _)
+				| PRPC (state_predicate , _)
 				->
 					(* Check whether the current state matches the state predicate *)
 					if State.match_state_predicate state_predicate state then(
@@ -2484,6 +2485,11 @@ class virtual algoStateBased =
 				
 				(* Cartography *)
 				| Cover_cartography _
+				| Learning_cartography _
+				| Shuffle_cartography _
+				| Border_cartography _
+				| Random_cartography _
+				| RandomSeq_cartography _
 					->
 					(* Cannot conclude anything from a single state yet *)
 					()

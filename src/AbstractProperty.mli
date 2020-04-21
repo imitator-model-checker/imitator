@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/04/10
+ * Last modified     : 2020/04/21
  *
  ************************************************************)
 
@@ -158,8 +158,7 @@ type property =
 	(* Cartography *)
 	| Cover_cartography of HyperRectangle.hyper_rectangle
 
-	
-(*	(** Cover the whole cartography using learning-based abstractions *)
+	(** Cover the whole cartography using learning-based abstractions *)
 	| Learning_cartography of HyperRectangle.hyper_rectangle
 	
 	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
@@ -169,13 +168,13 @@ type property =
 	| Border_cartography of HyperRectangle.hyper_rectangle
 	
 	(** Randomly pick up values for a given number of iterations *)
-	| Random_cartography  of HyperRectangle.hyper_rectangle * int
+	| Random_cartography of HyperRectangle.hyper_rectangle * int
 	
 	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
-	| RandomSeq_cartography  of HyperRectangle.hyper_rectangle * int
+	| RandomSeq_cartography of HyperRectangle.hyper_rectangle * int
 
 	(* Parametric reachability preservation *)
-	| PRPC of HyperRectangle.hyper_rectangle*)
+	| PRPC of state_predicate * HyperRectangle.hyper_rectangle
 
 
 	

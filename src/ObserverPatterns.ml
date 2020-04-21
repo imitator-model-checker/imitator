@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created:       2013/02/04
- * Last modified: 2020/04/16
+ * Last modified: 2020/04/21
  *
  ************************************************************)
  
@@ -115,6 +115,12 @@ let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_IMunion _
 
 	| Parsed_Cover_cartography _
+	| Parsed_Learning_cartography _
+	| Parsed_Shuffle_cartography _
+	| Parsed_Border_cartography _
+	| Parsed_Random_cartography _
+	| Parsed_RandomSeq_cartography _
+	| Parsed_PRPC _
 
 		->
 	false
@@ -159,6 +165,12 @@ let new_elements (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_IMunion _
 
 	| Parsed_Cover_cartography _
+	| Parsed_Learning_cartography _
+	| Parsed_Shuffle_cartography _
+	| Parsed_Border_cartography _
+	| Parsed_Random_cartography _
+	| Parsed_RandomSeq_cartography _
+	| Parsed_PRPC _
 	
 		-> (None , None)
 	
@@ -214,6 +226,12 @@ let get_nb_locations (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_IMunion _
 	
 	| Parsed_Cover_cartography _
+	| Parsed_Learning_cartography _
+	| Parsed_Shuffle_cartography _
+	| Parsed_Border_cartography _
+	| Parsed_Random_cartography _
+	| Parsed_RandomSeq_cartography _
+	| Parsed_PRPC _
 		-> 0
 (* 	| Parsed_Action_deadline _ -> 3 *)
 	(*** TODO: finish later ***)
