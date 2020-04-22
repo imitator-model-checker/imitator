@@ -13,10 +13,12 @@
 
  *
  * Created         : 2016/03/22
- * Last modified   : 2016/03/22
+ * Last modified   : 2020/04/22
  *
- * IMITATOR version: 2.7.4-working
+ * IMITATOR version: 3
  ************************************************************)
 
+property := #synth BCcover(
 p1 = 1..3
 p2 = 1..3
+);

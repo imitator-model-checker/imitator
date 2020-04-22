@@ -6938,7 +6938,7 @@ Local number of transitions             : 0
 ------------------------------------------------------------
 Constraint soundness                    : exact
 Termination                             : regular termination
-Constraint nature                       : bad
+Constraint nature                       : good
 ------------------------------------------------------------
 Local number of states                  : 2
 Local number of transitions             : 1
@@ -6964,8 +6964,8 @@ Local number of transitions             : 1
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode sequential + depth limit (grid with loop)',
-		'input_files': ['testBC-grid-plain-loop.imi', 'testBC-grid3x3.v0'],
-		'options'    : '-mode cover -depth-limit 10 -output-result',
+		'input_files': ['testBC-grid-plain-loop.imi', 'testBC-grid3x3-cover.imiprop'],
+		'options'    : '-depth-limit 10 -output-result',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'testBC-grid-plain-loop.res' , 'content' : """
@@ -7326,8 +7326,8 @@ Average number of transitions : 14.1
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode cover with tiles limit (flip-flop)',
-		'input_files': ['flipflop.imi', 'flipflop.v0'],
-		'options'    : '-mode cover -cart-tiles-limit 4 -output-result',
+		'input_files': ['flipflop.imi', 'flipflop-cover.imiprop'],
+		'options'    : '-cart-tiles-limit 4 -output-result',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'flipflop.res' , 'content' : """
@@ -7418,7 +7418,7 @@ Local number of transitions   : 14
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-Constraint nature             : bad
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 17
 Local number of transitions   : 16
