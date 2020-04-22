@@ -7445,8 +7445,8 @@ Average number of transitions : 11.7
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode random (grid)',
-		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4.v0'],
-		'options'    : '-mode random50 -output-result',
+		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4-random.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			# WARNING: this algorithm is… random! hence no absolute guarantee to find the result (this said, a max_tries of 20 generally allows one to find all tiles with a good probability)
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
