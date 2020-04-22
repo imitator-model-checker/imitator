@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2020/04/16
+ * Last modified     : 2020/04/22
  *
  ************************************************************)
 
@@ -25,6 +25,15 @@ open Exceptions
 open Statistics
 open AbstractModel
 open Result
+
+
+
+(************************************************************)
+(* Statistics *)
+(************************************************************)
+
+(* Create counter *)
+let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low
 
 
 
@@ -330,10 +339,6 @@ let result_nature_statistics_bc (soundness_str : string) termination (statespace
 
 (* Write an ef_synth result to the result file *)
 let export_to_file_noresult file_name =
-	(*** WARNING: duplicate code concerning the counter creation ***)
-	(* Create counter *)
-	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
-	
 	(* Start counter *)
 	counter#start;
 	
@@ -369,10 +374,6 @@ let export_to_file_noresult file_name =
 
 (* Write an ef_synth result to the result file *)
 let export_to_file_deprecated_efsynth_result file_name (deprecated_efsynth_result : Result.deprecated_efsynth_result) =
-	(*** WARNING: duplicate code concerning the counter creation ***)
-	(* Create counter *)
-	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
-	
 	(* Start counter *)
 	counter#start;
 	
@@ -424,10 +425,6 @@ let export_to_file_deprecated_efsynth_result file_name (deprecated_efsynth_resul
 
 (* Write a single_synthesis_result to the result file *)
 let export_to_file_single_synthesis_result file_name (single_synthesis_result : Result.single_synthesis_result) =
-	(*** WARNING: duplicate code concerning the counter creation ***)
-	(* Create counter *)
-	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
-	
 	(* Start counter *)
 	counter#start;
 
@@ -485,10 +482,6 @@ let export_to_file_single_synthesis_result file_name (single_synthesis_result : 
 
 (* Write a multiple_synthesis_result to the result file *)
 let export_to_file_multiple_synthesis_result file_name (multiple_synthesis_result : Result.multiple_synthesis_result) =
-	(*** WARNING: duplicate code concerning the counter creation ***)
-	(* Create counter *)
-	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
-	
 	(* Start counter *)
 	counter#start;
 
@@ -540,10 +533,6 @@ let export_to_file_multiple_synthesis_result file_name (multiple_synthesis_resul
 
 (* Write an ef_synth result to the result file *)
 let export_to_file_point_based_result file_name (point_based_result : Result.point_based_result) =
-	(*** WARNING: duplicate code concerning the counter creation ***)
-	(* Create counter *)
-	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
-	
 	(* Start counter *)
 	counter#start;
 
@@ -646,10 +635,6 @@ let general_bc_statistics (cartography_result : Result.cartography_result) =
 		
 (* Write result of BC to file *)
 let export_to_file_cartography_result file_name (cartography_result : Result.cartography_result) =
-	(*** WARNING: duplicate code concerning the counter creation ***)
-	(* Create counter *)
-	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
-	
 	(* Start counter *)
 	counter#start;
 
@@ -744,10 +729,6 @@ let export_to_file_cartography_result file_name (cartography_result : Result.car
 
 (* Export result of type 'Runs_exhibition_result' *)
 let export_to_file_runs_exhibition_result file_name (result : Result.runs_exhibition_result) =
-	(*** WARNING: duplicate code concerning the counter creation ***)
-	(* Create counter *)
-	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
-	
 	(* Start counter *)
 	counter#start;
 
