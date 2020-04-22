@@ -618,6 +618,12 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 				let bc_algo = new AlgoBCShuffle.algoBCShuffle hyper_rectangle (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
+			
+			(** Look for the border using the cartography*)
+			| Border_cartography hyper_rectangle ->
+				raise (NotImplemented("Border cartography is disabled"))
+	
+
 
 	(*
 
