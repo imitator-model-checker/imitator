@@ -190,8 +190,17 @@ let is_cartography = match property_option with
 	| None -> false
 	| Some property -> (
 		match property.property with
-		| Cover_cartography _ -> true
+		| Cover_cartography _
+		| Learning_cartography _
+		| Shuffle_cartography _
+		| Border_cartography _
+		| Random_cartography _
+		| RandomSeq_cartography _
+		| PRPC _
+			-> true
+	
 		| _ -> false
+
 	)
 in
 options#set_options_for_cartography is_cartography;
