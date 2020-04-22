@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/04/21
+# Last modified     : 2020/04/22
 #************************************************************
 
 
@@ -7161,7 +7161,7 @@ Average number of transitions           : 6.0
 	{
 		'purpose'    : 'Test BC in mode cover + graphical output (flip-flop)',
 		'input_files': ['flipflop.imi', 'flipflop-cover.imiprop'],
-		'options'    : '-mode cover -output-result -output-cart -output-graphics-source',
+		'options'    : '-output-result -output-cart -output-graphics-source',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'flipflop.res' , 'content' : """
@@ -8120,8 +8120,8 @@ Termination                   : regular termination
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode shuffle (grid)',
-		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4.v0'],
-		'options'    : '-mode shuffle -output-result',
+		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4-shuffle.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'testBC-grid-plain.res' , 'content' : """
@@ -8420,8 +8420,8 @@ Average number of transitions : 7.0
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode shuffle (grid2)',
-		'input_files': ['testBC-grid2-plain.imi', 'testBC-grid5x5.v0'],
-		'options'    : '-mode shuffle -output-result',
+		'input_files': ['testBC-grid2-plain.imi', 'testBC-grid5x5-shuffle.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'testBC-grid2-plain.res' , 'content' : """
@@ -8601,8 +8601,8 @@ Average number of transitions : 4.0
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode shuffle (flip-flop)',
-		'input_files': ['flipflop.imi', 'flipflop.v0'],
-		'options'    : '-mode shuffle -output-result',
+		'input_files': ['flipflop.imi', 'flipflop-shuffle.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)… and to check them separately as the order is of course unknown
 			{'file': 'flipflop.res' , 'content' : """
@@ -8658,7 +8658,7 @@ Average number of transitions : 4.0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-Constraint nature             : bad
+Constraint nature             : good
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -8671,7 +8671,7 @@ Constraint nature             : bad
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-Constraint nature             : bad
+Constraint nature             : good
 ------------------------------------------------------------
 """
 			} # end BC file
