@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/04/21
+ * Last modified     : 2020/04/22
  *
  ************************************************************)
 
@@ -603,6 +603,12 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 				let bc_algo = new AlgoBCCoverLearning.algoBCCoverLearning state_predicate hyper_rectangle (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_good_bad_constraint in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo*)
+				
+			(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+			| Shuffle_cartography hyper_rectangle ->
+				let bc_algo = new AlgoBCShuffle.algoBCShuffle hyper_rectangle (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
 
 	(*
 

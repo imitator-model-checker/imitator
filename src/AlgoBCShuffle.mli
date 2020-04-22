@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Shuffled version, used for the distributed cartography. [ACN15]
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/14
- * Last modified     : 2016/03/17
+ * Last modified     : 2020/04/22
  *
  ************************************************************)
 
@@ -22,7 +23,7 @@ open AlgoCartoGeneric
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoBCShuffle :
+class algoBCShuffle : HyperRectangle.hyper_rectangle -> (PVal.pval -> AlgoStateBased.algoStateBased) -> tiles_storage ->
 	object inherit algoCartoGeneric
 		(************************************************************)
 		(* Class variables *)
