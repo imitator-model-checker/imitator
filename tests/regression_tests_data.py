@@ -7264,7 +7264,7 @@ Tile #7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-Constraint nature             : bad
+Constraint nature             : good
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -7284,7 +7284,7 @@ Constraint nature             : bad
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-Constraint nature             : bad
+Constraint nature             : good
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -8696,8 +8696,8 @@ Average number of transitions : 14.1
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode cover (on the case study BC vs. PRPC)',
-		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
-		'options'    : '-mode cover -no-random -output-result',
+		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC-cover.imiprop'],
+		'options'    : '-no-random -output-result',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'diffBCPRPC.res' , 'content' : """
@@ -8765,7 +8765,7 @@ Local number of transitions             : 12
 ------------------------------------------------------------
 Constraint soundness                    : exact
 Termination                             : regular termination
-Constraint nature                       : bad
+Constraint nature                       : good
 ------------------------------------------------------------
 Local number of states                  : 7
 Local number of transitions             : 10
@@ -8789,7 +8789,7 @@ Local number of transitions             : 10
 ------------------------------------------------------------
 Constraint soundness                    : exact
 Termination                             : regular termination
-Constraint nature                       : bad
+Constraint nature                       : good
 ------------------------------------------------------------
 Local number of states                  : 7
 Local number of transitions             : 10
@@ -8861,7 +8861,7 @@ Local number of transitions             : 12
 ------------------------------------------------------------
 Constraint soundness                    : exact
 Termination                             : regular termination
-Constraint nature                       : bad
+Constraint nature                       : good
 ------------------------------------------------------------
 Local number of states                  : 7
 Local number of transitions             : 10
@@ -8885,7 +8885,7 @@ Local number of transitions             : 10
 ------------------------------------------------------------
 Constraint soundness                    : possible under-approximation
 Termination                             : regular termination
-Constraint nature                       : bad
+Constraint nature                       : good
 ------------------------------------------------------------
 Local number of states                  : 7
 Local number of transitions             : 10
@@ -8909,7 +8909,7 @@ Local number of transitions             : 10
 ------------------------------------------------------------
 Constraint soundness                    : exact
 Termination                             : regular termination
-Constraint nature                       : bad
+Constraint nature                       : good
 ------------------------------------------------------------
 Local number of states                  : 7
 Local number of transitions             : 10
@@ -8933,7 +8933,7 @@ Local number of transitions             : 10
 ------------------------------------------------------------
 Constraint soundness                    : possible under-approximation
 Termination                             : regular termination
-Constraint nature                       : bad
+Constraint nature                       : good
 ------------------------------------------------------------
 Local number of states                  : 8
 Local number of transitions             : 11
@@ -8960,8 +8960,8 @@ Average number of transitions           : 10.8
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PRPC (on the case study BC vs. PRPC)',
-		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
-		'options'    : '-mode PRPC -no-random -output-result',
+		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC-PRPC.imiprop'],
+		'options'    : '-no-random -output-result',
 		'expectations' : [
 			{'file': 'diffBCPRPC.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -8993,105 +8993,105 @@ Constraint nature                       : good/bad
 
 	,
 
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test PRPC (old version) in mode cover with depth limit (JLR15)',
-		'input_files': ['JLR-TACAS13.imi', 'JLR-TACAS13.v0'],
-		'options'    : '-mode cover -PRP -depth-limit 10 -output-result',
-		'expectations' : [
-			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
-			{'file': 'JLR-TACAS13.res' , 'content' : """
-(************************************************************)
- Tile #1
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test PRPC (old version) in mode cover with depth limit (JLR15)',
+		#'input_files': ['JLR-TACAS13.imi', 'JLR-TACAS13.v0'],
+		#'options'    : '-mode cover -PRP -depth-limit 10 -output-result',
+		#'expectations' : [
+			## NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
+			#{'file': 'JLR-TACAS13.res' , 'content' : """
+#(************************************************************)
+ #Tile #1
 
- Pi1:
-  a = 1
-& b = 0
+ #Pi1:
+  #a = 1
+#& b = 0
 
- K1:
- 2 > b
-& b >= 0
-& a > b
-& 10 >= a
+ #K1:
+ #2 > b
+#& b >= 0
+#& a > b
+#& 10 >= a
 
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Local number of states                  : 1
-Local number of transitions             : 0
-"""
-			} # end BC file
-			,
-			{'file': 'JLR-TACAS13.res' , 'content' : """
-(************************************************************)
- Tile #2
+#------------------------------------------------------------
+#Constraint soundness                    : exact
+#Termination                             : regular termination
+#Constraint nature                       : good
+#------------------------------------------------------------
+#Local number of states                  : 1
+#Local number of transitions             : 0
+#"""
+			#} # end BC file
+			#,
+			#{'file': 'JLR-TACAS13.res' , 'content' : """
+#(************************************************************)
+ #Tile #2
 
- Pi2:
-  a = 0
-& b = 1
+ #Pi2:
+  #a = 0
+#& b = 1
 
- K2:
- a >= 0
-& 9*b >= 2
-& 10 >= b
-& b >= a
+ #K2:
+ #a >= 0
+#& 9*b >= 2
+#& 10 >= b
+#& b >= a
 
 
-------------------------------------------------------------
-Constraint soundness                    : possible under-approximation
-Termination                             : depth limit (1 successor unexplored)
-Constraint nature                       : bad
-------------------------------------------------------------
-Local number of states                  : 18
-Local number of transitions             : 17
-"""
-			} # end BC file
-			,
-			{'file': 'JLR-TACAS13.res' , 'content' : """
-(************************************************************)
- Tile #3
+#------------------------------------------------------------
+#Constraint soundness                    : possible under-approximation
+#Termination                             : depth limit (1 successor unexplored)
+#Constraint nature                       : bad
+#------------------------------------------------------------
+#Local number of states                  : 18
+#Local number of transitions             : 17
+#"""
+			#} # end BC file
+			#,
+			#{'file': 'JLR-TACAS13.res' , 'content' : """
+#(************************************************************)
+ #Tile #3
 
- Pi3:
-  a = 3
-& b = 2
+ #Pi3:
+  #a = 3
+#& b = 2
 
- K3:
- b >= 2
-& a >= 0
-& 10 >= a
-& 10 >= b
+ #K3:
+ #b >= 2
+#& a >= 0
+#& 10 >= a
+#& 10 >= b
 
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : bad
-------------------------------------------------------------
-Local number of states                  : 2
-Local number of transitions             : 1
-"""
-			} # end BC file
-			,
-			{'file': 'JLR-TACAS13.res' , 'content' : """
-(************************************************************)
-GENERAL STATISTICS
-(************************************************************)
-------------------------------------------------------------
-Number of integers in v0                : 121
-Number of tiles computed                : 3
-Coverage                                : unknown
-Termination                             : regular termination
-Number of unsuccessful points           : 118
-Average number of states                : 7.0
-Average number of transitions           : 6.0
-"""
-			} # end BC file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
+#------------------------------------------------------------
+#Constraint soundness                    : exact
+#Termination                             : regular termination
+#Constraint nature                       : bad
+#------------------------------------------------------------
+#Local number of states                  : 2
+#Local number of transitions             : 1
+#"""
+			#} # end BC file
+			#,
+			#{'file': 'JLR-TACAS13.res' , 'content' : """
+#(************************************************************)
+#GENERAL STATISTICS
+#(************************************************************)
+#------------------------------------------------------------
+#Number of integers in v0                : 121
+#Number of tiles computed                : 3
+#Coverage                                : unknown
+#Termination                             : regular termination
+#Number of unsuccessful points           : 118
+#Average number of states                : 7.0
+#Average number of transitions           : 6.0
+#"""
+			#} # end BC file
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
 
-	,
+	#,
 
 	#------------------------------------------------------------
 	{

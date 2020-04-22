@@ -12,11 +12,14 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2016/08/16
- * Last modified   : 2016/08/16
+ * Last modified   : 2020/04/22
  *
- * IMITATOR version: 2.8
+ * IMITATOR version: 3
  ************************************************************)
 
-
+property := #synth PRPC(
+	loc[pta] = lbad
+	,
 	p1 = 0..4
 	p2 = 0..4
+);
