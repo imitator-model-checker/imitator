@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/04/21
+ * Last modified     : 2020/04/22
  *
  ************************************************************/
 
@@ -503,8 +503,8 @@ rectangle_parameter_assignments:
 
 /* Form: param = [constant arithmetic expression] */
 rectangle_parameter_assignment:
-	| and_opt NAME OP_EQ constant_arithmetic_expr DOUBLEDOT constant_arithmetic_expr comma_opt { ($2, $4, $6) }
-	| and_opt NAME OP_EQ constant_arithmetic_expr comma_opt { ($2, $4, $4) }
+	| and_opt NAME OP_EQ constant_arithmetic_expr DOUBLEDOT constant_arithmetic_expr { ($2, $4, $6) }
+	| and_opt NAME OP_EQ constant_arithmetic_expr { ($2, $4, $4) }
 
 ;
 
