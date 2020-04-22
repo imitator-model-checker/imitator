@@ -623,6 +623,17 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			| Border_cartography hyper_rectangle ->
 				raise (NotImplemented("Border cartography is disabled"))
 	
+			(** Randomly pick up values for a given number of iterations *)
+			| Random_cartography (hyper_rectangle, max_tries) ->
+				let bc_algo = new AlgoBCRandom.algoBCRandom hyper_rectangle max_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
+				
+			(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+			| RandomSeq_cartography (hyper_rectangle, max_tries) ->
+				let bc_algo = new AlgoBCRandomSeq.algoBCRandomSeq hyper_rectangle max_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
 
 
 	(*
