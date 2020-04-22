@@ -13,10 +13,14 @@
 
  *
  * Created         : 2016/03/23
- * Last modified   : 2016/03/23
+ * Last modified   : 2020/04/22
  *
- * IMITATOR version: 2.7.4-working
+ * IMITATOR version: 3
  ************************************************************)
 
+property := #synth BCrandom(
 p1 = 0..5
 p2 = 0..5
+,
+75
+);

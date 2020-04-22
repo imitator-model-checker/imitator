@@ -7744,8 +7744,8 @@ Termination                   : regular termination
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode random (grid2)',
-		'input_files': ['testBC-grid2-plain.imi', 'testBC-grid5x5.v0'],
-		'options'    : '-mode random75 -output-result',
+		'input_files': ['testBC-grid2-plain.imi', 'testBC-grid5x5-random.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'testBC-grid2-plain.res' , 'content' : """
@@ -7922,8 +7922,8 @@ Termination                   : regular termination
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode random (flip-flop)',
-		'input_files': ['flipflop.imi', 'flipflop.v0'],
-		'options'    : '-mode random200 -output-result',
+		'input_files': ['flipflop.imi', 'flipflop-random.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			# WARNING: this algorithm is… random! hence no absolute guarantee to find the result (this said, a max_tries of 200 generally allows one to find all tiles with a good probability)
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)… and to check them separately as the order is of course unknown
@@ -7980,7 +7980,7 @@ Termination                   : regular termination
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-Constraint nature             : bad
+Constraint nature             : good
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -7993,7 +7993,7 @@ Constraint nature             : bad
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-Constraint nature             : bad
+Constraint nature             : good
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -8029,8 +8029,8 @@ Average number of transitions : 14.1
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode random+seq',
-		'input_files': ['flipflop.imi', 'flipflop.v0'],
-		'options'    : '-mode randomseq3 -output-result',
+		'input_files': ['flipflop.imi', 'flipflop-randomseq.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)… and to check them separately as the order is of course unknown
 			{'file': 'flipflop.res' , 'content' : """
@@ -8086,7 +8086,7 @@ Average number of transitions : 14.1
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-Constraint nature             : bad
+Constraint nature             : good
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -8099,7 +8099,7 @@ Constraint nature             : bad
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-Constraint nature             : bad
+Constraint nature             : good
 ------------------------------------------------------------
 """
 			} # end BC file
