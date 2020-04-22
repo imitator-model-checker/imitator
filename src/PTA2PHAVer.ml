@@ -385,11 +385,6 @@ let string_of_location model automaton_index location_index =
 	^ (string_of_invariant model automaton_index location_index) (* bug here! *)
 	^ (string_of_transitions model automaton_index location_index)
 
-let explode s =
-  let rec exp i l =
-    if i < 0 then l else exp (i - 1) (s.[i] :: l) in
-  exp (String.length s - 1) []
-
 
 (* Convert the locations of an automaton into a string *)
 let string_of_locations model automaton_index =
@@ -476,11 +471,11 @@ let rec  string_of_initial_state () =
 	^ "\n" ^ "// ------------------------------------------------------------"
 	^ "\n" ^ "//  Initial constraint "
 	^ "\n" ^ "// ------------------------------------------------------------"
-	^ "\n  " ^ string_of_chars (string_lst_change_egale (explode (LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint)))
+	^ "\n" ^ string_of_chars (string_lst_change_egale (explode (LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint)))
     ^ " & true"
 	(* Footer of initial state *)
 	^ "" ^ ";";;
-
+let i = 0 ;;
 
 (* Convert an automaton into a string *)
 let string_of_automaton model automaton_index =
@@ -491,7 +486,7 @@ let string_of_automaton model automaton_index =
     ^ "\n" ^ (string_of_declarations model)
 	^ "\n" ^ (string_of_synclabs model automaton_index)
 	^ "\n" ^ (string_of_locations model automaton_index)
-    ^ "\n" ^ "\ninitially : " ^ (string_of_initial_state () )
+    ^ "\n" ^ "\ninitially : " ^ (model.location_names i i) ^ " &" ^ (string_of_initial_state () )
 	^ "\nend // " ^ (model.automata_names automaton_index) ^ " "
 	^ "\n// ----------------------------------------------------------"
 
@@ -553,13 +548,14 @@ let string_of_unreachable_location model unreachable_global_location =
 	)
     ^ ";"
 
+let r = 0 ;;
 
 (** Convert the correctness property to a string *)
 let string_of_property model property =
 	match property with
 	(* An "OR" list of global locations *)
 	| Unreachable_locations unreachable_global_location_list ->
-		"reg = unreachable" ^ (
+		"reg ="^ (model.automata_names r )^".unreachable" ^ (
 			string_of_list_of_string_with_sep "\n or \n " (List.map (string_of_unreachable_location model) unreachable_global_location_list)
 		)
 
