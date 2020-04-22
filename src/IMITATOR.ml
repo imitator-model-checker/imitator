@@ -635,6 +635,12 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 
+			(* Parametric reachability preservation *)
+			| PRPC (state_predicate, hyper_rectangle) ->
+				let bc_algo = new AlgoBCCover.algoBCCover hyper_rectangle (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoPRP.algoPRP pval state_predicate in myalgo) AlgoCartoGeneric.Tiles_good_bad_constraint in
+				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
+				myalgo
+
 
 	(*
 
