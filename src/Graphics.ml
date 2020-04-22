@@ -145,6 +145,42 @@ let graph_color_of_int tile_index statespace_nature dotted =
 exception CartographyError
 
 
+
+(* Get the reference hyper rectangle for properties that have one, or return None otherwise *)
+let get_v0_option () =
+	(* First check whether there is a property *)
+	if Input.has_property() then(
+		
+		match (Input.get_property()).property with
+			| EF _
+			| AGnot _
+			| EFexemplify _
+			| EFpmin _
+			| EFpmax _
+			| EFtmin _
+			| Accepting_cycle _
+			| PRP _
+				
+			| Cycle
+			| Deadlock_Freeness
+			| IM _
+			| ConvexIM _
+			| IMK _
+			| IMunion _
+				-> None
+			
+			| Cover_cartography v0
+			| Learning_cartography (_ , v0)
+			| Shuffle_cartography v0
+			| Border_cartography v0
+			| Random_cartography (v0, _)
+			| RandomSeq_cartography (v0, _)
+			| PRPC (_, v0)
+			
+				-> Some v0
+	) else None
+
+
 let draw_cartography (returned_constraint_list : (LinearConstraint.p_convex_or_nonconvex_constraint * StateSpace.statespace_nature) list) cartography_file_prefix =
 	(* Create counter *)
 	let counter_graphics_cartography = create_time_counter_and_register "cartography drawing" Graphics_counter Verbose_standard in
@@ -224,21 +260,18 @@ try(
 	print_message Verbose_low "Looking for dimensions…";
 	let range_params : int list ref = ref [] in
 	let bounds = ref (Array.make 2 (NumConst.zero, NumConst.zero)) in
+	
+	
+	(* Get the reference hyper rectangle from the property, if any *)
+	let v0_option = get_v0_option () in
 
+	begin
+	match v0_option with
+	
+	(* Case a hyper rectangle is defined in the property *)
+	| Some v0 ->
 	(* If cartography: find indices of first two variables with a parameter range *)
 	(*** TODO: take the projection into account! ***)
-	
-	
-	
-	(*** TODO: disabled for now ***)
-	
-	
-	
-	if (raise (NotImplemented "testing whether we are in cartography mode")) (*AbstractAlgorithm.is_algorithm_cartography options#imitator_mode*) then(
-		raise (NotImplemented "drawing v0")
-(*		(* Retrieve the V0 *)
-		(*** NOTE: only retrieve here because, in other mode (e.g., EF or IM) this object is not defined ***)
-		let v0 = Input.get_v0 () in
 		
 		print_message Verbose_low "Case real cartography: first 2 parameters with a range";
 		for index = 0 to model.nb_parameters - 1 do
@@ -261,10 +294,10 @@ try(
 
 		(* Update bounds *)
 		!bounds.(x_index) <- v0#get_min (List.nth !range_params 0), v0#get_max (List.nth !range_params 0);
-		!bounds.(y_index) <- v0#get_min (List.nth !range_params 1), v0#get_max (List.nth !range_params 1);*)
+		!bounds.(y_index) <- v0#get_min (List.nth !range_params 1), v0#get_max (List.nth !range_params 1);
 
-	)else(
-	(* If EF-synthesis / IM: choose the first two parameters *)
+	(* Otherwise: choose the first two parameters *)
+	| None ->
 	(*** TODO: take the projection into account! ***)
 		print_message Verbose_low "Pick up the first 2 parameters to draw the cartography";
 		(* First check that there are at least 2 parameters *)
@@ -298,7 +331,7 @@ try(
 		in
 		!bounds.(0) <- ef_x_min, ef_x_max;
 		!bounds.(1) <- ef_y_min, ef_y_max;
-	);
+	end;
 
 		
 	(*** WARNING: only works partially ***)
