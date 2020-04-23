@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/04/21
+ * Last modified     : 2020/04/23
  *
  ************************************************************)
 
@@ -3546,6 +3546,26 @@ let convert_synthesis_type = function
 	| Parsed_synthesis	-> Synthesis
 
 
+
+(*------------------------------------------------------------*)
+(** Convert a list of parsed parameters into a list of variable_index *)
+(*------------------------------------------------------------*)
+let convert_projection_definition (index_of_variables : (Automaton.variable_name, Automaton.variable_index) Hashtbl.t)  = function
+	(* No property *)
+	| None -> None
+	(* Some property *)
+	| Some (parsed_property : parsed_property) ->
+	begin
+		match parsed_property.projection with
+		| None -> None
+		| Some (parsed_parameters : string list) -> Some (List.map (fun (parsed_parameter_name : string) ->
+			(* No check because this was checked before *)
+			Hashtbl.find index_of_variables parsed_parameter_name
+			) parsed_parameters)
+	end
+
+
+
 type converted_observer_structure = {
 	(*  observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions *)
 	observer_structure			: Automaton.action_index list * (Automaton.action_index list) array * AbstractModel.location_urgency array * LinearConstraint.pxd_linear_constraint array * AbstractModel.transition list array array;
@@ -3974,12 +3994,12 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		(* Get the synthesis or emptiness type *)
 		let synthesis_type = convert_synthesis_type parsed_property.synthesis_type in
 		
-		(* Get the projection *)
-		
-		(*** TODO: !!! ***)
-		
-		let projection = None in
-		
+		(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Convert the projection definition *)
+		(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		print_message Verbose_total ("*** Building the projection definition…");
+		let projection = convert_projection_definition index_of_variables parsed_property_option in
+
 		(* Return the property *)
 		Some {
 			(* Emptiness or synthesis *)
@@ -3991,24 +4011,6 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		}
 		,
 		converted_observer_structure_option
-
-
-(*------------------------------------------------------------*)
-(** Convert a list of parsed parameters into a list of variable_index *)
-(*------------------------------------------------------------*)
-let convert_projection_definition (index_of_variables : (Automaton.variable_name, Automaton.variable_index) Hashtbl.t)  = function
-	(* No property *)
-	| None -> None
-	(* Some property *)
-	| Some (parsed_property : parsed_property) ->
-	begin
-		match parsed_property.projection with
-		| None -> None
-		| Some (parsed_parameters : string list) -> Some (List.map (fun (parsed_parameter_name : string) ->
-			(* No check because this was checked before *)
-			Hashtbl.find index_of_variables parsed_parameter_name
-			) parsed_parameters)
-	end
 
 
 
@@ -4956,13 +4958,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		print_message Verbose_medium ("Constraint X >= 0 ^ K0:");
 		print_message Verbose_medium (LinearConstraint.string_of_px_linear_constraint variable_names px_clocks_non_negative_and_initial_p_constraint);
 	);
-
-
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Convert the projection definition *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	print_message Verbose_total ("*** Building the projection definition…");
-	let projection = convert_projection_definition index_of_variables parsed_property_option in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
