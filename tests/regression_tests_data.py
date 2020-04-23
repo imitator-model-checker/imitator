@@ -4092,8 +4092,8 @@ Number of computed states               : 5
 		'expectations' : [
 			{'file': 'CUBPTA1.res' , 'content' : """
 BEGIN CONSTRAINT
- p1 >= 0
-& p2 >= 1
+ p2 >= 1
+& p1 >= 0
 END CONSTRAINT
 
 ------------------------------------------------------------
