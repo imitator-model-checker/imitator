@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/04/22
+# Last modified     : 2020/04/23
 #************************************************************
 
 
@@ -10541,12 +10541,15 @@ system pta1, pta2, pta3;
 		'expectations' : [
 			{'file': 'fmtv1A1-v2.res' , 'content' : """
 BEGIN CONSTRAINT
-125*e2e > 18126
-OR
-e2e >= 0
-&
-63 > e2e
+ 18126 >= 125*e2e
+& e2e >= 63
 END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} # end result file
 			,
