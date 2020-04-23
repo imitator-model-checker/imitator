@@ -132,16 +132,6 @@ parsing_counter#start;
 (* Parse the model and the property *)
 (*------------------------------------------------------------*)
 
-(*** TODO !!! 
-(* Should we add a special clock reset at each transition? *)
-let with_special_reset_clock =
-match options#imitator_mode with
-	| Parametric_NZ_CUB | Parametric_NZ_CUBcheck | Parametric_NZ_CUBtransform | Parametric_NZ_CUBtransformDistributed -> true
-	| _ -> false
-in
-
-***)
-
 let model, property_option = ParsingUtility.compile_model_and_property options in
 
 (*------------------------------------------------------------*)
@@ -162,19 +152,6 @@ match property_option with
 end;
 
 
-
-(*(*------------------------------------------------------------*)
-(* Parse the additional file (pi0 or v0) *)
-(*------------------------------------------------------------*)
-if is_mode_IM options#imitator_mode then(
-	let pi0 = ParsingUtility.compile_pi0 options in
-	Input.set_pi0 pi0;
-);
-
-if is_mode_cartography options#imitator_mode then(
-	let v0 = ParsingUtility.compile_v0 options in
-	Input.set_v0 v0;
-);*)
 
 (* End of parsing *)
 parsing_counter#stop;

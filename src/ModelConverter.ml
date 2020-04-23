@@ -4244,12 +4244,20 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	in
 	
 	(* Second handle the special_reset_clock *)
+	let with_special_reset_clock = match parsed_property_option with
+	| Some parsed_property ->
+		begin
+		match parsed_property.property with
+		| Parsed_NZCycle_check
+		| Parsed_NZCycle_CUB
+		| Parsed_NZCycle_transform
+			-> true
+			
+		| _ -> false
+		end
 	
-	
-	(*** TODO: will depend on the actual algorithm ***)
-	
-	
-	let with_special_reset_clock = false in
+	| None -> false
+	in
 	
 	let special_reset_clock_list = if with_special_reset_clock then [Constants.special_reset_clock_name] else [] in
 	
