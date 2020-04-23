@@ -4251,7 +4251,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		| Parsed_NZCycle_check
 		| Parsed_NZCycle_CUB
 		| Parsed_NZCycle_transform
-			-> true
+			->
+			print_message Verbose_high ("\nDefining special reset clock…");
+			true
 			
 		| _ -> false
 		end
