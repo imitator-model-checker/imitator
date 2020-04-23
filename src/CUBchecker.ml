@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Checks whether a PTA is a CUB-PTA and/or transform it into a CUB-PTA
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2019/07/09
+ * Last modified     : 2020/04/23
  *
  ************************************************************)
 
@@ -3362,7 +3363,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Automaton of transition_index *)
 	let new_automaton_of_transition = DynArray.get automaton_of_transition in
 	
-	(* Transform the property *)
+(*	(* Transform the property *)
 	(*** NOTE! only support reachability properties for now ***)
 	let new_unreachable_locations =
 		match model.correctness_condition with
@@ -3432,7 +3433,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		*)
 		(* Other cases not supported (in the entire tool) *)
 		| _ -> raise (NotImplemented "Properties different from reachability using a single automaton and a single location are not supported yet in the CUB transformation")
-	in
+	in*)
 		
 	
 	(*------------------------------------------------------------*)
@@ -3660,13 +3661,13 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* Property defined by the user *)
 		(*** TODO ***)
 		(*** WARNING: any property will be turned into an (equivalent) reachability property, i.e., the original user property is lost ***)
-		user_property = if new_unreachable_locations = [] then Noproperty else Unreachable_locations new_unreachable_locations;
+(* 		user_property = if new_unreachable_locations = [] then Noproperty else Unreachable_locations new_unreachable_locations; *)
 		(* Property defined by the model *)
-		correctness_condition = if new_unreachable_locations = [] then None else Some (Unreachable new_unreachable_locations);
+(* 		correctness_condition = if new_unreachable_locations = [] then None else Some (Unreachable new_unreachable_locations); *)
 		(* List of parameters to project the result onto *)
-		projection = model.projection;
+(* 		projection = model.projection; *)
 		(* Parameter to be minimized or maximized *)
-		optimized_parameter = model.optimized_parameter;
+(* 		optimized_parameter = model.optimized_parameter; *)
 	}
 	
 	in

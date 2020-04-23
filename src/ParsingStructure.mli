@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/04/21
+ * Last modified     : 2020/04/23
  *
  ****************************************************************)
 
@@ -375,10 +375,15 @@ type parsed_property_type =
 	(** Accepting infinite-run (cycle) *)
 	| Parsed_Acc_Cycle of parsed_state_predicate
 
-	(*(** Infinite-run (cycle) with non-Zeno assumption *)
-	| Parsed_NZCycle
+	(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
+	| Parsed_NZCycle_check
 	
-	*)
+	(** Infinite-run (cycle) with non-Zeno assumption: method by transforming the PTA into a CUB-PTA *)
+	| Parsed_NZCycle_transform
+
+	(** Infinite-run (cycle) with non-Zeno assumption: method assuming the PTA is already a CUB-PTA *)
+	| Parsed_NZCycle_CUB
+
 
 	(*------------------------------------------------------------*)
 	(* Deadlock-freeness *)

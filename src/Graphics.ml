@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/04/21
+ * Last modified     : 2020/04/23
  *
  ************************************************************)
  
@@ -162,6 +162,10 @@ let get_v0_option () =
 			| PRP _
 				
 			| Cycle
+			| NZCycle_check
+			| NZCycle_CUB
+			| NZCycle_transform
+			
 			| Deadlock_Freeness
 			| IM _
 			| ConvexIM _
@@ -1263,6 +1267,9 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 					-> Some state_predicate
 					
 				| Cycle
+				| NZCycle_check
+				| NZCycle_CUB
+				| NZCycle_transform
 				| Deadlock_Freeness
 				| IM _
 				| ConvexIM _

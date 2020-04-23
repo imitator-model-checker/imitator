@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created:       2013/02/04
- * Last modified: 2020/04/21
+ * Last modified: 2020/04/23
  *
  ************************************************************)
  
@@ -105,6 +105,9 @@ let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 
 	| Parsed_Cycle
 	| Parsed_Acc_Cycle _
+	| Parsed_NZCycle_check
+	| Parsed_NZCycle_transform
+	| Parsed_NZCycle_CUB
 
 	| Parsed_Deadlock_Freeness
 
@@ -155,6 +158,9 @@ let new_elements (parsed_property : ParsingStructure.parsed_property) =
 
 	| Parsed_Cycle
 	| Parsed_Acc_Cycle _
+	| Parsed_NZCycle_check
+	| Parsed_NZCycle_transform
+	| Parsed_NZCycle_CUB
 
 	| Parsed_Deadlock_Freeness
 
@@ -216,6 +222,9 @@ let get_nb_locations (parsed_property : ParsingStructure.parsed_property) =
 	
 	| Parsed_Cycle
 	| Parsed_Acc_Cycle _
+	| Parsed_NZCycle_check
+	| Parsed_NZCycle_transform
+	| Parsed_NZCycle_CUB
 
 	| Parsed_Deadlock_Freeness
 

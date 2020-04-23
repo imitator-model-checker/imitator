@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/04/21
+ * Last modified     : 2020/04/23
  *
  ************************************************************)
 
@@ -119,9 +119,15 @@ type property =
 	(** Accepting infinite-run (cycle) *)
 	| Accepting_cycle of state_predicate
 
-(*	(** Infinite-run (cycle) with non-Zeno assumption *)
-	| NZCycle
-	*)
+	(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
+	| NZCycle_check
+	
+	(** Infinite-run (cycle) with non-Zeno assumption: method by transforming the PTA into a CUB-PTA *)
+	| NZCycle_transform
+	
+	(** Infinite-run (cycle) with non-Zeno assumption: method assuming the PTA is already a CUB-PTA *)
+	| NZCycle_CUB
+	
 
 	(*------------------------------------------------------------*)
 	(* Deadlock-freeness *)

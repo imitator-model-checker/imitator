@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/04/22
+ * Last modified     : 2020/04/23
  *
  ************************************************************)
 
@@ -551,6 +551,100 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 
 			| Accepting_cycle state_predicate ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth state_predicate in myalgo
+
+			(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
+ 			| NZCycle_check ->
+				(* Computing a constraint for which the PTA is CUB *)
+				print_message Verbose_standard ("Checking whether the PTA is CUB for some parameter valuations…");
+
+				let cub_constraint = CUBchecker.check_cub model in
+
+				if verbose_mode_greater Verbose_low then(
+					(* Computing a constraint for which the PTA is CUB *)
+					print_message Verbose_low ("Computed CUB constraint");
+					print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names cub_constraint);
+					print_message Verbose_low ("Comparing the computed constraint with the initial constraint:");
+					print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names model.initial_p_constraint);
+
+				);
+
+				(* Compare if the model is CUB for *all* valuations *)
+				let is_universally_cub = LinearConstraint.p_is_equal cub_constraint model.initial_p_constraint in
+
+				if is_universally_cub then(
+					print_message Verbose_standard ("The model is a CUB-PTA for all defined parameter valuations, i.e.:");
+				)else(
+					print_message Verbose_standard ("The model is a CUB-PTA for the following parameter valuations:");
+				);
+				print_message Verbose_standard (LinearConstraint.string_of_p_linear_constraint model.variable_names cub_constraint);
+
+				(*** TODO: check if the constraint is stricter than the original constraint; if yes, the result can only be an under-approximation ***)
+
+				(* Update the model *)
+				LinearConstraint.px_intersection_assign_p model.initial_constraint [cub_constraint];
+				(* Update the initial p constraint too *)
+				LinearConstraint.p_intersection_assign model.initial_p_constraint [cub_constraint];
+
+				(* Call the NZ emptiness check *)
+				let nz_algo = new AlgoNZCUB.algoNZCUB in
+
+				(* Force under-approximation if not universally CUB *)
+				if not is_universally_cub then(
+					nz_algo#force_underapproximation;
+				);
+
+				let myalgo :> AlgoGeneric.algoGeneric = nz_algo in myalgo
+
+	
+			(** Infinite-run (cycle) with non-Zeno assumption: method by transforming the PTA into a CUB-PTA *)
+			| NZCycle_transform ->
+				print_message Verbose_standard ("Generating the transformed model…");
+
+				let cub_model = CUBchecker.cubpta_of_pta model in
+				(*** HACK: set the model in the input module too ***)
+				Input.set_model cub_model;
+
+				print_message Verbose_standard ("Transformation completed");
+
+				(* Only export to file in graphics for >= Verbose_low *)
+				if verbose_mode_greater Verbose_low then(
+					(* Export the model to a file *)
+					(*** TODO: not necessary? (but so far useful to test) ***)
+
+					let translated_model = ModelPrinter.string_of_model cub_model in
+
+					let imi_file = options#files_prefix ^ "-cub" ^ Constants.model_extension in
+					if verbose_mode_greater Verbose_total then(
+						print_message Verbose_total ("\n" ^ translated_model ^ "\n");
+					);
+
+					(* Write *)
+					write_to_file imi_file translated_model;
+					print_message Verbose_low ("File '" ^ imi_file ^ "' successfully created.");
+
+
+					(* Then transform to a graphics *)
+					(*** TODO: not necessary? (but so far useful to test) ***)
+
+					let translated_model = PTA2JPG.string_of_model cub_model in
+					if verbose_mode_greater Verbose_high then(
+						print_message Verbose_high ("\n" ^ translated_model ^ "\n");
+					);
+
+					Graphics.dot Constants.pta_default_image_format (options#files_prefix ^ "-cubpta") translated_model;
+
+					print_message Verbose_low ("Graphic export successfully created."); (*** TODO: add file name in a proper manner ***)
+				); (* end export *)
+
+				(* Call the NZ emptiness check *)
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB in myalgo
+
+
+			(** Infinite-run (cycle) with non-Zeno assumption: method assuming the PTA is already a CUB-PTA *)
+			| NZCycle_CUB ->
+			(* Just call the NZ emptiness check *)
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB in myalgo
+
 
 		(*------------------------------------------------------------*)
 		(* Deadlock-freeness *)

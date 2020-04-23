@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/04/21
+ * Last modified     : 2020/04/23
  *
  ************************************************************)
 
@@ -2474,6 +2474,9 @@ class virtual algoStateBased =
 	
 				
 				| Cycle
+				| NZCycle_check
+				| NZCycle_CUB
+				| NZCycle_transform
 				
 				| Deadlock_Freeness
 				
