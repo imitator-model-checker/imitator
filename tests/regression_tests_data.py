@@ -4033,8 +4033,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: flip-flop (no loop)',
-		'input_files': ['flipflop.imi'],
-		'options'    : '-mode NZCUB -output-result',
+		'input_files': ['flipflop.imi', 'flipflop-NZCUB.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4060,8 +4060,8 @@ Number of computed states               : 20
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno)',
-		'input_files': ['PDFC4.imi'],
-		'options'    : '-mode NZCUB -output-result',
+		'input_files': ['PDFC4.imi', 'PDFC4-NZCUB.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'PDFC4.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4087,8 +4087,8 @@ Number of computed states               : 5
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: CUBPTA1 (non-Zeno loop)',
-		'input_files': ['CUBPTA1.imi'],
-		'options'    : '-mode NZCUB -output-result',
+		'input_files': ['CUBPTA1.imi', 'CUBPTA-NZCUB.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'CUBPTA1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4115,8 +4115,8 @@ Number of computed states               : 5
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: CUBPTA2 (2 non-Zeno loops)',
-		'input_files': ['CUBPTA2.imi'],
-		'options'    : '-mode NZCUB -output-result',
+		'input_files': ['CUBPTA2.imi', 'CUBPTA-NZCUB.imiprop'],
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'CUBPTA2.res' , 'content' : """
 BEGIN CONSTRAINT
