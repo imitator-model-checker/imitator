@@ -10,7 +10,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/04/16
+ * Last modified     : 2020/04/23
  *
  ************************************************************)
 
@@ -183,7 +183,7 @@ class imitator_options =
 		val mutable no_random = ref false
 		
 		(* no time elapsing in zones (in fact, time elapsing is performed before taking a transition, not after) *)
-		val mutable no_time_elapsing = ref false
+		val mutable no_time_elapsing = false
 		
 		(* No automatic removal of variables declared but never used *)
 		val mutable no_variable_autoremove = ref false
@@ -269,7 +269,7 @@ class imitator_options =
 		method no_leq_test_in_ef = no_leq_test_in_ef
 		method no_lookahead = !no_lookahead
 		method no_pending_ordered = !no_pending_ordered
-		method no_time_elapsing = !no_time_elapsing
+		method no_time_elapsing = no_time_elapsing
 		method no_random = !no_random
 		method no_variable_autoremove = !no_variable_autoremove
 		method output_bc_cart = output_bc_cart
@@ -302,13 +302,17 @@ class imitator_options =
 		(* Set methods *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		
-		(*** NOTE: set methods are only used for the learning-based abstraction construction ***)
+		(*** NOTE: these set methods are only used for the learning-based abstraction construction ***)
 		
 		method set_file file_name =
 			model_file_name <- file_name
 
 		method set_files_prefix file_name =
 			files_prefix <- file_name
+		
+		(*** NOTE: this set method is only used for the CUB NZ algorithms ***)
+		method set_no_time_elapsing =
+			no_time_elapsing <- true
 			
 				
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -795,7 +799,7 @@ class imitator_options =
 
 				("-no-random", Set no_random, " In IM, no random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 
-				("-no-time-elapsing", Set no_time_elapsing, " No time elapsing in zone computation (i.e., time elapsing is performed before taking a transition, not after). Default: false.");
+				("-no-time-elapsing", Unit (fun () -> no_time_elapsing <- true), " No time elapsing in zone computation (i.e., time elapsing is performed before taking a transition, not after). Default: false.");
 
 				("-no-var-autoremove", Set no_variable_autoremove, " Prevent the automatic removal of variables (discrete, clocks, parameters) declared in the header but never used in the IPTAs. Default: false.");
 

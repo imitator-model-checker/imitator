@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2020/04/16
+ * Last modified: 2020/04/23
  *
  ************************************************************)
  
@@ -96,11 +96,15 @@ class imitator_options :
 		(* Set methods *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		
-		(*** NOTE: set methods are only used for the learning-based abstraction construction ***)
+		(*** NOTE: these set methods are only used for the learning-based abstraction construction ***)
 		
 		method set_file : string -> unit
 
 		method set_files_prefix : string -> unit
+
+		
+		(*** NOTE: this set method is only used for the CUB NZ algorithms ***)
+		method set_no_time_elapsing : unit
 
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

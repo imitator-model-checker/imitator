@@ -531,6 +531,9 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 
 			(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
  			| NZCycle_check ->
+				(* Important! Set the no-time-elapsing option *)
+				options#set_no_time_elapsing;
+				
 				(* Computing a constraint for which the PTA is CUB *)
 				print_message Verbose_standard ("Checking whether the PTA is CUB for some parameter valuations…");
 
@@ -575,6 +578,9 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 	
 			(** Infinite-run (cycle) with non-Zeno assumption: method by transforming the PTA into a CUB-PTA *)
 			| NZCycle_transform ->
+				(* Important! Set the no-time-elapsing option *)
+				options#set_no_time_elapsing;
+				
 				print_message Verbose_standard ("Generating the transformed model…");
 
 				let cub_model = CUBchecker.cubpta_of_pta model in
@@ -619,7 +625,10 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 
 			(** Infinite-run (cycle) with non-Zeno assumption: method assuming the PTA is already a CUB-PTA *)
 			| NZCycle_CUB ->
-			(* Just call the NZ emptiness check *)
+				(* Important! Set the no-time-elapsing option *)
+				options#set_no_time_elapsing;
+				
+				(* Just call the NZ emptiness check *)
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB in myalgo
 
 
