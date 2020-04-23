@@ -101,6 +101,7 @@ let property_header() =
 	^ "\n" ^ " * Model    : '" ^ options#property_file_name ^ "'"
 	^ "\n" ^ " * Generated: " ^ (now()) ^ ""
 	^ "\n" ^ " ************************************************************)"
+	^ "\n"
 
 
 
