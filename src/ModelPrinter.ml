@@ -706,6 +706,12 @@ and string_of_state_predicate model = function
 
 
 
+(** Convert the projection to a string, if any *)
+let string_of_projection model property =
+	match property.projection with
+	| None -> ""
+	| Some parameter_index_list ->
+		"\nprojectresult(" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names parameter_index_list)) ^ ");"
 
 
 (** Convert a property to a string *)
@@ -842,8 +848,9 @@ let string_of_abstract_property model property =
 	
 	^
 	
-	(*** TODO ***)
-	("TODO: projection")
+	(* Add the projection, if any *)
+	(string_of_projection model property)
+
 (*	match property with
 	(* An "OR" list of global locations *)
 	| Unreachable_locations unreachable_global_location_list ->
@@ -904,26 +911,7 @@ let string_of_abstract_property model property =
 	(*** NOTE: Would be better to have an "option" type ***)
 	| Noproperty -> "(* no property *)"*)
 
-(** Convert the projection to a string *)
-let string_of_projection model =
-	(*** TODO ***)
-	raise (NotImplemented "string_of_property")
-(*	match model.projection with
-	| None -> ""
-	| Some parameter_index_list ->
-		"\nprojectresult(" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names parameter_index_list)) ^ ");"*)
 
-
-(** Convert the optimization to a string *)
-let string_of_optimization model =
-	(*** TODO ***)
-	raise (NotImplemented "string_of_property")
-(*	match model.optimized_parameter with
-	| No_optimization -> ""
-	| Minimize parameter_index ->
-		"minimize(" ^ (model.variable_names parameter_index) ^ ");"
-	| Maximize parameter_index ->
-		"maximize(" ^ (model.variable_names parameter_index) ^ ");"*)
 
 
 (************************************************************)
