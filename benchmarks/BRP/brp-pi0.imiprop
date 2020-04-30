@@ -12,18 +12,17 @@
  * Input by        : ?? and Etienne Andre
  *
  * Created         : ? (< 09/2007)
- * Last modified   : 2015/07/19
+ * Last modified   : 2020/04/30
  *
- * IMITATOR version: 2.7.1
+ * IMITATOR version: 3
  ************************************************************)
 
 
-	---START PI0---
+property := #synth IM(
 (*	& MAX  = 2
 	& N    = 2 *)
 	& TD   = 1
 	& T1   = 3
 	& TR   = 16
 	& SYNC = 17
-	---END PI0---
-	
+);

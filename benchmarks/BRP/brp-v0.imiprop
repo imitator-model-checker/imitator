@@ -12,15 +12,17 @@
  * Input by        : ?? and Etienne Andre
  *
  * Created         : ? (< 09/2007)
- * Last modified   : 2015/07/19
+ * Last modified   : 2020/04/30
  *
- * IMITATOR version: 2.7.1
+ * IMITATOR version: 3
  ************************************************************)
 
 
+property := #synth BCcover(
 (*	& MAX  = 2
 	& N    = 2 *)
-	& TD   = 0 .. 50 -- 1
+	& TD   = 0 .. 50 (*1*)
 	& T1   = 3
-	& TR   = 0 .. 50 -- 16
+	& TR   = 0 .. 50 (*16*)
 	& SYNC = 17
+);

@@ -12,9 +12,9 @@
  * Input by        : ?? and Étienne André
  *
  * Created         : ? (< 09/2007)
- * Last modified   : 2018/09/06
+ * Last modified   : 2020/04/30
  *
- * IMITATOR version: 2.10.4
+ * IMITATOR version: 3
  ************************************************************)
  
 
@@ -22,46 +22,34 @@ var     x,ys, yr,z,u,v
 	(* removed 'w' as only used in R's automaton to mark urgent locations *)
            : clock;
 
-	i,	-- subscript of the chunk currently beeing processed (1<=i<=N)
-	ab,	-- alternating bit accompanying the next chunk to be sent
-	rc, 	-- nb of attempt undertaken by S to retransmit d_i (0<=rc<=MAX)
+	i,	(*subscript of the chunk currently beeing processed (1<=i<=N)*)
+	ab,	(* alternating bit accompanying the next chunk to be sent*)
+	rc, (* nb of attempt undertaken by S to retransmit d_i (0<=rc<=MAX)*)
 
 	b1,bN, rb1,rbN, 
 
 
-	retry,	-- specifique ici (borne le nombre de retentatives du sender
-		-- lors d'une erreur a Maxr)
+	retry, (*specifique ici (borne le nombre de retentatives du sender lors d'une erreur a Maxr)*)
 	Maxr,
 
 	rab, exp_ab 
            : discrete;
 	
 
-        MAX = 2, 	-- maximal number of retransmissions
-	N = 2, 	-- number of chunks of a file
-	SYNC = 17, 	-- delay added after a failure in order to assure 
-		-- that S does not start transmitting a new file before 
-		-- the receiver has properly reacted to the failure
-	T1 = 3,	-- time-out of the sender for initiating a retransmission
-		-- when S has not received an ack from S
-	TR,	-- time-out of the receiver for indicating failure
-		-- when R has not received the last chunk of a file
-	TD  	-- maximum delay in channel K (and L)
+        MAX = 2, 	(*maximal number of retransmissions*)
+	N = 2, 	(*number of chunks of a file*)
+	SYNC = 17, 	(*delay added after a failure in order to assure that S does not start transmitting a new file before the receiver has properly reacted to the failure *)
+	T1 = 3,	(*time-out of the sender for initiating a retransmission when S has not received an ack from S*)
+	TR,	(*time-out of the receiver for indicating failure when R has not received the last chunk of a file*)
+	TD  (*maximum delay in channel K (and L)*)
            : parameter;
--- -----------------------------------------------
 
 
 
---****************************************************--
---****************************************************--
--- AUTOMATA
---****************************************************--
---****************************************************--
 
-
---****************************************************--
+(************************************************************)
   automaton sender
---****************************************************--
+(************************************************************)
 synclabs: Sin, B, F, Sout_DK, Sout_NOK, Sout_OK;
 
 
@@ -89,24 +77,24 @@ loc wait_ack: invariant x<=T1
 
 urgent loc success: invariant True
 	when i<N do {i := i+1,b1 := 0,x := 0} goto next_frame;
-	when i=N sync Sout_OK do {x := 0} goto EndS; -- idleS;
+	when i=N sync Sout_OK do {x := 0} goto EndS; (*idleS;*)
 
 
 urgent loc error: invariant True
---	when x=0 & retry<Maxr do {ab := 0, retry := retry+1} goto idleS;
+(* --	when x=0 & retry<Maxr do {ab := 0, retry := retry+1} goto idleS; *)
 	when x=0  do {ab := 0} goto idleS;
---	invariant x<=SYNC
---	when x=SYNC do {ab := 0} goto idleS;
+(* --	invariant x<=SYNC *)
+(* --	when x=SYNC do {ab := 0} goto idleS; *)
 
 
 loc EndS: invariant x>=0
 
-end --sender
+end (*sender*)
 
 
---****************************************************--
+(************************************************************)
   automaton receiver	
---****************************************************--
+(************************************************************)
 synclabs: G, A, Rout_NOK, Rout_OK, Rout_FST, Rout_INC;
 
 
@@ -142,8 +130,8 @@ loc frame_received: invariant True (* originally w=0, but turned into urgent *)
 			do {} goto frame_reported;
 
 
-	when rab=1 & exp_ab=0 sync A do {} goto idleR;	-- do {z := 0} ???
-	when rab=0 & exp_ab=1 sync A do {} goto idleR;	-- do {z := 0} ???
+	when rab=1 & exp_ab=0 sync A do {} goto idleR;	(*-- do {z := 0} ???*)
+	when rab=0 & exp_ab=1 sync A do {} goto idleR;	(*-- do {z := 0} ???*)
 
 
 
@@ -162,14 +150,14 @@ loc idleR: invariant z<=TR
 
 loc FailureR: invariant z>=0
 
-end --receiver
+end (*receiver*)
 
 
 
 
---****************************************************--
+(************************************************************)
 automaton channelK
---****************************************************--
+(************************************************************)
 synclabs: F,G;
 
 loc startK: invariant u>=0
@@ -179,7 +167,7 @@ loc startK: invariant u>=0
 
 loc in_transitK: invariant u<=TD
 
-	when u<=TD & u>0 goto startK;  -- lost ??? (proba 0.02)
+	when u<=TD & u>0 goto startK;  (*lost ??? (proba 0.02)*)
 
 	when u<=TD & u>0 & b1=0 & bN=0 & ab=0
 		do {rb1 := 0, rbN := 0, rab := 0}
@@ -210,13 +198,13 @@ loc in_transitK: invariant u<=TD
 
 loc BadK: invariant u>=0
 
-end -- channelK
+end (*channelK*)
 
 
 
---****************************************************--
+(************************************************************)
 automaton channelL
---****************************************************--
+(************************************************************)
 synclabs: A,B;
 
 loc startL: invariant v>=0
@@ -228,37 +216,37 @@ loc startL: invariant v>=0
 loc in_transitL: invariant v<=TD
 
 	when v<=TD & v>0 sync B  goto startL;
-	when v<=TD & v>0  goto startL;   -- lost ??? (proba 0.01)
+	when v<=TD & v>0  goto startL;   (*lost ??? (proba 0.01)*)
 
 	when True sync A  goto BadL;
 
 loc BadL: invariant v>=0
 
-end -- channelL
+end (*channelL*)
 
 
---****************************************************--
+(************************************************************)
 automaton Sclient	
---****************************************************--
+(************************************************************)
 synclabs: Sin, Sout_OK, Sout_DK, Sout_NOK;
 
-loc startSC: invariant ys<=SYNC 		 -- invariant ys>=0
+loc startSC: invariant ys<=SYNC 	(*invariant ys>=0*)
 
 	when ys=SYNC & retry<=Maxr sync Sin do {ys := 0, retry := retry+1} 
 				goto transSC; 
-	-- when True sync Sin do {ys := 0}
+(* 	when True sync Sin do {ys := 0} *)
 
 loc transSC: invariant ys>=0
 
-	when True sync Sout_OK do {ys := 0} goto startSC;  -- do{}
-	when True sync Sout_DK do {ys := 0} goto startSC;  -- do{}
-	when True sync Sout_NOK do {ys := 0} goto startSC; -- do{}
+	when True sync Sout_OK do {ys := 0} goto startSC;
+	when True sync Sout_DK do {ys := 0} goto startSC;
+	when True sync Sout_NOK do {ys := 0} goto startSC;
 
-end --Sclient
+end (*Sclient*)
 
---****************************************************--
+(************************************************************)
 automaton Rclient	
---****************************************************--
+(************************************************************)
 synclabs: Rout_FST, Rout_OK, Rout_INC, Rout_NOK;
 
 loc startRC: invariant yr>=0
@@ -272,7 +260,7 @@ loc transRC: invariant yr>=0
 	when True sync Rout_INC  goto transRC; 
 	when True sync Rout_NOK  goto startRC; 
 
-end --Rclient
+end (*Rclient*)
 
 
 
@@ -291,10 +279,10 @@ init := loc[sender]=idleS
 	& rc=0 & i=0 & ab=0 
 	& b1=0 & bN=0 & rb1=0 & rbN=0
 	& rab=0 & exp_ab=0
-	& retry=0 & Maxr=0 	--Maxr=1
+	& retry=0 & Maxr=0 	(*Maxr=1*)
 
-	-- & TR>=4T1+3TD	--TR=SYNC>4T1+3TD
-	-- & T1>2TD & TR<=SYNC & TD>0 
+(*	-- & TR>=4T1+3TD	--TR=SYNC>4T1+3TD
+	-- & T1>2TD & TR<=SYNC & TD>0 *)
 
 (*	& MAX > 0
 	& N > 0*)
@@ -308,7 +296,7 @@ init := loc[sender]=idleS
 	& TR   >= 1 & TR <= 50
 
 	
-	
+(*	
 	----------------------
 	-- Constraint output by IMITATOR 1
 	----------------------
@@ -319,20 +307,12 @@ init := loc[sender]=idleS
 --       & TR <= TD + SYNC
 --       & 2TD < T1
 --       & 3TD + 4T1 <= TR
---       & TR < 2TD + 5T1
+--       & TR < 2TD + 5T1*)
 
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-property := unreachable loc[receiver] = FailureR;
 
 
 (************************************************************)
 (* The end *)
 (************************************************************)
 end
-
-
