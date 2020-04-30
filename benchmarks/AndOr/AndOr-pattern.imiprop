@@ -1,0 +1,8 @@
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* b- x- a- b+ a+ x+ *)
+property := always sequence(bDown, xDown, aDown, bUp, aUp, xUp) ;
+
