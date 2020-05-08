@@ -336,7 +336,9 @@ let string_of_transition model automaton_index transition =
 	(* Convert the sync *)
 	^ (string_of_sync model transition.action)
 	(* Convert the updates *)
-	^ " do {"
+	^ (if (string_of_clock_updates model clock_updates) = "" || (string_of_discrete_updates model discrete_updates) = ""
+     || (string_of_conditional_updates model conditional_updates) = "" then "" else (""
+    ^ " do {"
 	(* Clock updates *)
 	^ (string_of_clock_updates model clock_updates)
 	(* Add a coma in case of both clocks and discrete *)
@@ -347,7 +349,7 @@ let string_of_transition model automaton_index transition =
 	^ (if second_separator then "& " else "")
 	(* Conditional updates *)
 	^ (string_of_conditional_updates model conditional_updates)
-	^ "} "
+	^ "} "))
 	(* Convert the destination location *)
 	^ " goto " ^ (model.location_names automaton_index transition.target)
 	^ ";"
@@ -414,6 +416,18 @@ let string_of_chars chars =
   let buf = Buffer.create 16 in
   List.iter (Buffer.add_char buf) chars;
   Buffer.contents buf ;;
+
+(**let my_modified_strings = {
+	true_string   : "true";
+	false_string  : "false";
+	and_operator  : "\n& ";
+	or_operator   : " or ";
+	l_operator    : " < ";
+	le_operator   : " <= ";
+	eq_operator   : " == ";
+	ge_operator   : " >= ";
+	g_operator    : " > ";
+}**)
 
 
 (************************************************************)
