@@ -118,8 +118,8 @@ let my_modified_strings =  {
 
 (** Convert a guard into a string *)
 let string_of_guard variable_names = function
-	| True_guard -> my_modified_strings.true_string
-	| False_guard -> my_modified_strings.false_string
+	| true_guard -> my_modified_strings.true_string
+	| false_guard -> my_modified_strings.false_string
 	| Discrete_guard discrete_guard -> LinearConstraint.string_of_d_linear_constraint variable_names discrete_guard
 	| Continuous_guard continuous_guard -> LinearConstraint.customized_string_of_pxd_linear_constraint my_modified_strings variable_names continuous_guard
 	| Discrete_continuous_guard discrete_continuous_guard ->
