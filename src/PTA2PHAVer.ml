@@ -88,16 +88,44 @@ let string_of_declarations model =
 
 (*** NOTE: special handling as we have a discrete and a continuous guard that must be handled homogeneously ***)
 
+(**                            **)
+
+type customized_string =
+     LinearConstraint.customized_string = 
+    {
+	true_string  : string;
+	false_string : string;
+	and_operator : string;
+	or_operator  : string;
+	l_operator   : string;
+	le_operator  : string;
+	eq_operator  : string;
+	ge_operator  : string;
+	g_operator   : string;
+};;
+
+let my_modified_strings =  {
+	true_string   = "true" ;
+	false_string  = "false";
+	and_operator  = " & ";
+	or_operator   = " or ";
+	l_operator    = " < " ;
+	le_operator   = " <= ";
+	eq_operator   = " ==" ;
+	ge_operator   = " >= ";
+	g_operator    = " > "  };;
+(**                         **)
+
 (** Convert a guard into a string *)
 let string_of_guard variable_names = function
-	| True_guard -> "true"
-	| False_guard -> LinearConstraint.string_of_false
+	| True_guard -> my_modified_strings.true_string
+	| False_guard -> my_modified_strings.false_string
 	| Discrete_guard discrete_guard -> LinearConstraint.string_of_d_linear_constraint variable_names discrete_guard
-	| Continuous_guard continuous_guard -> LinearConstraint.string_of_pxd_linear_constraint variable_names continuous_guard
+	| Continuous_guard continuous_guard -> LinearConstraint.customized_string_of_pxd_linear_constraint my_modified_strings variable_names continuous_guard
 	| Discrete_continuous_guard discrete_continuous_guard ->
 		(LinearConstraint.string_of_d_linear_constraint variable_names discrete_continuous_guard.discrete_guard)
 		^ LinearConstraint.string_of_and ^
-		(LinearConstraint.string_of_pxd_linear_constraint variable_names discrete_continuous_guard.continuous_guard)
+		(LinearConstraint.customized_string_of_pxd_linear_constraint my_modified_strings variable_names discrete_continuous_guard.continuous_guard)
 
 
 
@@ -407,7 +435,8 @@ let explode s =
 
 let rec string_lst_change_egale = function
   | [] -> let a =' ' in a::[]
-  | (h::t) when h = '<' || h = '>' || h = '\n'-> ' '::(string_lst_change_egale t) 
+  | (h::t) when  h = '\n'-> ' '::(string_lst_change_egale t)
+  | (h::t) when h = '<' || h = '>' -> '='::(string_lst_change_egale t)
   | (h::t) ->  h::(string_lst_change_egale t);;
 
 
@@ -416,18 +445,6 @@ let string_of_chars chars =
   let buf = Buffer.create 16 in
   List.iter (Buffer.add_char buf) chars;
   Buffer.contents buf ;;
-
-(**let my_modified_strings = {
-	true_string   : "true";
-	false_string  : "false";
-	and_operator  : "\n& ";
-	or_operator   : " or ";
-	l_operator    : " < ";
-	le_operator   : " <= ";
-	eq_operator   : " == ";
-	ge_operator   : " >= ";
-	g_operator    : " > ";
-}**)
 
 
 (************************************************************)
@@ -438,17 +455,17 @@ let rec  string_of_initial_state () =
 	let model = Input.get_model () in
 
 	(* Header of initial state *)
-	"\n"
-	^ "\n" ^ "// ----------------------------------------------------------"
+	""
+	(**^ "\n" ^ "// ----------------------------------------------------------"
 	^ "\n" ^ "//  Initial state "
 	^ "\n" ^ "// ----------------------------------------------------------"
 	^ "\n" ^ ""
-	^ "\n" ^ ""
+	^ "\n" ^ ""**)
 
 	(* Initial location *)
-	^ "\n" ^ "// ------------------------------------------------------------"
+	(**^ "\n" ^ "// ------------------------------------------------------------"
 	^ "\n" ^ "//  Initial location "
-	^ "\n" ^ "// ------------------------------------------------------------"
+	^ "\n" ^ "// ------------------------------------------------------------"**)
 	^
 	(*** WARNING: Do not print the observer ***)
 	let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
@@ -466,10 +483,10 @@ let rec  string_of_initial_state () =
 	in string_of_list_of_string initial_automata
 
 	(* Initial discrete assignments *)
-	^ "\n" ^ ""
+	(**^ "\n" ^ ""
 	^ "\n" ^ "// ------------------------------------------------------------"
 	^ "\n" ^ "//  Initial discrete assignments "
-	^ "\n" ^ "// ------------------------------------------------------------"
+	^ "\n" ^ "// ------------------------------------------------------------"**)
 	^
 	let initial_discrete = List.map
 	(fun discrete_index ->
@@ -481,11 +498,11 @@ let rec  string_of_initial_state () =
 	in string_of_list_of_string initial_discrete
 
 	(* Initial constraint *)
-	^ "\n" ^ ""
+	(**^ "\n" ^ ""
 	^ "\n" ^ "// ------------------------------------------------------------"
 	^ "\n" ^ "//  Initial constraint "
-	^ "\n" ^ "// ------------------------------------------------------------"
-	^ "\n" ^ string_of_chars (string_lst_change_egale (explode (LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint)))
+	^ "\n" ^ "// ------------------------------------------------------------"**)
+	^ "" ^ string_of_chars (string_lst_change_egale (explode (LinearConstraint.string_of_px_linear_constraint model.variable_names model.initial_constraint)))
     ^ " & true"
 	(* Footer of initial state *)
 	^ "" ^ ";";;
