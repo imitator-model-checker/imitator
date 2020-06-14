@@ -40,6 +40,7 @@ class imitator_options :
 		method check_ippta : bool
 		method check_point : bool
 		method depth_limit : int option
+		method depth_init : int option
 		method distribution_mode : distribution_mode
 		method distributedKillIM : bool
 		method draw_cart : bool
