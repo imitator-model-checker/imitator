@@ -135,6 +135,9 @@ class imitator_options =
 		(* Limit the depth in a BFS algorithm or in NDFS for early backtracking *)
 		val mutable depth_limit = ref None
 
+		(* first depth to explore for the iterative deepening in NDFS algorithm *)
+		val mutable depth_init = ref None
+		
 		(* Distributed version of IMITATOR *)
 		val mutable distribution_mode = ref AbstractAlgorithm.Non_distributed
 
@@ -273,6 +276,7 @@ class imitator_options =
 		method check_ippta = !check_ippta
 		method check_point = !check_point
 		method depth_limit = !depth_limit
+		method depth_init = !depth_init
 		method distribution_mode = !distribution_mode
 		method distributedKillIM = !distributedKillIM
 		method draw_cart = draw_cart
@@ -610,6 +614,8 @@ class imitator_options =
 
 				("-depth-limit", Int (fun i -> depth_limit := Some i), " Limits the depth of the exploration of the state space. Default: no limit.");
 
+				("-depth-init", Int (fun i -> depth_init := Some i), " Initial depth for iterative deepening in NDFS exploration of the state space.");
+
 				("-distributed", String set_distributed, " Distributed version of the behavioral cartography and PRPC.
         Use `no` for the non-distributed mode (default).
         Use `static` for a static domain partitioning [ACN15].
@@ -752,9 +758,11 @@ class imitator_options =
 				("-states-description", Set states_description, " Generate the description of all reachable states in a text file. Default: false.");
 
 				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
-
-				("-statistics", Unit (fun _ -> statistics := true; Statistics.enable_all_counters()), " Print info on number of calls to PPL, and other statistics. Default: `false`");
-
+				
+				("-statistics", Unit (fun _ -> statistics := true; Statistics.enable_all_counters()), " Print info on number of calls to PPL, and other statistics. Default: 'false'");
+				
+				("-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography or NDFS iterative deepening. Default: 1.");
+				
 				("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
 
 				("-tiles-files", Unit (fun () -> output_tiles_files <- true), " In cartography, generate the required files for each tile (i.e., the .res file and the cartography files, if any). Default: false.");
