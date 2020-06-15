@@ -418,7 +418,9 @@ class algoNDFS =
 				^ (ModelPrinter.string_of_state model
 					(StateSpace.get_state state_space thestate)));
 			let depth_ok = match options#depth_limit with
-				| None -> true
+				| None -> if options#depth_init = None then true
+										else if (current_depth  > thestate_depth) then true
+											else (depth_reached <- true; false)
 				| Some depth_value -> if options#depth_init = None then (if (depth_value  > thestate_depth) then true
 											else (depth_reached <- true; false)
 										)
