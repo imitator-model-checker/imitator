@@ -975,8 +975,7 @@ class algoNDFS =
 
 			print_message Verbose_standard("---------------- Ending exploration ------------------");
 
-			if not depth_reached then (print_message Verbose_standard "DEPTH OK"; execute_again <- false)
-		else print_message Verbose_standard "NOK NOK NOK NOK";
+			if not depth_reached then execute_again <- false;
 
 			if execute_again then(
 				ResultProcessor.process_result self#compute_result "Iterative deepening" None;
