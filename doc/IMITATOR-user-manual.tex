@@ -855,7 +855,27 @@ list via the \styleOption{-pendingOrder} option:
 \end{description}
 
 
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Accepting loop (NDFS) with iterative deepening}\label{ss:accepting-loop-NDFS-iterative}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
+The NDFS algorithm described in \cref{ss:accepting-loop-NDFS} with all its options
+can also be applied
+in an iterative manner, based on depth limits. Each iteration explores a deeper state
+space, taking advantage of the previous computation. The iterations are applied until
+either the exact constraint is found or a limit is reached. This iterative analysis
+uses the following options :
+
+\begin{description}
+\item[\styleOption{-depth-init}] allows for starting this iterative computing by indicating
+the initial depth limit to be used;
+\item[\styleOption{-step}] indicates the step between the depths of two iterations;
+\item[\styleOption{-depth-limit}] is the maximal depth at which the last iteration
+will be run.
+\end{description}
+
+The results obtained at each iteration are displayed, thus giving valuable information
+to the user.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Parametric non-Zeno cycle synthesis}\label{ss:mode:Zeno}
@@ -1615,6 +1635,12 @@ Print the list of contributors and exits.
 % This can be a way to solve the \emph{emptiness} instead of the \emph{synthesis} prolem.
 % Nevertheless, note that, instead of returning a Boolean answer, the algorithm still outputs some valuations (typically the valuations associated with the first parametric zone found, that allows to guarantee the violation of the property).
 
+%------------------------------------------------------------
+\paragraph{\styleOption{-depth-init <initial\_depth>} (default: none)}
+%------------------------------------------------------------
+Setting \styleOption{-depth-init} allows for running iteratively \styleOption{AccLoopSynthNDFS},
+starting with depth limit \styleOption{<initial\_depth>} and increasing this limit
+at each iteration.
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-depth-limit <limit>} (default: none)}
@@ -1990,6 +2016,20 @@ Warning: enabling this option may slightly slow down the analysis, and will cert
 
 
 %------------------------------------------------------------
+<<<<<<< HEAD
+=======
+\paragraph{\styleOption{-step} (default: \styleOption{1})}
+%------------------------------------------------------------
+Step is used in two cases:
+\begin{itemize}
+\item for the behavioral cartography :
+integers can be used, or rationals (in the form \styleOption{x/y}) ;
+\item for iterative \styleOption{AccLoopSynthNDFS}, it indicates the step between
+two iterations.
+\end{itemize}
+
+%------------------------------------------------------------
+>>>>>>> updated the user manual
 \paragraph{\styleOption{-sync-auto-detect} (default: false)}
 %------------------------------------------------------------
 \imitator{} considers that all the \IPTA{} declaring a given action must be able to synchronize all together, so that the synchronization can happen.
