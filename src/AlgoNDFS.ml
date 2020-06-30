@@ -55,6 +55,9 @@ class algoNDFS =
 		(* for the evaluation of the synthesis result *)
 	val mutable cyclecount = 0 (* counter for the cycles found *)
 	val mutable processed_blue = 0 (* number of states processed by a blue dfs *)
+		(* total count for iterative version *)
+	val mutable total_cyclecount = 0
+	val mutable total_processed_blue = 0
 	val mutable depth_reached = false (* used when a max depth has been reached *)
 	val mutable execute_again = true (* used when not doing iterative deepening for 1 execution only *)
 	val mutable current_depth = -1 (* used for iterative deepening *)
@@ -395,14 +398,17 @@ class algoNDFS =
 		(* Mark a state blue if deadlock or no successor is green, green otherwise *)
 		(***************************************************************************)
 		let mark_blue_or_green thestate =
-			let successors = StateSpace.get_successors state_space thestate 
-				and is_green astate = table_test green astate
-			in
-			if (successors = [] || not (List.exists is_green successors)) then(
-				table_add blue thestate;
-				printtable "Blue" blue
-			) else (table_add green thestate;
-				printtable "Green" green)
+			(* mark only if not blue due to lookahead *)
+			if not (table_test blue thestate) then(
+				let successors = StateSpace.get_successors state_space thestate 
+					and is_green astate = table_test green astate
+				in
+				if (successors = [] || not (List.exists is_green successors)) then(
+					table_add blue thestate;
+					printtable "Blue" blue
+				) else (table_add green thestate;
+					printtable "Green" green)
+			)
 		in
 
 		(***************************)
@@ -513,6 +519,8 @@ class algoNDFS =
 				(* Clear the colours of previous iteration *)
 				Hashtbl.clear cyan;
 				Hashtbl.clear green; (* We keep the blue states from the previous run*)
+				processed_blue <- 0;
+				cyclecount <-0;
 				Hashtbl.clear red;
 				depth_reached <- false;
 			);
@@ -556,6 +564,7 @@ class algoNDFS =
 						collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
 						if (options#counterex = true) then raise TerminateAnalysis;
 						table_add blue astate;
+						table_add blue thestate;
 						printtable "Blue" blue;
 						(* and the current state is popped from the cyan list *)
 						table_rem cyan thestate;
@@ -657,6 +666,7 @@ class algoNDFS =
 						if (options#counterex = true) then raise TerminateAnalysis;
 						(* the state where the lookahead has found a cycle is now set blue *)
 						table_add blue astate;
+						table_add blue thestate;
 						printtable "Blue" blue;
 						(* and the current state is popped from the cyan list *)
 						table_rem cyan thestate;
@@ -775,6 +785,7 @@ class algoNDFS =
 								if (options#counterex = true) then raise TerminateAnalysis;
 								(* the state where the lookahead has found a cycle is now set blue *)
 								table_add blue astate;
+								table_add blue thestate;
 								printtable "Blue" blue;
 								(* and the current state is popped from the cyan list *)
 								table_rem cyan thestate;
@@ -894,6 +905,7 @@ class algoNDFS =
 								if (options#counterex = true) then raise TerminateAnalysis;
 								(* the state where the lookahead has found a cycle is now set blue *)
 								table_add blue astate;
+								table_add blue thestate;
 								printtable "Blue" blue;
 								(* and the current state is popped from the cyan list *)
 								table_rem cyan thestate;
@@ -976,6 +988,14 @@ class algoNDFS =
 			print_message Verbose_standard("---------------- Ending exploration ------------------");
 
 			if not depth_reached then execute_again <- false;
+
+			printtable "Blue" blue;
+			printtable "Green" green;
+			printtable "Cyan" cyan;
+			printtable "Red" red;
+
+			total_processed_blue <- total_processed_blue + processed_blue;
+			total_cyclecount <- total_cyclecount + cyclecount;
 
 			if execute_again then(
 				ResultProcessor.process_result self#compute_result "Iterative deepening" None;
@@ -1076,7 +1096,9 @@ class algoNDFS =
 		let nb_states = StateSpace.nb_states state_space in
 		print_message Verbose_standard ("Number of computed states: " ^ (string_of_int nb_states));
 		print_message Verbose_standard ("Number of processed states: " ^ (string_of_int processed_blue));
+		print_message Verbose_standard ("Total number of processed states: " ^ (string_of_int total_processed_blue));
 		print_message Verbose_standard ("Number of cycles found: " ^ (string_of_int cyclecount));
+		print_message Verbose_standard ("Total number of cycles found: " ^ (string_of_int total_cyclecount));
 
 		(* Get the termination status *)
 		let termination_status = match termination_status with
