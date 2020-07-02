@@ -24,8 +24,8 @@ function help {
 }
 
 function process_results {
-	echo -n `grep "cycles found" $one_result | cut -d: -f2 | sed -e 's/\[0m//'`' ; '>> $output_file
-	echo -n `grep "processed states" $one_result | cut -d: -f2 | sed -e 's/\[0m//'`' ; ' >> $output_file
+	echo -n `grep "cycles found" $one_result | grep -v Total | cut -d: -f2 | sed -e 's/\[0m//'`' ; '>> $output_file
+	echo -n `grep "processed states" $one_result | grep -v Total | cut -d: -f2 | sed -e 's/\[0m//'`' ; ' >> $output_file
 	exceeds_time=`grep "under-approximation" $one_result`
 	if [ -z "$exceeds_time" ]
 	then echo -n `grep "completed after" $one_result | sed -e 's/\[NDFS\] State space exploration completed after //' \
@@ -86,7 +86,7 @@ for f in $input_files
 		# columns 2 to 4 = L, X, P
 		echo -n `grep -e locations $one_result | cut -d, -f2,5,7 | sed -e 's/^ //' \
 			| sed -e 's/ locations, / \; /' | sed -e 's/ clock variables, / \; /' \
-			| sed -e 's/ parameters/ \;/' | sed -e 's/ parameter/ \; /' ` >> $output_file
+			| sed -e 's/ parameters/ \; /' | sed -e 's/ parameter/ \; /' ` >> $output_file
 	# no strategy
 		echo -e "\twithout strategy"
 		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFS -no-lookahead -no-acceptfirst -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
