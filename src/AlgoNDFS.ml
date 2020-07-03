@@ -1096,9 +1096,11 @@ class algoNDFS =
 		let nb_states = StateSpace.nb_states state_space in
 		print_message Verbose_standard ("Number of computed states: " ^ (string_of_int nb_states));
 		print_message Verbose_standard ("Number of processed states: " ^ (string_of_int processed_blue));
-		print_message Verbose_standard ("Total number of processed states: " ^ (string_of_int total_processed_blue));
+		if options#depth_init <> None then
+			print_message Verbose_standard ("Total number of processed states: " ^ (string_of_int total_processed_blue));
 		print_message Verbose_standard ("Number of cycles found: " ^ (string_of_int cyclecount));
-		print_message Verbose_standard ("Total number of cycles found: " ^ (string_of_int total_cyclecount));
+		if options#depth_init <> None then
+			print_message Verbose_standard ("Total number of cycles found: " ^ (string_of_int total_cyclecount));
 
 		(* Get the termination status *)
 		let termination_status = match termination_status with
