@@ -137,7 +137,7 @@ class imitator_options =
 
 		(* first depth to explore for the iterative deepening in NDFS algorithm *)
 		val mutable depth_init = ref None
-		
+
 		(* Distributed version of IMITATOR *)
 		val mutable distribution_mode = ref AbstractAlgorithm.Non_distributed
 
@@ -199,6 +199,9 @@ class imitator_options =
 
 		(* Name for the file containing the property *)
 		val mutable property_file_name = None
+
+		(* process again green states *)
+		val mutable recompute_green = ref false
 
 		(* limit number of states *)
 		val mutable states_limit = ref None
@@ -325,6 +328,7 @@ class imitator_options =
 		method pi_compatible = !pi_compatible
 		method precomputepi0 = !precomputepi0
 		method property_file_name = property_file_name
+		method recompute_green = !recompute_green
 		method states_limit = !states_limit
 		method statistics = !statistics
 		method sync_auto_detection = !sync_auto_detection
@@ -720,6 +724,8 @@ class imitator_options =
 
 				("-precomputepi0", Set precomputepi0, " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode only). Default: false.");
 
+				("-recompute-green", Set recompute_green, " In NDFS, process green states again if found at a lower depth. Default: false.");
+
 				(* Hidden option (April fool 2017) *)
 				(*** NOTE: "Beware: options that have an empty doc string will not be included in the list." ***)
 				("-romeo", Unit call_romeo, "");
@@ -727,11 +733,11 @@ class imitator_options =
 				("-states-description", Set states_description, " Generate the description of all reachable states in a text file. Default: false.");
 
 				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
-				
+
 				("-statistics", Unit (fun _ -> statistics := true; Statistics.enable_all_counters()), " Print info on number of calls to PPL, and other statistics. Default: 'false'");
-				
+
 				("-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography or NDFS iterative deepening. Default: 1.");
-				
+
 				("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
 
 				("-tiles-files", Unit (fun () -> output_tiles_files <- true), " In cartography, generate the required files for each tile (i.e., the .res file and the cartography files, if any). Default: false.");
@@ -1096,6 +1102,11 @@ end;
 				print_message Verbose_standard ("No lookahead in NDFS search.")
 			else
 				print_message Verbose_medium ("Lookahead for succesors closing accepting cycles in NDFS (default).");
+
+			if !recompute_green then
+				print_message Verbose_standard ("Re-processing green states in NDFS.")
+			else
+				print_message Verbose_medium ("No reprocessing of green states in NDFS (default).");
 
 (* 			if !no_pending_ordered then
 				print_message Verbose_standard ("No ordering of pending list with larger zones first in NDFS synthesis.")
