@@ -94,6 +94,7 @@ class imitator_options :
 		method pi_compatible : bool
 		method precomputepi0 : bool
 		method property_file_name : string option
+		method recompute_green : bool
 		method states_limit : int option
 		method statistics : bool
 		method sync_auto_detection : bool

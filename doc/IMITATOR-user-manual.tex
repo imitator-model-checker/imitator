@@ -867,11 +867,11 @@ either the exact constraint is found or a limit is reached. This iterative analy
 uses the following options :
 
 \begin{description}
-\item[\styleOption{-depth-init}] allows for starting this iterative computing by indicating
-the initial depth limit to be used;
-\item[\styleOption{-step}] indicates the step between the depths of two iterations;
-\item[\styleOption{-depth-limit}] is the maximal depth at which the last iteration
-will be run.
+	\item[\styleOption{-depth-init}] allows for starting this iterative computing by indicating
+	      the initial depth limit to be used;
+	\item[\styleOption{-step}] indicates the step between the depths of two iterations;
+	\item[\styleOption{-depth-limit}] is the maximal depth at which the last iteration
+	      will be run.
 \end{description}
 
 The results obtained at each iteration are displayed, thus giving valuable information
@@ -2016,20 +2016,17 @@ Warning: enabling this option may slightly slow down the analysis, and will cert
 
 
 %------------------------------------------------------------
-<<<<<<< HEAD
-=======
 \paragraph{\styleOption{-step} (default: \styleOption{1})}
 %------------------------------------------------------------
 Step is used in two cases:
 \begin{itemize}
-\item for the behavioral cartography :
-integers can be used, or rationals (in the form \styleOption{x/y}) ;
-\item for iterative \styleOption{AccLoopSynthNDFS}, it indicates the step between
-two iterations.
+	\item for the behavioral cartography :
+	      integers can be used, or rationals (in the form \styleOption{x/y}) ;
+	\item for iterative \styleOption{AccLoopSynthNDFS}, it indicates the step between
+	      two iterations.
 \end{itemize}
 
 %------------------------------------------------------------
->>>>>>> updated the user manual
 \paragraph{\styleOption{-sync-auto-detect} (default: false)}
 %------------------------------------------------------------
 \imitator{} considers that all the \IPTA{} declaring a given action must be able to synchronize all together, so that the synchronization can happen.
