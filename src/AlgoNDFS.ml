@@ -409,8 +409,14 @@ class algoNDFS =
 				if (successors = [] || not (List.exists is_green successors)) then (
 					table_add blue thestate;
 					printtable "Blue" blue
-				) else (table_add green thestate;
-					greendepth := IntMap.add thestate thedepth !greendepth;
+				) else (
+					if options#recompute_green &&
+						(not (is_green thestate) ||
+							(IntMap.find thestate !greendepth) > thedepth)
+					then (
+						table_add green thestate;
+						greendepth := IntMap.add thestate thedepth !greendepth
+					) else table_add green thestate;
 					printtable "Green" green)
 			)
 		in
@@ -427,7 +433,7 @@ class algoNDFS =
 (* 				let print_depth astate adepth = print_string ("(" ^ (string_of_int astate) ^ "," ^ (string_of_int adepth)) in
 				print_message Verbose_high (IntMap.iter print_depth !greendepth);
  *)				if options#recompute_green &&
-				(IntMap.find thestate !greendepth) < thedepth
+					(IntMap.find thestate !greendepth) < thedepth
 				then( (* the reexplored state must also be removed from previous red exploration *)
 					table_rem red thestate;
 					true
@@ -480,6 +486,7 @@ class algoNDFS =
 										else if (current_depth  > thestate_depth) then true
 											else (depth_reached <- true; false)
 			in
+			let is_green astate = table_test green astate in
 			if (depth_ok && enterdfs thestate) then (
 				predfs thestate;
 				let successors = reorderqueue (StateSpace.get_successors state_space thestate) in
@@ -514,7 +521,8 @@ class algoNDFS =
 			) else (* thestate is not explored because it is either too deep or covered by the constraint already *)
 				if not depth_ok then (
 					table_add green thestate;
-					greendepth := IntMap.add thestate thestate_depth !greendepth;
+					if options#recompute_green 
+					then greendepth := IntMap.add thestate thestate_depth !greendepth;
 					()
 				)
 		)
