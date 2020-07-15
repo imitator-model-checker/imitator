@@ -2,6 +2,7 @@
 
 ###########################################
 # Script for generating experiments table #
+# with layers and strategies              #
 # Author: Laure Petrucci                  #
 # Version: 2.1                            #
 # Date: 2020-01-25                        #
