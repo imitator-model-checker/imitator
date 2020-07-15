@@ -85,6 +85,7 @@ rm -f $one_result
 rm -f $output_file
 # table with iterative depth
 echo ' ; ; ; ; No layers ; ; ; ; Layers ; ; ;' >> $output_file
+echo 'Model ; L ; X ; P ; d ; c ; s ; t ; d ; c ; s ; t' >> $output_file
 for f in $input_files
 	do echo -e "Running experiments for model \033[1;31m$f\033[0m"
 		bin/imitator -mode checksyntax -verbose low $exp_dir/$f.imi > $one_result 2> /dev/null
