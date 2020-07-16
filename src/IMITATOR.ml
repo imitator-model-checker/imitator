@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/04/23
+ * Last modified     : 2020/07/16
  *
  ************************************************************)
 
@@ -925,27 +925,21 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			*)
 
 			(*** NOTE: only one distribution mode so far ***)
-			| Cover_cartography when options#distribution_mode <> Non_distributed ->
+			| Cover_cartography hyper_rectangle when options#distribution_mode <> Non_distributed ->
 				let algo = match options#distribution_mode with
 
 				(** Distributed mode: Master worker with sequential pi0 *)
 				| Distributed_ms_sequential ->
 					(* Branch between master and worker *)
 					if DistributedUtilities.is_master() then
-						let bc_algo = new AlgoBCCoverDistributedMSSeqMaster.algoBCCoverDistributedMSSeqMaster in
-						(*** NOTE: very important: must set NOW the parameters ***)
-						bc_algo#set_algo_instance_function new_im_or_prp;
-						bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
+						let bc_algo = new AlgoBCCoverDistributedMSSeqMaster.algoBCCoverDistributedMSSeqMaster hyper_rectangle (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 					else
-						let bc_algo = new AlgoBCCoverDistributedMSSeqWorker.algoBCCoverDistributedMSSeqWorker in
-						(*** NOTE: very important: must set NOW the parameters ***)
-						bc_algo#set_algo_instance_function new_im_or_prp;
-						bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
+						let bc_algo = new AlgoBCCoverDistributedMSSeqWorker.algoBCCoverDistributedMSSeqWorker hyper_rectangle (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
-
+(*
 				(** Distributed mode: Master worker with sequential pi0 shuffled *)
 				| Distributed_ms_shuffle ->
 					(* Branch between master and worker *)
@@ -1019,7 +1013,7 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 						bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
-
+*)
 
 				| _ -> raise (InternalError("Other distribution modes not yet implemented"))
 

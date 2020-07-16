@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: All common functions needed for the interface with MPI
  * 
  * File contributors : Étienne André, Camille Coti
  * Created           : 2014/03/24
- * Last modified     : 2018/04/06
+ * Last modified     : 2020/07/16
  *
  ************************************************************)
  
@@ -621,6 +622,7 @@ let unserialize_cartography_result (cartography_result_string : string) : Result
 		| _ -> raise (SerializationError ("Cannot unserialize im_result '" ^ cartography_result_string ^ "'."))
 	in
 	{
+		parameter_domain		= raise (NotImplemented "v0 in unserialize_cartography_result");
 		size_v0 				= NumConst.numconst_of_string size_v0_str;
 		tiles 					= unserialize_abstract_point_based_result_list tiles_str;
 		computation_time		= float_of_string computation_time_str;

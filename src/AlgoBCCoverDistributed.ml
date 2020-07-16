@@ -3,12 +3,13 @@
  *                       IMITATOR
  *
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: master-worker with point-based distribution of points. [ACE14,ACN15]
  *
  * File contributors : Étienne André
  * Created           : 2016/03/04
- * Last modified     : 2017/03/08
+ * Last modified     : 2020/07/16
  *
  ************************************************************)
 
@@ -39,58 +40,19 @@ open DistributedUtilities
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoBCCoverDistributed =
-	object (self)
-	inherit algoGeneric as super
+class virtual algoBCCoverDistributed (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit algoGeneric as super
+
 
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-
-	(*** BADPROG: code shared with AlgoCartoGeneric ***)
-	(* The function creating a new instance of the algorithm to call (typically IM or PRP). Initially None, to be updated immediatly after the object creation. *)
-	(*** NOTE: this should be a parameter of the class; but cannot due to inheritance from AlgoGeneric ***)
-	val mutable algo_instance_function = None
-
-	(*** BADPROG: code shared with AlgoCartoGeneric ***)
-	(* The type of the tiles manager *)
-	(*** NOTE: must be initialized first (and should be in the future passed as a class paramater) ***)
-	val mutable tiles_manager_type : AlgoCartoGeneric.tiles_storage option = None
-
-
-	(************************************************************)
-	(* Class methods to simulate class parameters *)
-	(************************************************************)
-
-	(*** BADPROG: code shared with AlgoCartoGeneric ***)
-	(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-	method set_algo_instance_function (f : unit -> AlgoStateBased.algoStateBased) : unit =
-		match algo_instance_function with
-		| Some _ ->
-			raise (InternalError("algo_instance_function was already set in algoBCCoverDistributed."))
-		| None ->
-			algo_instance_function <- Some f
-
-	(*** BADPROG: code shared with AlgoCartoGeneric ***)
-	(* Get the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-	method get_algo_instance_function =
-		match algo_instance_function with
-		| Some f -> f
-		| None ->
-			raise (InternalError("algo_instance_function not yet set in algoBCCoverDistributed."))
-
-	(*** BADPROG: code shared with AlgoCartoGeneric ***)
-	(* Set the tiles_manager type *)
-	method set_tiles_manager_type new_tiles_manager_type =
-		tiles_manager_type <- Some new_tiles_manager_type
-
-	(*** BADPROG: code shared with AlgoCartoGeneric ***)
-	(* Get the tiles_manager type *)
-	method get_tiles_manager_type =
-	match tiles_manager_type with
-		| Some t -> t
-		| None -> raise (InternalError("tiles_manager_type not yet set in algoBCCoverDistributed."))
-
+	(* The current algorithm instance *)
+	(*** NOTE: this initialiation is useless (and time consuming?), as a new instance will be overwritten when needed ***)
+	val mutable current_algo_instance : AlgoStateBased.algoStateBased =
+		let dummy_pval = new PVal.pval in
+		let myalgo :> AlgoStateBased.algoStateBased = new AlgoIMK.algoIMK dummy_pval in myalgo
+	
 
 	(************************************************************)
 	(* Class methods *)
@@ -106,19 +68,6 @@ class virtual algoBCCoverDistributed =
 	(* Run IM and return an abstract_point_based_result *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method run_im pi0 patator_termination_function_option =
-		(* Create instance of the algorithm to be called *)
-		let algo = self#get_algo_instance_function () in
-
-		(* Set up the pi0 *)
-		(*** NOTE/BADPROG: a bit ugly… pi0 could have been a parameter of the algorithm! ***)
-		Input.set_pi0 pi0;
-
-		(* Set up the termination function for PaTATOR *)
-		begin
-		match patator_termination_function_option with
-			| None -> ()
-			| Some f -> algo#set_patator_termination_function f;
-		end;
 
 		(* Print some messages *)
 		if verbose_mode_greater Verbose_low then(
@@ -132,6 +81,7 @@ class virtual algoBCCoverDistributed =
 		let global_verbose_mode = get_verbose_mode() in
 
 		(* Prevent the verbose messages (except in verbose modes high or total) *)
+		(*------------------------------------------------------------*)
 		if not (verbose_mode_greater Verbose_high) then
 				set_verbose_mode Verbose_mute;
 
@@ -139,12 +89,27 @@ class virtual algoBCCoverDistributed =
 
 		(*** NOTE: the initial state is computed again and again for each new instance of IM; TO OPTIMIZE? ***)
 
-		let imitator_result = algo#run() in
+(* 		let imitator_result = algo#run() in *)
+		
+		(* Call the algorithm to be iterated on (typically IM or PRP) *)
+		(*** NOTE: the bc time limit is NOT checked inside one execution of the algorithm to be iterated (but also note that the max execution time of the algorithm to be iterated is set to that of BC, in the Options pre-processing) ***)
+		current_algo_instance <- algo_instance_function pi0;
 
+		(* Set up the termination function for PaTATOR *)
+		begin
+		match patator_termination_function_option with
+			| None -> ()
+			| Some f -> current_algo_instance#set_patator_termination_function f;
+		end;
+
+		let imitator_result : imitator_result = current_algo_instance#run() in
+
+		
 		(* Get the verbose mode back *)
 		set_verbose_mode global_verbose_mode;
+		(*------------------------------------------------------------*)
 
-		self#print_algo_message Verbose_low ("Finished a computation of " ^ (algo#algorithm_name) ^ ".");
+		self#print_algo_message Verbose_low ("Finished a computation of " ^ (current_algo_instance#algorithm_name) ^ ".");
 
 		(* Checking the result type, and computing abstraction *)
 		let abstract_point_based_result = match imitator_result with
@@ -153,7 +118,7 @@ class virtual algoBCCoverDistributed =
 			(* Result for IM, IMK, IMunion *)
 			| Point_based_result point_based_result -> AlgoCartoGeneric.abstract_point_based_result_of_point_based_result point_based_result pi0
 			(* Other *)
-			| _ -> raise (InternalError("A point_based_result is expected as an output of the execution of " ^ algo#algorithm_name ^ "."))
+			| _ -> raise (InternalError("A point_based_result is expected as an output of the execution of " ^ current_algo_instance#algorithm_name ^ "."))
 		in
 
 		(* Return the abstract result *)

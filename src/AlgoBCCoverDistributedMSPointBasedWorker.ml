@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: master-worker with point-based distribution of points. [ACE14,ACN15]
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/10
- * Last modified     : 2016/08/15
+ * Last modified     : 2020/07/16
  *
  ************************************************************)
 
@@ -39,9 +40,8 @@ open DistributedUtilities
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoBCCoverDistributedMSPointBasedWorker =
-	object (self)
-	inherit AlgoBCCoverDistributed.algoBCCoverDistributed as super
+class virtual algoBCCoverDistributedMSPointBasedWorker (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit AlgoBCCoverDistributed.algoBCCoverDistributed v0 algo_instance_function tiles_manager_type as super
 	
 	
 	(************************************************************)
