@@ -682,7 +682,7 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 		(*------------------------------------------------------------*)
 	
 			(* Cartography *)
-			| Cover_cartography hyper_rectangle ->
+			| Cover_cartography hyper_rectangle when options#distribution_mode = Non_distributed ->
 				let bc_algo = new AlgoBCCover.algoBCCover hyper_rectangle (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
