@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2013/11/13
- * Last modified   : 2019/05/16
+ * Last modified   : 2020/07/17
  *
- * IMITATOR version: 2.11
+ * IMITATOR version: 3.0
  ************************************************************)
 
 var
@@ -72,7 +72,7 @@ init :=
 (* Property specification *)
 (************************************************************)
 
-property := unreachable loc[aa] = l2;
+(* property := unreachable loc[aa] = l2; *)
 
 
 (************************************************************)

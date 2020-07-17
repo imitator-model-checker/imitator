@@ -11,12 +11,13 @@
  * Input by        : Etienne Andre
  *
  * Created         : 2007/11
- * Last modified   : 2016/03/24
+ * Last modified   : 2020/07/17
  *
- * IMITATOR version: 2.7.4-working
+ * IMITATOR version: 3.0
  ************************************************************)
 
 
+property := #synth BCcover(
 	& dG3_u  = 8 .. 30
 	& dG4_u  = 3 .. 30
-
+);

@@ -11,13 +11,15 @@
  * Input by        : Étienne André
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
- * Created         : 2013/11/13
+ * Created         : 2014/06/06
  * Last modified   : 2020/07/17
  *
  * IMITATOR version: 3.0
  ************************************************************)
  
-property := #synth IM(
-	& a = 2
-	& b = 3
+property := #synth PRPC(
+	loc[aa] = l2
+	,
+	& a = 0..10
+	& b = 0..10
 );
