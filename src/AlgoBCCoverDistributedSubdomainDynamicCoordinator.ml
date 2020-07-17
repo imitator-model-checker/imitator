@@ -3,13 +3,14 @@
  *                       IMITATOR
  *
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: subdomain. [ACN15]
  * Coordinator algorithm
  *
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/10/10
+ * Last modified     : 2020/07/17
  *
  ************************************************************)
 
@@ -195,10 +196,8 @@ let pval2array pval =
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCCoverDistributedSubdomainDynamicCoordinator =
-	object (self)
-	inherit AlgoBCCoverDistributedSubdomain.algoBCCoverDistributedSubdomain as super
-
+class algoBCCoverDistributedSubdomainDynamicCoordinator (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit AlgoBCCoverDistributedSubdomain.algoBCCoverDistributedSubdomain v0 algo_instance_function tiles_manager_type as super
 
 	(************************************************************)
 	(* Class variables *)
@@ -270,7 +269,7 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 		(* First create the tiles manager *)
 		(*** NOTE: the get function takes care of the Some/None cases (and may raise an exception if not properly initialized) ***)
 		begin
-		match self#get_tiles_manager_type with
+		match tiles_manager_type with
 			| AlgoCartoGeneric.Tiles_list -> tiles_manager <- new TilesManagerList.tilesManagerList
 			| AlgoCartoGeneric.Tiles_good_bad_constraint -> raise (NotImplemented "not implemented yet")
 		end;
@@ -642,7 +641,7 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_bc_result : Result.imitator_result =
 		(* Compute the number of points in V0 *)
-		let size_v0 = (Input.get_v0 ())#get_nb_points (Input.get_options())#step in
+		let size_v0 = v0#get_nb_points (Input.get_options())#step in
 
 		(* Get termination *)
 		let termination = match termination with
@@ -651,7 +650,7 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator =
 		in
 
 		(* Ask the tiles manager to process the result itself, by passing the appropriate arguments *)
-		tiles_manager#process_result start_time size_v0 (*** TODO ***)0 termination None
+		tiles_manager#process_result start_time v0 size_v0 (*** TODO ***)0 termination None
 
 
 (************************************************************)

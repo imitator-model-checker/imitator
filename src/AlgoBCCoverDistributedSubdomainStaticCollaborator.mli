@@ -3,13 +3,14 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: subdomain with static distribution. [ACN15]
  * Collaborator (non-coordinator) algorithm
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/08/15
+ * Last modified     : 2020/07/17
  *
  ************************************************************)
 
@@ -22,10 +23,9 @@ open AlgoGeneric
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoBCCoverDistributedSubdomainStaticCollaborator :
-	object
-	inherit AlgoBCCoverDistributedSubdomainStatic.algoBCCoverDistributedSubdomainStatic
-
+class algoBCCoverDistributedSubdomainStaticCollaborator : HyperRectangle.hyper_rectangle -> (PVal.pval -> AlgoStateBased.algoStateBased) -> AlgoCartoGeneric.tiles_storage ->
+	object inherit AlgoBCCoverDistributedSubdomainStatic.algoBCCoverDistributedSubdomainStatic
+	
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
@@ -37,11 +37,6 @@ class algoBCCoverDistributedSubdomainStaticCollaborator :
 		method algorithm_name : string
 		
 		method initialize_variables : unit
-		
-(*		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Initialization method (only non-empty for coordinator) *)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method initialize : unit*)
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Finalization method to process results communication to the coordinator *)

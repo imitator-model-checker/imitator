@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: subdomain with static distribution. [ACN15]
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/08/15
+ * Last modified     : 2020/07/17
  *
  ************************************************************)
 
@@ -33,10 +34,8 @@ open DistributedUtilities
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoBCCoverDistributedSubdomainStatic =
-	object (self)
-	inherit AlgoBCCoverDistributedSubdomain.algoBCCoverDistributedSubdomain as super
-	
+class virtual algoBCCoverDistributedSubdomainStatic (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit AlgoBCCoverDistributedSubdomain.algoBCCoverDistributedSubdomain v0 algo_instance_function tiles_manager_type as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -121,7 +120,7 @@ class virtual algoBCCoverDistributedSubdomainStatic =
 		self#initialize;*)
 		
 		(* Print some information *)
-		self#print_algo_message Verbose_standard ("Computing own static subdomain...");
+		self#print_algo_message Verbose_standard ("Computing own static subdomain…");
 		
 		(* Compute subdomain for this collaborator only *)
 		let subdomain = self#compute_own_subdomain in
@@ -131,21 +130,12 @@ class virtual algoBCCoverDistributedSubdomainStatic =
 			self#print_algo_message Verbose_low("Own static subdomain: " ^ (ModelPrinter.string_of_v0 (Input.get_model()) subdomain));
 		);
 		
-		(* Assign subdomain *)
-		Input.set_v0 subdomain;
-		
-		(* Print some information *)
-		self#print_algo_message Verbose_low ("Subdomain assigned.");
-		
 		(* Create an instance of the sequential cartography *)
 		(*** NOTE: in static distribution mode, since each collaborator is responsible for its own cartography, the sequential cartography is perfectly suited ***)
-		let bc_instance = new AlgoBCCover.algoBCCover in
-		(* Set the instance of IM / PRP that was itself set from the current cartography class *)
-		bc_instance#set_algo_instance_function self#get_algo_instance_function;
-		bc_instance#set_tiles_manager_type (self#get_tiles_manager_type);
+		let bc_instance = new AlgoBCCover.algoBCCover subdomain algo_instance_function tiles_manager_type in
 		
 		(* Print some information *)
-		self#print_algo_message Verbose_standard ("Launching cartography on own static subdomain...");
+		self#print_algo_message Verbose_standard ("Running cartography on own static subdomain…");
 		
 		(* Launch the cartography *)
 		let imitator_result = bc_instance#run () in

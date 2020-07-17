@@ -3,13 +3,14 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: subdomain with static distribution. [ACN15]
  * Coordinator algorithm
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2017/02/08
+ * Last modified     : 2020/07/17
  *
  ************************************************************)
 
@@ -35,9 +36,8 @@ open AlgoBCCoverDistributedSubdomain
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCCoverDistributedSubdomainStaticCoordinator =
-	object (self)
-	inherit AlgoBCCoverDistributedSubdomainStatic.algoBCCoverDistributedSubdomainStatic as super
+class algoBCCoverDistributedSubdomainStaticCoordinator (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit AlgoBCCoverDistributedSubdomainStatic.algoBCCoverDistributedSubdomainStatic v0 algo_instance_function tiles_manager_type as super
 	
 	
 	(************************************************************)
@@ -45,12 +45,6 @@ class algoBCCoverDistributedSubdomainStaticCoordinator =
 	(************************************************************)
 	(* Number of collaborators (excluding the coordinator) *)
 	val nb_other_collaborators = DistributedUtilities.get_nb_nodes () - 1
-	
-	(* Keep the original v0, to set it back at the end (otherwise Graphics, which will collect it by get_v0, will get the split v0) *)
-	val original_v0 = Input.get_v0 ()
-	
-	(* Number of points in the original v0 (before splitting for the own exploration of the coordinator) *)
-	val original_nb_points : NumConst.t = (Input.get_v0 ())#get_nb_points (Input.get_options())#step
 	
 	(* List of bc_results received from the collaborators *)
 	val mutable bc_results : Result.cartography_result list = []
@@ -75,18 +69,6 @@ class algoBCCoverDistributedSubdomainStaticCoordinator =
 		(* The end *)
 		()
 
-(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Initialization method (only non-empty for coordinator) *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method initialize =
-		(* The coordinator will issue a warning if the number of nodes is NOT a power of 2 *)
-		if not (OCamlUtilities.is_a_power_of_2 nb_collaborators) then
-			print_warning ("The number of nodes in the static distribution scheme must be a power of 2, but it is here equal to " ^ (string_of_int nb_collaborators) ^ "; the behavior of " ^ Constants.program_name ^ " is NOT specified.");
-		
-		(* The end *)
-		()*)
-
-	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Finalization method to process results communication to the coordinator *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -139,7 +121,7 @@ class algoBCCoverDistributedSubdomainStaticCoordinator =
 		(* Now append all bc_results to make a unique cartography_result *)
 		
 		(* First create a manager *)
-		let tiles_manager = match self#get_tiles_manager_type with
+		let tiles_manager = match tiles_manager_type with
 			| AlgoCartoGeneric.Tiles_list -> new TilesManagerList.tilesManagerList
 			| AlgoCartoGeneric.Tiles_good_bad_constraint -> raise (NotImplemented "not implemented yet")
 		in
@@ -157,7 +139,6 @@ class algoBCCoverDistributedSubdomainStaticCoordinator =
 		(* Iterate on all received results *)
 		List.iter (fun (cartography_result : Result.cartography_result) ->
 			(* Add all tiles to the manager *)
-(* 			tiles := List.rev_append !tiles cartography_result.tiles; *)
 			List.iter (fun tile -> tiles_manager#process_tile tile) cartography_result.tiles;
 			
 			(* Update computation_time *)
@@ -193,12 +174,11 @@ class algoBCCoverDistributedSubdomainStaticCoordinator =
 			in termination := new_termination;
 		) bc_results;
 		
-		(* Before terminating, set back the original v0 *)
-		(*** BADPROG: because Graphics will collect v0 directly from Input.get_v0, instead of bc_result ***)
-		Input.set_v0 original_v0;
-		
+		(* Number of points in the original v0 (before splitting for the own exploration of the coordinator) *)
+		let original_nb_points : NumConst.t = v0#get_nb_points (Input.get_options())#step in
+
 		(* Ask the tiles manager to process the result itself, by passing the appropriate arguments *)
-		tiles_manager#process_result start_time original_nb_points !nb_unsuccessful_points !termination (Some !coverage)
+		tiles_manager#process_result start_time v0 original_nb_points !nb_unsuccessful_points !termination (Some !coverage)
 
 
 (************************************************************)

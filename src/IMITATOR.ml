@@ -963,22 +963,15 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 
-(*
 				(** Distributed mode: Master worker with subdomain distribution *)
 				| Distributed_ms_subpart ->
 					(* Branch between master and worker *)
 					if DistributedUtilities.is_master() then
-						let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCoordinator.algoBCCoverDistributedSubdomainDynamicCoordinator in
-						(*** NOTE: very important: must set NOW the parameters ***)
-						bc_algo#set_algo_instance_function new_im_or_prp;
-						bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
+						let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCoordinator.algoBCCoverDistributedSubdomainDynamicCoordinator hyper_rectangle (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 					else
-						let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCollaborator.algoBCCoverDistributedSubdomainDynamicCollaborator in
-						(*** NOTE: very important: must set NOW the parameters ***)
-						bc_algo#set_algo_instance_function new_im_or_prp;
-						bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
+						let bc_algo = new AlgoBCCoverDistributedSubdomainDynamicCollaborator.algoBCCoverDistributedSubdomainDynamicCollaborator hyper_rectangle (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 
@@ -986,20 +979,13 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 				| Distributed_static ->
 					(* Branch between collaborator and coordinator *)
 					if DistributedUtilities.is_coordinator() then
-						let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCoordinator.algoBCCoverDistributedSubdomainStaticCoordinator in
-						(*** NOTE: very important: must set NOW the parameters ***)
-						bc_algo#set_algo_instance_function new_im_or_prp;
-						bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
+						let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCoordinator.algoBCCoverDistributedSubdomainStaticCoordinator hyper_rectangle (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 					else
-						let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCollaborator.algoBCCoverDistributedSubdomainStaticCollaborator in
-						(*** NOTE: very important: must set NOW the parameters ***)
-						bc_algo#set_algo_instance_function new_im_or_prp;
-						bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
+						let bc_algo = new AlgoBCCoverDistributedSubdomainStaticCollaborator.algoBCCoverDistributedSubdomainStaticCollaborator hyper_rectangle (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
-*)
 
 				| _ -> raise (InternalError("Other distribution modes not yet implemented"))
 

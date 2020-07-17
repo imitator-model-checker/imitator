@@ -3,13 +3,14 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: subdomain with static distribution. [ACN15]
  * Collaborator (non-coordinator) algorithm
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/08/15
+ * Last modified     : 2020/07/17
  *
  ************************************************************)
 
@@ -34,10 +35,8 @@ open DistributedUtilities
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCCoverDistributedSubdomainStaticCollaborator =
-	object (self)
-	inherit AlgoBCCoverDistributedSubdomainStatic.algoBCCoverDistributedSubdomainStatic as super
-	
+class algoBCCoverDistributedSubdomainStaticCollaborator (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit AlgoBCCoverDistributedSubdomainStatic.algoBCCoverDistributedSubdomainStatic v0 algo_instance_function tiles_manager_type as super
 	
 	(************************************************************)
 	(* Class variables *)
