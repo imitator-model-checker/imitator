@@ -38,9 +38,4 @@ class algoBCCoverDistributedMSSeqWorker : HyperRectangle.hyper_rectangle -> (PVa
 		method algorithm_name : string
 
 		
-(*		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method im_instance : AlgoIMK.algoIMK*)
-
 end

@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/07/16
+ * Last modified     : 2020/07/17
  *
  ************************************************************)
 
@@ -939,22 +939,15 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 						let bc_algo = new AlgoBCCoverDistributedMSSeqWorker.algoBCCoverDistributedMSSeqWorker hyper_rectangle (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
-(*
 				(** Distributed mode: Master worker with sequential pi0 shuffled *)
 				| Distributed_ms_shuffle ->
 					(* Branch between master and worker *)
 					if DistributedUtilities.is_master() then
-						let bc_algo = new AlgoBCCoverDistributedMSShuffleMaster.algoBCCoverDistributedMSShuffleMaster in
-						(*** NOTE: very important: must set NOW the parameters ***)
-						bc_algo#set_algo_instance_function new_im_or_prp;
-						bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
+						let bc_algo = new AlgoBCCoverDistributedMSShuffleMaster.algoBCCoverDistributedMSShuffleMaster hyper_rectangle (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 					else
-						let bc_algo = new AlgoBCCoverDistributedMSShuffleWorker.algoBCCoverDistributedMSShuffleWorker in
-						(*** NOTE: very important: must set NOW the parameters ***)
-						bc_algo#set_algo_instance_function new_im_or_prp;
-						bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
+						let bc_algo = new AlgoBCCoverDistributedMSShuffleWorker.algoBCCoverDistributedMSShuffleWorker hyper_rectangle (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 
@@ -962,22 +955,15 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 				| Distributed_ms_random nb_tries ->
 					(* Branch between master and worker *)
 					if DistributedUtilities.is_master() then
-						let bc_algo = new AlgoBCCoverDistributedMSRandomSeqMaster.algoBCCoverDistributedMSRandomSeqMaster in
-						(*** NOTE: very important: must set NOW the parameters ***)
-						bc_algo#set_max_tries nb_tries;
-						bc_algo#set_algo_instance_function new_im_or_prp;
-						bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
+						let bc_algo = new AlgoBCCoverDistributedMSRandomSeqMaster.algoBCCoverDistributedMSRandomSeqMaster hyper_rectangle nb_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 					else
-						let bc_algo = new AlgoBCCoverDistributedMSRandomSeqWorker.algoBCCoverDistributedMSRandomSeqWorker in
-						(*** NOTE: very important: must set NOW the parameters ***)
-		(* 				bc_algo#set_max_tries nb_tries; *)
-						bc_algo#set_algo_instance_function new_im_or_prp;
-						bc_algo#set_tiles_manager_type AlgoCartoGeneric.Tiles_list;
+						let bc_algo = new AlgoBCCoverDistributedMSRandomSeqWorker.algoBCCoverDistributedMSRandomSeqWorker hyper_rectangle (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
 						let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 						myalgo
 
+(*
 				(** Distributed mode: Master worker with subdomain distribution *)
 				| Distributed_ms_subpart ->
 					(* Branch between master and worker *)

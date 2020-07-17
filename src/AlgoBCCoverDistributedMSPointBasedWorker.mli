@@ -39,13 +39,7 @@ class virtual algoBCCoverDistributedMSPointBasedWorker : HyperRectangle.hyper_re
 		
 		method initialize_variables : unit
 		
-		
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* 		method virtual im_instance : AlgoIMK.algoIMK *)
 
-		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Run the worker algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
