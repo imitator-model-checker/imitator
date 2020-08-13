@@ -2123,7 +2123,7 @@ We define each of those two components below.
 \regleGrammaire{\npec{wait\_opt}}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\ & \npec{\styleIMI{wait()}} \\
+	\ & \npec{\styleIMI{wait\{\}}} \\
 	$|$ & \npec{\styleIMI{wait}} \\
 	$|$ & \npec{\emptystring} \\
 \end{tabular}
@@ -2167,7 +2167,7 @@ We define each of those two components below.
 \regleGrammaire{updates}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{do} \styleIMI{(} \nt{update\_list} \styleIMI{)} \\
+	\  & \styleIMI{do} \styleIMI{\{} \nt{update\_list} \styleIMI{\}} \\
 \end{tabular}
 
 %------------------------------------------------------------
