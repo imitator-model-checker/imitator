@@ -7,24 +7,20 @@
 	Drinker: [ongoing work]
  * Correctness     : Many possibilities (e.g., "it is possible to get a coffee")
  * Source          : Own work
- * Author          : Etienne Andre
- * Input by        : Etienne Andre
+ * Author          : Étienne André
+ * Input by        : Étienne André
  *
  * Created         : 2015/10/17
- * Last modified   : 2015/10/17
+ * Last modified   : 2020/08/13
  *
- * IMITATOR version: 2.7.2
+ * IMITATOR version: 3
  ************************************************************)
 
-(* Parameters *)
-	(* time during which one can add sugar *)
-	p_add_sugar = 4,
-	(* time needed to prepare the coffee from the first button pressure *)
-	p_coffee = 7,
 
-	(* interval of time between 2 consecutive pressures by the user *)
- 	p_button = 1,
-	(* interval of work without need for coffee *)
-(* 	p_work_min = 3600, p_work_max = 7200, *)
-	(* time after which the drinker gets mad *)
-(* 	p_patience_max = 15 *)
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* First property: the researcher never gets mad *)
+property := #synth AGnot(loc[researcher] = mad);
+
