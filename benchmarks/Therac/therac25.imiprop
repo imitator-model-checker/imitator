@@ -1,0 +1,20 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Simplified model of the Therac 25 bug
+ *
+ * Description     : Simplified model of the Therac 25 bug
+ * Correctness     : The patient should not be given a massive dose of radiation
+ * Source          : "The failure only occurred when a particular nonstandard sequence of keystrokes was entered on the VT-100 terminal which controlled the PDP-11 computer: an X to (erroneously) select 25MV photon mode followed by ↑, E to (correctly) select 25 MeV Electron mode, then Enter, all within eight seconds."
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2017/03/10
+ * Last modified   : 2020/08/13
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+property := #synth AGnot(loc[observer] = obs_nok);

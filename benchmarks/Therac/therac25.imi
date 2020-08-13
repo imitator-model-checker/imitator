@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2017/03/10
- * Last modified   : 2017/03/10
+ * Last modified   : 2020/08/13
  *
- * IMITATOR version: 2.9
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -52,28 +52,28 @@ MODE25MeV = 2,
 (* Every at least 30 seconds, the engineer either selects E and enter, or selects X, up, E and enter; the time between each key stroke is p_key *)
 synclabs: key_E, key_X, key_enter, key_up;
 
-loc engineer_idle: while True wait {}
+loc engineer_idle: invariant True
 	(* Non-deterministically goes into the correct or incorrect behavior *)
-	when x_engineer >= 30 do {x_engineer' = 0} goto engineer_correct1;
-	when x_engineer >= 30 do {x_engineer' = 0} goto engineer_incorrect1;
+	when x_engineer >= 30 do {x_engineer := 0} goto engineer_correct1;
+	when x_engineer >= 30 do {x_engineer := 0} goto engineer_incorrect1;
 
-loc engineer_correct1: while True wait {}
-	when x_engineer >= p_key do {x_engineer' = 0} sync key_E goto engineer_correct2;
+loc engineer_correct1: invariant True
+	when x_engineer >= p_key do {x_engineer := 0} sync key_E goto engineer_correct2;
 
-loc engineer_correct2: while True wait {}
-	when x_engineer >= p_key do {x_engineer' = 0} sync key_enter goto engineer_idle;
+loc engineer_correct2: invariant True
+	when x_engineer >= p_key do {x_engineer := 0} sync key_enter goto engineer_idle;
 
-loc engineer_incorrect1: while True wait {}
-	when x_engineer >= p_key do {x_engineer' = 0} sync key_X goto engineer_incorrect2;
+loc engineer_incorrect1: invariant True
+	when x_engineer >= p_key do {x_engineer := 0} sync key_X goto engineer_incorrect2;
 
-loc engineer_incorrect2: while True wait {}
-	when x_engineer >= p_key do {x_engineer' = 0} sync key_up goto engineer_incorrect3;
+loc engineer_incorrect2: invariant True
+	when x_engineer >= p_key do {x_engineer := 0} sync key_up goto engineer_incorrect3;
 
-loc engineer_incorrect3: while True wait {}
-	when x_engineer >= p_key do {x_engineer' = 0} sync key_E goto engineer_incorrect4;
+loc engineer_incorrect3: invariant True
+	when x_engineer >= p_key do {x_engineer := 0} sync key_E goto engineer_incorrect4;
 
-loc engineer_incorrect4: while True wait {}
-	when x_engineer >= p_key do {x_engineer' = 0} sync key_enter goto engineer_idle;
+loc engineer_incorrect4: invariant True
+	when x_engineer >= p_key do {x_engineer := 0} sync key_enter goto engineer_idle;
 
 end (* engineer *)
 
@@ -83,9 +83,9 @@ end (* engineer *)
 (* Copies the buffer of the VT-100 into the buffer of the PDP-11 every 8 seconds *)
 synclabs: copy_25MV, copy_25MeV;
 
-loc loc_buffer_copier: while x_buffer <= p_period wait {}
-	when x_buffer = p_period & buffer_VT100 = MODE25MV sync copy_25MV do {buffer_PDP11' = MODE25MV, x_buffer' = 0} goto loc_buffer_copier;
-	when x_buffer = p_period & buffer_VT100 = MODE25MeV sync copy_25MeV do {buffer_PDP11' = MODE25MeV, x_buffer' = 0} goto loc_buffer_copier;
+loc loc_buffer_copier: invariant x_buffer <= p_period
+	when x_buffer = p_period & buffer_VT100 = MODE25MV sync copy_25MV do {buffer_PDP11 := MODE25MV, x_buffer := 0} goto loc_buffer_copier;
+	when x_buffer = p_period & buffer_VT100 = MODE25MeV sync copy_25MeV do {buffer_PDP11 := MODE25MeV, x_buffer := 0} goto loc_buffer_copier;
 
 end (* buffer_copier *)
 
@@ -96,21 +96,20 @@ end (* buffer_copier *)
 (* The PDP-11 computer reacts to key strokes: select the mode, or send what is in its buffer when asked to do so *)
 synclabs: key_E, key_X, key_enter, send_25MV, send_25MeV;
 
-loc loc_PDP11: while True wait {}
+loc loc_PDP11: invariant True
 	(* Select MODE25MV mode *)
-	when True sync key_X do {buffer_VT100' = MODE25MV} goto loc_PDP11;
+	when True sync key_X do {buffer_VT100 := MODE25MV} goto loc_PDP11;
 	(* Select MODE25MeV mode *)
-	when True sync key_E do {buffer_VT100' = MODE25MeV} goto loc_PDP11;
+	when True sync key_E do {buffer_VT100 := MODE25MeV} goto loc_PDP11;
 	(* Send radiations: go to a second location to send the right radiations *)
 	when True sync key_enter goto loc_PDP11_send;
 
 (* Send what is in the buffer *)
-urgent loc loc_PDP11_send: while True wait {}
+urgent loc loc_PDP11_send: invariant True
 	(* Send MODE25MV mode *)
 	when buffer_PDP11 = MODE25MV sync send_25MV goto loc_PDP11;
 	(* Send MODE25MeV mode *)
 	when buffer_PDP11 = MODE25MeV sync send_25MeV goto loc_PDP11;
-	
 
 end (* PDP11 *)
 
@@ -121,10 +120,10 @@ end (* PDP11 *)
 (* The observer just waits until a send_25MV radiations *)
 synclabs: send_25MV;
 
-loc obs_ok: while True wait {}
+loc obs_ok: invariant True
 	when True sync send_25MV goto obs_nok;
 
-loc obs_nok: while True wait {}
+loc obs_nok: invariant True
 
 end (* observer *)
 
@@ -160,13 +159,6 @@ init :=
 	& p_key >= 1
 	& p_period >= 1
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[observer] = obs_nok;
 
 
 (************************************************************)
