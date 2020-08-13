@@ -1,0 +1,26 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Empty template of a case study
+ *
+ * Description     : Packaging system
+ * Correctness     : Risk unreachable (??)
+ * Source          : https://github.com/astefano/efsmt_coverts/tree/master/imitator_examples/Imitator/packaging
+ * Author          : Étienne André
+ * Modeling        : Lacramioara Astefanoaei
+ * Input by        : Lacramioara Astefanoaei / Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2017/01/18
+ * Last modified   : 2020/08/13
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+property := #synth PRP(
+	loc[Monitor] = risk
+	,
+(* Parameters *)
+	& a = 1
+	& b = 2
+);

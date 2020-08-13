@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2017/01/18
- * Last modified   : 2017/01/18
+ * Last modified   : 2020/08/13
  *
- * IMITATOR version: 2.8
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -31,17 +31,17 @@ var
 (************************************************************)
   automaton FFS
 (************************************************************)
-synclabs: fillm,shipm, resumem, errpm;
+synclabs: fillm, shipm, resumem, errpm;
 
-loc f0: while True wait {}
-	when True sync fillm do {x'=0} goto f1;
+loc f0: invariant True
+	when True sync fillm do {x := 0} goto f1;
 
-loc f1: while x <= 2 wait {}
-	when True sync errpm do {x'=0} goto f2;
-	when x <= 1 sync shipm do {x'=0} goto f0;
+loc f1: invariant x <= 2
+	when True sync errpm do {x := 0} goto f2;
+	when x <= 1 sync shipm do {x := 0} goto f0;
 
-loc f2: while x <= b wait {}
-	when x >= a sync resumem do {x'=0} goto f1;
+loc f2: invariant x <= b
+	when x >= a sync resumem do {x := 0} goto f1;
 
 end
 
@@ -51,24 +51,24 @@ automaton Monitor
 (************************************************************)
 synclabs: packm, fillm, shipm, errpm, resolvem, resumem;
 
-loc m0: while True wait {}
+loc m0: invariant True
 	when True sync fillm do {} goto m1;
 	when True sync packm do {} goto m0;
 
-loc m1: while True wait {}
+loc m1: invariant True
 	when True sync errpm do {} goto m2;
 	when True sync packm do {} goto m1;
 	when True sync shipm do {} goto m0;
 
-loc m2: while True wait {}
+loc m2: invariant True
 	when True sync resumem do {} goto m3;
 	when True sync resolvem do {} goto m1;
 
-loc m3: while True wait {}
+loc m3: invariant True
 	when True sync resolvem do {} goto m1;
 	when True sync shipm do {} goto risk;
 
-loc risk: while True wait {}
+loc risk: invariant True
 (*	when True sync resolvem do {} goto risk;
 	when True sync shipm do {} goto risk;
 	when True sync fillm do {} goto risk;
@@ -85,12 +85,12 @@ automaton Packaging
 
 synclabs: packm, resolvem, errpm;
 
-loc p0: while y <= 5 wait {}
-	when True sync packm do {y'=0} goto p0;
-	when True sync errpm do {y'=0} goto p1;
+loc p0: invariant y <= 5
+	when True sync packm do {y := 0} goto p0;
+	when True sync errpm do {y := 0} goto p1;
 
-loc p1: while y <= 50 wait {}
-	when y >= 10 sync resolvem do {y'=0} goto p0;
+loc p1: invariant y <= 50
+	when y >= 10 sync resolvem do {y := 0} goto p0;
 
 end
 
@@ -137,14 +137,6 @@ init :=
 	& a >= 0
 	& b >= 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[Monitor] = risk;
-
 
 (************************************************************)
 (* The end *)
