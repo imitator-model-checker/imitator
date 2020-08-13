@@ -11,14 +11,16 @@
  * Author          : Input by Étienne André
  *
  * Created         : 2015/05/14
- * Last modified   : 2015/05/14
+ * Last modified   : 2020/08/13
  *
- * IMITATOR version: 2.7-beta2
+ * IMITATOR version: 3
  ************************************************************)
 
+property := #synth IM(
 	(*------------------------------------------------------------
 	   PARAMETER VALUATIONS
 	  ------------------------------------------------------------*)
-	(* Valuation 2 from [BBLS15]: satisfactory *)
+	(* Valuation 1 from [BBLS15]: not satisfactory because, although fail is unreachable, timeout is reachable *)
 	& p1 = 5
-	& p2 = 9
+	& p2 = 19
+);

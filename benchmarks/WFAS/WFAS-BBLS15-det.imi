@@ -14,9 +14,9 @@
  * Created         : 2015/05/13
  * Fork from       : WFAS-BBLS15.imi
  * Fork date       : 2016/02/12
- * Last modified   : 2016/02/12
+ * Last modified   : 2020/08/13
  *
- * IMITATOR version: 2.8-working
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -36,10 +36,10 @@ var
 (************************************************************)
 synclabs: result1, wakeup1;
 
-loc idle: while True wait {}
-	when True sync wakeup1 do {x1' = 0} goto awake;
+loc idle: invariant True
+	when True sync wakeup1 do {x1 := 0} goto awake;
 
-loc awake: while x1 < 3 wait {}
+loc awake: invariant x1 < 3
 	when True sync wakeup1 goto awake;
 	when x1 > 2 & x1 < 3 sync result1 goto idle;
 end (* sensor1 *)
@@ -51,10 +51,10 @@ end (* sensor1 *)
 (************************************************************)
 synclabs: result2a, result2b, wakeup2;
 
-loc idle: while True wait {}
-	when True sync wakeup2 do {x2' = 0} goto awake;
+loc idle: invariant True
+	when True sync wakeup2 do {x2 := 0} goto awake;
 
-loc awake: while x2 < 17 wait {}
+loc awake: invariant x2 < 17
 	when True sync wakeup2 goto awake;
 	when x2 > 2 & x2 < 3 sync result2a goto idle;
 	when x2 > 16 & x2 < 17 sync result2b goto idle;
@@ -66,44 +66,44 @@ end (* sensor2 *)
 (************************************************************)
 synclabs: result1, wakeup1, result2a, result2b, wakeup2;
 
-loc cont_1: while x < 2 & y <= 20 wait {}
+loc cont_1: invariant x < 2 & y <= 20
 	when True sync result1 goto fail;
 	when True sync result2a goto fail;
 	when True sync result2b goto fail;
 	when x < 2 sync wakeup1 goto cont_2;
 	when y = 20 goto timeout;
 
-loc cont_2: while x <= p1 & y <= 20 wait {}
+loc cont_2: invariant x <= p1 & y <= 20
 	when True sync result2a goto fail;
 	when True sync result2b goto fail;
-	when x = p1 do {x' = 0} goto cont_3;
-	when x < p1 sync result1 do {x' = 0} goto cont_3;
+	when x = p1 do {x := 0} goto cont_3;
+	when x < p1 sync result1 do {x := 0} goto cont_3;
 	when y = 20 goto timeout;
 
-loc cont_3: while x < 2 & y <= 20 wait {}
+loc cont_3: invariant x < 2 & y <= 20
 	when True sync result1 goto fail;
 	when True sync result2a goto fail;
 	when True sync result2b goto fail;
 	when x < 2 sync wakeup2 goto cont_4;
 	when y = 20 goto timeout;
 
-loc cont_4: while x <= p2 & y <= 20 wait {}
+loc cont_4: invariant x <= p2 & y <= 20
 	when True sync result1 goto fail;
 		(* BUG in the paper? I replaced 'x < p2' with 'x = p2' *)
-	when x = p2 do {x' = 0, y' = 0} goto cont_1;
-	when x < p2 sync result2a do {x' = 0, y' = 0} goto cont_1;
-	when x < p2 sync result2b do {x' = 0, y' = 0} goto cont_1;
+	when x = p2 do {x := 0, y := 0} goto cont_1;
+	when x < p2 sync result2a do {x := 0, y := 0} goto cont_1;
+	when x < p2 sync result2b do {x := 0, y := 0} goto cont_1;
 	when y = 20 goto timeout;
 
-loc fail: while True wait {}
+loc fail: invariant True
 
-loc timeout: while True wait {}
+loc timeout: invariant True
 
 end (* controller *)
 
 
 (************************************************************)
-(* Property specification *)
+(* Initial state *)
 (************************************************************)
 
 init := True
@@ -145,12 +145,5 @@ init := True
 (*	& p1 = 5
 	& p2 = 9*)
 ;
-
-
-(************************************************************)
-(* Analysis *)
-(************************************************************)
-
-property := unreachable loc[controller] = fail or loc[controller] = timeout;
 
 end

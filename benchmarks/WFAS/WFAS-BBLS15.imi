@@ -12,9 +12,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2015/05/13
- * Last modified   : 2018/09/10
+ * Last modified   : 2020/08/13
  *
- * IMITATOR version: 2.10.4
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -97,7 +97,7 @@ end (* controller *)
 
 
 (************************************************************)
-(* Property specification *)
+(* Initial state *)
 (************************************************************)
 
 init := True
@@ -141,10 +141,5 @@ init := True
 ;
 
 
-(************************************************************)
-(* Analysis *)
-(************************************************************)
-
-property := unreachable loc[controller] = fail or loc[controller] = timeout;
 
 end
