@@ -6,14 +6,14 @@
  * Description     : Model of a small acyclic asynchronous circuit
  * Correctness     : Q must not rise
  * Source          : "Preserving Partial Order Runs in Parametric Time Petri Nets"  (ACSD 2015), Fig. 7
- * Author          : Etienne Andre, Thomas Chatain, Cesar Rodriguez
- * Modeling        : Etienne Andre, Thomas Chatain, Cesar Rodriguez
- * Input by        : Etienne Andre
+ * Author          : Étienne André, Thomas Chatain, César Rodríguez
+ * Modeling        : Étienne André, Thomas Chatain, César Rodríguez
+ * Input by        : Étienne André
  *
  * Created         : 2015/01/29
- * Last modified   : 2015/07/30
+ * Last modified   : 2020/08/13
  *
- * IMITATOR version: 2.7.1
+ * IMITATOR version: 3
  ************************************************************)
 
 var 	ckNot1, ckNot2, ckNot3, ckAnd, ckEnv
@@ -33,20 +33,20 @@ var 	ckNot1, ckNot2, ckNot3, ckAnd, ckEnv
 synclabs: qUp, qDown, n1Up, n1Down;
 
 (* Unstable *)
-loc Not100: while ckNot1 <= dNot1_u wait {}
+loc Not100: invariant ckNot1 <= dNot1_u
 	when True sync qUp do {} goto Not110;
 	when ckNot1 >= dNot1_l sync n1Up do {} goto Not101;
 
 (* Stable *)
-loc Not101: while True wait {}
-	when True sync qUp do {ckNot1' = 0} goto Not111;
+loc Not101: invariant True
+	when True sync qUp do {ckNot1 := 0} goto Not111;
 
 (* Stable *)
-loc Not110: while True wait {}
-	when True sync qDown do {ckNot1' = 0} goto Not100;
+loc Not110: invariant True
+	when True sync qDown do {ckNot1 := 0} goto Not100;
 
 (* Unstable *)
-loc Not111: while ckNot1 <= dNot1_u wait {}
+loc Not111: invariant ckNot1 <= dNot1_u
 	when True sync qDown goto Not101;
 	when ckNot1 >= dNot1_l sync n1Down goto Not110;
 
@@ -60,20 +60,20 @@ end (*Not1Gate*)
 synclabs: iUp, iDown, n2Up, n2Down;
 
 (* Unstable *)
-loc Not200: while ckNot2 <= dNot2_u wait {}
+loc Not200: invariant ckNot2 <= dNot2_u
 	when True sync iUp do {} goto Not210;
 	when ckNot2 >= dNot2_l sync n2Up do {} goto Not201;
 
 (* Stable *)
-loc Not201: while True wait {}
-	when True sync iUp do {ckNot2' = 0} goto Not211;
+loc Not201: invariant True
+	when True sync iUp do {ckNot2 := 0} goto Not211;
 
 (* Stable *)
-loc Not210: while True wait {}
-	when True sync iDown do {ckNot2' = 0} goto Not200;
+loc Not210: invariant True
+	when True sync iDown do {ckNot2 := 0} goto Not200;
 
 (* Unstable *)
-loc Not211: while ckNot2 <= dNot2_u wait {}
+loc Not211: invariant ckNot2 <= dNot2_u
 	when True sync iDown goto Not201;
 	when ckNot2 >= dNot2_l sync n2Down goto Not210;
 
@@ -87,20 +87,20 @@ end (*Not2Gate*)
 synclabs: n1Up, n1Down, n3Up, n3Down;
 
 (* Unstable *)
-loc Not300: while ckNot3 <= dNot3_u wait {}
+loc Not300: invariant ckNot3 <= dNot3_u
 	when True sync n1Up do {} goto Not310;
 	when ckNot3 >= dNot3_l sync n3Up do {} goto Not301;
 
 (* Stable *)
-loc Not301: while True wait {}
-	when True sync n1Up do {ckNot3' = 0} goto Not311;
+loc Not301: invariant True
+	when True sync n1Up do {ckNot3 := 0} goto Not311;
 
 (* Stable *)
-loc Not310: while True wait {}
-	when True sync n1Down do {ckNot3' = 0} goto Not300;
+loc Not310: invariant True
+	when True sync n1Down do {ckNot3 := 0} goto Not300;
 
 (* Unstable *)
-loc Not311: while ckNot3 <= dNot3_u wait {}
+loc Not311: invariant ckNot3 <= dNot3_u
 	when True sync n1Down goto Not301;
 	when ckNot3 >= dNot3_l sync n3Down goto Not310;
 
@@ -113,48 +113,48 @@ end (*Not3Gate*)
 synclabs: n3Up, n3Down, n2Up, n2Down, qUp, qDown;
 
 (* Stable *)
-loc And000: while True wait {}
+loc And000: invariant True
 	when True sync n3Up do {} goto And100;
 	when True sync n2Up do {} goto And010;
 
 (* Untable *)
-loc And001: while ckAnd <= dAnd_u wait {}
-	when True sync n3Up do {ckAnd' = 0} goto And101;
-	when True sync n2Up do {ckAnd' = 0} goto And011;
+loc And001: invariant ckAnd <= dAnd_u
+	when True sync n3Up do {ckAnd := 0} goto And101;
+	when True sync n2Up do {ckAnd := 0} goto And011;
 	when ckAnd >= dAnd_l sync qDown do {} goto And000;
 
 (* Stable *)
-loc And010: while True wait {}
-	when True sync n3Up do {ckAnd' = 0} goto And110;
+loc And010: invariant True
+	when True sync n3Up do {ckAnd := 0} goto And110;
 	when True sync n2Down do {} goto And000;
 
 (* Untable *)
-loc And011: while ckAnd <= dAnd_u wait {}
+loc And011: invariant ckAnd <= dAnd_u
 	when True sync n3Up do {} goto And111;
-	when True sync n2Down do {ckAnd' = 0} goto And001;
+	when True sync n2Down do {ckAnd := 0} goto And001;
 	when ckAnd >= dAnd_l sync qDown do {} goto And010;
 
 (* Stable *)
-loc And100: while True wait {}
+loc And100: invariant True
 	when True sync n3Down do {} goto And000;
-	when True sync n2Up do {ckAnd' = 0} goto And110;
+	when True sync n2Up do {ckAnd := 0} goto And110;
 
 (* Untable *)
-loc And101: while ckAnd <= dAnd_u wait {}
-	when True sync n3Down do {ckAnd' = 0} goto And001;
+loc And101: invariant ckAnd <= dAnd_u
+	when True sync n3Down do {ckAnd := 0} goto And001;
 	when True sync n2Up do {} goto And111;
 	when ckAnd >= dAnd_l sync qDown do {} goto And100;
 
 (* Untable *)
-loc And110: while ckAnd <= dAnd_u  wait {}
+loc And110: invariant ckAnd <= dAnd_u 
 	when True sync n3Down do {} goto And010;
 	when True sync n2Down do {} goto And100;
 	when ckAnd >= dAnd_l sync qUp do {} goto And111;
 
 (* Stable *)
-loc And111: while True wait {}
-	when True sync n3Down do {ckAnd' = 0} goto And011;
-	when True sync n2Down do {ckAnd' = 0} goto And101;
+loc And111: invariant True
+	when True sync n3Down do {ckAnd := 0} goto And011;
+	when True sync n2Down do {ckAnd := 0} goto And101;
 
 end (*AndGate*)
 
@@ -166,18 +166,18 @@ end (*AndGate*)
 synclabs: iUp, iDown;
 
 (* Unstable *)
-loc EnvI1: while ckEnv <= di_u wait {}
+loc EnvI1: invariant ckEnv <= di_u
 	when ckEnv >= di_l sync iDown do {} goto EnvI0;
 
 (* Stable *)
-loc EnvI0: while True wait {}
+loc EnvI0: invariant True
 
 end (*EnvI*)
 
 
 
 (************************************************************)
-(* Analysis *)
+(* Initial state *)
 (************************************************************)
 
 init := True
@@ -255,15 +255,6 @@ init := True
 
 
 (************************************************************)
-(* Property specification *)
-(************************************************************)
-
-(* If qUp is performed, then And111 is necessarily reachable *)
-property := unreachable loc[AndGate] = And111;
-
-
-(************************************************************)
 (* The end *)
 (************************************************************)
 end
-
