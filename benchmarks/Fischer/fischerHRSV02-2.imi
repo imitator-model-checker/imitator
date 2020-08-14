@@ -8,12 +8,12 @@
  * Source          : From "Linear Parametric Model Checking of Timed Automata" Hune, Romijn, Stoelinga, Vaandrager, 2002
  * Author          : Hune, Romijn, Stoelinga, Vaandrager
  * Modeling        : Hune, Romijn, Stoelinga, Vaandrager
- * Input by        : Etienne Andre
+ * Input by        : Étienne André
  *
  * Created         : 2013/12/10
- * Last modified   : 2018/11/13
+ * Last modified   : 2020/08/14
  *
- * IMITATOR version: 2.10.4
+ * IMITATOR version: 3
  ************************************************************)
 
 var 
@@ -95,7 +95,7 @@ end (*process_2*)
 
 init :=
 	(*------------------------------------------------------------*)
-	(*   INITIAL LOCATION *)
+	(* Initial location *)
 	(*------------------------------------------------------------*)
 	& loc[process_1] = start_1
 	& loc[process_2] = start_2
@@ -119,12 +119,6 @@ init :=
 	& 0 <= min_delay
 	& min_delay < max_delay
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-property := unreachable loc[process_1] = cs_1 & loc[process_2] = cs_2;
 
 
 (************************************************************)

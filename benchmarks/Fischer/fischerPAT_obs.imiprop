@@ -1,0 +1,22 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Fischer's mutual exclusion protocol
+ *
+ * Description     : Fischer's mutual exclusion protocol with 2 processes
+	THIS MODEL IS NO LONGER NEEDED SINCE IMITATOR 2.7.2, AS THE TOOL NOW SUPPORTS TO CHECK SEVERAL LOCATIONS AT THE SAME TIME.
+ * Correctness     : Not 2 processes together in the critical section (location obs_violation unreachable)
+ * Source          : PAT library of benchmarks
+ * Author          : ?
+ * Input by        : Étienne André
+ *
+ * Created         : 2020/08/14
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+property := #synth AGnot(loc[observer] = obs_violation);

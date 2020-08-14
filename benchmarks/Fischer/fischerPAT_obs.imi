@@ -11,9 +11,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2012/10/08
- * Last modified   : 2015/07/31
+ * Last modified   : 2020/08/14
  *
- * IMITATOR version: 2.7-beta4
+ * IMITATOR version: 3
  ************************************************************)
 
 var 
@@ -184,11 +184,6 @@ init :=
 (*	& delta   = 3
 	& gamma = 4*)
 ;
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-property := unreachable loc[observer] = obs_violation;
 
 (************************************************************)
 (* The end *)

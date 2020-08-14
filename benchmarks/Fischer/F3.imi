@@ -118,6 +118,4 @@ end (* observer *)
 	& Delta >= 0
 	& delta >= 0;
 
-property := unreachable loc[observer] = obs_BAD;
-
 end
