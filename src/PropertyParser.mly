@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/04/23
+ * Last modified     : 2020/08/14
  *
  ************************************************************/
 
@@ -65,7 +65,6 @@ let resolve_property l =
 	CT_HAPPENED CT_HAS
 	CT_IF CT_IMCONVEX CT_IMK CT_IMUNION CT_IN CT_INFCYCLE CT_INFCYCLETHROUGH CT_IS
 	CT_LOC CT_LOOP
-	CT_MAXIMIZE CT_MINIMIZE
 	CT_NEXT CT_NOT CT_NZINFCYCLECHECK CT_NZINFCYCLECUB CT_NZINFCYCLETRANSFORM
 	CT_ONCE
 	CT_PROJECTRESULT CT_PRP CT_PRPC

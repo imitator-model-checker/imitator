@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/04/23
+ * Last modified     : 2020/08/14
 *****************************************************************)
 
 {
@@ -83,8 +83,6 @@ rule token = parse
 	| "is"             { CT_IS }
 	| "loc"            { CT_LOC }
 	| "loop"           { CT_LOOP }
-	| "maximize"       { CT_MAXIMIZE }
-	| "minimize"       { CT_MINIMIZE }
 	| "next"           { CT_NEXT }
 	| "not"            { CT_NOT }
  	| "once"           { CT_ONCE }
