@@ -13,12 +13,17 @@
 
  *
  * Created         : 2016/07/05
- * Last modified   : 2016/07/08
+ * Last modified   : 2020/08/14
  *
- * IMITATOR version: 2.8-beta
+ * IMITATOR version: 3
  ************************************************************)
 
+property := #synth BClearn(
+	(*** TODO: replace "Spec_9" with your favorite specification ***)
+	loc[Spec_9] = ERROR
+	,
 	p_is1 = 0 .. 10(*= 1*)
 (* 	p_is2 = 1 *)
 (* 	p_tu3a = 1 *)
 	p_deadline9 = 0 .. 10 (* = 3*)
+);

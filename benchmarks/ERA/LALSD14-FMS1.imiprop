@@ -12,11 +12,14 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
 
  *
- * Created         : 2016/07/05
- * Last modified   : 2016/07/05
+ * Created         : 2020/08/14
+ * Last modified   : 2020/08/14
  *
- * IMITATOR version: 2.8-beta
+ * IMITATOR version: 3
  ************************************************************)
 
-	p_conveyor = 0 .. 100 (* time from c_B1_in to I_B1_C1 *)
-	& p_deadline = 0 .. 100 (* maximum time between B1_in and B1_out *)
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := #synth AGnot(loc[Spec1] = Serror);
