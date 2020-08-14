@@ -1,0 +1,15 @@
+(************************************************************
+ *                         IMITATOR
+ *
+ * Counter-example given by a reviewer of ACSD 2015
+ *
+ * Author          : "Reviewer 1" (input by Étienne André)
+ *
+ * Created         : 2020/08/14
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+
+property := #synth EF(loc[pta] = l4);
