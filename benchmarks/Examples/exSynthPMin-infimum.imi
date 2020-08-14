@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2018/10/26
- * Last modified   : 2018/10/26
+ * Last modified   : 2020/08/14
  *
- * IMITATOR version: 2.10.4
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -66,15 +66,6 @@ init :=
 	& 0 <= p
 	& 0 <= pabs
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[pta] = ltarget;
-
-minimize(pabs)
 
 
 (************************************************************)
