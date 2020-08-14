@@ -11,18 +11,19 @@
  * Input by        : Laurent Fribourg and Etienne Andre
  *
  * Created         : 2007
- * Last modified   : 2015/07/30
+ * Last modified   : 2020/08/14
  *
- * IMITATOR version: 2.7.1
+ * IMITATOR version: 3
  ************************************************************)
 
-
-	---IEEE VALUE---
+property := #synth IM(
+	(* IEEE VALUE *)
  	& lambda   = 808
  	& sigma    = 26
  	& timeslot = 52
 
-	---RESCALED PRISM VALUE---
---	& lambda   = 96
---	& sigma    = 3
---	& timeslot = 6
+	(* RESCALED PRISM VALUE *)
+(*	& lambda   = 96
+	& sigma    = 3
+	& timeslot = 6*)
+);

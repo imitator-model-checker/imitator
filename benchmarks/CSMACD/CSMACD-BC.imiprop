@@ -11,28 +11,30 @@
  * Input by        : Laurent Fribourg and Etienne Andre
  *
  * Created         : 2007
- * Last modified   : 2010/04/19
+ * Last modified   : 2020/08/14
  *
- * IMITATOR version: 2.7.1
+ * IMITATOR version: 3
  ************************************************************)
 
--- 	& lambda   = 1 .. 20
--- 	& sigma    = 1 .. 2
--- 	& timeslot = 1 .. 2
+property := #synth BCcover(
+(* 	& lambda   = 1 .. 20
+ 	& sigma    = 1 .. 2
+ 	& timeslot = 1 .. 2*)
 
 	& lambda   = 1 .. 20
 	& sigma    = 1 .. 10
 	& timeslot = 1 .. 10
 
--- 	& lambda   = 1 .. 1000 -- 808
--- 	& sigma    = 0 .. 10 -- 0 .. 5 -- 26
--- 	& timeslot = 52 -- 1 .. 5 -- 20 .. 50 -- 52
+(* 	& lambda   = 1 .. 1000 (* 808*)
+ 	& sigma    = 0 .. 10 -- 0 .. 5 (*26*)
+ 	& timeslot = 52 (*1 .. 5*) (*20 .. 50 *) (*52*)*)
 
 
--- 	& lambda   = 808
--- 	& sigma    = 26
--- 	& timeslot = 52
+(* 	& lambda   = 808
+ 	& sigma    = 26
+ 	& timeslot = 52*)
 
---	& lambda=96
---	& sigma=3
---	& timeslot=6
+(*	& lambda=96
+	& sigma=3
+	& timeslot=6*)
+);
