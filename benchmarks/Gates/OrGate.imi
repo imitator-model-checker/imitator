@@ -5,8 +5,9 @@
  *
  * Author          : Christopher Makanga
  * Created         : 2014/08/28
- * Last modified   : 2014/08/28
- * IMITATOR version: 2.6.2
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3
  ************************************************************)
 
 var 	ckOr
@@ -23,46 +24,46 @@ synclabs: i1Up, i1Down, i2Up, i2Down,
 	sUp, sDown;
 
 (* Stable *)
-loc Or000: while True wait {}
-	when True sync i1Up do {ckOr' = 0} goto Or100;
-	when True sync i2Up do {ckOr' = 0} goto Or010;
+loc Or000: invariant True
+	when True sync i1Up do {ckOr := 0} goto Or100;
+	when True sync i2Up do {ckOr := 0} goto Or010;
 
 (* Unstable *)
-loc Or001: while ckOr <= dOr_u wait {}
+loc Or001: invariant ckOr <= dOr_u
 	when True sync i1Up do {} goto Or101;
 	when True sync i2Up do {} goto Or011;
 	when ckOr >= dOr_l sync sDown do {} goto Or000;
 
 (* Unstable *)
-loc Or010: while ckOr <= dOr_u wait {}
-	when True sync i1Up do {ckOr' = 0} goto Or110;
+loc Or010: invariant ckOr <= dOr_u
+	when True sync i1Up do {ckOr := 0} goto Or110;
 	when True sync i2Down do {} goto Or000;
 	when ckOr >= dOr_l sync sUp do {} goto Or011;
 
 (* Stable *)
-loc Or011: while True wait {}
+loc Or011: invariant True
 	when True sync i1Up do {} goto Or111;
-	when True sync i2Down do {ckOr' = 0} goto Or001;
+	when True sync i2Down do {ckOr := 0} goto Or001;
 
 (* Unstable *)
-loc Or100: while ckOr <= dOr_u wait {}
+loc Or100: invariant ckOr <= dOr_u
 	when True sync i1Down do {} goto Or000;
-	when True sync i2Up do {ckOr' = 0} goto Or110;
+	when True sync i2Up do {ckOr := 0} goto Or110;
 	when ckOr >= dOr_l sync sUp do {} goto Or101;
 
 (* Stable *)
-loc Or101: while True wait {}
-	when True sync i1Down do {ckOr' = 0} goto Or001;
+loc Or101: invariant True
+	when True sync i1Down do {ckOr := 0} goto Or001;
 	when True sync i2Up do {} goto Or111;
 
 (* Unstable *)
-loc Or110: while ckOr <= dOr_u  wait {}
-	when True sync i1Down do {ckOr' = 0} goto Or010;
-	when True sync i2Down do {ckOr' = 0} goto Or100;
+loc Or110: invariant ckOr <= dOr_u 
+	when True sync i1Down do {ckOr := 0} goto Or010;
+	when True sync i2Down do {ckOr := 0} goto Or100;
 	when ckOr >= dOr_l sync sUp do {} goto Or111;
 
 (* Stable *)
-loc Or111: while True wait {}
+loc Or111: invariant True
 	when True sync i1Down do {} goto Or011;
 	when True sync i2Down do {} goto Or101;
 

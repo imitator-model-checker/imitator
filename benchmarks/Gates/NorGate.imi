@@ -1,16 +1,15 @@
---****************************************************--
---****************************************************--
---   Laboratoire Specification et Verification
---
---   Modeling of a "NOR" logical gate
---
---   Etienne ANDRE
---
---   Created:        2010/03/19
---   Last modified : 2010/03/19
---****************************************************--
---****************************************************--
-
+(************************************************************
+ *                         IMITATOR
+ *
+ * Model of an "NOR" logical gate
+ *
+ * Author          : Étienne André
+ * Created         : 2010/03/19
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+ 
 var 	ckNor
 		: clock;
 
@@ -18,84 +17,84 @@ var 	ckNor
 			: parameter;
 
 
---****************************************************--
+(************************************************************)
   automaton norGate
---****************************************************--
+(************************************************************)
 synclabs: aUp, aDown, bUp, bDown,
 	qUp, qDown;
-initially Nor001;
 
--- UNSTABLE
-loc Nor000: while ckNor <= dNor_u wait {}
+(* Unstable state *)
+loc Nor000: invariant ckNor <= dNor_u
 	when True sync aUp do {} goto Nor100;
 	when True sync bUp do {} goto Nor010;
 	when ckNor >= dNor_l sync qUp do {} goto Nor001;
 
--- STABLE
-loc Nor001: while True wait {}
-	when True sync aUp do {ckNor' = 0} goto Nor101;
-	when True sync bUp do {ckNor' = 0} goto Nor011;
+(* Stable state *)
+loc Nor001: invariant True
+	when True sync aUp do {ckNor := 0} goto Nor101;
+	when True sync bUp do {ckNor := 0} goto Nor011;
 
--- STABLE
-loc Nor010: while True wait {}
+(* Stable state *)
+loc Nor010: invariant True
 	when True sync aUp do {} goto Nor110;
-	when True sync bDown do {ckNor' = 0} goto Nor000;
+	when True sync bDown do {ckNor := 0} goto Nor000;
 
--- UNSTABLE
-loc Nor011: while ckNor <= dNor_u wait {}
-	when True sync aUp do {ckNor' = 0} goto Nor111;
+(* Unstable state *)
+loc Nor011: invariant ckNor <= dNor_u
+	when True sync aUp do {ckNor := 0} goto Nor111;
 	when True sync bDown do {} goto Nor001;
 	when ckNor >= dNor_l sync qDown do {} goto Nor010;
 
--- STABLE
-loc Nor100: while True wait {}
-	when True sync aDown do {ckNor' = 0} goto Nor000;
+(* Stable state *)
+loc Nor100: invariant True
+	when True sync aDown do {ckNor := 0} goto Nor000;
 	when True sync bUp do {} goto Nor110;
 
--- UNSTABLE
-loc Nor101: while ckNor <= dNor_u wait {}
+(* Unstable state *)
+loc Nor101: invariant ckNor <= dNor_u
 	when True sync aDown do {} goto Nor001;
-	when True sync bUp do {ckNor' = 0} goto Nor111;
+	when True sync bUp do {ckNor := 0} goto Nor111;
 	when ckNor >= dNor_l sync qDown do {} goto Nor100;
 
--- STABLE
-loc Nor110: while True wait {}
+(* Stable state *)
+loc Nor110: invariant True
 	when True sync aDown do {} goto Nor010;
 	when True sync bDown do {} goto Nor100;
 
--- UNSTABLE
-loc Nor111: while ckNor <= dNor_u wait {}
-	when True sync aDown do {ckNor' = 0} goto Nor011;
-	when True sync bDown do {ckNor' = 0} goto Nor101;
+(* Unstable state *)
+loc Nor111: invariant ckNor <= dNor_u
+	when True sync aDown do {ckNor := 0} goto Nor011;
+	when True sync bDown do {ckNor := 0} goto Nor101;
 	when ckNor >= dNor_l sync qDown do {} goto Nor110;
 
-end -- norGate
+end (*norGate*)
 
 
 
---****************************************************--
--- ANALYSIS
---****************************************************--
-
-var init : region;
+(************************************************************)
+(* Initial state *)
+(************************************************************)
 
 init := 
-	------------------------------------------------------------
-	-- INITIAL LOCATION
-	------------------------------------------------------------
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
 	loc[norGate] = Nor001
 
-	------------------------------------------------------------
-	-- INITIAL CONSTRAINTS
-	------------------------------------------------------------
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
 	& ckNor = 0
 
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
 	& dNor_l >= 0
 
 	& dNor_l <= dNor_u
 ;
 
--- var init_reg
--- 	: region;
-
--- prints "LSV";
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

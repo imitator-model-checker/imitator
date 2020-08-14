@@ -5,8 +5,9 @@
  *
  * Author          : Christopher Makanga
  * Created         : 2014/08/28
- * Last modified   : 2014/08/28
- * IMITATOR version: 2.6.2
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3
  ************************************************************)
 
 var 	ckAnd
@@ -22,48 +23,48 @@ var 	ckAnd
 synclabs: i1Up, i1Down, i2Up, i2Down, sUp, sDown;
 
 (* Stable *)
-loc And000: while True wait {}
+loc And000: invariant True
 	when True sync i1Up do {} goto And100;
 	when True sync i2Up do {} goto And010;
 
 (* Untable *)
-loc And001: while ckAnd <= dAnd_u wait {}
-	when True sync i1Up do {ckAnd' = 0} goto And101;
-	when True sync i2Up do {ckAnd' = 0} goto And011;
+loc And001: invariant ckAnd <= dAnd_u
+	when True sync i1Up do {ckAnd := 0} goto And101;
+	when True sync i2Up do {ckAnd := 0} goto And011;
 	when ckAnd >= dAnd_l sync sDown do {} goto And000;
 
 (* Stable *)
-loc And010: while True wait {}
-	when True sync i1Up do {ckAnd' = 0} goto And110;
+loc And010: invariant True
+	when True sync i1Up do {ckAnd := 0} goto And110;
 	when True sync i2Down do {} goto And000;
 
 (* Untable *)
-loc And011: while ckAnd <= dAnd_u wait {}
+loc And011: invariant ckAnd <= dAnd_u
 	when True sync i1Up do {} goto And111;
-	when True sync i2Down do {ckAnd' = 0} goto And001;
+	when True sync i2Down do {ckAnd := 0} goto And001;
 	when ckAnd >= dAnd_l sync sDown do {} goto And010;
 
 (* Stable *)
-loc And100: while True wait {}
+loc And100: invariant True
 	when True sync i1Down do {} goto And000;
-	when True sync i2Up do {ckAnd' = 0} goto And110;
+	when True sync i2Up do {ckAnd := 0} goto And110;
 
 (* Untable *)
-loc And101: while ckAnd <= dAnd_u wait {}
-	when True sync i1Down do {ckAnd' = 0} goto And001;
+loc And101: invariant ckAnd <= dAnd_u
+	when True sync i1Down do {ckAnd := 0} goto And001;
 	when True sync i2Up do {} goto And111;
 	when ckAnd >= dAnd_l sync sDown do {} goto And100;
 
 (* Untable *)
-loc And110: while ckAnd <= dAnd_u  wait {}
+loc And110: invariant ckAnd <= dAnd_u 
 	when True sync i1Down do {} goto And010;
 	when True sync i2Down do {} goto And100;
 	when ckAnd >= dAnd_l sync sUp do {} goto And111;
 
 (* Stable *)
-loc And111: while True wait {}
-	when True sync i1Down do {ckAnd' = 0} goto And011;
-	when True sync i2Down do {ckAnd' = 0} goto And101;
+loc And111: invariant True
+	when True sync i1Down do {ckAnd := 0} goto And011;
+	when True sync i2Down do {ckAnd := 0} goto And101;
 
 end (*AndGate*)
 
