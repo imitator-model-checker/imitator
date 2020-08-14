@@ -1,0 +1,24 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Dummy example to illustrate various algorithms in IMITATOR.
+ *
+ * Description     : Dummy example to illustrate various algorithms in IMITATOR.
+ * Correctness     : TODO
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/08/14
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := #synth EF(loc[pta] = l1 or loc[pta] = l3);
