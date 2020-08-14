@@ -1,0 +1,24 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy PTA to act as a counterexample for the efficiency of SynthMinReach-PQ (minimal time reachability synthesis with priority queue)
+ *
+ * Description     : Toy PTA to act as a counterexample for the efficiency of SynthMinReach-PQ (minimal time reachability synthesis with priority queue). Note that EFsynth (in BFS) terminates on this example
+ * Correctness     : ltarget (un)reachable
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/08/14
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := #synth EFpmin(loc[pta] = ltarget , p_global_time);

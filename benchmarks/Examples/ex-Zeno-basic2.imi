@@ -5,12 +5,12 @@
  * It seems there is an infinite accepting non-Zeno run iff p1 >= p2 and p3 > 0
  * Node: the parametric zone graph is infinite
  *
- * Author          : Etienne Andre
+ * Author          : Étienne André
  *
  * Created         : 2015/04/28
- * Last modified   : 2015/04/28
+ * Last modified   : 2020/08/14
  *
- * IMITATOR version: 2.7-beta2
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -30,15 +30,15 @@ var
 (************************************************************)
 synclabs: ;
 
-loc l1: while x <= p1 wait {}
-	when x >= p2 do {y' = 0} goto l2;
+loc l1: invariant x <= p1
+	when x >= p2 do {y := 0} goto l2;
 
-loc l2: while True wait {}
-	when x = p3 do {x' = 0} goto l2;
+loc l2: invariant True
+	when x = p3 do {x := 0} goto l2;
 	when x <= p1 & y > 0 goto l3;
 
-loc l3: while True wait {}
-	when y <= p3 do {y' = 0} goto l3;
+loc l3: invariant True
+	when y <= p3 do {y := 0} goto l3;
 	when x <= p1 goto l2;
 
 end (* pta *)
@@ -46,7 +46,7 @@ end (* pta *)
 
 
 (************************************************************)
-(* Analysis *)
+(* Initial state *)
 (************************************************************)
 
 init := True
@@ -68,7 +68,5 @@ init := True
 	& p2 >= 0
 	& p3 >= 0
 ;
-
-(* property := unreachable loc[pta] = l1; *)
 
 end

@@ -7,9 +7,9 @@
  * Author          : Sun Jun
  *
  * Created         : 2015/05/07
- * Last modified   : 2015/05/07
+ * Last modified   : 2020/08/14
  *
- * IMITATOR version: 2.7-beta2
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -29,14 +29,14 @@ var
 (************************************************************)
 synclabs: ;
 
-loc l1: while True wait {}
-	when y <= p2 do {x' = 0} goto l2;
+loc l1: invariant True
+	when y <= p2 do {x := 0} goto l2;
 
-loc l2: while True wait {}
+loc l2: invariant True
 	when True goto l3;
-	when True do {y' = 0} goto l1;
+	when True do {y := 0} goto l1;
 
-loc l3: while True wait {}
+loc l3: invariant True
 	when x <= p1 goto l1;
 
 end (* pta *)
@@ -44,7 +44,7 @@ end (* pta *)
 
 
 (************************************************************)
-(* Analysis *)
+(* Initial state *)
 (************************************************************)
 
 init := True
@@ -65,7 +65,5 @@ init := True
 	& p1 >= 0
 	& p2 >= 0
 ;
-
-(* property := unreachable loc[pta] = l1; *)
 
 end
