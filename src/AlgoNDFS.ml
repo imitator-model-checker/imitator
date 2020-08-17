@@ -63,6 +63,8 @@ class algoNDFS =
 	val mutable execute_again = true (* used when not doing iterative deepening for 1 execution only *)
 	val mutable current_depth = -1 (* used for iterative deepening *)
 	val mutable max_depth = -1 (* used for iterative deepening *)
+	val mutable min_depth_found = -1 (* minimal depth at which a cycle is found *)
+	val mutable max_depth_reached = 0 (* maximum depth actually reached *)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
@@ -503,16 +505,17 @@ class algoNDFS =
 					(StateSpace.get_state state_space thestate)));
 			let depth_ok = match options#depth_limit with
 				| None -> if options#depth_init = None then true
-										else if (current_depth  > thestate_depth) then true
+										else if (current_depth  >= thestate_depth) then true
 											else (depth_reached <- true; false)
-				| Some depth_value -> if options#depth_init = None then (if (depth_value  > thestate_depth) then true
+				| Some depth_value -> if options#depth_init = None then (if (depth_value  >= thestate_depth) then true
 											else (depth_reached <- true; false)
 										)
-										else if (current_depth  > thestate_depth) then true
+										else if (current_depth  >= thestate_depth) then true
 											else (depth_reached <- true; false)
 			in
 			let is_green astate = table_test green astate in
 			if (depth_ok && enterdfs thestate) then (
+				if (thestate_depth > max_depth_reached) then max_depth_reached <- thestate_depth;
 				predfs thestate;
 				let successors = reorderqueue (StateSpace.get_successors state_space thestate) in
 				let rec process_sucs suclist = match suclist with
@@ -541,7 +544,7 @@ class algoNDFS =
 						so there is no need to process them.
 						However, the state must be marked blue and removed from cyan in the blue dfs *)
 				if (found) then
-					cyclefound thestate cyclestate
+					cyclefound thestate cyclestate thestate_depth
 				else (process_sucs successors;
 					postdfs thestate thestate_depth)
 			) else (* thestate is not explored because it is either too deep or covered by the constraint already *)
@@ -606,13 +609,15 @@ class algoNDFS =
 						printtable "Cyan (predfs)" cyan;
 						find_or_compute_successors astate
 					in
-					let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
+					let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 						cyclecount <- cyclecount + 1;
+						total_cyclecount <- total_cyclecount + 1;
+						if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
 						if (options#counterex = true) then
 							print_highlighted_message Shell_bold Verbose_standard
-								("Cycle found at state " ^ (string_of_int astate))
+								("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 						else print_highlighted_message Shell_bold Verbose_standard
-								("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
+								("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
 						print_message Verbose_standard
 							(ModelPrinter.string_of_state model
 								(StateSpace.get_state state_space astate));
@@ -653,13 +658,15 @@ class algoNDFS =
 							let predfs (astate : State.state_index) : unit =
 								table_add red astate;
 								printtable "Red (predfs)" red in
-							let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
+							let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 								cyclecount <- cyclecount + 1;
+								total_cyclecount <- total_cyclecount + 1;
+								if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
 								if (options#counterex = true) then
 									print_highlighted_message Shell_bold Verbose_standard
-										("Cycle found at state " ^ (string_of_int astate))
+										("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 								else print_highlighted_message Shell_bold Verbose_standard
-									("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
+									("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
 								print_message Verbose_standard
 									(ModelPrinter.string_of_state model
 										(StateSpace.get_state state_space astate));
@@ -677,7 +684,7 @@ class algoNDFS =
 								(table_test cyan astate)
 							in
 							let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
-								cyclefound astate astate
+								cyclefound astate astate astate_depth
 							in
 							let testrecursivedfs (astate : State.state_index) : bool =
 								not (table_test red astate)
@@ -710,13 +717,15 @@ class algoNDFS =
 						printtable "Cyan (predfs)" cyan;
 						find_or_compute_successors astate
 					in
-					let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
+					let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 						cyclecount <- cyclecount + 1;
+						total_cyclecount <- total_cyclecount + 1;
+						if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
 						if (options#counterex = true) then
 							print_highlighted_message Shell_bold Verbose_standard
-								("Cycle found at state " ^ (string_of_int astate))
+								("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 						else print_highlighted_message Shell_bold Verbose_standard
-								("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
+								("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
 						print_message Verbose_standard
 							(ModelPrinter.string_of_state model
 								(StateSpace.get_state state_space astate));
@@ -758,13 +767,15 @@ class algoNDFS =
 							let predfs (astate: State.state_index) : unit =
 								table_add red astate;
 								printtable "Red (predfs)" red in
-							let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
+							let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 								cyclecount <- cyclecount + 1;
+								total_cyclecount <- total_cyclecount + 1;
+								if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
 								if (options#counterex = true) then
 									print_highlighted_message Shell_bold Verbose_standard
-										("Cycle found at state " ^ (string_of_int astate))
+										("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 								else print_highlighted_message Shell_bold Verbose_standard
-									("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
+									("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
 								print_message Verbose_standard
 									(ModelPrinter.string_of_state model
 										(StateSpace.get_state state_space astate));
@@ -785,7 +796,7 @@ class algoNDFS =
 								(subsumesset astate cyan)
 							in
 							let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
-								cyclefound astate astate
+								cyclefound astate astate astate_depth
 							in
 							let testrecursivedfs (astate : State.state_index) : bool =
 								not (setsubsumes red astate)
@@ -830,13 +841,15 @@ class algoNDFS =
 								printtable "Cyan (preds)" cyan;
 								find_or_compute_successors astate
 							in
-							let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
+							let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 								cyclecount <- cyclecount + 1;
+								total_cyclecount <- total_cyclecount + 1;
+								if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
 								if (options#counterex = true) then
 									print_highlighted_message Shell_bold Verbose_standard
-										("Cycle found at state " ^ (string_of_int astate))
+										("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 								else print_highlighted_message Shell_bold Verbose_standard
-										("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
+										("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
 								print_message Verbose_standard
 									(ModelPrinter.string_of_state model
 										(StateSpace.get_state state_space astate));
@@ -878,13 +891,15 @@ class algoNDFS =
 									let predfs (astate: State.state_index) : unit =
 										table_add red astate;
 										printtable "Red (predfs)" red in
-									let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
+									let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 										cyclecount <- cyclecount + 1;
+										total_cyclecount <- total_cyclecount + 1;
+										if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
 										if (options#counterex = true) then
 											print_highlighted_message Shell_bold Verbose_standard
-												("Cycle found at state " ^ (string_of_int astate))
+												("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 										else print_highlighted_message Shell_bold Verbose_standard
-											("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
+											("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
 										print_message Verbose_standard
 											(ModelPrinter.string_of_state model
 												(StateSpace.get_state state_space astate));
@@ -905,7 +920,7 @@ class algoNDFS =
 										(table_test cyan astate)
 									in
 									let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
-										cyclefound astate astate
+										cyclefound astate astate astate_depth
 									in
 									let testrecursivedfs (astate : State.state_index) : bool =
 										not (table_test red astate)
@@ -953,13 +968,15 @@ class algoNDFS =
 								printtable "Cyan (predfs)" cyan;
 								find_or_compute_successors astate
 							in
-							let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
+							let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 								cyclecount <- cyclecount + 1;
+								total_cyclecount <- total_cyclecount + 1;
+								if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
 								if (options#counterex = true) then
 									print_highlighted_message Shell_bold Verbose_standard
-										("Cycle found at state " ^ (string_of_int astate))
+										("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 								else print_highlighted_message Shell_bold Verbose_standard
-										("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
+										("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
 								print_message Verbose_standard
 									(ModelPrinter.string_of_state model
 										(StateSpace.get_state state_space astate));
@@ -1002,13 +1019,15 @@ class algoNDFS =
 									let predfs (astate: State.state_index) : unit =
 										table_add red astate;
 										printtable "Red (predfs)" red in
-									let cyclefound (thestate : State.state_index) (astate : State.state_index) : unit =
+									let cyclefound (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : unit =
 										cyclecount <- cyclecount + 1;
+										total_cyclecount <- total_cyclecount + 1;
+										if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
 										if (options#counterex = true) then
 											print_highlighted_message Shell_bold Verbose_standard
-												("Cycle found at state " ^ (string_of_int astate))
+												("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 										else print_highlighted_message Shell_bold Verbose_standard
-											("Cycle " ^ (string_of_int cyclecount) ^ " found at state " ^ (string_of_int astate));
+											("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
 										print_message Verbose_standard
 											(ModelPrinter.string_of_state model
 												(StateSpace.get_state state_space astate));
@@ -1029,7 +1048,7 @@ class algoNDFS =
 										(subsumesset astate cyan)
 									in
 									let alternativedfs (astate : State.state_index) (astate_depth : int) : unit =
-										cyclefound astate astate
+										cyclefound astate astate astate_depth
 									in
 									let testrecursivedfs (astate : State.state_index) : bool =
 										not (layersetsubsumes red astate)
@@ -1064,7 +1083,6 @@ class algoNDFS =
 			printtable "Red (end while depth)" red;
 
 			total_processed_blue <- total_processed_blue + processed_blue;
-			total_cyclecount <- total_cyclecount + cyclecount;
 
 			if execute_again then(
 				ResultProcessor.process_result self#compute_result "Iterative deepening" None;
@@ -1170,6 +1188,9 @@ class algoNDFS =
 		print_message Verbose_standard ("Number of cycles found: " ^ (string_of_int cyclecount));
 		if options#depth_init <> None then
 			print_message Verbose_standard ("Total number of cycles found: " ^ (string_of_int total_cyclecount));
+		if (min_depth_found <> -1) then
+			print_message Verbose_standard ("Minimum depth at which a cycle was found: " ^ (string_of_int min_depth_found));
+		print_message Verbose_standard ("Maximal depth actually reached: " ^ (string_of_int max_depth_reached));
 
 		(* Get the termination status *)
 		let termination_status = match termination_status with
