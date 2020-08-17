@@ -11,21 +11,14 @@
  * Input by        : Romain Soulat, Étienne André
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
- * Created         : ?
+ * Created         : 2020/08/17
  * Last modified   : 2020/08/17
  *
  * IMITATOR version: 3.0
  ************************************************************)
  
- 
-property := #synth IM(
-	d11 = 3
-	& d12=6
-	& d13=1
-	& d14=7
+(************************************************************)
+(* Property specification *)
+(************************************************************)
 
-	& d21=10
-	& d22=8
-	& d23=5
-	& d24=4
-);
+property := #synth EF(loc[job1] = End1 & loc[job2] = End2 & loc[job3] = End3);
