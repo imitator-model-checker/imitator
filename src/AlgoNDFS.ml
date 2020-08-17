@@ -481,10 +481,10 @@ class algoNDFS =
 			| Keep_going (*when termination_status <> None*) -> ()
 
 			(* Termination due to time limit reached *)
-			| Time_limit_reached -> termination_status <- Some (Result.Time_limit (List.length !cyan))
+			| Time_limit_reached -> termination_status <- Some (Result.Time_limit (Hashtbl.length cyan)); execute_again <- false
 
 			(* Termination due to a number of explored states reached *)
-			| States_limit_reached -> termination_status <- Some (Result.States_limit (List.length !cyan))
+			| States_limit_reached -> termination_status <- Some (Result.States_limit (Hashtbl.length cyan)) ; execute_again <- false
 
 			(* Termination due to state space depth limit reached *)
 			| Depth_limit_reached -> termination_status <- Some (Result.Depth_limit (List.length !cyan))
