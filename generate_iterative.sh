@@ -28,11 +28,19 @@ function help {
 
 function process_results {
 	# find maximal depth
-	echo -n `grep "until depth" $one_result | tail -n 1 | cut -d' ' -f5 `' ; '>> $output_file
+	# echo -n `grep "until depth" $one_result | tail -n 1 | cut -d' ' -f5 `' ; '>> $output_file
+	echo -n `grep "depth actually" $one_result | tail -n 1 | cut -d: -f2 | sed -e 's/\[0m//'`' ;'>> $output_file
+	# minimal depth at which a cycle was found
+	min_depth=`grep "Minimum depth" $one_result | tail -n 1 | cut -d: -f2 | sed -e 's/\[0m//'`
+	if [ -z "$min_depth" ]
+	then echo -n " --- ; " >> $output_file
+	else echo -n "$min_depth ; " >> $output_file
+	fi
 	# total number of cycles found
 	echo -n `grep "cycles found" $one_result | grep Total | tail -n 1 | cut -d: -f2 | sed -e 's/\[0m//'`' ; '>> $output_file
 	# total number of processed states
 	echo -n `grep "processed states" $one_result | grep Total | tail -n 1 | cut -d: -f2 | sed -e 's/\[0m//'`' ; ' >> $output_file
+	# time of computation
 	in_time=`grep "exact" $one_result`
 	if [ -z "$in_time" ]
 	then echo -n "TO" >> $output_file
@@ -94,7 +102,7 @@ rm -f $one_result
 rm -f $output_file
 # table with iterative depth
 echo ' ; ; ; ; No layers ; ; ; ; Layers ; ; ;' >> $output_file
-echo 'Model ; L ; X ; P ; d ; c ; s ; t ; d ; c ; s ; t' >> $output_file
+echo 'Model ; L ; X ; P ; d ; m ; c ; s ; t ; d ; m ; c ; s ; t' >> $output_file
 for f in $input_files
 	do echo -e "Running experiments for model \033[1;31m$f\033[0m"
 		bin/imitator -mode checksyntax -verbose low $exp_dir/$f.imi > $one_result 2> /dev/null
