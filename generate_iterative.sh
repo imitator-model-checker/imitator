@@ -4,7 +4,7 @@
 # Script for generating experiments table #
 # for iterative deepening                 #
 # Author: Laure Petrucci                  #
-# Version: 1.0                            #
+# Version: 1.1                            #
 # Date: 2020-08-17                        #
 ###########################################
 
