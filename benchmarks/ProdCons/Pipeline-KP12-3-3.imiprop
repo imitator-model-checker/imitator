@@ -1,0 +1,25 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Producer/Consumer with n=3 processing nodes of length m=3
+ *
+ * Description     : The network presented in Figure 2 models the system consisting of the Producer feeding the Consumer with data sent through a sequence of nodes with additional processing capabilities. The model is scalable with respect to the number n of the processing nodes and the length m of each processing node and it contains three lower (a,c,e) and three upper (b,d,f) parameters. Note: the clocks were renamed (w.r.t. to [KP12]) for sake of simplicity.
+	WARNING: the first of the valuations in [KP12] does not match the result of IMITATOR!
+ * Correctness     : φ2 = ConsWaiting ∧ ProdReady ∧ xtotal ≥ 5
+ * Source          : SMT-based Parameter Synthesis for L/U Automata, Michał Knapik and Wojciech Penczek
+ * Author          : Michał Knapik and Wojciech Penczek
+ * Modeling        : Michał Knapik and Wojciech Penczek
+ * Input by        : Étienne André
+ *
+ * Created         : 2020/08/18
+ * Last modified   : 2020/08/18
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* φ2 = ConsWaiting ∧ ProdReady ∧ xtotal ≥ 5 *)
+property := #synth EF(loc[Consumer] = consWaiting & loc[Producer] = prodReady (*& xtotal >= 5*) & loc[observer] = finished);

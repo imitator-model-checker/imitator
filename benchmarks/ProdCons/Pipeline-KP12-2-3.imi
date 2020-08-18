@@ -11,9 +11,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2015/09/18
- * Last modified   : 2018/08/20
+ * Last modified   : 2020/08/18
  *
- * IMITATOR version: 2.10.4
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -34,10 +34,10 @@ var
 (************************************************************)
 synclabs: ProdReset, Feed2;
 
-loc prodReady: invariant xprod <= d wait
+loc prodReady: invariant xprod <= d
 	when xprod >= c sync Feed2 do {xprod := 0} goto prodWaiting;
 
-loc prodWaiting: invariant xprod <= b wait
+loc prodWaiting: invariant xprod <= b
 	when xprod >= a sync ProdReset do {xprod := 0} goto prodReady;
 
 end (* Producer *)
@@ -49,10 +49,10 @@ end (* Producer *)
 (************************************************************)
 synclabs: ConsReset, Feed4;
 
-loc consReady: invariant xcons <= d wait
+loc consReady: invariant xcons <= d
 	when xcons >= c sync Feed4 do {xcons := 0} goto consWaiting;
 
-loc consWaiting: invariant xcons <= b wait
+loc consWaiting: invariant xcons <= b
 	when xcons >= a sync ConsReset do {xcons := 0} goto consReady;
 
 end (* Consumer *)
@@ -64,19 +64,19 @@ end (* Consumer *)
 (************************************************************)
 synclabs: Node1Process1, Node1Process2, Node1Process3, Feed2, Feed3;
 
-loc node1Ready: invariant xnode1 <= d wait
+loc node1Ready: invariant xnode1 <= d
 	when xnode1 >= c sync Feed2 do {xnode1 := 0} goto intermediate1;
 
-loc intermediate1: invariant xnode1 <= f wait
+loc intermediate1: invariant xnode1 <= f
 	when xnode1 >= e sync Node1Process1 do {xnode1 := 0} goto intermediate2;
 
-loc intermediate2: invariant xnode1 <= f wait
+loc intermediate2: invariant xnode1 <= f
 	when xnode1 >= e sync Node1Process2 do {xnode1 := 0} goto intermediate3;
 
-loc intermediate3: invariant xnode1 <= f wait
+loc intermediate3: invariant xnode1 <= f
 	when xnode1 >= e sync Node1Process3 do {xnode1 := 0} goto send;
 
-loc send: invariant xnode1 <= d wait
+loc send: invariant xnode1 <= d
 	when xnode1 >= c sync Feed3 do {xnode1 := 0} goto node1Ready;
 
 end (* Node1 *)
@@ -87,19 +87,19 @@ end (* Node1 *)
 (************************************************************)
 synclabs: Node2Process1, Node2Process2, Node2Process3, Feed3, Feed4;
 
-loc node2Ready: invariant xnode2 <= d wait
+loc node2Ready: invariant xnode2 <= d
 	when xnode2 >= c sync Feed3 do {xnode2 := 0} goto intermediate1;
 
-loc intermediate1: invariant xnode2 <= f wait
+loc intermediate1: invariant xnode2 <= f
 	when xnode2 >= e sync Node2Process1 do {xnode2 := 0} goto intermediate2;
 
-loc intermediate2: invariant xnode2 <= f wait
+loc intermediate2: invariant xnode2 <= f
 	when xnode2 >= e sync Node2Process2 do {xnode2 := 0} goto intermediate3;
 
-loc intermediate3: invariant xnode2 <= f wait
+loc intermediate3: invariant xnode2 <= f
 	when xnode2 >= e sync Node2Process3 do {xnode2 := 0} goto send;
 
-loc send: invariant xnode2 <= d wait
+loc send: invariant xnode2 <= d
 	when xnode2 >= c sync Feed4 do {xnode2 := 0} goto node2Ready;
 
 end (* Node2 *)
@@ -150,14 +150,6 @@ init :=
 	& e >= 0
 	& f >= 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-(* φ2 = ConsWaiting ∧ ProdReady ∧ xtotal ≥ 5 *)
-property := unreachable loc[Consumer] = consWaiting & loc[Producer] = prodReady (*& xtotal >= 5*) & loc[observer] = finished;
 
 
 (************************************************************)
