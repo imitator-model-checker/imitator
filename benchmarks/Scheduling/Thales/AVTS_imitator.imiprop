@@ -1,0 +1,22 @@
+(************************************************************
+* IMITATOR MODEL
+*
+* Aerial Video Tracking Sytem
+*
+* Description : Preemptive model
+* Source : Thales
+* Author : Baptiste Parquier
+* Modeling : Baptiste Parquier
+* Input by : Baptiste Parquier
+*
+* Created : 2020/08/18
+* Last modified : 2020/08/18
+*
+* IMITATOR version: 3
+************************************************************)
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := #synth AGnot(loc[Observateur] = obsF);
