@@ -1,25 +1,24 @@
 var time,x_1, x_2, x_3,t_1,t_2 :clock;
 	  deadlineBasic,WCET_2, WCET_1,per1, Off1,per2, Off2: parameter;
 
---
---var t_3:clock;
---	per3, Off3:parameter;
------------------------------------------
+(*var t_3:clock;
+	per3, Off3:parameter;*)
+(*-----------------------------------------
 -- STOPPER Used for Analysis Only	--
------------------------------------------
+-----------------------------------------*)
 automaton stopper
 synclabs: done1, require1, done2, require2,deadline; 
 
-loc f_1_r: while time <= deadlineBasic wait {}
+loc f_1_r: invariant time <= deadlineBasic
 	when True sync done1 goto f_1_r;
 	when True sync require1 goto f_1_r;
 	when True sync done2 goto f_1_r;
 	when True sync require2 goto f_1_r;
---	when True sync done3 goto f_1_r;
---	when True sync require3 goto f_1_r;
+(* 	when True sync done3 goto f_1_r; *)
+(* 	when True sync require3 goto f_1_r; *)
 	when time = deadlineBasic sync deadline goto stopState;
 
-loc stopState: while True wait {}
+loc stopState: invariant True
 
 
 end
@@ -27,61 +26,59 @@ end
 automaton scheduler_P_Application
 
 synclabs: require1, done1, require2, done2;
---, require3, done3;
+(* , require3, done3; *)
 
-initially active_non_1_non_2_non_3;
 
-loc active_non_1_non_2_non_3: while True stop{x_1,x_2,x_3} wait {}
+loc active_non_1_non_2_non_3: invariant True stop{x_1,x_2,x_3}
 	when True sync require1  do {} goto active_1_non_2_non_3;
 	when True sync require2 do {} goto active_non_1_2_non_3;	
---	when True sync require3 do {} goto active_non_1_non_2_3;
+(* 	when True sync require3 do {} goto active_non_1_non_2_3; *)
 
---loc active_non_1_non_2_3: while True stop{x_1,x_2} wait {}
+(*--loc active_non_1_non_2_3: invariant True stop{x_1,x_2}
 --	when x_3 < WCET_3 sync require1 do {} goto active_1_non_2_3;
 --	when x_3 < WCET_3 sync require2 do {} goto active_non_1_2_3;
---	when x_3 = WCET_3 sync done3 do {x_3'=0,, } goto active_non_1_non_2_non_3;
+--	when x_3 = WCET_3 sync done3 do {x_3 := 0,, } goto active_non_1_non_2_non_3;*)
 
-loc active_non_1_2_non_3: while True stop{x_1,x_3} wait {}
+loc active_non_1_2_non_3: invariant True stop{x_1,x_3}
 	when x_2 < WCET_2 sync require1 do {} goto active_1_2_non_3;
---	when x_2 < WCET_2 sync require3 do {} goto active_non_1_2_3;
-	when x_2 = WCET_2 do {x_2'=0} sync done2 goto active_non_1_non_2_non_3;
+(* 	when x_2 < WCET_2 sync require3 do {} goto active_non_1_2_3; *)
+	when x_2 = WCET_2 do {x_2 := 0} sync done2 goto active_non_1_non_2_non_3;
 
---loc active_non_1_2_3: while True stop{x_1,x_3} wait {}
+(*--loc active_non_1_2_3: invariant True stop{x_1,x_3}
 --	when x_2 < WCET_2 sync require1 do {} goto active_1_2_3;
---	when x_2 = WCET_2 sync done2 do {x_2'=0} goto active_non_1_non_2_3;
+--	when x_2 = WCET_2 sync done2 do {x_2 := 0} goto active_non_1_non_2_3;*)
 
-loc active_1_non_2_non_3: while True stop{x_2,x_3} wait {}
+loc active_1_non_2_non_3: invariant True stop{x_2,x_3}
 	when x_1 < WCET_1 sync require2 do {} goto active_1_2_non_3;	
---	when x_1 < WCET_1 sync require3 do {} goto active_1_non_2_3;
-	when x_1 = WCET_1 sync done1 do {x_1'=0} goto active_non_1_non_2_non_3;
+(* 	when x_1 < WCET_1 sync require3 do {} goto active_1_non_2_3; *)
+	when x_1 = WCET_1 sync done1 do {x_1 := 0} goto active_non_1_non_2_non_3;
 
---loc active_1_non_2_3: while True stop{x_2,x_3} wait {}
+(*--loc active_1_non_2_3: invariant True stop{x_2,x_3}
 --	when x_1 < WCET_1 sync require2 do {} goto active_1_2_3;	
---	when x_1 = WCET_1 sync done1  do {x_1' = 0} goto active_non_1_non_2_3;
+--	when x_1 = WCET_1 sync done1  do {x_1' = 0} goto active_non_1_non_2_3;*)
 
-loc active_1_2_non_3: while True stop{x_2,x_3} wait {}
---	when x_1 < WCET_1 sync require3 do {} goto active_1_2_3;
-	when x_1 = WCET_1 sync done1 do {x_1'=0}  goto active_non_1_2_non_3;
+loc active_1_2_non_3: invariant True stop{x_2,x_3}
+(* 	when x_1 < WCET_1 sync require3 do {} goto active_1_2_3; *)
+	when x_1 = WCET_1 sync done1 do {x_1 := 0}  goto active_non_1_2_non_3;
 
---loc active_1_2_3: while True stop{x_2,x_3} wait {}
---	when x_1 = WCET_1 sync done1 do {x_1' = 0} goto active_non_1_2_3;
+(*--loc active_1_2_3: invariant True stop{x_2,x_3}
+--	when x_1 = WCET_1 sync done1 do {x_1' = 0} goto active_non_1_2_3;*)
 
-end -- automaton_P_gyro
+end (*automaton_P_gyro*)
 
 automaton T_1
 
 
 synclabs: done1, require1;
 
-initially init_s;
 
-loc init_s: while t_1 <= Off1 wait {}
-	when t_1 = Off1 sync require1 do {t_1'=0} goto waiting;
+loc init_s: invariant t_1 <= Off1
+	when t_1 = Off1 sync require1 do {t_1 := 0} goto waiting;
 
-loc idle: while t_1 <= per1 wait {}
-	when t_1 = per1 sync require1 do {t_1'=0} goto waiting;
+loc idle: invariant t_1 <= per1
+	when t_1 = per1 sync require1 do {t_1 := 0} goto waiting;
 
-loc waiting: while t_1 <= per1 wait {}
+loc waiting: invariant t_1 <= per1
 	when True sync done1 do {} goto idle;
 
 end
@@ -90,53 +87,57 @@ automaton T_2
 
 synclabs: done2, require2;
 
-initially init_s;
+loc init_s: invariant t_2 <= Off2
+	when t_2 = Off2 sync require2 do {t_2 := 0} goto waiting;
 
-loc init_s: while t_2 <= Off2 wait {}
-	when t_2 = Off2 sync require2 do {t_2'=0} goto waiting;
+loc idle: invariant t_2 <= per2
+	when t_2 = per2 sync require2 do {t_2 := 0} goto waiting;
 
-loc idle: while t_2 <= per2 wait {}
-	when t_2 = per2 sync require2 do {t_2'=0} goto waiting;
-
-loc waiting: while t_2 <= per2 wait {}
+loc waiting: invariant t_2 <= per2
 	when True sync done2 do {} goto idle;
 
 end
 
---automaton T_3
+(*--automaton T_3
 
 --
 --synclabs: done3, require3;
 --
 --initially init_s;
 --
---loc init_s: while t_3 <= Off3 wait {}
---	when t_3 = Off3 sync require3 do {t_3'=0} goto waiting;
+--loc init_s: invariant t_3 <= Off3
+--	when t_3 = Off3 sync require3 do {t_3 := 0} goto waiting;
 --
---loc idle: while t_3 <= per3 wait {}
+--loc idle: invariant t_3 <= per3
 --	when t_3 = per3 sync require3 do {t_3' = 0} goto waiting;
 --
---loc waiting: while t_3 <= per3 wait {}
+--loc waiting: invariant t_3 <= per3
 --	when True sync done3 do {} goto idle;
 --
---end
+--end*)
+(************************************************************)
+(* Initial state *)
+(************************************************************)
 
-var init  : region;
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	loc[stopper] = f_1_r &
 
-init := loc[stopper] = f_1_r &
 	loc[scheduler_P_Application] = active_non_1_non_2_non_3 &
 	loc[T_1] = init_s &
 	loc[T_2] = init_s &
---	loc[T_3]= init_s &
+(*--	loc[T_3]= init_s &*)
 
 x_1 = 0 &
 x_2 = 0 &
 x_3 = 0 &
 t_1 = 0 &
 t_2 = 0 &
---t_3 = 0 &
+(* t_3 = 0 & *)
 time = 0 
--- & deadlineBasic = 24
+(*-- & deadlineBasic = 24
 -- &
 ---------
 --Etude 1--
@@ -148,5 +149,23 @@ time = 0
 --per3 = 20 &
 --Off1 = 0 &
 --Off2 = 0 
---& Off3 = 0
+--& Off3 = 0*)
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& deadlineBasic >= 0
+	& WCET_2 >= 0
+	& WCET_1 >= 0
+	& per1 >= 0
+	& Off1 >= 0
+	& per2 >= 0
+	& Off2 >= 0
+
+
 ;
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

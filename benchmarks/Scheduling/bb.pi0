@@ -1,3 +1,4 @@
+property := #synth IM(
 deadlineBasic = 120 &
 WCET_1 = 1 &
 WCET_2 = 2 &
@@ -8,3 +9,4 @@ per3 = 20 &
 Off1 = 0 &
 Off2 = 0 &
 Off3 = 0
+);
