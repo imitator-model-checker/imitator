@@ -1,0 +1,2 @@
+
+property := #synth AGnot(loc[checker] = error);
