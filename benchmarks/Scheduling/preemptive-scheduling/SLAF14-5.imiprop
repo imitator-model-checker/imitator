@@ -10,20 +10,9 @@
  *                 Étienne André, Giuseppe Lipari, Hoang Gia Nguyen and Youcheng Sun; Sched5
  *             ''Toward Parametric Timed Interfaces for Real-Time Components'' (2014) by 
  *                 Youcheng Sun, Giuseppe Lipari, Étienne André and Laurent Fribourg
- * Created: < 2015/10/30
+ * Created: 2020/08/18
  * Last modified: 2020/08/18
  * IMITATOR version: 3
  ************************************************************)
 
-property := #synth BCcover(
- (* t4_C = 10& t5_C = 20 *)
-
-(*	t4_C = 5..15
-& 	t5_C = 15..25*)
-
-(*	t4_C = 20..30
-& 	t5_C = 15..25*)
-
-	t4_C = 10..50
-& 	t5_C = 10..50
-);
+property := #synth AGnot(loc[OBS_dline] = dline_loc_miss);

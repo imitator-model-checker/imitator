@@ -11,15 +11,10 @@
  * References: ''Toward Parametric Timed Interfaces for Real-Time Components'' (2014) by 
  *                  Youcheng Sun, Giuseppe Lipari, Étienne André and Laurent Fribourg
  *
- * Date: 2014/04/01
+ * Date: 2015/10/30
  * Last modified: 2020/08/18
- * IMITATOR version: 3 
+ * IMITATOR version: 3
  ************************************************************)
 
-property := #synth BCcover(
- (*t2_C = 5 & t3_C = 20*)
 
-	t2_C = 0..100
-& 	t3_C = 5..150
-& 	t3_arr_P = 20..55
-);
+property := #synth AGnot(loc[OBS_dline] = dline_loc_miss);

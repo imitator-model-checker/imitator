@@ -1,9 +1,12 @@
 (*
  * Author: Giuseppe Lipari
  * Date: January 2014
- * IMITATOR version: 2.6
+ * Last modified: 2020/08/18
+ * IMITATOR version: 3
 *)
 
+property := #synth IM(
 
 t1_arr_P = 5
 & t2_arr_P = 7
+);
