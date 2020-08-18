@@ -1,17 +1,15 @@
 (************************************************************
  *                         IMITATOR
  *
- *        IMITATOR fmtv1A3-v2.imi -mode EF -merge -incl -output-result && python parseIMI.py fmtv1A3-v2.res e2e
- * 
  * Modeling the FMTV challenge, problem 1A for n=3
  * References      : "Verification of Two Real-Time Systems Using Parametric Timed Automata" (2015) by 
- *                      Youcheng Sun, Etienne Andre and Giuseppe Lipari
- * Author          : Etienne Andre and Youcheng Sun
+ *                      Youcheng Sun, Étienne André and Giuseppe Lipari
+ * Author          : Étienne André and Youcheng Sun
+ *
  * Created         : 2015/03/19
- * Last modified   : 2018/09/07
+ * Last modified   : 2020/08/18
  *
- * IMITATOR version: 2.10.3
- *
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -229,13 +227,13 @@ end (* T4 *)
 
 
 (************************************************************)
-(* Analysis *)
+(* Initial state *)
 (************************************************************)
 
-init := True
-	(*------------------------------------------------------------
-	   INITIAL LOCATION
-	  ------------------------------------------------------------*)
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
 	& loc[cameraT1T2] = camera0
 	& loc[T3] = T3preinit
 	& loc[T4] = T4preinit
@@ -286,6 +284,7 @@ init := True
 ;
 
 
-property := unreachable loc[T4] = T4end_ok;
-
-projectresult(e2e);
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

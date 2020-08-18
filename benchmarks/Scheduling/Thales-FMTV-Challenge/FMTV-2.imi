@@ -1,17 +1,15 @@
 (**************************************************************************
  *                         IMITATOR
  *
- *        IMITATOR fmtv-c2-v2.imi -mode EF -merge -incl -output-result && python parseIMI.py fmtv-c2-v2.res D
- *
  * Model for Challenge 2 of FMTV 15 challenge at the WATERS workshop 
  * References      : "Verification of Two Real-Time Systems Using Parametric Timed Automata" (2015) by 
- *                      Youcheng Sun, Etienne Andre and Giuseppe Lipari
+ *                      Youcheng Sun, Étienne André and Giuseppe Lipari
  *
  * Author          : G. Lipari and Youcheng Sun
  * Created         : 2015/xx/xx (< 2015/10/30)
- * Last modified   : 2018/09/07
+ * Last modified   : 2020/08/18
  *
- * IMITATOR version: 2.10
+ * IMITATOR version: 3
  **************************************************************************)
 
 var
@@ -19,7 +17,7 @@ var
     (** CONSTANTS **)
  
     P6 = 100,
-    J6 = 20, -- the jitter of task 6
+    J6 = 20, (*the jitter of task 6*)
     C6_seg1_max = 4,
     C6_seg1_min = 4,
     C6_seg2_max = 10,
@@ -61,136 +59,136 @@ var
 automaton T6
 synclabs: T6_arr, T6_start, T6_dis, T6_pre, T6_act, T7_act, T5_act, T6_end, miss_event;
 
-loc T6_idle: invariant p6 <= P6      -- waiting for activation 
+loc T6_idle: invariant p6 <= P6      (*ing for activation *)
     when p6 = P6 
 	 do {p6  :=  0, j6 := 0, delay := 0}
 	 goto T6_jitter_pre;
 
 
-loc T6_jitter_pre: invariant j6 <= J6    -- waiting for jitter
+loc T6_jitter_pre: invariant j6 <= J6    (*ing for jitter*)
     when j6 <= J6
     	 sync T6_arr
 	 do {c6  :=  0}
 	 goto T6_jitter_post;
 
 
-loc T6_jitter_post: invariant c6 <=0    -- siganl the start
+loc T6_jitter_post: invariant c6 <=0    (*signal  the start*)
     when c6 = 0
     	 sync T6_start       
 	 do {c6 := 0}
 	 goto T6_seg1_susp;
 
 
-loc T6_seg1_susp: invariant p6<=P6 stop {c6}   -- the task is suspended
+loc T6_seg1_susp: invariant p6<=P6 stop {c6}   (*the task is suspended*)
     when True 
     	 sync T6_dis
 	 
 	 goto T6_seg1_exec;
 	 
-    when p6=P6                             -- signal a deadline miss
+    when p6=P6                             (*signal a deadline miss*)
     	 sync miss_event
 	 do {p6 := 0}
 	 goto T6_idle;
 
 
-loc T6_seg1_exec: invariant c6<=C6_seg1_max  -- T6 executes
+loc T6_seg1_exec: invariant c6<=C6_seg1_max  (*T6 executes*)
     when c6 >= C6_seg1_min 
     	 sync T5_act
 	 do {c6 := 0}    	 
 	 goto T6_hole_pre;
 
-    when p6 >= P6                            -- dline miss
+    when p6 >= P6                            (*dline miss*)
     	 sync miss_event
 	 do {p6 := 0}
 	 goto T6_idle;
 
-    when True                                -- preemption
+    when True                                (*preemption*)
     	 sync T6_pre
 	 
 	 goto T6_seg1_susp;
 
 
-loc T6_hole_pre: invariant c6 <= 0      -- signal "end of seg1"
+loc T6_hole_pre: invariant c6 <= 0      (*signal "end of seg1"*)
     when c6 = 0 
     	 sync T6_end
 	 
 	 goto T6_hole;
 
--- loc T6_hole_act: invariant c6 <= 0       -- activates T5
+(*-- loc T6_hole_act: invariant c6 <= 0       (*activates T5*)
 --     when c6 = 0
 --     	 sync T5_act
 -- 	 
--- 	 goto T6_hole;
+-- 	 goto T6_hole;*)
     
-loc T6_hole : invariant True            -- waits for end of T5 
+loc T6_hole : invariant True            (*s for end of T5 *)
     when True
     	 sync T6_act
 	 do {c6 := 0}
 	 goto T6_hole_post;
 
 
-loc T6_hole_post : invariant c6 <= 0    -- signal a fake arrival time
+loc T6_hole_post : invariant c6 <= 0    (*signal a fake arrival time*)
     when c6=0      
     	 sync T6_arr
 	 do {c6 := 0}
 	 goto T6_seg2_susp;
 
 
-loc T6_seg2_susp: invariant p6 <= P6 stop {c6}  -- suspended invariant waiting for a schedule dispatch event
+loc T6_seg2_susp: invariant p6 <= P6 stop {c6}  (*suspended invarianting for a schedule dispatch event*)
     when True 
     	 sync T6_dis 
 	 
 	 goto T6_seg2_exec;
 	 
-    when p6=P6              -- miss ? 
+    when p6=P6              (*miss ? *)
     	 sync miss_event
 	 do {p6 := 0}
 	 goto T6_idle;
 
 
 
-loc T6_seg2_exec: invariant c6<=C6_seg2_max  -- executes the second segment
+loc T6_seg2_exec: invariant c6<=C6_seg2_max  (*executes the second segment*)
     when c6 >= C6_seg2_min 
     	 sync T7_act
 	 do {c6 := 0}
 	 goto T6_seg3_exec;
 
-    when p6 >= P6           -- miss ?
+    when p6 >= P6           (*miss ?*)
     	 sync miss_event
 	 do {p6 := 0}
 	 goto T6_idle;
 
-    when True               -- preemption
+    when True               (*preemption*)
     	 sync T6_pre
 	 
 	 goto T6_seg2_susp;
 
 
-loc T6_seg3_exec: invariant c6<=C6_seg3_max  -- executes the third segment
-    when c6 >= C6_seg3_min  -- T6 completed
+loc T6_seg3_exec: invariant c6<=C6_seg3_max  (*executes the third segment*)
+    when c6 >= C6_seg3_min  (*T6 completed*)
     	 sync T6_end
 	 do {c6 := 0}
 	 goto T6_idle;
 
-    when p6 >= P6           -- miss ?
+    when p6 >= P6           (*miss ?*)
     	 sync miss_event
 	 do {p6 := 0}
 	 goto T6_idle;
 
-    when True               -- preemption
+    when True               (*preemption*)
     	 sync T6_pre
 	 
 	 goto T6_seg3_susp;
  
 
 
-loc T6_seg3_susp: invariant p6 <= P6 stop {c6}  -- suspended invariant waiting for a schedule dispatch event
+loc T6_seg3_susp: invariant p6 <= P6 stop {c6}  (*suspended invarianting for a schedule dispatch event*)
     when True 
     	 sync T6_dis 
 	 
 	 goto T6_seg3_exec;
 	 
-    when p6=P6              -- miss ? 
+    when p6=P6              (*miss ? *)
     	 sync miss_event
 	 do {p6 := 0}
 	 goto T6_idle;
@@ -335,7 +333,7 @@ synclabs: miss_event, T6_start, T7_finish;
 loc Obs_idle: invariant True
     when True 
     	 sync T6_start
-	  --delay  :=  0}
+(* 	  delay  :=  0} *)
 	 goto Obs_start;
 
     when True 
@@ -371,13 +369,13 @@ loc sched_loc_ : invariant True
     when True sync T6_arr do {sched_urgent := 0} goto sched_loc_AT6;
     when True sync T5_arr do {sched_urgent := 0} goto sched_loc_AT5;
     when True sync T7_arr do {sched_urgent := 0} goto sched_loc_AT7;
-loc sched_loc_AT2 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT2 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T2_dis goto sched_loc_RT2;
-loc sched_loc_AT6 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT6 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T6_dis goto sched_loc_RT6;
-loc sched_loc_AT5 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT5 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T5_dis goto sched_loc_RT5;
-loc sched_loc_AT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T7_dis goto sched_loc_RT7;
 
 loc sched_loc_RT7 : invariant True
@@ -385,19 +383,19 @@ loc sched_loc_RT7 : invariant True
     when True sync T6_arr do {sched_urgent := 0} goto sched_loc_AT6RT7;
     when True sync T5_arr do {sched_urgent := 0} goto sched_loc_AT5RT7;
     when True sync T7_end do { sched_urgent := 0 } goto sched_loc_ET7;
-loc sched_loc_ET7 : invariant sched_urgent <= 0 wait
+loc sched_loc_ET7 : invariant sched_urgent <= 0
     when sched_urgent = 0   goto sched_loc_;
-loc sched_loc_AT2RT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT2RT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T7_pre goto sched_loc_AT2WT7;
-loc sched_loc_AT2WT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT2WT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T2_dis goto sched_loc_RT2WT7;
-loc sched_loc_AT6RT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT6RT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T7_pre goto sched_loc_AT6WT7;
-loc sched_loc_AT6WT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT6WT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T6_dis goto sched_loc_RT6WT7;
-loc sched_loc_AT5RT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT5RT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T7_pre goto sched_loc_AT5WT7;
-loc sched_loc_AT5WT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT5WT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T5_dis goto sched_loc_RT5WT7;
 
 loc sched_loc_RT5 : invariant True
@@ -405,30 +403,30 @@ loc sched_loc_RT5 : invariant True
     when True sync T6_arr do {sched_urgent := 0} goto sched_loc_AT6RT5;
     when True sync T7_arr do {sched_urgent := 0} goto sched_loc_RT5WT7;
     when True sync T5_end do { sched_urgent := 0 } goto sched_loc_ET5;
-loc sched_loc_ET5 : invariant sched_urgent <= 0 wait
+loc sched_loc_ET5 : invariant sched_urgent <= 0
     when sched_urgent = 0   goto sched_loc_;
-loc sched_loc_AT2RT5 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT2RT5 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T5_pre goto sched_loc_AT2WT5;
-loc sched_loc_AT2WT5 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT2WT5 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T2_dis goto sched_loc_RT2WT5;
-loc sched_loc_AT6RT5 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT6RT5 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T5_pre goto sched_loc_AT6WT5;
-loc sched_loc_AT6WT5 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT6WT5 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T6_dis goto sched_loc_RT6WT5;
 
 loc sched_loc_RT5WT7 : invariant True
     when True sync T2_arr do {sched_urgent := 0} goto sched_loc_AT2RT5WT7;
     when True sync T6_arr do {sched_urgent := 0} goto sched_loc_AT6RT5WT7;
     when True sync T5_end do { sched_urgent := 0 } goto sched_loc_ET5WT7;
-loc sched_loc_ET5WT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_ET5WT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T7_dis  goto sched_loc_RT7;
-loc sched_loc_AT2RT5WT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT2RT5WT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T5_pre goto sched_loc_AT2WT5WT7;
-loc sched_loc_AT2WT5WT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT2WT5WT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T2_dis goto sched_loc_RT2WT5WT7;
-loc sched_loc_AT6RT5WT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT6RT5WT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T5_pre goto sched_loc_AT6WT5WT7;
-loc sched_loc_AT6WT5WT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT6WT5WT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T6_dis goto sched_loc_RT6WT5WT7;
 
 loc sched_loc_RT6 : invariant True
@@ -436,43 +434,43 @@ loc sched_loc_RT6 : invariant True
     when True sync T5_arr do {sched_urgent := 0} goto sched_loc_RT6WT5;
     when True sync T7_arr do {sched_urgent := 0} goto sched_loc_RT6WT7;
     when True sync T6_end do { sched_urgent := 0 } goto sched_loc_ET6;
-loc sched_loc_ET6 : invariant sched_urgent <= 0 wait
+loc sched_loc_ET6 : invariant sched_urgent <= 0
     when sched_urgent = 0   goto sched_loc_;
-loc sched_loc_AT2RT6 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT2RT6 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T6_pre goto sched_loc_AT2WT6;
-loc sched_loc_AT2WT6 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT2WT6 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T2_dis goto sched_loc_RT2WT6;
 
 loc sched_loc_RT6WT7 : invariant True
     when True sync T2_arr do {sched_urgent := 0} goto sched_loc_AT2RT6WT7;
     when True sync T5_arr do {sched_urgent := 0} goto sched_loc_RT6WT5WT7;
     when True sync T6_end do { sched_urgent := 0 } goto sched_loc_ET6WT7;
-loc sched_loc_ET6WT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_ET6WT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T7_dis  goto sched_loc_RT7;
-loc sched_loc_AT2RT6WT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT2RT6WT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T6_pre goto sched_loc_AT2WT6WT7;
-loc sched_loc_AT2WT6WT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT2WT6WT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T2_dis goto sched_loc_RT2WT6WT7;
 
 loc sched_loc_RT6WT5 : invariant True
     when True sync T2_arr do {sched_urgent := 0} goto sched_loc_AT2RT6WT5;
     when True sync T7_arr do {sched_urgent := 0} goto sched_loc_RT6WT5WT7;
     when True sync T6_end do { sched_urgent := 0 } goto sched_loc_ET6WT5;
-loc sched_loc_ET6WT5 : invariant sched_urgent <= 0 wait
+loc sched_loc_ET6WT5 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T5_dis  goto sched_loc_RT5;
-loc sched_loc_AT2RT6WT5 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT2RT6WT5 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T6_pre goto sched_loc_AT2WT6WT5;
-loc sched_loc_AT2WT6WT5 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT2WT6WT5 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T2_dis goto sched_loc_RT2WT6WT5;
 
 loc sched_loc_RT6WT5WT7 : invariant True
     when True sync T2_arr do {sched_urgent := 0} goto sched_loc_AT2RT6WT5WT7;
     when True sync T6_end do { sched_urgent := 0 } goto sched_loc_ET6WT5WT7;
-loc sched_loc_ET6WT5WT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_ET6WT5WT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T5_dis  goto sched_loc_RT5WT7;
-loc sched_loc_AT2RT6WT5WT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT2RT6WT5WT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T6_pre goto sched_loc_AT2WT6WT5WT7;
-loc sched_loc_AT2WT6WT5WT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_AT2WT6WT5WT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T2_dis goto sched_loc_RT2WT6WT5WT7;
 
 loc sched_loc_RT2 : invariant True
@@ -480,51 +478,51 @@ loc sched_loc_RT2 : invariant True
     when True sync T5_arr do {sched_urgent := 0} goto sched_loc_RT2WT5;
     when True sync T7_arr do {sched_urgent := 0} goto sched_loc_RT2WT7;
     when True sync T2_end do { sched_urgent := 0 } goto sched_loc_ET2;
-loc sched_loc_ET2 : invariant sched_urgent <= 0 wait
+loc sched_loc_ET2 : invariant sched_urgent <= 0
     when sched_urgent = 0   goto sched_loc_;
 
 loc sched_loc_RT2WT7 : invariant True
     when True sync T6_arr do {sched_urgent := 0} goto sched_loc_RT2WT6WT7;
     when True sync T5_arr do {sched_urgent := 0} goto sched_loc_RT2WT5WT7;
     when True sync T2_end do { sched_urgent := 0 } goto sched_loc_ET2WT7;
-loc sched_loc_ET2WT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_ET2WT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T7_dis  goto sched_loc_RT7;
 
 loc sched_loc_RT2WT5 : invariant True
     when True sync T6_arr do {sched_urgent := 0} goto sched_loc_RT2WT6WT5;
     when True sync T7_arr do {sched_urgent := 0} goto sched_loc_RT2WT5WT7;
     when True sync T2_end do { sched_urgent := 0 } goto sched_loc_ET2WT5;
-loc sched_loc_ET2WT5 : invariant sched_urgent <= 0 wait
+loc sched_loc_ET2WT5 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T5_dis  goto sched_loc_RT5;
 
 loc sched_loc_RT2WT5WT7 : invariant True
     when True sync T6_arr do {sched_urgent := 0} goto sched_loc_RT2WT6WT5WT7;
     when True sync T2_end do { sched_urgent := 0 } goto sched_loc_ET2WT5WT7;
-loc sched_loc_ET2WT5WT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_ET2WT5WT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T5_dis  goto sched_loc_RT5WT7;
 
 loc sched_loc_RT2WT6 : invariant True
     when True sync T5_arr do {sched_urgent := 0} goto sched_loc_RT2WT6WT5;
     when True sync T7_arr do {sched_urgent := 0} goto sched_loc_RT2WT6WT7;
     when True sync T2_end do { sched_urgent := 0 } goto sched_loc_ET2WT6;
-loc sched_loc_ET2WT6 : invariant sched_urgent <= 0 wait
+loc sched_loc_ET2WT6 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T6_dis  goto sched_loc_RT6;
 
 loc sched_loc_RT2WT6WT7 : invariant True
     when True sync T5_arr do {sched_urgent := 0} goto sched_loc_RT2WT6WT5WT7;
     when True sync T2_end do { sched_urgent := 0 } goto sched_loc_ET2WT6WT7;
-loc sched_loc_ET2WT6WT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_ET2WT6WT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T6_dis  goto sched_loc_RT6WT7;
 
 loc sched_loc_RT2WT6WT5 : invariant True
     when True sync T7_arr do {sched_urgent := 0} goto sched_loc_RT2WT6WT5WT7;
     when True sync T2_end do { sched_urgent := 0 } goto sched_loc_ET2WT6WT5;
-loc sched_loc_ET2WT6WT5 : invariant sched_urgent <= 0 wait
+loc sched_loc_ET2WT6WT5 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T6_dis  goto sched_loc_RT6WT5;
 
 loc sched_loc_RT2WT6WT5WT7 : invariant True
     when True sync T2_end do { sched_urgent := 0 } goto sched_loc_ET2WT6WT5WT7;
-loc sched_loc_ET2WT6WT5WT7 : invariant sched_urgent <= 0 wait
+loc sched_loc_ET2WT6WT5WT7 : invariant sched_urgent <= 0
     when sched_urgent = 0 sync T6_dis  goto sched_loc_RT6WT5WT7;
 
 loc sched_loc_stop : invariant True
@@ -536,12 +534,15 @@ end
 
 
 (************************************************************)
-(* Analysis *)
+(* Initial state *)
 (************************************************************)
 
-init:= True 
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
 
-       (* Init scheduler *)
+		(* Init scheduler *)
        & loc[sched_sched] = sched_loc_ 
        & sched_urgent = 0
 
@@ -562,7 +563,7 @@ init:= True
        & loc[T2] = T2_idle
        & c2 = 0 
        & P2_uncertain-28 <= p2 & p2 <= P2_uncertain
-       --& 0 <= p2 & p2 <= P2_uncertain
+(*        & 0 <= p2 & p2 <= P2_uncertain *)
        & P2 - P2_delta <= P2_uncertain & P2_uncertain <= P2 + P2_delta
 
        (* Init Observer *)
@@ -572,7 +573,7 @@ init:= True
         & D >= 0
        ;
 
-       
-property := unreachable loc[Observer] = Obs_stop;
-
-projectresult(D);
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
