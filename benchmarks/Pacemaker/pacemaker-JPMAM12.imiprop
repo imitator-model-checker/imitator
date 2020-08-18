@@ -8,18 +8,9 @@
  * TACAS 2014
  *
  * Author          : Étienne André
- * Created         : 2015/02/25
+ * Created         : 2020/08/18
  * Last modified   : 2020/08/18
  * IMITATOR version: 3
  ************************************************************)
 
-property := #synth IM(
-&	TAVI		= 150
-&	TLRI		= 1000
-&	TPVARP		= 100
-&	TVRP		= 150
-&	TURI		= 400
-&	TPVAB		= 50
-&	Aminwait	= 0 (*random value here !*)
-&	Amaxwait	= 1000 (*random value here !*)
-);
+property := #synth AGnot(loc[monitor5a] = monitor5a_BAD);

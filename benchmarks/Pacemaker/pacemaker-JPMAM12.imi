@@ -7,10 +7,10 @@
  * Zhihao Jiang, Miroslav Pajic, Salar Moarref, Rajeev Alur, Rahul Mangharam
  * TACAS 2014
  *
- * Author          : Etienne Andre
+ * Author          : Étienne André
  * Created         : 2015/02/11
- * Last modified   : 2015/02/25
- * IMITATOR version: 2.6.2
+ * Last modified   : 2020/08/18
+ * IMITATOR version: 3
  ************************************************************)
 
 var 
@@ -46,15 +46,15 @@ var
 (************************************************************)
 synclabs: AP, AS, VP, VS;
 
-loc LRI: while t_LRI <= TLRI - TAVI wait {}
-	when True sync VP do {t_LRI' = 0} goto LRI;
-	when True sync VS do {t_LRI' = 0} goto LRI;
-	when t_LRI >= TLRI - TAVI sync AP do {t_LRI' = 0} goto LRI;
+loc LRI: invariant t_LRI <= TLRI - TAVI
+	when True sync VP do {t_LRI := 0} goto LRI;
+	when True sync VS do {t_LRI := 0} goto LRI;
+	when t_LRI >= TLRI - TAVI sync AP do {t_LRI := 0} goto LRI;
 	when True sync AS goto ASed;
 
-loc ASed: while True wait {}
-	when True sync VP do {t_LRI' = 0} goto LRI;
-	when True sync VS do {t_LRI' = 0} goto LRI;
+loc ASed: invariant True
+	when True sync VP do {t_LRI := 0} goto LRI;
+	when True sync VS do {t_LRI := 0} goto LRI;
 
 end (*LRI*)
 
@@ -65,18 +65,18 @@ end (*LRI*)
 (************************************************************)
 synclabs: AP, AS, VP, VS;
 
-loc Idle: while True wait {}
-	when True sync AP do {t_AVI' = 0, AVIisIdle' = FALSE} goto AVI;
-	when True sync AS do {t_AVI' = 0, AVIisIdle' = FALSE} goto AVI;
+loc Idle: invariant True
+	when True sync AP do {t_AVI := 0, AVIisIdle := FALSE} goto AVI;
+	when True sync AS do {t_AVI := 0, AVIisIdle := FALSE} goto AVI;
 
-loc AVI: while t_AVI <= TAVI wait {}
+loc AVI: invariant t_AVI <= TAVI
 	when True sync VS goto Idle;
-	when t_AVI >= TAVI & clk >= TURI sync VP do {AVIisIdle' = TRUE} goto Idle;
+	when t_AVI >= TAVI & clk >= TURI sync VP do {AVIisIdle := TRUE} goto Idle;
 	when t_AVI >= TAVI & clk < TURI goto WaitURI;
 
-loc WaitURI: while clk <= TURI wait {}
-	when True sync VS do {AVIisIdle' = TRUE} goto Idle;
-	when clk >= TURI sync VP do {AVIisIdle' = TRUE} goto Idle;
+loc WaitURI: invariant clk <= TURI
+	when True sync VS do {AVIisIdle := TRUE} goto Idle;
+	when clk >= TURI sync VP do {AVIisIdle := TRUE} goto Idle;
 
 
 end (*AVI*)
@@ -88,9 +88,9 @@ end (*AVI*)
 (************************************************************)
 synclabs: VP, VS;
 
-loc URI: while True wait {}
-	when True sync VP do {clk' = 0} goto URI;
-	when True sync VS do {clk' = 0} goto URI;
+loc URI: invariant True
+	when True sync VP do {clk := 0} goto URI;
+	when True sync VS do {clk := 0} goto URI;
 
 end (*URI*)
 
@@ -101,44 +101,44 @@ end (*URI*)
 (************************************************************)
 synclabs: AR, AS, Aget, VP, VS, PVARPbacktoIdle;
 
-loc Idle: while True wait {}
-	when True sync VP do {t_PVARP' = 0, PVARPisIdle' = FALSE} goto PVAB;
-	when True sync VS do {t_PVARP' = 0, PVARPisIdle' = FALSE} goto PVAB;
-	when True sync Aget do {t_PVARP' = 0, PVARPisIdle' = FALSE} goto inter;
+loc Idle: invariant True
+	when True sync VP do {t_PVARP := 0, PVARPisIdle := FALSE} goto PVAB;
+	when True sync VS do {t_PVARP := 0, PVARPisIdle := FALSE} goto PVAB;
+	when True sync Aget do {t_PVARP := 0, PVARPisIdle := FALSE} goto inter;
 
 (* ------------------------------------------------------------ *)
 (** COMMITTED **)
-(*loc inter: while True wait {}
+(*loc inter: invariant True
 	when True sync AS goto Idle;*)
 
 (* Replaced with the following gadget *)
 
-loc inter: while t_PVARP = 0 wait {}
+loc inter: invariant t_PVARP = 0
 	(* Easy case: loc[AVI] = idle: committed is urgent *)
-	when AVIisIdle = TRUE sync AS do {PVARPisIdle' = TRUE} goto Idle;
+	when AVIisIdle = TRUE sync AS do {PVARPisIdle := TRUE} goto Idle;
 	(* Less easy case: loc[AVI] =!= idle: wait! *)
 	when AVIisIdle = FALSE goto Wait;
 
-loc Wait: while True wait {}
-	when True sync VP do {t_PVARP' = 0} goto Urgent;
-	when True sync VS do {t_PVARP' = 0} goto Urgent;
+loc Wait: invariant True
+	when True sync VP do {t_PVARP := 0} goto Urgent;
+	when True sync VS do {t_PVARP := 0} goto Urgent;
 
-loc Urgent: while t_PVARP = 0 wait {}
-	when t_PVARP = 0 sync AS do {PVARPisIdle' = TRUE} goto Idle;
+loc Urgent: invariant t_PVARP = 0
+	when t_PVARP = 0 sync AS do {PVARPisIdle := TRUE} goto Idle;
 
 (* END gadget for committed *)
 (* ------------------------------------------------------------ *)
 
-loc PVAB: while t_PVARP <= TPVAB wait {}
+loc PVAB: invariant t_PVARP <= TPVAB
 	when t_PVARP >= TPVAB goto PVARP;
 
-loc PVARP: while t_PVARP <= TPVARP wait {}
-	when True sync Aget do {x_urgent' = 0} goto inter1;
-	when t_PVARP >= TPVARP do {PVARPisIdle' = TRUE} sync PVARPbacktoIdle goto Idle;
+loc PVARP: invariant t_PVARP <= TPVARP
+	when True sync Aget do {x_urgent := 0} goto inter1;
+	when t_PVARP >= TPVARP do {PVARPisIdle := TRUE} sync PVARPbacktoIdle goto Idle;
 
 (** COMMITTED **)
 (* In fact, urgent is OK because AR is not synchronized with anyone else *)
-loc inter1: while x_urgent = 0 wait {}
+loc inter1: invariant x_urgent = 0
 	when x_urgent = 0 sync AR goto PVARP;
 
 
@@ -151,9 +151,9 @@ end (*PVARP*)
 (************************************************************)
 synclabs: AP, AS, Aget, Vget, VP, VS, PVARPbacktoIdle;
 
-loc Idle: while True wait {}
-	when True sync Vget do {t_VRP' = 0} goto inter;
-	when True sync VP do {t_VRP' = 0} goto VRP;
+loc Idle: invariant True
+	when True sync Vget do {t_VRP := 0} goto inter;
+	when True sync VP do {t_VRP := 0} goto VRP;
 	(* To prevent blocking *)
 	when True sync AP goto Idle;
 	when True sync AS goto Idle;
@@ -161,10 +161,10 @@ loc Idle: while True wait {}
 
 (* ------------------------------------------------------------ *)
 (** COMMITTED **)
-(*loc inter: while True wait {}
-	when True sync VS do {t_VRP' = 0} goto VRP;*)
+(*loc inter: invariant True
+	when True sync VS do {t_VRP := 0} goto VRP;*)
 
-loc inter: while t_VRP = 0 wait {}
+loc inter: invariant t_VRP = 0
 	(* Ready *)
 	when AVIisIdle = FALSE & PVARPisIdle = TRUE sync VS goto VRP;
 	(* Not ready...*)
@@ -173,37 +173,37 @@ loc inter: while t_VRP = 0 wait {}
 	when AVIisIdle = TRUE & PVARPisIdle = FALSE goto bNOKdNOK;
 
 (* AVI(b) not ready; PVARP(d) not ready *)
-loc bNOKdNOK: while True wait {}
+loc bNOKdNOK: invariant True
 	when True sync AP goto bOKdNOK;
-	when True sync AS do {t_VRP' = 0} goto bOKdOK;
+	when True sync AS do {t_VRP := 0} goto bOKdOK;
 	when True sync PVARPbacktoIdle goto bNOKdOK;
 	(* To prevent blocking *)
 	when True sync Aget goto bNOKdNOK;
 
 (* AVI(b) ready; PVARP(d) not ready *)
-loc bOKdNOK: while True wait {}
-	when True sync PVARPbacktoIdle do {t_VRP' = 0} goto bOKdOK;
+loc bOKdNOK: invariant True
+	when True sync PVARPbacktoIdle do {t_VRP := 0} goto bOKdOK;
 	when True sync AS goto bNOKdOK; (* hopefully correct! *)
 	(* To prevent blocking *)
 	when True sync Aget goto bOKdNOK;
 
 (* AVI(b) not ready; PVARP(d) ready *)
-loc bNOKdOK: while True wait {}
-	when True sync AP do {t_VRP' = 0} goto bOKdOK;
+loc bNOKdOK: invariant True
+	when True sync AP do {t_VRP := 0} goto bOKdOK;
 	when True sync Aget goto bNOKdNOK2;
 
 (* AVI(b) not ready; PVARP(d) not ready *)
-loc bNOKdNOK2: while True wait {}
-	when True sync AS do {t_VRP' = 0} goto bOKdOK;
+loc bNOKdNOK2: invariant True
+	when True sync AS do {t_VRP := 0} goto bOKdOK;
 
 (* AVI(b) ready; PVARP(d) ready: fire! *)
-loc bOKdOK: while t_VRP = 0 wait {}
+loc bOKdOK: invariant t_VRP = 0
 	when t_VRP = 0 sync VS goto VRP;
 
 (* END gadget for committed *)
 (* ------------------------------------------------------------ *)
 
-loc VRP: while t_VRP <= TVRP wait {}
+loc VRP: invariant t_VRP <= TVRP
 	when t_VRP >= TVRP goto Idle;
 	(* To prevent blocking *)
 	when True sync AP goto VRP;
@@ -221,9 +221,9 @@ end (*VRP*)
 (************************************************************)
 synclabs: Aget, AP;
 
-loc AReady: while x < Amaxwait wait {}
-	when True sync AP do {x' = 0} goto AReady;
-	when x > Aminwait sync Aget do {x' = 0} goto AReady;
+loc AReady: invariant x < Amaxwait
+	when True sync AP do {x := 0} goto AReady;
+	when x > Aminwait sync Aget do {x := 0} goto AReady;
 
 end (*RHM*)
 
@@ -234,26 +234,26 @@ end (*RHM*)
 (************************************************************)
 synclabs: VP, VS;
 
-loc wait_1st: while True wait {}
-	when True sync VP do {t_5a' = 0} goto wait_2nd;
-	when True sync VS do {t_5a' = 0} goto wait_2nd;
+loc wait_1st: invariant True
+	when True sync VP do {t_5a := 0} goto wait_2nd;
+	when True sync VS do {t_5a := 0} goto wait_2nd;
 
-loc wait_2nd: while True wait {}
-	when True sync VP do {x_urgent' = 0} goto two_a;
-	when True sync VS do {x_urgent' = 0} goto two_a;
+loc wait_2nd: invariant True
+	when True sync VP do {x_urgent := 0} goto two_a;
+	when True sync VS do {x_urgent := 0} goto two_a;
 
-loc two_a: while x_urgent = 0 wait {}
-	when x_urgent = 0 do {t_5a' = 0} goto wait_2nd;
-	when x_urgent = 0 && t_5a > TLRI do {t_5a' = 0} goto monitor5a_BAD;
+loc two_a: invariant x_urgent = 0
+	when x_urgent = 0 do {t_5a := 0} goto wait_2nd;
+	when x_urgent = 0 && t_5a > TLRI do {t_5a := 0} goto monitor5a_BAD;
 
 (* Sink location (stop time) *)
-loc monitor5a_BAD: while x_urgent = 0 wait {}
+loc monitor5a_BAD: invariant x_urgent = 0
 
 end (* monitor5a *)
 
 
 (************************************************************)
-(* Analysis *)
+(* Initial state *)
 (************************************************************)
 
 init := True
@@ -314,7 +314,5 @@ init := True
 	& TURI		= 400
 	& TPVAB		= 50*)
 ;
-
-property := unreachable loc[monitor5a] = monitor5a_BAD;
 
 end

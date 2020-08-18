@@ -7,10 +7,10 @@
  * Marco Diciolla, Chang Hwan Peter Kim, Marta Kwiatkowska and Alexandru Mereacre
  * 2014
  *
- * Author          : Etienne Andre
+ * Author          : Étienne André
  * Created         : 2015/02/11
- * Last modified   : 2015/02/11
- * IMITATOR version: 2.6.2
+ * Last modified   : 2020/08/18
+ * IMITATOR version: 3
  ************************************************************)
 
 var 	t, x
@@ -33,16 +33,16 @@ var 	t, x
 (************************************************************)
 synclabs: Aget, AP;
 
-loc Q: while True wait {}
-	when t >= PP sync Aget do {t' = 0} goto Qprime;
+loc Q: invariant True
+	when t >= PP sync Aget do {t := 0} goto Qprime;
 	when True sync AP do {} goto Qsecond;
 
-loc Qprime: while True wait {}
-	when t >= PP do {t' = 0} goto Qprime;
-	when x >= AERP do {x' = 0} goto Q;
+loc Qprime: invariant True
+	when t >= PP do {t := 0} goto Qprime;
+	when x >= AERP do {x := 0} goto Q;
 
-loc Qsecond: while True wait {}
-	when True sync Aget do {x' = 0} goto Qprime;
+loc Qsecond: invariant True
+	when True sync Aget do {x := 0} goto Qprime;
 
 end (*atrium*)
 
@@ -53,11 +53,11 @@ end (*atrium*)
 (************************************************************)
 synclabs: Aget, CDI;
 
-loc C: while True wait {}
+loc C: invariant True
 	when True sync Aget do {} goto Cprime;
 
-loc Cprime: while True wait {}
-	when t >= TAVD sync CDI do {t' = 0} goto C;
+loc Cprime: invariant True
+	when t >= TAVD sync CDI do {t := 0} goto C;
 
 end (*conduction*)
 
@@ -68,15 +68,15 @@ end (*conduction*)
 (************************************************************)
 synclabs: Vget, CD, VP;
 
-loc V: while True wait {}
+loc V: invariant True
 	when True sync CD goto Vprime;
 	when True sync VP goto Vprime;
 
-loc Vprime: while True wait {}
+loc Vprime: invariant True
 	when True sync Vget goto Vsecond;
 
-loc Vsecond: while True wait {}
-	when t >= VERP do {t' = 0} goto V;
+loc Vsecond: invariant True
+	when t >= VERP do {t := 0} goto V;
 
 end (*ventricle*)
 
@@ -87,25 +87,25 @@ end (*ventricle*)
 (************************************************************)
 synclabs: AP, AS, VP, VS;
 
-loc LRI: while t <= TLRImTLAVI wait {}
-	when True sync VP do {t' = 0} goto LRI;
-	when True sync VS do {t' = 0} goto LRI;
-	when t >= TLRImTLAVI sync AP do {t' = 0} goto LRI;
+loc LRI: invariant t <= TLRImTLAVI
+	when True sync VP do {t := 0} goto LRI;
+	when True sync VS do {t := 0} goto LRI;
+	when t >= TLRImTLAVI sync AP do {t := 0} goto LRI;
 	when True sync AS goto ASed;
 
-loc ASed: while True wait {}
-	when True sync VP do {t' = 0} goto LRI;
-	when True sync VS do {t' = 0} goto LRI;
+loc ASed: invariant True
+	when True sync VP do {t := 0} goto LRI;
+	when True sync VS do {t := 0} goto LRI;
 
 end (*LRI*)
 
 
 
 (************************************************************)
-(* Analysis *)
+(* Initial state *)
 (************************************************************)
 
-init := True
+init :=
 	(*------------------------------------------------------------
 	   INITIAL LOCATION
 	  ------------------------------------------------------------*)
