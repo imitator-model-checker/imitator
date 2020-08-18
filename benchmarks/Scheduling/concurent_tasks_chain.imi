@@ -32,14 +32,14 @@ automaton j_1_1
 
 synclabs: Release1, Done1;
 
-loc idling: while time_1_1 <= offset_1_1 stop{wcet_1,bcet_1,priority_1} wait{}
-	when time_1_1 = offset_1_1 do {wcet_1' = wcet_1, bcet_1'= bcet_1, priority_1' = priority_1} sync Release1 goto waiting;
+loc idling: invariant time_1_1 <= offset_1_1 stop{wcet_1,bcet_1,priority_1}
+	when time_1_1 = offset_1_1 do {wcet_1 := wcet_1, bcet_1 :=  bcet_1, priority_1 := priority_1} sync Release1 goto waiting;
 
-loc waiting: while True stop{wcet_1,bcet_1,priority_1} wait{}
-	when True sync Done1 do {priority_1' = priority1_2, bcet_1'=bcet1_2, wcet_1'=wcet1_2} goto end_1_1;
+loc waiting: invariant True stop{wcet_1,bcet_1,priority_1}
+	when True sync Done1 do {priority_1 := priority1_2, bcet_1 := bcet1_2, wcet_1 := wcet1_2} goto end_1_1;
 
-loc end_1_1: while True stop{wcet_1,bcet_1,priority_1} wait{}
-	when True sync Release1 do {wcet_1' = wcet_1, bcet_1'= bcet_1, priority_1' = priority_1}  goto end_1_1;
+loc end_1_1: invariant True stop{wcet_1,bcet_1,priority_1}
+	when True sync Release1 do {wcet_1 := wcet_1, bcet_1 :=  bcet_1, priority_1 := priority_1}  goto end_1_1;
 	when True sync Done1 goto end_1_1;
 
 end
@@ -49,18 +49,18 @@ automaton j_1_2
 
 synclabs: Release1, Done1;
 
-loc init_1: while True wait {}
+loc init_1: invariant True
 	when True sync Done1 goto idling;
-	when True sync Release1 do {wcet_1' = wcet_1, bcet_1'= bcet_1, priority_1' = priority_1}  goto init_1;
+	when True sync Release1 do {wcet_1 := wcet_1, bcet_1 :=  bcet_1, priority_1 := priority_1}  goto init_1;
 
-loc idling: while True wait {}
-	when time_1_2 >= offset_1_2 sync Release1 do {wcet_1' = wcet_1, bcet_1'= bcet_1, priority_1' = priority_1}  goto waiting;
+loc idling: invariant True
+	when time_1_2 >= offset_1_2 sync Release1 do {wcet_1 := wcet_1, bcet_1 :=  bcet_1, priority_1 := priority_1}  goto waiting;
 
-loc waiting: while True wait {}
-	when True sync Done1 do {priority_1' = priority1_3, bcet_1'=bcet1_3, wcet_1'=wcet1_3} goto end_1_2;
+loc waiting: invariant True
+	when True sync Done1 do {priority_1 := priority1_3, bcet_1 := bcet1_3, wcet_1 := wcet1_3} goto end_1_2;
 
-loc end_1_2: while True wait {}
-	when True sync Release1 do {wcet_1' = wcet_1, bcet_1'= bcet_1, priority_1' = priority_1}  goto end_1_2;
+loc end_1_2: invariant True
+	when True sync Release1 do {wcet_1 := wcet_1, bcet_1 :=  bcet_1, priority_1 := priority_1}  goto end_1_2;
 	when True sync Done1 goto end_1_2;
 
 end
@@ -70,22 +70,22 @@ automaton j_1_3
 
 synclabs: Release1, Done1;
 
-loc init_1: while True wait {}
+loc init_1: invariant True
 	when True sync Done1 goto init_2;
-	when True sync Release1 do {wcet_1' = wcet_1, bcet_1'= bcet_1, priority_1' = priority_1}  goto init_1;
+	when True sync Release1 do {wcet_1 := wcet_1, bcet_1 :=  bcet_1, priority_1 := priority_1}  goto init_1;
 
-loc init_2: while True wait {}
+loc init_2: invariant True
 	when True sync Done1 goto idling;
-	when True sync Release1 do {wcet_1' = wcet_1, bcet_1'= bcet_1, priority_1' = priority_1}  goto init_2;
+	when True sync Release1 do {wcet_1 := wcet_1, bcet_1 :=  bcet_1, priority_1 := priority_1}  goto init_2;
 
-loc idling: while True wait {}
-	when time_1_3 >= offset_1_3 sync Release1 do {wcet_1' = wcet_1, bcet_1'= bcet_1, priority_1' = priority_1}  goto waiting;
+loc idling: invariant True
+	when time_1_3 >= offset_1_3 sync Release1 do {wcet_1 := wcet_1, bcet_1 :=  bcet_1, priority_1 := priority_1}  goto waiting;
 
-loc waiting: while True wait {}
-	when True sync Done1 do {priority_1' =priority1_4, bcet_1'=bcet1_4, wcet_1'=wcet1_4} goto end_1_3;
+loc waiting: invariant True
+	when True sync Done1 do {priority_1 :=priority1_4, bcet_1 := bcet1_4, wcet_1 := wcet1_4} goto end_1_3;
 
-loc end_1_3: while True wait {}
-	when True sync Release1 do {wcet_1' = wcet_1, bcet_1'= bcet_1, priority_1' = priority_1}  goto end_1_3;
+loc end_1_3: invariant True
+	when True sync Release1 do {wcet_1 := wcet_1, bcet_1 :=  bcet_1, priority_1 := priority_1}  goto end_1_3;
 	when True sync Done1 goto end_1_3;
 
 end
@@ -95,25 +95,25 @@ automaton j_1_4
 
 synclabs: Release1, Done1;
 
-loc init_1: while True wait {}
+loc init_1: invariant True
 	when True sync Done1 goto init_2;
-	when True sync Release1 do {wcet_1' = wcet_1, bcet_1'= bcet_1, priority_1' = priority_1}  goto init_1;
+	when True sync Release1 do {wcet_1 := wcet_1, bcet_1 :=  bcet_1, priority_1 := priority_1}  goto init_1;
 
-loc init_2: while True wait {}
+loc init_2: invariant True
 	when True sync Done1 goto init_3;
-	when True sync Release1 do {wcet_1' = wcet_1, bcet_1'= bcet_1, priority_1' = priority_1}  goto init_2;
+	when True sync Release1 do {wcet_1 := wcet_1, bcet_1 :=  bcet_1, priority_1 := priority_1}  goto init_2;
 
-loc init_3: while True wait {}
+loc init_3: invariant True
 	when True sync Done1 goto idling;
-	when True sync Release1 do {wcet_1' = wcet_1, bcet_1'= bcet_1, priority_1' = priority_1}  goto init_3;
+	when True sync Release1 do {wcet_1 := wcet_1, bcet_1 :=  bcet_1, priority_1 := priority_1}  goto init_3;
 
-loc idling: while True wait {}
-	when time_1_4 >= offset_1_4 sync Release1 do {wcet_1' = wcet_1, bcet_1'= bcet_1, priority_1' = priority_1}  goto waiting;
+loc idling: invariant True
+	when time_1_4 >= offset_1_4 sync Release1 do {wcet_1 := wcet_1, bcet_1 :=  bcet_1, priority_1 := priority_1}  goto waiting;
 
-loc waiting: while True wait {}
-	when True sync Done1 do {wcet_1' = wcet_1, bcet_1'= bcet_1, priority_1' = priority_1} goto end_1_4;
+loc waiting: invariant True
+	when True sync Done1 do {wcet_1 := wcet_1, bcet_1 :=  bcet_1, priority_1 := priority_1} goto end_1_4;
 
-loc end_1_4: while True wait {}
+loc end_1_4: invariant True
 
 end
 
@@ -124,14 +124,14 @@ automaton j_2_1
 synclabs: Release2, Done2;
 
 
-loc idling: while True stop{wcet_2,bcet_2,priority_2} wait{}
-	when time_2_1 >= offset_2_1 sync Release2 do {wcet_2' = wcet_2, bcet_2'= bcet_2, priority_2' = priority_2} goto waiting;
+loc idling: invariant True stop{wcet_2,bcet_2,priority_2}
+	when time_2_1 >= offset_2_1 sync Release2 do {wcet_2 := wcet_2, bcet_2 :=  bcet_2, priority_2 := priority_2} goto waiting;
 
-loc waiting: while True stop{wcet_2,bcet_2,priority_2} wait{}
-	when True sync Done2 do {priority_2' = priority2_2, bcet_2'=bcet2_2, wcet_2'=wcet2_2} goto end_2_1;
+loc waiting: invariant True stop{wcet_2,bcet_2,priority_2}
+	when True sync Done2 do {priority_2 := priority2_2, bcet_2 := bcet2_2, wcet_2 := wcet2_2} goto end_2_1;
 
-loc end_2_1: while True stop{wcet_2,bcet_2,priority_2} wait{}
-	when True sync Release2 do {wcet_2' = wcet_2, bcet_2'= bcet_2, priority_2' = priority_2} goto end_2_1;
+loc end_2_1: invariant True stop{wcet_2,bcet_2,priority_2}
+	when True sync Release2 do {wcet_2 := wcet_2, bcet_2 :=  bcet_2, priority_2 := priority_2} goto end_2_1;
 	when True sync Done2 goto end_2_1;
 
 end
@@ -140,18 +140,18 @@ automaton j_2_2
 
 synclabs: Release2, Done2;
 
-loc init_1: while True  wait {}
+loc init_1: invariant True 
 	when True sync Done2 goto idling;
-	when True sync Release2 do {wcet_2' = wcet_2, bcet_2'= bcet_2, priority_2' = priority_2} goto init_1;
+	when True sync Release2 do {wcet_2 := wcet_2, bcet_2 :=  bcet_2, priority_2 := priority_2} goto init_1;
 
-loc idling: while True wait {}
-	when time_2_2 >= offset_2_2 sync Release2 do {wcet_2' = wcet_2, bcet_2'= bcet_2, priority_2' = priority_2} goto waiting;
+loc idling: invariant True
+	when time_2_2 >= offset_2_2 sync Release2 do {wcet_2 := wcet_2, bcet_2 :=  bcet_2, priority_2 := priority_2} goto waiting;
 
-loc waiting: while True wait {}
-	when True sync Done2 do {priority_2' = priority2_3, bcet_2'=bcet2_3, wcet_2'=wcet2_3} goto end_2_2;
+loc waiting: invariant True
+	when True sync Done2 do {priority_2 := priority2_3, bcet_2 := bcet2_3, wcet_2 := wcet2_3} goto end_2_2;
 
-loc end_2_2: while True wait {}
-	when True sync Release2 do {wcet_2' = wcet_2, bcet_2'= bcet_2, priority_2' = priority_2} goto end_2_2;
+loc end_2_2: invariant True
+	when True sync Release2 do {wcet_2 := wcet_2, bcet_2 :=  bcet_2, priority_2 := priority_2} goto end_2_2;
 	when True sync Done2 goto end_2_2;
 
 end
@@ -160,21 +160,21 @@ automaton j_2_3
 
 synclabs: Release2, Done2;
 
-loc init_1: while True wait {}
+loc init_1: invariant True
 	when True sync Done2 goto init_2;
-	when True sync Release2 do {wcet_2' = wcet_2, bcet_2'= bcet_2, priority_2' = priority_2} goto init_1;
+	when True sync Release2 do {wcet_2 := wcet_2, bcet_2 :=  bcet_2, priority_2 := priority_2} goto init_1;
 
-loc init_2: while True wait {}
+loc init_2: invariant True
 	when True sync Done2 goto idling;
-	when True sync Release2 do {wcet_2' = wcet_2, bcet_2'= bcet_2, priority_2' = priority_2} goto init_2;
+	when True sync Release2 do {wcet_2 := wcet_2, bcet_2 :=  bcet_2, priority_2 := priority_2} goto init_2;
 
-loc idling: while True wait {}
-	when time_2_3 >= offset_2_3 sync Release2 do {wcet_2' = wcet_2, bcet_2'= bcet_2, priority_2' = priority_2} goto waiting;
+loc idling: invariant True
+	when time_2_3 >= offset_2_3 sync Release2 do {wcet_2 := wcet_2, bcet_2 :=  bcet_2, priority_2 := priority_2} goto waiting;
 
-loc waiting: while True wait {}
-	when True sync Done2 do {wcet_2' = wcet_2, bcet_2'= bcet_2, priority_2' = priority_2} goto end_2_3;
+loc waiting: invariant True
+	when True sync Done2 do {wcet_2 := wcet_2, bcet_2 :=  bcet_2, priority_2 := priority_2} goto end_2_3;
 
-loc end_2_3: while True wait {}
+loc end_2_3: invariant True
 
 end
 
@@ -183,32 +183,37 @@ automaton scheduler
 
 synclabs: Release1, Done1, Release2, Done2;
 
-loc non_1_non_2: while True stop{x_1,x_2} wait{}
-	when True sync Release1 do {x_1' = x_1, x_2'=x_2} goto ok_1_non_2;
-	when True sync Release2 do {x_1' = x_1, x_2'=x_2}goto non_1_ok_2;
+loc non_1_non_2: invariant True stop{x_1,x_2}
+	when True sync Release1 do {x_1 := x_1, x_2 := x_2} goto ok_1_non_2;
+	when True sync Release2 do {x_1 := x_1, x_2 := x_2}goto non_1_ok_2;
 
-loc ok_1_non_2: while x_1 <= wcet_1 stop{x_2} wait{}
-	when x_1 < wcet_1 & priority_1 > priority_2 sync Release2 do {x_1' = x_1, x_2'=x_2} goto ok_1_w_2;
-	when x_1 < wcet_1 & priority_1 < priority_2 sync Release2 do {x_1' = x_1, x_2'=x_2} goto w_1_ok_2;
-	when x_1 >= bcet_1 sync Done1 do {x_1'= 0, x_2'=x_2} goto non_1_non_2;
+loc ok_1_non_2: invariant x_1 <= wcet_1 stop{x_2}
+	when x_1 < wcet_1 & priority_1 > priority_2 sync Release2 do {x_1 := x_1, x_2 := x_2} goto ok_1_w_2;
+	when x_1 < wcet_1 & priority_1 < priority_2 sync Release2 do {x_1 := x_1, x_2 := x_2} goto w_1_ok_2;
+	when x_1 >= bcet_1 sync Done1 do {x_1 :=  0, x_2 := x_2} goto non_1_non_2;
 
-loc non_1_ok_2: while x_2 <= wcet_2 stop{x_1} wait{}
-	when x_2 < wcet_2 & priority_1 > priority_2 sync Release1 do {x_1' = x_1, x_2'=x_2} goto ok_1_w_2;
-	when x_2 < wcet_2 & priority_1 < priority_2 sync Release1 do {x_1' = x_1, x_2'=x_2} goto w_1_ok_2;
-	when x_2 >= bcet_2 sync Done2 do {x_1'= x_1, x_2'=0} goto non_1_non_2;
+loc non_1_ok_2: invariant x_2 <= wcet_2 stop{x_1}
+	when x_2 < wcet_2 & priority_1 > priority_2 sync Release1 do {x_1 := x_1, x_2 := x_2} goto ok_1_w_2;
+	when x_2 < wcet_2 & priority_1 < priority_2 sync Release1 do {x_1 := x_1, x_2 := x_2} goto w_1_ok_2;
+	when x_2 >= bcet_2 sync Done2 do {x_1 :=  x_1, x_2 := 0} goto non_1_non_2;
 
-loc ok_1_w_2: while x_1 <= wcet_1 stop{x_2} wait{}
-	when x_1 >= bcet_1 sync Done1 do {x_1'= 0, x_2'=x_2} goto non_1_ok_2;
+loc ok_1_w_2: invariant x_1 <= wcet_1 stop{x_2}
+	when x_1 >= bcet_1 sync Done1 do {x_1 :=  0, x_2 := x_2} goto non_1_ok_2;
 
-loc w_1_ok_2: while x_2 <= wcet_2 stop{x_1} wait{}
-	when x_2 >= bcet_2 sync Done2 do {x_1'= x_1, x_2'=0} goto ok_1_non_2;
+loc w_1_ok_2: invariant x_2 <= wcet_2 stop{x_1}
+	when x_2 >= bcet_2 sync Done2 do {x_1 :=  x_1, x_2 := 0} goto ok_1_non_2;
 
 end
 
-var init: region;
+(************************************************************)
+(* Initial state *)
+(************************************************************)
 
-
-init:= 	loc[j_1_1] = idling &
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+			loc[j_1_1] = idling &
 			loc[j_1_2] = init_1 &
 			loc[j_1_3] = init_1 &
 			loc[j_1_4] = init_1 &
@@ -225,13 +230,13 @@ init:= 	loc[j_1_1] = idling &
 			time_2_1 = 0 &
 			time_2_2 = 0 &
 			time_2_3 = 0 &
---			offset_1_1 = 0 &
+(*--			offset_1_1 = 0 &
 --			offset_1_2 = 20 &
 --			offset_1_3 = 75 &
 --			offset_1_4 = 130 &
 --			offset_2_1 = 30 &
 --			offset_2_2 = 60 &
---			offset_2_3 = 120 &
+--			offset_2_3 = 120 &*)
 			priority_1 = priority1_1 &
 			wcet_1 = wcet1_1 &
 			bcet_1 = bcet1_1 &
@@ -246,9 +251,9 @@ init:= 	loc[j_1_1] = idling &
 
 			priority2_1 = 3 &
 			priority2_2 = 3 &
-			priority2_3 = 1 --&
+			priority2_3 = 1 &
 
---			bcet1_1 = 10 &
+(*--			bcet1_1 = 10 &
 --			wcet1_1 = 40 &
 --			bcet1_2 = 5 &
 --			wcet1_2 = 10 &
@@ -261,12 +266,37 @@ init:= 	loc[j_1_1] = idling &
 --			bcet2_2 = 5 &
 --			wcet2_2 = 40 &
 --			bcet2_3 = 20 &
---			wcet2_3 = 70 
+--			wcet2_3 = 70 *)
+
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+
+	offset_1_1 >= 0
+	& bcet1_1 >= 0
+	& bcet1_2 >= 0
+	& bcet1_3 >= 0
+	& bcet1_4 >= 0
+	& bcet2_1 >= 0
+	& bcet2_2 >= 0
+	& bcet2_3 >= 0
+	& wcet1_1 >= 0
+	& wcet1_2 >= 0
+	& wcet1_3 >= 0
+	& wcet1_4 >= 0
+	& wcet2_1 >= 0
+	& wcet2_2 >= 0
+	& wcet2_3 >= 0
+	& offset_1_2 >= 0
+	& offset_1_3 >= 0
+	& offset_1_4 >= 0
+	& offset_2_1 >= 0
+	& offset_2_2 >= 0
+	& offset_2_3 >= 0
 ;
 
-			
-
-
-
-
-
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
