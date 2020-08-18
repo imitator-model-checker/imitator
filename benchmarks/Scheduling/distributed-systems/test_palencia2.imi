@@ -1,4 +1,3 @@
-
 (************************************************************
  *                      IMITATOR MODEL                      
  *
@@ -10,6 +9,8 @@
               
  * Created: < 2013/10
  * Last modified: 2018/08/20
+ *
+ * IMITATOR version: 3.0
  ************************************************************)
 
 var 
@@ -59,120 +60,120 @@ var
 automaton pipeline_1
 	synclabs:pipeline_restart_1,task_11_act,task_11_done;
 
-	loc P1_1: while t_asap_1 <= 0 wait
+	loc P1_1: invariant t_asap_1 <= 0
 		 when t_asap_1=0 sync task_11_act goto P1_2;
-	loc P1_2: while t_pipeline_1 <= D_pipeline_1 wait
-		 when t_pipeline_1 <= D_pipeline_1 sync task_11_done do {t_asap_1'=0} goto P1_3;
-	loc P1_3: while t_pipeline_1 <= T_pipeline_1 wait
-		 when t_pipeline_1 = T_pipeline_1 do {t_pipeline_1'=0,t_asap_1'=0} sync pipeline_restart_1 goto P1_1;
+	loc P1_2: invariant t_pipeline_1 <= D_pipeline_1
+		 when t_pipeline_1 <= D_pipeline_1 sync task_11_done do {t_asap_1 := 0} goto P1_3;
+	loc P1_3: invariant t_pipeline_1 <= T_pipeline_1
+		 when t_pipeline_1 = T_pipeline_1 do {t_pipeline_1 := 0,t_asap_1 := 0} sync pipeline_restart_1 goto P1_1;
 end
 
 automaton pipeline_2
 	synclabs:pipeline_restart_2,task_21_act,task_21_done,task_22_act,task_22_done,task_23_act,task_23_done,task_24_act,task_24_done,task_25_act,task_25_done;
 
-	loc P2_1: while t_asap_2 <= 0 wait
+	loc P2_1: invariant t_asap_2 <= 0
 		 when t_asap_2=0 sync task_21_act goto P2_2;
-	loc P2_2: while t_pipeline_2 <= D_pipeline_2 wait
-		 when t_pipeline_2 <= D_pipeline_2 sync task_21_done do {t_asap_2'=0} goto P2_3;
-	loc P2_3: while t_asap_2 <= 0 wait
+	loc P2_2: invariant t_pipeline_2 <= D_pipeline_2
+		 when t_pipeline_2 <= D_pipeline_2 sync task_21_done do {t_asap_2 := 0} goto P2_3;
+	loc P2_3: invariant t_asap_2 <= 0
 		 when t_asap_2=0 sync task_22_act goto P2_4;
-	loc P2_4: while t_pipeline_2 <= D_pipeline_2 wait
-		 when t_pipeline_2 <= D_pipeline_2 sync task_22_done do {t_asap_2'=0} goto P2_5;
-	loc P2_5: while t_asap_2 <= 0 wait
+	loc P2_4: invariant t_pipeline_2 <= D_pipeline_2
+		 when t_pipeline_2 <= D_pipeline_2 sync task_22_done do {t_asap_2 := 0} goto P2_5;
+	loc P2_5: invariant t_asap_2 <= 0
 		 when t_asap_2=0 sync task_23_act goto P2_6;
-	loc P2_6: while t_pipeline_2 <= D_pipeline_2 wait
-		 when t_pipeline_2 <= D_pipeline_2 sync task_23_done do {t_asap_2'=0} goto P2_7;
-	loc P2_7: while t_asap_2 <= 0 wait
+	loc P2_6: invariant t_pipeline_2 <= D_pipeline_2
+		 when t_pipeline_2 <= D_pipeline_2 sync task_23_done do {t_asap_2 := 0} goto P2_7;
+	loc P2_7: invariant t_asap_2 <= 0
 		 when t_asap_2=0 sync task_24_act goto P2_8;
-	loc P2_8: while t_pipeline_2 <= D_pipeline_2 wait
-		 when t_pipeline_2 <= D_pipeline_2 sync task_24_done do {t_asap_2'=0} goto P2_9;
-	loc P2_9: while t_asap_2 <= 0 wait
+	loc P2_8: invariant t_pipeline_2 <= D_pipeline_2
+		 when t_pipeline_2 <= D_pipeline_2 sync task_24_done do {t_asap_2 := 0} goto P2_9;
+	loc P2_9: invariant t_asap_2 <= 0
 		 when t_asap_2=0 sync task_25_act goto P2_10;
-	loc P2_10: while t_pipeline_2 <= D_pipeline_2 wait
-		 when t_pipeline_2 <= D_pipeline_2 sync task_25_done do {t_asap_2'=0} goto P2_11;
-	loc P2_11: while t_pipeline_2 <= T_pipeline_2 wait
-		 when t_pipeline_2 = T_pipeline_2 do {t_pipeline_2'=0,t_asap_2'=0} sync pipeline_restart_2 goto P2_1;
+	loc P2_10: invariant t_pipeline_2 <= D_pipeline_2
+		 when t_pipeline_2 <= D_pipeline_2 sync task_25_done do {t_asap_2 := 0} goto P2_11;
+	loc P2_11: invariant t_pipeline_2 <= T_pipeline_2
+		 when t_pipeline_2 = T_pipeline_2 do {t_pipeline_2 := 0,t_asap_2 := 0} sync pipeline_restart_2 goto P2_1;
 end
 
 automaton pipeline_3
 	synclabs:pipeline_restart_3,task_31_act,task_31_done;
 
-	loc P3_1: while t_asap_3 <= 0 wait
+	loc P3_1: invariant t_asap_3 <= 0
 		 when t_asap_3=0 sync task_31_act goto P3_2;
-	loc P3_2: while t_pipeline_3 <= D_pipeline_3 wait
-		 when t_pipeline_3 <= D_pipeline_3 sync task_31_done do {t_asap_3'=0} goto P3_3;
-	loc P3_3: while t_pipeline_3 <= T_pipeline_3 wait
-		 when t_pipeline_3 = T_pipeline_3 do {t_pipeline_3'=0,t_asap_3'=0} sync pipeline_restart_3 goto P3_1;
+	loc P3_2: invariant t_pipeline_3 <= D_pipeline_3
+		 when t_pipeline_3 <= D_pipeline_3 sync task_31_done do {t_asap_3 := 0} goto P3_3;
+	loc P3_3: invariant t_pipeline_3 <= T_pipeline_3
+		 when t_pipeline_3 = T_pipeline_3 do {t_pipeline_3 := 0,t_asap_3 := 0} sync pipeline_restart_3 goto P3_1;
 end
 
 automaton pipeline_4
 	synclabs:pipeline_restart_4,task_41_act,task_41_done;
 
-	loc P4_1: while t_asap_4 <= 0 wait
+	loc P4_1: invariant t_asap_4 <= 0
 		 when t_asap_4=0 sync task_41_act goto P4_2;
-	loc P4_2: while t_pipeline_4 <= D_pipeline_4 wait
-		 when t_pipeline_4 <= D_pipeline_4 sync task_41_done do {t_asap_4'=0} goto P4_3;
-	loc P4_3: while t_pipeline_4 <= T_pipeline_4 wait
-		 when t_pipeline_4 = T_pipeline_4 do {t_pipeline_4'=0,t_asap_4'=0} sync pipeline_restart_4 goto P4_1;
+	loc P4_2: invariant t_pipeline_4 <= D_pipeline_4
+		 when t_pipeline_4 <= D_pipeline_4 sync task_41_done do {t_asap_4 := 0} goto P4_3;
+	loc P4_3: invariant t_pipeline_4 <= T_pipeline_4
+		 when t_pipeline_4 = T_pipeline_4 do {t_pipeline_4 := 0,t_asap_4 := 0} sync pipeline_restart_4 goto P4_1;
 end
 
 automaton proc_1
 	 synclabs: DEADLINE_MISSED_1, task_11_act,task_11_done,task_21_act,task_21_done,task_25_act,task_25_done;
 
-	loc DEADLINE_MISS: while True wait
-	loc proc_1_000: while True stop {t_task_11,t_task_21,t_task_25} wait
-		when True sync task_11_act do {t_task_11'=0} goto proc_1_100;
-		when True sync task_21_act do {t_task_21'=0} goto proc_1_010;
-		when True sync task_25_act do {t_task_25'=0} goto proc_1_001;
-	loc proc_1_100: while t_task_11 <= C_task_11 stop {t_task_21,t_task_25} wait
+	loc DEADLINE_MISS: invariant True
+	loc proc_1_000: invariant True stop {t_task_11,t_task_21,t_task_25}
+		when True sync task_11_act do {t_task_11 := 0} goto proc_1_100;
+		when True sync task_21_act do {t_task_21 := 0} goto proc_1_010;
+		when True sync task_25_act do {t_task_25 := 0} goto proc_1_001;
+	loc proc_1_100: invariant t_task_11 <= C_task_11 stop {t_task_21,t_task_25}
 		when t_task_25 < C_task_25 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_4 = D_pipeline_4 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_11 = C_task_11 sync task_11_done goto proc_1_000;
-		when t_task_11 < C_task_11 sync task_21_act do {t_task_21'=0} goto proc_1_110;
-		when t_task_11 < C_task_11 sync task_25_act do {t_task_25'=0} goto proc_1_101;
-	loc proc_1_010: while t_task_21 <= C_task_21 stop {t_task_11,t_task_25} wait
+		when t_task_11 < C_task_11 sync task_21_act do {t_task_21 := 0} goto proc_1_110;
+		when t_task_11 < C_task_11 sync task_25_act do {t_task_25 := 0} goto proc_1_101;
+	loc proc_1_010: invariant t_task_21 <= C_task_21 stop {t_task_11,t_task_25}
 		when t_task_25 < C_task_25 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_4 = D_pipeline_4 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
-		when t_task_21 < C_task_21 sync task_11_act do {t_task_11'=0} goto proc_1_110;
+		when t_task_21 < C_task_21 sync task_11_act do {t_task_11 := 0} goto proc_1_110;
 		when t_task_21 = C_task_21 sync task_21_done goto proc_1_000;
-		when t_task_21 < C_task_21 sync task_25_act do {t_task_25'=0} goto proc_1_011;
-	loc proc_1_001: while t_task_25 <= C_task_25 stop {t_task_11,t_task_21} wait
+		when t_task_21 < C_task_21 sync task_25_act do {t_task_25 := 0} goto proc_1_011;
+	loc proc_1_001: invariant t_task_25 <= C_task_25 stop {t_task_11,t_task_21}
 		when t_task_25 < C_task_25 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_4 = D_pipeline_4 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
-		when t_task_25 < C_task_25 sync task_11_act do {t_task_11'=0} goto proc_1_101;
-		when t_task_25 < C_task_25 sync task_21_act do {t_task_21'=0} goto proc_1_011;
+		when t_task_25 < C_task_25 sync task_11_act do {t_task_11 := 0} goto proc_1_101;
+		when t_task_25 < C_task_25 sync task_21_act do {t_task_21 := 0} goto proc_1_011;
 		when t_task_25 = C_task_25 sync task_25_done goto proc_1_000;
-	loc proc_1_110: while t_task_11 <= C_task_11 stop {t_task_21,t_task_25} wait
+	loc proc_1_110: invariant t_task_11 <= C_task_11 stop {t_task_21,t_task_25}
 		when t_task_25 < C_task_25 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_4 = D_pipeline_4 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_11 = C_task_11 sync task_11_done goto proc_1_010;
 		when t_task_21 = C_task_21 sync task_21_done goto proc_1_100;
-		when t_task_11 < C_task_11 sync task_25_act do {t_task_25'=0} goto proc_1_111;
-	loc proc_1_101: while t_task_11 <= C_task_11 stop {t_task_21,t_task_25} wait
+		when t_task_11 < C_task_11 sync task_25_act do {t_task_25 := 0} goto proc_1_111;
+	loc proc_1_101: invariant t_task_11 <= C_task_11 stop {t_task_21,t_task_25}
 		when t_task_25 < C_task_25 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_4 = D_pipeline_4 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_11 = C_task_11 sync task_11_done goto proc_1_001;
-		when t_task_11 < C_task_11 sync task_21_act do {t_task_21'=0} goto proc_1_111;
+		when t_task_11 < C_task_11 sync task_21_act do {t_task_21 := 0} goto proc_1_111;
 		when t_task_25 = C_task_25 sync task_25_done goto proc_1_100;
-	loc proc_1_011: while t_task_21 <= C_task_21 stop {t_task_11,t_task_25} wait
+	loc proc_1_011: invariant t_task_21 <= C_task_21 stop {t_task_11,t_task_25}
 		when t_task_25 < C_task_25 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_4 = D_pipeline_4 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
-		when t_task_21 < C_task_21 sync task_11_act do {t_task_11'=0} goto proc_1_111;
+		when t_task_21 < C_task_21 sync task_11_act do {t_task_11 := 0} goto proc_1_111;
 		when t_task_21 = C_task_21 sync task_21_done goto proc_1_001;
 		when t_task_25 = C_task_25 sync task_25_done goto proc_1_010;
-	loc proc_1_111: while t_task_11 <= C_task_11 stop {t_task_21,t_task_25} wait
+	loc proc_1_111: invariant t_task_11 <= C_task_11 stop {t_task_21,t_task_25}
 		when t_task_25 < C_task_25 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
 		when t_task_25 < C_task_25 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_1 goto DEADLINE_MISS;
@@ -185,92 +186,92 @@ end
 automaton proc_2
 	 synclabs: DEADLINE_MISSED_2,task_22_act,task_22_done,task_24_act,task_24_done;
 
-	 loc idle: while True stop{t_task_22,t_task_24} wait
-		when True sync task_22_act do{Token_22'=1}goto t_22_running;
-		when True sync task_24_act do{Token_24'=1}goto t_24_running;
+	 loc idle: invariant True stop{t_task_22,t_task_24}
+		when True sync task_22_act do{Token_22 := 1}goto t_22_running;
+		when True sync task_24_act do{Token_24 := 1}goto t_24_running;
 
-	loc DEADLINE_MISS: while True wait
-	loc t_22_running: while t_task_22 <= C_task_22 stop {t_task_24} wait
+	loc DEADLINE_MISS: invariant True
+	loc t_22_running: invariant t_task_22 <= C_task_22 stop {t_task_24}
 		when t_task_22 < C_task_22 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
 		when t_task_22 < C_task_22 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
 		when t_task_22 < C_task_22 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
 		when t_task_22 < C_task_22 & t_pipeline_4 = D_pipeline_4 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
-		 when t_task_22 <= 0 sync task_22_act do{Token_22'=1}goto t_22_running;
-		 when t_task_22 > 0 sync task_22_act do{Token_22'=1}goto t_22_running;
-		 when t_task_22 <= 0 sync task_24_act do{Token_24'=1}goto t_22_running;
-		 when t_task_22 > 0 sync task_24_act do{Token_24'=1}goto t_22_running;
-		when t_task_22 = C_task_22 & Token_24=0 sync task_22_done do{Token_22'=0} goto idle;
-		when t_task_22 = C_task_22 & Token_24=1 sync task_22_done do{t_task_24'=0,Token_22'=0} goto t_24_running;
-	loc t_24_running: while t_task_24 <= C_task_24 stop {t_task_22} wait
+		 when t_task_22 <= 0 sync task_22_act do{Token_22 := 1}goto t_22_running;
+		 when t_task_22 > 0 sync task_22_act do{Token_22 := 1}goto t_22_running;
+		 when t_task_22 <= 0 sync task_24_act do{Token_24 := 1}goto t_22_running;
+		 when t_task_22 > 0 sync task_24_act do{Token_24 := 1}goto t_22_running;
+		when t_task_22 = C_task_22 & Token_24=0 sync task_22_done do{Token_22 := 0} goto idle;
+		when t_task_22 = C_task_22 & Token_24=1 sync task_22_done do{t_task_24 := 0,Token_22 := 0} goto t_24_running;
+	loc t_24_running: invariant t_task_24 <= C_task_24 stop {t_task_22}
 		when t_task_24 < C_task_24 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
 		when t_task_24 < C_task_24 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
 		when t_task_24 < C_task_24 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
 		when t_task_24 < C_task_24 & t_pipeline_4 = D_pipeline_4 sync DEADLINE_MISSED_2 goto DEADLINE_MISS;
-		 when t_task_24 <= 0 sync task_22_act do{Token_22'=1}goto t_22_running;
-		 when t_task_24 > 0 sync task_22_act do{Token_22'=1}goto t_24_running;
-		 when t_task_24 <= 0 sync task_24_act do{Token_24'=1}goto t_24_running;
-		 when t_task_24 > 0 sync task_24_act do{Token_24'=1}goto t_24_running;
-		when t_task_24 = C_task_24 & Token_22=0 sync task_24_done do{Token_24'=0} goto idle;
-		when t_task_24 = C_task_24 & Token_22=1 sync task_24_done do{t_task_22'=0,Token_24'=0} goto t_22_running;
+		 when t_task_24 <= 0 sync task_22_act do{Token_22 := 1}goto t_22_running;
+		 when t_task_24 > 0 sync task_22_act do{Token_22 := 1}goto t_24_running;
+		 when t_task_24 <= 0 sync task_24_act do{Token_24 := 1}goto t_24_running;
+		 when t_task_24 > 0 sync task_24_act do{Token_24 := 1}goto t_24_running;
+		when t_task_24 = C_task_24 & Token_22=0 sync task_24_done do{Token_24 := 0} goto idle;
+		when t_task_24 = C_task_24 & Token_22=1 sync task_24_done do{t_task_22 := 0,Token_24 := 0} goto t_22_running;
 end
 
 automaton proc_3
 	 synclabs: DEADLINE_MISSED_3, task_23_act,task_23_done,task_31_act,task_31_done,task_41_act,task_41_done;
 
-	loc DEADLINE_MISS: while True wait
-	loc proc_3_000: while True stop {t_task_23,t_task_31,t_task_41} wait
-		when True sync task_23_act do {t_task_23'=0} goto proc_3_100;
-		when True sync task_31_act do {t_task_31'=0} goto proc_3_010;
-		when True sync task_41_act do {t_task_41'=0} goto proc_3_001;
-	loc proc_3_100: while t_task_23 <= C_task_23 stop {t_task_31,t_task_41} wait
+	loc DEADLINE_MISS: invariant True
+	loc proc_3_000: invariant True stop {t_task_23,t_task_31,t_task_41}
+		when True sync task_23_act do {t_task_23 := 0} goto proc_3_100;
+		when True sync task_31_act do {t_task_31 := 0} goto proc_3_010;
+		when True sync task_41_act do {t_task_41 := 0} goto proc_3_001;
+	loc proc_3_100: invariant t_task_23 <= C_task_23 stop {t_task_31,t_task_41}
 		when t_task_41 < C_task_41 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_4 = D_pipeline_4 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_23 = C_task_23 sync task_23_done goto proc_3_000;
-		when t_task_23 < C_task_23 sync task_31_act do {t_task_31'=0} goto proc_3_110;
-		when t_task_23 < C_task_23 sync task_41_act do {t_task_41'=0} goto proc_3_101;
-	loc proc_3_010: while t_task_31 <= C_task_31 stop {t_task_23,t_task_41} wait
+		when t_task_23 < C_task_23 sync task_31_act do {t_task_31 := 0} goto proc_3_110;
+		when t_task_23 < C_task_23 sync task_41_act do {t_task_41 := 0} goto proc_3_101;
+	loc proc_3_010: invariant t_task_31 <= C_task_31 stop {t_task_23,t_task_41}
 		when t_task_41 < C_task_41 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_4 = D_pipeline_4 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
-		when t_task_31 < C_task_31 sync task_23_act do {t_task_23'=0} goto proc_3_110;
+		when t_task_31 < C_task_31 sync task_23_act do {t_task_23 := 0} goto proc_3_110;
 		when t_task_31 = C_task_31 sync task_31_done goto proc_3_000;
-		when t_task_31 < C_task_31 sync task_41_act do {t_task_41'=0} goto proc_3_011;
-	loc proc_3_001: while t_task_41 <= C_task_41 stop {t_task_23,t_task_31} wait
+		when t_task_31 < C_task_31 sync task_41_act do {t_task_41 := 0} goto proc_3_011;
+	loc proc_3_001: invariant t_task_41 <= C_task_41 stop {t_task_23,t_task_31}
 		when t_task_41 < C_task_41 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_4 = D_pipeline_4 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
-		when t_task_41 < C_task_41 sync task_23_act do {t_task_23'=0} goto proc_3_101;
-		when t_task_41 < C_task_41 sync task_31_act do {t_task_31'=0} goto proc_3_011;
+		when t_task_41 < C_task_41 sync task_23_act do {t_task_23 := 0} goto proc_3_101;
+		when t_task_41 < C_task_41 sync task_31_act do {t_task_31 := 0} goto proc_3_011;
 		when t_task_41 = C_task_41 sync task_41_done goto proc_3_000;
-	loc proc_3_110: while t_task_31 <= C_task_31 stop {t_task_23,t_task_41} wait
+	loc proc_3_110: invariant t_task_31 <= C_task_31 stop {t_task_23,t_task_41}
 		when t_task_41 < C_task_41 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_4 = D_pipeline_4 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_23 = C_task_23 sync task_23_done goto proc_3_010;
 		when t_task_31 = C_task_31 sync task_31_done goto proc_3_100;
-		when t_task_31 < C_task_31 sync task_41_act do {t_task_41'=0} goto proc_3_111;
-	loc proc_3_101: while t_task_23 <= C_task_23 stop {t_task_31,t_task_41} wait
+		when t_task_31 < C_task_31 sync task_41_act do {t_task_41 := 0} goto proc_3_111;
+	loc proc_3_101: invariant t_task_23 <= C_task_23 stop {t_task_31,t_task_41}
 		when t_task_41 < C_task_41 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_4 = D_pipeline_4 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_23 = C_task_23 sync task_23_done goto proc_3_001;
-		when t_task_23 < C_task_23 sync task_31_act do {t_task_31'=0} goto proc_3_111;
+		when t_task_23 < C_task_23 sync task_31_act do {t_task_31 := 0} goto proc_3_111;
 		when t_task_41 = C_task_41 sync task_41_done goto proc_3_100;
-	loc proc_3_011: while t_task_31 <= C_task_31 stop {t_task_23,t_task_41} wait
+	loc proc_3_011: invariant t_task_31 <= C_task_31 stop {t_task_23,t_task_41}
 		when t_task_41 < C_task_41 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_4 = D_pipeline_4 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
-		when t_task_31 < C_task_31 sync task_23_act do {t_task_23'=0} goto proc_3_111;
+		when t_task_31 < C_task_31 sync task_23_act do {t_task_23 := 0} goto proc_3_111;
 		when t_task_31 = C_task_31 sync task_31_done goto proc_3_001;
 		when t_task_41 = C_task_41 sync task_41_done goto proc_3_010;
-	loc proc_3_111: while t_task_31 <= C_task_31 stop {t_task_23,t_task_41} wait
+	loc proc_3_111: invariant t_task_31 <= C_task_31 stop {t_task_23,t_task_41}
 		when t_task_41 < C_task_41 & t_pipeline_1 = D_pipeline_1 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_2 = D_pipeline_2 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
 		when t_task_41 < C_task_41 & t_pipeline_3 = D_pipeline_3 sync DEADLINE_MISSED_3 goto DEADLINE_MISS;
@@ -280,7 +281,9 @@ automaton proc_3
 		when t_task_41 = C_task_41 sync task_41_done goto proc_3_110;
 end
 
-var init:region;
+
+
+
 init:= True &
 	loc[proc_1]= proc_1_000 &
 	loc[proc_2]= idle &
@@ -332,9 +335,7 @@ init:= True &
 	& C_task_41 >= 0
 ;
 
-property := unreachable(loc[proc_1] = DEADLINE_MISS)
-	or
-	(loc[proc_2] = DEADLINE_MISS)
-	or
-	(loc[proc_3] = DEADLINE_MISS)
-;
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

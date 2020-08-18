@@ -1,3 +1,4 @@
+
 (************************************************************
  *                      IMITATOR MODEL                      
  *
@@ -7,13 +8,16 @@
  
  * Note: we are not sure what is the property??
               
- * Created: < 2013/10
+ * Created: 2020/08/18
  * Last modified: 2018/08/20
  *
  * IMITATOR version: 3.0
  ************************************************************)
- 
-property := #synth BCcover(
-	C_task_11 = 1..20 & 
-	C_task_21 = 1..20
+
+property := #synth AGnot(
+	(loc[proc_1] = DEADLINE_MISS)
+	or
+	(loc[proc_2] = DEADLINE_MISS)
+	or
+	(loc[proc_3] = DEADLINE_MISS)
 );
