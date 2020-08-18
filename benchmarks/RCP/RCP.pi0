@@ -1,56 +1,69 @@
---****************************************************--
---****************************************************--
---   Circuit described in
---   "Parameterized Reachability Analysis of the IEEE 1394 Root Contention Protocol using TReX"
---   Collomb-Annichini, Sighireanu (RTTOOLS 2001)
---
---   Etienne ANDRE and Laurent FRIBOURG
---   Laboratoire Specification et Verification
---
---                                Created : 2008/01/10
---                          Last modified : 2014/03/26
---****************************************************--
---****************************************************--
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * IEEE 1394 Root Contention Protocol
+ *
+ * Description     : IEEE 1394 Root Contention Protocol
+ * Correctness     : ?
+ * Source          : unknown source
+ * Author          : ?
+ * Modeling        : ?
+ * Input by        : ?? (< 2007) and Étienne André
+ *
+ * Created         : 2008/01/10
+ * Last modified   : 2020/08/18
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+ 
+property := #synth IM(
+	(*------------------------------------------------------------*)
+	(* Instantiations taken from "Probabilistic Model Checking of Deadline Properties in the IEEE 1394 FireWire Root Contention Protocol" (possible values for "delay": 30 or 360) *)
+	(*------------------------------------------------------------*)
 
 
-	----------------------
-	-- Instanciations
-	----------------------
-	-- Instantiations taken from
-	-- "Probabilistic Model Checking of Deadline Properties in the IEEE 1394 FireWire Root Contention Protocol"
-	-- (possible values for "delay": 30 or 360)
-
-
-	---IEEE VALUES---
+	(*------------------------------------------------------------*)
+	(* IEEE VALUES *)
+	(*------------------------------------------------------------*)
 	& rc_fast_min	= 760
 	& rc_fast_max	= 850
 	& rc_slow_min	= 1590
 	& rc_slow_max	= 1670
 	& delay			= 360
 	
-	---2D (as for BC)---
+	(*------------------------------------------------------------*)
+	(* 2D (as for BC) *)
+	(*------------------------------------------------------------*)
 (*	& rc_slow_min = 159
 	& delay       = 36*)
 	
 
 
-	---PRISM WEB PAGE---
--- 	& rc_fast_min	= 76
+	(*------------------------------------------------------------*)
+	(* PRISM WEB PAGE*)
+	(*------------------------------------------------------------*)
+(*-- 	& rc_fast_min	= 76
 -- 	& rc_fast_max	= 85
 -- 	& rc_slow_min	= 159
 -- 	& rc_slow_max	= 167
--- 	& delay			= 36 -- PROBLEM HERE
+-- 	& delay			= 36 -- PROBLEM HERE*)
 
--- 	---TESTS---
--- 	& rc_fast_min	= 76
+	(*------------------------------------------------------------*)
+	(* TESTS *)
+	(*------------------------------------------------------------*)
+(*-- 	& rc_fast_min	= 76
 -- 	& rc_fast_max	= 85
 -- 	& rc_slow_min	= 140 -- 159
 -- 	& rc_slow_max	= 140 -- 167
--- 	& delay		= 42 --30
+-- 	& delay		= 42 --30*)
 
--- 	---SMALL VALUES---
---	& rc_fast_max	= 4
+	(*------------------------------------------------------------*)
+	(* SMALL VALUES *)
+	(*------------------------------------------------------------*)
+(*--	& rc_fast_max	= 4
 --	& rc_fast_min	= 3
 --	& rc_slow_max	= 8
 --	& rc_slow_min	= 7
---	& delay		= 1
+--	& delay		= 1*)
+
+);

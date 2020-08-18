@@ -8,18 +8,17 @@
  * Source          : unknown source
  * Author          : ?
  * Modeling        : ?
- * Input by        : Étienne André
+ * Input by        : ?? (< 2007) and Étienne André
  *
- * Created         : 2014/04/28
+ * Created         : 2008/01/10
  * Last modified   : 2020/08/18
  *
  * IMITATOR version: 3
  ************************************************************)
  
-property := #synth BCcover(
-	& rc_fast_max = 76 .. 99
-(*	& rc_fast_min = 76
-	& rc_slow_max = 140 .. 200 -- 167*)
-	& rc_slow_min = 140 .. 200 (* 159 *)
-	& delay       = 1 .. 50 (* 30 *)
-);
+ 
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := #synth EF(loc[s1o] = S1oEnd);
