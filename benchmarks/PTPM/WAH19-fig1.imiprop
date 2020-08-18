@@ -1,0 +1,24 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Fig.1 from [WAH19]
+ *
+ * Description     : Fig.1 from [WAH19] "Monitoring copy to b within tp time units"
+ * Correctness     : Valuations of tp such for which copy is not well copied within tp time units
+ * Source          : "Symbolic Monitoring Against Specifications Parametric in Time and Data", CAV 2019, Masaki Waga, Étienne André, Ichiro Hasuo [doi:10.1007/978-3-030-25540-4_30]
+ * Author          : Étienne André, Masaki Waga
+ * Modeling        : Étienne André, Masaki Waga
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/08/18
+ * Last modified   : 2020/08/18
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := #synth EF(loc[monitor] = lfrownie);

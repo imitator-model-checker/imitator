@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2018/03/30
- * Last modified   : 2018/08/23
+ * Last modified   : 2020/08/18
  *
- * IMITATOR version: 2.10.1
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -3044,14 +3044,6 @@ init :=
 	& t >= 0
 	& tprime >= 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[pta] = s_end;
-maximize(p1)
 
 
 (************************************************************)
