@@ -1,18 +1,24 @@
---****************************************************--
---****************************************************--
---   Portion of the SPSMALL memory circuit ("spsmall_blueb_lsv")
---
---   Design by ST-Microelectronics
---   Timings by LIP6
---   Model by LSV
---
---   Created       : 2010/04/02
---   Last modified : 2011/04/29
---****************************************************--
---****************************************************--
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Portion of the SPSMALL memory circuit ("spsmall_blueb_lsv")
+ *
+ * Description     : Model with observer (to check whether tCKQ is conform with ST specification)
+ * Correctness     : s <= 166
+ * Source          : Project ANR Valmem
+ * Author          : ST-Microelectronics (design)
+ * Modeling        : LSV (timings by LIP6)
+ * Input by        : Emmanuelle Encrenaz, Laurent Fribourg, Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
 
+ *
+ * Created         : 2010/04/02
+ * Last modified   : 2020/08/19
+ *
+ * IMITATOR version: 3
+ ************************************************************)
 
-	---START V0---
+property := #synth BCcover(
 	& d_up_q_0         = 21
 	& d_up_net27       = 0
 	& d_up_d_inta      = 22
@@ -38,11 +44,13 @@
 
 	& tHI              = 45
 	& tLO              = 65
-	& tsetupd          = 65 .. 110 -- 108
-	& tsetupwen        = 0 .. 66 -- 48
--- 	& tsetupd          = 89 .. 98 -- 108
--- 	& tsetupwen        = 25 .. 34 -- 48	
+	& tsetupd          = 65 .. 110 (* 108 *)
+	& tsetupwen        = 0 .. 66 (* 48 *)
+(* 	& tsetupd          = 89 .. 98 -- 108 *)
+(* 	& tsetupwen        = 25 .. 34 -- 48	 *)
 
 
--- 	& tsetupd = 0 .. 200 (*108*)
--- 	& tsetupwen = 0 .. 100 (*48*)
+(* 	& tsetupd = 0 .. 200 (*108*) *)
+(* 	& tsetupwen = 0 .. 100 (*48*) *)
+);
+
