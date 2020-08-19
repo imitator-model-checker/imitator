@@ -3,7 +3,7 @@
  *
  * Race on a digital circuit (SR Latch)
  *
- * Description     : Race on a digital circuit (SR Latch). Version with point traversal delays (no interval).
+ * Description     : Race on a digital circuit (SR Latch)
  * Correctness     : TODO
  * Source          : TODO
  * Author          : Étienne André
@@ -11,14 +11,11 @@
  * Input by        : Étienne André
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
- * Created         : 2010/03/23
+ * Created         : 2020/08/19
  * Last modified   : 2020/08/19
  *
  * IMITATOR version: 3.0
  ************************************************************)
- 
-property := #synth BCcover(
-	& dNor1		= 0 .. 10
-	& dNor2		= 0 .. 10
-	& t_down	= 0 .. 10
-);
+
+(* Not exactly the property that we would like! The real property is "the system eventually reaches a state where \overline{Q} = 1" *)
+property := #synth if overQ_Up then R_Down has happened before;
