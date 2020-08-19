@@ -8,12 +8,12 @@
  * Source          : Model described in "Parametric Real-Time Reasoning" (fig. 2); Alur, Henzinger, Vardi (STOC 1993)
  * Author          : Alur, Henzinger, Vardi
  * Modeling        : Alur, Henzinger, Vardi
- * Input by        : Etienne Andre
+ * Input by        : Étienne André
  *
  * Created         : 2011/11/25
- * Last modified   : 2015/07/31
+ * Last modified   : 2020/08/19
  *
- * IMITATOR version: 2.7.2
+ * IMITATOR version: 3
  ************************************************************)
  
 
@@ -115,20 +115,6 @@ init :=
 	& a >= 0 & a <= b
 	& c >= 0 & c <= d
 	& e >= 0 & e <= f
-;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable
-	(* IMITATOR still misses the "<>", hence we need to enumerate other locations of gate *)
-		loc[train] = train2 & loc[gate] = gate0
-	or
-		loc[train] = train2 & loc[gate] = gate1
-	or
-		loc[train] = train2 & loc[gate] = gate3
 ;
 
 

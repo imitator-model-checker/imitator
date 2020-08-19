@@ -10,19 +10,21 @@
  * Modeling        : Alur, Henzinger, Vardi
  * Input by        : Étienne André
  *
- * Created         : 2011/11/25
+ * Created         : 2020/08/19
  * Last modified   : 2020/08/19
  *
  * IMITATOR version: 3
  ************************************************************)
  
-(*  a < d + f *)
+(************************************************************)
+(* Property specification *)
+(************************************************************)
 
-property := #synth IM(
-	& a = 4
-	& b = 6
-	& c = 1
-	& d = 2
-	& e = 2
-	& f = 3
+property := #synth AGnot(
+	(* IMITATOR still misses the "<>", hence we need to enumerate other locations of gate *)
+		loc[train] = train2 & loc[gate] = gate0
+	or
+		loc[train] = train2 & loc[gate] = gate1
+	or
+		loc[train] = train2 & loc[gate] = gate3
 );
