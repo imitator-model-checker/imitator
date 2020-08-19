@@ -11,20 +11,14 @@
  * Input by        : ?, Étienne André, Laurent Fribourg
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
- * Created         : < 2008
+ * Created         : 2020/08/19
  * Last modified   : 2020/08/19
  *
  * IMITATOR version: 3
  ************************************************************)
  
- (* automates de etude 1110 - V8*)
+ (************************************************************)
+(* Property specification *)
+(************************************************************)
 
-property := #synth IM(
-	&	PLCct  = 600
-	&	COMct  = 500
-	& 	SIGmrt = 2071
-	&	PLCmtt = 100
-	&	RIOd   = 70
-	&	COMd   = 25
-	&	NETd   = 10
-);
+property := #synth EF(loc[ENV] = ENV5);
