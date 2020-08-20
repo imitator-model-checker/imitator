@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/08/14
+ * Last modified     : 2020/08/20
  *
  ************************************************************/
 
@@ -221,6 +221,18 @@ property:
 	| CT_BCRANDOMSEQ LPAREN reference_rectangle COMMA pos_integer RPAREN { Parsed_RandomSeq_cartography ($3, $5) }
 	
 	| CT_PRPC LPAREN state_predicate COMMA reference_rectangle RPAREN { Parsed_PRPC ($3,$5) }
+
+	
+	/*------------------------------------------------------------*/
+	/* Observer patterns */
+	/*------------------------------------------------------------*/
+	/* if a2 then a1 has happened before */
+	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Parsed_action_precedence_acyclic ($4, $2) }
+	/* everytime a2 then a1 has happened before */
+	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Parsed_action_precedence_cyclic ($4, $2) }
+	/* everytime a2 then a1 has happened once before */
+	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_BEFORE { Parsed_action_precedence_cyclicstrict ($4, $2) }
+	
 
 ;
 

@@ -3638,7 +3638,7 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		let clock_obs = nb_parameters + nb_clocks - 1 in
 		(* Get the info from the observer pattern *)
 		let observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions, initial_observer_constraint, correctness_condition =
-			ObserverPatterns.get_automaton nb_actions observer_id nosync_obs clock_obs property in
+			ObserverPatterns.get_observer_automaton nb_actions observer_id nosync_obs clock_obs property in
 
 		(* Return the structure and the correctness_condition *)
 		Some (observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions),

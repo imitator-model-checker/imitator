@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/04/23
+ * Last modified     : 2020/08/20
  *
  ****************************************************************)
 
@@ -436,6 +436,18 @@ type parsed_property_type =
 
 	(* Parametric reachability preservation *)
 	| Parsed_PRPC of parsed_state_predicate * parsed_pdomain
+
+
+	(*------------------------------------------------------------*)
+	(* Observer patterns *)
+	(*------------------------------------------------------------*)
+
+	(* if a2 then a1 has happened before *)
+	| Parsed_action_precedence_acyclic of sync_name * sync_name
+	(* everytime a2 then a1 has happened before *)
+	| Parsed_action_precedence_cyclic of sync_name * sync_name
+	(* everytime a2 then a1 has happened exactly once before *)
+	| Parsed_action_precedence_cyclicstrict of sync_name * sync_name
 
 
 

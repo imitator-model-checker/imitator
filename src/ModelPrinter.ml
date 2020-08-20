@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/04/23
+ * Last modified     : 2020/08/20
  *
  ************************************************************)
 
@@ -842,6 +842,23 @@ let string_of_abstract_property model property =
 		(* Parametric reachability preservation *)
 		| PRPC (state_predicate , hyper_rectangle) -> "PRPC(" ^ (string_of_state_predicate model state_predicate) ^ " , " ^ (string_of_v0 model hyper_rectangle) ^ ")"
 		
+		
+(*		(*------------------------------------------------------------*)
+		(* Observer patterns *)
+		(*------------------------------------------------------------*)
+		
+		(* if a2 then a1 has happened before *)
+		| Action_precedence_acyclic (a1 , a2) ->
+			"if " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened before"
+		(* everytime a2 then a1 has happened before *)
+		| Action_precedence_cyclic (a1 , a2) ->
+			"everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened before"
+		(* everytime a2 then a1 has happened exactly once before *)
+		| Action_precedence_cyclicstrict (a1 , a2) ->
+			"everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened exactly once before"
+*)
+		
+
 		(*** TODO ***)
 (* 		| _ -> raise (NotImplemented "ModelPrinter.string_of_property for any other algorithm") *)
 	)
@@ -857,16 +874,6 @@ let string_of_abstract_property model property =
 		"property := unreachable " ^ (
 			string_of_list_of_string_with_sep "\n or \n " (List.map (string_of_unreachable_location model) unreachable_global_location_list)
 		)
-
-	(* if a2 then a1 has happened before *)
-	| Action_precedence_acyclic (a1 , a2) ->
-		"property := if " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened before;"
-	(* everytime a2 then a1 has happened before *)
-	| Action_precedence_cyclic (a1 , a2) ->
-		"property := everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened before;"
-	(* everytime a2 then a1 has happened exactly once before *)
-	| Action_precedence_cyclicstrict (a1 , a2) ->
-		"property := everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened exactly once before;"
 
 	(*** NOTE: not implemented ***)
 (*	(* if a1 then eventually a2 *)

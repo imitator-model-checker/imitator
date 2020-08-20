@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created:       2013/02/04
- * Last modified: 2020/04/23
+ * Last modified: 2020/08/20
  *
  ************************************************************)
  
@@ -21,6 +21,7 @@ open OCamlUtilities
 open ImitatorUtilities
 open ParsingStructure
 open AbstractModel
+open AbstractProperty
 
 
 (************************************************************)
@@ -125,6 +126,11 @@ let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_RandomSeq_cartography _
 	| Parsed_PRPC _
 
+	| Parsed_action_precedence_acyclic _
+	| Parsed_action_precedence_cyclic _
+	| Parsed_action_precedence_cyclicstrict _
+
+
 		->
 	false
 (* 	| Parsed_Action_deadline _ -> true *)
@@ -132,15 +138,9 @@ let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 (* 	| _ -> raise (NotImplemented "ObserverPatterns.needs_clock") *)
 
 
-(*(* Create a list of unreachable_global_location from a single bad location *)
-let single_unreachable_location automaton_index location_index =
-	(* Create the (single) global location *)
-	let unreachable_global_location = {
-		unreachable_locations= [(automaton_index, location_index)];
-		discrete_constraints =  [];
-	}
-	in
-	Unreachable [unreachable_global_location]*)
+(* Create a property of the form AGnot from a single bad location *)
+let make_AGnot_single_location automaton_index location_index =
+	AGnot (State_predicate_term (State_predicate_factor (Simple_predicate (Loc_predicate (Loc_predicate_EQ (automaton_index , location_index ) ) ) ) ) )
 
 
 (* Create the new automata and new clocks necessary for the observer *)
@@ -180,22 +180,24 @@ let new_elements (parsed_property : ParsingStructure.parsed_property) =
 	
 		-> (None , None)
 	
+	(* Untimed observers: add automaton, does not add clock *)
+	| ParsingStructure.Parsed_action_precedence_acyclic _
+	| ParsingStructure.Parsed_action_precedence_cyclic _
+	| ParsingStructure.Parsed_action_precedence_cyclicstrict _
+		-> (Some observer_automaton_name, None)
+	
 (*	| Parsed_Action_deadline _
 		-> (Some observer_automaton_name, Some observer_clock_name)
 	(*** TODO: finish later ***)
 	| _ -> raise (NotImplemented "ObserverPatterns.new_elements")*)
 
-(*	(* Untimed observers: add automaton, does not add clock *)
-	| ParsingStructure.Action_precedence_acyclic _
-	| ParsingStructure.Action_precedence_cyclic _
-	| ParsingStructure.Action_precedence_cyclicstrict _
+(*	
 	(*** NOT IMPLEMENTED ***)
 (*		| ParsingStructure.Eventual_response_acyclic _
 	| ParsingStructure.Eventual_response_cyclic _
 	| ParsingStructure.Eventual_response_cyclicstrict _*)
 	| ParsingStructure.Sequence_acyclic _
 	| ParsingStructure.Sequence_cyclic _
-		-> (Some observer_automaton_name, None)
 
 	(* Timed observers: add automaton, add clock *)
 	| ParsingStructure.Action_deadline _
@@ -242,6 +244,12 @@ let get_nb_locations (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_RandomSeq_cartography _
 	| Parsed_PRPC _
 		-> 0
+	
+	| ParsingStructure.Parsed_action_precedence_acyclic _
+	| ParsingStructure.Parsed_action_precedence_cyclic _
+	| ParsingStructure.Parsed_action_precedence_cyclicstrict _
+		-> 3
+
 (* 	| Parsed_Action_deadline _ -> 3 *)
 	(*** TODO: finish later ***)
 (* 	| _ -> raise (NotImplemented "ObserverPatterns.get_nb_locations") *)
@@ -249,10 +257,6 @@ let get_nb_locations (parsed_property : ParsingStructure.parsed_property) =
 		(* Not a real observer: does not build anything *)
 		| ParsingStructure.Parsed_unreachable_locations _ -> 0
 
-		| ParsingStructure.Action_precedence_acyclic _
-		| ParsingStructure.Action_precedence_cyclic _
-		| ParsingStructure.Action_precedence_cyclicstrict _
-			-> 3
 		(*** NOT IMPLEMENTED ***)
 (*		| ParsingStructure.Eventual_response_acyclic _ -> 3
 		| ParsingStructure.Eventual_response_cyclic _ -> 2
@@ -285,11 +289,13 @@ let get_locations property =
 	Returns:
 	- Actions per automaton
 	- Actions per location
-	- Transitions
 	- Invariants
+	- Transitions
+	- Init inequality
+	- Property
 *)
 (*------------------------------------------------------------*)
-let get_automaton nb_actions automaton_index nosync_index x_obs (parsed_property : ParsingStructure.parsed_property) =
+let get_observer_automaton nb_actions automaton_index nosync_index x_obs (parsed_property : ParsingStructure.parsed_property) =
 	(* Create the common structures *)
 	let initialize_structures nb_locations all_actions =
 		(* Array for actions for location *)
@@ -322,12 +328,12 @@ let get_automaton nb_actions automaton_index nosync_index x_obs (parsed_property
 			allow_all
 	in
 
-	match parsed_property with
+	match parsed_property.property with
 		
 	(*** TODO: finish later ***)
-	| _ -> raise (NotImplemented "ObserverPatterns.get_automaton")
-
-(*	| Action_precedence_acyclic (a1, a2) ->
+	| _ -> raise (NotImplemented "ObserverPatterns.get_observer_automaton")
+(*
+	| Parsed_action_precedence_acyclic (a1, a2) ->
 		let nb_locations = 3 in
 		let all_actions = [a1;a2] in
 		(* Initialize *)
@@ -343,11 +349,11 @@ let get_automaton nb_actions automaton_index nosync_index x_obs (parsed_property
 		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init inequality *)
 		None,
-		(* Reduce to reachability property *)
-		single_unreachable_location automaton_index 2
+		(* Reduce to safety property *)
+		make_AGnot_single_location automaton_index 2
 
 
-	| Action_precedence_cyclic (a1, a2) ->
+	| Parsed_action_precedence_cyclic (a1, a2) ->
 		let nb_locations = 3 in
 		let all_actions = [a1;a2] in
 		(* Initialize *)
@@ -374,11 +380,11 @@ let get_automaton nb_actions automaton_index nosync_index x_obs (parsed_property
 		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init inequality *)
 		None,
-		(* Reduce to reachability property *)
-		single_unreachable_location automaton_index 2
+		(* Reduce to safety property *)
+		make_AGnot_single_location automaton_index 2
 
 
-	| Action_precedence_cyclicstrict (a1, a2) ->
+	| Parsed_action_precedence_cyclicstrict (a1, a2) ->
 		let nb_locations = 3 in
 		let all_actions = [a1;a2] in
 		(* Initialize *)
@@ -395,18 +401,18 @@ let get_automaton nb_actions automaton_index nosync_index x_obs (parsed_property
 		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init inequality *)
 		None,
-		(* Reduce to reachability property *)
-		single_unreachable_location automaton_index 2
+		(* Reduce to safety property *)
+		make_AGnot_single_location automaton_index 2
 
 
-		(*** NOT IMPLEMENTED ***)
+			(*** NOT IMPLEMENTED ***)
 (*	| Eventual_response_acyclic (a1, a2)
 	| Eventual_response_cyclic (a1, a2)
 	| Eventual_response_cyclicstrict (a1, a2)
 		-> raise (InternalError("Observer not implemented."))*)
 
 
-	| Action_deadline (a, d) ->
+	| Parsed_action_deadline (a, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a] in
 		(* Initialize *)
@@ -430,11 +436,11 @@ let get_automaton nb_actions automaton_index nosync_index x_obs (parsed_property
 		nosync_index :: all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* Return x_obs = 0 *)
 		Some (lc_x_eq_0 x_obs),
-		(* Reduce to reachability property *)
-		single_unreachable_location automaton_index 2
+		(* Reduce to safety property *)
+		make_AGnot_single_location automaton_index 2
 
 
-	| TB_Action_precedence_acyclic (a1, a2, d) ->
+	| Parsed_TB_Action_precedence_acyclic (a1, a2, d) ->
 		let nb_locations = 4 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
@@ -478,11 +484,11 @@ let get_automaton nb_actions automaton_index nosync_index x_obs (parsed_property
 		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
-		(* Reduce to reachability property *)
-		single_unreachable_location automaton_index 3
+		(* Reduce to safety property *)
+		make_AGnot_single_location automaton_index 3
 
 
-	| TB_Action_precedence_cyclic (a1, a2, d) ->
+	| Parsed_TB_Action_precedence_cyclic (a1, a2, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
@@ -525,11 +531,11 @@ let get_automaton nb_actions automaton_index nosync_index x_obs (parsed_property
 		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
-		(* Reduce to reachability property *)
-		single_unreachable_location automaton_index 2
+		(* Reduce to safety property *)
+		make_AGnot_single_location automaton_index 2
 
 
-	| TB_Action_precedence_cyclicstrict (a1, a2, d) ->
+	| Parsed_TB_Action_precedence_cyclicstrict (a1, a2, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
@@ -566,11 +572,11 @@ let get_automaton nb_actions automaton_index nosync_index x_obs (parsed_property
 		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
-		(* Reduce to reachability property *)
-		single_unreachable_location automaton_index 2
+		(* Reduce to safety property *)
+		make_AGnot_single_location automaton_index 2
 
 
-	| TB_response_acyclic (a1, a2, d) ->
+	| Parsed_TB_response_acyclic (a1, a2, d) ->
 		let nb_locations = 4 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
@@ -603,8 +609,8 @@ let get_automaton nb_actions automaton_index nosync_index x_obs (parsed_property
 		nosync_index :: all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
-		(* Reduce to reachability property *)
-		single_unreachable_location automaton_index 3
+		(* Reduce to safety property *)
+		make_AGnot_single_location automaton_index 3
 
 	| TB_response_cyclic (a1, a2, d) ->
 		let nb_locations = 3 in
@@ -638,11 +644,11 @@ let get_automaton nb_actions automaton_index nosync_index x_obs (parsed_property
 		nosync_index :: all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
-		(* Reduce to reachability property *)
-		single_unreachable_location automaton_index 2
+		(* Reduce to safety property *)
+		make_AGnot_single_location automaton_index 2
 
 
-	| TB_response_cyclicstrict (a1, a2, d) ->
+	| Parsed_TB_response_cyclicstrict (a1, a2, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
@@ -674,11 +680,11 @@ let get_automaton nb_actions automaton_index nosync_index x_obs (parsed_property
 		nosync_index :: all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
-		(* Reduce to reachability property *)
-		single_unreachable_location automaton_index 2
+		(* Reduce to safety property *)
+		make_AGnot_single_location automaton_index 2
 
 
-	| Sequence_acyclic list_of_actions ->
+	| Parsed_sequence_acyclic list_of_actions ->
 		let nb_locations = (List.length list_of_actions) + 2 in
 		let all_actions = list_of_actions in
 		(* Initialize *)
@@ -712,11 +718,11 @@ let get_automaton nb_actions automaton_index nosync_index x_obs (parsed_property
 		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
-		(* Reduce to reachability property *)
-		single_unreachable_location automaton_index lbad
+		(* Reduce to safety property *)
+		make_AGnot_single_location automaton_index lbad
 
 
-	| Sequence_cyclic list_of_actions ->
+	| Parsed_sequence_cyclic list_of_actions ->
 		let nb_locations = (List.length list_of_actions) + 1 in
 		let all_actions = list_of_actions in
 		(* Initialize *)
@@ -754,6 +760,5 @@ let get_automaton nb_actions automaton_index nosync_index x_obs (parsed_property
 		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
-		(* Reduce to reachability property *)
-		single_unreachable_location automaton_index lbad*)
-
+		(* Reduce to safety property *)
+		make_AGnot_single_location automaton_index lbad*)

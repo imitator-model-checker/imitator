@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/04/23
+ * Last modified     : 2020/08/20
  *
  ************************************************************)
 
@@ -183,6 +183,18 @@ type property =
 	| PRPC of state_predicate * HyperRectangle.hyper_rectangle
 
 
+(*	(*------------------------------------------------------------*)
+	(* Observer patterns *)
+	(*------------------------------------------------------------*)
+	
+	(* if a2 then a1 has happened before *)
+	| Action_precedence_acyclic of action_index * action_index
+	(* everytime a2 then a1 has happened before *)
+	| Action_precedence_cyclic of action_index * action_index
+	(* everytime a2 then a1 has happened exactly once before *)
+	| Action_precedence_cyclicstrict of action_index * action_index*)
+
+
 	
 
 type synthesis_type =
@@ -218,9 +230,6 @@ type abstract_property = {
 
 
 (*
-(** predicates for bad definition *)
-
-type duration = LinearConstraint.p_linear_term
 
 
 (** Definition of the property by the end user *)
@@ -230,13 +239,6 @@ type property =
 
   (* An "OR" list of global locations *)
   | Unreachable_locations of unreachable_global_location list
-
-  (* if a2 then a1 has happened before *)
-  | Action_precedence_acyclic of action_index * action_index
-  (* everytime a2 then a1 has happened before *)
-  | Action_precedence_cyclic of action_index * action_index
-  (* everytime a2 then a1 has happened exactly once before *)
-  | Action_precedence_cyclicstrict of action_index * action_index
 
   (*** NOTE: not implemented ***)
   (*	(* if a1 then eventually a2 *)
