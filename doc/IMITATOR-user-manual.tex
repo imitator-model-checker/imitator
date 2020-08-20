@@ -115,7 +115,7 @@ Fischer mutual exclusion protocol is a protocol that guarantees the mutual exclu
 
 We give below this model using the \imitator{} syntax.
 This model is given in graphical form in \cref{figure:fischer}.\footnote{%
-	This \LaTeX{} representation, that makes use of the \LaTeX{} TikZ library, was automatically output by \imitator{}, using option \styleOption{-PTA2TikZ}, followed by some manual positioning optimization.
+	This \LaTeX{} representation, that makes use of the \LaTeX{} TikZ library, was automatically output by \imitator{}, using option \styleOption{-imi2TikZ}, followed by some manual positioning optimization.
 }
 
 \bigskip
@@ -431,7 +431,7 @@ Different from many tools for (parametric) timed automata, clocks are not necess
 The initial value of the clocks is defined by~$\Cinit$ (see \cref{section:init}).
 If nothing is defined in~$\Cinit$, then their value is supposed to be arbitrary (any real value greater or equal to~0).
 
-Note that parameters are not assumed positive; however, the behavior of \imitator{} has not been tested for negative parameters, and it is strongly advised to constrain them to be positive in $\Cinit$ (if it is not the case, a warning is issued by \imitator{}).
+Note that parameters are not assumed to be positive; however, the behavior of \imitator{} has not been tested for negative parameters, and it is strongly advised to constrain them to be non-negative in $\Cinit$ (if it is not the case, a warning is issued by \imitator{}).
 
 % TODO: example
 
@@ -470,14 +470,14 @@ They can be seen as syntactic sugar to represent a possibly unbounded number of 
 
 In \imitator{}, rationals are exact and unbounded, just as in maths (\ie{} they are \emph{not} represented using a limited number of bits, such as 32 or 64 bits).
 Hence, no overflow can occur, and the representation of the constraints is always exact.
-Note that floating-point numbers are totally absent from the \imitator{} implementation (except for the generation of graphical outputs).
+Note that floating-point numbers (``float'') are totally absent from the \imitator{} implementation (except for the generation of graphical outputs).
 
 Discrete variables must be initialized to a single constant value in the \styleIMI{init} definition;
 if they are not, a warning is issued, and they are arbitrarily set to~0.
 
 Discrete variables can be tested in guards, and updated along transitions.
 They are first tested, then updated.
-If two \IPTA{} in parallel update the same variable on the same synchronized transition (\eg{} an \IPTA{} performs \styleIMI{i := 2} while another one performs \styleIMI{i := 3}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified (\ie{} \imitator{} will choose one or the other assignment in a non-deterministic manner).
+If two \IPTA{} in parallel update the same variable on the same synchronized transition (\eg{} an \IPTA{} performs \styleIMI{i := 2} while another one performs \styleIMI{i := 3}), then a warning is issued, and the behavior of the \NIPTA{} becomes unspecified (\ie{} \imitator{} will choose one or the other assignment in an unspecified manner).
 If a division by zero is encountered (\eg{} in an update \styleIMI{i := 2 / i}, when the current value of~\styleIMI{i} is~0), an exception is raised and \imitator{} terminates with an error.
 
 
@@ -1238,7 +1238,7 @@ and \styleOption{-output-graphics-source} to keep the plot source.
 Since version 2.11, \imitator{} supports a translation of the model to the \uppaal{} syntax~\cite{LPY97}.
 To generate an equivalent \uppaal{} model without performing any analysis, use:
 
-\styleCommand{\binimitator{} model.imi -PTA2Uppaal}
+\styleCommand{\binimitator{} model.imi -imi2Uppaal}
 
 \imitator{} will generate a file \stylePath{model-uppaal.xml}.
 Note that translation of properties is not supported.
@@ -1298,7 +1298,7 @@ Properties are so far not translated to \uppaal{}.
 Since version 2.8, \imitator{} supports a translation of the model to the \hytech{} syntax~\cite{HHW95} (that is quite close to that of \imitator{} anyway).
 To generate an equivalent \hytech{} model without performing any analysis, use:
 
-\styleCommand{\binimitator{} model.imi -PTA2HyTech}
+\styleCommand{\binimitator{} model.imi -imi2HyTech}
 
 \imitator{} will generate a file \stylePath{model.hy}.
 Note that translation of properties is not supported.
@@ -1311,11 +1311,11 @@ Note that translation of properties is not supported.
 
 To generate a graphic representation of the \NIPTA{} model without performing any analysis, use:
 
-\styleCommand{\binimitator{} model.imi -PTA2JPG}
+\styleCommand{\binimitator{} model.imi -imi2JPG}
 
-\styleCommand{\binimitator{} model.imi -PTA2PDF}
+\styleCommand{\binimitator{} model.imi -imi2PDF}
 
-\styleCommand{\binimitator{} model.imi -PTA2PNG}
+\styleCommand{\binimitator{} model.imi -imi2PNG}
 
 \imitator{} will generate a file \stylePath{model-pta.jpg}, \stylePath{model-pta.pdf} and \stylePath{model-pta.png} respectively (using the \gdot{} utility).
 
@@ -1323,7 +1323,7 @@ Colored transitions are synchronized transitions (\ie{} shared by at least two \
 
 \begin{example}
 	Consider again the case study given in \cref{chapter:syntax-introduction} (and of which a TikZ export was given in \cref{figure:fischer}).
-	Then the result of the \styleOption{-PTA2PDF} command is given in \cref{figure:PDF-export}.
+	Then the result of the \styleOption{-imi2PDF} command is given in \cref{figure:PDF-export}.
 \end{example}
 
 \begin{figure}
@@ -1342,7 +1342,7 @@ Colored transitions are synchronized transitions (\ie{} shared by at least two \
 
 To generate a \LaTeX{} representation of the \NIPTA{} model (using the \texttt{tikz} package) without performing any analysis, use:
 
-\styleCommand{\binimitator{} model.imi -PTA2TikZ}
+\styleCommand{\binimitator{} model.imi -imi2TikZ}
 
 \imitator{} will generate a file \stylePath{model.tex}.
 This file is a standalone \LaTeX{} file containing a single figure, which contains the different \IPTA{} in ``\texttt{subfigure}'' environments.
@@ -1855,48 +1855,48 @@ Since version 2.9, it is advised to use instead \styleOption{-mode PRP} and \sty
 
 
 % %------------------------------------------------------------
-% \paragraph{\styleOption{-PTA2GrML} (default: false)}
+% \paragraph{\styleOption{-imi2GrML} (default: false)}
 % %------------------------------------------------------------
 % Translates the input model to a GrML format (used by \CosyVerif{} \cite{AHHKLLP13}), and exits.
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-PTA2HyTech} (default: false)}
+\paragraph{\styleOption{-imi2HyTech} (default: false)}
 %------------------------------------------------------------
 Translates the input model to a \hytech{} model, and exits.
 See \cref{section:hytech} for details.
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-PTA2IMI} (default: false)}
+\paragraph{\styleOption{-imi2IMI} (default: false)}
 %------------------------------------------------------------
 Regenerates the model into an \imitator{} model, and exits.
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-PTA2JPG} (default: false)}
+\paragraph{\styleOption{-imi2JPG} (default: false)}
 %------------------------------------------------------------
 Translates the input model to a graphical, human-readable form (in \texttt{.jpg} format), and exits.
 	% TODO add the graphics of the coffee machine
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-PTA2PDF} (default: false)}
+\paragraph{\styleOption{-imi2PDF} (default: false)}
 %------------------------------------------------------------
 Translates the input model to a graphical, human-readable form (in \texttt{.pdf} format), and exits.
 	% TODO add the graphics of the coffee machine
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-PTA2PNG} (default: false)}
+\paragraph{\styleOption{-imi2PNG} (default: false)}
 %------------------------------------------------------------
 Translates the input model to a graphical, human-readable form (in \texttt{.png} format), and exits.
 	% TODO add the graphics of the coffee machine
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-PTA2TikZ} (default: false)}
+\paragraph{\styleOption{-imi2TikZ} (default: false)}
 %------------------------------------------------------------
 Translates the input model to a \LaTeX{} representation of the model (using the \texttt{tikz} package) without performing any analysis, and exits.
 Note that node positioning is not (much) supported, so may want to edit manually some positions.
 	% TODO refer to the graphics of the coffee machine
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-PTA2Uppaal} (default: false)}
+\paragraph{\styleOption{-imi2Uppaal} (default: false)}
 %------------------------------------------------------------
 Translates the input model to a \uppaal{} model, and exits.
 See \cref{section:uppaal} for details.
