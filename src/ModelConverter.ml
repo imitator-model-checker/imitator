@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/04/23
+ * Last modified     : 2020/08/20
  *
  ************************************************************)
 
@@ -4146,9 +4146,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
  	
  	
  	
- 	
- 	let observer_automaton, observer_clock_option = None, None in
-
  	
  	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add clock and automaton for the observer *)
