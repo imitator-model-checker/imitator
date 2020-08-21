@@ -59,19 +59,19 @@ let untimedt action_index target_index =
 		target		= target_index;
 	}]
 
-(* Constraint x <= d, with 'd' a LinearConstraint.p_linear_term : d - x >= 0 *)
+(* Constraint x <= d, with `d` a LinearConstraint.p_linear_term : d - x >= 0 *)
 let ct_x_leq_d (x : clock_index) (d : LinearConstraint.p_linear_term) =
 	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d true
 
 
-(* Constraint x >= d, with 'd' a LinearConstraint.p_linear_term : x - d >= 0 *)
+(* Constraint x >= d, with `d` a LinearConstraint.p_linear_term : x - d >= 0 *)
 let ct_x_geq_d (x : clock_index) (d : LinearConstraint.p_linear_term) =
 	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d false
 
 
-(* Constraint x = d, with d LinearConstraint.p_linear_term : d - x = 0 *)
-let ct_x_eq_d (x : clock_index) (d : LinearConstraint.p_linear_term) =
-	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_eq d false
+(* Constraint x > d, with `d` LinearConstraint.p_linear_term : d - x = 0 *)
+let ct_x_g_d (x : clock_index) (d : LinearConstraint.p_linear_term) =
+	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_g d false
 
 
 (* Linear constraint x = 0 *)
@@ -474,12 +474,12 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 		(* Update actions per location for the silent action *)
 		actions_per_location.(location_init) <- nosync_index :: all_actions;
 		(* Update invariants *)
-		invariants.(location_init) <- ct_x_leq_d observer_clock_index d ;
+		invariants.(location_init) <- truec() (*ct_x_leq_d observer_clock_index d*) ;
 		(* Compute transitions *)
 		transitions.(location_init).(a) <- untimedt a location_ok;
 		transitions.(location_init).(nosync_index) <-
 			[{
-				guard		= Continuous_guard (ct_x_eq_d observer_clock_index d);
+				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= nosync_index;
 				updates		= create_update No_update [] [];
 				target		= location_nok;
@@ -653,7 +653,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 		(* Update actions per location for the silent action *)
 		actions_per_location.(1) <- nosync_index :: all_actions;
 		(* Update invariants *)
-		invariants.(1) <- ct_x_leq_d observer_clock_index d;
+		invariants.(1) <-  truec() (*ct_x_leq_d observer_clock_index d *);
 		(* Compute transitions *)
 		transitions.(0).(a1) <-
 			[{
@@ -667,7 +667,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 		transitions.(1).(a2) <- untimedt a2 2;
 		transitions.(1).(nosync_index) <-
 			[{
-				guard		= Continuous_guard (ct_x_eq_d observer_clock_index d);
+				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= nosync_index;
 				updates		= create_update No_update [] [];
 				target		= 3;
@@ -691,7 +691,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 		(* Update actions per location for the silent action *)
 		actions_per_location.(1) <- nosync_index :: all_actions;
 		(* Update invariants *)
-		invariants.(1) <- ct_x_leq_d observer_clock_index d;
+		invariants.(1) <-  truec() (*ct_x_leq_d observer_clock_index d *);
 		(* Compute transitions *)
 		transitions.(0).(a1) <-
 			[{
@@ -705,7 +705,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 		transitions.(1).(a2) <- untimedt a2 0;
 		transitions.(1).(nosync_index) <-
 			[{
-				guard		= Continuous_guard (ct_x_eq_d observer_clock_index d);
+				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= nosync_index;
 				updates		= create_update No_update [] [];
 				target		= 2;
@@ -729,7 +729,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 		(* Update actions per location for the silent action *)
 		actions_per_location.(1) <- nosync_index :: all_actions;
 		(* Update invariants *)
-		invariants.(1) <- ct_x_leq_d observer_clock_index d;
+		invariants.(1) <-  truec() (*ct_x_leq_d observer_clock_index d *);
 		(* Compute transitions *)
 		transitions.(0).(a1) <-
 			[{
@@ -743,7 +743,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 		transitions.(1).(a2) <- untimedt a2 0;
 		transitions.(1).(nosync_index) <-
 			[{
-				guard		= Continuous_guard (ct_x_eq_d observer_clock_index d);
+				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= nosync_index;
 				updates		= create_update No_update [] [];
 				target		= 2;
