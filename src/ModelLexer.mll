@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/01/20
+ * Last modified     : 2020/08/21
 *****************************************************************)
 
 {
@@ -51,6 +51,7 @@ rule token = parse
 	(* NOTE: just to forbid their use in the input model *)
  	| "automatically_generated_observer"       { CT_OBSERVER } (* to forbid this keyword, potentially used in the observer *)
  	| "automatically_generated_x_obs"       { CT_OBSERVER_CLOCK } (* to forbid this keyword, potentially used in the observer *)
+ 	| "nosync_obs" {CT_NOSYNCOBS} (* to forbid this keyword, used when an observer is defined *)
  	| "special_0_clock" {CT_SPECIAL_RESET_CLOCK_NAME} (* to forbid this keyword, used when a special reset clock is defined *)
 
  	(* All keywords *)

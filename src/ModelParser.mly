@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/01/20
+ * Last modified     : 2020/08/21
  *
  ************************************************************/
 
@@ -85,7 +85,7 @@ let unzip l = List.fold_left
 	CT_VAR
 	CT_WAIT CT_WHEN CT_WHILE CT_WITHIN
 	/* NOTE: just to forbid their use in the input model */
-	CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
+	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
 
 
 %token EOF
