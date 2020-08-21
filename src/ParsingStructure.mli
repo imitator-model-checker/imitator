@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/08/20
+ * Last modified     : 2020/08/21
  *
  ****************************************************************)
 
@@ -449,6 +449,8 @@ type parsed_property_type =
 	(* everytime a2 then a1 has happened once before *)
 	| Parsed_action_precedence_cyclicstrict of sync_name * sync_name
 
+	(* a within d *)
+	| Parsed_action_deadline of sync_name * parsed_duration
 
 
 type parsed_property = {

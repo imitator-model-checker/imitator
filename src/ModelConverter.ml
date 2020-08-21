@@ -92,7 +92,6 @@ type useful_parsing_model_information = {
 	index_of_automata					: (Automaton.automaton_name , Automaton.automaton_index) Hashtbl.t;
 	index_of_locations					: ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array;
 	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
-	nb_actions							: int;
 	nb_clocks							: int;
 	nb_parameters						: int;
 	parameter_names						: variable_name list;
@@ -1947,7 +1946,7 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 	done;
 	(* Fill the array for the observer no_sync *)
 	if with_observer_action then(
-		array_of_action_names.(nb_actions - 1) <- ("nosync_obs");
+		array_of_action_names.(nb_actions - 1) <- Constants.observer_nosync_name;
 		array_of_action_types.(nb_actions - 1) <- Action_type_nosync;
 	);
 
@@ -2634,7 +2633,10 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_action_precedence_cyclicstrict _
 			-> ()
 
-		
+		(* a within d *)
+		| Parsed_action_deadline (_ , duration)
+			-> get_variables_in_linear_expression variables_used_ref duration
+
 		
 		
 (*		(*** TODO ***)
@@ -2666,18 +2668,6 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
             | Parsed_unreachable_loc _ -> ()
           ) parsed_unreachable_global_location;
       ) parsed_unreachable_global_location_list
-
-  (* if a2 then a1 has happened before *)
-  | Action_precedence_acyclic _
-  (* everytime a2 then a1 has happened before *)
-  | Action_precedence_cyclic _
-  (* everytime a2 then a1 has happened once before *)
-  | Action_precedence_cyclicstrict _
-    -> ()
-
-  (* a no later than d *)
-  | Action_deadline (sync_name , duration)
-    -> get_variables_in_linear_expression variables_used_ref duration
 
   (* if a2 then a1 happened within d before *)
   | TB_Action_precedence_acyclic ((*sync_name*)_, (*sync_name*)_, duration)
@@ -3448,9 +3438,23 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		| ParsingStructure.Parsed_action_precedence_cyclicstrict ( a1 , a2 )
 			-> gen_check_2actions a1 a2
 		
+
+		(* CASE ACTION + DEADLINE *)
+		
+		(* a within d *)
+		| ParsingStructure.Parsed_action_deadline ( a , d )
+			->
+			(* Check action name and deadline (perform all even if one fails) *)
+			let check1 = check_action_name index_of_actions a in
+			let check2 = all_variables_defined_in_linear_expression variable_names constants d in
+			let check3 = (if no_variables_in_linear_expression index_of_variables type_of_variables constants d
+						then true
+						else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
+			in
+			check1 && check2 && check3
+
 		
 (*		(*** TODO ***)
-		| Parsed_Action_deadline _
 		| _
 			->
 			raise (NotImplemented "ModelConverter : check_property_option")*)
@@ -3477,41 +3481,7 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 			Unreachable_locations unreachable_global_location_list , !checks_passed
 
 
-		(* CASE TWO ACTIONS *)
-		(* if a2 then a1 has happened before *)
-		| ParsingStructure.Action_precedence_acyclic ( a1 , a2 )
-		(* everytime a2 then a1 has happened before *)
-		| ParsingStructure.Action_precedence_cyclic ( a1 , a2 )
-		(* everytime a2 then a1 has happened once before *)
-		| ParsingStructure.Action_precedence_cyclicstrict ( a1 , a2 )
-			(*** NOT IMPLEMENTED ***)
-			(*		(* if a1 then eventually a2 *)
-					| ParsingStructure.Eventual_response_acyclic ( a1 , a2 )
-					(* everytime a1 then eventually a2 *)
-					| ParsingStructure.Eventual_response_cyclic ( a1 , a2 )
-					(* everytime a1 then eventually a2 once before next *)
-					| ParsingStructure.Eventual_response_cyclicstrict ( a1 , a2 )*)
-			-> gen_check_and_convert_2act property a1 a2
 
-		(* CASE ACTION + DEADLINE *)
-		| ParsingStructure.Action_deadline ( a , d )
-			->
-			(* Check action name and deadline (perform 2 even if one fails) *)
-			let check1 = check_action_name index_of_actions a in
-			let check2 = all_variables_defined_in_linear_expression variable_names constants d in
-			let check3 = all_variables_defined_in_linear_expression variable_names constants d in
-			let check4 = (if no_variables_in_linear_expression index_of_variables type_of_variables constants d
-						then true
-						else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
-			in
-			if not (check1 && check2 && check3 && check4) then (None , false)
-			else (
-			(* Get action indexes *)
-			let action_index = Hashtbl.find index_of_actions a in
-			(* Convert deadline *)
-			let d = LinearConstraint.cast_p_of_pxd_linear_term (linear_term_of_linear_expression index_of_variables constants d) true in
-			AbstractModel.Action_deadline ( action_index , d ), true
-			)
 
 		(* CASE 2 ACTIONS + DEADLINE *)
 		(* if a2 then a1 happened within d before *)
@@ -3625,7 +3595,7 @@ type converted_observer_structure = {
 
 
 (* Convert ParsingStructure.parsed_property into AbstractProperty.property *)
-let convert_property_option useful_parsing_model_information (observer_automaton_index_option : automaton_index option) (observer_nosync_index_option : action_index option) (parsed_property_option : ParsingStructure.parsed_property option) : (AbstractProperty.abstract_property option * converted_observer_structure option) =
+let convert_property_option useful_parsing_model_information (nb_actions : int) (observer_automaton_index_option : automaton_index option) (observer_nosync_index_option : action_index option) (parsed_property_option : ParsingStructure.parsed_property option) : (AbstractProperty.abstract_property option * converted_observer_structure option) =
 	let constants			= useful_parsing_model_information.constants in
 	let discrete			= useful_parsing_model_information.discrete in
 	let index_of_actions	= useful_parsing_model_information.index_of_actions in
@@ -3955,13 +3925,28 @@ let convert_property_option useful_parsing_model_information (observer_automaton
 		(*------------------------------------------------------------*)
 		(* Observer patterns *)
 		(*------------------------------------------------------------*)
+		
+		(* CASE TWO ACTIONS *)
+		
 		(* if a2 then a1 has happened before *)
-		| ParsingStructure.Parsed_action_precedence_acyclic ( a1 , a2 )
+		| ParsingStructure.Parsed_action_precedence_acyclic _
 		(* everytime a2 then a1 has happened before *)
-		| ParsingStructure.Parsed_action_precedence_cyclic ( a1 , a2 )
+		| ParsingStructure.Parsed_action_precedence_cyclic _
 		(* everytime a2 then a1 has happened once before *)
-		| ParsingStructure.Parsed_action_precedence_cyclicstrict ( a1 , a2 )
+		| ParsingStructure.Parsed_action_precedence_cyclicstrict _
+
+		(* CASE ACTION + DEADLINE *)
+		
+		(* a within d *)
+		| ParsingStructure.Parsed_action_deadline _
 			->
+			
+(*			(* Get action indexes *)
+			let action_index = Hashtbl.find index_of_actions a in
+			(* Convert deadline *)
+			let d = LinearConstraint.cast_p_of_pxd_linear_term (linear_term_of_linear_expression index_of_variables constants d) true in
+			AbstractModel.Action_deadline ( action_index , d ), true
+			)*)
 		
 			(* Print some information *)
 			print_message Verbose_low ("*** The property is an observer pattern. Generating the observer…");
@@ -3987,12 +3972,18 @@ let convert_property_option useful_parsing_model_information (observer_automaton
 			(*** WARNING: quite a HACK, here ***)
 			let clock_obs = useful_parsing_model_information.nb_parameters + useful_parsing_model_information.nb_clocks - 1 in
 			
+			(* Print some information *)
+			print_message Verbose_total ("*** Retrieved the observer's clock index (if any): `" ^ (string_of_int clock_obs) ^ "`");
+			
 			(* Create the function action index -> action name *)
 			let action_index_of_action_name action_name = try (Hashtbl.find index_of_actions action_name) with Not_found -> raise (InternalError ("Action `" ^ action_name ^ "` not found in HashTable `index_of_actions` when defining function `action_index_of_action_name`, althoug this should have been checked before.")) in
 			
+			(* Create the function converting a ParsingStructure.parsed_duration into a LinearConstraint.p_linear_term *)
+			let p_linear_term_of_parsed_duration (parsed_duration : ParsingStructure.parsed_duration) : LinearConstraint.p_linear_term = LinearConstraint.cast_p_of_pxd_linear_term (linear_term_of_linear_expression index_of_variables constants parsed_duration) true in
+			
 			(* Get the info from the observer pattern *)
 			let observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions, initial_observer_constraint, abstract_property =
-				ObserverPatterns.get_observer_automaton action_index_of_action_name useful_parsing_model_information.nb_actions observer_automaton_index observer_nosync_index clock_obs parsed_property in
+				ObserverPatterns.get_observer_automaton action_index_of_action_name p_linear_term_of_parsed_duration nb_actions observer_automaton_index observer_nosync_index clock_obs parsed_property in
 
 			(* Count transitions *)
 			let nb_transitions_for_observer =
@@ -4018,10 +4009,12 @@ let convert_property_option useful_parsing_model_information (observer_automaton
 			abstract_property
 			,
 			Some converted_observer_structure
+		
+				(*** TODO ***)
+(*
+
 
 		
-		(*** TODO ***)
-(*		| Parsed_Action_deadline _
 		| _
 			->
 			raise (NotImplemented "ModelConverter.convert_property_option")*)
@@ -4029,22 +4022,6 @@ let convert_property_option useful_parsing_model_information (observer_automaton
 		
 		
 		(*
-		(* CASE NON-REACHABILITY *)
-		| Parsed_unreachable_locations parsed_unreachable_global_location_list (*(automaton_name , location_name)*) ->
-			(* Global flag for checks *)
-			let checks_passed = ref true in
-			(* Check and convert each global location *)
-			let unreachable_global_location_list = List.map (fun parsed_unreachable_global_location ->
-				(* Check and convert this parsed_unreachable_global_location *)
-				let unreachable_global_location , checked = check_and_convert_unreachable_global_location index_of_variables type_of_variables discrete variable_names index_of_automata index_of_locations parsed_unreachable_global_location in
-				(* Update global variable *)
-				checks_passed := !checks_passed && checked;
-				(* Keep abstract global location *)
-				unreachable_global_location
-			) parsed_unreachable_global_location_list
-			in
-			(* Return abstract structure and flag for checks *)
-			Unreachable_locations unreachable_global_location_list , !checks_passed
 
 
 		(* CASE TWO ACTIONS *)
@@ -4588,7 +4565,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		index_of_automata			= index_of_automata;
 		index_of_locations			= index_of_locations;
 		index_of_variables			= index_of_variables;
-		nb_actions					= nb_actions;
 		nb_clocks					= nb_clocks;
 		nb_parameters				= nb_parameters;
 		parameter_names				= parameter_names;
@@ -4691,7 +4667,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_high ("*** Building automata…");
 	(* Get all the possible actions for every location of every automaton *)
 	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_stopwatches, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option != None) in
+	
 	let nb_actions = List.length actions in
+	
+	(* Print some information *)
+	print_message Verbose_high ("The model contains " ^ (string_of_int nb_actions) ^ " action" ^ (s_of_int nb_actions) ^ ".");
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4700,7 +4680,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	
 	(* We may need to create additional structures for the observer, if any *)
 	
-	let abstract_property_option, converted_observer_structure_option = convert_property_option useful_parsing_model_information observer_automaton_index_option observer_nosync_index_option parsed_property_option in
+	let abstract_property_option, converted_observer_structure_option = convert_property_option useful_parsing_model_information nb_actions observer_automaton_index_option observer_nosync_index_option parsed_property_option in
 	
 	(* Convert some variables to catch up with older code below *)
 	let observer_structure_option, nb_transitions_for_observer, initial_observer_constraint_option = match converted_observer_structure_option with

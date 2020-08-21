@@ -18,24 +18,25 @@
 (************************************************************)
 open Exceptions
 open OCamlUtilities
+open Constants
 open ImitatorUtilities
+open Automaton
 open ParsingStructure
 open AbstractModel
 open AbstractProperty
 
 
 (************************************************************)
-(** Constants *)
+(** Building location names *)
 (************************************************************)
-let observer_automaton_name	= "automatically_generated_observer"
-let observer_clock_name		= "automatically_generated_x_obs"
 let location_prefix			= "loc_AutoGen_obs_"
-
 
 let location_name location_index =
 	location_prefix ^ (string_of_int location_index)
 
+(************************************************************)
 (** Shortcuts *)
+(************************************************************)
 let truec = LinearConstraint.pxd_true_constraint
 
 
@@ -59,30 +60,22 @@ let untimedt action_index target_index =
 	}]
 
 (* Constraint x <= d, with 'd' a LinearConstraint.p_linear_term : d - x >= 0 *)
-let ct_x_leq_d x d =
+let ct_x_leq_d (x : clock_index) (d : LinearConstraint.p_linear_term) =
 	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d true
 
 
 (* Constraint x >= d, with 'd' a LinearConstraint.p_linear_term : x - d >= 0 *)
-let ct_x_geq_d x d =
+let ct_x_geq_d (x : clock_index) (d : LinearConstraint.p_linear_term) =
 	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d false
 
 
-(*(* Linear inequality x = d, with d LinearConstraint.p_linear_term : d - x = 0 *)
-let lt_x_eq_d x d =
-	(* Build the linear term *)
-	let lt = LinearConstraint.add_linear_terms d (LinearConstraint.make_linear_term [NumConst.minus_one, x] NumConst.zero) in
-	(* Build linear inequality *)
-	LinearConstraint.make_linear_inequality lt LinearConstraint.Op_eq*)
-
-
 (* Constraint x = d, with d LinearConstraint.p_linear_term : d - x = 0 *)
-let ct_x_eq_d x d =
+let ct_x_eq_d (x : clock_index) (d : LinearConstraint.p_linear_term) =
 	LinearConstraint.pxd_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_eq d false
 
 
 (* Linear constraint x = 0 *)
-let lc_x_eq_0 x =
+let lc_x_eq_0 (x : clock_index) =
 	let d = LinearConstraint.make_p_linear_term [] NumConst.zero in
 	LinearConstraint.px_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d false
 
@@ -95,6 +88,9 @@ let lc_x_eq_0 x =
 (** Returns true whether the observer requires one clock *)
 let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 	match parsed_property.property with
+	
+	(* Non-observer properties *)
+	
 	| Parsed_EF _
 	| Parsed_AGnot _
 
@@ -126,14 +122,22 @@ let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_RandomSeq_cartography _
 	| Parsed_PRPC _
 
+	(* Untimed observers *)
+	
 	| Parsed_action_precedence_acyclic _
 	| Parsed_action_precedence_cyclic _
 	| Parsed_action_precedence_cyclicstrict _
-
-
-		->
-	false
-(* 	| Parsed_Action_deadline _ -> true *)
+	
+		-> false
+	
+	
+	(* Timed observers *)
+	
+	| Parsed_action_deadline _
+	
+		-> true
+	
+	
 	(*** TODO: finish later ***)
 (* 	| _ -> raise (NotImplemented "ObserverPatterns.needs_clock") *)
 
@@ -150,7 +154,9 @@ let make_AGnot_single_location automaton_index location_index =
 (* Create the new automata and new clocks necessary for the observer *)
 let new_elements (parsed_property : ParsingStructure.parsed_property) =
 	match parsed_property.property with
+	
 	(* No observer required: does not build anything *)
+	
 	| Parsed_EF _
 	| Parsed_AGnot _
 	
@@ -184,14 +190,17 @@ let new_elements (parsed_property : ParsingStructure.parsed_property) =
 	
 		-> (None , None)
 	
-	(* Untimed observers: add automaton, does not add clock *)
+	(* Untimed observers: add automaton, do not add clock *)
 	| ParsingStructure.Parsed_action_precedence_acyclic _
 	| ParsingStructure.Parsed_action_precedence_cyclic _
 	| ParsingStructure.Parsed_action_precedence_cyclicstrict _
 		-> (Some observer_automaton_name, None)
 	
-(*	| Parsed_Action_deadline _
+	(* Timed observers: add automaton, add clock *)
+	| Parsed_action_deadline _
 		-> (Some observer_automaton_name, Some observer_clock_name)
+		
+(*	
 	(*** TODO: finish later ***)
 	| _ -> raise (NotImplemented "ObserverPatterns.new_elements")*)
 
@@ -249,12 +258,17 @@ let get_nb_locations (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_PRPC _
 		-> 0
 	
+	(* Observers *)
+
 	| ParsingStructure.Parsed_action_precedence_acyclic _
 	| ParsingStructure.Parsed_action_precedence_cyclic _
 	| ParsingStructure.Parsed_action_precedence_cyclicstrict _
 		-> 3
+	
+	| ParsingStructure.Parsed_action_deadline _
+		-> 3
 
-(* 	| Parsed_Action_deadline _ -> 3 *)
+(* 	 *)
 	(*** TODO: finish later ***)
 (* 	| _ -> raise (NotImplemented "ObserverPatterns.get_nb_locations") *)
 	(*
@@ -299,7 +313,7 @@ let get_locations property =
 	- Property
 *)
 (*------------------------------------------------------------*)
-let get_observer_automaton action_index_of_action_name nb_actions automaton_index nosync_index x_obs (parsed_property : ParsingStructure.parsed_property) =
+let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_duration : ParsingStructure.parsed_duration -> LinearConstraint.p_linear_term) (nb_actions : int) automaton_index nosync_index observer_clock_index (parsed_property : ParsingStructure.parsed_property) =
 	(* Create the common structures *)
 	let initialize_structures nb_locations all_actions =
 		(* Array for actions for location *)
@@ -331,9 +345,23 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 			List.iter (fun action_index -> allow_all.(action_index) <- untimedt action_index location_index) all_actions;
 			allow_all
 	in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_high ("Entering `get_observer_automaton` with"
+		^ "\n      - nb_actions            = " ^ (string_of_int nb_actions)
+		^ "\n      - automaton_index       = " ^ (string_of_int automaton_index)
+		^ "\n      - nosync_index          = " ^ (string_of_int nosync_index)
+		^ "\n      - observer_clock_index  = " ^ (string_of_int observer_clock_index)
+		^ "");
+	);
 
+	
 	match parsed_property.property with
-		
+	
+	(*------------------------------------------------------------*)
+	(* if a2 then a1 has happened before *)
+	(*------------------------------------------------------------*)
 	| Parsed_action_precedence_acyclic (action_name1, action_name2) ->
 		
 		(* Convert action names to indexes *)
@@ -360,6 +388,9 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		make_AGnot_single_location automaton_index 2
 
 
+	(*------------------------------------------------------------*)
+	(* everytime a2 then a1 has happened before *)
+	(*------------------------------------------------------------*)
 	| Parsed_action_precedence_cyclic (action_name1, action_name2) ->
 		(* Convert action names to indexes *)
 		let a1 = action_index_of_action_name action_name1 in
@@ -395,6 +426,9 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		make_AGnot_single_location automaton_index 2
 
 
+	(*------------------------------------------------------------*)
+	(* everytime a2 then a1 has happened once before *)
+	(*------------------------------------------------------------*)
 	| Parsed_action_precedence_cyclicstrict (action_name1, action_name2) ->
 		(* Convert action names to indexes *)
 		let a1 = action_index_of_action_name action_name1 in
@@ -420,19 +454,15 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		make_AGnot_single_location automaton_index 2
 
 
-	(*** TODO: finish later ***)
-	| _ -> raise (NotImplemented "ObserverPatterns.get_observer_automaton")
-(*
+	(*------------------------------------------------------------*)
+	(* a within d *)
+	(*------------------------------------------------------------*)
+	| Parsed_action_deadline (action_name, parsed_duration) ->
+		(* Convert action name to index *)
+		let a = action_index_of_action_name action_name in
+		(* Convert parsed_duration *)
+		let d = p_linear_term_of_parsed_duration parsed_duration in
 
-
-			(*** NOT IMPLEMENTED ***)
-(*	| Eventual_response_acyclic (a1, a2)
-	| Eventual_response_cyclic (a1, a2)
-	| Eventual_response_cyclicstrict (a1, a2)
-		-> raise (InternalError("Observer not implemented."))*)
-
-
-	| Parsed_action_deadline (action_name, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a] in
 		(* Initialize *)
@@ -440,12 +470,12 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		(* Update actions per location for the silent action *)
 		actions_per_location.(0) <- nosync_index :: all_actions;
 		(* Update invariants *)
-		invariants.(0) <- ct_x_leq_d x_obs d ;
+		invariants.(0) <- ct_x_leq_d observer_clock_index d ;
 		(* Compute transitions *)
 		transitions.(0).(a) <- untimedt a 1;
 		transitions.(0).(nosync_index) <-
 			[{
-				guard		= Continuous_guard (ct_x_eq_d x_obs d);
+				guard		= Continuous_guard (ct_x_eq_d observer_clock_index d);
 				action		= nosync_index;
 				updates		= create_update No_update [] [];
 				target		= 2;
@@ -454,12 +484,21 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		transitions.(2) <- allow_all 2;
 		(* Return structure (and add silent action) *)
 		nosync_index :: all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
-		(* Return x_obs = 0 *)
-		Some (lc_x_eq_0 x_obs),
+		(* Return observer_clock_index = 0 *)
+		Some (lc_x_eq_0 observer_clock_index),
 		(* Reduce to safety property *)
 		make_AGnot_single_location automaton_index 2
 
 
+		
+		(*** TODO: finish later ***)
+	| _ -> raise (NotImplemented "ObserverPatterns.get_observer_automaton")
+(*
+
+
+
+	(*------------------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	| Parsed_TB_Action_precedence_acyclic (action_name1, action_name2, d) ->
 		let nb_locations = 4 in
 		let all_actions = [a1; a2] in
@@ -471,7 +510,7 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates		= create_update (Resets [x_obs]) [] [];
+				updates		= create_update (Resets [observer_clock_index]) [] [];
 				target		= 1;
 			}];
 		transitions.(0).(a2) <- untimedt a2 3;
@@ -479,20 +518,20 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates		= create_update (Resets [x_obs]) [] [];
+				updates		= create_update (Resets [observer_clock_index]) [] [];
 				target		= 1;
 			}];
 		transitions.(1).(a2) <-
 			[
 			{
-				guard		= Continuous_guard (ct_x_leq_d x_obs d);
+				guard		= Continuous_guard (ct_x_leq_d observer_clock_index d);
 				action		= a2;
 				updates		= create_update No_update [] [];
 				target		= 2;
 			}
 			;
 			{
-				guard		= Continuous_guard (ct_x_geq_d x_obs d);
+				guard		= Continuous_guard (ct_x_geq_d observer_clock_index d);
 				action		= a2;
 				updates		= create_update No_update [] [];
 				target		= 3;
@@ -508,6 +547,8 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		make_AGnot_single_location automaton_index 3
 
 
+	(*------------------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	| Parsed_TB_Action_precedence_cyclic (action_name1, action_name2, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
@@ -519,7 +560,7 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates		= create_update (Resets [x_obs]) [] [];
+				updates		= create_update (Resets [observer_clock_index]) [] [];
 				target		= 1;
 			}];
 		transitions.(0).(a2) <- untimedt a2 2;
@@ -527,20 +568,20 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates		= create_update (Resets [x_obs]) [] [];
+				updates		= create_update (Resets [observer_clock_index]) [] [];
 				target		= 1;
 			}];
 		transitions.(1).(a2) <-
 			[
 			{
-				guard		= Continuous_guard (ct_x_leq_d x_obs d);
+				guard		= Continuous_guard (ct_x_leq_d observer_clock_index d);
 				action		= a2;
 				updates		= create_update No_update [] [];
 				target		= 0;
 			}
 			;
 			{
-				guard		= Continuous_guard (ct_x_geq_d x_obs d);
+				guard		= Continuous_guard (ct_x_geq_d observer_clock_index d);
 				action		= a2;
 				updates		= create_update No_update [] [];
 				target		= 2;
@@ -555,6 +596,8 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		make_AGnot_single_location automaton_index 2
 
 
+	(*------------------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	| Parsed_TB_Action_precedence_cyclicstrict (action_name1, action_name2, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
@@ -566,7 +609,7 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates		= create_update (Resets [x_obs]) [] [];
+				updates		= create_update (Resets [observer_clock_index]) [] [];
 				target		= 1;
 			}];
 		transitions.(0).(a2) <- untimedt a2 2;
@@ -574,14 +617,14 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		transitions.(1).(a2) <-
 			[
 			{
-				guard		= Continuous_guard (ct_x_leq_d x_obs d);
+				guard		= Continuous_guard (ct_x_leq_d observer_clock_index d);
 				action		= a2;
 				updates		= create_update No_update [] [];
 				target		= 0;
 			}
 			;
 			{
-				guard		= Continuous_guard (ct_x_geq_d x_obs d);
+				guard		= Continuous_guard (ct_x_geq_d observer_clock_index d);
 				action		= a2;
 				updates		= create_update No_update [] [];
 				target		= 2;
@@ -596,6 +639,8 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		make_AGnot_single_location automaton_index 2
 
 
+	(*------------------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	| Parsed_TB_response_acyclic (action_name1, action_name2, d) ->
 		let nb_locations = 4 in
 		let all_actions = [a1; a2] in
@@ -604,13 +649,13 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		(* Update actions per location for the silent action *)
 		actions_per_location.(1) <- nosync_index :: all_actions;
 		(* Update invariants *)
-		invariants.(1) <- ct_x_leq_d x_obs d;
+		invariants.(1) <- ct_x_leq_d observer_clock_index d;
 		(* Compute transitions *)
 		transitions.(0).(a1) <-
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates		= create_update (Resets [x_obs]) [] [];
+				updates		= create_update (Resets [observer_clock_index]) [] [];
 				target		= 1;
 			}];
 		transitions.(0).(a2) <- untimedt a2 0;
@@ -618,7 +663,7 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		transitions.(1).(a2) <- untimedt a2 2;
 		transitions.(1).(nosync_index) <-
 			[{
-				guard		= Continuous_guard (ct_x_eq_d x_obs d);
+				guard		= Continuous_guard (ct_x_eq_d observer_clock_index d);
 				action		= nosync_index;
 				updates		= create_update No_update [] [];
 				target		= 3;
@@ -632,6 +677,8 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		(* Reduce to safety property *)
 		make_AGnot_single_location automaton_index 3
 
+	(*------------------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	| TB_response_cyclic (action_name1, action_name2, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
@@ -640,13 +687,13 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		(* Update actions per location for the silent action *)
 		actions_per_location.(1) <- nosync_index :: all_actions;
 		(* Update invariants *)
-		invariants.(1) <- ct_x_leq_d x_obs d;
+		invariants.(1) <- ct_x_leq_d observer_clock_index d;
 		(* Compute transitions *)
 		transitions.(0).(a1) <-
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates		= create_update (Resets [x_obs]) [] [];
+				updates		= create_update (Resets [observer_clock_index]) [] [];
 				target		= 1;
 			}];
 		transitions.(0).(a2) <- untimedt a2 0;
@@ -654,7 +701,7 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		transitions.(1).(a2) <- untimedt a2 0;
 		transitions.(1).(nosync_index) <-
 			[{
-				guard		= Continuous_guard (ct_x_eq_d x_obs d);
+				guard		= Continuous_guard (ct_x_eq_d observer_clock_index d);
 				action		= nosync_index;
 				updates		= create_update No_update [] [];
 				target		= 2;
@@ -668,6 +715,8 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		make_AGnot_single_location automaton_index 2
 
 
+	(*------------------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	| Parsed_TB_response_cyclicstrict (action_name1, action_name2, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
@@ -676,13 +725,13 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		(* Update actions per location for the silent action *)
 		actions_per_location.(1) <- nosync_index :: all_actions;
 		(* Update invariants *)
-		invariants.(1) <- ct_x_leq_d x_obs d;
+		invariants.(1) <- ct_x_leq_d observer_clock_index d;
 		(* Compute transitions *)
 		transitions.(0).(a1) <-
 			[{
 				guard		= True_guard;
 				action		= a1;
-				updates		= create_update (Resets [x_obs]) [] [];
+				updates		= create_update (Resets [observer_clock_index]) [] [];
 				target		= 1;
 			}];
 		transitions.(0).(a2) <- untimedt a2 2;
@@ -690,7 +739,7 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		transitions.(1).(a2) <- untimedt a2 0;
 		transitions.(1).(nosync_index) <-
 			[{
-				guard		= Continuous_guard (ct_x_eq_d x_obs d);
+				guard		= Continuous_guard (ct_x_eq_d observer_clock_index d);
 				action		= nosync_index;
 				updates		= create_update No_update [] [];
 				target		= 2;
@@ -704,6 +753,8 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		make_AGnot_single_location automaton_index 2
 
 
+	(*------------------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	| Parsed_sequence_acyclic list_of_actions ->
 		let nb_locations = (List.length list_of_actions) + 2 in
 		let all_actions = list_of_actions in
@@ -742,6 +793,8 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		make_AGnot_single_location automaton_index lbad
 
 
+	(*------------------------------------------------------------*)
+	(*------------------------------------------------------------*)
 	| Parsed_sequence_cyclic list_of_actions ->
 		let nb_locations = (List.length list_of_actions) + 1 in
 		let all_actions = list_of_actions in

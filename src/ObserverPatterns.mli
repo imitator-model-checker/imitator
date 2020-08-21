@@ -35,10 +35,16 @@ val new_elements : ParsingStructure.parsed_property-> (string option * string op
 val get_locations : ParsingStructure.parsed_property -> (location_name array)
 
 (* Create the observer;
-	Takes as parameters the number of actions, the automaton_index, the nosync index for the observer
+	Takes as parameters:
+		- the function retrieving the index of an action name
+		- the function converting a ParsingStructure.parsed_duration into a LinearConstraint.p_linear_term
+		- the number of actions
+		- the automaton_index of the observer
+		- the nosync index for the observer
+		- the clock index for the observer
 	Returns all information for building the automaton + reduces the user-defined property to a safety property
 *)
-val get_observer_automaton : (action_name -> action_index) -> int -> automaton_index -> action_index -> clock_index -> ParsingStructure.parsed_property -> 
+val get_observer_automaton : (action_name -> action_index) -> (ParsingStructure.parsed_duration -> LinearConstraint.p_linear_term) -> int -> automaton_index -> action_index -> clock_index -> ParsingStructure.parsed_property -> 
 	(* Actions per automaton *)
 	  action_index list
 	(* Actions per location *)

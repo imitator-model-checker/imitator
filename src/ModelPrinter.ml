@@ -541,14 +541,14 @@ let string_of_automaton model automaton_index =
 
 (* Convert the automata into a string *)
 let string_of_automata model =
-	(*** WARNING: Do not print the observer ***)
+(*	(*** WARNING: Do not print the observer ***)
 	let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
-	in
+	in*)
 
 	(* Print all (other) PTA *)
 	string_of_list_of_string_with_sep "\n\n" (
 		List.map (fun automaton_index -> string_of_automaton model automaton_index
-	) pta_without_obs)
+	) model.automata)
 
 
 
