@@ -700,11 +700,16 @@ However, many correctness properties can be encoded using reachability using \em
 
 Encoding observers can be done manually (using \adhoc{} \IPTA{}), or using predefined correctness property patterns commonly met in the literature.
 
+\begin{warning}
+	These properties assume \emph{time-progress}, \ie{} if the model is stuck in a \emph{time-lock}, these properties may give incorrect results.
+\end{warning}
+
+
 If using a predefined property pattern, the property pattern must be specified as follows:
 
 \styleIMI{property := \#synth [PROP]}
 \\
-where \styleIMI{[PROP]} must conform to one of the following patterns, where  \styleIMI{a}, \styleIMI{a1}, \styleIMI{a2} are actions, and the deadline \styleIMI{d} is a (possibly parametric) linear expression:
+where \styleIMI{[PROP]} must follow the syntax of the following patterns, where \styleIMI{a}, \styleIMI{a1}, \styleIMI{a2} are actions, and the deadline \styleIMI{d} is a (possibly parametric) linear expression:
 
 \begin{itemize}
 	\item \styleIMI{if a2 then a1 has happened before}
@@ -734,6 +739,8 @@ The semantics of these properties is detailed in~\cite{Andre13ICECCS}.
 % \styleCommand{\binimitator{} model.imi -mode EF -merge -incl -output-result}
 % 
 % Once more, options \styleOption{-merge} and \styleOption{-incl} are optional, but often improve efficiency and termination.
+
+\imitator{} then translates the selected pattern into an additional observer automaton, and performs some safety or reachability synthesis.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
