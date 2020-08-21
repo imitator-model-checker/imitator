@@ -10,7 +10,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/04/23
+ * Last modified     : 2020/08/21
  *
  ************************************************************)
 
@@ -195,7 +195,7 @@ class imitator_options =
 		val mutable precomputepi0 = ref false
 		
 		(* Name for the file containing the property *)
-		val mutable property_file_name = "uninitialized property file name"
+		val mutable property_file_name = None
 		
 		(* limit number of states *)
 		val mutable states_limit = ref None
@@ -873,7 +873,7 @@ class imitator_options =
 				(* If 2nd argument: property file *)
 				else if nb_args = 1 then(
 					nb_args <- nb_args + 1;
-					property_file_name <- arg;
+					property_file_name <- Some arg;
 					(* Property => mode = algorithm *)
 					imitator_mode <- Algorithm;
 				)
@@ -897,7 +897,7 @@ class imitator_options =
 			);
 			
 			(* Case no property file, although it is needed *)
-			if nb_args = 1 && (property_needed imitator_mode) then(
+			if nb_args = 1 && (property_needed imitator_mode = Second_file_required) then(
 				(*** HACK: print header now ***)
 				print_header_string();
 				print_error ("Please give a file name for the property.");

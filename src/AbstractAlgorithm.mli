@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/18
- * Last modified     : 2020/01/09
+ * Last modified     : 2020/08/21
  *
  ************************************************************)
 
@@ -222,8 +222,13 @@ type graphical_state_space =
 (** Predicates on mode *)
 (************************************************************)
 
-val property_needed              : imitator_mode -> bool
-(*val is_mode_IM                   : imitator_mode -> bool*)
+(* Does the algorithm require a second (property) file in addition to the model? *)
+type second_file_need =
+	| Second_file_required
+	| Second_file_optional
+	| Second_file_useless
+
+val property_needed              : imitator_mode -> second_file_need
 val cartography_drawing_possible : imitator_mode -> bool
 
 

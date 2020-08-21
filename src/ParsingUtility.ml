@@ -167,17 +167,28 @@ let compile_model_and_property options =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Parsing the property *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	
+	(* We parse a property file if 1) the algorithm requires a property OR 2) the algorithm has an optional property and there is indeed a property *)
+	let property_parsing =
+		AbstractAlgorithm.property_needed options#imitator_mode = Second_file_required
+		or
+		(AbstractAlgorithm.property_needed options#imitator_mode = Second_file_optional && options#property_file_name <> None)
+	in
 
 	let parsed_property_option =
-	if AbstractAlgorithm.property_needed options#imitator_mode then(
+	if property_parsing then(
 		(* Statistics *)
 		parsing_counter#start;
 
+		(* Get the file name *)
+		let property_file_name = match options#property_file_name with
+			| Some property_file_name -> property_file_name
+			| None -> raise (InternalError "No property file name found in `compile_model_and_property` although it was expected.")
+		in
+		
+		print_message Verbose_low ("Parsing property file `" ^ property_file_name ^ "\…");
+		
 		(* Parsing the property *)
-		let property_file_name = options#property_file_name in
-		
-		print_message Verbose_low ("Parsing property file " ^ options#property_file_name ^ "…");
-		
 		let parsed_property : ParsingStructure.parsed_property = parser_lexer_from_file PropertyParser.main PropertyLexer.token property_file_name in
 
 		(* Statistics *)

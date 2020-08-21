@@ -197,16 +197,20 @@ if verbose_mode_greater Verbose_high then(
 (************************************************************)
 (* Debug print: property *)
 (************************************************************)
-if AbstractAlgorithm.property_needed options#imitator_mode then(
-	let property = Input.get_property() in
-	
-	print_message Verbose_total ("\nPreparing to print the property…");
-	let property_string = ModelPrinter.string_of_abstract_property model property in
-	
-	print_message Verbose_low ("\nThe property is the following one:\n" ^ property_string ^ "\n");
-);
+begin
+match options#property_file_name with
+	| Some _ ->
+		let property = Input.get_property() in
+		
+		print_message Verbose_total ("\nPreparing to print the property…");
+		let property_string = ModelPrinter.string_of_abstract_property model property in
+		
+		print_message Verbose_low ("\nThe property is the following one:\n" ^ property_string ^ "\n");
 
+	| None _ ->
+		()
 
+end;
 
 
 

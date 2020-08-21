@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2020/04/23
+ * Last modified: 2020/08/21
  *
  ************************************************************)
  
@@ -79,7 +79,7 @@ class imitator_options :
 		method output_tiles_files : bool
 		method pi_compatible : bool
 		method precomputepi0 : bool
-		method property_file_name : string
+		method property_file_name : string option
 		method states_limit : int option
 		method statistics : bool
 		method step : NumConst.t

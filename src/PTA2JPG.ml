@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2012/08/24
- * Last modified     : 2020/01/08
+ * Last modified     : 2020/08/21
  *
  ************************************************************)
 
@@ -305,12 +305,12 @@ Generation time: " ^ (now()) ^ "\"];"
 
 
 	^ (
-		(* Do not print the observer *)
+(*		(* Do not print the observer *)
 		let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
-		in
+		in*)
 		string_of_list_of_string_with_sep "\n\n" (
 			List.map (fun automaton_index -> string_of_automaton model automaton_index
-		) pta_without_obs)
+		) model.automata)
 	)
 	^ "\n\n/**************************************************/"
 	^ "\n/* Ending general graph */"

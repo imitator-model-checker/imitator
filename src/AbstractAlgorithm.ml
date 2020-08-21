@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/18
- * Last modified     : 2020/01/11
+ * Last modified     : 2020/08/21
  *
  ************************************************************)
 
@@ -227,14 +227,22 @@ type graphical_state_space =
 (** Predicates on mode *)
 (************************************************************)
 
-(*** NOTE: explicit definition to avoid to forget a new algorithm (which would raise a warning upon compiling) ***)
+(* Does the algorithm require a second (property) file in addition to the model? *)
+type second_file_need =
+	| Second_file_required
+	| Second_file_optional
+	| Second_file_useless
+
 let property_needed = function
 	| Syntax_check
 	| State_space_computation
+		-> Second_file_useless
+		
 	| Translation _
-		-> false
-	| Algorithm (*_*)
-		-> true
+		-> Second_file_optional
+	
+	| Algorithm
+		-> Second_file_required
 
 (*
 (*** NOTE: explicit definition to avoid to forget a new algorithm (which would raise a warning upon compiling) ***)

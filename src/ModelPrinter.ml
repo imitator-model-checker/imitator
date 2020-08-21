@@ -98,7 +98,7 @@ let model_header() =
 let property_header() =
 	let options = Input.get_options () in
 	common_header
-	^ "\n" ^ " * Model    : '" ^ options#property_file_name ^ "'"
+	^ "\n" ^ " * Model    : '" ^ (match options#property_file_name with Some property_file_name -> property_file_name | None -> raise (InternalError "Property file name not found in `ModelPrinter.property_header()`")) ^ "'"
 	^ "\n" ^ " * Generated: " ^ (now()) ^ ""
 	^ "\n" ^ " ************************************************************)"
 	^ "\n"
