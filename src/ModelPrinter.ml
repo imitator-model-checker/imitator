@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/08/20
+ * Last modified     : 2020/08/21
  *
  ************************************************************)
 
@@ -863,58 +863,6 @@ let string_of_abstract_property model property =
 	(* Add the projection, if any *)
 	(string_of_projection model property)
 
-(*	match property with
-	(* An "OR" list of global locations *)
-	| Unreachable_locations unreachable_global_location_list ->
-		"property := unreachable " ^ (
-			string_of_list_of_string_with_sep "\n or \n " (List.map (string_of_unreachable_location model) unreachable_global_location_list)
-		)
-
-	(*** NOTE: not implemented ***)
-(*	(* if a1 then eventually a2 *)
-	| Eventual_response_acyclic (a1 , a2) -> ""
-	(* everytime a1 then eventually a2 *)
-	| Eventual_response_cyclic (a1 , a2) -> ""
-	(* everytime a1 then eventually a2 once before next *)
-	| Eventual_response_cyclicstrict (a1 , a2) -> ""
-	*)
-
-	(* a no later than d *)
-	| Action_deadline (a, d) ->
-		"property := " ^ (model.action_names a) ^ " no later than " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ ";"
-
-	(* if a2 then a1 happened within d before *)
-	| TB_Action_precedence_acyclic (a1 , a2, d) ->
-		"property := if " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " before;"
-	(* everytime a2 then a1 happened within d before *)
-	| TB_Action_precedence_cyclic (a1 , a2, d) ->
-		"property := everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " before;"
-	(* everytime a2 then a1 happened once within d before *)
-	| TB_Action_precedence_cyclicstrict (a1 , a2, d) ->
-		"property := everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened once within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " before;"
-
-	(* if a1 then eventually a2 within d *)
-	| TB_response_acyclic (a1 , a2, d) ->
-		"property := if " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ ";"
-	(* everytime a1 then eventually a2 within d *)
-	| TB_response_cyclic (a1 , a2, d) ->
-		"property := everytime " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ ";"
-	(* everytime a1 then eventually a2 within d once before next *)
-	| TB_response_cyclicstrict (a1 , a2, d) ->
-		"property := if " ^ (model.action_names a2) ^ " then eventually " ^ (model.action_names a1) ^ " within " ^ (LinearConstraint.string_of_p_linear_term model.variable_names d) ^ " once before next;"
-
-	(* sequence a1, …, an *)
-	| Sequence_acyclic action_index_list ->
-		"property := sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
-	(* always sequence a1, …, an *)
-	| Sequence_cyclic action_index_list ->
-		"property := always sequence (" ^ (string_of_list_of_string_with_sep ", " (List.map model.action_names action_index_list)) ^ ");"
-
-	(*** NOTE: Would be better to have an "option" type ***)
-	| Noproperty -> "(* no property *)"*)
-
-
-
 
 (************************************************************)
 (** Model *)
@@ -930,13 +878,6 @@ let string_of_model model =
 	^  "\n" ^ string_of_automata model
 	(* The initial state *)
 	^ "\n" ^ string_of_initial_state ()
-(*	(* The property *)
-	^ property_header
-	^  "\n" ^ string_of_property model model.user_property
-	(* The projection *)
-	^  "\n" ^ string_of_projection model
-	(* The optimization *)
-	^  "\n" ^ string_of_optimization model*)
 	(* The footer *)
 	^  "\n" ^ footer
 
