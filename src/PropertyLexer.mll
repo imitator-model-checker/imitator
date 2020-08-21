@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/08/14
+ * Last modified     : 2020/08/21
 *****************************************************************)
 
 {
@@ -31,6 +31,12 @@ rule token = parse
 		{ comment_depth := 1;
 		comment_ocaml lexbuf;
 		token lexbuf }
+
+	(*** NOTE: just to forbid their use in the input model and property ***)
+ 	| "automatically_generated_observer"    { CT_OBSERVER }                (* to forbid this keyword, potentially used in the observer *)
+ 	| "automatically_generated_x_obs"       { CT_OBSERVER_CLOCK }          (* to forbid this keyword, potentially used in the observer *)
+ 	| "nosync_obs"                          { CT_NOSYNCOBS}                (* to forbid this keyword, used when an observer is defined *)
+ 	| "special_0_clock"                     { CT_SPECIAL_RESET_CLOCK_NAME} (* to forbid this keyword, used when a special reset clock is defined *)
 
 	(* Synthesis type *)
  	| "#exhibit"       { CT_EXHIBIT }
@@ -92,7 +98,6 @@ rule token = parse
 	| "sequence"       { CT_SEQUENCE }
  	| "then"           { CT_THEN }
 	| "True"           { CT_TRUE }
- 	| "unreachable"    { CT_UNREACHABLE }
 	| "when"           { CT_WHEN }
 	| "within"         { CT_WITHIN }
 

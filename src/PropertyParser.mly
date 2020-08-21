@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/08/20
+ * Last modified     : 2020/08/21
  *
  ************************************************************/
 
@@ -71,9 +71,10 @@ let resolve_property l =
 	CT_PROPERTY
 	CT_SEQUENCE CT_SYNTH
 	CT_THEN CT_TRACEPRESERVATION CT_TRUE
-	CT_UNREACHABLE 
 	CT_WHEN CT_WITHIN
 
+	/*** NOTE: just to forbid their use in the input model and property ***/
+	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
  	
 %token EOF
 

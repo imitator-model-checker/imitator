@@ -48,18 +48,17 @@ rule token = parse
 		comment_ocaml lexbuf;
 		token lexbuf }
 
-	(* NOTE: just to forbid their use in the input model *)
- 	| "automatically_generated_observer"       { CT_OBSERVER } (* to forbid this keyword, potentially used in the observer *)
- 	| "automatically_generated_x_obs"       { CT_OBSERVER_CLOCK } (* to forbid this keyword, potentially used in the observer *)
- 	| "nosync_obs" {CT_NOSYNCOBS} (* to forbid this keyword, used when an observer is defined *)
- 	| "special_0_clock" {CT_SPECIAL_RESET_CLOCK_NAME} (* to forbid this keyword, used when a special reset clock is defined *)
+	(*** NOTE: just to forbid their use in the input model and property ***)
+ 	| "automatically_generated_observer"    { CT_OBSERVER }                (* to forbid this keyword, potentially used in the observer *)
+ 	| "automatically_generated_x_obs"       { CT_OBSERVER_CLOCK }          (* to forbid this keyword, potentially used in the observer *)
+ 	| "nosync_obs"                          { CT_NOSYNCOBS}                (* to forbid this keyword, used when an observer is defined *)
+ 	| "special_0_clock"                     { CT_SPECIAL_RESET_CLOCK_NAME} (* to forbid this keyword, used when a special reset clock is defined *)
 
  	(* All keywords *)
  	| "accepting"      { CT_ACCEPTING }
 	| "always"         { CT_ALWAYS }
 	| "and"            { CT_AND }
 	| "automaton"      { CT_AUTOMATON }
-	| "bad"            { CT_BAD }
  	| "before"         { CT_BEFORE }
 	| "clock"          { CT_CLOCK }
 	| "constant"       { CT_CONSTANT }
@@ -79,13 +78,11 @@ rule token = parse
 	| "initially"      { CT_INITIALLY }
 	| "invariant"      { CT_INVARIANT }
 	| "loc"            { CT_LOC }
-	| "locations"      { CT_LOCATIONS }
 	| "next"           { CT_NEXT }
 	| "not"            { CT_NOT }
  	| "once"           { CT_ONCE }
 	| "or"             { CT_OR }
 	| "parameter"      { CT_PARAMETER }
-	| "region"         { CT_REGION }
 	| "sequence"       { CT_SEQUENCE }
 	| "stop"           { CT_STOP }
 	| "sync"           { CT_SYNC }
