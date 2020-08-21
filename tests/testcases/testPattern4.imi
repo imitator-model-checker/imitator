@@ -1,0 +1,85 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Simple model to test observer patterns
+ *
+ * Description     : Simple model to test observer pattern "a within d"
+ * Correctness     : The pattern should be satisfied for the following parameter valuations: p \in (2, 3]
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/08/21
+ * Last modified   : 2020/08/21
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant x <= 2
+	(* Disabled if p > 2 *)
+	when x = p goto l2;
+	
+	when x = 2 sync a goto l3;
+
+	when True goto l4;
+
+loc l2: invariant True
+
+loc l3: invariant True
+
+loc l4: invariant x <= 2
+	(* Can be taken whenever p \in [1, 3] *)
+	(*** NOTE: there is a time-lock for other valuations of p ***)
+	when x = 2 & 1 <= p & p <= 3 sync a goto l5;
+
+loc l5: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -1982,7 +1982,7 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened once before',
+		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened once before" on a model for 3 patterns',
 		'input_files': ['testPattern2.imi', 'testPattern2-everytimeonce.imiprop'],
 		'options'    : '-merge -incl -output-result',
 		'expectations' : [
@@ -1998,6 +1998,61 @@ OR
 OR
   p > 2
 & 3 > p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	# WARNING: the expected result is different from the (mathematically) sound result, due to a time-lock; observer patterns are incorrect in presence of time-locks
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "a within d"',
+		'input_files': ['testPattern3.imi', 'testPattern3.imiprop'],
+		'options'    : '-merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testPattern3.res' , 'content' : """
+BEGIN CONSTRAINT
+ 3 >= p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	# WARNING: the expected result is different from the (mathematically) sound result, due to a time-lock; observer patterns are incorrect in presence of time-locks
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "a within d"',
+		'input_files': ['testPattern4.imi', 'testPattern4.imiprop'],
+		'options'    : '-merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testPattern4.res' , 'content' : """
+BEGIN CONSTRAINT
+ p > 2
 END CONSTRAINT
 
 ------------------------------------------------------------

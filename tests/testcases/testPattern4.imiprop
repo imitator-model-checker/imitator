@@ -1,0 +1,20 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Simple model to test observer patterns
+ *
+ * Description     : Simple model to test observer pattern "a within d"
+ * Correctness     : The pattern should be satisfied for the following parameter valuations: p \in (2, 3]
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/08/21
+ * Last modified   : 2020/08/21
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+property := #synth a within 2;
