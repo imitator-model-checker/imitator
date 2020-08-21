@@ -77,7 +77,7 @@ let ct_x_eq_d (x : clock_index) (d : LinearConstraint.p_linear_term) =
 (* Linear constraint x = 0 *)
 let lc_x_eq_0 (x : clock_index) =
 	let d = LinearConstraint.make_p_linear_term [] NumConst.zero in
-	LinearConstraint.px_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_ge d false
+	LinearConstraint.px_linear_constraint_of_clock_and_parameters x LinearConstraint.Op_eq d false
 
 
 
@@ -463,31 +463,35 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 		(* Convert parsed_duration *)
 		let d = p_linear_term_of_parsed_duration parsed_duration in
 
-		let nb_locations = 3 in
+		let nb_locations	= 3 in
+		let location_init	= 0 in
+		let location_ok		= 1 in
+		let location_nok	= 2 in
+		
 		let all_actions = [a] in
 		(* Initialize *)
 		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* Update actions per location for the silent action *)
-		actions_per_location.(0) <- nosync_index :: all_actions;
+		actions_per_location.(location_init) <- nosync_index :: all_actions;
 		(* Update invariants *)
-		invariants.(0) <- ct_x_leq_d observer_clock_index d ;
+		invariants.(location_init) <- ct_x_leq_d observer_clock_index d ;
 		(* Compute transitions *)
-		transitions.(0).(a) <- untimedt a 1;
-		transitions.(0).(nosync_index) <-
+		transitions.(location_init).(a) <- untimedt a location_ok;
+		transitions.(location_init).(nosync_index) <-
 			[{
 				guard		= Continuous_guard (ct_x_eq_d observer_clock_index d);
 				action		= nosync_index;
 				updates		= create_update No_update [] [];
-				target		= 2;
+				target		= location_nok;
 			}];
-		transitions.(1) <- allow_all 1;
-		transitions.(2) <- allow_all 2;
+		transitions.(location_ok) <- allow_all location_ok;
+		transitions.(location_nok) <- allow_all location_nok;
 		(* Return structure (and add silent action) *)
 		nosync_index :: all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* Return observer_clock_index = 0 *)
 		Some (lc_x_eq_0 observer_clock_index),
 		(* Reduce to safety property *)
-		make_AGnot_single_location automaton_index 2
+		make_AGnot_single_location automaton_index location_nok
 
 
 		
