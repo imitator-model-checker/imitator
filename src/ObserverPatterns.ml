@@ -140,6 +140,10 @@ let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 
 (* Create a property of the form AGnot from a single bad location *)
 let make_AGnot_single_location automaton_index location_index =
+	(* Print some information *)
+	print_message Verbose_high ("Creating an `AGnot` property: `loc[" ^ (string_of_int automaton_index) ^ "] = " ^ (string_of_int location_index) ^ "`");
+	
+	(* Return actual property *)
 	AGnot (State_predicate_term (State_predicate_factor (Simple_predicate (Loc_predicate (Loc_predicate_EQ (automaton_index , location_index ) ) ) ) ) )
 
 
@@ -347,6 +351,7 @@ let get_observer_automaton action_index_of_action_name nb_actions automaton_inde
 		transitions.(0).(a2) <- untimedt a2 2;
 		transitions.(1) <- allow_all 1;
 		transitions.(2) <- allow_all 2;
+		
 		(* Return structure *)
 		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init inequality *)

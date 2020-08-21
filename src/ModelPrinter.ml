@@ -743,7 +743,17 @@ let string_of_abstract_property model property =
 		(* Reachability *)
 		| EF state_predicate -> "EF(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 		(* Safety *)
-		| AGnot state_predicate -> "AGnot(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+		| AGnot state_predicate ->
+			(* Print some information *)
+			print_message Verbose_high "Converting an AGnot property to a string…";
+			
+			(* Convert the state predicate *)
+			let state_predicate_str = string_of_state_predicate model state_predicate in
+			
+			(* Print some information *)
+(* 			print_message Verbose_total "State predicate converted"; *)
+
+			"AGnot(" ^ state_predicate_str ^ ")"
 
 		
 		(*------------------------------------------------------------*)
@@ -842,21 +852,6 @@ let string_of_abstract_property model property =
 		(* Parametric reachability preservation *)
 		| PRPC (state_predicate , hyper_rectangle) -> "PRPC(" ^ (string_of_state_predicate model state_predicate) ^ " , " ^ (string_of_v0 model hyper_rectangle) ^ ")"
 		
-		
-(*		(*------------------------------------------------------------*)
-		(* Observer patterns *)
-		(*------------------------------------------------------------*)
-		
-		(* if a2 then a1 has happened before *)
-		| Action_precedence_acyclic (a1 , a2) ->
-			"if " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened before"
-		(* everytime a2 then a1 has happened before *)
-		| Action_precedence_cyclic (a1 , a2) ->
-			"everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened before"
-		(* everytime a2 then a1 has happened exactly once before *)
-		| Action_precedence_cyclicstrict (a1 , a2) ->
-			"everytime " ^ (model.action_names a2) ^ " then " ^ (model.action_names a1) ^ " has happened exactly once before"
-*)
 		
 
 		(*** TODO ***)

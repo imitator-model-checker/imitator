@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/07/17
+ * Last modified     : 2020/08/21
  *
  ************************************************************)
 
@@ -187,8 +187,10 @@ options#set_options_for_cartography is_cartography;
 (************************************************************)
 (* Debug print: model *)
 (************************************************************)
-if verbose_mode_greater Verbose_total then(
-	print_message Verbose_total ("\nThe input model is the following one:\n" ^ (ModelPrinter.string_of_model model) ^ "\n");
+if verbose_mode_greater Verbose_high then(
+	print_message Verbose_total ("\nPreparing to print the model…");
+	let model_string = ModelPrinter.string_of_model model in
+	print_message Verbose_high ("\nThe input model is the following one:\n" ^ model_string ^ "\n");
 );
 
 
@@ -198,8 +200,10 @@ if verbose_mode_greater Verbose_total then(
 if AbstractAlgorithm.property_needed options#imitator_mode then(
 	let property = Input.get_property() in
 	
-	(*** TODO ***)
-	print_message Verbose_low ("\nThe property is the following one:\n" ^ (ModelPrinter.string_of_abstract_property model property) ^ "\n");
+	print_message Verbose_total ("\nPreparing to print the property…");
+	let property_string = ModelPrinter.string_of_abstract_property model property in
+	
+	print_message Verbose_low ("\nThe property is the following one:\n" ^ property_string ^ "\n");
 );
 
 

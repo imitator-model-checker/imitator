@@ -3625,7 +3625,7 @@ type converted_observer_structure = {
 
 
 (* Convert ParsingStructure.parsed_property into AbstractProperty.property *)
-let convert_property_option useful_parsing_model_information (observer_nosync_index_option : action_index option) (observer_automaton_index_option : automaton_index option) (parsed_property_option : ParsingStructure.parsed_property option) : (AbstractProperty.abstract_property option * converted_observer_structure option) =
+let convert_property_option useful_parsing_model_information (observer_automaton_index_option : automaton_index option) (observer_nosync_index_option : action_index option) (parsed_property_option : ParsingStructure.parsed_property option) : (AbstractProperty.abstract_property option * converted_observer_structure option) =
 	let constants			= useful_parsing_model_information.constants in
 	let discrete			= useful_parsing_model_information.discrete in
 	let index_of_actions	= useful_parsing_model_information.index_of_actions in
@@ -3979,6 +3979,9 @@ let convert_property_option useful_parsing_model_information (observer_nosync_in
 				| Some automaton_index -> automaton_index
 				| None -> raise (InternalError ("An observer automaton index should have been defined."))
 			in
+			
+			(* Print some information *)
+			print_message Verbose_total ("*** Retrieved the observer automaton index: `" ^ (string_of_int observer_automaton_index) ^ "`");
 			
 			(* Get the local clock for the observer *)
 			(*** WARNING: quite a HACK, here ***)
@@ -4382,7 +4385,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Compute the index for the observer automaton *)
 	let observer_automaton_index_option = match observer_automaton with
 		| None -> None
-		| Some _ -> Some (nb_automata-1)
+		| Some _ ->
+			(* Print some information *)
+			print_message Verbose_high ("\nObserver automaton index is: " ^ (string_of_int (nb_automata - 1)));
+			
+			Some (nb_automata - 1)
 	in
 
 
@@ -4390,6 +4397,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Set the LinearConstraint dimensions *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Print some information *)
 	print_message Verbose_high ("\nSetting dimensions…");
 	LinearConstraint.set_dimensions nb_parameters nb_clocks nb_discrete;
 	
@@ -4426,7 +4434,12 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	done;
 
 	(* Functional version *)
-	let (automata_names : automaton_index -> automaton_name) = fun automaton_index -> array_of_automata_names.(automaton_index) in
+	let (automata_names : automaton_index -> automaton_name) = fun automaton_index ->
+		(* Add a safety mechanism *)
+		try(
+			array_of_automata_names.(automaton_index)
+		) with Invalid_argument msg -> raise (InternalError ("Automaton name of index `" ^ (string_of_int automaton_index) ^ "` not found in `automata_names` function. Additional details: `" ^ msg ^ "`"))
+	in
 
 	(* The array of actions ; index -> action name *)
 	let actions : action_name array = Array.of_list action_names in
@@ -4536,8 +4549,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		Array.to_list (Array.mapi (fun location_index _ -> location_index) array_of_location_names.(automaton_index));
 	done;
 	let (locations_per_automaton : automaton_index -> location_index list) = fun automaton_index -> array_of_locations_per_automaton.(automaton_index) in
+	
 	(* Create the access function returning a location name *)
-	let location_names = fun automaton_index location_index -> array_of_location_names.(automaton_index).(location_index) in
+	let location_names = fun automaton_index location_index ->
+		(* Add a safety mechanism *)
+		try(
+			array_of_location_names.(automaton_index).(location_index)
+		) with Invalid_argument msg -> raise (InternalError ("Location name of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in `location_names` function. Additional details: `" ^ msg ^ "`"))
+	in
 
 
 	(* Debug print *)
@@ -4945,7 +4964,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 				if List.length transitions_for_this_location > 1 then(
 					(* Write a message *)
 					if verbose_mode_greater Verbose_high then(
-						print_message Verbose_high ("This network of PTAs is not strongly deterministic: in automaton '" ^ (automata_names automaton_index) ^ "', in location '" ^ (location_names automaton_index location_index) ^ "', there are " ^ (string_of_int (List.length transitions_for_this_location)) ^ "outgoing transitions labeled with action '" ^ (action_names action_index) ^ "'.");
+						print_message Verbose_high ("This network of PTAs is not strongly deterministic: in automaton '" ^ (automata_names automaton_index) ^ "', in location '" ^ (location_names automaton_index location_index) ^ "', there are " ^ (string_of_int (List.length transitions_for_this_location)) ^ " outgoing transitions labeled with action '" ^ (action_names action_index) ^ "'.");
 					);
 
 					(* Update flag *)
