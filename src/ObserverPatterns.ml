@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created:       2013/02/04
- * Last modified: 2020/08/20
+ * Last modified: 2020/08/21
  *
  ************************************************************)
  
@@ -295,7 +295,7 @@ let get_locations property =
 	- Property
 *)
 (*------------------------------------------------------------*)
-let get_observer_automaton nb_actions automaton_index nosync_index x_obs (parsed_property : ParsingStructure.parsed_property) =
+let get_observer_automaton action_index_of_action_name nb_actions automaton_index nosync_index x_obs (parsed_property : ParsingStructure.parsed_property) =
 	(* Create the common structures *)
 	let initialize_structures nb_locations all_actions =
 		(* Array for actions for location *)
@@ -330,10 +330,12 @@ let get_observer_automaton nb_actions automaton_index nosync_index x_obs (parsed
 
 	match parsed_property.property with
 		
-	(*** TODO: finish later ***)
-	| _ -> raise (NotImplemented "ObserverPatterns.get_observer_automaton")
-(*
-	| Parsed_action_precedence_acyclic (a1, a2) ->
+	| Parsed_action_precedence_acyclic (action_name1, action_name2) ->
+		
+		(* Convert action names to indexes *)
+		let a1 = action_index_of_action_name action_name1 in
+		let a2 = action_index_of_action_name action_name2 in
+	
 		let nb_locations = 3 in
 		let all_actions = [a1;a2] in
 		(* Initialize *)
@@ -353,7 +355,11 @@ let get_observer_automaton nb_actions automaton_index nosync_index x_obs (parsed
 		make_AGnot_single_location automaton_index 2
 
 
-	| Parsed_action_precedence_cyclic (a1, a2) ->
+	| Parsed_action_precedence_cyclic (action_name1, action_name2) ->
+		(* Convert action names to indexes *)
+		let a1 = action_index_of_action_name action_name1 in
+		let a2 = action_index_of_action_name action_name2 in
+	
 		let nb_locations = 3 in
 		let all_actions = [a1;a2] in
 		(* Initialize *)
@@ -384,7 +390,11 @@ let get_observer_automaton nb_actions automaton_index nosync_index x_obs (parsed
 		make_AGnot_single_location automaton_index 2
 
 
-	| Parsed_action_precedence_cyclicstrict (a1, a2) ->
+	| Parsed_action_precedence_cyclicstrict (action_name1, action_name2) ->
+		(* Convert action names to indexes *)
+		let a1 = action_index_of_action_name action_name1 in
+		let a2 = action_index_of_action_name action_name2 in
+	
 		let nb_locations = 3 in
 		let all_actions = [a1;a2] in
 		(* Initialize *)
@@ -405,6 +415,11 @@ let get_observer_automaton nb_actions automaton_index nosync_index x_obs (parsed
 		make_AGnot_single_location automaton_index 2
 
 
+	(*** TODO: finish later ***)
+	| _ -> raise (NotImplemented "ObserverPatterns.get_observer_automaton")
+(*
+
+
 			(*** NOT IMPLEMENTED ***)
 (*	| Eventual_response_acyclic (a1, a2)
 	| Eventual_response_cyclic (a1, a2)
@@ -412,7 +427,7 @@ let get_observer_automaton nb_actions automaton_index nosync_index x_obs (parsed
 		-> raise (InternalError("Observer not implemented."))*)
 
 
-	| Parsed_action_deadline (a, d) ->
+	| Parsed_action_deadline (action_name, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a] in
 		(* Initialize *)
@@ -440,7 +455,7 @@ let get_observer_automaton nb_actions automaton_index nosync_index x_obs (parsed
 		make_AGnot_single_location automaton_index 2
 
 
-	| Parsed_TB_Action_precedence_acyclic (a1, a2, d) ->
+	| Parsed_TB_Action_precedence_acyclic (action_name1, action_name2, d) ->
 		let nb_locations = 4 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
@@ -488,7 +503,7 @@ let get_observer_automaton nb_actions automaton_index nosync_index x_obs (parsed
 		make_AGnot_single_location automaton_index 3
 
 
-	| Parsed_TB_Action_precedence_cyclic (a1, a2, d) ->
+	| Parsed_TB_Action_precedence_cyclic (action_name1, action_name2, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
@@ -535,7 +550,7 @@ let get_observer_automaton nb_actions automaton_index nosync_index x_obs (parsed
 		make_AGnot_single_location automaton_index 2
 
 
-	| Parsed_TB_Action_precedence_cyclicstrict (a1, a2, d) ->
+	| Parsed_TB_Action_precedence_cyclicstrict (action_name1, action_name2, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
@@ -576,7 +591,7 @@ let get_observer_automaton nb_actions automaton_index nosync_index x_obs (parsed
 		make_AGnot_single_location automaton_index 2
 
 
-	| Parsed_TB_response_acyclic (a1, a2, d) ->
+	| Parsed_TB_response_acyclic (action_name1, action_name2, d) ->
 		let nb_locations = 4 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
@@ -612,7 +627,7 @@ let get_observer_automaton nb_actions automaton_index nosync_index x_obs (parsed
 		(* Reduce to safety property *)
 		make_AGnot_single_location automaton_index 3
 
-	| TB_response_cyclic (a1, a2, d) ->
+	| TB_response_cyclic (action_name1, action_name2, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
@@ -648,7 +663,7 @@ let get_observer_automaton nb_actions automaton_index nosync_index x_obs (parsed
 		make_AGnot_single_location automaton_index 2
 
 
-	| Parsed_TB_response_cyclicstrict (a1, a2, d) ->
+	| Parsed_TB_response_cyclicstrict (action_name1, action_name2, d) ->
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)

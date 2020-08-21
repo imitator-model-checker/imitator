@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/08/20
+ * Last modified     : 2020/08/21
  *
  ************************************************************)
 
@@ -92,6 +92,8 @@ type useful_parsing_model_information = {
 	index_of_automata					: (Automaton.automaton_name , Automaton.automaton_index) Hashtbl.t;
 	index_of_locations					: ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array;
 	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
+	nb_actions							: int;
+	nb_clocks							: int;
 	nb_parameters						: int;
 	parameter_names						: variable_name list;
 	removed_action_names				: action_name list;
@@ -1471,7 +1473,7 @@ let check_automata useful_parsing_model_information automata =
 (*------------------------------------------------------------*)
 (* Check that the init_definition are well-formed *)
 (*------------------------------------------------------------*)
-let check_init useful_parsing_model_information init_definition observer_automaton =
+let check_init useful_parsing_model_information init_definition observer_automaton_index_option =
 	let array_of_location_names	= useful_parsing_model_information.array_of_location_names in
 	let automata				= useful_parsing_model_information.automata in
 	let automata_names			= useful_parsing_model_information.automata_names in
@@ -1540,7 +1542,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 		) initial_locations;
 	(* Check that every automaton is given at least one initial location *)
 	List.iter (fun automaton_index ->
-		let is_observer i = match observer_automaton with
+		let is_observer i = match observer_automaton_index_option with
 			| None -> false
 			| Some observer_id -> i = observer_id
 		in
@@ -3266,7 +3268,7 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 	let variable_names		= useful_parsing_model_information.variable_names in
 
 	(* Generic check function for 2 actions *)
-	let gen_check_2act property a1 a2 =
+	let gen_check_2actions a1 a2 =
 		(* Check action names (perform 2 even if one fails) *)
 		evaluate_and
 			(check_action_name index_of_actions a1)
@@ -3274,7 +3276,7 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 	in
 
 	(* Generic check function for 2 actions and one deadline *)
-	let gen_check_2actd property a1 a2 d =
+	let gen_check_2actionsd a1 a2 d =
 		(* Check action names and deadline (perform 3 even if one fails) *)
 		let check1 = check_action_name index_of_actions a1 in
 		let check2 = check_action_name index_of_actions a2 in
@@ -3419,6 +3421,21 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
 				(check_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle)
 
+
+		(*------------------------------------------------------------*)
+		(* Observer patterns *)
+		(*------------------------------------------------------------*)
+		
+		(* CASE TWO ACTIONS *)
+		
+		(* if a2 then a1 has happened before *)
+		| ParsingStructure.Parsed_action_precedence_acyclic ( a1 , a2 )
+		(* everytime a2 then a1 has happened before *)
+		| ParsingStructure.Parsed_action_precedence_cyclic ( a1 , a2 )
+		(* everytime a2 then a1 has happened exactly once before *)
+		| ParsingStructure.Parsed_action_precedence_cyclicstrict ( a1 , a2 )
+			-> gen_check_2actions a1 a2
+		
 		
 (*		(*** TODO ***)
 		| Parsed_Action_deadline _
@@ -3587,19 +3604,16 @@ let convert_projection_definition (index_of_variables : (Automaton.variable_name
 
 type converted_observer_structure = {
 	(*  observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions *)
-	observer_structure			: Automaton.action_index list * (Automaton.action_index list) array * AbstractModel.location_urgency array * LinearConstraint.pxd_linear_constraint array * AbstractModel.transition list array array;
+	observer_structure					: Automaton.action_index list * (Automaton.action_index list) array * AbstractModel.location_urgency array * LinearConstraint.pxd_linear_constraint array * AbstractModel.transition list array array;
 	
-	nb_transitions_for_observer	: int;
-	initial_observer_constraint	: LinearConstraint.px_linear_constraint;
+	nb_transitions_for_observer			: int;
+	
+	initial_observer_constraint_option	: LinearConstraint.px_linear_constraint option;
 }
-
-(*type converted_observer =
-	| No_converted_observer
-	| Converted_observer of converted_observer_structure*)
 
 
 (* Convert ParsingStructure.parsed_property into AbstractProperty.property *)
-let convert_property_option useful_parsing_model_information (parsed_property_option : ParsingStructure.parsed_property option) : (AbstractProperty.abstract_property option * converted_observer_structure option) =
+let convert_property_option useful_parsing_model_information (observer_nosync_index_option : action_index option) (observer_automaton_index_option : automaton_index option) (parsed_property_option : ParsingStructure.parsed_property option) : (AbstractProperty.abstract_property option * converted_observer_structure option) =
 	let constants			= useful_parsing_model_information.constants in
 	let discrete			= useful_parsing_model_information.discrete in
 	let index_of_actions	= useful_parsing_model_information.index_of_actions in
@@ -3637,8 +3651,9 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 		(*** WARNING: quite a HACK, here ***)
 		let clock_obs = nb_parameters + nb_clocks - 1 in
 		(* Get the info from the observer pattern *)
+		let action_index_of_action_name = (*** TODO ***) in
 		let observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions, initial_observer_constraint, correctness_condition =
-			ObserverPatterns.get_observer_automaton nb_actions observer_id nosync_obs clock_obs property in
+			ObserverPatterns.get_observer_automaton action_index_of_action_name nb_actions observer_id nosync_obs clock_obs property in
 
 		(* Return the structure and the correctness_condition *)
 		Some (observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions),
@@ -3923,7 +3938,73 @@ let convert_property_option useful_parsing_model_information (parsed_property_op
 			PRPC (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle)
 			,
 			None
-	
+
+
+		(*------------------------------------------------------------*)
+		(* Observer patterns *)
+		(*------------------------------------------------------------*)
+		(* if a2 then a1 has happened before *)
+		| ParsingStructure.Parsed_action_precedence_acyclic ( a1 , a2 )
+		(* everytime a2 then a1 has happened before *)
+		| ParsingStructure.Parsed_action_precedence_cyclic ( a1 , a2 )
+		(* everytime a2 then a1 has happened exactly once before *)
+		| ParsingStructure.Parsed_action_precedence_cyclicstrict ( a1 , a2 )
+			->
+		
+			(* Print some information *)
+			print_message Verbose_low ("*** The property is an observer pattern. Generating the observer…");
+			
+			(* First, let us retrieve some useful information *)
+			
+			(* Get the silent action index for the observer *)
+			let observer_nosync_index = match observer_nosync_index_option with
+				| Some action_index -> action_index
+				| None -> raise (InternalError ("An observer action should have been defined."))
+			in
+			
+			(* Get the observer automaton index *)
+			let observer_automaton_index = match observer_automaton_index_option with
+				| Some automaton_index -> automaton_index
+				| None -> raise (InternalError ("An observer automaton index should have been defined."))
+			in
+			
+			(* Get the local clock for the observer *)
+			(*** WARNING: quite a HACK, here ***)
+			let clock_obs = useful_parsing_model_information.nb_parameters + useful_parsing_model_information.nb_clocks - 1 in
+			
+			(* Create the function action index -> action name *)
+			let action_index_of_action_name action_name = try (Hashtbl.find index_of_actions action_name) with Not_found -> raise (InternalError ("Action `" ^ action_name ^ "` not found in HashTable `index_of_actions` when defining function `action_index_of_action_name`, althoug this should have been checked before.")) in
+			
+			(* Get the info from the observer pattern *)
+			let observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions, initial_observer_constraint, abstract_property =
+				ObserverPatterns.get_observer_automaton action_index_of_action_name useful_parsing_model_information.nb_actions observer_automaton_index observer_nosync_index clock_obs parsed_property in
+
+			(* Count transitions *)
+			let nb_transitions_for_observer =
+			(* Iterate on locations *)
+				Array.fold_left (fun nb_transitions_for_locations transitions_for_this_location ->
+					Array.fold_left (fun nb_transitions_for_actions transitions_for_this_action ->
+					nb_transitions_for_actions + (List.length transitions_for_this_action)
+					) nb_transitions_for_locations transitions_for_this_location
+				) 0 observer_transitions
+			in
+			
+			(* Create the structure *)
+			let converted_observer_structure = {
+				observer_structure					= observer_actions , observer_actions_per_location , observer_location_urgency , observer_invariants , observer_transitions;
+				
+				nb_transitions_for_observer			= nb_transitions_for_observer;
+				
+				initial_observer_constraint_option	= initial_observer_constraint;
+			}
+			in
+			
+			(* Return the property and the structure *)
+			abstract_property
+			,
+			Some converted_observer_structure
+
+		
 		(*** TODO ***)
 (*		| Parsed_Action_deadline _
 		| _
@@ -4274,7 +4355,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Update automata names with the observer automaton *)
 	let declared_automata_names = match observer_automaton with
 		| None -> declared_automata_names
-		| Some automaton_obs -> list_append declared_automata_names [automaton_obs]
+		| Some automaton_name -> list_append declared_automata_names [automaton_name]
 	in
 
 	(* Numbers *)
@@ -4287,7 +4368,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 	(* Compute the index for the observer automaton *)
-	let observer_automaton = match observer_automaton with
+	let observer_automaton_index_option = match observer_automaton with
 		| None -> None
 		| Some _ -> Some (nb_automata-1)
 	in
@@ -4413,7 +4494,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	let (array_of_location_names : location_name array array) = make_locations_per_automaton index_of_automata parsed_model.automata nb_automata in
 	(* Add the observer locations *)
 	begin
-	match observer_automaton with
+	match observer_automaton_index_option with
 		| None -> ()
 			(*** WARNING: we assume here that observer automaton is the last one ! ***)
 		| Some automaton_index ->
@@ -4476,6 +4557,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		index_of_automata			= index_of_automata;
 		index_of_locations			= index_of_locations;
 		index_of_variables			= index_of_variables;
+		nb_actions					= nb_actions;
+		nb_clocks					= nb_clocks;
 		nb_parameters				= nb_parameters;
 		parameter_names				= parameter_names;
 		removed_action_names		= removed_action_names;
@@ -4507,7 +4590,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	print_message Verbose_high ("*** Checking init definition…");
 	(* Get pairs for the initialisation of the discrete variables, and check the init definition *)
 
-	let init_discrete_pairs, well_formed_init = check_init useful_parsing_model_information parsed_model.init_definition observer_automaton in
+	let init_discrete_pairs, well_formed_init = check_init useful_parsing_model_information parsed_model.init_definition observer_automaton_index_option in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4576,7 +4659,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Building automata…");
 	(* Get all the possible actions for every location of every automaton *)
-	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_stopwatches, transitions, nosync_obs = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton != None) in
+	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_stopwatches, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option != None) in
 	let nb_actions = List.length actions in
 
 
@@ -4586,7 +4669,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	
 	(* We may need to create additional structures for the observer, if any *)
 	
-	let abstract_property_option, converted_observer_structure_option = convert_property_option useful_parsing_model_information parsed_property_option in
+	let abstract_property_option, converted_observer_structure_option = convert_property_option useful_parsing_model_information observer_automaton_index_option observer_nosync_index_option parsed_property_option in
 	
 	(* Convert some variables to catch up with older code below *)
 	let observer_structure_option, nb_transitions_for_observer, initial_observer_constraint_option = match converted_observer_structure_option with
@@ -4594,7 +4677,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		| Some converted_observer_structure ->
 			Some converted_observer_structure.observer_structure,
 			converted_observer_structure.nb_transitions_for_observer,
-			Some converted_observer_structure.initial_observer_constraint
+			converted_observer_structure.initial_observer_constraint_option
 	in
 	
 	
@@ -4635,7 +4718,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(* Add the observer structure to the automata *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	begin
-	match observer_automaton with
+	match observer_automaton_index_option with
 	| None -> ()
 	| Some observer_id ->
 		(* Get the info from the observer pattern *)
@@ -5171,9 +5254,9 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 	(* The observer *)
-	observer_pta = observer_automaton;
+	observer_pta = observer_automaton_index_option;
 	is_observer = (fun automaton_index ->
-		match observer_automaton with
+		match observer_automaton_index_option with
 		| Some pta -> pta = automaton_index
 		| None -> false
 	);
