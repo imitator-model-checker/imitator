@@ -132,6 +132,9 @@ let string_of_var_type = function
 
 (* Convert the initial variable declarations into a string *)
 let string_of_declarations model =
+	(* Print some information *)
+(* 	print_message Verbose_total "Entering `ModelPrinter.string_of_declarations`…"; *)
+
 	let string_of_variables list_of_variables =
 		string_of_list_of_string_with_sep ", " (List.map model.variable_names list_of_variables) in
 
@@ -172,6 +175,9 @@ let string_of_guard variable_names = function
 
 (* Convert the synclabs of an automaton into a string *)
 let string_of_synclabs model automaton_index =
+	(* Print some information *)
+(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_synclabs(" ^ (model.automata_names automaton_index) ^ ")`…"); *)
+
 	"synclabs: "
 	^ (let synclabs, _ = (List.fold_left (fun (synclabs, first) action_index ->
 		match model.action_types action_index with
@@ -456,6 +462,9 @@ let string_of_transition model automaton_index transition =
 
 (* Convert a transition into a string: compact version for debugging/pretty-printing *)
 let debug_string_of_transition model automaton_index transition =
+	(* Print some information *)
+(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transition(" ^ (model.automata_names automaton_index) ^ ")`…"); *)
+
 	let clock_updates = transition.updates.clock in
 	let discrete_updates = transition.updates.discrete in
 	let conditional_updates = transition.updates.conditional in
@@ -490,11 +499,21 @@ let debug_string_of_transition model automaton_index transition =
 
 (* Convert the transitions of a location into a string *)
 let string_of_transitions model automaton_index location_index =
+	(* Print some information *)
+(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transitions(" ^ (model.automata_names automaton_index) ^ ": " ^ (model.location_names automaton_index location_index) ^ ")`…"); *)
+
 	string_of_list_of_string (
 	(* For each action *)
 	List.map (fun action_index ->
+		(* Print some information *)
+(* 		print_message Verbose_total ("Retrieving transitions…"); *)
+
 		(* Get the list of transitions *)
 		let transitions = model.transitions automaton_index location_index action_index in
+		
+		(* Print some information *)
+(* 		print_message Verbose_total ("Transitions retrieved."); *)
+
 		(* Convert to string *)
 		string_of_list_of_string (
 			(* For each transition *)
@@ -506,6 +525,9 @@ let string_of_transitions model automaton_index location_index =
 
 (* Convert a location of an automaton into a string *)
 let string_of_location model automaton_index location_index =
+	(* Print some information *)
+(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_location(" ^ (model.automata_names automaton_index) ^ ": " ^ (model.location_names automaton_index location_index) ^ ")`…"); *)
+
 	"\n"
 	^ (if model.is_urgent automaton_index location_index then "urgent " else "")
 	^ (if model.is_accepting automaton_index location_index then "accepting " else "")
@@ -522,14 +544,22 @@ let string_of_location model automaton_index location_index =
 
 (* Convert the locations of an automaton into a string *)
 let string_of_locations model automaton_index =
+	(* Print some information *)
+(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_locations(" ^ (model.automata_names automaton_index) ^ ")`…"); *)
+
 	string_of_list_of_string_with_sep "\n " (List.map (fun location_index ->
-(* 		print_message Verbose_high ("location_index : " ^ (string_of_int location_index)); *)
+		(* Print some information *)
+(* 		print_message Verbose_total ("Location_index : " ^ (string_of_int location_index)); *)
+		
 		string_of_location model automaton_index location_index
 	) (model.locations_per_automaton automaton_index))
 
 
 (* Convert an automaton into a string *)
 let string_of_automaton model automaton_index =
+	(* Print some information *)
+(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_automaton(" ^ (model.automata_names automaton_index) ^ ")`…"); *)
+
 	"\n(************************************************************)"
 	^ "\n automaton " ^ (model.automata_names automaton_index)
 	^ "\n(************************************************************)"
@@ -541,7 +571,10 @@ let string_of_automaton model automaton_index =
 
 (* Convert the automata into a string *)
 let string_of_automata model =
-(*	(*** WARNING: Do not print the observer ***)
+	(* Print some information *)
+(* 	print_message Verbose_total "Entering `ModelPrinter.string_of_automata`…"; *)
+
+	(*	(*** WARNING: Do not print the observer ***)
 	let pta_without_obs = List.filter (fun automaton_index -> not (model.is_observer automaton_index)) model.automata
 	in*)
 
@@ -556,9 +589,9 @@ let string_of_automata model =
 (************************************************************)
 (** Initial state *)
 (************************************************************)
-let string_of_initial_state ()=
-	(* Retrieve the model *)
-	let model = Input.get_model () in
+let string_of_initial_state model =
+	(* Print some information *)
+(* 	print_message Verbose_total "Entering `ModelPrinter.string_of_initial_state`…"; *)
 
 	(* Header of initial state *)
 	"\n"
@@ -745,7 +778,7 @@ let string_of_abstract_property model property =
 		(* Safety *)
 		| AGnot state_predicate ->
 			(* Print some information *)
-			print_message Verbose_high "Converting an AGnot property to a string…";
+(* 			print_message Verbose_high "Converting an AGnot property to a string…"; *)
 			
 			(* Convert the state predicate *)
 			let state_predicate_str = string_of_state_predicate model state_predicate in
@@ -870,6 +903,9 @@ let string_of_abstract_property model property =
 
 (* Convert the model into a string *)
 let string_of_model model =
+	(* Print some information *)
+(* 	print_message Verbose_total "Entering `ModelPrinter.string_of_model`…"; *)
+	
 	(* The header *)
 	model_header ()
 	(* The variable declarations *)
@@ -877,7 +913,7 @@ let string_of_model model =
 	(* All automata *)
 	^  "\n" ^ string_of_automata model
 	(* The initial state *)
-	^ "\n" ^ string_of_initial_state ()
+	^ "\n" ^ string_of_initial_state model
 	(* The footer *)
 	^  "\n" ^ footer
 
