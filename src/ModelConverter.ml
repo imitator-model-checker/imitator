@@ -2623,6 +2623,18 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 			(* Then add the HyperRectangle *)
 			variables_used_ref := StringSet.union !variables_used_ref (StringSet.of_list (get_variables_in_parsed_hyper_rectangle parsed_hyper_rectangle));
 
+		(*------------------------------------------------------------*)
+		(* Observer patterns *)
+		(*------------------------------------------------------------*)
+		(* if a2 then a1 has happened before *)
+		| Parsed_action_precedence_acyclic _
+		(* everytime a2 then a1 has happened before *)
+		| Parsed_action_precedence_cyclic _
+		(* everytime a2 then a1 has happened exactly once before *)
+		| Parsed_action_precedence_cyclicstrict _
+			-> ()
+
+		
 		
 		
 (*		(*** TODO ***)
