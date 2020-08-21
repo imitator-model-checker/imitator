@@ -213,7 +213,7 @@ type parsed_property =
   | Action_precedence_acyclic of sync_name * sync_name
   (* everytime a2 then a1 has happened before *)
   | Action_precedence_cyclic of sync_name * sync_name
-  (* everytime a2 then a1 has happened exactly once before *)
+  (* everytime a2 then a1 has happened once before *)
   | Action_precedence_cyclicstrict of sync_name * sync_name
 
   (*** NOT IMPLEMENTED ***)
@@ -446,7 +446,7 @@ type parsed_property_type =
 	| Parsed_action_precedence_acyclic of sync_name * sync_name
 	(* everytime a2 then a1 has happened before *)
 	| Parsed_action_precedence_cyclic of sync_name * sync_name
-	(* everytime a2 then a1 has happened exactly once before *)
+	(* everytime a2 then a1 has happened once before *)
 	| Parsed_action_precedence_cyclicstrict of sync_name * sync_name
 
 

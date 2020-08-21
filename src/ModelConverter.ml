@@ -2630,7 +2630,7 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_action_precedence_acyclic _
 		(* everytime a2 then a1 has happened before *)
 		| Parsed_action_precedence_cyclic _
-		(* everytime a2 then a1 has happened exactly once before *)
+		(* everytime a2 then a1 has happened once before *)
 		| Parsed_action_precedence_cyclicstrict _
 			-> ()
 
@@ -2671,7 +2671,7 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
   | Action_precedence_acyclic _
   (* everytime a2 then a1 has happened before *)
   | Action_precedence_cyclic _
-  (* everytime a2 then a1 has happened exactly once before *)
+  (* everytime a2 then a1 has happened once before *)
   | Action_precedence_cyclicstrict _
     -> ()
 
@@ -3444,7 +3444,7 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		| ParsingStructure.Parsed_action_precedence_acyclic ( a1 , a2 )
 		(* everytime a2 then a1 has happened before *)
 		| ParsingStructure.Parsed_action_precedence_cyclic ( a1 , a2 )
-		(* everytime a2 then a1 has happened exactly once before *)
+		(* everytime a2 then a1 has happened once before *)
 		| ParsingStructure.Parsed_action_precedence_cyclicstrict ( a1 , a2 )
 			-> gen_check_2actions a1 a2
 		
@@ -3482,7 +3482,7 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		| ParsingStructure.Action_precedence_acyclic ( a1 , a2 )
 		(* everytime a2 then a1 has happened before *)
 		| ParsingStructure.Action_precedence_cyclic ( a1 , a2 )
-		(* everytime a2 then a1 has happened exactly once before *)
+		(* everytime a2 then a1 has happened once before *)
 		| ParsingStructure.Action_precedence_cyclicstrict ( a1 , a2 )
 			(*** NOT IMPLEMENTED ***)
 			(*		(* if a1 then eventually a2 *)
@@ -3959,7 +3959,7 @@ let convert_property_option useful_parsing_model_information (observer_automaton
 		| ParsingStructure.Parsed_action_precedence_acyclic ( a1 , a2 )
 		(* everytime a2 then a1 has happened before *)
 		| ParsingStructure.Parsed_action_precedence_cyclic ( a1 , a2 )
-		(* everytime a2 then a1 has happened exactly once before *)
+		(* everytime a2 then a1 has happened once before *)
 		| ParsingStructure.Parsed_action_precedence_cyclicstrict ( a1 , a2 )
 			->
 		
@@ -4052,7 +4052,7 @@ let convert_property_option useful_parsing_model_information (observer_automaton
 		| ParsingStructure.Action_precedence_acyclic ( a1 , a2 )
 		(* everytime a2 then a1 has happened before *)
 		| ParsingStructure.Action_precedence_cyclic ( a1 , a2 )
-		(* everytime a2 then a1 has happened exactly once before *)
+		(* everytime a2 then a1 has happened once before *)
 		| ParsingStructure.Action_precedence_cyclicstrict ( a1 , a2 )
 			(*** NOT IMPLEMENTED ***)
 			(*		(* if a1 then eventually a2 *)
