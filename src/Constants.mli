@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2019/10/16
+ * Last modified     : 2020/08/21
  *
  ************************************************************)
 
@@ -89,5 +89,14 @@ val guessed_nb_states_for_hashtable : int
 (* Internal cuisine *)
 (************************************************************)
 (************************************************************)
+
+(* Name of the observer automaton internal action *)
+val observer_nosync_name		: string
+
+val observer_automaton_name		: string
+val observer_clock_name			: string
+
+
+
 (* Name of the special clock always reset (used for NZ model checking, and not to be printed in normal operations) *)
-val special_reset_clock_name : string
+val special_reset_clock_name	: string

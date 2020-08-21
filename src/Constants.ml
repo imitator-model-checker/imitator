@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2020/01/06
+ * Last modified     : 2020/08/21
  *
  ************************************************************)
 
@@ -58,7 +58,7 @@ let dot_command = "dot"
 (************************************************************)
 
 (* Name for the global time clock in the input model *)
-let global_time_clock_name = "global_time"
+let global_time_clock_name		= "global_time"
 
 
 (************************************************************)
@@ -69,24 +69,24 @@ let global_time_clock_name = "global_time"
 
 
 (** Extension for input model files *)
-let model_extension = ".imi"
+let model_extension				= ".imi"
 
 (** Extension for property files *)
-let property_extension = ".prop"
+let property_extension			= ".prop"
 
 (** Extension for files output *)
-let result_file_extension = ".res"
+let result_file_extension		= ".res"
 
-let state_space_image_format = "pdf"
-let pta_default_image_format = "jpg"
-let dot_file_extension = "dot"
-let default_dot_image_extension = "dot"
-let states_file_extension = "states"
+let state_space_image_format	= "pdf"
+let pta_default_image_format	= "jpg"
+let dot_file_extension			= "dot"
+let default_dot_image_extension	= "dot"
+let states_file_extension		= "states"
 
-let cartography_extension = "png"
-let cartography_size = "1024x1024"
+let cartography_extension		= "png"
+let cartography_size			= "1024x1024"
 
-let signals_image_extension = "ps"
+let signals_image_extension		= "ps"
 
 
 (************************************************************)
@@ -102,5 +102,13 @@ let guessed_nb_states_for_hashtable = 100
 (* Internal cuisine *)
 (************************************************************)
 (************************************************************)
+
+(* Name of the observer automaton internal action *)
+let observer_nosync_name		= "nosync_obs"
+
+let observer_automaton_name		= "automatically_generated_observer"
+let observer_clock_name			= "automatically_generated_x_obs"
+
+
 (* Name of the special clock always reset (used for NZ model checking, and not to be printed in normal operations) *)
-let special_reset_clock_name = "special_0_clock"
+let special_reset_clock_name	= "special_0_clock"
