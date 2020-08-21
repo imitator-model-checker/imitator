@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/04/23
+# Last modified     : 2020/08/21
 #************************************************************
 
 
@@ -1889,6 +1889,131 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 
 	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "if a2 then a1 has happened before"',
+		'input_files': ['testPattern1.imi', 'testPattern1.imiprop'],
+		'options'    : '-merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testPattern1.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2 >= p1
+& p1 >= 0
+& p2 >= 0
+& p2 + 1 >= p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "if a2 then a1 has happened before" on a model for 3 patterns',
+		'input_files': ['testPattern2.imi', 'testPattern2-if.imiprop'],
+		'options'    : '-merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testPattern2.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 0
+& 1 > p
+OR
+  p > 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened before" on a model for 3 patterns',
+		'input_files': ['testPattern2.imi', 'testPattern2-everytime.imiprop'],
+		'options'    : '-merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testPattern2.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 0
+& 1 > p
+OR
+  p > 3
+OR
+  p > 2
+& 3 > p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened once before',
+		'input_files': ['testPattern2.imi', 'testPattern2-everytimeonce.imiprop'],
+		'options'    : '-merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testPattern2.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 0
+& 1 > p
+OR
+  p > 5
+OR
+  p > 3
+& 5 > p
+OR
+  p > 2
+& 3 > p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 
 	#------------------------------------------------------------
 	{
