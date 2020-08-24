@@ -4,7 +4,7 @@
  * Simple model to test observer patterns
  *
  * Description     : Simple model to test observer pattern "a within d" with a parametric d
- * Correctness     : The pattern should be satisfied for the following parameter valuations: TODO
+ * Correctness     : The pattern should be satisfied for the following parameter valuations: p >= 3
  * Source          : Own work
  * Author          : Étienne André
  * Modeling        : Étienne André
