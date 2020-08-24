@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2020/04/16
+ * Last modified     : 2020/08/24
  *
  ************************************************************)
 
@@ -26,6 +26,7 @@ open Gc
 (************************************************************)
 open Exceptions
 open AbstractModel
+open AbstractAlgorithm
 open OCamlUtilities
 open ImitatorUtilities
 open Statistics
@@ -171,7 +172,7 @@ let compile_model_and_property options =
 	(* We parse a property file if 1) the algorithm requires a property OR 2) the algorithm has an optional property and there is indeed a property *)
 	let property_parsing =
 		AbstractAlgorithm.property_needed options#imitator_mode = Second_file_required
-		or
+		||
 		(AbstractAlgorithm.property_needed options#imitator_mode = Second_file_optional && options#property_file_name <> None)
 	in
 
