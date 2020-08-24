@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/08/21
+ * Last modified     : 2020/08/24
  *
  ************************************************************)
 
@@ -207,7 +207,7 @@ match options#property_file_name with
 		
 		print_message Verbose_low ("\nThe property is the following one:\n" ^ property_string ^ "\n");
 
-	| None _ ->
+	| None ->
 		()
 
 end;

@@ -92,7 +92,7 @@ let parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name =
 			print_error ("Parsing error in file " ^ file_name ^ ": unexpected token '" ^ (Char.escaped c) ^ "'."); abort_program (); exit(1)
 
 		(*** HACK: added because of some mysterious exception raised during parsing (2020/04/16) ***)
-		| Invalid_argument "index out of bounds" ->
+		| Invalid_argument (*"index out of bounds"*)_ ->
 			print_message Verbose_total ("Parsing error detected 'index out of bounds'. Processing…");
 			print_error ("Mysterious parsing error in file " ^ file_name ^ ", maybe at the very beginning."); abort_program (); exit(1)
 		

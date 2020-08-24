@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/17
- * Last modified     : 2020/04/21
+ * Last modified     : 2020/08/24
  *
  ************************************************************)
 
@@ -53,9 +53,6 @@ class algoAccLoopSynth (state_predicate : AbstractProperty.state_predicate) =
 	(* Detect whether a loop is accepting *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method is_accepting scc =
-		(* Retrieve the model *)
-		let model = Input.get_model() in
-
 		(* Accepting if at least one state in the SCC matches the state predicate *)
 		List.exists (fun state_index -> 
 			State.match_state_predicate state_predicate (StateSpace.get_state state_space state_index)

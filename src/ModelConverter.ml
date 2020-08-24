@@ -3237,7 +3237,7 @@ let check_parsed_hyper_rectangle useful_parsing_model_information (parsed_hyper_
 (*------------------------------------------------------------*)
 let check_property_option useful_parsing_model_information (parsed_property_option : ParsingStructure.parsed_property option) =
 	let constants			= useful_parsing_model_information.constants in
-	let discrete			= useful_parsing_model_information.discrete in
+(* 	let discrete			= useful_parsing_model_information.discrete in *)
 	let index_of_actions	= useful_parsing_model_information.index_of_actions in
 (* 	let index_of_automata	= useful_parsing_model_information.index_of_automata in *)
 (* 	let index_of_locations	= useful_parsing_model_information.index_of_locations in *)

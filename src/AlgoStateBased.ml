@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/04/23
+ * Last modified     : 2020/08/24
  *
  ************************************************************)
 
@@ -1998,18 +1998,18 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		
 		(* Get the values *)
 		
-		let state_index_n_plus_1 : State.state_index =
+(*		let state_index_n_plus_1 : State.state_index =
 			if n = List.length symbolic_run.symbolic_steps - 1
 			then target_state_index
 			else ((List.nth symbolic_run.symbolic_steps (n+1)).source)
-		in
+		in*)
 
 		let symbolic_step_n : StateSpace.symbolic_step = List.nth symbolic_run.symbolic_steps n in
 		
 		(* Get state n *)
 		let state_n = StateSpace.get_state state_space symbolic_step_n.source in
 		(* Get state n+1 *)
-		let state_n_plus_1 = StateSpace.get_state state_space state_index_n_plus_1 in
+(* 		let state_n_plus_1 = StateSpace.get_state state_space state_index_n_plus_1 in *)
 		
 		(* Get the location and zone for state_n *)
 		let location_n, z_n = state_n.global_location, state_n.px_constraint in
