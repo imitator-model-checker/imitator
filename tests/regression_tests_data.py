@@ -2098,6 +2098,139 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test observer pattern "if a2 then a1 has happened within d before"',
+		'input_files': ['testPattern6.imi', 'testPattern6-if.imiprop'],
+		'options'    : '-merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testPattern6.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= 0
+& 1 > p1
+OR
+  p1 > 5
+& p2 >= 0
+OR
+  5 > p1
+& p1 > 2
+& p2 >= 0
+OR
+  p2 >= 2015
+& p1 = 5
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened within d before"',
+		'input_files': ['testPattern6.imi', 'testPattern6-everytime.imiprop'],
+		'options'    : '-merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testPattern6.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= 0
+& 1 > p1
+OR
+  p1 > 5
+& p2 >= 0
+OR
+  p1 > 4
+& p2 >= 0
+& 5 > p1
+OR
+  p1 > 3
+& p2 >= 0
+& 4 > p1
+OR
+  p2 >= 4
+& p1 = 4
+OR
+  p2 >= 2015
+& p1 = 5
+OR
+  p1 > 2
+& p2 >= 0
+& 3 > p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened once within d before"',
+		'input_files': ['testPattern6.imi', 'testPattern6-everytimeonce.imiprop'],
+		'options'    : '-merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testPattern6.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= 0
+& 1 > p1
+OR
+  p1 > 5
+& p2 >= 0
+OR
+  p1 > 4
+& p2 >= 0
+& 5 > p1
+OR
+  p1 > 3
+& p2 >= 0
+& 4 > p1
+OR
+  p2 >= 4
+& p1 = 4
+OR
+  p1 > 2
+& p2 >= 0
+& 3 > p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test EFmin on a toy example',
 		'input_files': ['testEFmin.imi', 'testEFmin.imiprop'],
 		'options'    : '-merge -incl -output-result',
