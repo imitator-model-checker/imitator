@@ -128,6 +128,9 @@ let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_action_precedence_cyclic _
 	| Parsed_action_precedence_cyclicstrict _
 	
+	| ParsingStructure.Parsed_Sequence_acyclic _
+	| ParsingStructure.Parsed_Sequence_cyclic _
+
 		-> false
 	
 	
@@ -138,6 +141,10 @@ let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_TB_Action_precedence_acyclic _
 	| Parsed_TB_Action_precedence_cyclic _
 	| Parsed_TB_Action_precedence_cyclicstrict _
+
+	| ParsingStructure.Parsed_TB_response_acyclic _
+	| ParsingStructure.Parsed_TB_response_cyclic _
+	| ParsingStructure.Parsed_TB_response_cyclicstrict _
 
 		-> true
 	
@@ -192,36 +199,29 @@ let new_elements (parsed_property : ParsingStructure.parsed_property) =
 		-> (None , None)
 	
 	(* Untimed observers: add automaton, do not add clock *)
+	
 	| ParsingStructure.Parsed_action_precedence_acyclic _
 	| ParsingStructure.Parsed_action_precedence_cyclic _
 	| ParsingStructure.Parsed_action_precedence_cyclicstrict _
+
+	| ParsingStructure.Parsed_Sequence_acyclic _
+	| ParsingStructure.Parsed_Sequence_cyclic _
+	
 		-> (Some observer_automaton_name, None)
 	
 	(* Timed observers: add automaton, add clock *)
+	
 	| Parsed_action_deadline _
 	| Parsed_TB_Action_precedence_acyclic _
 	| Parsed_TB_Action_precedence_cyclic _
 	| Parsed_TB_Action_precedence_cyclicstrict _
+
+	| ParsingStructure.Parsed_TB_response_acyclic _
+	| ParsingStructure.Parsed_TB_response_cyclic _
+	| ParsingStructure.Parsed_TB_response_cyclicstrict _
+	
 		-> (Some observer_automaton_name, Some observer_clock_name)
-		
 
-(*	
-	(*** NOT IMPLEMENTED ***)
-(*		| ParsingStructure.Eventual_response_acyclic _
-	| ParsingStructure.Eventual_response_cyclic _
-	| ParsingStructure.Eventual_response_cyclicstrict _*)
-	| ParsingStructure.Sequence_acyclic _
-	| ParsingStructure.Sequence_cyclic _
-
-	(* Timed observers: add automaton, add clock *)
-	| ParsingStructure.Action_deadline _
-	| ParsingStructure.TB_Action_precedence_acyclic _
-	| ParsingStructure.TB_Action_precedence_cyclic _
-	| ParsingStructure.TB_Action_precedence_cyclicstrict _
-	| ParsingStructure.TB_response_acyclic _
-	| ParsingStructure.TB_response_cyclic _
-	| ParsingStructure.TB_response_cyclicstrict _
-		-> (Some observer_automaton_name, Some observer_clock_name)*)
 
 (* Get the number of locations for this observer *)
 let get_nb_locations (parsed_property : ParsingStructure.parsed_property) =
@@ -272,28 +272,13 @@ let get_nb_locations (parsed_property : ParsingStructure.parsed_property) =
 	| ParsingStructure.Parsed_TB_Action_precedence_acyclic _ -> 4
 	| ParsingStructure.Parsed_TB_Action_precedence_cyclic _ -> 3
 	| ParsingStructure.Parsed_TB_Action_precedence_cyclicstrict _ -> 3
-
-(* 	 *)
-	(*** TODO: finish later ***)
-(* 	| _ -> raise (NotImplemented "ObserverPatterns.get_nb_locations") *)
-	(*
-		(* Not a real observer: does not build anything *)
-		| ParsingStructure.Parsed_unreachable_locations _ -> 0
-
-		(*** NOT IMPLEMENTED ***)
-(*		| ParsingStructure.Eventual_response_acyclic _ -> 3
-		| ParsingStructure.Eventual_response_cyclic _ -> 2
-		| ParsingStructure.Eventual_response_cyclicstrict _ -> 3*)
-		| ParsingStructure.Action_deadline _ -> 3
-		| ParsingStructure.TB_Action_precedence_acyclic _ -> 4
-		| ParsingStructure.TB_Action_precedence_cyclic _ -> 3
-		| ParsingStructure.TB_Action_precedence_cyclicstrict _ -> 3
-		| ParsingStructure.TB_response_acyclic _ -> 4
-		| ParsingStructure.TB_response_cyclic _ -> 3
-		| ParsingStructure.TB_response_cyclicstrict _ -> 3
-		| ParsingStructure.Sequence_acyclic list_of_actions -> (List.length list_of_actions) + 2
-		| ParsingStructure.Sequence_cyclic list_of_actions -> (List.length list_of_actions) + 1
-			*)
+	
+	| ParsingStructure.Parsed_TB_response_acyclic _ -> 4
+	| ParsingStructure.Parsed_TB_response_cyclic _ -> 3
+	| ParsingStructure.Parsed_TB_response_cyclicstrict _ -> 3
+	
+	| ParsingStructure.Parsed_Sequence_acyclic list_of_actions -> (List.length list_of_actions) + 2
+	| ParsingStructure.Parsed_Sequence_cyclic list_of_actions -> (List.length list_of_actions) + 1
 
 
 (* Create the list of location indexes for this observer *)
@@ -678,11 +663,17 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 		(* Reduce to safety property *)
 		make_AGnot_single_location automaton_index location_nok
 
-(*
 
 	(*------------------------------------------------------------*)
+	(* if a1 then eventually a2 within d *)
 	(*------------------------------------------------------------*)
-	| Parsed_TB_response_acyclic (action_name1, action_name2, d) ->
+	| Parsed_TB_response_acyclic (action_name1, action_name2, parsed_duration) ->
+		(* Convert action names to index *)
+		let a1 = action_index_of_action_name action_name1 in
+		let a2 = action_index_of_action_name action_name2 in
+		(* Convert parsed_duration *)
+		let d = p_linear_term_of_parsed_duration parsed_duration in
+
 		let nb_locations = 4 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
@@ -719,8 +710,15 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 		make_AGnot_single_location automaton_index 3
 
 	(*------------------------------------------------------------*)
+	(* everytime a1 then eventually a2 within d *)
 	(*------------------------------------------------------------*)
-	| TB_response_cyclic (action_name1, action_name2, d) ->
+	| Parsed_TB_response_cyclic (action_name1, action_name2, parsed_duration) ->
+		(* Convert action names to index *)
+		let a1 = action_index_of_action_name action_name1 in
+		let a2 = action_index_of_action_name action_name2 in
+		(* Convert parsed_duration *)
+		let d = p_linear_term_of_parsed_duration parsed_duration in
+
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
@@ -757,8 +755,15 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 
 
 	(*------------------------------------------------------------*)
+	(* everytime a1 then eventually a2 within d once before next *)
 	(*------------------------------------------------------------*)
-	| Parsed_TB_response_cyclicstrict (action_name1, action_name2, d) ->
+	| Parsed_TB_response_cyclicstrict (action_name1, action_name2, parsed_duration) ->
+		(* Convert action names to index *)
+		let a1 = action_index_of_action_name action_name1 in
+		let a2 = action_index_of_action_name action_name2 in
+		(* Convert parsed_duration *)
+		let d = p_linear_term_of_parsed_duration parsed_duration in
+
 		let nb_locations = 3 in
 		let all_actions = [a1; a2] in
 		(* Initialize *)
@@ -795,8 +800,12 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 
 
 	(*------------------------------------------------------------*)
+	(* sequence: a1, …, an *)
 	(*------------------------------------------------------------*)
-	| Parsed_sequence_acyclic list_of_actions ->
+	| Parsed_Sequence_acyclic list_of_actions_names ->
+		(* Convert action names to index *)
+		let list_of_actions = List.map action_index_of_action_name list_of_actions_names in
+		
 		let nb_locations = (List.length list_of_actions) + 2 in
 		let all_actions = list_of_actions in
 		(* Initialize *)
@@ -835,8 +844,12 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 
 
 	(*------------------------------------------------------------*)
+	(* sequence: always a1, …, an *)
 	(*------------------------------------------------------------*)
-	| Parsed_sequence_cyclic list_of_actions ->
+	| Parsed_Sequence_cyclic list_of_actions_names ->
+		(* Convert action names to index *)
+		let list_of_actions = List.map action_index_of_action_name list_of_actions_names in
+		
 		let nb_locations = (List.length list_of_actions) + 1 in
 		let all_actions = list_of_actions in
 		(* Initialize *)
@@ -875,6 +888,10 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 		(* No init constraint *)
 		None,
 		(* Reduce to safety property *)
-		make_AGnot_single_location automaton_index lbad*)
-		(*** TODO: finish later ***)
-	| _ -> raise (NotImplemented "ObserverPatterns.get_observer_automaton")
+		make_AGnot_single_location automaton_index lbad
+
+	(*------------------------------------------------------------*)
+	(* Others: should not happen! *)
+	(*------------------------------------------------------------*)
+	(*** NOTE: this function is only called *after* a match is done, which is why it shouldn't happen ***)
+	| _ -> raise (InternalError "Non-observer pattern property detected in `get_observer_automaton`, although this should not have happened")

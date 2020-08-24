@@ -197,58 +197,6 @@ type init_definition = parsed_init_state_predicate list
 
 type parsed_duration = linear_expression
 
-(*** NOTE: for now, we restrict to constants (later should be extended to at least constant expressions) *)
-(* type discrete_value = NumConst.t *)
-
-(** Predicates for the definition of the correctness property *)
-
-(*
-type parsed_property =
-  | Parsed_unreachable_locations of parsed_unreachable_global_location list
-
-  (* DEPRECATED *)
-  (* 	| Unreachable_action of sync_name *)
-
-  (* if a2 then a1 has happened before *)
-  | Action_precedence_acyclic of sync_name * sync_name
-  (* everytime a2 then a1 has happened before *)
-  | Action_precedence_cyclic of sync_name * sync_name
-  (* everytime a2 then a1 has happened once before *)
-  | Action_precedence_cyclicstrict of sync_name * sync_name
-
-  (*** NOT IMPLEMENTED ***)
-  (*	(* if a1 then eventually a2 *)
-    	| Eventual_response_acyclic of sync_name * sync_name
-    	(* everytime a1 then eventually a2 *)
-    	| Eventual_response_cyclic of sync_name * sync_name
-    	(* everytime a1 then eventually a2 once before next *)
-    	| Eventual_response_cyclicstrict of sync_name * sync_name*)
-
-  (* a no later than d *)
-  | Action_deadline of sync_name * duration
-
-  (* if a2 then a1 happened within d before *)
-  | TB_Action_precedence_acyclic of sync_name * sync_name * duration
-  (* everytime a2 then a1 happened within d before *)
-  | TB_Action_precedence_cyclic of sync_name * sync_name * duration
-  (* everytime a2 then a1 happened once within d before *)
-  | TB_Action_precedence_cyclicstrict of sync_name * sync_name * duration
-
-  (* if a1 then eventually a2 within d *)
-  | TB_response_acyclic of sync_name * sync_name * duration
-  (* everytime a1 then eventually a2 within d *)
-  | TB_response_cyclic of sync_name * sync_name * duration
-  (* everytime a1 then eventually a2 within d once before next *)
-  | TB_response_cyclicstrict of sync_name * sync_name * duration
-
-  (* sequence: a1, ..., an *)
-  | Sequence_acyclic of sync_name list
-  (* sequence: always a1, ..., an *)
-  | Sequence_cyclic of sync_name list
-
-
-type property_definition  = parsed_property option*)
-
 
 (****************************************************************)
 (** Projection definition *)
@@ -331,11 +279,7 @@ type parsed_property_type =
 	| Parsed_AGnot of parsed_state_predicate
 	
 	
-(*	(*** TODO: observers! ***)
-	(* Reachability *)
-	| Parsed_Action_deadline of sync_name * parsed_duration
-	
-	
+(*	
 	(* Unavoidability *)
 	| Parsed_AF of parsed_state_predicate
 	
@@ -458,6 +402,18 @@ type parsed_property_type =
 	| Parsed_TB_Action_precedence_cyclic of sync_name * sync_name * parsed_duration
 	(* everytime a2 then a1 happened once within d before *)
 	| Parsed_TB_Action_precedence_cyclicstrict of sync_name * sync_name * parsed_duration
+
+	(* if a1 then eventually a2 within d *)
+	| Parsed_TB_response_acyclic of sync_name * sync_name * parsed_duration
+	(* everytime a1 then eventually a2 within d *)
+	| Parsed_TB_response_cyclic of sync_name * sync_name * parsed_duration
+	(* everytime a1 then eventually a2 within d once before next *)
+	| Parsed_TB_response_cyclicstrict of sync_name * sync_name * parsed_duration
+
+	(* sequence: a1, …, an *)
+	| Parsed_Sequence_acyclic of sync_name list
+	(* sequence: always a1, …, an *)
+	| Parsed_Sequence_cyclic of sync_name list
 
 
 
