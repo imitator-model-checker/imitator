@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/08/21
+ * Last modified     : 2020/08/24
 *****************************************************************)
 
 {
@@ -75,7 +75,6 @@ rule token = parse
  	| "PRPC"           { CT_PRPC }
  	| "tracepreservation" { CT_TRACEPRESERVATION }
 
-	| "accloop"        { CT_ACCLOOP }
 	| "always"         { CT_ALWAYS }
 	| "and"            { SYMBOL_AND }
 	| "before"         { CT_BEFORE }
@@ -98,7 +97,6 @@ rule token = parse
 	| "sequence"       { CT_SEQUENCE }
  	| "then"           { CT_THEN }
 	| "True"           { CT_TRUE }
-	| "when"           { CT_WHEN }
 	| "within"         { CT_WITHIN }
 
 

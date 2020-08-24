@@ -56,7 +56,7 @@ let resolve_property l =
 %token COLON COMMA DOUBLEDOT SEMICOLON SYMBOL_AND SYMBOL_OR
 
 %token
-	CT_ACCEPTING CT_ACCLOOP CT_AG CT_AGnot CT_ALWAYS
+	CT_AG CT_AGnot CT_ALWAYS
 	CT_BCBORDER CT_BCLEARN CT_BCRANDOM CT_BCRANDOMSEQ CT_BCSHUFFLE CT_BEFORE
 	CT_COVERCARTOGRAPHY
 	CT_DEADLOCKFREE
@@ -71,7 +71,7 @@ let resolve_property l =
 	CT_PROPERTY
 	CT_SEQUENCE CT_SYNTH
 	CT_THEN CT_TRACEPRESERVATION CT_TRUE
-	CT_WHEN CT_WITHIN
+	CT_WITHIN
 
 	/*** NOTE: just to forbid their use in the input model and property ***/
 	CT_NOSYNCOBS CT_OBSERVER CT_OBSERVER_CLOCK CT_SPECIAL_RESET_CLOCK_NAME
@@ -244,9 +244,19 @@ property:
 	/* everytime a2 then a1 happened once within d before */
 	| CT_EVERYTIME NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_ONCE CT_WITHIN linear_expression CT_BEFORE { Parsed_TB_Action_precedence_cyclicstrict ($4, $2, $9) }
 
+	/* if a1 then eventually a2 within d */
+	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { Parsed_TB_response_acyclic ($2, $5, $7) }
+	/* everytime a1 then eventually a2 within d */
+	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { Parsed_TB_response_cyclic ($2, $5, $7) }
+	/* everytime a1 then eventually a2 within d once before next */
+	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression CT_ONCE CT_BEFORE CT_NEXT { Parsed_TB_response_cyclicstrict ($2, $5, $7) }
 
-
-	
+	/* sequence a1, …, an */
+	| CT_SEQUENCE name_nonempty_list { Parsed_Sequence_acyclic ($2) }
+	| CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Parsed_Sequence_acyclic ($3) } /* with parentheses */
+	/* always sequence a1, …, an */
+	| CT_ALWAYS CT_SEQUENCE name_nonempty_list { Parsed_Sequence_cyclic ($3) }
+	| CT_ALWAYS CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Parsed_Sequence_cyclic ($4) } /* with parentheses */
 
 ;
 
@@ -381,48 +391,6 @@ projection_definition:
 
 ;
 
-
-/* List of patterns */
-/*pattern:*/
-
-	/* if a1 then eventually a2 within d */
-/*	| CT_IF NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { TB_response_acyclic ($2, $5, $7) }*/
-	/* everytime a1 then eventually a2 within d */
-/*	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression { TB_response_cyclic ($2, $5, $7) }*/
-	/* everytime a1 then eventually a2 within d once before next */
-/*	| CT_EVERYTIME NAME CT_THEN CT_EVENTUALLY NAME CT_WITHIN linear_expression CT_ONCE CT_BEFORE CT_NEXT { TB_response_cyclicstrict ($2, $5, $7) }*/
-
-	/* sequence a1, …, an */
-/*	| CT_SEQUENCE name_nonempty_list { Sequence_acyclic ($2) }
-	| CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Sequence_acyclic ($3) }*/ /* with parentheses */
-	/* always sequence a1, …, an */
-/*	| CT_ALWAYS CT_SEQUENCE name_nonempty_list { Sequence_cyclic ($3) }
-	| CT_ALWAYS CT_SEQUENCE LPAREN name_nonempty_list RPAREN { Sequence_cyclic ($4) } */ /* with parentheses */
-/*;*/
-
-
-/* A single definition of one bad location or one bad discrete definition */
-/*bad_simple_predicate:
-	| discrete_predicate { Parsed_unreachable_discrete($1) }
-	| loc_predicate { Parsed_unreachable_loc($1) }
-;
-*/
-/* A global definition of several bad locations and/or bad discrete definitions */
-/*bad_global_predicate:
-	| bad_global_predicate AMPERSAND bad_global_predicate { List.rev_append $1 $3 }
-	| LPAREN bad_global_predicate RPAREN { $2 }
-	| bad_simple_predicate { [$1] }
-;
-
-bad_global_predicates:
-	| bad_global_predicate CT_OR bad_global_predicates { $1 :: $3 }
-	| bad_global_predicate { [$1] }
-;
-*/
-
-	
-	
-	
 
 /************************************************************/
 /** LINEAR EXPRESSIONS */
