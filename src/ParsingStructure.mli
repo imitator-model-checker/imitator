@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/08/21
+ * Last modified     : 2020/08/24
  *
  ****************************************************************)
 
@@ -451,6 +451,14 @@ type parsed_property_type =
 
 	(* a within d *)
 	| Parsed_action_deadline of sync_name * parsed_duration
+	
+	(* if a2 then a1 happened within d before *)
+	| Parsed_TB_Action_precedence_acyclic of sync_name * sync_name * parsed_duration
+	(* everytime a2 then a1 happened within d before *)
+	| Parsed_TB_Action_precedence_cyclic of sync_name * sync_name * parsed_duration
+	(* everytime a2 then a1 happened once within d before *)
+	| Parsed_TB_Action_precedence_cyclicstrict of sync_name * sync_name * parsed_duration
+
 
 
 type parsed_property = {

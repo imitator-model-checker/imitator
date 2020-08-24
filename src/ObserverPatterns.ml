@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias
  * Created:       2013/02/04
- * Last modified: 2020/08/21
+ * Last modified: 2020/08/24
  *
  ************************************************************)
  
@@ -135,11 +135,12 @@ let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 	
 	| Parsed_action_deadline _
 	
+	| Parsed_TB_Action_precedence_acyclic _
+	| Parsed_TB_Action_precedence_cyclic _
+	| Parsed_TB_Action_precedence_cyclicstrict _
+
 		-> true
 	
-	
-	(*** TODO: finish later ***)
-(* 	| _ -> raise (NotImplemented "ObserverPatterns.needs_clock") *)
 
 
 (* Create a property of the form AGnot from a single bad location *)
@@ -198,11 +199,11 @@ let new_elements (parsed_property : ParsingStructure.parsed_property) =
 	
 	(* Timed observers: add automaton, add clock *)
 	| Parsed_action_deadline _
+	| Parsed_TB_Action_precedence_acyclic _
+	| Parsed_TB_Action_precedence_cyclic _
+	| Parsed_TB_Action_precedence_cyclicstrict _
 		-> (Some observer_automaton_name, Some observer_clock_name)
 		
-(*	
-	(*** TODO: finish later ***)
-	| _ -> raise (NotImplemented "ObserverPatterns.new_elements")*)
 
 (*	
 	(*** NOT IMPLEMENTED ***)
@@ -267,6 +268,10 @@ let get_nb_locations (parsed_property : ParsingStructure.parsed_property) =
 	
 	| ParsingStructure.Parsed_action_deadline _
 		-> 3
+		
+	| ParsingStructure.Parsed_TB_Action_precedence_acyclic _ -> 4
+	| ParsingStructure.Parsed_TB_Action_precedence_cyclic _ -> 3
+	| ParsingStructure.Parsed_TB_Action_precedence_cyclicstrict _ -> 3
 
 (* 	 *)
 	(*** TODO: finish later ***)
@@ -495,153 +500,185 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 
 
 		
-		(*** TODO: finish later ***)
-	| _ -> raise (NotImplemented "ObserverPatterns.get_observer_automaton")
-(*
 
 
 
 	(*------------------------------------------------------------*)
+	(* if a2 then a1 happened within d before *)
 	(*------------------------------------------------------------*)
-	| Parsed_TB_Action_precedence_acyclic (action_name1, action_name2, d) ->
+	| Parsed_TB_Action_precedence_acyclic (action_name1, action_name2, parsed_duration) ->
+		(* Convert action names to index *)
+		let a1 = action_index_of_action_name action_name1 in
+		let a2 = action_index_of_action_name action_name2 in
+		(* Convert parsed_duration *)
+		let d = p_linear_term_of_parsed_duration parsed_duration in
+
 		let nb_locations = 4 in
+		let location_init	= 0 in
+		let location_inter	= 1 in
+		let location_ok		= 2 in
+		let location_nok	= 3 in
+
 		let all_actions = [a1; a2] in
 		(* Initialize *)
 		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no silent action here) *)
 		(* Compute transitions *)
-		transitions.(0).(a1) <- 
+		transitions.(location_init).(a1) <- 
 			[{
 				guard		= True_guard;
 				action		= a1;
 				updates		= create_update (Resets [observer_clock_index]) [] [];
-				target		= 1;
+				target		= location_inter;
 			}];
-		transitions.(0).(a2) <- untimedt a2 3;
-		transitions.(1).(a1) <-
+		transitions.(location_init).(a2) <- untimedt a2 location_nok;
+		transitions.(location_inter).(a1) <-
 			[{
 				guard		= True_guard;
 				action		= a1;
 				updates		= create_update (Resets [observer_clock_index]) [] [];
-				target		= 1;
+				target		= location_inter;
 			}];
-		transitions.(1).(a2) <-
+		transitions.(location_inter).(a2) <-
 			[
 			{
 				guard		= Continuous_guard (ct_x_leq_d observer_clock_index d);
 				action		= a2;
 				updates		= create_update No_update [] [];
-				target		= 2;
+				target		= location_ok;
 			}
 			;
 			{
-				guard		= Continuous_guard (ct_x_geq_d observer_clock_index d);
+				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= a2;
 				updates		= create_update No_update [] [];
-				target		= 3;
+				target		= location_nok;
 			}
 			];
-		transitions.(2) <- allow_all 2;
-		transitions.(3) <- allow_all 3;
+		transitions.(location_ok) <- allow_all location_ok;
+		transitions.(location_nok) <- allow_all location_nok;
 		(* Return structure *)
 		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
 		(* Reduce to safety property *)
-		make_AGnot_single_location automaton_index 3
+		make_AGnot_single_location automaton_index location_nok
 
 
 	(*------------------------------------------------------------*)
+	(* everytime a2 then a1 happened within d before *)
 	(*------------------------------------------------------------*)
-	| Parsed_TB_Action_precedence_cyclic (action_name1, action_name2, d) ->
+	| Parsed_TB_Action_precedence_cyclic (action_name1, action_name2, parsed_duration) ->
+		(* Convert action names to index *)
+		let a1 = action_index_of_action_name action_name1 in
+		let a2 = action_index_of_action_name action_name2 in
+		(* Convert parsed_duration *)
+		let d = p_linear_term_of_parsed_duration parsed_duration in
+
 		let nb_locations = 3 in
+		let location_init	= 0 in
+		let location_ok		= 1 in
+		let location_nok	= 2 in
+
 		let all_actions = [a1; a2] in
 		(* Initialize *)
 		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no silent action here) *)
 		(* Compute transitions *)
-		transitions.(0).(a1) <-
+		transitions.(location_init).(a1) <-
 			[{
 				guard		= True_guard;
 				action		= a1;
 				updates		= create_update (Resets [observer_clock_index]) [] [];
-				target		= 1;
+				target		= location_ok;
 			}];
-		transitions.(0).(a2) <- untimedt a2 2;
-		transitions.(1).(a1) <-
+		transitions.(location_init).(a2) <- untimedt a2 location_nok;
+		transitions.(location_ok).(a1) <-
 			[{
 				guard		= True_guard;
 				action		= a1;
 				updates		= create_update (Resets [observer_clock_index]) [] [];
-				target		= 1;
+				target		= location_ok;
 			}];
-		transitions.(1).(a2) <-
+		transitions.(location_ok).(a2) <-
 			[
 			{
 				guard		= Continuous_guard (ct_x_leq_d observer_clock_index d);
 				action		= a2;
 				updates		= create_update No_update [] [];
-				target		= 0;
+				target		= location_init;
 			}
 			;
 			{
-				guard		= Continuous_guard (ct_x_geq_d observer_clock_index d);
+				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= a2;
 				updates		= create_update No_update [] [];
-				target		= 2;
+				target		= location_nok;
 			}
 			];
-		transitions.(2) <- allow_all 2;
+		transitions.(location_nok) <- allow_all location_nok;
 		(* Return structure *)
 		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
 		(* Reduce to safety property *)
-		make_AGnot_single_location automaton_index 2
+		make_AGnot_single_location automaton_index location_nok
 
 
 	(*------------------------------------------------------------*)
+	(* everytime a2 then a1 happened once within d before *)
 	(*------------------------------------------------------------*)
-	| Parsed_TB_Action_precedence_cyclicstrict (action_name1, action_name2, d) ->
+	| Parsed_TB_Action_precedence_cyclicstrict (action_name1, action_name2, parsed_duration) ->
+		(* Convert action names to index *)
+		let a1 = action_index_of_action_name action_name1 in
+		let a2 = action_index_of_action_name action_name2 in
+		(* Convert parsed_duration *)
+		let d = p_linear_term_of_parsed_duration parsed_duration in
+
 		let nb_locations = 3 in
+		let location_init	= 0 in
+		let location_ok		= 1 in
+		let location_nok	= 2 in
+
 		let all_actions = [a1; a2] in
 		(* Initialize *)
 		let actions_per_location, observer_location_urgency, invariants, transitions, allow_all = initialize_structures nb_locations all_actions in
 		(* No need to update actions per location (no silent action here) *)
 		(* Compute transitions *)
-		transitions.(0).(a1) <-
+		transitions.(location_init).(a1) <-
 			[{
 				guard		= True_guard;
 				action		= a1;
 				updates		= create_update (Resets [observer_clock_index]) [] [];
-				target		= 1;
+				target		= location_ok;
 			}];
-		transitions.(0).(a2) <- untimedt a2 2;
-		transitions.(1).(a1) <- untimedt a1 2;
-		transitions.(1).(a2) <-
+		transitions.(location_init).(a2) <- untimedt a2 location_nok;
+		transitions.(location_ok).(a1) <- untimedt a1 location_nok;
+		transitions.(location_ok).(a2) <-
 			[
 			{
 				guard		= Continuous_guard (ct_x_leq_d observer_clock_index d);
 				action		= a2;
 				updates		= create_update No_update [] [];
-				target		= 0;
+				target		= location_init;
 			}
 			;
 			{
-				guard		= Continuous_guard (ct_x_geq_d observer_clock_index d);
+				guard		= Continuous_guard (ct_x_g_d observer_clock_index d);
 				action		= a2;
 				updates		= create_update No_update [] [];
-				target		= 2;
+				target		= location_nok;
 			}
 			];
-		transitions.(2) <- allow_all 2;
+		transitions.(location_nok) <- allow_all location_nok;
 		(* Return structure *)
 		all_actions, actions_per_location, observer_location_urgency, invariants, transitions,
 		(* No init constraint *)
 		None,
 		(* Reduce to safety property *)
-		make_AGnot_single_location automaton_index 2
+		make_AGnot_single_location automaton_index location_nok
 
+(*
 
 	(*------------------------------------------------------------*)
 	(*------------------------------------------------------------*)
@@ -839,3 +876,5 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 		None,
 		(* Reduce to safety property *)
 		make_AGnot_single_location automaton_index lbad*)
+		(*** TODO: finish later ***)
+	| _ -> raise (NotImplemented "ObserverPatterns.get_observer_automaton")

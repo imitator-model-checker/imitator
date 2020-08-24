@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/08/21
+ * Last modified     : 2020/08/24
  *
  ************************************************************)
 
@@ -2637,6 +2637,14 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_action_deadline (_ , duration)
 			-> get_variables_in_linear_expression variables_used_ref duration
 
+		(* if a2 then a1 happened within d before *)
+		| Parsed_TB_Action_precedence_acyclic ((*sync_name*)_, (*sync_name*)_, duration)
+		(* everytime a2 then a1 happened within d before *)
+		| Parsed_TB_Action_precedence_cyclic ((*sync_name*)_, (*sync_name*)_, duration)
+		(* everytime a2 then a1 happened once within d before *)
+		| Parsed_TB_Action_precedence_cyclicstrict ((*sync_name*)_, (*sync_name*)_, duration)
+			-> get_variables_in_linear_expression variables_used_ref duration
+
 		
 		
 (*		(*** TODO ***)
@@ -2668,13 +2676,6 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
             | Parsed_unreachable_loc _ -> ()
           ) parsed_unreachable_global_location;
       ) parsed_unreachable_global_location_list
-
-  (* if a2 then a1 happened within d before *)
-  | TB_Action_precedence_acyclic ((*sync_name*)_, (*sync_name*)_, duration)
-  (* everytime a2 then a1 happened within d before *)
-  | TB_Action_precedence_cyclic ((*sync_name*)_, (*sync_name*)_, duration)
-  (* everytime a2 then a1 happened once within d before *)
-  | TB_Action_precedence_cyclicstrict ((*sync_name*)_, (*sync_name*)_, duration)
 
   (* if a1 then eventually a2 within d *)
   | TB_response_acyclic ((*sync_name*)_, (*sync_name*)_, duration)
@@ -3277,19 +3278,6 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 			(check_action_name index_of_actions a2)
 	in
 
-	(* Generic check function for 2 actions and one deadline *)
-	let gen_check_2actionsd a1 a2 d =
-		(* Check action names and deadline (perform 3 even if one fails) *)
-		let check1 = check_action_name index_of_actions a1 in
-		let check2 = check_action_name index_of_actions a2 in
-		let check3 = all_variables_defined_in_linear_expression variable_names constants d in
-		let check4 = (if no_variables_in_linear_expression index_of_variables type_of_variables constants d
-					then true
-					else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
-		in
-		check1 && check2 && check3 && check4
-	in
-
 	(* Generic check and conversion function for a list of actions *)
 	let gen_list property actions_list =
 		(* Check action names (use a fold_left instead of forall to ensure that all actions will be checked) *)
@@ -3453,6 +3441,24 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 			in
 			check1 && check2 && check3
 
+		(* CASE 2 ACTIONS + DEADLINE *)
+		
+		(* if a2 then a1 happened within d before *)
+		| ParsingStructure.Parsed_TB_Action_precedence_acyclic (a1, a2, d)
+		(* everytime a2 then a1 happened within d before *)
+		| ParsingStructure.Parsed_TB_Action_precedence_cyclic (a1, a2, d)
+		(* everytime a2 then a1 happened once within d before *)
+		| ParsingStructure.Parsed_TB_Action_precedence_cyclicstrict (a1, a2, d)
+			->
+			(* Check action names and deadline (perform 3 even if one fails) *)
+			let check1 = check_action_name index_of_actions a1 in
+			let check2 = check_action_name index_of_actions a2 in
+			let check3 = all_variables_defined_in_linear_expression variable_names constants d in
+			let check4 = (if no_variables_in_linear_expression index_of_variables type_of_variables constants d
+						then true
+						else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
+			in
+			check1 && check2 && check3 && check4
 		
 (*		(*** TODO ***)
 		| _
@@ -3483,13 +3489,6 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 
 
 
-		(* CASE 2 ACTIONS + DEADLINE *)
-		(* if a2 then a1 happened within d before *)
-		| ParsingStructure.TB_Action_precedence_acyclic (a1, a2, d)
-		(* everytime a2 then a1 happened within d before *)
-		| ParsingStructure.TB_Action_precedence_cyclic (a1, a2, d)
-		(* everytime a2 then a1 happened once within d before *)
-		| ParsingStructure.TB_Action_precedence_cyclicstrict (a1, a2, d)
 		(* if a1 then eventually a2 within d *)
 		| ParsingStructure.TB_response_acyclic (a1, a2, d)
 		(* everytime a1 then eventually a2 within d *)
@@ -3939,6 +3938,16 @@ let convert_property_option useful_parsing_model_information (nb_actions : int) 
 		
 		(* a within d *)
 		| ParsingStructure.Parsed_action_deadline _
+		
+		(* CASE 2 ACTIONS + DEADLINE *)
+		
+		(* if a2 then a1 happened within d before *)
+		| ParsingStructure.Parsed_TB_Action_precedence_acyclic _
+		(* everytime a2 then a1 happened within d before *)
+		| ParsingStructure.Parsed_TB_Action_precedence_cyclic _
+		(* everytime a2 then a1 happened once within d before *)
+		| ParsingStructure.Parsed_TB_Action_precedence_cyclicstrict _
+		
 			->
 			
 (*			(* Get action indexes *)
