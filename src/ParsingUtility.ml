@@ -187,7 +187,7 @@ let compile_model_and_property options =
 			| None -> raise (InternalError "No property file name found in `compile_model_and_property` although it was expected.")
 		in
 		
-		print_message Verbose_low ("Parsing property file `" ^ property_file_name ^ "\…");
+		print_message Verbose_low ("Parsing property file `" ^ property_file_name ^ "`…");
 		
 		(* Parsing the property *)
 		let parsed_property : ParsingStructure.parsed_property = parser_lexer_from_file PropertyParser.main PropertyLexer.token property_file_name in
