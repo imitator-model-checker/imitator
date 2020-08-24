@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/08/21
+# Last modified     : 2020/08/24
 #************************************************************
 
 
@@ -2053,6 +2053,32 @@ Constraint nature                       : good
 			{'file': 'testPattern4.res' , 'content' : """
 BEGIN CONSTRAINT
  p > 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "a within d" with a parametric d',
+		'input_files': ['testPattern5.imi', 'testPattern5.imiprop'],
+		'options'    : '-merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testPattern5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 3
 END CONSTRAINT
 
 ------------------------------------------------------------
