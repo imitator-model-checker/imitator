@@ -2336,6 +2336,61 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test observer pattern "sequence a1, …, an"',
+		'input_files': ['testPattern8.imi', 'testPattern8-sequence.imiprop'],
+		'options'    : '-merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testPattern8.res' , 'content' : """
+BEGIN CONSTRAINT
+  4 > p
+ & p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "always sequence a1, …, an"',
+		'input_files': ['testPattern8.imi', 'testPattern8-alwayssequence.imiprop'],
+		'options'    : '-merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testPattern8.res' , 'content' : """
+BEGIN CONSTRAINT
+  p > 3
+ & 4 > p
+ OR
+   p >= 0
+ & 3 > p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test EFmin on a toy example',
 		'input_files': ['testEFmin.imi', 'testEFmin.imiprop'],
 		'options'    : '-merge -incl -output-result',
