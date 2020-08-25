@@ -410,9 +410,9 @@ type parsed_property_type =
 	(* everytime a1 then eventually a2 within d once before next *)
 	| Parsed_TB_response_cyclicstrict of sync_name * sync_name * parsed_duration
 
-	(* sequence: a1, …, an *)
+	(* sequence a1, …, an *)
 	| Parsed_Sequence_acyclic of sync_name list
-	(* sequence: always a1, …, an *)
+	(* always sequence a1, …, an *)
 	| Parsed_Sequence_cyclic of sync_name list
 
 

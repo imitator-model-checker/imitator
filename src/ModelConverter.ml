@@ -2653,9 +2653,9 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_TB_response_cyclicstrict (_, _, parsed_duration)
 			-> get_variables_in_linear_expression variables_used_ref parsed_duration
 
-		(* sequence: a1, …, an *)
+		(* sequence a1, …, an *)
 		| Parsed_Sequence_acyclic _
-		(* sequence: always a1, …, an *)
+		(* always sequence a1, …, an *)
 		| Parsed_Sequence_cyclic _
 			-> ()
 
@@ -3435,9 +3435,9 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 
 		(* CASE SEQUENCES (list of actions) *)
 
-		(* sequence: a1, …, an *)
+		(* sequence a1, …, an *)
 		| ParsingStructure.Parsed_Sequence_acyclic (actions_list)
-		(* sequence: always a1, …, an *)
+		(* always sequence a1, …, an *)
 		| ParsingStructure.Parsed_Sequence_cyclic (actions_list)
 			->
 			(* Check action names (use a fold_left instead of forall to ensure that all actions will be checked) *)
@@ -3764,9 +3764,9 @@ let convert_property_option useful_parsing_model_information (nb_actions : int) 
 		
 		(* CASE SEQUENCES *)
 		
-		(* sequence: a1, …, an *)
+		(* sequence a1, …, an *)
 		| Parsed_Sequence_acyclic _
-		(* sequence: always a1, …, an *)
+		(* always sequence a1, …, an *)
 		| Parsed_Sequence_cyclic _
 		
 			->

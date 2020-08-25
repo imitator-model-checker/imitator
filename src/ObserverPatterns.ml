@@ -800,7 +800,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 
 
 	(*------------------------------------------------------------*)
-	(* sequence: a1, …, an *)
+	(* sequence a1, …, an *)
 	(*------------------------------------------------------------*)
 	| Parsed_Sequence_acyclic list_of_actions_names ->
 		(* Convert action names to index *)
@@ -844,7 +844,7 @@ let get_observer_automaton action_index_of_action_name (p_linear_term_of_parsed_
 
 
 	(*------------------------------------------------------------*)
-	(* sequence: always a1, …, an *)
+	(* always sequence a1, …, an *)
 	(*------------------------------------------------------------*)
 	| Parsed_Sequence_cyclic list_of_actions_names ->
 		(* Convert action names to index *)
