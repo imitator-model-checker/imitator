@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2020/08/21
+ * Last modified: 2020/08/25
  *
  ************************************************************)
  
@@ -75,7 +75,11 @@ class imitator_options :
 		method output_cart_y_min : int option
 		method output_cart_y_max : int option
 		method output_float : bool
+		
 		method output_result : bool
+		method is_set_output_result : bool
+		method set_output_result : bool -> unit
+		
 		method output_tiles_files : bool
 		method pi_compatible : bool
 		method precomputepi0 : bool

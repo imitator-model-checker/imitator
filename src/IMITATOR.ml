@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/08/24
+ * Last modified     : 2020/08/25
  *
  ************************************************************)
 
@@ -161,24 +161,25 @@ parsing_counter#stop;
 (* Set some options *)
 (************************************************************)
 
+(* Set default options depending on the IMITATOR mode *)
+let merge_needed = match property_option with
+	| None -> false
+	| Some property -> AlgorithmOptions.merge_needed property
+in
+
+
+(* Update if not yet set *)
+if not options#is_set_output_result then(
+	(* Print some information *)
+	print_message Verbose_high ("Set option `-output-result` to its default value: `" ^ (string_of_bool merge_needed) ^ "`");
+	
+	options#set_output_result (merge_needed);
+);
+
 (* Set some options depending on the IMITATOR mode *)
-(*** A bit a HACK ***)
 let is_cartography = match property_option with
 	| None -> false
-	| Some property -> (
-		match property.property with
-		| Cover_cartography _
-		| Learning_cartography _
-		| Shuffle_cartography _
-		| Border_cartography _
-		| Random_cartography _
-		| RandomSeq_cartography _
-		| PRPC _
-			-> true
-	
-		| _ -> false
-
-	)
+	| Some property -> AlgorithmOptions.is_cartography property
 in
 options#set_options_for_cartography is_cartography;
 

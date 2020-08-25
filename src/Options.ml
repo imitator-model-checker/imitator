@@ -10,7 +10,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/08/21
+ * Last modified     : 2020/08/25
  *
  ************************************************************)
 
@@ -33,7 +33,7 @@ open AbstractAlgorithm
 
 
 class imitator_options =
-	object
+	object (self)
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
@@ -77,7 +77,8 @@ class imitator_options =
 		val mutable output_float = false
 		
 		(* Output result to a file *)
-		val mutable output_result = false
+		(*** NOTE: type option since it can be modified to default values depending on the property, after the property is parsed ***)
+		val mutable output_result = None
 		
 		(* In cartography mode, output all tiles to files *)
 		val mutable output_tiles_files = false
@@ -237,6 +238,11 @@ class imitator_options =
 		(* Get methods *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		
+		(* Returns a Boolean from a bool option. Raises exception if it is equal to None ***)
+		method private bool_of_option option_name = function
+			| Some b -> b
+			| None -> raise (InternalError ("Option `" ^ option_name ^ "` is not yet initialized."))
+		
 		method acyclic = !acyclic
 (* 		method best_worst_case = !best_worst_case *)
 		method branch_and_bound = !branch_and_bound
@@ -279,7 +285,11 @@ class imitator_options =
 		method output_cart_y_min = output_cart_y_min
 		method output_cart_y_max = output_cart_y_max
 		method output_float = output_float
-		method output_result = output_result
+		
+		method output_result = self#bool_of_option "output_result" output_result
+		method is_set_output_result = output_result <> None
+		method set_output_result b = output_result <- Some b
+		
 		method output_tiles_files = output_tiles_files
 		method pi_compatible = !pi_compatible
 		method precomputepi0 = !precomputepi0
@@ -817,7 +827,7 @@ class imitator_options =
 				
 				("-output-float", Unit (fun () -> output_float <- true), " Approximates the value of discrete variables as floats. Default: false.");
 				
-				("-output-result", Unit (fun () -> output_result <- true), " Write the result to a file. Default: false.");
+				("-output-result", Unit (fun () -> output_result <- Some true), " Write the result to a file. Default: true.");
 				
 				("-output-states", Set with_log, " Generate the description of all reachable states in a file. Default: false.");
 				
@@ -1322,11 +1332,14 @@ end;
 				print_message Verbose_medium ("No approximate value of discrete variables will be given (default).")
 			;
 			
-			if output_result then
+			begin match output_result with
+			| Some true ->
 				print_message Verbose_standard ("The result will be written to a file.")
-			else
-				print_message Verbose_medium ("No result written into a file (default).")
-			;
+			| Some false ->
+				print_message Verbose_standard ("No result written into a file.")
+			| None ->
+				print_message Verbose_medium ("The result will be written to a file if requested by the algorithm.")
+			end;
 			
 			if graphical_state_space <> Graphical_state_space_none then
 				print_message Verbose_standard ("The trace set(s) will be generated in a graphical mode.")
@@ -1429,11 +1442,11 @@ end;
 				);
 			
 				(* Case result output requested *)
-				if output_result then(
+				if self#output_result then(
 					(* Enable result for BC *)
 					output_bc_result <- true;
 					(* Disable cartography for instances unless requested *)
-					if not output_tiles_files then output_result <- false
+					if not output_tiles_files then output_result <- (Some false)
 				);
 			
 			);
