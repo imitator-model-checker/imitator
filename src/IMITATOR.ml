@@ -695,6 +695,7 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 	
+			(*** NOTE: cannot reintroduce it unless the compositional verifier "CV" is updated to the IMITATOR 3.0 syntax ***)
 (*			(** Cover the whole cartography using learning-based abstractions *)
 			| Learning_cartography (state_predicate, hyper_rectangle) ->
 				let bc_algo = new AlgoBCCoverLearning.algoBCCoverLearning state_predicate hyper_rectangle (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_good_bad_constraint in

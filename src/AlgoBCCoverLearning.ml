@@ -64,6 +64,8 @@ class algoBCCoverLearning (state_predicate : AbstractProperty.state_predicate) (
 
 	(* Backup the original model (for final postprocessing) *)
 	val original_model = Input.get_model ()
+	(* Backup the original property (for final postprocessing) *)
+	val original_property = Input.get_property ()
 	(* Backup the original model file names *)
 	val original_file = (Input.get_options ())#model_file_name
 	val original_files_prefix = (Input.get_options ())#files_prefix
@@ -235,7 +237,7 @@ class algoBCCoverLearning (state_predicate : AbstractProperty.state_predicate) (
 		
 		counter_reparsing#increment;
 		counter_reparsing#start;
-		let new_model = ParsingUtility.compile_model options false in
+		let new_model, _ = ParsingUtility.compile_model_and_property options in
 		counter_reparsing#stop;
 		
 		(* Set model *)
@@ -260,11 +262,11 @@ class algoBCCoverLearning (state_predicate : AbstractProperty.state_predicate) (
 		(* Select the right algorithm according to the analysis type *)
 		let algo_instance = match analysis_type with
 			(* If counter-exemple: run EF on the parametric trace *)
-			| CounterExample -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoEFunsafeSynth.algoEFunsafeSynth in myalgo
+			| CounterExample -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoEFunsafeSynth.algoEFunsafeSynth state_predicate in myalgo
 			
 			(* If abstraction: run PRP on this abstraction *)
 			(*** NOTE: the current valuation (current_point) is already set in Input ***)
-			| Abstraction -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoPRP.algoPRP in myalgo
+			| Abstraction -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoPRP.algoPRP current_point state_predicate in myalgo
 		in
 		current_algo_instance <- algo_instance;
 		
@@ -288,6 +290,9 @@ class algoBCCoverLearning (state_predicate : AbstractProperty.state_predicate) (
 		(*** TODO (not implemented yet as we need to create files manually for now...) ***)
 
 		
+		(* Set model and property back to their original value *)
+		Input.set_model original_model;
+		Input.set_property original_property;
 		(* Set model name and model prefix name back to their original value *)
 		options#set_file original_file;
 		options#set_files_prefix original_files_prefix;
