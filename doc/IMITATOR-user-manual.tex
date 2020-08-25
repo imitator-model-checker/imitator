@@ -439,13 +439,13 @@ Finally, note that the number of \IPTA{}, locations, variables and actions that 
 
 \bigskip
 
-\imitator{} may use the determinism in (yet to come) algorithms; and the deterministic nature of an \NIPTA{} is detected by \imitator{}.
+\imitator{} may use the determinism in (yet to come) algorithms; and the deterministic nature of a \NIPTA{} is detected by \imitator{}.
 In our setting, the strong determinism denotes at most one transition going out from a location and labeled with a given observable (\ie{} non-silent) transition.
 Let us precisely define what it means:
 
 %------------------------------------------------------------
 \begin{definition}[strong determinism]
-	Let $\A$ be an \NIPTA{} made of $N$ \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \DVar_i, \Clock_i, \Param_i, \invariant_i, \stopwatches_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \grandn$.
+	Let $\A$ be a \NIPTA{} made of $N$ \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \DVar_i, \Clock_i, \Param_i, \invariant_i, \stopwatches_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \grandn$.
 
 	$\A$ is \emph{strongly-deterministic} if
 	for all automaton $\A_i$,
@@ -598,6 +598,7 @@ The property syntax is as follows:\footnote{%
 
 \styleIMI{property := \#synth EF(statepredicate);}\\
 where \styleIMI{statepredicate} is a state predicate, for example of the form \styleIMI{loc[AUTOMATON] = LOCATION}, where \styleIMI{AUTOMATON} is an automaton name, and \styleIMI{LOCATION} is a location name.
+State predicates allow conjunction, disjunction and the use of global discrete variables.
 
 The algorithm \EFsynth{} implemented in \imitator{} is a basic breadth-first procedure, close to the one described in \cite{JLR15}.
 Of course, the EF-emptiness problem being undecidable~\cite{AHV93}, the analysis is not guaranteed to terminate.
@@ -747,11 +748,11 @@ The semantics of these properties is detailed in~\cite{Andre13ICECCS}.
 \section{Parametric deadlock-freeness checking}\label{ss:mode:PDFC}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given an \NIPTA{}, \PDFC{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system is deadlock-free~\cite{Andre16}.
+Given a \NIPTA{}, \PDFC{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system is deadlock-free~\cite{Andre16}.
 
-The command is:
+The property syntax is as follows:
 
-\styleCommand{\binimitator{} model.imi -mode PDFC -output-result}
+\styleIMI{property := \#synth deadlockfree;}
 
 As usual, \imitator{} can also
 	output the trace set in a graphical form (option \styleOption{-output-trace-set})
@@ -770,7 +771,7 @@ As usual, \imitator{} can also
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 
-Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, \ie{} an infinite run. % TODO: ~\cite{AL17}
+Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, \ie{} an infinite run. % TODO: ~\cite{AL17}
 
 % The command is:
 % 
@@ -789,7 +790,7 @@ As usual, \imitator{} can also
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Accepting loop}\label{ss:accepting-loop}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one \emph{accepting} cycle, \ie{} an infinite run passing infinitely often by an accepting location.
+Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one \emph{accepting} cycle, \ie{} an infinite run passing infinitely often by an accepting location.
 
 The property syntax is as follows:
 
@@ -799,9 +800,11 @@ The property syntax is as follows:
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Accepting loop (NDFS)}\label{ss:accepting-loop-NDFS}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one accepting cycle.
+Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one accepting cycle.
 This algorithm differs from the one in \cref{ss:accepting-loop} in the sense that this algorithm performs a nested depth-first search (NDFS) exploration until a cycle is found~\cite{NPP18}.
 In addition, this algorithm is (by default) not complete.
+
+% TODO!
 
 The command is:
 
@@ -849,22 +852,24 @@ As usual, \imitator{} can also
 \section{Parametric non-Zeno cycle synthesis}\label{ss:mode:Zeno}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given an \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, under the non-Zeno assumption~\cite{ANPS17}.
+Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, under the non-Zeno assumption~\cite{ANPS17}.
 That is, only parameter valuations yielding at least one non-Zeno cycle are synthesized.
 Parameter valuations yielding only Zeno-cycles or no cycles are ignored.
 
 The method implemented in \imitator{} is based on CUB-\IPTA{}, a syntactic subclass of PTA based on the CUB-TA proposed in~\cite{WSWLSDYL15}.
 
+% NOTE: hidden property =
+% 	\styleIMI{property := \#synth NZ\_inf\_cycle\_CUB;}
+
 Two options are possible in \imitator{}:
 \begin{enumerate}
-	\item a partial method (but slightly faster) than first detects whether the input \NIPTA{} is already a CUB-PTA; if so, it applies non-Zeno checking on this CUB-PTA; otherwise, the returned constraint will be false.
+	\item a partial method (but slightly faster), that first detects whether the input \NIPTA{} is already a CUB-PTA; if so, it applies non-Zeno checking on this CUB-PTA; otherwise, the returned constraint will be false.
 
-	\styleCommand{\binimitator{} model.imi -mode NZCUBcheck -output-result}
-
+	\styleIMI{property := \#synth NZ\_inf\_cycle\_check;}
 
 	\item a complete method (though of course without guarantee of termination), that transforms the \NIPTA{} into a network of CUB-PTAs, and applies non-Zeno checking on the transformed CUB-PTA.
 
-	\styleCommand{\binimitator{} model.imi -mode NZCUBtrans -output-result}
+	\styleIMI{property := \#synth NZ\_inf\_cycle\_transform;}
 
 \end{enumerate}
 
@@ -896,15 +901,23 @@ As usual, \imitator{} can also
 \section{Inverse method: Trace preservation and robustness}\label{ss:mode:IM}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given an \NIPTA{} and a reference parameter valuation, the inverse method~\IM{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the set of traces is the same as for the reference valuation~\cite{ACEF09}.
+Given a \NIPTA{} and a reference parameter valuation, the inverse method~\IM{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the set of traces is the same as for the reference valuation~\cite{ACEF09}.
 This problem is known as the trace-preservation synthesis, and formalized in~\cite{AM15}.
 The trace-preservation emptiness problem being undecidable~\cite{AM15}, the analysis is not guaranteed to terminate (although it often does in practice).
 
-The command is:
+The property syntax is of the following form:
 
-\styleCommand{\binimitator{} model.imi model.pi0 -output-result}
+\styleIMI{property := \#synth IM(referencevaluation);}
 
-The reference valuation is described in \stylePath{model.pi0}.
+\noindent{}
+where \styleIMI{referencevaluation} is a reference valuation of the form \styleIMI{p1 = 1 \& p2 = 2 \&…} (see \cref{section:grammar-property} for details).
+
+%------------------------------------------------------------
+\begin{remark}
+	The following synonyms are allowed for \styleIMI{IM}: \styleIMI{inversemethod} and \styleIMI{tracepreservation}.
+\end{remark}
+%------------------------------------------------------------
+
 
 \imitator{} can also
 	output the trace set in a graphical form (option \styleOption{-output-trace-set})
@@ -923,15 +936,18 @@ Recall that the option \styleOption{-output-result} is not compulsory, but allow
 \section{Behavioral cartography}\label{ss:mode:BC}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Given an \NIPTA{} and a bounded parameter domain, the behavioral cartography~\BC{} synthesizes tiles, \ie{} parameter domains such that for any parameter valuation in that domain, the set of traces is the same~\cite{AF10}.
+Given a \NIPTA{} and a bounded parameter domain, the behavioral cartography~\BC{} synthesizes tiles, \ie{} parameter domains such that for any parameter valuation in that domain, the set of traces is the same~\cite{AF10}.
 The corresponding problem being undecidable, the analysis is not guaranteed to terminate; when it terminates, it may also leave ``holes'', \ie{} parameter domains not covered by any tile.
 	% TODO: cite AM15
 
-The command is:
+The property syntax is of the following form:
 
-\styleCommand{\binimitator{} model.imi model.v0 -mode cover -output-result}
 
-The bounded parameter domain is described in \stylePath{model.v0}.
+\styleIMI{property := \#synth BCcover(referencerectangle);}
+
+\noindent{}
+where \styleIMI{referencerectangle} is a reference hyper-rectangle of the form \styleIMI{p1 = 1..5 \& p2 = 2..4 \&…} (see \cref{section:grammar-property} for details).
+
 
 \imitator{} can also
 	output all trace sets in a graphical form (option \styleOption{-output-trace-set}),
@@ -954,13 +970,14 @@ Recall that the option \styleOption{-output-result} is not compulsory, but allow
 
 An alternative to the behavioral cartography is a random coverage; it can be seen as a kind of sampling.
 
-The command is:
+The property syntax is of the following form:
 
-\styleCommand{\binimitator{} model.imi model.v0 -mode randomXX -output-result}
+\styleIMI{property := \#synth BCrandom(referencerectangle , XX);}
 
-\noindent{}where \styleOption{XX} is the number of times an integer point is randomly selected within the domain defined in \stylePath{model.v0}.
+
+\noindent{}where \styleOption{XX} is the number of times an integer point is randomly selected within the domain defined.
 If this point is already covered by one of the tiles, the inverse method is not called, an another point is selected.
-Note that \styleOption{XX} represents the number of integer points randomly selected; the number of calls to the inverse method can be significantly smaller.
+Note that \styleOption{XX} represents the number of integer points randomly selected; the number of \emph{calls} to the inverse method can be significantly smaller.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -972,9 +989,10 @@ That is, all integer points in the reference parameter domain are generated in a
 Then the points are enumerated.
 It differs from the random cartography in the sense that the random cartography randomly samples points without guarantee of full coverage, whereas the shuffle enumeration guarantees the coverage of all integer points.
 
-The command is:
+The property syntax is:
 
-\styleCommand{\binimitator{} model.imi model.v0 -mode shuffle -output-result}
+\styleIMI{property := \#synth BCshuffle(referencerectangle);}
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -985,11 +1003,10 @@ The command is:
 ``given a reference parameter valuation~$\pval$ and some location~$\loc$, synthesize other valuations that preserve the reachability of~$\loc$''.
 By preserving the reachability, we mean that $\loc$ is reachable for the other valuations iff $\loc$ is reachable for~$\pval$.
 
-This algorithm~$\PRP$, that combines \EFsynth{} and \IM{} (see~\cite{ALNS15} for details), is called as follows:
+This algorithm~$\PRP$, that somehow combines \EFsynth{} and \IM{} (see~\cite{ALNS15} for details), is called using the following property syntax:
 
-\styleCommand{\binimitator{} model.imi model.pi0 -mode PRP -output-result}
+\styleIMI{property := \#synth PRP(statepredicate , referencevaluation);}
 
-Note that a bad location (as in \cref{ss:mode:EFsynth}) or a property (as in \cref{ss:mode:prop}) must be defined in the model.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -999,17 +1016,17 @@ Note that a bad location (as in \cref{ss:mode:EFsynth}) or a property (as in \cr
 An extension of $\PRP$ to the cartography (named \PRPC{}) is also available: \PRPC{} synthesizes parameter constraints in which the (non-)reachability of $\loc$ is uniform.
 \PRPC{} was showed in~\cite{ALNS15} to be a suitable alternative to \EFsynth{}, especially when distributed (see option \styleOption{-distributed}).
 
-This algorithm~$\PRPC$ is called as follows:
+The property syntax for this algorithm $\PRPC$ is as follows:
 
-\styleCommand{\binimitator{} model.imi model.v0 -mode PRPC -output-result}
-
-Again, a bad location (as in \cref{ss:mode:EFsynth}) or a property (as in \cref{ss:mode:prop}) must be defined in the model.
+\styleIMI{property := \#synth PRPC(statepredicate , rectanglevaluation);}
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Summary}\label{ss:mode:summary}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% TODO
 
 \begin{table}[h]
 	{\centering
@@ -1125,7 +1142,7 @@ More statistics are obtained with higher levels of verbosity, or with the \style
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Projection onto some parameters}\label{section:projection}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-The result can be projected onto selected parameters, by using the following syntax at the end of the model file:
+The result can be projected onto selected parameters, by using the following syntax at the end of the property file:
 
 \styleIMI{projectresult(param1, \dots, paramn);}
 
@@ -2021,7 +2038,7 @@ Furthermore, the names of the sets of locations of various \IPTA{} are not-neces
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Grammar of the input file}
+\section{Grammar of the model}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The \imitator{} input model is described by the following grammar.
@@ -2635,7 +2652,7 @@ We define each of those two components below.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Grammar of the property file}
+\section{Grammar of the property file}\label{section:grammar-property}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % TODO
