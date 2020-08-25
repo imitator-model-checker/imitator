@@ -54,10 +54,18 @@ class imitator_options :
 		method imitator_mode : imitator_mode
 		(* experimental variant for EFsynth *)
 (* 		method new_ef_mode : bool *)
+		
 		method inclusion : bool
+		method is_set_inclusion : bool
+		method set_inclusion: bool -> unit
+
 		method inclusion2 : bool
+		
 		method merge : bool
-(* 		method merge_before : bool *)
+		method is_set_merge : bool
+		method set_merge : bool -> unit
+
+		(* 		method merge_before : bool *)
 		method merge_heuristic : merge_heuristic
 		method model_file_name : string
 		method no_acceptfirst : bool

@@ -158,23 +158,65 @@ parsing_counter#stop;
 
 
 (************************************************************)
-(* Set some options *)
+(* Set some (default) options *)
 (************************************************************)
 
 (* Set default options depending on the IMITATOR mode *)
-let merge_needed = match property_option with
-	| None -> false
-	| Some property -> AlgorithmOptions.merge_needed property
-in
 
+(*------------------------------------------------------------*)
+(* Output-result *)
+(*------------------------------------------------------------*)
 
 (* Update if not yet set *)
 if not options#is_set_output_result then(
 	(* Print some information *)
-	print_message Verbose_high ("Set option `-output-result` to its default value: `" ^ (string_of_bool merge_needed) ^ "`");
+	print_message Verbose_high ("Set option `-output-result` to its default value: `true`");
 	
-	options#set_output_result (merge_needed);
+	options#set_output_result true;
 );
+
+
+(*------------------------------------------------------------*)
+(* Incl *)
+(*------------------------------------------------------------*)
+
+(* Get value depending on the algorithm *)
+begin match property_option with
+	| None -> ()
+	| Some property ->
+		let inclusion_needed = AlgorithmOptions.inclusion_needed property in
+		(* Update if not yet set *)
+		if not options#is_set_inclusion then(
+			(* Print some information *)
+			print_message Verbose_high ("Set option `-inclusion` to its default value: `" ^ (string_of_bool inclusion_needed) ^ "`");
+			
+			options#set_inclusion (inclusion_needed);
+		);
+end;
+
+
+(*------------------------------------------------------------*)
+(* Merge *)
+(*------------------------------------------------------------*)
+
+(* Get value depending on the algorithm *)
+begin match property_option with
+	| None -> ()
+	| Some property ->
+		let merge_needed = AlgorithmOptions.merge_needed property in
+		(* Update if not yet set *)
+		if not options#is_set_merge then(
+			(* Print some information *)
+			print_message Verbose_high ("Set option `-merge` to its default value: `" ^ (string_of_bool merge_needed) ^ "`");
+			
+			options#set_merge (merge_needed);
+		);
+end;
+
+
+(*------------------------------------------------------------*)
+(* Special cartography options *)
+(*------------------------------------------------------------*)
 
 (* Set some options depending on the IMITATOR mode *)
 let is_cartography = match property_option with

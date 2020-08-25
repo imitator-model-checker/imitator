@@ -1430,7 +1430,7 @@ end
 	{
 		'purpose'    : 'Test EF with bad initial state',
 		'input_files': ['testEFdegenerate1.imi', 'testEFdegenerate1.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFdegenerate1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1485,7 +1485,7 @@ Number of computed states               : 0
 	{
 		'purpose'    : 'Test EF with bad initial state and some constrained valuations',
 		'input_files': ['testEFdegenerate2.imi', 'testEFdegenerate2.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFdegenerate2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1512,7 +1512,7 @@ Number of computed states               : 0
 	{
 		'purpose'    : 'Test EF with the new syntax from 2.10.1',
 		'input_files': ['fischer_2.imi', 'fischer_2.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'fischer_2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1608,7 +1608,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (queueBFS exploration order)',
 		'input_files': ['F3.imi', 'F3.imiprop'],
-		'options'    : '-merge -incl -explOrder queueBFS -output-result',
+		'options'    : '-explOrder queueBFS -output-result',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1633,7 +1633,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (layerBFS exploration order) with counterexample',
 		'input_files': ['F3.imi', 'F3.imiprop'],
-		'options'    : '-merge -incl -explOrder layerBFS -counterexample -output-result',
+		'options'    : '-explOrder layerBFS -counterexample -output-result',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1658,7 +1658,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (queueBFS exploration order) with counterexample',
 		'input_files': ['F3.imi', 'F3.imiprop'],
-		'options'    : '-merge -incl -explOrder queueBFS -counterexample -output-result',
+		'options'    : '-explOrder queueBFS -counterexample -output-result',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1755,7 +1755,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EF with complex unreachability property',
 		'input_files': ['coffeeDrinker.imi', 'coffeeDrinker.imiprop'],
-		'options'    : '-merge -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'coffeeDrinker.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1818,7 +1818,7 @@ END CONSTRAINT
 	{
 		'purpose'    : 'Test EF with observer + depth-limit + project-result (quite basic)',
 		'input_files': ['coffeeDrinker.imi', 'coffeeDrinker-within.imiprop'],
-		'options'    : '-merge -depth-limit 10 -output-result',
+		'options'    : '-depth-limit 10 -output-result',
 		'expectations' : [
 			{'file': 'coffeeDrinker.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1841,7 +1841,7 @@ END CONSTRAINT
 		# Test for IMITATOR version: 2.11
 		'purpose'    : 'Test EFunsafe',
 		'input_files': ['testEFcounterex.imi', 'testEFcounterex.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFcounterex.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1870,7 +1870,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 2.11
 		'purpose'    : 'Test EFunsafe with counterexample',
 		'input_files': ['testEFcounterex.imi', 'testEFcounterex-witness.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFcounterex.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1894,7 +1894,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test observer pattern "if a2 then a1 has happened before"',
 		'input_files': ['testPattern1.imi', 'testPattern1.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testPattern1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1923,7 +1923,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test observer pattern "if a2 then a1 has happened before" on a model for 3 patterns',
 		'input_files': ['testPattern2.imi', 'testPattern2-if.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testPattern2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1952,7 +1952,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened before" on a model for 3 patterns',
 		'input_files': ['testPattern2.imi', 'testPattern2-everytime.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testPattern2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1984,7 +1984,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened once before" on a model for 3 patterns',
 		'input_files': ['testPattern2.imi', 'testPattern2-everytimeonce.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testPattern2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2020,7 +2020,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test observer pattern "a within d"',
 		'input_files': ['testPattern3.imi', 'testPattern3.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testPattern3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2048,7 +2048,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test observer pattern "a within d"',
 		'input_files': ['testPattern4.imi', 'testPattern4.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testPattern4.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2074,7 +2074,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test observer pattern "a within d" with a parametric d',
 		'input_files': ['testPattern5.imi', 'testPattern5.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testPattern5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2100,7 +2100,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test observer pattern "if a2 then a1 has happened within d before"',
 		'input_files': ['testPattern6.imi', 'testPattern6-if.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testPattern6.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2138,7 +2138,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened within d before"',
 		'input_files': ['testPattern6.imi', 'testPattern6-everytime.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testPattern6.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2187,7 +2187,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened once within d before"',
 		'input_files': ['testPattern6.imi', 'testPattern6-everytimeonce.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testPattern6.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2233,7 +2233,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test observer pattern "if a1 then eventually a2 within d"',
 		'input_files': ['testPattern7.imi', 'testPattern7-if.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testPattern7.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2263,7 +2263,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test observer pattern "everytime a1 then eventually a2 within d"',
 		'input_files': ['testPattern7.imi', 'testPattern7-everytime.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testPattern7.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2298,7 +2298,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test observer pattern "everytime a1 then eventually a2 within d once before next"',
 		'input_files': ['testPattern7.imi', 'testPattern7-everytimeonce.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testPattern7.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2338,7 +2338,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test observer pattern "sequence a1, …, an"',
 		'input_files': ['testPattern8.imi', 'testPattern8-sequence.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testPattern8.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2364,7 +2364,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test observer pattern "always sequence a1, …, an"',
 		'input_files': ['testPattern8.imi', 'testPattern8-alwayssequence.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testPattern8.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2393,7 +2393,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EFmin on a toy example',
 		'input_files': ['testEFmin.imi', 'testEFmin.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFmin.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2422,7 +2422,7 @@ Number of computed states               : 12
 	{
 		'purpose'    : 'Test EFmax on a toy example',
 		'input_files': ['testEFmin.imi', 'testEFmax.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFmin.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2452,7 +2452,7 @@ Number of computed states               : 20
 	{
 		'purpose'    : 'Test EFsynthmin on a clock-free toy example 1',
 		'input_files': ['testEFsynthminParams1.imi', 'testEFsynthminParams1.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFsynthminParams1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2485,7 +2485,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EFsynthmin on a clock-free toy example 2',
 		'input_files': ['testEFsynthminParams2.imi', 'testEFsynthminParams1.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFsynthminParams2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2521,7 +2521,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EFsynthmin on a clock-free toy example 3',
 		'input_files': ['testEFsynthminParams3.imi', 'testEFsynthminParams1.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFsynthminParams3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2549,7 +2549,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EFsynthmin on a clock-free toy example 4',
 		'input_files': ['testEFsynthminParams4.imi', 'testEFsynthminParams1.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFsynthminParams4.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2577,7 +2577,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EFsynthmin on a clock-free toy example 5',
 		'input_files': ['testEFsynthminParams5.imi', 'testEFsynthminParams1.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFsynthminParams5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2604,7 +2604,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EFsynthmin on a clock-free toy example 6',
 		'input_files': ['testEFsynthminParams6.imi', 'testEFsynthminParams1.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFsynthminParams6.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2631,7 +2631,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EFsynthmin on a toy example',
 		'input_files': ['testEFsynthmin.imi', 'testEFsynthmin.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFsynthmin.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2662,7 +2662,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EFsynthmax on a clock-free toy example 1',
 		'input_files': ['testEFsynthmaxParams1.imi', 'testEFsynthmaxParams1.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFsynthmaxParams1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2694,7 +2694,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EFsynthmax on a clock-free toy example 2',
 		'input_files': ['testEFsynthmaxParams2.imi', 'testEFsynthmaxParams1.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFsynthmaxParams2.res' , 'content' : """
 
@@ -2730,7 +2730,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EFsynthmax on a clock-free toy example 3',
 		'input_files': ['testEFsynthmaxParams3.imi', 'testEFsynthmaxParams1.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFsynthmaxParams3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2757,7 +2757,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EFsynthmax on a clock-free toy example 4',
 		'input_files': ['testEFsynthmaxParams4.imi', 'testEFsynthmaxParams1.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFsynthmaxParams4.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2784,7 +2784,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EFsynthmax on a clock-free toy example 5',
 		'input_files': ['testEFsynthmaxParams5.imi', 'testEFsynthmaxParams1.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFsynthmaxParams5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2813,7 +2813,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EFsynthmax on a clock-free toy example 6',
 		'input_files': ['testEFsynthmaxParams6.imi', 'testEFsynthmaxParams1.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFsynthmaxParams6.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2844,7 +2844,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EFsynthmax on a toy example',
 		'input_files': ['testEFsynthmax.imi', 'testEFsynthmax.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFsynthmax.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5769,7 +5769,7 @@ END CONSTRAINT		  """
 		# Test for IMITATOR version: 2.11
 		'purpose'    : 'Test PRP on a very simple example',
 		'input_files': ['testEFcounterex.imi', 'testEFcounterex-prp.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'testEFcounterex.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -11036,7 +11036,7 @@ system pta1, pta2, pta3;
 	{
 		'purpose'    : 'FMTV challenge: Test EF with project-result -verbose mute',
 		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-EF.imiprop'],
-		'options'    : '-merge -incl -output-result',
+		'options'    : '-output-result',
 		'expectations' : [
 			{'file': 'fmtv1A1-v2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -11062,7 +11062,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'FMTV challenge: Test EFmin',
 		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-min.imiprop'],
-		'options'    : '-merge -incl -output-result -verbose mute',
+		'options'    : '-output-result -verbose mute',
 		'expectations' : [
 			{'file': 'fmtv1A1-v2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -11087,7 +11087,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'FMTV challenge: Test EFmax',
 		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-max.imiprop'],
-		'options'    : '-merge -incl -output-result -verbose mute',
+		'options'    : '-output-result -verbose mute',
 		'expectations' : [
 			{'file': 'fmtv1A1-v2.res' , 'content' : """
 BEGIN CONSTRAINT

@@ -19,7 +19,7 @@
 open AbstractProperty
 
 
-let merge_needed property =
+let inclusion_needed property =
 	match property.property with
 	(*------------------------------------------------------------*)
 	(* Non-nested CTL *)
@@ -138,6 +138,9 @@ let merge_needed property =
 	| PRPC _
 		-> true
 
+
+(*** NOTE: Shortcut! ***)
+let merge_needed = inclusion_needed
 
 
 let is_cartography property =

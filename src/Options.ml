@@ -163,11 +163,19 @@ class imitator_options =
 (* 		val mutable efim = ref false *)
 		
 		(* inclusion mode *)
-		val mutable inclusion = ref false
+		val mutable inclusion = None
 		
 		(* Double inclusion mode *)
 		val mutable inclusion2 = ref false
 		
+		(* Merging states on the fly *)
+		val mutable merge = None
+		(* Merging states on the fly (after pi0-compatibility check) *)
+(* 		val mutable merge_before = ref false *)
+	
+		(* Merging heuristic *)
+		val mutable merge_heuristic = Merge_iter10
+
 		(* do not put accepting states at the head of successors list in NDFS *)
 		val mutable no_acceptfirst = ref false
 
@@ -217,17 +225,6 @@ class imitator_options =
 		val mutable step = ref NumConst.one
 
 		
-		
-		(* SPECIALIZED OPTIONS*)
-		
-		(* Merging states on the fly *)
-		val mutable merge = ref false
-		(* Merging states on the fly (after pi0-compatibility check) *)
-(* 		val mutable merge_before = ref false *)
-	
-		(* Merging heuristic *)
-		val mutable merge_heuristic = Merge_iter10
-		
 
 
 		(************************************************************)
@@ -264,9 +261,17 @@ class imitator_options =
 		method files_prefix = files_prefix
 		method imitator_mode = imitator_mode
 (* 		method new_ef_mode = new_ef_mode *)
-		method inclusion = !inclusion
+
+		method inclusion = self#bool_of_option "inclusion" inclusion
+		method is_set_inclusion = inclusion <> None
+		method set_inclusion b = inclusion <- Some b
+		
 		method inclusion2 = !inclusion2
-		method merge = !merge
+
+		method merge = self#bool_of_option "merge" merge
+		method is_set_merge = merge <> None
+		method set_merge b = merge <- Some b
+
 (* 		method merge_before = !merge_before *)
 		method merge_heuristic = merge_heuristic
 		method model_file_name = model_file_name
@@ -764,11 +769,11 @@ class imitator_options =
 				
 				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");*)
 				
-				("-incl", Set inclusion, " Consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: 'false'");
+				("-inclusion", Unit (fun () -> inclusion <- Some true), " Consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: depending on the algorithm");
 				
 				("-incl2", Set inclusion2, " Consider a bidirectional inclusion of symbolic zones (new <= old or old <= new) instead of the equality when checking for a fixpoint. Default: 'false'");
 				
-				("-merge", Set merge, " Use the merging technique of [AFS13]. Default: 'false' (disable)");
+				("-merge", Unit (fun () -> merge <- Some true), " Use the merging technique of [AFS13]. Default: depending on the algorithm");
 				
 (*				("-merge-before", Set merge_before , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");*)
 				
@@ -1198,11 +1203,15 @@ end;
 			;*)
 
 
-			if !merge then (
+			begin match merge with
+			| Some true ->
 				print_message Verbose_standard ("Merging technique of [AFS13] enabled.");
-			) else
-				print_message Verbose_medium ("Merging technique of [AFS13] disabled (default).")
-			;
+			| Some false ->
+				print_message Verbose_standard ("Merging technique of [AFS13] disabled.")
+			| None ->
+				print_message Verbose_medium ("Merging technique of [AFS13] enabled if requested by the algorithm.")
+			end;
+
 (*			if !merge_before then
 				print_message Verbose_standard ("Variant of the merging technique of [AFS13] enabled. States will be merged before pi0-compatibility test (EXPERIMENTAL).")
 			else

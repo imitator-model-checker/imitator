@@ -13,5 +13,6 @@
  ************************************************************)
 
 
-val merge_needed   : AbstractProperty.abstract_property -> bool
-val is_cartography : AbstractProperty.abstract_property -> bool
+val inclusion_needed : AbstractProperty.abstract_property -> bool
+val merge_needed     : AbstractProperty.abstract_property -> bool
+val is_cartography   : AbstractProperty.abstract_property -> bool
