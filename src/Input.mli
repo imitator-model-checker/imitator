@@ -24,12 +24,6 @@ val set_property: AbstractProperty.abstract_property -> unit
 val has_property: unit -> bool
 val get_property: unit -> AbstractProperty.abstract_property
 
-(*val get_pi0: unit -> PVal.pval
-val set_pi0: PVal.pval -> unit
-
-val get_v0: unit -> v0
-val set_v0: v0 -> unit*)
-
 val get_options: unit -> imitator_options
 val set_options: imitator_options -> unit
 

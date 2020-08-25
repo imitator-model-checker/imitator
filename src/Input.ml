@@ -19,8 +19,6 @@ open Exceptions
 
 (* internal references to global data structures *)
 let model_ref = ref None
-(*let pi0_ref = ref None
-let v0_ref = ref None*)
 let property_ref = ref None
 let options_ref = ref None
 
@@ -50,24 +48,6 @@ let get_property () =
 		| Some property -> property
 
 let has_property () = !property_ref <> None
-
-(*let get_pi0 _ =
-	match !pi0_ref with
-		| None ->
-			raise (InternalError "Input pi0 not available");
-		| Some pi0 -> pi0
-
-let set_pi0 pi0 =
-	pi0_ref := Some pi0
-
-let get_v0 _ =
-	match !v0_ref with
-		| None ->
-			raise (InternalError "Input v0 not available");
-		| Some v0 -> v0
-
-let set_v0 v0 =
-	v0_ref := Some v0*)
 
 let get_options () =
 	match !options_ref with
