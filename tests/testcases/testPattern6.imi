@@ -5,9 +5,9 @@
  *
  * Description     : Simple model to test observer patterns "if a2 then a1 has happened before", "everytime a2 then a1 has happened before", and "everytime a2 then a1 has happened once before"
  * Correctness     : The pattern should be satisfied for the following parameter valuations:
- *                   - pattern "if a2 then a1 has happened before"            : TODO
- *                   - pattern "everytime a2 then a1 has happened before"     : TODO
- *                   - pattern "everytime a2 then a1 has happened once before": TODO
+ *                   - pattern "if a2 then a1 has happened before"            : p1 \in [0,1) U (2,5) U (5,…) U p1 = 5 ^ p2 >= 2015
+ *                   - pattern "everytime a2 then a1 has happened before"     : p1 \in [0,1) U (2,3) U (3,4) U (4,5) U (5,…) U p1 = 4 ^ p2 >= 4 U p1 = 5 ^ p2 >= 2015
+ *                   - pattern "everytime a2 then a1 has happened once before": p1 \in [0,1) U (2,3) U (3,4) U (4,5) U (5,…) U p1 = 4 ^ p2 >= 4
  * Source          : Own work
  * Author          : Étienne André
  * Modeling        : Étienne André
@@ -15,7 +15,7 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2020/08/24
- * Last modified   : 2020/08/24
+ * Last modified   : 2020/08/25
  *
  * IMITATOR version: 3.0
  ************************************************************)
