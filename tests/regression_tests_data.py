@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/08/24
+# Last modified     : 2020/08/25
 #************************************************************
 
 
@@ -2228,6 +2228,111 @@ Constraint nature                       : good
 
 	,
 
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "if a1 then eventually a2 within d"',
+		'input_files': ['testPattern7.imi', 'testPattern7-if.imiprop'],
+		'options'    : '-merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testPattern7.res' , 'content' : """
+BEGIN CONSTRAINT
+  p1 > 1
+ & p2 >= p1
+ OR
+   p1 >= 0
+ & 1 > p1
+ & p2 >= p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "everytime a1 then eventually a2 within d"',
+		'input_files': ['testPattern7.imi', 'testPattern7-everytime.imiprop'],
+		'options'    : '-merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testPattern7.res' , 'content' : """
+BEGIN CONSTRAINT
+  p1 > 1
+ & 2 > p1
+ & p2 >= p1
+ OR
+   p2 >= 3
+ & p1 >= 2
+ & p2 >= p1
+ OR
+   p1 >= 0
+ & p2 >= p1
+ & 1 > p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "everytime a1 then eventually a2 within d once before next"',
+		'input_files': ['testPattern7.imi', 'testPattern7-everytimeonce.imiprop'],
+		'options'    : '-merge -incl -output-result',
+		'expectations' : [
+			{'file': 'testPattern7.res' , 'content' : """
+BEGIN CONSTRAINT
+  p1 > 4
+ & p2 >= p1
+ OR
+   p1 > 1
+ & p2 >= p1
+ & 2 > p1
+ OR
+   p2 >= 3
+ & p1 >= 2
+ & p2 >= p1
+ & 4 > p1
+ OR
+   p1 >= 0
+ & p2 >= p1
+ & 1 > p1
+
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 
 	#------------------------------------------------------------
 	{
