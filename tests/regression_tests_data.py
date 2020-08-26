@@ -4306,9 +4306,9 @@ Constraint nature                       : good
 		'expectations' : [
 			{'file': 'testNDFS-2.res' , 'content' : """
 BEGIN CONSTRAINT
- p = 2
-OR
   p = 1
+OR
+ p = 2
 OR
   p = 4
 END CONSTRAINT
@@ -4911,7 +4911,7 @@ Number of computed states     : 3
 	{
 		'purpose'    : 'Test PDFC: basic example with disjunction',
 		'input_files': ['PDFC5.imi', 'PDFC-deadlockfree.imiprop'],
-		'options'    : ' -output-states',
+		'options'    : '-output-states',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4934,9 +4934,6 @@ Constraint soundness          : exact
 Termination                   : regular termination
 Constraint nature             : good
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 6
-Number of computed states     : 7
 """
 			} #end result file
 			,
@@ -5048,9 +5045,6 @@ Constraint soundness          : exact
 Termination                   : regular termination
 Constraint nature             : good
 ------------------------------------------------------------
-Number of states              : 20
-Number of transitions         : 19
-Number of computed states     : 20
 """
 			} #end result file
 			,
@@ -5502,9 +5496,6 @@ Constraint soundness          : possible under-approximation <good|bad> possible
 Termination                   : depth limit (1 successor unexplored)
 Constraint nature             : good/bad
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 8
-Number of computed states     : 9
 """
 			} #end result file
 		] # end expectations
@@ -5636,7 +5627,11 @@ END CONSTRAINT
 		'options'    : '',
 		'expectations' : [
 			{'file': 'exVariantes.res' , 'content' : """
-	p2 >= 3 & 5*p1 > p2 & p2 >= 4*p1
+	BEGIN CONSTRAINT
+ 5*p1 > p2
+& p2 >= 3
+& p2 >= 4*p1
+END CONSTRAINT
 		  """
 			} # end result file
 			,
