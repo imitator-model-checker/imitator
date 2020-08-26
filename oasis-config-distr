@@ -46,7 +46,7 @@ Test tes1
 
 Test test2
   Command: echo "\n********** TEST 2 **********\n"; \
-      ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.pi0 -output-trace-set -states-description -statistics
+      ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.pi0 -draw-statespace -states-description -statistics
 
 Test test3
   Command: echo "\n********** TEST 3 **********\n"; \

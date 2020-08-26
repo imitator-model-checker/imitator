@@ -588,12 +588,29 @@ class imitator_options =
 				else(
 					(*** HACK: print header now ***)
 					print_header_string();
-					print_error ("The merge heuristic '" ^ heuristic ^ "' is not valid.");
+					print_error ("The merge heuristic `" ^ heuristic ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
 					exit(1);
 				)
 			
+			and set_statespace mode =
+				if mode = "light" then
+					graphical_state_space <- Graphical_state_space_nodetails
+				else if mode = "normal" then
+					graphical_state_space <- Graphical_state_space_normal
+				else if mode = "full" then
+					graphical_state_space <- Graphical_state_space_verbose
+				else(
+					(*** HACK: print header now ***)
+					print_header_string();
+					print_error ("The value of `-draw-statespace` `" ^ mode ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
+
+
 			(* Very useful option (April fool 2017) *)
 			and call_romeo () =
 				(*** HACK: print header now ***)
@@ -699,6 +716,12 @@ class imitator_options =
 				("-draw-cart-y-min", Int (fun n -> output_cart_y_min <- Some n), " Set minimum value for the y axis when plotting the cartography (not entirely functional yet). Default: 0.");
 				("-draw-cart-y-max", Int (fun n -> output_cart_y_max <- Some n), " Set maximum value for the y axis when plotting the cartography (not entirely functional yet). Default: automatic.");
 				
+				("-draw-statespace", String set_statespace, " Draw the state space in a graphical form (using `dot`).
+       Use value `light` for the structure only (no location names).
+       Use value `normal` for location names.
+       Use value `full` for location names and constraints.
+				");
+				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 				
 				(*** TODO: this should be the new "witness" mode ***)
@@ -716,6 +739,8 @@ class imitator_options =
         Default: layerBFS (except for AccLoopSynthNDFS, in which case this is NDFS).
 				");
 				
+				("-graphics-source", Set with_graphics_source, " Keep file(s) used for generating graphical output. Default: false.");
+
 				("-imi2HyTech", Unit (fun _ ->
 					imitator_mode <- Translation HyTech
 				), "Translate the model into a HyTech model, and exit without performing any analysis. Defaut : 'false'");
@@ -800,25 +825,11 @@ class imitator_options =
 
 				("-no-random", Set no_random, " In IM, no random selection of the pi0-incompatible inequality (select the first found). Default: false.");
 
-				("-no-time-elapsing", Unit (fun () -> no_time_elapsing <- true), " No time elapsing in zone computation (i.e., time elapsing is performed before taking a transition, not after). Default: false.");
-
 				("-no-var-autoremove", Set no_variable_autoremove, " Prevent the automatic removal of variables (discrete, clocks, parameters) declared in the header but never used in the IPTAs. Default: false.");
 
-				("-output-graphics-source", Set with_graphics_source, " Keep file(s) used for generating graphical output. Default: false.");
-
-				("-output-prefix", String (fun new_prefix -> files_prefix <- new_prefix), " Set the prefix for output files. Default: [./model-name].");
+				("-output-files-prefix", String (fun new_prefix -> files_prefix <- new_prefix), " Set the prefix for output files. Default: [./model-name].");
 				
 				("-output-float", Unit (fun () -> output_float <- true), " Approximates the value of discrete variables as floats. Default: false.");
-				
-				("-output-tiles-files", Unit (fun () -> output_tiles_files <- true), " In cartography, generate the required files for each tile (works together with -output-cart, -output-result). Default: false.");
-				
-				(*** TODO: merge these 3 options using "-output-trace-set nodetails", "-output-trace-set normal", "-output-trace-set verbose" ***)
-				("-output-trace-set", Unit (fun _ -> graphical_state_space <- Graphical_state_space_normal), " Output trace set under a graphical form (using 'dot') with location names. Default: none.");
-				
-				("-output-trace-set-nodetails", Unit (fun _ -> graphical_state_space <- Graphical_state_space_nodetails), " Output trace set under a graphical form (using 'dot') without location names. Default: none.");
-
-				("-output-trace-set-verbose", Unit (fun _ -> graphical_state_space <- Graphical_state_space_verbose), " Output trace set under a graphical form (using 'dot') with location names and constraints. Default: none.");
-				
 				
 				("-precomputepi0", Set precomputepi0, " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode only). Default: false.");
 
@@ -841,6 +852,10 @@ class imitator_options =
 				
 				("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
 				
+				("-tiles-files", Unit (fun () -> output_tiles_files <- true), " In cartography, generate the required files for each tile (i.e., the .res file and the cartography files, if any). Default: false.");
+				
+				("-time-elapsing-after", Unit (fun () -> no_time_elapsing <- true), " No time elapsing in zone computation (i.e., time elapsing is performed before taking a transition, not after). Default: false.");
+
 				("-time-limit", Int (fun i -> time_limit := Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. In cartography, this limit applies to each call to IM; use -cart-time-limit for a global limit. Default: no limit.");
 				
 				("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");

@@ -7626,7 +7626,7 @@ Average number of transitions           : 6.0
 	{
 		'purpose'    : 'Test BC in mode cover + graphical output (flip-flop)',
 		'input_files': ['flipflop.imi', 'flipflop-cover.imiprop'],
-		'options'    : '-draw-cart -output-graphics-source',
+		'options'    : '-draw-cart -graphics-source',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'flipflop.res' , 'content' : """
@@ -10405,7 +10405,7 @@ end
 	{
 		'purpose'    : 'Test the graphical state space generation (no details)',
 		'input_files': ['CUBPTA1.imi'],
-		'options'    : '-mode statespace -output-trace-set-nodetails -output-graphics-source',
+		'options'    : '-mode statespace -draw-statespace light -graphics-source',
 		'expectations' : [
 			{'file': 'CUBPTA1-statespace.dot' , 'content' : """
   s_0 -> s_1 [label="a"];
@@ -10434,7 +10434,7 @@ end
 	{
 		'purpose'    : 'Test the graphical state space generation (normal)',
 		'input_files': ['CUBPTA1.imi'],
-		'options'    : '-mode statespace -output-trace-set -output-graphics-source',
+		'options'    : '-mode statespace -draw-statespace normal -graphics-source',
 		'expectations' : [
 			{'file': 'CUBPTA1-statespace.dot' , 'content' : """
   s_0 -> s_1 [label="a"];
@@ -10463,7 +10463,7 @@ end
 	{
 		'purpose'    : 'Test the graphical state space generation (verbose)',
 		'input_files': ['CUBPTA1.imi'],
-		'options'    : '-mode statespace -output-trace-set-verbose -output-graphics-source',
+		'options'    : '-mode statespace -draw-statespace full -graphics-source',
 		'expectations' : [
 			{'file': 'CUBPTA1-statespace.dot' , 'content' : """
   s_0 -> s_1 [label="a"];
@@ -10496,7 +10496,7 @@ end
 		## Test until  : 2020/04/10
 		#'purpose'    : 'Test the graphical state space generation (verbose with projection)',
 		#'input_files': ['CUBPTA1project.imi'],
-		#'options'    : '-mode statespace -output-trace-set-verbose -output-graphics-source',
+		#'options'    : '-mode statespace -draw-statespace full -graphics-source',
 		#'expectations' : [
 			#{'file': 'CUBPTA1project-statespace.dot' , 'content' : """
   #s_0 -> s_1 [label="a"];
