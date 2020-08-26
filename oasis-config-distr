@@ -8,7 +8,7 @@
 #
 #  _oasis authors: Étienne André, Alban Linard
 #  Created:        2013/12/11
-#  Last modified:  2020/07/17
+#  Last modified:  2020/08/26
 ###############################################################
 
 OASISFormat: 0.3
@@ -46,27 +46,27 @@ Test tes1
 
 Test test2
   Command: echo "\n********** TEST 2 **********\n"; \
-      ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.pi0 -output-trace-set -output-states -output-result -statistics
+      ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.pi0 -output-trace-set -states-description -statistics
 
 Test test3
   Command: echo "\n********** TEST 3 **********\n"; \
-      ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.v0 -output-cart
+      ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.v0 -draw-cart
 
 Test test4
   Command: echo "\n********** TEST 4 **********\n"; \
-      ./bin/patator benchmarks/Examples/JLR-TACAS13.imi benchmarks/Examples/JLR-TACAS13-PRPC.imiprop -output-result -output-cart -depth-limit 10 -verbose warnings
+      ./bin/patator benchmarks/Examples/JLR-TACAS13.imi benchmarks/Examples/JLR-TACAS13-PRPC.imiprop -draw-cart -depth-limit 10 -verbose warnings
 
 Test test5
   Command: echo "\n********** TEST 5 **********\n"; \
-      mpiexec -n 4 ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.v0 -output-cart -distributed sequential -verbose standard
+      mpiexec -n 4 ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.v0 -draw-cart -distributed sequential -verbose standard
 
 Test test6
   Command: echo "\n********** TEST 6 **********\n"; \
-      mpiexec -n 4 ./bin/patator tests/testcases/testBC-grid-plain.imi tests/testcases/testBC-grid3x3-cover.imiprop -output-result -output-cart -distributed dynamic -verbose low
+      mpiexec -n 4 ./bin/patator tests/testcases/testBC-grid-plain.imi tests/testcases/testBC-grid3x3-cover.imiprop -draw-cart -distributed dynamic -verbose low
 
 Test test7
   Command: echo "\n********** TEST 7 **********\n"; \
-      mpiexec -n 4 ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.v0 -output-result -output-cart -distributed dynamic -verbose mute
+      mpiexec -n 4 ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.v0 -draw-cart -distributed dynamic -verbose mute
 
 Test finalcomment
   Command: echo "\n********** END TESTS **********\n"

@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2020/08/25
+ * Last modified: 2020/08/26
  *
  ************************************************************)
  
@@ -36,24 +36,19 @@ class imitator_options :
 		method branch_and_bound : bool
 (* 		method branch_and_bound_unset : unit *)
 		method cart : bool
-(* 		method cartonly : bool *)
 		method carto_tiles_limit : int option
 		method carto_time_limit : int option
 		method check_ippta : bool
 		method check_point : bool
-(* 		method counterex : bool *)
 		method depth_limit : int option
 		method distribution_mode : distribution_mode
 		method distributedKillIM : bool
 (* 		method dynamic : bool *)
 		method dynamic_clock_elimination : bool
 		method early_terminate : bool
-(* 		method efim : bool *)
 		method exploration_order : exploration_order
 		method files_prefix : string
 		method imitator_mode : imitator_mode
-		(* experimental variant for EFsynth *)
-(* 		method new_ef_mode : bool *)
 		
 		method inclusion : bool
 		method is_set_inclusion : bool

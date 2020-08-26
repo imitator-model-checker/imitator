@@ -10,7 +10,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/08/25
+ * Last modified     : 2020/08/26
  *
  ************************************************************)
 
@@ -104,9 +104,6 @@ class imitator_options =
 		(* yet another (testing) mode *)
 		val mutable branch_and_bound = ref false
 		
-		(* Complete version of IM (experimental) *)
-(* 		val mutable completeIM = ref false *)
-		
 		(* imitator mode *)
 		(*** NOTE: arbitrary initialization ***)
 		val mutable imitator_mode = Syntax_check
@@ -114,9 +111,6 @@ class imitator_options =
 		(* Exploration order *)
 		val mutable exploration_order = AbstractAlgorithm.Exploration_layer_BFS
 		
-		(* experimental variant for EFsynth *)
-(* 		val mutable new_ef_mode = false *)
-
 		(* Best worst-case clock value for EFsynthminpq *)
 (* 		val mutable best_worst_case = ref false *)
 
@@ -135,9 +129,6 @@ class imitator_options =
 		(* limit on global runtime for cartography *)
 		val mutable carto_time_limit = None
 		
-		(* stop the analysis as soon as a counterexample is found *)
-(* 		val mutable counterex = ref false *)
-
 		(* Check whether each constraint contains an integer point *)
 		val mutable check_ippta = ref false
 		
@@ -158,9 +149,6 @@ class imitator_options =
 		
 		(* Remove useless clocks (slightly experimental) *)
 		val mutable dynamic_clock_elimination = ref false
-		
-		(* New algorithm by Etienne and Youcheng *)
-(* 		val mutable efim = ref false *)
 		
 		(* inclusion mode *)
 		val mutable inclusion = None
@@ -246,21 +234,17 @@ class imitator_options =
 		method cart = cart
 		method carto_tiles_limit = carto_tiles_limit
 		method carto_time_limit = carto_time_limit
-(* 		method cartonly = cartonly *)
 		method check_ippta = !check_ippta
 		method check_point = !check_point
-(* 		method counterex = !counterex *)
 		method depth_limit = !depth_limit
 		method distribution_mode = !distribution_mode
 		method distributedKillIM = !distributedKillIM
 		(* method dynamic = !dynamic *)
 		method dynamic_clock_elimination = !dynamic_clock_elimination
 		method early_terminate = !early_terminate
-(* 		method (*efim*) = !efim *)
 		method exploration_order = exploration_order
 		method files_prefix = files_prefix
 		method imitator_mode = imitator_mode
-(* 		method new_ef_mode = new_ef_mode *)
 
 		method inclusion = self#bool_of_option "inclusion" inclusion
 		method is_set_inclusion = inclusion <> None
@@ -682,23 +666,17 @@ class imitator_options =
 
 				("-cart-time-limit", Int (fun i -> carto_time_limit <- Some i), " Set a global time limit (in seconds) for the cartography (in which case the -time-limit option only applies to each call to IM). Default: no limit.");
 
-(* 				("-cartonly", Unit (fun () -> cart <- true; cartonly <- true; imitator_mode <- Translation), " Only outputs a cartography. Default: false."); *)
-
 				(* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'"); *)
 				
 				("-check-ippta", Set check_ippta, " Check that every new symbolic state contains an integer point; raises an exception if not. Default: false.");
 				
 				("-check-point", Set check_point, " For IM, check at each iteration whether the accumulated parameter constraint is restricted to pi0 (warning! very costly). Default: false.");
 				
-(* 				("-completeIM", Set completeIM, " Experimental version of IM that outputs a complete (full) result. Default: false."); *)
-				
 				("-contributors", Unit (fun _ ->
 					(*** HACK: print header now ***)
 					print_header_string();
 					print_contributors();
 					exit 0), " Print contributors and exit.");
-				
-(* 				("-counterexample", Set counterex, " For EF, stop the analysis as soon as a bad state is discovered. Default: false."); *)
 				
 				("-depth-limit", Int (fun i -> depth_limit := Some i), " Limits the depth of the exploration of the state space. Default: no limit.");
 
@@ -712,6 +690,14 @@ class imitator_options =
 				");
 				
 				("-distributedKillIM", Set distributedKillIM, " In distributed cartography, kill processes covered by other tiles [ACN15]; only works with selected distribution schemes. Default: false.");
+				
+				("-draw-cart", Unit (fun () -> cart <- true), " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false.");
+				
+				(*** WARNING: only works partially ***)
+				("-draw-cart-x-min", Int (fun n -> output_cart_x_min <- Some n), " Set minimum value for the x axis when plotting the cartography (not entirely functional yet). Default: 0.");
+				("-draw-cart-x-max", Int (fun n -> output_cart_x_max <- Some n), " Set maximum value for the x axis when plotting the cartography (not entirely functional yet). Default: automatic.");
+				("-draw-cart-y-min", Int (fun n -> output_cart_y_min <- Some n), " Set minimum value for the y axis when plotting the cartography (not entirely functional yet). Default: 0.");
+				("-draw-cart-y-max", Int (fun n -> output_cart_y_max <- Some n), " Set maximum value for the y axis when plotting the cartography (not entirely functional yet). Default: automatic.");
 				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 				
@@ -765,15 +751,15 @@ class imitator_options =
 				), "Translate the model into an Uppaal model, and exit without performing any analysis. Some features may not be translated, see user manual. Defaut : 'false'");
 				
 
-(*				("-IMK", Set pi_compatible, " Algorithm IMoriginal (defined in [AS11]): return a constraint such that no pi-incompatible state can be reached. Default: 'false'");
-				
-				("-IMunion", Set union, " Algorithm IMUnion (defined in [AS11]): Returns the union of the constraint on the parameters associated to the last state of each trace. Default: 'false'");*)
-				
+				(*** NOTE: no check that they are both called… If so, behavior is unspecified ***)
 				("-inclusion", Unit (fun () -> inclusion <- Some true), " Consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: depending on the algorithm");
-				
+				("-no-inclusion", Unit (fun () -> inclusion <- Some false), " Do not consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: depending on the algorithm");
+
 				("-incl2", Set inclusion2, " Consider a bidirectional inclusion of symbolic zones (new <= old or old <= new) instead of the equality when checking for a fixpoint. Default: 'false'");
 				
+				(*** NOTE: no check that they are both called… If so, behavior is unspecified ***)
 				("-merge", Unit (fun () -> merge <- Some true), " Use the merging technique of [AFS13]. Default: depending on the algorithm");
+				("-no-merge", Unit (fun () -> merge <- Some false), " Do not use the merging technique of [AFS13]. Default: depending on the algorithm");
 				
 (*				("-merge-before", Set merge_before , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");*)
 				
@@ -818,23 +804,11 @@ class imitator_options =
 
 				("-no-var-autoremove", Set no_variable_autoremove, " Prevent the automatic removal of variables (discrete, clocks, parameters) declared in the header but never used in the IPTAs. Default: false.");
 
-				("-output-cart", Unit (fun () -> cart <- true), " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false.");
-				
-				(*** WARNING: only works partially ***)
-				("-output-cart-x-min", Int (fun n -> output_cart_x_min <- Some n), " Set minimum value for the x axis when plotting the cartography (not entirely functional yet). Default: 0.");
-				("-output-cart-x-max", Int (fun n -> output_cart_x_max <- Some n), " Set maximum value for the x axis when plotting the cartography (not entirely functional yet). Default: automatic.");
-				("-output-cart-y-min", Int (fun n -> output_cart_y_min <- Some n), " Set minimum value for the y axis when plotting the cartography (not entirely functional yet). Default: 0.");
-				("-output-cart-y-max", Int (fun n -> output_cart_y_max <- Some n), " Set maximum value for the y axis when plotting the cartography (not entirely functional yet). Default: automatic.");
-				
 				("-output-graphics-source", Set with_graphics_source, " Keep file(s) used for generating graphical output. Default: false.");
 
 				("-output-prefix", String (fun new_prefix -> files_prefix <- new_prefix), " Set the prefix for output files. Default: [./model-name].");
 				
 				("-output-float", Unit (fun () -> output_float <- true), " Approximates the value of discrete variables as floats. Default: false.");
-				
-				("-output-result", Unit (fun () -> output_result <- Some true), " Write the result to a file. Default: true.");
-				
-				("-output-states", Set with_log, " Generate the description of all reachable states in a file. Default: false.");
 				
 				("-output-tiles-files", Unit (fun () -> output_tiles_files <- true), " In cartography, generate the required files for each tile (works together with -output-cart, -output-result). Default: false.");
 				
@@ -850,9 +824,14 @@ class imitator_options =
 
 (* 				("-PRP", Set efim, " Reachability-preservation algorithm mixing IM and EFsynth [ALNS15]. Default: false. WARNING: deprecated option (use -mode PRP or -mode PRPC)"); *)
 				
+(* 				("-result-file", Unit (fun () -> output_result <- Some true), " Write the result to a file. Default: true."); *)
+				("-no-result-file", Unit (fun () -> output_result <- Some false), " Do not write the result to a file. Default (for most algorithms): false, i.e., result is written.");
+				
 				(* Hidden option (April fool 2017) *)
 				(*** NOTE: "Beware: options that have an empty doc string will not be included in the list." ***)
 				("-romeo", Unit call_romeo, "");
+				
+				("-states-description", Set with_log, " Generate the description of all reachable states in a text file. Default: false.");
 				
 				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
 				
@@ -866,7 +845,7 @@ class imitator_options =
 				
 				("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
 				
-				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the reachability graph is a tree (otherwise analysis may loop). Default: 'false'");
+				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the state space is a tree (otherwise analysis may loop). Default: 'false'");
 				
 				("-verbose", String set_verbose_mode_ref, " Print more or less information. Can be set to 'mute', 'warnings', 'standard', 'experiments', 'low', 'medium', 'high', 'total'. Default: 'standard'");
 				
@@ -1194,14 +1173,6 @@ end;
 
 
 			(* OPTIONS *)
-
-			(*** TODO: check that only in IM/BC mode ***)
-(*			if !completeIM then (
-				print_message Verbose_standard ("IM will output a complete, possibly non-convex, constraint.");
-			) else
-				print_message Verbose_medium ("IM will output a possibly incomplete, but convex, constraint (default).")
-			;*)
-
 
 			begin match merge with
 			| Some true ->

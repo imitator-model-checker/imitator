@@ -607,16 +607,18 @@ Of course, the EF-emptiness problem being undecidable~\cite{AHV93}, the analysis
 % 
 % \styleCommand{\binimitator{} model.imi -mode EFunsafe -merge -incl -output-result}
 
-The option \styleOption{-output-result} is not compulsory, but allows one to obtain a result in an external text file (\stylePath{model.res}) formatted using a standardized manner (see \cref{chapter:result}), and therefore easier to parse using an external tool than the terminal output.
+% The option \styleOption{-output-result} is not compulsory, but allows one to
+One obtains a result in an external text file (\stylePath{model.res}) formatted using a standardized manner (see \cref{chapter:result}), and therefore easier to parse using an external tool than the terminal output.
 
 The options \styleOption{-merge} and \styleOption{-incl} are optional, but generally greatly increase the analysis efficiency and the termination.
 The option \styleOption{-dynamic-elimination} can also be used to reduce the state space.
 
 \imitator{} can also
 	output the trace set in a graphical form (option \styleOption{-output-trace-set}),
-	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}),
-	or
-	output the result to a text file using a normalized syntax (option \styleOption{-output-result}), that can be then scripted from external programs.
+	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
+It also
+	outputs the result to a text file using a normalized syntax% (option \styleOption{-output-result})
+	, that can be then scripted from external programs.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -757,7 +759,7 @@ The property syntax is as follows:
 As usual, \imitator{} can also
 	output the trace set in a graphical form (option \styleOption{-output-trace-set})
 	or
-	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
+	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
 % 	or
 % 	output the result to a text file using a normalized syntax (option \styleOption{-output-result}).
 
@@ -785,7 +787,7 @@ The property syntax is as follows:
 As usual, \imitator{} can also
 	output the trace set in a graphical form (option \styleOption{-output-trace-set})
 	or
-	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
+	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Accepting loop}\label{ss:accepting-loop}
@@ -837,7 +839,7 @@ the current branch and backtracks when this depth is reached.
 As usual, \imitator{} can also
 	output the trace set in a graphical form (option \styleOption{-output-trace-set})
 	or
-	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
+	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
 
 
 %------------------------------------------------------------
@@ -889,7 +891,7 @@ Two options are possible in \imitator{}:
 As usual, \imitator{} can also
 	output the trace set in a graphical form (option \styleOption{-output-trace-set})
 	or
-	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
+	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
 
 \begin{remark}
 	The \emph{accepting} cycles are not (yet?) supported for non-Zeno synthesis.
@@ -922,12 +924,14 @@ where \styleIMI{referencevaluation} is a reference valuation of the form \styleI
 \imitator{} can also
 	output the trace set in a graphical form (option \styleOption{-output-trace-set})
 	or
-	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
+	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
 	% TODO
 % 	or
 % 	output the result to a text file using a normalized syntax (option \styleOption{-output-result}).
 
-Recall that the option \styleOption{-output-result} is not compulsory, but allows one to obtain a result in an external text file (\stylePath{model.res}) and formatted using a standardized manner (see \cref{chapter:result}). %, and therefore easier to parse using an external tool than the terminal output.
+Recall that \imitator{} % option \styleOption{-output-result} is not compulsory, but allows one to obtain 
+generates
+a result in an external text file (\stylePath{model.res}) and formatted using a standardized manner (see \cref{chapter:result}). %, and therefore easier to parse using an external tool than the terminal output.
 
 
 
@@ -951,16 +955,17 @@ where \styleIMI{referencerectangle} is a reference hyper-rectangle of the form \
 
 \imitator{} can also
 	output all trace sets in a graphical form (option \styleOption{-output-trace-set}),
-	output the constraints synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}),
 	or
-	output the result to a text file using a normalized syntax (option \styleOption{-output-result}).
+	output the constraints synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
+% 	or
+% 	output the result to a text file using a normalized syntax (option \styleOption{-output-result}).
 
 The option \styleOption{-step} specifies the interval between any two points of which the coverage is checked (see \cite{AF10}).
 By default, it is 1; setting $\frac{1}{3}$ often leads to full coverage when 1 was not enough.
 
 In addition, trace sets and separate graphical cartographies for each tile can also be generated by adding option \styleOption{-output-tiles-files}.
 
-Recall that the option \styleOption{-output-result} is not compulsory, but allows one to obtain a result in an external text file (\stylePath{model.res}) formatted using a standardized manner (see \cref{chapter:result}), and therefore easier to parse using an external tool than the terminal output.
+% Recall that the option \styleOption{-output-result} is not compulsory, but allows one to obtain a result in an external text file (\stylePath{model.res}) formatted using a standardized manner (see \cref{chapter:result}), and therefore easier to parse using an external tool than the terminal output.
 
 
 
@@ -1057,9 +1062,9 @@ Of course, the state space may be infinite, and this analysis is not guaranteed 
 
 The standard command is:
 
-\styleCommand{\binimitator{} model.imi -mode statespace -output-states}
+\styleCommand{\binimitator{} model.imi -mode statespace -states-description}
 
-The option \styleOption{-output-states} generates a file with a textual description of all states (without this option, \imitator{} will not output anything).
+The option \styleOption{-states-description} generates a file with a textual description of all states (without this option, \imitator{} will not output anything).
 Each state is represented with its discrete part (location and values of the discrete variables), the clock and parameter constraints, and below their projection onto the parameters.
 % ; in addition, if \styleFileContent{projectresult} is defined in the model (see \cref{section:projection}), the projection onto a specific set of parameters is also added.
 
@@ -1073,7 +1078,8 @@ Each state is represented with its discrete part (location and values of the dis
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Using option \styleOption{-output-result}, \imitator{} generates a file \stylePath{model.res}.
+% Using option \styleOption{-output-result},
+\imitator{} generates a file \stylePath{model.res}.
 Since version 2.7, this file has a standardized format, and can therefore be parsed using an external tool.
 
 We do not give a formal grammar for this file (yet), but it can be easily inferred from example outputs.
@@ -1148,7 +1154,7 @@ The result can be projected onto selected parameters, by using the following syn
 
 In that case, all parameters not in that set are eliminated using variable elimination, and the result in the result file only contains the selected parameters.
 
-This projection is also added to the states description (see option \styleOption{-output-states}) and to the graphical state space output (see option \styleOption{-output-trace-set-verbose}).
+This projection is also added to the states description (see option \styleOption{-states-description}) and to the graphical state space output (see option \styleOption{-output-trace-set-verbose}).
 
 
 
@@ -1235,7 +1241,7 @@ This option is mostly suitable for small trace sets.
 
 To visualize the constraint generated by \imitator{} using a 2-dimensional plot (thanks to the external plot utility), use:
 
-\styleCommand{\binimitator{} model.imi [options] -output-cart}
+\styleCommand{\binimitator{} model.imi [options] -draw-cart}
 
 This will generate file \stylePath{model\_cart.png}.
 % \stylePath{model\_cart\_ef.png} if the algorithm is \EFsynth{},
@@ -1246,10 +1252,10 @@ This will generate file \stylePath{model\_cart.png}.
 The two dimensions chosen for the plot are the first two (non-constant) parameter dimension in the model.
 
 Additional useful options are
-\styleOption{-output-cart-x-min},
-\styleOption{-output-cart-x-max},
-\styleOption{-output-cart-y-min},
-\styleOption{-output-cart-y-max}
+\styleOption{-draw-cart-x-min},
+\styleOption{-draw-cart-x-max},
+\styleOption{-draw-cart-y-min},
+\styleOption{-draw-cart-y-max}
 to tune the values of the axes,
 and \styleOption{-output-graphics-source} to keep the plot source.
 
@@ -1559,6 +1565,56 @@ Various distribution modes are possible:
 
 
 
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-draw-cart} (default: off)}
+%------------------------------------------------------------
+
+After execution of the behavioral cartography or \EFsynth{}, plots the generated zones as a \texttt{.png} file.
+This will generate file \stylePath{model\_cart.png}.
+% \stylePath{model\_cart\_ef.png} if the algorithm is \EFsynth{},
+% \stylePath{model\_cart\_bc.png} if the algorithm is \BC{} and its variant,
+% or \stylePath{model\_cart\_patator.png} if the algorithm is the distributed \BC{} and its variants.
+% This option takes an integer which limits the number of generated plots, where each plot represents the projection of the parametric zones on two parameters.
+	% TODO: check
+If the model contains more than two parameters, then \code{-draw-cart} will plot the projection of the generated zones on the first two parameters of the model (or on the two \emph{varying} parameters in the case of \BC{}).
+
+This option makes use of the external utility \texttt{graph}, which is
+part of the \emph{GNU plotting utils}, available on most Linux
+platforms.
+The generated files will be located in the current directory, unless option \styleOption{-output-prefix} is used.
+
+Additional useful options are
+\styleOption{-draw-cart-x-min},
+\styleOption{-draw-cart-x-max},
+\styleOption{-draw-cart-y-min},
+\styleOption{-draw-cart-y-max}
+to tune the values of the axes,
+and \styleOption{-output-graphics-source} to keep the plot source.
+
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-draw-cart-x-min} (default: off)}
+%------------------------------------------------------------
+Set minimum value for the $x$ axis when plotting the cartography (not entirely functional in all situations yet).
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-draw-cart-x-max} (default: off)}
+%------------------------------------------------------------
+Set maximum value for the $x$ axis when plotting the cartography (not entirely functional in all situations yet).
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-draw-cart-y-min} (default: off)}
+%------------------------------------------------------------
+Set minimum value for the $y$ axis when plotting the cartography (not entirely functional in all situations yet).
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-draw-cart-y-max} (default: off)}
+%------------------------------------------------------------
+Set maximum value for the $y$ axis when plotting the cartography (not entirely functional in all situations yet).
+
+
+
 %------------------------------------------------------------
 \paragraph{\styleOption{-dynamic-elimination} (default: false)}
 %------------------------------------------------------------
@@ -1586,37 +1642,65 @@ In this latter case, the possible values are:
 
 
 % %------------------------------------------------------------
-% \paragraph{\styleOption{-fromGrML} (default: false)}
+% \paragraph{\styleOption{-imi2GrML} (default: false)}
 % %------------------------------------------------------------
-%
-% Does not use the standard input syntax described here, but a GrML input syntax.
-% This is used when interfacing \imitator{} with the \CosyVerif{} platform~\cite{AHHKLLP13}.
-% Note that, in that case, not all syntactic features of \imitator{} are supported.
+% Translates the input model to a GrML format (used by \CosyVerif{} \cite{AHHKLLP13}), and exits.
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-imi2HyTech} (default: false)}
+%------------------------------------------------------------
+Translates the input model to a \hytech{} model, and exits.
+See \cref{section:hytech} for details.
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-imi2IMI} (default: false)}
+%------------------------------------------------------------
+Regenerates the model into an \imitator{} model, and exits.
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-imi2JPG} (default: false)}
+%------------------------------------------------------------
+Translates the input model to a graphical, human-readable form (in \texttt{.jpg} format), and exits.
+	% TODO add the graphics of the coffee machine
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-imi2PDF} (default: false)}
+%------------------------------------------------------------
+Translates the input model to a graphical, human-readable form (in \texttt{.pdf} format), and exits.
+	% TODO add the graphics of the coffee machine
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-imi2PNG} (default: false)}
+%------------------------------------------------------------
+Translates the input model to a graphical, human-readable form (in \texttt{.png} format), and exits.
+	% TODO add the graphics of the coffee machine
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-imi2TikZ} (default: false)}
+%------------------------------------------------------------
+Translates the input model to a \LaTeX{} representation of the model (using the \texttt{tikz} package) without performing any analysis, and exits.
+Note that node positioning is not (much) supported, so may want to edit manually some positions.
+	% TODO refer to the graphics of the coffee machine
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-imi2Uppaal} (default: false)}
+%------------------------------------------------------------
+Translates the input model to a \uppaal{} model, and exits.
+See \cref{section:uppaal} for details.
 
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-IMK} (default: false)}
+\paragraph{\styleOption{-inclusion} (default: depending on the algorithm)}
 %------------------------------------------------------------
-When in mode \styleOption{inversemethod},
-uses a variant of the inverse method that returns a constraint such that no $\pio$-compatible state is reached; it does not guarantee however that any ``good'' state will be reached (see~\cite{AS13}).
-
-
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-IMunion} (default: false)}
-%------------------------------------------------------------
-When in mode \styleOption{inversemethod},
-uses a variant of the inverse method that returns the union of the constraints associated to the last state of each path (see~\cite{AS13}).
-
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-incl} (default: false)}
-%------------------------------------------------------------
-Consider an inclusion of parametric zone instead of the equality when performing the $\textit{Post}$ operation.
+Consider an inclusion of parametric zone instead of the equality when performing the $\mathit{Post}$ operation.
 In other terms, when encountering a new state, \imitator{} checks if the same state (same location and same constraint) has been encountered before and, if so, discards this ``new'' state.
-However, when the \code{-incl} option is activated, it suffices that a previous state with the same location and a constraint \emph{greater than or equal} to the constraint of the new state has been encountered to discard the new state and stop exploring the current branch.
+However, when the \code{-inclusion} option is activated, it suffices that a previous state with the same location and a constraint \emph{greater than or equal} to the constraint of the new state has been encountered to discard the new state and stop exploring the current branch.
 This option corresponds to the way that, \eg{} \hytech{} works, and suffices when one wants to check the \emph{non-reachability} of a given bad state.
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-no-inclusion} (default: depending on the algorithm)}
+%------------------------------------------------------------
 
 
 %------------------------------------------------------------
@@ -1644,7 +1728,8 @@ However, not all the properties of the inverse method are preserved when using m
 The mode for \imitator{}, \ie{} the algorithm to run.
 
 \begin{longtable}{@{} l @{\ \ } p{12cm}}
-	\styleOption{checksyntax} & Simple syntax check and no analysis. Use option \styleOption{-output-result} to generate a simple file with statistics on the model (numbers of variables, automata, L/U-nature, strong determinism…)
+	\styleOption{checksyntax} & Simple syntax check and no analysis.
+% Use option \styleOption{-output-result} to generate a simple file with statistics on the model (numbers of variables, automata, L/U-nature, strong determinism…)
 % 		(see \cref{ss:mode:statespace}) %TODO?
 	\\
 
@@ -1738,54 +1823,6 @@ Using \styleOption{-no-var-autoremove} prevents \imitator{} from automatically r
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-output-cart} (default: off)}
-%------------------------------------------------------------
-
-After execution of the behavioral cartography or \EFsynth{}, plots the generated zones as a \texttt{.png} file.
-This will generate file \stylePath{model\_cart.png}.
-% \stylePath{model\_cart\_ef.png} if the algorithm is \EFsynth{},
-% \stylePath{model\_cart\_bc.png} if the algorithm is \BC{} and its variant,
-% or \stylePath{model\_cart\_patator.png} if the algorithm is the distributed \BC{} and its variants.
-% This option takes an integer which limits the number of generated plots, where each plot represents the projection of the parametric zones on two parameters.
-	% TODO: check
-If the model contains more than two parameters, then \code{-output-cart} will plot the projection of the generated zones on the first two parameters of the model (or on the two \emph{varying} parameters in the case of \BC{}).
-
-This option makes use of the external utility \texttt{graph}, which is
-part of the \emph{GNU plotting utils}, available on most Linux
-platforms.
-The generated files will be located in the current directory, unless option \styleOption{-output-prefix} is used.
-
-Additional useful options are
-\styleOption{-output-cart-x-min},
-\styleOption{-output-cart-x-max},
-\styleOption{-output-cart-y-min},
-\styleOption{-output-cart-y-max}
-to tune the values of the axes,
-and \styleOption{-output-graphics-source} to keep the plot source.
-
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-output-cart-x-min} (default: off)}
-%------------------------------------------------------------
-Set minimum value for the $x$ axis when plotting the cartography (not entirely functional in all situations yet).
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-output-cart-x-max} (default: off)}
-%------------------------------------------------------------
-Set maximum value for the $x$ axis when plotting the cartography (not entirely functional in all situations yet).
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-output-cart-y-min} (default: off)}
-%------------------------------------------------------------
-Set minimum value for the $y$ axis when plotting the cartography (not entirely functional in all situations yet).
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-output-cart-y-max} (default: off)}
-%------------------------------------------------------------
-Set maximum value for the $y$ axis when plotting the cartography (not entirely functional in all situations yet).
-
-
-%------------------------------------------------------------
 \paragraph{\styleOption{-output-float} (default: false)}
 %------------------------------------------------------------
 Convert (exact-valued) discrete variables into (possibly approximated) floats in all outputs.
@@ -1813,22 +1850,12 @@ Examples:
 By default, the path prefix is the \emph{current directory}, \ie{} where the user is (therefore not necessarily the model directory).
 
 
-%------------------------------------------------------------
-\paragraph{\styleOption{-output-result} (default: false)}
-%------------------------------------------------------------
-Writes the result of the analysis to a file named \stylePath{<input\_file>.result} using a normalized syntax, that can be easily parsed, \eg{} using an external script.
-
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-output-states} (default: false)}
-%------------------------------------------------------------
-Generates a file \stylePath{<input\_file>.states} describing the reachable states in plain text (value of the location, of the discrete variables, associated constraint, and its projection onto the parameters).
 
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-output-tiles-files} (default: false)}
 %------------------------------------------------------------
-In cartography, generates the required files for each tile (works together with \styleOption{-output-cart} and/or \styleOption{-output-result}).
+In cartography, generates the required files for each tile (\ie{} the \stylePath{.res} files, as well as the graphical cartography files whenever \styleOption{-draw-cart} is enabled).
 
 
 %------------------------------------------------------------
@@ -1860,77 +1887,36 @@ Enabling this option instead of \styleOption{-output-trace-set} will yield a ver
 	% TODO: show examples in the manual
 
 
+
+% %------------------------------------------------------------
+% \paragraph{\styleOption{-result-file} (default: false)}
+% %------------------------------------------------------------
+% Writes the result of the analysis to a file named \stylePath{<input\_file>.result} using a normalized syntax, that can be easily parsed, \eg{} using an external script.
+
 %------------------------------------------------------------
-\paragraph{\styleOption{-PRP} (default: false)}
+\paragraph{\styleOption{-no-result-file} (default: false)}
 %------------------------------------------------------------
-Deprecated option.
-% TODO: add macro for deprecated
-Option used to activate the former and deprecated versions of \PRP{} or \PRPC{} \cite{ALNS15}.
-These options must be used in addition to the \styleOption{-mode} option.
-That is, in order to call the former version of \PRP{}, use:
+Does not write the result of the analysis to a file.
+By default, a file named \stylePath{<input\_file>.res} is created using a normalized syntax, that can be easily parsed, \eg{} using an external script.
 
-\styleCommand{\binimitator{} model.imi model.pi0 -PRP}
-
-And in order to call the former version of \PRPC{}, use:
-
-\styleCommand{\binimitator{} model.imi model.v0 -mode cover -PRP}
-
-Since version 2.9, it is advised to use instead \styleOption{-mode PRP} and \styleOption{-mode PRPC}, which call newly implemented versions of these algorithms, with a better structured result.
 
 
 % %------------------------------------------------------------
-% \paragraph{\styleOption{-imi2GrML} (default: false)}
+% \paragraph{\styleOption{-romeo} (default: false)}
 % %------------------------------------------------------------
-% Translates the input model to a GrML format (used by \CosyVerif{} \cite{AHHKLLP13}), and exits.
+% April 1st, 2017 feature :-)
+% Supposedly calls the Romeo model checker~\cite{LRST09} instead of \imitator{}.
+% Just try!
+
+
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-imi2HyTech} (default: false)}
+\paragraph{\styleOption{-states-description} (default: false)}
 %------------------------------------------------------------
-Translates the input model to a \hytech{} model, and exits.
-See \cref{section:hytech} for details.
+Generates a file \stylePath{<input\_file>.states} describing the reachable states in plain text (value of the location, of the discrete variables, associated constraint, and its projection onto the parameters).
 
-%------------------------------------------------------------
-\paragraph{\styleOption{-imi2IMI} (default: false)}
-%------------------------------------------------------------
-Regenerates the model into an \imitator{} model, and exits.
 
-%------------------------------------------------------------
-\paragraph{\styleOption{-imi2JPG} (default: false)}
-%------------------------------------------------------------
-Translates the input model to a graphical, human-readable form (in \texttt{.jpg} format), and exits.
-	% TODO add the graphics of the coffee machine
 
-%------------------------------------------------------------
-\paragraph{\styleOption{-imi2PDF} (default: false)}
-%------------------------------------------------------------
-Translates the input model to a graphical, human-readable form (in \texttt{.pdf} format), and exits.
-	% TODO add the graphics of the coffee machine
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-imi2PNG} (default: false)}
-%------------------------------------------------------------
-Translates the input model to a graphical, human-readable form (in \texttt{.png} format), and exits.
-	% TODO add the graphics of the coffee machine
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-imi2TikZ} (default: false)}
-%------------------------------------------------------------
-Translates the input model to a \LaTeX{} representation of the model (using the \texttt{tikz} package) without performing any analysis, and exits.
-Note that node positioning is not (much) supported, so may want to edit manually some positions.
-	% TODO refer to the graphics of the coffee machine
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-imi2Uppaal} (default: false)}
-%------------------------------------------------------------
-Translates the input model to a \uppaal{} model, and exits.
-See \cref{section:uppaal} for details.
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-romeo} (default: false)}
-%------------------------------------------------------------
-April 1st, 2017 feature :-)
-Supposedly calls the Romeo model checker~\cite{LRST09} instead of \imitator{}.
-Just try!
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-states-limit} (default: none)}
@@ -1996,7 +1982,7 @@ Give some debugging information, that may also be useful to have more details on
 The admissible values for \styleOption{-verbose} are given below:
 
 \begin{tabular}{@{} l @{\ \ } l}
- \styleOption{mute} & No output (the result can be output to a file using \styleOption{-output-result}) \\
+ \styleOption{mute} & No output (the result is still output to an external file) \\
  \styleOption{warnings} & Prints only warnings \\
  \styleOption{standard} & Give little information (number of steps, computation time)\\
  \styleOption{experiments} & Give some additional information, typically enough for experiments\\

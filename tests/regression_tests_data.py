@@ -302,7 +302,7 @@ Is strongly deterministic?              : false
 	{
 		'purpose'    : 'Test variable elimination in Boolean expressions',
 		'input_files': ['testConditions.imi'],
-		'options'    : '-mode statespace -output-states',
+		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'testConditions-statespace.states' , 'content' : """
   STATE 0:
@@ -320,7 +320,7 @@ Is strongly deterministic?              : false
 	{
 		'purpose'    : 'Test evaluation of <if> branch in conditional update',
 		'input_files': ['testConditions.imi'],
-		'options'    : '-mode statespace -output-states',
+		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'testConditions-statespace.states' , 'content' : """
 	STATE 1:
@@ -340,7 +340,7 @@ Is strongly deterministic?              : false
 	{
 		'purpose'    : 'Test evaluation of <else> branch in conditional update',
 		'input_files': ['testConditions.imi'],
-		'options'    : '-mode statespace -output-states',
+		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'testConditions-statespace.states' , 'content' : """
 	STATE 2:
@@ -605,7 +605,7 @@ end
 		# Test for IMITATOR version: TODO
 		'purpose'    : 'Test the state space',
 		'input_files': ['flipflop.imi'],
-		'options'    : '-mode statespace -output-states -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'options'    : '-mode statespace -states-description -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'flipflop-statespace.states' , 'content' : """
   DESCRIPTION OF THE STATES
@@ -981,7 +981,7 @@ end
 		## Reason for removal: projectresult is now in the property, so a state space cannot be projected
 		#'purpose'    : 'Test state space with projection',
 		#'input_files': ['testProjectP.imi'],
-		#'options'    : '-mode statespace -output-states',
+		#'options'    : '-mode statespace -states-description',
 		#'expectations' : [
 			#{'file': 'testProjectP-statespace.states' , 'content' : """
   #DESCRIPTION OF THE STATES
@@ -1168,7 +1168,7 @@ end
 	{
 		'purpose'    : 'Test urgency',
 		'input_files': ['testUrgency.imi'],
-		'options'    : '-mode statespace -output-states',
+		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'testUrgency-statespace.states' , 'content' : """
 		  DESCRIPTION OF THE TRANSITIONS
@@ -1194,7 +1194,7 @@ end
 	{
 		'purpose'    : 'Test synchronization model',
 		'input_files': ['testSynchro.imi'],
-		'options'    : '-mode statespace -output-states',
+		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'testSynchro-statespace.states' , 'content' : """
   DESCRIPTION OF THE STATES
@@ -1269,7 +1269,7 @@ end
 	{
 		'purpose'    : 'Test updates (state space)',
 		'input_files': ['testUpdates.imi'],
-		'options'    : '-mode statespace -depth-limit 4 -output-states',
+		'options'    : '-mode statespace -depth-limit 4 -states-description',
 		'expectations' : [
 			{'file': 'testUpdates-statespace.states' , 'content' : """
 
@@ -1326,7 +1326,7 @@ end
 	{
 		'purpose'    : 'Test clock elimination',
 		'input_files': ['loopingTAdyn.imi'],
-		'options'    : '-mode statespace -dynamic-elimination -output-states -depth-limit 10', # NOTE: depth-limit is just a safety to avoid yielding a loop if the test fails!
+		'options'    : '-mode statespace -dynamic-elimination -states-description -depth-limit 10', # NOTE: depth-limit is just a safety to avoid yielding a loop if the test fails!
 		'expectations' : [
 			{'file': 'loopingTAdyn-statespace.states' , 'content' : """
   DESCRIPTION OF THE STATES
@@ -1364,7 +1364,7 @@ end
 	{
 		'purpose'    : 'Test discrete variable automatic elimination',
 		'input_files': ['testVarElim.imi'],
-		'options'    : '-mode statespace -output-states',
+		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			# NOTE: we just parse the beginning of state 1 to check that the variables are properly removed
 			{'file': 'testVarElim-statespace.states' , 'content' : """
@@ -1383,7 +1383,7 @@ end
 	{
 		'purpose'    : 'Test absence of discrete variable automatic elimination',
 		'input_files': ['testVarElim.imi'],
-		'options'    : '-mode statespace -output-states -no-var-autoremove',
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
 			# NOTE: we just parse the beginning of state 1 to check that the variables are properly removed
 			{'file': 'testVarElim-statespace.states' , 'content' : """
@@ -3639,7 +3639,7 @@ END RESULT
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter nor clock valuation derived)',
 		'input_files': ['testCounterExSimple-8.imi', 'testCounterExSimple-8.imiprop'],
-		'options'    : '-output-cart',
+		'options'    : '-draw-cart',
 		'expectations' : [
 			{'file': 'testCounterExSimple-8.res' , 'content' : """
 
@@ -4620,7 +4620,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test PDFC: very basic example without clocks',
 		'input_files': ['PDFC1.imi', 'PDFC-deadlockfree.imiprop'],
-		'options'    : '-output-states',
+		'options'    : '-states-description',
 		'expectations' : [
 			{'file': 'PDFC1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4675,7 +4675,7 @@ Constraint nature             : good
 	{
 		'purpose'    : 'Test PDFC: very basic example (false result)',
 		'input_files': ['PDFC3.imi', 'PDFC-deadlockfree.imiprop'],
-		'options'    : ' -output-states',
+		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'PDFC3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4738,7 +4738,7 @@ Number of computed states     : 2
 	{
 		'purpose'    : 'Test PDFC: very basic example (normal result)',
 		'input_files': ['PDFC4.imi', 'PDFC-deadlockfree.imiprop'],
-		'options'    : ' -output-states',
+		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'PDFC4.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4805,7 +4805,7 @@ Number of computed states     : 3
 	{
 		'purpose'    : 'Test PDFC: very basic example (false result)',
 		'input_files': ['PDFC6.imi', 'PDFC-deadlockfree.imiprop'],
-		'options'    : ' -output-states -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'options'    : ' -states-description -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC6.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4857,7 +4857,7 @@ Number of computed states     : 2
 	{
 		'purpose'    : 'Test PDFC: very basic example (true result)',
 		'input_files': ['PDFC7.imi', 'PDFC-deadlockfree.imiprop'],
-		'options'    : ' -output-states',
+		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'PDFC7.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4911,7 +4911,7 @@ Number of computed states     : 3
 	{
 		'purpose'    : 'Test PDFC: basic example with disjunction',
 		'input_files': ['PDFC5.imi', 'PDFC-deadlockfree.imiprop'],
-		'options'    : '-output-states',
+		'options'    : '-states-description',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5033,7 +5033,7 @@ Constraint nature             : good
 	{
 		'purpose'    : 'Test PDFC: example with early termination due to false constraint',
 		'input_files': ['flipflop.imi', 'flipflop-deadlockfree.imiprop'],
-		'options'    : ' -output-states -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'options'    : ' -states-description -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5760,7 +5760,7 @@ Constraint nature                       : good
 	#{
 		#'purpose'    : 'Test PRP (old version) on a simple example (good reference valuation)',
 		#'input_files': ['testPRP.imi', 'testPRP.pigood'],
-		#'options'    : '-PRP  -output-states',
+		#'options'    : '-PRP  -states-description',
 		#'expectations' : [
 			#{'file': 'testPRP.res' , 'content' : """
 #BEGIN CONSTRAINT
@@ -5842,7 +5842,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test PRP on a simple example (good reference valuation)',
 		'input_files': ['testPRP.imi', 'testPRP-good.imiprop'],
-		'options'    : '-output-states',
+		'options'    : '-states-description',
 		'expectations' : [
 			{'file': 'testPRP.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5924,7 +5924,7 @@ END CONSTRAINT
 	#{
 		#'purpose'    : 'Test PRP (old version) on a simple example (bad reference valuation)',
 		#'input_files': ['testPRP.imi', 'testPRP.pibad'],
-		#'options'    : '-PRP  -output-states',
+		#'options'    : '-PRP  -states-description',
 		#'expectations' : [
 			#{'file': 'testPRP.res' , 'content' : """
 		 #& p1 >= 0
@@ -6014,7 +6014,7 @@ END CONSTRAINT
 	{
 		'purpose'    : 'Test PRP on a simple example (bad reference valuation)',
 		'input_files': ['testPRP.imi', 'testPRP-bad.imiprop'],
-		'options'    : '-output-states',
+		'options'    : '-states-description',
 		'expectations' : [
 			{'file': 'testPRP.res' , 'content' : """
 		 & p1 >= 0
@@ -6104,7 +6104,7 @@ OR
 	#{
 		#'purpose'    : 'Test PRP (old version) on a simple example (looping reference valuation)',
 		#'input_files': ['testPRP.imi', 'testPRP.piloop'],
-		#'options'    : '-PRP  -depth-limit 10 -output-states',
+		#'options'    : '-PRP  -depth-limit 10 -states-description',
 		#'expectations' : [
 			#{'file': 'testPRP.res' , 'content' : """
  #p2 >= 4
@@ -6325,7 +6325,7 @@ OR
 	{
 		'purpose'    : 'Test PRP on a simple example (looping reference valuation)',
 		'input_files': ['testPRP.imi', 'testPRP-loop.imiprop'],
-		'options'    : '-depth-limit 10 -output-states',
+		'options'    : '-depth-limit 10 -states-description',
 		'expectations' : [
 			{'file': 'testPRP.res' , 'content' : """
  p2 >= 4
@@ -7626,7 +7626,7 @@ Average number of transitions           : 6.0
 	{
 		'purpose'    : 'Test BC in mode cover + graphical output (flip-flop)',
 		'input_files': ['flipflop.imi', 'flipflop-cover.imiprop'],
-		'options'    : '-output-cart -output-graphics-source',
+		'options'    : '-draw-cart -output-graphics-source',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'flipflop.res' , 'content' : """
@@ -9562,7 +9562,7 @@ Constraint nature                       : good/bad
 	{
 		'purpose'    : 'Simple example without merging',
 		'input_files': ['exActionsNonPreserved.imi'],
-		'options'    : '-mode statespace -output-states',
+		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'exActionsNonPreserved-statespace.states' , 'content' : """
 		*/
@@ -9614,7 +9614,7 @@ Constraint nature                       : good/bad
 	{
 		'purpose'    : 'Simple example with merging',
 		'input_files': ['exActionsNonPreserved.imi'],
-		'options'    : '-mode statespace -output-states -merge',
+		'options'    : '-mode statespace -states-description -merge',
 		'expectations' : [
 			{'file': 'exActionsNonPreserved-statespace.states' , 'content' : """
 		*/
