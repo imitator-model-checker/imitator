@@ -97,7 +97,7 @@ class imitator_options :
 		method union : bool
 		method graphical_state_space : graphical_state_space
 		method with_graphics_source : bool
-		method with_log : bool
+		method states_description : bool
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Set methods *)

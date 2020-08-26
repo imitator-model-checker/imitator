@@ -96,7 +96,7 @@ class imitator_options =
 		val mutable with_graphics_source = ref false
 		
 		(* Print logs *)
-		val mutable with_log = ref false
+		val mutable states_description = ref false
 
 		
 		(* ALGORITHIMS *)
@@ -293,7 +293,7 @@ class imitator_options =
 		method union = !union
 		method graphical_state_space = graphical_state_space
 		method with_graphics_source = !with_graphics_source
-		method with_log = !with_log
+		method states_description = !states_description
 
 		
 		
@@ -831,7 +831,7 @@ class imitator_options =
 				(*** NOTE: "Beware: options that have an empty doc string will not be included in the list." ***)
 				("-romeo", Unit call_romeo, "");
 				
-				("-states-description", Set with_log, " Generate the description of all reachable states in a text file. Default: false.");
+				("-states-description", Set states_description, " Generate the description of all reachable states in a text file. Default: false.");
 				
 				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
 				
@@ -966,7 +966,7 @@ class imitator_options =
 				print_warning ("Ayclic mode is set although tree mode is already set. Only tree mode will be considered.");
 			);
 
-(*			if !with_parametric_log && not !with_log then (
+(*			if !with_parametric_log && not !states_description then (
 				print_warning ("Parametric log was asked, but log was not asked. No log will be output.");
 			);*)
 
@@ -1327,7 +1327,7 @@ end;
 				print_message Verbose_medium ("No graphical output for trace set(s) (default).")
 			;
 
-			if !with_log then
+			if !states_description then
 				print_message Verbose_standard ("Description of states will be output.")
 			else
 				print_message Verbose_medium ("No state description (default).");

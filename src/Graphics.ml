@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/04/23
+ * Last modified     : 2020/08/26
  *
  ************************************************************)
  
@@ -1661,7 +1661,7 @@ let dot dot_image_extension radical dot_source_file =
 	
 	(*** WARNING! that's bad programming… it shouldn't be the role of this function to test options ***)
 	
-	if options#graphical_state_space <> Graphical_state_space_none || options#with_log then (
+	if options#graphical_state_space <> Graphical_state_space_none || options#states_description then (
 		(* Get the file names *)
 		let dot_file_name = (radical ^ "." ^ dot_file_extension) in
 		let image_file_name = (radical ^ "." ^ dot_image_extension) in
@@ -1719,7 +1719,7 @@ let draw_statespace state_space algorithm_name radical =
 	let options = Input.get_options () in
 	
 	(* Do not write if no dot AND no log *)
-	if options#graphical_state_space <> Graphical_state_space_none || options#with_log then (
+	if options#graphical_state_space <> Graphical_state_space_none || options#states_description then (
 		let dot_model, states = dot_of_statespace state_space algorithm_name (*~fancy:options#fancy*) in
 		
 		dot state_space_image_format radical dot_model;
@@ -1758,7 +1758,7 @@ let draw_statespace state_space algorithm_name radical =
 		);*)
 			
 		(* Write states file *)
-		if options#with_log then (
+		if options#states_description then (
 			let states_file_name = (radical ^ "." ^ states_file_extension) in
 			print_message Verbose_standard ("Writing the states description to file '" ^ states_file_name ^ "'…");
 			write_to_file states_file_name states;
