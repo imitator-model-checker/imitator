@@ -66,7 +66,7 @@ automaton variable
 	synclabs:
 	Start1, SetX1, Enter1, SetX01, Start2, SetX2, Enter2, SetX02, Start3, SetX3, Enter3, SetX03;
 
-	loc Val0: invariant True wait {}
+	loc Val0: invariant True
 	when True sync Start1 do {} goto Val0;
 	when True sync Start2 do {} goto Val0;
 	when True sync Start3 do {} goto Val0;
@@ -74,21 +74,21 @@ automaton variable
 	when True sync SetX2 do {} goto Val2;
 	when True sync SetX3 do {} goto Val3;
 
-	loc Val1: invariant True wait {}
+	loc Val1: invariant True
 	when True sync Enter1 do {} goto Val1;
 	when True sync SetX01 do {} goto Val0;
 	when True sync SetX1 do {} goto Val1;
 	when True sync SetX2 do {} goto Val2;
 	when True sync SetX3 do {} goto Val3;
 
-	loc Val2: invariant True wait {}
+	loc Val2: invariant True
 	when True sync Enter2 do {} goto Val2;
 	when True sync SetX02 do {} goto Val0;
 	when True sync SetX1 do {} goto Val1;
 	when True sync SetX2 do {} goto Val2;
 	when True sync SetX3 do {} goto Val3;
 
-	loc Val3: invariant True wait {}
+	loc Val3: invariant True
 	when True sync Enter3 do {} goto Val3;
 	when True sync SetX03 do {} goto Val0;
 	when True sync SetX1 do {} goto Val1;
@@ -98,11 +98,11 @@ end
 
 automaton observer
 
-	loc obs_OK: invariant True wait {}
+	loc obs_OK: invariant True
 		(* Change '3' with any number of processes in CS *)
 		when nb = 3 do {} goto obs_BAD;
 
-	loc obs_BAD: invariant True wait {}
+	loc obs_BAD: invariant True
 end (* observer *)
 
 
