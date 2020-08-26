@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/08/25
+ * Last modified     : 2020/08/26
  *
  ************************************************************)
 
@@ -181,9 +181,9 @@ if not options#is_set_output_result then(
 (*------------------------------------------------------------*)
 
 (* Get value depending on the algorithm *)
-begin match property_option with
-	| None -> ()
-	| Some property ->
+begin match property_option, options#imitator_mode with
+	| Some property, _
+		->
 		let inclusion_needed = AlgorithmOptions.inclusion_needed property in
 		(* Update if not yet set *)
 		if not options#is_set_inclusion then(
@@ -192,6 +192,19 @@ begin match property_option with
 			
 			options#set_inclusion (inclusion_needed);
 		);
+		
+	| _, State_space_computation
+		->
+		(* Update if not yet set *)
+		if not options#is_set_inclusion then(
+			(* Print some information *)
+			print_message Verbose_high ("Set option `-inclusion` to its default value: `false`");
+			
+			options#set_inclusion (false);
+		);
+
+	| None, _ -> ()
+	
 end;
 
 
@@ -200,9 +213,8 @@ end;
 (*------------------------------------------------------------*)
 
 (* Get value depending on the algorithm *)
-begin match property_option with
-	| None -> ()
-	| Some property ->
+begin match property_option, options#imitator_mode with
+	| Some property, _ ->
 		let merge_needed = AlgorithmOptions.merge_needed property in
 		(* Update if not yet set *)
 		if not options#is_set_merge then(
@@ -211,6 +223,18 @@ begin match property_option with
 			
 			options#set_merge (merge_needed);
 		);
+		
+	| _, State_space_computation
+		->
+		(* Update if not yet set *)
+		if not options#is_set_merge then(
+			(* Print some information *)
+			print_message Verbose_high ("Set option `-merge` to its default value: `false`");
+			
+			options#set_merge(false);
+		);
+
+	| None, _ -> ()
 end;
 
 
