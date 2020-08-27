@@ -10,7 +10,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/08/26
+ * Last modified     : 2020/08/27
  *
  ************************************************************)
 
@@ -595,7 +595,7 @@ class imitator_options =
 				)
 			
 			and set_statespace mode =
-				if mode = "light" then
+				if mode = "undetailed" then
 					graphical_state_space <- Graphical_state_space_nodetails
 				else if mode = "normal" then
 					graphical_state_space <- Graphical_state_space_normal
@@ -717,7 +717,7 @@ class imitator_options =
 				("-draw-cart-y-max", Int (fun n -> output_cart_y_max <- Some n), " Set maximum value for the y axis when plotting the cartography (not entirely functional yet). Default: automatic.");
 				
 				("-draw-statespace", String set_statespace, " Draw the state space in a graphical form (using `dot`).
-       Use value `light` for the structure only (no location names).
+       Use value `undetailed` for the structure only (no location names).
        Use value `normal` for location names.
        Use value `full` for location names and constraints.
 				");
@@ -736,7 +736,7 @@ class imitator_options =
         Use 'NDFS' for standard NDFS. [NPvdP18]
         Use 'NDFSsub' for standard NDFS with subsumption. [NPvdP18]
         Use 'layerNDFSsub' for layered NDFS with subsumption. [NPvdP18]
-        Default: layerBFS (except for AccLoopSynthNDFS, in which case this is NDFS).
+        Default: layerBFS.
 				");
 				
 				("-graphics-source", Set with_graphics_source, " Keep file(s) used for generating graphical output. Default: false.");
@@ -827,16 +827,14 @@ class imitator_options =
 
 				("-no-var-autoremove", Set no_variable_autoremove, " Prevent the automatic removal of variables (discrete, clocks, parameters) declared in the header but never used in the IPTAs. Default: false.");
 
-				("-output-files-prefix", String (fun new_prefix -> files_prefix <- new_prefix), " Set the prefix for output files. Default: [./model-name].");
+				("-output-prefix", String (fun new_prefix -> files_prefix <- new_prefix), " Set the prefix for output files. Default: [./model-name].");
 				
 				("-output-float", Unit (fun () -> output_float <- true), " Approximates the value of discrete variables as floats. Default: false.");
 				
-				("-precomputepi0", Set precomputepi0, " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode only). Default: false.");
-
-(* 				("-PRP", Set efim, " Reachability-preservation algorithm mixing IM and EFsynth [ALNS15]. Default: false. WARNING: deprecated option (use -mode PRP or -mode PRPC)"); *)
+(* 				("-output-result", Unit (fun () -> output_result <- Some true), " Write the result to a file. Default: true."); *)
+				("-no-output-result", Unit (fun () -> output_result <- Some false), " Do not write the result to a file. Default (for most algorithms): false, i.e., result is written.");
 				
-(* 				("-result-file", Unit (fun () -> output_result <- Some true), " Write the result to a file. Default: true."); *)
-				("-no-result-file", Unit (fun () -> output_result <- Some false), " Do not write the result to a file. Default (for most algorithms): false, i.e., result is written.");
+				("-precomputepi0", Set precomputepi0, " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode only). Default: false.");
 				
 				(* Hidden option (April fool 2017) *)
 				(*** NOTE: "Beware: options that have an empty doc string will not be included in the list." ***)

@@ -1192,20 +1192,20 @@ For example, this is the case of \styleFileContent{s\_4} and \styleFileContent{s
 
 Note that, beyond about 1,000 states or 1,000 transitions, the \gdot{} utility (responsible to generate the state space) may crash.
 
-Using \styleOption{-draw-statespace light} makes a more compact representation, but is also less informative as only the state number and the transition labels are shown.
+Using \styleOption{-draw-statespace undetailed} makes a more compact representation, but is also less informative as only the state number and the transition labels are shown.
 
 Conversely, \styleOption{-draw-statespace full} makes a more detailed representation, by also adding to the state space all constraints:
 	the clock and parameter constraints, and below their projection onto the parameters; in addition, if \styleFileContent{projectresult} is defined in the model (see \cref{section:projection}), the projection onto a specific set of parameters is also added.
 This option is mostly suitable for small trace sets.
 
 \begin{example}
-	An example of state space with no details (output using \styleOption{-draw-statespace light}), with normal details (using \styleOption{-draw-statespace normal}), and in verbose mode (using \styleOption{-draw-statespace full}) are given in \cref{figure:traceset:nodetail,figure:traceset:normal,figure:traceset:verbose}.
+	An example of state space with no details (output using \styleOption{-draw-statespace undetailed}), with normal details (using \styleOption{-draw-statespace normal}), and in verbose mode (using \styleOption{-draw-statespace full}) are given in \cref{figure:traceset:nodetail,figure:traceset:normal,figure:traceset:verbose}.
 
 	These graphics were generated using the example in \cref{chapter:syntax-introduction} with the following command:
 
 	\styleCommand{imitator fischer.imi -mode EF -depth-limit 4 -draw-statespace normal}
 
-	(where \styleOption{normal} should be replaced with \styleOption{light} or \styleOption{full}, respectively)
+	(where \styleOption{normal} should be replaced with \styleOption{undetailed} or \styleOption{full}, respectively)
 \end{example}
 
 \begin{figure}
@@ -1582,7 +1582,7 @@ If the model contains more than two parameters, then \code{-draw-cart} will plot
 This option makes use of the external utility \texttt{graph}, which is
 part of the \emph{GNU plotting utils}, available on most Linux
 platforms.
-The generated files will be located in the current directory, unless option \styleOption{-output-files-prefix} is used.
+The generated files will be located in the current directory, unless option \styleOption{-output-prefix} is used.
 
 Additional useful options are
 \styleOption{-draw-cart-x-min},
@@ -1625,7 +1625,7 @@ Note that the path and the name of those two files can be changed using the \sty
 
 Three values for this option are allowed:
 \begin{itemize}
-	\item Use value \styleOption{light} for the structure only (no location names): does \emph{not} provide detailed information on the local locations of the composed \IPTA{}, and instead only outputs the state id.
+	\item Use value \styleOption{undetailed} for the structure only (no location names): does \emph{not} provide detailed information on the local locations of the composed \IPTA{}, and instead only outputs the state id.
 	Enabling the option with this value instead of \styleOption{-draw-trace-set normal} may yield a smaller graph, which is useful when generating relatively large state spaces.
 	
 	\item Use value \styleOption{normal} for location names.
@@ -1859,16 +1859,16 @@ Convert (exact-valued) discrete variables into (possibly approximated) floats in
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-output-files-prefix} (default: \stylePath{<input\_file>})}
+\paragraph{\styleOption{-output-prefix} (default: \stylePath{<input\_file>})}
 %------------------------------------------------------------
 Set the path prefix for all generated files.
 The path can be either relative (to the path to the \binimitator{} binary) or absolute, and must be followed by the file name.
 
 Examples:
 \begin{itemize}
-	\item \styleOption{-output-files-prefix log}
-	\item \styleOption{-output-files-prefix ./log}
-	\item \styleOption{-output-files-prefix /home/imitator/outputs}
+	\item \styleOption{-output-prefix log}
+	\item \styleOption{-output-prefix ./log}
+	\item \styleOption{-output-prefix /home/imitator/outputs}
 \end{itemize}
 
 By default, the path prefix is the \emph{current directory}, \ie{} where the user is (therefore not necessarily the model directory).

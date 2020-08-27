@@ -10409,7 +10409,7 @@ end
 	{
 		'purpose'    : 'Test the graphical state space generation (no details)',
 		'input_files': ['CUBPTA1.imi'],
-		'options'    : '-mode statespace -draw-statespace light -graphics-source',
+		'options'    : '-mode statespace -draw-statespace undetailed -graphics-source',
 		'expectations' : [
 			{'file': 'CUBPTA1-statespace.dot' , 'content' : """
   s_0 -> s_1 [label="a"];
