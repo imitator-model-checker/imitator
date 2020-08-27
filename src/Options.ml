@@ -328,7 +328,7 @@ class imitator_options =
 					with Not_found ->
 					(*** HACK: print header now ***)
 					print_header_string();
-					print_error ("The verbose mode '" ^ verbose_mode ^ "' is not valid.");
+					print_error ("The verbose mode `" ^ verbose_mode ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
 					exit(1); in
@@ -395,7 +395,7 @@ class imitator_options =
 				) with Failure _ | Invalid_argument _-> (
 					(*** HACK: print header now ***)
 					print_header_string();
-					print_error ("The distribution mode '" ^ mode ^ "' is not valid.");
+					print_error ("The distribution mode `" ^ mode ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
 					exit(1);
@@ -426,7 +426,7 @@ class imitator_options =
 				else(
 					(*** HACK: print header now ***)
 					print_header_string();
-					print_error ("The exploration order '" ^ order ^ "' is not valid.");
+					print_error ("The exploration order `" ^ order ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
 					exit(1);
@@ -527,24 +527,24 @@ class imitator_options =
 					"Maybe";
 					"42";
 				] in
-				print_message Verbose_standard ("Answer: '" ^ (random_element answers) ^ "'.");
+				print_message Verbose_standard ("Answer: `" ^ (random_element answers) ^ "`.");
 				terminate_program ();
 				()
 
 			(* Options *)
 			and speclist = [
-				("-acyclic", Set acyclic, " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: 'false'");
+				("-acyclic", Set acyclic, " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: `false`");
 				
 (* 				("-best-worst-case", Set best_worst_case, " Instead of the minimum global time, compute the best worst-case time bound in the EFsynthminpq mode. Default: false."); *)
 
 (* 				Temporarily disabled (March 2014) *)
-(* 				("-bab", Set branch_and_bound, " Experimental new feature of IMITATOR, based on cost optimization (WORK IN PROGRESS). Default: 'false'"); *)
+(* 				("-bab", Set branch_and_bound, " Experimental new feature of IMITATOR, based on cost optimization (WORK IN PROGRESS). Default: `false`"); *)
 				
 				("-cart-tiles-limit", Int (fun i -> carto_tiles_limit <- Some i), " Set a maximum number of tiles computed for the cartography. Default: no limit.");
 
 				("-cart-time-limit", Int (fun i -> carto_time_limit <- Some i), " Set a global time limit (in seconds) for the cartography (in which case the -time-limit option only applies to each call to IM). Default: no limit.");
 
-				(* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : 'false'"); *)
+				(* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : `false`"); *)
 				
 				("-check-ippta", Set check_ippta, " Check that every new symbolic state contains an integer point; raises an exception if not. Default: false.");
 				
@@ -559,12 +559,12 @@ class imitator_options =
 				("-depth-limit", Int (fun i -> depth_limit := Some i), " Limits the depth of the exploration of the state space. Default: no limit.");
 
 				("-distributed", String set_distributed, " Distributed version of the behavioral cartography and PRPC.
-        Use 'no' for the non-distributed mode (default).
-        Use 'static' for a static domain partitioning [ACN15].
-        Use 'sequential' for a master-worker scheme with sequential point distribution [ACE14].
-        Use 'randomXX' for a master-worker scheme with random point distribution (e.g., random5 or random10); after XX successive unsuccessful attempts (where the generated point is already covered), the algorithm will switch to an exhaustive sequential iteration [ACE14].
-        Use 'shuffle' for a master-worker scheme with shuffle point distribution [ACN15].
-        Use 'dynamic' for a master-worker dynamic subdomain decomposition [ACN15].
+        Use `no` for the non-distributed mode (default).
+        Use `static` for a static domain partitioning [ACN15].
+        Use `sequential` for a master-worker scheme with sequential point distribution [ACE14].
+        Use `randomXX` for a master-worker scheme with random point distribution (e.g., random5 or random10); after XX successive unsuccessful attempts (where the generated point is already covered), the algorithm will switch to an exhaustive sequential iteration [ACE14].
+        Use `shuffle` for a master-worker scheme with shuffle point distribution [ACN15].
+        Use `dynamic` for a master-worker dynamic subdomain decomposition [ACN15].
 				");
 				
 				("-distributedKillIM", Set distributedKillIM, " In distributed cartography, kill processes covered by other tiles [ACN15]; only works with selected distribution schemes. Default: false.");
@@ -589,14 +589,14 @@ class imitator_options =
 				("-early-terminate", Set early_terminate, " Provide a single valuation that minimizes global time, instead of all valuations in the EFsynthminpq mode. Default: false.");
 
 				("-explOrder", String set_exploration_order, " Exploration order [EXPERIMENTAL].
-        Use 'layerBFS' for a layer-based breadth-first search.
-        Use 'queueBFS' for a queue-based breadth-first search. [ANP17]
-        Use 'queueBFSRS' for a queue-based breadth-first search with ranking system. [ANP17]
-        Use 'queueBFSPRIOR' for a priority-based BFS with ranking system. [ANP17]
-        Use 'optTimeQueue' for optimal reachability with priority queue [ANP17]
-        Use 'NDFS' for standard NDFS. [NPvdP18]
-        Use 'NDFSsub' for standard NDFS with subsumption. [NPvdP18]
-        Use 'layerNDFSsub' for layered NDFS with subsumption. [NPvdP18]
+        Use `layerBFS` for a layer-based breadth-first search.
+        Use `queueBFS` for a queue-based breadth-first search. [ANP17]
+        Use `queueBFSRS` for a queue-based breadth-first search with ranking system. [ANP17]
+        Use `queueBFSPRIOR` for a priority-based BFS with ranking system. [ANP17]
+        Use `optTimeQueue` for optimal reachability with priority queue [ANP17]
+        Use `NDFS` for standard NDFS. [NPvdP18]
+        Use `NDFSsub` for standard NDFS with subsumption. [NPvdP18]
+        Use `layerNDFSsub` for layered NDFS with subsumption. [NPvdP18]
         Default: layerBFS.
 				");
 				
@@ -604,57 +604,57 @@ class imitator_options =
 
 				("-imi2HyTech", Unit (fun _ ->
 					imitator_mode <- Translation HyTech
-				), "Translate the model into a HyTech model, and exit without performing any analysis. Defaut : 'false'");
+				), "Translate the model into a HyTech model, and exit without performing any analysis. Defaut : `false`");
 				
 				("-imi2IMI", Unit (fun _ ->
 					imitator_mode <- Translation IMI
-				), "Regenerate the model into an IMITATOR model, and exit without performing any analysis. Defaut : 'false'");
+				), "Regenerate the model into an IMITATOR model, and exit without performing any analysis. Defaut : `false`");
 				
 				("-imi2JPG", Unit (fun _ ->
 					(*** HACK ***)
 					graphical_state_space <- Graphical_state_space_normal;
 					imitator_mode <- Translation JPG
-				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : 'false'");
+				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : `false`");
 				
 				("-imi2PDF", Unit (fun _ ->
 					(*** HACK ***)
 					graphical_state_space <- Graphical_state_space_normal;
 					imitator_mode <- Translation PDF
-				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : 'false'");
+				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : `false`");
 				
 				("-imi2PNG", Unit (fun _ ->
 					(*** HACK ***)
 					graphical_state_space <- Graphical_state_space_normal;
 					imitator_mode <- Translation PNG
-				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : 'false'");
+				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : `false`");
 				
 				("-imi2TikZ", Unit (fun _ ->
 					imitator_mode <- Translation TikZ
-				), "Translate the model into LaTeX TikZ code (no positioning yet), and exit without performing any analysis. Defaut : 'false'");
+				), "Translate the model into LaTeX TikZ code (no positioning yet), and exit without performing any analysis. Defaut : `false`");
 				
 				("-imi2Uppaal", Unit (fun _ ->
 					imitator_mode <- Translation Uppaal
-				), "Translate the model into an Uppaal model, and exit without performing any analysis. Some features may not be translated, see user manual. Defaut : 'false'");
+				), "Translate the model into an Uppaal model, and exit without performing any analysis. Some features may not be translated, see user manual. Defaut : `false`");
 				
 
 				(*** NOTE: no check that they are both called… If so, behavior is unspecified ***)
 				("-inclusion", Unit (fun () -> inclusion <- Some true), " Consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: depending on the algorithm");
 				("-no-inclusion", Unit (fun () -> inclusion <- Some false), " Do not consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: depending on the algorithm");
 
-				("-inclusion-bidir", Set inclusion2, " Consider a bidirectional inclusion of symbolic zones (new <= old or old <= new) instead of the equality when checking for a fixpoint. Default: 'false'");
+				("-inclusion-bidir", Set inclusion2, " Consider a bidirectional inclusion of symbolic zones (new <= old or old <= new) instead of the equality when checking for a fixpoint. Default: `false`");
 				
 				(*** NOTE: no check that they are both called… If so, behavior is unspecified ***)
 				("-merge", Unit (fun () -> merge <- Some true), " Use the merging technique of [AFS13]. Default: depending on the algorithm");
 				("-no-merge", Unit (fun () -> merge <- Some false), " Do not use the merging technique of [AFS13]. Default: depending on the algorithm");
 				
-(*				("-merge-before", Set merge_before , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: 'false' (disable)");*)
+(*				("-merge-before", Set merge_before , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: `false` (disable)");*)
 				
-				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Options are 'always', 'targetseen', 'pq10', 'pq100', 'iter10', 'iter100'. Default: iter10.");
+				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Options are `always`, `targetseen`, `pq10`, `pq100`, `iter10`, `iter100`. Default: iter10.");
 
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
-        Use 'checksyntax' for a simple syntax check and no analysis.
+        Use `checksyntax` for a simple syntax check and no analysis.
         
-        Use 'statespace' for the generation of the entire parametric state space."
+        Use `statespace` for the generation of the entire parametric state space."
 			(*        "Use 'EF' for a parametric non-reachability analysis. [AHV93,JLR15]
         Use 'EFmin' for a parametric non-reachability analysis with parameter minimization. [ABPP19]
         Use 'EFmax' for a parametric non-reachability analysis with parameter maximization. [ABPP19]
@@ -705,7 +705,7 @@ class imitator_options =
 				
 				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
 				
-				("-statistics", Unit (fun _ -> statistics := true; Statistics.enable_all_counters()), " Print info on number of calls to PPL, and other statistics. Default: 'false'");
+				("-statistics", Unit (fun _ -> statistics := true; Statistics.enable_all_counters()), " Print info on number of calls to PPL, and other statistics. Default: `false`");
 				
 				("-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography. Default: 1/1.");
 				
@@ -719,9 +719,9 @@ class imitator_options =
 				
 				("-timed", Set timed_mode, " Adds a timing information to each output of the program. Default: none.");
 				
-				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the state space is a tree (otherwise analysis may loop). Default: 'false'");
+				("-tree", Set tree, " Does not test if a new state was already encountered. To be set ONLY if the state space is a tree (otherwise analysis may loop). Default: `false`");
 				
-				("-verbose", String set_verbose_mode_ref, " Print more or less information. Can be set to 'mute', 'warnings', 'standard', 'experiments', 'low', 'medium', 'high', 'total'. Default: 'standard'");
+				("-verbose", String set_verbose_mode_ref, " Print more or less information. Can be set to `mute`, `warnings`, `standard`, `experiments`, `low`, `medium`, `high`, `total`. Default: `standard`");
 				
 				("-version", Unit (fun _ ->
 					(*** HACK: print header now ***)
@@ -747,7 +747,7 @@ class imitator_options =
 				)
 				(* If more than two arguments : warns *)
 				else (
-					print_warning ("The argument '" ^ arg ^ "' will be ignored.");
+					print_warning ("The argument `" ^ arg ^ "` will be ignored.");
 				)
 			) in
 
@@ -814,7 +814,7 @@ class imitator_options =
 			(* File prefix *)
 			print_message Verbose_low ("Prefix for output files: " ^ files_prefix);
 			(* Print full command *)
-			(*** WARNING: this command drops the "" or '' (if any) ***)
+			(*** WARNING: this command drops the "" or `` (if any) ***)
 			print_message Verbose_low ("Command: " ^ (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv));
 
 			(* Global mode *)
@@ -860,13 +860,13 @@ class imitator_options =
 			(* No no_leq_test_in_ef if not EF *)
 			if imitator_mode <> Algorithm && no_leq_test_in_ef then 
 (*			if no_leq_test_in_ef && (imitator_mode <> EF_synthesis && imitator_mode <> EF_min && imitator_mode <> EF_max && imitator_mode <> EF_synth_min && imitator_mode <> EF_synth_max && imitator_mode <> EF_synth_min_priority_queue && imitator_mode <> EFunsafe_synthesis && imitator_mode <> EFexemplify && imitator_mode <> PRP) then*)(
-				print_warning ("The option '-no-inclusion-test-in-EF' is reserved for EF and PRP. It will thus be ignored.");
+				print_warning ("The option `-no-inclusion-test-in-EF` is reserved for EF and PRP. It will thus be ignored.");
 			);
 				
 				(*** TODO ***)
 (*			(* No counterex if not EF *)
 			if !counterex && (imitator_mode <> EF_synthesis && imitator_mode <> EFunsafe_synthesis && imitator_mode <> Acc_loop_synthesis_NDFS) then(
-				print_warning ("The option '-counterexample' is reserved for EF and AccLoopSynthNDFS. It will thus be ignored.");
+				print_warning ("The option `-counterexample` is reserved for EF and AccLoopSynthNDFS. It will thus be ignored.");
 			);*)
 			
 
