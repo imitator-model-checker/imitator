@@ -4358,8 +4358,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test AccLoopSynthNDFS emptiness: flipflop (no loop)',
-		'input_files': ['flipflop.imi'],
-		'options'    : '-mode AccLoopSynthNDFS  -counterexample',
+		'input_files': ['flipflop.imi', 'flipflop-loop-witness.imiprop'],
+		'options'    : '-explOrder NDFS',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4382,8 +4382,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test AccLoopSynthNDFS with complete constraint: flipflop (no loop)',
-		'input_files': ['flipflop.imi'],
-		'options'    : '-mode AccLoopSynthNDFS -explOrder NDFSsub ',
+		'input_files': ['flipflop.imi', 'flipflop-loop-witness.imiprop'],
+		'options'    : '-explOrder NDFSsub ',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4405,12 +4405,13 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1
+		# Test version             : 2
 		# Test since               : 2019/07/22
-		# Test for IMITATOR version: 2.12
+		# Last modified            : 2020/08/27
+		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynthNDFS emptiness: simple example 1',
-		'input_files': ['testNDFS-1.imi'],
-		'options'    : '-mode AccLoopSynthNDFS  -counterexample',
+		'input_files': ['testNDFS-1.imi', 'testNDFS-loop-witness.imiprop'],
+		'options'    : '-explOrder NDFS',
 		'expectations' : [
 			{'file': 'testNDFS-1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4432,12 +4433,13 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1
+		# Test version             : 2
 		# Test since               : 2019/08/01
-		# Test for IMITATOR version: 2.12
-		'purpose'    : 'Test AccLoopSynthNDFS: simple example 1 with complete constraint',
-		'input_files': ['testNDFS-1.imi'],
-		'options'    : '-mode AccLoopSynthNDFS -explOrder NDFSsub ',
+		# Last modified            : 2020/08/27
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynthNDFS synthesis: simple example 1',
+		'input_files': ['testNDFS-1.imi', 'testNDFS-loop.imiprop'],
+		'options'    : '-explOrder NDFSsub ',
 		'expectations' : [
 			{'file': 'testNDFS-1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4459,12 +4461,13 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1
+		# Test version             : 2
 		# Test since               : 2019/08/01
-		# Test for IMITATOR version: 2.12
+		# Last modified            : 2020/08/27
+		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynthNDFS emptiness: simple example 2',
-		'input_files': ['testNDFS-2.imi'],
-		'options'    : '-mode AccLoopSynthNDFS  -counterexample',
+		'input_files': ['testNDFS-2.imi', 'testNDFS-loop-witness.imiprop'],
+		'options'    : '-explOrder NDFS',
 		'expectations' : [
 			{'file': 'testNDFS-2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4486,12 +4489,13 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1
+		# Test version             : 2
 		# Test since               : 2019/08/01
-		# Test for IMITATOR version: 2.12
+		# Last modified            : 2020/08/27
+		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynthNDFS: simple example 2 with complete constraint',
-		'input_files': ['testNDFS-2.imi'],
-		'options'    : '-mode AccLoopSynthNDFS -explOrder NDFSsub ',
+		'input_files': ['testNDFS-2.imi', 'testNDFS-loop.imiprop'],
+		'options'    : '-explOrder NDFSsub ',
 		'expectations' : [
 			{'file': 'testNDFS-2.res' , 'content' : """
 BEGIN CONSTRAINT
