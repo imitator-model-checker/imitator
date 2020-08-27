@@ -23,8 +23,15 @@ myocamlbuild.ml
 src/BuildInfo.ml*
 src/PaTATOR.ml
 
+iamadeveloper
 
 # testing logs
+
+*-regenerated.imi
+*.res
+*.states
+
+benchmarks/**/*-regenerated.imi
 benchmarks/**/*.res
 benchmarks/**/*.png
 benchmarks/**/*.jpg
@@ -32,6 +39,7 @@ benchmarks/**/*.states
 benchmarks/**/*.pdf
 benchmarks/**/*.xml
 
+tests/**/*-regenerated.imi
 tests/**/*.log
 tests/**/*.jpg
 tests/**/*.png
