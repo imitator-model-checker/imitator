@@ -431,21 +431,26 @@ match options#imitator_mode with
 
 
 
-(*** TODO: check if needed in the new version (probably not) ***)
-		(*(************************************************************)
+		(************************************************************)
 		(* Preliminary checks *)
 		(************************************************************)
 
-
-		if options#imitator_mode = EFexemplify then(
+		begin
+		match abstract_property.property with
+		| EFexemplify _ | EFtmin _ ->
+			begin
 			match model.global_time_clock with
 				| Some _ -> ()
 				| _ ->
-					print_error ("An absolute time clock must be defined in the model to run EFexemplify.");
+					print_error ("An absolute time clock `" ^ Constants.global_time_clock_name ^ "` must be defined in the model to run this algorithm.");
 					abort_program();
-		);
+			end;
 
-*)
+		| _ -> ()
+		
+		end;
+
+
 
 
 
