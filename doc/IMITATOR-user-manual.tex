@@ -1745,7 +1745,7 @@ This option corresponds to the way that, \eg{} \hytech{} works, and suffices whe
 Consider a bidirectional inclusion of parametric zone instead of the equality when performing the $\textit{Post}$ operation.
 When the \code{-incl2} option is activated, it suffices that a previous state with the same location and a constraint greater than or equal to (resp.\ \emph{smaller or equal} to) the constraint of the new state has been encountered to discard the new state (resp.\ the old state, which is replaced by the new one).
 
-It seems that, although less states are computed, this option is \emph{less} efficient than \styleOption{-incl} (in part due to the extra inclusion checks required by \styleOption{-incl2}).
+It seems that, although less states are computed, this option is \emph{less} efficient than \styleOption{-inclusion} (in part due to the extra inclusion checks required by \styleOption{-incl2}).
 
 
 %------------------------------------------------------------
@@ -1759,9 +1759,9 @@ However, not all the properties of the inverse method are preserved when using m
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-mode} (default: \styleOption{inversemethod})}
+\paragraph{\styleOption{-mode} (default: none)}
 %------------------------------------------------------------
-The mode for \imitator{}, \ie{} the algorithm to run.
+When executing \imitator{} without a property, \ie{} in a special mode.
 
 \begin{longtable}{@{} l @{\ \ } p{12cm}}
 	\styleOption{checksyntax} & Simple syntax check and no analysis.
@@ -1771,58 +1771,6 @@ The mode for \imitator{}, \ie{} the algorithm to run.
 
 	\styleOption{statespace} & Generation of the entire parametric state space \\
 	& (see \cref{ss:mode:statespace}) \\
-
-	\styleOption{EFunsafe} & Parametric reachability synthesis (\EFsynth{} \cite{JLR15}) \\
-	& (see \cref{ss:mode:EFunsafe}) \\
-
-	\styleOption{EF} & Parametric safety synthesis (\EFsynth{} \cite{JLR15}) \\
-	& (see \cref{ss:mode:EF}) \\
-
-	\styleOption{EFmin} & Parametric minimization synthesis \\
-	& (see \cref{ss:mode:EFmin}) \\
-
-	\styleOption{EFmax} & Parametric maximization synthesis \\
-	& (see \cref{ss:mode:EFmax}) \\
-
-	\styleOption{EFsynthminpq} & Minimal-time reachability synthesis~\cite{ABPV19} \\
-	& (see \cref{ss:mode:EFopt}) \\
-
-	\styleOption{PDFC} & Parametric deadlock-freeness checking (\PDFC{} \cite{Andre16}) \\
-	& (see \cref{ss:mode:PDFC}) \\
-
-	\styleOption{LoopSynth} & cycle synthesis \\
-	& (see \cref{ss:loop}) \\
-
-	\styleOption{AccLoopSynth} & accepting cycle synthesis \\
-	& (see \cref{ss:accepting-loop}) \\
-
-	\styleOption{AccLoopSynthNDFS} & accepting cycle synthesis with NDFS exploration~\cite{NPP18}\\
-	& (see \cref{ss:accepting-loop-NDFS}) \\
-
-	\styleOption{NZCUBcheck} & non-Zeno cycle synthesis (with CUB-detection) \\
-	& (see \cref{ss:mode:Zeno}) \\
-
-	\styleOption{NZCUBtrans} & non-Zeno cycle synthesis (with CUB-transformation) \\
-	& (see \cref{ss:mode:Zeno}) \\
-
-	\styleOption{inversemethod} & Inverse method \\
-	& (see \cref{ss:mode:IM}) \\
-
-	\styleOption{PRP} & Parametric reachability preservation \\
-	& (see \cref{ss:mode:PRP}) \\
-
-	\styleOption{PRPC} & Parametric reachability preservation cartography \\
-	& (see \cref{sss:mode:PRPC}) \\
-
-	\styleOption{cover} & Behavioral cartography with full coverage \\
-	& (see \cref{ss:mode:BC}) \\
-
-	\styleOption{randomXX} & Behavioral cartography with \styleOption{XX} iterations \\
-	& (see \cref{sss:mode:BC:random}) \\
-
-	\styleOption{shuffle} & Behavioral cartography with full coverage,\\
-	& and points considered in a random manner \\
-	& (see \cref{sss:mode:BC:shuffle}) \\
 \end{longtable}
 
 

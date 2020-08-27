@@ -344,88 +344,8 @@ class imitator_options =
 				else if mode = "statespace" then 
 					imitator_mode <- State_space_computation
 
-(*				(* Case: old version of EF-synthesis using a list of constraints *)
-				else if mode = "EFold" then 
-					imitator_mode <- EF_synthesis
-					
-				(* Case: new EF-synthesis using PointSetPowerSet *)
-				else if mode = "EF" then(
-					new_ef_mode <- true;
-					imitator_mode <- EF_synthesis
-				)
-					
-				(* Case: EF-synthesis w.r.t. bad states (unsafe) *)
-				else if mode = "EFunsafe" then(
-					imitator_mode <- EFunsafe_synthesis
-				)
-					
-				(* Case: EF-minimization *)
-				else if mode = "EFmin" then 
-					imitator_mode <- EF_min
-					
-				(* Case: EF-maximization *)
-				else if mode = "EFmax" then 
-					imitator_mode <- EF_max
-					
-				(* Case: EF-synthesis with minimization *)
-				else if mode = "EFsynthmin" then 
-					imitator_mode <- EF_synth_min
-					
-				(* Case: EF-maximization *)
-				else if mode = "EFsynthmax" then 
-					imitator_mode <- EF_synth_max
-					
-				(** Optimal reachability with priority queue: queue-based, with priority to the earliest successor for the selection of the next state [ABPP19] *)
-				else if mode = "EFsynthminpq" then 
-					imitator_mode <- EF_synth_min_priority_queue
-					
-				(** EF-synthesis with examples of (un)safe words *)
-				else if mode = "EFexemplify" then 
-					imitator_mode <- EFexemplify
-					
-				(* Case: AF-synthesis *)
-				else if mode = "AF" then 
-					imitator_mode <- AF_synthesis
-					
-				(* Case: Parametric loop synthesis *)
-				else if mode = "LoopSynth" then 
-					imitator_mode <- Loop_synthesis
-				
-				(* Case: Parametric accepting loop synthesis (liveness) *)
-				else if mode = "AccLoopSynth" then 
-					imitator_mode <- Acc_loop_synthesis
-				
-				(* Case: parametric accepting loop synthesis with NDFS exploration *)
-				else if mode = "AccLoopSynthNDFS" then(
-					imitator_mode <- Acc_loop_synthesis_NDFS;
-					(* By default: NDFS (other options can also be specified) *)
-					exploration_order <- Exploration_NDFS;
-				)
+(*
 
-				(** Case: Parametric Büchi-emptiness checking with non-Zenoness (method: check whether the PTA is CUB) *)
-				else if mode = "NZCUBcheck" then(
-					imitator_mode <- Parametric_NZ_CUBcheck;
-					
-					(*** NOTE: very important! This algorithm requires the alternative definition of time-elapsing ***)
-					no_time_elapsing := true;
-				)
-					
-				(* Case: Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
-				else if mode = "NZCUBtrans" then(
-					imitator_mode <- Parametric_NZ_CUBtransform;
-					
-					(*** NOTE: very important! This algorithm requires the alternative definition of time-elapsing ***)
-					no_time_elapsing := true;
-				)
-					
-				(* Case: Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA; distributed version) *)
-				else if mode = "NZCUBtransdist" then(
-					imitator_mode <- Parametric_NZ_CUBtransformDistributed;
-					
-					(*** NOTE: very important! This algorithm requires the alternative definition of time-elapsing ***)
-					no_time_elapsing := true;
-				)
-					
 				(* Case: Parametric Büchi-emptiness checking with non-Zenoness on a CUB-PTA: hidden option (mainly for testing) *)
 				else if mode = "NZCUB" then(
 					imitator_mode <- Parametric_NZ_CUB;
@@ -437,66 +357,7 @@ class imitator_options =
 					graphical_state_space <- Graphical_state_space_normal;
 				)
 					
-				(* Case: Parametric deadlock checking *)
-				else if mode = "PDFC" then 
-					imitator_mode <- Parametric_deadlock_checking
-					
-				(* Case: Inverse method with convex, and therefore possibly incomplete result *)
-				else if mode = "inversemethod" then 
-					imitator_mode <- Inverse_method
-					
-				(* Case: Inverse method with full, non-convex result *)
-				else if mode = "IMcomplete" then 
-					imitator_mode <- Inverse_method_complete
-					
-				(* Case: PRP *)
-				else if mode = "PRP" then 
-					imitator_mode <- PRP
-					
-				(* Case: cover *)
-				else if mode = "cover" then 
-					imitator_mode <- Cover_cartography
-					
-				(* Case: learning *)
-				else if mode = "coverlearning" then 
-					imitator_mode <- Learning_cartography
-					
-				(* Case: shuffle *)
-				else if mode = "shuffle" then 
-					imitator_mode <- Shuffle_cartography
-					
-				(* Case: border *)
-				else if mode = "border" then 
-					imitator_mode <- Border_cartography
-					
-				(* Case: PRPC *)
-				else if mode = "PRPC" then 
-					imitator_mode <- PRPC
-					
-				(* Case: number of iterations *)
-				else try (
-					(* Find the 'randomseq' string *)
-					if String.length mode >= 9 && String.sub mode 0 9 = "randomseq" then(
-						(* Find the number *)
-						let number = String.sub mode 9 (String.length mode - 9) in
-						imitator_mode <- (RandomSeq_cartography (int_of_string number))
-					)
-					(* Find the 'random' string *)
-					else if String.length mode >= 6 && String.sub mode 0 6 = "random" then (
-						(* Find the number *)
-						let number = String.sub mode 6 (String.length mode - 6) in
-						imitator_mode <- (Random_cartography (int_of_string number))
-					)
-					else raise (Failure "'randomseq' and 'random' not found")
-				) with Failure e | Invalid_argument e-> (
-					(*** HACK: print header now ***)
-					print_header_string();
-(* 					print_error("Error '" ^ e ^ "'"); *)
-					print_error ("The mode '" ^ mode ^ "' is not valid.");
-					Arg.usage speclist usage_msg;
-					abort_program ();
-					exit(1);
-				)*)
+*)
 			
 			(* Get the distributed mode *)
 			and set_distributed mode =
@@ -1084,29 +945,6 @@ end;
 				print_message Verbose_medium ("Time elapsing will be applied at the end of the computation of a new state (default).")
 			;
 
-			if !union then
-				print_message Verbose_standard ("Considering return variant IMunion [AS11].")
-			else
-				print_message Verbose_medium ("No IMunion return variant (default).");
-
-			if !pi_compatible then
-				print_message Verbose_standard ("Considering return variant IMoriginal [AS11].")
-			else
-				print_message Verbose_medium ("No IMoriginal return variant (default).");*)
-
-			(* Should add a warning in case of incompatible mode (IMoriginal incompatible with IMunion) + VARIANT ROMAIN *)
-
-
-			(*** TODO ***)
-
-(*			if (imitator_mode = EF_synthesis || imitator_mode = EFunsafe_synthesis) then(
-				if !counterex then(
-					print_message Verbose_standard ("Counterexample mode: the analysis will stop as soon as a target state is found.");
-				)else(
-					print_message Verbose_medium ("No counterexample mode (default).");
-				);
-			);*)
-
 			
 						(*** TODO : reintroduce ***)
 
@@ -1183,7 +1021,7 @@ end;
 			else
 				print_message Verbose_medium ("No branch and bound mode (default).");
 
-
+*)
 
 			(* OPTIONS *)
 
