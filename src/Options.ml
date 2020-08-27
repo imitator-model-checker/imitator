@@ -113,9 +113,6 @@ class imitator_options =
 		
 		(* Best worst-case clock value for EFsynthminpq *)
 (* 		val mutable best_worst_case = ref false *)
-
-		(* Terminate once a single valuation is found for EFsynthminpq *)
-		val mutable early_terminate = ref false
 		
 		
 		(* ANALYSIS OPTIONS *)
@@ -241,7 +238,6 @@ class imitator_options =
 		method distributedKillIM = !distributedKillIM
 		(* method dynamic = !dynamic *)
 		method dynamic_clock_elimination = !dynamic_clock_elimination
-		method early_terminate = !early_terminate
 		method exploration_order = exploration_order
 		method files_prefix = files_prefix
 		method imitator_mode = imitator_mode
@@ -585,9 +581,6 @@ class imitator_options =
 				
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 				
-				(*** TODO: this should be the new "witness" mode ***)
-				("-early-terminate", Set early_terminate, " Provide a single valuation that minimizes global time, instead of all valuations in the EFsynthminpq mode. Default: false.");
-
 				("-explOrder", String set_exploration_order, " Exploration order [EXPERIMENTAL].
         Use `layerBFS` for a layer-based breadth-first search.
         Use `queueBFS` for a queue-based breadth-first search. [ANP17]
@@ -1111,11 +1104,6 @@ end;
 			)
 			else
 				print_message Verbose_medium ("No check of the constraint equality with pi0 (default).");*)
-
-			if !early_terminate then
-				print_message Verbose_standard ("Early termination chosen for EFsynthminpq, the algorithm will stop once a single valuation is found that minimizes global_time.")
-			else
-				print_message Verbose_medium ("No early termination, computing all valuations for EFsynthminpq (default).");
 
 			
 			(************************************************************)

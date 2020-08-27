@@ -9,7 +9,7 @@
  * 
  * File contributors : Vincent Bloemen, Étienne André
  * Created           : 2018/10/08
- * Last modified     : 2020/04/16
+ * Last modified     : 2020/08/27
  *
  ************************************************************)
 
@@ -581,6 +581,9 @@ class algoEFtminQueue (state_predicate : AbstractProperty.state_predicate) =
         let constraint_list = ref [] in (* List of constraints that reach the target location (in minimal time) *)
 		let can_merge = ref false in
 		let pq_add = ref 1 in
+		
+		(* Get property to check whether the mode is witness or synthesis *)
+		let property = Input.get_property() in
 
 		print_message Verbose_standard("---------------- Starting exploration ----------------");
 
@@ -674,9 +677,9 @@ class algoEFtminQueue (state_predicate : AbstractProperty.state_predicate) =
 
                 (* Don't compute successors when target is found *)
                 if not !explore_successors then (
-                    (* Possibly terminate when target state is found *)
-                    if (options#early_terminate) then (
-                        print_message Verbose_standard("Found target!");
+                    (* Possibly terminate when first target state is found *)
+                    if property.synthesis_type = Witness then (
+                        print_message Verbose_standard("Found target! Stopping");
                         algorithm_keep_going := false;
                         termination_status <- Some (Result.Regular_termination);
                     );

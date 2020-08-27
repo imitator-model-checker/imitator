@@ -45,7 +45,6 @@ class imitator_options :
 		method distributedKillIM : bool
 (* 		method dynamic : bool *)
 		method dynamic_clock_elimination : bool
-		method early_terminate : bool
 		method exploration_order : exploration_order
 		method files_prefix : string
 		method imitator_mode : imitator_mode
