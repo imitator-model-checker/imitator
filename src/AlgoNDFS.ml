@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * LIPN, Université Paris 13 (France)
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: NDFS algorithms
  * 
  * File contributors : Laure Petrucci, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2019/09/10
+ * Last modified     : 2020/08/27
  *
  ************************************************************)
 
@@ -22,6 +23,8 @@ open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
+open AbstractAlgorithm
+open AbstractProperty
 open Result
 open AlgoStateBased
 open State
@@ -414,6 +417,9 @@ class algoNDFS =
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 		print_message Verbose_standard("---------------- Starting exploration ----------------");
+		
+		(* Get the property to check whether we are in synthesis or witness mode *)
+		let property = Input.get_property() in
  
 		begin
 		match options#exploration_order with
@@ -499,7 +505,7 @@ class algoNDFS =
 				print_message Verbose_low("Finished the calls")
 				
 			(* Subsumption + emptiness *)
-			| Exploration_NDFS_sub when options#counterex = true ->
+			| Exploration_NDFS_sub when property.synthesis_type = Witness ->
 (* NDFS with subsumption *)
 				print_message Verbose_standard("Using the option NDFSsub");
 				(* set up the dfs blue calls *)
@@ -581,7 +587,7 @@ class algoNDFS =
 				print_message Verbose_low("Finished the calls")
 				
 			(* Layer + emptiness *)
-			| Exploration_layer_NDFS_sub when options#counterex = true ->
+			| Exploration_layer_NDFS_sub when property.synthesis_type = Witness ->
 (* NDFS with subsumption and layers *)
 				print_message Verbose_standard("Using the option layerNDFSsub");
 				(* set up the dfs blue calls *)
@@ -679,7 +685,7 @@ class algoNDFS =
 				print_message Verbose_low("Finished the calls")
 				
 			(* Subsumption + synthesis *)
-			| (*Exploration_syn_NDFS_sub*)Exploration_NDFS_sub when options#counterex = false ->
+			| (*Exploration_syn_NDFS_sub*)Exploration_NDFS_sub when property.synthesis_type = Synthesis ->
 (* collecting NDFS with subsumption *)
 				print_message Verbose_standard("Using the option synNDFSsub");
 				(* set up the dfs blue calls *)
@@ -782,8 +788,8 @@ class algoNDFS =
 				print_message Verbose_low("Finished the calls")
 				
 			(* Layer + synthesis *)
-			| (*Exploration_syn_layer_NDFS_sub*)Exploration_layer_NDFS_sub when options#counterex = false ->
-(* collecting NDFS with layers and subsumption *)
+			| (*Exploration_syn_layer_NDFS_sub*)Exploration_layer_NDFS_sub when property.synthesis_type = Synthesis ->
+				(* collecting NDFS with layers and subsumption *)
 				print_message Verbose_standard("Using the option synlayerNDFSsub");
 				(* set up the dfs blue calls *)
 				add_pending init_state_index 0;

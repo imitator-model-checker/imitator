@@ -543,11 +543,17 @@ if options#imitator_mode = Inverse_method && options#branch_and_bound then(
 			(************************************************************)
 			(* Parametric loop synthesis *)
 			(************************************************************)
+			(*** Almost a HACK: branch between two completely different algorithms depending on the exploration order ***)
+			| Cycle when (options#exploration_order = Exploration_NDFS || options#exploration_order = Exploration_NDFS_sub || options#exploration_order = Exploration_layer_NDFS_sub) ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS in myalgo
+
 			| Cycle ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoLoopSynth.algoLoopSynth in myalgo
 
+
 			| Accepting_cycle state_predicate ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth state_predicate in myalgo
+
 
 			(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
  			| NZCycle_check ->
