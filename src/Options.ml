@@ -641,7 +641,7 @@ class imitator_options =
 				("-inclusion", Unit (fun () -> inclusion <- Some true), " Consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: depending on the algorithm");
 				("-no-inclusion", Unit (fun () -> inclusion <- Some false), " Do not consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: depending on the algorithm");
 
-				("-incl2", Set inclusion2, " Consider a bidirectional inclusion of symbolic zones (new <= old or old <= new) instead of the equality when checking for a fixpoint. Default: 'false'");
+				("-inclusion-bidir", Set inclusion2, " Consider a bidirectional inclusion of symbolic zones (new <= old or old <= new) instead of the equality when checking for a fixpoint. Default: 'false'");
 				
 				(*** NOTE: no check that they are both called… If so, behavior is unspecified ***)
 				("-merge", Unit (fun () -> merge <- Some true), " Use the merging technique of [AFS13]. Default: depending on the algorithm");

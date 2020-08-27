@@ -1740,12 +1740,12 @@ This option corresponds to the way that, \eg{} \hytech{} works, and suffices whe
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-incl2} (default: false)}
+\paragraph{\styleOption{-inclusion-bidir} (default: false)}
 %------------------------------------------------------------
 Consider a bidirectional inclusion of parametric zone instead of the equality when performing the $\textit{Post}$ operation.
-When the \code{-incl2} option is activated, it suffices that a previous state with the same location and a constraint greater than or equal to (resp.\ \emph{smaller or equal} to) the constraint of the new state has been encountered to discard the new state (resp.\ the old state, which is replaced by the new one).
+When the \code{-inclusion-bidir} option is activated, it suffices that a previous state with the same location and a constraint greater than or equal to (resp.\ \emph{smaller or equal} to) the constraint of the new state has been encountered to discard the new state (resp.\ the old state, which is replaced by the new one).
 
-It seems that, although less states are computed, this option is \emph{less} efficient than \styleOption{-inclusion} (in part due to the extra inclusion checks required by \styleOption{-incl2}).
+It seems that, although less states are computed, this option is \emph{less} efficient than \styleOption{-inclusion} (in part due to the extra inclusion checks required by \styleOption{-inclusion-bidir}).
 
 
 %------------------------------------------------------------

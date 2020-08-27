@@ -1583,7 +1583,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (double-directional inclusion)',
 		'input_files': ['F3.imi', 'F3.imiprop'],
-		'options'    : '-merge -incl2 ',
+		'options'    : '-merge -inclusion-bidir ',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
