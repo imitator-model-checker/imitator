@@ -88,7 +88,6 @@ class imitator_options :
 		method property_file_name : string option
 		method states_limit : int option
 		method statistics : bool
-(* 		method step : NumConst.t *)
 		method sync_auto_detection : bool
 		method time_limit : int option
 		method timed_mode : bool

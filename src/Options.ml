@@ -206,9 +206,6 @@ class imitator_options =
 		(* Union of last states (algo "IMunion") *)
 		val mutable union = ref false
 		
-(*		(* Step for the cartography *)
-		val mutable step = ref NumConst.one*)
-
 		
 
 
@@ -281,7 +278,6 @@ class imitator_options =
 		method property_file_name = property_file_name
 		method states_limit = !states_limit
 		method statistics = !statistics
-(* 		method step = !step *)
 		method sync_auto_detection = !sync_auto_detection
 		method time_limit = !time_limit
 		method timed_mode = !timed_mode
@@ -604,20 +600,14 @@ class imitator_options =
 				), "Regenerate the model into an IMITATOR model, and exit without performing any analysis. Defaut : `false`");
 				
 				("-imi2JPG", Unit (fun _ ->
-					(*** HACK ***)
-(* 					graphical_state_space <- Graphical_state_space_normal; *)
 					imitator_mode <- Translation JPG
 				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : `false`");
 				
 				("-imi2PDF", Unit (fun _ ->
-					(*** HACK ***)
-(* 					graphical_state_space <- Graphical_state_space_normal; *)
 					imitator_mode <- Translation PDF
 				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : `false`");
 				
 				("-imi2PNG", Unit (fun _ ->
-					(*** HACK ***)
-(* 					graphical_state_space <- Graphical_state_space_normal; *)
 					imitator_mode <- Translation PNG
 				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : `false`");
 				
@@ -699,8 +689,6 @@ class imitator_options =
 				("-states-limit", Int (fun i -> states_limit := Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
 				
 				("-statistics", Unit (fun _ -> statistics := true; Statistics.enable_all_counters()), " Print info on number of calls to PPL, and other statistics. Default: `false`");
-				
-(* 				("-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography. Default: 1/1."); *)
 				
 				("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
 				
@@ -833,8 +821,6 @@ class imitator_options =
 			(* Check compatibility between options *) 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			
-			(*** TODO: add warning if Learning_cartography is used with some incompatible options (such as -PRP) ***)
-			
 
 			if !acyclic && !tree then (
 				acyclic := false;
@@ -851,8 +837,6 @@ class imitator_options =
 			(*** TODO : reintroduce ***)
 			if not is_cartography && carto_tiles_limit <> None then print_warning ("A maximum number of tiles has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
 			if not is_cartography && carto_time_limit <> None then print_warning ("A maximum computation for the cartography has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
-(*			if not is_cartography && (NumConst.neq !step NumConst.one) then
-				print_warning (Constants.program_name ^ " is not run in cartography mode; the option regarding to the step of the cartography algorithm will thus be ignored.");*)
 			if not is_cartography && output_tiles_files then print_warning ("The option `-tiles-files` outputs files for each iteration of a cartography algorithm, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
 			
 			
@@ -890,10 +874,8 @@ class imitator_options =
 				| Exploration_queue_BFS_PRIOR -> print_message Verbose_standard ("Exploration order: queue-based BFS with priority [ACN17].")
 				
 				| Exploration_NDFS -> print_message Verbose_standard ("Exploration order: standard NDFS [NPvdP18].")
-(*				| Exploration_NDFS_sub when !counterex = true -> print_message Verbose_standard ("Exploration order: NDFS with subsumption [NPvdP18]; emptiness only.")
-				| Exploration_layer_NDFS_sub when !counterex = true -> print_message Verbose_standard ("Exploration order: layerd NDFS with subsumption [NPvdP18]; emptiness only.")*)
-				| Exploration_NDFS_sub (*when !counterex = false*) -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption [NPvdP18].")
-				| Exploration_layer_NDFS_sub (*when !counterex = false*) -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption and layers [NPvdP18].")
+				| Exploration_NDFS_sub -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption [NPvdP18].")
+				| Exploration_layer_NDFS_sub -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption and layers [NPvdP18].")
 (* 				| Exploration_syn_mixed_NDFS -> print_message Verbose_standard ("Exploration order: NDFS with mix of subsumption and layers.") *)
 end;
 
