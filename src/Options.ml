@@ -816,17 +816,17 @@ class imitator_options =
 			(*** WARNING: this command drops the "" or `` (if any) ***)
 			print_message Verbose_low ("Command: " ^ (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv));
 
-			(* Global mode *)
-			let message = string_of_mode imitator_mode in
-			print_message Verbose_standard ("Mode: " ^ message ^ ".");
 
+			(* Print mode or property *)
+			begin
+			match imitator_mode with
+			| Algorithm ->
+				print_message Verbose_standard ("Algorithm: " ^ (AlgorithmOptions.text_of_property (get_property () )));
 
-(*				(*** NOTE: disabled due to circular build because of ModelPrinter :( ***)
-			(* If property: print *)
-			if imitator_mode = Algorithm && verbose_mode_greater Verbose_low then(
-				print_message Verbose_low ("Property: " ^ (ModelPrinter.string_of_abstract_property model (get_property ())));
-			
-			);*)
+			| _ -> 
+				let mode_string = string_of_mode imitator_mode in
+				print_message Verbose_standard ("Mode: " ^ mode_string ^ ".");
+			end;
 
 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

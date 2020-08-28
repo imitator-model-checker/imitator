@@ -144,19 +144,132 @@ let merge_needed = inclusion_needed
 
 
 let is_cartography property =
-		match property.property with
-		| Cover_cartography _
-		| Learning_cartography _
-		| Shuffle_cartography _
-		| Border_cartography _
-		| Random_cartography _
-		| RandomSeq_cartography _
-		| PRPC _
-			-> true
+	match property.property with
+	| Cover_cartography _
+	| Learning_cartography _
+	| Shuffle_cartography _
+	| Border_cartography _
+	| Random_cartography _
+	| RandomSeq_cartography _
+	| PRPC _
+		-> true
+
+	| _ -> false
+
+
+
+(* Gives a textual description of a property *)
+let text_of_property property =
+	let synthesis_or_witness = match property.synthesis_type with
+		| Synthesis -> "synthesis"
+		| Witness -> "witness"
+	in
 	
-		| _ -> false
+	match property.property with
+	(*------------------------------------------------------------*)
+	(* Non-nested CTL *)
+	(*------------------------------------------------------------*)
 
+	(* Reachability *)
+	| EF _ -> "reachability " ^ synthesis_or_witness
+	
+	(* Safety *)
+	| AGnot _ -> "safety " ^ synthesis_or_witness
+	
+	
+	(*------------------------------------------------------------*)
+	(* Reachability and specification illustration *)
+	(*------------------------------------------------------------*)
+	
+	(** EF-synthesis with examples of (un)safe words *)
+	| EFexemplify _ -> "reachability counterexample exemplification"
+	
+	(*------------------------------------------------------------*)
+	(* Optimized reachability *)
+	(*------------------------------------------------------------*)
+	
+	(* Reachability with minimization of a parameter valuation *)
+	| EFpmin _ -> "reachability parameter minimization " ^ synthesis_or_witness
+	
+	(* Reachability with maximization of a parameter valuation *)
+	| EFpmax _ -> "reachability parameter maximization " ^ synthesis_or_witness
+	
+	(* Reachability with minimal-time *)
+	| EFtmin _ -> "reachability time minimization " ^ synthesis_or_witness
+	
 
+	(*------------------------------------------------------------*)
+	(* Cycles *)
+	(*------------------------------------------------------------*)
+	
+	(** Infinite-run (cycle) *)
+	| Cycle -> "infinite run " ^ synthesis_or_witness
+
+	(** Accepting infinite-run (cycle) *)
+	| Accepting_cycle _ -> "infinite accepting run " ^ synthesis_or_witness
+
+	(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
+	| NZCycle_check -> "non-Zeno infinite accepting run " ^ synthesis_or_witness ^ " (without CUB transformation)"
+	
+	(** Infinite-run (cycle) with non-Zeno assumption: method by transforming the PTA into a CUB-PTA *)
+	| NZCycle_transform -> "non-Zeno infinite accepting run " ^ synthesis_or_witness ^ " (with CUB transformation)"
+	
+	(** Infinite-run (cycle) with non-Zeno assumption: method assuming the PTA is already a CUB-PTA *)
+	| NZCycle_CUB -> "non-Zeno infinite accepting run " ^ synthesis_or_witness ^ " (for a CUB PTA)"
+	
+
+	(*------------------------------------------------------------*)
+	(* Deadlock-freeness *)
+	(*------------------------------------------------------------*)
+	
+	(* Deadlock-free synthesis *)
+	| Deadlock_Freeness -> "parametric deadlock " ^ synthesis_or_witness
+
+	
+	(*------------------------------------------------------------*)
+	(* Inverse method, trace preservation, robustness *)
+	(*------------------------------------------------------------*)
+	
+	(* Inverse method with complete, non-convex result *)
+	| IM _ -> "inverse method"
+
+	(* Non-complete, non-deterministic inverse method with convex result *)
+	| ConvexIM _ -> "convex inverse method"
+
+	(* Parametric reachability preservation *)
+	| PRP _ -> "PRP"
+
+	(* Variant IMK of the Inverse method *)
+	| IMK _ -> "IMK [AS13]"
+
+	(* Variant IMunion of the Inverse method *)
+	| IMunion _ -> "IMunion [AS13]"
+
+	
+	(*------------------------------------------------------------*)
+	(* Cartography algorithms *)
+	(*------------------------------------------------------------*)
+	
+	(* Cartography *)
+	| Cover_cartography _ -> "behavioral cartography algorithm with full coverage and step " (*^ (NumConst.string_of_numconst !step)*)
+
+	(** Cover the whole cartography using learning-based abstractions *)
+	| Learning_cartography _ -> "behavioral cartography algorithm with full coverage and step " (*^ (NumConst.string_of_numconst !step)*) ^ " and using learning-based abstractions"
+	
+	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+	| Shuffle_cartography _ -> "behavioral cartography algorithm with full coverage (shuffled version) and step " (*^ (NumConst.string_of_numconst !step)*)
+	
+	(** Look for the border using the cartography*)
+	| Border_cartography _ -> "behavioral cartography algorithm with border detection and step " (*^ (NumConst.string_of_numconst !step)*)
+	
+	(** Randomly pick up values for a given number of iterations *)
+	| Random_cartography (_, nb) -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " (*^ (NumConst.string_of_numconst !step)*)
+	
+	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+	| RandomSeq_cartography (_, nb) -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations + sequential phase and step " (*^ (NumConst.string_of_numconst !step)*)
+
+	(* Parametric reachability preservation *)
+	| PRPC _ -> "parametric reachability preservation cartography"
 
 (*
 				| State_space_computation -> "parametric state space exploration"
