@@ -465,8 +465,8 @@ match options#imitator_mode with
 		(************************************************************)
 		(************************************************************)
 
-			(* Find the correct concrete algorithm to execute *)
-			let concrete_algorithm : AlgoGeneric.algoGeneric = match abstract_property.property with
+		(* Find the correct concrete algorithm to execute *)
+		let concrete_algorithm : AlgoGeneric.algoGeneric = match abstract_property.property with
 
 			
 		(*------------------------------------------------------------*)
@@ -709,10 +709,11 @@ match options#imitator_mode with
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
 	
+			(** Cover the whole cartography using learning-based abstractions *)
+			| Learning_cartography (state_predicate, hyper_rectangle, step) ->
 			(*** NOTE: cannot reintroduce it unless the compositional verifier "CV" is updated to the IMITATOR 3.0 syntax ***)
-(*			(** Cover the whole cartography using learning-based abstractions *)
-			| Learning_cartography (state_predicate, hyper_rectangle) ->
-				let bc_algo = new AlgoBCCoverLearning.algoBCCoverLearning state_predicate hyper_rectangle (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_good_bad_constraint in
+				raise (NotImplemented("Learning_cartography is temporarily disabled"))
+(*				let bc_algo = new AlgoBCCoverLearning.algoBCCoverLearning state_predicate hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_good_bad_constraint in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo*)
 				
@@ -877,7 +878,14 @@ match options#imitator_mode with
 			(************************************************************)
 
 
-		in
+
+			(*** NOTE: safety to avoid a warning when compiling the non-distributed version of IMITATOR ***)
+			| Cover_cartography _ (*when options#distribution_mode <> Non_distributed *)->
+				(* Situation that can happen when using the -distributed version *)
+				print_error ("A distributed mode has been set, but this is the non-distributed version of `" ^ (Constants.program_name) ^ "`");
+				abort_program();
+				exit 1;
+			in
 
 
 
