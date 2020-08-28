@@ -1143,7 +1143,16 @@ end;
 				print_message Verbose_standard ("No ordering of pending list with larger zones first in NDFS synthesis.")
 			else
 				print_message Verbose_medium ("Ordering pending list with larger zones first in NDFS synthesis (default)."); *)
-
+			begin
+			match pending_order with
+			| Pending_accept ->
+				print_message Verbose_standard ("Ordering pending list with accepting states first.")
+			| Pending_param ->
+				print_message Verbose_standard ("Ordering pending list with larger parameter zones first.")
+			| Pending_zone ->
+				print_message Verbose_standard ("Ordering pending list with larger zones first.")
+			| Pending_none -> ()
+			end;
 
 			(*** TODO: check that only in IM/BC mode ***)
 			if !no_random then
