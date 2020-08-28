@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2020/04/16
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -63,7 +63,7 @@ val print_warnings_limit_for : Result.bc_algorithm_termination -> unit
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoCartoGeneric : HyperRectangle.hyper_rectangle -> (PVal.pval -> AlgoStateBased.algoStateBased) -> tiles_storage ->
+class virtual algoCartoGeneric : HyperRectangle.hyper_rectangle -> NumConst.t -> (PVal.pval -> AlgoStateBased.algoStateBased) -> tiles_storage ->
 	object inherit algoGeneric
 		(************************************************************)
 		(* Class variables *)

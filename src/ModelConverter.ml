@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/08/24
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -2599,28 +2599,29 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		(*------------------------------------------------------------*)
 		
 		(* Cartography *)
-		| Parsed_Cover_cartography parsed_hyper_rectangle
+		| Parsed_Cover_cartography (parsed_hyper_rectangle, _)
 		(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
-		| Parsed_Shuffle_cartography parsed_hyper_rectangle
+		| Parsed_Shuffle_cartography (parsed_hyper_rectangle, _)
 		(** Look for the border using the cartography*)
-		| Parsed_Border_cartography parsed_hyper_rectangle
+		| Parsed_Border_cartography (parsed_hyper_rectangle, _)
 		(** Randomly pick up values for a given number of iterations *)
-		| Parsed_Random_cartography (parsed_hyper_rectangle, _)
+		| Parsed_Random_cartography (parsed_hyper_rectangle, _, _)
 		(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
-		| Parsed_RandomSeq_cartography (parsed_hyper_rectangle, _)
+		| Parsed_RandomSeq_cartography (parsed_hyper_rectangle, _, _)
 			->
 			variables_used_ref := StringSet.of_list (get_variables_in_parsed_hyper_rectangle parsed_hyper_rectangle);
 		
 
 		(** Cover the whole cartography using learning-based abstractions *)
-		| Parsed_Learning_cartography (parsed_state_predicate, parsed_hyper_rectangle)
+		| Parsed_Learning_cartography (parsed_state_predicate, parsed_hyper_rectangle, _)
 		(* Parametric reachability preservation *)
-		| Parsed_PRPC (parsed_state_predicate, parsed_hyper_rectangle)
+		| Parsed_PRPC (parsed_state_predicate, parsed_hyper_rectangle, _)
 			->
 			(* First get the variables in the state predicate *)
 			get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate;
 			(* Then add the HyperRectangle *)
 			variables_used_ref := StringSet.union !variables_used_ref (StringSet.of_list (get_variables_in_parsed_hyper_rectangle parsed_hyper_rectangle));
+
 
 		(*------------------------------------------------------------*)
 		(* Observer patterns *)
@@ -3349,27 +3350,31 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		(*------------------------------------------------------------*)
 		
 		(* Cartography *)
-		| Parsed_Cover_cartography parsed_hyper_rectangle
+		| Parsed_Cover_cartography (parsed_hyper_rectangle, step)
 		(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
-		| Parsed_Shuffle_cartography parsed_hyper_rectangle
+		| Parsed_Shuffle_cartography (parsed_hyper_rectangle, step)
 		(** Look for the border using the cartography*)
-		| Parsed_Border_cartography parsed_hyper_rectangle
+		| Parsed_Border_cartography (parsed_hyper_rectangle, step)
 		(** Randomly pick up values for a given number of iterations *)
-		| Parsed_Random_cartography (parsed_hyper_rectangle, _)
+		| Parsed_Random_cartography (parsed_hyper_rectangle, _, step)
 		(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
-		| Parsed_RandomSeq_cartography (parsed_hyper_rectangle, _)
+		| Parsed_RandomSeq_cartography (parsed_hyper_rectangle, _, step)
 			->
-			check_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle
+			evaluate_and
+				(* The step has to be > 0 *)
+				(NumConst.g step NumConst.zero)
+				(check_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle)
 	
 		(** Cover the whole cartography using learning-based abstractions *)
-		| Parsed_Learning_cartography (parsed_state_predicate, parsed_hyper_rectangle)
+		| Parsed_Learning_cartography (parsed_state_predicate, parsed_hyper_rectangle, step)
 		(* Parametric reachability preservation *)
-		| Parsed_PRPC (parsed_state_predicate, parsed_hyper_rectangle)
+		| Parsed_PRPC (parsed_state_predicate, parsed_hyper_rectangle, step)
 		->
-			(*** NOTE: two checks to allow to check both side of the equality whatever happens ***)
-			evaluate_and
-				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
-				(check_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle)
+			(* The step has to be > 0 *)
+			let check1 = NumConst.g step NumConst.zero in
+			let check2 = check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate in
+			let check3 = check_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle in
+			check1 && check2 && check3
 
 
 		(*------------------------------------------------------------*)
@@ -3686,44 +3691,44 @@ let convert_property_option useful_parsing_model_information (nb_actions : int) 
 		(*------------------------------------------------------------*)
 		
 		(* Cartography *)
-		| Parsed_Cover_cartography parsed_hyper_rectangle ->
-			Cover_cartography (convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle)
+		| Parsed_Cover_cartography (parsed_hyper_rectangle, step) ->
+			Cover_cartography ((convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle) , step)
 			,
 			None
 		
 		(** Cover the whole cartography using learning-based abstractions *)
-		| Parsed_Learning_cartography (parsed_state_predicate, parsed_hyper_rectangle) ->
-			Learning_cartography (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle)
+		| Parsed_Learning_cartography (parsed_state_predicate, parsed_hyper_rectangle, step) ->
+			Learning_cartography ((convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle , step))
 			,
 			None
 		
 		(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
-		| Parsed_Shuffle_cartography parsed_hyper_rectangle ->
-			Shuffle_cartography (convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle)
+		| Parsed_Shuffle_cartography (parsed_hyper_rectangle, step) ->
+			Shuffle_cartography (convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle , step)
 			,
 			None
 		
 		(** Look for the border using the cartography*)
-		| Parsed_Border_cartography parsed_hyper_rectangle ->
-			Border_cartography (convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle)
+		| Parsed_Border_cartography (parsed_hyper_rectangle, step) ->
+			Border_cartography (convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle , step)
 			,
 			None
 		
 		(** Randomly pick up values for a given number of iterations *)
-		| Parsed_Random_cartography (parsed_hyper_rectangle, nb) ->
-			Random_cartography (convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle , nb)
+		| Parsed_Random_cartography (parsed_hyper_rectangle, nb, step) ->
+			Random_cartography (convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle , nb , step)
 			,
 			None
 		
 		(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
-		| Parsed_RandomSeq_cartography (parsed_hyper_rectangle, nb) ->
-			RandomSeq_cartography (convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle , nb)
+		| Parsed_RandomSeq_cartography (parsed_hyper_rectangle, nb, step) ->
+			RandomSeq_cartography (convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle , nb , step)
 			,
 			None
 	
 		(* Parametric reachability preservation *)
-		| Parsed_PRPC (parsed_state_predicate, parsed_hyper_rectangle) ->
-			PRPC (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle)
+		| Parsed_PRPC (parsed_state_predicate, parsed_hyper_rectangle, step) ->
+			PRPC (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle , step)
 			,
 			None
 

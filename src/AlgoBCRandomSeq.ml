@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/16
- * Last modified     : 2020/04/22
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -48,8 +48,8 @@ type phase =
 (************************************************************)
 (************************************************************)
 
-class algoBCRandomSeq (v0 : HyperRectangle.hyper_rectangle) (max_tries: int) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
-	object (self) inherit algoCartoGeneric v0 algo_instance_function tiles_manager_type as super
+class algoBCRandomSeq (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (max_tries: int) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
+	object (self) inherit algoCartoGeneric v0 step algo_instance_function tiles_manager_type as super
 	
 	(************************************************************)
 	(* Class variables *)

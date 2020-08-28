@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/08/24
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -2465,7 +2465,7 @@ class virtual algoStateBased =
 				| EFtmin state_predicate
 				| Accepting_cycle state_predicate
 				| PRP (state_predicate , _)
-				| PRPC (state_predicate , _)
+				| PRPC (state_predicate , _, _)
 				->
 					(* Check whether the current state matches the state predicate *)
 					if State.match_state_predicate state_predicate state then(

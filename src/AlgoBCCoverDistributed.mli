@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/04
- * Last modified     : 2020/07/16
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -24,7 +24,7 @@ open AlgoCartoGeneric
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoBCCoverDistributed : HyperRectangle.hyper_rectangle -> (PVal.pval -> AlgoStateBased.algoStateBased) -> AlgoCartoGeneric.tiles_storage ->
+class virtual algoBCCoverDistributed : HyperRectangle.hyper_rectangle -> NumConst.t -> (PVal.pval -> AlgoStateBased.algoStateBased) -> AlgoCartoGeneric.tiles_storage ->
 	object
 	inherit algoGeneric
 		(************************************************************)

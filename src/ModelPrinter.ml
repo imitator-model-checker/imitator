@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/08/21
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -865,25 +865,32 @@ let string_of_abstract_property model property =
 		(*------------------------------------------------------------*)
 		
 		(* Cartography *)
-		| Cover_cartography hyper_rectangle -> "BCcover(" ^ (string_of_v0 model hyper_rectangle) ^ ")"
+		| Cover_cartography (hyper_rectangle, step) ->
+			"BCcover(" ^ (string_of_v0 model hyper_rectangle) ^ ", " ^ (NumConst.string_of_numconst step)  ^ ")"
 
 		(** Cover the whole cartography using learning-based abstractions *)
-		| Learning_cartography (state_predicate, hyper_rectangle) -> "BClearn(" ^ (string_of_state_predicate model state_predicate) ^ " , " ^ (string_of_v0 model hyper_rectangle) ^ ")"
+		| Learning_cartography (state_predicate, hyper_rectangle, step) ->
+			"BClearn(" ^ (string_of_state_predicate model state_predicate) ^ " , " ^ (string_of_v0 model hyper_rectangle) ^ ", " ^ (NumConst.string_of_numconst step)  ^ ")"
 		
 		(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
-		| Shuffle_cartography hyper_rectangle -> "BCshuffle(" ^ (string_of_v0 model hyper_rectangle) ^ ")"
+		| Shuffle_cartography (hyper_rectangle, step) ->
+			"BCshuffle(" ^ (string_of_v0 model hyper_rectangle) ^ ", " ^ (NumConst.string_of_numconst step)  ^ ")"
 		
 		(** Look for the border using the cartography*)
-		| Border_cartography hyper_rectangle -> "BCborder(" ^ (string_of_v0 model hyper_rectangle) ^ ")"
+		| Border_cartography (hyper_rectangle, step) ->
+			"BCborder(" ^ (string_of_v0 model hyper_rectangle) ^ ", " ^ (NumConst.string_of_numconst step)  ^ ")"
 		
 		(** Randomly pick up values for a given number of iterations *)
-		| Random_cartography (hyper_rectangle, nb) -> "BCrandom(" ^ (string_of_v0 model hyper_rectangle) ^ ", " ^ (string_of_int nb)  ^ ")"
+		| Random_cartography (hyper_rectangle, nb, step) ->
+			"BCrandom(" ^ (string_of_v0 model hyper_rectangle) ^ ", " ^ (string_of_int nb)  ^ ", " ^ (NumConst.string_of_numconst step)  ^ ")"
 		
 		(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
-		| RandomSeq_cartography (hyper_rectangle, nb) -> "BCrandomseq(" ^ (string_of_v0 model hyper_rectangle) ^ ", " ^ (string_of_int nb)  ^ ")"
+		| RandomSeq_cartography (hyper_rectangle, nb, step) ->
+			"BCrandomseq(" ^ (string_of_v0 model hyper_rectangle) ^ ", " ^ (string_of_int nb)  ^ ", " ^ (NumConst.string_of_numconst step)  ^ ")"
 
 		(* Parametric reachability preservation *)
-		| PRPC (state_predicate , hyper_rectangle) -> "PRPC(" ^ (string_of_state_predicate model state_predicate) ^ " , " ^ (string_of_v0 model hyper_rectangle) ^ ")"
+		| PRPC (state_predicate , hyper_rectangle, step) ->
+			"PRPC(" ^ (string_of_state_predicate model state_predicate) ^ " , " ^ (string_of_v0 model hyper_rectangle) ^ ", " ^ (NumConst.string_of_numconst step)  ^ ")"
 		
 		
 

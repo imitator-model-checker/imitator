@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/16
- * Last modified     : 2020/07/17
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -23,7 +23,7 @@
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoBCCoverDistributedMSRandomSeqMaster : HyperRectangle.hyper_rectangle -> int -> (PVal.pval -> AlgoStateBased.algoStateBased) -> AlgoCartoGeneric.tiles_storage ->
+class algoBCCoverDistributedMSRandomSeqMaster : HyperRectangle.hyper_rectangle -> NumConst.t -> int -> (PVal.pval -> AlgoStateBased.algoStateBased) -> AlgoCartoGeneric.tiles_storage ->
 	object inherit AlgoBCCoverDistributedMSPointBasedMaster.algoBCCoverDistributedMSPointBasedMaster
 
 		(************************************************************)

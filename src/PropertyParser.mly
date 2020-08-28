@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/08/24
+ * Last modified     : 2020/08/28
  *
  ************************************************************/
 
@@ -69,7 +69,7 @@ let resolve_property l =
 	CT_ONCE
 	CT_PROJECTRESULT CT_PRP CT_PRPC
 	CT_PROPERTY
-	CT_SEQUENCE CT_SYNTH
+	CT_SEQUENCE CT_STEP CT_SYNTH
 	CT_THEN CT_TRACEPRESERVATION CT_TRUE
 	CT_WITHIN
 
@@ -209,19 +209,26 @@ property:
 	/*------------------------------------------------------------*/
 	
 	/* Cartography */
-	| CT_COVERCARTOGRAPHY LPAREN reference_rectangle RPAREN { Parsed_Cover_cartography $3 }
+	| CT_COVERCARTOGRAPHY LPAREN reference_rectangle RPAREN { Parsed_Cover_cartography ($3 , Constants.default_cartography_step) }
+	| CT_COVERCARTOGRAPHY LPAREN reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Parsed_Cover_cartography ($3 , $7) }
 	
-	| CT_BCLEARN LPAREN state_predicate COMMA reference_rectangle RPAREN { Parsed_Learning_cartography ($3, $5) }
+	| CT_BCLEARN LPAREN state_predicate COMMA reference_rectangle RPAREN { Parsed_Learning_cartography ($3, $5, Constants.default_cartography_step) }
+	| CT_BCLEARN LPAREN state_predicate COMMA reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Parsed_Learning_cartography ($3, $5, $9) }
 	
-	| CT_BCSHUFFLE LPAREN reference_rectangle RPAREN { Parsed_Shuffle_cartography $3 }
+	| CT_BCSHUFFLE LPAREN reference_rectangle RPAREN { Parsed_Shuffle_cartography ($3, Constants.default_cartography_step) }
+	| CT_BCSHUFFLE LPAREN reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Parsed_Shuffle_cartography ($3, $7) }
 	
-	| CT_BCBORDER LPAREN reference_rectangle RPAREN { Parsed_Border_cartography $3 }
+	| CT_BCBORDER LPAREN reference_rectangle RPAREN { Parsed_Border_cartography ($3, Constants.default_cartography_step) }
+	| CT_BCBORDER LPAREN reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Parsed_Border_cartography ($3, $7) }
 	
-	| CT_BCRANDOM LPAREN reference_rectangle COMMA pos_integer RPAREN { Parsed_Random_cartography ($3, $5) }
+	| CT_BCRANDOM LPAREN reference_rectangle COMMA pos_integer RPAREN { Parsed_Random_cartography ($3, $5, Constants.default_cartography_step) }
+	| CT_BCRANDOM LPAREN reference_rectangle COMMA pos_integer COMMA CT_STEP OP_EQ rational RPAREN { Parsed_Random_cartography ($3, $5, $9) }
 	
-	| CT_BCRANDOMSEQ LPAREN reference_rectangle COMMA pos_integer RPAREN { Parsed_RandomSeq_cartography ($3, $5) }
+	| CT_BCRANDOMSEQ LPAREN reference_rectangle COMMA pos_integer RPAREN { Parsed_RandomSeq_cartography ($3, $5, Constants.default_cartography_step) }
+	| CT_BCRANDOMSEQ LPAREN reference_rectangle COMMA pos_integer COMMA CT_STEP OP_EQ rational RPAREN { Parsed_RandomSeq_cartography ($3, $5, $9) }
 	
-	| CT_PRPC LPAREN state_predicate COMMA reference_rectangle RPAREN { Parsed_PRPC ($3,$5) }
+	| CT_PRPC LPAREN state_predicate COMMA reference_rectangle RPAREN { Parsed_PRPC ($3,$5, Constants.default_cartography_step) }
+	| CT_PRPC LPAREN state_predicate COMMA reference_rectangle COMMA CT_STEP OP_EQ rational RPAREN { Parsed_PRPC ($3,$5, $9) }
 
 	
 	/*------------------------------------------------------------*/

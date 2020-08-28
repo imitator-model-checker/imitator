@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2020/07/17
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -34,8 +34,8 @@ open DistributedUtilities
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoBCCoverDistributedSubdomainStatic (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
-	object (self) inherit AlgoBCCoverDistributedSubdomain.algoBCCoverDistributedSubdomain v0 algo_instance_function tiles_manager_type as super
+class virtual algoBCCoverDistributedSubdomainStatic (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit AlgoBCCoverDistributedSubdomain.algoBCCoverDistributedSubdomain v0 step algo_instance_function tiles_manager_type as super
 	
 	(************************************************************)
 	(* Class variables *)

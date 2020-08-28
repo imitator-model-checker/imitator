@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2020/08/21
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -100,3 +100,13 @@ val observer_clock_name			: string
 
 (* Name of the special clock always reset (used for NZ model checking, and not to be printed in normal operations) *)
 val special_reset_clock_name	: string
+
+
+(************************************************************)
+(************************************************************)
+(* Algorithms *)
+(************************************************************)
+(************************************************************)
+
+(* Default step for the cartography algorithms *)
+val default_cartography_step	: NumConst.t

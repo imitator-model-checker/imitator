@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/14
- * Last modified     : 2020/04/22
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -45,8 +45,8 @@ exception Stop_loop of more_points
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCShuffle (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
-	object (self) inherit algoCartoGeneric v0 algo_instance_function tiles_manager_type as super
+class algoBCShuffle (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
+	object (self) inherit algoCartoGeneric v0 step algo_instance_function tiles_manager_type as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -80,7 +80,7 @@ class algoBCShuffle (v0 : HyperRectangle.hyper_rectangle) (algo_instance_functio
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private compute_all_points =
 		(*** WARNING: step not implemented here! ***)
-		if NumConst.neq options#step NumConst.one then(
+		if NumConst.neq step NumConst.one then(
 			raise (InternalError("The step must be equal to 1 to compute all pi0 in V0 (for now)."));
 		);
 		

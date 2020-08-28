@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2020/07/17
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -23,7 +23,7 @@ open AlgoGeneric
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoBCCoverDistributedSubdomainStaticCoordinator : HyperRectangle.hyper_rectangle -> (PVal.pval -> AlgoStateBased.algoStateBased) -> AlgoCartoGeneric.tiles_storage ->
+class algoBCCoverDistributedSubdomainStaticCoordinator : HyperRectangle.hyper_rectangle -> NumConst.t -> (PVal.pval -> AlgoStateBased.algoStateBased) -> AlgoCartoGeneric.tiles_storage ->
 	object inherit AlgoBCCoverDistributedSubdomainStatic.algoBCCoverDistributedSubdomainStatic
 	
 		(************************************************************)

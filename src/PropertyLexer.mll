@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/08/24
+ * Last modified     : 2020/08/28
 *****************************************************************)
 
 {
@@ -95,6 +95,7 @@ rule token = parse
  	| "projectresult"  { CT_PROJECTRESULT }
  	| "property"       { CT_PROPERTY }
 	| "sequence"       { CT_SEQUENCE }
+	| "step"           { CT_STEP }
  	| "then"           { CT_THEN }
 	| "True"           { CT_TRUE }
 	| "within"         { CT_WITHIN }

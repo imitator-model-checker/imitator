@@ -206,8 +206,8 @@ class imitator_options =
 		(* Union of last states (algo "IMunion") *)
 		val mutable union = ref false
 		
-		(* Step for the cartography *)
-		val mutable step = ref NumConst.one
+(*		(* Step for the cartography *)
+		val mutable step = ref NumConst.one*)
 
 		
 
@@ -281,7 +281,7 @@ class imitator_options =
 		method property_file_name = property_file_name
 		method states_limit = !states_limit
 		method statistics = !statistics
-		method step = !step
+(* 		method step = !step *)
 		method sync_auto_detection = !sync_auto_detection
 		method time_limit = !time_limit
 		method timed_mode = !timed_mode
@@ -700,7 +700,7 @@ class imitator_options =
 				
 				("-statistics", Unit (fun _ -> statistics := true; Statistics.enable_all_counters()), " Print info on number of calls to PPL, and other statistics. Default: `false`");
 				
-				("-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography. Default: 1/1.");
+(* 				("-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography. Default: 1/1."); *)
 				
 				("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
 				
@@ -851,8 +851,8 @@ class imitator_options =
 			(*** TODO : reintroduce ***)
 			if not is_cartography && carto_tiles_limit <> None then print_warning ("A maximum number of tiles has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
 			if not is_cartography && carto_time_limit <> None then print_warning ("A maximum computation for the cartography has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
-			if not is_cartography && (NumConst.neq !step NumConst.one) then
-				print_warning (Constants.program_name ^ " is not run in cartography mode; the option regarding to the step of the cartography algorithm will thus be ignored.");
+(*			if not is_cartography && (NumConst.neq !step NumConst.one) then
+				print_warning (Constants.program_name ^ " is not run in cartography mode; the option regarding to the step of the cartography algorithm will thus be ignored.");*)
 			if not is_cartography && output_tiles_files then print_warning ("The option `-tiles-files` outputs files for each iteration of a cartography algorithm, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
 			
 			

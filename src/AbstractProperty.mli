@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/08/25
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -149,26 +149,28 @@ type property =
 	(* Cartography algorithms *)
 	(*------------------------------------------------------------*)
 	
+	(*** NOTE: the last argument is the step; it is optional in the parser, and its value is otherwise defined in Constants ***)
+	
 	(* Cartography *)
-	| Cover_cartography of HyperRectangle.hyper_rectangle
+	| Cover_cartography of HyperRectangle.hyper_rectangle * NumConst.t
 
 	(** Cover the whole cartography using learning-based abstractions *)
-	| Learning_cartography of state_predicate * HyperRectangle.hyper_rectangle
+	| Learning_cartography of state_predicate * HyperRectangle.hyper_rectangle * NumConst.t
 	
 	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
-	| Shuffle_cartography of HyperRectangle.hyper_rectangle
+	| Shuffle_cartography of HyperRectangle.hyper_rectangle * NumConst.t
 	
 	(** Look for the border using the cartography*)
-	| Border_cartography of HyperRectangle.hyper_rectangle
+	| Border_cartography of HyperRectangle.hyper_rectangle * NumConst.t
 	
 	(** Randomly pick up values for a given number of iterations *)
-	| Random_cartography of HyperRectangle.hyper_rectangle * int
+	| Random_cartography of HyperRectangle.hyper_rectangle * int * NumConst.t
 	
 	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
-	| RandomSeq_cartography of HyperRectangle.hyper_rectangle * int
+	| RandomSeq_cartography of HyperRectangle.hyper_rectangle * int * NumConst.t
 
 	(* Parametric reachability preservation *)
-	| PRPC of state_predicate * HyperRectangle.hyper_rectangle
+	| PRPC of state_predicate * HyperRectangle.hyper_rectangle * NumConst.t
 
 
 

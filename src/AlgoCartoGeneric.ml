@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2020/04/16
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -216,7 +216,7 @@ let print_warnings_limit_for = function
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
+class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
 	object (self) inherit algoGeneric as super
 	
 	
@@ -329,7 +329,7 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (algo_insta
 		try(
 		while not !reached_max_dimension do
 			(* Try to increment the local dimension *)
-			let current_dimension_incremented = NumConst.add (current_pi0#get_value !current_dimension) options#step in
+			let current_dimension_incremented = NumConst.add (current_pi0#get_value !current_dimension) step in
 			if current_dimension_incremented <= max_bounds.(!current_dimension) then (
 				(* Copy the current point *)
 				let new_point = current_pi0#copy in
@@ -414,7 +414,7 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (algo_insta
 	let v0 = self#get_v0 in*)
 	
 	(*** WARNING! Does not work with step <> 1 !!!! ***)
-	if options#step <> NumConst.one then
+	if step <> NumConst.one then
 		raise (NotImplemented("Random pi0 not implemented with steps <> 1."));
 	
 	(* Create the pi0 *)
@@ -517,7 +517,7 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (algo_insta
 		(* Start counting from 1 *)
 		current_iteration <- 1;
 		
-		nb_points <- v0#get_nb_points options#step;
+		nb_points <- v0#get_nb_points step;
 
 		(* Print some information *)
 		self#print_algo_message Verbose_medium ("Number of dimensions: " ^ (string_of_int nb_dimensions));
@@ -563,12 +563,6 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (algo_insta
 		()
 	
 	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* 	method virtual algorithm_instance : AlgoIMK.algoIMK *)
-
-		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Create the initial point for the analysis *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

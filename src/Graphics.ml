@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/08/26
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
  
@@ -173,13 +173,13 @@ let get_v0_option () =
 			| IMunion _
 				-> None
 			
-			| Cover_cartography v0
-			| Learning_cartography (_ , v0)
-			| Shuffle_cartography v0
-			| Border_cartography v0
-			| Random_cartography (v0, _)
-			| RandomSeq_cartography (v0, _)
-			| PRPC (_, v0)
+			| Cover_cartography (v0, _)
+			| Learning_cartography (_ , v0, _)
+			| Shuffle_cartography (v0, _)
+			| Border_cartography (v0, _)
+			| Random_cartography (v0, _, _)
+			| RandomSeq_cartography (v0, _, _)
+			| PRPC (_, v0, _)
 			
 				-> Some v0
 	) else None

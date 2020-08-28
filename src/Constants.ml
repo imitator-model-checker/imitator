@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2020/08/21
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -112,3 +112,15 @@ let observer_clock_name			= "automatically_generated_x_obs"
 
 (* Name of the special clock always reset (used for NZ model checking, and not to be printed in normal operations) *)
 let special_reset_clock_name	= "special_0_clock"
+
+
+
+
+(************************************************************)
+(************************************************************)
+(* Algorithms *)
+(************************************************************)
+(************************************************************)
+
+(* Default step for the cartography algorithms *)
+let default_cartography_step	= NumConst.one

@@ -251,22 +251,22 @@ let text_of_property property =
 	(*------------------------------------------------------------*)
 	
 	(* Cartography *)
-	| Cover_cartography _ -> "behavioral cartography algorithm with full coverage and step " (*^ (NumConst.string_of_numconst !step)*)
+	| Cover_cartography (_, step) -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst step)
 
 	(** Cover the whole cartography using learning-based abstractions *)
-	| Learning_cartography _ -> "behavioral cartography algorithm with full coverage and step " (*^ (NumConst.string_of_numconst !step)*) ^ " and using learning-based abstractions"
+	| Learning_cartography (_, _, step) -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst step) ^ " and using learning-based abstractions"
 	
 	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
-	| Shuffle_cartography _ -> "behavioral cartography algorithm with full coverage (shuffled version) and step " (*^ (NumConst.string_of_numconst !step)*)
+	| Shuffle_cartography (_, step) -> "behavioral cartography algorithm with full coverage (shuffled version) and step " ^ (NumConst.string_of_numconst step)
 	
 	(** Look for the border using the cartography*)
-	| Border_cartography _ -> "behavioral cartography algorithm with border detection and step " (*^ (NumConst.string_of_numconst !step)*)
+	| Border_cartography (_, step) -> "behavioral cartography algorithm with border detection and step " ^ (NumConst.string_of_numconst step)
 	
 	(** Randomly pick up values for a given number of iterations *)
-	| Random_cartography (_, nb) -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " (*^ (NumConst.string_of_numconst !step)*)
+	| Random_cartography (_, nb, step) -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " ^ (NumConst.string_of_numconst step)
 	
 	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
-	| RandomSeq_cartography (_, nb) -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations + sequential phase and step " (*^ (NumConst.string_of_numconst !step)*)
+	| RandomSeq_cartography (_, nb, step) -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations + sequential phase and step " ^ (NumConst.string_of_numconst step)
 
 	(* Parametric reachability preservation *)
 	| PRPC _ -> "parametric reachability preservation cartography"
@@ -293,11 +293,11 @@ let text_of_property property =
 				| Inverse_method -> "inverse method"
 				| Inverse_method_complete -> "inverse method with complete result"
 				| PRP -> "parametric reachability preservation"
-				| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step)
-				| Learning_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step) ^ " and using learning-based abstractions"
-				| Shuffle_cartography -> "behavioral cartography algorithm with full coverage (shuffled version) and step " ^ (NumConst.string_of_numconst !step)
-				| Border_cartography -> "behavioral cartography algorithm with border detection (experimental) and step " ^ (NumConst.string_of_numconst !step)
-				| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " ^ (NumConst.string_of_numconst !step)
-				| RandomSeq_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations + sequential phase and step " ^ (NumConst.string_of_numconst !step)
+				| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst step)
+				| Learning_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst step) ^ " and using learning-based abstractions"
+				| Shuffle_cartography -> "behavioral cartography algorithm with full coverage (shuffled version) and step " ^ (NumConst.string_of_numconst step)
+				| Border_cartography -> "behavioral cartography algorithm with border detection (experimental) and step " ^ (NumConst.string_of_numconst step)
+				| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " ^ (NumConst.string_of_numconst step)
+				| RandomSeq_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations + sequential phase and step " ^ (NumConst.string_of_numconst step)
 				| PRPC -> "parametric reachability preservation cartography"
 				*)

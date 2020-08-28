@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/07/22
- * Last modified     : 2020/04/21
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -24,7 +24,7 @@ open AlgoBCCover
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoBCCoverLearning : AbstractProperty.state_predicate -> HyperRectangle.hyper_rectangle -> (PVal.pval -> AlgoStateBased.algoStateBased) -> AlgoCartoGeneric.tiles_storage ->
+class algoBCCoverLearning : AbstractProperty.state_predicate -> HyperRectangle.hyper_rectangle -> NumConst.t -> (PVal.pval -> AlgoStateBased.algoStateBased) -> AlgoCartoGeneric.tiles_storage ->
 	object inherit algoBCCover
 		(************************************************************)
 		(* Class variables *)

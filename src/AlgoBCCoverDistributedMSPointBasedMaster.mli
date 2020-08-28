@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/10
- * Last modified     : 2020/07/15
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -23,7 +23,7 @@ open AlgoGeneric
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoBCCoverDistributedMSPointBasedMaster : HyperRectangle.hyper_rectangle -> (PVal.pval -> AlgoStateBased.algoStateBased) -> AlgoCartoGeneric.tiles_storage ->
+class virtual algoBCCoverDistributedMSPointBasedMaster : HyperRectangle.hyper_rectangle -> NumConst.t -> (PVal.pval -> AlgoStateBased.algoStateBased) -> AlgoCartoGeneric.tiles_storage ->
 	object inherit AlgoBCCoverDistributed.algoBCCoverDistributed
 
 		(************************************************************)

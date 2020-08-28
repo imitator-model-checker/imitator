@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/07/22
- * Last modified     : 2020/04/21
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -55,8 +55,8 @@ type learning_result =
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCCoverLearning (state_predicate : AbstractProperty.state_predicate) (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
-	object (self) inherit algoBCCover v0 algo_instance_function tiles_manager_type as super
+class algoBCCoverLearning (state_predicate : AbstractProperty.state_predicate) (step : NumConst.t) (v0 : HyperRectangle.hyper_rectangle) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit algoBCCover v0 step algo_instance_function tiles_manager_type as super
 	
 	(************************************************************)
 	(* Class variables *)

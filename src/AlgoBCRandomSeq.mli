@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/16
- * Last modified     : 2020/04/22
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -25,7 +25,7 @@ open AlgoCartoGeneric
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoBCRandomSeq : HyperRectangle.hyper_rectangle -> int -> (PVal.pval -> AlgoStateBased.algoStateBased) -> tiles_storage ->
+class algoBCRandomSeq : HyperRectangle.hyper_rectangle -> NumConst.t -> int -> (PVal.pval -> AlgoStateBased.algoStateBased) -> tiles_storage ->
 	object inherit algoCartoGeneric
 		(************************************************************)
 		(* Class variables *)
