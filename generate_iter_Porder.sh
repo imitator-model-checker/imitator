@@ -2,14 +2,16 @@
 
 ###########################################
 # Script for generating experiments table #
-# for iterative deepening                 #
+# for iterative deepening with initial    #
+# depth from previous experiments with    #
+# pending list orders                     #
 # Author: Laure Petrucci                  #
-# Version: 1.1                            #
-# Date: 2020-08-17                        #
+# Version: 1.0                            #
+# Date: 2020-08-28                        #
 ###########################################
 
 function usage {
-	echo -e "\033[1;31musage\033[0m: $0 [-h | [-d depth_init] [-s depth_step] [-t timeout] -o table_filename [-S | -i input_models]]"
+	echo -e "\033[1;31musage\033[0m: $0 [-h | [-t timeout] -o table_filename [-S | -i input_models]]"
 }
 
 function help {
@@ -18,11 +20,8 @@ function help {
 	echo -e "\nExecutes the experiments on all models. The result is written in the file specified with the \033[1m-o\033[0m option"
 	echo -e "\n\033[1m-h\033[0m\t\t\tThis help"
 	echo -e "\n\033[1m-t timeout\033[0m\t\tUses a specified value for the timeout (in seconds) \033[4m[default: 90]\033[0m"
-	echo -e "\n\033[1m-d depth_init\033[0m\t\tUses a specified value for the initial depth \033[4m[default: 5]\033[0m"
-	echo -e "\n\033[1m-s depth_step\033[0m\t\tUses a specified value for the step between iterations \033[4m[default: same as depth_init]\033[0m"
 	echo -e "\n\033[1m-o table_filename\033[0m\tOutputs the results in a csv file (with separator ;) named \033[4mtable_filename\033[0m"
 	echo -e "\n\033[1m-S\033[0m\t\t\tUses a subset of the models"
-	echo -e "\n\033[1m-i input_models\033[0m\t\tOnly the models in \033[4minput_models\033[0m are used"
 	exit
 }
 
@@ -54,8 +53,7 @@ function process_results {
 # get the options
 timeout=90 # 1.5 minute by default
 output_file=
-depth_init=5 # initial depth of 5 by default
-new_step=false # to check if a new step was set as argument
+depth_step=5
 
 exp_dir="tests/acceptingExamples"
 input_files="BRP coffee \
@@ -69,11 +67,21 @@ input_files="BRP coffee \
 		Sched2.50.2 simop \
 		spsmall tgcTogether2 \
 		WFAS-BBLS15-det"
-while getopts "hd:s:t:o:Si:" opt; do
+input_depths="12 4 \
+		3 5 0 0 32 3 5 13 \
+		13 1 \
+		3 5 \
+		32 44 59 \
+		8 2 \
+		2 \
+		6 \
+		6 13 \
+		25 13 \
+		3"
+
+while getopts "ht:o:S" opt; do
 case $opt in
 	h) help ;;
-	d) depth_init=$OPTARG ;;
-	s) depth_step=$OPTARG ; new_step=true;;
 	t) timeout=$OPTARG ;;
 	o) output_file=$OPTARG ;;
 	S) input_files="critical-region critical-region4 F3 F4 FDDI4 FischerAHV93 flipflop fmtv1A1-v2 \
@@ -81,8 +89,13 @@ case $opt in
 		Pipeline-KP12-2-3 \
 		RCP Sched2.100.0 \
 		Sched2.50.0 \
-		spsmall tgcTogether2" ;;
-	i) input_files=$OPTARG ;;
+		spsmall tgcTogether2"
+	   input_depths="3 5 0 0 32 3 5 13 \
+		3 5 \
+		32 44 59 \
+		8 2 \
+		6 \
+		25 13" ;;
 esac
 done
 
@@ -91,35 +104,46 @@ then usage
 	exit
 fi
 
-# if no step was given as argument, use the initial depth as a step
-if [ "$new_step" = false ]
-then depth_step=$depth_init
-fi
-
 extension=".${output_file##*.}"
 one_result="`basename $2 $extension`.tmp"
 rm -f $one_result
 rm -f $output_file
-# table with iterative depth
-echo ' ; ; ; ; No layers ; ; ; ; ; Layers ; ; ; ;' >> $output_file
-echo 'Model ; L ; X ; P ; d ; m ; c ; s ; t ; d ; m ; c ; s ; t' >> $output_file
-for f in $input_files
-	do echo -e "Running experiments for model \033[1;31m$f\033[0m"
-		bin/imitator -mode checksyntax -verbose low $exp_dir/$f.imi > $one_result 2> /dev/null
+# convert input to arrays
+files=( $input_files )
+depths=( $input_depths )
+input_len=${#files[@]}
+echo "$input_len files"
+# table with iterative depth from previous experiments
+echo ' ; ; ; ; accepting ; ; ; ; ; ; param ; ; ; ; ; ; zone ; ; ; ; ;' >> $output_file
+echo 'Model ; L ; X ; P ; i ; d ; m ; c ; s ; t ; i ; d ; m ; c ; s ; t ; i ; d ; m ; c ; s ; t' >> $output_file
+for ((i=0;i<input_len;i++))
+	do echo -e "Running experiments for model \033[1;31m${files[$i]}\033[0m from depth \033[1;31m${depths[$i]}\033[0m"
+		bin/imitator -mode checksyntax -verbose low $exp_dir/${files[$i]}.imi > $one_result 2> /dev/null
 		# first column = benchmark file name
-		echo -n "$f ; " >> $output_file
+		echo -n "${files[$i]} ; " >> $output_file
 		# columns 2 to 4 = L, X, P
 		echo -n `grep -e locations $one_result | cut -d, -f2,5,7 | sed -e 's/^ //' \
 			| sed -e 's/ locations, / \; /' | sed -e 's/ clock variables, / \; /' \
 			| sed -e 's/ parameters/ \; /' | sed -e 's/ parameter/ \; /' ` >> $output_file
-	# no layers
-		echo -e "\twithout layers"
-		bin/imitator -mode AccLoopSynthNDFS -explOrder NDFSsub -time-limit $timeout -depth-init $depth_init -step $depth_step $exp_dir/$f.imi > $one_result 2> /dev/null
+	# pending list order: accepting
+		echo -e "\twith pending list order accepting"
+		echo -n " ${depths[$i]} ; " >> $output_file
+		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFSsub -time-limit $timeout -depth-init ${depths[$i]} \
+			-step $depth_step -pendingOrder accepting $exp_dir/${files[$i]}.imi > $one_result 2> /dev/null
 		process_results
-		echo -n ' ; ' >> $output_file
-	# layers
-		echo -e "\twith layers"
-		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFSsub -time-limit $timeout -depth-init $depth_init -step $depth_step $exp_dir/$f.imi > $one_result 2> /dev/null
+		echo -n ' ;' >> $output_file
+	# pending list order: param
+		echo -e "\twith pending list order param"
+		echo -n " ${depths[$i]} ; " >> $output_file
+		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFSsub -time-limit $timeout -depth-init ${depths[$i]} \
+			-step $depth_step -pendingOrder param $exp_dir/${files[$i]}.imi > $one_result 2> /dev/null
+		process_results
+	# pending list order: zone
+		echo -n ' ;' >> $output_file
+		echo -e "\twith pending list order zone"
+		echo -n " ${depths[$i]} ; " >> $output_file
+		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFSsub -time-limit $timeout -depth-init ${depths[$i]} \
+			-step $depth_step -pendingOrder zone $exp_dir/${files[$i]}.imi > $one_result 2> /dev/null
 		process_results
 		echo '' >> $output_file
 	done
