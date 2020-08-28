@@ -166,10 +166,18 @@ parsing_counter#stop;
 
 (* Update if not yet set *)
 if not options#is_set_output_result then(
-	(* Print some information *)
-	print_message Verbose_high ("Set option `-output-result` to its default value: `true`");
+	let default_value = match options#imitator_mode with
+		| Algorithm | Syntax_check | State_space_computation
+			-> true
+
+		| Translation _
+			-> false
+	in
 	
-	options#set_output_result true;
+	(* Print some information *)
+	print_message Verbose_high ("Set option `-output-result` to its default value: `" ^ (string_of_bool default_value) ^ "`");
+	
+	options#set_output_result default_value;
 );
 
 
@@ -366,7 +374,7 @@ match options#imitator_mode with
 
 	(* Translation to a graphics *)
 	| Translation JPG | Translation PDF | Translation PNG ->
-		print_message Verbose_standard ("Translating model to a graphics.");
+		print_message Verbose_medium ("Translating model to a graphics…");
 		let translated_model = PTA2JPG.string_of_model model in
 		if verbose_mode_greater Verbose_high then(
 			print_message Verbose_high ("\n" ^ translated_model ^ "\n");
@@ -378,13 +386,18 @@ match options#imitator_mode with
 			| Translation PNG	-> "png"
 			| _					-> raise (InternalError ("Impossible situation: No graphic extension found although JPG/PDF/PNG was expected"))
 		in
-		Graphics.dot extension (options#files_prefix ^ "-pta") translated_model;
-		print_message Verbose_standard ("File successfully created."); (*** TODO: add file name in a proper manner ***)
+		let dot_created_file_option = Graphics.dot extension (options#files_prefix ^ "-pta") translated_model in
+		begin
+		match dot_created_file_option with
+		| None -> print_error "Oops…! Something went wrong with dot."
+		| Some created_file -> print_message Verbose_standard ("File `" ^ created_file ^ "` successfully created.");
+		end;
 		
-		(* Create a file with some statistics on the origina model if requested *)
+		(* Create a file with some statistics on the original model if requested *)
 		ResultProcessor.process_result Translation_result "translation to graphics" None;
 
 		terminate_program()
+
 
 	(************************************************************)
 	(* Computation of the whole state space *)
@@ -624,9 +637,14 @@ match options#imitator_mode with
 						print_message Verbose_high ("\n" ^ translated_model ^ "\n");
 					);
 
-					Graphics.dot Constants.pta_default_image_format (options#files_prefix ^ "-cubpta") translated_model;
+					let dot_created_file_option = Graphics.dot Constants.pta_default_image_format (options#files_prefix ^ "-cubpta") translated_model in
+					
+					begin
+					match dot_created_file_option with
+					| None -> print_error "Oops…! Something went wrong with dot."
+					| Some created_file -> print_message Verbose_low ("Graphic export `" ^ created_file ^ "` successfully created.");
+					end;
 
-					print_message Verbose_low ("Graphic export successfully created."); (*** TODO: add file name in a proper manner ***)
 				); (* end export *)
 
 				(* Call the NZ emptiness check *)
@@ -680,12 +698,6 @@ match options#imitator_mode with
 			| IMunion pval ->
 					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMunion.algoIMunion pval in myalgo
 
-
-			(*** TODO: allow for old version with list of constraints ***)
-(*			(* Old version (with list of constraints) *)
-			| EF_synthesis (*when not options#new_ef_mode*) ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFsynthOld.algoEFsynth in myalgo
-				*)
 
 		(*------------------------------------------------------------*)
 		(* Cartography algorithms *)
@@ -776,9 +788,13 @@ match options#imitator_mode with
 						print_message Verbose_high ("\n" ^ translated_model ^ "\n");
 					);
 
-					Graphics.dot Constants.pta_default_image_format (options#files_prefix ^ "-cubpta") translated_model;
-
-					print_message Verbose_low ("Graphic export successfully created."); (*** TODO: add file name in a proper manner ***)
+					let dot_created_file_option = Graphics.dot Constants.pta_default_image_format (options#files_prefix ^ "-cubpta") translated_model in
+					
+					begin
+					match dot_created_file_option with
+						| None -> print_error "Oops…! Something went wrong with dot."
+						| Some created_file -> print_message Verbose_low ("Graphic export `" ^ created_file ^ "` successfully created.");
+					end;
 				); (* end export *)
 
 				(* Call the NZ emptiness check *)
@@ -859,13 +875,6 @@ match options#imitator_mode with
 			(************************************************************)
 			(* End distributed cartography *)
 			(************************************************************)
-
-
-
-		| _ ->
-			(*** TODO: temporary end ***)
-			raise (NotImplemented ("IMITATOR says temporarily bye!"));
-			exit 1;
 
 
 		in

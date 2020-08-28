@@ -605,19 +605,19 @@ class imitator_options =
 				
 				("-imi2JPG", Unit (fun _ ->
 					(*** HACK ***)
-					graphical_state_space <- Graphical_state_space_normal;
+(* 					graphical_state_space <- Graphical_state_space_normal; *)
 					imitator_mode <- Translation JPG
 				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : `false`");
 				
 				("-imi2PDF", Unit (fun _ ->
 					(*** HACK ***)
-					graphical_state_space <- Graphical_state_space_normal;
+(* 					graphical_state_space <- Graphical_state_space_normal; *)
 					imitator_mode <- Translation PDF
 				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : `false`");
 				
 				("-imi2PNG", Unit (fun _ ->
 					(*** HACK ***)
-					graphical_state_space <- Graphical_state_space_normal;
+(* 					graphical_state_space <- Graphical_state_space_normal; *)
 					imitator_mode <- Translation PNG
 				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : `false`");
 				
@@ -1155,7 +1155,7 @@ end;
 			| Some true ->
 				print_message Verbose_standard ("The result will be written to a file.")
 			| Some false ->
-				print_message Verbose_standard ("No result written into a file.")
+				print_message Verbose_low ("No result written into a file.")
 			| None ->
 				print_message Verbose_medium ("The result will be written to a file if requested by the algorithm.")
 			end;

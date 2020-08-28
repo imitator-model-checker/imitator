@@ -1650,8 +1650,8 @@ Generation time: " ^ (now()) ^ "\"];"
 	header ^ states_description ^ transitions_description
 
 
-(** Execute the 'dot' utility with as argument the image format, the radical, and the source file *)
-let dot dot_image_extension radical dot_source_file =
+(** Execute the `dot` utility with as argument the image format, the radical, and the source file. Returns `Some file_name` if successful, or None otherwise *)
+let dot dot_image_extension radical dot_source_file : (string option) =
 	(* Retrieve the model *)
 (* 	let model = Input.get_model () in *)
 	(* Retrieve the input options *)
@@ -1661,7 +1661,7 @@ let dot dot_image_extension radical dot_source_file =
 	
 	(*** WARNING! that's bad programming… it shouldn't be the role of this function to test options ***)
 	
-	if options#graphical_state_space <> Graphical_state_space_none || options#states_description then (
+(* 	if options#graphical_state_space <> Graphical_state_space_none || options#states_description then ( *)
 		(* Get the file names *)
 		let dot_file_name = (radical ^ "." ^ dot_file_extension) in
 		let image_file_name = (radical ^ "." ^ dot_image_extension) in
@@ -1672,7 +1672,7 @@ let dot dot_image_extension radical dot_source_file =
 		(* Create the input file *)
 		print_message Verbose_medium ("Creating input file for dot…");
 
-		if options#graphical_state_space <> Graphical_state_space_none then (
+(* 		if options#graphical_state_space <> Graphical_state_space_none then ( *)
 			(* Write dot file *)
 			if options#with_graphics_source then(
 				print_message Verbose_standard ("Creating source file for dot…");
@@ -1681,32 +1681,53 @@ let dot dot_image_extension radical dot_source_file =
 			);
 			write_to_file dot_file_name dot_source_file;
 
-			(* Generate gif file using dot *)
-			(*** WARNING: don't change this string (parsed by CosyVerif) **)
-			(*** TODO: add CosyVerif mode with output of the form "key : value" **)
-			print_message Verbose_standard ("Generating graphical output to '" ^ image_file_name ^ "'…");
-			begin
+			(* Print some information *)
+			print_message Verbose_low ("Generating graphical output to `" ^ image_file_name ^ "`…");
+			
+			let dot_success =
 			try (
+				(* Actually call dot *)
 				let command_result = Sys.command (dot_command ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ image_file_name ^ "") in
-				print_message Verbose_medium ("Result of the 'dot' command: " ^ (string_of_int command_result));
 				
-				if command_result != 0 then
-					print_error ("Something went wrong when calling 'dot'. Exit code: " ^ (string_of_int command_result) ^ ". Maybe you forgot to install the 'dot' utility (from the 'graphviz' package in Debian).");
+				(* Print some information *)
+				print_message Verbose_medium ("Result of the `dot` command: " ^ (string_of_int command_result));
+				
+				if command_result != 0 then(
+					print_error ("Something went wrong when calling `dot`. Exit code: " ^ (string_of_int command_result) ^ ". Maybe you forgot to install the `dot` utility (from the `graphviz` package in Debian).");
+					(* Something went wrong *)
+					false
+					)
+				else(
+					(* Print some information *)
+					print_message Verbose_low ("Graphical output successfully generated to `" ^ image_file_name ^ "`.");
+					
+					(* Everything is fine *)
+					true
+				)
 			) with 
-				| Sys_error error_message -> print_error ("System error while calling 'dot'. Error message: '" ^ error_message ^ "'.");
-			end;
+				| Sys_error error_message ->
+					print_error ("System error while calling `dot`. Error message: `" ^ error_message ^ "`.");
+					(* Something went wrong *)
+					false
+			in
 			
 			(* Removing dot file (except if option) *)
 			if not options#with_graphics_source then(
 				print_message Verbose_medium ("Removing dot file…");
 				delete_file dot_file_name;
 			);
-		); (* end if graphical_state_space *)
-	)
+			
+			(* Return None if something went wrong, or the file name otherwise *)
+			if dot_success then
+				Some image_file_name
+			else None
+		(* ) (* end if graphical_state_space *)
+		else None*)
+(* 	) else None *)
 	
 
-(** Draw the state space using dot *)
-let draw_statespace state_space algorithm_name radical =
+(** `draw_statespace state_space algorithm_name radical` draws the state space using dot, if required by the options. *)
+let draw_statespace_if_requested state_space algorithm_name radical : unit =
 	(* Preliminary check: the state space shall not be empty *)
 	if (StateSpace.nb_states state_space) = 0 then (
 		print_warning "State space is empty: not drawing";
@@ -1720,58 +1741,34 @@ let draw_statespace state_space algorithm_name radical =
 	
 	(* Do not write if no dot AND no log *)
 	if options#graphical_state_space <> Graphical_state_space_none || options#states_description then (
-		let dot_model, states = dot_of_statespace state_space algorithm_name (*~fancy:options#fancy*) in
+		let dot_model, states = dot_of_statespace state_space algorithm_name in
 		
-		dot state_space_image_format radical dot_model;
-		
-		(*(* Get the file names *)
-		let dot_file_name = (radical ^ "." ^ dot_file_extension) in
-		let states_file_name = (radical ^ "." ^ states_file_extension) in
-		let gif_file_name = (radical ^ "." ^ dot_image_extension) in
-		
-		(* New line *)
-		print_message Verbose_standard "";
-		
-		(* Create the input file *)
-		print_message Verbose_medium ("Creating input file for dot…");
-
-		if options#graphical_state_space then (
-			(* Write dot file *)
-			if options#graphical_state_space_source then(
-				print_message Verbose_standard ("Creating source file for dot…");
-			)else(
-				print_message Verbose_medium ("Writing to dot file…");
-			);
-			write_to_file dot_file_name dot_model;
-
-			(* Generate gif file using dot *)
-			print_message Verbose_standard "Generating graphical output…";
-			print_message Verbose_medium ("Calling dot…");
-			let command_result = Sys.command (dot_command ^ " -T" ^ dot_image_extension ^ " " ^ dot_file_name ^ " -o " ^ gif_file_name ^ "") in
-			print_message Verbose_medium ("Result of the 'dot' command: " ^ (string_of_int command_result));
-			
-			(* Removing dot file (except if option) *)
-			if not options#graphical_state_space_source then(
-				print_message Verbose_medium ("Removing dot file…");
-				delete_file dot_file_name;
-			);
-		);*)
-			
-		(* Write states file *)
+		(* Write states file if needed *)
 		if options#states_description then (
 			let states_file_name = (radical ^ "." ^ states_file_extension) in
 			print_message Verbose_standard ("Writing the states description to file '" ^ states_file_name ^ "'…");
 			write_to_file states_file_name states;
 		);
+		
+		(* Generate graphical state space if needed *)
+		if options#graphical_state_space <> Graphical_state_space_none then(
+			(* Call the dedicated function that returns a string option *)
+			let dot_success = dot state_space_image_format radical dot_model in
+			
+			match dot_success with
+			| None -> print_error "Oops…! Something went wrong with dot when drawing the state space."
+			| Some created_file -> print_message Verbose_standard ("Graphical state space successfully created in `" ^ created_file ^ "`.")
+		);
+
 	);
-	
+
 	(* Statistics *)
 	counter_graphics_statespace#stop;
 	
-	); (* end if state space not empty *)
-	
 	(* The end *)
 	()
+	
+	) (* end if state space not empty *)
 
 
 

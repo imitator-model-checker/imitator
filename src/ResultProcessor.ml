@@ -935,12 +935,12 @@ let process_single_synthesis_or_point_based_result file_prefix algorithm_name re
 	
 	(* Draw state space *)
 	let radical = file_prefix ^ "-statespace" in
-	Graphics.draw_statespace state_space algorithm_name radical;
+	Graphics.draw_statespace_if_requested state_space algorithm_name radical;
 	
 	(* Render zones in a graphical form *)
 	if options#draw_cart then (
 		let zones = zones_of_good_bad_constraint result in
-		Graphics.draw_cartography zones (file_prefix ^ "_cart")
+		Graphics.draw_cartography zones (file_prefix ^ Constants.cart_file_suffix)
 	) else (
 			print_message Verbose_high "Graphical cartography not asked: not drawn.";
 	);
@@ -1006,7 +1006,7 @@ let process_result result algorithm_name prefix_option =
 	
 		(* Draw state space *)
 		let radical = file_prefix ^ "-statespace" in
-		Graphics.draw_statespace state_space_computation.state_space algorithm_name radical;
+		Graphics.draw_statespace_if_requested state_space_computation.state_space algorithm_name radical;
 		
 		(* The end *)
 		()
@@ -1062,12 +1062,12 @@ let process_result result algorithm_name prefix_option =
 	
 		(* Draw state space *)
 		let radical = file_prefix ^ "-statespace" in
-		Graphics.draw_statespace efsynth_result.state_space algorithm_name radical;
+		Graphics.draw_statespace_if_requested efsynth_result.state_space algorithm_name radical;
 		
 		(* Render zones in a graphical form *)
 		if options#draw_cart then (
 			let zones = List.map (fun p_linear_constraint -> (LinearConstraint.Convex_p_constraint p_linear_constraint, StateSpace.Bad)) efsynth_result.constraints in
-			Graphics.draw_cartography zones (file_prefix ^ "_cart")
+			Graphics.draw_cartography zones (file_prefix ^ Constants.cart_file_suffix)
 		) else (
 			print_message Verbose_high "Graphical cartography not asked: not drawn.";
 		);
@@ -1150,7 +1150,7 @@ let process_result result algorithm_name prefix_option =
 			) [] valid_tiles
 			in
 			
-			Graphics.draw_cartography zones (file_prefix ^ "_cart")
+			Graphics.draw_cartography zones (file_prefix ^ Constants.cart_file_suffix)
 		) else (
 			(* Print some information *)
 			print_message Verbose_high "Graphical cartography not asked: not drawn.";
@@ -1180,7 +1180,7 @@ let process_result result algorithm_name prefix_option =
 		(* Render zones in a graphical form *)
 		if options#output_bc_cart then (
 			let zones = zones_of_good_bad_constraint result.result in
-			Graphics.draw_cartography zones (file_prefix ^ "_cart")
+			Graphics.draw_cartography zones (file_prefix ^ Constants.cart_file_suffix)
 		) else (
 			print_message Verbose_high "Graphical cartography not asked: not drawn.";
 		);

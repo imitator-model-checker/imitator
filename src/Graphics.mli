@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * LIPN, Université Paris 13 (France)
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: All graphics handling (cartography, trace set…)
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2019/08/14
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -41,9 +42,9 @@ val draw_concrete_run : StateSpace.concrete_run -> string -> unit
 val draw_impossible_concrete_run : StateSpace.impossible_concrete_run -> string -> unit
 
 
-(** Execute the 'dot' utility with as argument the image format, the radical, and the source file *)
-val dot : string -> string -> string -> unit
+(** Execute the `dot` utility with as argument the image format, the radical, and the source file. Returns `Some file_name` if successful, or None otherwise *)
+val dot : string -> string -> string -> (string option)
 
 
-(** 'draw_statespace state_space algorithm_name radical' draws the state space using dot *)
-val draw_statespace : StateSpace.state_space -> string -> string -> unit
+(** `draw_statespace state_space algorithm_name radical` draws the state space using dot, if required by the options. *)
+val draw_statespace_if_requested : StateSpace.state_space -> string -> string -> unit
