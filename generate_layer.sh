@@ -60,7 +60,7 @@ input_files="BRP coffee \
 		Sched2.50.2 simop \
 		spsmall tgcTogether2 \
 		WFAS-BBLS15-det"
-while getopts "ht:o:Si:'" opt; do
+while getopts "ht:o:Si:" opt; do
 case $opt in
 	h) help ;;
 	t) timeout=$OPTARG ;;
@@ -85,7 +85,7 @@ one_result="`basename $2 $extension`.tmp"
 rm -f $one_result
 rm -f $output_file
 # table with layers
-echo ' ; ; ; ; No strategy ; ; ; Subsumption ; ; ; Ordering ; ; ; Lookahead ; ; ; Order+Look ; ; ; O + L + Sub ; ;' > $output_file
+echo ' ; ; ; ; No strategy ; ; ; ; ; Subsumption ; ; ; ; ; Ordering ; ; ; ; ; Lookahead ; ; ; ; ; Order+Look ; ; ; ; ; O + L + Sub ; ; ; ;' > $output_file
 echo 'Model ; L ; X ; P ; d ; m ; c ; s ; t ; d ; m ; c ; s ; t ; d ; m ; c ; s ; t ; d ; m ; c ; s ; t ; d ; m ; c ; s ; t ; d ; m ; c ; s ; t' >> $output_file
 for f in $input_files
 	do echo -e "Running experiments for model \033[1;31m$f\033[0m"
