@@ -10,7 +10,7 @@
  * 
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/08/27
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -52,7 +52,7 @@ class imitator_options =
 	
 		(* OUTPUT OPTIONS *)
 		
-		(* Plot cartography; in cartography mode, this option means ANY tile will output a cartography (activated if both -cart and -output-tiles-files are true) *)
+		(* Plot cartography; in cartography mode, this option means ANY tile will output a cartography (activated if both `-cart` and `-tiles-files` are true) *)
 		val mutable cart = false
 		
 		(* only plot cartography *)
@@ -799,9 +799,15 @@ class imitator_options =
 			
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Recall options and print info *)
+		(* Recall options, print info, and check compatibility with the actual algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method recall() =
+		method recall_and_warn (model : AbstractModel.abstract_model) (property_option : AbstractProperty.abstract_property option) : unit =
+			(* Function to access the property if the mode is Algorithm *)
+			let get_property () = match property_option with
+			| Some property -> property
+			| None -> raise (InternalError "A property should be defined in recall_and_warn.get_property")
+			in
+		
 			(* File *)
 			print_message Verbose_standard ("Model: " ^ model_file_name);
 			(* File prefix *)
@@ -815,11 +821,13 @@ class imitator_options =
 			print_message Verbose_standard ("Mode: " ^ message ^ ".");
 
 
-			(*** TODO : print the property, if any ***)
+(*				(*** NOTE: disabled due to circular build because of ModelPrinter :( ***)
+			(* If property: print *)
+			if imitator_mode = Algorithm && verbose_mode_greater Verbose_low then(
+				print_message Verbose_low ("Property: " ^ (ModelPrinter.string_of_abstract_property model (get_property ())));
 			
-			
+			);*)
 
-			
 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Check compatibility between options *) 
@@ -833,22 +841,20 @@ class imitator_options =
 				print_warning ("Ayclic mode is set although tree mode is already set. Only tree mode will be considered.");
 			);
 
-(*			if !with_parametric_log && not !states_description then (
-				print_warning ("Parametric log was asked, but log was not asked. No log will be output.");
-			);*)
-
+			(* Set some options depending on the IMITATOR mode *)
+			let is_cartography = match property_option with
+				| None -> false
+				| Some property -> AlgorithmOptions.is_cartography property
+			in
 			
 			(* No cart options if not in cartography *)
 			(*** TODO : reintroduce ***)
-(*			if not (is_mode_cartography imitator_mode) && carto_tiles_limit <> None then print_warning ("A maximum number of tiles has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
-			if not (is_mode_cartography imitator_mode) && carto_time_limit <> None then print_warning ("A maximum computation for the cartography has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
-			if not (is_mode_cartography imitator_mode) && (NumConst.neq !step NumConst.one) then
-				print_warning (Constants.program_name ^ " is not run in cartography mode; the option regarding to the step of the cartography algorithm will thus be ignored.");*)
+			if not is_cartography && carto_tiles_limit <> None then print_warning ("A maximum number of tiles has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
+			if not is_cartography && carto_time_limit <> None then print_warning ("A maximum computation for the cartography has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
+			if not is_cartography && (NumConst.neq !step NumConst.one) then
+				print_warning (Constants.program_name ^ " is not run in cartography mode; the option regarding to the step of the cartography algorithm will thus be ignored.");
+			if not is_cartography && output_tiles_files then print_warning ("The option `-tiles-files` outputs files for each iteration of a cartography algorithm, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
 			
-(*			(* Options for variants of IM, but not in IM mode *)
-			if (not (is_mode_IM imitator_mode) && not (is_mode_cartography imitator_mode)) && (!union || !pi_compatible) then
-				print_warning ("Options regarding the variants of the inverse method will be ignored, as " ^ Constants.program_name ^ " is not run in inverse method or cartography.");*)
-
 			
 			(* No no_leq_test_in_ef if not EF *)
 			if imitator_mode <> Algorithm && no_leq_test_in_ef then 
@@ -856,11 +862,8 @@ class imitator_options =
 				print_warning ("The option `-no-inclusion-test-in-EF` is reserved for EF and PRP. It will thus be ignored.");
 			);
 				
-				(*** TODO ***)
-(*			(* No counterex if not EF *)
-			if !counterex && (imitator_mode <> EF_synthesis && imitator_mode <> EFunsafe_synthesis && imitator_mode <> Acc_loop_synthesis_NDFS) then(
-				print_warning ("The option `-counterexample` is reserved for EF and AccLoopSynthNDFS. It will thus be ignored.");
-			);*)
+
+			(*** TODO: check compatibility for #witness and #synthesis wrt the various algorithms ***)
 			
 
 			(*** TODO ***)
@@ -870,7 +873,7 @@ class imitator_options =
 				if !merge then print_warning "The merging option may not preserve the correctness of AFsynth.";
 			);*)
 			
-			(*** TODO: add warning if -cart but mode translation or statespace ***)
+			if imitator_mode <> Algorithm && cart then print_warning ("The `-draw-cart` option is reserved for synthesis algorithms. Ignored.");
 
 
 
@@ -931,60 +934,58 @@ end;
 				end
 			else
 				print_message Verbose_medium ("No bidirectional fixpoint variant (default).");
+*)
 
-			if !no_time_elapsing then
+			if no_time_elapsing then
 				print_message Verbose_standard ("Time elapsing will be applied at the beginning of the computation of a new state.")
 			else
 				print_message Verbose_medium ("Time elapsing will be applied at the end of the computation of a new state (default).")
 			;
 
-			
-						(*** TODO : reintroduce ***)
-
-(*			begin
+			begin
 			match !distribution_mode with
 			| Non_distributed -> 
 				print_message Verbose_medium ("Non-distributed mode (default).");
 			| Distributed_unsupervised ->(
 				print_message Verbose_standard ("Considering a distributed mode with unsupervised workers (work in progress).");
-				if not (is_mode_cartography imitator_mode) then(
+				if not is_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_unsupervised_multi_threaded ->(
 				print_message Verbose_standard ("Considering a distributed mode with unsupervised multi-threaded workers (work in progress).");
-				if not (is_mode_cartography imitator_mode) then(
+				if not is_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_static ->(
 				print_message Verbose_standard ("Considering a distributed mode with static splitting [ACN15].");
-				if not (is_mode_cartography imitator_mode) then(
+				if not is_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_ms_sequential ->(
 				print_message Verbose_standard ("Considering a distributed mode with sequential enumeration of pi0 points [ACE14].");
-				if not (is_mode_cartography imitator_mode) then(
+				if not is_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_ms_shuffle ->(
 				print_message Verbose_standard ("Considering a distributed mode with \"shuffle\" enumeration of pi0 points.");
-				if not (is_mode_cartography imitator_mode) then(
+				if not is_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			| Distributed_ms_random max -> (
 				print_message Verbose_standard ("Considering a distributed mode with random generation of pi0 points with up to " ^ (string_of_int max) ^ " successive failure before switching to exhaustive enumeration [ACE14].");
-				if not (is_mode_cartography imitator_mode) then(
+				if not is_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
 			(*************)
 			| Distributed_ms_subpart -> (
 				print_message Verbose_standard ("Considering a distributed mode with a dynamic domain decomposition [ACN15].");
-				if not (is_mode_cartography imitator_mode) then(
+				if not is_cartography then(
 					print_warning "The distributed mode is only valid for the cartography. Option will be ignored.";
 				)
 			)
@@ -992,12 +993,12 @@ end;
 
 			if !distributedKillIM then(
 				print_message Verbose_standard ("Heuristics to kill a process when its point is covered by another tile, in the distributed cartography [ACN15]; only works with some distribution schemes.");
-				if not (is_mode_cartography imitator_mode) || !distribution_mode = Non_distributed then(
+				if not is_cartography || !distribution_mode = Non_distributed then(
 					print_warning "The killIM heuristics is only valid for the distributed cartography. Option will be ignored.";
 				);
 			)else
 				print_message Verbose_medium ("No killIM heuristics (default).")
-			;*)
+			;
 
 			if !precomputepi0 then(
 				print_message Verbose_standard ("Compute the next pi0 before the next reception of a constraint.");
@@ -1014,7 +1015,6 @@ end;
 			else
 				print_message Verbose_medium ("No branch and bound mode (default).");
 
-*)
 
 			(* OPTIONS *)
 

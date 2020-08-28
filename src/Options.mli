@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2020/08/26
+ * Last modified: 2020/08/28
  *
  ************************************************************)
  
@@ -119,9 +119,10 @@ class imitator_options :
 		
 		method parse : unit
 		
-		(* Recall options *)
-		method recall : unit -> unit
-		
+		(* Recall options, print info, and check compatibility with the actual algorithm *)
+		method recall_and_warn : AbstractModel.abstract_model -> AbstractProperty.abstract_property option -> unit
+
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Force some options when the mode is cartography *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

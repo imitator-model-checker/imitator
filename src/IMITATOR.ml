@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/08/27
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -115,9 +115,6 @@ print_header_string();
 
 (* Print date *)
 print_message Verbose_experiments ("Analysis time: " ^ (now()) ^ "\n");
-
-(* Recall the arguments *)
-options#recall();
 
 
 (************************************************************)
@@ -249,6 +246,13 @@ let is_cartography = match property_option with
 in
 options#set_options_for_cartography is_cartography;
 
+
+(************************************************************)
+(* Recall options and print some warnings if needed *)
+(************************************************************)
+
+(* Recall the arguments *)
+options#recall_and_warn model property_option;
 
 
 (************************************************************)
@@ -419,17 +423,6 @@ match options#imitator_mode with
 			| Synthesis -> false
 		in
 		
-(*		(* Determine the right algorithm depending on the property *)
-		let abstract_algorithm = match abstract_property.property with
-			(* Reachability *)
-			| EF state_predicate -> EFsynth state_predicate
-			(* Safety *)
-			| AGnot state_predicate -> EFsynth state_predicate
-			
-			| _ -> raise (NotImplemented ("algorithm_of_property"))
-		in*)
-
-
 
 		(************************************************************)
 		(* Preliminary checks *)
@@ -449,20 +442,6 @@ match options#imitator_mode with
 		| _ -> ()
 		
 		end;
-
-
-
-
-
-
-(*(************************************************************)
-(* EXPERIMENTAL: branch and bound *)
-(************************************************************)
-
-if options#imitator_mode = Inverse_method && options#branch_and_bound then(
-	Reachability.branch_and_bound model pi0 init_state_after_time_elapsing;
-	terminate_program();
-);*)
 
 
 
