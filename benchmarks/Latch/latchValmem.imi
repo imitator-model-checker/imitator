@@ -12,7 +12,7 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2007/12
- * Last modified   : 2020/08/13
+ * Last modified   : 2020/08/28
  *
  * IMITATOR version: 3.0
  ************************************************************)
@@ -171,7 +171,7 @@ loc LatchD1E0: invariant ckLatch >= 0
 	when True sync dDown1 do {} goto LatchD0E0;
 
 loc LatchD1E1: invariant ckLatch <= dLatchUp
-	when ckLatch >= dLatchUp sync latchUp1 do {(*tLatchUp1 := s, *) q'=1} 
+	when ckLatch >= dLatchUp sync latchUp1 do {(*tLatchUp1 := s, *) q := 1} 
 			goto LatchD1E1B;
 	when True sync dDown1 do {} goto LatchD0E1;
 	when True sync andDown1 do {} goto LatchD1E0;
