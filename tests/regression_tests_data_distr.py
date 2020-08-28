@@ -5,15 +5,17 @@
 #                       IMITATOR
 #
 #             Data for non-regression tests
-#               (distributed version only)
 #
-# Etienne ANDRE
-# Laboratoire d'Informatique de Paris Nord
-# Universite Paris 13, Sorbonne Paris Cite, France
-# Created      : 2016/03/14
-# Last modified: 2017/03/21
+# Université Paris 13, LIPN, CNRS, France
+# Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+#
+# File description  : non-regression tests data
+#
+# File contributors : Étienne André, Jaime Arias
+#
+# Created           : 2016/03/14
+# Last modified     : 2020/08/28
 #************************************************************
-
 
 
 #************************************************************
@@ -24,7 +26,7 @@ tests_distr = [
 	{
 		'purpose'    : 'Distributed cartography: BC sequential (grid)',
 		'input_files': ['testBC-grid-plain.imi', 'testBC-grid3x3.v0'],
-		'options'    : '-mode cover -distributed sequential -output-result',
+		'options'    : '-mode cover -distributed sequential',
 		'nb_nodes'   : 4,
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
@@ -206,7 +208,7 @@ Average number of transitions : 6.0
 	{
 		'purpose'    : 'Distributed cartography: BC sequential (grid2)',
 		'input_files': ['testBC-grid2-plain.imi', 'testBC-grid5x5.v0'],
-		'options'    : '-mode cover -distributed sequential -output-result',
+		'options'    : '-mode cover -distributed sequential',
 		'nb_nodes'   : 4,
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
@@ -379,7 +381,7 @@ Termination                   : regular termination
 	{
 		'purpose'    : 'Distributed cartography: BC sequential (flip-flop)',
 		'input_files': ['flipflop.imi', 'flipflop.v0'],
-		'options'    : '-mode cover -distributed sequential -output-result',
+		'options'    : '-mode cover -distributed sequential',
 		'nb_nodes'   : 4,
 		'expectations' : [
 		# NOTE: not much to test here, as the number of tiles/states/unsuccessful points/etc. all depend on the relative speed of the workers, and is hence entirely non-deterministic
@@ -470,7 +472,7 @@ Termination                   : regular termination
 	{
 		'purpose'    : 'Distributed cartography: BC random5 (grid)',
 		'input_files': ['testBC-grid-plain.imi', 'testBC-grid3x3.v0'],
-		'options'    : '-mode cover -distributed random5 -output-result',
+		'options'    : '-mode cover -distributed random5',
 		'nb_nodes'   : 4,
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
@@ -643,7 +645,7 @@ Termination                   : regular termination
 	{
 		'purpose'    : 'Distributed cartography: BC random5 (grid2)',
 		'input_files': ['testBC-grid2-plain.imi', 'testBC-grid5x5.v0'],
-		'options'    : '-mode cover -distributed random5 -output-result',
+		'options'    : '-mode cover -distributed random5',
 		'nb_nodes'   : 4,
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
@@ -817,7 +819,7 @@ Termination                   : regular termination
 	{
 		'purpose'    : 'Distributed cartography: BC random+seq (flip-flop with 2 nodes)',
 		'input_files': ['flipflop.imi', 'flipflop.v0'],
-		'options'    : '-mode cover -distributed random5 -output-result',
+		'options'    : '-mode cover -distributed random5',
 		'nb_nodes'   : 2,
 		'expectations' : [
 		# NOTE: not much to test here, as the number of tiles/states/unsuccessful points/etc. all depend on the relative speed of the workers, and is hence entirely non-deterministic
@@ -908,7 +910,7 @@ Termination                   : regular termination
 	{
 		'purpose'    : 'Distributed cartography: BC random+seq (flip-flop with 4 nodes)',
 		'input_files': ['flipflop.imi', 'flipflop.v0'],
-		'options'    : '-mode cover -distributed random5 -output-result',
+		'options'    : '-mode cover -distributed random5',
 		'nb_nodes'   : 4,
 		'expectations' : [
 		# NOTE: not much to test here, as the number of tiles/states/unsuccessful points/etc. all depend on the relative speed of the workers, and is hence entirely non-deterministic
@@ -999,7 +1001,7 @@ Termination                   : regular termination
 	{
 		'purpose'    : 'Distributed cartography: BC random+seq (flip-flop with 40 nodes)',
 		'input_files': ['flipflop.imi', 'flipflop.v0'],
-		'options'    : '-mode cover -distributed random5 -output-result',
+		'options'    : '-mode cover -distributed random5',
 		'nb_nodes'   : 40,
 		'expectations' : [
 		# NOTE: not much to test here, as the number of tiles/states/unsuccessful points/etc. all depend on the relative speed of the workers, and is hence entirely non-deterministic
@@ -1090,7 +1092,7 @@ Termination                   : regular termination
 	{
 		'purpose'    : 'Distributed cartography: BC shuffle (grid)',
 		'input_files': ['testBC-grid-plain.imi', 'testBC-grid3x3.v0'],
-		'options'    : '-mode cover -distributed shuffle -output-result',
+		'options'    : '-mode cover -distributed shuffle',
 		'nb_nodes'   : 4,
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
@@ -1272,7 +1274,7 @@ Average number of transitions : 6.0
 	{
 		'purpose'    : 'Distributed cartography: BC shuffle (grid2)',
 		'input_files': ['testBC-grid2-plain.imi', 'testBC-grid5x5.v0'],
-		'options'    : '-mode cover -distributed shuffle -output-result',
+		'options'    : '-mode cover -distributed shuffle',
 		'nb_nodes'   : 4,
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
@@ -1445,7 +1447,7 @@ Termination                   : regular termination
 	{
 		'purpose'    : 'Distributed cartography: BC shuffle (flip-flop)',
 		'input_files': ['flipflop.imi', 'flipflop.v0'],
-		'options'    : '-mode cover -distributed shuffle -output-result',
+		'options'    : '-mode cover -distributed shuffle',
 		'nb_nodes'   : 4,
 		'expectations' : [
 		# NOTE: not much to test here, as the number of tiles/states/unsuccessful points/etc. all depend on the relative speed of the workers, and is hence entirely non-deterministic
@@ -1536,7 +1538,7 @@ Termination                   : regular termination
 	{
 		'purpose'    : 'Distributed cartography: BC static (grid)',
 		'input_files': ['testBC-grid-plain.imi', 'testBC-grid3x3.v0'],
-		'options'    : '-mode cover -distributed static -output-result',
+		'options'    : '-mode cover -distributed static',
 		'nb_nodes'   : 4,
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
@@ -1718,7 +1720,7 @@ Average number of transitions : 6.0
 	{
 		'purpose'    : 'Distributed cartography: BC static (grid2)',
 		'input_files': ['testBC-grid2-plain.imi', 'testBC-grid5x5.v0'],
-		'options'    : '-mode cover -distributed static -output-result',
+		'options'    : '-mode cover -distributed static',
 		'nb_nodes'   : 4,
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
@@ -1900,7 +1902,7 @@ Average number of transitions : 4.0
 	{
 		'purpose'    : 'Distributed cartography: BC dynamic (flip-flop)',
 		'input_files': ['flipflop.imi', 'flipflop.v0'],
-		'options'    : '-mode cover -distributed dynamic -output-result',
+		'options'    : '-mode cover -distributed dynamic',
 		'nb_nodes'   : 4,
 		'expectations' : [
 		# NOTE: not much to test here, as the number of tiles/states/unsuccessful points/etc. all depend on the relative speed of the workers, and is hence entirely non-deterministic
@@ -1991,7 +1993,7 @@ Termination                   : regular termination
 	{
 		'purpose'    : 'Distributed cartography: BC dynamic (grid)',
 		'input_files': ['testBC-grid-plain.imi', 'testBC-grid3x3.v0'],
-		'options'    : '-mode cover -distributed dynamic -output-result',
+		'options'    : '-mode cover -distributed dynamic',
 		'nb_nodes'   : 4,
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
@@ -2173,7 +2175,7 @@ Average number of transitions : 6.0
 	{
 		'purpose'    : 'Distributed cartography: BC dynamic (grid2)',
 		'input_files': ['testBC-grid2-plain.imi', 'testBC-grid5x5.v0'],
-		'options'    : '-mode cover -distributed dynamic -output-result',
+		'options'    : '-mode cover -distributed dynamic',
 		'nb_nodes'   : 4,
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
@@ -2355,7 +2357,7 @@ Number of unsuccessful points : 0
 	{
 		'purpose'    : 'Distributed cartography: BC mode cover with sequential distribution (on the case study BC vs. PRPC)',
 		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
-		'options'    : '-mode cover -no-random -distributed sequential -output-result',
+		'options'    : '-mode cover -no-random -distributed sequential',
 		'nb_nodes'   : 4,
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
@@ -2534,7 +2536,7 @@ Termination                             : regular termination
 	{
 		'purpose'    : 'Distributed cartography: BC mode cover with shuffle distribution (on the case study BC vs. PRPC)',
 		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
-		'options'    : '-mode cover -no-random -distributed shuffle -output-result',
+		'options'    : '-mode cover -no-random -distributed shuffle',
 		'nb_nodes'   : 4,
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
@@ -2713,7 +2715,7 @@ Termination                             : regular termination
 	{
 		'purpose'    : 'Distributed cartography: PRPC with sequential distribution (on the case study BC vs. PRPC)',
 		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
-		'options'    : '-mode PRPC -no-random -distributed sequential -output-result',
+		'options'    : '-mode PRPC -no-random -distributed sequential',
 		'nb_nodes'   : 4,
 		'expectations' : [
 			{'file': 'diffBCPRPC.res' , 'content' : """
@@ -2751,7 +2753,7 @@ Constraint nature                       : good/bad
 	{
 		'purpose'    : 'Distributed cartography: PRPC with shuffle distribution (on the case study BC vs. PRPC)',
 		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
-		'options'    : '-mode PRPC -no-random -distributed shuffle -output-result',
+		'options'    : '-mode PRPC -no-random -distributed shuffle',
 		'nb_nodes'   : 4,
 		'expectations' : [
 			{'file': 'diffBCPRPC.res' , 'content' : """
@@ -2789,7 +2791,7 @@ Constraint nature                       : good/bad
 	{
 		'purpose'    : 'Distributed cartography: PRPC with static distribution (on the case study BC vs. PRPC)',
 		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
-		'options'    : '-mode PRPC -no-random -distributed static -output-result',
+		'options'    : '-mode PRPC -no-random -distributed static',
 		'nb_nodes'   : 4,
 		'expectations' : [
 			{'file': 'diffBCPRPC.res' , 'content' : """
@@ -2827,7 +2829,7 @@ Constraint nature                       : good/bad
 	{
 		'purpose'    : 'Distributed cartography: PRPC with dynamic distribution (on the case study BC vs. PRPC), 4 nodes',
 		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
-		'options'    : '-mode PRPC -no-random -distributed dynamic -output-result',
+		'options'    : '-mode PRPC -no-random -distributed dynamic',
 		'nb_nodes'   : 4,
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
@@ -2866,7 +2868,7 @@ Constraint nature                       : good/bad
 	{
 		'purpose'    : 'Distributed cartography: PRPC with dynamic distribution (on the case study BC vs. PRPC), 8 nodes',
 		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
-		'options'    : '-mode PRPC -no-random -distributed dynamic -output-result',
+		'options'    : '-mode PRPC -no-random -distributed dynamic',
 		'nb_nodes'   : 8,
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
