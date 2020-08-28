@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/18
- * Last modified     : 2020/08/21
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -17,99 +17,6 @@
 (** Internal modules *)
 (************************************************************)
 open Exceptions
-
-(************************************************************)
-(** Available algorithms *)
-(************************************************************)
-(*
-type algorithm =
-	(** Reachability *)
-	| EFsynth of AbstractProperty.state_predicate
-	
-(*	(** EF-synthesis w.r.t. unsafe locations *)
-	| EFunsafe_synthesis
-	
-	(** EF-minimization *)
-	| EF_min
-	
-	(** EF-maximization *)
-	| EF_max
-	
-	(** EF-synthesis with minimization *)
-	| EF_synth_min
-	
-	(** EF-synthesis with maximization *)
-	| EF_synth_max
-	
-	(** Optimal reachability with priority queue: queue-based, with priority to the earliest successor for the selection of the next state [ABPP19] *)
-	| EF_synth_min_priority_queue
-
-	(** EF-synthesis with examples of (un)safe words *)
-	| EFexemplify
-	
-	(** AF-synthesis *)
-	| AF_synthesis
-	
-	(** Parametric loop synthesis *)
-	| Loop_synthesis
-	
-	(** Parametric accepting loop synthesis *)
-	| Acc_loop_synthesis
-	
-	(** Parametric accepting loop synthesis with NDFS exploration *)
-	| Acc_loop_synthesis_NDFS
-
-	(** Parametric Büchi-emptiness checking with non-Zenoness (method: check whether the PTA is CUB) *)
-	| Parametric_NZ_CUBcheck
-	
-	(** Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
-	| Parametric_NZ_CUBtransform
-	
-	(** Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA, distributed version) *)
-	| Parametric_NZ_CUBtransformDistributed
-	
-	(** Parametric Büchi-emptiness checking with non-Zenoness on a CUB-PTA: hidden option (mainly for testing) *)
-	| Parametric_NZ_CUB
-	
-	(** Parametric deadlock-checking *)
-	| Parametric_deadlock_checking
-	
-	(** Inverse method with convex, and therefore possibly incomplete result *)
-	| Inverse_method
-	
-	(** Inverse method with full, non-convex result*)
-	| Inverse_method_complete
-	
-	(** Parametric reachability preservation *)
-	| PRP
-	
-	(** Cover the whole cartography *)
-	| Cover_cartography
-	
-	(** Cover the whole cartography using learning-based abstractions *)
-	| Learning_cartography
-	
-	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
-	| Shuffle_cartography
-	
-	(** Look for the border using the cartography*)
-	| Border_cartography
-	
-	(** Randomly pick up values for a given number of iterations *)
-	| Random_cartography of int
-	
-	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
-	| RandomSeq_cartography of int
-
-	(** Synthesis using iterative calls to PRP *)
-	| PRPC*)
-
-let is_algorithm_cartography = function
-	(** Reachability *)
-	| EFsynth _
-		-> false
-	| _
-		-> raise (NotImplemented "AbstractAlgorithm.is_algorithm_cartography")*)
 
 
 (************************************************************)
@@ -244,45 +151,6 @@ let property_needed = function
 	| Algorithm
 		-> Second_file_required
 
-(*
-(*** NOTE: explicit definition to avoid to forget a new algorithm (which would raise a warning upon compiling) ***)
-let is_mode_IM = function
-	| No_analysis
-	| Translation
-	| State_space_computation
-	| Acc_loop_synthesis_NDFS
-	| EF_synthesis
-	| EFunsafe_synthesis
-	| EF_min
-	| EF_max
-	| EF_synth_min
-	| EF_synth_max
-	| EF_synth_min_priority_queue
-	| EFexemplify
-	| AF_synthesis
-	| Loop_synthesis
-	| Acc_loop_synthesis
-	| Parametric_NZ_CUBcheck
-	| Parametric_NZ_CUBtransform
-	| Parametric_NZ_CUBtransformDistributed
-	| Parametric_NZ_CUB
-	| Parametric_deadlock_checking
-		-> false
-	| Inverse_method
-	| Inverse_method_complete
-	| PRP
-		-> true
-	| Cover_cartography
-	| Learning_cartography
-	| Shuffle_cartography
-	| Border_cartography
-	| Random_cartography _
-	| RandomSeq_cartography _
-	| PRPC
-		-> false
-
-
-*)
 
 let cartography_drawing_possible = function
 	| Syntax_check
@@ -320,33 +188,3 @@ let string_of_mode (imitator_mode : imitator_mode) : string = match imitator_mod
 	(** Synthesis algorithm *)
 	| Algorithm (*synthesis_algorithm*) -> "algorithm" (*** TODO: not so precise! ***)
 
-(*
-				| State_space_computation -> "parametric state space exploration"
-				| EF_synthesis -> "EF-synthesis"
-				| EFunsafe_synthesis -> "EFunsafe-synthesis"
-				| EF_min -> "EF-minimization"
-				| EF_max -> "EF-maximization"
-				| EF_synth_min -> "EF-synth with minimization"
-				| EF_synth_max -> "EF-synth with maximization"
-				| EF_synth_min_priority_queue -> "EF-synth with minimal reachability"
-				| EFexemplify -> "EF-exemplify"
-				| AF_synthesis -> "AF-synthesis"
-				| Loop_synthesis -> "infinite run synthesis"
-				| Acc_loop_synthesis -> "accepting infinite run synthesis"
-				| Acc_loop_synthesis_NDFS -> "accepting infinite run synthesis with NDFS exploration"
-				| Parametric_NZ_CUBcheck -> "parametric non-Zeno emptiness checking (CUB checking)"
-				| Parametric_NZ_CUBtransform -> "parametric non-Zeno emptiness checking (CUB transformation)"
-				| Parametric_NZ_CUBtransformDistributed -> "parametric non-Zeno emptiness checking (CUB transformation), distributed version"
-				| Parametric_NZ_CUB -> "parametric non-Zeno emptiness checking [testing mode without transformation]"
-				| Parametric_deadlock_checking -> "Parametric deadlock-checking"
-				| Inverse_method -> "inverse method"
-				| Inverse_method_complete -> "inverse method with complete result"
-				| PRP -> "parametric reachability preservation"
-				| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step)
-				| Learning_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step) ^ " and using learning-based abstractions"
-				| Shuffle_cartography -> "behavioral cartography algorithm with full coverage (shuffled version) and step " ^ (NumConst.string_of_numconst !step)
-				| Border_cartography -> "behavioral cartography algorithm with border detection (experimental) and step " ^ (NumConst.string_of_numconst !step)
-				| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " ^ (NumConst.string_of_numconst !step)
-				| RandomSeq_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations + sequential phase and step " ^ (NumConst.string_of_numconst !step)
-				| PRPC -> "parametric reachability preservation cartography"
-				*)

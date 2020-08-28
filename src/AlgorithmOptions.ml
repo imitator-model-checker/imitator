@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2020/08/25
- * Last modified     : 2020/08/25
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -156,3 +156,35 @@ let is_cartography property =
 	
 		| _ -> false
 
+
+
+(*
+				| State_space_computation -> "parametric state space exploration"
+				| EF_synthesis -> "EF-synthesis"
+				| EFunsafe_synthesis -> "EFunsafe-synthesis"
+				| EF_min -> "EF-minimization"
+				| EF_max -> "EF-maximization"
+				| EF_synth_min -> "EF-synth with minimization"
+				| EF_synth_max -> "EF-synth with maximization"
+				| EF_synth_min_priority_queue -> "EF-synth with minimal reachability"
+				| EFexemplify -> "EF-exemplify"
+				| AF_synthesis -> "AF-synthesis"
+				| Loop_synthesis -> "infinite run synthesis"
+				| Acc_loop_synthesis -> "accepting infinite run synthesis"
+				| Acc_loop_synthesis_NDFS -> "accepting infinite run synthesis with NDFS exploration"
+				| Parametric_NZ_CUBcheck -> "parametric non-Zeno emptiness checking (CUB checking)"
+				| Parametric_NZ_CUBtransform -> "parametric non-Zeno emptiness checking (CUB transformation)"
+				| Parametric_NZ_CUBtransformDistributed -> "parametric non-Zeno emptiness checking (CUB transformation), distributed version"
+				| Parametric_NZ_CUB -> "parametric non-Zeno emptiness checking [testing mode without transformation]"
+				| Parametric_deadlock_checking -> "Parametric deadlock-checking"
+				| Inverse_method -> "inverse method"
+				| Inverse_method_complete -> "inverse method with complete result"
+				| PRP -> "parametric reachability preservation"
+				| Cover_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step)
+				| Learning_cartography -> "behavioral cartography algorithm with full coverage and step " ^ (NumConst.string_of_numconst !step) ^ " and using learning-based abstractions"
+				| Shuffle_cartography -> "behavioral cartography algorithm with full coverage (shuffled version) and step " ^ (NumConst.string_of_numconst !step)
+				| Border_cartography -> "behavioral cartography algorithm with border detection (experimental) and step " ^ (NumConst.string_of_numconst !step)
+				| Random_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations and step " ^ (NumConst.string_of_numconst !step)
+				| RandomSeq_cartography nb -> "behavioral cartography algorithm with " ^ (string_of_int nb) ^ " random iterations + sequential phase and step " ^ (NumConst.string_of_numconst !step)
+				| PRPC -> "parametric reachability preservation cartography"
+				*)

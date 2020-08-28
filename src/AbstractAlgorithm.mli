@@ -8,103 +8,10 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/18
- * Last modified     : 2020/08/21
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
-
-(*
-(************************************************************)
-(** Available algorithms *)
-(************************************************************)
-
-type algorithm =
-	(** Reachability *)
-	| Algo_EF of AbstractProperty.state_predicate
-	
-	(** Safety *)
-	| AGnotsynth of AbstractProperty.state_predicate
-	
-(*	(** EF-synthesis w.r.t. unsafe locations *)
-	| EFunsafe_synthesis
-	
-	(** EF-minimization *)
-	| EF_min
-	
-	(** EF-maximization *)
-	| EF_max
-	
-	(** EF-synthesis with minimization *)
-	| EF_synth_min
-	
-	(** EF-synthesis with maximization *)
-	| EF_synth_max
-	
-	(** Optimal reachability with priority queue: queue-based, with priority to the earliest successor for the selection of the next state [ABPP19] *)
-	| EF_synth_min_priority_queue
-
-	(** EF-synthesis with examples of (un)safe words *)
-	| EFexemplify
-	
-	(** AF-synthesis *)
-	| AF_synthesis
-	
-	(** Parametric loop synthesis *)
-	| Loop_synthesis
-	
-	(** Parametric accepting loop synthesis *)
-	| Acc_loop_synthesis
-	
-	(** Parametric accepting loop synthesis with NDFS exploration *)
-	| Acc_loop_synthesis_NDFS
-
-	(** Parametric Büchi-emptiness checking with non-Zenoness (method: check whether the PTA is CUB) *)
-	| Parametric_NZ_CUBcheck
-	
-	(** Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA) *)
-	| Parametric_NZ_CUBtransform
-	
-	(** Parametric Büchi-emptiness checking with non-Zenoness (method: transformation into a CUB-PTA, distributed version) *)
-	| Parametric_NZ_CUBtransformDistributed
-	
-	(** Parametric Büchi-emptiness checking with non-Zenoness on a CUB-PTA: hidden option (mainly for testing) *)
-	| Parametric_NZ_CUB
-	
-	(** Parametric deadlock-checking *)
-	| Parametric_deadlock_checking
-	
-	(** Inverse method with convex, and therefore possibly incomplete result *)
-	| Inverse_method
-	
-	(** Inverse method with full, non-convex result*)
-	| Inverse_method_complete
-	
-	(** Parametric reachability preservation *)
-	| PRP
-	
-	(** Cover the whole cartography *)
-	| Cover_cartography
-	
-	(** Cover the whole cartography using learning-based abstractions *)
-	| Learning_cartography
-	
-	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
-	| Shuffle_cartography
-	
-	(** Look for the border using the cartography*)
-	| Border_cartography
-	
-	(** Randomly pick up values for a given number of iterations *)
-	| Random_cartography of int
-	
-	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
-	| RandomSeq_cartography of int
-
-	(** Synthesis using iterative calls to PRP *)
-	| PRPC*)
-
-(* Predicate on algorithms *)
-val is_algorithm_cartography     : algorithm -> bool*)
 
 
 (************************************************************)
