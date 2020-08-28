@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Camille Coti
  * Created           : 2014/03/24
- * Last modified     : 2020/07/17
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
  
@@ -1048,6 +1048,10 @@ let receive_pull_request () =
 
 	| Slave_bcresult_tag ->
 		raise (InternalError("Cannot receive a Slave_bcresult_tag at that point"))
+		
+	| _ ->
+		print_error "Unexpected tag received in function `receive_pull_request ()`";
+		raise (InternalError "Unexpected tag received in function `receive_pull_request ()`")
 ;;
 
 
@@ -1131,6 +1135,10 @@ let receive_work () =
 	| Master_terminate_tag -> Terminate
 	
 	| Master_continue_tag -> Continue
+	
+	| _ ->
+		print_error "Unexpected tag received in function `receive_work ()`";
+		raise (InternalError "Unexpected tag received in function `receive_work ()`")
 
 
 (* Function used for collaborator - coordinator static distribution scheme *)
@@ -1212,6 +1220,9 @@ let receive_pull_request_NZCUB () =
 	    print_message Verbose_high ("[Master] Received Slave_outofbound_tag");
 	    OutOfBound source_rank
 
+	| _ ->
+		print_error "Unexpected tag received in function `receive_pull_request_NZCUB ()`";
+		raise (InternalError "Unexpected tag received in function `receive_pull_request_NZCUB ()`")
 (* Master - End *)
 
  
@@ -1238,6 +1249,10 @@ let receive_work_NZCUB () =
 
 	| Master_terminate_tag -> Terminate
 
+
+	| _ ->
+		print_error "Unexpected tag received in function `receive_work_NZCUB ()`";
+		raise (InternalError "Unexpected tag received in function `receive_work_NZCUB ()`")
 
 
 (* Worker - End *)

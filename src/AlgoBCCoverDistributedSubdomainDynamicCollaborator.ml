@@ -432,14 +432,17 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator (v0 : HyperRectangle.hy
 					finished := true
 
 			(* Otherwise: error! *)
-			| Work _ -> self#print_algo_error ("received unexpected Work tag from the master in method 'run'.");
-					raise (InternalError("received unexpected Work tag from the master in method 'run'."));
-			| Stop -> self#print_algo_error ("received unexpected Stop tag from the master in method 'run'.");
-					raise (InternalError("received unexpected Stop tag from the master in method 'run'."));
-			| TileUpdate _ -> self#print_algo_error ("received unexpected TileUpdate tag from the master in method 'run'.");
-					raise (InternalError("received unexpected TileUpdate tag from the master in method 'run'."));
-			| Continue -> self#print_algo_error ("received unexpected Continue tag from the master in method 'run'.");
-					raise (InternalError("received unexpected Continue tag from the master in method 'run'."));
+			| Work _ -> self#print_algo_error ("received unexpected Work tag from the master in method `run`.");
+					raise (InternalError("received unexpected Work tag from the master in method `run`."));
+			| Stop -> self#print_algo_error ("received unexpected Stop tag from the master in method `run`.");
+					raise (InternalError("received unexpected Stop tag from the master in method `run`."));
+			| TileUpdate _ -> self#print_algo_error ("received unexpected TileUpdate tag from the master in method `run`.");
+					raise (InternalError("received unexpected TileUpdate tag from the master in method `run`."));
+			| Continue -> self#print_algo_error ("received unexpected Continue tag from the master in method `run`.");
+					raise (InternalError("received unexpected Continue tag from the master in method `run`."));
+				
+			| _ -> self#print_algo_error ("received unexpected tag from the master in method `run`.");
+					raise (InternalError("received unexpected tag from the master in method `run`."));
 
 		done;
 
