@@ -307,12 +307,12 @@ class algoNDFS =
 			pending := add_ordered (astate_index,astate_depth) !pending before_pair;
 			printpendingqueue "Pending (state added)" !pending
         in
-        let is_pending astate =
-			match !pending with
+        let rec in_queue astate thequeue =
+			match thequeue with
 			| [] -> false
 			| (thestate,_)::body ->
 				if (astate = thestate) then true
-			else false
+				else in_queue astate body
 		in
 
 		(**********************************)
@@ -427,7 +427,7 @@ class algoNDFS =
 				let successors = StateSpace.get_successors state_space thestate
 					and is_green astate = table_test green astate
 					and is_pending_not_blue astate =
-						(is_pending astate) &&
+						(in_queue astate !pending) &&
 						not (table_test blue astate)
 				in
 				if (successors = [] ||
