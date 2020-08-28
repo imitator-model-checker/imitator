@@ -1136,11 +1136,23 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 				) location.transitions;
 			) locations;
 		) parsed_model.automata;
+	
+	(*** NOTE: disabled because we DO want to eliminate variables that appear ONLY in the init definition ***)
+(*	(* Gather the variables used in init *)
+	let init_definition = parsed_model.init_definition in
+	List.iter (function
+		(* `loc[automaton] = location`: no variable => nothing to do *)
+		| Parsed_loc_assignment _ -> ()
+		(* Linear constraint: get variables *)
+		| Parsed_linear_predicate linear_constraint ->
+			get_variables_in_linear_constraint all_variables_used linear_constraint
+	) init_definition;*)
 
-  (* Return the set of variables actually used *)
-  !all_variables_used
+	(* Return the set of variables actually used *)
+	!all_variables_used
 
-  
+
+
 (************************************************************)
 (** Checking the model *)
 (************************************************************)
