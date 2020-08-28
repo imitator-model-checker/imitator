@@ -71,16 +71,10 @@ type property =
 	| AGnot of state_predicate
 	
 	
-(*	(*** TODO: observers! ***)
-	(* Reachability *)
-	| Action_deadline of action_name * duration
-	
-	
+(*	
 	(* Unavoidability *)
 	| AF of state_predicate
-	
-	(* Liveness *)
-	| AG of state_predicate*)
+*)
 	
 	(*------------------------------------------------------------*)
 	(* Reachability and specification illustration *)
