@@ -52,16 +52,16 @@ class imitator_options =
 	
 		(* OUTPUT OPTIONS *)
 		
-		(* Plot cartography; in cartography mode, this option means ANY tile will output a cartography (activated if both `-cart` and `-tiles-files` are true) *)
-		val mutable cart = false
-		
 		(* only plot cartography *)
 		val mutable cartonly = false
+		
+		(* Plot cartography; in cartography mode, this option means ANY tile will output a cartography (activated if both `-draw-cart` and `-tiles-files` are true) *)
+		val mutable draw_cart = false
 		
 		(* prefix for output files *)
 		val mutable files_prefix = ""
 		
-		(* plot cartography for BC; this options means that the global cartography of all tiles will be generated (activated if -cart is true) *)
+		(* plot cartography for BC; this options means that the global cartography of all tiles will be generated (activated if -draw-cart is true) *)
 		val mutable output_bc_cart = false
 		
 		(* Output result for BC to a file *)
@@ -228,7 +228,6 @@ class imitator_options =
 		method acyclic = !acyclic
 (* 		method best_worst_case = !best_worst_case *)
 		method branch_and_bound = !branch_and_bound
-		method cart = cart
 		method carto_tiles_limit = carto_tiles_limit
 		method carto_time_limit = carto_time_limit
 		method check_ippta = !check_ippta
@@ -236,6 +235,7 @@ class imitator_options =
 		method depth_limit = !depth_limit
 		method distribution_mode = !distribution_mode
 		method distributedKillIM = !distributedKillIM
+		method draw_cart = draw_cart
 		(* method dynamic = !dynamic *)
 		method dynamic_clock_elimination = !dynamic_clock_elimination
 		method exploration_order = exploration_order
@@ -565,7 +565,7 @@ class imitator_options =
 				
 				("-distributedKillIM", Set distributedKillIM, " In distributed cartography, kill processes covered by other tiles [ACN15]; only works with selected distribution schemes. Default: false.");
 				
-				("-draw-cart", Unit (fun () -> cart <- true), " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false.");
+				("-draw-cart", Unit (fun () -> draw_cart <- true), " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: false.");
 				
 				(*** WARNING: only works partially ***)
 				("-draw-cart-x-min", Int (fun n -> output_cart_x_min <- Some n), " Set minimum value for the x axis when plotting the cartography (not entirely functional yet). Default: 0.");
@@ -873,7 +873,7 @@ class imitator_options =
 				if !merge then print_warning "The merging option may not preserve the correctness of AFsynth.";
 			);*)
 			
-			if imitator_mode <> Algorithm && cart then print_warning ("The `-draw-cart` option is reserved for synthesis algorithms. Ignored.");
+			if imitator_mode <> Algorithm && draw_cart then print_warning ("The `-draw-cart` option is reserved for synthesis algorithms. Ignored.");
 
 
 
@@ -1110,7 +1110,7 @@ end;
 			(* Recall output options *)
 			(************************************************************)
 
-			if cart then
+			if draw_cart then
 				print_message Verbose_standard ("The cartography will be drawn.")
 			else
 				print_message Verbose_medium ("No graphical output for the cartography (default).");
@@ -1121,21 +1121,21 @@ end;
 			match output_cart_x_min with
 				| None -> print_message Verbose_medium ("No specified minimum value for the x axis for the cartography (default).");
 				| Some n ->
-					if not cart then (print_warning "A minimum value for the x axis for the cartography is specified, but no cartography will be output. Ignored.")
+					if not draw_cart then (print_warning "A minimum value for the x axis for the cartography is specified, but no cartography will be output. Ignored.")
 					else print_message Verbose_low ("The minimum value for the x axis for the cartography will be " ^ (string_of_int n) ^ ".");
 			end;
 			begin
 			match output_cart_x_max with
 				| None -> print_message Verbose_medium ("No specified minimum value for the x axis for the cartography (default).");
 				| Some n ->
-					if not cart then (print_warning "A maximum value for the x axis for the cartography is specified, but no cartography will be output. Ignored.")
+					if not draw_cart then (print_warning "A maximum value for the x axis for the cartography is specified, but no cartography will be output. Ignored.")
 					else print_message Verbose_low ("The maximum value for the x axis for the cartography will be " ^ (string_of_int n) ^ ".");
 			end;
 			begin
 			match output_cart_y_min with
 				| None -> print_message Verbose_medium ("No specified minimum value for the y axis for the cartography (default).");
 				| Some n ->
-					if not cart then (print_warning "A minimum value for the y axis for the cartography is specified, but no cartography will be output. Ignored.")
+					if not draw_cart then (print_warning "A minimum value for the y axis for the cartography is specified, but no cartography will be output. Ignored.")
 					else print_message Verbose_low ("The minimum value for the y axis for the cartography will be " ^ (string_of_int n) ^ ".");
 			end;
 			begin
@@ -1253,11 +1253,11 @@ end;
 			(* Handling BC tiles files output *)
 			if is_cartography then(
 				(* Case cartograpy output requested *)
-				if cart then(
+				if draw_cart then(
 					(* Enable cartography for BC *)
 					output_bc_cart <- true;
 					(* Disable cartography for instances unless requested *)
-					if not output_tiles_files then cart <- false
+					if not output_tiles_files then draw_cart <- false
 				);
 			
 				(* Case result output requested *)

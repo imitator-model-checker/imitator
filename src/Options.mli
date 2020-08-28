@@ -35,7 +35,6 @@ class imitator_options :
 (* 		method best_worst_case : bool *)
 		method branch_and_bound : bool
 (* 		method branch_and_bound_unset : unit *)
-		method cart : bool
 		method carto_tiles_limit : int option
 		method carto_time_limit : int option
 		method check_ippta : bool
@@ -43,6 +42,7 @@ class imitator_options :
 		method depth_limit : int option
 		method distribution_mode : distribution_mode
 		method distributedKillIM : bool
+		method draw_cart : bool
 (* 		method dynamic : bool *)
 		method dynamic_clock_elimination : bool
 		method exploration_order : exploration_order
