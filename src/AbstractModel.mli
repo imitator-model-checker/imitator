@@ -265,13 +265,4 @@ type abstract_model = {
 	(* Initial constraint of the model projected onto P and all clocks non-negative *)
 	px_clocks_non_negative_and_initial_p_constraint: LinearConstraint.px_linear_constraint;
 
-(*	(* Property defined by the user (not used in the analysis, only for printing purpose; at this stage, the user property is already transformed into the correctness_condition below) *)
-	user_property : property_definition;
-	(* Property defined by the model *)
-	correctness_condition : correctness_condition;
-	(* List of parameters to project the result onto *)
-	projection : projection;
-	(* Parameter to be minimized or maximized *)
-	optimized_parameter : optimization;*)
-
 }
