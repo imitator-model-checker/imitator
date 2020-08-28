@@ -132,7 +132,7 @@ class virtual algoBCCoverDistributedSubdomainStatic (v0 : HyperRectangle.hyper_r
 		
 		(* Create an instance of the sequential cartography *)
 		(*** NOTE: in static distribution mode, since each collaborator is responsible for its own cartography, the sequential cartography is perfectly suited ***)
-		let bc_instance = new AlgoBCCover.algoBCCover subdomain algo_instance_function tiles_manager_type in
+		let bc_instance = new AlgoBCCover.algoBCCover subdomain step algo_instance_function tiles_manager_type in
 		
 		(* Print some information *)
 		self#print_algo_message Verbose_standard ("Running cartography on own static subdomain…");

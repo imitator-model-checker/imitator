@@ -641,7 +641,7 @@ class algoBCCoverDistributedSubdomainDynamicCoordinator (v0 : HyperRectangle.hyp
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method compute_bc_result : Result.imitator_result =
 		(* Compute the number of points in V0 *)
-		let size_v0 = v0#get_nb_points (Input.get_options())#step in
+		let size_v0 = v0#get_nb_points step in
 
 		(* Get termination *)
 		let termination = match termination with

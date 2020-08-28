@@ -62,7 +62,7 @@ class algoBCCoverDistributedMSRandomSeqMaster (v0 : HyperRectangle.hyper_rectang
 		(* Print some information *)
 		self#print_algo_message Verbose_standard ("Creating BC instance…");
 		
-		let algo_bcrandomseq = new AlgoBCRandomSeq.algoBCRandomSeq v0 max_tries algo_instance_function tiles_manager_type in
+		let algo_bcrandomseq = new AlgoBCRandomSeq.algoBCRandomSeq v0 step max_tries algo_instance_function tiles_manager_type in
 		let myalgo :> AlgoCartoGeneric.algoCartoGeneric = algo_bcrandomseq in
 		myalgo
 		

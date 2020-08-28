@@ -99,7 +99,7 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator (v0 : HyperRectangle.hy
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** NOTE: in dynamic distribution mode, since each collaborator is responsible for its own cartography, the sequential cartography is perfectly suited ***)
 	method private new_bc_instance current_domain =
-		let bc_instance = new AlgoBCCover.algoBCCover current_domain algo_instance_function tiles_manager_type in
+		let bc_instance = new AlgoBCCover.algoBCCover current_domain step algo_instance_function tiles_manager_type in
 
 		(* Initialize *)
 		bc_instance#initialize_cartography;

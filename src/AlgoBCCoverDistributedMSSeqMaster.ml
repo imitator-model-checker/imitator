@@ -58,7 +58,7 @@ class algoBCCoverDistributedMSSeqMaster (v0 : HyperRectangle.hyper_rectangle) (s
 	(** Return a new instance of the underlying cartography algorithm (typically BCrandom or BCcover) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method bc_instance =
-		let myalgo :> AlgoCartoGeneric.algoCartoGeneric = new AlgoBCCover.algoBCCover v0 algo_instance_function tiles_manager_type in
+		let myalgo :> AlgoCartoGeneric.algoCartoGeneric = new AlgoBCCover.algoBCCover v0 step algo_instance_function tiles_manager_type in
 		myalgo
 
 

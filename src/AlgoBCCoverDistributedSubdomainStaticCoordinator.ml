@@ -175,7 +175,7 @@ class algoBCCoverDistributedSubdomainStaticCoordinator (v0 : HyperRectangle.hype
 		) bc_results;
 		
 		(* Number of points in the original v0 (before splitting for the own exploration of the coordinator) *)
-		let original_nb_points : NumConst.t = v0#get_nb_points (Input.get_options())#step in
+		let original_nb_points : NumConst.t = v0#get_nb_points step in
 
 		(* Ask the tiles manager to process the result itself, by passing the appropriate arguments *)
 		tiles_manager#process_result start_time v0 original_nb_points !nb_unsuccessful_points !termination (Some !coverage)
