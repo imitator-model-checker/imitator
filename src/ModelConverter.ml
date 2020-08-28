@@ -62,20 +62,6 @@ module StringSet = Set.Make(String)
 
 (************************************************************)
 (************************************************************)
-(** Global variables: saved data structures between model parsing and second file parsing *)
-(************************************************************)
-(************************************************************)
-
-(*** HACK: at the end of model parsing, we will backup some data structures that will be used for reference valuation (pi0) / reference hyper-rectangle (v0) parsing and checking ***)
-(*let saved_index_of_variables	= ref None
-let saved_nb_parameters			= ref None
-let saved_parameters			= ref None
-let saved_parameters_names		= ref None
-let saved_variables				= ref None*)
-
-
-(************************************************************)
-(************************************************************)
 (** Useful data structure to avoid multiple parameters in functions *)
 (************************************************************)
 (************************************************************)
@@ -295,48 +281,6 @@ let check_only_discretes_in_parsed_update_arithmetic_expression index_of_variabl
     )
 
 
-(*
-(*** WARNING! duplicate code! removed 2019/12/13 ***)
-(*------------------------------------------------------------*)
-(* Check that a parsed_update_arithmetic_expression contains non-constant at only selected parts *)
-(*------------------------------------------------------------*)
-let valuate_parsed_update_arithmetic_expression constants =
-
-	let rec check_constants_in_parsed_update_arithmetic_expression_rec = function
-		| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term)
-		| Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
-		evaluate_and
-			(check_constants_in_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression)
-			(check_constants_in_parsed_update_term parsed_update_term)
-		| Parsed_DAE_term parsed_update_term ->
-		check_constants_in_parsed_update_term parsed_update_term
-
-	and check_constants_in_parsed_update_term = function
-		| Parsed_DT_mul (parsed_update_term, parsed_update_factor) ->
-		(* Constants only forbidden in the parsed_update_term *)
-		check_constants_in_parsed_update_term parsed_update_term
-		| Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
-		(* Constants only forbidden in the parsed_update_factor *)
-		check_constants_in_parsed_update_factor parsed_update_factor
-		| Parsed_DT_factor parsed_update_factor -> check_constants_in_parsed_update_factor parsed_update_factor
-
-	and check_constants_in_parsed_update_factor = function
-		| Parsed_DF_variable variable_name ->
-		if Hashtbl.mem constants variable_name then (
-			true
-		) else (
-			print_error ("Variable '" ^ variable_name ^ "' cannot be used at this place in an update.");
-			false
-		)
-		
-		| Parsed_DF_constant var_value -> true
-		
-		| Parsed_DF_unary_min parsed_discrete_factor -> check_constants_in_parsed_update_factor parsed_discrete_factor
-		
-		| Parsed_DF_expression parsed_update_arithmetic_expression -> check_constants_in_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression
-
-	in check_constants_in_parsed_update_arithmetic_expression_rec
-*)
 
 
 (************************************************************)
@@ -1643,7 +1587,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 	in
 
 	(* Check that no discrete variable is used in other inequalities (warns if yes) *)
-	(**** TO DO ****) (*use 'other_inequalities' *)
+	(*** TODO ***) (*use 'other_inequalities' *)
 
 	(* Return whether the init declaration passed the tests *)
 	discrete_values_pairs, !well_formed
@@ -1655,17 +1599,6 @@ let check_init useful_parsing_model_information init_definition observer_automat
 (************************************************************)
 
 
-
-(*------------------------------------------------------------*)
-(* Convert a ParsingStructure.tile_nature into a Result.tile_nature *)
-(*------------------------------------------------------------*)
-(*** TODO: this part has nothing to do with model conversion and should preferably go elsewhere… ***)
-(*let convert_tile_nature = function
-  | ParsingStructure.Good -> StateSpace.Good
-  | ParsingStructure.Bad -> StateSpace.Bad
-  | ParsingStructure.Unknown -> StateSpace.Unknown*)
-
-  
 
 (*------------------------------------------------------------*)
 (* Create the hash table of constants ; check the validity on-the-fly *)
@@ -4357,53 +4290,11 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	in
 
 
-(*	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Check optimization definition *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let well_formed_optimization = check_optimization parameter_names parsed_optimization_definition in*)
-
-
-
-	
-
-	(*	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Check polyhedra definition in (optional) carto mode *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let well_formed_carto = ref true in
-
-*)
-
-	(*** TODO!!! reintroduce differently ***)
-(*	let parsed_constraints , (p1_min , p1_max) , (p2_min , p2_max)  = parsed_carto_definition in
-	let carto_linear_constraints = List.map (fun (parsed_convex_predicate , tile_nature) ->
-		(* Check well-formedness *)
-		if all_variables_defined_in_convex_predicate variable_names constants parsed_convex_predicate then(
-			(* Convert to a AbstractModel.linear_constraint *)
-			LinearConstraint.cast_p_of_pxd_linear_constraint (linear_constraint_of_convex_predicate index_of_variables constants parsed_convex_predicate) true
-			,
-			(* Convert the tile nature *)
-			convert_tile_nature tile_nature
-		)else(
-			(* Set well-formedness to false *)
-			well_formed_carto := false;
-			(* Return anything *)
-			LinearConstraint.p_false_constraint () , AbstractModel.Unknown
-		)
-	) parsed_constraints in*)
-	(*** TODO!!! reintroduce differently ***)
-
-
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Check property definition *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** WARNING: might be a problem if the check_automata test fails ***)
-	let well_formed_property = check_property_option useful_parsing_model_information parsed_property_option in
-
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* exit if not well formed *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	if not (check_no_unassigned_constants && well_formed_automata && well_formed_projection && well_formed_init && well_formed_property)
+	if not (well_formed_projection && well_formed_init)
 		then raise InvalidModel;
 
 	print_message Verbose_medium ("Model syntax successfully checked.");
@@ -4439,9 +4330,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			converted_observer_structure.initial_observer_constraint_option
 	in
 	
-	
-(* 	let observer_structure_option, nb_transitions_for_observer, initial_observer_constraint_option, abstract_property_option = convert_property_option useful_parsing_model_information parsed_property_option in *)
-
 	
 
 
@@ -5023,16 +4911,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** HACK (big big hack): save some data structures to be used by the parsing and checking of additional file (pi0 or v0), if any ***)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(*	saved_index_of_variables	:= Some index_of_variables;
-	saved_nb_parameters			:= Some nb_parameters;
-	saved_parameters			:= Some parameters;
-	saved_parameter_names		:= Some parameter_names;
-	saved_variables				:= Some variables;*)
-
-
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Build the final structure *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	{
@@ -5143,265 +5021,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	px_clocks_non_negative_and_initial_p_constraint = px_clocks_non_negative_and_initial_p_constraint;
 
 	}
-	
-(*	,
-	
-	(* Also return the useful parsing information (used for property parsing) *)
-	{
-		constants         : constants;
-		index_of_automata : index_of_automata;
-		index_of_variables: index_of_variables;
-	}*)
-
 
 	,
 	
 	abstract_property_option
-	(*** TODO: handle property! ***)
-
-	(*type abstract_property = {
-	(* Emptiness or synthesis *)
-	synthesis_type	: synthesis_type;
-	(* Property *)
-	property		: property;
-	(* Projection of the result *)
-	projection		: projection;
-}*)
 
 
 
-(************************************************************)
-(************************************************************)
-(** Property conversion *)
-(************************************************************)
-(************************************************************)
-(*
-(*------------------------------------------------------------*)
-(* Check the property w.r.t. the model variables *)
-(*------------------------------------------------------------*)
-
-(* Check correct variable names in parsed_discrete_arithmetic_expression *)
-	
-(* Check correct variable names in parsed_loc_predicate *)
-let check_parsed_loc_predicate useful_parsing_model_information = function
-	| Parsed_loc_predicate_EQ (automaton_name, location_name)
-	| Parsed_loc_predicate_NEQ (automaton_name, location_name)
-	->
-		(* Check automaton name *)
-		let check_automaton = Hashtbl.mem useful_parsing_model_information.index_of_automata automaton_name in
-		if not check_automaton then (
-			print_error ("Automaton name '" ^ automaton_name ^ "' undefined in the property");
-		);
-		(* Check location name *)
-		let check_location = Hashtbl.mem useful_parsing_model_information.index_of_locations.(automaton_index) location_name in
-		if not check_location then (
-			print_error ("Location name '" ^ location_name ^ "' undefined in the property");
-		);
-		(* Return *)
-		check_automaton && check_location
-
-
-(* Check correct variable names in parsed_simple_predicate *)
-let check_parsed_simple_predicate useful_parsing_model_information = function
-	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> check_parsed_discrete_boolean_expression useful_parsing_model_information parsed_discrete_boolean_expression
-	| Parsed_loc_predicate parsed_loc_predicate -> check_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate
-
-
-(* Check correct variable names in parsed_state_predicate *)
-let rec check_parsed_state_predicate_factor useful_parsing_model_information = function
-	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor -> check_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor
-	| Parsed_simple_predicate parsed_simple_predicate -> check_parsed_simple_predicate useful_parsing_model_information parsed_simple_predicate
-	| Parsed_state_predicate parsed_state_predicate -> check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
-
-and check_parsed_state_predicate_term useful_parsing_model_information = function
-	| Parsed_state_predicate_term_AND (parsed_state_predicate_term1, parsed_state_predicate_term2) ->
-		let check1 = check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term1 in
-		let check2 = check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term2 in
-		check1 && check2
-	| Parsed_state_predicate_factor parsed_state_predicate_factor -> check_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor
-
-and check_parsed_state_predicate useful_parsing_model_information = function
-	| Parsed_state_predicate_OR (parsed_state_predicate1, parsed_state_predicate2) ->
-		let check1 = check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate1 in
-		let check2 = check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate2 in
-		check1 && check2
-	| Parsed_state_predicate_term parsed_state_predicate_term -> check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term
-
-
-	
-let check_property useful_parsing_model_information parsed_property : bool =
-	match parsed_property with
-	(* Reachability *)
-	| EF parsed_state_predicate
-	(* Unavoidability *)
-	| AF parsed_state_predicate	
-	(* Liveness *)
-	| AG parsed_state_predicate
-		-> check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
-
-
-
-(** Check and convert the parsing structure into an abstract property *)
-let abstract_property_of_parsed_property (options : Options.imitator_options) (useful_parsing_model_information : useful_parsing_model_information) (parsed_property : ParsingStructure.parsed_property) : ImitatorUtilities.synthesis_algorithm =
-	(* First check *)
-	if not (check_property useful_parsing_model_information parsed_property) then(
-		raise InvalidProperty
-	);
-	
-	(* Now convert *)
-	convert_property useful_parsing_model_information parsed_property*)
-
-(*
-(************************************************************)
-(************************************************************)
-(** Pi0 conversion *)
-(************************************************************)
-(************************************************************)
-
-
-(*------------------------------------------------------------*)
-(* Main function for pi0 parsing and converting *)
-(*------------------------------------------------------------*)
-let check_and_make_pi0 parsed_pi0 =
-  (* Print some information *)
-  print_message Verbose_total ("*** Building reference valuation…");
-
-  (*** HACK (big big hack): retrieve the structures saved at the end of the model parsing, and kept for efficiency ***)
-  let nb_parameters, parameters, parameters_names, variables =
-    match !saved_nb_parameters, !saved_parameters, !saved_parameters_names, !saved_variables with
-    | Some nb_parameters, Some parameters, Some parameters_names, Some variables -> nb_parameters, parameters, parameters_names, variables
-    | _ -> raise (InternalError("Saved data structures (nb_parameters, parameters_names, variables) not available when parsing reference valuation"))
-  in
-
-  (* Verification of the pi0 *)
-  if not (check_pi0 parsed_pi0 parameters_names) then raise InvalidPi0;
-
-  (* Construction of the pi0 *)
-  let pi0 = make_pi0 parsed_pi0 variables nb_parameters in
-
-  (* Print some information *)
-  print_message Verbose_medium ("\n*** Reference valuation pi0:");
-  List.iter (fun parameter ->
-      print_message Verbose_medium (
-        variables.(parameter) ^ " : " ^ (NumConst.string_of_numconst (pi0#get_value parameter))
-      )
-    ) parameters;
-
-  (* Return the valuation *)
-  pi0
-
-
-
-(************************************************************)
-(************************************************************)
-(** V0 conversion *)
-(************************************************************)
-(************************************************************)
-
-(*------------------------------------------------------------*)
-(* Check the V0 w.r.t. the model parameters *)
-(*------------------------------------------------------------*)
-let check_v0 parsed_v0 parameters_names =
-  (* Compute the list of variable names *)
-  let list_of_variables = List.map (fun (v, _, _) -> v) parsed_v0 in
-
-  (* Compute the multiply defined variables *)
-  let multiply_defined_variables = elements_existing_several_times list_of_variables in
-  (* Print an error for each of them *)
-  List.iter (fun variable_name -> print_error ("The parameter '" ^ variable_name ^ "' was assigned several times a valuation in v0.")) multiply_defined_variables;
-
-  (*** TODO: only warns if it is always defined to the same value ***)
-
-  (* Check if the variables are all defined *)
-  let all_defined = List.fold_left
-      (fun all_defined variable_name ->
-         if List.mem variable_name list_of_variables then all_defined
-         else (
-           print_error ("The parameter '" ^ variable_name ^ "' was not assigned a valuation in v0.");
-           false
-         )
-      )
-      true
-      parameters_names
-  in
-
-  (* Check that the intervals are not null *)
-  let all_intervals_ok = List.fold_left
-      (fun all_intervals_ok (variable_name, a, b) ->
-         if NumConst.le a b then all_intervals_ok
-         else (
-           print_error ("The interval [" ^ (NumConst.string_of_numconst a) ^ ", " ^ (NumConst.string_of_numconst b) ^ "] is null for parameter '" ^ variable_name ^ "' in v0.");
-           false
-         )
-      )
-      true
-      parsed_v0
-  in
-
-  (* Check if some defined variables are not parameters (and warn) *)
-  List.iter
-    (fun variable_name ->
-       if not (List.mem variable_name parameters_names) then (
-         print_warning ("'" ^ variable_name ^ "', which is assigned a valuation in v0, is not a valid parameter name.")
-       )
-    )
-    list_of_variables
-  ;
-
-  (* If something went wrong: launch an error *)
-  multiply_defined_variables = [] && all_defined && all_intervals_ok
-
-
-(*------------------------------------------------------------*)
-(* Convert the parsed v0 into a valid v0 *)
-(*------------------------------------------------------------*)
-let make_v0 parsed_v0 index_of_variables =
-  let v0 = new HyperRectangle.hyper_rectangle in
-  List.iter (fun (variable_name, a, b) ->
-      try
-        (* Get the variable index *)
-        let variable_index = Hashtbl.find index_of_variables variable_name in
-        (* Update the variable value *)
-        v0#set_min variable_index a;
-        v0#set_max variable_index b;
-      with Not_found ->
-        (* No problem: this must be an invalid parameter name (which is ignored) *)
-        ()
-        (* 			raise (InternalError ("The variable name '" ^ variable_name ^ "' was not found in the list of variables although checks should have been performed before.")) *)
-    ) parsed_v0;
-  v0
-
-
-(*------------------------------------------------------------*)
-(* Main function for v0 parsing and converting *)
-(*------------------------------------------------------------*)
-let check_and_make_v0 parsed_v0 =
-  (* Print some information *)
-  print_message Verbose_total ("*** Building reference hyper-rectangle…");
-
-  (*** HACK (big big hack): retrieve the structures saved at the end of the model parsing, and kept for efficiency ***)
-  let index_of_variables, nb_parameters, parameters_names, variables =
-    match !saved_index_of_variables, !saved_nb_parameters, !saved_parameters_names, !saved_variables with
-    | Some index_of_variables, Some nb_parameters, Some parameters_names, Some variables -> index_of_variables, nb_parameters, parameters_names, variables
-    | _ -> raise (InternalError("Saved data structures (index_of_variables, nb_parameters, parameters_names, variables) not available when parsing hyper-rectangle"))
-  in
-
-  (* Verification *)
-  if not (check_v0 parsed_v0 parameters_names) then raise InvalidV0;
-
-  (* Construction *)
-  let v0 = make_v0 parsed_v0 index_of_variables in
-
-  (* Print some information *)
-  print_message Verbose_medium ("\n*** Reference rectangle V0:");
-  for parameter_index = 0 to nb_parameters - 1 do
-    let min = v0#get_min parameter_index in
-    let max = v0#get_max parameter_index in
-    print_message Verbose_medium (
-      variables.(parameter_index) ^ " : [" ^ (NumConst.string_of_numconst min) ^ ", " ^ (NumConst.string_of_numconst max) ^ "]"
-    );
-  done;
-
-  (* Return the hyper-rectangle *)
-  v0
-*)
