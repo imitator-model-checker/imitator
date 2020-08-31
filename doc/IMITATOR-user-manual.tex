@@ -73,6 +73,7 @@ In this document, we present the input syntax, we formally define the input mode
 \paragraph{Keywords:} formal verification, model checking, software verification, parameter synthesis
 
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{A brief introduction to the syntax}\label{chapter:syntax-introduction}
@@ -174,7 +175,7 @@ At any time, this \IPTA{} may synchronize on action \styleIMI{update\_1}, reset 
 In location \styleIMI{check1}, the process wait at least \styleIMI{gamma} time units (modeled by the inequality \styleIMI{x1 >= gamma}, in all outgoing transitions).
 If \styleIMI{turn} is still equal to \styleIMI{1} (that is, no other process attempted in the meanwhile to enter the critical section), then process~1 is indeed ready to enter the critical section, by synchronizing \styleIMI{access\_1} and resetting \styleIMI{x1}.
 If \styleIMI{turn} is different from \styleIMI{1} (that is, another process attempted in the meanwhile to enter the critical section, and it is not safe for process~1 to enter), then process~1 returns to its idle location, by synchronizing \styleIMI{no\_access\_1} and resetting \styleIMI{x1}.
-Note that we have to use two transitions checking that either \styleIMI{turn < 1} or \styleIMI{turn > 1} to compensate that the ``different from'' operator (``\styleIMI{$\neq$}'') is not (yet) supported by \imitator{}.
+Note that we have to use two transitions checking that either \styleIMI{turn < 1} or \styleIMI{turn > 1} to compensate that the ``different from'' operator (``\styleIMI{$\neq$}'') is not (yet) supported by \imitator{} for constraints involving clocks or parameters.
 
 In location \styleIMI{access1}, process~1 can remain any time, and eventually enters the critical section by synchronizing \styleIMI{enter\_1} and incrementing the global variable \styleIMI{counter} by~1.
 
@@ -575,7 +576,7 @@ The standard \imitator{} command for all algorithms is:
 
 \begin{itemize}
 	\item synthesis (\styleIMI{\#synth}): synthesizing all valuations such that a property holds;
-	\item witness (\styleIMI{\#exhibit}): find (at least) one valuation such that a property holds.
+	\item witness (\styleIMI{\#exhibit} or \styleIMI{\#witness}, both equivalent): find (at least) one valuation such that a property holds.
 \end{itemize}
 
 While the ``witness'' mode is close to (the contrary of) emptiness-checking, the ``witness'' mode is not strictly speaking an emptiness check: rather, the algorithm stops as soon as it finds some valuations, but there may be more than one, so the result can still be symbolic.
@@ -596,9 +597,9 @@ The property syntax is as follows:\footnote{%
 	\imitator{} uses the TCTL syntax, where EF notably denotes reachability.
 }
 
-\styleIMI{property := \#synth EF(statepredicate);}\\
-where \styleIMI{statepredicate} is a state predicate, for example of the form \styleIMI{loc[AUTOMATON] = LOCATION}, where \styleIMI{AUTOMATON} is an automaton name, and \styleIMI{LOCATION} is a location name.
-State predicates allow conjunction, disjunction and the use of global discrete variables.
+\styleIMI{property := \#synth EF(state\_predicate);}\\
+where \styleIMI{state\_predicate} is a state predicate, for example of the form \styleIMI{loc[AUTOMATON] = LOCATION}, where \styleIMI{AUTOMATON} is an automaton name, and \styleIMI{LOCATION} is a location name.
+State predicates allow conjunction, disjunction and the use of global discrete variables (see \cref{section:grammar-property} for details).
 
 The algorithm \EFsynth{} implemented in \imitator{} is a basic breadth-first procedure, close to the one described in \cite{JLR15}.
 Of course, the EF-emptiness problem being undecidable~\cite{AHV93}, the analysis is not guaranteed to terminate.
@@ -610,16 +611,15 @@ Of course, the EF-emptiness problem being undecidable~\cite{AHV93}, the analysis
 % The option \styleOption{-output-result} is not compulsory, but allows one to
 One obtains a result in an external text file (\stylePath{model.res}) formatted using a standardized manner (see \cref{chapter:result}), and therefore easier to parse using an external tool than the terminal output.
 
-The options \styleOption{-merge} and \styleOption{-incl} are optional, but generally greatly increase the analysis efficiency and the termination.
-The option \styleOption{-dynamic-elimination} can also be used to reduce the state space.
+The options \styleOption{-merge} and \styleOption{-inclusion} are implicitely activated for this algorithm, as they usually greatly increase the analysis efficiency and the termination.
+You may want to use \styleOption{-no-merge} or \styleOption{-no-inclusion} to disable them.
+The option \styleOption{-dynamic-elimination} (not activated by default) can also be used to reduce the state space.
 
 \imitator{} can also
-	output the trace set in a graphical form (option \styleOption{-draw-statespace}),
-	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
-It also
-	outputs the result to a text file using a normalized syntax% (option \styleOption{-output-result})
-	, that can be then scripted from external programs.
-
+	output the state space in a graphical form (option \styleOption{-draw-statespace}),
+	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}),
+	or
+	output the text description of all states (option \styleOption{-states-description}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Safety}\label{ss:mode:EF}
@@ -633,18 +633,9 @@ Often, we are rather interested in \emph{safety} synthesis, \ie{} the set of val
 
 The property syntax is as follows:
 
-\styleIMI{property := \#synth AGnot(statepredicate);}
+\styleIMI{property := \#synth AGnot(state\_predicate);}
 
 Internally, this algorithm works exactly the same as the reachability-synthesis, and at the end the obtained constraint is \emph{negated} (with parameters being constrained to be included in the initial state valuations).
-
-%------------------------------------------------------------
-\begin{remark}
-	For both reachability and safety, one can use the option \styleOption{-counterexample} to stop the analysis as soon as a counterexample is found (see list of options in \cref{chapter:options}).
-	
-	In that case, the result is not exact, but approximated.
-\end{remark}
-%------------------------------------------------------------
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -657,7 +648,7 @@ This algorithm is briefly mentioned in~\cite{ABPV19}.
 
 The property syntax is as follows:
 
-\styleIMI{property := \#synth EFpmin(statepredicate, p);}\\
+\styleIMI{property := \#synth EFpmin(state\_predicate, p);}\\
 where \styleIMI{p} is the parameter the value of which must be minimized.
 
 
@@ -670,7 +661,7 @@ This algorithm is the dual of EF-minimization (see \cref{ss:mode:EFmin}).
 
 The property syntax is as follows:
 
-\styleIMI{property := \#synth EFpmax(statepredicate, p);}
+\styleIMI{property := \#synth EFpmax(state\_predicate, p);}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -688,7 +679,7 @@ Our algorithm uses a priority queue, with priority to the earliest successor for
 
 The property syntax is as follows:
 
-\styleIMI{property := \#synth EFtmin(statepredicate);}\\
+\styleIMI{property := \#synth EFtmin(state\_predicate);}\\
 where \styleIMI{p} is the parameter the value of which must be minimized.
 
 \emph{The maximum time reachability is currently not implemented.}
@@ -699,7 +690,7 @@ where \styleIMI{p} is the parameter the value of which must be minimized.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \imitator{} basically only supports bad state reachability synthesis on the one hand, and algorithms such as the inverse method and the cartography on the other hand.
-However, many correctness properties can be encoded using reachability using \emph{observers} (see \cite{ABL98,ABBL98,ABBL03,Andre13ICECCS}).
+However, many correctness properties can reduce to reachability using \emph{observers} (see \cite{ABL98,ABBL98,ABBL03,Andre13ICECCS}).
 
 Encoding observers can be done manually (using \adhoc{} \IPTA{}), or using predefined correctness property patterns commonly met in the literature.
 
@@ -710,9 +701,9 @@ Encoding observers can be done manually (using \adhoc{} \IPTA{}), or using prede
 
 If using a predefined property pattern, the property pattern must be specified as follows:
 
-\styleIMI{property := \#synth [PROP]}
+\styleIMI{property := \#synth <PROP>}
 \\
-where \styleIMI{[PROP]} must follow the syntax of the following patterns, where \styleIMI{a}, \styleIMI{a1}, \styleIMI{a2} are actions, and the deadline \styleIMI{d} is a (possibly parametric) linear expression:
+where \styleIMI{<PROP>} must follow the syntax of the following patterns, where \styleIMI{a}, \styleIMI{a1}, \styleIMI{a2} are actions, and the deadline \styleIMI{d} is a (possibly parametric) linear expression:
 
 \begin{itemize}
 	\item \styleIMI{if a2 then a1 has happened before}
@@ -757,7 +748,7 @@ The property syntax is as follows:
 \styleIMI{property := \#synth deadlockfree;}
 
 As usual, \imitator{} can also
-	output the trace set in a graphical form (option \styleOption{-draw-statespace})
+	output the state space in a graphical form (option \styleOption{-draw-statespace})
 	or
 	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
 % 	or
@@ -785,7 +776,7 @@ The property syntax is as follows:
 
 
 As usual, \imitator{} can also
-	output the trace set in a graphical form (option \styleOption{-draw-statespace})
+	output the state space in a graphical form (option \styleOption{-draw-statespace})
 	or
 	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
 
@@ -796,7 +787,7 @@ Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for 
 
 The property syntax is as follows:
 
-\styleIMI{property := \#synth inf\_cycle\_through(statepredicate);}
+\styleIMI{property := \#synth inf\_cycle\_through(state\_predicate);}
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -806,17 +797,25 @@ Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for 
 This algorithm differs from the one in \cref{ss:accepting-loop} in the sense that this algorithm performs a nested depth-first search (NDFS) exploration until a cycle is found~\cite{NPP18}.
 In addition, this algorithm is (by default) not complete.
 
-% TODO!
+The property syntax is as follows:
 
-The command is:
+\styleIMI{property := \#synth inf\_cycle;}
 
-\styleCommand{\binimitator{} model.imi -mode AccLoopSynthNDFS -output-result}
+However, there are two main differences with \cref{ss:loop,ss:accepting-loop}:
+\begin{enumerate}
+	\item accepting locations must be specified using the keyword \styleIMI{accepting} (this keyword is not used by other algorithms\footnote{This comes from the fact that the developers of this algorithm are mainly Jaco Van~de~Pol and Laure~Petrucci, who used a different accepting location system.});
+	\item an exploration order must be specified as command line (see below).
+\end{enumerate}
+
+The command is therefore:
+
+\styleCommand{\binimitator{} model.imi property.imiprop -explOrder NDFS}
 
 Several heuristics can be used, some of them synthesizing all parameter values for which a cycle can be found.
 These are accessible via the \styleOption{-explOrder} option:
 
 \begin{description}
-	\item[\styleOption{-explOrder NDFS}]: use standard NDFS to find an accepting cycle (default option);
+	\item[\styleOption{-explOrder NDFS}]: use standard NDFS to find an accepting cycle;
 	\item[\styleOption{-explOrder NDFSsub}]: standard NDFS with subsumption;
 	\item[\styleOption{-explOrder layerNDFSsub}]: NDFS with subsumption and layers;
 % 	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
@@ -837,16 +836,10 @@ the current branch and backtracks when this depth is reached.
 
 
 As usual, \imitator{} can also
-	output the trace set in a graphical form (option \styleOption{-draw-statespace})
+	output the state space in a graphical form (option \styleOption{-draw-statespace})
 	or
 	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
 
-
-%------------------------------------------------------------
-\begin{remark}
-	As for \EFsynth{}, one can use here the option \styleOption{-counterexample} to stop the analysis as soon as a counterexample is found (see list of options in \cref{chapter:options}).
-\end{remark}
-%------------------------------------------------------------
 
 
 
@@ -859,6 +852,7 @@ That is, only parameter valuations yielding at least one non-Zeno cycle are synt
 Parameter valuations yielding only Zeno-cycles or no cycles are ignored.
 
 The method implemented in \imitator{} is based on CUB-\IPTA{}, a syntactic subclass of PTA based on the CUB-TA proposed in~\cite{WSWLSDYL15}.
+The precise algorithm we use, including the transformation of an arbitrary PTA into a CUB-PTA, is described in~\cite{ANPS17}.
 
 % NOTE: hidden property =
 % 	\styleIMI{property := \#synth NZ\_inf\_cycle\_CUB;}
@@ -889,7 +883,7 @@ Two options are possible in \imitator{}:
 \end{warning}
 
 As usual, \imitator{} can also
-	output the trace set in a graphical form (option \styleOption{-draw-statespace})
+	output the state space in a graphical form (option \styleOption{-draw-statespace})
 	or
 	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
 
@@ -909,10 +903,10 @@ The trace-preservation emptiness problem being undecidable~\cite{AM15}, the anal
 
 The property syntax is of the following form:
 
-\styleIMI{property := \#synth IM(referencevaluation);}
+\styleIMI{property := \#synth IM(parameter\_valuation);}
 
 \noindent{}
-where \styleIMI{referencevaluation} is a reference valuation of the form \styleIMI{p1 = 1 \& p2 = 2 \&…} (see \cref{section:grammar-property} for details).
+where \styleIMI{parameter\_valuation} is a reference valuation of the form \styleIMI{p1 = 1 \& p2 = 2 \&…} (see \cref{section:grammar-property} for details).
 
 %------------------------------------------------------------
 \begin{remark}
@@ -922,7 +916,7 @@ where \styleIMI{referencevaluation} is a reference valuation of the form \styleI
 
 
 \imitator{} can also
-	output the trace set in a graphical form (option \styleOption{-draw-statespace})
+	output the state space in a graphical form (option \styleOption{-draw-statespace})
 	or
 	output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
 	% TODO
@@ -934,6 +928,7 @@ generates
 a result in an external text file (\stylePath{model.res}) and formatted using a standardized manner (see \cref{chapter:result}). %, and therefore easier to parse using an external tool than the terminal output.
 
 
+\imitator{} also offers two similar algorithms: \styleIMI{IMK} and \styleIMI{IMunion} return similar but slightly different results (see \cite{AS11}).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -947,14 +942,14 @@ The corresponding problem being undecidable, the analysis is not guaranteed to t
 The property syntax is of the following form:
 
 
-\styleIMI{property := \#synth BCcover(referencerectangle);}
+\styleIMI{property := \#synth BCcover(hyper\_rectangle);}
 
 \noindent{}
-where \styleIMI{referencerectangle} is a reference hyper-rectangle of the form \styleIMI{p1 = 1..5 \& p2 = 2..4 \&…} (see \cref{section:grammar-property} for details).
+where \styleIMI{hyper\_rectangle} is a reference hyper-rectangle of the form \styleIMI{p1 = 1..5 \& p2 = 2..4 \&…} (see \cref{section:grammar-property} for details).
 
 
 \imitator{} can also
-	output all trace sets in a graphical form (option \styleOption{-draw-statespace}),
+	output all state spaces in a graphical form (option \styleOption{-draw-statespace}),
 	or
 	output the constraints synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
 % 	or
@@ -962,14 +957,17 @@ where \styleIMI{referencerectangle} is a reference hyper-rectangle of the form \
 
 When using the following syntax with an optional second argument:
 
-\styleIMI{property := \#synth BCcover(referencerectangle, step=2/3);}
+\styleIMI{property := \#synth BCcover(hyper\_rectangle, step=2/3);}
 
 \noindent one can specify the interval between any two points of which the coverage is checked (see \cite{AF10}), here \styleIMI{2/3}.
 By default, it is 1; setting $\frac{1}{3}$ often leads to full coverage when 1 was not enough.
-Any strictly postive rational (or integer) is allowed.
-This optional argument is syntactically accepted for other cartography-like algorithms, but may not always be considered by the algorithm, nor was fully tested.
+Any strictly positive rational (or integer) is allowed.
 
-In addition, trace sets and separate graphical cartographies for each tile can also be generated by adding option \styleOption{-tiles-files}.
+\begin{warning}
+	This optional argument is syntactically accepted for other cartography-like algorithms, but may not always be considered by the algorithm, nor was fully tested.
+\end{warning}
+
+In addition, state spaces and separate graphical cartographies for each tile can also be generated by adding option \styleOption{-tiles-files}.
 
 % Recall that the option \styleOption{-output-result} is not compulsory, but allows one to obtain a result in an external text file (\stylePath{model.res}) formatted using a standardized manner (see \cref{chapter:result}), and therefore easier to parse using an external tool than the terminal output.
 
@@ -979,16 +977,19 @@ In addition, trace sets and separate graphical cartographies for each tile can a
 \subsection*{Behavioral cartography with random coverage}\label{sss:mode:BC:random}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-An alternative to the behavioral cartography is a random coverage; it can be seen as a kind of sampling.
+An alternative to the behavioral cartography is a random coverage~\cite{AF10}; it can be seen as a kind of sampling.
 
 The property syntax is of the following form:
 
-\styleIMI{property := \#synth BCrandom(referencerectangle , XX);}
+\styleIMI{property := \#synth BCrandom(hyper\_rectangle , nb);}
 
 
-\noindent{}where \styleOption{XX} is the number of times an integer point is randomly selected within the domain defined.
+\noindent{}where \styleOption{nb} is the number of times an integer point is randomly selected within the domain defined.
 If this point is already covered by one of the tiles, the inverse method is not called, an another point is selected.
-Note that \styleOption{XX} represents the number of integer points randomly selected; the number of \emph{calls} to the inverse method can be significantly smaller.
+Note that \styleOption{nb} represents the number of integer points randomly selected; the number of \emph{calls} to the inverse method can be significantly smaller.
+
+A second algorithm is \styleIMI{BCrandomseq}~\cite{ACE14}, which first selects random point selections, and then enumerates all integer points to make sure they are actually covered.
+This algorithm is mostly interesting when distributed (see \cite{ACE14,ACN15}).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -997,12 +998,12 @@ Note that \styleOption{XX} represents the number of integer points randomly sele
 
 A second alternative to the behavioral cartography is an enumeration of all integer points in a random fashion.
 That is, all integer points in the reference parameter domain are generated in a data structure (an array), and then are shuffled.
-Then the points are enumerated.
+Then the points are enumerated~\cite{ACN15}.
 It differs from the random cartography in the sense that the random cartography randomly samples points without guarantee of full coverage, whereas the shuffle enumeration guarantees the coverage of all integer points.
 
 The property syntax is:
 
-\styleIMI{property := \#synth BCshuffle(referencerectangle);}
+\styleIMI{property := \#synth BCshuffle(hyper\_rectangle);}
 
 
 
@@ -1016,7 +1017,7 @@ By preserving the reachability, we mean that $\loc$ is reachable for the other v
 
 This algorithm~$\PRP$, that somehow combines \EFsynth{} and \IM{} (see~\cite{ALNS15} for details), is called using the following property syntax:
 
-\styleIMI{property := \#synth PRP(statepredicate , referencevaluation);}
+\styleIMI{property := \#synth PRP(state\_predicate , parameter\_valuation);}
 
 
 
@@ -1029,7 +1030,7 @@ An extension of $\PRP$ to the cartography (named \PRPC{}) is also available: \PR
 
 The property syntax for this algorithm $\PRPC$ is as follows:
 
-\styleIMI{property := \#synth PRPC(statepredicate , rectanglevaluation);}
+\styleIMI{property := \#synth PRPC(state\_predicate , hyper\_rectangle);}
 
 
 
@@ -1037,23 +1038,77 @@ The property syntax for this algorithm $\PRPC$ is as follows:
 \section{Summary}\label{ss:mode:summary}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% TODO
+We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic syntax, and specifying whether they support the \styleIMI{\#witness} mode that stops as soon as (at least) one parameter valuation is witnessed.
 
-\begin{table}[h]
+\begin{table}[h!]
+	\caption{Summary of the algorithms syntax}
 	{\centering
 	\begin{tabular}{ | l | l | c | c | }
+	
+		% Non-nested CTL
 		\hline
 		\rowHeader{} Algorithm & Syntax & Synth & Witness \\
 		\hline
-		Reachability & \styleIMI{EF(statepredicate)} & \cellYes{} & \cellYes{} \\
+		Reachability & \styleIMI{EF(state\_predicate)} & \cellYes{} & \cellYes{} \\
 		\hline
-		Safety & \styleIMI{AGnot(statepredicate)} & \cellYes{} & \cellYes{} \\
+		Safety & \styleIMI{AGnot(state\_predicate)} & \cellYes{} & \cellYes{} \\
+		
+		% Optimized reachability
+		 
 		\hline
+		Parameter minimization & \styleIMI{EFpmin(state\_predicate, p)} & \cellYes{} & \cellYes{} \\
+		\hline
+		Parameter maximization & \styleIMI{EFpmax(state\_predicate, p)} & \cellYes{} & \cellYes{} \\
+		\hline
+		Minimal-time & \styleIMI{EFtmin(state\_predicate)} & \cellYes{} & \cellYes{} \\
+		
+		% Cycles
+		
+		\hline
+		Cycle & \styleIMI{inf\_cycle} & \cellYes{} & \cellNo{} \\
+		\hline
+		Accepting cycle & \styleIMI{inf\_cycle\_through(state\_predicate)} & \cellYes{} & \cellNo{} \\
+		\hline
+		Accepting cycle (NDFS) & \styleIMI{inf\_cycle} & \cellYes{} & \cellYes{} \\
+		\hline
+		Non-Zeno cycles & \styleIMI{inf\_cycle} & \cellYes{} & \cellNo{} \\
+		
+		% Deadlock-freeness
+		
+		\hline
+		Deadlock-freeness & \styleIMI{deadlockfree} & \cellYes{} & \cellNo{} \\
+		
+		% Inverse method
+		
+		\hline
+		Inverse method & \styleIMI{IM(parameter\_valuation)} & \cellYes{} & \cellNo{} \\
+		\hline
+		Inverse method & \styleIMI{IMK(parameter\_valuation)} & \cellYes{} & \cellNo{} \\
+		\hline
+		Inverse method & \styleIMI{IMunion(parameter\_valuation)} & \cellYes{} & \cellNo{} \\
+		
+		% Cartography
+		
+		\hline
+		Cartography & \styleIMI{BCcover(hyper\_rectangle)} & \cellYes{} & \cellNo{} \\
+		Cartography & \styleIMI{BCrandom(hyper\_rectangle, nb)} & \cellYes{} & \cellNo{} \\
+		Cartography & \styleIMI{BCrandomseq(hyper\_rectangle, nb)} & \cellYes{} & \cellNo{} \\
+		Cartography & \styleIMI{BCshuffle(hyper\_rectangle)} & \cellYes{} & \cellNo{} \\
+		
+		% PRP, PRPC
+		
+		\hline
+		PRP & \styleIMI{PRP(state\_pred, parameter\_val)} & \cellYes{} & \cellNo{} \\
+		\hline
+		PRPC & \styleIMI{PRPC(state\_pred, hyper\_rect)} & \cellYes{} & \cellNo{} \\
+		
+		\hline
+
 	\end{tabular}
 
 	}
+	
 	\label{table:summary:algorithms}
-	\caption{Summary of the algorithms syntax}
 \end{table}
 
 
@@ -1074,7 +1129,7 @@ The option \styleOption{-states-description} generates a file with a textual des
 Each state is represented with its discrete part (location and values of the discrete variables), the clock and parameter constraints, and below their projection onto the parameters.
 % ; in addition, if \styleFileContent{projectresult} is defined in the model (see \cref{section:projection}), the projection onto a specific set of parameters is also added.
 
-\imitator{} can also output the trace set in a graphical form using option \styleOption{-draw-statespace}.
+\imitator{} can also output the state space in a graphical form using option \styleOption{-draw-statespace}.
 % TODO: example
 
 
@@ -1122,16 +1177,16 @@ The resulting constraint comes with two other information:
 		The constraint nature is only an \emph{attempt}, as the constraint may not always be sound (see below).
 	\item its soundness, \ie{} whether the constraint is exact (\imitator{} returned exactly the set of parameter valuations solution to the analysis requested), a possible under-approximation of that result, a possible over-approximation of that result (in some rare cases), or a possibly invalid constraint (in which case the result output by \imitator{} shall not be used).
 \end{itemize}
-Note that in almost all analyses, \imitator{} return an exact or an under-approximated constraint.
+Note that in almost all analyses, \imitator{} returns an exact or an under-approximated constraint.
 A possibly invalid constraint can be synthesized when some options are used: for example, computing the result of \IM{} with the merging enabled (\styleOption{-merge}) yields a possibly invalid constraint, as it was shown that the merging optimization does not preserve the validity of the result of~\IM{}~\cite{AFS13atva}.
 
-\begin{remark}
-	\IM{} is independent of the property, and therefore the constraint nature is not really interesting.
-	\imitator{} performs the following:
-	if a safety property is defined and if the state space reaches some unsafe states, then the constraint is considered as bad.
-	In any other case (safe state space, or no safety property defined), the constraint nature is considered as good.
-	The same applies for \BC{}.
-\end{remark}
+% \begin{remark}
+% 	\IM{} is independent of the property, and therefore the constraint nature is not really interesting.
+% 	\imitator{} performs the following:
+% 	if a safety property is defined and if the state space reaches some unsafe states, then the constraint is considered as bad.
+% 	In any other case (safe state space, or no safety property defined), the constraint nature is considered as good.
+% 	The same applies for \BC{}.
+% \end{remark}
 
 
 Finally, the result also comes with an evaluation of the termination: the termination can be regular (the analysis went to its end without interruption) or an early termination, with some states unexplored (\eg{} if a maximum analysis time (\styleOption{-time-limit}), a maximum exploration depth (\styleOption{-depth-limit}), etc., was set).
@@ -1186,18 +1241,18 @@ For more detailed commands, and a complete list of options, see \cref{chapter:op
 
 To generate the (discretized) state space of a given computation in a graphical form, use:
 
-\styleCommand{\binimitator{} model.imi [options] -draw-statespace normal}
+\styleCommand{\binimitator{} model.imi [property.imiprop] [options] -draw-statespace normal}
 
 \imitator{} will generate a file \stylePath{model-statespace.pdf}.
 States are made of two part: the left-hand number (\eg{} \styleFileContent{s\_0}) is the number of the symbolic state, which comes from \imitator{} internal representation (\styleFileContent{s\_0} is the first one to be generated, and so on); the right-hand part displays all the discrete part of the symbolic state vertically, that is the current location in each of the NIPTA in parallel, and the value of possible discrete variables (if any).
-Consider state \texttt{s\_1} in \cref{figure:traceset:normal} (and originating from the example in \cref{chapter:syntax-introduction}):
+Consider state \texttt{s\_1} in \cref{figure:statespace:normal} (and originating from the example in \cref{chapter:syntax-introduction}):
 	the current location of IPTA \styleFileContent{proc\_1} is \styleFileContent{active1},
 	the current location of IPTA \styleFileContent{proc\_2} is \styleFileContent{idle2},
 	while
 	the current location of IPTA \styleFileContent{observer} is \styleFileContent{obs\_waiting}.
 In addition, the current value of variable \styleFileContent{turn} is $-1$ while the current value of \styleFileContent{counter} is~0.
 The color is chosen according to \imitator{} internal choice: however, two symbolic states with the same color have the same discrete part (location and values of the discrete variables).
-For example, this is the case of \styleFileContent{s\_4} and \styleFileContent{s\_5} in \cref{figure:traceset:normal}.
+For example, this is the case of \styleFileContent{s\_4} and \styleFileContent{s\_5} in \cref{figure:statespace:normal}.
 
 Note that, beyond about 1,000 states or 1,000 transitions, the \gdot{} utility (responsible to generate the state space) may crash.
 
@@ -1205,14 +1260,14 @@ Using \styleOption{-draw-statespace undetailed} makes a more compact representat
 
 Conversely, \styleOption{-draw-statespace full} makes a more detailed representation, by also adding to the state space all constraints:
 	the clock and parameter constraints, and below their projection onto the parameters; in addition, if \styleFileContent{projectresult} is defined in the model (see \cref{section:projection}), the projection onto a specific set of parameters is also added.
-This option is mostly suitable for small trace sets.
+This option is mostly suitable for small state spaces.
 
 \begin{example}
-	An example of state space with no details (output using \styleOption{-draw-statespace undetailed}), with normal details (using \styleOption{-draw-statespace normal}), and in verbose mode (using \styleOption{-draw-statespace full}) are given in \cref{figure:traceset:nodetail,figure:traceset:normal,figure:traceset:verbose}.
+	An example of state space with no details (output using \styleOption{-draw-statespace undetailed}), with normal details (using \styleOption{-draw-statespace normal}), and in verbose mode (using \styleOption{-draw-statespace full}) are given in \cref{figure:statespace:nodetail,figure:statespace:normal,figure:statespace:verbose}.
 
 	These graphics were generated using the example in \cref{chapter:syntax-introduction} with the following command:
 
-	\styleCommand{imitator fischer.imi -mode EF -depth-limit 4 -draw-statespace normal}
+	\styleCommand{\binimitator{} fischer.imi fischer.imiprop -depth-limit 4 -draw-statespace normal}
 
 	(where \styleOption{normal} should be replaced with \styleOption{undetailed} or \styleOption{full}, respectively)
 \end{example}
@@ -1223,20 +1278,20 @@ This option is mostly suitable for small trace sets.
 		\includegraphics[width=\textwidth]{images/fischerPAT_obs-statespace-nodetails.pdf}
 
 		\caption{No details}
-		\label{figure:traceset:nodetail}
+		\label{figure:statespace:nodetail}
 	\end{subfigure}
 	\begin{subfigure}[b]{.48\textwidth}
 		\includegraphics[width=\textwidth]{images/fischerPAT_obs-statespace-normal.pdf}
 
 		\caption{Normal}
-		\label{figure:traceset:normal}
+		\label{figure:statespace:normal}
 	\end{subfigure}
 
 	\begin{subfigure}[b]{.75\textwidth}
 		\includegraphics[width=\textwidth]{images/fischerPAT_obs-statespace-verbose.pdf}
 
 		\caption{Verbose}
-		\label{figure:traceset:verbose}
+		\label{figure:statespace:verbose}
 	\end{subfigure}
 
 	\caption{Examples of graphical state space}
@@ -1250,7 +1305,7 @@ This option is mostly suitable for small trace sets.
 
 To visualize the constraint generated by \imitator{} using a 2-dimensional plot (thanks to the external plot utility), use:
 
-\styleCommand{\binimitator{} model.imi [options] -draw-cart}
+\styleCommand{\binimitator{} model.imi property.imiprop [options] -draw-cart}
 
 This will generate file \stylePath{model\_cart.png}.
 % \stylePath{model\_cart\_ef.png} if the algorithm is \EFsynth{},
@@ -1293,7 +1348,7 @@ Parameters are therefore translated to constants, the value of which can be manu
 \imitator{} allows a much wider form of constraints than \uppaal{}.
 In particular, \imitator{} allows any conjunction of linear constraints (see \cref{ss:constraints}) while \uppaal{} mainly allows clocks to be compared to integers.
 In addition, \uppaal{} only allows invariants of the form $\clock \leq c$ or $\clock < c$, which is not a restriction in \imitator{}.
-No check are made when translating, and therefore \uppaal{} may not accept models translated from \imitator{} input models using these features.
+No checks are made when translating, and therefore \uppaal{} may not accept models translated from \imitator{} input models using these features.
 
 \paragraph{Discrete variables}
 Discrete variables in \imitator{} are rational-valued with an exact value.
@@ -1626,24 +1681,24 @@ Set maximum value for the $y$ axis when plotting the cartography (not entirely f
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-draw-trace-set} (default: none)}
+\paragraph{\styleOption{-draw-statespace} (default: none)}
 %------------------------------------------------------------
 Graphical output using \gdot{}.
-In this case, \imitator{} outputs a file \stylePath{<input\_file>.pdf}, which is a graphical output in the PDF format, generated using \gdot{}, corresponding to the trace set.
+In this case, \imitator{} outputs a file \stylePath{<input\_file>.pdf}, which is a graphical output in the PDF format, generated using \gdot{}, corresponding to the state space.
 
-Note that the path and the name of those two files can be changed using the \stylePath{-log-prefix} option.
+Note that the path and the name of those two files can be changed using the \stylePath{-output-prefix} option.
 
 Three values for this option are allowed:
 \begin{itemize}
 	\item Use value \styleOption{undetailed} for the structure only (no location names): does \emph{not} provide detailed information on the local locations of the composed \IPTA{}, and instead only outputs the state id.
-	Enabling the option with this value instead of \styleOption{-draw-trace-set normal} may yield a smaller graph, which is useful when generating relatively large state spaces.
+	Enabling the option with this value instead of \styleOption{-draw-statespace normal} may yield a smaller graph, which is useful when generating relatively large state spaces.
 	
 	\item Use value \styleOption{normal} for location names.
 	
 	\item Use value \styleOption{full} for location names and constraints.
 	This provides very detailed information, by adding to the right of the local locations of the composed \IPTA{} the associated constraint as well.
 In addition, the parametric constraint is printed too.
-Enabling the option with this value instead of \styleOption{-draw-trace-set normal} will yield a very large graph, and it is useful (and readable) mostly for very small state spaces.
+Enabling the option with this value instead of \styleOption{-draw-statespace normal} will yield a very large graph, and it is useful (and readable) mostly for very small state spaces.
 	% TODO: show examples in the manual
 
 \end{itemize}
@@ -1663,26 +1718,32 @@ Dynamic elimination of clocks that are known to not used in the future of the cu
 %------------------------------------------------------------
 Exploration orders are considered in two frameworks.
 
-First, for standard reachability analysis (and counterexample analysis, using \styleOption{-counterexample}), and documented in~\cite{ANP17}.
-% TODO!
+First, for standard reachability analysis (and counterexample analysis, using \styleIMI{\#witness}), and documented in~\cite{ANP17}.
+\begin{itemize}
+	\item \styleOption{-explOrder layerBFS}: layer-based breadth-first search (default);
+	\item \styleOption{-explOrder queueBFS}: queue-based breadth-first search;
+	\item \styleOption{-explOrder queueBFSRS}: queue-based breadth-first search with ranking system
+	\item \styleOption{-explOrder queueBFSPRIOR}: priority-based BFS with ranking system.
+\end{itemize}
+%
 This framework remains relatively experimental.
 
 Second, for accepting loop synthesis with NDFS exploration~\cite{NPP18} (see \cref{ss:accepting-loop-NDFS}).
 In this latter case, the possible values are:
-\begin{description}
-	\item[\styleOption{-explOrder NDFS}]: use standard NDFS to find an accepting cycle (default option);
-	\item[\styleOption{-explOrder NDFSsub}]: standard NDFS with subsumption;
-	\item[\styleOption{-explOrder layerNDFSsub}]: NDFS with subsumption and layers;
+\begin{itemize}
+	\item\styleOption{-explOrder NDFS}: use standard NDFS to find an accepting cycle;
+	\item\styleOption{-explOrder NDFSsub}: standard NDFS with subsumption;
+	\item\styleOption{-explOrder layerNDFSsub}: NDFS with subsumption and layers;
 % 	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
 % 	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
-\end{description}
+\end{itemize}
 
 
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-graphics-source} (default: false)}
 %------------------------------------------------------------
-Keep file(s) used for generating graphical output (\eg{} trace set, cartography); these files are otherwise deleted after the generation of the graphics.
+Keep file(s) used for generating graphical output (\eg{} state space, cartography); these files are otherwise deleted after the generation of the graphics.
 
 
 
@@ -1739,9 +1800,9 @@ See \cref{section:uppaal} for details.
 %------------------------------------------------------------
 \paragraph{\styleOption{-inclusion} (default: depending on the algorithm)}
 %------------------------------------------------------------
-Consider an inclusion of parametric zone instead of the equality when performing the $\mathit{Post}$ operation.
+Consider an inclusion of parametric zone instead of the equality when computing the successors of a set of states.
 In other terms, when encountering a new state, \imitator{} checks if the same state (same location and same constraint) has been encountered before and, if so, discards this ``new'' state.
-However, when the \code{-inclusion} option is activated, it suffices that a previous state with the same location and a constraint \emph{greater than or equal} to the constraint of the new state has been encountered to discard the new state and stop exploring the current branch.
+However, when the \styleOption{-inclusion} option is activated, it suffices that a previous state with the same location and a constraint \emph{greater than or equal} to the constraint of the new state has been encountered to discard the new state and stop exploring the current branch.
 This option corresponds to the way that, \eg{} \hytech{} works, and suffices when one wants to check the \emph{non-reachability} of a given bad state.
 
 %------------------------------------------------------------
@@ -1753,7 +1814,7 @@ Force disabling inclusion, even if the selected algorithm normally requires it.
 %------------------------------------------------------------
 \paragraph{\styleOption{-inclusion-bidir} (default: false)}
 %------------------------------------------------------------
-Consider a bidirectional inclusion of parametric zone instead of the equality when performing the $\textit{Post}$ operation.
+Consider a bidirectional inclusion of parametric zone instead of the equality when computing the successors of a set of states.
 When the \code{-inclusion-bidir} option is activated, it suffices that a previous state with the same location and a constraint greater than or equal to (resp.\ \emph{smaller or equal} to) the constraint of the new state has been encountered to discard the new state (resp.\ the old state, which is replaced by the new one).
 
 It seems that, although less states are computed, this option is \emph{less} efficient than \styleOption{-inclusion} (in part due to the extra inclusion checks required by \styleOption{-inclusion-bidir}).
@@ -1763,7 +1824,7 @@ It seems that, although less states are computed, this option is \emph{less} eff
 \paragraph{\styleOption{-merge} (default: depending on the algorithm)}
 %------------------------------------------------------------
 Use the merging technique of \cite{AFS13atva}.
-This option is safe (and advised) for the \EFsynth{} algorithm.
+This option is safe (and used by default) for the \EFsynth{} algorithm, and similar algorithms.
 
 However, not all the properties of the inverse method are preserved when using merging (see \cite{AFS13atva} for details).
 
@@ -1825,7 +1886,7 @@ Convert (exact-valued) discrete variables into (possibly approximated) floats in
 \paragraph{\styleOption{-output-prefix} (default: \stylePath{<input\_file>})}
 %------------------------------------------------------------
 Set the path prefix for all generated files.
-The path can be either relative (to the path to the \binimitator{} binary) or absolute, and must be followed by the file name.
+The path can be either relative (to the path to the \stylePath{\binimitator{}} binary) or absolute, and must be followed by the file name.
 
 Examples:
 \begin{itemize}
@@ -1887,12 +1948,6 @@ Print info on number of calls to PPL, and other statistics about memory and time
 Warning: enabling this option may slightly slow down the analysis, and will certainly induce some extra computational time at the end.
 
 
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-step} (default: \styleOption{1})}
-%------------------------------------------------------------
-Step for the behavioral cartography.
-Integers can be used, or rationals (in the form \styleOption{x/y}).
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-sync-auto-detect} (default: false)}
@@ -1978,7 +2033,8 @@ Prints \imitator{} header including the version number and exits.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-We give in this chapter the complete grammar of input models for \imitator{}.
+We give in this chapter the complete grammar of input models and properties for \imitator{}.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Variable names}
@@ -2374,7 +2430,7 @@ We define each of those two components below.
 %------------------------------------------------------------
 \begin{tabular}{l l}
 	\  & \nt{integer} \\
-	\  & \nt{float} \\
+	$|$  & \nt{float} \\
 	$|$ & \nt{integer} \styleIMI{/} \nt{pos\_integer}  \\
 \end{tabular}
 
@@ -2454,15 +2510,16 @@ We define each of those two components below.
 \regleGrammaire{init\_state\_predicate}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{loc\_predicate} \\
+	\  & \nt{init\_loc\_predicate} \\
 	$|$ & \nt{linear\_constraint} \\
 \end{tabular}
 
 %------------------------------------------------------------
-\regleGrammaire{loc\_predicate}
+\regleGrammaire{init\_loc\_predicate}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{loc[} \styleIMI{<name>} \styleIMI{] = \styleIMI{<name>}} \\
+	\  & \styleIMI{loc[ <name> ] = <name>} \\
+	$|$  & \styleIMI{<name> is in <name>} \\
 \end{tabular}
 
 
@@ -2501,9 +2558,12 @@ We define each of those two components below.
 \regleGrammaire{quantified\_property}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{\#synth} \nt{property} \styleIMI{;} \nt{projection\_definition\_opt} \\
-	$|$  & \styleIMI{\#witness} \nt{property} \styleIMI{;} \nt{projection\_definition\_opt} \\
+	\  & \styleIMI{\#synth} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt} \\
+	$|$  & \styleIMI{\#exhibit} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt} \\
+	$|$  & \styleIMI{\#witness} \nt{property} \nt{semicolon\_opt} \nt{projection\_definition\_opt} \\
 \end{tabular}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %------------------------------------------------------------
 \regleGrammaire{property}
@@ -2555,7 +2615,7 @@ We define each of those two components below.
 	$|$  & \styleIMI{BCshuffle} \styleIMI{(} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)} \\
 	% NOTE: disabled for now
 % 	$|$  & \styleIMI{BCborder} \styleIMI{(} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)} \\
-	$|$  & \styleIMI{BCrandom} \styleIMI{(} \nt{hyper\_rectangle} \styleIMI{,} \nt{pos\_inteer} \nt{step\_opt} \styleIMI{)} \\
+	$|$  & \styleIMI{BCrandom} \styleIMI{(} \nt{hyper\_rectangle} \styleIMI{,} \nt{pos\_integer} \nt{step\_opt} \styleIMI{)} \\
 	$|$  & \styleIMI{BCrandomseq} \styleIMI{(} \nt{hyper\_rectangle} \styleIMI{,} \nt{pos\_integer} \nt{step\_opt} \styleIMI{)} \\
 	$|$  & \styleIMI{PRPC} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)} \\
 	
@@ -2591,92 +2651,307 @@ We define each of those two components below.
 	$|$ & \styleIMI{always sequence} \styleIMI{(} \nt{var\_list} \styleIMI{)} \\
 \end{tabular}
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-% TODO
-
-
-\nt{step\_opt}
-
-\nt{hyper\_rectangle}
-
-\nt{parameter\_valuation}
 
 %------------------------------------------------------------
-\regleGrammaire{bad\_simple\_predicate}
+\regleGrammaire{state\_predicate}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{discrete\_predicate} \\
-	$|$ & \nt{loc\_predicate} \\
+	\  & \nt{state\_predicate} \styleIMI{$| |$} \nt{state\_predicate} \\
+	$|$  & \nt{state\_predicate\_term} \\
+	$|$  & \styleIMI{True} \\
+	$|$  & \styleIMI{False} \\
+\end{tabular}
+
+
+
+%------------------------------------------------------------
+\regleGrammaire{state\_predicate\_term}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{state\_predicate\_term} \styleIMI{$\&\&$} \nt{state\_predicate\_term} \\
+	$|$  & \nt{state\_predicate\_factor} \\
 \end{tabular}
 
 
 %------------------------------------------------------------
-\regleGrammaire{bad\_global\_predicate}
+\regleGrammaire{state\_predicate\_factor}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{bad\_global\_predicate} \styleIMI{\&} \nt{bad\_global\_predicate} \\
-	$|$ & \styleIMI{(} \nt{bad\_global\_predicate} \styleIMI{)} \\
-	$|$ & \styleIMI{(} \nt{bad\_simple\_predicate} \styleIMI{)} \\
+	\  & \nt{simple\_predicate}  \\
+	$|$  & \styleIMI{not} \nt{state\_predicate\_factor} \\
+	$|$  & \styleIMI{(} \nt{state\_predicate} \styleIMI{)} \\
+\end{tabular}
+
+
+
+%------------------------------------------------------------
+\regleGrammaire{simple\_predicate}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{discrete\_boolean\_predicate}  \\
+	$|$  & \nt{loc\_predicate} \\
+\end{tabular}
+
+
+
+
+%------------------------------------------------------------
+\regleGrammaire{loc\_predicate}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \styleIMI{loc[ <name> ] = <name>} \\
+	$|$  & \styleIMI{<name> is in <name>} \\
+	$|$  & \styleIMI{loc[ <name> ] <> <name>} \\
+	$|$  & \styleIMI{<name> is not in <name>} \\
+\end{tabular}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%------------------------------------------------------------
+\regleGrammaire{discrete\_boolean\_predicate}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{discrete\_expression} \nt{op\_bool} \nt{discrete\_expression} \\
+	$|$  & \nt{discrete\_expression} \styleIMI{ in [} \nt{discrete\_expression} \styleIMI{,} \nt{discrete\_expression} \styleIMI{]} \\
+	$|$  & \nt{discrete\_expression} \styleIMI{ in [} \nt{discrete\_expression} \styleIMI{..} \nt{discrete\_expression} \styleIMI{]} \\
 \end{tabular}
 
 
 %------------------------------------------------------------
-\regleGrammaire{bad\_global\_predicates}
+\regleGrammaire{discrete\_expression}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \nt{bad\_global\_predicate} \styleIMI{or} \nt{bad\_global\_predicates} \\
-	$|$ & \nt{bad\_global\_predicate} \\
+	\  & \nt{discrete\_expression} \styleIMI{+} \nt{discrete\_term} \\
+	$|$  & \nt{discrete\_expression} \styleIMI{-} \nt{discrete\_term} \\
+	$|$  & \nt{discrete\_term} \\
 \end{tabular}
 
 
 %------------------------------------------------------------
-\regleGrammaire{property\_definition}
+\regleGrammaire{discrete\_term}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{property :=} \nt{pattern} \styleIMI{;} \\
-	$|$ & \nt{include\_file} \\
-	$|$ & \emptystring \\
+	\  & \nt{discrete\_term} \styleIMI{*} \nt{discrete\_factor} \\
+	$|$  & \nt{discrete\_term} \styleIMI{/} \nt{discrete\_factor} \\
+	$|$  & \nt{discrete\_factor} \\
 \end{tabular}
 
-% %------------------------------------------------------------
-% \regleGrammaire{loc\_expression}
-% %------------------------------------------------------------
-% \begin{tabular}{l l}
-% 	\  & \nt{loc\_predicate} \\
-% 	$|$ & \nt{loc\_predicate} \styleIMI{\&} \nt{loc\_expression} \\
-% 	$|$ & \nt{loc\_predicate} \nt{loc\_expression} \\
-% \end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{discrete\_factor}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \styleIMI{<name>} \\
+	$|$  & \nt{positive\_rational} \\
+	$|$  & \styleIMI{(} \nt{discrete\_expression} \styleIMI{)} \\
+	$|$  & \styleIMI{-} \nt{discrete\_factor} \\
+\end{tabular}
+
+
+%------------------------------------------------------------
+\regleGrammaire{op\_bool}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \styleIMI{<} \\
+	$|$  & \styleIMI{<=} \\
+	$|$  & \styleIMI{=} \\
+	$|$  & \styleIMI{<>} \\
+	$|$  & \styleIMI{>=} \\
+	$|$  & \styleIMI{>} \\
+\end{tabular}
+
+
+
+%------------------------------------------------------------
+\regleGrammaire{positive\_rational}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{pos\_integer} \\
+	$|$  & \nt{pos\_float} \\
+\end{tabular}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Grammar of the reference valuation file}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The reference valuation file (usually named \stylePath{model.pi0}) gives a constant value to any parameter of the model;
-this file is used for~\IM{} and \PRP{}.
 
-It basically consists of a sequence of equalities \styleIMI{parameter = constant} separated (or not!) by the \styleIMI{\&} symbol.
-All parameters of the model must be given a valuation in this file; but the file may also use names that do not appear in the model (a warning will just be issued).
-
-Arithmetic expressions (using integers and rationals) can even be used instead of just constants.
-
-% TODO: give the actual grammar
-
+%------------------------------------------------------------
+\regleGrammaire{projection\_definition\_opt}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \styleIMI{projectresult( } \nt{name\_nonempty\_list} \styleIMI{)} \nt{semicolon\_opt}  \\
+	$|$ & \emptystring{} \\
+\end{tabular}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Grammar of the reference hyperrectangle file}
+
+
+% NOTE
+% linear\_expression => See model grammar
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-The hyperrectangle file (usually named \stylePath{model.v0}) defines a bounded parameter domain, \ie{} a hyperrectangle having as dimensions the parameters of the model;
-this file is used for~\BC{} and \PRPC{}.
 
-It basically consists of a sequence of either equalities \styleIMI{parameter = constant} or intervals \styleIMI{parameter = constant .. constant} separated (or not!) by the \styleIMI{\&} symbol.
-All parameters of the model must be given an interval (possibly punctual) in this file; again, the file may also use names that do not appear in the model (a warning will just be issued).
+%------------------------------------------------------------
+\regleGrammaire{parameter\_valuation}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{parameter\_assignments} \nt{semicolon\_opt} \\
+\end{tabular}
 
-Again, arithmetic expressions (using integers and rationals) can even be used instead of just constants.
 
-% TODO: give the actual grammar
+
+%------------------------------------------------------------
+\regleGrammaire{parameter\_assignments}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{parameter\_assignment} \nt{parameter\_assignments} \\
+	$|$ & \emptystring{} \\
+\end{tabular}
+
+
+%------------------------------------------------------------
+\regleGrammaire{parameter\_assignment}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{and\_opt} \styleIMI{<name> = } \nt{constant\_arithmetic\_expr} \nt{comma\_opt} \\
+\end{tabular}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%------------------------------------------------------------
+\regleGrammaire{hyper\_rectangle}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{rectangle\_parameter\_assignments} \nt{semicolon\_opt} \\
+\end{tabular}
+
+
+
+%------------------------------------------------------------
+\regleGrammaire{rectangle\_parameter\_assignments}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{rectangle\_parameter\_assignment} \nt{rectangle\_parameter\_assignments} \\
+	$|$ & \emptystring{} \\
+\end{tabular}
+
+
+%------------------------------------------------------------
+\regleGrammaire{rectangle\_parameter\_assignment}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{and\_opt} \styleIMI{<name> = } \nt{constant\_arithmetic\_expr} \styleIMI{..} \nt{constant\_arithmetic\_expr} \nt{comma\_opt} \\
+	$|$  & \nt{and\_opt} \styleIMI{<name> = } \nt{constant\_arithmetic\_expr} \nt{comma\_opt} \\
+\end{tabular}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%------------------------------------------------------------
+\regleGrammaire{constant\_arithmetic\_expr}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{constant\_arithmetic\_expr} \styleIMI{+} \nt{constant\_expr\_mult} \\
+	$|$  & \nt{constant\_arithmetic\_expr} \styleIMI{-} \nt{constant\_expr\_mult} \\
+	$|$  & \nt{constant\_expr\_mult} \\
+\end{tabular}
+
+
+%------------------------------------------------------------
+\regleGrammaire{constant\_expr\_mult}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{constant\_expr\_mult} \styleIMI{*} \nt{constant\_neg\_atom} \\
+	$|$  & \nt{constant\_expr\_mult} \styleIMI{/} \nt{constant\_neg\_atom} \\
+	$|$  & \nt{constant\_neg\_atom} \\
+\end{tabular}
+
+
+%------------------------------------------------------------
+\regleGrammaire{constant\_neg\_atom}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	$|$  & \nt{constant\_atom} \\
+	$|$  & \styleIMI{-} \nt{constant\_atom} \\
+\end{tabular}
+
+
+
+%------------------------------------------------------------
+\regleGrammaire{constant\_atom}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	$|$  & \styleIMI{(} \nt{constant\_arithmetic\_expr} \styleIMI{)} \\
+	$|$  & \nt{rational} \\
+\end{tabular}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%------------------------------------------------------------
+\regleGrammaire{step\_opt}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	$|$  & \styleIMI{, step=} \nt{pos\_rational} \\
+	$|$  & \emptystring{} \\
+\end{tabular}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%------------------------------------------------------------
+\regleGrammaire{and\_opt}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	$|$  & \styleIMI{\&\&} \\
+	$|$  & \emptystring{} \\
+\end{tabular}
+
+
+%------------------------------------------------------------
+\regleGrammaire{comma\_opt}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	$|$  & \styleIMI{, } \\
+	$|$  & \emptystring{} \\
+\end{tabular}
+
+
+%------------------------------------------------------------
+\regleGrammaire{semicolon\_opt}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	$|$  & \styleIMI{;} \\
+	$|$  & \emptystring{} \\
+\end{tabular}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{remark}
+	In the parameter valuation definition (\nt{parameter\_valuation}), all parameters of the model must be given a valuation in this file; but the file may also use names that do not appear in the model (a warning will just be issued).
+\end{remark}
+
+\begin{remark}
+	In the hyper-rectangle definition (\nt{hyper\_rectangle}), all parameters of the model must be given an interval (possibly punctual) in this file; again, the file may also use names that do not appear in the model (a warning will just be issued).
+\end{remark}
+
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2713,6 +2988,7 @@ The following words are reserved keywords and cannot be used as names for automa
 \styleIMI{init},
 \styleIMI{initially},
 \styleIMI{invariant},
+\styleIMI{is},
 \styleIMI{loc},
 \styleIMI{next},
 \styleIMI{nosync\_obs},
