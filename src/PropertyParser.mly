@@ -353,19 +353,23 @@ op_bool:
 
 
 /************************************************************/
-rational_linear_term:
+/* rational_linear_term: */
 /************************************************************/
-	| positive_rational_with_div { $1 }
+/*	| positive_rational_with_div { $1 } */
 	/*** NOTE: or should it be OP_MINUS rational_with_div? ***/
-	| OP_MINUS rational_linear_term { NumConst.neg $2 }
-	| LPAREN rational_linear_term RPAREN { $2 }
+/*	| OP_MINUS rational_linear_term { NumConst.neg $2 } */
+/*	| LPAREN rational_linear_term RPAREN { $2 }
 ;
+*/
 
+/*
 positive_rational_with_div:
 	| pos_integer { NumConst.numconst_of_int $1 }
 	| pos_float { $1 }
 	| pos_integer OP_DIV pos_integer { (NumConst.div (NumConst.numconst_of_int $1) (NumConst.numconst_of_int $3)) }
 ;
+
+*/
 
 positive_rational:
 	| pos_integer { NumConst.numconst_of_int $1 }
