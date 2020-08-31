@@ -2005,7 +2005,7 @@ A non-terminal followed by two colons is defined by the list of immediately foll
 Input characters of terminals appear in \styleIMI{typewritter} font.
 The meta symbol \emptystring{} denotes the empty string.
 
-The text \npec{in green} is not taken into account by \imitator{}, but allows some backward-compatibility with \hytech{} files~\cite{HHW95}.
+% The text \npec{in green} is not taken into account by \imitator{}, but allows some backward-compatibility with \hytech{} files~\cite{HHW95}.
 
 
 %------------------------------------------------------------
@@ -2101,31 +2101,9 @@ We define each of those two components below.
 \regleGrammaire{prolog}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \npec{\nt{initialization}} \nt{sync\_labels} \\
-	$|$ & \nt{sync\_labels} \npec{\nt{initialization}} \\
 	$|$ & \nt{sync\_labels} \\
-	$|$ & \npec{\nt{initialization}} \\
 	$|$ & \emptystring \\
 \end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{\npec{initialization}}
-%------------------------------------------------------------
-\npec{
-\begin{tabular}{l l}
-	\  & \styleIMI{initially} \styleIMI{<name>} \nt{state\_initialization} \styleIMI{;} \\
-\end{tabular}
-}
-
-%------------------------------------------------------------
-\regleGrammaire{\npec{state\_initialization}}
-%------------------------------------------------------------
-\npec{
-\begin{tabular}{l l}
-	\  & \styleIMI{\&} \nt{convex\_predicate} \\
-	$|$ & \emptystring \\
-\end{tabular}
-}
 
 %------------------------------------------------------------
 \regleGrammaire{sync\_labels}
@@ -2163,28 +2141,30 @@ We define each of those two components below.
 \regleGrammaire{location}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
-	$|$ & \styleIMI{urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
-	$|$ & \styleIMI{accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
-	$|$ & \styleIMI{accepting urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
-	$|$ & \styleIMI{urgent accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \npec{\nt{wait\_opt}} \nt{transitions} \\
+	\  & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \nt{transitions} \\
+	$|$ & \styleIMI{urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \nt{transitions} \\
+	$|$ & \styleIMI{accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \nt{transitions} \\
+	$|$ & \styleIMI{accepting urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \nt{transitions} \\
+	$|$ & \styleIMI{urgent accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \nt{transitions} \\
 % 	$|$ & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{while} \nt{convex\_predicate} \nt{transitions} \\
 \end{tabular}
 
-\smallskip
+% \smallskip
+% 
+% NOTE: hidden for sake of simplicity
+% (for backward compatibility with versions $< 2.10.1$ and \hytech{}, replacing ``\styleIMI{invariant}'' with ``\styleIMI{while}'' is still allowed, although it is deprecated)
+% 
+% \smallskip
 
-(for backward compatibility with versions $< 2.10.1$ and \hytech{}, replacing ``\styleIMI{invariant}'' with ``\styleIMI{while}'' is still allowed, although it is deprecated)
-
-\smallskip
-
-%------------------------------------------------------------
-\regleGrammaire{\npec{wait\_opt}}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\ & \npec{\styleIMI{wait()}} \\
-	$|$ & \npec{\styleIMI{wait}} \\
-	$|$ & \npec{\emptystring} \\
-\end{tabular}
+% NOTE: hidden for sake of simplicity
+% %------------------------------------------------------------
+% \regleGrammaire{\npec{wait\_opt}}
+% %------------------------------------------------------------
+% \begin{tabular}{l l}
+% 	\ & \npec{\styleIMI{wait()}} \\
+% 	$|$ & \npec{\styleIMI{wait}} \\
+% 	$|$ & \npec{\emptystring} \\
+% \end{tabular}
 
 %------------------------------------------------------------
 \regleGrammaire{stop\_opt}
@@ -2225,7 +2205,7 @@ We define each of those two components below.
 \regleGrammaire{updates}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\  & \styleIMI{do} \styleIMI{(} \nt{update\_list} \styleIMI{)} \\
+	\  & \styleIMI{do} \styleIMI{ \{ } \nt{update\_list} \styleIMI{ \} } \\
 \end{tabular}
 
 %------------------------------------------------------------
@@ -2253,11 +2233,12 @@ We define each of those two components below.
 	\  & \styleIMI{<name>} \styleIMI{:=} \nt{arithmetic\_expression} \\
 \end{tabular}
 
-\smallskip
-
-(for backward compatibility with versions $< 2.10.1$ and \hytech{}, replacing ``\styleIMI{<name>} \styleIMI{:=}'' with ``\styleIMI{<name>} \styleIMI{'} \styleIMI{=}'' is still allowed, although it is deprecated)
-
-\smallskip
+% \smallskip
+% 
+% NOTE: hidden for sake of simplicity
+% (for backward compatibility with versions $< 2.10.1$ and \hytech{}, replacing ``\styleIMI{<name>} \styleIMI{:=}'' with ``\styleIMI{<name>} \styleIMI{'} \styleIMI{=}'' is still allowed, although it is deprecated)
+% 
+% \smallskip
 
 %------------------------------------------------------------
 \regleGrammaire{normal\_update\_list}
@@ -2439,43 +2420,7 @@ We define each of those two components below.
 \regleGrammaire{init}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	& \npec{\nt{init\_declaration}} \nt{init\_definition} \nt{property\_definition} \nt{projection\_definition} \npec{\nt{other\_commands}} \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{\npec{init\_declaration}}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \npec{\styleIMI{var} \styleIMI{init} \styleIMI{:} \styleIMI{region} \styleIMI{;}} \\
-		% TODO: in fact, any sequence of names is accepted, not only init
-	$|$ & \emptystring \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{other\_commands}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \styleIMI{end} \npec{\nt{rest\_of\_commands}} \\
-	$|$ & \emptystring \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{\npec{rest\_of\_commands}}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \npec{\nt{anything}} \npec{\nt{rest\_of\_commands}} \\
-	$|$ & \emptystring \\
-\end{tabular}
-
-%------------------------------------------------------------
-\regleGrammaire{\npec{anything}}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \styleIMI{(} \\
-	$|$ & \styleIMI{)} \\
-	$|$ & \styleIMI{<name>} \\
-	$|$ & \styleIMI{init} \\
-	$|$ & \styleIMI{bad} \\
+	& \nt{init\_definition} \styleIMI{end} \\
 \end{tabular}
 
 
@@ -2531,6 +2476,132 @@ We define each of those two components below.
 \end{tabular}
 
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Grammar of the property file}\label{section:grammar-property}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%------------------------------------------------------------
+\regleGrammaire{property\_definition}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \nt{property\_kw\_opt} \nt{quantified\_property}  \\
+\end{tabular}
+
+
+%------------------------------------------------------------
+\regleGrammaire{property\_kw\_opt}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \styleIMI{property :=} \\
+	$|$  & \emptystring \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{quantified\_property}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\  & \styleIMI{\#synth} \nt{property} \styleIMI{;} \nt{projection\_definition\_opt} \\
+	$|$  & \styleIMI{\#witness} \nt{property} \styleIMI{;} \nt{projection\_definition\_opt} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{property}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+
+% 	Non-nested CTL
+
+	\  & \styleIMI{EF} \nt{state\_predicate} \\
+	$|$  & \styleIMI{AGnot} \nt{state\_predicate} \\
+	
+% 	Reachability and specification illustration
+
+	% NOTE: hidden for now
+% 	$|$  & \styleIMI{EFexemplify} \nt{state\_predicate} \\
+
+	% Optimized reachability
+	
+	$|$  & \styleIMI{EFpmin} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \styleIMI{<name>} \styleIMI{)} \\
+	$|$  & \styleIMI{EFpmax} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \styleIMI{<name>} \styleIMI{)} \\
+	$|$  & \styleIMI{EFtmin} \nt{state\_predicate} \\
+
+	% Cycles
+	
+	$|$  & \styleIMI{inf\_cycle} \\
+	$|$  & \styleIMI{inf\_cycle\_through} \nt{state\_predicate} \\
+	$|$  & \styleIMI{NZ\_inf\_cycle\_check} \\
+	$|$  & \styleIMI{NZ\_inf\_cycle\_transform} \\
+	% NOTE: hidden for sake of simplicity
+% 	$|$  & \styleIMI{NZ\_inf\_cycle\_CUB} \\
+	
+	% Deadlock-freeness
+	
+	$|$  & \styleIMI{deadlockfree} \\
+	
+	% Inverse method, trace preservation, robustness
+	
+	$|$  & \styleIMI{IM} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)} \\
+	$|$  & \styleIMI{IMconvex} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)} \\
+	$|$  & \styleIMI{IMK} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)} \\
+	$|$  & \styleIMI{IMunion} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)} \\
+	$|$  & \styleIMI{PRP} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)} \\
+	
+	% Cartography algorithms
+	
+	$|$  & \styleIMI{BCcover} \styleIMI{(} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)} \\
+	% NOTE: disabled for now
+% 	$|$  & \styleIMI{BClearn} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)} \\
+	$|$  & \styleIMI{BCshuffle} \styleIMI{(} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)} \\
+	% NOTE: disabled for now
+% 	$|$  & \styleIMI{BCborder} \styleIMI{(} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)} \\
+	$|$  & \styleIMI{BCrandom} \styleIMI{(} \nt{hyper\_rectangle} \styleIMI{,} \nt{pos\_inteer} \nt{step\_opt} \styleIMI{)} \\
+	$|$  & \styleIMI{BCrandomseq} \styleIMI{(} \nt{hyper\_rectangle} \styleIMI{,} \nt{pos\_integer} \nt{step\_opt} \styleIMI{)} \\
+	$|$  & \styleIMI{PRPC} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)} \\
+	
+	% Observer pattern
+	$|$  & \nt{pattern} \\
+\end{tabular}
+
+
+
+%------------------------------------------------------------
+\regleGrammaire{pattern}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	$|$ & \styleIMI{if <name> then <name> has happened before} \\
+	$|$ & \styleIMI{everytime <name> then <name> has happened before} \\
+	$|$ & \styleIMI{everytime <name> then <name> has happened once before} \\
+		% TODO
+% 	$|$ & \styleIMI{if <name> then eventually <name>} \\
+		% TODO
+% 	$|$ & \styleIMI{everytime <name> then eventually <name>} \\
+		% TODO
+% 	$|$ & \styleIMI{everytime <name> then eventually <name> once before next} \\
+	$|$ & \styleIMI{<name> within }\nt{linear\_expression} \styleIMI{} \\
+	$|$ & \styleIMI{if <name> then <name> has happened within }\nt{linear\_expression} \styleIMI{ before} \\
+	$|$ & \styleIMI{everytime <name> then <name> has happened within }\nt{linear\_expression} \styleIMI{ before} \\
+	$|$ & \styleIMI{everytime <name> then <name> has happened once within }\nt{linear\_expression} \styleIMI{ before} \\
+	$|$ & \styleIMI{if <name> then eventually <name> within }\nt{linear\_expression} \styleIMI{} \\
+	$|$ & \styleIMI{everytime <name> then eventually <name> within }\nt{linear\_expression} \styleIMI{} \\
+	$|$ & \styleIMI{everytime <name> then eventually <name> within }\nt{linear\_expression} \styleIMI{ once before next} \\
+	$|$ & \styleIMI{sequence} \nt{var\_list} \\
+	$|$ & \styleIMI{sequence} \styleIMI{(} \nt{var\_list} \styleIMI{)} \\
+	$|$ & \styleIMI{always sequence} \nt{var\_list} \\
+	$|$ & \styleIMI{always sequence} \styleIMI{(} \nt{var\_list} \styleIMI{)} \\
+\end{tabular}
+
+
+
+% TODO
+
+
+\nt{step\_opt}
+
+\nt{hyper\_rectangle}
+
+\nt{parameter\_valuation}
+
 %------------------------------------------------------------
 \regleGrammaire{bad\_simple\_predicate}
 %------------------------------------------------------------
@@ -2568,36 +2639,6 @@ We define each of those two components below.
 	$|$ & \emptystring \\
 \end{tabular}
 
-%------------------------------------------------------------
-\regleGrammaire{pattern}
-%------------------------------------------------------------
-\begin{tabular}{l l}
-	\  & \styleIMI{unreachable} \nt{bad\_global\_predicates} \\
-	$|$ & \styleIMI{if <name> then <name> has happened before} \\
-	$|$ & \styleIMI{everytime <name> then <name> has happened before} \\
-	$|$ & \styleIMI{everytime <name> then <name> has happened once before} \\
-		% TODO
-% 	$|$ & \styleIMI{if <name> then eventually <name>} \\
-		% TODO
-% 	$|$ & \styleIMI{everytime <name> then eventually <name>} \\
-		% TODO
-% 	$|$ & \styleIMI{everytime <name> then eventually <name> once before next} \\
-	$|$ & \styleIMI{<name> within }\nt{linear\_expression} \styleIMI{} \\
-	$|$ & \styleIMI{if <name> then <name> happened within }\nt{linear\_expression} \styleIMI{ before} \\
-	$|$ & \styleIMI{everytime <name> then <name> happened within }\nt{linear\_expression} \styleIMI{ before} \\
-	$|$ & \styleIMI{everytime <name> then <name> happened once within }\nt{linear\_expression} \styleIMI{ before} \\
-	$|$ & \styleIMI{if <name> then eventually <name> within }\nt{linear\_expression} \styleIMI{} \\
-	$|$ & \styleIMI{everytime <name> then eventually <name> within }\nt{linear\_expression} \styleIMI{} \\
-	$|$ & \styleIMI{everytime <name> then eventually <name> within }\nt{linear\_expression} \styleIMI{ once before next} \\
-	$|$ & \styleIMI{sequence} \nt{var\_list} \\
-	$|$ & \styleIMI{sequence} \styleIMI{(} \nt{var\_list} \styleIMI{)} \\
-	$|$ & \styleIMI{always sequence} \nt{var\_list} \\
-	$|$ & \styleIMI{always sequence} \styleIMI{(} \nt{var\_list} \styleIMI{)} \\
-\end{tabular}
-
-
-%% TODO: add -cartonly grammar ! (entirely removed from the manual so far)
-
 % %------------------------------------------------------------
 % \regleGrammaire{loc\_expression}
 % %------------------------------------------------------------
@@ -2606,13 +2647,6 @@ We define each of those two components below.
 % 	$|$ & \nt{loc\_predicate} \styleIMI{\&} \nt{loc\_expression} \\
 % 	$|$ & \nt{loc\_predicate} \nt{loc\_expression} \\
 % \end{tabular}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Grammar of the property file}\label{section:grammar-property}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% TODO
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
