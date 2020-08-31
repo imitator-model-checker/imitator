@@ -307,11 +307,6 @@ loc_predicate:
 	/* my_pta IS NOT IN my_loc */
 	| NAME CT_IS CT_NOT CT_IN NAME { Parsed_loc_predicate_EQ ($1, $5) }
 ;
-/** NOTE:
-
-"Pourquoi pas PTA in Bad (ou PTA is in Bad) plutôt que loc[PTA] = Bad ? Ce n'est pas plus long mais plus lisible, non ?"
-	Didier
-*/
 
 
 /************************************************************/
