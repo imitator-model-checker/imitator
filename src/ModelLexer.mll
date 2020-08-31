@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/08/21
+ * Last modified     : 2020/08/31
 *****************************************************************)
 
 {
@@ -74,6 +74,7 @@ rule token = parse
  	| "has"            { CT_HAS }
 	| "if"             { CT_IF }
 	| "in"             { CT_IN }
+	| "is"             { CT_IS }
 	| "init"           { CT_INIT }
 	| "initially"      { CT_INITIALLY }
 	| "invariant"      { CT_INVARIANT }

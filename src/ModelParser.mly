@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/08/21
+ * Last modified     : 2020/08/31
  *
  ************************************************************/
 
@@ -73,7 +73,7 @@ let unzip l = List.fold_left
 	CT_FALSE
 	CT_GOTO
 	CT_HAPPENED CT_HAS
-	CT_IF CT_IN CT_INIT CT_INITIALLY CT_INVARIANT
+	CT_IF CT_IN CT_INIT CT_INITIALLY CT_INVARIANT CT_IS
 	CT_LOC
 	CT_NEXT CT_NOT
 	CT_ONCE CT_OR
@@ -591,12 +591,15 @@ init_expression_fol:
 
 /* Used in the init definition */
 init_state_predicate:
-	| loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
+	| init_loc_predicate { let a,b = $1 in (Parsed_loc_assignment (a,b)) }
 	| linear_constraint { Parsed_linear_predicate $1 }
 ;
 
-loc_predicate:
+init_loc_predicate:
+	/* loc[my_pta] = my_loc */
 	| CT_LOC LSQBRA NAME RSQBRA OP_EQ NAME { ($3, $6) }
+	/* my_pta IS IN my_loc */
+	| NAME CT_IS CT_IN NAME { ($1, $4) }
 ;
 
 
