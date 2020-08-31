@@ -1086,7 +1086,10 @@ Each state is represented with its discrete part (location and values of the dis
 
 % Using option \styleOption{-output-result},
 \imitator{} generates a file \stylePath{model.res}.
-Since version 2.7, this file has a standardized format, and can therefore be parsed using an external tool.
+% Since version 2.7,
+This file has a standardized format, and can therefore be parsed using an external tool.
+
+To disable the creation of this file, please use \styleOption{-no-result-file} (see \cref{chapter:options}).
 
 We do not give a formal grammar for this file (yet), but it can be easily inferred from example outputs.
 
@@ -1505,21 +1508,21 @@ In cartography algorithm, set up a global time limit to the algorithm.
 In contrast, \styleOption{-time-limit} is applied to each call to the inverse method.
 
 
-%------------------------------------------------------------
-\paragraph{\styleOption{-check-ippta} (default: false)}
-%------------------------------------------------------------
-
-Check that every new symbolic state contains an integer point (\ie{} a point in the $\Clock \cup \Param$ dimension).
-If not, raises an exception.
-
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-check-point} (default: false)}
-%------------------------------------------------------------
-
-In the inverse method, checks at each iteration whether the accumulated parameter constraint is restricted to the reference parameter valuation.
-Note that this option is not implemented as nicely as it could be, and can hence turn very costly.
-
+% %------------------------------------------------------------
+% \paragraph{\styleOption{-check-ippta} (default: false)}
+% %------------------------------------------------------------
+% 
+% Check that every new symbolic state contains an integer point (\ie{} a point in the $\Clock \cup \Param$ dimension).
+% If not, raises an exception.
+% 
+% 
+% %------------------------------------------------------------
+% \paragraph{\styleOption{-check-point} (default: false)}
+% %------------------------------------------------------------
+% 
+% In the inverse method, checks at each iteration whether the accumulated parameter constraint is restricted to the reference parameter valuation.
+% Note that this option is not implemented as nicely as it could be, and can hence turn very costly.
+% 
 
 % %------------------------------------------------------------
 % \paragraph{\styleOption{-completeIM} (default: false)}
@@ -1535,13 +1538,14 @@ Note that this option is not implemented as nicely as it could be, and can hence
 Print the list of contributors and exits.
 
 
-%------------------------------------------------------------
-\paragraph{\styleOption{-counterexample}}
-%------------------------------------------------------------
-For algorithms \EFsynth{} and \styleOption{AccLoopSynthNDFS}, stops the analysis as soon as one target state is found, and returns the (possibly approximated) result.
-
-This can be a way to solve the \emph{emptiness} instead of the \emph{synthesis} prolem.
-Nevertheless, note that, instead of returning a Boolean answer, the algorithm still outputs some valuations (typically the valuations associated with the first parametric zone found, that allows to guarantee the violation of the property).
+% NOTE: deleted as of version 3
+% %------------------------------------------------------------
+% \paragraph{\styleOption{-counterexample}}
+% %------------------------------------------------------------
+% For algorithms \EFsynth{} and \styleOption{AccLoopSynthNDFS}, stops the analysis as soon as one target state is found, and returns the (possibly approximated) result.
+% 
+% This can be a way to solve the \emph{emptiness} instead of the \emph{synthesis} prolem.
+% Nevertheless, note that, instead of returning a Boolean answer, the algorithm still outputs some valuations (typically the valuations associated with the first parametric zone found, that allows to guarantee the violation of the property).
 
 
 %------------------------------------------------------------
@@ -1743,6 +1747,7 @@ This option corresponds to the way that, \eg{} \hytech{} works, and suffices whe
 %------------------------------------------------------------
 \paragraph{\styleOption{-no-inclusion} (default: depending on the algorithm)}
 %------------------------------------------------------------
+Force disabling inclusion, even if the selected algorithm normally requires it.
 
 
 %------------------------------------------------------------
@@ -1755,13 +1760,17 @@ It seems that, although less states are computed, this option is \emph{less} eff
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-merge} (default: \code{false})}
+\paragraph{\styleOption{-merge} (default: depending on the algorithm)}
 %------------------------------------------------------------
 Use the merging technique of \cite{AFS13atva}.
 This option is safe (and advised) for the \EFsynth{} algorithm.
 
 However, not all the properties of the inverse method are preserved when using merging (see \cite{AFS13atva} for details).
 
+%------------------------------------------------------------
+\paragraph{\styleOption{-no-merge} (default: depending on the algorithm)}
+%------------------------------------------------------------
+Force disabling merging, even if the selected algorithm normally requires it.
 
 
 %------------------------------------------------------------
