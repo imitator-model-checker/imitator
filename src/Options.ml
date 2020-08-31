@@ -578,11 +578,10 @@ class imitator_options =
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 				
 				("-explOrder", String set_exploration_order, " Exploration order [EXPERIMENTAL].
-        Use `layerBFS` for a layer-based breadth-first search.
+        Use `layerBFS` for a layer-based breadth-first search (default).
         Use `queueBFS` for a queue-based breadth-first search. [ANP17]
         Use `queueBFSRS` for a queue-based breadth-first search with ranking system. [ANP17]
         Use `queueBFSPRIOR` for a priority-based BFS with ranking system. [ANP17]
-        Use `optTimeQueue` for optimal reachability with priority queue [ANP17]
         Use `NDFS` for standard NDFS. [NPvdP18]
         Use `NDFSsub` for standard NDFS with subsumption. [NPvdP18]
         Use `layerNDFSsub` for layered NDFS with subsumption. [NPvdP18]
