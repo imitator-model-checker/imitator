@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/08/28
+ * Last modified     : 2020/09/01
  *
  ************************************************************)
 
@@ -836,6 +836,11 @@ let string_of_abstract_property model property =
 		(*** TODO ***)
 (* 		| _ -> raise (NotImplemented "ModelPrinter.string_of_property for any other algorithm") *)
 	)
+	
+	^
+	
+	(* Final (optional) semi-colon *)
+	";"
 	
 	^
 	
