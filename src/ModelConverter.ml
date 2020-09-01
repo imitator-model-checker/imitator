@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/08/28
+ * Last modified     : 2020/09/01
  *
  ************************************************************)
 
@@ -4471,22 +4471,51 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	done;
 
 	(* Create the functional representation *)
-	let variable_names = fun i -> array_of_variable_names.(i) in
+	let variable_names = fun variable_index ->
+		(* Add a safety mechanism *)
+		try(
+			array_of_variable_names.(variable_index) 
+		) with Invalid_argument msg -> raise (InternalError ("Could not find name of variable `" ^ (string_of_int variable_index) ^ "` in function `variable_names`. Additional details: `" ^ msg ^ "`"))
+	in
+
 	(* Create the functional representation for action types *)
-	let action_types = fun action_index -> action_types.(action_index) in
+	let action_types = fun action_index ->
+		(* Add a safety mechanism *)
+		try(
+			action_types.(action_index)
+		) with Invalid_argument msg -> raise (InternalError ("Could not find type of action `" ^ (string_of_int action_index) ^ "` in function `action_types`. Additional details: `" ^ msg ^ "`"))
+	in
+	
 	(* Create the functional representation for the actions of every automaton *)
-	let actions_per_automaton = fun automaton_index -> actions_per_automaton.(automaton_index) in
+	let actions_per_automaton = fun automaton_index ->
+		(* Add a safety mechanism *)
+		try(
+			actions_per_automaton.(automaton_index)
+		) with Invalid_argument msg -> raise (InternalError ("Could not find list of actions for automaton of index `" ^ (string_of_int automaton_index) ^ "` in function `actions_per_automaton`. Additional details: `" ^ msg ^ "`"))
+	in
+	
 	(* Create the functional representation for the actions of every location of every automaton *)
-	let actions_per_location = fun automaton_index location_index -> actions_per_location.(automaton_index).(location_index) in
+	let actions_per_location = fun automaton_index location_index ->
+		(* Add a safety mechanism *)
+		try(
+			actions_per_location.(automaton_index).(location_index)
+		) with Invalid_argument msg -> raise (InternalError ("Could not find list of actions for automaton of index `" ^ (string_of_int automaton_index) ^ "` and location of index `" ^ (string_of_int location_index) ^ "` in function `actions_per_location`. Additional details: `" ^ msg ^ "`"))
+	in
+	
 	(* Invariants *)
-	let invariants = fun automaton_index location_index -> invariants.(automaton_index).(location_index) in
+	let invariants = fun automaton_index location_index ->
+		(* Add a safety mechanism *)
+		try(
+			invariants.(automaton_index).(location_index)
+		) with Invalid_argument msg -> raise (InternalError ("Could not find invariant for automaton of index `" ^ (string_of_int automaton_index) ^ "` and location of index `" ^ (string_of_int location_index) ^ "` in function `invariants`. Additional details: `" ^ msg ^ "`"))
+	in
 	
 	(* Accepting locations *)
 	let is_accepting = fun automaton_index location_index ->
 		(* Add a safety mechanism *)
 		try(
 			location_acceptance.(automaton_index).(location_index) = Location_accepting
-		) with Invalid_argument msg -> raise (InternalError ("Acceptance of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in `is_accepting` function. Additional details: `" ^ msg ^ "`"))
+		) with Invalid_argument msg -> raise (InternalError ("Acceptance of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `is_accepting`. Additional details: `" ^ msg ^ "`"))
 	in
 	
 	(* Urgency *)
@@ -4494,7 +4523,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		(* Add a safety mechanism *)
 		try(
 			location_urgency.(automaton_index).(location_index) = Location_urgent
-		) with Invalid_argument msg -> raise (InternalError ("Urgency of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in `is_urgent` function. Additional details: `" ^ msg ^ "`"))
+		) with Invalid_argument msg -> raise (InternalError ("Urgency of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `is_urgent`. Additional details: `" ^ msg ^ "`"))
 	in
 	
 	(* Costs *)
@@ -4502,7 +4531,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		(* Add a safety mechanism *)
 		try(
 			costs.(automaton_index).(location_index)
-		) with Invalid_argument msg -> raise (InternalError ("Cost of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in `costs` function. Additional details: `" ^ msg ^ "`"))
+		) with Invalid_argument msg -> raise (InternalError ("Cost of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `costs`. Additional details: `" ^ msg ^ "`"))
 	in
 	
 	(* Stopwatches *)
@@ -4510,7 +4539,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		(* Add a safety mechanism *)
 		try(
 			stopwatches_array.(automaton_index).(location_index)
-		) with Invalid_argument msg -> raise (InternalError ("Clocks stopped at location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in `stopwatches` function. Additional details: `" ^ msg ^ "`"))
+		) with Invalid_argument msg -> raise (InternalError ("Clocks stopped at location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `stopwatches`. Additional details: `" ^ msg ^ "`"))
 	in
 	
 	(* Transitions *)
@@ -4518,7 +4547,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		(* Add a safety mechanism *)
 		try(
 			transitions.(automaton_index).(location_index).(action_index)
-		) with Invalid_argument msg -> raise (InternalError ("Transitions of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` via action of index `" ^ (string_of_int action_index) ^ "` not found in `transitions` function. Additional details: `" ^ msg ^ "`"))
+		) with Invalid_argument msg -> raise (InternalError ("Transitions of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` via action of index `" ^ (string_of_int action_index) ^ "` not found in function `transitions`. Additional details: `" ^ msg ^ "`"))
 	in
 	
 	(* Transition description *)
@@ -4526,7 +4555,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		(* Add a safety mechanism *)
 		try(
 			transitions_description.(transition_index)
-		) with Invalid_argument msg -> raise (InternalError ("Description of transition of index `" ^ (string_of_int transition_index) ^ "` not found in `transitions_description` function. Additional details: `" ^ msg ^ "`"))
+		) with Invalid_argument msg -> raise (InternalError ("Description of transition of index `" ^ (string_of_int transition_index) ^ "` not found in function `transitions_description`. Additional details: `" ^ msg ^ "`"))
 	in
 	
 	(* Automaton of transition *)
@@ -4534,7 +4563,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		(* Add a safety mechanism *)
 		try(
 			automaton_of_transition.(transition_index)
-		) with Invalid_argument msg -> raise (InternalError ("Automaton of transition of index `" ^ (string_of_int transition_index) ^ "` not found in `automaton_of_transition` function. Additional details: `" ^ msg ^ "`"))
+		) with Invalid_argument msg -> raise (InternalError ("Automaton of transition of index `" ^ (string_of_int transition_index) ^ "` not found in function `automaton_of_transition`. Additional details: `" ^ msg ^ "`"))
 	in
 	
 	(* Actions *)
