@@ -319,36 +319,6 @@ let string_of_boolean_operations = function
 	| OP_G		-> ">"
 
 
-(*(** Convert a logical operation into a string *)
-let string_of_logical_operators lop =
-	match lop with
-	| True_bool -> string_of_true
-	| False_bool -> string_of_false
-	| Not_bool _ -> "<>"
-	| And_bool _ -> " && "
-	| Or_bool _ -> " || "
-	| Discrete_boolean_expression (_, op, _) -> " " ^ (string_of_boolean_operations op) ^ " "
-
-(** Generic template to convert a Boolean expression into a string *)
-let rec string_of_boolean_template variable_names boolean_expr str_lop =
-	let symbol = str_lop boolean_expr in
-	match boolean_expr with
-		| True_bool -> string_of_true
-		| False_bool -> string_of_false
-		| Not_bool b -> symbol ^ "(" ^ (string_of_boolean_template variable_names b str_lop) ^ ")"
-		| And_bool (b1, b2) -> (string_of_boolean_template variable_names b1 str_lop)
-													^ symbol ^ (string_of_boolean_template variable_names b2 str_lop)
-		| Or_bool (b1, b2) -> (string_of_boolean_template variable_names b1 str_lop)
-												^ symbol ^ (string_of_boolean_template variable_names b2 str_lop)
-		| Expression_bool (expr1, op, expr2) -> (string_of_arithmetic_expression variable_names expr1)
-																					^ symbol
-																					^ (string_of_arithmetic_expression variable_names expr2)
-
-(** Convert a Boolean expression into a string *)
-let string_of_boolean variable_names boolean_expr =
-	string_of_boolean_template variable_names boolean_expr string_of_logical_operators*)
-
-
 (** Convert a discrete_boolean_expression into a string *)
 let string_of_discrete_boolean_expression variable_names = function
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
@@ -654,37 +624,6 @@ let string_of_initial_state model =
 (************************************************************)
 
 
-(*
-let string_of_unreachable_location model unreachable_global_location =
-	(* Convert locations *)
-	string_of_list_of_string_with_sep " & " (List.map (fun (automaton_index, location_index) ->
-			"loc[" ^ (model.automata_names automaton_index) ^ "]" ^ " = " ^ (model.location_names automaton_index location_index)
-		) unreachable_global_location.unreachable_locations
-	)
-	^
-	(* Separator *)
-	(if unreachable_global_location.unreachable_locations <> [] && unreachable_global_location.discrete_constraints <> [] then " & " else "")
-	^
-	(* Convert discrete *)
-	string_of_list_of_string_with_sep " & " (List.map (function
-		| Discrete_l (discrete_index , discrete_value)
-			-> (model.variable_names discrete_index) ^ " < " ^ (NumConst.string_of_numconst discrete_value)
-		| Discrete_leq (discrete_index , discrete_value)
-			-> (model.variable_names discrete_index) ^ " <= " ^ (NumConst.string_of_numconst discrete_value)
-		| Discrete_equal (discrete_index , discrete_value)
-			-> (model.variable_names discrete_index) ^ " = " ^ (NumConst.string_of_numconst discrete_value)
-		| Discrete_neq (discrete_index , discrete_value)
-			-> (model.variable_names discrete_index) ^ " <> " ^ (NumConst.string_of_numconst discrete_value)
-		| Discrete_geq (discrete_index , discrete_value)
-			-> (model.variable_names discrete_index) ^ " >= " ^ (NumConst.string_of_numconst discrete_value)
-		| Discrete_g (discrete_index , discrete_value)
-			-> (model.variable_names discrete_index) ^ " > " ^ (NumConst.string_of_numconst discrete_value)
-		| Discrete_interval (discrete_index , min_discrete_value, max_discrete_value)
-			-> (model.variable_names discrete_index) ^ " in [" ^ (NumConst.string_of_numconst min_discrete_value) ^ " , " ^ (NumConst.string_of_numconst max_discrete_value) ^ "]"
-		) unreachable_global_location.discrete_constraints
-	)
-*)
-
 
 (** Convert a state_predicate to a string *)
 
@@ -953,13 +892,6 @@ let string_of_x_valuation model = string_of_valuation model.clocks model.variabl
 (************************************************************)
 (** States *)
 (************************************************************)
-
-(* Convert a location name into a string *)
-(*let string_of_location_name model location =
-	let string_array = List.map (fun automaton_index location_index ->
-		model.automata_names.(automaton_index) ^ ": " ^ (model.location_names automaton_index location_index)
-	) location in
-	string_of_array_of_string_with_sep ", " string_array*)
 
 (* Convert a state into a string *)
 let string_of_state model (state : state) =

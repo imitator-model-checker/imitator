@@ -637,25 +637,8 @@ class imitator_options =
         Use `checksyntax` for a simple syntax check and no analysis.
         
         Use `statespace` for the generation of the entire parametric state space."
-			(*        "Use 'EF' for a parametric non-reachability analysis. [AHV93,JLR15]
-        Use 'EFmin' for a parametric non-reachability analysis with parameter minimization. [ABPP19]
-        Use 'EFmax' for a parametric non-reachability analysis with parameter maximization. [ABPP19]
-        Use 'EFsynthminpq' for a parametric non-reachability analysis with global time minimization. [ABPP19]
-        Use 'PDFC' for parametric non-deadlock checking. [Andre16]
-        Use 'LoopSynth' for cycle-synthesis (without non-Zeno assumption). [ANPS17]
-        Use 'AccLoopSynth' for accepting cycle-synthesis (without non-Zeno assumption).
-        Use 'AccLoopSynthNDFS' for accepting cycle-synthesis with NDFS exploration (without non-Zeno assumption) [NPvdP18]
-        Use 'NZCUBcheck' for cycle-synthesis (with non-Zeno assumption, using a CUB-detection). [EXPERIMENTAL] [ANPS17]
-        Use 'NZCUBtrans' for cycle-synthesis (with non-Zeno assumption, using a transformation into a CUB-PTA). [EXPERIMENTAL] [ANPS17]
-        
-        Use 'inversemethod' for the inverse method with convex, and therefore potentially incomplete, result. [ACEF09]
-        Use 'IMcomplete' for the inverse method with complete, possibly non-convex result. [AM15]
-        
-        Use 'PRP' for parametric reachability preservation. [ALNS15]
-        Use 'PRPC' for parametric reachability preservation cartography. [ALNS15]
-        For the behavioral cartography algorithm, use 'cover' to cover all the points within V0, 'border' to find the border between a small-valued good and a large-valued bad zone (experimental), or 'randomXX' where XX is a number to iterate random calls to IM (e.g., random5 or random10000). [AF10]
-        Default: 'inversemethod'."
-        *));
+				);
+
 				(*** NOTE: hidden option! 'shuffle' to cover all the points within v0 after shuffling the array. (Reason for hiding: only useful in the distributed cartography) ***)
 				(*** NOTE: hidden option! or 'randomseqXX' where XX is a number to iterate random calls to IM followed by a sequential check (e.g., randomseq5 or randomseq10000) (Reason for hiding: only useful in the distributed cartography) ***)
 				("-no-acceptfirst", Set no_acceptfirst, "In NDFS, do not put accepting states at the head of the successors list. Default: false.");
