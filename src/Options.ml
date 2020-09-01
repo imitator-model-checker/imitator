@@ -336,21 +336,7 @@ class imitator_options =
 				else if mode = "statespace" then 
 					imitator_mode <- State_space_computation
 
-(*
 
-				(* Case: Parametric Büchi-emptiness checking with non-Zenoness on a CUB-PTA: hidden option (mainly for testing) *)
-				else if mode = "NZCUB" then(
-					imitator_mode <- Parametric_NZ_CUB;
-					
-					(*** NOTE: very important! This algorithm requires the alternative definition of time-elapsing ***)
-					no_time_elapsing := true;
-					
-					(*** HACK!!! otherwise Graphics won't generate the .jpg file to test…) ***)
-					graphical_state_space <- Graphical_state_space_normal;
-				)
-					
-*)
-			
 			(* Get the distributed mode *)
 			and set_distributed mode =
 				(* Case: no distributed mode *)
