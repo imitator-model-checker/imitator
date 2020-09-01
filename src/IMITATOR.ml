@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/08/28
+ * Last modified     : 2020/09/01
  *
  ************************************************************)
 
@@ -617,7 +617,13 @@ match options#imitator_mode with
 					(* Export the model to a file *)
 					(*** TODO: not necessary? (but so far useful to test) ***)
 
+					(* Print some information *)
+					print_message Verbose_low ("Preparing the transformed model conversion to string…");
+
 					let translated_model = ModelPrinter.string_of_model cub_model in
+
+					(* Print some information *)
+					print_message Verbose_medium ("About to write the transformed model to file…");
 
 					let imi_file = options#files_prefix ^ "-cub" ^ Constants.model_extension in
 					if verbose_mode_greater Verbose_total then(
