@@ -196,10 +196,12 @@ let string_of_synclabs model automaton_index =
 
 (* Convert the invariant of a location into a string *)
 let string_of_invariant model automaton_index location_index =
+	(* Print some information *)
+(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_invariant(" ^ (model.automata_names automaton_index) ^ ", " ^ (model.location_names automaton_index location_index) ^ ")`…"); *)
+	
 	(* Invariant *)
 	"invariant "
 	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index))
-
 
 	(* Handle stopwatches *)
 	^
@@ -400,11 +402,17 @@ let string_of_conditional_updates model conditional_updates =
 	string_of_conditional_updates_template model conditional_updates string_of_clock_updates string_of_discrete_updates wrap_if wrap_else wrap_end sep
 
 (* Convert a transition into a string *)
-let string_of_transition model automaton_index transition =
+let string_of_transition model automaton_index (transition : transition) =
+	(* Print some information *)
+(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transition(" ^ (model.automata_names automaton_index) ^ ")` with target `" ^ (model.location_names automaton_index transition.target) ^ "` via action `" ^ (string_of_sync model transition.action) ^ "`…"); *)
+
 	let clock_updates = transition.updates.clock in
 	let discrete_updates = transition.updates.discrete in
 	let conditional_updates = transition.updates.conditional in
 	let first_separator, second_separator = separator_comma transition.updates in
+
+	(* Print some information *)
+(* 	print_message Verbose_total ("Updates retrieved…"); *)
 
 	"\n\t" ^ "when "
 	(* Convert the guard *)
@@ -423,17 +431,18 @@ let string_of_transition model automaton_index transition =
 	(* Conditional updates *)
 	^ (string_of_conditional_updates model conditional_updates)
 	^ "} "
-
+	
 	(* Convert the sync *)
 	^ (string_of_sync model transition.action)
 	(* Convert the destination location *)
 	^ " goto " ^ (model.location_names automaton_index transition.target)
 	^ ";"
 
+
 (* Convert a transition into a string: compact version for debugging/pretty-printing *)
-let debug_string_of_transition model automaton_index transition =
+let debug_string_of_transition model automaton_index (transition : transition) =
 	(* Print some information *)
-(* 	print_message Verbose_total ("Entering `ModelPrinter.string_of_transition(" ^ (model.automata_names automaton_index) ^ ")`…"); *)
+(* 	print_message Verbose_total ("Entering `ModelPrinter.debug_string_of_transition(" ^ (model.automata_names automaton_index) ^ ")`…"); *)
 
 	let clock_updates = transition.updates.clock in
 	let discrete_updates = transition.updates.discrete in
@@ -476,7 +485,7 @@ let string_of_transitions model automaton_index location_index =
 	(* For each action *)
 	List.map (fun action_index ->
 		(* Print some information *)
-(* 		print_message Verbose_total ("Retrieving transitions…"); *)
+(* 		print_message Verbose_total ("Retrieving transitions via `" ^ (string_of_sync model action_index) ^ "`…"); *)
 
 		(* Get the list of transitions *)
 		let transitions = model.transitions automaton_index location_index action_index in
