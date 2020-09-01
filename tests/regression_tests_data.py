@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/08/27
+# Last modified     : 2020/09/01
 #************************************************************
 
 
@@ -4605,6 +4605,54 @@ BEGIN CONSTRAINT
 OR
   p1 >= 0
 & p2 >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test infinite run on one example (Zeno version)',
+		'input_files': ['testInfiniteRun.imi', 'testInfiniteRun-Zeno.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testInfiniteRun.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test infinite run on one example (non-Zeno version)',
+		'input_files': ['testInfiniteRun.imi', 'testInfiniteRun-nonZeno.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testInfiniteRun.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 2
 END CONSTRAINT
 
 ------------------------------------------------------------
