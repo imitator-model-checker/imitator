@@ -4519,7 +4519,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	in
 	
 	(* Urgency *)
-	let is_urgent = fun automaton_index location_index -> 
+	let is_urgent = fun automaton_index location_index ->
 		(* Add a safety mechanism *)
 		try(
 			location_urgency.(automaton_index).(location_index) = Location_urgent
