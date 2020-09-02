@@ -1055,6 +1055,7 @@ class algoNDFS =
 		let nb_states = StateSpace.nb_states state_space in
 		print_message Verbose_standard ("Number of computed states: " ^ (string_of_int nb_states));
 		print_message Verbose_standard ("Number of processed states: " ^ (string_of_int processed_blue));
+		print_message Verbose_standard ("Number of cycles found: " ^ (string_of_int cyclecount));
 
 (*		let constr_result = match constraint_valuations with
 				| None -> LinearConstraint.false_p_nnconvex_constraint()
