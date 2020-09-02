@@ -138,7 +138,7 @@ type impossible_concrete_run = {
 (************************************************************)
 
 (*** WARNING: the structure is here (state, transition) followed by final state, but in concrete_run, it is initial state followed by (transition, state) list :( ***)
- 
+
 type symbolic_step = {
 	source			: State.state_index;
 	transition		: combined_transition;
@@ -272,7 +272,7 @@ let make guessed_nb_transitions =
 	let states_for_comparison = Hashtbl.create Constants.guessed_nb_states_for_hashtable in
 	(* Create a hashtable for the state space *)
 	let transitions_table = Hashtbl.create guessed_nb_transitions in
-	
+
 	print_message Verbose_high ("Creating empty state space with an initial guessed number of " ^ (string_of_int Constants.guessed_nb_states_for_hashtable) ^ " state" ^ (s_of_int Constants.guessed_nb_states_for_hashtable) ^ " and " ^ (string_of_int guessed_nb_transitions) ^ " transition" ^ (s_of_int guessed_nb_transitions) ^ ".");
 
 	(* Create the state space *)
@@ -361,10 +361,10 @@ let get_state state_space state_index =
 			Hashtbl.find state_space.all_states state_index
 		) with Not_found -> raise (InternalError ("State of index '" ^ (string_of_int state_index) ^ "' was not found in state_space (in function: get_state)."))
 	in
-	
+
 	(* Find the pair (location_index, constraint) *)
 	let location_index, linear_constraint = state.global_location_index, state.px_constraint in
-	
+
 	(* Find the location *)
 	let global_location = get_location state_space location_index in
 
@@ -440,7 +440,7 @@ let get_successors state_space state_index =
 
 	(*** NOTE: we get all pairs "transition , target", then we keep the second elements, i.e., the target state indexes ***)
 	let _ , target_state_indices = List.split (get_successors_with_combined_transitions state_space state_index) in
-	
+
 	(* We eliminate duplicates *)
 	let result = list_only_once target_state_indices in
 
@@ -454,7 +454,7 @@ let get_successors state_space state_index =
 let get_transitions_of_state state_space state_index =
 	(* Print some information *)
 	print_message Verbose_total ("Entering StateSpace.get_transitions_of_state");
-	
+
 	let transitions_and_targets = get_successors_with_combined_transitions state_space state_index in
 
 	let result , _ = List.split transitions_and_targets in
@@ -486,10 +486,10 @@ let get_successors_with_actions state_space state_index =
 	(* Statistics *)
 	counter_get_successors_with_actions#increment;
 	counter_get_successors_with_actions#start;
-	
+
 	(* Get all successors with their combined transition *)
 	let transitions_and_successors = get_successors_with_combined_transitions state_space state_index in
-	
+
 	(* Transform to pair (target state index, action index) *)
 	let result = List.map (fun (combined_transition , target_state_index) ->
 		(* Get the action_index *)
@@ -497,17 +497,17 @@ let get_successors_with_actions state_space state_index =
 		(* Create pair *)
 		target_state_index , action_index
 	) transitions_and_successors in
-	
+
 (*	(* We eliminate duplicates *)
 	let result = list_only_once target_state_indices in*)
 	(*** TODO: ??? ***)
-	
+
 	(* Statistics *)
 	counter_get_successors_with_actions#stop;
 
 	result*)
 
-	
+
 
 (*------------------------------------------------------------*)
 (** Compute and return a predecessor array state_index -> (combined_transition , state_index) list *)
@@ -520,14 +520,14 @@ let compute_predecessors_with_combined_transitions state_space : predecessors_ta
 
 	(* Print some information *)
 	print_message Verbose_total "Computing predecessors…";
-	
+
 	(* Get the highest id of the state space *)
 	(*** NOTE: we get the highest id and not the length of the Hashtbl due to the fact that states may be merged/removed by bidirectional inclusion ***)
 	let highest_id = !(state_space.next_state_index) - 1 in
-	
+
 	(* Print some information *)
 	print_message Verbose_total ("Creating an array of length " ^ (string_of_int (highest_id + 1)) ^ "");
-	
+
 	(* Create an array for predecessors: state_index -> (state_index, action_index) list *)
 	let predecessors = Array.make (highest_id + 1) [] in
 
@@ -535,10 +535,10 @@ let compute_predecessors_with_combined_transitions state_space : predecessors_ta
 	Hashtbl.iter(fun source_state_index _ ->
 		(* Print some information *)
 		print_message Verbose_total ("Retrieving successors of state #" ^ (string_of_int source_state_index));
-		
+
 		(* Get all successors of this state *)
 		let successors = hashtbl_get_or_default state_space.transitions_table source_state_index [] in
-		
+
 		(* Print some information *)
 		if verbose_mode_greater Verbose_total then(
 			print_message Verbose_total ("Successors of state #" ^ (string_of_int source_state_index) ^ ": " ^ (string_of_list_of_string_with_sep "," (List.map (fun (_, state_index) -> string_of_int state_index) successors)));
@@ -546,12 +546,12 @@ let compute_predecessors_with_combined_transitions state_space : predecessors_ta
 
 		(* Iterate on pairs (combined_transition * 'target_state_index') *)
 		List.iter (fun (combined_transition, target_state_index) ->
-		
+
 			(* Print some information *)
 			if verbose_mode_greater Verbose_total then(
 				print_message Verbose_total ("Adding #" ^ (string_of_int source_state_index) ^ " to the predecessors of #" ^ (string_of_int target_state_index) ^ "");
 			);
-			
+
 			(* Add to the predecessor array *)
 			Array.set predecessors target_state_index (
 				(* Add the new element *)
@@ -567,10 +567,10 @@ let compute_predecessors_with_combined_transitions state_space : predecessors_ta
 			if verbose_mode_greater Verbose_total then(
 				print_message Verbose_total ("Predecessors of #" ^ (string_of_int target_state_index) ^ " now: " ^ (string_of_list_of_string_with_sep "," (List.map (fun (_, state_index) -> string_of_int state_index) predecessors.(target_state_index))));
 			);
-			
+
 		) successors;
-		
-		
+
+
 	) state_space.all_states;
 
 	(* Statistics *)
@@ -722,10 +722,10 @@ let get_guard state_space state_index combined_transition state_index' =
 			| Discrete_guard discrete_guard -> current_list_of_guards
 			| Continuous_guard continuous_guard -> continuous_guard :: current_list_of_guards
 			| Discrete_continuous_guard discrete_continuous_guard -> discrete_continuous_guard.continuous_guard :: current_list_of_guards
-		
+
 	) [] combined_transition
 	in
-	
+
 	(* Replace with true if empty list *)
 	let continuous_guards = if continuous_guards = [] then [LinearConstraint.pxd_true_constraint()] else continuous_guards in
 
@@ -761,7 +761,7 @@ let get_resets state_space state_index combined_transition state_index' =
 			| Updates _ -> raise (NotImplemented "Only clock resets are allowed for now in StateSpace.get_resets")
 	) [] combined_transition
 	in
-	
+
 	(* Keep each clock once *)
 	list_only_once resets
 
@@ -1058,31 +1058,31 @@ let backward_symbolic_run state_space (target_state_index : state_index) (source
 		(* Otherwise: recompute *)
 		| None -> compute_predecessors_with_combined_transitions state_space
 	in
-	
+
 	(* Create a table to remember whether a state is marked or not *)
 	(*** NOTE: use the number of states in the state space as default init ***)
 	let colortable = colortable_create (nb_states state_space) in
-	
+
 	(* Function to sort the predecessors made of a pair of a combined_transition and a state_index *)
 	let sort_predecessors = List.sort (fun (_, a) (_, b) -> Pervasives.compare a b) in
-	
+
 	(*------------------------------------------------------------*)
 	(* Use a recursive procedure returning a (list of (state, combined transition))'option ; None denotes the current run is useless. The states are returned in reversed order. *)
 	let rec backward_symbolic_run_rec current_state_index =
 		(* If target is reached: return *)
 		if current_state_index = source_state_index then Some [] (*** NOTE: do not add index, it will be added during the recursion together with the transition ***)
-		
+
 		(* If the state is marked, give up *)
 		else if is_marked colortable current_state_index then None
-		
+
 		(* Else process this state *)
 		else(
 			(* Mark it! *)
 			mark colortable current_state_index;
-			
+
 			(* Get the predecessors *)
 			let predecessors = predecessors_table.(current_state_index) in
-			
+
 			(* Heuristics: test the predecessors by increasing state_index (intuitively, a smaller state_index may be closer to the initial state, hence should be tried first) *)
 			let sorted_predecessors = sort_predecessors predecessors in
 
@@ -1090,18 +1090,18 @@ let backward_symbolic_run state_space (target_state_index : state_index) (source
 			let symbolic_steps = List.fold_left (fun current_steps (combined_transition, predecessor_index) ->
 				(* If predecessor is marked: skip and go to next predecessor *)
 				if is_marked colortable predecessor_index then current_steps
-				
+
 				(* If unmarked: call recursively *)
-				else 
+				else
 				let recursive_result = backward_symbolic_run_rec predecessor_index in
 				match recursive_result with
 					(* If no result in this direction: skip and go to next predecessor *)
 					| None -> current_steps
 					(* Otherwise: return the result and add the symbolic_step *)
 					| Some symbolic_steps -> Some ({source = predecessor_index ; transition = combined_transition } :: symbolic_steps)
-			
+
 			) None sorted_predecessors in
-			
+
 			match symbolic_steps with
 				(* If no steps found after iterating, we are in a deadlock *)
 				| None -> None
@@ -1111,7 +1111,7 @@ let backward_symbolic_run state_space (target_state_index : state_index) (source
 
 	in
 	(*------------------------------------------------------------*)
-	
+
 	(* Call the recursive procedure and reverse the result *)
 	match backward_symbolic_run_rec target_state_index with
 	(* Oops! *)
@@ -1201,7 +1201,7 @@ let state_included (state1 : state) (state2 : state) : bool =
 		LinearConstraint.px_is_leq constr1 constr2
 	)
 
-let new_location_index state_space location = 
+let new_location_index state_space location =
         let new_index = try (
 	Hashtbl.find state_space.index_of_locations location
 ) with Not_found -> (
@@ -1353,7 +1353,7 @@ let add_state state_space state_comparison (new_state : state) =
 			(* Iterate on each state *)
 			List.iter (fun state_index ->
 				let state = get_state state_space state_index in
-				
+
 				print_message Verbose_total ("Retrieved state #" ^ (string_of_int state_index) ^ ".");
 
 				(* Branch depending on the check function used for state comparison *)
@@ -1406,7 +1406,7 @@ let add_state state_space state_comparison (new_state : state) =
 
 			(* Not found -> insert state *)
 			let new_state_index = insert_state state_space location_index new_state in
-			
+
 			(* Print some information *)
 			print_message Verbose_total ("Inserted new state #" ^ (string_of_int new_state_index) ^ ".");
 
@@ -1431,13 +1431,13 @@ let add_transition state_space (source_state_index, combined_transition, target_
 
 	(* Print some information *)
 	print_message Verbose_total ("Entering StateSpace.add_transition");
-	
+
 	(* check if it already exists *)
 	let transitions = get_transitions_of_state state_space source_state_index in
-	
+
 	(* Print some information *)
 	print_message Verbose_total ("Existence check done");
-	
+
 	(*** TODO: it seems that getting the list is doing twice here; optimization? ***)
 	if not (List.mem combined_transition transitions) then
 		(** Add to the data structure *)
@@ -1449,7 +1449,7 @@ let add_transition state_space (source_state_index, combined_transition, target_
 
 	(* Print some information *)
 	print_message Verbose_total ("Exiting StateSpace.add_transition");
-	
+
 	()
 
 

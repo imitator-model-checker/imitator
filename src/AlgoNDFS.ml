@@ -127,7 +127,7 @@ class algoNDFS =
 		(************************************)
 		(* basic queues for NDFS algorithms *)
 		(************************************)
-		let cyan = ref [] in
+		let cyan = Hashtbl.create 100 in
 		let blue = Hashtbl.create 100 in
 		let green = Hashtbl.create 100 in
 		let greendepth = ref IntMap.empty in
@@ -489,7 +489,7 @@ class algoNDFS =
 			| States_limit_reached -> termination_status <- Some (Result.States_limit (Hashtbl.length cyan)) ; execute_again <- false
 
 			(* Termination due to state space depth limit reached *)
-			| Depth_limit_reached -> termination_status <- Some (Result.Depth_limit (List.length !cyan))
+			| Depth_limit_reached -> termination_status <- Some (Result.Depth_limit (Hashtbl.length cyan))
 			end;
 			if (limit_reached <> Keep_going) then raise (TerminateAnalysis)
 			else(
@@ -561,6 +561,9 @@ class algoNDFS =
 		(*                     State Space Exploration                       *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+		(* Get the property to check whether we are in synthesis or witness mode *)
+		let property = Input.get_property() in
+
 		(* loop for iterative deepening, otherwise used only once *)
 
 		current_depth <- (match options#depth_init with
@@ -597,7 +600,7 @@ class algoNDFS =
 (* NDFS without subsumption *)
 					(* set up the dfs blue calls *)
 					let enterdfs (astate : State.state_index) : bool =
-						if (options#counterex = false &&
+						if (property.synthesis_type = Synthesis &&
 								check_parameter_leq_list astate) then (
 							table_add blue astate;
 							printtable "Blue (enterdfs)" blue;
@@ -613,7 +616,7 @@ class algoNDFS =
 						cyclecount <- cyclecount + 1;
 						total_cyclecount <- total_cyclecount + 1;
 						if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
-						if (options#counterex = true) then
+						if (property.synthesis_type = Witness) then
 							print_highlighted_message Shell_bold Verbose_standard
 								("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 						else print_highlighted_message Shell_bold Verbose_standard
@@ -622,14 +625,14 @@ class algoNDFS =
 							(ModelPrinter.string_of_state model
 								(StateSpace.get_state state_space astate));
 						(* For synthesis: we do not stop immediately *)
-						if (options#counterex = false) then
+						if (property.synthesis_type = Synthesis) then
 							termination_status <- Some Regular_termination
 						else termination_status <- Some Target_found;
 						print_projection Verbose_standard astate;
 						let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 						constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 						collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
-						if (options#counterex = true) then raise TerminateAnalysis;
+						if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 						(* table_add blue astate; *)
 						table_add blue thestate;
 						printtable "Blue (cyclefound)" blue;
@@ -662,7 +665,7 @@ class algoNDFS =
 								cyclecount <- cyclecount + 1;
 								total_cyclecount <- total_cyclecount + 1;
 								if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
-								if (options#counterex = true) then
+								if (property.synthesis_type = Witness) then
 									print_highlighted_message Shell_bold Verbose_standard
 										("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 								else print_highlighted_message Shell_bold Verbose_standard
@@ -676,7 +679,7 @@ class algoNDFS =
 								let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 								constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 								collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
-								if (options#counterex = true) then raise TerminateAnalysis;
+								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 							in
 							let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
 								true in
@@ -704,7 +707,7 @@ class algoNDFS =
 (* NDFS with subsumption *)
 					(* set up the dfs blue calls *)
 					let enterdfs (astate : State.state_index) : bool =
-						if (options#counterex = false && check_parameter_leq_list astate) then (
+						if (property.synthesis_type = Synthesis && check_parameter_leq_list astate) then (
 							(* State astate has been handled and must now become blue *)
 							table_add blue astate;
 							printtable "Blue (enterdfs)" blue;
@@ -721,7 +724,7 @@ class algoNDFS =
 						cyclecount <- cyclecount + 1;
 						total_cyclecount <- total_cyclecount + 1;
 						if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
-						if (options#counterex = true) then
+						if (property.synthesis_type = Witness) then
 							print_highlighted_message Shell_bold Verbose_standard
 								("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 						else print_highlighted_message Shell_bold Verbose_standard
@@ -730,14 +733,14 @@ class algoNDFS =
 							(ModelPrinter.string_of_state model
 								(StateSpace.get_state state_space astate));
 								(* For synthesis: we do not stop immediately *)
-						if (options#counterex = false) then
+						if (property.synthesis_type = Synthesis) then
 							termination_status <- Some Regular_termination
 						else termination_status <- Some Target_found;
 						print_projection Verbose_standard astate;
 						let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 						constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 						collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
-						if (options#counterex = true) then raise TerminateAnalysis;
+						if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 						(* the state where the lookahead has found a cycle is now set blue *)
 						(* table_add blue astate; *)
 						table_add blue thestate;
@@ -771,7 +774,7 @@ class algoNDFS =
 								cyclecount <- cyclecount + 1;
 								total_cyclecount <- total_cyclecount + 1;
 								if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
-								if (options#counterex = true) then
+								if (property.synthesis_type = Witness) then
 									print_highlighted_message Shell_bold Verbose_standard
 										("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 								else print_highlighted_message Shell_bold Verbose_standard
@@ -780,14 +783,14 @@ class algoNDFS =
 									(ModelPrinter.string_of_state model
 										(StateSpace.get_state state_space astate));
 								(* For synthesis: we do not stop immediately *)
-								if (options#counterex = false) then
+								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
 								else termination_status <- Some Target_found;
 								print_projection Verbose_standard astate;
 								let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 								constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 								collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
-								if (options#counterex = true) then raise TerminateAnalysis;
+								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 							in
 							let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
 								(same_parameter_projection thestate astate)
@@ -828,7 +831,7 @@ class algoNDFS =
 								test_reexplore_green thestate thestate_depth) then
 							begin
 							let enterdfs (astate : State.state_index) : bool =
-								if (options#counterex = false && check_parameter_leq_list astate) then (
+								if (property.synthesis_type = Synthesis && check_parameter_leq_list astate) then (
 									(* State astate has been handled and must now become blue *)
 									table_add blue astate;
 									printtable "Blue (enterdfs)" blue;
@@ -845,7 +848,7 @@ class algoNDFS =
 								cyclecount <- cyclecount + 1;
 								total_cyclecount <- total_cyclecount + 1;
 								if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
-								if (options#counterex = true) then
+								if (property.synthesis_type = Witness) then
 									print_highlighted_message Shell_bold Verbose_standard
 										("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 								else print_highlighted_message Shell_bold Verbose_standard
@@ -854,14 +857,14 @@ class algoNDFS =
 									(ModelPrinter.string_of_state model
 										(StateSpace.get_state state_space astate));
 									(* For synthesis: we do not stop immediately *)
-								if (options#counterex = false) then
+								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
 								else termination_status <- Some Target_found;
 								print_projection Verbose_standard astate;
 								let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 								constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 								collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
-								if (options#counterex = true) then raise TerminateAnalysis;
+								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 								(* the state where the lookahead has found a cycle is now set blue *)
 								(* table_add blue astate; *)
 								table_add blue thestate;
@@ -895,7 +898,7 @@ class algoNDFS =
 										cyclecount <- cyclecount + 1;
 										total_cyclecount <- total_cyclecount + 1;
 										if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
-										if (options#counterex = true) then
+										if (property.synthesis_type = Witness) then
 											print_highlighted_message Shell_bold Verbose_standard
 												("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 										else print_highlighted_message Shell_bold Verbose_standard
@@ -904,14 +907,14 @@ class algoNDFS =
 											(ModelPrinter.string_of_state model
 												(StateSpace.get_state state_space astate));
 										(* For synthesis: we do not stop immediately *)
-										if (options#counterex = false) then
+										if (property.synthesis_type = Synthesis) then
 											termination_status <- Some Regular_termination
 										else termination_status <- Some Target_found;
 										print_projection Verbose_standard astate;
 										let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 										constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 										collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
-									if (options#counterex = true) then raise TerminateAnalysis;
+									if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 									in
 									let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
 										(same_parameter_projection thestate astate)
@@ -955,7 +958,7 @@ class algoNDFS =
 								test_reexplore_green thestate thestate_depth) then
 							begin
 							let enterdfs (astate : State.state_index) : bool =
-								if (options#counterex = false && check_parameter_leq_list astate) then (
+								if (property.synthesis_type = Synthesis && check_parameter_leq_list astate) then (
 									(* State astate has been handled and must now become blue *)
 									table_add blue astate;
 									printtable "Blue (enterdfs)" blue;
@@ -972,7 +975,7 @@ class algoNDFS =
 								cyclecount <- cyclecount + 1;
 								total_cyclecount <- total_cyclecount + 1;
 								if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
-								if (options#counterex = true) then
+								if (property.synthesis_type = Witness) then
 									print_highlighted_message Shell_bold Verbose_standard
 										("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 								else print_highlighted_message Shell_bold Verbose_standard
@@ -981,14 +984,14 @@ class algoNDFS =
 									(ModelPrinter.string_of_state model
 										(StateSpace.get_state state_space astate));
 									(* For synthesis: we do not stop immediately *)
-								if (options#counterex = false) then
+								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
 								else termination_status <- Some Target_found;
 								print_projection Verbose_standard astate;
 								let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 								constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 								collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
-								if (options#counterex = true) then raise TerminateAnalysis;
+								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 								(* the state where the lookahead has found a cycle is now set blue *)
 								(* table_add blue astate; *)
 								table_add blue thestate;
@@ -1023,7 +1026,7 @@ class algoNDFS =
 										cyclecount <- cyclecount + 1;
 										total_cyclecount <- total_cyclecount + 1;
 										if (astate_depth < min_depth_found || min_depth_found = -1) then min_depth_found <- astate_depth;
-										if (options#counterex = true) then
+										if (property.synthesis_type = Witness) then
 											print_highlighted_message Shell_bold Verbose_standard
 												("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 										else print_highlighted_message Shell_bold Verbose_standard
@@ -1032,14 +1035,14 @@ class algoNDFS =
 											(ModelPrinter.string_of_state model
 												(StateSpace.get_state state_space astate));
 										(* For synthesis: we do not stop immediately *)
-										if (options#counterex = false) then
+										if (property.synthesis_type = Synthesis) then
 											termination_status <- Some Regular_termination
 										else termination_status <- Some Target_found;
 										print_projection Verbose_standard astate;
 										let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 										constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 										collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
-									if (options#counterex = true) then raise TerminateAnalysis;
+									if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 									in
 									let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
 										(same_parameter_projection thestate astate)

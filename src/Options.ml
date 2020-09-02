@@ -158,6 +158,7 @@ class imitator_options =
 
 		(* Merging states on the fly *)
 		val mutable merge = None
+		val mutable mergeq = None
 		(* Merging states on the fly (after pi0-compatibility check) *)
 (* 		val mutable merge_before = ref false *)
 
@@ -177,7 +178,7 @@ class imitator_options =
 		val mutable no_lookahead = ref false
 
 		(* do not order the pending list with bigger zones first in NDFS synthesis *)
-(* 		val mutable no_pending_ordered = ref false *)
+		val mutable no_pending_ordered = ref false
 
 		(* do not use random values *)
 		val mutable no_random = ref false
@@ -248,13 +249,11 @@ class imitator_options =
 		(* SPECIALIZED OPTIONS*)
 
 		(* Merging states on the fly *)
-		val mutable merge = ref false
-		val mutable mergeq = ref false
 		(* Merging states on the fly (after pi0-compatibility check) *)
 (* 		val mutable merge_before = ref false *)
 
 		(* Merging heuristic *)
-		val mutable merge_heuristic = Merge_iter10
+		(* val mutable merge_heuristic = Merge_iter10 *)
 
 
 
@@ -308,27 +307,28 @@ class imitator_options =
 		method model_file_name = model_file_name
 		method nb_args = nb_args
 		method no_acceptfirst = !no_acceptfirst
-(* 		method no_initprune = !no_initprune *)
 		method no_leq_test_in_ef = no_leq_test_in_ef
 		method no_lookahead = !no_lookahead
-(* 		method no_pending_ordered = !no_pending_ordered *)
-		method no_time_elapsing = !no_time_elapsing
+		method no_pending_ordered = !no_pending_ordered
+		method no_time_elapsing = no_time_elapsing
 		method no_random = !no_random
 		method no_variable_autoremove = !no_variable_autoremove
-		method output_bc_cart = !output_bc_cart
-		method output_bc_result = !output_bc_result
-		method output_cart_x_min = !output_cart_x_min
-		method output_cart_x_max = !output_cart_x_max
-		method output_cart_y_min = !output_cart_y_min
-		method output_cart_y_max = !output_cart_y_max
-		method output_float = !output_float
-		method output_result = !output_result
-		method output_tiles_files = !output_tiles_files
-		method pending_order = pending_order
+		method output_bc_cart = output_bc_cart
+		method output_bc_result = output_bc_result
+		method output_cart_x_min = output_cart_x_min
+		method output_cart_x_max = output_cart_x_max
+		method output_cart_y_min = output_cart_y_min
+		method output_cart_y_max = output_cart_y_max
+		method output_float = output_float
+
+		method output_result = self#bool_of_option "output_result" output_result
+		method is_set_output_result = output_result <> None
+		method set_output_result b = output_result <- Some b
+
+		method output_tiles_files = output_tiles_files
 		method pi_compatible = !pi_compatible
 		method precomputepi0 = !precomputepi0
 		method property_file_name = property_file_name
-		method recompute_green = !recompute_green
 		method states_limit = !states_limit
 		method statistics = !statistics
 		method sync_auto_detection = !sync_auto_detection
@@ -340,7 +340,9 @@ class imitator_options =
 		method with_graphics_source = !with_graphics_source
 		method states_description = !states_description
 
-
+		method recompute_green = !recompute_green
+		method pending_order = pending_order
+		method step = !step
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Set methods *)

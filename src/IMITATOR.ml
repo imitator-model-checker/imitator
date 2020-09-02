@@ -173,10 +173,10 @@ if not options#is_set_output_result then(
 		| Translation _
 			-> false
 	in
-	
+
 	(* Print some information *)
 	print_message Verbose_high ("Set option `-output-result` to its default value: `" ^ (string_of_bool default_value) ^ "`");
-	
+
 	options#set_output_result default_value;
 );
 
@@ -194,22 +194,22 @@ begin match property_option, options#imitator_mode with
 		if not options#is_set_inclusion then(
 			(* Print some information *)
 			print_message Verbose_high ("Set option `-inclusion` to its default value: `" ^ (string_of_bool inclusion_needed) ^ "`");
-			
+
 			options#set_inclusion (inclusion_needed);
 		);
-		
+
 	| _, State_space_computation
 		->
 		(* Update if not yet set *)
 		if not options#is_set_inclusion then(
 			(* Print some information *)
 			print_message Verbose_high ("Set option `-inclusion` to its default value: `false`");
-			
+
 			options#set_inclusion (false);
 		);
 
 	| None, _ -> ()
-	
+
 end;
 
 
@@ -222,23 +222,30 @@ begin match property_option, options#imitator_mode with
 	| Some property, _ ->
 		let merge_needed = AlgorithmOptions.merge_needed property in
 		(* Update if not yet set *)
-		if not options#is_set_merge then(
-			(* Print some information *)
-			print_message Verbose_high ("Set option `-merge` to its default value: `" ^ (string_of_bool merge_needed) ^ "`");
-			
-			options#set_merge (merge_needed);
+		if not options#is_set_mergeq then (
+			options#set_mergeq(false);
+
+			if not options#is_set_merge then(
+				(* Print some information *)
+				print_message Verbose_high ("Set option `-merge` to its default value: `" ^ (string_of_bool merge_needed) ^ "`");
+
+				options#set_merge (merge_needed);
+			);
 		);
-		
+
 	| _, State_space_computation
 		->
 		(* Update if not yet set *)
-		if not options#is_set_merge then(
-			(* Print some information *)
-			print_message Verbose_high ("Set option `-merge` to its default value: `false`");
-			
-			options#set_merge(false);
-		);
+		if not options#is_set_mergeq then (
+			options#set_mergeq(false);
 
+			if not options#is_set_merge then(
+				(* Print some information *)
+				print_message Verbose_high ("Set option `-merge` to its default value: `false`");
+
+				options#set_merge(false);
+			);
+		);
 	| None, _ -> ()
 end;
 
@@ -280,10 +287,10 @@ begin
 match options#property_file_name with
 	| Some _ ->
 		let property = Input.get_property() in
-		
+
 		print_message Verbose_total ("\nPreparing to print the property…");
 		let property_string = ModelPrinter.string_of_abstract_property model property in
-		
+
 		print_message Verbose_low ("\nThe property is the following one:\n" ^ property_string ^ "\n");
 
 	| None ->
@@ -324,10 +331,10 @@ match options#imitator_mode with
 	(************************************************************)
 	(* Generate directly the "empty" result for syntax check *)
 	ResultProcessor.process_result Syntax_check_result "syntax check" None;
-	
+
 	(* If arrived here, syntax is correct *)
 	print_message Verbose_standard "Syntax is correct. Have fun!";
-	
+
 	terminate_program()
 
 
@@ -336,7 +343,7 @@ match options#imitator_mode with
 	(************************************************************)
 	(* Translation to text language (IMITATOR, other model checker, TikZ) *)
 	| Translation IMI | Translation HyTech | Translation TikZ | Translation Uppaal ->
-	
+
 		(*** NOTE: not super nice… ***)
 		let printer = match options#imitator_mode with
 			| Translation IMI		-> ModelPrinter.string_of_model
@@ -345,7 +352,7 @@ match options#imitator_mode with
 			| Translation Uppaal	-> PTA2Uppaal.string_of_model
 			| _						-> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
 		in
-	
+
 		(*** NOTE: not super nice… ***)
 		let suffix = match options#imitator_mode with
 			| Translation IMI		-> "-regenerated" ^ Constants.model_extension
@@ -354,7 +361,7 @@ match options#imitator_mode with
 			| Translation Uppaal	->  "-uppaal.xml"
 			| _						-> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
 		in
-	
+
 		print_message Verbose_standard ("Regenerating the input model to a new model.");
 		let translated_model = printer model in
 		let target_language_file = options#files_prefix ^ suffix in
@@ -364,7 +371,7 @@ match options#imitator_mode with
 		(* Write *)
 		write_to_file target_language_file translated_model;
 		print_message Verbose_standard ("File '" ^ target_language_file ^ "' successfully created.");
-		
+
 		(* Create a file with some statistics on the origina model if requested *)
 		ResultProcessor.process_result Translation_result ("translation to " ^ (AbstractAlgorithm.string_of_translation
 			(match options#imitator_mode with Translation translation -> translation | _ -> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
@@ -392,7 +399,7 @@ match options#imitator_mode with
 		| None -> print_error "Oops…! Something went wrong with dot."
 		| Some created_file -> print_message Verbose_standard ("File `" ^ created_file ^ "` successfully created.");
 		end;
-		
+
 		(* Create a file with some statistics on the original model if requested *)
 		ResultProcessor.process_result Translation_result "translation to graphics" None;
 
@@ -403,12 +410,12 @@ match options#imitator_mode with
 	(* Computation of the whole state space *)
 	(************************************************************)
 	| State_space_computation ->
-	
+
 		(*** NOTE: this is static subclass coercition; see https://ocaml.org/learn/tutorials/objects.html ***)
 		let concrete_algorithm :> AlgoGeneric.algoGeneric = new AlgoPostStar.algoPostStar in
-		
+
 		(*** NOTE: duplicate code with what follows ***)
-		
+
 		let result = concrete_algorithm#run() in
 
 		(* Stop the main algorithm counters *)
@@ -417,7 +424,7 @@ match options#imitator_mode with
 
 		(* Process *)
 		ResultProcessor.process_result result concrete_algorithm#algorithm_name None;
-	
+
 		()
 
 	(************************************************************)
@@ -429,13 +436,13 @@ match options#imitator_mode with
 		(* Retrieve the algorithm *)
 		(*** NOTE: at this stage, we are sure to have defined a property ***)
 		let abstract_property = Input.get_property() in
-		
+
 		let emptiness_only =
 			match abstract_property.synthesis_type with
 			| Witness   -> true
 			| Synthesis -> false
 		in
-		
+
 
 		(************************************************************)
 		(* Preliminary checks *)
@@ -453,7 +460,7 @@ match options#imitator_mode with
 			end;
 
 		| _ -> ()
-		
+
 		end;
 
 
@@ -468,7 +475,7 @@ match options#imitator_mode with
 		(* Find the correct concrete algorithm to execute *)
 		let concrete_algorithm : AlgoGeneric.algoGeneric = match abstract_property.property with
 
-			
+
 		(*------------------------------------------------------------*)
 		(* Non-nested CTL *)
 		(*------------------------------------------------------------*)
@@ -476,20 +483,20 @@ match options#imitator_mode with
 			(* Reachability *)
 			(************************************************************)
 			| EF state_predicate ->
-				
+
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFunsafeSynth.algoEFunsafeSynth state_predicate in myalgo
-			
-			
+
+
 			(************************************************************)
 			(* Safety *)
 			(************************************************************)
 			| AGnot state_predicate ->
-			
+
 				(*** NOTE: witness not supported (we need to compute everything to make sure the system is safe) ***)
 				if abstract_property.synthesis_type = Witness then(
 					print_warning "Exhibition of a subset of parameter valuations is not yet supported by this algorithm; either the whole set of valuations will be computed, or an over-approximation of this set.";
 				);
-			
+
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAGsafeSynth.algoAGsafeSynth state_predicate in myalgo
 
 
@@ -513,7 +520,7 @@ match options#imitator_mode with
 				let myalgo :> AlgoGeneric.algoGeneric = efopt_algo in
 				myalgo
 
-		
+
 			(************************************************************)
 			(* Reachability with maximization of a parameter valuation *)
 			(************************************************************)
@@ -524,19 +531,19 @@ match options#imitator_mode with
 				let myalgo :> AlgoGeneric.algoGeneric = efopt_algo in
 				myalgo
 
-		
+
 			(************************************************************)
 			(* Reachability with minimal-time *)
 			(************************************************************)
 			| EFtmin state_predicate ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoEFtminQueue.algoEFtminQueue state_predicate in myalgo
 
-		
-		
+
+
 		(*------------------------------------------------------------*)
 		(* Cycles *)
 		(*------------------------------------------------------------*)
-		
+
 			(************************************************************)
 			(* Parametric loop synthesis *)
 			(************************************************************)
@@ -556,7 +563,7 @@ match options#imitator_mode with
  			| NZCycle_check ->
 				(* Important! Set the no-time-elapsing option *)
 				options#set_no_time_elapsing;
-				
+
 				(* Computing a constraint for which the PTA is CUB *)
 				print_message Verbose_standard ("Checking whether the PTA is CUB for some parameter valuations…");
 
@@ -598,12 +605,12 @@ match options#imitator_mode with
 
 				let myalgo :> AlgoGeneric.algoGeneric = nz_algo in myalgo
 
-	
+
 			(** Infinite-run (cycle) with non-Zeno assumption: method by transforming the PTA into a CUB-PTA *)
 			| NZCycle_transform ->
 				(* Important! Set the no-time-elapsing option *)
 				options#set_no_time_elapsing;
-				
+
 				print_message Verbose_standard ("Generating the transformed model…");
 
 				let cub_model = CUBchecker.cubpta_of_pta model in
@@ -638,7 +645,7 @@ match options#imitator_mode with
 					);
 
 					let dot_created_file_option = Graphics.dot Constants.pta_default_image_format (options#files_prefix ^ "-cubpta") translated_model in
-					
+
 					begin
 					match dot_created_file_option with
 					| None -> print_error "Oops…! Something went wrong with dot."
@@ -655,7 +662,7 @@ match options#imitator_mode with
 			| NZCycle_CUB ->
 				(* Important! Set the no-time-elapsing option *)
 				options#set_no_time_elapsing;
-				
+
 				(* Just call the NZ emptiness check *)
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNZCUB.algoNZCUB in myalgo
 
@@ -673,11 +680,11 @@ match options#imitator_mode with
 		(*------------------------------------------------------------*)
 		(* Inverse method, trace preservation, robustness *)
 		(*------------------------------------------------------------*)
-		
+
 			(************************************************************)
 			(* Inverse method *)
 			(************************************************************)
-			
+
 			(* Inverse method with complete, non-convex result *)
 			| IM pval ->
 					let myalgo :> AlgoGeneric.algoGeneric = new AlgoIMcomplete.algoIMcomplete pval in myalgo
@@ -702,13 +709,13 @@ match options#imitator_mode with
 		(*------------------------------------------------------------*)
 		(* Cartography algorithms *)
 		(*------------------------------------------------------------*)
-	
+
 			(* Cartography *)
 			| Cover_cartography (hyper_rectangle, step) when options#distribution_mode = Non_distributed ->
 				let bc_algo = new AlgoBCCover.algoBCCover hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
-	
+
 			(** Cover the whole cartography using learning-based abstractions *)
 			| Learning_cartography (state_predicate, hyper_rectangle, step) ->
 			(*** NOTE: cannot reintroduce it unless the compositional verifier "CV" is updated to the IMITATOR 3.0 syntax ***)
@@ -716,23 +723,23 @@ match options#imitator_mode with
 (*				let bc_algo = new AlgoBCCoverLearning.algoBCCoverLearning state_predicate hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_good_bad_constraint in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo*)
-				
+
 			(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
 			| Shuffle_cartography (hyper_rectangle, step) ->
 				let bc_algo = new AlgoBCShuffle.algoBCShuffle hyper_rectangle step (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
-			
+
 			(** Look for the border using the cartography*)
 			| Border_cartography (hyper_rectangle, step) ->
 				raise (NotImplemented("Border cartography is disabled"))
-	
+
 			(** Randomly pick up values for a given number of iterations *)
 			| Random_cartography (hyper_rectangle, max_tries, step) ->
 				let bc_algo = new AlgoBCRandom.algoBCRandom hyper_rectangle step max_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
 				let myalgo :> AlgoGeneric.algoGeneric = bc_algo in
 				myalgo
-				
+
 			(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
 			| RandomSeq_cartography (hyper_rectangle, max_tries, step) ->
 				let bc_algo = new AlgoBCRandomSeq.algoBCRandomSeq hyper_rectangle step max_tries (fun pval -> let myalgo :> AlgoStateBased.algoStateBased = new AlgoIM.algoIM pval in myalgo) AlgoCartoGeneric.Tiles_list in
@@ -790,7 +797,7 @@ match options#imitator_mode with
 					);
 
 					let dot_created_file_option = Graphics.dot Constants.pta_default_image_format (options#files_prefix ^ "-cubpta") translated_model in
-					
+
 					begin
 					match dot_created_file_option with
 						| None -> print_error "Oops…! Something went wrong with dot."
