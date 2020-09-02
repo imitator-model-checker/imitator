@@ -216,7 +216,7 @@ class algoNDFS =
 		(*********************************************************************)
 		(* Check inclusion of zone projection on parameters wrt a constraint *)
 		(*********************************************************************)
-		let smaller_parameter_constraint state_index aconstraint =
+(* 		let smaller_parameter_constraint state_index aconstraint =
 			let state = StateSpace.get_state state_space state_index in
 			let aconstr = LinearConstraint.px_hide_nonparameters_and_collapse state.px_constraint in
 			print_message Verbose_high ("Projected constraint : \n"
@@ -226,6 +226,25 @@ class algoNDFS =
 			print_message Verbose_high ("Compared (bigger?) constraint : \n"
 				^ LinearConstraint.string_of_p_linear_constraint model.variable_names aconstraint);
 			LinearConstraint.p_is_leq aconstr aconstraint
+		in
+ *)
+		(****************************************************************************************)
+		(* Check if parameter constraint is included in a non-convex list of convex constraints *)
+		(****************************************************************************************)
+		let check_parameter_leq_list astate_index = 
+			print_highlighted_message Shell_bold Verbose_high
+				("Testing inclusion of parameter zone in list of collected constraints");
+			let astate = StateSpace.get_state state_space astate_index in
+			let linear_aconstr =
+				LinearConstraint.px_hide_nonparameters_and_collapse astate.px_constraint in
+			let astate_constr =
+				LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint linear_aconstr in
+			let found_constr =
+				LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list in
+			if (LinearConstraint.p_nnconvex_constraint_is_leq astate_constr found_constr) then (
+				print_highlighted_message Shell_bold Verbose_medium("Pruning with inclusion in collected constraints");
+				true
+			) else false
 		in
 
 		(*************************************)
@@ -708,9 +727,10 @@ class algoNDFS =
 				print_message Verbose_standard("Using the option synNDFSsub");
 				(* set up the dfs blue calls *)
 				let enterdfs (astate : State.state_index) : bool =
-					if (List.exists (fun aconstraint ->
+					if (check_parameter_leq_list astate) then (
+(* 					if (List.exists (fun aconstraint ->
 							smaller_parameter_constraint astate aconstraint) !constraint_list) then (
-						(* State astate has been handled and must now become blue *)
+ *)						(* State astate has been handled and must now become blue *)
 						blue := astate::(!blue);
 						printqueue "Blue" !blue;
 						false
@@ -757,9 +777,9 @@ class algoNDFS =
 				let testrecursivedfs (astate: State.state_index) : bool =
 					true in
 				let postdfs (astate: State.state_index) (astate_depth : int) : unit =
-					(* launch red dfs only if not with a smmaller constraint than a state marked by a lookahead*)
-					if ((not (List.exists (fun aconstraint ->
-								smaller_parameter_constraint astate aconstraint) !constraint_list)) &&
+					(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
+					if ((not (check_parameter_leq_list astate) (* (List.exists (fun aconstraint ->
+								smaller_parameter_constraint astate aconstraint) !constraint_list) *)) &&
 							(State.is_accepting (StateSpace.get_state state_space astate))) then (
 						(* set up the dfs red calls *)
 						let enterdfs (astate: State.state_index) : bool =
@@ -824,9 +844,10 @@ class algoNDFS =
 						if (not (List.mem thestate !blue)) then
 						begin 
 						let enterdfs (astate : State.state_index) : bool =
-							if (List.exists (fun aconstraint ->
+							if (check_parameter_leq_list astate) then (
+(* 							if (List.exists (fun aconstraint ->
 									smaller_parameter_constraint astate aconstraint) !constraint_list) then (
-								(* State astate has been handled and must now become blue *)
+ *)								(* State astate has been handled and must now become blue *)
 								blue := astate::(!blue);
 								printqueue "Blue" !blue;
 								false
@@ -874,9 +895,9 @@ class algoNDFS =
 						let testrecursivedfs (astate: State.state_index) : bool =
 							true in
 						let postdfs (astate: State.state_index) (astate_depth : int) : unit =
-							(* launch red dfs only if not with a smmaller constraint than a state marked by a lookahead*)
-							if ((not (List.exists (fun aconstraint ->
-										smaller_parameter_constraint astate aconstraint) !constraint_list)) &&
+							(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
+							if ((not (check_parameter_leq_list astate )(* List.exists (fun aconstraint ->
+										smaller_parameter_constraint astate aconstraint) !constraint_list) *)) &&
 									(State.is_accepting (StateSpace.get_state state_space astate))) then (
 								(* set up the dfs red calls *)
 								let enterdfs (astate: State.state_index) : bool =
