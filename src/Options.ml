@@ -164,6 +164,9 @@ class imitator_options =
 		(* do not put accepting states at the head of successors list in NDFS *)
 		val mutable no_acceptfirst = ref false
 
+		(* do not use pruning of initial zone in NDFS *)
+		val mutable no_initprune = ref false
+
 		(* No leq test of the new states wrt the computed constraint in EFsynth *)
 		val mutable no_leq_test_in_ef = false
 
@@ -254,6 +257,7 @@ class imitator_options =
 		method model_file_name = model_file_name
 		method nb_args = nb_args
 		method no_acceptfirst = !no_acceptfirst
+		method no_initprune = !no_initprune
 		method no_leq_test_in_ef = no_leq_test_in_ef
 		method no_lookahead = !no_lookahead
 		method no_pending_ordered = !no_pending_ordered
@@ -662,6 +666,8 @@ class imitator_options =
 
 				("-no-inclusion-test-in-EF", Unit (fun () -> no_leq_test_in_ef <- true), " In EFsynth, no inclusion test of the new states constraints in the already computed constraint. Default: false.");
 
+				("-no-initprune", Set no_initprune, " In collecting NDFS, no pruning if the initial constraint is included in the collected zone. Default: false.");
+
 				("-no-lookahead", Set no_lookahead, " In NDFS, no lookahead for finding successors closing an accepting cycle. Default: false.");
 
 				("-no-pending-ordered", Set no_pending_ordered, " In NDFS synthesis, do not order the pending queue with larger zones first. Default: false.");
@@ -1029,6 +1035,11 @@ end;
 				print_message Verbose_standard ("Not reordering successors (accepting states first) in NDFS search.")
 			else
 				print_message Verbose_medium ("Reordering successors (accepting states first) in NDFS (default).");
+
+			if !no_initprune then
+				print_message Verbose_standard ("No initial zone prune in collecting NDFS.")
+			else
+				print_message Verbose_medium ("Pruning of initial constraint in NDFS (default).");
 
 			if !no_lookahead then
 				print_message Verbose_standard ("No lookahead in NDFS search.")
