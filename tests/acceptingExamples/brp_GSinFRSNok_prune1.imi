@@ -1,0 +1,186 @@
+-- monitor: G (S_in -> F R_OK)
+
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * BRP (Bounded Retransmission Protocol)
+ *
+ * Description     : Bounded Retransmission Protocol [version slightly modified]
+ * Source          : "The Bounded Retransmission Protocol Must Be on Time!"
+ * Author          : Pedro R. D'Argenio , Joost-Pieter Katoen , Theo C. Ruys , G. Jan Tretmans
+ * Modeling        : Laurent Fribourg
+ * Modified by     : Laure Petrucci and Jaco van de Pol
+ *
+ * Created         : ? (< 09/2007)
+ * Last modified   : 2019/09/10
+ *
+ * IMITATOR version: 2.12 "Butter Lobster"
+ ************************************************************)
+
+var     x,z,u,v
+		: clock;
+
+	i,	-- subscript of the chunk currently beeing processed (1<=i<=N)
+	rc, 	-- nb of attempt undertaken by S to retransmit d_i (0<=rc<=MAX)
+	b1,bN, rb1,rbN, -- these Boolean variables are used for communication between S-K-L-R
+	ab, rab, exp_ab	-- to be sent/received/expected alternating bit
+		: discrete; 
+	
+    MAX = 2, 	-- maximal number of retransmissions
+	N = 2, 		-- number of chunks of a file
+	SYNC,		-- delay added after a failure in order to assure 
+			-- that S does not start transmitting a new file before 
+			-- the receiver has properly reacted to the failure
+	TS,	-- time-out of the sender for initiating a retransmission
+		-- when S has not received an ack from S
+	TR,	-- time-out of the receiver for indicating failure
+		-- when R has not received the last chunk of a file
+	TD  	-- maximum delay in channel K (and L)
+           : parameter;
+-- -----------------------------------------------
+
+
+
+--****************************************************--
+--****************************************************--
+-- AUTOMATA
+--****************************************************--
+--****************************************************--
+
+(************************************************************)
+automaton monitor
+(************************************************************)
+
+synclabs: S_in, S_OK, S_NOK, sndD;
+
+loc s0: while True wait {}
+    	when True sync sndD goto s0;
+    	when True sync S_OK goto s0;
+    	when True sync S_NOK goto s0;
+    	when True sync S_in goto s0;
+    	when True sync S_in goto s1;
+
+accepting loc s1: while True wait {}
+    	when True sync sndD goto s1;
+    	when True sync S_in goto s1;
+	
+end --monitor
+
+--****************************************************--
+  automaton sender
+--****************************************************--
+synclabs: S_in, rcvA, sndD, S_DK, S_NOK, S_OK;
+
+loc idleS: while x>=0 wait {}
+	when True sync S_in do {b1'=1,x'=0} goto next_frame; 
+				
+urgent loc next_frame: while True wait {}
+	when i=N sync sndD do {bN'=1} goto wait_ack;
+	when i<N sync sndD do {bN'=0} goto wait_ack;
+
+loc wait_ack: while x<=TS wait {}
+	when x=TS & rc=MAX & i=N sync S_DK do {x'=0,rc'=0,i'=1} goto error;
+	when x=TS & rc=MAX & i<N sync S_NOK do {x'=0,rc'=0,i'=1} goto error;
+	when x<TS sync rcvA do {ab'=1-ab,x'=0,rc'=0} goto success;
+	when x=TS & rc<MAX sync sndD do {rc'=rc+1,x'=0} goto wait_ack;
+
+urgent loc success: while True wait {}
+	when i<N do {i'=i+1,b1'=0} goto next_frame;
+	when i=N sync S_OK do {i'=1} goto idleS;
+
+loc error: while x <= SYNC wait {}
+	when x=SYNC do {ab'=0} goto idleS;
+
+end --sender
+
+
+--****************************************************--
+  automaton receiver	
+--****************************************************--
+synclabs: rcvD, sndA, R_NOK, R_OK, R_FST, R_INC;
+
+loc new_file: while True wait {}
+	when True sync rcvD do {z'=0} goto fst_safe;
+
+urgent loc fst_safe: while True wait {}
+	when rb1=1 do {exp_ab'=rab} goto frame_received;
+
+urgent loc frame_received: while True wait {}
+	when rab=exp_ab & rb1=1 & rbN=0 sync R_FST
+			do {rb1'=0,rab'=0} goto frame_reported;
+	when rab=exp_ab & rb1=0 & rbN=0 sync R_INC
+			do {rb1'=0,rab'=0} goto frame_reported;
+	when rab=exp_ab & rbN=1 sync R_OK
+			do {rb1'=0,rab'=0} goto frame_reported;
+	when rab=1-exp_ab sync sndA do {rb1'=0,rab'=0} goto idleR;
+
+
+urgent loc frame_reported: while True wait {}
+	when True sync sndA do {exp_ab'=1-exp_ab,z'=0} goto idleR;
+
+loc idleR: while z<=TR wait {}
+	when z<TR sync rcvD do {} goto frame_received;
+	when z=TR & rbN=0 sync R_NOK do {rbN'=0,exp_ab'=0} goto new_file;
+	when z=TR & rbN=1 do {rbN'=0,exp_ab'=0} goto new_file;
+
+end --receiver
+
+
+--****************************************************--
+automaton channelK
+--****************************************************--
+synclabs: sndD, rcvD, lostK;
+
+loc startK: while u>=0 wait {}
+	when True sync sndD do {u'=0} goto in_transitK;   
+
+
+loc in_transitK: while u<=TD wait {}
+	when True sync lostK goto startK;
+	when True do {rb1'=b1, rbN'=bN, rab'=ab} sync rcvD goto startK;
+
+end -- channelK
+
+
+
+--****************************************************--
+automaton channelL
+--****************************************************--
+synclabs: sndA, rcvA, lostL;
+
+loc startL: while v>=0 wait {}
+	when True sync sndA do {v'=0} goto in_transitL;   
+
+loc in_transitL: while v<=TD wait {}
+	when True sync rcvA  goto startL;
+	when True sync lostL goto startL;
+
+end -- channelL
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+init :=   loc[sender]=idleS
+	& loc[receiver]=new_file
+	& loc[channelK]=startK
+	& loc[channelL]=startL
+	& loc[monitor]=s0
+
+	& x=0 & z=0 & u=0 & v=0
+	& rc=0 & i=1 & ab=0 
+	& b1=0 & bN=0 & rb1=0 & rbN=0
+	& rab=0 & exp_ab=0
+
+	& TD > 0
+	& TS > 0
+	& TR > 0
+	& SYNC > 0
+	
+	& TS > 2 * TD
+	
+  & TR > TD
+  & TR > 3*TS + TD
+  & SYNC+3*TS > TR
+	;

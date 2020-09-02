@@ -1,4 +1,10 @@
 *.annot
+*.bcf
+*.fdb*
+*.fls
+*.out
+*.run.xml
+*.synctex.*
 *.cmo
 *.cma
 *.cmi
@@ -8,6 +14,13 @@
 *.cmxs
 *.cmxa
 *.pyc
+
+# MAC users
+.DS_Store
+=
+
+# LP
+ICST19/*
 
 # PyCharm configuration
 .idea

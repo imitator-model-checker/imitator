@@ -1,5 +1,3 @@
--- GF Sin
-
 (************************************************************
  *                      IMITATOR MODEL                      
  *
@@ -86,6 +84,7 @@ loc new_file: while True wait {}
 
 urgent loc fst_safe: while True wait {}
 	when rb1=1 do {exp_ab'=rab} goto frame_received;
+	when rb1=0 goto FailureR;
 
 urgent loc frame_received: while True wait {}
 	when rab=exp_ab & rb1=1 & rbN=0 sync Rout_FST
@@ -104,6 +103,9 @@ loc idleR: while z<=TR wait {}
 	when z<TR sync G do {} goto frame_received;
 	when z=TR & rbN=0 sync Rout_NOK do {} goto new_file;
 	when z=TR & rbN=1 goto new_file;
+
+accepting loc FailureR: while True wait {}
+    	when True do {} goto FailureR;
 
 end --receiver
 
@@ -139,21 +141,6 @@ loc in_transitL: while v<=TD wait {}
 
 end -- channelL
 
-(************************************************************)
-automaton monitor
-(************************************************************)
-
-synclabs: Sin, F;
-
-loc s0: while True wait {}
-    	when True sync F goto s0;
-    	when True sync Sin goto s0;
-    	when True sync F goto s1;
-
-accepting loc s1: while True wait {}
-    	when True sync F goto s1;
-	
-end --monitor
 
 
 (************************************************************)
@@ -163,7 +150,6 @@ init :=   loc[sender]=idleS
 	& loc[receiver]=new_file
 	& loc[channelK]=startK
 	& loc[channelL]=startL
-	& loc[monitor]=s0
 
 	& x=0 & z=0 & u=0 & v=0
 	& rc=0 & i=0 & ab=0 
@@ -174,6 +160,12 @@ init :=   loc[sender]=idleS
 	& T1 > 0
 	& TR > 0
 	& SYNC > 0
+	& MAX > 0
+	& T1 + TD < TR
 	;
 
+
+(************************************************************)
+(* The end *)
+(************************************************************)
 end
