@@ -487,6 +487,7 @@ class algoNDFS =
 					let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 					constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
 					collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
+					cyclecount <- cyclecount + 1;
 					raise TerminateAnalysis
 				in
 				let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
@@ -517,6 +518,7 @@ class algoNDFS =
 							let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 							constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
 							collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
+							cyclecount <- cyclecount + 1;
 							raise TerminateAnalysis
 						in
 						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
@@ -568,6 +570,7 @@ class algoNDFS =
 					let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 					constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
 					collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
+					cyclecount <- cyclecount + 1;
 					raise TerminateAnalysis
 				in
 				let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
@@ -599,6 +602,7 @@ class algoNDFS =
 							let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 							constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
 							collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
+							cyclecount <- cyclecount + 1;
 							raise TerminateAnalysis
 						in
 						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
@@ -662,6 +666,7 @@ class algoNDFS =
 							let state_constr = astate.px_constraint in
 							constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
 							collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
+							cyclecount <- cyclecount + 1;
 							raise TerminateAnalysis
 						in
 						let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
@@ -693,7 +698,8 @@ class algoNDFS =
 									print_projection Verbose_standard astate;
 									let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 									constraint_list := [LinearConstraint.px_hide_nonparameters_and_collapse state_constr];
-									collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;									
+									collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
+									cyclecount <- cyclecount + 1;
 									raise TerminateAnalysis
 								in
 								let filterdfs (thestate : State.state_index) (astate : State.state_index) : bool =
