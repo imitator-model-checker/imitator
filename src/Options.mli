@@ -18,8 +18,6 @@
 open AbstractAlgorithm
 
 
-
-
 class imitator_options :
 	object
 
@@ -65,15 +63,14 @@ class imitator_options :
 		method is_set_mergeq : bool
 		method set_mergeq : bool -> unit
 
-(* 		method merge_before : bool *)
+		(* 		method merge_before : bool *)
 		method merge_heuristic : merge_heuristic
 		method model_file_name : string
 		method no_acceptfirst : bool
 		method nb_args : int
-(* 		method no_initprune : bool *)
 		method no_leq_test_in_ef : bool
 		method no_lookahead : bool
-(* 		method no_pending_ordered : bool *)
+		method no_pending_ordered : bool
 		method no_random : bool
 		method no_time_elapsing : bool
 		method no_variable_autoremove : bool
@@ -90,11 +87,9 @@ class imitator_options :
 		method set_output_result : bool -> unit
 
 		method output_tiles_files : bool
-		method pending_order : pending_order
 		method pi_compatible : bool
 		method precomputepi0 : bool
 		method property_file_name : string option
-		method recompute_green : bool
 		method states_limit : int option
 		method statistics : bool
 		method sync_auto_detection : bool
@@ -105,6 +100,10 @@ class imitator_options :
 		method graphical_state_space : graphical_state_space
 		method with_graphics_source : bool
 		method states_description : bool
+
+		method recompute_green : bool
+		method pending_order : pending_order
+		method step : NumConst.t
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Set methods *)

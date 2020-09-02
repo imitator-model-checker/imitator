@@ -42,17 +42,17 @@ type translation =
 type imitator_mode =
 	(** No analysis, syntactic check only *)
 	| Syntax_check
-	
+
 	(** Translation to another language: no analysis *)
 	| Translation of translation
-	
+
 	(** Full state space exploration, until fully explored or some preliminary termination *)
 	| State_space_computation
-	
+
 	(** Synthesis algorithm *)
 	| Algorithm (*of synthesis_algorithm*)
-	
-	
+
+
 
 (************************************************************)
 (** Options *)
@@ -61,10 +61,10 @@ type imitator_mode =
 type distribution_mode =
 	(** Normal mode *)
 	| Non_distributed
-	
+
 	(** Distributed mode: static distribution mode (each node has its own part with no communication) *)
 	| Distributed_static
-	
+
 	(** Distributed mode: Master slave with sequential pi0 *)
 	| Distributed_ms_sequential
 	(** Distributed mode: Master slave with sequential pi0 shuffled *)
@@ -93,15 +93,21 @@ type exploration_order =
 	| Exploration_NDFS
 	(** NDFSsub: NDFS with subsumption [NPvdP18] **)
 	| Exploration_NDFS_sub
+	(** layerNDFS: NDFS with layers [NPvdP18] **)
+	| Exploration_layer_NDFS
 	(** layerNDFSsub: NDFS with subsumption  and layers [NPvdP18] **)
 	| Exploration_layer_NDFS_sub
-(*	(** synNDFSsub: NDFS synthesis with subsumption **)
-	| Exploration_syn_NDFS_sub
-	(** synlayerNDFSsub: NDFS synthesis with subsumption and layers [NPvdP18] **)
-	| Exploration_syn_layer_NDFS_sub*)
-	(** synMixedNDFS: NDFS synthesis with a mix of subsumption and layers **)
-(* 	| Exploration_syn_mixed_NDFS *)
 
+type pending_order =
+	(** NDFS with layers: order in the pending list exploration **)
+	(* no particular order *)
+	| Pending_none
+	(* biggest parametric projection of zone first *)
+	| Pending_param
+	(* accepting states first *)
+	| Pending_accept
+	(* biggest zone first *)
+	| Pending_zone
 
 type merge_heuristic =
 	(** Merge_always: merge after every processed state *)
@@ -144,10 +150,10 @@ let property_needed = function
 	| Syntax_check
 	| State_space_computation
 		-> Second_file_useless
-		
+
 	| Translation _
 		-> Second_file_optional
-	
+
 	| Algorithm
 		-> Second_file_required
 
@@ -178,13 +184,13 @@ let string_of_translation = function
 let string_of_mode (imitator_mode : imitator_mode) : string = match imitator_mode with
 	(** No analysis, syntactic check only *)
 	| Syntax_check -> "syntax check"
-	
+
 	(** Translation to another language: no analysis *)
 	| Translation translation -> "translation to " ^ (string_of_translation translation)
-	
+
 	(** Translation to another language: no analysis *)
 	| State_space_computation -> "full symbolic state space exploration "
-	
+
 	(** Synthesis algorithm *)
 	| Algorithm (*synthesis_algorithm*) -> "algorithm" (*** TODO: not so precise! ***)
 
