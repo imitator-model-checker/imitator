@@ -88,7 +88,7 @@ for f in BRP coffee \
 		# columns 17 to 19 = cycles, states, time (with layers)
 		echo -n `grep "cycles found" $one_result | cut -d: -f2 | sed -e 's/\[0m//'`";" >> $output_file
 		echo -n `grep "processed states" $one_result | cut -d: -f2 | sed -e 's/\[0m//'`";" >> $output_file
-		echo `grep "completed after" $one_result | sed -e 's/\[NDFS\] State space exploration completed after //' \
+		echo -n `grep "completed after" $one_result | sed -e 's/\[NDFS\] State space exploration completed after //' \
 			| sed -e 's/ seconds.//' | sed -e 's/ second.//' | sed -e 's/\[0m/;/' ` >> $output_file
 		# ordering and lookahead (no ordering of pending list)
 		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFSsub -no-pending-ordered -time-limit $timeout $exp_dir/$f.imi > $one_result
@@ -96,7 +96,7 @@ for f in BRP coffee \
 		# columns 20 to 22 = cycles, states, time (with layers)
 		echo -n `grep "cycles found" $one_result | cut -d: -f2 | sed -e 's/\[0m//'`";" >> $output_file
 		echo -n `grep "processed states" $one_result | cut -d: -f2 | sed -e 's/\[0m//'`";" >> $output_file
-		echo `grep "completed after" $one_result | sed -e 's/\[NDFS\] State space exploration completed after //' \
+		echo -n `grep "completed after" $one_result | sed -e 's/\[NDFS\] State space exploration completed after //' \
 			| sed -e 's/ seconds.//' | sed -e 's/ second.//' | sed -e 's/\[0m/;/' ` >> $output_file
 		# ordering, lookahead and ordering of pending list
 		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFSsub -time-limit $timeout $exp_dir/$f.imi > $one_result
