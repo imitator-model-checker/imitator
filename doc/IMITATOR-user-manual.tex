@@ -1769,11 +1769,11 @@ This framework remains relatively experimental.
 
 Second, for accepting loop synthesis with NDFS exploration~\cite{NPP18} (see \cref{ss:accepting-loop-NDFS}).
 In this latter case, the possible values are:
-\begin{description}
-\item[\styleOption{-explOrder NDFS}]: use standard NDFS to find an accepting cycle (default option);
-\item[\styleOption{-explOrder NDFSsub}]: standard NDFS with subsumption;
-\item[\styleOption{-explOrder layerNDFS}]: NDFS with layers;
-\item[\styleOption{-explOrder layerNDFSsub}]: NDFS with subsumption and layers;
+\begin{itemize}
+\item \styleOption{-explOrder NDFS}: use standard NDFS to find an accepting cycle (default option);
+\item \styleOption{-explOrder NDFSsub}: standard NDFS with subsumption;
+\item \styleOption{-explOrder layerNDFS}: NDFS with layers;
+\item \styleOption{-explOrder layerNDFSsub}: NDFS with subsumption and layers;
 % 	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
 % 	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
 \end{itemize}
@@ -1981,7 +1981,11 @@ The possible values are:
 Does not write the result of the analysis to a file.
 By default, a file named \stylePath{<input\_file>.res} is created using a normalized syntax, that can be easily parsed, \eg{} using an external script.
 
-
+%------------------------------------------------------------
+\paragraph{\styleOption{-recompute-green} (default: false)}
+%------------------------------------------------------------
+In \styleOption{AccLoopSynthNDFS} with iterative deepening, force re-exploration of
+green states when encountered on a shorter path.
 
 % %------------------------------------------------------------
 % \paragraph{\styleOption{-romeo} (default: false)}
