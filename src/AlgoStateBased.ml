@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/08/28
+ * Last modified     : 2020/09/03
  *
  ************************************************************)
 
@@ -3560,7 +3560,41 @@ class virtual algoStateBased =
 				| _ -> raise (InternalError ("Impossible situation: at that point, it should be a (variant of) queue BFS"))
 			);
 
+
 			(* Merge states! *)
+			
+(*			(*** CASE mergeq ***)
+			if options#mergeq then(
+				queue := StateSpace.merge state_space !queue;
+				(*** TODO: the following code belongs to StateSpace ***)
+				(match options#exploration_order with
+					| Exploration_queue_BFS_RS -> hashtbl_filter (StateSpace.test_state_index state_space) rank_hashtable
+					| _ -> ();
+				)
+			)
+			(*** CASE merge (classical) ***)
+			else if options#merge then(
+			(*** Here, we merge only the queue ***)
+			(*** TODO: merge something else? ***)
+			let new_states_after_merging = ref (!queue) in
+			if options#merge (*|| options#merge_before*) then (
+				(* New version *)
+				let eaten_states = StateSpace.merge state_space !new_states_after_merging in
+				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
+				
+				(match options#exploration_order with
+				
+				| Exploration_queue_BFS_RS -> List.iter ( fun state_index -> Hashtbl.remove rank_hashtable state_index;
+					) eaten_states;
+				| _ -> ();
+				)
+			);
+			(* Copy back the merged queue *)
+			queue := !new_states_after_merging;
+			);*)
+			
+			
+			(*** BEGIN OLD MIXED VERSION (2020-09) ***)
 			if options#merge (*|| options#merge_before*) then (
 				queue := StateSpace.merge state_space !queue;
 				(* TODO: the following code belongs in StateSpace *)
@@ -3569,6 +3603,7 @@ class virtual algoStateBased =
 					| _ -> ();
 				)
 			);
+			(*** END OLD MIXED VERSION (2020-09) ***)
 
 			(* Check if the limit has been reached *)
 			self#check_and_update_queue_bfs_limit;
@@ -3732,8 +3767,22 @@ class virtual algoStateBased =
 			(* Merge states! *)
 			let new_states_after_merging = ref post_n_plus_1 in
 			(*** HACK here! For #merge_before, we should ONLY merge here; but, in order not to change the full structure of the post computation, we first merge locally before the pi0-compatibility test, then again here ***)
+			
+(*			if options#mergeq then(
+				new_states_after_merging := StateSpace.merge state_space !new_states_after_merging;
+			) else if options#merge then (
+	(* 			new_states_after_merging := try_to_merge_states state_space !new_states_after_merging; *)
+				(* New version *)
+				let eaten_states = StateSpace.merge state_space !new_states_after_merging in
+				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
+			);*)
+			
+			(*** BEGIN OLD MIXED VERSION (2020-09) ***)
+
 			if options#merge (*|| options#merge_before*) then
 				new_states_after_merging := StateSpace.merge state_space !new_states_after_merging;
+			(*** END OLD MIXED VERSION (2020-09) ***)
+				
 			(* Update the post_n, i.e., at that point we replace the post^n by post^n+1 in our BFS algorithm, and go one step deeper in the state space *)
 			post_n := !new_states_after_merging;
 
