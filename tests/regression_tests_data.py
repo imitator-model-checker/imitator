@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/09/01
+# Last modified     : 2020/09/03
 #************************************************************
 
 
@@ -5599,7 +5599,7 @@ END CONSTRAINT
 	{
 		'purpose'    : 'Test the convex inverse method (SIMOP)',
 		'input_files': ['simop.imi', 'simop.pi0'],
-		'options'    : '-merge -no-random ',
+		'options'    : '-merge -no-random -inclusion',
 		'expectations' : [
 			{'file': 'simop.res' , 'content' : """
 BEGIN CONSTRAINT
