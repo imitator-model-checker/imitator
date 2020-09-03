@@ -223,6 +223,9 @@ begin match property_option, options#imitator_mode with
 		let merge_needed = AlgorithmOptions.merge_needed property in
 		(* Update if not yet set *)
 		if not options#is_set_mergeq then (
+			(* Print some information *)
+			print_message Verbose_high ("Case option `-mergeq` not set");
+			
 			options#set_mergeq(false);
 
 			if not options#is_set_merge then(
@@ -237,6 +240,9 @@ begin match property_option, options#imitator_mode with
 		->
 		(* Update if not yet set *)
 		if not options#is_set_mergeq then (
+			(* Print some information *)
+			print_message Verbose_high ("Case option `-mergeq` not set");
+
 			options#set_mergeq(false);
 
 			if not options#is_set_merge then(

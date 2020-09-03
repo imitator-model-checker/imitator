@@ -207,6 +207,9 @@ class imitator_options =
 		(* limit number of states *)
 		val mutable states_limit = ref None
 
+		(* Step for NDFS *)
+		val mutable step = ref NumConst.one
+
 		(* autodetect sync actions *)
 		val mutable sync_auto_detection = ref false
 
@@ -218,44 +221,6 @@ class imitator_options =
 
 		(* Union of last states (algo "IMunion") *)
 		val mutable union = ref false
-
-		(* Step for the cartography *)
-		val mutable step = ref NumConst.one
-
-
-		(* TRANSLATION *)
-
-(*		(* Translate PTA model into a CLP program *)
-		val mutable pta2clp = ref false*)
-
-		(* Translate PTA model into a HyTech file *)
-		val mutable pta2hytech = ref false
-
-		(* Translate PTA model into a new IMITATOR file *)
-		val mutable pta2imi = ref false
-
-		(* Translate PTA model into a graphics *)
-		val mutable pta2jpg = ref false
-		val mutable pta2pdf = ref false
-		val mutable pta2png = ref false
-
-		(* Translate PTA model into a TikZ LaTeX code *)
-		val mutable pta2tikz = ref false
-
-		(* Translate PTA model into an Uppaal file *)
-		val mutable pta2uppaal = ref false
-
-
-		(* SPECIALIZED OPTIONS*)
-
-		(* Merging states on the fly *)
-		(* Merging states on the fly (after pi0-compatibility check) *)
-(* 		val mutable merge_before = ref false *)
-
-		(* Merging heuristic *)
-		(* val mutable merge_heuristic = Merge_iter10 *)
-
-
 
 		(************************************************************)
 		(* Class methods *)
@@ -738,7 +703,7 @@ class imitator_options =
 
 				("-statistics", Unit (fun _ -> statistics := true; Statistics.enable_all_counters()), " Print info on number of calls to PPL, and other statistics. Default: 'false'");
 
-				("-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for the cartography or NDFS iterative deepening. Default: 1.");
+				("-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step := (NumConst.numconst_of_string i)), " Step for NDFS iterative deepening. Default: 1.");
 
 				("-sync-auto-detect", Set sync_auto_detection, " Detect automatically the synchronized actions in each automaton. Default: false (consider the actions declared by the user)");
 
