@@ -1308,7 +1308,7 @@ end;
 			if is_cartography && carto_time_limit <> None && !time_limit = None then(
 				print_warning ("A time limit is defined for BC but not for IM: forcing time limit for IM too.");
 				let limit = match carto_time_limit with
-					| None -> raise (InternalError ("Impossible situation in options, carto_time_limit is set at that point"))
+					| None -> raise (InternalError ("Impossible situation in options, `-cart-time-limit` should be set at that point"))
 					| Some limit -> limit
 				in
 				time_limit := Some limit;
