@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/09/02
+ * Last modified     : 2020/09/03
  *
  ************************************************************)
 
@@ -698,7 +698,8 @@ class imitator_options =
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
         Use `checksyntax` for a simple syntax check and no analysis.
 
-        Use `statespace` for the generation of the entire parametric state space.");
+        Use `statespace` for the generation of the entire parametric state space."
+        );
 
 				(*** NOTE: hidden option! 'shuffle' to cover all the points within v0 after shuffling the array. (Reason for hiding: only useful in the distributed cartography) ***)
 				(*** NOTE: hidden option! or 'randomseqXX' where XX is a number to iterate random calls to IM followed by a sequential check (e.g., randomseq5 or randomseq10000) (Reason for hiding: only useful in the distributed cartography) ***)
