@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2020/08/28
+ * Last modified: 2020/09/03
  *
  ************************************************************)
 
@@ -46,7 +46,7 @@ class imitator_options :
 		method dynamic_clock_elimination : bool
 		method exploration_order : exploration_order
 		method files_prefix : string
-		method imitator_mode : imitator_mode
+		method imitator_mode : AbstractAlgorithm.imitator_mode
 
 		method inclusion : bool
 		method is_set_inclusion : bool
