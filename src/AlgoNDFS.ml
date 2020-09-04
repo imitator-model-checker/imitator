@@ -513,7 +513,7 @@ class algoNDFS =
 										else if (current_depth  >= thestate_depth) then true
 											else (depth_reached <- true; false)
 			in
-			let is_green astate = table_test green astate in
+(* 			let is_green astate = table_test green astate in *)
 			if (depth_ok && enterdfs thestate) then (
 				if (thestate_depth > max_depth_reached) then max_depth_reached <- thestate_depth;
 				predfs thestate;
