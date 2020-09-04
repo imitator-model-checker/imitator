@@ -490,9 +490,7 @@ try(
 	(* find the minimum and maximum abscissa and ordinate for each constraint and store them in a list *)
 	
 	(* Add the min bounds rectangle *)
-	(*** NOTE: `-C` = color ***)
-	(*** NOTE: `-q` = fill_fraction ***)
-	script_line := !script_line ^ " -C --line-mode 5 -q 1 " ^ file_bounds_name ^ " ";
+	script_line := !script_line ^ " --line-mode 0 --fill-fraction -1 " ^ file_bounds_name ^ " ";
 	
 	
 	(* Print some information *)
@@ -614,8 +612,8 @@ try(
 		(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
 		if fst s
 			(*** TODO : same color for one disjunctive tile ***)
-			then script_line := !script_line ^ "--line-mode " ^ (graph_color_of_int !tile_index statespace_nature true) ^ " -q 0.3 " ^ file_name ^ " "
-			else script_line := !script_line ^ "--line-mode " ^ (graph_color_of_int !tile_index statespace_nature false) ^ " -q 0.7 " ^ file_name ^ " "
+			then script_line := !script_line ^ "--line-mode " ^ (graph_color_of_int !tile_index statespace_nature true) ^ " --fill-fraction 0.3 " ^ file_name ^ " "
+			else script_line := !script_line ^ "--line-mode " ^ (graph_color_of_int !tile_index statespace_nature false) ^ " --fill-fraction 0.7 " ^ file_name ^ " "
 		;
 	in
 	
@@ -640,7 +638,7 @@ try(
 	script_line := !script_line
 		(* Part to add the last file *)
 		(*** NOTE: is `-C` needed? (2020/09/04, ÉA) ***)
-		^ " -C --line-mode 2 -q -1 " ^ file_v0_name
+		^ " -C --line-mode 2 --fill-fraction -1 " ^ file_v0_name
 		
 		(* Part to set global options and to redirect to the output *)
 		^ " -L \"" ^ options#files_prefix ^ "\" -r 0.15 -u 0.12 -w 0.8 -h 0.75 --blankout 1.0 > " ^ cartography_image_file

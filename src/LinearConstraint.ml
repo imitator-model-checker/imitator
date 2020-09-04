@@ -3075,6 +3075,7 @@ type direction =
 
 
 (* convert a linear constraint to a set of 2d points wrt. the variables x,y *)
+(*** WARNING/BUG: polyhedra outside the bounds should be excluded but they are not ***)
 let generate_points x y linear_constraint min_abs min_ord max_abs max_ord =
 
 	(* Print some information *)
