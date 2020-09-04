@@ -7066,6 +7066,30 @@ Average number of transitions : 7.0
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2020/09/04
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test BC in mode cover (grid) with step=2',
+		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4-cover-step2.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+------------------------------------------------------------
+Number of integers in v0                : 4
+Number of tiles computed                : 4
+Coverage                                : integer-complete
+Termination                             : regular termination
+Number of unsuccessful points           : 0
+"""
+			} # end BC file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	{
 		'purpose'    : 'Test BC in mode cover (grid2)',
 		'input_files': ['testBC-grid2-plain.imi', 'testBC-grid5x5-cover.imiprop'],
 		'options'    : '',
