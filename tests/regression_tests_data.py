@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/09/03
+# Last modified     : 2020/09/04
 #************************************************************
 
 
@@ -1833,6 +1833,62 @@ END CONSTRAINT
 
 	,
 
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/04
+		# Test for IMITATOR version: 3.0
+		'purpose'    : 'Test EF (difference between emptiness and synthesis, here emptiness)',
+		'input_files': ['testEFemptiness.imi', 'testEFemptiness-empt.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFemptiness.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/04
+		# Test for IMITATOR version: 3.0
+		'purpose'    : 'Test EF (difference between emptiness and synthesis, here synthesis)',
+		'input_files': ['testEFemptiness.imi', 'testEFemptiness-synth.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFemptiness.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 1
+ OR
+ p >= 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 
 	#------------------------------------------------------------
 	{

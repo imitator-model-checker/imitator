@@ -1,0 +1,81 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy example to exhibit different result for synthesis (#synth) and emptiness (#witness)
+ *
+ * Description     : Toy example to exhibit different result for synthesis (#synth) and emptiness (#witness). Expected result is to be p=1 for emptiness (for BFS exploration orders), but p=1 or p >= 2 for synthesis
+ * Correctness     : lgoal is reachable
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/09/04
+ * Last modified   : 2020/09/04
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant True
+	(*** NOTE: can be taken iff p = 1 ***)
+	when x = 1 & x = p sync a do {x := 0} goto lgoal;
+
+	when x >= 2 sync a goto l2;
+
+loc l2: invariant True
+	when x >= 2 sync a goto l3;
+
+loc l3: invariant True
+	(*** NOTE: can be taken iff p >= 2 ***)
+	when x = p sync a goto lgoal;
+
+loc lgoal: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
