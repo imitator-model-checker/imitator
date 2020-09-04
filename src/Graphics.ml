@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/08/28
+ * Last modified     : 2020/09/04
  *
  ************************************************************)
  
@@ -261,9 +261,13 @@ try(
 	
 	(* First find the dimensions *)
 
+	(* Print some information *)
 	print_message Verbose_low "Looking for dimensions…";
+	
 	let range_params : int list ref = ref [] in
-	let bounds = ref (Array.make 2 (NumConst.zero, NumConst.zero)) in
+	
+	(* The coordinates of the dotted rectangle to be printed *)
+	let reference_rectangle_coordinates = ref (Array.make 2 (NumConst.zero, NumConst.zero)) in
 	
 	
 	(* Get the reference hyper rectangle from the property, if any *)
@@ -296,9 +300,9 @@ try(
 			raise CartographyError
 		);
 
-		(* Update bounds *)
-		!bounds.(x_index) <- v0#get_min (List.nth !range_params 0), v0#get_max (List.nth !range_params 0);
-		!bounds.(y_index) <- v0#get_min (List.nth !range_params 1), v0#get_max (List.nth !range_params 1);
+		(* Update coordinates of the dotted rectangle *)
+		!reference_rectangle_coordinates.(x_index) <- v0#get_min (List.nth !range_params 0), v0#get_max (List.nth !range_params 0);
+		!reference_rectangle_coordinates.(y_index) <- v0#get_min (List.nth !range_params 1), v0#get_max (List.nth !range_params 1);
 
 	(* Otherwise: choose the first two parameters *)
 	| None ->
@@ -333,8 +337,8 @@ try(
 			| None -> NumConst.numconst_of_int 50 (*** WARNING: quite random thing here ! ***)
 			| Some n -> NumConst.numconst_of_int n
 		in
-		!bounds.(0) <- ef_x_min, ef_x_max;
-		!bounds.(1) <- ef_y_min, ef_y_max;
+		!reference_rectangle_coordinates.(0) <- ef_x_min, ef_x_max;
+		!reference_rectangle_coordinates.(1) <- ef_y_min, ef_y_max;
 	end;
 
 		
@@ -343,34 +347,34 @@ try(
 	begin
 	match options#output_cart_x_min with
 		| None -> ()
-		| Some n -> let (old_min, old_max) = !bounds.(x_index) in
+		| Some n -> let (old_min, old_max) = !reference_rectangle_coordinates.(x_index) in
 			let new_min = NumConst.numconst_of_int n in
 			if NumConst.g new_min old_min then
-				!bounds.(x_index) <- (new_min, old_max);
+				!reference_rectangle_coordinates.(x_index) <- (new_min, old_max);
 	end;
 	begin
 	match options#output_cart_x_max with
 		| None -> ()
-		| Some n -> let (old_min, old_max) = !bounds.(x_index) in
+		| Some n -> let (old_min, old_max) = !reference_rectangle_coordinates.(x_index) in
 			let new_max = NumConst.numconst_of_int n in
 			if NumConst.l new_max old_max then
-				!bounds.(x_index) <- (old_min, new_max);
+				!reference_rectangle_coordinates.(x_index) <- (old_min, new_max);
 	end;
 	begin
 	match options#output_cart_y_min with
 		| None -> ()
-		| Some n -> let (old_min, old_max) = !bounds.(y_index) in
+		| Some n -> let (old_min, old_max) = !reference_rectangle_coordinates.(y_index) in
 			let new_min = NumConst.numconst_of_int n in
 			if NumConst.g new_min old_min then
-				!bounds.(y_index) <- (new_min, old_max);
+				!reference_rectangle_coordinates.(y_index) <- (new_min, old_max);
 	end;
 	begin
 	match options#output_cart_y_max with
 		| None -> ()
-		| Some n -> let (old_min, old_max) = !bounds.(y_index) in
+		| Some n -> let (old_min, old_max) = !reference_rectangle_coordinates.(y_index) in
 			let new_max = NumConst.numconst_of_int n in
 			if NumConst.l new_max old_max then
-				!bounds.(y_index) <- (old_min, new_max);
+				!reference_rectangle_coordinates.(y_index) <- (old_min, new_max);
 	end;
 	
 	(* Now start *)
@@ -407,16 +411,16 @@ try(
 	print_message Verbose_low ("Computing the zone…");
 	
 	let str_rectangle_v0 =
-				(graph_string_of_numconst (fst (!bounds.(x_pos))))
-		^" "^(graph_string_of_numconst (snd (!bounds.(y_pos))))
-		^"\n"^(graph_string_of_numconst (snd (!bounds.(x_pos))))
-		^" "^ (graph_string_of_numconst (snd (!bounds.(y_pos))))
-		^"\n"^(graph_string_of_numconst (snd (!bounds.(x_pos))))
-		^" "^ (graph_string_of_numconst (fst (!bounds.(y_pos))))
-		^"\n"^(graph_string_of_numconst (fst (!bounds.(x_pos))))
-		^" "^ (graph_string_of_numconst (fst (!bounds.(y_pos))))
-		^"\n"^(graph_string_of_numconst (fst (!bounds.(x_pos))))
-		^" "^ (graph_string_of_numconst (snd (!bounds.(y_pos))))
+				(graph_string_of_numconst (fst (!reference_rectangle_coordinates.(x_pos))))
+		^" "^(graph_string_of_numconst (snd (!reference_rectangle_coordinates.(y_pos))))
+		^"\n"^(graph_string_of_numconst (snd (!reference_rectangle_coordinates.(x_pos))))
+		^" "^ (graph_string_of_numconst (snd (!reference_rectangle_coordinates.(y_pos))))
+		^"\n"^(graph_string_of_numconst (snd (!reference_rectangle_coordinates.(x_pos))))
+		^" "^ (graph_string_of_numconst (fst (!reference_rectangle_coordinates.(y_pos))))
+		^"\n"^(graph_string_of_numconst (fst (!reference_rectangle_coordinates.(x_pos))))
+		^" "^ (graph_string_of_numconst (fst (!reference_rectangle_coordinates.(y_pos))))
+		^"\n"^(graph_string_of_numconst (fst (!reference_rectangle_coordinates.(x_pos))))
+		^" "^ (graph_string_of_numconst (snd (!reference_rectangle_coordinates.(y_pos))))
 	in
 	output_string file_rectangle_v0 str_rectangle_v0;
 	close_out file_rectangle_v0;
@@ -433,27 +437,8 @@ try(
 	print_message Verbose_low ("Finding zone corners…");
 
 	(* get corners of bounds *)
-	let init_min_abs, init_max_abs = !bounds.(x_pos) in
-	let init_min_ord, init_max_ord = !bounds.(y_pos) in
-(*		(* convert to float *)
-	let init_min_abs = float_of_int init_min_abs in
-	let init_max_abs = float_of_int init_max_abs in
-	let init_min_ord = float_of_int init_min_ord in
-	let init_max_ord = float_of_int init_max_ord in
-	
-	(* find mininma and maxima for axes (version Daphne) *)
-	let min_abs, max_abs, min_ord, max_ord =
-	List.fold_left (fun limits constr -> 
-		let points, _ = shape_of_poly x_param y_param constr in			
-		List.fold_left (fun limits (x,y) ->
-			let current_min_abs, current_max_abs, current_min_ord, current_max_ord = limits in
-			let new_min_abs = min current_min_abs x in
-			let new_max_abs = max current_max_abs x in
-			let new_min_ord = min current_min_ord y in
-			let new_max_ord = max current_max_ord y in
-			(new_min_abs, new_max_abs, new_min_ord, new_max_ord) 
-		) limits points  		 
-	) (init_min_abs, init_max_abs, init_min_ord, init_max_ord) new_returned_constraint_list in*)
+	let init_min_abs, init_max_abs = !reference_rectangle_coordinates.(x_pos) in
+	let init_min_ord, init_max_ord = !reference_rectangle_coordinates.(y_pos) in
 
 	(* Conversion to float, because all functions handle floats *)
 	
@@ -498,29 +483,21 @@ try(
 	match options#output_cart_x_min with
 		| None -> ()
 		| Some n -> min_abs := float_of_int n;
-(*		let (_, old_max) = !bounds.(x_index) in
-			!bounds.(x_index) <- (NumConst.numconst_of_int n, old_max);*)
 	end;
 	begin
 	match options#output_cart_x_max with
 		| None -> ()
 		| Some n -> max_abs := float_of_int n;
-		(*let (old_min, _) = !bounds.(x_index) in
-			!bounds.(x_index) <- (old_min, NumConst.numconst_of_int n);*)
 	end;
 	begin
 	match options#output_cart_y_min with
 		| None -> ()
 		| Some n -> min_ord := float_of_int n;
-		(*let (_, old_max) = !bounds.(y_index) in
-			!bounds.(y_index) <- (NumConst.numconst_of_int n, old_max);*)
 	end;
 	begin
 	match options#output_cart_y_max with
 		| None -> ()
 		| Some n -> max_ord := float_of_int n;
-		(*let (old_min, _) = !bounds.(y_index) in
-			!bounds.(y_index) <- (old_min, NumConst.numconst_of_int n);*)
 	end;
 	(*** TODO!!! do something if some min > max ***)
 
