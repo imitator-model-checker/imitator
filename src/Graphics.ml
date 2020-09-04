@@ -226,32 +226,6 @@ try(
 		) returned_constraint_list
 	)  in
 	
-(*	(* For all returned_constraint *)
-	let new_returned_constraint_list = List.map (
-		fun returned_constraint -> match returned_constraint with
-			| Convex_constraint (k, tn) -> Convex_constraint (LinearConstraint.render_non_strict_p_linear_constraint k , tn)
-			| Union_of_constraints (list_of_k, tn) -> Union_of_constraints (List.map LinearConstraint.render_non_strict_p_linear_constraint list_of_k , tn)
-			| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
-	) returned_constraint_list
-	in*)
-	
-	(* From now on, we work with a list [(LinearConstraint.p_linear_constraint, statespace_nature), …] *)
-
-
-(*	(*** HORRIBLE IMPERATIVE (and not tail recursive) programming !!!!! ***)
-	(* For all returned_constraint *)
-	for k = 0 to List.length returned_constraint_list -1 do
-		(* For all linear_constraint *)
-		for i=0 to List.length constraint_list -1 do
-			let inequality_list = ppl_Polyhedron_get_constraints (List.nth constraint_list i) in 
-			let new_inequality_list = ref [] in
-			for j=0 to List.length inequality_list -1 do 
-				new_inequality_list := (strict_to_not_strict_inequality (List.nth inequality_list j))::!new_inequality_list;
-			done;
-			new_constraint_list := make !new_inequality_list::!new_constraint_list;
-		done;
-	done;*)
-	
 	
 	(*** TODO!!! for EF-synthesis, first draw a green background, since the non-red is necessarily green (well, unless approximations are used) ***)
 	
@@ -461,11 +435,6 @@ try(
 		) points;
 	in
 	(* Update min / max for all returned constraint *)
-(*	List.iter (function
-		| Convex_constraint (k, _) -> update_min_max k
-		| Union_of_constraints (list_of_k, _) -> List.iter update_min_max list_of_k
-		| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
-	) new_returned_constraint_list;*)
 	List.iter (function (p_linear_constraint, _) -> update_min_max p_linear_constraint) returned_constraint_list;
 
 	(* Print some information *)
@@ -502,30 +471,6 @@ try(
 	(*** TODO!!! do something if some min > max ***)
 
 	
-	(* print_message Verbose_standard ((string_of_float !min_abs)^"  "^(string_of_float !min_ord)); *)
-	(* Create a new file for each constraint *)
-(*		for i=0 to List.length !new_constraint_list-1 do
-		let file_name = cartography_file_prefix^"_points_"^(string_of_int i)^".txt" in
-		let file_out = open_out file_name in
-		(* find the points satisfying the constraint *)
-		let s=plot_2d (x_param) (y_param) (List.nth !new_constraint_list i) min_abs min_ord max_abs max_ord in
-		(* print in the file the coordinates of the points *)
-		output_string file_out (snd s);
-		(* close the file and open it in a reading mode to read the first line *)
-		close_out file_out;			
-		let file_in = open_in file_name in
-		let s2 = input_line file_in in
-		(* close the file and open it in a writting mode to copy the whole string in it and ensure that the polygon is closed*)
-		close_in file_in;
-		let file_out_bis = open_out file_name in
-		output_string file_out_bis ((snd s)^s2);
-		close_out file_out_bis;
-		(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
-		if fst s
-			then script_line := !script_line^"-m "^(string_of_int((i mod 5)+1+20))^" -q 0.3 "^file_name^" "
-			else script_line := !script_line^"-m "^(string_of_int((i mod 5)+1))^" -q 0.7 "^file_name^" "
-	done;*)
-
 	(*** BAD PROG : bouh pas beau ***)
 	(*** WARNING: it looks like file_index = tile_index, always! ***)
 	let file_index = ref 0 in
@@ -542,12 +487,6 @@ try(
 		);
 		
 		let file_name = make_cartography_tile_file_name cartography_file_prefix !file_index in
-		
-(*			(* Remove all non-parameter dimensions (the n highest) *)
-		print_message Verbose_standard ("Removing the " ^ (string_of_int (model.nb_discrete + model.nb_clocks)) ^ " highest (clocks and discrete) dimensions in the constraint, to keep only the " ^ (string_of_int (model.nb_parameters)) ^ " lowest."); 
-		(* Should be done already ?!! *)
-		hide_assign model.clocks_and_discrete k;
-		remove_dimensions (model.nb_discrete + model.nb_clocks) k ;*)
 		
 		(* find the points satisfying the constraint *)
 		let s = LinearConstraint.plot_2d x_param y_param k !min_abs !min_ord !max_abs !max_ord in
@@ -593,29 +532,6 @@ try(
 	in
 	
 	(* For all returned_constraint *)
-(*	List.iter (function
-		| Convex_constraint (k, tn) ->
-			(*** WARNING: duplicate code ***)
-			(* Test just in case ! (otherwise an exception arises *)
-			if LinearConstraint.p_is_false k then(
-				print_warning " Found a false constraint when computing the cartography. Ignored."
-			)else(
-				tile_index := !tile_index + 1;
-				create_file_for_constraint k tn
-			)
-		| Union_of_constraints (list_of_k, tn) ->
-			List.iter (fun k -> 
-				(*** WARNING: duplicate code ***)
-				(* Test just in case ! (otherwise an exception arises *)
-				if LinearConstraint.p_is_false k then(
-					print_warning " Found a false constraint when computing the cartography. Ignored."
-				)else(
-					tile_index := !tile_index + 1;
-					create_file_for_constraint k tn
-				)
-			) list_of_k
-		| NNCConstraint _ -> raise (InternalError ("NNCCs are not available everywhere yet."))
-	) new_returned_constraint_list;*)
 	List.iter (fun (p_linear_constraint, statespace_nature) ->
 		(* Test just in case! (otherwise an exception arises *)
 		if LinearConstraint.p_is_false p_linear_constraint then(
@@ -634,12 +550,6 @@ try(
 	(* `-r 0.15 -u 0.12 -w 0.8 -h 0.75`: very, very ad-hoc attempt to reduce a bit the margins *)
 	script_line := !script_line^" -C -m 2 -q -1 " ^ file_v0_name ^ " -L \"" ^ options#files_prefix ^ "\" -r 0.15 -u 0.12 -w 0.8 -h 0.75 --blankout 1.0 > " ^ cartography_image_file;
 	
-	(* Create a script that will print the cartography *)
-(* 	let script_name = cartography_file_prefix ^ ".sh" in *)
-
-(*	(* write the script into a file *)
-	write_to_file script_name !script_line;*)
-	
 	(* Print some information *)
 	print_message Verbose_standard (
 		"Plot cartography in 2D projected on parameters " ^ x_name ^ " and " ^ y_name
@@ -652,8 +562,6 @@ try(
 	if not options#with_graphics_source then(
 		print_message Verbose_medium ("Removing V0 file…");
 		delete_file file_v0_name;
-(* 		print_message Verbose_medium ("Removing script file…"); *)
-(* 		delete_file script_name; *)
 		(* Removing all point files *)
 		for i = 1 to !file_index do
 			print_message Verbose_medium ("Removing points file #" ^ (string_of_int i) ^ "…");
