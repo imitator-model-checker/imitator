@@ -79,9 +79,6 @@ let draw_comments command =
 
 (* Actually run graph *)
 let run_graph command =
-	(*** TODO: Improve! Should perform an automatic detection of the model! ***)
-	(*** NOTE (2019/07/04): what does this comment mean?! ***)
-	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_medium then(
 		print_message Verbose_medium ("About the execute the following command…:\n" ^ command ^ "");
@@ -229,11 +226,23 @@ try(
 	
 	(*** TODO!!! for EF-synthesis, first draw a green background, since the non-red is necessarily green (well, unless approximations are used) ***)
 	
+	(*------------------------------------------------------------*)
+	(* Constants *)
+	(*------------------------------------------------------------*)
+	
 	let x_index = 0 in
 	let y_index = 1 in
 
 	
+	(* Defaut min/max coordinates for the reference rectangle and the minimal bounds of the image, if none are specified using a v0 or some options *)
+	let default_x_min = 0  in
+	let default_x_max = 50 in
+	let default_y_min = 0  in
+	let default_y_max = 50 in
+	
+	(*------------------------------------------------------------*)
 	(* First find the dimensions *)
+	(*------------------------------------------------------------*)
 
 	(* Print some information *)
 	print_message Verbose_low "Looking for dimensions…";
@@ -243,7 +252,14 @@ try(
 	(* The coordinates of the dotted rectangle to be printed *)
 	let reference_rectangle_coordinates = ref (Array.make 2 (NumConst.zero, NumConst.zero)) in
 	
+	(* The coordinates of the min bounds rectangle (not really to be printed, but to ensure a minimal graphics size) *)
+	let min_bounds_coordinates = Array.make 2 (0, 0) in
+	min_bounds_coordinates.(x_index) <- default_x_min, default_x_max;
+	min_bounds_coordinates.(y_index) <- default_y_min, default_y_max;
 	
+	
+	(*------------------------------------------------------------*)
+
 	(* Get the reference hyper rectangle from the property, if any *)
 	let v0_option = get_v0_option () in
 
@@ -293,22 +309,22 @@ try(
 		(* Prepare the "V0" rectangle *)
 		let ef_x_min =
 		match options#output_cart_x_min with
-			| None -> NumConst.numconst_of_int 0 (*** WARNING: quite random thing here ! ***)
+			| None -> NumConst.numconst_of_int default_x_min
 			| Some n -> NumConst.numconst_of_int n
 		in
 		let ef_x_max =
 		match options#output_cart_x_max with
-			| None -> NumConst.numconst_of_int 50 (*** WARNING: quite random thing here ! ***)
+			| None -> NumConst.numconst_of_int default_x_max
 			| Some n -> NumConst.numconst_of_int n
 		in
 		let ef_y_min =
 		match options#output_cart_y_min with
-			| None -> NumConst.numconst_of_int 0 (*** WARNING: quite random thing here ! ***)
+			| None -> NumConst.numconst_of_int default_y_min
 			| Some n -> NumConst.numconst_of_int n
 		in
 		let ef_y_max =
 		match options#output_cart_y_max with
-			| None -> NumConst.numconst_of_int 50 (*** WARNING: quite random thing here ! ***)
+			| None -> NumConst.numconst_of_int default_y_max
 			| Some n -> NumConst.numconst_of_int n
 		in
 		!reference_rectangle_coordinates.(0) <- ef_x_min, ef_x_max;
@@ -316,60 +332,67 @@ try(
 	end;
 
 		
-	(*** WARNING: only works partially ***)
-	(* Shrink V0 bounds if options specified *)
 	begin
 	match options#output_cart_x_min with
 		| None -> ()
-		| Some n -> let (old_min, old_max) = !reference_rectangle_coordinates.(x_index) in
+		| Some n ->
+			(* Update the bounds of the minimum size rectangle *)
+			let (_, old_max) = min_bounds_coordinates.(x_index) in
+			min_bounds_coordinates.(x_index) <- (n, old_max);
+			
+			let (old_min, old_max) = !reference_rectangle_coordinates.(x_index) in
 			let new_min = NumConst.numconst_of_int n in
 			if NumConst.g new_min old_min then
+				(* Shrink V0 bounds *)
 				!reference_rectangle_coordinates.(x_index) <- (new_min, old_max);
 	end;
 	begin
 	match options#output_cart_x_max with
 		| None -> ()
-		| Some n -> let (old_min, old_max) = !reference_rectangle_coordinates.(x_index) in
+		| Some n ->
+			(* Update the bounds of the minimum size rectangle *)
+			let (old_min, _) = min_bounds_coordinates.(x_index) in
+			min_bounds_coordinates.(x_index) <- (old_min, n);
+			
+			let (old_min, old_max) = !reference_rectangle_coordinates.(x_index) in
 			let new_max = NumConst.numconst_of_int n in
 			if NumConst.l new_max old_max then
+				(* Shrink V0 bounds *)
 				!reference_rectangle_coordinates.(x_index) <- (old_min, new_max);
 	end;
 	begin
 	match options#output_cart_y_min with
 		| None -> ()
-		| Some n -> let (old_min, old_max) = !reference_rectangle_coordinates.(y_index) in
+		| Some n ->
+			(* Update the bounds of the minimum size rectangle *)
+			let (_, old_max) = min_bounds_coordinates.(y_index) in
+			min_bounds_coordinates.(y_index) <- (n, old_max);
+			
+			let (old_min, old_max) = !reference_rectangle_coordinates.(y_index) in
 			let new_min = NumConst.numconst_of_int n in
 			if NumConst.g new_min old_min then
+				(* Shrink V0 bounds *)
 				!reference_rectangle_coordinates.(y_index) <- (new_min, old_max);
 	end;
 	begin
 	match options#output_cart_y_max with
 		| None -> ()
-		| Some n -> let (old_min, old_max) = !reference_rectangle_coordinates.(y_index) in
+		| Some n ->
+			(* Update the bounds of the minimum size rectangle *)
+			let (old_min, _) = min_bounds_coordinates.(y_index) in
+			min_bounds_coordinates.(y_index) <- (old_min, n);
+
+			let (old_min, old_max) = !reference_rectangle_coordinates.(y_index) in
 			let new_max = NumConst.numconst_of_int n in
 			if NumConst.l new_max old_max then
+				(* Shrink V0 bounds *)
 				!reference_rectangle_coordinates.(y_index) <- (old_min, new_max);
 	end;
 	
-	(* Now start *)
 	
-	let x_pos = 0 in
-	let y_pos = 1 in
-	
-	(* Retrieve parameters *)
-	let x_param = List.nth !range_params x_pos in
-	let y_param = List.nth !range_params y_pos in
-
-	let x_name = model.variable_names x_param in
-	let y_name = model.variable_names y_param in
-
-	(* Print some information *)
-(* 	print_message Verbose_standard ("Cartography will be drawn in 2D for parameters " ^ x_name ^  " and " ^ y_name ^  "."); *)
-	
-	(* Create a temp file containing the V0 coordinates *)
-	let file_v0_name = cartography_file_prefix ^ "_v0.txt" in
-	let file_rectangle_v0 = open_out file_v0_name in
-	
+	(*------------------------------------------------------------*)
+	(* Handle the v0 rectangle *)
+	(*------------------------------------------------------------*)
 	
 	(* Convert a num_const to a string, specifically for Graph *)
 	let graph_string_of_numconst n = 
@@ -380,21 +403,25 @@ try(
 		(* Convert to a string, and add a "." at the end *)
 		(NumConst.string_of_numconst n) ^ "."
 	in
+
+	(* Create a temp file containing the V0 coordinates *)
+	let file_v0_name = cartography_file_prefix ^ "_v0.txt" in
+	let file_rectangle_v0 = open_out file_v0_name in
 	
 	(* Print some information *)
 	print_message Verbose_low ("Computing the zone…");
 	
 	let str_rectangle_v0 =
-				(graph_string_of_numconst (fst (!reference_rectangle_coordinates.(x_pos))))
-		^" "^(graph_string_of_numconst (snd (!reference_rectangle_coordinates.(y_pos))))
-		^"\n"^(graph_string_of_numconst (snd (!reference_rectangle_coordinates.(x_pos))))
-		^" "^ (graph_string_of_numconst (snd (!reference_rectangle_coordinates.(y_pos))))
-		^"\n"^(graph_string_of_numconst (snd (!reference_rectangle_coordinates.(x_pos))))
-		^" "^ (graph_string_of_numconst (fst (!reference_rectangle_coordinates.(y_pos))))
-		^"\n"^(graph_string_of_numconst (fst (!reference_rectangle_coordinates.(x_pos))))
-		^" "^ (graph_string_of_numconst (fst (!reference_rectangle_coordinates.(y_pos))))
-		^"\n"^(graph_string_of_numconst (fst (!reference_rectangle_coordinates.(x_pos))))
-		^" "^ (graph_string_of_numconst (snd (!reference_rectangle_coordinates.(y_pos))))
+				(graph_string_of_numconst (fst (!reference_rectangle_coordinates.(x_index))))
+		^" "^(graph_string_of_numconst (snd (!reference_rectangle_coordinates.(y_index))))
+		^"\n"^(graph_string_of_numconst (snd (!reference_rectangle_coordinates.(x_index))))
+		^" "^ (graph_string_of_numconst (snd (!reference_rectangle_coordinates.(y_index))))
+		^"\n"^(graph_string_of_numconst (snd (!reference_rectangle_coordinates.(x_index))))
+		^" "^ (graph_string_of_numconst (fst (!reference_rectangle_coordinates.(y_index))))
+		^"\n"^(graph_string_of_numconst (fst (!reference_rectangle_coordinates.(x_index))))
+		^" "^ (graph_string_of_numconst (fst (!reference_rectangle_coordinates.(y_index))))
+		^"\n"^(graph_string_of_numconst (fst (!reference_rectangle_coordinates.(x_index))))
+		^" "^ (graph_string_of_numconst (snd (!reference_rectangle_coordinates.(y_index))))
 	in
 	output_string file_rectangle_v0 str_rectangle_v0;
 	close_out file_rectangle_v0;
@@ -403,16 +430,77 @@ try(
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total ("str_rectangle_v0 = \n" ^ str_rectangle_v0);
 
+
+	(*------------------------------------------------------------*)
+	(* Handle the bounds rectangle, i.e., to make sure the image has at least the size of the min/max values given *)
+	(*------------------------------------------------------------*)
+	
+	(* Convert an int to a string, specifically for Graph *)
+	let graph_string_of_int n = 
+		(* Convert to a string, and add a "." at the end *)
+		(string_of_int n) ^ "."
+	in
+
+	
+	(* Create a temp file containing the bounds rectangle coordinates *)
+	let file_bounds_name = cartography_file_prefix ^ "_bounds.txt" in
+	let file_rectangle_bounds = open_out file_bounds_name in
+	
+	(* Print some information *)
+	print_message Verbose_low ("Computing the zone…");
+	
+	let str_rectangle_bounds =
+				(graph_string_of_int (fst (min_bounds_coordinates.(x_index))))
+		^" "^(graph_string_of_int (snd (min_bounds_coordinates.(y_index))))
+		^"\n"^(graph_string_of_int (snd (min_bounds_coordinates.(x_index))))
+		^" "^ (graph_string_of_int (snd (min_bounds_coordinates.(y_index))))
+		^"\n"^(graph_string_of_int (snd (min_bounds_coordinates.(x_index))))
+		^" "^ (graph_string_of_int (fst (min_bounds_coordinates.(y_index))))
+		^"\n"^(graph_string_of_int (fst (min_bounds_coordinates.(x_index))))
+		^" "^ (graph_string_of_int (fst (min_bounds_coordinates.(y_index))))
+		^"\n"^(graph_string_of_int (fst (min_bounds_coordinates.(x_index))))
+		^" "^ (graph_string_of_int (snd (min_bounds_coordinates.(y_index))))
+	in
+	output_string file_rectangle_bounds str_rectangle_bounds;
+	close_out file_rectangle_bounds;
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total ("str_rectangle_bounds = \n" ^ str_rectangle_bounds);
+
+	
+	(*------------------------------------------------------------*)
+	(* Now start *)
+	(*------------------------------------------------------------*)
+		
+	(* Retrieve parameters *)
+	let x_param = List.nth !range_params x_index in
+	let y_param = List.nth !range_params y_index in
+
+	let x_name = model.variable_names x_param in
+	let y_name = model.variable_names y_param in
+
+	(* Print some information *)
+(* 	print_message Verbose_standard ("Cartography will be drawn in 2D for parameters " ^ x_name ^  " and " ^ y_name ^  "."); *)
+	
+
 	(* Beginning of the script *)
+	
 	let script_line = ref ("graph -T " ^ cartography_extension ^ " --bitmap-size " ^ cartography_size ^ " -C -X \"" ^ x_name ^ "\" -Y \"" ^ y_name ^ "\" ") in
 	(* find the minimum and maximum abscissa and ordinate for each constraint and store them in a list *)
+	
+	(* Add the min bounds rectangle *)
+	(*** NOTE: `-C` = color ***)
+	(*** NOTE: `-q` = fill_fraction ***)
+	script_line := !script_line ^ " -C --line-mode 5 -q 1 " ^ file_bounds_name ^ " ";
+	
 	
 	(* Print some information *)
 	print_message Verbose_low ("Finding zone corners…");
 
 	(* get corners of bounds *)
-	let init_min_abs, init_max_abs = !reference_rectangle_coordinates.(x_pos) in
-	let init_min_ord, init_max_ord = !reference_rectangle_coordinates.(y_pos) in
+	let init_min_abs, init_max_abs = !reference_rectangle_coordinates.(x_index) in
+	let init_min_ord, init_max_ord = !reference_rectangle_coordinates.(y_index) in
 
 	(* Conversion to float, because all functions handle floats *)
 	
@@ -526,8 +614,8 @@ try(
 		(* instructions to have the zones colored. If fst s = true then the zone is infinite *)
 		if fst s
 			(*** TODO : same color for one disjunctive tile ***)
-			then script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index statespace_nature true) ^ " -q 0.3 " ^ file_name ^ " "
-			else script_line := !script_line ^ "-m " ^ (graph_color_of_int !tile_index statespace_nature false) ^ " -q 0.7 " ^ file_name ^ " "
+			then script_line := !script_line ^ "--line-mode " ^ (graph_color_of_int !tile_index statespace_nature true) ^ " -q 0.3 " ^ file_name ^ " "
+			else script_line := !script_line ^ "--line-mode " ^ (graph_color_of_int !tile_index statespace_nature false) ^ " -q 0.7 " ^ file_name ^ " "
 		;
 	in
 	
@@ -545,26 +633,46 @@ try(
 	
 	(* File in which the cartography will be printed *)
 	let cartography_image_file = cartography_file_prefix ^ "." ^ cartography_extension in
-	(* last part of the script *)
-	(* -m: line mode *)
+	
+	(* Last part of the script *)
 	(* `-r 0.15 -u 0.12 -w 0.8 -h 0.75`: very, very ad-hoc attempt to reduce a bit the margins *)
-	script_line := !script_line^" -C -m 2 -q -1 " ^ file_v0_name ^ " -L \"" ^ options#files_prefix ^ "\" -r 0.15 -u 0.12 -w 0.8 -h 0.75 --blankout 1.0 > " ^ cartography_image_file;
+	(*** TODO: add here the min bounds rectangle ***)
+	script_line := !script_line
+		(* Part to add the last file *)
+		(*** NOTE: is `-C` needed? (2020/09/04, ÉA) ***)
+		^ " -C --line-mode 2 -q -1 " ^ file_v0_name
+		
+		(* Part to set global options and to redirect to the output *)
+		^ " -L \"" ^ options#files_prefix ^ "\" -r 0.15 -u 0.12 -w 0.8 -h 0.75 --blankout 1.0 > " ^ cartography_image_file
+	;
 	
 	(* Print some information *)
 	print_message Verbose_standard (
 		"Plot cartography in 2D projected on parameters " ^ x_name ^ " and " ^ y_name
 		^ " to file '" ^ cartography_image_file ^ "'."); 
 
+	(*------------------------------------------------------------*)
 	(* execute the script *)
+	(*------------------------------------------------------------*)
 	let _ = run_graph !script_line in
 
+	(*------------------------------------------------------------*)
 	(* Remove files *)
+	(*------------------------------------------------------------*)
 	if not options#with_graphics_source then(
+	
+		(* Remove the file printing the dotted rectangle *)
+		
+		(* Print some information *)
 		print_message Verbose_medium ("Removing V0 file…");
 		delete_file file_v0_name;
-		(* Removing all point files *)
+		
+		(* Remove all constraints files *)
+		
 		for i = 1 to !file_index do
+			(* Print some information *)
 			print_message Verbose_medium ("Removing points file #" ^ (string_of_int i) ^ "…");
+			
 			delete_file (make_cartography_tile_file_name cartography_file_prefix i);
 		done;
 	);
