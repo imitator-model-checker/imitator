@@ -195,6 +195,9 @@ try(
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 	
+	(* Get the reference hyper rectangle from the property, if any *)
+	let v0_option = get_v0_option () in
+
 	(* No reason to draw a cartography: exception! *)
 	if not (AbstractAlgorithm.cartography_drawing_possible options#imitator_mode) then(
 		print_error "Cartography cannot be drawn in this mode.";
@@ -250,7 +253,7 @@ try(
 	let range_params : int list ref = ref [] in
 	
 	(* The coordinates of the dotted rectangle to be printed *)
-	let reference_rectangle_coordinates = ref (Array.make 2 (NumConst.zero, NumConst.zero)) in
+	let reference_rectangle_coordinates = Array.make 2 (NumConst.zero, NumConst.zero) in
 	
 	(* The coordinates of the min bounds rectangle (not really to be printed, but to ensure a minimal graphics size) *)
 	let min_bounds_coordinates = Array.make 2 (0, 0) in
@@ -259,9 +262,6 @@ try(
 	
 	
 	(*------------------------------------------------------------*)
-
-	(* Get the reference hyper rectangle from the property, if any *)
-	let v0_option = get_v0_option () in
 
 	begin
 	match v0_option with
@@ -290,9 +290,30 @@ try(
 			raise CartographyError
 		);
 
+		(* Get min/max *)
+		let x_min = v0#get_min (List.nth !range_params 0) in
+		let x_max = v0#get_max (List.nth !range_params 0) in
+		let y_min = v0#get_min (List.nth !range_params 1) in
+		let y_max = v0#get_max (List.nth !range_params 1) in
+		
 		(* Update coordinates of the dotted rectangle *)
-		!reference_rectangle_coordinates.(x_index) <- v0#get_min (List.nth !range_params 0), v0#get_max (List.nth !range_params 0);
-		!reference_rectangle_coordinates.(y_index) <- v0#get_min (List.nth !range_params 1), v0#get_max (List.nth !range_params 1);
+		reference_rectangle_coordinates.(x_index) <- x_min, x_max;
+		reference_rectangle_coordinates.(y_index) <- y_min, y_max;
+		
+		(* Also overwrite the bounds, ONLY if integers *)
+		let old_x_min, old_x_max = min_bounds_coordinates.(x_index) in
+		min_bounds_coordinates.(x_index) <-
+			(if NumConst.is_int x_min then NumConst.to_int x_min else old_x_min)
+			,
+			(if NumConst.is_int x_max then (NumConst.to_int x_max) else old_x_max)
+		;
+		let old_y_min, old_y_max = min_bounds_coordinates.(y_index) in
+		min_bounds_coordinates.(y_index) <-
+			(if NumConst.is_int y_min then (NumConst.to_int y_min) else old_y_min)
+			,
+			(if NumConst.is_int y_max then (NumConst.to_int y_max) else old_y_max)
+		;
+
 
 	(* Otherwise: choose the first two parameters *)
 	| None ->
@@ -327,8 +348,8 @@ try(
 			| None -> NumConst.numconst_of_int default_y_max
 			| Some n -> NumConst.numconst_of_int n
 		in
-		!reference_rectangle_coordinates.(0) <- ef_x_min, ef_x_max;
-		!reference_rectangle_coordinates.(1) <- ef_y_min, ef_y_max;
+		reference_rectangle_coordinates.(0) <- ef_x_min, ef_x_max;
+		reference_rectangle_coordinates.(1) <- ef_y_min, ef_y_max;
 	end;
 
 		
@@ -340,11 +361,11 @@ try(
 			let (_, old_max) = min_bounds_coordinates.(x_index) in
 			min_bounds_coordinates.(x_index) <- (n, old_max);
 			
-			let (old_min, old_max) = !reference_rectangle_coordinates.(x_index) in
+			let (old_min, old_max) = reference_rectangle_coordinates.(x_index) in
 			let new_min = NumConst.numconst_of_int n in
 			if NumConst.g new_min old_min then
 				(* Shrink V0 bounds *)
-				!reference_rectangle_coordinates.(x_index) <- (new_min, old_max);
+				reference_rectangle_coordinates.(x_index) <- (new_min, old_max);
 	end;
 	begin
 	match options#output_cart_x_max with
@@ -354,11 +375,11 @@ try(
 			let (old_min, _) = min_bounds_coordinates.(x_index) in
 			min_bounds_coordinates.(x_index) <- (old_min, n);
 			
-			let (old_min, old_max) = !reference_rectangle_coordinates.(x_index) in
+			let (old_min, old_max) = reference_rectangle_coordinates.(x_index) in
 			let new_max = NumConst.numconst_of_int n in
 			if NumConst.l new_max old_max then
 				(* Shrink V0 bounds *)
-				!reference_rectangle_coordinates.(x_index) <- (old_min, new_max);
+				reference_rectangle_coordinates.(x_index) <- (old_min, new_max);
 	end;
 	begin
 	match options#output_cart_y_min with
@@ -368,11 +389,11 @@ try(
 			let (_, old_max) = min_bounds_coordinates.(y_index) in
 			min_bounds_coordinates.(y_index) <- (n, old_max);
 			
-			let (old_min, old_max) = !reference_rectangle_coordinates.(y_index) in
+			let (old_min, old_max) = reference_rectangle_coordinates.(y_index) in
 			let new_min = NumConst.numconst_of_int n in
 			if NumConst.g new_min old_min then
 				(* Shrink V0 bounds *)
-				!reference_rectangle_coordinates.(y_index) <- (new_min, old_max);
+				reference_rectangle_coordinates.(y_index) <- (new_min, old_max);
 	end;
 	begin
 	match options#output_cart_y_max with
@@ -382,11 +403,11 @@ try(
 			let (old_min, _) = min_bounds_coordinates.(y_index) in
 			min_bounds_coordinates.(y_index) <- (old_min, n);
 
-			let (old_min, old_max) = !reference_rectangle_coordinates.(y_index) in
+			let (old_min, old_max) = reference_rectangle_coordinates.(y_index) in
 			let new_max = NumConst.numconst_of_int n in
 			if NumConst.l new_max old_max then
 				(* Shrink V0 bounds *)
-				!reference_rectangle_coordinates.(y_index) <- (old_min, new_max);
+				reference_rectangle_coordinates.(y_index) <- (old_min, new_max);
 	end;
 	
 	
@@ -397,7 +418,7 @@ try(
 	(* Convert a num_const to a string, specifically for Graph *)
 	let graph_string_of_numconst n = 
 		(* Check that it is an integer *)
-		if not (NumConst.is_integer n) then(
+		if not (NumConst.is_int n) then(
 			raise (InternalError("Only integers can be handled for the cartography, so far. Found: '" ^ (NumConst.string_of_numconst n) ^ "'"))
 		);
 		(* Convert to a string, and add a "." at the end *)
@@ -412,16 +433,16 @@ try(
 	print_message Verbose_low ("Computing the zone…");
 	
 	let str_rectangle_v0 =
-				(graph_string_of_numconst (fst (!reference_rectangle_coordinates.(x_index))))
-		^" "^(graph_string_of_numconst (snd (!reference_rectangle_coordinates.(y_index))))
-		^"\n"^(graph_string_of_numconst (snd (!reference_rectangle_coordinates.(x_index))))
-		^" "^ (graph_string_of_numconst (snd (!reference_rectangle_coordinates.(y_index))))
-		^"\n"^(graph_string_of_numconst (snd (!reference_rectangle_coordinates.(x_index))))
-		^" "^ (graph_string_of_numconst (fst (!reference_rectangle_coordinates.(y_index))))
-		^"\n"^(graph_string_of_numconst (fst (!reference_rectangle_coordinates.(x_index))))
-		^" "^ (graph_string_of_numconst (fst (!reference_rectangle_coordinates.(y_index))))
-		^"\n"^(graph_string_of_numconst (fst (!reference_rectangle_coordinates.(x_index))))
-		^" "^ (graph_string_of_numconst (snd (!reference_rectangle_coordinates.(y_index))))
+				(graph_string_of_numconst (fst (reference_rectangle_coordinates.(x_index))))
+		^" "^(graph_string_of_numconst (snd (reference_rectangle_coordinates.(y_index))))
+		^"\n"^(graph_string_of_numconst (snd (reference_rectangle_coordinates.(x_index))))
+		^" "^ (graph_string_of_numconst (snd (reference_rectangle_coordinates.(y_index))))
+		^"\n"^(graph_string_of_numconst (snd (reference_rectangle_coordinates.(x_index))))
+		^" "^ (graph_string_of_numconst (fst (reference_rectangle_coordinates.(y_index))))
+		^"\n"^(graph_string_of_numconst (fst (reference_rectangle_coordinates.(x_index))))
+		^" "^ (graph_string_of_numconst (fst (reference_rectangle_coordinates.(y_index))))
+		^"\n"^(graph_string_of_numconst (fst (reference_rectangle_coordinates.(x_index))))
+		^" "^ (graph_string_of_numconst (snd (reference_rectangle_coordinates.(y_index))))
 	in
 	output_string file_rectangle_v0 str_rectangle_v0;
 	close_out file_rectangle_v0;
@@ -497,8 +518,8 @@ try(
 	print_message Verbose_low ("Finding zone corners…");
 
 	(* get corners of bounds *)
-	let init_min_abs, init_max_abs = !reference_rectangle_coordinates.(x_index) in
-	let init_min_ord, init_max_ord = !reference_rectangle_coordinates.(y_index) in
+	let init_min_abs, init_max_abs = reference_rectangle_coordinates.(x_index) in
+	let init_min_ord, init_max_ord = reference_rectangle_coordinates.(y_index) in
 
 	(* Conversion to float, because all functions handle floats *)
 	
