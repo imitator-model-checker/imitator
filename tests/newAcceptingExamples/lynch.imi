@@ -1,0 +1,164 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Empty template of a case study
+ *
+ * Description     : TODO
+ * Correctness     : TODO
+ * Source          : TODO
+ * Author          : ME
+ * Input by        : ME, Laure Petrucci
+ *
+ * Created         : 1970/01/01
+ * Last modified   : 2020/09/07
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+var 
+(* Clocks *)
+	c1, 
+	c2  
+		:clock;
+	
+(* Discrete *)
+	V1,
+	V2,
+	count
+		: discrete;
+
+(* Constants *)
+	(* T = 16 *)
+	pid1 = 1,
+	pid2 = 2
+		: constant;
+
+(* Parameters *)
+	T
+		: parameter;
+
+
+
+(************************************************************)
+automaton proc1
+(************************************************************)
+(* synclabs : ; *)
+
+
+loc L1: invariant True
+	when V1 = -1 do {c1 := 0} goto L2;
+
+loc L2: invariant c1 <= T
+	when c1 <= T do {V1'= pid1, c1 := 0} goto L3;
+
+loc L3: invariant True
+	when V1 < pid1 && V1 > pid1 do {c1 := 0} goto L1; (* V1 != pid1 *)
+	when V1 = pid1 && c1 > T do {c1 := 0} goto L4;
+
+accepting loc L4: invariant True
+	when V2 = 1 do {c1 := 0} goto L5; (*V2 = True*)
+	when V2 = 0 do {} goto L1; (*V2 = False*)
+	when True goto L4;
+
+loc L5: invariant c1 <= T
+	when c1 <= T do {c1 := 0, V2 := 1} goto L6; (*V2 = True*)
+
+loc L6: invariant True
+	when V1 = pid1 do {count := count + 1} goto CS7;
+	when V1 < pid1 && V1 > pid1 do {} goto L1;
+
+loc CS7: invariant True
+	when True do {count := count - 1, c1 := 0} goto L8;
+
+loc L8: invariant c1 <= T
+	when c1 <= T do {V2 := 0, c1 := 0} goto L9;
+
+loc L9: invariant c1 <= T
+	when c1 <= T do {V1 := -1} goto L1;
+	
+
+end
+
+
+
+
+(************************************************************)
+automaton proc2
+(************************************************************)
+(* synclabs : ; *)
+
+
+loc L1: invariant True
+	when V1 = -1 do {c2 := 0} goto L2;
+
+loc L2: invariant c2 <= T
+	when c2 <= T do {V1'= pid1, c2 := 0} goto L3;
+
+loc L3: invariant True
+	when V1 < pid1 && V1 > pid1 do {c2 := 0} goto L1; (* V1 != pid1 *)
+	when V1 = pid1 && c2 > T do {c2 := 0} goto L4;
+
+accepting loc L4: invariant True
+	when V2 = 1 do {c2 := 0} goto L5; (*V2 = True*)
+	when V2 = 0 do {} goto L1; (*V2 = False*)
+
+loc L5: invariant c2 <= T
+	when c2 <= T do {c2 := 0, V2 := 1} goto L6; (*V2 = True*)
+
+loc L6: invariant True
+	when V1 = pid1 do {count := count + 1} goto CS7;
+	when V1 < pid1 && V1 > pid1 do {} goto L1;
+
+loc CS7: invariant True
+	when True do {count := count - 1, c2 := 0} goto L8;
+
+loc L8: invariant c2 <= T
+	when c2 <= T do {V2 := 0, c2 := 0} goto L9;
+
+loc L9: invariant c2 <= T
+	when c2 <= T do {V1 := -1} goto L1;
+	
+
+end
+
+
+
+
+
+
+(************************************************************)
+(************************************************************)
+(* ANALYSIS                                                 *)
+(************************************************************)
+(************************************************************)
+
+
+   
+init := True
+	(*--------------------
+	   Initial locations
+	--------------------*)
+	& loc[proc1] = L1
+	& loc[proc2] = L1
+	
+	(*--------------------
+	   Clocks
+	--------------------*)
+	& c1 = 0
+	& c2 = 0
+	
+	(*--------------------
+	   Discrete
+	--------------------*)
+	& V1 = -1
+	& V2 = 0
+	& count = 0
+
+	(*--------------------
+	   Parameters
+	--------------------*)
+	& T >= 0
+;
+
+
+end

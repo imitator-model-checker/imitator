@@ -1,0 +1,203 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Empty template of a case study
+ *
+ * Description     : TODO
+ * Correctness     : TODO
+ * Source          : TODO
+ * Author          : ME
+ * Input by        : ME, Laure Petrucci
+ *
+ * Created         : 1970/01/01
+ * Last modified   : 2020/09/07
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x1, x2
+		: clock;
+
+(* Discrete *)
+	id 
+		: discrete;
+		
+(* Constants *)
+	max_id = 2
+	(*
+	A = 10
+	B = 20
+	*)
+		: constant;
+
+(* Parameters *)
+	A, B
+		: parameter;
+
+
+
+(************************************************************)
+  automaton counter
+(************************************************************)
+
+loc initial: invariant True
+	when id = 0 do {id := 1} goto initCount;
+
+accepting loc initCount: invariant True
+	when id < max_id do {id := id + 1} goto initCount;
+	when id = max_id do {id := 1} goto initCount;
+	
+end (* counter *)
+
+
+
+
+
+(************************************************************)
+  automaton arbiter1
+(************************************************************)
+
+synclabs: cellenter1; 
+
+loc l0: invariant True
+	when id > 0 & id <= max_id sync cellenter1 do {id := 0} goto l1;
+
+loc l1: invariant True
+	when True do {id := id} goto l0;
+	
+end (* arbiter1 *)
+
+
+
+(************************************************************)
+  automaton prodcell1
+(************************************************************)
+
+synclabs: cellenter1, cellexit1; 
+
+loc notReady: invariant True
+	when x1 <= B do {x1 := 0} goto testing;
+
+loc testing: invariant x1 <= A
+	when x1 >= A do {x1 := 0} goto notReady;
+	when x1 <= A - 1 do {} goto requesting;
+	
+loc requesting: invariant True
+	when True sync cellenter1 do {x1 := 0} goto critical;
+	
+loc critical: invariant x1 <= B
+	when x1 <= A - 1 sync cellexit1 do {x1 := 0} goto testing2;
+	when x1 >= B goto error;
+	
+loc error: invariant True
+
+loc testing2: invariant x1 <= A
+	when x1 >= A do {} goto error;
+	when x1 <= A - 1 do {} goto safe;
+	
+loc safe: invariant True
+
+end (* prodcell *)
+
+
+
+
+
+(************************************************************)
+  automaton arbiter2
+(************************************************************)
+
+synclabs: cellenter2; 
+
+loc l0: invariant True
+	when id > 0 & id <= max_id sync cellenter2 do {id := 0} goto l1;
+
+loc l1: invariant True
+	when True do {id := id} goto l0;
+	
+end (* arbiter *)
+
+
+
+(************************************************************)
+  automaton prodcell2
+(************************************************************)
+
+synclabs: cellenter2, cellexit2; 
+
+loc notReady: invariant True
+	when x2 <= B do {x2 := 0} goto testing;
+
+loc testing: invariant x2 <= A
+	when x2 >= A do {x2 := 0} goto notReady;
+	when x2 <= A - 1 do {} goto requesting;
+	
+loc requesting: invariant True
+	when True sync cellenter2 do {x2 := 0} goto critical;
+	
+loc critical: invariant x2 <= B
+	when x2 <= A - 1 sync cellexit2 do {x2 := 0} goto testing2;
+	when x2 >= B do {} goto error;
+	
+loc error: invariant True
+
+loc testing2: invariant x2 <= A
+	when x2 >= A do {} goto error;
+	when x2 <= A - 1 do {} goto safe;
+	
+loc safe: invariant True
+
+end (* prodcell *)
+
+
+
+
+
+
+
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init := True
+	(*------------------------------------------------------------
+	   INITIAL LOCATION
+	  ------------------------------------------------------------*)
+	& loc[counter] = initial
+	
+	& loc[arbiter1] = l0
+	& loc[prodcell1] = notReady
+
+	& loc[arbiter2] = l0
+	& loc[prodcell2] = notReady
+
+
+	(*------------------------------------------------------------
+	   INITIAL CLOCKS
+	  ------------------------------------------------------------*)
+	& x1 = 0
+	& x2 = 0
+
+
+	(*------------------------------------------------------------
+	   INITIAL DISCRETE
+	  ------------------------------------------------------------*)
+	& id = 0
+
+	(*------------------------------------------------------------
+	   PARAMETER CONSTRAINTS
+	  ------------------------------------------------------------*)
+	& A >= 0
+	& B >= 0
+;
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
