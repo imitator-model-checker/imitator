@@ -31,7 +31,7 @@ class imitator_options :
 
 		method acyclic : bool
 (* 		method best_worst_case : bool *)
-		method branch_and_bound : bool
+(* 		method branch_and_bound : bool *)
 (* 		method branch_and_bound_unset : unit *)
 		method carto_tiles_limit : int option
 		method carto_time_limit : int option
@@ -100,7 +100,6 @@ class imitator_options :
 		method time_limit : int option
 		method timed_mode : bool
 		method tree : bool
-		method union : bool
 		method graphical_state_space : graphical_state_space
 		method with_graphics_source : bool
 		method states_description : bool
