@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/18
- * Last modified     : 2020/08/28
+ * Last modified     : 2020/09/08
  *
  ************************************************************)
 
@@ -193,4 +193,24 @@ let string_of_mode (imitator_mode : imitator_mode) : string = match imitator_mod
 
 	(** Synthesis algorithm *)
 	| Algorithm (*synthesis_algorithm*) -> "algorithm" (*** TODO: not so precise! ***)
+
+
+
+let string_of_exploration_order (exploration_order : exploration_order) : string = match exploration_order with
+	(** Layer-BFS: all states at depth i are computed, and then their successors at depth i+1 [original version] *)
+	| Exploration_layer_BFS -> "layer-based BFS"
+	(** Queue-BFS: basic queue, independent of the depth [ANP17] *)
+	| Exploration_queue_BFS -> "queue-based BFS [ACN17]"
+	(** Queue-BFS: queue-based, independent of the depth, with ranking system for the selection of the next state [ANP17] *)
+	| Exploration_queue_BFS_RS -> "queue-based BFS with ranking system [ACN17]"
+	(** Queue-BFS: queue-based, independent of the depth, with prior for the selection of the next state [ANP17] *)
+	| Exploration_queue_BFS_PRIOR -> "queue-based BFS with priority [ACN17]"
+	(** NDFS: standard Nested Depth-First Search **)
+	| Exploration_NDFS -> "standard NDFS [NPvdP18]"
+	(** NDFSsub: NDFS with subsumption [NPvdP18] **)
+	| Exploration_NDFS_sub -> "NDFS with subsumption [NPvdP18]"
+	(** layerNDFS: NDFS with layers [NPvdP18] **)
+	| Exploration_layer_NDFS -> "NDFS with layers [NPvdP18]"
+	(** layerNDFSsub: NDFS with subsumption  and layers [NPvdP18] **)
+	| Exploration_layer_NDFS_sub -> "NDFS with subsumption and layers [NPvdP18]"
 

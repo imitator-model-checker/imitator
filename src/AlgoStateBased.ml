@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/09/03
+ * Last modified     : 2020/09/08
  *
  ************************************************************)
 
@@ -2463,7 +2463,7 @@ class virtual algoStateBased =
 				| EFpmin (state_predicate, _)
 				| EFpmax (state_predicate, _)
 				| EFtmin state_predicate
-				| Accepting_cycle state_predicate
+				| Cycle_through state_predicate
 				| PRP (state_predicate , _)
 				| PRPC (state_predicate , _, _)
 				->
@@ -2474,6 +2474,7 @@ class virtual algoStateBased =
 	
 				
 				| Cycle
+				| Accepting_cycle
 				| NZCycle_check
 				| NZCycle_CUB
 				| NZCycle_transform

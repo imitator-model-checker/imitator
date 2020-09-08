@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/09/01
+ * Last modified     : 2020/09/08
  *
  ************************************************************)
 
@@ -205,6 +205,7 @@ begin match property_option, options#imitator_mode with
 			(* Print some information *)
 			print_message Verbose_high ("Set option `-inclusion` to its default value: `false`");
 
+			(*** BADPROG: this default option value should not be hard-coded here ***)
 			options#set_inclusion (false);
 		);
 
@@ -249,11 +250,46 @@ begin match property_option, options#imitator_mode with
 				(* Print some information *)
 				print_message Verbose_high ("Set option `-merge` to its default value: `false`");
 
+				(*** BADPROG: this default option value should not be hard-coded here ***)
 				options#set_merge(false);
 			);
 		);
 	| None, _ -> ()
 end;
+
+
+(*------------------------------------------------------------*)
+(* Exploration order *)
+(*------------------------------------------------------------*)
+
+(* Get value depending on the algorithm *)
+begin match property_option, options#imitator_mode with
+	| Some property, _
+		->
+		let default_exploration_order = AlgorithmOptions.default_exploration_order property in
+		(* Update if not yet set *)
+		if not options#is_set_exploration_order then(
+			(* Print some information *)
+			print_message Verbose_high ("Set option `-explOrder` to its default value: `" ^ (AbstractAlgorithm.string_of_exploration_order default_exploration_order) ^ "`");
+
+			options#set_exploration_order (default_exploration_order);
+		);
+
+	| _, State_space_computation
+		->
+		(* Update if not yet set *)
+		if not options#is_set_exploration_order then(
+			(* Print some information *)
+			print_message Verbose_high ("Set option `-explOrder` to its default value: `layerBFS`");
+
+			(*** BADPROG: this default option value should not be hard-coded here ***)
+			options#set_exploration_order (Exploration_layer_BFS);
+		);
+
+	| None, _ -> ()
+
+end;
+
 
 
 (*------------------------------------------------------------*)
@@ -553,15 +589,19 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Parametric loop synthesis *)
 			(************************************************************)
-			(*** Almost a HACK: branch between two completely different algorithms depending on the exploration order ***)
-			| Cycle when (options#exploration_order = Exploration_NDFS || options#exploration_order = Exploration_NDFS_sub || options#exploration_order = Exploration_layer_NDFS_sub) ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS in myalgo
 
+			(** Infinite-run (cycle) *)
 			| Cycle ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoLoopSynth.algoLoopSynth in myalgo
 
+				
+			(** Accepting infinite-run (cycle) using an accepting keyword *)
+			| Accepting_cycle ->
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS in myalgo
 
-			| Accepting_cycle state_predicate ->
+
+			(** Accepting infinite-run (cycle) through a state predicate *)
+			| Cycle_through state_predicate ->
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth state_predicate in myalgo
 
 

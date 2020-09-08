@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/09/03
+ * Last modified     : 2020/09/08
  *
  ************************************************************)
 
@@ -29,6 +29,16 @@ open Exceptions
 open OCamlUtilities
 open ImitatorUtilities
 open AbstractAlgorithm
+
+
+(************************************************************)
+(* Class-independent functions *)
+(************************************************************)
+
+(* Returns a `type` from a `type option`. Raises Exception InternalError if it is equal to None ***)
+let value_of_option option_name (a : 'a option) : 'a = match a with
+	| Some value -> value
+	| None -> raise (InternalError ("Option `" ^ option_name ^ "` is not yet initialized."))
 
 
 
@@ -109,7 +119,7 @@ class imitator_options =
 		val mutable imitator_mode = Syntax_check
 
 		(* Exploration order *)
-		val mutable exploration_order = AbstractAlgorithm.Exploration_layer_BFS
+		val mutable exploration_order : AbstractAlgorithm.exploration_order option = None
 
 		(* Best worst-case clock value for EFsynthminpq *)
 (* 		val mutable best_worst_case = ref false *)
@@ -151,14 +161,14 @@ class imitator_options =
 		val mutable dynamic_clock_elimination = ref false
 
 		(* inclusion mode *)
-		val mutable inclusion = None
+		val mutable inclusion : bool option = None
 
 		(* Double inclusion mode *)
 		val mutable inclusion2 = ref false
 
 		(* Merging states on the fly *)
-		val mutable merge = None
-		val mutable mergeq = None
+		val mutable merge : bool option = None
+		val mutable mergeq : bool option = None
 		(* Merging states on the fly (after pi0-compatibility check) *)
 (* 		val mutable merge_before = ref false *)
 
@@ -230,11 +240,6 @@ class imitator_options =
 		(* Get methods *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-		(* Returns a Boolean from a bool option. Raises exception if it is equal to None ***)
-		method private bool_of_option option_name = function
-			| Some b -> b
-			| None -> raise (InternalError ("Option `" ^ option_name ^ "` is not yet initialized."))
-
 		method acyclic = !acyclic
 (* 		method best_worst_case = !best_worst_case *)
 		method branch_and_bound = !branch_and_bound
@@ -249,21 +254,25 @@ class imitator_options =
 		method draw_cart = draw_cart
 		(* method dynamic = !dynamic *)
 		method dynamic_clock_elimination = !dynamic_clock_elimination
-		method exploration_order = exploration_order
+		
+		method exploration_order = value_of_option "exploration_order" exploration_order
+		method is_set_exploration_order = exploration_order <> None
+		method set_exploration_order new_exploration_order = exploration_order <- Some new_exploration_order
+		
 		method files_prefix = files_prefix
 		method imitator_mode = imitator_mode
 
-		method inclusion = self#bool_of_option "inclusion" inclusion
+		method inclusion = value_of_option "inclusion" inclusion
 		method is_set_inclusion = inclusion <> None
 		method set_inclusion b = inclusion <- Some b
 
 		method inclusion2 = !inclusion2
 
-		method merge = self#bool_of_option "merge" merge
+		method merge = value_of_option "merge" merge
 		method is_set_merge = merge <> None
 		method set_merge b = merge <- Some b
 
-		method mergeq = self#bool_of_option "mergeq" mergeq
+		method mergeq = value_of_option "mergeq" mergeq
 		method is_set_mergeq = mergeq <> None
 		method set_mergeq b = mergeq <- Some b
 
@@ -286,7 +295,7 @@ class imitator_options =
 		method output_cart_y_max = output_cart_y_max
 		method output_float = output_float
 
-		method output_result = self#bool_of_option "output_result" output_result
+		method output_result = value_of_option "output_result" output_result
 		method is_set_output_result = output_result <> None
 		method set_output_result b = output_result <- Some b
 
@@ -402,21 +411,21 @@ class imitator_options =
 			and set_exploration_order order =
 				(*  *)
 				if order = "layerBFS" then
-					exploration_order <- Exploration_layer_BFS
+					exploration_order <- Some Exploration_layer_BFS
 				else if order = "queueBFS" then
-					exploration_order <- Exploration_queue_BFS
+					exploration_order <- Some Exploration_queue_BFS
 				else if order = "queueBFSRS" then
-					exploration_order <- Exploration_queue_BFS_RS
+					exploration_order <- Some Exploration_queue_BFS_RS
 				else if order = "queueBFSPRIOR" then
-					exploration_order <- Exploration_queue_BFS_PRIOR
+					exploration_order <- Some Exploration_queue_BFS_PRIOR
 				else if order = "NDFS" then
-					exploration_order <- Exploration_NDFS
+					exploration_order <- Some Exploration_NDFS
 				else if order = "NDFSsub" then
-					exploration_order <- Exploration_NDFS_sub
+					exploration_order <- Some Exploration_NDFS_sub
 				else if order = "layerNDFS" then
-					exploration_order <- Exploration_layer_NDFS
+					exploration_order <- Some Exploration_layer_NDFS
 				else if order = "layerNDFSsub" then
-					exploration_order <- Exploration_layer_NDFS_sub
+					exploration_order <- Some Exploration_layer_NDFS_sub
 				else(
 					(*** HACK: print header now ***)
 					print_header_string();
@@ -601,14 +610,14 @@ class imitator_options =
 				("-dynamic-elimination", Set dynamic_clock_elimination, " Dynamic clock elimination [FSFMA13]. Default: false.");
 
 				("-explOrder", String set_exploration_order, " Exploration order [EXPERIMENTAL].
-        Use `layerBFS` for a layer-based breadth-first search (default).
+        Use `layerBFS` for a layer-based breadth-first search (default for most algorithms).
         Use `queueBFS` for a queue-based breadth-first search. [ANP17]
         Use `queueBFSRS` for a queue-based breadth-first search with ranking system. [ANP17]
         Use `queueBFSPRIOR` for a priority-based BFS with ranking system. [ANP17]
         Use `NDFS` for standard NDFS. [NPvdP18]
         Use `NDFSsub` for standard NDFS with subsumption. [NPvdP18]
         Use `layerNDFS` for layered NDFS. [NPvdP18]
-        Use `layerNDFSsub` for layered NDFS with subsumption. [NPvdP18]
+        Use `layerNDFSsub` for layered NDFS with subsumption. [NPvdP18] (default for NDFS algorithms)
         Default: layerBFS.
 				");
 
@@ -891,16 +900,10 @@ class imitator_options =
 			(* Exploration order *)
 			begin
 			match exploration_order with
-				| Exploration_layer_BFS -> print_message Verbose_experiments ("Exploration order: layer-based BFS.")
-				| Exploration_queue_BFS -> print_message Verbose_standard ("Exploration order: queue-based BFS [ACN17].")
-				| Exploration_queue_BFS_RS -> print_message Verbose_standard ("Exploration order: queue-based BFS with ranking system [ACN17].")
-				| Exploration_queue_BFS_PRIOR -> print_message Verbose_standard ("Exploration order: queue-based BFS with priority [ACN17].")
-
-				| Exploration_NDFS -> print_message Verbose_standard ("Exploration order: standard NDFS [NPvdP18].")
-				| Exploration_NDFS_sub -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption [NPvdP18].")
-				| Exploration_layer_NDFS -> print_message Verbose_standard ("Exploration order: NDFS synthesis with layers [NPvdP18].")
-				| Exploration_layer_NDFS_sub -> print_message Verbose_standard ("Exploration order: NDFS synthesis with subsumption and layers [NPvdP18].")
-end;
+				| Some exploration_order -> print_message Verbose_experiments ("Exploration order: " ^ AbstractAlgorithm.string_of_exploration_order exploration_order)
+				
+				| None -> print_message Verbose_low ("No exploration order set.")
+			end;
 
             (* Merge heuristic *)
             begin

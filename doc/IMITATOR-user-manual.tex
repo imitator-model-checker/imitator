@@ -799,12 +799,12 @@ In addition, this algorithm is (by default) not complete.
 
 The property syntax is as follows:
 
-\styleIMI{property := \#synth inf\_cycle;}
+\styleIMI{property := \#synth inf\_acc\_cycle;}
 
 However, there are two main differences with \cref{ss:loop,ss:accepting-loop}:
 \begin{enumerate}
 	\item accepting locations must be specified using the keyword \styleIMI{accepting} (this keyword is not used by other algorithms\footnote{This comes from the fact that the developers of this algorithm are mainly Jaco Van~de~Pol and Laure~Petrucci, who used a different accepting location system.});
-	\item an exploration order must be specified as command line (see below).
+	\item an exploration order may be specified as command line (see below).
 \end{enumerate}
 
 The command is therefore:
@@ -818,7 +818,7 @@ These are accessible via the \styleOption{-explOrder} option:
 	\item[\styleOption{-explOrder NDFS}]: use standard NDFS to find an accepting cycle;
 	\item[\styleOption{-explOrder NDFSsub}]: standard NDFS with subsumption;
 	\item[\styleOption{-explOrder layerNDFS}]: NDFS with layers;
-	\item[\styleOption{-explOrder layerNDFSsub}]: NDFS with subsumption and layers;
+	\item[\styleOption{-explOrder layerNDFSsub}]: NDFS with subsumption and layers (default);
 	      % 	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
 	      % 	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
 \end{description}
@@ -1103,9 +1103,9 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 			\hline
 			Accepting cycle        & \styleIMI{inf\_cycle\_through(state\_predicate)} & \cellYes{} & \cellNo{}  \\
 			\hline
-			Accepting cycle (NDFS) & \styleIMI{inf\_cycle}                            & \cellYes{} & \cellYes{} \\
+			Accepting cycle (NDFS) & \styleIMI{inf\_acc\_cycle}                            & \cellYes{} & \cellYes{} \\
 			\hline
-			Non-Zeno cycles        & \styleIMI{inf\_cycle}                            & \cellYes{} & \cellNo{}  \\
+			Non-Zeno cycles        & \styleIMI{NZ\_inf\_cycle}                            & \cellYes{} & \cellNo{}  \\
 
 			% Deadlock-freeness
 
@@ -2665,6 +2665,7 @@ We define each of those two components below.
 	% Cycles
 
 	$|$ & \styleIMI{inf\_cycle}                                                                                                \\
+	$|$ & \styleIMI{inf\_acc\_cycle}                                                                                           \\
 	$|$ & \styleIMI{inf\_cycle\_through} \nt{state\_predicate}                                                                 \\
 	$|$ & \styleIMI{NZ\_inf\_cycle\_check}                                                                                     \\
 	$|$ & \styleIMI{NZ\_inf\_cycle\_transform}                                                                                 \\

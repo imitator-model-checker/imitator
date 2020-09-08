@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/08/28
+ * Last modified     : 2020/09/08
 *****************************************************************)
 
 {
@@ -62,6 +62,8 @@ rule token = parse
  	| "IMconvex"       { CT_IMCONVEX }
  	| "IMK"            { CT_IMK }
  	| "IMunion"        { CT_IMUNION }
+	| "inf_acc_cycle"  { CT_INFACCCYCLE }
+	| "infacccycle"    { CT_INFACCCYCLE }
 	| "inf_cycle"      { CT_INFCYCLE }
 	| "infcycle"       { CT_INFCYCLE }
 	| "inf_cycle_through" { CT_INFCYCLETHROUGH }

@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2020/08/25
- * Last modified     : 2020/08/28
+ * Last modified     : 2020/09/08
  *
  ************************************************************)
 
@@ -16,8 +16,17 @@
 (************************************************************)
 (* Internal modules *)
 (************************************************************)
+open AbstractAlgorithm
 open AbstractProperty
 
+
+(************************************************************)
+(* Default options depending on the property *)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(* Inclusion *)
+(*------------------------------------------------------------*)
 
 let inclusion_needed property =
 	match property.property with
@@ -52,6 +61,8 @@ let inclusion_needed property =
 	(* Reachability with minimal-time *)
 	| EFtmin _
 	
+		-> true
+
 
 	(*------------------------------------------------------------*)
 	(* Cycles *)
@@ -60,11 +71,12 @@ let inclusion_needed property =
 	(** Infinite-run (cycle) *)
 	| Cycle
 
-	(** Accepting infinite-run (cycle) *)
-	| Accepting_cycle _
+	(** Accepting infinite-run (cycle) via an accepting keyword *)
+	| Accepting_cycle
 	
-		-> true
-
+	(** Accepting infinite-run (cycle) through a state predicate *)
+	| Cycle_through _
+	
 	(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
 	| NZCycle_check
 	
@@ -139,9 +151,141 @@ let inclusion_needed property =
 		-> true
 
 
+(*------------------------------------------------------------*)
+(* Merge *)
+(*------------------------------------------------------------*)
+
 (*** NOTE: Shortcut! ***)
 let merge_needed = inclusion_needed
 
+
+
+(*------------------------------------------------------------*)
+(* Exploration order *)
+(*------------------------------------------------------------*)
+
+let default_exploration_order property =
+	match property.property with
+	(*------------------------------------------------------------*)
+	(* Non-nested CTL *)
+	(*------------------------------------------------------------*)
+
+	(* Reachability *)
+	| EF _
+	
+	(* Safety *)
+	| AGnot _
+	
+	
+	(*------------------------------------------------------------*)
+	(* Reachability and specification illustration *)
+	(*------------------------------------------------------------*)
+	
+	(** EF-synthesis with examples of (un)safe words *)
+	| EFexemplify _
+	
+	(*------------------------------------------------------------*)
+	(* Optimized reachability *)
+	(*------------------------------------------------------------*)
+	
+	(* Reachability with minimization of a parameter valuation *)
+	| EFpmin _
+	
+	(* Reachability with maximization of a parameter valuation *)
+	| EFpmax _
+	
+	(* Reachability with minimal-time *)
+	| EFtmin _
+	
+		-> Exploration_layer_BFS
+
+
+	(*------------------------------------------------------------*)
+	(* Cycles *)
+	(*------------------------------------------------------------*)
+	
+	(** Infinite-run (cycle) *)
+	| Cycle
+		-> Exploration_layer_BFS
+
+	(** Accepting infinite-run (cycle) via an accepting keyword *)
+	| Accepting_cycle
+		-> Exploration_layer_NDFS_sub
+	
+	(** Accepting infinite-run (cycle) through a state predicate *)
+	| Cycle_through _
+	
+	(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
+	| NZCycle_check
+	
+	(** Infinite-run (cycle) with non-Zeno assumption: method by transforming the PTA into a CUB-PTA *)
+	| NZCycle_transform
+	
+	(** Infinite-run (cycle) with non-Zeno assumption: method assuming the PTA is already a CUB-PTA *)
+	| NZCycle_CUB
+	
+		-> Exploration_layer_BFS
+	
+
+	(*------------------------------------------------------------*)
+	(* Deadlock-freeness *)
+	(*------------------------------------------------------------*)
+	
+	(* Deadlock-free synthesis *)
+	| Deadlock_Freeness
+	
+	(*------------------------------------------------------------*)
+	(* Inverse method, trace preservation, robustness *)
+	(*------------------------------------------------------------*)
+	
+	(* Inverse method with complete, non-convex result *)
+	| IM _
+
+	(* Non-complete, non-deterministic inverse method with convex result *)
+	| ConvexIM _
+
+	(* Parametric reachability preservation *)
+	| PRP _
+
+	(* Variant IMK of the Inverse method *)
+	| IMK _
+
+	(* Variant IMunion of the Inverse method *)
+	| IMunion _
+
+	
+	(*------------------------------------------------------------*)
+	(* Cartography algorithms *)
+	(*------------------------------------------------------------*)
+	
+	(* Cartography *)
+	| Cover_cartography _
+
+	(** Cover the whole cartography using learning-based abstractions *)
+	| Learning_cartography _
+	
+	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+	| Shuffle_cartography _
+	
+	(** Look for the border using the cartography*)
+	| Border_cartography _
+	
+	(** Randomly pick up values for a given number of iterations *)
+	| Random_cartography _
+	
+	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+	| RandomSeq_cartography _
+
+	(* Parametric reachability preservation *)
+	| PRPC _
+		-> Exploration_layer_BFS
+
+
+
+
+(************************************************************)
+(* Predicates on properties *)
+(************************************************************)
 
 let is_cartography property =
 	match property.property with
@@ -157,6 +301,9 @@ let is_cartography property =
 	| _ -> false
 
 
+(************************************************************)
+(* Textual description of properties *)
+(************************************************************)
 
 (* Gives a textual description of a property *)
 let text_of_property property =
@@ -205,8 +352,11 @@ let text_of_property property =
 	(** Infinite-run (cycle) *)
 	| Cycle -> "infinite run " ^ synthesis_or_witness
 
-	(** Accepting infinite-run (cycle) *)
-	| Accepting_cycle _ -> "infinite accepting run " ^ synthesis_or_witness
+	(** Accepting infinite-run (cycle) via an accepting keyword *)
+	| Accepting_cycle -> "infinite run accepting run " ^ synthesis_or_witness
+	
+	(** Accepting infinite-run (cycle) through a state predicate *)
+	| Cycle_through _ -> "infinite accepting run " ^ synthesis_or_witness
 
 	(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
 	| NZCycle_check -> "non-Zeno infinite accepting run " ^ synthesis_or_witness ^ " (without CUB transformation)"

@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/18
- * Last modified     : 2020/08/28
+ * Last modified     : 2020/09/08
  *
  ************************************************************)
 
@@ -150,7 +150,8 @@ val cartography_drawing_possible : imitator_mode -> bool
 (** Conversions of modes to string *)
 (************************************************************)
 
-val string_of_mode			: imitator_mode -> string
-val string_of_translation	: translation -> string
+val string_of_mode				: imitator_mode -> string
+val string_of_translation		: translation -> string
+val string_of_exploration_order	: exploration_order -> string
 
 

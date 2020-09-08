@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/09/04
+ * Last modified     : 2020/09/08
  *
  ************************************************************)
  
@@ -155,10 +155,11 @@ let get_v0_option () =
 			| EFpmin _
 			| EFpmax _
 			| EFtmin _
-			| Accepting_cycle _
+			| Cycle_through _
 			| PRP _
 				
 			| Cycle
+			| Accepting_cycle
 			| NZCycle_check
 			| NZCycle_CUB
 			| NZCycle_transform
@@ -1274,11 +1275,12 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 				| EFpmin (state_predicate , _)
 				| EFpmax (state_predicate , _)
 				| EFtmin state_predicate
-				| Accepting_cycle state_predicate
+				| Cycle_through state_predicate
 				| PRP (state_predicate, _)
 					-> Some state_predicate
 					
 				| Cycle
+				| Accepting_cycle
 				| NZCycle_check
 				| NZCycle_CUB
 				| NZCycle_transform
