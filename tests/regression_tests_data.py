@@ -5280,7 +5280,9 @@ Number of computed states     : 2
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+
 	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (true result)',
@@ -5334,7 +5336,9 @@ Number of computed states     : 3
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	
 	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: basic example with disjunction',
@@ -5364,99 +5368,12 @@ Constraint nature             : good
 ------------------------------------------------------------
 """
 			} #end result file
-			,
-			{'file': 'PDFC5-statespace.states' , 'content' : """
-  DESCRIPTION OF THE STATES
-
-  /************************************************************/
-  INITIAL
-  STATE 0:
-  pta: l1 ==>
-& p1 + 5 >= x1
-& p1 >= 0
-& p2 >= 0
-& p3 >= 0
-& x1 >= 0
-& x1 = x2
-
-  Projection onto the parameters:
-   p3 >= 0
-& p2 >= 0
-& p1 >= 0
-
-  /************************************************************/
-  STATE 1:
-  pta: l2 ==>
-& p1 >= 0
-& p2 >= 0
-& p3 >= 0
-& x1 >= 0
-& x1 = x2
-
-  Projection onto the parameters:
-   p3 >= 0
-& p2 >= 0
-& p1 >= 0
-
-  /************************************************************/
-  STATE 2:
-  pta: l3 ==>
-& p1 >= 0
-& p1 + 5 >= p3
-& p2 >= 0
-& p3 >= 0
-& x1 >= p3
-& x1 = x2
-
-  Projection onto the parameters:
-   p1 + 5 >= p3
-& p3 >= 0
-& p1 >= 0
-& p2 >= 0
-
-  /************************************************************/
-  STATE 3:
-  pta: l3 ==>
-& p1 >= 0
-& p2 >= 0
-& p3 >= 0
-& x1 >= 0
-& x1 = x2
-
-  Projection onto the parameters:
-   p3 >= 0
-& p2 >= 0
-& p1 >= 0
-
-  /************************************************************/
-  STATE 4:
-  pta: l2 ==>
-& p1 >= 0
-& p1 + 5 >= p3
-& p2 >= 0
-& p3 >= 0
-& x1 >= p3
-& x1 = x2
-
-  Projection onto the parameters:
-   p1 + 5 >= p3
-& p3 >= 0
-& p1 >= 0
-& p2 >= 0
-
-  DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_1 via "a"
-  s_0 -> s_2
-  s_1 -> s_3 via "a"
-  s_2 -> s_4 via "a"
-  s_3 -> s_1 via "a"
-  s_4 -> s_2 via "a"
-"""
-			} #end result file
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+
 	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: example with early termination due to false constraint',
