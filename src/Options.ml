@@ -364,7 +364,7 @@ class imitator_options =
 
 
 		method parse =
-			let usage_msg = "Usage: " ^ (Sys.argv.(0)) ^ " model" ^ Constants.model_extension ^ " [property." ^ Constants.property_extension ^ "] [options]" in
+			let usage_msg = "Usage: " ^ (Sys.argv.(0)) ^ " model" ^ Constants.model_extension ^ " [property" ^ Constants.property_extension ^ "] [options]" in
 
 			(* Get the verbose mode *)
 			let rec set_verbose_mode_ref verbose_mode =
@@ -564,30 +564,38 @@ class imitator_options =
 
 			(* Options *)
 			and speclist = [
-				("-acyclic", Unit (fun () -> acyclic <- true), " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: disabled");
+				("-acyclic", Unit (fun () -> acyclic <- true), " Test if a new state was already encountered only with states of the same depth. To be set only if the system is fully acyclic (no backward branching, i.e., no cycle). Default: disabled.
+				");
 
 (* 				("-best-worst-case", (fun () -> best_worst_case <- true), " Instead of the minimum global time, compute the best worst-case time bound in the EFsynthminpq mode. Default: false."); *)
 
 (* 				Temporarily disabled (March 2014) *)
 (* 				("-bab", (fun () -> branch_and_bound <- true), " Experimental new feature of IMITATOR, based on cost optimization (WORK IN PROGRESS). Default: disabled"); *)
 
-				("-cart-tiles-limit", Int (fun i -> carto_tiles_limit <- Some i), " Set a maximum number of tiles computed for the cartography. Default: no limit.");
+				("-cart-tiles-limit", Int (fun i -> carto_tiles_limit <- Some i), " Set a maximum number of tiles computed for the cartography. Default: no limit.
+				");
 
-				("-cart-time-limit", Int (fun i -> carto_time_limit <- Some i), " Set a global time limit (in seconds) for the cartography (in which case the -time-limit option only applies to each call to IM). Default: no limit.");
+				("-cart-time-limit", Int (fun i -> carto_time_limit <- Some i), " Set a global time limit (in seconds) for the cartography (in which case the -time-limit option only applies to each call to IM). Default: no limit.
+				");
 
-				(* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Defaut : disabled"); *)
+				(* 				("-dynamic", Set dynamic, "Perform the on-the-fly intersection. Default: disabled"); *)
 
-				("-check-ippta", Unit (fun () -> check_ippta <- true), " Check that every new symbolic state contains an integer point; raises an exception if not. Default: disabled.");
+				("-check-ippta", Unit (fun () -> check_ippta <- true), " Check that every new symbolic state contains an integer point; raises an exception if not. Default: disabled.
+				");
 
-				("-check-point", Unit (fun () -> check_point <- true), " For IM, check at each iteration whether the accumulated parameter constraint is restricted to pi0 (warning! very costly). Default: disabled.");
+				("-check-point", Unit (fun () -> check_point <- true), " For IM, check at each iteration whether the accumulated parameter constraint is restricted to pi0 (warning! very costly). Default: disabled.
+				");
 
 				("-contributors", Unit (fun _ ->
 					print_contributors();
-					exit 0), " Print contributors and exit.");
+					exit 0), " Print contributors and exit.
+				");
 
-				("-depth-limit", Int (fun i -> depth_limit <- Some i), " Limits the depth of the exploration of the state space. Default: no limit.");
+				("-depth-limit", Int (fun i -> depth_limit <- Some i), " Limits the depth of the exploration of the state space. Default: no limit.
+				");
 
-				("-depth-init", Int (fun i -> depth_init <- Some i), " Initial depth for iterative deepening in NDFS exploration of the state space.");
+				("-depth-init", Int (fun i -> depth_init <- Some i), " Initial depth for iterative deepening in NDFS exploration of the state space.
+				");
 				(*** TODO: what's default? ***)
 
 				("-distributed", String set_distributed, " Distributed version of the behavioral cartography and PRPC.
@@ -599,15 +607,18 @@ class imitator_options =
         Use `dynamic` for a master-worker dynamic subdomain decomposition [ACN15].
 				");
 
-				("-distributedKillIM", Unit (fun () -> distributedKillIM <- true), " In distributed cartography, kill processes covered by other tiles [ACN15]; only works with selected distribution schemes. Default: disabled.");
+				("-distributedKillIM", Unit (fun () -> distributedKillIM <- true), " In distributed cartography, kill processes covered by other tiles [ACN15]; only works with selected distribution schemes. Default: disabled.
+				");
 
-				("-draw-cart", Unit (fun () -> draw_cart <- true), " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: disabled.");
+				("-draw-cart", Unit (fun () -> draw_cart <- true), " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: disabled.
+				");
 
 				(*** WARNING: only works partially ***)
 				("-draw-cart-x-min", Int (fun n -> output_cart_x_min <- Some n), " Set minimum value for the x axis when plotting the cartography (not entirely functional yet). Default: 0.");
 				("-draw-cart-x-max", Int (fun n -> output_cart_x_max <- Some n), " Set maximum value for the x axis when plotting the cartography (not entirely functional yet). Default: automatic.");
 				("-draw-cart-y-min", Int (fun n -> output_cart_y_min <- Some n), " Set minimum value for the y axis when plotting the cartography (not entirely functional yet). Default: 0.");
-				("-draw-cart-y-max", Int (fun n -> output_cart_y_max <- Some n), " Set maximum value for the y axis when plotting the cartography (not entirely functional yet). Default: automatic.");
+				("-draw-cart-y-max", Int (fun n -> output_cart_y_max <- Some n), " Set maximum value for the y axis when plotting the cartography (not entirely functional yet). Default: automatic.
+				");
 
 				("-draw-statespace", String set_statespace, " Draw the state space in a graphical form (using `dot`).
        Use value `undetailed` for the structure only (no location names).
@@ -615,7 +626,8 @@ class imitator_options =
        Use value `full` for location names and constraints.
 				");
 
-				("-dynamic-elimination", Unit (fun () -> dynamic_clock_elimination <- true), " Dynamic clock elimination [FSFMA13]. Default: disabled.");
+				("-dynamic-elimination", Unit (fun () -> dynamic_clock_elimination <- true), " Dynamic clock elimination [FSFMA13]. Default: disabled.
+				");
 
 				("-explOrder", String set_exploration_order, " Exploration order [EXPERIMENTAL].
         Use `layerBFS` for a layer-based breadth-first search (default for most algorithms).
@@ -629,119 +641,96 @@ class imitator_options =
         Use `layerNDFS` for layered NDFS. [NPvdP18]
         Use `layerNDFSsub` for layered NDFS with subsumption. [NPvdP18] (default for NDFS algorithms)*)
 
-				("-graphics-source", Unit (fun () -> with_graphics_source <- true), " Keep file(s) used for generating graphical output. Default: disabled.");
+				("-graphics-source", Unit (fun () -> with_graphics_source <- true), " Keep file(s) used for generating graphical output. Default: disabled.
+				");
 
 				("-imi2HyTech", Unit (fun _ ->
 					imitator_mode <- Translation HyTech
-				), "Translate the model into a HyTech model, and exit without performing any analysis. Defaut : disabled");
+				), "Translate the model into a HyTech model, and exit without performing any analysis. Default: disabled");
 
 				("-imi2IMI", Unit (fun _ ->
 					imitator_mode <- Translation IMI
-				), "Regenerate the model into an IMITATOR model, and exit without performing any analysis. Defaut : disabled");
+				), "Regenerate the model into an IMITATOR model, and exit without performing any analysis. Default: disabled");
 
 				("-imi2JPG", Unit (fun _ ->
 					imitator_mode <- Translation JPG
-				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : disabled");
+				), "Translate the model into a graphics, and exit without performing any analysis. Default: disabled");
 
 				("-imi2PDF", Unit (fun _ ->
 					imitator_mode <- Translation PDF
-				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : disabled");
+				), "Translate the model into a graphics, and exit without performing any analysis. Default: disabled");
 
 				("-imi2PNG", Unit (fun _ ->
 					imitator_mode <- Translation PNG
-				), "Translate the model into a graphics, and exit without performing any analysis. Defaut : disabled");
+				), "Translate the model into a graphics, and exit without performing any analysis. Default: disabled");
 
 				("-imi2TikZ", Unit (fun _ ->
 					imitator_mode <- Translation TikZ
-				), "Translate the model into LaTeX TikZ code (no positioning yet), and exit without performing any analysis. Defaut : disabled");
+				), "Translate the model into LaTeX TikZ code (no positioning yet), and exit without performing any analysis. Default: disabled");
 
 				("-imi2Uppaal", Unit (fun _ ->
 					imitator_mode <- Translation Uppaal
-				), "Translate the model into an Uppaal model, and exit without performing any analysis. Some features may not be translated, see user manual. Defaut : disabled");
+				), "Translate the model into an Uppaal model, and exit without performing any analysis. Some features may not be translated, see user manual. Default: disabled
+				");
 
 
 				("-inclusion", Unit (fun () -> warn_if_set inclusion "inclusion"; inclusion <- Some true), " Consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: depending on the algorithm");
-				("-no-inclusion", Unit (fun () -> warn_if_set inclusion "inclusion"; inclusion <- Some false), " Do not consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: depending on the algorithm");
+				("-no-inclusion", Unit (fun () -> warn_if_set inclusion "inclusion"; inclusion <- Some false), " Do not consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: depending on the algorithm.
+				");
 
-				("-inclusion-bidir", Unit (fun () -> inclusion2 <- true), " Consider a bidirectional inclusion of symbolic zones (new <= old or old <= new) instead of the equality when checking for a fixpoint. Default: disabled");
+				("-inclusion-bidir", Unit (fun () -> inclusion2 <- true), " Consider a bidirectional inclusion of symbolic zones (new <= old or old <= new) instead of the equality when checking for a fixpoint. Default: disabled.
+				");
 
-				("-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some true), " Layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled");
-				("-no-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some false), " No layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled");
+				("-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some true), " Layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled.");
+				("-no-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some false), " No layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled.
+				");
 
 				("-merge", Unit (fun () -> warn_if_set merge "merge"; merge <- Some true), " Use the merging technique of [AFS13]. Default: depending on the algorithm");
-				("-no-merge", Unit (fun () -> warn_if_set merge "merge"; merge <- Some false), " Do not use the merging technique of [AFS13]. Default: depending on the algorithm");
+				("-no-merge", Unit (fun () -> warn_if_set merge "merge"; merge <- Some false), " Do not use the merging technique of [AFS13]. Default: depending on the algorithm.
+				");
 
 (*				("-merge-before", Unit (fun () -> merge_before <- true) , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: disabled (disable)");*)
 
 				("-mergeq", Unit (fun () -> warn_if_set mergeq "mergeq"; mergeq <- Some true; merge <- Some true), "Use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm");
-				("-no-mergeq", Unit (fun () -> warn_if_set mergeq "mergeq"; mergeq <- Some false), " Do not use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm");
+				("-no-mergeq", Unit (fun () -> warn_if_set mergeq "mergeq"; mergeq <- Some false), " Do not use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm.
+				");
 
-				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Options are `always`, `targetseen`, `pq10`, `pq100`, `iter10`, `iter100`. Default: `iter10`.");
+				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Options are `always`, `targetseen`, `pq10`, `pq100`, `iter10`, `iter100`. Default: `iter10`.
+				");
 
 				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
         Use `checksyntax` for a simple syntax check and no analysis.
-
         Use `statespace` for the generation of the entire parametric state space."
         );
 
-				("-no-acceptfirst", Unit (fun () -> no_acceptfirst <- true), "In NDFS, do not put accepting states at the head of the successors list. Default: enabled.");
+				("-no-acceptfirst", Unit (fun () -> no_acceptfirst <- true), "In NDFS, do not put accepting states at the head of the successors list. Default: enabled.
+				");
 
-				("-no-inclusion-test-in-EF", Unit (fun () -> no_leq_test_in_ef <- true), " In EFsynth, no inclusion test of the new states constraints in the already computed constraint. Default: enabled.");
+				("-no-inclusion-test-in-EF", Unit (fun () -> no_leq_test_in_ef <- true), " In EFsynth, no inclusion test of the new states constraints in the already computed constraint. Default: enabled (i.e., inclusion test).
+				");
 
 (* 				("-no-initprune", Unit (fun () -> no_initprune <- true), " In collecting NDFS, no pruning if the initial constraint is included in the collected zone. Default: disabled."); *)
 
-				("-no-lookahead", Unit (fun () -> no_lookahead <- true), " In NDFS, no lookahead for finding successors closing an accepting cycle. Default: enabled.");
+				("-no-lookahead", Unit (fun () -> no_lookahead <- true), " In NDFS, no lookahead for finding successors closing an accepting cycle. Default: enabled (i.e., lookahead).
+				");
 
 (* 				("-no-pending-ordered", Unit (fun () -> no_pending_ordered <- true), " In NDFS synthesis, do not order the pending queue with larger zones first. Default: enabled."); *)
 
-				("-no-random", Unit (fun () -> no_random <- true), " In IM, no random selection of the pi0-incompatible inequality (select the first found). Default: enabled.");
+				("-no-random", Unit (fun () -> no_random <- true), " In IM, no random selection of the pi0-incompatible inequality (select the first found). Default: enabled (i.e., random).
+				");
 
-				("-no-var-autoremove", Unit (fun () -> no_variable_autoremove <- true), " Prevent the automatic removal of variables (discrete, clocks, parameters) declared in the header but never used in the IPTAs. Default: enabled.");
+				("-no-var-autoremove", Unit (fun () -> no_variable_autoremove <- true), " Prevent the automatic removal of variables (discrete, clocks, parameters) declared in the header but never used in the IPTAs. Default: enabled (auto-remove).
+				");
 
-				("-output-prefix", String (fun new_prefix -> files_prefix <- new_prefix), " Set the prefix for output files. Default: [./model-name].");
+				("-output-prefix", String (fun new_prefix -> files_prefix <- new_prefix), " Set the prefix for output files. Default: [./model-name].
+				");
 
-				("-output-float", Unit (fun () -> output_float <- true), " Approximates the value of discrete variables as floats. Default: disabled.");
+				("-output-float", Unit (fun () -> output_float <- true), " Approximates the value of discrete variables as floats. Default: disabled.
+				");
 
 (* 				("-output-result", Unit (fun () -> output_result <- Some true), " Write the result to a file. Default: true."); *)
-				("-no-output-result", Unit (fun () -> output_result <- Some false), " Do not write the result to a file. Default (for most algorithms): enabled, i.e., result is written.");
-
-				("-precomputepi0", Unit (fun () -> precomputepi0 <- true), " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode only). Default: disabled.");
-
-				("-recompute-green", Unit (fun () -> recompute_green <- true), " In NDFS, process green states again if found at a lower depth. Default: disabled.");
-
-				(* Hidden option (April fool 2017) *)
-				(*** NOTE: "Beware: options that have an empty doc string will not be included in the list." ***)
-				("-romeo", Unit call_romeo, "");
-
-				("-states-description", Unit (fun () -> states_description <- true), " Generate the description of all reachable states in a text file. Default: disabled.");
-
-				("-states-limit", Int (fun i -> states_limit <- Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.");
-
-				("-statistics", Unit (fun _ -> statistics <- true; Statistics.enable_all_counters()), " Print info on number of calls to PPL, and other statistics. Default: disabled");
-
-				("-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step <- (NumConst.numconst_of_string i)), " Step for NDFS iterative deepening. Default: 1.");
-
-				("-subsumption", Unit (fun () -> warn_if_set subsumption "subsumption"; subsumption <- Some true), " NDFS with subsumption (for NDFS algorithms only) [NPvdP18]. Default: enabled");
-				("-no-subsumption", Unit (fun () -> warn_if_set subsumption "subsumption"; subsumption <- Some false), " NDFS without subsumption (for NDFS algorithms only) [NPvdP18]. Default: enabled");
-
-				("-sync-auto-detect", Unit (fun () -> sync_auto_detection <- true), " Detect automatically the synchronized actions in each automaton. Default: disabled (consider the actions declared by the user)");
-
-				("-tiles-files", Unit (fun () -> output_tiles_files <- true), " In cartography, generate the required files for each tile (i.e., the .res file and the cartography files, if any). Default: disabled.");
-
-				("-time-elapsing-after", Unit (fun () -> no_time_elapsing <- true), " No time elapsing in zone computation (i.e., time elapsing is performed before taking a transition, not after). Default: disabled.");
-
-				("-time-limit", Int (fun i -> time_limit <- Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. In cartography, this limit applies to each call to IM; use -cart-time-limit for a global limit. Default: no limit.");
-
-				("-timed", Unit (fun () -> timed_mode <- true), " Adds a timing information to each output of the program. Default: disabled.");
-
-				("-tree", Unit (fun () -> tree <- true), " Does not test if a new state was already encountered. To be set ONLY if the state space is a tree (otherwise analysis may loop). Default: disabled");
-
-				("-verbose", String set_verbose_mode_ref, " Print more or less information. Can be set to `mute`, `warnings`, `standard`, `experiments`, `low`, `medium`, `high`, `total`. Default: `standard`");
-
-				("-version", Unit (fun _ ->
-					print_string ("GitHub branch and hash: " ^ ImitatorUtilities.git_branch_and_full_hash);
-					print_newline();
-					exit 0), " Print version number and exit.");
+				("-no-output-result", Unit (fun () -> output_result <- Some false), " Do not write the result to a file. Default (for most algorithms): enabled, i.e., result is written.
+				");
 
 				("-pendingOrder", String set_pending_order, " Pending list exploration order [EXPERIMENTAL].
         Use `accepting` for a layered NDFS where pending list has accepting states first.
@@ -750,6 +739,60 @@ class imitator_options =
         Use `zone` for a layered NDFS where pending list has bigger full zone first.
         Default: none.
 				");
+
+				("-precomputepi0", Unit (fun () -> precomputepi0 <- true), " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode for cartography only). Default: disabled.
+				");
+
+				("-recompute-green", Unit (fun () -> recompute_green <- true), " In NDFS, process green states again if found at a lower depth. Default: disabled.
+				");
+
+				(* Hidden option (April fool 2017) *)
+				(*** NOTE: "Beware: options that have an empty doc string will not be included in the list." ***)
+				("-romeo", Unit call_romeo, "");
+
+				("-states-description", Unit (fun () -> states_description <- true), " Generate the description of all reachable states in a text file. Default: disabled.
+				");
+
+				("-states-limit", Int (fun i -> states_limit <- Some i), " States limit: will try to stop after reaching this number of states. Warning: the program may have to first finish computing the current iteration before stopping. Default: no limit.
+				");
+
+				("-statistics", Unit (fun _ -> statistics <- true; Statistics.enable_all_counters()), " Print info on number of calls to PPL, and other statistics. Default: disabled.
+				");
+
+				("-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step <- (NumConst.numconst_of_string i)), " Step for NDFS iterative deepening. Default: 1.
+				");
+
+				("-subsumption", Unit (fun () -> warn_if_set subsumption "subsumption"; subsumption <- Some true), " NDFS with subsumption (for NDFS algorithms only) [NPvdP18]. Default: enabled.");
+				("-no-subsumption", Unit (fun () -> warn_if_set subsumption "subsumption"; subsumption <- Some false), " NDFS without subsumption (for NDFS algorithms only) [NPvdP18]. Default: enabled.
+				");
+
+				("-sync-auto-detect", Unit (fun () -> sync_auto_detection <- true), " Detect automatically the synchronized actions in each automaton. Default: disabled (consider the actions declared by the user).
+				");
+
+				("-tiles-files", Unit (fun () -> output_tiles_files <- true), " In cartography, generate the required files for each tile (i.e., the .res file and the cartography files, if any). Default: disabled.
+				");
+
+				("-time-elapsing-after", Unit (fun () -> no_time_elapsing <- true), " No time elapsing in zone computation (i.e., time elapsing is performed before taking a transition, not after). Default: disabled.
+				");
+
+				("-time-limit", Int (fun i -> time_limit <- Some i), " Time limit in seconds. Warning: no guarantee that the program will stop exactly after the given amount of time. In cartography, this limit applies to each call to IM; use -cart-time-limit for a global limit. Default: no limit.
+				");
+
+				("-timed", Unit (fun () -> timed_mode <- true), " Adds a timing information to each output of the program. Default: disabled.
+				");
+
+				("-tree", Unit (fun () -> tree <- true), " Does not test if a new state was already encountered. To be set ONLY if the state space is a tree (otherwise analysis may loop). Default: disabled.
+				");
+
+				("-verbose", String set_verbose_mode_ref, " Print more or less information. Can be set to `mute`, `warnings`, `standard`, `experiments`, `low`, `medium`, `high`, `total`. Default: `standard`.
+				");
+
+				("-version", Unit (fun _ ->
+					print_string ("GitHub branch and hash: " ^ ImitatorUtilities.git_branch_and_full_hash);
+					print_newline();
+					exit 0), " Print version number and exit.
+				");
+
 			] in
 
 			(* function for parsing arguments *)
