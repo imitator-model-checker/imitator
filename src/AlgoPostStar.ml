@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2020/01/08
+ * Last modified     : 2020/09/09
  *
  ************************************************************)
 
@@ -143,7 +143,7 @@ class algoPostStar =
 
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
-			| None -> raise (InternalError "Termination status not set in EFsynth.compute_result")
+			| None -> raise (InternalError "Termination status not set in PostStar.compute_result")
 			| Some status -> status
 		in
 
