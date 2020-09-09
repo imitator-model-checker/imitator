@@ -5343,7 +5343,77 @@ Number of computed states     : 3
 	{
 		'purpose'    : 'Test PDFC: basic example with disjunction',
 		'input_files': ['PDFC5.imi', 'PDFC-deadlockfree.imiprop'],
-		'options'    : '-states-description',
+		'options'    : '',
+		'expectations' : [
+			{'file': 'PDFC5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= 0
+& p1 + 5 = p3
+OR
+  p1 >= 0
+& p3 > 5 + p1
+& p2 >= 5 + p1
+OR
+  p1 >= 0
+& p1 + 5 > p3
+& p3 >= 0
+& p2 >= 5 + p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+Constraint nature             : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PDFC: basic example with disjunction (no inclusion)',
+		'input_files': ['PDFC5.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-no-inclusion',
+		'expectations' : [
+			{'file': 'PDFC5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= 0
+& p1 + 5 = p3
+OR
+  p1 >= 0
+& p3 > 5 + p1
+& p2 >= 5 + p1
+OR
+  p1 >= 0
+& p1 + 5 > p3
+& p3 >= 0
+& p2 >= 5 + p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+Constraint nature             : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PDFC: basic example with disjunction (explicit inclusion)',
+		'input_files': ['PDFC5.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-inclusion',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
