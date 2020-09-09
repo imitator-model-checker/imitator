@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/18
- * Last modified     : 2020/09/08
+ * Last modified     : 2020/09/09
  *
  ************************************************************)
 
@@ -89,14 +89,14 @@ type exploration_order =
 	| Exploration_queue_BFS_RS
 	(** Queue-BFS: queue-based, independent of the depth, with prior for the selection of the next state [ANP17] *)
 	| Exploration_queue_BFS_PRIOR
-	(** NDFS: standard Nested Depth-First Search **)
+(*	(** NDFS: standard Nested Depth-First Search **)
 	| Exploration_NDFS
 	(** NDFSsub: NDFS with subsumption [NPvdP18] **)
 	| Exploration_NDFS_sub
 	(** layerNDFS: NDFS with layers [NPvdP18] **)
 	| Exploration_layer_NDFS
 	(** layerNDFSsub: NDFS with subsumption  and layers [NPvdP18] **)
-	| Exploration_layer_NDFS_sub
+	| Exploration_layer_NDFS_sub*)
 
 type pending_order =
 	(** NDFS with layers: order in the pending list exploration **)
@@ -206,11 +206,11 @@ let string_of_exploration_order (exploration_order : exploration_order) : string
 	(** Queue-BFS: queue-based, independent of the depth, with prior for the selection of the next state [ANP17] *)
 	| Exploration_queue_BFS_PRIOR -> "queue-based BFS with priority [ACN17]"
 	(** NDFS: standard Nested Depth-First Search **)
-	| Exploration_NDFS -> "standard NDFS [NPvdP18]"
+(*	| Exploration_NDFS -> "standard NDFS [NPvdP18]"
 	(** NDFSsub: NDFS with subsumption [NPvdP18] **)
 	| Exploration_NDFS_sub -> "NDFS with subsumption [NPvdP18]"
 	(** layerNDFS: NDFS with layers [NPvdP18] **)
 	| Exploration_layer_NDFS -> "NDFS with layers [NPvdP18]"
 	(** layerNDFSsub: NDFS with subsumption  and layers [NPvdP18] **)
-	| Exploration_layer_NDFS_sub -> "NDFS with subsumption and layers [NPvdP18]"
+	| Exploration_layer_NDFS_sub -> "NDFS with subsumption and layers [NPvdP18]"*)
 

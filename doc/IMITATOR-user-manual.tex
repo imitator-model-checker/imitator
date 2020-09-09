@@ -818,7 +818,7 @@ These are accessible via the \styleOption{-explOrder} option:
 	\item[\styleOption{-explOrder NDFS}]: use standard NDFS to find an accepting cycle;
 	\item[\styleOption{-explOrder NDFSsub}]: standard NDFS with subsumption;
 	\item[\styleOption{-explOrder layerNDFS}]: NDFS with layers;
-	\item[\styleOption{-explOrder layerNDFSsub}]: NDFS with subsumption and layers (default);
+	\item[\styleOption{-explOrder layerNDFSsub}]: NDFS with subsumption and layers (default)	;
 	      % 	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
 	      % 	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
 \end{description}
@@ -1565,7 +1565,7 @@ If needed, more information can be obtained by contacting the \imitator{} team.
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-acyclic} (default: false)}
+\paragraph{\styleOption{-acyclic} (default: disabled)}
 %------------------------------------------------------------
 Does not test if a new state was already encountered.
 Without this option, when \imitator{} encounters a new state, it checks if it has been encountered before.
@@ -1597,7 +1597,7 @@ In contrast, \styleOption{-time-limit} is applied to each call to the inverse me
 
 
 % %------------------------------------------------------------
-% \paragraph{\styleOption{-check-ippta} (default: false)}
+% \paragraph{\styleOption{-check-ippta} (default: disabled)}
 % %------------------------------------------------------------
 %
 % Check that every new symbolic state contains an integer point (\ie{} a point in the $\Clock \cup \Param$ dimension).
@@ -1605,7 +1605,7 @@ In contrast, \styleOption{-time-limit} is applied to each call to the inverse me
 %
 %
 % %------------------------------------------------------------
-% \paragraph{\styleOption{-check-point} (default: false)}
+% \paragraph{\styleOption{-check-point} (default: disabled)}
 % %------------------------------------------------------------
 %
 % In the inverse method, checks at each iteration whether the accumulated parameter constraint is restricted to the reference parameter valuation.
@@ -1613,7 +1613,7 @@ In contrast, \styleOption{-time-limit} is applied to each call to the inverse me
 %
 
 % %------------------------------------------------------------
-% \paragraph{\styleOption{-completeIM} (default: false)}
+% \paragraph{\styleOption{-completeIM} (default: disabled)}
 % %------------------------------------------------------------
 %
 % Returns a complete result for the inverse method for deterministic PTA, \ie{} returns a conjunction of negations of convex parameter constraints.
@@ -1747,7 +1747,7 @@ Three values for this option are allowed:
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-dynamic-elimination} (default: false)}
+\paragraph{\styleOption{-dynamic-elimination} (default: disabled)}
 %------------------------------------------------------------
 Dynamic elimination of clocks that are known to not used in the future of the current state~\cite{Andre13FSFMA}.
 
@@ -1781,7 +1781,7 @@ In this latter case, the possible values are:
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-graphics-source} (default: false)}
+\paragraph{\styleOption{-graphics-source} (default: disabled)}
 %------------------------------------------------------------
 Keep file(s) used for generating graphical output (\eg{} state space, cartography); these files are otherwise deleted after the generation of the graphics.
 
@@ -1789,48 +1789,48 @@ Keep file(s) used for generating graphical output (\eg{} state space, cartograph
 
 
 % %------------------------------------------------------------
-% \paragraph{\styleOption{-imi2GrML} (default: false)}
+% \paragraph{\styleOption{-imi2GrML} (default: disabled)}
 % %------------------------------------------------------------
 % Translates the input model to a GrML format (used by \CosyVerif{} \cite{AHHKLLP13}), and exits.
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-imi2HyTech} (default: false)}
+\paragraph{\styleOption{-imi2HyTech} (default: disabled)}
 %------------------------------------------------------------
 Translates the input model to a \hytech{} model, and exits.
 See \cref{section:hytech} for details.
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-imi2IMI} (default: false)}
+\paragraph{\styleOption{-imi2IMI} (default: disabled)}
 %------------------------------------------------------------
 Regenerates the model into an \imitator{} model, and exits.
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-imi2JPG} (default: false)}
+\paragraph{\styleOption{-imi2JPG} (default: disabled)}
 %------------------------------------------------------------
 Translates the input model to a graphical, human-readable form (in \texttt{.jpg} format), and exits.
 % TODO add the graphics of the coffee machine
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-imi2PDF} (default: false)}
+\paragraph{\styleOption{-imi2PDF} (default: disabled)}
 %------------------------------------------------------------
 Translates the input model to a graphical, human-readable form (in \texttt{.pdf} format), and exits.
 % TODO add the graphics of the coffee machine
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-imi2PNG} (default: false)}
+\paragraph{\styleOption{-imi2PNG} (default: disabled)}
 %------------------------------------------------------------
 Translates the input model to a graphical, human-readable form (in \texttt{.png} format), and exits.
 % TODO add the graphics of the coffee machine
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-imi2TikZ} (default: false)}
+\paragraph{\styleOption{-imi2TikZ} (default: disabled)}
 %------------------------------------------------------------
 Translates the input model to a \LaTeX{} representation of the model (using the \texttt{tikz} package) without performing any analysis, and exits.
 Note that node positioning is not (much) supported, so may want to edit manually some positions.
 % TODO refer to the graphics of the coffee machine
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-imi2Uppaal} (default: false)}
+\paragraph{\styleOption{-imi2Uppaal} (default: disabled)}
 %------------------------------------------------------------
 Translates the input model to a \uppaal{} model, and exits.
 See \cref{section:uppaal} for details.
@@ -1852,12 +1852,23 @@ Force disabling inclusion, even if the selected algorithm normally requires it.
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-inclusion-bidir} (default: false)}
+\paragraph{\styleOption{-inclusion-bidir} (default: disabled)}
 %------------------------------------------------------------
 Consider a bidirectional inclusion of parametric zone instead of the equality when computing the successors of a set of states.
 When the \code{-inclusion-bidir} option is activated, it suffices that a previous state with the same location and a constraint greater than or equal to (resp.\ \emph{smaller or equal} to) the constraint of the new state has been encountered to discard the new state (resp.\ the old state, which is replaced by the new one).
 
 It seems that, although less states are computed, this option is \emph{less} efficient than \styleOption{-inclusion} (in part due to the extra inclusion checks required by \styleOption{-inclusion-bidir}).
+
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-layer} (default: disabled)}
+%------------------------------------------------------------
+For NDFS algorithms, consider layered NDFS~\cite{NPP18}.
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-no-layer} (default: disabled)}
+%------------------------------------------------------------
+For NDFS algorithms, do not consider layered NDFS~\cite{NPP18}.
 
 
 %------------------------------------------------------------
@@ -1890,27 +1901,27 @@ When executing \imitator{} without a property, \ie{} in a special mode.
 \end{longtable}
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-no-acceptfirst} (default: false)}
+\paragraph{\styleOption{-no-acceptfirst} (default: disabled)}
 %------------------------------------------------------------
 In \styleOption{AccLoopSynthNDFS}, do not put accepting states at the head of the successors list.
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-no-inclusion-test-in-EF} (default: false)}
+\paragraph{\styleOption{-no-inclusion-test-in-EF} (default: disabled)}
 %------------------------------------------------------------
 In \EFsynth{}, no inclusion test of the new states constraints in the already computed constraint is performed when this option is enabled.
 Otherwise, in normal mode, the algorithm checks whether a new state parameter constraint is included into the already computed parameter constraint and, if so, cuts the branch.
 This can save time by cutting branches, but can also slow down the analysis for complex constraints.
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-no-lookahead} (default: false)}
+\paragraph{\styleOption{-no-lookahead} (default: disabled)}
 %------------------------------------------------------------
 In \styleOption{AccLoopSynthNDFS}, do not perform a lookahead for finding successors
 closing an accepting cycle.
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-no-random} (default: false)}
+\paragraph{\styleOption{-no-random} (default: disabled)}
 %------------------------------------------------------------
 In the inverse method, no random selection of the $\pio$-incompatible inequality (select the first found).
 By default, select an inequality in a random manner.
@@ -1918,7 +1929,7 @@ By default, select an inequality in a random manner.
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-no-var-autoremove} (default: false)}
+\paragraph{\styleOption{-no-var-autoremove} (default: disabled)}
 %------------------------------------------------------------
 Usually, \imitator{} automatically removes from the analysis the variables declared in the header, but used nowhere in the \IPTA{}s nor in the correctness property.
 Note that a variable updated (to~0 or to any other value) is \emph{not} considered used, as long as it is not used elsewhere (\ie{} in a guard, an invariant, a value to be updated to, a property…).
@@ -1927,7 +1938,7 @@ Using \styleOption{-no-var-autoremove} prevents \imitator{} from automatically r
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-output-float} (default: false)}
+\paragraph{\styleOption{-output-float} (default: disabled)}
 %------------------------------------------------------------
 Convert (exact-valued) discrete variables into (possibly approximated) floats in all outputs.
 
@@ -1955,9 +1966,17 @@ By default, the path prefix is the \emph{current directory}, \ie{} where the use
 
 
 % %------------------------------------------------------------
-% \paragraph{\styleOption{-result-file} (default: false)}
+% \paragraph{\styleOption{-result-file} (default: disabled)}
 % %------------------------------------------------------------
 % Writes the result of the analysis to a file named \stylePath{<input\_file>.result} using a normalized syntax, that can be easily parsed, \eg{} using an external script.
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-no-output-result} (default: enabled)}
+%------------------------------------------------------------
+Does not write the result of the analysis to a file.
+By default, a file named \stylePath{<input\_file>.res} is created using a normalized syntax, that can be easily parsed, \eg{} using an external script.
+
+
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-pendingOrder} (default: \styleOption{none})}
@@ -1976,19 +1995,13 @@ The possible values are:
 \end{longtable}
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-PRP} (default: false)}
-%------------------------------------------------------------
-Does not write the result of the analysis to a file.
-By default, a file named \stylePath{<input\_file>.res} is created using a normalized syntax, that can be easily parsed, \eg{} using an external script.
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-recompute-green} (default: false)}
+\paragraph{\styleOption{-recompute-green} (default: disabled)}
 %------------------------------------------------------------
 In \styleOption{AccLoopSynthNDFS} with iterative deepening, force re-exploration of
 green states when encountered on a shorter path.
 
 % %------------------------------------------------------------
-% \paragraph{\styleOption{-romeo} (default: false)}
+% \paragraph{\styleOption{-romeo} (default: disabled)}
 % %------------------------------------------------------------
 % April 1st, 2017 feature :-)
 % Supposedly calls the Romeo model checker~\cite{LRST09} instead of \imitator{}.
@@ -1997,7 +2010,7 @@ green states when encountered on a shorter path.
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-states-description} (default: false)}
+\paragraph{\styleOption{-states-description} (default: disabled)}
 %------------------------------------------------------------
 Generates a file \stylePath{<input\_file>.states} describing the reachable states in plain text (value of the location, of the discrete variables, associated constraint, and its projection onto the parameters).
 
@@ -2012,7 +2025,7 @@ Warning: the program may have to first finish computing the current iteration (\
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-statistics} (default: false)}
+\paragraph{\styleOption{-statistics} (default: disabled)}
 %------------------------------------------------------------
 Print info on number of calls to PPL, and other statistics about memory and time.
 Warning: enabling this option may slightly slow down the analysis, and will certainly induce some extra computational time at the end.
@@ -2026,7 +2039,18 @@ Step is used for iterative \styleOption{AccLoopSynthNDFS}: it indicates the step
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-sync-auto-detect} (default: false)}
+\paragraph{\styleOption{-subsumption} (default: enabled for NDFS)}
+%------------------------------------------------------------
+For NDFS algorithms, use subsumption~\cite{NPP18}.
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-no-subsumption} (default: enabled for NDFS)}
+%------------------------------------------------------------
+For NDFS algorithms, do not use subsumption~\cite{NPP18}.
+
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-sync-auto-detect} (default: disabled)}
 %------------------------------------------------------------
 \imitator{} considers that all the \IPTA{} declaring a given action must be able to synchronize all together, so that the synchronization can happen.
 By default, \imitator{} considers that the actions declared in an \IPTA{} are those declared in the \styleIMI{synclabs} section.
@@ -2037,14 +2061,14 @@ The option \styleOption{-sync-auto-detect} allows to detect automatically the ac
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-tiles-files} (default: false)}
+\paragraph{\styleOption{-tiles-files} (default: disabled)}
 %------------------------------------------------------------
 In cartography, generates the required files for each tile (\ie{} the \stylePath{.res} files, as well as the graphical cartography files whenever \styleOption{-draw-cart} is enabled).
 
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-time-elapsing-after} (default: false)}
+\paragraph{\styleOption{-time-elapsing-after} (default: disabled)}
 %------------------------------------------------------------
 When computing a new symbolic state, compute the time elapsing before taking the transition instead of after.
 
@@ -2061,14 +2085,14 @@ In the cartography mode, this option represents a \emph{global} time limit, not 
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-timed} (default: false)}
+\paragraph{\styleOption{-timed} (default: disabled)}
 %------------------------------------------------------------
 Add a timing information to each shell output of the program.
 
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-tree} (default: false)}
+\paragraph{\styleOption{-tree} (default: disabled)}
 %------------------------------------------------------------
 Does not test if a new state was already encountered.
 To be set \emph{only} if the reachability graph is a tree with all states being different (otherwise analysis may loop).

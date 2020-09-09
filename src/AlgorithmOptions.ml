@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2020/08/25
- * Last modified     : 2020/09/08
+ * Last modified     : 2020/09/09
  *
  ************************************************************)
 
@@ -164,7 +164,7 @@ let merge_needed = inclusion_needed
 (* Exploration order *)
 (*------------------------------------------------------------*)
 
-let default_exploration_order property =
+(*let default_exploration_order property =
 	match property.property with
 	(*------------------------------------------------------------*)
 	(* Non-nested CTL *)
@@ -279,7 +279,7 @@ let default_exploration_order property =
 	(* Parametric reachability preservation *)
 	| PRPC _
 		-> Exploration_layer_BFS
-
+*)
 
 
 

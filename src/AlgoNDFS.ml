@@ -10,7 +10,7 @@
  * File contributors : Laure Petrucci, Jaco van de Pol,
  *						Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2020/08/27
+ * Last modified     : 2020/09/09
  *
  ************************************************************)
 
@@ -594,10 +594,10 @@ class algoNDFS =
 			);
 
 			begin
-			match options#exploration_order with
+			match options#layer, options#subsumption with
 
-				| Exploration_NDFS ->
-(* NDFS without subsumption *)
+				(* No layer, no subsumption *)
+				| false, false ->
 					(* set up the dfs blue calls *)
 					let enterdfs (astate : State.state_index) : bool =
 						if (property.synthesis_type = Synthesis &&
@@ -703,8 +703,8 @@ class algoNDFS =
 						with TerminateAnalysis -> ());
 					print_message Verbose_low("Finished the calls")
 
-				| Exploration_NDFS_sub ->
-(* NDFS with subsumption *)
+				(* No layer, subsumption *)
+				| false, true ->
 					(* set up the dfs blue calls *)
 					let enterdfs (astate : State.state_index) : bool =
 						if (property.synthesis_type = Synthesis && check_parameter_leq_list astate) then (
@@ -815,8 +815,8 @@ class algoNDFS =
 						with TerminateAnalysis -> ());
 					print_message Verbose_low("Finished the calls")
 
-				| Exploration_layer_NDFS ->
-(* NDFS with layers but no subsumption *)
+				(* Layers, no subsumption *)
+				| true, false ->
 					(* set up the dfs blue calls *)
 					add_pending init_state_index 0;
 					(try (while !pending != [] do
@@ -942,8 +942,8 @@ class algoNDFS =
 								with TerminateAnalysis -> ());
 					print_message Verbose_low("Finished the calls")
 
-				| Exploration_layer_NDFS_sub ->
-(* NDFS with layers and subsumption *)
+				(* Layers, subsumption *)
+				| true, true ->
 					(* set up the dfs blue calls *)
 					add_pending init_state_index 0;
 					(try (while !pending != [] do
@@ -1070,7 +1070,7 @@ class algoNDFS =
 								with TerminateAnalysis -> ());
 					print_message Verbose_low("Finished the calls")
 
-	                       | _ -> raise (InternalError ("Unknown exploration order in NDFS"))
+(* 	                       | _ -> raise (InternalError ("Unknown exploration order in NDFS")) *)
 			end;
 
 			(* combine the linear constraints *)

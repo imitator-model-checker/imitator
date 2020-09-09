@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/09/08
+ * Last modified     : 2020/09/09
  *
  ************************************************************)
 
@@ -258,7 +258,7 @@ begin match property_option, options#imitator_mode with
 end;
 
 
-(*------------------------------------------------------------*)
+(*(*------------------------------------------------------------*)
 (* Exploration order *)
 (*------------------------------------------------------------*)
 
@@ -288,8 +288,64 @@ begin match property_option, options#imitator_mode with
 
 	| None, _ -> ()
 
+end;*)
+
+
+
+(*------------------------------------------------------------*)
+(* Layer (for NDFS) *)
+(*------------------------------------------------------------*)
+
+(* Get value depending on the algorithm *)
+begin match property_option, options#imitator_mode with
+	| Some property, _ ->
+		(*** HACK: hard-coded directly ***)
+		let layer_needed = match property.property with
+			| Accepting_cycle -> Some false
+			| _ -> None
+		in
+		(* Update if not yet set *)
+		if not options#is_set_layer then (
+			(* Print some information *)
+			print_message Verbose_high ("Case option `-layer` not set");
+			
+			match layer_needed with
+			| Some b -> options#set_layer (b);
+			| None -> ()
+		);
+
+	(* Otherwise: leave unchanged *)
+	| _, State_space_computation
+	| None, _ -> ()
 end;
 
+
+(*------------------------------------------------------------*)
+(* Subsumption (for NDFS) *)
+(*------------------------------------------------------------*)
+
+(* Get value depending on the algorithm *)
+begin match property_option, options#imitator_mode with
+	| Some property, _ ->
+		(*** HACK: hard-coded directly ***)
+		let subsumption_needed = match property.property with
+			| Accepting_cycle -> Some true
+			| _ -> None
+		in
+		(* Update if not yet set *)
+		if not options#is_set_subsumption then (
+			(* Print some information *)
+			print_message Verbose_high ("Case option `-subsumption` not set");
+			
+			match subsumption_needed with
+			| Some b -> options#set_subsumption (b);
+			| None -> ()
+		);
+
+	(* Otherwise: leave unchanged *)
+	| _, State_space_computation
+	| None, _ -> ()
+end;
 
 
 (*------------------------------------------------------------*)

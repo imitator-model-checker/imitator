@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2020/09/08
+ * Last modified: 2020/09/09
  *
  ************************************************************)
 
@@ -58,6 +58,10 @@ class imitator_options :
 
 		method inclusion2 : bool
 
+		method layer : bool
+		method is_set_layer : bool
+		method set_layer : bool -> unit
+
 		method merge : bool
 		method is_set_merge : bool
 		method set_merge : bool -> unit
@@ -96,6 +100,11 @@ class imitator_options :
 		method property_file_name : string option
 		method states_limit : int option
 		method statistics : bool
+		
+		method subsumption : bool
+		method is_set_subsumption : bool
+		method set_subsumption : bool -> unit
+
 		method sync_auto_detection : bool
 		method time_limit : int option
 		method timed_mode : bool

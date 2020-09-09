@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/09/08
+ * Last modified     : 2020/09/09
  *
  ************************************************************)
 
@@ -117,7 +117,8 @@ class imitator_options =
 		val mutable imitator_mode = Syntax_check
 
 		(* Exploration order *)
-		val mutable exploration_order : AbstractAlgorithm.exploration_order option = None
+		(*** HACK: hard-coded default value ***)
+		val mutable exploration_order : AbstractAlgorithm.exploration_order option = Some Exploration_layer_BFS
 
 		(* Best worst-case clock value for EFsynthminpq *)
 (* 		val mutable best_worst_case = ref false *)
@@ -163,6 +164,9 @@ class imitator_options =
 
 		(* Double inclusion mode *)
 		val mutable inclusion2 = false
+
+		(* Layered NDFS *)
+		val mutable layer : bool option = None
 
 		(* Merging states on the fly *)
 		val mutable merge : bool option = None
@@ -218,6 +222,9 @@ class imitator_options =
 		(* Step for NDFS *)
 		val mutable step = NumConst.one
 
+		(* Subsumption for NDFS *)
+		val mutable subsumption : bool option = None
+
 		(* autodetect sync actions *)
 		val mutable sync_auto_detection = false
 
@@ -226,6 +233,7 @@ class imitator_options =
 
 		(* tree mode: never compare inclusion or equality of any new state with a former state *)
 		val mutable tree = false
+
 
 		(************************************************************)
 		(* Class methods *)
@@ -262,6 +270,10 @@ class imitator_options =
 		method set_inclusion b = inclusion <- Some b
 
 		method inclusion2 = inclusion2
+
+		method layer = value_of_option "layer" layer
+		method is_set_layer = layer <> None
+		method set_layer b = layer <- Some b
 
 		method merge = value_of_option "merge" merge
 		method is_set_merge = merge <> None
@@ -300,6 +312,11 @@ class imitator_options =
 		method property_file_name = property_file_name
 		method states_limit = states_limit
 		method statistics = statistics
+
+		method subsumption = value_of_option "subsumption" subsumption
+		method is_set_subsumption = subsumption <> None
+		method set_subsumption b = subsumption <- Some b
+
 		method sync_auto_detection = sync_auto_detection
 		method time_limit = time_limit
 		method timed_mode = timed_mode
@@ -311,6 +328,7 @@ class imitator_options =
 		method recompute_green = recompute_green
 		method pending_order = pending_order
 		method step = step
+
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Set methods *)
@@ -412,14 +430,14 @@ class imitator_options =
 					exploration_order <- Some Exploration_queue_BFS_RS
 				else if order = "queueBFSPRIOR" then
 					exploration_order <- Some Exploration_queue_BFS_PRIOR
-				else if order = "NDFS" then
+(*				else if order = "NDFS" then
 					exploration_order <- Some Exploration_NDFS
 				else if order = "NDFSsub" then
 					exploration_order <- Some Exploration_NDFS_sub
 				else if order = "layerNDFS" then
 					exploration_order <- Some Exploration_layer_NDFS
 				else if order = "layerNDFSsub" then
-					exploration_order <- Some Exploration_layer_NDFS_sub
+					exploration_order <- Some Exploration_layer_NDFS_sub*)
 				else(
 					(*** HACK: print header now ***)
 					print_header_string();
@@ -609,12 +627,12 @@ class imitator_options =
         Use `queueBFS` for a queue-based breadth-first search. [ANP17]
         Use `queueBFSRS` for a queue-based breadth-first search with ranking system. [ANP17]
         Use `queueBFSPRIOR` for a priority-based BFS with ranking system. [ANP17]
-        Use `NDFS` for standard NDFS. [NPvdP18]
-        Use `NDFSsub` for standard NDFS with subsumption. [NPvdP18]
-        Use `layerNDFS` for layered NDFS. [NPvdP18]
-        Use `layerNDFSsub` for layered NDFS with subsumption. [NPvdP18] (default for NDFS algorithms)
         Default: layerBFS.
 				");
+(*        Use `NDFS` for standard NDFS. [NPvdP18]
+        Use `NDFSsub` for standard NDFS with subsumption. [NPvdP18]
+        Use `layerNDFS` for layered NDFS. [NPvdP18]
+        Use `layerNDFSsub` for layered NDFS with subsumption. [NPvdP18] (default for NDFS algorithms)*)
 
 				("-graphics-source", Unit (fun () -> with_graphics_source <- true), " Keep file(s) used for generating graphical output. Default: disabled.");
 
@@ -654,11 +672,16 @@ class imitator_options =
 				("-inclusion-bidir", Unit (fun () -> inclusion2 <- true), " Consider a bidirectional inclusion of symbolic zones (new <= old or old <= new) instead of the equality when checking for a fixpoint. Default: disabled");
 
 				(*** NOTE: no check that they are both called… If so, behavior is unspecified ***)
+				("-layer", Unit (fun () -> layer <- Some true), " Layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled");
+				("-no-layer", Unit (fun () -> layer <- Some false), " No layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled");
+
+				(*** NOTE: no check that they are both called… If so, behavior is unspecified ***)
 				("-merge", Unit (fun () -> merge <- Some true), " Use the merging technique of [AFS13]. Default: depending on the algorithm");
 				("-no-merge", Unit (fun () -> merge <- Some false), " Do not use the merging technique of [AFS13]. Default: depending on the algorithm");
 
 (*				("-merge-before", Unit (fun () -> merge_before <- true) , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: disabled (disable)");*)
 
+				(*** NOTE: no check that they are both called… If so, behavior is unspecified ***)
 				("-mergeq", Unit (fun () -> mergeq <- Some true; merge <- Some true), "Use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm");
 				("-no-mergeq", Unit (fun () -> mergeq <- Some false), " Do not use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm");
 
@@ -706,6 +729,10 @@ class imitator_options =
 				("-statistics", Unit (fun _ -> statistics <- true; Statistics.enable_all_counters()), " Print info on number of calls to PPL, and other statistics. Default: disabled");
 
 				("-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step <- (NumConst.numconst_of_string i)), " Step for NDFS iterative deepening. Default: 1.");
+
+				(*** NOTE: no check that they are both called… If so, behavior is unspecified ***)
+				("-subsumption", Unit (fun () -> subsumption <- Some true), " NDFS with subsumption (for NDFS algorithms only) [NPvdP18]. Default: enabled");
+				("-no-subsumption", Unit (fun () -> subsumption <- Some false), " NDFS without subsumption (for NDFS algorithms only) [NPvdP18]. Default: enabled");
 
 				("-sync-auto-detect", Unit (fun () -> sync_auto_detection <- true), " Detect automatically the synchronized actions in each automaton. Default: disabled (consider the actions declared by the user)");
 
@@ -845,8 +872,7 @@ class imitator_options =
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Check compatibility between options *)
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-
+			
 			if acyclic && tree then (
 				acyclic <- false;
 				print_warning ("Ayclic mode is set although tree mode is already set. Only tree mode will be considered.");
@@ -1011,12 +1037,12 @@ class imitator_options =
 			;
 
 
-			if branch_and_bound then
+(*			if branch_and_bound then
 				print_message Verbose_standard ("Considering branch and bound (work in progress!!).")
 			else
-				print_message Verbose_medium ("No branch and bound mode (default).");
-
-
+				print_message Verbose_medium ("No branch and bound mode (default).");*)
+				
+				
 			(* OPTIONS *)
 			begin match mergeq with
 			| Some true ->
@@ -1060,6 +1086,20 @@ class imitator_options =
 				print_message Verbose_standard ("No initial zone prune in collecting NDFS.")
 			else
 				print_message Verbose_medium ("Pruning of initial constraint in NDFS (default)."); *)
+
+			begin
+			match layer with
+			| None			-> print_message Verbose_high ("Option `-layer` for NDFS unspecified.")
+			| Some true		-> print_message Verbose_experiments ("Option `-layer` for NDFS enabled.")
+			| Some false	-> print_message Verbose_experiments ("Option `-layer` for NDFS disabled.")
+			end;
+
+			begin
+			match subsumption with
+			| None			-> print_message Verbose_high ("Option `-subsumption` for NDFS unspecified.")
+			| Some true		-> print_message Verbose_experiments ("Option `-subsumption` for NDFS enabled.")
+			| Some false	-> print_message Verbose_experiments ("Option `-subsumption` for NDFS disabled.")
+			end;
 
 			if no_lookahead then
 				print_message Verbose_standard ("No lookahead in NDFS search.")
