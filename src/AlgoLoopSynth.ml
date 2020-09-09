@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2020/03/27
+ * Last modified     : 2020/09/09
  *
  ************************************************************)
 
@@ -290,9 +290,18 @@ class algoLoopSynth =
 			| Some status -> status
 		in
 
-		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
-		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
+		let soundness =
+			(* EXACT if termination is normal and no inclusion nor merge *)
+			if termination_status = Regular_termination && not options#inclusion && not options#merge then Constraint_exact
+			(* UNDER-APPROXIMATED if termination is NOT normal AND neither merging nor state inclusion was used *)
+			else if termination_status <> Regular_termination && not options#inclusion && not options#merge then Constraint_maybe_under
+			(* OVER-APPROXIMATED if termination is normal AND merging or state inclusion was used *)
+			else if termination_status = Regular_termination && (options#inclusion || options#merge) then Constraint_maybe_over
+			(* UNKNOWN otherwise *)
+			else Constraint_maybe_invalid
+		in
 
+			
 		(* Return the result *)
 		Single_synthesis_result
 		{
