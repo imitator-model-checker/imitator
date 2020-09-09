@@ -4548,6 +4548,65 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: witness vs. synthesis (witness)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-loop-witness.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: witness vs. synthesis (synthesis)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-loop.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with 1 real loop',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
 		'options'    : '',
@@ -4686,6 +4745,65 @@ Constraint nature                       : good
 	} # end test case
 	#------------------------------------------------------------
 	
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: witness vs. synthesis (witness)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-accloop-witness.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: witness vs. synthesis (synthesis)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-accloop.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
 	,
 
 	#------------------------------------------------------------

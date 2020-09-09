@@ -49,6 +49,7 @@ loc l2: invariant True
 	when x < 5 & p < x do {x := 0} sync a goto ltarget;
 
 loc ltarget: invariant True
+	when True sync a goto ltarget;
 
 end (* pta *)
 
