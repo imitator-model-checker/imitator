@@ -221,12 +221,16 @@ class algoLoopSynth =
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when found a loop (after updating the state space) *)
+	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_loop_constraint state_index scc loop_px_constraint =
 		(* Process loop constraint if accepting loop *)
 		if self#is_accepting scc then(
 			(* Just update the loop constraint *)
 			self#update_loop_constraint loop_px_constraint;
+			
+			(* If witness: raise TerminateAnalysis! *)
+			self#terminate_if_witness;
 		);
 		
 		(* The end *)
