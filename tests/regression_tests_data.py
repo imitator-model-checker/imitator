@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/09/04
+# Last modified     : 2020/09/09
 #************************************************************
 
 
@@ -9692,7 +9692,104 @@ Constraint nature                       : good/bad
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Simple example without merging',
+		'purpose'    : 'Testing state space + merging on a trivial example: -no-merge',
+		'input_files': ['exActionsNonPreserved.imi'],
+		'options'    : '-mode statespace -states-description -no-merge',
+		'expectations' : [
+			{'file': 'exActionsNonPreserved-statespace.states' , 'content' : """
+		*/
+
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: L1 ==>
+& 2 >= x
+& p >= 0
+& x >= 0
+
+  Projection onto the parameters:
+   p >= 0
+
+  /************************************************************/
+  STATE 1:
+  pta: L2 ==>
+& p >= 0
+& x >= 2
+& 2 >= p
+
+  Projection onto the parameters:
+   2 >= p
+& p >= 0
+
+  /************************************************************/
+  STATE 2:
+  pta: L2 ==>
+& p >= 2
+& x >= 2
+
+  Projection onto the parameters:
+   p >= 2
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_1 via "a"
+  s_0 -> s_2 via "b"
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Testing state space + merging on a trivial example: -merge',
+		'input_files': ['exActionsNonPreserved.imi'],
+		'options'    : '-mode statespace -states-description -merge',
+		'expectations' : [
+			{'file': 'exActionsNonPreserved-statespace.states' , 'content' : """
+		*/
+
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: L1 ==>
+& 2 >= x
+& p >= 0
+& x >= 0
+
+  Projection onto the parameters:
+   p >= 0
+
+  /************************************************************/
+  STATE 2:
+  pta: L2 ==> 
+& p >= 0
+& x >= 2
+
+  Projection onto the parameters:
+   p >= 0
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_2 via "b"
+  s_0 -> s_2 via "a"
+  """ 
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Testing state space + merging on a trivial example: testing no option = -no-merge',
 		'input_files': ['exActionsNonPreserved.imi'],
 		'options'    : '-mode statespace -states-description',
 		'expectations' : [
@@ -9741,48 +9838,9 @@ Constraint nature                       : good/bad
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	
 	,
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Simple example with merging',
-		'input_files': ['exActionsNonPreserved.imi'],
-		'options'    : '-mode statespace -states-description -merge',
-		'expectations' : [
-			{'file': 'exActionsNonPreserved-statespace.states' , 'content' : """
-		*/
-
-  DESCRIPTION OF THE STATES
-
-  /************************************************************/
-  INITIAL
-  STATE 0:
-  pta: L1 ==>
-& 2 >= x
-& p >= 0
-& x >= 0
-
-  Projection onto the parameters:
-   p >= 0
-
-  /************************************************************/
-  STATE 1:
-  pta: L2 ==>
-& p >= 0
-& x >= 2
-
-  Projection onto the parameters:
-   p >= 0
-
-  DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_1 via "a"
-  s_0 -> s_1 via "b"
-  """
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-	,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test the model printer',
