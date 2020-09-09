@@ -4682,9 +4682,9 @@ Constraint nature                       : good
 		'expectations' : [
 			{'file': 'testNDFS-2.res' , 'content' : """
 BEGIN CONSTRAINT
-  p = 1
-OR
  p = 2
+OR
+  p = 1
 OR
   p = 4
 END CONSTRAINT
