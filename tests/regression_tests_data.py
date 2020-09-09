@@ -1556,6 +1556,252 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EF on toy example: witness',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-witness.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EF on toy example: synthesis',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EF on toy example: synthesis (syntax without parentheses)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-noparen.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EF on toy example: synthesis (-output-prefix)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
+		'options'    : '-output-prefix mypersonnalizedprefix',
+		'expectations' : [
+			{'file': 'mypersonnalizedprefix.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EF on toy example: synthesis (explicit -merge -inclusion)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
+		'options'    : '-merge -inclusion',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EF on toy example: synthesis (-no-merge)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
+		'options'    : '-no-merge',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EF on toy example: synthesis (-no-merge -no-inclusion)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
+		'options'    : '-no-merge -no-inclusion',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	# TODO: merge without inclusion (for now: loops forever)
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EF on toy example: synthesis (-no-merge -no-inclusion -no-inclusion-test-in-EF)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
+		'options'    : '-no-merge -no-inclusion -no-inclusion-test-in-EF',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test EF with basic unreachability property for Fischer:3',
 		'input_files': ['F3.imi', 'F3.imiprop'],
 		'options'    : '',

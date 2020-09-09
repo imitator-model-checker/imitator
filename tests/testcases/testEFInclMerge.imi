@@ -1,0 +1,83 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy case study to test the insensitivity of the result of EFsynth to -merge / -inclusion options
+ *
+ * Description     : Toy case study to test the insensitivity of the result of EFsynth to -merge / -inclusion options
+ * Correctness     : EF ltarget
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/09/09
+ * Last modified   : 2020/09/09
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant True
+	(*** NOTE: one can only take a FINITE number of times this transition (and only for p=1) ***)
+	when x = 1 & x = p & y < 10 do {x := 0} goto l1;
+	
+	(* Immediately go to ltarget for p=2046 (to test #witness) *)
+	when x = 2046 & x = p goto ltarget;
+
+	(*** NOTE: this is to test the merge ***)
+	when x <= 2 do {y := 0} goto l2;
+	when x > 2 do {y := 0} goto l2;
+
+loc l2: invariant True
+	when x < 5 & p < x do {x := 0} sync a goto ltarget;
+
+loc ltarget: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x >= 0
+	& y >= 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
