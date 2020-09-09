@@ -897,7 +897,7 @@ class imitator_options =
 
 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-			(* Check compatibility between options *)
+			(* Check compatibility between options: ignoring some options *)
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			
 			if acyclic && tree then (
@@ -912,10 +912,12 @@ class imitator_options =
 			in
 
 			(* No cart options if not in cartography *)
-			(*** TODO : reintroduce ***)
-			if not is_cartography && carto_tiles_limit <> None then print_warning ("A maximum number of tiles has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
-			if not is_cartography && carto_time_limit <> None then print_warning ("A maximum computation for the cartography has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
-			if not is_cartography && output_tiles_files then print_warning ("The option `-tiles-files` outputs files for each iteration of a cartography algorithm, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
+			if not is_cartography && carto_tiles_limit <> None then
+				print_warning ("A maximum number of tiles has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
+			if not is_cartography && carto_time_limit <> None then
+				print_warning ("A maximum computation for the cartography has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
+			if not is_cartography && output_tiles_files then
+				print_warning ("The option `-tiles-files` outputs files for each iteration of a cartography algorithm, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
 
 
 			(* No no_leq_test_in_ef if not EF *)
@@ -928,14 +930,20 @@ class imitator_options =
 			(*** TODO: check compatibility for #witness and #synthesis wrt the various algorithms ***)
 
 
+			if imitator_mode <> Algorithm && draw_cart then print_warning ("The `-draw-cart` option is reserved for synthesis algorithms. Ignored.");
+
+			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			(* Check compatibility between options: options with threats on the result correctness *)
+			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			
 			(*** TODO ***)
 (*			(* AF is not safe with incl or merging *)
 			if imitator_mode = AF_synthesis then(
 				if !inclusion then print_warning "The state inclusion option may not preserve the correctness of AFsynth.";
 				if !merge || !mergeq then print_warning "The merging option may not preserve the correctness of AFsynth.";
 			);*)
-
-			if imitator_mode <> Algorithm && draw_cart then print_warning ("The `-draw-cart` option is reserved for synthesis algorithms. Ignored.");
+			
+			(*** TODO: incl / merge for IM, cycles… ***)
 
 
 
@@ -1254,9 +1262,9 @@ class imitator_options =
 			end;
 
 			if graphical_state_space <> Graphical_state_space_none then
-				print_message Verbose_standard ("The trace set(s) will be generated in a graphical mode.")
+				print_message Verbose_standard ("The state space(s) will be generated in a graphical mode.")
 			else
-				print_message Verbose_medium ("No graphical output for trace set(s) (default).")
+				print_message Verbose_medium ("No graphical output for state space(s) (default).")
 			;
 
 			if states_description then
