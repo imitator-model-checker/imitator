@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/06
- * Last modified     : 2020/04/16
+ * Last modified     : 2020/09/09
  *
  ************************************************************)
 
@@ -75,7 +75,7 @@ class algoIM (pval : PVal.pval) =
 		(* Create the result *)
 		let p_constraint = LinearConstraint.p_true_constraint() in
 		
-		self#print_algo_message Verbose_low ("Performing the intersection of all p-constraints...");
+		self#print_algo_message Verbose_low ("Performing the intersection of all p-constraints…");
 		
 		(* Iterate on all states *)
 (* 		val iterate_on_states : (state_index -> abstract_state -> unit) -> state_space -> unit *)
@@ -109,11 +109,11 @@ class algoIM (pval : PVal.pval) =
 			else statespace_nature
 		in
 		
-		(* Constraint is... *)
+		(* Constraint is… *)
 		let soundness = 
 			(* EXACT if termination is normal and no random selections and no incl and no merge were performed *)
 			if termination_status = Regular_termination && nb_random_selections = 0 && not options#inclusion && not options#merge then Constraint_exact
-			(* UNDER-APPROXIMATED if termination is normal and random selections and no incl and no merge were performed  were performed *)
+			(* UNDER-APPROXIMATED if termination is normal and random selections and no incl and no merge were performed *)
 			else if termination_status = Regular_termination && nb_random_selections > 0 && not options#inclusion && not options#merge then Constraint_maybe_under
 			(* OVER-APPROXIMATED if no random selections were performed and either termination is not normal or merging was used or state inclusion was used *)
 			else if nb_random_selections = 0 && (termination_status <> Regular_termination || options#inclusion || options#merge) then Constraint_maybe_over
@@ -124,6 +124,7 @@ class algoIM (pval : PVal.pval) =
 		let result = match statespace_nature with
 			(*** NOTE: if a safety property is defined and if the state space reaches some unsafe states, then the constraint is considered as bad.
 	In any other case (safe state space, or no safety property defined), the constraint nature is considered as good. ***)
+			(*** NOTE: this can probably not happen anymore as there is no property in the model (ÉA, 2020/09/09) ***)
 			| StateSpace.Good | StateSpace.Unknown -> Good_constraint(LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint, soundness)
 			| StateSpace.Bad -> Bad_constraint(LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint, soundness)
 		in
