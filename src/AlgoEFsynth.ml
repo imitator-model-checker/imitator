@@ -392,15 +392,7 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 			self#process_counterexample new_state_index;
 			
 			(* 2. If #witness mode, then we will throw an exception *)
-			let property = Input.get_property() in
-			if property.synthesis_type = Witness then(
-				(* Update termination status *)
-				(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
-				self#print_algo_message Verbose_standard "Target state found! Terminating…";
-				termination_status <- Some Target_found;
-			
-				raise TerminateAnalysis;
-			);
+			self#terminate_if_witness;
 		); (* end if target *)
 
 

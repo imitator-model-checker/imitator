@@ -2795,6 +2795,21 @@ class virtual algoStateBased =
 	(** Check whether the algorithm should terminate at the end of some post, independently of the number of states to be processed (e.g., if the constraint is already true or false) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual check_termination_at_post_n : bool
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Check whether the property is a #witness mode; if so, raise TerminateAnalysis *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method terminate_if_witness : unit =
+		let property = Input.get_property() in
+		if property.synthesis_type = Witness then(
+			(* Update termination status *)
+			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
+			self#print_algo_message Verbose_standard "Target state found! Terminating…";
+			termination_status <- Some Target_found;
+		
+			raise TerminateAnalysis;
+		)
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
