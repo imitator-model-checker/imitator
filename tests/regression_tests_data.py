@@ -5233,7 +5233,7 @@ Number of computed states     : 3
 	{
 		'purpose'    : 'Test PDFC: very basic example (false result)',
 		'input_files': ['PDFC6.imi', 'PDFC-deadlockfree.imiprop'],
-		'options'    : ' -states-description -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'options'    : ' -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'PDFC6.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5378,7 +5378,7 @@ Constraint nature             : good
 	{
 		'purpose'    : 'Test PDFC: example with early termination due to false constraint',
 		'input_files': ['flipflop.imi', 'flipflop-deadlockfree.imiprop'],
-		'options'    : ' -states-description -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5400,7 +5400,7 @@ Constraint nature             : good
 	{
 		'purpose'    : 'Test PDFC: example with basic backward under-approximation',
 		'input_files': ['PDFC8.imi', 'PDFC-deadlockfree.imiprop'],
-		'options'    : '-depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'options'    : '-depth-limit 5 -no-var-autoremove',
 		'expectations' : [
 			{'file': 'PDFC8.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5501,9 +5501,6 @@ Constraint soundness          : possible under-approximation <good|bad> possible
 Termination                   : depth limit (1 successor unexplored)
 Constraint nature             : good/bad
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 8
-Number of computed states     : 9
 """
 			} #end result file
 		] # end expectations
