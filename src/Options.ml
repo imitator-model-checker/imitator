@@ -370,8 +370,6 @@ class imitator_options =
 			let rec set_verbose_mode_ref verbose_mode =
 				let mode = try verbose_mode_of_string verbose_mode
 					with Not_found ->
-					(*** HACK: print header now ***)
-					print_header_string();
 					print_error ("The verbose mode `" ^ verbose_mode ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
@@ -423,8 +421,6 @@ class imitator_options =
 					let number = String.sub mode 6 (String.length mode - 6) in
 					distribution_mode <- Distributed_ms_random (int_of_string number)
 				) with Failure _ | Invalid_argument _-> (
-					(*** HACK: print header now ***)
-					print_header_string();
 					print_error ("The distribution mode `" ^ mode ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
@@ -450,8 +446,6 @@ class imitator_options =
 				else if order = "layerNDFSsub" then
 					exploration_order <- Some Exploration_layer_NDFS_sub*)
 				else(
-					(*** HACK: print header now ***)
-					print_header_string();
 					print_error ("The exploration order `" ^ order ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
@@ -469,8 +463,6 @@ class imitator_options =
 				else if order = "zone" then
 					pending_order <- Pending_zone
 				else(
-					(*** HACK: print header now ***)
-					print_header_string();
 					print_error ("The exploration order `" ^ order ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
@@ -492,8 +484,6 @@ class imitator_options =
 				else if heuristic = "iter100" then
 					merge_heuristic <- Merge_iter100
 				else(
-					(*** HACK: print header now ***)
-					print_header_string();
 					print_error ("The merge heuristic `" ^ heuristic ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
@@ -508,8 +498,6 @@ class imitator_options =
 				else if mode = "full" then
 					graphical_state_space <- Graphical_state_space_verbose
 				else(
-					(*** HACK: print header now ***)
-					print_header_string();
 					print_error ("The value of `-draw-statespace` `" ^ mode ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
@@ -519,8 +507,6 @@ class imitator_options =
 
 			(* Very useful option (April fool 2017) *)
 			and call_romeo () =
-				(*** HACK: print header now ***)
-				print_header_string();
 				print_message Verbose_standard "Calling the Romeo model-checker instead of the IMITATOR core engine.";
 				print_warning "option -romeo is still very experimental";
 				print_warning "Romeo is a very unreliable tool to be manipulated with the highest care.";
@@ -596,8 +582,6 @@ class imitator_options =
 				("-check-point", Unit (fun () -> check_point <- true), " For IM, check at each iteration whether the accumulated parameter constraint is restricted to pi0 (warning! very costly). Default: disabled.");
 
 				("-contributors", Unit (fun _ ->
-					(*** HACK: print header now ***)
-					print_header_string();
 					print_contributors();
 					exit 0), " Print contributors and exit.");
 
@@ -755,8 +739,6 @@ class imitator_options =
 				("-verbose", String set_verbose_mode_ref, " Print more or less information. Can be set to `mute`, `warnings`, `standard`, `experiments`, `low`, `medium`, `high`, `total`. Default: `standard`");
 
 				("-version", Unit (fun _ ->
-					(*** HACK: print header now ***)
-					print_header_string();
 					print_string ("GitHub branch and hash: " ^ ImitatorUtilities.git_branch_and_full_hash);
 					print_newline();
 					exit 0), " Print version number and exit.");
@@ -795,8 +777,6 @@ class imitator_options =
 
 			(* Case no file *)
 			if nb_args < 1 then(
-				(*** HACK: print header now ***)
-				print_header_string();
 				print_error ("Please give a file name for the model.");
 				Arg.usage speclist usage_msg;
 				abort_program ();
@@ -805,8 +785,6 @@ class imitator_options =
 
 			(* Case no property file, although it is needed *)
 			if nb_args = 1 && (property_needed imitator_mode = Second_file_required) then(
-				(*** HACK: print header now ***)
-				print_header_string();
 				print_error ("Please give a file name for the property.");
 				Arg.usage speclist usage_msg;
 				abort_program ();

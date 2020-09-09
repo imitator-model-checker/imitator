@@ -76,6 +76,15 @@ let counter_main_algorithm = create_time_counter_and_register "main algorithm" A
 begin
 try(
 
+(************************************************************)
+(************************************************************)
+(* Print startup message *)
+(************************************************************)
+(************************************************************)
+
+(* Print header *)
+print_header_string();
+
 
 (************************************************************)
 (* Get the arguments *)
@@ -96,6 +105,10 @@ Input.set_options options;
 (* options_parsing_counter#stop; *)
 
 
+(* Print date *)
+print_message Verbose_experiments ("Analysis time: " ^ (now()) ^ "\n");
+
+
 (************************************************************)
 (* Record backtrace if verbose > standard *)
 (************************************************************)
@@ -103,18 +116,6 @@ if verbose_mode_greater Verbose_low then(
 	Printexc.record_backtrace true;
 );
 
-
-(************************************************************)
-(************************************************************)
-(* Print startup message *)
-(************************************************************)
-(************************************************************)
-
-(* Print header *)
-print_header_string();
-
-(* Print date *)
-print_message Verbose_experiments ("Analysis time: " ^ (now()) ^ "\n");
 
 
 (************************************************************)
