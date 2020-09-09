@@ -291,15 +291,6 @@ class algoIMK (pval : PVal.pval) =
 				(* This may be a loop *)
 				self#process_looping_state new_state_index;
 	
-	(*** TODO: add back ***)
-(*			(* ELSE : add to SLAST if mode union *)
-				if options#union then (
-					print_message Verbose_low ("\nMode union: adding a looping state to SLast.");
-					(* Adding the state *)
-					(*** TODO / TO CHECK: what if new_state_index is already in slast?!! ***)
-					slast := new_state_index :: !slast;
-				);*)
-	
 			end; (* end else if added *)
 			
 			
