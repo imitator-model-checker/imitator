@@ -4296,7 +4296,327 @@ Constraint nature                       : good
 
 	,
 
-# NOTE: test removed since there is no accepting loop synthesis + observer patterns as of version 3
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with 1 real loop',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (over-approx with -inclusion)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
+		'options'    : '-inclusion',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+OR
+  p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (over-approx with -inclusion -merge)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
+		'options'    : '-inclusion -merge',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+OR
+  p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	# TODO: do -merge only! (so far does not terminate)
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (under-approx with -depth-limit)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
+		'options'    : '-depth-limit 3',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : depth limit (2 successors unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (invalid with -inclusion -depth-limit)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
+		'options'    : '-inclusion -depth-limit 3',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possibly invalid
+Termination                             : depth limit (1 successor unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (syntax variant without parentheses)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop-noparen.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (over-approx with -inclusion)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
+		'options'    : '-inclusion',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+OR
+  p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (over-approx with -inclusion -merge)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
+		'options'    : '-inclusion -merge',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+OR
+  p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	# TODO: do -merge only! (so far does not terminate)
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (under-approx with -depth-limit)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
+		'options'    : '-depth-limit 3',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : depth limit (2 successors unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (invalid with -inclusion -depth-limit)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
+		'options'    : '-inclusion -depth-limit 3',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possibly invalid
+Termination                             : depth limit (1 successor unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+
+	# NOTE: test removed since there is no accepting loop synthesis + observer patterns as of version 3
 	##------------------------------------------------------------
 	#{
 		#'purpose'    : 'Test AccLoopSynth: flipflop (no loop)',
