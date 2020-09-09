@@ -261,7 +261,7 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 	method process_counterexample target_state_index =
-	(* Only process counterexample if needed *)
+		(* Only process counterexample if needed *)
 		let property = Input.get_property() in
 		if property.synthesis_type = Witness then(
 			
@@ -276,16 +276,6 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 					(* Generate the graphics *)
 					Graphics.draw_concrete_run concrete_run (options#files_prefix ^ "_signals");
 			end;
-		);
-		
-		(* If the state is a target state (i.e., process_state returned false) AND the option to stop the analysis as soon as a counterexample is found is activated, then we will throw an exception *)
-		if property.synthesis_type = Witness (*&& !is_target*) then(
-			(* Update termination status *)
-			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
-			self#print_algo_message Verbose_standard "Target state found! Terminating…";
-			termination_status <- Some Target_found;
-		
-			raise TerminateAnalysis;
 		);
 		
 		(* The end *)
@@ -395,9 +385,25 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 		self#add_transition_to_state_space (source_state_index, combined_transition, new_state_index) addition_result;
 
 		
-		(* Construct counterexample if requested by the algorithm (and stop termination by raising a TerminateAnalysis exception, if needed) *)
-		if !is_target then
+		
+		(* Case accepting state *)
+		if !is_target then(
+			(* 1. Construct counterexample if requested by the algorithm (and stop termination by raising a TerminateAnalysis exception, if needed) *)
 			self#process_counterexample new_state_index;
+			
+			(* 2. If #witness mode, then we will throw an exception *)
+			let property = Input.get_property() in
+			if property.synthesis_type = Witness then(
+				(* Update termination status *)
+				(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
+				self#print_algo_message Verbose_standard "Target state found! Terminating…";
+				termination_status <- Some Target_found;
+			
+				raise TerminateAnalysis;
+			);
+		); (* end if target *)
+
+
 		
 		(* Statistics *)
 		counter_add_a_new_state#stop;
