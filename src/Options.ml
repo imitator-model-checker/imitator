@@ -41,6 +41,17 @@ let value_of_option option_name (a : 'a option) : 'a = match a with
 	| None -> raise (InternalError ("Option `" ^ option_name ^ "` is not yet initialized."))
 
 
+(* Warn if an option is already set; this helps to detect cases when both `-inclusion` and `-no-inclusion` are called, for example *)
+let warn_if_set option_value option_name =
+	if option_value <> None then(
+		print_warning ("Option `" ^ option_name ^ "` may be set to two different values. Behavior is unspecified.");
+	)
+
+
+
+(************************************************************)
+(* The class *)
+(************************************************************)
 
 class imitator_options =
 	object (self)
@@ -665,25 +676,21 @@ class imitator_options =
 				), "Translate the model into an Uppaal model, and exit without performing any analysis. Some features may not be translated, see user manual. Defaut : disabled");
 
 
-				(*** NOTE: no check that they are both called… If so, behavior is unspecified ***)
-				("-inclusion", Unit (fun () -> inclusion <- Some true), " Consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: depending on the algorithm");
-				("-no-inclusion", Unit (fun () -> inclusion <- Some false), " Do not consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: depending on the algorithm");
+				("-inclusion", Unit (fun () -> warn_if_set inclusion "inclusion"; inclusion <- Some true), " Consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: depending on the algorithm");
+				("-no-inclusion", Unit (fun () -> warn_if_set inclusion "inclusion"; inclusion <- Some false), " Do not consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: depending on the algorithm");
 
 				("-inclusion-bidir", Unit (fun () -> inclusion2 <- true), " Consider a bidirectional inclusion of symbolic zones (new <= old or old <= new) instead of the equality when checking for a fixpoint. Default: disabled");
 
-				(*** NOTE: no check that they are both called… If so, behavior is unspecified ***)
-				("-layer", Unit (fun () -> layer <- Some true), " Layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled");
-				("-no-layer", Unit (fun () -> layer <- Some false), " No layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled");
+				("-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some true), " Layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled");
+				("-no-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some false), " No layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled");
 
-				(*** NOTE: no check that they are both called… If so, behavior is unspecified ***)
-				("-merge", Unit (fun () -> merge <- Some true), " Use the merging technique of [AFS13]. Default: depending on the algorithm");
-				("-no-merge", Unit (fun () -> merge <- Some false), " Do not use the merging technique of [AFS13]. Default: depending on the algorithm");
+				("-merge", Unit (fun () -> warn_if_set merge "merge"; merge <- Some true), " Use the merging technique of [AFS13]. Default: depending on the algorithm");
+				("-no-merge", Unit (fun () -> warn_if_set merge "merge"; merge <- Some false), " Do not use the merging technique of [AFS13]. Default: depending on the algorithm");
 
 (*				("-merge-before", Unit (fun () -> merge_before <- true) , " Use the merging technique of [AFS13] but merges states before pi0-compatibility test (EXPERIMENTAL). Default: disabled (disable)");*)
 
-				(*** NOTE: no check that they are both called… If so, behavior is unspecified ***)
-				("-mergeq", Unit (fun () -> mergeq <- Some true; merge <- Some true), "Use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm");
-				("-no-mergeq", Unit (fun () -> mergeq <- Some false), " Do not use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm");
+				("-mergeq", Unit (fun () -> warn_if_set mergeq "mergeq"; mergeq <- Some true; merge <- Some true), "Use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm");
+				("-no-mergeq", Unit (fun () -> warn_if_set mergeq "mergeq"; mergeq <- Some false), " Do not use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm");
 
 				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Options are `always`, `targetseen`, `pq10`, `pq100`, `iter10`, `iter100`. Default: `iter10`.");
 
@@ -730,9 +737,8 @@ class imitator_options =
 
 				("-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step <- (NumConst.numconst_of_string i)), " Step for NDFS iterative deepening. Default: 1.");
 
-				(*** NOTE: no check that they are both called… If so, behavior is unspecified ***)
-				("-subsumption", Unit (fun () -> subsumption <- Some true), " NDFS with subsumption (for NDFS algorithms only) [NPvdP18]. Default: enabled");
-				("-no-subsumption", Unit (fun () -> subsumption <- Some false), " NDFS without subsumption (for NDFS algorithms only) [NPvdP18]. Default: enabled");
+				("-subsumption", Unit (fun () -> warn_if_set subsumption "subsumption"; subsumption <- Some true), " NDFS with subsumption (for NDFS algorithms only) [NPvdP18]. Default: enabled");
+				("-no-subsumption", Unit (fun () -> warn_if_set subsumption "subsumption"; subsumption <- Some false), " NDFS without subsumption (for NDFS algorithms only) [NPvdP18]. Default: enabled");
 
 				("-sync-auto-detect", Unit (fun () -> sync_auto_detection <- true), " Detect automatically the synchronized actions in each automaton. Default: disabled (consider the actions declared by the user)");
 
