@@ -1246,7 +1246,7 @@ class imitator_options =
 
 			begin match output_result with
 			| Some true ->
-				print_message Verbose_standard ("The result will be written to a file.")
+				print_message Verbose_low ("The result will be written to a file.")
 			| Some false ->
 				print_message Verbose_low ("No result written into a file.")
 			| None ->

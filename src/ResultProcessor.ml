@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2020/08/28
+ * Last modified     : 2020/09/09
  *
  ************************************************************)
 
@@ -362,7 +362,7 @@ let export_to_file_noresult file_name =
 	
 	(* Write to file *)
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
 	
 	(* Stop counter *)
 	counter#stop;
@@ -414,7 +414,7 @@ let export_to_file_deprecated_efsynth_result file_name (deprecated_efsynth_resul
 	
 	(* Write to file *)
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
 	
 	(* Stop counter *)
 	counter#stop;
@@ -471,7 +471,7 @@ let export_to_file_single_synthesis_result file_name (single_synthesis_result : 
 	
 	(* Write to file *)
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
 	
 	(* Stop counter *)
 	counter#stop;
@@ -521,7 +521,7 @@ let export_to_file_multiple_synthesis_result file_name (multiple_synthesis_resul
 	
 	(* Write to file *)
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
 	
 	(* Stop counter *)
 	counter#stop;
@@ -589,7 +589,7 @@ let export_to_file_point_based_result file_name (point_based_result : Result.poi
 	
 	(* Write to file *)
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
 	
 	(* Stop counter *)
 	counter#stop;
@@ -718,7 +718,7 @@ let export_to_file_cartography_result file_name (cartography_result : Result.car
 	in
 	(* Write to file *)
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
 	
 	(* Stop counter *)
 	counter#stop;
@@ -795,7 +795,7 @@ let export_to_file_runs_exhibition_result file_name (result : Result.runs_exhibi
 	
 	(* Write to file *)
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
 	
 	(* Stop counter *)
 	counter#stop;
