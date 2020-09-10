@@ -5301,6 +5301,34 @@ Constraint nature                       : good
 		# Test since               : 2020/09/10
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
+		'purpose'    : 'Test only `accepting` keyword: EF',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-EFnopred.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/10
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
 		'purpose'    : 'Test both `accepting` keyword and state predicate in property: Loop',
 		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop.imiprop'],
 		'options'    : '-cycleAlgo Loop',
@@ -5332,6 +5360,34 @@ Constraint nature                       : good
 		# Test since               : 2020/09/10
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
+		'purpose'    : 'Test only `accepting` keyword: Loop',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred.imiprop'],
+		'options'    : '-cycleAlgo Loop',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/10
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
 		'purpose'    : 'Test both `accepting` keyword and state predicate in property: NDFS',
 		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop.imiprop'],
 		'options'    : '',
@@ -5342,6 +5398,34 @@ BEGIN CONSTRAINT
  OR
    p = 2
 
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/10
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test only `accepting` keyword: NDFS',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
 END CONSTRAINT
 
 ------------------------------------------------------------
