@@ -277,6 +277,8 @@ state_predicate:
 	| state_predicate_term { Parsed_state_predicate_term $1 }
 	| CT_TRUE { Parsed_state_predicate_true }
 	| CT_FALSE { Parsed_state_predicate_false }
+	/* Also allow empty state predicate, equivalent to False */
+	| { Parsed_state_predicate_false }
 ;
 
 state_predicate_term:
