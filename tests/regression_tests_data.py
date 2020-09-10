@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/09/09
+# Last modified     : 2020/09/10
 #************************************************************
 
 
@@ -4751,11 +4751,11 @@ Constraint nature                       : good
 	{
 		# Test version             : 1
 		# Test since               : 2020/09/09
-		# Last modified            : 2020/09/09
+		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: witness vs. synthesis (witness)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-accloop-witness.imiprop'],
-		'options'    : '',
+		'options'    : '-cycleAlgo Loop',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4779,11 +4779,11 @@ Constraint nature                       : good
 	{
 		# Test version             : 1
 		# Test since               : 2020/09/09
-		# Last modified            : 2020/09/09
+		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: witness vs. synthesis (synthesis)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-accloop.imiprop'],
-		'options'    : '',
+		'options'    : '-cycleAlgo Loop',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4810,11 +4810,11 @@ Constraint nature                       : good
 	{
 		# Test version             : 1
 		# Test since               : 2020/09/09
-		# Last modified            : 2020/09/09
+		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
-		'options'    : '',
+		'options'    : '-cycleAlgo Loop',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4838,11 +4838,11 @@ Constraint nature                       : good
 	{
 		# Test version             : 1
 		# Test since               : 2020/09/09
-		# Last modified            : 2020/09/09
+		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (syntax variant without parentheses)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop-noparen.imiprop'],
-		'options'    : '',
+		'options'    : '-cycleAlgo Loop',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4866,11 +4866,11 @@ Constraint nature                       : good
 	{
 		# Test version             : 1
 		# Test since               : 2020/09/09
-		# Last modified            : 2020/09/09
+		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (over-approx with -inclusion)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
-		'options'    : '-inclusion',
+		'options'    : '-cycleAlgo Loop -inclusion',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4896,11 +4896,11 @@ Constraint nature                       : good
 	{
 		# Test version             : 1
 		# Test since               : 2020/09/09
-		# Last modified            : 2020/09/09
+		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (over-approx with -inclusion -merge)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
-		'options'    : '-inclusion -merge',
+		'options'    : '-cycleAlgo Loop -inclusion -merge',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4928,11 +4928,11 @@ Constraint nature                       : good
 	{
 		# Test version             : 1
 		# Test since               : 2020/09/09
-		# Last modified            : 2020/09/09
+		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (under-approx with -depth-limit)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
-		'options'    : '-depth-limit 3',
+		'options'    : '-cycleAlgo Loop -depth-limit 3',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4956,11 +4956,11 @@ Constraint nature                       : good
 	{
 		# Test version             : 1
 		# Test since               : 2020/09/09
-		# Last modified            : 2020/09/09
+		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (invalid with -inclusion -depth-limit)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
-		'options'    : '-inclusion -depth-limit 3',
+		'options'    : '-cycleAlgo Loop -inclusion -depth-limit 3',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5012,10 +5012,11 @@ Constraint nature                       : good
 	{
 		# Test version             : 2
 		# Test since               : 2019/07/22
+		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example 1',
 		'input_files': ['testNDFS-1.imi', 'testNDFS1-accloop.imiprop'],
-		'options'    : '-mode AccLoopSynth ',
+		'options'    : '-cycleAlgo Loop',
 		'expectations' : [
 			{'file': 'testNDFS-1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5039,10 +5040,11 @@ Constraint nature                       : good
 	{
 		# Test version             : 2
 		# Test since               : 2019/07/22
+		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example 2',
 		'input_files': ['testNDFS-2.imi', 'testNDFS2-accloop.imiprop'],
-		'options'    : '',
+		'options'    : '-cycleAlgo Loop',
 		'expectations' : [
 			{'file': 'testNDFS-2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5070,10 +5072,11 @@ Constraint nature                       : good
 	{
 		# Test version             : 2
 		# Test since               : 2019/07/22
+		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example 3 (accepting for all valuations)',
 		'input_files': ['PDFC5.imi', 'PDFC5-accloop.imiprop'],
-		'options'    : '',
+		'options'    : '-cycleAlgo Loop',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5098,8 +5101,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test AccLoopSynthNDFS emptiness: flipflop (no loop)',
-		'input_files': ['flipflop.imi', 'flipflop-loop-witness.imiprop'],
-		'options'    : '-explOrder NDFS',
+		'input_files': ['flipflop.imi', 'flipflop-accloop-witness.imiprop'],
+		'options'    : '-cycleAlgo NDFS',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5121,9 +5124,9 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test AccLoopSynthNDFS with complete constraint: flipflop (no loop)',
-		'input_files': ['flipflop.imi', 'flipflop-loop-witness.imiprop'],
-		'options'    : '-explOrder NDFSsub ',
+		'purpose'    : 'Test AccLoopSynthNDFS synthesis: flipflop (no loop)',
+		'input_files': ['flipflop.imi', 'flipflop-accloop.imiprop'],
+		'options'    : '-cycleAlgo NDFS',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5147,11 +5150,11 @@ Constraint nature                       : good
 	{
 		# Test version             : 2
 		# Test since               : 2019/07/22
-		# Last modified            : 2020/08/27
+		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynthNDFS emptiness: simple example 1',
-		'input_files': ['testNDFS-1.imi', 'testNDFS-loop-witness.imiprop'],
-		'options'    : '-explOrder NDFS',
+		'input_files': ['testNDFS-1.imi', 'testNDFS1-accloop-witness.imiprop'],
+		'options'    : '-cycleAlgo NDFS',
 		'expectations' : [
 			{'file': 'testNDFS-1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5175,11 +5178,11 @@ Constraint nature                       : good
 	{
 		# Test version             : 2
 		# Test since               : 2019/08/01
-		# Last modified            : 2020/08/27
+		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynthNDFS synthesis: simple example 1',
-		'input_files': ['testNDFS-1.imi', 'testNDFS-loop.imiprop'],
-		'options'    : '-explOrder NDFSsub ',
+		'input_files': ['testNDFS-1.imi', 'testNDFS1-accloop.imiprop'],
+		'options'    : '-cycleAlgo NDFS',
 		'expectations' : [
 			{'file': 'testNDFS-1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5203,15 +5206,17 @@ Constraint nature                       : good
 	{
 		# Test version             : 2
 		# Test since               : 2019/08/01
-		# Last modified            : 2020/08/27
+		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynthNDFS emptiness: simple example 2',
-		'input_files': ['testNDFS-2.imi', 'testNDFS-loop-witness.imiprop'],
-		'options'    : '-explOrder NDFS',
+		'input_files': ['testNDFS-2.imi', 'testNDFS2-accloop-witness.imiprop'],
+		'options'    : '-cycleAlgo NDFS',
 		'expectations' : [
-			{'file': 'testNDFS-2.res' , 'content' : """
+			{'file': 'testNDFS-2.res' , 'content' :
+# NOTE: p = 4 would also be an acceptable result
+"""
 BEGIN CONSTRAINT
- p = 4
+ p = 2
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -5231,19 +5236,19 @@ Constraint nature                       : good
 	{
 		# Test version             : 2
 		# Test since               : 2019/08/01
-		# Last modified            : 2020/08/27
+		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test AccLoopSynthNDFS: simple example 2 with complete constraint',
-		'input_files': ['testNDFS-2.imi', 'testNDFS-loop.imiprop'],
-		'options'    : '-explOrder NDFSsub ',
+		'purpose'    : 'Test AccLoopSynthNDFS synthesis: simple example 2',
+		'input_files': ['testNDFS-2.imi', 'testNDFS2-accloop.imiprop'],
+		'options'    : '-cycleAlgo NDFS',
 		'expectations' : [
 			{'file': 'testNDFS-2.res' , 'content' : """
 BEGIN CONSTRAINT
-   p = 2
- OR
-   p = 1
- OR
-   p = 4
+ p = 4
+OR
+  p = 1
+OR
+  p = 2
 END CONSTRAINT
 
 ------------------------------------------------------------

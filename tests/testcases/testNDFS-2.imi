@@ -12,7 +12,7 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2019/07/22
- * Last modified   : 2020/04/01
+ * Last modified   : 2020/09/10
  *
  * IMITATOR version: 3
  ************************************************************)
@@ -40,13 +40,13 @@ loc l1: invariant True
 	when x = 2 & x = p sync a do {x := 5} goto l3;
 	when x = 4 & x = p sync a do {x := 0} goto l4;
 
-accepting loc l2: invariant True
+(*accepting*) loc l2: invariant True
 	when x = 1 goto l2;
 
-accepting loc l3: invariant True
+(*accepting*) loc l3: invariant True
 	when x > 0 goto l3;
 
-accepting urgent loc l4: invariant True
+(*accepting*) urgent loc l4: invariant True
 	when x = 0 goto l2;
 	when x = 0 goto l3;
 

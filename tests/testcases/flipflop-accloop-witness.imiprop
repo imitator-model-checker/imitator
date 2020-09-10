@@ -1,0 +1,20 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Modeling of the circuit described in "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella)
+ *
+ * Description     : A flip-flop circuit made of 4 gates. No discrete variable.
+ * Correctness     : TODO
+ * Source          : "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella); Design Automation Conference, 2004. Proceedings of the ASP-DAC 2004. Asia and South Pacific; DOI: 10.1109/ASPDAC.2004.1337668
+ * Author          : Roberto Clariso and Jordi Cortadella
+ * Modeling        : Étienne André and Laurent Fribourg
+ * Input by        : Étienne André
+ *
+ * Created         : 2020/09/10
+ * Last modified   : 2020/09/10
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+(*** NOTE: this property is always wrong, as there is no loop on location `Input4` ***)
+property := #witness inf_cycle_through(loc[input] = Input4);
