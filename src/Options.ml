@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/09/09
+ * Last modified     : 2020/09/10
  *
  ************************************************************)
 
@@ -152,6 +152,9 @@ class imitator_options =
 		(* Check whether the accumulated constraint is restricted to pi0 *)
 		val mutable check_point = false
 
+		(* Algorithm for cycle detection in cycle synthesis algorithms *)
+		val mutable cycle_algorithm : AbstractAlgorithm.cycle_algorithm option = None
+
 		(* Limit the depth in a BFS algorithm or in NDFS for early backtracking *)
 		val mutable depth_limit = None
 
@@ -261,6 +264,12 @@ class imitator_options =
 		method carto_time_limit = carto_time_limit
 		method check_ippta = check_ippta
 		method check_point = check_point
+		
+		(* Algorithm for cycle detection in cycle synthesis algorithms *)
+		method cycle_algorithm : AbstractAlgorithm.cycle_algorithm = value_of_option "cycle_algorithm" cycle_algorithm
+		method is_set_cycle_algorithm : bool = cycle_algorithm <> None
+		method set_cycle_algorithm (new_cycle_algorithm : AbstractAlgorithm.cycle_algorithm) = cycle_algorithm <- Some new_cycle_algorithm
+
 		method depth_limit = depth_limit
 		method depth_init = depth_init
 		method distribution_mode = distribution_mode
@@ -376,15 +385,18 @@ class imitator_options =
 					exit(1); in
 				set_verbose_mode mode
 
-			(* Get the mode *)
-			and set_mode mode =
-				(* Case: simple syntax check *)
-				if mode = "checksyntax" then
-					imitator_mode <- Syntax_check
 
-				(* Case: state space exploration *)
-				else if mode = "statespace" then
-					imitator_mode <- State_space_computation
+			and set_cycle_algorithm cycle_algorithm_string =
+				if cycle_algorithm_string = "Loop" then
+					cycle_algorithm <- Some AbstractAlgorithm.Loop
+				else if cycle_algorithm_string = "NDFS" then
+					cycle_algorithm <- Some AbstractAlgorithm.NDFS
+				else(
+					print_error ("The value of `-cycleAlgo` `" ^ cycle_algorithm_string ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
 
 
 			(* Get the distributed mode *)
@@ -451,6 +463,18 @@ class imitator_options =
 					abort_program ();
 					exit(1);
 				)
+
+
+			(* Get the mode *)
+			and set_mode mode =
+				(* Case: simple syntax check *)
+				if mode = "checksyntax" then
+					imitator_mode <- Syntax_check
+
+				(* Case: state space exploration *)
+				else if mode = "statespace" then
+					imitator_mode <- State_space_computation
+
 
 			and set_pending_order order =
 				(*  *)
@@ -589,6 +613,11 @@ class imitator_options =
 				("-contributors", Unit (fun _ ->
 					print_contributors();
 					exit 0), " Print contributors and exit.
+				");
+
+				("-cycleAlgo", String set_cycle_algorithm, " Algorithm for loop synthesis.
+        Use `Loop` for BFS with a variant of Tarjan's strongly connected components algorithm.
+        Use `NDFS` for NDFS algorithms [NPvdP18] (default).
 				");
 
 				("-depth-limit", Int (fun i -> depth_limit <- Some i), " Limits the depth of the exploration of the state space. Default: no limit.

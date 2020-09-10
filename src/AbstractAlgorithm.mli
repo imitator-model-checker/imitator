@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/18
- * Last modified     : 2020/09/09
+ * Last modified     : 2020/09/10
  *
  ************************************************************)
 
@@ -130,6 +130,13 @@ type graphical_state_space =
 	| Graphical_state_space_normal
 	(* State space with state numbers, locations, constraints and parameter constraints *)
 	| Graphical_state_space_verbose
+
+
+type cycle_algorithm =
+	(* Standard BFS algorithm using a variant of Tarjan's strongly connected components algorithm *)
+	| Loop
+	(* NDFS based algorithm [NPvdP18] *)
+	| NDFS
 
 
 (************************************************************)

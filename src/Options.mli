@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2020/09/09
+ * Last modified: 2020/09/10
  *
  ************************************************************)
 
@@ -37,6 +37,12 @@ class imitator_options :
 		method carto_time_limit : int option
 		method check_ippta : bool
 		method check_point : bool
+		
+		(* Algorithm for cycle detection in cycle synthesis algorithms *)
+		method cycle_algorithm : AbstractAlgorithm.cycle_algorithm
+		method is_set_cycle_algorithm : bool
+		method set_cycle_algorithm : AbstractAlgorithm.cycle_algorithm -> unit
+
 		method depth_limit : int option
 		method depth_init : int option
 		method distribution_mode : distribution_mode
