@@ -5266,6 +5266,138 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2020/09/10
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test both `accepting` keyword and state predicate in property: EF',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-EF.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
+ OR
+   p = 4
+
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/10
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test both `accepting` keyword and state predicate in property: Loop',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop.imiprop'],
+		'options'    : '-cycleAlgo Loop',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
+ OR
+   p = 4
+
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/10
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test both `accepting` keyword and state predicate in property: NDFS',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 4
+ OR
+   p = 2
+
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/10
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test both `accepting` keyword and state predicate in property: PRPC',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-PRPC.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2 > p
+& p >= 0
+OR
+  4 > p
+& p > 2
+OR
+  p > 4
+<good|bad>
+ p = 2
+OR
+  p = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact <good|bad> exact
+Termination                             : regular termination
+Constraint nature                       : good/bad
+
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test NZCUB: flip-flop (no loop)',
 		'input_files': ['flipflop.imi', 'flipflop-NZCUB.imiprop'],
 		'options'    : '',
