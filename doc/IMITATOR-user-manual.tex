@@ -601,6 +601,8 @@ The property syntax is as follows:\footnote{%
 where \styleIMI{state\_predicate} is a state predicate, for example of the form \styleIMI{loc[AUTOMATON] = LOCATION}, where \styleIMI{AUTOMATON} is an automaton name, and \styleIMI{LOCATION} is a location name.
 State predicates allow conjunction, disjunction and the use of global discrete variables (see \cref{section:grammar-property} for details).
 
+
+
 The algorithm \EFsynth{} implemented in \imitator{} is a basic breadth-first procedure, close to the one described in \cite{JLR15}.
 Of course, the EF-emptiness problem being undecidable~\cite{AHV93}, the analysis is not guaranteed to terminate.
 
@@ -620,6 +622,18 @@ output the state space in a graphical form (option \styleOption{-draw-statespace
 output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}),
 or
 output the text description of all states (option \styleOption{-states-description}).
+
+
+%------------------------------------------------------------
+\begin{remark}
+	For all reachability/safety algorithms (including cycle synthesis), one can also use the \styleIMI{accepting} keyword in the model (in front of a location, see grammar in \cref{section:grammar:model}).
+	In that case, the semantics of the acceptance of a state is as follows: ``either at least one of the locations is accepting (thanks to the \styleIMI{accepting} keyword), or the state matches the \styleIMI{state\_predicate} in the property.
+	
+	The presence of the \styleIMI{accepting} keyword can be seen as a ``hack'' to make property writing easier in some cases.
+\end{remark}
+%------------------------------------------------------------
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Safety}\label{ss:mode:EF}
@@ -2202,7 +2216,7 @@ Furthermore, the names of the sets of locations of various \IPTA{} are not-neces
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Grammar of the model}
+\section{Grammar of the model}\label{section:grammar:model}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The \imitator{} input model is described by the following grammar.
