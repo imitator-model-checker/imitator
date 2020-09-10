@@ -9,7 +9,7 @@
  * 
  * File contributors : Vincent Bloemen, Étienne André
  * Created           : 2018/10/08
- * Last modified     : 2020/08/27
+ * Last modified     : 2020/09/10
  *
  ************************************************************)
 
@@ -378,7 +378,7 @@ class algoEFtminQueue (state_predicate : AbstractProperty.state_predicate) =
 		
 		(* Check the state_predicate *)
 
-		State.match_state_predicate state_predicate state
+		State.is_accepting_or_match_state_predicate state_predicate state
    
 
 

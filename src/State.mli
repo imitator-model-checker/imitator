@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2016/05/04
- * Last modified     : 2019/12/10
+ * Last modified     : 2020/09/10
  *
  ************************************************************)
 
@@ -50,9 +50,13 @@ type abstract_state = {
 (************************************************************)
 
 (* Shortcut, the function is actually called on global locations *)
-val match_state_predicate : AbstractProperty.state_predicate -> state -> bool
+(* val match_state_predicate : AbstractProperty.state_predicate -> state -> bool *)
 
-val is_accepting : state -> bool
+val is_one_location_accepting : state -> bool
+
+(* Tests whether a state is either accepting (i.e., at least one location is accepting using the `accepting` keyword) OR matches `state_predicate` *)
+val is_accepting_or_match_state_predicate : AbstractProperty.state_predicate -> state -> bool
+
 
 (************************************************************)
 (************************************************************)

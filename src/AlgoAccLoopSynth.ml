@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/17
- * Last modified     : 2020/08/24
+ * Last modified     : 2020/09/10
  *
  ************************************************************)
 
@@ -55,7 +55,7 @@ class algoAccLoopSynth (state_predicate : AbstractProperty.state_predicate) =
 	method is_accepting scc =
 		(* Accepting if at least one state in the SCC matches the state predicate *)
 		List.exists (fun state_index -> 
-			State.match_state_predicate state_predicate (StateSpace.get_state state_space state_index)
+			State.is_accepting_or_match_state_predicate state_predicate (StateSpace.get_state state_space state_index)
 		) scc
 
 

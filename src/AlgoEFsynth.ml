@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2020/04/03
+ * Last modified     : 2020/09/10
  *
  ************************************************************)
 
@@ -121,7 +121,7 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 		
 		let to_be_added =
 			(* Check whether the current location matches one of the unreachable global locations *)
-			if State.match_state_predicate state_predicate state then(
+			if State.is_accepting_or_match_state_predicate state_predicate state then(
 			
 				(* Print some information *)
 				if verbose_mode_greater Verbose_medium then(

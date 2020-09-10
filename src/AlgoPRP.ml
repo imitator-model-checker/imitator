@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/11
- * Last modified     : 2020/04/16
+ * Last modified     : 2020/09/10
  *
  ************************************************************)
 
@@ -94,7 +94,7 @@ class algoPRP (pval : PVal.pval) (state_predicate : AbstractProperty.state_predi
 		
 		let to_be_added = 
 			(* Check whether the current location matches one of the unreachable global locations *)
-			if State.match_state_predicate state_predicate state then(
+			if State.is_accepting_or_match_state_predicate state_predicate state then(
 			
 				(* Project onto the parameters *)
 				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state.px_constraint in

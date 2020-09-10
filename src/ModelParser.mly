@@ -307,9 +307,9 @@ location:
 loc_urgency_accepting_type:
 	| CT_LOC { Parsed_location_nonurgent, Parsed_location_nonaccepting }
 	| CT_URGENT CT_LOC { Parsed_location_urgent, Parsed_location_nonaccepting }
-	| CT_ACCEPTING CT_LOC { print_warning ("The syntax `accepting loc` is deprecated; it is not taken into consideration."); Parsed_location_nonurgent, Parsed_location_accepting }
-	| CT_URGENT CT_ACCEPTING CT_LOC { print_warning ("The syntax `accepting loc` is deprecated; it is not taken into consideration."); Parsed_location_urgent, Parsed_location_accepting }
-	| CT_ACCEPTING CT_URGENT CT_LOC { print_warning ("The syntax `accepting loc` is deprecated; it is not taken into consideration."); Parsed_location_urgent, Parsed_location_accepting }
+	| CT_ACCEPTING CT_LOC { (Parsed_location_nonurgent, Parsed_location_accepting) }
+	| CT_URGENT CT_ACCEPTING CT_LOC { (Parsed_location_urgent, Parsed_location_accepting) }
+	| CT_ACCEPTING CT_URGENT CT_LOC { (Parsed_location_urgent, Parsed_location_accepting) }
 ;
 
 location_name_and_costs:

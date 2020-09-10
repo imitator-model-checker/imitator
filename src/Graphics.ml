@@ -1305,7 +1305,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 			match state_predicate_option with
 			| Some state_predicate ->
 				(* Check whether the current state matches ths state predicate *)
-				State.match_state_predicate state_predicate state
+				State.is_accepting_or_match_state_predicate state_predicate state
 			| None -> false
 
 			end

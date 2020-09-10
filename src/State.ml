@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2016/05/04
- * Last modified     : 2019/12/10
+ * Last modified     : 2020/09/10
  *
  ************************************************************)
 
@@ -63,7 +63,7 @@ let match_state_predicate state_predicate state =
 (*------------------------------------------------*)
 (* Check whether the global location is accepting *)
 (*------------------------------------------------*)
-let is_accepting (state : state) =
+let is_one_location_accepting (state : state) =
 	
 	(* Retrieve the model *)
 	let model = Input.get_model() in
@@ -77,6 +77,13 @@ let is_accepting (state : state) =
 	Array.iteri (fun automaton_index location_index ->
 		result := !result || model.is_accepting automaton_index location_index) locations;
 	!result
+
+
+(* Tests whether a state is either accepting (i.e., at least one location is accepting using the `accepting` keyword) OR matches `state_predicate` *)
+let is_accepting_or_match_state_predicate (state_predicate : AbstractProperty.state_predicate) (state : state) : bool =
+	(is_one_location_accepting state)
+	||
+	(match_state_predicate state_predicate state)
 
 
 
