@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/09/08
+ * Last modified     : 2020/09/10
 *****************************************************************)
 
 {
@@ -69,6 +69,7 @@ rule token = parse
 	| "inf_cycle_through" { CT_INFCYCLETHROUGH }
 	| "infcyclethrough"{ CT_INFCYCLETHROUGH }
  	| "inversemethod"  { CT_TRACEPRESERVATION }
+	| "loop_through"   { CT_INFCYCLETHROUGH }
 	| "loopthrough"    { CT_INFCYCLETHROUGH }
 	| "NZ_inf_cycle_check" { CT_NZINFCYCLECHECK }
 	| "NZ_inf_cycle_CUB" { CT_NZINFCYCLECUB }
