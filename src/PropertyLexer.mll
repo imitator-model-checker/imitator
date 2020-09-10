@@ -62,8 +62,8 @@ rule token = parse
  	| "IMconvex"       { CT_IMCONVEX }
  	| "IMK"            { CT_IMK }
  	| "IMunion"        { CT_IMUNION }
-	| "inf_acc_cycle"  { CT_INFACCCYCLE }
-	| "infacccycle"    { CT_INFACCCYCLE }
+(* 	| "inf_acc_cycle"  { CT_INFACCCYCLE } *)
+(* 	| "infacccycle"    { CT_INFACCCYCLE } *)
 	| "inf_cycle"      { CT_INFCYCLE }
 	| "infcycle"       { CT_INFCYCLE }
 	| "inf_cycle_through" { CT_INFCYCLETHROUGH }
