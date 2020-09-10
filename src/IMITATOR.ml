@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/09/09
+ * Last modified     : 2020/09/10
  *
  ************************************************************)
 
@@ -292,6 +292,37 @@ begin match property_option, options#imitator_mode with
 end;*)
 
 
+(*------------------------------------------------------------*)
+(* Cycle Algorithm *)
+(*------------------------------------------------------------*)
+
+(* Get value depending on the algorithm *)
+begin match property_option, options#imitator_mode with
+	| Some property, _
+		->
+		(*** HACK: hard-coded directly ***)
+		let default_cycle_algorithm_option = match property.property with
+			| Cycle_through _ -> Some NDFS
+			| _ -> None
+		in
+
+		(* Update if not yet set *)
+		if not options#is_set_cycle_algorithm then(
+			match default_cycle_algorithm_option with
+			| Some default_cycle_algorithm ->
+				(* Print some information *)
+				print_message Verbose_high ("Set option `-cycleAlgo` to its default value: `" ^ (AbstractAlgorithm.string_of_cycle_algorithm default_cycle_algorithm) ^ "`");
+
+				options#set_cycle_algorithm (default_cycle_algorithm);
+			| None -> ()
+		);
+
+	| _, State_space_computation
+	| None, _ ->
+		(* Nothing to do *)
+		()
+end;
+
 
 (*------------------------------------------------------------*)
 (* Layer (for NDFS) *)
@@ -302,7 +333,7 @@ begin match property_option, options#imitator_mode with
 	| Some property, _ ->
 		(*** HACK: hard-coded directly ***)
 		let layer_needed = match property.property with
-			| Accepting_cycle -> Some false
+			| Cycle_through _ when options#cycle_algorithm = NDFS -> Some false
 			| _ -> None
 		in
 		(* Update if not yet set *)
@@ -330,7 +361,7 @@ begin match property_option, options#imitator_mode with
 	| Some property, _ ->
 		(*** HACK: hard-coded directly ***)
 		let subsumption_needed = match property.property with
-			| Accepting_cycle -> Some true
+			| Cycle_through _ when options#cycle_algorithm = NDFS -> Some true
 			| _ -> None
 		in
 		(* Update if not yet set *)
@@ -652,16 +683,21 @@ match options#imitator_mode with
 				let myalgo :> AlgoGeneric.algoGeneric = new AlgoLoopSynth.algoLoopSynth in myalgo
 
 				
-			(** Accepting infinite-run (cycle) using an accepting keyword *)
+(*			(** Accepting infinite-run (cycle) using an accepting keyword *)
 			| Accepting_cycle ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS in myalgo*)
 
 
-			(** Accepting infinite-run (cycle) through a state predicate *)
+			(** Accepting infinite-run (cycle) using an accepting keyword *)
 			| Cycle_through state_predicate ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth state_predicate in myalgo
+				let myalgo :> AlgoGeneric.algoGeneric =
+				(* Branching depending on the requested algorithm *)
+				match options#cycle_algorithm with
+					| AbstractAlgorithm.Loop -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth state_predicate in myalgo
+					| AbstractAlgorithm.NDFS -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS state_predicate in myalgo
+				in myalgo
 
-
+			
 			(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
  			| NZCycle_check ->
 				(* Important! Set the no-time-elapsing option *)

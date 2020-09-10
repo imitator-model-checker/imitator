@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/08/31
+ * Last modified     : 2020/09/10
  *
  ************************************************************/
 
@@ -229,7 +229,7 @@ prolog:
 initialization:
 	| CT_INITIALLY NAME state_initialization SEMICOLON {
 		(* Print a warning because this syntax is deprecated and not taken into account! *)
-		print_warning ("The syntax 'initially " ^ $2 ^ "' is deprecated and is NOT taken into account. Initial locations must be defined in the initial state definition.");
+		print_warning ("The syntax `initially " ^ $2 ^ "` is deprecated and is NOT taken into account. Initial locations must be defined in the initial state definition.");
 		()
 	}
 ;
@@ -274,7 +274,7 @@ while_or_invariant_or_nothing:
 	/* From 2018/02/22, "while" may be be replaced with invariant */
 	/* From 2019/12, "while" should be be replaced with invariant */
 	| CT_WHILE {
-		print_warning ("The syntax 'while [invariant]' is deprecated; you should use 'invariant [invariant]' instead.");
+		print_warning ("The syntax `while [invariant]` is deprecated; you should use `invariant [invariant]` instead.");
 		()
 		}
 	| CT_INVARIANT {}
@@ -307,9 +307,9 @@ location:
 loc_urgency_accepting_type:
 	| CT_LOC { Parsed_location_nonurgent, Parsed_location_nonaccepting }
 	| CT_URGENT CT_LOC { Parsed_location_urgent, Parsed_location_nonaccepting }
-	| CT_ACCEPTING CT_LOC { Parsed_location_nonurgent, Parsed_location_accepting }
-	| CT_URGENT CT_ACCEPTING CT_LOC { Parsed_location_urgent, Parsed_location_accepting }
-	| CT_ACCEPTING CT_URGENT CT_LOC { Parsed_location_urgent, Parsed_location_accepting }
+	| CT_ACCEPTING CT_LOC { print_warning ("The syntax `accepting loc` is deprecated; it is not taken into consideration."); Parsed_location_nonurgent, Parsed_location_accepting }
+	| CT_URGENT CT_ACCEPTING CT_LOC { print_warning ("The syntax `accepting loc` is deprecated; it is not taken into consideration."); Parsed_location_urgent, Parsed_location_accepting }
+	| CT_ACCEPTING CT_URGENT CT_LOC { print_warning ("The syntax `accepting loc` is deprecated; it is not taken into consideration."); Parsed_location_urgent, Parsed_location_accepting }
 ;
 
 location_name_and_costs:
@@ -319,11 +319,11 @@ location_name_and_costs:
 
 wait_opt:
 	| CT_WAIT {
-			print_warning ("The syntax 'wait' in invariants is deprecated.");
+			print_warning ("The syntax `wait` in invariants is deprecated.");
 		()
 	}
 	| CT_WAIT LBRACE RBRACE {
-			print_warning ("The syntax 'wait {}' in invariants is deprecated.");
+			print_warning ("The syntax `wait {}` in invariants is deprecated.");
 		()
 	}
 	/* Now deprecated and not accepted anymore */

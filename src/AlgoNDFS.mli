@@ -6,10 +6,9 @@
  * 
  * Module description: NDFS algorithms
  * 
- * File contributors : Laure Petrucci, Jaco van de Pol,
- *						Étienne André
+ * File contributors : Laure Petrucci, Jaco van de Pol, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2019/07/05
+ * Last modified     : 2019/09/10
  *
  ************************************************************)
 
@@ -24,7 +23,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoNDFS :
+class algoNDFS : AbstractProperty.state_predicate ->
 	object inherit algoStateBased
 
 		(************************************************************)

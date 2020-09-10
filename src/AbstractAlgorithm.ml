@@ -221,3 +221,7 @@ let string_of_exploration_order (exploration_order : exploration_order) : string
 	(** layerNDFSsub: NDFS with subsumption  and layers [NPvdP18] **)
 	| Exploration_layer_NDFS_sub -> "NDFS with subsumption and layers [NPvdP18]"*)
 
+
+let string_of_cycle_algorithm (cycle_algorithm : cycle_algorithm) : string = match cycle_algorithm with
+	| Loop -> "Loop"
+	| NDFS -> "NDFS"

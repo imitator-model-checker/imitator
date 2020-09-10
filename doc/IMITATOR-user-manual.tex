@@ -780,48 +780,88 @@ output the state space in a graphical form (option \styleOption{-draw-statespace
 or
 output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
 
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Accepting loop}\label{ss:accepting-loop}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one \emph{accepting} cycle, \ie{} an infinite run passing infinitely often by an accepting location.
 
-The property syntax is as follows:
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Accepting loop synthesis}\label{ss:accepting-loop}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one \emph{accepting} cycle, \ie{} an infinite run passing infinitely often by location matching an accepting condition.
+Such accepting conditions are given in the form of a state predicate, \ie{} a conjunction or disjunction of locations and values for discrete variables.
+
+\imitator{} implements two algorithms to this goal:
+\begin{enumerate}
+	\item a basic BFS algorithm using a variant of Tarjan's strongly connected components algorithm (\cref{sss:accepting-loop-BFS}); and
+	\item an NDFS algorithm with several options~\cite{NPP18} (\cref{sss:accepting-loop-NDFS}).
+\end{enumerate}
+
+In both cases, the property syntax is as follows:
 
 \styleIMI{property := \#synth inf\_cycle\_through(state\_predicate);}
 
+The second algorithm (\cref{sss:accepting-loop-NDFS}) is so far the default in \imitator{}; both algorithms have \emph{not} been experimentally compared with each other; this is the subject of future work.
+
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Accepting loop (NDFS)}\label{ss:accepting-loop-NDFS}
+\subsubsection{Accepting loop (BFS + Tarjan)}\label{sss:accepting-loop-BFS}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one accepting cycle.
-This algorithm differs from the one in \cref{ss:accepting-loop} in the sense that this algorithm performs a nested depth-first search (NDFS) exploration until a cycle is found~\cite{NPP18}.
-In addition, this algorithm is (by default) not complete.
 
-The property syntax is as follows:
+This (non-default) algorithm can be called using the following option syntax:
 
-\styleIMI{property := \#synth inf\_acc\_cycle;}
+\styleOption{-cycleAlgo Loop}
 
-However, there are two main differences with \cref{ss:loop,ss:accepting-loop}:
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsubsection{Accepting loop (NDFS)}\label{sss:accepting-loop-NDFS}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+% BEGIN OLD VERSION
+% Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one accepting cycle.
+% This algorithm differs from the one in \cref{sss:accepting-loop-BFS} in the sense that this algorithm performs a nested depth-first search (NDFS) exploration until a cycle is found~\cite{NPP18}.
+% In addition, this algorithm is (by default) not complete.
+% 
+% The property syntax is as follows:
+% 
+% \styleIMI{property := \#synth inf\_acc\_cycle;}
+% 
+% However, there are two main differences with \cref{ss:loop,sss:accepting-loop-BFS}:
+% \begin{enumerate}
+% 	\item accepting locations must be specified using the keyword \styleIMI{accepting} (this keyword is not used by other algorithms\footnote{This comes from the fact that the developers of this algorithm are mainly Jaco Van~de~Pol and Laure~Petrucci, who used a different accepting location system.});
+% 	\item an exploration order may be specified as command line (see below).
+% \end{enumerate}
+% 
+% The command is therefore:
+% 
+% \styleCommand{\binimitator{} model.imi property.imiprop -explOrder NDFS}
+% 
+% Several heuristics can be used, some of them synthesizing all parameter values for which a cycle can be found.
+% These are accessible via the \styleOption{-explOrder} option:
+% 
+% \begin{description}
+% 	\item[\styleOption{-explOrder NDFS}]: use standard NDFS to find an accepting cycle;
+% 	\item[\styleOption{-explOrder NDFSsub}]: standard NDFS with subsumption;
+% 	\item[\styleOption{-explOrder layerNDFS}]: NDFS with layers;
+% 	\item[\styleOption{-explOrder layerNDFSsub}]: NDFS with subsumption and layers (default)	;
+% 	      % 	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
+% 	      % 	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
+% \end{description}
+% END OLD VERSION
+
+This (default) algorithm can be called using the following option syntax:
+
+\styleOption{-cycleAlgo NDFS}
+
+It is also called when no \styleOption{-cycleAlgo} is specified.
+
+Two additional options can be specified (a third one, \styleOption{-pendingOrder}, is explained later):
 \begin{enumerate}
-	\item accepting locations must be specified using the keyword \styleIMI{accepting} (this keyword is not used by other algorithms\footnote{This comes from the fact that the developers of this algorithm are mainly Jaco Van~de~Pol and Laure~Petrucci, who used a different accepting location system.});
-	\item an exploration order may be specified as command line (see below).
+	\item \styleOption{-layer} (or \styleOption{-no-layer}) to enable (or disable) layered NDFS~\cite{NPP18};
+	\item \styleOption{-subsumption} (or \styleOption{-no-subsumption}) to enable (or disable) subsumption~\cite{NPP18}.
 \end{enumerate}
+By default, \styleOption{-layer} is disabled, and \styleOption{-subsumption} is enabled, as experiments showed this is the most efficient setting~\cite{NPP18}.
 
-The command is therefore:
+All combinations of options yield an exact result.
 
-\styleCommand{\binimitator{} model.imi property.imiprop -explOrder NDFS}
 
-Several heuristics can be used, some of them synthesizing all parameter values for which a cycle can be found.
-These are accessible via the \styleOption{-explOrder} option:
 
-\begin{description}
-	\item[\styleOption{-explOrder NDFS}]: use standard NDFS to find an accepting cycle;
-	\item[\styleOption{-explOrder NDFSsub}]: standard NDFS with subsumption;
-	\item[\styleOption{-explOrder layerNDFS}]: NDFS with layers;
-	\item[\styleOption{-explOrder layerNDFSsub}]: NDFS with subsumption and layers (default)	;
-	      % 	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
-	      % 	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
-\end{description}
 
 At each cycle found, \imitator{} outputs its number (when using the synthesis) and
 the node at which the cycle was detected. When it terminates the complete parameter
@@ -855,11 +895,15 @@ list via the \styleOption{-pendingOrder} option:
 \end{description}
 
 
+% TODO: step
+
+
+
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Accepting loop (NDFS) with iterative deepening}\label{ss:accepting-loop-NDFS-iterative}
+\paragraph{Accepting loop (NDFS) with iterative deepening}\label{sss:accepting-loop-NDFS-iterative}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
-The NDFS algorithm described in \cref{ss:accepting-loop-NDFS} with all its options
+The NDFS algorithm described above with all its options
 can also be applied
 in an iterative manner, based on depth limits. Each iteration explores a deeper state
 space, taking advantage of the previous computation. The iterations are applied until
@@ -1638,7 +1682,8 @@ Print the list of contributors and exits.
 %------------------------------------------------------------
 \paragraph{\styleOption{-depth-init <initial\_depth>} (default: none)}
 %------------------------------------------------------------
-Setting \styleOption{-depth-init} allows for running iteratively \styleOption{AccLoopSynthNDFS},
+For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}),
+setting \styleOption{-depth-init} allows for running iteratively NDFS,
 starting with depth limit \styleOption{<initial\_depth>} and increasing this limit
 at each iteration.
 
@@ -1755,9 +1800,10 @@ Dynamic elimination of clocks that are known to not used in the future of the cu
 %------------------------------------------------------------
 \paragraph{\styleOption{-explOrder} } % TODO (default: false)
 %------------------------------------------------------------
-Exploration orders are considered in two frameworks.
+Exploration orders are considered %in two frameworks.
 
-First, for standard reachability analysis (and counterexample analysis, using \styleIMI{\#witness}), and documented in~\cite{ANP17}.
+%First,
+for standard reachability analysis (and counterexample analysis, using \styleIMI{\#witness}), and are documented in~\cite{ANP17}.
 \begin{itemize}
 	\item \styleOption{-explOrder layerBFS}: layer-based breadth-first search (default);
 	\item \styleOption{-explOrder queueBFS}: queue-based breadth-first search;
@@ -1767,16 +1813,16 @@ First, for standard reachability analysis (and counterexample analysis, using \s
 %
 This framework remains relatively experimental.
 
-Second, for accepting loop synthesis with NDFS exploration~\cite{NPP18} (see \cref{ss:accepting-loop-NDFS}).
-In this latter case, the possible values are:
-\begin{itemize}
-\item \styleOption{-explOrder NDFS}: use standard NDFS to find an accepting cycle (default option);
-\item \styleOption{-explOrder NDFSsub}: standard NDFS with subsumption;
-\item \styleOption{-explOrder layerNDFS}: NDFS with layers;
-\item \styleOption{-explOrder layerNDFSsub}: NDFS with subsumption and layers;
-% 	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
-% 	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
-\end{itemize}
+% Second, for accepting loop synthesis with NDFS exploration~\cite{NPP18} (see \cref{sss:accepting-loop-NDFS}).
+% In this latter case, the possible values are:
+% \begin{itemize}
+% \item \styleOption{-explOrder NDFS}: use standard NDFS to find an accepting cycle (default option);
+% \item \styleOption{-explOrder NDFSsub}: standard NDFS with subsumption;
+% \item \styleOption{-explOrder layerNDFS}: NDFS with layers;
+% \item \styleOption{-explOrder layerNDFSsub}: NDFS with subsumption and layers;
+% % 	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
+% % 	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
+% \end{itemize}
 
 
 
@@ -1863,12 +1909,12 @@ It seems that, although less states are computed, this option is \emph{less} eff
 %------------------------------------------------------------
 \paragraph{\styleOption{-layer} (default: disabled)}
 %------------------------------------------------------------
-For NDFS algorithms, consider layered NDFS~\cite{NPP18}.
+For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}), consider layered NDFS~\cite{NPP18}.
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-no-layer} (default: disabled)}
 %------------------------------------------------------------
-For NDFS algorithms, do not consider layered NDFS~\cite{NPP18}.
+For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}), do not consider layered NDFS~\cite{NPP18}.
 
 
 %------------------------------------------------------------
@@ -1903,7 +1949,8 @@ When executing \imitator{} without a property, \ie{} in a special mode.
 %------------------------------------------------------------
 \paragraph{\styleOption{-no-acceptfirst} (default: disabled)}
 %------------------------------------------------------------
-In \styleOption{AccLoopSynthNDFS}, do not put accepting states at the head of the successors list.
+For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}),
+do not put accepting states at the head of the successors list.
 
 
 %------------------------------------------------------------
@@ -1916,7 +1963,8 @@ This can save time by cutting branches, but can also slow down the analysis for 
 %------------------------------------------------------------
 \paragraph{\styleOption{-no-lookahead} (default: disabled)}
 %------------------------------------------------------------
-In \styleOption{AccLoopSynthNDFS}, do not perform a lookahead for finding successors
+For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}),
+do not perform a lookahead for finding successors
 closing an accepting cycle.
 
 
@@ -1981,7 +2029,8 @@ By default, a file named \stylePath{<input\_file>.res} is created using a normal
 %------------------------------------------------------------
 \paragraph{\styleOption{-pendingOrder} (default: \styleOption{none})}
 %------------------------------------------------------------
-Defines the ordering strategy used for the pending list in NDFS exploration with layers.
+For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}),
+defines the ordering strategy used for the pending list in NDFS exploration with layers.
 The possible values are:
 \begin{longtable}{@{} l @{\ \ } p{12.5cm}}
 	\styleOption{none}      & the states are added to the pending list
@@ -1997,7 +2046,7 @@ The possible values are:
 %------------------------------------------------------------
 \paragraph{\styleOption{-recompute-green} (default: disabled)}
 %------------------------------------------------------------
-In \styleOption{AccLoopSynthNDFS} with iterative deepening, force re-exploration of
+For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}) with iterative deepening, force re-exploration of
 green states when encountered on a shorter path.
 
 % %------------------------------------------------------------
@@ -2035,18 +2084,20 @@ Warning: enabling this option may slightly slow down the analysis, and will cert
 %------------------------------------------------------------
 \paragraph{\styleOption{-step} (default: \styleOption{1})}
 %------------------------------------------------------------
-Step is used for iterative \styleOption{AccLoopSynthNDFS}: it indicates the step between two iterations.
+For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}),
+\styleOption{-step} is used for iterative NDFS: it indicates the step between two iterations.
 
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-subsumption} (default: enabled for NDFS)}
 %------------------------------------------------------------
-For NDFS algorithms, use subsumption~\cite{NPP18}.
+For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}), use subsumption~\cite{NPP18}.
+
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-no-subsumption} (default: enabled for NDFS)}
 %------------------------------------------------------------
-For NDFS algorithms, do not use subsumption~\cite{NPP18}.
+For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}), do not use subsumption~\cite{NPP18}.
 
 
 %------------------------------------------------------------
@@ -2689,7 +2740,7 @@ We define each of those two components below.
 	% Cycles
 
 	$|$ & \styleIMI{inf\_cycle}                                                                                                \\
-	$|$ & \styleIMI{inf\_acc\_cycle}                                                                                           \\
+% 	$|$ & \styleIMI{inf\_acc\_cycle}                                                                                           \\
 	$|$ & \styleIMI{inf\_cycle\_through} \nt{state\_predicate}                                                                 \\
 	$|$ & \styleIMI{NZ\_inf\_cycle\_check}                                                                                     \\
 	$|$ & \styleIMI{NZ\_inf\_cycle\_transform}                                                                                 \\

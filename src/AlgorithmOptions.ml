@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2020/08/25
- * Last modified     : 2020/09/09
+ * Last modified     : 2020/09/10
  *
  ************************************************************)
 
@@ -71,8 +71,8 @@ let inclusion_needed property =
 	(** Infinite-run (cycle) *)
 	| Cycle
 
-	(** Accepting infinite-run (cycle) via an accepting keyword *)
-	| Accepting_cycle
+(*	(** Accepting infinite-run (cycle) via an accepting keyword *)
+	| Accepting_cycle*)
 	
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
@@ -352,8 +352,8 @@ let text_of_property property =
 	(** Infinite-run (cycle) *)
 	| Cycle -> "infinite run " ^ synthesis_or_witness
 
-	(** Accepting infinite-run (cycle) via an accepting keyword *)
-	| Accepting_cycle -> "infinite run accepting run " ^ synthesis_or_witness
+(*	(** Accepting infinite-run (cycle) via an accepting keyword *)
+	| Accepting_cycle -> "infinite run accepting run " ^ synthesis_or_witness*)
 	
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _ -> "infinite accepting run " ^ synthesis_or_witness

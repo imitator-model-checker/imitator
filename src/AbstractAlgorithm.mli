@@ -157,8 +157,8 @@ val cartography_drawing_possible : imitator_mode -> bool
 (** Conversions of modes to string *)
 (************************************************************)
 
-val string_of_mode				: imitator_mode -> string
-val string_of_translation		: translation -> string
-val string_of_exploration_order	: exploration_order -> string
-
+val string_of_mode				: imitator_mode		-> string
+val string_of_translation		: translation		-> string
+val string_of_exploration_order	: exploration_order	-> string
+val string_of_cycle_algorithm	: cycle_algorithm	-> string
 

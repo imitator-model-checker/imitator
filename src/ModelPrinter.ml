@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/09/08
+ * Last modified     : 2020/09/10
  *
  ************************************************************)
 
@@ -769,8 +769,8 @@ let string_of_abstract_property model property =
 		(** Infinite-run (cycle) *)
 		| Cycle -> "inf_cycle"
 
-		(** Accepting infinite-run (cycle) via an accepting keyword *)
-		| Accepting_cycle -> "inf_acc_cycle"
+(*		(** Accepting infinite-run (cycle) via an accepting keyword *)
+		| Accepting_cycle -> "inf_acc_cycle"*)
 
 		(** Accepting infinite-run (cycle) through a state predicate *)
 		| Cycle_through state_predicate ->

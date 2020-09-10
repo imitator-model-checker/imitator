@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/09/09
+ * Last modified     : 2020/09/10
  *
  ************************************************************)
 
@@ -2494,8 +2494,8 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		(** Infinite-run (cycle) *)
 		| Parsed_Cycle -> ()
 
-		(** Accepting infinite-run (cycle) via an accepting keyword *)
-		| Parsed_Accepting_Cycle -> ()
+(*		(** Accepting infinite-run (cycle) via an accepting keyword *)
+		| Parsed_Accepting_Cycle -> ()*)
 
 		(** Accepting infinite-run (cycle) through a state predicate *)
 		| Parsed_Cycle_Through parsed_state_predicate
@@ -3248,8 +3248,8 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		(** Infinite-run (cycle) *)
 		| Parsed_Cycle -> true
 		
-		(** Accepting infinite-run (cycle) via an accepting keyword *)
-		| Parsed_Accepting_Cycle -> true
+(*		(** Accepting infinite-run (cycle) via an accepting keyword *)
+		| Parsed_Accepting_Cycle -> true*)
 
 		(** Accepting infinite-run (cycle) through a state predicate *)
 		| Parsed_Cycle_Through parsed_state_predicate ->
@@ -3578,8 +3578,8 @@ let convert_property_option useful_parsing_model_information (nb_actions : int) 
 		(** Infinite-run (cycle) *)
 		| Parsed_Cycle -> Cycle, None
 
-		(** Accepting infinite-run (cycle) via an accepting keyword *)
-		| Parsed_Accepting_Cycle -> Accepting_cycle, None
+(*		(** Accepting infinite-run (cycle) via an accepting keyword *)
+		| Parsed_Accepting_Cycle -> Accepting_cycle, None*)
 		
 		(** Accepting infinite-run (cycle) through a state predicate *)
 		| Parsed_Cycle_Through parsed_state_predicate ->

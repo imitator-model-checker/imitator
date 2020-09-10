@@ -973,6 +973,8 @@ class imitator_options =
 			);*)
 			
 			(*** TODO: incl / merge for IM, cycles… ***)
+			
+			(*** TODO: check NDFS options only for NDFS; and NDFS only for Cycle_through ***)
 
 
 

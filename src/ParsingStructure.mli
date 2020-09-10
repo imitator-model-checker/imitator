@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/08
- * Last modified     : 2020/09/08
+ * Last modified     : 2020/09/10
  *
  ****************************************************************)
 
@@ -317,7 +317,7 @@ type parsed_property_type =
 	| Parsed_Cycle
 
 	(** Accepting infinite-run (cycle) through an accepting keyword *)
-	| Parsed_Accepting_Cycle
+(* 	| Parsed_Accepting_Cycle *)
 
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Parsed_Cycle_Through of parsed_state_predicate

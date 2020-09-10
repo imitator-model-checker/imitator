@@ -7,10 +7,9 @@
  *
  * Module description: NDFS algorithms
  *
- * File contributors : Laure Petrucci, Jaco van de Pol,
- *						Étienne André
+ * File contributors : Laure Petrucci, Jaco van de Pol, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2020/09/09
+ * Last modified     : 2020/09/10
  *
  ************************************************************)
 
@@ -46,7 +45,7 @@ exception DFS_Limit_detected of bfs_limit_reached
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoNDFS =
+class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 	object (self) inherit algoStateBased as super
 
 	(************************************************************)
@@ -69,7 +68,7 @@ class algoNDFS =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "NDFS"
+	method algorithm_name = "Cycle (NDFS)"
 
 	(************************************)
 	(* Check the states and time limits *)
@@ -200,7 +199,7 @@ class algoNDFS =
                     match q with
                     | [] -> ([],[]);
                     | s::q' -> let (a,b) = requ q' in
-                            if (State.is_accepting (StateSpace.get_state state_space s))
+                            if ((*State.is_accepting*)State.match_state_predicate state_predicate (StateSpace.get_state state_space s))
                             then (s::a,b)
                             else (a,s::b)
             in
@@ -298,7 +297,7 @@ class algoNDFS =
         let before s t = (* TODO: avoid hash-table lookups for every comparison *)
             match options#pending_order with
             | Pending_none -> true
-            | Pending_accept -> State.is_accepting (StateSpace.get_state state_space s)
+            | Pending_accept -> (*State.is_accepting*)State.match_state_predicate state_predicate (StateSpace.get_state state_space s)
             | Pending_param -> (smaller_parameter_projection t s)
             | Pending_zone -> (smaller_zone t s)
         in
@@ -384,7 +383,7 @@ class algoNDFS =
 		(***********************************)
 		let withLookahead astate thesuccessors =
 			if not options#no_lookahead then (
-				if (State.is_accepting (StateSpace.get_state
+				if ((*State.is_accepting*)State.match_state_predicate state_predicate (StateSpace.get_state
 						state_space astate)) then (
 					(* accepting state: find cyan successor *)
 					try ((List.find (fun suc_id ->
@@ -395,7 +394,7 @@ class algoNDFS =
 					(* Not accepting state: find accepting cyan
 						successor *)
 					try ((List.find (fun suc_id ->
-						(State.is_accepting (StateSpace.get_state state_space suc_id)) &&
+						((*State.is_accepting*)State.match_state_predicate state_predicate (StateSpace.get_state state_space suc_id)) &&
 						(table_test cyan suc_id)) thesuccessors),
 							true)
 					with Not_found -> init_state_index, false
@@ -496,7 +495,7 @@ class algoNDFS =
 			print_highlighted_message Shell_bold Verbose_low("Executing rundfs at depth "
 				^ (string_of_int thestate_depth)
 				^ " with "
-				^ (if State.is_accepting (StateSpace.get_state state_space thestate)
+				^ (if (*State.is_accepting*)State.match_state_predicate state_predicate (StateSpace.get_state state_space thestate)
 					then "accepting " else "")
 				^ "state "
 				^ (StateSpace.string_of_state_index thestate)
@@ -522,7 +521,7 @@ class algoNDFS =
 					| [] -> ();
 					| suc_id::body ->
 						print_message Verbose_low("Handling "
-							^ (if State.is_accepting (StateSpace.get_state state_space suc_id)
+							^ (if (*State.is_accepting*)State.match_state_predicate state_predicate (StateSpace.get_state state_space suc_id)
 								then "accepting " else "")
 							^ "successor "
 							^ (ModelPrinter.string_of_state model
@@ -654,7 +653,7 @@ class algoNDFS =
 					let postdfs (astate : State.state_index) (astate_depth : int) : unit =
 						(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
 						if ((* (not (check_parameter_leq_list astate)) && *)
-								(State.is_accepting (StateSpace.get_state state_space astate))) then (
+								((*State.is_accepting*)State.match_state_predicate state_predicate (StateSpace.get_state state_space astate))) then (
 							(* set up the dfs red calls *)
 							let enterdfs (astate : State.state_index) : bool =
 								not (check_parameter_leq_list astate) in
@@ -763,7 +762,7 @@ class algoNDFS =
 					let postdfs (astate: State.state_index) (astate_depth : int) : unit =
 						(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
 						if ((* (not (check_parameter_leq_list astate)) && *)
-								(State.is_accepting (StateSpace.get_state state_space astate))) then (
+								((*State.is_accepting*)State.match_state_predicate state_predicate (StateSpace.get_state state_space astate))) then (
 							(* set up the dfs red calls *)
 							let enterdfs (astate: State.state_index) : bool =
 								not (check_parameter_leq_list astate) in
@@ -887,7 +886,7 @@ class algoNDFS =
 							let postdfs (astate: State.state_index) (astate_depth : int) : unit =
 								(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
 								if ((* (not (check_parameter_leq_list astate)) && *)
-										(State.is_accepting (StateSpace.get_state state_space astate))) then (
+										((*State.is_accepting*)State.match_state_predicate state_predicate (StateSpace.get_state state_space astate))) then (
 									(* set up the dfs red calls *)
 									let enterdfs (astate: State.state_index) : bool =
 										not (check_parameter_leq_list astate) in
@@ -1015,7 +1014,7 @@ class algoNDFS =
 							let postdfs (astate: State.state_index) (astate_depth : int) : unit =
 								(* launch red dfs only if not with a smaller constraint than a state marked by a lookahead *)
 								if ((* (not (check_parameter_leq_list astate)) && *)
-										(State.is_accepting (StateSpace.get_state state_space astate))) then (
+										((*State.is_accepting*)State.match_state_predicate state_predicate (StateSpace.get_state state_space astate))) then (
 									(* set up the dfs red calls *)
 									let enterdfs (astate: State.state_index) : bool =
 										not (check_parameter_leq_list astate) in
