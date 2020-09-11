@@ -537,7 +537,7 @@ Constants are (unbounded, exact) rationals.
 Limited linear expressions over rationals can be used in the definition of a constant; however no other constant can be used in a definition, \ie{} one cannot (yet) write \styleIMI{c1 = c2 + 1: constant;}.
 
 
-% TODO : 'hint' box
+%------------------------------------------------------------
 \begin{hint}
 	In fact, a variable (\eg{} a parameter) can be turned to a constant as follows in the definition of the parameters:
 	\begin{center}
@@ -546,6 +546,7 @@ Limited linear expressions over rationals can be used in the definition of a con
 	This is equivalent to replacing \styleIMI{p} with \styleIMI{2} everywhere in the model; this is particularly useful when some parameters should be instantiated.
 	In contrast, if the parameter is instantiated in the initial definition, \imitator{} still counts it as a parameter, which makes all constraints suffer from an additional dimension.
 \end{hint}
+%------------------------------------------------------------
 
 
 
@@ -625,12 +626,34 @@ output the text description of all states (option \styleOption{-states-descripti
 
 
 %------------------------------------------------------------
-\begin{remark}
+\begin{remark}\label{remark:accepting}
 	For all reachability/safety algorithms (including cycle synthesis), one can also use the \styleIMI{accepting} keyword in the model (in front of a location, see grammar in \cref{section:grammar:model}).
-	In that case, the semantics of the acceptance of a state is as follows: ``either at least one of the locations is accepting (thanks to the \styleIMI{accepting} keyword), or the state matches the \styleIMI{state\_predicate} in the property.
+	In that case, the property becomes simply:
+	
+	\styleIMI{property := \#synth EF(accepting);}
+	
+	The semantics of the acceptance of a state is as follows: ``at least one of the locations is accepting (as specified by the \styleIMI{accepting} keyword).''
+	
+	If one defines \styleIMI{accepting} locations in the model \emph{and} uses a \styleIMI{state\_predicate} in the property, \emph{both} acceptance conditions are considered at the same time.
+	In this case,
+	the semantics of the acceptance of a state is as follows: ``either at least one of the locations is accepting (thanks to the \styleIMI{accepting} keyword), \emph{or} the state matches the \styleIMI{state\_predicate} in the property.''
 	
 	The presence of the \styleIMI{accepting} keyword can be seen as a ``hack'' to make property writing easier in some cases.
 \end{remark}
+%------------------------------------------------------------
+
+%------------------------------------------------------------
+\begin{becareful}
+	From \cref{remark:accepting}, one can see that
+	
+	\styleIMI{property := \#synth EF(False);}
+	
+	is absolutely equivalent to
+	
+	\styleIMI{property := \#synth EF(accepting);}.
+	
+	This might be seem counterintuitive; but remember that the \styleIMI{accepting} keyword can be seen as a ``hack'', and the acceptance condition should normally be defined in \emph{properties} only.
+\end{becareful}
 %------------------------------------------------------------
 
 
@@ -786,8 +809,13 @@ Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for 
 
 The property syntax is as follows:
 
-\styleIMI{property := \#synth inf\_cycle;}
+\styleIMI{property := \#synth cycle;}
 
+%------------------------------------------------------------
+\begin{syntaxalias}
+	\imitator{} accepts the \styleIMI{loop} keyword as an equivalent for \styleIMI{cycle}.
+\end{syntaxalias}
+%------------------------------------------------------------
 
 As usual, \imitator{} can also
 output the state space in a graphical form (option \styleOption{-draw-statespace})
@@ -809,7 +837,20 @@ Such accepting conditions are given in the form of a state predicate, \ie{} a co
 
 In both cases, the property syntax is as follows:
 
-\styleIMI{property := \#synth inf\_cycle\_through(state\_predicate);}
+\styleIMI{property := \#synth cycle\_through(state\_predicate);}
+
+%------------------------------------------------------------
+\begin{syntaxalias}
+	\imitator{} accepts the following equivalent keywords for \styleIMI{cycle\_through}:
+	\begin{itemize}
+		\item \styleIMI{cyclethrough}
+		\item \styleIMI{loop\_through}
+		\item \styleIMI{loopthrough}
+	\end{itemize}
+\end{syntaxalias}
+%------------------------------------------------------------
+
+
 
 The second algorithm (\cref{sss:accepting-loop-NDFS}) is so far the default in \imitator{}; both algorithms have \emph{not} been experimentally compared with each other; this is the subject of future work.
 
@@ -947,17 +988,17 @@ The method implemented in \imitator{} is based on CUB-\IPTA{}, a syntactic subcl
 The precise algorithm we use, including the transformation of an arbitrary PTA into a CUB-PTA, is described in~\cite{ANPS17}.
 
 % NOTE: hidden property =
-% 	\styleIMI{property := \#synth NZ\_inf\_cycle\_CUB;}
+% 	\styleIMI{property := \#synth NZ\_cycle\_CUB;}
 
 Two options are possible in \imitator{}:
 \begin{enumerate}
 	\item a partial method (but slightly faster), that first detects whether the input \NIPTA{} is already a CUB-PTA; if so, it applies non-Zeno checking on this CUB-PTA; otherwise, the returned constraint will be false.
 
-	      \styleIMI{property := \#synth NZ\_inf\_cycle\_check;}
+	      \styleIMI{property := \#synth NZ\_cycle\_check;}
 
 	\item a complete method (though of course without guarantee of termination), that transforms the \NIPTA{} into a network of CUB-PTAs, and applies non-Zeno checking on the transformed CUB-PTA.
 
-	      \styleIMI{property := \#synth NZ\_inf\_cycle\_transform;}
+	      \styleIMI{property := \#synth NZ\_cycle\_transform;}
 
 \end{enumerate}
 
@@ -1001,18 +1042,19 @@ The property syntax is of the following form:
 where \styleIMI{parameter\_valuation} is a reference valuation of the form \styleIMI{p1 = 1 \& p2 = 2 \&…} (see \cref{section:grammar-property} for details).
 
 %------------------------------------------------------------
-\begin{remark}
-	The following synonyms are allowed for \styleIMI{IM}: \styleIMI{inversemethod} and \styleIMI{tracepreservation}.
-\end{remark}
+\begin{syntaxalias}
+	\imitator{} accepts the following equivalent keywords for \styleIMI{IM}:
+	\begin{itemize}
+		\item \styleIMI{inversemethod}
+		\item \styleIMI{tracepreservation}
+	\end{itemize}
+\end{syntaxalias}
 %------------------------------------------------------------
 
 
-\imitator{} can also
-output the state space in a graphical form (option \styleOption{-draw-statespace})
+\imitator{} can also output the state space in a graphical form (option \styleOption{-draw-statespace})
 or
 output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
-% TODO
-% 	or
 % 	output the result to a text file using a normalized syntax (option \styleOption{-output-result}).
 
 Recall that \imitator{} % option \styleOption{-output-result} is not compulsory, but allows one to obtain
@@ -1157,13 +1199,11 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 			% Cycles
 
 			\hline
-			Cycle                  & \styleIMI{inf\_cycle}                            & \cellYes{} & \cellYes{}  \\
+			Cycle                  & \styleIMI{cycle}                            & \cellYes{} & \cellYes{}  \\
 			\hline
-			Accepting cycle        & \styleIMI{inf\_cycle\_through(state\_predicate)} & \cellYes{} & \cellYes{}  \\
+			Accepting cycle        & \styleIMI{cycle\_through(state\_predicate)} & \cellYes{} & \cellYes{}  \\
 			\hline
-			Accepting cycle (NDFS) & \styleIMI{inf\_acc\_cycle}                            & \cellYes{} & \cellYes{} \\
-			\hline
-			Non-Zeno cycles        & \styleIMI{NZ\_inf\_cycle}                            & \cellYes{} & \cellNo{}  \\
+			Non-Zeno cycles        & \styleIMI{NZ\_cycle}                            & \cellYes{} & \cellNo{}  \\
 
 			% Deadlock-freeness
 
@@ -1350,7 +1390,8 @@ Note that, beyond about 1,000 states or 1,000 transitions, the \gdot{} utility (
 Using \styleOption{-draw-statespace undetailed} makes a more compact representation, but is also less informative as only the state number and the transition labels are shown.
 
 Conversely, \styleOption{-draw-statespace full} makes a more detailed representation, by also adding to the state space all constraints:
-the clock and parameter constraints, and below their projection onto the parameters; in addition, if \styleFileContent{projectresult} is defined in the model (see \cref{section:projection}), the projection onto a specific set of parameters is also added.
+the clock and parameter constraints, and below their projection onto the parameters.
+	%in addition, if \styleFileContent{projectresult} is defined in the model (see \cref{section:projection}), the projection onto a specific set of parameters is also added.
 This option is mostly suitable for small state spaces.
 
 \begin{example}
@@ -1391,10 +1432,10 @@ This option is mostly suitable for small state spaces.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Constraints and cartography}
+\section{Visualizing the synthesized constraint in 2D}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-To visualize the constraint generated by \imitator{} using a 2-dimensional plot (thanks to the external plot utility), use:
+To visualize the constraint generated by \imitator{} using a 2-dimensional plot (thanks to the external \stylePath{plot} utility), use:
 
 \styleCommand{\binimitator{} model.imi property.imiprop [options] -draw-cart}
 
@@ -1784,7 +1825,7 @@ Set maximum value for the $y$ axis when plotting the cartography (not entirely f
 Graphical output using \gdot{}.
 In this case, \imitator{} outputs a file \stylePath{<input\_file>.pdf}, which is a graphical output in the PDF format, generated using \gdot{}, corresponding to the state space.
 
-Note that the path and the name of those two files can be changed using the \stylePath{-output-prefix} option.
+Note that the path and the name of those two files can be changed using the \styleOption{-output-prefix} option.
 
 Three values for this option are allowed:
 \begin{itemize}
@@ -2753,13 +2794,27 @@ We define each of those two components below.
 
 	% Cycles
 
-	$|$ & \styleIMI{inf\_cycle}                                                                                                \\
+	$|$ & \styleIMI{cycle}                                                                                                \\
+	$|$ & \styleIMI{loop}
+		\commentgrammar{alias for \styleIMI{cycle}}
+	\\
 % 	$|$ & \styleIMI{inf\_acc\_cycle}                                                                                           \\
-	$|$ & \styleIMI{inf\_cycle\_through} \nt{state\_predicate}                                                                 \\
-	$|$ & \styleIMI{NZ\_inf\_cycle\_check}                                                                                     \\
-	$|$ & \styleIMI{NZ\_inf\_cycle\_transform}                                                                                 \\
+	$|$ & \styleIMI{cycle\_through} \nt{state\_predicate}
+	\\
+	% NOTE: alias
+	$|$ & \styleIMI{cyclethrough} \nt{state\_predicate}
+		\commentgrammar{alias for \styleIMI{cycle\_through}}
+	\\
+	$|$ & \styleIMI{loop\_through} \nt{state\_predicate} 
+		\commentgrammar{alias for \styleIMI{cycle\_through}}
+	\\
+	$|$ & \styleIMI{loopthrough} \nt{state\_predicate}
+		\commentgrammar{alias for \styleIMI{cycle\_through}}
+	\\
+	$|$ & \styleIMI{NZ\_cycle\_check}                                                                                     \\
+	$|$ & \styleIMI{NZ\_cycle\_transform}                                                                                 \\
 	% NOTE: hidden for sake of simplicity
-	% 	$|$  & \styleIMI{NZ\_inf\_cycle\_CUB} \\
+	% 	$|$  & \styleIMI{NZ\_cycle\_CUB} \\
 
 	% Deadlock-freeness
 
@@ -2767,7 +2822,14 @@ We define each of those two components below.
 
 	% Inverse method, trace preservation, robustness
 
-	$|$ & \styleIMI{IM} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)}                                                    \\
+	$|$ & \styleIMI{IM} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)}
+	\\
+	$|$ & \styleIMI{inversemethod} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)}
+		\commentgrammar{alias for \styleIMI{IM}}
+	\\
+	$|$ & \styleIMI{tracepreservation} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)}
+		\commentgrammar{alias for \styleIMI{IM}}
+	\\
 	$|$ & \styleIMI{IMconvex} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)}                                              \\
 	$|$ & \styleIMI{IMK} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)}                                                   \\
 	$|$ & \styleIMI{IMunion} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)}                                               \\
@@ -2828,6 +2890,9 @@ We define each of those two components below.
 	$|$ & \nt{state\_predicate\_term}                                  \\
 	$|$ & \styleIMI{True}                                              \\
 	$|$ & \styleIMI{False}                                             \\
+	$|$ & \styleIMI{accepting}                                             \\
+	$|$ & \emptystring{}
+	\\
 \end{tabular}
 
 
@@ -2836,7 +2901,7 @@ We define each of those two components below.
 \regleGrammaire{state\_predicate\_term}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \nt{state\_predicate\_term} \styleIMI{$\&\&$} \nt{state\_predicate\_term} \\
+	\   & \nt{state\_predicate\_term} \styleIMI{$\&$} \nt{state\_predicate\_term} \\
 	$|$ & \nt{state\_predicate\_factor}                                             \\
 \end{tabular}
 
@@ -3081,7 +3146,7 @@ We define each of those two components below.
 \regleGrammaire{and\_opt}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	$|$ & \styleIMI{\&\&} \\
+	$|$ & \styleIMI{\&} \\
 	$|$ & \emptystring{}  \\
 \end{tabular}
 

@@ -6,9 +6,9 @@
  * Author          : Étienne André
  *
  * Created         : 2020/08/14
- * Last modified   : 2020/08/14
+ * Last modified   : 2020/09/11
  *
  * IMITATOR version: 3
  ************************************************************)
  
-property := #synth NZ_inf_cycle_transform;
+property := #synth NZ_cycle_transform;

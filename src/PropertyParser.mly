@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/09/10
+ * Last modified     : 2020/09/11
  *
  ************************************************************/
 
@@ -56,7 +56,7 @@ let resolve_property l =
 %token COLON COMMA DOUBLEDOT SEMICOLON SYMBOL_AND SYMBOL_OR
 
 %token
-	CT_AG CT_AGnot CT_ALWAYS
+	CT_ACCEPTING CT_AG CT_AGnot CT_ALWAYS
 	CT_BCBORDER CT_BCLEARN CT_BCRANDOM CT_BCRANDOMSEQ CT_BCSHUFFLE CT_BEFORE
 	CT_COVERCARTOGRAPHY
 	CT_DEADLOCKFREE
@@ -277,6 +277,8 @@ state_predicate:
 	| state_predicate_term { Parsed_state_predicate_term $1 }
 	| CT_TRUE { Parsed_state_predicate_true }
 	| CT_FALSE { Parsed_state_predicate_false }
+	/* `accepting` keyword, equivalent to checking accepting locations only, i.e., equivalent to False */
+	| CT_ACCEPTING { Parsed_state_predicate_false }
 	/* Also allow empty state predicate, equivalent to False */
 	| { Parsed_state_predicate_false }
 ;

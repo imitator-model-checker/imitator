@@ -1,1 +1,1 @@
-property := #synth inf_cycle;
+property := #synth cycle;

@@ -309,6 +309,11 @@
 	{\begin{mdframed}[roundcorner=3pt,backgroundcolor=red!20,linecolor=red!50!black,linewidth=2]\begin{mywarning}}
 	{\end{mywarning}\end{mdframed}}
 
+\newtheorem{myalias}{Syntax freedom} %[chapter]
+\newenvironment{syntaxalias}
+	{\begin{mdframed}[roundcorner=3pt,backgroundcolor=green!20,linecolor=green!50!black,linewidth=2]\begin{myalias}\small}
+	{\end{myalias}\end{mdframed}}
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -326,6 +331,7 @@
 \newcommand{\regleGrammaire}[1]{\bigskip \noindent \nt{#1} :: \\}
 % Not taken into account in the grammar
 % \newcommand{\npec}[1]{\textcolor{green!50!black}{#1}}
+\newcommand{\commentgrammar}[1]{\textcolor{black!50}{\texttt{/* #1 */}}}
 
 \newcommand{\probleme}[2]{
 	\medskip

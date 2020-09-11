@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/09/10
+ * Last modified     : 2020/09/11
 *****************************************************************)
 
 {
@@ -44,6 +44,7 @@ rule token = parse
  	| "#synth"         { CT_SYNTH }
  	
  	(* Keywords for properties *)
+	| "accepting"      { CT_ACCEPTING }
 	| "AG"             { CT_AG }
 	| "AGnot"          { CT_AGnot }
  	| "deadlockfree"   { CT_DEADLOCKFREE }
@@ -53,6 +54,9 @@ rule token = parse
  	| "BCborder"       { CT_BCBORDER }
  	| "BCrandom"       { CT_BCRANDOM }
  	| "BCrandomseq"    { CT_BCRANDOMSEQ }
+	| "cycle"          { CT_INFCYCLE }
+	| "cycle_through"  { CT_INFCYCLETHROUGH }
+	| "cyclethrough"   { CT_INFCYCLETHROUGH }
 	| "EF"             { CT_EF }
 	| "EFexemplify"    { CT_EFEXEMPLIFY }
 	| "EFpmax"         { CT_EFpmax }
@@ -64,16 +68,13 @@ rule token = parse
  	| "IMunion"        { CT_IMUNION }
 (* 	| "inf_acc_cycle"  { CT_INFACCCYCLE } *)
 (* 	| "infacccycle"    { CT_INFACCCYCLE } *)
-	| "inf_cycle"      { CT_INFCYCLE }
-	| "infcycle"       { CT_INFCYCLE }
-	| "inf_cycle_through" { CT_INFCYCLETHROUGH }
-	| "infcyclethrough"{ CT_INFCYCLETHROUGH }
  	| "inversemethod"  { CT_TRACEPRESERVATION }
+	| "loop"           { CT_INFCYCLE }
 	| "loop_through"   { CT_INFCYCLETHROUGH }
 	| "loopthrough"    { CT_INFCYCLETHROUGH }
-	| "NZ_inf_cycle_check" { CT_NZINFCYCLECHECK }
-	| "NZ_inf_cycle_CUB" { CT_NZINFCYCLECUB }
-	| "NZ_inf_cycle_transform" { CT_NZINFCYCLETRANSFORM }
+	| "NZ_cycle_check" { CT_NZINFCYCLECHECK }
+	| "NZ_cycle_CUB"   { CT_NZINFCYCLECUB }
+	| "NZ_cycle_transform" { CT_NZINFCYCLETRANSFORM }
  	| "PRP"            { CT_PRP }
  	| "PRPC"           { CT_PRPC }
  	| "tracepreservation" { CT_TRACEPRESERVATION }

@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2020/09/09
- * Last modified   : 2020/09/09
+ * Last modified   : 2020/09/11
  *
  * IMITATOR version: 3.0
  ************************************************************)
 
-property := #synth inf_cycle_through loc[pta] = ltarget;
+property := #synth cycle_through loc[pta] = ltarget;

@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/09/10
+ * Last modified     : 2020/09/11
  *
  ************************************************************)
 
@@ -767,23 +767,23 @@ let string_of_abstract_property model property =
 		(*------------------------------------------------------------*)
 		
 		(** Infinite-run (cycle) *)
-		| Cycle -> "inf_cycle"
+		| Cycle -> "cycle"
 
 (*		(** Accepting infinite-run (cycle) via an accepting keyword *)
-		| Accepting_cycle -> "inf_acc_cycle"*)
+		| Accepting_cycle -> "acc_cycle"*)
 
 		(** Accepting infinite-run (cycle) through a state predicate *)
 		| Cycle_through state_predicate ->
-		"inf_cycle_through(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+		"cycle_through(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 		
 		(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
-		| NZCycle_check -> "NZ_inf_cycle_check"
+		| NZCycle_check -> "NZ_cycle_check"
 		
 		(** Infinite-run (cycle) with non-Zeno assumption: method by transforming the PTA into a CUB-PTA *)
-		| NZCycle_transform -> "NZ_inf_cycle_transform"
+		| NZCycle_transform -> "NZ_cycle_transform"
 		
 		(** Infinite-run (cycle) with non-Zeno assumption: method assuming the PTA is already a CUB-PTA *)
-		| NZCycle_CUB -> "NZ_inf_cycle_CUB"
+		| NZCycle_CUB -> "NZ_cycle_CUB"
 
 		
 		(*------------------------------------------------------------*)

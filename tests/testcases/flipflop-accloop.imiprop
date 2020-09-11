@@ -11,10 +11,10 @@
  * Input by        : Étienne André
  *
  * Created         : 2020/09/10
- * Last modified   : 2020/09/10
+ * Last modified   : 2020/09/11
  *
  * IMITATOR version: 3.0
  ************************************************************)
 
 (*** NOTE: this property is always wrong, as there is no loop on location `Input4` ***)
-property := #synth inf_cycle_through(loc[input] = Input4);
+property := #synth cycle_through(loc[input] = Input4);
