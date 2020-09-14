@@ -897,7 +897,7 @@ This (default) algorithm can be called using the following option syntax:
 
 It is also called when no \styleOption{-cycleAlgo} is specified.
 
-Two additional options can be specified (a third one, \styleOption{-pendingOrder}, is explained later):
+Two additional options can be specified (a third one, \styleOption{-pending-order}, is explained later):
 \begin{enumerate}
 	\item \styleOption{-layer} (or \styleOption{-no-layer}) to enable (or disable) layered NDFS~\cite{NPP18};
 	\item \styleOption{-subsumption} (or \styleOption{-no-subsumption}) to enable (or disable) subsumption~\cite{NPP18}.
@@ -928,15 +928,15 @@ or
 output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-output-cart}).
 
 The exploration with layers considers different ordering policies for its pending
-list via the \styleOption{-pendingOrder} option:
+list via the \styleOption{-pending-order} option:
 \begin{description}
-	\item[\styleOption{-pendingOrder none}]: the states are added to the pending list
+	\item[\styleOption{-pending-order none}]: the states are added to the pending list
 	      without specific policy	(default option);
-	\item[\styleOption{-pendingOrder accepting}]: the accepting states are added at
+	\item[\styleOption{-pending-order accepting}]: the accepting states are added at
 	      the head of the pending list, the others at the tail;
-	\item[\styleOption{-pendingOrder param}]: the states are added to the list on
+	\item[\styleOption{-pending-order param}]: the states are added to the list on
 	      the basis of a largest projection of zone on parameters first;
-	\item[\styleOption{-pendingOrder zone}]: the states are added to the list on
+	\item[\styleOption{-pending-order zone}]: the states are added to the list on
 	      the basis of a largest zone first.
 \end{description}
 
@@ -1756,7 +1756,7 @@ For cycle synthesis algorithms (\cref{ss:mode:LoopSynth}), call either \styleOpt
 See
 	\styleOption{-layer},
 	\styleOption{-subsumption},
-	\styleOption{-pendingOrder},
+	\styleOption{-pending-order},
 	\styleOption{-depth-init},
 	\styleOption{-depth-limit},
 	\styleOption{-step}
@@ -2130,7 +2130,7 @@ By default, a file named \stylePath{<input\_file>.res} is created using a normal
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-pendingOrder} (default: \styleOption{none})}
+\paragraph{\styleOption{-pending-order} (default: \styleOption{none})}
 %------------------------------------------------------------
 For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}),
 defines the ordering strategy used for the pending list in NDFS exploration with layers.

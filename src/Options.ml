@@ -806,7 +806,7 @@ class imitator_options =
 				");
 (* 				NOTE: hidden value `already`, to assume the PTA is already a CUB-PTA *)
 
-				("-pendingOrder", String set_pending_order, " Pending list exploration order [EXPERIMENTAL].
+				("-pending-order", String set_pending_order, " Pending list exploration order [EXPERIMENTAL].
         Use `accepting` for a layered NDFS where pending list has accepting states first.
         Use `none` for a layered NDFS where pending list has no ordering policy.
         Use `param` for a layered NDFS where pending list has bigger parametric zones first.
