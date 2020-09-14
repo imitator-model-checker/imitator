@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/09/10
+ * Last modified     : 2020/09/14
  *
  ************************************************************/
 
@@ -392,12 +392,23 @@ update_nonempty_list:
 
 /** Normal updates */
 update:
-	| NAME APOSTROPHE OP_EQ arithmetic_expression { ($1, $4) }
-	/** NOTE: from 2018/02/22: assign becomes recommended */
-	| NAME APOSTROPHE OP_ASSIGN arithmetic_expression { ($1, $4) }
-	/** NOTE: from 2018/02/22: apostrophe becomes optional */
-	| NAME OP_EQ arithmetic_expression { ($1, $3) }
-	/** NOTE: from 2018/02/22: assign becomes recommended */
+	/*** NOTE: deprecated syntax ***/
+	| NAME APOSTROPHE OP_EQ arithmetic_expression {
+		print_warning ("The syntax `var' = value` in updates is deprecated. Please use `var := value`.");
+		($1, $4)
+		}
+
+	/*** NOTE: deprecated syntax ***/
+	| NAME APOSTROPHE OP_ASSIGN arithmetic_expression {
+		print_warning ("The syntax `var' := value` in updates is deprecated. Please use `var := value`.");
+		($1, $4)
+	}
+	/*** NOTE: deprecated syntax ***/
+	| NAME OP_EQ arithmetic_expression {
+		print_warning ("The syntax `var = value` in updates is deprecated. Please use `var := value`.");
+		($1, $3)
+	}
+
 	| NAME OP_ASSIGN arithmetic_expression { ($1, $3) }
 ;
 
