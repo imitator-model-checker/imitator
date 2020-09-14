@@ -456,7 +456,7 @@ update:
 		NOTE: it is used to avoid nested conditional updates */
 normal_update_list:
 	| update COMMA normal_update_list { $1 :: $3}
-	| update { [$1]}
+	| update comma_opt { [$1]}
 	| { [] }
 ;
 
