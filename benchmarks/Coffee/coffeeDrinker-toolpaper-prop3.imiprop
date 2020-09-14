@@ -11,7 +11,7 @@
  * Input by        : Étienne André
  *
  * Created         : 2020/08/13
- * Last modified   : 2020/08/13
+ * Last modified   : 2020/09/14
  *
  * IMITATOR version: 3
  ************************************************************)
@@ -22,7 +22,7 @@
 (************************************************************)
 
 (* Third property: after the button is pressed, then coffee comes after a parametric time p_max *)
-property := #synth if press then eventually coffee within p_max;
+property := #synth pattern(if press then eventually coffee within p_max);
 
 (** Add option -depth-limit 15, or remove the 'sleep' transition in the machine PTA to avoid an unnecessary loop in the analysis (as we are interested in the first coffee here) **)
 
