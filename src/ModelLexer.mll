@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/08/31
+ * Last modified     : 2020/09/14
 *****************************************************************)
 
 {
@@ -69,6 +69,7 @@ rule token = parse
  	| "eventually"     { CT_EVENTUALLY }
  	| "everytime"      { CT_EVERYTIME }
 	| "False"          { CT_FALSE }
+	| "flow"           { CT_FLOW }
 	| "goto"           { CT_GOTO }
  	| "happened"       { CT_HAPPENED }
  	| "has"            { CT_HAS }

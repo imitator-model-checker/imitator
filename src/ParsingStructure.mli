@@ -149,6 +149,9 @@ and normal_update = variable_name * parsed_discrete_arithmetic_expression
 (** conditional updating - NOTE: it does not support nested conditions *)
 and condition_update = parsed_boolean_expression * normal_update list * normal_update list
 
+(* A list of pairs (clock, rational) *)
+type parsed_flow = (variable_name * NumConst.t) list
+
 (* Transition = Guard * update list * sync label * destination location *)
 type transition = guard * update list * sync * location_name
 
@@ -166,11 +169,12 @@ type parsed_location = {
 	invariant   : invariant;
 	(* List of stopped clocks *)
 	stopped     : (variable_name list);
+	(* Flow of clocks *)
+	flow        : parsed_flow;
 	(* Transitions starting from this location *)
 	transitions : transition list;
 }
 
-(* type location = location_name * loc_type * linear_expression option * invariant * (variable_name list) * (transition list) *)
 
 type parsed_automaton = automaton_name * sync_name list * parsed_location list
 

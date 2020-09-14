@@ -70,7 +70,7 @@ let unzip l = List.fold_left
 	CT_CLOCK CT_CONSTANT
 	CT_DISCRETE CT_DO
 	CT_ELSE CT_END CT_EVENTUALLY CT_EVERYTIME
-	CT_FALSE
+	CT_FALSE CT_FLOW
 	CT_GOTO
 	CT_HAPPENED CT_HAS
 	CT_IF CT_IN CT_INIT CT_INITIALLY CT_INVARIANT CT_IS
@@ -282,22 +282,25 @@ while_or_invariant_or_nothing:
 ;
 
 location:
-	| loc_urgency_accepting_type location_name_and_costs COLON while_or_invariant_or_nothing convex_predicate stopwatches wait_opt transitions {
+	| loc_urgency_accepting_type location_name_and_costs COLON while_or_invariant_or_nothing convex_predicate stopwatches_and_flow_opt wait_opt transitions {
 		let urgency, accepting = $1 in
 		let name, cost = $2 in
+		let stopwatches, flow = $6 in
 		{
 			(* Name *)
-			name = name;
+			name		= name;
 			(* Urgent or not? *)
-			urgency = urgency;
+			urgency		= urgency;
 			(* Accepting or not? *)
-			acceptance = accepting;
+			acceptance	= accepting;
 			(* Cost *)
-			cost = cost;
+			cost		= cost;
 			(* Invariant *)
-			invariant = $5;
+			invariant	= $5;
 			(* List of stopped clocks *)
-			stopped = $6;
+			stopped		= stopwatches;
+			(* Flow of clocks *)
+			flow		= flow;
 			(* Transitions starting from this location *)
 			transitions = $8;
 		}
@@ -331,11 +334,48 @@ wait_opt:
 	| { }
 ;
 
+
+/************************************************************/
+
+stopwatches_and_flow_opt:
+	| stopwatches flow { $1, $2 }
+	| flow stopwatches { $2, $1 }
+	| stopwatches { $1, [] }
+	| flow { [], $1 }
+	| { [], [] }
+;
+
+/************************************************************/
+
+flow:
+	| CT_FLOW LBRACE flow_list RBRACE { $3 }
+;
+
+
+/************************************************************/
+
+flow_list:
+	| flow_nonempty_list { $1 }
+	| { [] }
+;
+
+/************************************************************/
+
+flow_nonempty_list:
+	| single_flow COMMA flow_nonempty_list { $1 :: $3 }
+	| single_flow comma_opt { [$1] }
+;
+
+/************************************************************/
+
+single_flow:
+	| NAME APOSTROPHE OP_EQ rational_linear_expression { ($1, $4) }
+;
+
 /************************************************************/
 
 stopwatches:
 	| CT_STOP LBRACE name_list RBRACE { $3 }
-	| { [] }
 ;
 
 /************************************************************/
