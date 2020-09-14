@@ -402,7 +402,7 @@ class imitator_options =
 				else if cycle_algorithm_string = "NDFS" then
 					cycle_algorithm <- Some AbstractAlgorithm.NDFS
 				else(
-					print_error ("The value of `-cycleAlgo` `" ^ cycle_algorithm_string ^ "` is not valid.");
+					print_error ("The value of `-cycle-algo` `" ^ cycle_algorithm_string ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
 					abort_program ();
 					exit(1);
@@ -653,7 +653,7 @@ class imitator_options =
 					exit 0), " Print contributors and exit.
 				");
 
-				("-cycleAlgo", String set_cycle_algorithm, " Algorithm for loop synthesis.
+				("-cycle-algo", String set_cycle_algorithm, " Algorithm for loop synthesis.
         Use `Loop` for BFS with a variant of Tarjan's strongly connected components algorithm.
         Use `NDFS` for NDFS algorithms [NPvdP18] (default).
 				");

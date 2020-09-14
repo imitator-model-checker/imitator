@@ -852,7 +852,7 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 
 This (non-default) algorithm can be called using the following option syntax:
 
-\styleOption{-cycleAlgo Loop}
+\styleOption{-cycle-algo BFS}
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -893,9 +893,9 @@ This (non-default) algorithm can be called using the following option syntax:
 
 This (default) algorithm can be called using the following option syntax:
 
-\styleOption{-cycleAlgo NDFS}
+\styleOption{-cycle-algo NDFS}
 
-It is also called when no \styleOption{-cycleAlgo} is specified.
+It is also called when no \styleOption{-cycle-algo} is specified.
 
 Two additional options can be specified (a third one, \styleOption{-pending-order}, is explained later):
 \begin{enumerate}
@@ -1750,9 +1750,9 @@ Print the list of contributors and exits.
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-cycleAlgo} (default: NDFS)}
+\paragraph{\styleOption{-cycle-algo} (default: NDFS)}
 %------------------------------------------------------------
-For cycle synthesis algorithms (\cref{ss:mode:LoopSynth}), call either \styleOption{Loop} (BFS) or \styleOption{NDFS}, with some additional options in the latter case.
+For cycle synthesis algorithms (\cref{ss:mode:LoopSynth}), call either \styleOption{BFS} (breadth-first search) or \styleOption{NDFS} (nested depth-first search), with some additional options in the latter case.
 See
 	\styleOption{-layer},
 	\styleOption{-subsumption},
