@@ -1,1 +1,1 @@
-property := #synth cycle_through(loc[pta] = l2);
+property := #synth CycleThrough(loc[pta] = l2);

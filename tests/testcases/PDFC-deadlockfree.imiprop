@@ -1,1 +1,1 @@
-property := #synth deadlockfree;
+property := #synth DeadlockFree;

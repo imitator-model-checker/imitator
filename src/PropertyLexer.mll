@@ -46,16 +46,15 @@ rule token = parse
  	(* Keywords for properties *)
 	| "AG"             { CT_AG }
 	| "AGnot"          { CT_AGnot }
- 	| "deadlockfree"   { CT_DEADLOCKFREE }
+ 	| "DeadlockFree"   { CT_DEADLOCKFREE }
  	| "BCcover"        { CT_COVERCARTOGRAPHY }
  	| "BClearn"        { CT_BCLEARN }
  	| "BCshuffle"      { CT_BCSHUFFLE }
  	| "BCborder"       { CT_BCBORDER }
  	| "BCrandom"       { CT_BCRANDOM }
  	| "BCrandomseq"    { CT_BCRANDOMSEQ }
-	| "cycle"          { CT_INFCYCLE }
-	| "cycle_through"  { CT_INFCYCLETHROUGH }
-	| "cyclethrough"   { CT_INFCYCLETHROUGH }
+	| "Cycle"          { CT_INFCYCLE }
+	| "CycleThrough"   { CT_INFCYCLETHROUGH }
 	| "EF"             { CT_EF }
 	| "EFexemplify"    { CT_EFEXEMPLIFY }
 	| "EFpmax"         { CT_EFpmax }
@@ -65,16 +64,13 @@ rule token = parse
  	| "IMconvex"       { CT_IMCONVEX }
  	| "IMK"            { CT_IMK }
  	| "IMunion"        { CT_IMUNION }
-(* 	| "inf_acc_cycle"  { CT_INFACCCYCLE } *)
-(* 	| "infacccycle"    { CT_INFACCCYCLE } *)
- 	| "inversemethod"  { CT_TRACEPRESERVATION }
-	| "loop"           { CT_INFCYCLE }
-	| "loop_through"   { CT_INFCYCLETHROUGH }
-	| "loopthrough"    { CT_INFCYCLETHROUGH }
+ 	| "InverseMethod"  { CT_TRACEPRESERVATION }
+	| "Loop"           { CT_INFCYCLE }
+	| "LoopThrough"    { CT_INFCYCLETHROUGH }
 	| "NZCycle"        { CT_NZCYCLE }
  	| "PRP"            { CT_PRP }
  	| "PRPC"           { CT_PRPC }
- 	| "tracepreservation" { CT_TRACEPRESERVATION }
+ 	| "TracePreservation" { CT_TRACEPRESERVATION }
 
 	| "accepting"      { CT_ACCEPTING }
 	| "always"         { CT_ALWAYS }

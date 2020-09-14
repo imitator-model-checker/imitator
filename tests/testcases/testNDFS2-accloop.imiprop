@@ -1,1 +1,1 @@
-property := #synth cycle_through(loc[pta] = l2 or loc[pta] = l3 or loc[pta] = l4);
+property := #synth CycleThrough(loc[pta] = l2 or loc[pta] = l3 or loc[pta] = l4);

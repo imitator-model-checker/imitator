@@ -1,1 +1,1 @@
-property := #witness cycle_through(loc[pta] = l2 or loc[pta] = l3 or loc[pta] = l4);
+property := #witness CycleThrough(loc[pta] = l2 or loc[pta] = l3 or loc[pta] = l4);

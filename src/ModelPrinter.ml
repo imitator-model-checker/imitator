@@ -768,8 +768,8 @@ let string_of_abstract_property model property =
 		
 		(** Accepting infinite-run (cycle) through a state predicate *)
 		| Cycle_through state_predicate ->
-			if state_predicate = State_predicate_true then "cycle"
-			else "cycle_through(" ^ (string_of_state_predicate model state_predicate) ^ ")"
+			if state_predicate = State_predicate_true then "Cycle"
+			else "CycleThrough(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 		
 		(** Infinite-run (cycle) with non-Zeno assumption *)
 		| NZ_Cycle -> "NZCycle"
@@ -780,7 +780,7 @@ let string_of_abstract_property model property =
 		(*------------------------------------------------------------*)
 		
 		(* Deadlock-free synthesis *)
-		| Deadlock_Freeness -> "deadlockfree"
+		| Deadlock_Freeness -> "DeadlockFree"
 		
 		
 		(*------------------------------------------------------------*)
@@ -788,7 +788,7 @@ let string_of_abstract_property model property =
 		(*------------------------------------------------------------*)
 		
 		(* Inverse method with complete, non-convex result *)
-		| IM pval -> "tracepreservation(" ^ (string_of_pval model pval) ^ ")"
+		| IM pval -> "TracePreservation(" ^ (string_of_pval model pval) ^ ")"
 
 		(* Non-complete, non-deterministic inverse method with convex result *)
 		| ConvexIM pval -> "IMconvex(" ^ (string_of_pval model pval) ^ ")"
