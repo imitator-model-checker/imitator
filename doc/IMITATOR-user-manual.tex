@@ -408,6 +408,10 @@ Clocks can be stopped in locations, thanks to the optional \styleIMI{stop \{ …
 A clock is stopped in a location if it belongs to the list of clocks in \styleIMI{stop \{ … \}}.
 It is resumed when leaving the location---unless the target location again stops this clock.
 
+\paragraph{Urgent locations}
+A location can be defined as \emph{urgent}, using the keyword \styleIMI{urgent} (see grammar in  \cref{section:grammar:model}).
+In an urgent location, time cannot elapse, \ie{} it must be left in $0$-time.
+Note however that ``in $0$-time'' does not necessarily mean immediately: that is, several actions may be performed (in $0$-time) before the location is left.
 
 
 
