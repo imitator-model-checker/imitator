@@ -11,10 +11,10 @@
  * Input by        : Étienne André
  *
  * Created         : 2007/11
- * Last modified   : 2020/08/14
+ * Last modified   : 2020/09/14
  *
  * IMITATOR version: 3.0
  ************************************************************)
  
 (* Not exactly the property that we would like! The real property is qUp and ckDown always occur, and qUp occurs before ckDown *)
-property := #synth if ckDown then qUp has happened before;
+property := #synth pattern(if ckDown then qUp has happened before);

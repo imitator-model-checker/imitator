@@ -67,7 +67,7 @@ let resolve_property l =
 	CT_LOC CT_LOOP
 	CT_NEXT CT_NOT CT_NZINFCYCLECHECK CT_NZINFCYCLECUB CT_NZINFCYCLETRANSFORM
 	CT_ONCE
-	CT_PROJECTRESULT CT_PRP CT_PRPC
+	CT_PATTERN CT_PROJECTRESULT CT_PRP CT_PRPC
 	CT_PROPERTY
 	CT_SEQUENCE CT_STEP CT_SYNTH
 	CT_THEN CT_TRACEPRESERVATION CT_TRUE
@@ -234,6 +234,14 @@ property:
 	/*------------------------------------------------------------*/
 	/* Observer patterns */
 	/*------------------------------------------------------------*/
+	| CT_PATTERN LPAREN pattern RPAREN { $3 }
+
+;
+
+
+/************************************************************/
+pattern:
+/************************************************************/
 	/* if a2 then a1 has happened before */
 	| CT_IF NAME CT_THEN NAME CT_HAS CT_HAPPENED CT_BEFORE { Parsed_action_precedence_acyclic ($4, $2) }
 	/* everytime a2 then a1 has happened before */

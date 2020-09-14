@@ -11,9 +11,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2020/08/24
- * Last modified   : 2020/08/24
+ * Last modified   : 2020/09/14
  *
  * IMITATOR version: 3.0
  ************************************************************)
 
-property := #synth everytime a2 then a1 has happened within p2 before;
+property := #synth pattern(everytime a2 then a1 has happened within p2 before);

@@ -12,10 +12,10 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2020/08/19
- * Last modified   : 2020/08/19
+ * Last modified   : 2020/09/14
  *
  * IMITATOR version: 3.0
  ************************************************************)
 
 (* Not exactly the property that we would like! The real property is "the system eventually reaches a state where \overline{Q} = 1" *)
-property := #synth if overQ_Up then R_Down has happened before;
+property := #synth pattern(if overQ_Up then R_Down has happened before);

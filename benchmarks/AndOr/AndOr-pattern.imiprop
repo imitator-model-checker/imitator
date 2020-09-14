@@ -4,5 +4,5 @@
 (************************************************************)
 
 (* b- x- a- b+ a+ x+ *)
-property := always sequence(bDown, xDown, aDown, bUp, aUp, xUp) ;
+property := #synth pattern(always sequence(bDown, xDown, aDown, bUp, aUp, xUp)) ;
 

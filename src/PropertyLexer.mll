@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/09/11
+ * Last modified     : 2020/09/14
 *****************************************************************)
 
 {
@@ -44,7 +44,6 @@ rule token = parse
  	| "#synth"         { CT_SYNTH }
  	
  	(* Keywords for properties *)
-	| "accepting"      { CT_ACCEPTING }
 	| "AG"             { CT_AG }
 	| "AGnot"          { CT_AGnot }
  	| "deadlockfree"   { CT_DEADLOCKFREE }
@@ -79,6 +78,7 @@ rule token = parse
  	| "PRPC"           { CT_PRPC }
  	| "tracepreservation" { CT_TRACEPRESERVATION }
 
+	| "accepting"      { CT_ACCEPTING }
 	| "always"         { CT_ALWAYS }
 	| "and"            { SYMBOL_AND }
 	| "before"         { CT_BEFORE }
@@ -96,6 +96,7 @@ rule token = parse
 	| "not"            { CT_NOT }
  	| "once"           { CT_ONCE }
 	| "or"             { SYMBOL_OR }
+	| "pattern"        { CT_PATTERN }
  	| "projectresult"  { CT_PROJECTRESULT }
  	| "property"       { CT_PROPERTY }
 	| "sequence"       { CT_SEQUENCE }

@@ -716,8 +716,7 @@ Our algorithm uses a priority queue, with priority to the earliest successor for
 
 The property syntax is as follows:
 
-\styleIMI{property := \#synth EFtmin(state\_predicate);}\\
-where \styleIMI{p} is the parameter the value of which must be minimized.
+\styleIMI{property := \#synth EFtmin(state\_predicate);}
 
 \emph{The maximum time reachability is currently not implemented.}
 
@@ -738,7 +737,7 @@ Encoding observers can be done manually (using \adhoc{} \IPTA{}), or using prede
 
 If using a predefined property pattern, the property pattern must be specified as follows:
 
-\styleIMI{property := \#synth <PROP>}
+\styleIMI{property := \#synth pattern(<PROP>)}
 \\
 where \styleIMI{<PROP>} must follow the syntax of the following patterns, where \styleIMI{a}, \styleIMI{a1}, \styleIMI{a2} are actions, and the deadline \styleIMI{d} is a (possibly parametric) linear expression:
 
@@ -1248,6 +1247,8 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 	\label{table:summary:algorithms}
 \end{table}
 
+
+% TODO: options by default!
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1951,6 +1952,10 @@ Consider an inclusion of parametric zone instead of the equality when computing 
 In other terms, when encountering a new state, \imitator{} checks if the same state (same location and same constraint) has been encountered before and, if so, discards this ``new'' state.
 However, when the \styleOption{-inclusion} option is activated, it suffices that a previous state with the same location and a constraint \emph{greater than or equal} to the constraint of the new state has been encountered to discard the new state and stop exploring the current branch.
 This option corresponds to the way that, \eg{} \hytech{} works, and suffices when one wants to check the \emph{non-reachability} of a given bad state.
+
+In reachability algorithms (\cref{ss:mode:EFsynth,ss:mode:EF,ss:mode:EFmin,ss:mode:EFmax,ss:mode:EFopt,ss:mode:prop,ss:mode:PRP}), \styleOption{-inclusion} is usually enabled by default; however, for loop synthesis algorithms (\cref{ss:mode:LoopSynth,ss:mode:Zeno}), it is disabled as it may introduce spurious cycles.
+% TODO: table summarizing everything
+
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-no-inclusion} (default: depending on the algorithm)}
@@ -2854,7 +2859,7 @@ We define each of those two components below.
 	$|$ & \styleIMI{PRPC} \styleIMI{(} \nt{state\_predicate} \styleIMI{,} \nt{hyper\_rectangle} \nt{step\_opt} \styleIMI{)}    \\
 
 	% Observer pattern
-	$|$ & \nt{pattern}                                                                                                         \\
+	$|$ & \styleIMI{pattern(} \nt{pattern} \styleIMI{)}                                                                                                       \\
 \end{tabular}
 
 

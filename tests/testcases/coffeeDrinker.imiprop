@@ -11,7 +11,7 @@
  * Input by        : Étienne André
  *
  * Created         : 2020/01/08
- * Last modified   : 2020/03/20
+ * Last modified   : 2020/09/14
  *
  * IMITATOR version: 3.0
  ************************************************************)
@@ -27,4 +27,4 @@ property := #synth AGnot (loc[researcher] = mad || loc[machine] = cdone && nb_su
 (* property := #witness EF (loc[researcher] = mad || loc[machine] = cdone && nb_sugar < 3); *)
 (* property := #synth AGnot (loc[researcher] = mad || loc[machine] = cdone && nb_sugar < 3); *)
 (* projectresult((*p_patience_max, *)p_press, p_coffee); *)
-(* property := if press then eventually coffee within 20; *)
+(* property := #synth pattern(if press then eventually coffee within 20); *)
