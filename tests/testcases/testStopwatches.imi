@@ -1,0 +1,84 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy example to test stopwatches
+ *
+ * Description     : Toy example to test stopwatches
+ * Correctness     : N/A
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/09/14
+ * Last modified   : 2020/09/14
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant x <= p stop {y}
+	(* Can be taken iff p = 10 *)
+	when x = p & x = y sync a goto l2;
+	(* Should not be taken *)
+	when y > 10 & p = y sync a goto lgoal;
+
+loc l2: invariant x >= 10 & y <= 15 stop { x }
+	when y = 15 sync a goto l3;
+
+loc l3: invariant True stop {x, y}
+	when True sync a goto l4;
+
+loc l4: invariant True
+	when x = p + 3 & y = 18 sync a goto lgoal;
+
+loc lgoal: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 10
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -1324,6 +1324,34 @@ end
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2020/09/14
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test stopwatches',
+		'input_files': ['testStopwatches.imi', 'testStopwatches.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testStopwatches.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 10
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test clock elimination',
 		'input_files': ['loopingTAdyn.imi'],
 		'options'    : '-mode statespace -dynamic-elimination -states-description -depth-limit 10', # NOTE: depth-limit is just a safety to avoid yielding a loop if the test fails!
