@@ -1,1 +1,1 @@
-property := #synth cycle_through(accepting);
+property := #synth CycleThrough(accepting);
