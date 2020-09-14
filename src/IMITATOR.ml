@@ -271,7 +271,7 @@ begin match property_option, options#imitator_mode with
 		(* Update if not yet set *)
 		if not options#is_set_exploration_order then(
 			(* Print some information *)
-			print_message Verbose_high ("Set option `-explOrder` to its default value: `" ^ (AbstractAlgorithm.string_of_exploration_order default_exploration_order) ^ "`");
+			print_message Verbose_high ("Set option `-expl-order` to its default value: `" ^ (AbstractAlgorithm.string_of_exploration_order default_exploration_order) ^ "`");
 
 			options#set_exploration_order (default_exploration_order);
 		);
@@ -281,7 +281,7 @@ begin match property_option, options#imitator_mode with
 		(* Update if not yet set *)
 		if not options#is_set_exploration_order then(
 			(* Print some information *)
-			print_message Verbose_high ("Set option `-explOrder` to its default value: `layerBFS`");
+			print_message Verbose_high ("Set option `-expl-order` to its default value: `layerBFS`");
 
 			(*** BADPROG: this default option value should not be hard-coded here ***)
 			options#set_exploration_order (Exploration_layer_BFS);

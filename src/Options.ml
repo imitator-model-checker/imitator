@@ -696,7 +696,7 @@ class imitator_options =
 				("-dynamic-elimination", Unit (fun () -> dynamic_clock_elimination <- true), " Dynamic clock elimination [FSFMA13]. Default: disabled.
 				");
 
-				("-explOrder", String set_exploration_order, " Exploration order [EXPERIMENTAL].
+				("-expl-order", String set_exploration_order, " Exploration order [EXPERIMENTAL].
         Use `layerBFS` for a layer-based breadth-first search (default for most algorithms).
         Use `queueBFS` for a queue-based breadth-first search. [ANP17]
         Use `queueBFSRS` for a queue-based breadth-first search with ranking system. [ANP17]

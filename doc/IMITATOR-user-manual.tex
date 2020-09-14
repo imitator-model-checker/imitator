@@ -876,18 +876,18 @@ This (non-default) algorithm can be called using the following option syntax:
 % 
 % The command is therefore:
 % 
-% \styleCommand{\binimitator{} model.imi property.imiprop -explOrder NDFS}
+% \styleCommand{\binimitator{} model.imi property.imiprop -expl-order NDFS}
 % 
 % Several heuristics can be used, some of them synthesizing all parameter values for which a cycle can be found.
-% These are accessible via the \styleOption{-explOrder} option:
+% These are accessible via the \styleOption{-expl-order} option:
 % 
 % \begin{description}
-% 	\item[\styleOption{-explOrder NDFS}]: use standard NDFS to find an accepting cycle;
-% 	\item[\styleOption{-explOrder NDFSsub}]: standard NDFS with subsumption;
-% 	\item[\styleOption{-explOrder layerNDFS}]: NDFS with layers;
-% 	\item[\styleOption{-explOrder layerNDFSsub}]: NDFS with subsumption and layers (default)	;
-% 	      % 	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
-% 	      % 	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
+% 	\item[\styleOption{-expl-order NDFS}]: use standard NDFS to find an accepting cycle;
+% 	\item[\styleOption{-expl-order NDFSsub}]: standard NDFS with subsumption;
+% 	\item[\styleOption{-expl-order layerNDFS}]: NDFS with layers;
+% 	\item[\styleOption{-expl-order layerNDFSsub}]: NDFS with subsumption and layers (default)	;
+% 	      % 	\item[\styleOption{-expl-order synNDFSsub}]: NDFS synthesis with subsumption;
+% 	      % 	\item[\styleOption{-expl-order synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
 % \end{description}
 % END OLD VERSION
 
@@ -1886,17 +1886,17 @@ This technique uses some basic static analysis of the \IPTA{} composing the \NIP
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-explOrder} } % TODO (default: false)
+\paragraph{\styleOption{-expl-order} } % TODO (default: false)
 %------------------------------------------------------------
 Exploration orders are considered %in two frameworks.
 
 %First,
 for standard reachability analysis (and counterexample analysis, using \styleIMI{\#witness}), and are documented in~\cite{ANP17}.
 \begin{itemize}
-	\item \styleOption{-explOrder layerBFS}: layer-based breadth-first search (default);
-	\item \styleOption{-explOrder queueBFS}: queue-based breadth-first search;
-	\item \styleOption{-explOrder queueBFSRS}: queue-based breadth-first search with ranking system
-	\item \styleOption{-explOrder queueBFSPRIOR}: priority-based BFS with ranking system.
+	\item \styleOption{-expl-order layerBFS}: layer-based breadth-first search (default);
+	\item \styleOption{-expl-order queueBFS}: queue-based breadth-first search;
+	\item \styleOption{-expl-order queueBFSRS}: queue-based breadth-first search with ranking system
+	\item \styleOption{-expl-order queueBFSPRIOR}: priority-based BFS with ranking system.
 \end{itemize}
 %
 This framework remains relatively experimental.
@@ -1904,12 +1904,12 @@ This framework remains relatively experimental.
 % Second, for accepting loop synthesis with NDFS exploration~\cite{NPP18} (see \cref{sss:accepting-loop-NDFS}).
 % In this latter case, the possible values are:
 % \begin{itemize}
-% \item \styleOption{-explOrder NDFS}: use standard NDFS to find an accepting cycle (default option);
-% \item \styleOption{-explOrder NDFSsub}: standard NDFS with subsumption;
-% \item \styleOption{-explOrder layerNDFS}: NDFS with layers;
-% \item \styleOption{-explOrder layerNDFSsub}: NDFS with subsumption and layers;
-% % 	\item[\styleOption{-explOrder synNDFSsub}]: NDFS synthesis with subsumption;
-% % 	\item[\styleOption{-explOrder synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
+% \item \styleOption{-expl-order NDFS}: use standard NDFS to find an accepting cycle (default option);
+% \item \styleOption{-expl-order NDFSsub}: standard NDFS with subsumption;
+% \item \styleOption{-expl-order layerNDFS}: NDFS with layers;
+% \item \styleOption{-expl-order layerNDFSsub}: NDFS with subsumption and layers;
+% % 	\item[\styleOption{-expl-order synNDFSsub}]: NDFS synthesis with subsumption;
+% % 	\item[\styleOption{-expl-order synlayerNDFSsub}]: NDFS synthesis with subsumption and layers.
 % \end{itemize}
 
 
