@@ -404,6 +404,15 @@ That is, any clock can potentially be stopped in some location.
 \imitator{} will detect whether a model has or not stopwatches; if there is no stopwatch in some model, \imitator{} will apply some optimizations that (may) increase the analysis speed.
 % TODO: nice box with a ``tip'' title
 
+Clocks can be stopped in locations, thanks to the optional \styleIMI{stop \{ … \}} keyword (see grammar in  \cref{section:grammar:model}).
+A clock is stopped in a location if it belongs to the list of clocks in \styleIMI{stop \{ … \}}.
+It is resumed when leaving the location---unless the target location again stops this clock.
+
+
+
+
+% TODO: give semantics?
+
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
 \subsection{Networks of \imitator{} Parametric Timed Automata}
@@ -431,6 +440,9 @@ If a variable is required to be local to an \IPTA{}, then it should just not be 
 Different from many tools for (parametric) timed automata, clocks are not necessarily initially equal to~0 (this is similar to \hytech{}~\cite{HHW95} but different from \uppaal{}~\cite{LPY97}).
 The initial value of the clocks is defined by~$\Cinit$ (see \cref{section:init}).
 If nothing is defined in~$\Cinit$, then their value is supposed to be arbitrary (any real value greater or equal to~0).
+
+
+In a \NIPTA{}, a clock~$\clock$ is stopped in a location $(\loc_1, \dots, \loc_N)$ if it stopped in at least one of the locations~$\loc_i$, \ie{} $\clock \in \stopwatches_i(\loc_i)$ for some~$i \in \{ 1 , \dots , N \}$.
 
 Note that parameters are not assumed to be positive; however, the behavior of \imitator{} has not been tested for negative parameters, and it is strongly advised to constrain them to be non-negative in $\Cinit$ (if it is not the case, a warning is issued by \imitator{}).
 
@@ -616,7 +628,7 @@ One obtains a result in an external text file (\stylePath{model.res}) formatted 
 
 The options \styleOption{-merge} and \styleOption{-inclusion} are implicitely activated for this algorithm, as they usually greatly increase the analysis efficiency and the termination.
 You may want to use \styleOption{-no-merge} or \styleOption{-no-inclusion} to disable them.
-The option \styleOption{-dynamic-elimination} (not activated by default) can also be used to reduce the state space.
+The options \styleOption{-dynamic-elimination} (not activated by default) and \styleOption{-inclusion-bidir} can also be used to (try to) reduce the state space.
 
 \imitator{} can also
 output the state space in a graphical form (option \styleOption{-draw-statespace}),
@@ -797,7 +809,7 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Accepting loop synthesis}\label{ss:accepting-loop}
+\subsection{Accepting cycle synthesis}\label{ss:accepting-loop}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one \emph{accepting} cycle, \ie{} an infinite run passing infinitely often by location matching an accepting condition.
 Such accepting conditions are given in the form of a state predicate, \ie{} a conjunction or disjunction of locations and values for discrete variables.
@@ -835,7 +847,7 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsubsection{Accepting loop (BFS + Tarjan)}\label{sss:accepting-loop-BFS}
+\subsubsection{Accepting cycle (BFS + Tarjan)}\label{sss:accepting-loop-BFS}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 This (non-default) algorithm can be called using the following option syntax:
@@ -844,7 +856,7 @@ This (non-default) algorithm can be called using the following option syntax:
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsubsection{Accepting loop (NDFS)}\label{sss:accepting-loop-NDFS}
+\subsubsection{Accepting cycle (NDFS)}\label{sss:accepting-loop-NDFS}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 % BEGIN OLD VERSION
@@ -934,7 +946,7 @@ list via the \styleOption{-pendingOrder} option:
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\paragraph{Accepting loop (NDFS) with iterative deepening}\label{sss:accepting-loop-NDFS-iterative}
+\paragraph{Accepting cycle (NDFS) with iterative deepening}\label{sss:accepting-loop-NDFS-iterative}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 The NDFS algorithm described above with all its options
@@ -959,7 +971,7 @@ to the user.
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Any loop synthesis}\label{ss:loop}
+\subsection{Any cycle synthesis}\label{ss:loop}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 
 
@@ -1732,14 +1744,22 @@ In contrast, \styleOption{-time-limit} is applied to each call to the inverse me
 Print the list of contributors and exits.
 
 
-% NOTE: deleted as of version 3
-% %------------------------------------------------------------
-% \paragraph{\styleOption{-counterexample}}
-% %------------------------------------------------------------
-% For algorithms \EFsynth{} and \styleOption{AccLoopSynthNDFS}, stops the analysis as soon as one target state is found, and returns the (possibly approximated) result.
-%
-% This can be a way to solve the \emph{emptiness} instead of the \emph{synthesis} prolem.
-% Nevertheless, note that, instead of returning a Boolean answer, the algorithm still outputs some valuations (typically the valuations associated with the first parametric zone found, that allows to guarantee the violation of the property).
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-cycleAlgo} (default: NDFS)}
+%------------------------------------------------------------
+For cycle synthesis algorithms (\cref{ss:mode:LoopSynth}), call either \styleOption{Loop} (BFS) or \styleOption{NDFS}, with some additional options in the latter case.
+See
+	\styleOption{-layer},
+	\styleOption{-subsumption},
+	\styleOption{-pendingOrder},
+	\styleOption{-depth-init},
+	\styleOption{-depth-limit},
+	\styleOption{-step}
+for possible additional options.
+
+
+
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-depth-init <initial\_depth>} (default: none)}
@@ -1856,7 +1876,9 @@ Three values for this option are allowed:
 %------------------------------------------------------------
 \paragraph{\styleOption{-dynamic-elimination} (default: disabled)}
 %------------------------------------------------------------
-Dynamic elimination of clocks that are known to not used in the future of the current state~\cite{Andre13FSFMA}.
+Dynamic elimination of clocks that are known to not be used in the future of the current state~\cite{Andre13FSFMA}.
+That is, \imitator{} deletes from the symbolic states all clocks that will not be used in a guard or an invariant until their next reset.
+This technique uses some basic static analysis of the \IPTA{} composing the \NIPTA{}.
 
 
 %------------------------------------------------------------
