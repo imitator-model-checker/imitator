@@ -793,7 +793,7 @@ Given a \NIPTA{}, \PDFC{} synthesizes a parameter constraint such that, for any 
 
 The property syntax is as follows:
 
-\styleIMI{property := \#synth deadlockfree;}
+\styleIMI{property := \#synth DeadlockFree;}
 
 As usual, \imitator{} can also
 output the state space in a graphical form (option \styleOption{-draw-statespace})
@@ -822,16 +822,11 @@ Such accepting conditions are given in the form of a state predicate, \ie{} a co
 
 In both cases, the property syntax is as follows:
 
-\styleIMI{property := \#synth cycle\_through(state\_predicate);}
+\styleIMI{property := \#synth CycleThrough(state\_predicate);}
 
 %------------------------------------------------------------
 \begin{syntaxalias}
-	\imitator{} accepts the following equivalent keywords for \styleIMI{cycle\_through}:
-	\begin{itemize}
-		\item \styleIMI{cyclethrough}
-		\item \styleIMI{loop\_through}
-		\item \styleIMI{loopthrough}
-	\end{itemize}
+	\imitator{} accepts \styleIMI{LoopThrough} as an equivalent keyword for \styleIMI{CycleThrough}.
 \end{syntaxalias}
 %------------------------------------------------------------
 
@@ -979,15 +974,15 @@ Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for 
 
 The property syntax is as follows:
 
-\styleIMI{property := \#synth cycle;}
+\styleIMI{property := \#synth Cycle;}
 
 
 This is syntactic sugar for the following property:
 
-\styleIMI{property := \#synth cycle\_through(True);}
+\styleIMI{property := \#synth CycleThrough(True);}
 %------------------------------------------------------------
 \begin{syntaxalias}
-	\imitator{} accepts the \styleIMI{loop} keyword as an equivalent for \styleIMI{cycle}.
+	\imitator{} accepts the \styleIMI{Loop} keyword as an equivalent for \styleIMI{Cycle}.
 \end{syntaxalias}
 %------------------------------------------------------------
 
@@ -1066,8 +1061,8 @@ where \styleIMI{parameter\_valuation} is a reference valuation of the form \styl
 \begin{syntaxalias}
 	\imitator{} accepts the following equivalent keywords for \styleIMI{IM}:
 	\begin{itemize}
-		\item \styleIMI{inversemethod}
-		\item \styleIMI{tracepreservation}
+		\item \styleIMI{InverseMethod}
+		\item \styleIMI{TracePreservation}
 	\end{itemize}
 \end{syntaxalias}
 %------------------------------------------------------------
@@ -1220,16 +1215,16 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 			% Cycles
 
 			\hline
-			Cycle                  & \styleIMI{cycle}                            & \cellYes{} & \cellYes{}  \\
+			Cycle                  & \styleIMI{Cycle}                            & \cellYes{} & \cellYes{}  \\
 			\hline
-			Accepting cycle        & \styleIMI{cycle\_through(state\_predicate)} & \cellYes{} & \cellYes{}  \\
+			Accepting cycle        & \styleIMI{CycleThrough(state\_predicate)} & \cellYes{} & \cellYes{}  \\
 			\hline
 			Non-Zeno cycles        & \styleIMI{NZCycle}                            & \cellYes{} & \cellNo{}  \\
 
 			% Deadlock-freeness
 
 			\hline
-			Deadlock-freeness      & \styleIMI{deadlockfree}                          & \cellYes{} & \cellNo{}  \\
+			Deadlock-freeness      & \styleIMI{DeadlockFree}                          & \cellYes{} & \cellNo{}  \\
 
 			% Inverse method
 
@@ -2842,37 +2837,30 @@ We define each of those two components below.
 
 	% Cycles
 
-	$|$ & \styleIMI{cycle}                                                                                                \\
-	$|$ & \styleIMI{loop}
-		\commentgrammar{alias for \styleIMI{cycle}}
+	$|$ & \styleIMI{Cycle}                                                                                                \\
+	$|$ & \styleIMI{Loop}
+		\commentgrammar{alias for \styleIMI{Cycle}}
 	\\
-% 	$|$ & \styleIMI{inf\_acc\_cycle}                                                                                           \\
-	$|$ & \styleIMI{cycle\_through} \nt{state\_predicate}
+	$|$ & \styleIMI{CycleThrough} \nt{state\_predicate}
 	\\
 	% NOTE: alias
-	$|$ & \styleIMI{cyclethrough} \nt{state\_predicate}
-		\commentgrammar{alias for \styleIMI{cycle\_through}}
-	\\
-	$|$ & \styleIMI{loop\_through} \nt{state\_predicate} 
-		\commentgrammar{alias for \styleIMI{cycle\_through}}
-	\\
-	$|$ & \styleIMI{loopthrough} \nt{state\_predicate}
-		\commentgrammar{alias for \styleIMI{cycle\_through}}
+	$|$ & \styleIMI{LoopThrough} \nt{state\_predicate}
+		\commentgrammar{alias for \styleIMI{CycleThrough}}
 	\\
 	$|$ & \styleIMI{NZCycle}                                                                                     \\
 
 	% Deadlock-freeness
 
-	$|$ & \styleIMI{deadlockfree}                                                                                              \\
+	$|$ & \styleIMI{DeadlockFree}                                                                                              \\
 
 	% Inverse method, trace preservation, robustness
 
 	$|$ & \styleIMI{IM} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)}
 	\\
-	$|$ & \styleIMI{inversemethod} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)}
+	$|$ & \styleIMI{InverseMethod} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)}
 		\commentgrammar{alias for \styleIMI{IM}}
 	\\
-	$|$ & \styleIMI{tracepreservation} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)}
+	$|$ & \styleIMI{TracePreservation} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)}
 		\commentgrammar{alias for \styleIMI{IM}}
 	\\
 	$|$ & \styleIMI{IMconvex} \styleIMI{(} \nt{parameter\_valuation} \styleIMI{)}                                              \\
