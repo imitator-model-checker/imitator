@@ -1113,6 +1113,12 @@ let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_mode
 				all_variables_used := StringSet.add stopwatch_name !all_variables_used
 				) location.stopped;
 
+			(* Gather in the flows *)
+			print_message Verbose_total ("          Gathering variables used in possible flows");
+			List.iter (fun (clock_name, _) ->
+				all_variables_used := StringSet.add clock_name !all_variables_used
+				) location.flow;
+
 			(* Gather in the convex predicate *)
 			print_message Verbose_total ("          Gathering variables in convex predicate");
 			get_variables_in_convex_predicate all_variables_used location.invariant;
@@ -1341,14 +1347,38 @@ let check_stopwatches index_of_variables type_of_variables stopwatches =
 		try (
 			let variable_index = Hashtbl.find index_of_variables stopwatch in
 			if type_of_variables variable_index != Var_type_clock then (
-			print_error ("The variable '" ^ stopwatch ^ "' that should be stopped is not defined as a clock.");
+			print_error ("The variable `" ^ stopwatch ^ "` that should be stopped is not defined as a clock.");
 			ok := false;
 			);
 		) with Not_found -> (
-			print_error ("The variable '" ^ stopwatch ^ "' that should be stopped is not defined.");
+			print_error ("The variable `" ^ stopwatch ^ "` that should be stopped is not defined.");
 			ok := false;
 			);
 		) stopwatches;
+	!ok
+
+
+(*------------------------------------------------------------*)
+(* Check that all variables mentioned in a list of flows exist and are clocks *)
+(*------------------------------------------------------------*)
+
+(*** TODO: check for duplicates (and warn), check for discrepancies (and raise error) ***)
+
+let check_flows index_of_variables type_of_variables flows =
+	let ok = ref true in
+	List.iter (fun (clock_name, _) ->
+		(* Get variable name *)
+		try (
+			let variable_index = Hashtbl.find index_of_variables clock_name in
+			if type_of_variables variable_index != Var_type_clock then (
+			print_error ("The variable `" ^ clock_name ^ "` used in a flow is not defined as a clock.");
+			ok := false;
+			);
+		) with Not_found -> (
+			print_error ("The variable `" ^ clock_name ^ "` used in a flow is not defined.");
+			ok := false;
+			);
+		) flows;
 	!ok
 
 
@@ -1391,8 +1421,12 @@ let check_automata useful_parsing_model_information automata =
 			end;
 
 			(* Check the stopwatches *)
-			print_message Verbose_total ("          Checking possible stopwatches");
+			print_message Verbose_total ("          Checking stopwatches");
 			if not (check_stopwatches index_of_variables type_of_variables location.stopped) then well_formed := false;
+
+			(* Check the flows *)
+			print_message Verbose_total ("          Checking flows");
+			if not (check_flows index_of_variables type_of_variables location.flow) then well_formed := false;
 
 
 			(* Check the convex predicate *)
@@ -1751,8 +1785,11 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 	let transitions = Array.make nb_automata (Array.make 0 []) in
 	(* Create an empty array for the invariants *)
 	let invariants = Array.make nb_automata (Array.make 0 (LinearConstraint.pxd_false_constraint ())) in
-	(* Create an empty array for the invariants *)
+	(* Create an empty array for the stopwatches *)
 	let stopwatches_array = Array.make nb_automata (Array.make 0 []) in
+	(* Create an empty array for the flows *)
+	let flow_array = Array.make nb_automata (Array.make 0 []) in
+	
 	(* Does the model has any stopwatch? *)
 	let has_stopwatches = ref false in
 	(* Maintain the index of no_sync *)
@@ -1780,6 +1817,8 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 		invariants.(automaton_index) <- Array.make nb_locations (LinearConstraint.pxd_false_constraint ());
 		(* Create the array of stopwatches for this automaton *)
 		stopwatches_array.(automaton_index) <- Array.make nb_locations [];
+		(* Create the array of flows for this automaton *)
+		flow_array.(automaton_index) <- Array.make nb_locations [];
 
 		(* For each location: *)
 		List.iter
@@ -1863,10 +1902,18 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 				(* Convert the stopwatches names into variables *)
 				let list_of_stopwatch_names = list_only_once location.stopped in
 				(* Update the array of stopwatches *)
-				stopwatches_array.(automaton_index).(location_index) <- List.map (fun stopwatch_index ->
-					Hashtbl.find index_of_variables stopwatch_index
-				)
-					list_of_stopwatch_names;
+				stopwatches_array.(automaton_index).(location_index) <- List.map (fun clock_index ->
+					Hashtbl.find index_of_variables clock_index
+				) list_of_stopwatch_names;
+
+				(* Does the model has stopwatches? *)
+				if location.flow != [] then has_stopwatches := true;
+				(* Convert the flow names into variables *)
+				(*** TODO: remove duplicates, reorder ***)
+				(* Update the array of flows *)
+				flow_array.(automaton_index).(location_index) <- List.map (fun (clock_index, flow_value) ->
+					(Hashtbl.find index_of_variables clock_index), flow_value
+				) location.flow;
 
 			) locations;
 		(* Update the array of actions per automaton *)
