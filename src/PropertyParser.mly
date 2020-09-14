@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/09/11
+ * Last modified     : 2020/09/14
  *
  ************************************************************/
 
@@ -166,11 +166,8 @@ property:
 	/*------------------------------------------------------------*/
 	
 	/* Infinite-run (cycle) */
-	| CT_INFCYCLE { Parsed_Cycle }
+	| CT_INFCYCLE { Parsed_Cycle_Through Parsed_state_predicate_true }
 
-	/* Accepting infinite-run (cycle) through an accepting keyword */
-/*	| CT_INFACCCYCLE { Parsed_Accepting_Cycle } */
-	
 	/* Accepting infinite-run (cycle) through a state predicate */
 	| CT_INFCYCLETHROUGH state_predicate { Parsed_Cycle_Through $2 }
 

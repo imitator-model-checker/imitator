@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/09/10
+ * Last modified     : 2020/09/14
  *
  ************************************************************)
  
@@ -158,8 +158,6 @@ let get_v0_option () =
 			| Cycle_through _
 			| PRP _
 				
-			| Cycle
-(* 			| Accepting_cycle *)
 			| NZCycle_check
 			| NZCycle_CUB
 			| NZCycle_transform
@@ -1279,8 +1277,6 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 				| PRP (state_predicate, _)
 					-> Some state_predicate
 					
-				| Cycle
-(* 				| Accepting_cycle *)
 				| NZCycle_check
 				| NZCycle_CUB
 				| NZCycle_transform

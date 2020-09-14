@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/10/08
- * Last modified     : 2020/09/10
+ * Last modified     : 2020/09/14
  *
  ************************************************************)
 
@@ -101,12 +101,6 @@ type property =
 	(* Cycles *)
 	(*------------------------------------------------------------*)
 	
-	(** Infinite-run (cycle) *)
-	| Cycle
-
-(*	(** Accepting infinite-run (cycle) using an accepting keyword *)
-	| Accepting_cycle*)
-
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through of state_predicate
 

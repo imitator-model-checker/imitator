@@ -796,32 +796,6 @@ output the constraint synthesized in a graphical form in two dimensions (option 
 \section{Parametric cycle synthesis}\label{ss:mode:LoopSynth}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-\subsection{Any loop synthesis}\label{ss:loop}
-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
-
-
-Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, \ie{} an infinite run. % TODO: ~\cite{AL17}
-
-% The command is:
-%
-% \styleCommand{\binimitator{} model.imi -mode LoopSynth -output-result}
-
-The property syntax is as follows:
-
-\styleIMI{property := \#synth cycle;}
-
-%------------------------------------------------------------
-\begin{syntaxalias}
-	\imitator{} accepts the \styleIMI{loop} keyword as an equivalent for \styleIMI{cycle}.
-\end{syntaxalias}
-%------------------------------------------------------------
-
-As usual, \imitator{} can also
-output the state space in a graphical form (option \styleOption{-draw-statespace})
-or
-output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
-
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \subsection{Accepting loop synthesis}\label{ss:accepting-loop}
@@ -853,6 +827,12 @@ In both cases, the property syntax is as follows:
 
 
 The second algorithm (\cref{sss:accepting-loop-NDFS}) is so far the default in \imitator{}; both algorithms have \emph{not} been experimentally compared with each other; this is the subject of future work.
+
+
+As usual, \imitator{} can also
+output the state space in a graphical form (option \styleOption{-draw-statespace})
+or
+output the constraint synthesized in a graphical form in two dimensions (option \styleOption{-draw-cart}).
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -975,6 +955,32 @@ uses the following options :
 
 The results obtained at each iteration are displayed, thus giving valuable information
 to the user.
+
+
+
+
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+\subsection{Any loop synthesis}\label{ss:loop}
+%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
+
+
+Given a \NIPTA{}, \imitator{} synthesizes a parameter constraint such that, for any parameter valuation in that constraint, the system contains at least one cycle, \ie{} an infinite run. % TODO: ~\cite{AL17}
+
+The property syntax is as follows:
+
+\styleIMI{property := \#synth cycle;}
+
+
+This is syntactic sugar for the following property:
+
+\styleIMI{property := \#synth cycle\_through(True);}
+%------------------------------------------------------------
+\begin{syntaxalias}
+	\imitator{} accepts the \styleIMI{loop} keyword as an equivalent for \styleIMI{cycle}.
+\end{syntaxalias}
+%------------------------------------------------------------
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Parametric non-Zeno cycle synthesis}\label{ss:mode:Zeno}

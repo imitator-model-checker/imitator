@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/17
- * Last modified     : 2020/09/10
+ * Last modified     : 2020/09/14
  *
  ************************************************************)
 
@@ -42,7 +42,7 @@ class algoAccLoopSynth (state_predicate : AbstractProperty.state_predicate) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "AcceptingCycle"
+	method algorithm_name = "Cycle"
 	
 			
 	(************************************************************)

@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/09/10
+ * Last modified     : 2020/09/14
  *
  ************************************************************)
 
@@ -677,16 +677,6 @@ match options#imitator_mode with
 			(************************************************************)
 			(* Parametric loop synthesis *)
 			(************************************************************)
-
-			(** Infinite-run (cycle) *)
-			| Cycle ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoLoopSynth.algoLoopSynth in myalgo
-
-				
-(*			(** Accepting infinite-run (cycle) using an accepting keyword *)
-			| Accepting_cycle ->
-				let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS in myalgo*)
-
 
 			(** Accepting infinite-run (cycle) using an accepting keyword *)
 			| Cycle_through state_predicate ->

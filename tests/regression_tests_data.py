@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/09/10
+# Last modified     : 2020/09/14
 #************************************************************
 
 
@@ -4466,7 +4466,7 @@ END RESULT
 	{
 		'purpose'    : 'Test LoopSynth: flip-flop (no loop)',
 		'input_files': ['flipflop.imi', 'flipflop-loop.imiprop'],
-		'options'    : '',
+		'options'    : '-cycleAlgo Loop',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4490,7 +4490,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop',
 		'input_files': ['PDFC4.imi', 'PDFC-loop.imiprop'],
-		'options'    : '',
+		'options'    : '-cycleAlgo Loop',
 		'expectations' : [
 			{'file': 'PDFC4.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4520,7 +4520,7 @@ Number of computed states               : 3
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation',
 		'input_files': ['PDFC5.imi', 'PDFC-loop.imiprop'],
-		'options'    : '',
+		'options'    : '-cycleAlgo Loop',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4550,7 +4550,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: witness vs. synthesis (witness)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-loop-witness.imiprop'],
-		'options'    : '',
+		'options'    : '-cycleAlgo Loop',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4578,7 +4578,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: witness vs. synthesis (synthesis)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-loop.imiprop'],
-		'options'    : '',
+		'options'    : '-cycleAlgo Loop',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4609,7 +4609,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with 1 real loop',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
-		'options'    : '',
+		'options'    : '-cycleAlgo Loop',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4637,7 +4637,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (over-approx with -inclusion)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
-		'options'    : '-inclusion',
+		'options'    : '-inclusion -cycleAlgo Loop',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4667,7 +4667,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (over-approx with -inclusion -merge)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
-		'options'    : '-inclusion -merge',
+		'options'    : '-cycleAlgo Loop -inclusion -merge',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4699,7 +4699,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (under-approx with -depth-limit)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
-		'options'    : '-depth-limit 3',
+		'options'    : '-cycleAlgo Loop -depth-limit 3',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4727,7 +4727,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (invalid with -inclusion -depth-limit)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
-		'options'    : '-inclusion -depth-limit 3',
+		'options'    : '-cycleAlgo Loop -inclusion -depth-limit 3',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT

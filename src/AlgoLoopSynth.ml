@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2020/09/09
+ * Last modified     : 2020/09/14
  *
  ************************************************************)
 
@@ -44,7 +44,7 @@ type has_loop =
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoLoopSynth =
+class virtual algoLoopSynth =
 	object (self) inherit algoStateBased as super
 	
 	(************************************************************)
@@ -66,7 +66,7 @@ class algoLoopSynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "Cycle"
+(* 	method algorithm_name = "Cycle" *)
 	
 	
 	

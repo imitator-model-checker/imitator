@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2020/08/25
- * Last modified     : 2020/09/10
+ * Last modified     : 2020/09/14
  *
  ************************************************************)
 
@@ -67,12 +67,6 @@ let inclusion_needed property =
 	(*------------------------------------------------------------*)
 	(* Cycles *)
 	(*------------------------------------------------------------*)
-	
-	(** Infinite-run (cycle) *)
-	| Cycle
-
-(*	(** Accepting infinite-run (cycle) via an accepting keyword *)
-	| Accepting_cycle*)
 	
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
@@ -203,14 +197,6 @@ let merge_needed = inclusion_needed
 	(*------------------------------------------------------------*)
 	(* Cycles *)
 	(*------------------------------------------------------------*)
-	
-	(** Infinite-run (cycle) *)
-	| Cycle
-		-> Exploration_layer_BFS
-
-	(** Accepting infinite-run (cycle) via an accepting keyword *)
-	| Accepting_cycle
-		-> Exploration_layer_NDFS_sub
 	
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
@@ -348,12 +334,6 @@ let text_of_property property =
 	(*------------------------------------------------------------*)
 	(* Cycles *)
 	(*------------------------------------------------------------*)
-	
-	(** Infinite-run (cycle) *)
-	| Cycle -> "infinite run " ^ synthesis_or_witness
-
-(*	(** Accepting infinite-run (cycle) via an accepting keyword *)
-	| Accepting_cycle -> "infinite run accepting run " ^ synthesis_or_witness*)
 	
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _ -> "infinite accepting run " ^ synthesis_or_witness
