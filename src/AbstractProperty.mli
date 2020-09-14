@@ -33,6 +33,9 @@ type loc_predicate =
 type simple_predicate =
 	| Discrete_boolean_expression of DiscreteExpressions.discrete_boolean_expression
 	| Loc_predicate of loc_predicate
+	| State_predicate_true
+	| State_predicate_false
+	| State_predicate_accepting
 
 
 type state_predicate_factor =
@@ -47,9 +50,6 @@ and state_predicate_term =
 and state_predicate =
 	| State_predicate_OR of state_predicate * state_predicate
 	| State_predicate_term of state_predicate_term
-	(*** NOTE: added for conveniency, notably to create 'dummy' predicates ***)
-	| State_predicate_true
-	| State_predicate_false
 
 
 (************************************************************)

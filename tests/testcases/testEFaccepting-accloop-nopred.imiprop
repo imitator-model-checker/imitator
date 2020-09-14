@@ -17,4 +17,4 @@
  * IMITATOR version: 3.0
  ************************************************************)
 
-property := #synth CycleThrough;
+property := #synth CycleThrough(accepting);

@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2020/09/10
+ * Last modified     : 2020/09/14
  *
  ************************************************************)
 
@@ -157,7 +157,7 @@ class virtual algoEFopt (state_predicate : AbstractProperty.state_predicate) (pa
 		
 		(* Check the state_predicate *)
 
-		State.is_accepting_or_match_state_predicate state_predicate state
+		State.match_state_predicate model.is_accepting state_predicate state
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

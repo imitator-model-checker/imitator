@@ -538,6 +538,9 @@ let convert_parsed_loc_predicate useful_parsing_model_information = function
 let convert_parsed_simple_predicate useful_parsing_model_information = function
 	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (convert_parsed_discrete_boolean_expression useful_parsing_model_information parsed_discrete_boolean_expression)
 	| Parsed_loc_predicate parsed_loc_predicate -> Loc_predicate (convert_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate)
+	| Parsed_state_predicate_true -> State_predicate_true
+	| Parsed_state_predicate_false -> State_predicate_false
+	| Parsed_state_predicate_accepting -> State_predicate_accepting
 
 
 (* Convert parsed_state_predicate *)
@@ -563,8 +566,6 @@ and convert_parsed_state_predicate useful_parsing_model_information = function
 			convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate2
 		)
 	| Parsed_state_predicate_term parsed_state_predicate_term -> State_predicate_term (convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term)
-	| Parsed_state_predicate_true -> State_predicate_true
-	| Parsed_state_predicate_false -> State_predicate_false
 
 
 
@@ -643,6 +644,9 @@ let get_variables_in_parsed_simple_predicate variables_used_ref = function
 		(* No variable in location predicate *)
 		()
 
+	| Parsed_state_predicate_true | Parsed_state_predicate_false | Parsed_state_predicate_accepting ->
+		()
+
 
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a parsed_state_predicate_factor *)
@@ -682,8 +686,6 @@ and get_variables_in_parsed_state_predicate variables_used_ref = function
 	| Parsed_state_predicate_term parsed_state_predicate_term ->
 		get_variables_in_parsed_state_predicate_term variables_used_ref parsed_state_predicate_term
 
-	| Parsed_state_predicate_true | Parsed_state_predicate_false
-		-> ()
 
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a convex predicate *)
@@ -2997,6 +2999,8 @@ let check_parsed_simple_predicate useful_parsing_model_information = function
 		check_parsed_discrete_boolean_expression useful_parsing_model_information parsed_discrete_boolean_expression
 	| Parsed_loc_predicate parsed_loc_predicate ->
 		check_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate
+	| Parsed_state_predicate_true | Parsed_state_predicate_false | Parsed_state_predicate_accepting ->
+		true
 
 
 let rec check_parsed_state_predicate useful_parsing_model_information = function
@@ -3009,8 +3013,6 @@ let rec check_parsed_state_predicate useful_parsing_model_information = function
 	| Parsed_state_predicate_term parsed_state_predicate_term ->
 		check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term
 
-	| Parsed_state_predicate_true | Parsed_state_predicate_false ->
-		true
 
 and check_parsed_state_predicate_term useful_parsing_model_information = function
 	| Parsed_state_predicate_term_AND (parsed_state_predicate_term_1 , parsed_state_predicate_term_2) ->

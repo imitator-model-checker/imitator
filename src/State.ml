@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2016/05/04
- * Last modified     : 2020/09/10
+ * Last modified     : 2020/09/14
  *
  ************************************************************)
 
@@ -55,15 +55,7 @@ type abstract_state = {
 (** Matching state predicates with a global location *)
 (************************************************************)
 
-let match_state_predicate state_predicate state =
-	(* Call dedicated function *)
-	Location.match_state_predicate state_predicate state.global_location
-
-
-(*------------------------------------------------*)
-(* Check whether the global location is accepting *)
-(*------------------------------------------------*)
-let is_one_location_accepting (state : state) =
+(*let is_one_location_accepting (state : state) =
 	
 	(* Retrieve the model *)
 	let model = Input.get_model() in
@@ -76,14 +68,21 @@ let is_one_location_accepting (state : state) =
 	
 	Array.iteri (fun automaton_index location_index ->
 		result := !result || model.is_accepting automaton_index location_index) locations;
+	
+	(* Return result *)
 	!result
+	
+let match_state_predicate state_predicate state =
+	(* Call dedicated function *)
+	Location.match_state_predicate state_predicate state.global_location*)
 
 
-(* Tests whether a state is either accepting (i.e., at least one location is accepting using the `accepting` keyword) OR matches `state_predicate` *)
-let is_accepting_or_match_state_predicate (state_predicate : AbstractProperty.state_predicate) (state : state) : bool =
-	(is_one_location_accepting state)
+(* Tests whether a state matches `state_predicate`; takes as argument the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
+let match_state_predicate (locations_acceptance_condition : Automaton.automaton_index -> Automaton.location_index -> bool) (state_predicate : AbstractProperty.state_predicate) (state : state) : bool =
+(*	(is_one_location_accepting state)
 	||
-	(match_state_predicate state_predicate state)
+	(match_state_predicate state_predicate state)*)
+	Location.match_state_predicate locations_acceptance_condition state_predicate state.global_location
 
 
 

@@ -238,7 +238,9 @@ type parsed_loc_predicate =
 type parsed_simple_predicate =
 	| Parsed_discrete_boolean_expression of parsed_discrete_boolean_expression
 	| Parsed_loc_predicate of parsed_loc_predicate
-
+	| Parsed_state_predicate_true
+	| Parsed_state_predicate_false
+	| Parsed_state_predicate_accepting
 
 type parsed_state_predicate_factor =
 	| Parsed_state_predicate_factor_NOT of parsed_state_predicate_factor
@@ -252,8 +254,6 @@ and parsed_state_predicate_term =
 and parsed_state_predicate =
 	| Parsed_state_predicate_OR of parsed_state_predicate * parsed_state_predicate
 	| Parsed_state_predicate_term of parsed_state_predicate_term
-	| Parsed_state_predicate_true
-	| Parsed_state_predicate_false
 
 	
 (****************************************************************)

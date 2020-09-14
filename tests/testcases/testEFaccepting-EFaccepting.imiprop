@@ -11,10 +11,10 @@
  * Input by        : Étienne André
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
- * Created         : 2020/09/10
+ * Created         : 2020/09/14
  * Last modified   : 2020/09/14
  *
  * IMITATOR version: 3.0
  ************************************************************)
 
-property := #synth EF(accepting or loc[pta] = l4);
+property := #synth EF(accepting);

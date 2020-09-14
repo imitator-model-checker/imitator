@@ -2468,7 +2468,7 @@ class virtual algoStateBased =
 				| PRPC (state_predicate , _, _)
 				->
 					(* Check whether the current state matches the state predicate *)
-					if State.is_accepting_or_match_state_predicate state_predicate state then(
+					if State.match_state_predicate model.is_accepting state_predicate state then(
 						statespace_nature <- StateSpace.Bad;
 					);
 	
@@ -2543,7 +2543,7 @@ class virtual algoStateBased =
 			let source_constraint = source_state.px_constraint in
 			let source_constraint_projection = LinearConstraint.px_hide_nonparameters_and_collapse source_constraint in
 			print_message Verbose_high ("Performing post from "
-				^ (if State.is_one_location_accepting source_state then "accepting " else "")
+				^ (if Location.is_accepting model.is_accepting source_state.global_location then "accepting " else "")
 				^ "state:");
 			print_message Verbose_high (ModelPrinter.string_of_state model source_state);
 			print_message Verbose_high ("\nThe projection of this constraint onto the parameters is:");

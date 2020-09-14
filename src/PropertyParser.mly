@@ -166,7 +166,7 @@ property:
 	/*------------------------------------------------------------*/
 	
 	/* Infinite-run (cycle) */
-	| CT_INFCYCLE { Parsed_Cycle_Through Parsed_state_predicate_true }
+	| CT_INFCYCLE { Parsed_Cycle_Through (Parsed_state_predicate_term (Parsed_state_predicate_factor(Parsed_simple_predicate Parsed_state_predicate_true))) }
 
 	/* Accepting infinite-run (cycle) through a state predicate */
 	| CT_INFCYCLETHROUGH state_predicate { Parsed_Cycle_Through $2 }
@@ -272,31 +272,36 @@ pattern:
 /************************************************************/
 state_predicate:
 /************************************************************/
-	| state_predicate SYMBOL_OR state_predicate { Parsed_state_predicate_OR ($1, $3) }
-	| state_predicate_term { Parsed_state_predicate_term $1 }
-	| CT_TRUE { Parsed_state_predicate_true }
-	| CT_FALSE { Parsed_state_predicate_false }
-	/* `accepting` keyword, equivalent to checking accepting locations only, i.e., equivalent to False */
-	| CT_ACCEPTING { Parsed_state_predicate_false }
+	| non_empty_state_predicate { $1 }
 	/* Also allow empty state predicate, equivalent to False */
-	| { Parsed_state_predicate_false }
+	| { Parsed_state_predicate_term (Parsed_state_predicate_factor(Parsed_simple_predicate Parsed_state_predicate_false)) }
+;
+
+/************************************************************/
+non_empty_state_predicate:
+/************************************************************/
+	| non_empty_state_predicate SYMBOL_OR state_predicate_term { Parsed_state_predicate_OR ($1, Parsed_state_predicate_term $3) }
+	| state_predicate_term { Parsed_state_predicate_term $1 }
 ;
 
 state_predicate_term:
-	| state_predicate_term SYMBOL_AND state_predicate_term { Parsed_state_predicate_term_AND ($1, $3) }
+	| state_predicate_term SYMBOL_AND state_predicate_factor { Parsed_state_predicate_term_AND ($1, Parsed_state_predicate_factor $3) }
 	| state_predicate_factor { Parsed_state_predicate_factor $1 }
 ;
 
 state_predicate_factor:
 	| simple_predicate { Parsed_simple_predicate $1 }
 	| CT_NOT state_predicate_factor { Parsed_state_predicate_factor_NOT $2 }
-	| LPAREN state_predicate RPAREN { Parsed_state_predicate $2 }
+	| LPAREN non_empty_state_predicate RPAREN { Parsed_state_predicate $2 }
 ;
 
 /* A single definition of one bad location or one bad discrete definition */
 simple_predicate:
 	| discrete_boolean_predicate { Parsed_discrete_boolean_expression($1) }
 	| loc_predicate { Parsed_loc_predicate ($1) }
+	| CT_TRUE { Parsed_state_predicate_true }
+	| CT_FALSE { Parsed_state_predicate_false }
+	| CT_ACCEPTING { Parsed_state_predicate_accepting }
 ;
 
 

@@ -274,8 +274,8 @@ This chapter formally introduces the input model of \imitator{}.
 \imitator{} performs parametric verification of models specified using networks of \imitator{} parametric timed automata (hereafter \NIPTA{}).
 
 An \imitator{} parametric timed automaton (hereafter \IPTA{}) is a variant of parametric automata (as introduced in~\cite{AHV93}).
-A first difference between \IPTA{} and the PTA of \cite{AHV93} is that \IPTA{} have no accepting / final location;
-furthermore, \IPTA{} augment the expressiveness of PTA with several features such as invariants, discrete (rational) variables, complex guards and invariants (\ie{} not only comparing a single clock to a single parameter), stopwatches (\ie{} the ability to stop some clocks in some locations), and arbitrary clock updates (\ie{} not necessarily to~0).
+% A first difference between \IPTA{} and the PTA of \cite{AHV93} is that \IPTA{} have no accepting / final location;
+\IPTA{} augment the expressiveness of PTA from~\cite{AHV93} with several features such as invariants, discrete (rational) variables, complex guards and invariants (\ie{} not only comparing a single clock to a single parameter), stopwatches (\ie{} the ability to stop some clocks in some locations), and arbitrary clock updates (\ie{} not necessarily to~0).
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
@@ -640,33 +640,38 @@ output the text description of all states (option \styleOption{-states-descripti
 %------------------------------------------------------------
 \begin{remark}\label{remark:accepting}
 	For all reachability/safety algorithms (including cycle synthesis), one can also use the \styleIMI{accepting} keyword in the model (in front of a location, see grammar in \cref{section:grammar:model}).
-	In that case, the property becomes simply:
+	In that case, one can use the \styleIMI{accepting} predicate inside the property state predicate.
+	That is, one can define properties of the form:
+
+	\styleIMI{property := \#witness EF(accepting);}
 	
-	\styleIMI{property := \#synth EF(accepting);}
+	or even:
 	
-	The semantics of the acceptance of a state is as follows: ``at least one of the locations is accepting (as specified by the \styleIMI{accepting} keyword).''
+	\styleIMI{property := \#synth EF(loc[pta] = l1 | (accepting \& loc[pta] <> l2));}
 	
-	If one defines \styleIMI{accepting} locations in the model \emph{and} uses a \styleIMI{state\_predicate} in the property, \emph{both} acceptance conditions are considered at the same time.
-	In this case,
-	the semantics of the acceptance of a state is as follows: ``either at least one of the locations is accepting (thanks to the \styleIMI{accepting} keyword), \emph{or} the state matches the \styleIMI{state\_predicate} in the property.''
+	The semantics of the acceptance of a state is as follows: ``at least one of the locations is accepting (as specified by the \styleIMI{accepting} keyword in the model).''
 	
-	The presence of the \styleIMI{accepting} keyword can be seen as a ``hack'' to make property writing easier in some cases.
+% 	If one defines \styleIMI{accepting} locations in the model \emph{and} uses a \styleIMI{state\_predicate} in the property, \emph{both} acceptance conditions are considered at the same time.
+% 	In this case,
+% 	the semantics of the acceptance of a state is as follows: ``either at least one of the locations is accepting (thanks to the \styleIMI{accepting} keyword), \emph{or} the state matches the \styleIMI{state\_predicate} in the property.''
+% 	
+% 	The presence of the \styleIMI{accepting} keyword can be seen as a ``hack'' to make property writing easier in some cases.
 \end{remark}
 %------------------------------------------------------------
 
-%------------------------------------------------------------
-\begin{becareful}
-	From \cref{remark:accepting}, one can see that
-	
-	\styleIMI{property := \#synth EF(False);}
-	
-	is absolutely equivalent to
-	
-	\styleIMI{property := \#synth EF(accepting);}.
-	
-	This might be seem counterintuitive; but remember that the \styleIMI{accepting} keyword can be seen as a ``hack'', and the acceptance condition should normally be defined in \emph{properties} only.
-\end{becareful}
-%------------------------------------------------------------
+% %------------------------------------------------------------
+% \begin{becareful}
+% 	From \cref{remark:accepting}, one can see that
+% 	
+% 	\styleIMI{property := \#synth EF(False);}
+% 	
+% 	is absolutely equivalent to
+% 	
+% 	\styleIMI{property := \#synth EF(accepting);}.
+% 	
+% 	This might be seem counterintuitive; but remember that the \styleIMI{accepting} keyword can be seen as a ``hack'', and the acceptance condition should normally be defined in \emph{properties} only.
+% \end{becareful}
+% %------------------------------------------------------------
 
 
 

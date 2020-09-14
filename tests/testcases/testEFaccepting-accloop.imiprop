@@ -17,4 +17,4 @@
  * IMITATOR version: 3.0
  ************************************************************)
 
-property := #synth CycleThrough(loc[pta] = l4);
+property := #synth CycleThrough(loc[pta] = l4 or accepting);

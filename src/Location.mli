@@ -4,13 +4,14 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: define global locations
  * 
  * File contributors        : Étienne André
  * Created                  : 2010/03/10
  * Renamed from Automaton.ml: 2015/10/22
- * Last modified            : 2019/10/16
+ * Last modified            : 2020/09/14
  *
  ************************************************************)
 
@@ -85,8 +86,11 @@ val get_discrete_value : global_location -> discrete_index -> discrete_value
 (** Get a hash value for a location, including discrete values *)
 val hash_code : global_location -> int
 
-(** Checks whether a global_location satisfies a state_predicate *)
-val match_state_predicate : AbstractProperty.state_predicate -> global_location -> bool
+(** Check whether a global location is accepting according to the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
+val is_accepting : (automaton_index -> location_index -> bool) -> global_location -> bool
+
+(** Checks whether a global_location satisfies a state_predicate; takes as argument the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
+val match_state_predicate : (automaton_index -> location_index -> bool) -> AbstractProperty.state_predicate -> global_location -> bool
 
 
 

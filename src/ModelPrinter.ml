@@ -29,8 +29,9 @@ open StateSpace
 (************************************************************)
 (** Constants *)
 (************************************************************)
-let string_of_true	= "True"
-let string_of_false	= "False"
+let string_of_true		= "True"
+let string_of_false		= "False"
+let string_of_accepting	= "accepting"
 
 
 
@@ -646,9 +647,15 @@ let string_of_loc_predicate (model : AbstractModel.abstract_model) = function
 let string_of_simple_predicate (model : AbstractModel.abstract_model) = function
 	| Discrete_boolean_expression discrete_boolean_expression ->
 		string_of_discrete_boolean_expression model.variable_names discrete_boolean_expression
+
 	| Loc_predicate loc_predicate ->
 		string_of_loc_predicate model loc_predicate
 
+	| State_predicate_true -> string_of_true
+	
+	| State_predicate_false -> string_of_false
+	
+	| State_predicate_accepting -> string_of_accepting
 
 	
 let rec string_of_state_predicate_factor model = function
@@ -681,9 +688,6 @@ and string_of_state_predicate model = function
 	| State_predicate_term state_predicate_term ->
 		string_of_state_predicate_term model state_predicate_term
 		
-	| State_predicate_true -> string_of_true
-	
-	| State_predicate_false -> string_of_false
 
 
 
@@ -768,7 +772,7 @@ let string_of_abstract_property model property =
 		
 		(** Accepting infinite-run (cycle) through a state predicate *)
 		| Cycle_through state_predicate ->
-			if state_predicate = State_predicate_true then "Cycle"
+			if state_predicate = (State_predicate_term (State_predicate_factor (Simple_predicate State_predicate_true))) then "Cycle"
 			else "CycleThrough(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 		
 		(** Infinite-run (cycle) with non-Zeno assumption *)

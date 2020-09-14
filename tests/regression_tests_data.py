@@ -5270,7 +5270,7 @@ Constraint nature                       : good
 		# Test since               : 2020/09/10
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test both `accepting` keyword and state predicate in property: EF',
+		'purpose'    : 'Test state predicate with `accepting` keyword and location predicate in property: EF',
 		'input_files': ['testEFaccepting.imi', 'testEFaccepting-EF.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -5298,11 +5298,11 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
-		# Test since               : 2020/09/10
-		# Last modified            : 2020/09/10
+		# Test since               : 2020/09/14
+		# Last modified            : 2020/09/14
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test only `accepting` keyword: EF',
-		'input_files': ['testEFaccepting.imi', 'testEFaccepting-EFnopred.imiprop'],
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-EFaccepting.imiprop'],
 		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFaccepting.res' , 'content' : """
@@ -5327,9 +5327,67 @@ Constraint nature                       : good
 	{
 		# Test version             : 1
 		# Test since               : 2020/09/10
+		# Last modified            : 2020/09/14
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test empty state predicate: EF',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-EFnopred.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/14
+		# Last modified            : 2020/09/14
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test complex state predicate: EF',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-EFcomplex.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+	p = 2
+OR
+	p = 3
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/10
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test both `accepting` keyword and state predicate in property: Loop',
+		'purpose'    : 'Test state predicate with `accepting` keyword and location predicate in property: Loop',
 		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop.imiprop'],
 		'options'    : '-cycle-algo Loop',
 		'expectations' : [
@@ -5388,7 +5446,7 @@ Constraint nature                       : good
 		# Test since               : 2020/09/10
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test both `accepting` keyword and state predicate in property: NDFS',
+		'purpose'    : 'Test state predicate with `accepting` keyword and location predicate in property: NDFS',
 		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -5447,7 +5505,7 @@ Constraint nature                       : good
 		# Test since               : 2020/09/10
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test both `accepting` keyword and state predicate in property: PRPC',
+		'purpose'    : 'Test state predicate with `accepting` keyword and location predicate in property: PRPC',
 		'input_files': ['testEFaccepting.imi', 'testEFaccepting-PRPC.imiprop'],
 		'options'    : '',
 		'expectations' : [
