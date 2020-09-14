@@ -5,11 +5,11 @@
  *
  * Modeling the FMTV challenge, problem 1A for n=1
  * References      : "Verification of Two Real-Time Systems Using Parametric Timed Automata" (2015) by 
- *                      Youcheng Sun, Etienne Andre and Giuseppe Lipari
+ *                      Youcheng Sun, Étienne André and Giuseppe Lipari
  *
- * Author          : Etienne Andre and Youcheng Sun
+ * Author          : Étienne André and Youcheng Sun
  * Created         : 2015/03/19
- * Last modified   : 2020/03/31
+ * Last modified   : 2020/09/14
  *
  * IMITATOR version: 3
  ************************************************************)
@@ -100,7 +100,7 @@ loc camera2: invariant ckT1T2 = 0
 	when True do {} goto camera3;
 
 loc camera3: invariant ckT1T2 = 0
-	when True do {frame_in_3 '= FRAME_EMPTY} goto camera4;
+	when True do {frame_in_3 := FRAME_EMPTY} goto camera4;
 	when True do {} goto camera4;
 
 (* Now launch the Start signal *)

@@ -11,7 +11,7 @@
  * Input by        : Étienne André
  *
  * Created         : 2012/10/08
- * Last modified   : 2020/08/14
+ * Last modified   : 2020/09/14
  *
  * IMITATOR version: 3
  ************************************************************)
@@ -58,22 +58,22 @@ automaton procGEN
 (************************************************************)
 synclabs: access_GEN, enter_GEN, exit_GEN, no_access_GEN, try_GEN, update_GEN;
 
-loc idleGEN: while True wait {}
-	when turn = IDLE sync try_GEN do {xGEN' = 0} goto activeGEN;
+loc idleGEN: invariant True
+	when turn = IDLE sync try_GEN do {xGEN := 0} goto activeGEN;
 
-loc activeGEN: while xGEN <= delta wait {}
-	when True sync update_GEN do {turn' = GEN, xGEN' = 0} goto checkGEN;
+loc activeGEN: invariant xGEN <= delta
+	when True sync update_GEN do {turn := GEN, xGEN := 0} goto checkGEN;
 
-loc checkGEN: while True wait {}
+loc checkGEN: invariant True
 	when xGEN >= gamma & turn = GEN sync access_GEN goto accessGEN;
 	when xGEN >= gamma & turn < GEN sync no_access_GEN do {} goto idleGEN;
 	when xGEN >= gamma & turn > GEN sync no_access_GEN do {} goto idleGEN; -- oops, no "<>" operator here!
 
-loc accessGEN: while True wait {}
-	when True sync enter_GEN do {counter' = counter + 1} goto CSGEN;
+loc accessGEN: invariant True
+	when True sync enter_GEN do {counter := counter + 1} goto CSGEN;
 
-loc CSGEN: while True wait {}
-	when True sync exit_GEN do {counter' = counter - 1, turn' = IDLE} goto idleGEN;
+loc CSGEN: invariant True
+	when True sync exit_GEN do {counter := counter - 1, turn := IDLE} goto idleGEN;
 
 end -- procGEN*)
 

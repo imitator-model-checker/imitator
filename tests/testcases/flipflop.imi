@@ -11,7 +11,7 @@
  * Input by        : Étienne André
  *
  * Created         : 2007/11
- * Last modified   : 2020/03/20
+ * Last modified   : 2020/09/14
  *
  * IMITATOR version: 3.0
  ************************************************************)
@@ -57,7 +57,7 @@ loc Input2: invariant s <= tLO + tHold
 	when s = tLO + tHold sync dDown do {} goto Input3;
 
 loc Input3: invariant s <= tLO + tHI 
-	when s = tLO + tHI sync ckDown do {s'=0} goto Input4;  (*IF ONE WANTS TO BLOCK THE TIME AFTER ckDown*)
+	when s = tLO + tHI sync ckDown do {s := 0} goto Input4;  (*IF ONE WANTS TO BLOCK THE TIME AFTER ckDown*)
 (*  	when s = tLO + tHI sync ckDown do {} goto Input4; *)
 
 loc Input4: invariant s <= 0  (*IF ONE WANTS TO BLOCK THE TIME AFTER ckDown*)
