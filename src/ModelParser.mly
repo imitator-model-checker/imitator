@@ -628,9 +628,9 @@ init_definition:
 ;
 
 
-/* We allow here an optional "&" at the beginning */
+/* We allow here an optional "&" at the beginning and at the end */
 init_expression:
-	| ampersand_opt init_expression_fol { $2 }
+	| ampersand_opt init_expression_fol ampersand_opt { $2 }
 	| { [ ] }
 ;
 
