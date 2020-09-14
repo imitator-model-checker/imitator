@@ -674,7 +674,7 @@ class imitator_options =
         Use `dynamic` for a master-worker dynamic subdomain decomposition [ACN15].
 				");
 
-				("-distributedKillIM", Unit (fun () -> distributedKillIM <- true), " In distributed cartography, kill processes covered by other tiles [ACN15]; only works with selected distribution schemes. Default: disabled.
+				("-distributed-kill-IM", Unit (fun () -> distributedKillIM <- true), " In distributed cartography, kill processes covered by other tiles [ACN15]; only works with selected distribution schemes. Default: disabled.
 				");
 
 				("-draw-cart", Unit (fun () -> draw_cart <- true), " Plot cartography before terminating the program. Uses the first two parameters with ranges. Default: disabled.
