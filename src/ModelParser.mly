@@ -422,10 +422,10 @@ update_list:
 /************************************************************/
 
 update_nonempty_list:
-	| update COMMA update_list { Normal $1 :: $3}
-	| update { [Normal $1] }
-	| condition_update COMMA update_list { Condition $1 :: $3}
-	| condition_update { [Condition $1] }
+	| update COMMA update_nonempty_list { Normal $1 :: $3}
+	| update comma_opt { [Normal $1] }
+	| condition_update COMMA update_nonempty_list { Condition $1 :: $3}
+	| condition_update comma_opt { [Condition $1] }
 ;
 
 /************************************************************/
