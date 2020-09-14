@@ -71,14 +71,8 @@ let inclusion_needed property =
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
 	
-	(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
-	| NZCycle_check
-	
-	(** Infinite-run (cycle) with non-Zeno assumption: method by transforming the PTA into a CUB-PTA *)
-	| NZCycle_transform
-	
-	(** Infinite-run (cycle) with non-Zeno assumption: method assuming the PTA is already a CUB-PTA *)
-	| NZCycle_CUB
+	(** Infinite-run (cycle) with non-Zeno assumption *)
+	| NZ_Cycle
 	
 		-> false
 	
@@ -338,14 +332,8 @@ let text_of_property property =
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _ -> "infinite accepting run " ^ synthesis_or_witness
 
-	(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
-	| NZCycle_check -> "non-Zeno infinite accepting run " ^ synthesis_or_witness ^ " (without CUB transformation)"
-	
-	(** Infinite-run (cycle) with non-Zeno assumption: method by transforming the PTA into a CUB-PTA *)
-	| NZCycle_transform -> "non-Zeno infinite accepting run " ^ synthesis_or_witness ^ " (with CUB transformation)"
-	
-	(** Infinite-run (cycle) with non-Zeno assumption: method assuming the PTA is already a CUB-PTA *)
-	| NZCycle_CUB -> "non-Zeno infinite accepting run " ^ synthesis_or_witness ^ " (for a CUB PTA)"
+	(** Infinite-run (cycle) with non-Zeno assumption *)
+	| NZ_Cycle -> "non-Zeno infinite accepting run " ^ synthesis_or_witness ^ ""
 	
 
 	(*------------------------------------------------------------*)

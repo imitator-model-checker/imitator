@@ -104,14 +104,8 @@ type property =
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through of state_predicate
 
-	(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
-	| NZCycle_check
-	
-	(** Infinite-run (cycle) with non-Zeno assumption: method by transforming the PTA into a CUB-PTA *)
-	| NZCycle_transform
-	
-	(** Infinite-run (cycle) with non-Zeno assumption: method assuming the PTA is already a CUB-PTA *)
-	| NZCycle_CUB
+	(** Infinite-run (cycle) with non-Zeno assumption *)
+	| NZ_Cycle
 	
 
 	(*------------------------------------------------------------*)

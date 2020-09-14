@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/18
- * Last modified     : 2020/09/10
+ * Last modified     : 2020/09/14
  *
  ************************************************************)
 
@@ -141,6 +141,18 @@ type cycle_algorithm =
 	| Loop
 	(* NDFS based algorithm [NPvdP18] *)
 	| NDFS
+
+
+(** Infinite-run (cycle) with non-Zeno assumption: method *)
+type nz_method =
+	(** Method by checking whether the PTA is already a CUB-PTA for some valuation *)
+	| NZ_check
+	
+	(** Method by transforming the PTA into a CUB-PTA *)
+	| NZ_transform
+	
+	(** Method assuming the PTA is already a CUB-PTA *)
+	| NZ_already
 
 
 (************************************************************)

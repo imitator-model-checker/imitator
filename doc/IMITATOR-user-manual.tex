@@ -1004,21 +1004,25 @@ Parameter valuations yielding only Zeno-cycles or no cycles are ignored.
 The method implemented in \imitator{} is based on CUB-\IPTA{}, a syntactic subclass of PTA based on the CUB-TA proposed in~\cite{WSWLSDYL15}.
 The precise algorithm we use, including the transformation of an arbitrary PTA into a CUB-PTA, is described in~\cite{ANPS17}.
 
-% NOTE: hidden property =
-% 	\styleIMI{property := \#synth NZ\_cycle\_CUB;}
+The property syntax is:
+
+\styleIMI{property := \#synth NZCycle;}
+
 
 Two options are possible in \imitator{}:
 \begin{enumerate}
 	\item a partial method (but slightly faster), that first detects whether the input \NIPTA{} is already a CUB-PTA; if so, it applies non-Zeno checking on this CUB-PTA; otherwise, the returned constraint will be false.
 
-	      \styleIMI{property := \#synth NZ\_cycle\_check;}
+	      Use \styleOption{-nz-method check}.
 
 	\item a complete method (though of course without guarantee of termination), that transforms the \NIPTA{} into a network of CUB-PTAs, and applies non-Zeno checking on the transformed CUB-PTA.
 
-	      \styleIMI{property := \#synth NZ\_cycle\_transform;}
+	      Use \styleOption{-nz-method transform}.
 
 \end{enumerate}
 
+% NOTE: hidden option =
+	      Use \styleOption{-nz-method already}.
 
 \begin{becareful}[restrictions]
 	In contrast to most other algorithms of \imitator{}, these two algorithms work on a slightly restricted syntax:
@@ -1220,7 +1224,7 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 			\hline
 			Accepting cycle        & \styleIMI{cycle\_through(state\_predicate)} & \cellYes{} & \cellYes{}  \\
 			\hline
-			Non-Zeno cycles        & \styleIMI{NZ\_cycle}                            & \cellYes{} & \cellNo{}  \\
+			Non-Zeno cycles        & \styleIMI{NZCycle}                            & \cellYes{} & \cellNo{}  \\
 
 			% Deadlock-freeness
 
@@ -2072,6 +2076,17 @@ Note that a variable updated (to~0 or to any other value) is \emph{not} consider
 Using \styleOption{-no-var-autoremove} prevents \imitator{} from automatically remove these variables.
 
 
+%------------------------------------------------------------
+\paragraph{\styleOption{-nz-method} (default: transform)}
+%------------------------------------------------------------
+For non-Zeno cycle synthesis (\cref{ss:mode:Zeno}), choose to either:
+\begin{itemize}
+	\item synthesize valuations only for the subset of valuations for which the \NIPTA{} already satisfies the CUB assumption (\styleOption{-nz-method check}), or
+	\item transform the \NIPTA{} into an equivalent CUB-\NIPTA{} (\styleOption{-nz-method transform}).
+	% NOTE: hidden value \styleOption{-nz-method already}
+\end{itemize}
+
+
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-output-float} (default: disabled)}
@@ -2844,10 +2859,7 @@ We define each of those two components below.
 	$|$ & \styleIMI{loopthrough} \nt{state\_predicate}
 		\commentgrammar{alias for \styleIMI{cycle\_through}}
 	\\
-	$|$ & \styleIMI{NZ\_cycle\_check}                                                                                     \\
-	$|$ & \styleIMI{NZ\_cycle\_transform}                                                                                 \\
-	% NOTE: hidden for sake of simplicity
-	% 	$|$  & \styleIMI{NZ\_cycle\_CUB} \\
+	$|$ & \styleIMI{NZCycle}                                                                                     \\
 
 	% Deadlock-freeness
 

@@ -71,9 +71,7 @@ rule token = parse
 	| "loop"           { CT_INFCYCLE }
 	| "loop_through"   { CT_INFCYCLETHROUGH }
 	| "loopthrough"    { CT_INFCYCLETHROUGH }
-	| "NZ_cycle_check" { CT_NZINFCYCLECHECK }
-	| "NZ_cycle_CUB"   { CT_NZINFCYCLECUB }
-	| "NZ_cycle_transform" { CT_NZINFCYCLETRANSFORM }
+	| "NZCycle"        { CT_NZCYCLE }
  	| "PRP"            { CT_PRP }
  	| "PRPC"           { CT_PRPC }
  	| "tracepreservation" { CT_TRACEPRESERVATION }

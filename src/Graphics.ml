@@ -158,9 +158,7 @@ let get_v0_option () =
 			| Cycle_through _
 			| PRP _
 				
-			| NZCycle_check
-			| NZCycle_CUB
-			| NZCycle_transform
+			| NZ_Cycle
 			
 			| Deadlock_Freeness
 			| IM _
@@ -1277,9 +1275,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 				| PRP (state_predicate, _)
 					-> Some state_predicate
 					
-				| NZCycle_check
-				| NZCycle_CUB
-				| NZCycle_transform
+				| NZ_Cycle
 				| Deadlock_Freeness
 				| IM _
 				| ConvexIM _

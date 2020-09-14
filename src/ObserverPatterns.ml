@@ -101,9 +101,7 @@ let needs_clock (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_EFtmin _
 
 	| Parsed_Cycle_Through _
-	| Parsed_NZCycle_check
-	| Parsed_NZCycle_transform
-	| Parsed_NZCycle_CUB
+	| Parsed_NZ_Cycle
 
 	| Parsed_Deadlock_Freeness
 
@@ -174,9 +172,7 @@ let new_elements (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_EFtmin _
 
 	| Parsed_Cycle_Through _
-	| Parsed_NZCycle_check
-	| Parsed_NZCycle_transform
-	| Parsed_NZCycle_CUB
+	| Parsed_NZ_Cycle
 
 	| Parsed_Deadlock_Freeness
 
@@ -235,9 +231,7 @@ let get_nb_locations (parsed_property : ParsingStructure.parsed_property) =
 	| Parsed_EFtmin _
 	
 	| Parsed_Cycle_Through _
-	| Parsed_NZCycle_check
-	| Parsed_NZCycle_transform
-	| Parsed_NZCycle_CUB
+	| Parsed_NZ_Cycle
 
 	| Parsed_Deadlock_Freeness
 

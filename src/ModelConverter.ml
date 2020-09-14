@@ -2495,15 +2495,9 @@ let get_variables_in_property_option (parsed_property_option : ParsingStructure.
 		| Parsed_Cycle_Through parsed_state_predicate
 			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
 
-		(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
-		| Parsed_NZCycle_check -> ()
+		(** Infinite-run (cycle) with non-Zeno assumption *)
+		| Parsed_NZ_Cycle -> ()
 		
-		(** Infinite-run (cycle) with non-Zeno assumption: method by transforming the PTA into a CUB-PTA *)
-		| Parsed_NZCycle_transform -> ()
-		
-		(** Infinite-run (cycle) with non-Zeno assumption: method assuming the PTA is already a CUB-PTA *)
-		| Parsed_NZCycle_CUB -> ()
-
 
 		(*------------------------------------------------------------*)
 		(* Deadlock-freeness *)
@@ -3243,14 +3237,8 @@ let check_property_option useful_parsing_model_information (parsed_property_opti
 		| Parsed_Cycle_Through parsed_state_predicate ->
 			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
 		
-		(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
-		| Parsed_NZCycle_check -> true
-		
-		(** Infinite-run (cycle) with non-Zeno assumption: method by transforming the PTA into a CUB-PTA *)
-		| Parsed_NZCycle_transform -> true
-		
-		(** Infinite-run (cycle) with non-Zeno assumption: method assuming the PTA is already a CUB-PTA *)
-		| Parsed_NZCycle_CUB -> true
+		(** Infinite-run (cycle) with non-Zeno assumption *)
+		| Parsed_NZ_Cycle -> true
 
 
 		(*------------------------------------------------------------*)
@@ -3569,15 +3557,9 @@ let convert_property_option useful_parsing_model_information (nb_actions : int) 
 			,
 			None
 		
-		(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
-		| Parsed_NZCycle_check -> NZCycle_check, None
+		(** Infinite-run (cycle) with non-Zeno assumption *)
+		| Parsed_NZ_Cycle -> NZ_Cycle, None
 		
-		(** Infinite-run (cycle) with non-Zeno assumption: method by transforming the PTA into a CUB-PTA *)
-		| Parsed_NZCycle_transform -> NZCycle_transform, None
-		
-		(** Infinite-run (cycle) with non-Zeno assumption: method assuming the PTA is already a CUB-PTA *)
-		| Parsed_NZCycle_CUB -> NZCycle_CUB, None
-
 
 		(*------------------------------------------------------------*)
 		(* Deadlock-freeness *)
@@ -4002,9 +3984,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	| Some parsed_property ->
 		begin
 		match parsed_property.property with
-		| Parsed_NZCycle_check
-		| Parsed_NZCycle_CUB
-		| Parsed_NZCycle_transform
+		| Parsed_NZ_Cycle
 			->
 			print_message Verbose_high ("\nDefining special reset clock…");
 			true

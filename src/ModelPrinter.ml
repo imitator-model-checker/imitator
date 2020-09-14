@@ -771,15 +771,9 @@ let string_of_abstract_property model property =
 			if state_predicate = State_predicate_true then "cycle"
 			else "cycle_through(" ^ (string_of_state_predicate model state_predicate) ^ ")"
 		
-		(** Infinite-run (cycle) with non-Zeno assumption: method by checking whether the PTA is already a CUB-PTA for some valuation *)
-		| NZCycle_check -> "NZ_cycle_check"
+		(** Infinite-run (cycle) with non-Zeno assumption *)
+		| NZ_Cycle -> "NZCycle"
 		
-		(** Infinite-run (cycle) with non-Zeno assumption: method by transforming the PTA into a CUB-PTA *)
-		| NZCycle_transform -> "NZ_cycle_transform"
-		
-		(** Infinite-run (cycle) with non-Zeno assumption: method assuming the PTA is already a CUB-PTA *)
-		| NZCycle_CUB -> "NZ_cycle_CUB"
-
 		
 		(*------------------------------------------------------------*)
 		(* Deadlock-freeness *)

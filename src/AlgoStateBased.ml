@@ -2473,9 +2473,7 @@ class virtual algoStateBased =
 					);
 	
 				
-				| NZCycle_check
-				| NZCycle_CUB
-				| NZCycle_transform
+				| NZ_Cycle
 				
 				| Deadlock_Freeness
 				

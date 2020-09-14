@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2020/09/10
+ * Last modified: 2020/09/14
  *
  ************************************************************)
 
@@ -88,6 +88,12 @@ class imitator_options :
 		method no_random : bool
 		method no_time_elapsing : bool
 		method no_variable_autoremove : bool
+		
+		(* Method used for infinite-run (cycle) with non-Zeno assumption *)
+		method nz_method : AbstractAlgorithm.nz_method
+		method is_set_nz_method : bool
+		method set_nz_method : AbstractAlgorithm.nz_method -> unit
+		
 		method output_bc_cart : bool
 		method output_bc_result : bool
 		method output_cart_x_min : int option

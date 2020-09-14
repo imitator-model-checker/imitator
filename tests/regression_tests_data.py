@@ -5484,7 +5484,7 @@ Constraint nature                       : good/bad
 	{
 		'purpose'    : 'Test NZCUB: flip-flop (no loop)',
 		'input_files': ['flipflop.imi', 'flipflop-NZCUB.imiprop'],
-		'options'    : '',
+		'options'    : '-nz-method already',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5507,6 +5507,54 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno)',
+		'input_files': ['PDFC4.imi', 'PDFC4-NZCUB.imiprop'],
+		'options'    : '-nz-method already',
+		'expectations' : [
+			{'file': 'PDFC4.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno); check',
+		'input_files': ['PDFC4.imi', 'PDFC4-NZCUB.imiprop'],
+		'options'    : '-nz-method check',
+		'expectations' : [
+			{'file': 'PDFC4.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno); transform',
 		'input_files': ['PDFC4.imi', 'PDFC4-NZCUB.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -5532,7 +5580,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test NZCUB: CUBPTA1 (non-Zeno loop)',
 		'input_files': ['CUBPTA1.imi', 'CUBPTA-NZCUB.imiprop'],
-		'options'    : '',
+		'options'    : '-nz-method already',
 		'expectations' : [
 			{'file': 'CUBPTA1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5557,7 +5605,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test NZCUB: CUBPTA2 (2 non-Zeno loops)',
 		'input_files': ['CUBPTA2.imi', 'CUBPTA-NZCUB.imiprop'],
-		'options'    : '',
+		'options'    : '-nz-method already',
 		'expectations' : [
 			{'file': 'CUBPTA2.res' , 'content' : """
 BEGIN CONSTRAINT

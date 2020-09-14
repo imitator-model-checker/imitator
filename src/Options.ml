@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/09/10
+ * Last modified     : 2020/09/14
  *
  ************************************************************)
 
@@ -29,6 +29,7 @@ open Exceptions
 open OCamlUtilities
 open ImitatorUtilities
 open AbstractAlgorithm
+open AbstractProperty
 
 
 (************************************************************)
@@ -191,6 +192,9 @@ class imitator_options =
 		(* Merging heuristic *)
 		val mutable merge_heuristic = Merge_iter10
 
+		(* Method for NZ algorithms *)
+		val mutable nz_method : AbstractAlgorithm.nz_method option = None
+
 		(* do not put accepting states at the head of successors list in NDFS *)
 		val mutable no_acceptfirst = false
 
@@ -314,6 +318,12 @@ class imitator_options =
 		method no_time_elapsing = no_time_elapsing
 		method no_random = no_random
 		method no_variable_autoremove = no_variable_autoremove
+		
+		(* Method used for infinite-run (cycle) with non-Zeno assumption *)
+		method nz_method : AbstractAlgorithm.nz_method = value_of_option "nz_method" nz_method
+		method is_set_nz_method : bool = nz_method <> None
+		method set_nz_method (new_nz_method : AbstractAlgorithm.nz_method) = nz_method <- Some new_nz_method
+
 		method output_bc_cart = output_bc_cart
 		method output_bc_result = output_bc_result
 		method output_cart_x_min = output_cart_x_min
@@ -474,6 +484,34 @@ class imitator_options =
 				(* Case: state space exploration *)
 				else if mode = "statespace" then
 					imitator_mode <- State_space_computation
+
+				else(
+					print_error ("The mode `" ^ mode ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
+
+			(* Get the method for NZ algorithms *)
+			and set_nz_method nz_method_string =
+				(** Method by checking whether the PTA is already a CUB-PTA for some valuation *)
+				if nz_method_string = "check" then
+					nz_method <- Some NZ_check
+
+				(** Method by transforming the PTA into a CUB-PTA *)
+				else if nz_method_string = "transform" then
+					nz_method <- Some NZ_transform
+						
+				(** Method assuming the PTA is already a CUB-PTA *)
+				else if nz_method_string = "already" then
+					nz_method <- Some NZ_already
+				
+				else(
+					print_error ("The method `" ^ nz_method_string ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
 
 
 			and set_pending_order order =
@@ -761,12 +799,19 @@ class imitator_options =
 				("-no-output-result", Unit (fun () -> output_result <- Some false), " Do not write the result to a file. Default (for most algorithms): enabled, i.e., result is written.
 				");
 
+				("-nz-method", String set_nz_method, " Method for non-Zeno CUB-PTA algorithms [ANPS17].
+        Use `check` to try to synthesize loops only for the valuations for which the PTA is already CUB.
+        Use `transform` to transform the PTA into an equivalent CUB-PTA, and then to look for loops.
+        Default: `transform`.
+				");
+(* 				NOTE: hidden value `already`, to assume the PTA is already a CUB-PTA *)
+
 				("-pendingOrder", String set_pending_order, " Pending list exploration order [EXPERIMENTAL].
         Use `accepting` for a layered NDFS where pending list has accepting states first.
         Use `none` for a layered NDFS where pending list has no ordering policy.
         Use `param` for a layered NDFS where pending list has bigger parametric zones first.
         Use `zone` for a layered NDFS where pending list has bigger full zone first.
-        Default: none.
+        Default: `none`.
 				");
 
 				("-precomputepi0", Unit (fun () -> precomputepi0 <- true), " Compute the next pi0 before the next reception of a constraint (in PaTATOR mode for cartography only). Default: disabled.
@@ -960,6 +1005,15 @@ class imitator_options =
 
 
 			if imitator_mode <> Algorithm && draw_cart then print_warning ("The `-draw-cart` option is reserved for synthesis algorithms. Ignored.");
+			
+			if imitator_mode = Algorithm then(
+				let property = get_property() in
+				
+				if property.property <> NZ_Cycle && self#is_set_nz_method then(
+					print_warning ("The `-nz-method` option is reserved for non-Zeno cycle synthesis algorithms. Ignored.");
+				);
+			);
+
 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Check compatibility between options: options with threats on the result correctness *)
