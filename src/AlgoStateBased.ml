@@ -795,6 +795,37 @@ let apply_time_elapsing = apply_time_shift Forward
 let apply_time_past = apply_time_shift Backward
 
 
+(* Generate a polyhedron for computing the time elapsing for (parametric) timed automata, i.e., without stopwatches nor flows *)
+let generate_polyhedron_time_elapsing_pta variables_elapse variables_constant =
+	(* Create the inequalities var = 1, for var in variables_elapse *)
+	let inequalities_elapse = List.map (fun variable ->
+		(* Create a linear term *)
+		let linear_term = LinearConstraint.make_pxd_linear_term [(NumConst.one, variable)] NumConst.one in
+		(* Create the inequality *)
+		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
+	) variables_elapse in
+	
+	(* Create the inequalities var = 0, for var in variables_constant *)
+	let inequalities_constant = List.map (fun variable ->
+		(* Create a linear term *)
+		let linear_term = LinearConstraint.make_pxd_linear_term [(NumConst.one, variable)] NumConst.zero in
+		(* Create the inequality *)
+		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
+	) variables_constant in
+	
+	(* Print some information *)
+	print_message Verbose_total ("Creating linear constraint for time elapsing…");
+	
+	(* Convert both sets of inequalities to a constraint *)
+	let linear_constraint_time = LinearConstraint.make_pxd_constraint (List.rev_append inequalities_elapse inequalities_constant) in
+	
+	linear_constraint_time
+(*	(* Call dedicated function *)
+	LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron linear_constraint_time linear_constraint*)
+
+
+
+
 (*------------------------------------------------------------*)
 (** Apply time elapsing in location to a concrete valuation (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)

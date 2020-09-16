@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/08/23
+ * Last modified     : 2020/09/16
  *
  ************************************************************)
 
@@ -450,6 +450,14 @@ val pxd_remove_dimensions : int -> pxd_linear_constraint -> unit
 (** 'rename_variables renaming_couples c' renames all variables according to the couples of the form (old, new), with side effects *)
 (* val rename_variables_assign : (variable * variable) list -> linear_constraint -> unit *)
 val pxd_rename_variables_assign : (variable * variable) list -> pxd_linear_constraint -> unit
+
+(*------------------------------------------------------------*)
+(* Time elapsing and time past *)
+(*------------------------------------------------------------*)
+
+(* Time elapsing function wrt a polyhedron: `time_elapse_assign_wrt_polyhedron linear_constraint_time linear_constraint` modifies `linear_constraint` by letting time elapse according to the rates defined in the polyhedron `linear_constraint_time` *)
+val pxd_time_elapse_assign_wrt_polyhedron : pxd_linear_constraint -> pxd_linear_constraint -> unit
+
 
 (** 'time_elapse_assign variables_elapse variables_constant linear_constraint' performs time elapsing on a set of variables variables_elapse; other variables remain constant; version with side effects; behavior is unspecified if some variables within linear_constraint do not appear in any set of variables *)
 (* val time_elapse_assign : variable list -> variable list -> linear_constraint -> unit *)

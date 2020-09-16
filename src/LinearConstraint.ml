@@ -2292,6 +2292,17 @@ let rename_variables list_of_pairs linear_constraint =
 (* Time elapsing and time past *)
 (*------------------------------------------------------------*)
 
+(* Time elapsing function wrt a polyhedron: `time_elapse_assign_wrt_polyhedron linear_constraint_time linear_constraint` modifies `linear_constraint` by letting time elapse according to the rates defined in the polyhedron `linear_constraint_time` *)
+let time_elapse_assign_wrt_polyhedron linear_constraint_time linear_constraint =
+	(* Print some information *)
+	print_message Verbose_total ("Applying PPL time elapsing function…");
+
+	(* Apply the time elapsing using PPL *)
+	ippl_time_elapse_assign linear_constraint linear_constraint_time
+
+let pxd_time_elapse_assign_wrt_polyhedron = time_elapse_assign_wrt_polyhedron
+
+
 (* Generic time elapsing function *)
 (* 'reverse_direction' should be minus_one for growing, one for decreasing *)
 let time_elapse_gen_assign reverse_direction nb_dimensions variables_elapse variables_constant linear_constraint =
@@ -2316,15 +2327,14 @@ let time_elapse_gen_assign reverse_direction nb_dimensions variables_elapse vari
 	
 	(* Print some information *)
 	print_message Verbose_total ("Creating linear constraint for time elapsing…");
+	
+	(*** TODO: when no stopwatches in the model, we compute for EVERY transition this very same constraint `linear_constraint_time`! ***)
 
 	(* Convert both sets of inequalities to a constraint *)
 	let linear_constraint_time = make nb_dimensions (List.rev_append inequalities_elapse inequalities_constant) in
 	
-	(* Print some information *)
-	print_message Verbose_total ("Applying PPL time elapsing function…");
-
-	(* Apply the time elapsing using PPL *)
-	ippl_time_elapse_assign linear_constraint linear_constraint_time
+	(* Call dedicated function *)
+	time_elapse_assign_wrt_polyhedron linear_constraint_time linear_constraint
 
 
 (** Time elapsing function *)
