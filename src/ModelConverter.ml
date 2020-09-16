@@ -1934,11 +1934,15 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 				(* Does the model has stopwatches? *)
 				if location.flow != [] then has_stopwatches := true;
 				(* Convert the flow names into variables *)
-				(*** TODO: remove duplicates, reorder ***)
 				(* Update the array of flows *)
-				flow_array.(automaton_index).(location_index) <- List.map (fun (clock_index, flow_value) ->
-					(Hashtbl.find index_of_variables clock_index), flow_value
-				) location.flow;
+				flow_array.(automaton_index).(location_index) <-
+					(* Sort the list and remove duplicates, just to potentially speed up a bit *)
+					List.sort_uniq Pervasives.compare
+					(
+						List.map (fun (clock_index, flow_value) ->
+							(Hashtbl.find index_of_variables clock_index), flow_value
+						) location.flow
+					);
 
 			) locations;
 		(* Update the array of actions per automaton *)
@@ -1973,7 +1977,7 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 	let actions = list_of_interval 0 (nb_actions - 1) in
 
 	(* Return all the structures in a functional representation *)
-	actions, array_of_action_names, array_of_action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, !has_stopwatches, transitions, (if with_observer_action then Some (nb_actions - 1) else None)
+	actions, array_of_action_names, array_of_action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, !has_stopwatches, flow_array, transitions, (if with_observer_action then Some (nb_actions - 1) else None)
 
 
 
@@ -4362,7 +4366,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Building automata…");
 	(* Get all the possible actions for every location of every automaton *)
-	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_stopwatches, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option != None) in
+	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_stopwatches, flow_array, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option != None) in
 	
 	let nb_actions = List.length actions in
 	
@@ -4448,8 +4452,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			invariants.(observer_id)			<- observer_invariants;
 			(* Update costs (no costs in observers) *)
 			costs.(observer_id)					<- Array.make nb_locations None;
-			(* Update costs (no stopwatches in observers) *)
+			(* Update stopwatches (no stopwatches in observers) *)
 			stopwatches_array.(observer_id)		<- Array.make nb_locations [];
+			(* Update stopwatches (no stopwatches in observers) *)
+			flow_array.(observer_id)			<- Array.make nb_locations [];
 			
 			(* Update transitions *)
 			
@@ -4587,6 +4593,14 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		) with Invalid_argument msg -> raise (InternalError ("Clocks stopped at location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `stopwatches`. Additional details: `" ^ msg ^ "`"))
 	in
 	
+	(* Flow *)
+	let flow = fun automaton_index location_index ->
+		(* Add a safety mechanism *)
+		try(
+			flow_array.(automaton_index).(location_index)
+		) with Invalid_argument msg -> raise (InternalError ("List of flows at location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `flow`. Additional details: `" ^ msg ^ "`"))
+	in
+	
 	(* Transitions *)
 	let transitions = fun automaton_index location_index action_index ->
 		(* Add a safety mechanism *)
@@ -4643,10 +4657,6 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 (*	(* Convert the invariants *)
 	print_message Verbose_total ("*** Building invariants…");
 	let invariants = convert_invariants index_of_variables constants invariants in*)
-
-	(* Convert the stopwatches *)
-(* 	print_message Verbose_total ("*** Building stopwatches…"); *)
-(*	let stopwatches_fun = (fun automaton_index location_index -> stopwatches.(automaton_index).(location_index)) in*)
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -5090,6 +5100,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	transitions = transitions;
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches = stopwatches;
+	(* The list of pairs (clock, NumConst.t) defining the flow of some clocks at each automaton and each location *)
+	flow = flow;
 	(* An array transition_index -> transition *)
 	transitions_description = transitions_description;
 	(* An array transition_index -> automaton_index *)

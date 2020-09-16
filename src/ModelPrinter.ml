@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/09/14
+ * Last modified     : 2020/09/16
  *
  ************************************************************)
 
@@ -213,6 +213,16 @@ let string_of_invariant model automaton_index location_index =
 	else
 	let stopped_str = string_of_list_of_string_with_sep "," (List.map model.variable_names stopped) in
 	" stop{" ^ stopped_str ^ "}"
+
+	(* Handle flow *)
+	^
+	let flow = model.flow automaton_index location_index in
+	(* Case 1: no explicit flow *)
+	if flow = [] then " "
+	(* Case 2: some flow *)
+	else
+	let flow_str = string_of_list_of_string_with_sep "," (List.map (fun (variable_index, flow_value) -> (model.variable_names variable_index) ^ "' = " ^ (NumConst.string_of_numconst flow_value) ) flow) in
+	" flow{" ^ flow_str ^ "}"
 
 
 (* Convert a sync into a string *)

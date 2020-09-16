@@ -9,7 +9,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2020/09/01
+ * Last modified     : 2020/09/16
  *
  ************************************************************)
 
@@ -3675,6 +3675,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(*** TODO ***)
 		(*** NOTE: dummy function ***)
 		stopwatches = (fun _ _-> []);
+		(* The list of pairs (clock, NumConst.t) defining the flow of some clocks at each automaton and each location *)
+		(*** TODO ***)
+		(*** NOTE: dummy function ***)
+		flow = (fun _ _-> []);
 
 	
 		(* All clocks non-negative *)

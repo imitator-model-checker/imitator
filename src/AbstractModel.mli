@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/11
- * Last modified     : 2019/12/13
+ * Last modified     : 2020/09/16
  *
  ************************************************************)
 
@@ -249,6 +249,8 @@ type abstract_model = {
 	transitions : automaton_index -> location_index -> action_index -> (transition_index list);
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches : automaton_index -> location_index -> clock_index list;
+	(* The list of pairs (clock, NumConst.t) defining the flow of some clocks at each automaton and each location *)
+	flow : automaton_index -> location_index -> (clock_index * NumConst.t) list;
 	(* An array transition_index -> transition *)
 	transitions_description : transition_index -> transition;
 	(* An array transition_index -> automaton_index *)
