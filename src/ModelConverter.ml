@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/09/14
+ * Last modified     : 2020/09/16
  *
  ************************************************************)
 
@@ -1340,18 +1340,18 @@ let synclab_used_everywhere automata synclab_name =
 (*------------------------------------------------------------*)
 (* Check that all variables mentioned in a list of stopwatches exist and are clocks *)
 (*------------------------------------------------------------*)
-let check_stopwatches index_of_variables type_of_variables stopwatches =
+let check_stopwatches index_of_variables type_of_variables location_name stopwatches =
 	let ok = ref true in
 	List.iter (fun stopwatch ->
 		(* Get variable name *)
 		try (
 			let variable_index = Hashtbl.find index_of_variables stopwatch in
 			if type_of_variables variable_index != Var_type_clock then (
-			print_error ("The variable `" ^ stopwatch ^ "` that should be stopped is not defined as a clock.");
+			print_error ("The variable `" ^ stopwatch ^ "` that should be stopped in location `" ^ location_name ^ "` is not defined as a clock.");
 			ok := false;
 			);
 		) with Not_found -> (
-			print_error ("The variable `" ^ stopwatch ^ "` that should be stopped is not defined.");
+			print_error ("The variable `" ^ stopwatch ^ "` that should be stopped in location `" ^ location_name ^ "` is not defined.");
 			ok := false;
 			);
 		) stopwatches;
@@ -1364,18 +1364,43 @@ let check_stopwatches index_of_variables type_of_variables stopwatches =
 
 (*** TODO: check for duplicates (and warn), check for discrepancies (and raise error) ***)
 
-let check_flows index_of_variables type_of_variables flows =
+let check_flows nb_clocks index_of_variables type_of_variables location_name flows =
+	(* Create a hash table variable_index => flow value *)
+	let temp_flow_hashtable : (variable_index, NumConst.t) Hashtbl.t = Hashtbl.create nb_clocks in
+
+	(* Flag *)
 	let ok = ref true in
-	List.iter (fun (clock_name, _) ->
+	List.iter (fun (clock_name, flow_value) ->
 		(* Get variable name *)
 		try (
 			let variable_index = Hashtbl.find index_of_variables clock_name in
+			
+			(* Check variable type *)
 			if type_of_variables variable_index != Var_type_clock then (
-			print_error ("The variable `" ^ clock_name ^ "` used in a flow is not defined as a clock.");
-			ok := false;
+				print_error ("The variable `" ^ clock_name ^ "` used in a flow in location `" ^ location_name ^ "` is not defined as a clock.");
+				ok := false;
 			);
+			
+			(* Check whether a value was already defined *)
+			if Hashtbl.mem temp_flow_hashtable variable_index then(
+				(* Check whether the value is the same or not *)
+				let previous_value = Hashtbl.find temp_flow_hashtable variable_index in
+				(* If same value: warn *)
+				if NumConst.equal flow_value previous_value then(
+					print_warning("Duplicate clock flow value for variable `" ^ clock_name ^ "` in location `" ^ location_name ^ "`.");
+				)else(
+				(* If different value: error *)
+					print_error("Multiple and different clock flow values for variable `" ^ clock_name ^ "` in location `" ^ location_name ^ "`.");
+					ok := false;
+				);
+			)else(
+				(* Add the value to the table *)
+				Hashtbl.add temp_flow_hashtable variable_index flow_value;
+			);
+			
+			
 		) with Not_found -> (
-			print_error ("The variable `" ^ clock_name ^ "` used in a flow is not defined.");
+			print_error ("The variable `" ^ clock_name ^ "` used in a flow in location `" ^ location_name ^ "` is not defined.");
 			ok := false;
 			);
 		) flows;
@@ -1422,11 +1447,11 @@ let check_automata useful_parsing_model_information automata =
 
 			(* Check the stopwatches *)
 			print_message Verbose_total ("          Checking stopwatches");
-			if not (check_stopwatches index_of_variables type_of_variables location.stopped) then well_formed := false;
+			if not (check_stopwatches index_of_variables type_of_variables location.name location.stopped) then well_formed := false;
 
 			(* Check the flows *)
 			print_message Verbose_total ("          Checking flows");
-			if not (check_flows index_of_variables type_of_variables location.flow) then well_formed := false;
+			if not (check_flows useful_parsing_model_information.nb_clocks index_of_variables type_of_variables location.name location.flow) then well_formed := false;
 
 
 			(* Check the convex predicate *)
