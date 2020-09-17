@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2020/08/28
+ * Last modified     : 2020/09/17
  *
  ************************************************************)
 
@@ -495,10 +495,7 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (step : Num
 	method initialize_variables =
 		(* Time counter for the algorithm *)
 		start_time <- Unix.gettimeofday();
-
-(*		(* Retrieve the v0 *)
-		let v0 = self#get_v0 in*)
-
+		
 		(* 		super#initialize_variables; *)
 
 		(* Set the number of dimensions in the system *)
@@ -543,9 +540,6 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (step : Num
 		let init_px_constraint = init_state.px_constraint in
 		(* Hide non parameters *)
 		init_p_constraint <- LinearConstraint.px_hide_nonparameters_and_collapse init_px_constraint;
-
-(*		(* List of tiles *)
-		im_results <- [];*)
 
 		(* First create the tiles manager *)
 		begin
@@ -653,9 +647,6 @@ class virtual algoCartoGeneric (v0 : HyperRectangle.hyper_rectangle) (step : Num
 	(* Initializing cartography algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method initialize_cartography =
-(*		(* Retrieve the v0 *)
-		let v0 = self#get_v0 in*)
-
 		(* Print some information *)
 		self#print_algo_message Verbose_standard ("Starting running cartography…\n"); (* " ^ self#algorithm_name ^ " *)
 		
