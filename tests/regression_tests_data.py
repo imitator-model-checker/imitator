@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/09/14
+# Last modified     : 2020/09/17
 #************************************************************
 
 
@@ -32,6 +32,7 @@ tests = [
 	{
 		# Test version             : 1
 		# Test since               : 2019/07/09
+		# Last modified            : 2019/07/09
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test the L/U-nature (L-PTA)',
 		'input_files': ['testL.imi'],
@@ -1326,6 +1327,7 @@ end
 	{
 		# Test version             : 1
 		# Test since               : 2020/09/14
+		# Last modified            : 2020/09/14
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test stopwatches',
 		'input_files': ['testStopwatches.imi', 'testStopwatches.imiprop'],
@@ -1334,6 +1336,35 @@ end
 			{'file': 'testStopwatches.res' , 'content' : """
 BEGIN CONSTRAINT
 p = 10
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/17
+		# Last modified            : 2020/09/17
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test flows',
+		'input_files': ['testFlows.imi', 'testFlows.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testFlows.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 2046
 END CONSTRAINT
 
 ------------------------------------------------------------
