@@ -2328,8 +2328,6 @@ let time_elapse_gen_assign reverse_direction nb_dimensions variables_elapse vari
 	(* Print some information *)
 	print_message Verbose_total ("Creating linear constraint for time elapsing…");
 	
-	(*** TODO: when no stopwatches in the model, we compute for EVERY transition this very same constraint `linear_constraint_time`! ***)
-
 	(* Convert both sets of inequalities to a constraint *)
 	let linear_constraint_time = make nb_dimensions (List.rev_append inequalities_elapse inequalities_constant) in
 	

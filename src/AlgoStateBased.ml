@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/09/14
+ * Last modified     : 2020/09/17
  *
  ************************************************************)
 
@@ -737,70 +737,15 @@ let compute_stopwatches (location : Location.global_location) : (Automaton.clock
 (*------------------------------------------------------------*)
 (* Generic function to apply either time elapsing or time past to a constraint in a location *)
 (*------------------------------------------------------------*)
+
 type time_direction = Forward | Backward
 
-let apply_time_shift (direction : time_direction) (location : Location.global_location) (the_constraint : LinearConstraint.pxd_linear_constraint) =
-	(* Get the model *)
-	let model = Input.get_model() in
-
-	let direction_str = match direction with
-		| Forward -> "elapsing"
-		| Backward -> "past"
-	in
-
-	(* If urgent: no time elapsing *)
-	if is_location_urgent location then (
-		print_message Verbose_high ("Location urgent: NO time " ^ direction_str);
-		()
-	(* If not urgent: apply time elapsing *)
-	)else(
-		(* Compute the list of stopwatches *)
-		let stopped_clocks, elapsing_clocks = compute_stopwatches location in
-		print_message Verbose_high ("Computing list of stopwatches");
-		if verbose_mode_greater Verbose_total then(
-			let list_of_names = List.map model.variable_names stopped_clocks in
-			print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
-			let list_of_names = List.map model.variable_names elapsing_clocks in
-			print_message Verbose_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
-		);
-
-		(* Perform time elapsing *)
-		print_message Verbose_high ("Now applying time " ^ direction_str ^ "…");
-		let time_shift_function = match direction with
-			| Forward -> LinearConstraint.pxd_time_elapse_assign
-			| Backward -> LinearConstraint.pxd_time_past_assign
-		in
-		(*** NOTE: the comment is to be changed in alternative TE mode ***)
-		time_shift_function
-			elapsing_clocks
-			(List.rev_append stopped_clocks model.parameters_and_discrete)
-			the_constraint
-		;
-		(* Print some information *)
-		if verbose_mode_greater Verbose_total then(
-			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names the_constraint);
-		);
-		()
-	)
-
-(*------------------------------------------------------------*)
-(** Apply time elapsing in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
-(*------------------------------------------------------------*)
-let apply_time_elapsing = apply_time_shift Forward
-
-
-(*------------------------------------------------------------*)
-(** Apply time past in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
-(*------------------------------------------------------------*)
-let apply_time_past = apply_time_shift Backward
-
-
-(* Generate a polyhedron for computing the time elapsing for (parametric) timed automata, i.e., without stopwatches nor flows *)
-let generate_polyhedron_time_elapsing_pta variables_elapse variables_constant =
+(* Generate a polyhedron for computing the time elapsing for (parametric) timed automata, i.e., without stopwatches nor flows. *)
+let generate_polyhedron_time_elapsing_pta time_direction variables_elapse variables_constant =
 	(* Create the inequalities var = 1, for var in variables_elapse *)
 	let inequalities_elapse = List.map (fun variable ->
-		(* Create a linear term *)
-		let linear_term = LinearConstraint.make_pxd_linear_term [(NumConst.one, variable)] NumConst.one in
+		(* Create a linear term of the form `var + (-1 | 1) = 0`, with `-1` for elapsing, or `1` for past *)
+		let linear_term = LinearConstraint.make_pxd_linear_term [(NumConst.one, variable)] (match time_direction with Forward -> NumConst.minus_one | Backward -> NumConst.one) in
 		(* Create the inequality *)
 		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
 	) variables_elapse in
@@ -817,11 +762,93 @@ let generate_polyhedron_time_elapsing_pta variables_elapse variables_constant =
 	print_message Verbose_total ("Creating linear constraint for time elapsing…");
 	
 	(* Convert both sets of inequalities to a constraint *)
-	let linear_constraint_time = LinearConstraint.make_pxd_constraint (List.rev_append inequalities_elapse inequalities_constant) in
-	
-	linear_constraint_time
-(*	(* Call dedicated function *)
-	LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron linear_constraint_time linear_constraint*)
+	LinearConstraint.make_pxd_constraint (List.rev_append inequalities_elapse inequalities_constant)
+
+
+(*** HACK: should be an object!!! ***)
+(*** WARNING: won't work if NESTED analyses are performed! i.e., a AlgoStateBased calls another AlgoStateBased ***)
+(* Static polyhedron used for time elapsing computation, for "normal" PTAs, i.e., without stopwatches nor explicit flows *)
+let time_elapsing_polyhedron : LinearConstraint.pxd_linear_constraint option ref = ref None
+(* Static polyhedron used for time past computation, for "normal" PTAs, i.e., without stopwatches nor explicit flows *)
+let time_past_polyhedron : LinearConstraint.pxd_linear_constraint option ref = ref None
+
+
+
+let apply_time_shift (direction : time_direction) (location : Location.global_location) (the_constraint : LinearConstraint.pxd_linear_constraint) =
+	(* Get the model *)
+	let model = Input.get_model() in
+
+	let direction_str = match direction with
+		| Forward	-> "elapsing"
+		| Backward	-> "past"
+	in
+
+	(* If urgent: no time elapsing *)
+	if is_location_urgent location then (
+		print_message Verbose_high ("Location urgent: NO time " ^ direction_str);
+		()
+	(* If not urgent: apply time elapsing *)
+	)else(
+		(* If normal PTA, i.e., without stopwatches nor flows: directly call using the static polyhedron *)
+		if not model.has_stopwatches then(
+			(* Get the statically computed time elapsing polyhedron *)
+			let time_polyhedron =
+				(* Choose the right variable depending on time direction *)
+				let appropriate_variable = match direction with
+					| Forward	-> !time_elapsing_polyhedron
+					| Backward	-> !time_past_polyhedron
+				in
+				match appropriate_variable with
+				| Some polyedron -> polyedron
+				| None -> raise (InternalError "The static polyhedron for time elapsing should have been computed in function `apply_time_shift`.")
+			in
+			
+			(* Apply time elapsing *)
+			LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron time_polyhedron the_constraint;
+		
+		)else(
+			(* Otherwise, compute dynamically the list of stopwatches *)
+			let stopped_clocks, elapsing_clocks = compute_stopwatches location in
+			print_message Verbose_high ("Computing list of stopwatches");
+			if verbose_mode_greater Verbose_total then(
+				let list_of_names = List.map model.variable_names stopped_clocks in
+				print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+				let list_of_names = List.map model.variable_names elapsing_clocks in
+				print_message Verbose_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
+			);
+
+			(* Perform time elapsing *)
+			print_message Verbose_high ("Now applying time " ^ direction_str ^ "…");
+			let time_shift_function = match direction with
+				| Forward	-> LinearConstraint.pxd_time_elapse_assign
+				| Backward	-> LinearConstraint.pxd_time_past_assign
+			in
+			(*** NOTE: the comment is to be changed in alternative TE mode ***)
+			time_shift_function
+				elapsing_clocks
+				(List.rev_append stopped_clocks model.parameters_and_discrete)
+				the_constraint
+			;
+			(* Print some information *)
+			if verbose_mode_greater Verbose_total then(
+				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names the_constraint);
+			);
+			()
+		)
+	)
+
+
+(*------------------------------------------------------------*)
+(** Apply time elapsing in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
+(*------------------------------------------------------------*)
+let apply_time_elapsing = apply_time_shift Forward
+
+
+(*------------------------------------------------------------*)
+(** Apply time past in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
+(*------------------------------------------------------------*)
+let apply_time_past = apply_time_shift Backward
+
 
 
 
@@ -1098,6 +1125,31 @@ let compute_initial_state_or_abort () : state =
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
+	
+	(*** QUITE A HACK! Strange to have it here ***)
+	(* If normal PTA, i.e., without stopwatches nor flows, compute once for all the static time elapsing polyhedron *)
+	if not model.has_stopwatches then(
+		let variables_elapse		= model.clocks in
+		let variables_constant		= model.parameters_and_discrete in
+		let time_el_polyhedron		= generate_polyhedron_time_elapsing_pta Forward variables_elapse variables_constant in
+		let time_pa_polyhedron		= generate_polyhedron_time_elapsing_pta Backward variables_elapse variables_constant in
+		
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high "Computed the static time elapsing polyhedron:";
+			print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_el_polyhedron);
+			print_message Verbose_high "";
+			print_message Verbose_high "Computed the static time past polyhedron:";
+			print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_pa_polyhedron);
+			print_message Verbose_high "";
+		);
+		
+		(* Save them *)
+		time_elapsing_polyhedron	:= Some time_el_polyhedron;
+		time_past_polyhedron 		:= Some time_pa_polyhedron;
+	
+	);
+
 
 	(* Print the initial state *)
 	if verbose_mode_greater Verbose_medium then
@@ -2374,7 +2426,7 @@ class waiting_list =
 	(* Class variables *)
 	(************************************************************)
 	val mutable waiting_list = []
-
+	
 
 	(************************************************************)
 	(* Class methods *)
@@ -2465,6 +2517,30 @@ class virtual algoStateBased =
 	method initialize_variables =
 		statespace_nature <- StateSpace.Unknown;
 		unexplored_successors <- UnexSucc_undef;
+		
+(*		(* If normal PTA, i.e., without stopwatches nor flows, compute once for all the static time elapsing polyhedron *)
+		if not model.has_stopwatches then(
+			let variables_elapse	= model.clocks in
+			let variables_constant	= model.parameters_and_discrete in
+			let time_el_polyhedron		= generate_polyhedron_time_elapsing_pta Forward variables_elapse variables_constant in
+			let time_pa_polyhedron		= generate_polyhedron_time_elapsing_pta Backward variables_elapse variables_constant in
+			
+			(* Print some information *)
+			if verbose_mode_greater Verbose_high then(
+				print_message Verbose_high "Computed the static time elapsing polyhedron:";
+				print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_el_polyhedron);
+				print_message Verbose_high "";
+				print_message Verbose_high "Computed the static time past polyhedron:";
+				print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_pa_polyhedron);
+				print_message Verbose_high "";
+			);
+			
+			(* Save them *)
+			time_elapsing_polyhedron	:= Some time_el_polyhedron;
+			time_past_polyhedron 		:= Some time_pa_polyhedron;
+		
+		);*)
+
 		()
 		(* The end *)
 
@@ -3998,7 +4074,7 @@ class virtual algoStateBased =
 
 		(* Compute initial state *)
 		let init_state = compute_initial_state_or_abort() in
-
+		
 		(* copy init state, as it might be destroyed later *)
 		(*** NOTE: this operation appears to be here totally useless ***)
 		let init_loc, init_constr = init_state.global_location, init_state.px_constraint in
@@ -4007,15 +4083,13 @@ class virtual algoStateBased =
 		(* Set up the initial state constraint *)
 		initial_constraint <- Some init_constr;
 
-(*		(*Initialization of slast : used in union mode only*)
-		slast := [];*)
+		(* Variable initialization *)
+		(*** NOTE: must be done *after* the initial state computation (for PRP notably) ***)
+		print_message Verbose_low ("Initializing the algorithm local variables…");
+		self#initialize_variables;
 
 		(* Print some information *)
 		print_message Verbose_standard ("Starting running algorithm " ^ self#algorithm_name ^ "…\n");
-
-		(* Variable initialization *)
-		print_message Verbose_low ("Initializing the algorithm local variables…");
-		self#initialize_variables;
 
 		(* Debut prints *)
 		print_message Verbose_low ("Starting exploring the parametric zone graph from the following initial state:");
