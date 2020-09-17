@@ -704,7 +704,7 @@ let compute_stopwatches (location : Location.global_location) : (Automaton.clock
 	(* If no stopwatches at all: just return the set of clocks *)
 	if not model.has_stopwatches then ([], model.clocks) else(
 		(* Hashtbl clock_id --> true if clock should be stopped by some automaton *)
-		let stopwatches_hash = Hashtbl.create (List.length model.clocks) in
+		let stopwatches_hashtable = Hashtbl.create (List.length model.clocks) in
 		let stopwatch_mode = ref false in
 		(* Update hash table *)
 		List.iter (fun automaton_index ->
@@ -716,7 +716,7 @@ let compute_stopwatches (location : Location.global_location) : (Automaton.clock
 			if stopped != [] then stopwatch_mode := true;
 			(* Add each clock *)
 			List.iter (fun stopwatch_id ->
-				Hashtbl.replace stopwatches_hash stopwatch_id true
+				Hashtbl.replace stopwatches_hashtable stopwatch_id true
 			) stopped;
 		) model.automata;
 		(* If there are no stopwatches then just return the set of clocks *)
@@ -724,7 +724,7 @@ let compute_stopwatches (location : Location.global_location) : (Automaton.clock
 			(* Computing the list of stopped clocks, and the list of elapsing clocks *)
 			List.fold_left (fun (stopped_clocks, elapsing_clocks) clock_id ->
 				(* Test if the clock should be stopped *)
-				if Hashtbl.mem stopwatches_hash clock_id then
+				if Hashtbl.mem stopwatches_hashtable clock_id then
 					clock_id :: stopped_clocks, elapsing_clocks
 				else
 					stopped_clocks, clock_id :: elapsing_clocks
@@ -733,12 +733,97 @@ let compute_stopwatches (location : Location.global_location) : (Automaton.clock
 	) (* if no stopwatch in the model *)
 
 
+(*------------------------------------------------------------*)
+(* Compute the list of clocks with their flow in a location   *)
+(* Returns a list of pairs (clock_index, flow)                *)
+(* Raises a warning whenever a clock is assigned to TWO different flows *)
+(*------------------------------------------------------------*)
+let compute_flows (location : Location.global_location) : ((Automaton.clock_index * NumConst.t) list) =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+
+	(* Hashtbl clock_id --> flow *)
+	let flows_hashtable = Hashtbl.create (List.length model.clocks) in
+	
+	(* Maintain a Boolean to see if any clock has a rate different from 1 *)
+	let flow_mode = ref false in
+	
+	(* Update hash table *)
+	List.iter (fun automaton_index ->
+		(* Get the current location *)
+		let location_index = Location.get_location location automaton_index in
+		
+		(* 1. Manage the list of stopped clocks *)
+		let stopped = model.stopwatches automaton_index location_index in
+		(* If list non null: we have flows <> 1 *)
+		if stopped != [] then flow_mode := true;
+		(* Add each clock *)
+		List.iter (fun stopwatch_id ->
+			Hashtbl.replace flows_hashtable stopwatch_id NumConst.zero
+		) stopped;
+		
+		(* 2. Manage the explicit flows *)
+		let flows = model.flow automaton_index location_index in
+		(* Add each clock *)
+		List.iter (fun (clock_id, flow_value) ->
+			(* If flow <> 1, update Boolean *)
+			if NumConst.neq flow_value NumConst.one then flow_mode := true;
+
+			(* Compare with previous value *)
+			try(
+				(* Get former value *)
+				let former_flow_value = Hashtbl.find flows_hashtable clock_id in
+				(* Compare *)
+				if NumConst.neq former_flow_value flow_value then(
+					
+					(*** TODO: a flag should be raised somewhere so that the result is said to be perhaps wrong! (or unspecified) ***)
+					
+					print_warning ("Clock `" ^ (model.variable_names clock_id) ^ "` is assigned to two different flow values at the same time (`" ^ (NumConst.string_of_numconst flow_value) ^ "` in location `" ^ (model.location_names automaton_index location_index) ^ "` and `" ^ (NumConst.string_of_numconst former_flow_value) ^ "` in another location). The behavior becomes unspecified!");
+				);
+				(* Do not add *)
+				()
+			) with Not_found ->(
+			(* Not found: not yet defined => add *)
+				Hashtbl.add flows_hashtable clock_id flow_value
+			);
+			
+		) flows;
+		
+	) model.automata;
+	
+	(* If there are no explicit flows then just return the set of clocks with flow 1 *)
+	if (not !flow_mode) then (List.map (fun clock_id -> clock_id, NumConst.one) model.clocks) else (
+		(* Computing the list of clocks with their flow *)
+		List.map (fun clock_id ->
+			(* Try to get the clock explicit flow *)
+			try(
+				(* Get value *)
+				let flow_value = Hashtbl.find flows_hashtable clock_id in
+				(* Return *)
+				clock_id, flow_value
+			) with Not_found ->
+				(* Absent: flow is 1 *)
+				clock_id, NumConst.one
+		) model.clocks
+	) (* if no explicit flow for this location *)
+
+
 
 (*------------------------------------------------------------*)
 (* Generic function to apply either time elapsing or time past to a constraint in a location *)
 (*------------------------------------------------------------*)
 
 type time_direction = Forward | Backward
+
+let create_inequalities_constant variables_constant =
+	(* Create the inequalities var = 0, for var in variables_constant *)
+	List.map (fun variable ->
+		(* Create a linear term *)
+		let linear_term = LinearConstraint.make_pxd_linear_term [(NumConst.one, variable)] NumConst.zero in
+		(* Create the inequality *)
+		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
+	) variables_constant
+
 
 (* Generate a polyhedron for computing the time elapsing for (parametric) timed automata, i.e., without stopwatches nor flows. *)
 let generate_polyhedron_time_elapsing_pta time_direction variables_elapse variables_constant =
@@ -750,16 +835,11 @@ let generate_polyhedron_time_elapsing_pta time_direction variables_elapse variab
 		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
 	) variables_elapse in
 	
-	(* Create the inequalities var = 0, for var in variables_constant *)
-	let inequalities_constant = List.map (fun variable ->
-		(* Create a linear term *)
-		let linear_term = LinearConstraint.make_pxd_linear_term [(NumConst.one, variable)] NumConst.zero in
-		(* Create the inequality *)
-		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
-	) variables_constant in
+	(* Create the inequalities `var = 0`, for var in variables_constant *)
+	let inequalities_constant = create_inequalities_constant variables_constant in
 	
 	(* Print some information *)
-	print_message Verbose_total ("Creating linear constraint for time elapsing…");
+	print_message Verbose_total ("Creating linear constraint for standard time elapsing…");
 	
 	(* Convert both sets of inequalities to a constraint *)
 	LinearConstraint.make_pxd_constraint (List.rev_append inequalities_elapse inequalities_constant)
@@ -807,7 +887,8 @@ let apply_time_shift (direction : time_direction) (location : Location.global_lo
 			LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron time_polyhedron the_constraint;
 		
 		)else(
-			(* Otherwise, compute dynamically the list of stopwatches *)
+			(* BEGIN FORMER VERSION WITH STOPWATCHES (2020/09) ***)
+(*			(* Otherwise, compute dynamically the list of stopwatches *)
 			let stopped_clocks, elapsing_clocks = compute_stopwatches location in
 			print_message Verbose_high ("Computing list of stopwatches");
 			if verbose_mode_greater Verbose_total then(
@@ -828,7 +909,50 @@ let apply_time_shift (direction : time_direction) (location : Location.global_lo
 				elapsing_clocks
 				(List.rev_append stopped_clocks model.parameters_and_discrete)
 				the_constraint
-			;
+			;*)
+			(* END FORMER VERSION WITH STOPWATCHES (2020/09) ***)
+			
+			(* Otherwise, compute dynamically the list of clocks with their respective flow *)
+			
+			(* Print some information *)
+			print_message Verbose_high ("Computing list of explicit flows…");
+			
+			let flows = compute_flows location in
+			
+			(* Print some information *)
+			if verbose_mode_greater Verbose_total then(
+				let list_of_flows = List.map (fun (clock_id, flow_value) -> (model.variable_names clock_id) ^ "' = " ^ (NumConst.string_of_numconst flow_value)) flows in
+				print_message Verbose_total ("Flows: " ^ (string_of_list_of_string_with_sep ", " list_of_flows));
+			);
+
+			(* Compute polyhedron *)
+			(* Create the inequalities `clock_id = flow_value` *)
+			let inequalities_flows = List.map (fun (clock_id, flow_value) ->
+				(* Create a linear term `clock_id + (-)flow_value`; the value is negated iff direction is foward, to create `clock_id - flow_value = 0`, equivalent to `clock_id = flow_value` *)
+				let negated_flow_value = match direction with
+				| Forward	-> NumConst.neg flow_value
+				| Backward	-> flow_value
+				in
+				let linear_term = LinearConstraint.make_pxd_linear_term [(NumConst.one, clock_id)] negated_flow_value in
+				(* Create the inequality *)
+				LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
+			) flows in
+			
+			(* Create the inequalities `var = 0`, for var in variables_constant *)
+			let inequalities_constant = create_inequalities_constant model.parameters_and_discrete in
+	
+			(* Print some information *)
+			print_message Verbose_total ("Creating linear constraint for time elapsing with explicit flows…");
+			
+			(* Perform time elapsing *)
+			print_message Verbose_high ("Now applying time " ^ direction_str ^ "…");
+			
+			(* Convert both sets of inequalities to a constraint *)
+			let time_polyhedron = LinearConstraint.make_pxd_constraint (List.rev_append inequalities_flows inequalities_constant) in
+			
+			(* Apply time elapsing *)
+			LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron time_polyhedron the_constraint;
+			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_total then(
 				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names the_constraint);
