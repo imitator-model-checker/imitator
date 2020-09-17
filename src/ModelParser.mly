@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/09/14
+ * Last modified     : 2020/09/17
  *
  ************************************************************/
 
@@ -560,14 +560,15 @@ rational_linear_expression:
 	| rational_linear_term { $1 }
 	| rational_linear_expression OP_PLUS rational_linear_term { NumConst.add $1 $3 }
 	| rational_linear_expression OP_MUL rational_linear_term { NumConst.mul $1 $3 }
+	| rational_linear_expression OP_DIV rational_linear_term { NumConst.div $1 $3 }
 	| rational_linear_expression OP_MINUS rational_linear_term { NumConst.sub $1 $3 } /* linear_term a la deuxieme place */
 ;
 
 /* Linear term over rationals only */
 rational_linear_term:
 	| rational { $1 }
-	| OP_MINUS rational { NumConst.neg $2 }
-	| LPAREN rational_linear_term RPAREN { $2 }
+	| OP_MINUS rational_linear_term { NumConst.neg $2 }
+	| LPAREN rational_linear_expression RPAREN { $2 }
 ;
 
 rational:
