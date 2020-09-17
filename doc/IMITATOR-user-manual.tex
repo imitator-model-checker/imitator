@@ -350,6 +350,7 @@ Let $\unobs$ denote the unobservable action.
 %------------------------------------------------------------
 \begin{definition}[\IPTA{}]\label{definition:IPTA}
 	An \imitator{} parametric timed automaton (\emph{\IPTA{}}) is a tuple $\A = \tuple{\Action, \Loc, \locinit, \DVar, \Clock, \Param, \invariant, \stopwatches, \steps}$, where:
+		% TODO: add flows
 	\begin{itemize}
 		\item $\Action$ is a finite set of actions;
 		\item $\Loc$ is a finite set of locations;
@@ -407,6 +408,32 @@ That is, any clock can potentially be stopped in some location.
 Clocks can be stopped in locations, thanks to the optional \styleIMI{stop \{ … \}} keyword (see grammar in  \cref{section:grammar:model}).
 A clock is stopped in a location if it belongs to the list of clocks in \styleIMI{stop \{ … \}}.
 It is resumed when leaving the location---unless the target location again stops this clock.
+
+\paragraph{Flows}
+\imitator{} also support constant flows, \ie{} multi-rate (parametric) timed automata~\cite{ACHHHNOSY95}.
+That is, it is possible to specify the \emph{speed} of a clock in a location.
+This value is an arbitrary rational number, including 0 or a negative number.
+This can be specified using a syntax of the following form: \styleIMI{flow \{x' = 2\}}.
+A clock for which no flow is explicitly defined has of course flow~1.
+A stopwatch has flow~0.
+
+%------------------------------------------------------------
+\begin{remark}
+	It is possible to defined ill-formed models where contradictory flows are defined for a given clock.
+	For example, in
+	
+	\styleIMI{stop \{ x \} flow \{x' = 2, y' = 0\}}
+	
+	\noindent
+	\styleIMI{x} is assigned both flow~0 (because it is defined as a stopped clock) and 2 (in the explicit flow definition).
+	
+	Alternatively, in a \NIPTA{}, it is possible to be in a global location such that, in one location of one of the automata a given clock is assigned a given flow, and in another location of another automata in parallel, the same clock is assigned another flow.
+	
+	In the case of such contradictory flows, \imitator{} will trigger a warning on-the-fly, and the result of the analysis is unspecified.
+\end{remark}
+%------------------------------------------------------------
+
+
 
 \paragraph{Urgent locations}
 A location can be defined as \emph{urgent}, using the keyword \styleIMI{urgent} (see grammar in  \cref{section:grammar:model}).
@@ -2455,11 +2482,11 @@ We define each of those two components below.
 \regleGrammaire{location}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \nt{transitions}                  \\
-	$|$ & \styleIMI{urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \nt{transitions}           \\
-	$|$ & \styleIMI{accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \nt{transitions}        \\
-	$|$ & \styleIMI{accepting urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \nt{transitions} \\
-	$|$ & \styleIMI{urgent accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stop\_opt} \nt{transitions} \\
+	\   & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}                  \\
+	$|$ & \styleIMI{urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}           \\
+	$|$ & \styleIMI{accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions}        \\
+	$|$ & \styleIMI{accepting urgent loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions} \\
+	$|$ & \styleIMI{urgent accepting loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{invariant} \nt{convex\_predicate} \nt{stopw\_and\_flow\_opt} \nt{transitions} \\
 	% 	$|$ & \styleIMI{loc} \styleIMI{<name>} \styleIMI{:} \styleIMI{while} \nt{convex\_predicate} \nt{transitions} \\
 \end{tabular}
 
@@ -2481,14 +2508,55 @@ We define each of those two components below.
 % \end{tabular}
 
 %------------------------------------------------------------
-\regleGrammaire{stop\_opt}
+\regleGrammaire{stopw\_and\_flow\_opt}
 %------------------------------------------------------------
 \begin{tabular}{l l}
-	\   & \styleIMI{stop\{} \nt{name\_list} \styleIMI{\}} \\
+	\   & \nt{stopwatches} \nt{flow} \\
+	$|$ & \nt{flow} \nt{stopwatches} \\
+	$|$ & \nt{flow} \\
+	$|$ & \nt{stopwatches} \\
 	$|$ & \emptystring                                    \\
 \end{tabular}
 
-% TODO: flow!
+
+%------------------------------------------------------------
+\regleGrammaire{flow}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{flow \{} \nt{flow\_list} \styleIMI{\}} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{flow\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{flow\_nonempty\_list} \\
+	$|$ & \emptystring \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{flow\_nonempty\_list}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \nt{single\_flow} \styleIMI{,} \nt{flow\_nonempty\_list} \\
+	$|$ & \nt{single\_flow} \nt{comma\_opt} \\
+\end{tabular}
+
+
+%------------------------------------------------------------
+\regleGrammaire{single\_flow}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	% TODO: not exactly \nt{constant\_arithmetic\_expr}! The grammar in ModelParser and PropertyParser are slightly different => unify
+	\   & \styleIMI{<name>' = } \nt{constant\_arithmetic\_expr} \\
+\end{tabular}
+
+%------------------------------------------------------------
+\regleGrammaire{stopwatches}
+%------------------------------------------------------------
+\begin{tabular}{l l}
+	\   & \styleIMI{stop\{} \nt{name\_list} \styleIMI{\}} \\
+\end{tabular}
 
 
 %------------------------------------------------------------
