@@ -275,17 +275,19 @@ This chapter formally introduces the input model of \imitator{}.
 
 An \imitator{} parametric timed automaton (hereafter \IPTA{}) is a variant of parametric automata (as introduced in~\cite{AHV93}).
 % A first difference between \IPTA{} and the PTA of \cite{AHV93} is that \IPTA{} have no accepting / final location;
-\IPTA{} augment the expressiveness of PTA from~\cite{AHV93} with several features such as invariants, discrete (rational) variables, complex guards and invariants (\ie{} not only comparing a single clock to a single parameter), stopwatches (\ie{} the ability to stop some clocks in some locations), and arbitrary clock updates (\ie{} not necessarily to~0).
+\IPTA{} augment the expressiveness of PTA from~\cite{AHV93} with several features such as invariants, discrete (rational) variables, complex guards and invariants (\ie{} not only comparing a single clock to a single parameter), stopwatches (\ie{} the ability to stop some clocks in some locations), multi-rate clocks (\ie{} the speed of a clock is not necessarily~1, and can be defined to any rational) and arbitrary clock updates (\ie{} not necessarily to~0, but also to rationals, other clock valuations or even parameters).
 
 
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
 \subsection{Clocks, parameters, discrete variables}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-
 
-\emph{Clocks} are real-valued variables all evolving at the same rate (unless they are stopped, which is allowed in \imitator{}).
+\emph{Clocks} are real-valued variables.
 A set of clocks is $\Clock = \{ \clock_1, \dots, \clock_\ClockCard \}$;
 a clock valuation is
 $\clockval \colon \Clock \rightarrow \grandrplus$.
+By default, all clocks are evolving at the same rate (1), but this rate can be defined to any rational value in \imitator{}.
+Clocks can also be \emph{stopped} in \imitator{}.
 
 \emph{Parameters} are rational-valued variables, that act as unknown constants.
 A set of parameters is $\Param = \{ \param_1, \dots, \param_\ParamCard \} $;
@@ -349,8 +351,7 @@ Let $\unobs$ denote the unobservable action.
 
 %------------------------------------------------------------
 \begin{definition}[\IPTA{}]\label{definition:IPTA}
-	An \imitator{} parametric timed automaton (\emph{\IPTA{}}) is a tuple $\A = \tuple{\Action, \Loc, \locinit, \DVar, \Clock, \Param, \invariant, \stopwatches, \steps}$, where:
-		% TODO: add flows
+	An \imitator{} parametric timed automaton (\emph{\IPTA{}}) is a tuple $\A = \tuple{\Action, \Loc, \locinit, \DVar, \Clock, \Param, \invariant, \flow, \steps}$, where:
 	\begin{itemize}
 		\item $\Action$ is a finite set of actions;
 		\item $\Loc$ is a finite set of locations;
@@ -359,7 +360,7 @@ Let $\unobs$ denote the unobservable action.
 		\item $\Clock$ is a set of clocks;
 		\item $\Param$ is a set of parameters;
 		\item $\invariant : \Loc \rightarrow \LConstraintXPD$ assigns to every location~$\loc$ a constraint over all variables, called the \emph{invariant} of~$\loc$;
-		\item $\stopwatches : \Loc \rightarrow \Clock$ assigns to a every location a list of clocks that are stopped in this location;
+		\item $\flow : \Loc \times \Clock \rightarrow \grandq$ assigns to a every location and clock a given flow (or speed), \ie{} a rational number;
 		\item $\steps$ is a set of edges $(\loc, \guard, \action, \Cupdates, \Dupdates, \loc')$, where
 		      $\loc, \loc' \in \Loc$ are the source and destination locations,
 		      $\guard \in \LConstraintXPD$ is a constraint over all variables (called \emph{guard} of the transition),
@@ -399,23 +400,33 @@ On the other hand, arithmetic expressions are richer than linear constraints, as
 
 Since version 2.12, \styleIMI{if}-\styleIMI{then}-\styleIMI{else} conditions are allowed in \emph{discrete} updates.
 
-\paragraph{Stopwatches}
-There are no distinction between clocks and stopwatches.
+\paragraph{Flows and stopwatches}
+By default, all clocks at evolve at the same rate in all locations, and this rate is~1.
+That is, by default, $\forall \loc \in \Loc, \forall \clock \in \Clock : \flow(\loc, \clock) = 1$.
+
+However, one can explicitly define an alternative (constant, rational-valued) flow using two methods:
+\begin{description}
+	\item [Using stopwatches]
+A stopwatch is a clock whose elapsing is stopped in some locations, \ie{} $\flow(\loc, \clock) = 0$.
+There is no distinction between clocks and stopwatches.
 That is, any clock can potentially be stopped in some location.
-\imitator{} will detect whether a model has or not stopwatches; if there is no stopwatch in some model, \imitator{} will apply some optimizations that (may) increase the analysis speed.
+\imitator{} will detect whether a model has or not stopwatches; if there is no stopwatch in the model, \imitator{} will apply some optimizations that (may) increase the analysis speed.
 % TODO: nice box with a ``tip'' title
 
 Clocks can be stopped in locations, thanks to the optional \styleIMI{stop \{ … \}} keyword (see grammar in  \cref{section:grammar:model}).
 A clock is stopped in a location if it belongs to the list of clocks in \styleIMI{stop \{ … \}}.
 It is resumed when leaving the location---unless the target location again stops this clock.
 
-\paragraph{Flows}
+\item [Using explicit flows]
 \imitator{} also support constant flows, \ie{} multi-rate (parametric) timed automata~\cite{ACHHHNOSY95}.
 That is, it is possible to specify the \emph{speed} of a clock in a location.
-This value is an arbitrary rational number, including 0 or a negative number.
+This value is an arbitrary rational number, including 0 (in which case it is equivalent to a stopwatch) or a negative number.
 This can be specified using a syntax of the following form: \styleIMI{flow \{x' = 2\}}.
 A clock for which no flow is explicitly defined has of course flow~1.
 A stopwatch has flow~0.
+\end{description}
+
+
 
 %------------------------------------------------------------
 \begin{remark}
@@ -451,7 +462,7 @@ Note however that ``in $0$-time'' does not necessarily mean immediately: that is
 
 %------------------------------------------------------------
 \begin{definition}[\NIPTA{}]
-	Given a set of \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \DVar_i, \Clock_i, \Param_i, \invariant_i, \stopwatches_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \grandn$,
+	Given a set of \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \DVar_i, \Clock_i, \Param_i, \invariant_i, \flow_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \grandn$,
 	a network of \IPTA{} (\emph{\NIPTA{}}) is a tuple
 	$\tuple{\Action, \DVar, \Clock, \Param, \{ \A_i \mid 1 \leq i \leq N \}, \Cinit}$, where:
 	\begin{itemize}
@@ -473,7 +484,8 @@ The initial value of the clocks is defined by~$\Cinit$ (see \cref{section:init})
 If nothing is defined in~$\Cinit$, then their value is supposed to be arbitrary (any real value greater or equal to~0).
 
 
-In a \NIPTA{}, a clock~$\clock$ is stopped in a location $(\loc_1, \dots, \loc_N)$ if it stopped in at least one of the locations~$\loc_i$, \ie{} $\clock \in \stopwatches_i(\loc_i)$ for some~$i \in \{ 1 , \dots , N \}$.
+In a \NIPTA{}, a clock~$\clock$ is stopped in a location $(\loc_1, \dots, \loc_N)$ if it stopped in at least one of the locations~$\loc_i$, \ie{} $\clock \in \flow_i(\loc_i) = 0$ for some~$i \in \{ 1 , \dots , N \}$.
+% TODO
 
 Note that parameters are not assumed to be positive; however, the behavior of \imitator{} has not been tested for negative parameters, and it is strongly advised to constrain them to be non-negative in $\Cinit$ (if it is not the case, a warning is issued by \imitator{}).
 
@@ -489,7 +501,7 @@ Let us precisely define what it means:
 
 %------------------------------------------------------------
 \begin{definition}[strong determinism]
-	Let $\A$ be a \NIPTA{} made of $N$ \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \DVar_i, \Clock_i, \Param_i, \invariant_i, \stopwatches_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \grandn$.
+	Let $\A$ be a \NIPTA{} made of $N$ \IPTA{} $\A_i = \tuple{\Action_i, \Loc_i, (\locinit)_i, \DVar_i, \Clock_i, \Param_i, \invariant_i, \flow_i, \steps_i}$, $1 \leq i \leq N$ for some $N \in \grandn$.
 
 	$\A$ is \emph{strongly-deterministic} if
 	for all automaton $\A_i$,
