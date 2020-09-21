@@ -620,14 +620,14 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 						else print_highlighted_message Shell_bold Verbose_standard
 								("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
-						print_message Verbose_standard
+						print_message Verbose_low
 							(ModelPrinter.string_of_state model
 								(StateSpace.get_state state_space astate));
 						(* For synthesis: we do not stop immediately *)
 						if (property.synthesis_type = Synthesis) then
 							termination_status <- Some Regular_termination
 						else termination_status <- Some Target_found;
-						print_projection Verbose_standard astate;
+						print_projection Verbose_low astate;
 						let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 						constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 						collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
@@ -669,12 +669,12 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 										("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 								else print_highlighted_message Shell_bold Verbose_standard
 									("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
-								print_message Verbose_standard
+								print_message Verbose_low
 									(ModelPrinter.string_of_state model
 										(StateSpace.get_state state_space astate));
 								(* For synthesis: we do not stop immediately *)
 								termination_status <- Some Target_found;
-								print_projection Verbose_standard astate;
+								print_projection Verbose_low astate;
 								let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 								constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 								collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
@@ -728,14 +728,14 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 						else print_highlighted_message Shell_bold Verbose_standard
 								("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
-						print_message Verbose_standard
+						print_message Verbose_low
 							(ModelPrinter.string_of_state model
 								(StateSpace.get_state state_space astate));
 								(* For synthesis: we do not stop immediately *)
 						if (property.synthesis_type = Synthesis) then
 							termination_status <- Some Regular_termination
 						else termination_status <- Some Target_found;
-						print_projection Verbose_standard astate;
+						print_projection Verbose_low astate;
 						let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 						constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 						collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
@@ -778,14 +778,14 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 										("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 								else print_highlighted_message Shell_bold Verbose_standard
 									("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
-								print_message Verbose_standard
+								print_message Verbose_low
 									(ModelPrinter.string_of_state model
 										(StateSpace.get_state state_space astate));
 								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
 								else termination_status <- Some Target_found;
-								print_projection Verbose_standard astate;
+								print_projection Verbose_low astate;
 								let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 								constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 								collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
@@ -852,14 +852,14 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 										("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 								else print_highlighted_message Shell_bold Verbose_standard
 										("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
-								print_message Verbose_standard
+								print_message Verbose_low
 									(ModelPrinter.string_of_state model
 										(StateSpace.get_state state_space astate));
 									(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
 								else termination_status <- Some Target_found;
-								print_projection Verbose_standard astate;
+								print_projection Verbose_low astate;
 								let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 								constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 								collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
@@ -900,9 +900,9 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 										if (property.synthesis_type = Witness) then
 											print_highlighted_message Shell_bold Verbose_standard
 												("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
-										else print_highlighted_message Shell_bold Verbose_standard
+										else print_highlighted_message Shell_bold Verbose_low
 											("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
-										print_message Verbose_standard
+										print_message Verbose_low
 											(ModelPrinter.string_of_state model
 												(StateSpace.get_state state_space astate));
 										(* For synthesis: we do not stop immediately *)
@@ -979,14 +979,14 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 										("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 								else print_highlighted_message Shell_bold Verbose_standard
 										("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
-								print_message Verbose_standard
+								print_message Verbose_low
 									(ModelPrinter.string_of_state model
 										(StateSpace.get_state state_space astate));
 									(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
 								else termination_status <- Some Target_found;
-								print_projection Verbose_standard astate;
+								print_projection Verbose_low astate;
 								let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 								constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 								collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
@@ -1030,14 +1030,14 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 												("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 										else print_highlighted_message Shell_bold Verbose_standard
 											("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
-										print_message Verbose_standard
+										print_message Verbose_low
 											(ModelPrinter.string_of_state model
 												(StateSpace.get_state state_space astate));
 										(* For synthesis: we do not stop immediately *)
 										if (property.synthesis_type = Synthesis) then
 											termination_status <- Some Regular_termination
 										else termination_status <- Some Target_found;
-										print_projection Verbose_standard astate;
+										print_projection Verbose_low astate;
 										let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 										constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 										collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
