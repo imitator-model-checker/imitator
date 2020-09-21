@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/09/14
+ * Last modified     : 2020/09/21
  *
  ************************************************************)
 
@@ -946,7 +946,7 @@ class imitator_options =
 			(* Function to access the property if the mode is Algorithm *)
 			let get_property () = match property_option with
 			| Some property -> property
-			| None -> raise (InternalError "A property should be defined in recall_and_warn.get_property")
+			| None -> raise (InternalError "A property should have be defined in `recall_and_warn.get_property`")
 			in
 
 			(* File *)
@@ -985,13 +985,30 @@ class imitator_options =
 				| Some property -> AlgorithmOptions.is_cartography property
 			in
 
+			(*------------------------------------------------------------*)
+			(* Check if #witness is supported for this algorithm *)
+			(*------------------------------------------------------------*)
+			begin
+			match property_option with
+				| None -> ()
+				| Some property ->
+					if property.synthesis_type = Witness && not (AlgorithmOptions.supports_witness property) then(
+						print_warning ("The mode #witness is not supported by this property. Normal synthesis will be run.");
+					);
+			end;
+
+			
+			(*------------------------------------------------------------*)
 			(* No cart options if not in cartography *)
-			if not is_cartography && carto_tiles_limit <> None then
-				print_warning ("A maximum number of tiles has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
-			if not is_cartography && carto_time_limit <> None then
-				print_warning ("A maximum computation for the cartography has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
-			if not is_cartography && output_tiles_files then
-				print_warning ("The option `-tiles-files` outputs files for each iteration of a cartography algorithm, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
+			(*------------------------------------------------------------*)
+			if not is_cartography then(
+				if carto_tiles_limit <> None then
+					print_warning ("A maximum number of tiles has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
+				if carto_time_limit <> None then
+					print_warning ("A maximum computation for the cartography has been set, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
+				if output_tiles_files then
+					print_warning ("The option `-tiles-files` outputs files for each iteration of a cartography algorithm, but " ^ Constants.program_name ^ " does not run in cartography mode. Ignored.");
+			);
 
 
 			(* No no_leq_test_in_ef if not EF *)
