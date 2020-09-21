@@ -15,7 +15,8 @@
  #
 ################################################################
 
-if [ -f "setup.ml" ]
+# clean the project
+if [ -f "setup.ml" ] && [ "$1" != "--no-distclean" ]
 then
   ocaml setup.ml -distclean
 fi
