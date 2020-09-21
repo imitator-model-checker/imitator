@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2020/09/14
+ * Last modified     : 2020/09/21
  *
  ************************************************************)
 
@@ -32,9 +32,6 @@ class virtual algoLoopSynth :
 
 (* 		method algorithm_name : string *)
 		
-		(* Non-necessarily convex constraint allowing the presence of a loop *)
-		val mutable loop_constraint : LinearConstraint.p_nnconvex_constraint
-
 
 		(************************************************************)
 		(* Class methods *)

@@ -56,8 +56,6 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 	
 	(* The bad state has been found *)
 	val counter_found_bad = create_discrete_counter_and_register "found target state" PPL_counter Verbose_low
-	(* The constraint of a new state is smaller than the bad constraint: cut branch *)
-	val counter_cut_branch = create_discrete_counter_and_register "cut branch (constraint <= bad)" PPL_counter Verbose_low
 	(* Methods counters *)
 	val counter_process_state = create_hybrid_counter_and_register "EFsynth.process_state" States_counter Verbose_experiments
 	val counter_add_a_new_state = create_hybrid_counter_and_register "EFsynth.add_a_new_state" States_counter Verbose_experiments
@@ -256,6 +254,7 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 		match addition_result with
 		(* If the state was present: do nothing *)
 		| StateSpace.State_already_present _ -> ()
+
 		(* If this is really a new state, or a state larger than a former state *)
 		| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
 
@@ -277,9 +276,6 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 				if not options#no_leq_test_in_ef then(
 					(* Check whether new_state.px_constraint <= synthesized_constraint *)
 					if self#check_whether_px_included_into_synthesized_constraint new_state.px_constraint then(
-						(* Statistics *)
-						counter_cut_branch#increment;
-						
 						(* Print some information *)
 						self#print_algo_message Verbose_low "Found a state included in synthesized valuations; cut branch.";
 

@@ -2648,6 +2648,8 @@ class virtual algoStateBased =
 	val counter_cache = create_discrete_counter_and_register "cache (EF)" PPL_counter Verbose_low
 	(* Number of cache misses *)
 	val counter_cache_miss = create_discrete_counter_and_register "cache miss (EF)" PPL_counter Verbose_low
+	(* The constraint of a new state is smaller than the bad constraint: cut branch *)
+	val counter_cut_branch = create_discrete_counter_and_register "cut branch (constraint <= bad)" PPL_counter Verbose_low
 
 
 	(************************************************************)
@@ -2772,7 +2774,14 @@ class virtual algoStateBased =
 		);
 
 		(* return p_constraint <= synthesized_constraint *)
-		LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) synthesized_constraint
+		if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) synthesized_constraint then(
+			(* Statistics *)
+			counter_cut_branch#increment;
+			
+			true
+		)else(
+			false
+		)
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

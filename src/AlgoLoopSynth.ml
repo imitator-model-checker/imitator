@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2020/09/14
+ * Last modified     : 2020/09/21
  *
  ************************************************************)
 
@@ -51,10 +51,6 @@ class virtual algoLoopSynth =
 	(* Class variables *)
 	(************************************************************)
 	
-	(* Non-necessarily convex constraint allowing the presence of a loop *)
-	val mutable loop_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
-
-	
 	(* Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is used at the end of the algorithm) *)
 	(*** WARNING: these lines are copied from AlgoDeadlockFree ***)
 	val init_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint =
@@ -80,7 +76,7 @@ class virtual algoLoopSynth =
 	method initialize_variables =
 		super#initialize_variables;
 		(*** NOTE: duplicate operation ***)
-		loop_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
+		synthesized_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
 
 		(* The end *)
 		()
@@ -95,6 +91,9 @@ class virtual algoLoopSynth =
 	(*** WARNING/BADPROG: the following is partially copy/paste from AlgoEF.ml (though much modified) ***)
 	method add_a_new_state source_state_index combined_transition new_state =
 
+		(* Reset the mini-cache (for the p-constraint) *)
+		self#reset_minicache;
+
 		(* Try to add the new state to the state space *)
 		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
 		
@@ -103,9 +102,27 @@ class virtual algoLoopSynth =
 		(* If this is really a new state, or a state larger than a former state *)
 		| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
 
+			let to_be_added =
+			(*** NOTE: don't perform the following test if the associated option is enabled ***)
+			if options#no_leq_test_in_ef then true else(
+				(* Check whether new_state.px_constraint <= synthesized_constraint *)
+				if self#check_whether_px_included_into_synthesized_constraint new_state.px_constraint then(
+					(* Print some information *)
+					self#print_algo_message Verbose_low "Found a state included in synthesized valuations; cut branch.";
+
+					(* Do NOT compute its successors; cut the branch *)
+					false
+				)else(
+					true
+				)
+			) in
+			
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
-			new_states_indexes <- new_state_index :: new_states_indexes;
+			if to_be_added then(
+				new_states_indexes <- new_state_index :: new_states_indexes;
+			);
 		 (* end if new state *)
+
 		(* If the state was present:  *)
 		| StateSpace.State_already_present new_state_index ->
 			(* Not added: means this state was already present before *)
@@ -152,7 +169,7 @@ class virtual algoLoopSynth =
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* When a loop is found, update the loop constraint; current_constraint is a PX constraint that will not be modified. It will be projected onto the parameters and unified with the current parameter loop_constraint *)
+	(* When a loop is found, update the loop constraint; current_constraint is a PX constraint that will not be modified. It will be projected onto the parameters and unified with the current parameter synthesized_constraint *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method update_loop_constraint current_constraint =
 		(* Retrieve the model *)
@@ -187,7 +204,7 @@ class virtual algoLoopSynth =
 		); (* end if projection *)
 
 		(* Update the loop constraint using the current constraint *)
-		LinearConstraint.p_nnconvex_p_union_assign loop_constraint p_constraint;
+		LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint p_constraint;
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
@@ -195,7 +212,7 @@ class virtual algoLoopSynth =
 			print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 			
 			self#print_algo_message Verbose_medium "The loop constraint is now:";
-			print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names loop_constraint);
+			print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
 		);
 		
 		(* The end *)
@@ -310,7 +327,7 @@ class virtual algoLoopSynth =
 		Single_synthesis_result
 		{
 			(* Non-necessarily convex constraint guaranteeing the existence of at least one loop *)
-			result				= Good_constraint (loop_constraint, soundness);
+			result				= Good_constraint (synthesized_constraint, soundness);
 			
 			(* English description of the constraint *)
 			constraint_description = "constraint for detecting cycles";

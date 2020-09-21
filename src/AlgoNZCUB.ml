@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/10/10
- * Last modified     : 2019/07/11
+ * Last modified     : 2020/09/21
  *
  ************************************************************)
 
@@ -248,7 +248,7 @@ class algoNZCUB =
 		Single_synthesis_result
 		{
 			(* Non-necessarily convex constraint guaranteeing the existence of at least one loop *)
-			result				= Good_constraint (loop_constraint, soundness);
+			result				= Good_constraint (synthesized_constraint, soundness);
 			
 			(* English description of the constraint *)
 			constraint_description = "constraint guaranteeing the presence of at least one non-Zeno loop";
