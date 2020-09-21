@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2020/09/14
+ * Last modified     : 2020/09/21
  *
  ************************************************************)
 
@@ -60,7 +60,7 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 	(*** NOTE: if EF is called several times, then each call will create a counter ***)
 	
 	(* The bad state has been found *)
-	val counter_found_bad = create_discrete_counter_and_register "found bad state" PPL_counter Verbose_low
+	val counter_found_bad = create_discrete_counter_and_register "found target state" PPL_counter Verbose_low
 	(* The constraint of a new state is smaller than the bad constraint: cut branch *)
 	val counter_cut_branch = create_discrete_counter_and_register "cut branch (constraint <= bad)" PPL_counter Verbose_low
 	(* How many times the cache was useful *)
@@ -166,12 +166,12 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 				(*** NOTE: do NOT do it in mode no_leq_test_in_ef ***)
 				
 				if (not options#no_leq_test_in_ef) && LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) bad_constraint then(
-					self#print_algo_message Verbose_low "Found a state violating the property (but the constraint was already known).";
+					self#print_algo_message Verbose_low "Found a target state (but the constraint was already known).";
 				)else(
 					(* The constraint is new! *)
 					
 					(* Print some information *)
-					self#print_algo_message Verbose_standard "Found a new state violating the property.";
+					self#print_algo_message Verbose_standard "Found a new target state.";
 						
 					(* Update the bad constraint using the current constraint *)
 					(*** NOTE: perhaps try first whether p_constraint <= bad_constraint ? ***)
@@ -179,10 +179,10 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 					
 					(* Print some information *)
 					if verbose_mode_greater Verbose_low then(
-						self#print_algo_message Verbose_medium "Adding the following constraint to the bad constraint:";
+						self#print_algo_message Verbose_medium "Adding the following constraint to the synthesized constraint:";
 						print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 						
-						self#print_algo_message Verbose_low "The bad constraint is now:";
+						self#print_algo_message Verbose_low "The synthesized constraint is now:";
 						print_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
 					);
 				); (* end if new bad constraint *)
@@ -343,12 +343,12 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 				let p_constraint = self#compute_p_constraint_with_cache new_state.px_constraint in
 				
 				(* Print some information *)
-				self#print_algo_message Verbose_medium "Checking whether the new state is included into known bad valuations…";
+				self#print_algo_message Verbose_medium "Checking whether the new state is included into known synthesized valuations…";
 				if verbose_mode_greater Verbose_high then(
 					self#print_algo_message Verbose_high "\nNew constraint:";
 					print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 					
-					self#print_algo_message Verbose_high "\nCurrent bad constraint:";
+					self#print_algo_message Verbose_high "\nCurrent synthesized constraint:";
 					print_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
 				);
 
@@ -360,7 +360,7 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 						counter_cut_branch#increment;
 						
 						(* Print some information *)
-						self#print_algo_message Verbose_low "Found a state included in bad valuations; cut branch.";
+						self#print_algo_message Verbose_low "Found a state included in synthesized valuations; cut branch.";
 
 						(* Do NOT compute its successors; cut the branch *)
 						to_be_added := false;
