@@ -275,27 +275,8 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 			
 				(*** NOTE: don't perform this test if the associated option is enabled ***)
 				if not options#no_leq_test_in_ef then(
-					(* Print some information *)
-					if verbose_mode_greater Verbose_medium then(
-						self#print_algo_message Verbose_medium "Projecting onto the parameters…";
-					);
-
-					(* Project onto the parameters *)
-					(*** NOTE: here, we use the mini-cache system ***)
-					let p_constraint = self#compute_p_constraint_with_minicache new_state.px_constraint in
-					
-					(* Print some information *)
-					self#print_algo_message Verbose_medium "Checking whether the new state is included into known synthesized valuations…";
-					if verbose_mode_greater Verbose_high then(
-						self#print_algo_message Verbose_high "\nNew constraint:";
-						print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-						
-						self#print_algo_message Verbose_high "\nCurrent synthesized constraint:";
-						print_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
-					);
-
-					(* if p_constraint <= synthesized_constraint *)
-					if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) synthesized_constraint then (
+					(* Check whether new_state.px_constraint <= synthesized_constraint *)
+					if self#check_whether_px_included_into_synthesized_constraint new_state.px_constraint then(
 						(* Statistics *)
 						counter_cut_branch#increment;
 						

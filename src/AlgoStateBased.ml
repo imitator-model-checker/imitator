@@ -2747,6 +2747,33 @@ class virtual algoStateBased =
 		cached_p_constraint <- None;
 		()
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Check whether the projection of a PX-constraint is included into the `synthesized_constraint` *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method check_whether_px_included_into_synthesized_constraint (px_linear_constraint : LinearConstraint.px_linear_constraint) : bool =
+		(* First project onto the parameters *)
+
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message Verbose_medium "Projecting onto the parameters…";
+		);
+
+		(*** NOTE: here, we use the mini-cache system ***)
+		let p_constraint = self#compute_p_constraint_with_minicache px_linear_constraint in
+		
+		(* Print some information *)
+		self#print_algo_message Verbose_medium "Checking whether the new state is included into known synthesized valuations…";
+		if verbose_mode_greater Verbose_high then(
+			self#print_algo_message Verbose_high "\nNew constraint:";
+			print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+			
+			self#print_algo_message Verbose_high "\nCurrent synthesized constraint:";
+			print_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
+		);
+
+		(* return p_constraint <= synthesized_constraint *)
+		LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) synthesized_constraint
+
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Update the nature of the trace set *)
