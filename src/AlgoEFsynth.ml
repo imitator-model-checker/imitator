@@ -249,9 +249,6 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 		(* Try to add the new state to the state space *)
 		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
 		
-		(* Boolean to check whether the analysis should be terminated immediately *)
-(* 		let terminate_analysis_immediately = ref false in *)
-		
 		(* Boolean to check whether the state is a target state *)
 		let is_target = ref false in
 		
@@ -273,31 +270,31 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 			(* Update the target flag *)
 			is_target := not !to_be_added;
 			
-			(* If to be added: if the state is included into the bad constraint, no need to explore further, and hence do not add *)
+			(* If to be added: if the state is included into the synthesized constraint, no need to explore further, and hence do not add *)
 			if !to_be_added then(
 			
-				(* Print some information *)
-				if verbose_mode_greater Verbose_medium then(
-					self#print_algo_message Verbose_medium "Projecting onto the parameters…";
-				);
-
-				(* Project onto the parameters *)
-				(*** NOTE: here, we use the mini-cache system ***)
-				let p_constraint = self#compute_p_constraint_with_minicache new_state.px_constraint in
-				
-				(* Print some information *)
-				self#print_algo_message Verbose_medium "Checking whether the new state is included into known synthesized valuations…";
-				if verbose_mode_greater Verbose_high then(
-					self#print_algo_message Verbose_high "\nNew constraint:";
-					print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-					
-					self#print_algo_message Verbose_high "\nCurrent synthesized constraint:";
-					print_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
-				);
-
-				(* if p_constraint <= synthesized_constraint *)
 				(*** NOTE: don't perform this test if the associated option is enabled ***)
 				if not options#no_leq_test_in_ef then(
+					(* Print some information *)
+					if verbose_mode_greater Verbose_medium then(
+						self#print_algo_message Verbose_medium "Projecting onto the parameters…";
+					);
+
+					(* Project onto the parameters *)
+					(*** NOTE: here, we use the mini-cache system ***)
+					let p_constraint = self#compute_p_constraint_with_minicache new_state.px_constraint in
+					
+					(* Print some information *)
+					self#print_algo_message Verbose_medium "Checking whether the new state is included into known synthesized valuations…";
+					if verbose_mode_greater Verbose_high then(
+						self#print_algo_message Verbose_high "\nNew constraint:";
+						print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+						
+						self#print_algo_message Verbose_high "\nCurrent synthesized constraint:";
+						print_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
+					);
+
+					(* if p_constraint <= synthesized_constraint *)
 					if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) synthesized_constraint then (
 						(* Statistics *)
 						counter_cut_branch#increment;
