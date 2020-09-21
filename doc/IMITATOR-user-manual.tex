@@ -1372,11 +1372,9 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 
 	}
 
-	\label{table:summary:algorithms}
+	\label{table:summary:options}
 \end{table}
 
-
-% TODO refer to this table
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2099,7 +2097,7 @@ However, when the \styleOption{-inclusion} option is activated, it suffices that
 This option corresponds to the way that, \eg{} \hytech{} works, and suffices when one wants to check the \emph{non-reachability} of a given bad state.
 
 In reachability algorithms (\cref{ss:mode:EFsynth,ss:mode:EF,ss:mode:EFmin,ss:mode:EFmax,ss:mode:EFopt,ss:mode:prop,ss:mode:PRP}), \styleOption{-inclusion} is usually enabled by default; however, for loop synthesis algorithms (\cref{ss:mode:LoopSynth,ss:mode:Zeno}), it is disabled as it may introduce spurious cycles.
-% TODO: table summarizing everything
+See \cref{table:summary:options} for the default behavior of algorithms \wrt{} this option.
 
 
 %------------------------------------------------------------
@@ -2135,6 +2133,9 @@ Use the merging technique of \cite{AFS13atva}.
 This option is safe (and used by default) for the \EFsynth{} algorithm, and similar algorithms.
 
 However, not all the properties of the inverse method are preserved when using merging (see \cite{AFS13atva} for details).
+
+See \cref{table:summary:options} for the default behavior of algorithms \wrt{} this option.
+
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-no-merge} (default: depending on the algorithm)}
