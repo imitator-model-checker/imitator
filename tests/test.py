@@ -3,17 +3,16 @@
 # ************************************************************
 #
 #                       IMITATOR
-# 
+#
 # Université Paris 13, LIPN, CNRS, France
 # Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
-# 
+#
 # Script description: TESTATOR (script for non-regression tests)
-# 
+#
 # File contributors : Étienne André
 # Created           : 2012/05/??
 # Last modified     : 2020/03/20
 # ************************************************************
-
 
 # ************************************************************
 # MODULES
@@ -75,6 +74,7 @@ def make_binary(binary):
 
 def make_file(file_name):
     return os.path.join(EXAMPLE_PATH, file_name)
+
 
 def make_output_file(file_name):
     return os.path.join(file_name)
@@ -141,10 +141,10 @@ test_fmt = """\
 
 """
 
-
 # ************************************************************
 # MAIN TESTING FUNCTION
 # ************************************************************
+
 
 def test(binary_name, tests, logfile, logfile_name):
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
@@ -154,7 +154,8 @@ def test(binary_name, tests, logfile, logfile_name):
     if not os.path.exists(binary):
         fail_with('Binary %s does not exist' % binary)
 
-    print_to_screen('\n{c.BOLD}# TESTING BINARY {name}{c.NORMAL}'.format(c=bcolors, name=binary_name))
+    print_to_screen('\n{c.BOLD}# TESTING BINARY {name}{c.NORMAL}'.format(
+        c=bcolors, name=binary_name))
 
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
     # TEST CASES
@@ -174,20 +175,24 @@ def test(binary_name, tests, logfile, logfile_name):
         passed = True
 
         # Print something
-        print_to_log(header_benchmark.format(benchmark_id=benchmark_id,
-                                             purpose=test_case['purpose']))
-        print_to_screen(' Benchmark {}: {}..'.format(benchmark_id, test_case['purpose']))
+        print_to_log(
+            header_benchmark.format(benchmark_id=benchmark_id,
+                                    purpose=test_case['purpose']))
+        print_to_screen(' Benchmark {}: {}..'.format(benchmark_id,
+                                                     test_case['purpose']))
 
         # Add the path to all input files
         # TODO: test for existence of files (just in case)
-        cmd_inputs = [make_file(each_file) for each_file in test_case['input_files']]
+        cmd_inputs = [
+            make_file(each_file) for each_file in test_case['input_files']
+        ]
 
         # ------------------------------------------------------------
         # NOTE: complicated 'if' in case of distributed. Non-distributed: binary = IMITATOR, options = all the rest
         cmd = [binary] + cmd_inputs + (test_case['options']).split()
 
         # Distributed: binary = mpiexec, options = all the rest including IMITATOR binary
-        if 'nb_nodes'in test_case and test_case['nb_nodes'] > 1:
+        if 'nb_nodes' in test_case and test_case['nb_nodes'] > 1:
             cmd = ['mpiexec', '-n', str(test_case['nb_nodes'])] + cmd
 
         # Print the command
@@ -203,41 +208,54 @@ def test(binary_name, tests, logfile, logfile_name):
         files_to_remove = set()
 
         # Check the expectations
-        for expectation_id, expectation in enumerate(test_case['expectations']):
+        for expectation_id, expectation in enumerate(
+                test_case['expectations']):
             # Build file
             output_file = make_output_file(expectation['file'])
-            
+
             test_expectation_id = '{}.{}'.format(benchmark_id, expectation_id)
 
             # Check existence of the output file
             if not os.path.exists(output_file):
-                print_to_log(' File {} does not exist! Test {} failed.'.format(output_file, test_expectation_id))
+                print_to_log(' File {} does not exist! Test {} failed.'.format(
+                    output_file, test_expectation_id))
                 passed = False
             else:
-                # Read file
-                with open(output_file, "r") as my_file:
-                    # Get the content
-                    original_content = my_file.read()
-                    # Replace all whitespace characters (space, tab, newline, and so on) with a single space
-                    content = ' '.join(original_content.split())
-
-                    # Replace all whitespace characters (space, tab, newline, and so on) with a single space
-                    expected_content = ' '.join(expectation['content'].split())
-
-                    # Look for the expected content
-                    position = content.find(expected_content)
-
-                    if position >= 0:
-                        print_to_log(' Test %s passed.' % test_expectation_id)
-                        passed_test_cases += 1
-                    else:
-                        passed = False
-                        print_to_log(test_fmt.format(expectation_id=test_expectation_id,
-                                                     expected_content=expectation['content'],
-                                                     original_content=original_content))
-
                 # Add file to list of files to remove
                 files_to_remove.add(output_file)
+
+                # Get extension of file
+                _, file_extension = os.path.splitext(output_file)
+
+                if (file_extension == '.png'):
+                    print_to_log(' Test %s passed.' % test_expectation_id)
+                    passed_test_cases += 1
+                else:
+                    # Read file
+                    with open(output_file, "r") as my_file:
+                        # Get the content
+                        original_content = my_file.read()
+                        # Replace all whitespace characters (space, tab, newline, and so on) with a single space
+                        content = ' '.join(original_content.split())
+
+                        # Replace all whitespace characters (space, tab, newline, and so on) with a single space
+                        expected_content = ' '.join(
+                            expectation['content'].split())
+
+                        # Look for the expected content
+                        position = content.find(expected_content)
+
+                        if position >= 0:
+                            print_to_log(' Test %s passed.' %
+                                         test_expectation_id)
+                            passed_test_cases += 1
+                        else:
+                            passed = False
+                            print_to_log(
+                                test_fmt.format(
+                                    expectation_id=test_expectation_id,
+                                    expected_content=expectation['content'],
+                                    original_content=original_content))
 
         # Update number of test cases
         test_case_id += len(test_case['expectations'])
@@ -258,7 +276,8 @@ def test(binary_name, tests, logfile, logfile_name):
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
     # THE END
     # *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-    print_to_log('\n\n############################################################')
+    print_to_log(
+        '\n\n############################################################')
 
     # NOTE: ugly…
     total_benchmarks = benchmark_id - 1
@@ -266,51 +285,63 @@ def test(binary_name, tests, logfile, logfile_name):
 
     if total_benchmarks == passed_benchmarks and total_test_cases == passed_test_cases:
         print_to_screen_and_log(
-            'All benchmarks ({}/{}) passed successfully.'.format(passed_benchmarks, total_benchmarks))
+            'All benchmarks ({}/{}) passed successfully.'.format(
+                passed_benchmarks, total_benchmarks))
         print_to_screen_and_log(
-            'All test cases ({}/{}) passed successfully.'.format(passed_test_cases, total_test_cases))
+            'All test cases ({}/{}) passed successfully.'.format(
+                passed_test_cases, total_test_cases))
     else:
-        print_to_screen(bcolors.WARNING + 'WARNING! Some tests failed.' + bcolors.NORMAL)
+        print_to_screen(bcolors.WARNING + 'WARNING! Some tests failed.' +
+                        bcolors.NORMAL)
         print_to_log('WARNING! Some tests failed.')
 
         if passed_benchmarks == total_benchmarks:
-            print_to_screen('{2.GOOD}{0}/{1} benchmarks passed successfully.{2.NORMAL}'.format(passed_benchmarks,
-                                                                                               total_benchmarks,
-                                                                                               bcolors))
+            print_to_screen(
+                '{2.GOOD}{0}/{1} benchmarks passed successfully.{2.NORMAL}'.
+                format(passed_benchmarks, total_benchmarks, bcolors))
         else:
-            print_to_screen('{2.WARNING}{0}/{1} benchmarks passed successfully.{2.NORMAL}'.format(passed_benchmarks,
-                                                                                                  total_benchmarks,
-                                                                                                  bcolors))
+            print_to_screen(
+                '{2.WARNING}{0}/{1} benchmarks passed successfully.{2.NORMAL}'.
+                format(passed_benchmarks, total_benchmarks, bcolors))
 
-        print_to_log('{}/{} benchmarks passed successfully.'.format(passed_benchmarks, total_benchmarks))
+        print_to_log('{}/{} benchmarks passed successfully.'.format(
+            passed_benchmarks, total_benchmarks))
 
         if passed_benchmarks < total_benchmarks:
-            print_to_screen('{2.ERROR}{0}/{1} benchmarks failed.{2.NORMAL}'.format(
-                total_benchmarks - passed_benchmarks,
-                total_benchmarks, bcolors))
+            print_to_screen(
+                '{2.ERROR}{0}/{1} benchmarks failed.{2.NORMAL}'.format(
+                    total_benchmarks - passed_benchmarks, total_benchmarks,
+                    bcolors))
         else:
-            print_to_screen('{}/{} benchmarks failed.'.format(total_benchmarks - passed_benchmarks, total_benchmarks))
+            print_to_screen('{}/{} benchmarks failed.'.format(
+                total_benchmarks - passed_benchmarks, total_benchmarks))
 
-        print_to_log('{}/{} benchmarks failed.'.format(total_benchmarks - passed_benchmarks, total_benchmarks))
+        print_to_log('{}/{} benchmarks failed.'.format(
+            total_benchmarks - passed_benchmarks, total_benchmarks))
 
         if passed_test_cases == total_test_cases:
-            print_to_screen('{2.GOOD}{0}/{1} test cases passed successfully.{2.NORMAL}'.format(passed_test_cases,
-                                                                                               total_test_cases,
-                                                                                               bcolors))
+            print_to_screen(
+                '{2.GOOD}{0}/{1} test cases passed successfully.{2.NORMAL}'.
+                format(passed_test_cases, total_test_cases, bcolors))
         else:
-            print_to_screen('{2.WARNING}{0}/{1} test cases passed successfully.{2.NORMAL}'.format(passed_test_cases,
-                                                                                                  total_test_cases,
-                                                                                                  bcolors))
+            print_to_screen(
+                '{2.WARNING}{0}/{1} test cases passed successfully.{2.NORMAL}'.
+                format(passed_test_cases, total_test_cases, bcolors))
 
-        print_to_log('{}/{} test cases passed successfully.'.format(passed_test_cases, total_test_cases))
+        print_to_log('{}/{} test cases passed successfully.'.format(
+            passed_test_cases, total_test_cases))
 
         if passed_test_cases < total_test_cases:
-            print_to_screen('{2.ERROR}{0}/{1} test cases failed.{2.NORMAL}'.format(total_test_cases - passed_test_cases,
-                                                                                   total_test_cases, bcolors))
+            print_to_screen(
+                '{2.ERROR}{0}/{1} test cases failed.{2.NORMAL}'.format(
+                    total_test_cases - passed_test_cases, total_test_cases,
+                    bcolors))
         else:
-            print_to_screen('{}/{} test cases failed.'.format(total_test_cases - passed_test_cases, total_test_cases))
+            print_to_screen('{}/{} test cases failed.'.format(
+                total_test_cases - passed_test_cases, total_test_cases))
 
-        print_to_log('{}/{} test cases failed.'.format(total_test_cases - passed_test_cases, total_test_cases))
+        print_to_log('{}/{} test cases failed.'.format(
+            total_test_cases - passed_test_cases, total_test_cases))
 
     print_to_screen('(See %s for details.)' % logfile_name)
 
@@ -320,14 +351,19 @@ def test(binary_name, tests, logfile, logfile_name):
 # ************************************************************
 
 # print '*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-'
-print_to_screen_and_log('############################################################')
-print_to_screen('{0.BOLD} TESTATOR{0.NORMAL}                                              v0.1'.format(bcolors))
+print_to_screen_and_log(
+    '############################################################')
+print_to_screen(
+    '{0.BOLD} TESTATOR{0.NORMAL}                                              v0.1'
+    .format(bcolors))
 print_to_log(' TESTATOR                                              v0.1')
 print_to_screen_and_log('')
 print_to_screen_and_log(' Étienne André')
 print_to_screen_and_log(' Université Paris 13, LIPN, CNRS, France')
-print_to_screen_and_log(' Université de Lorraine, CNRS, Inria, LORIA, Nancy, France')
-print_to_screen_and_log('############################################################')
+print_to_screen_and_log(
+    ' Université de Lorraine, CNRS, Inria, LORIA, Nancy, France')
+print_to_screen_and_log(
+    '############################################################')
 now = datetime.datetime.now()
 print_to_screen_and_log(now.strftime("%A %d. %B %Y %H:%M:%S %z"))
 
@@ -350,7 +386,8 @@ logfile = open(DISTRIBUTED_LOGFILE, 'w')
 # IMPORTING THE TESTS CONTENT
 from regression_tests_data_distr import tests_distr
 
-test(DISTRIBUTED_BINARY_NAME, tests_distr + tests, logfile, DISTRIBUTED_LOGFILE)
+test(DISTRIBUTED_BINARY_NAME, tests_distr + tests, logfile,
+     DISTRIBUTED_LOGFILE)
 
 # ************************************************************
 # THE END
