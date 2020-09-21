@@ -239,7 +239,6 @@ Quite naturally, what we would be interested in is knowing for which parameter v
 Assuming this model is input in file \stylePath{fischer.imi} and the property is in file \stylePath{fischer.imiprop}, the command calling \imitator{} is as follows:
 
 \styleCommand{\binimitator{} fischer.imi fischer.imiprop}
-% TODO: so far, we need to add -merge manually
 
 % In this command, \styleOption{-mode EF} calls the algorithm \EFsynth{} that synthesizes valuations reaching a given location (see \cref{ss:mode:EFsynth}); and \styleOption{-merge} is a merging technique reducing the state space that, for this model, ensures termination (see \cite{AFS13atva} for more details on merging).
 
@@ -1303,7 +1302,81 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 \end{table}
 
 
-% TODO: options by default!
+
+
+
+\begin{table}[h!]
+	\caption{Summary of the algorithms default options}
+	{\centering
+		\begin{tabular}{ | l | l | c | c | c | }
+
+			% Non-nested CTL
+			\hline
+			\rowHeader{} Algorithm & Syntax                                           & \styleOption{-inclusion}      & \styleOption{-merge}    \\
+			\hline
+			State space computation           & \cellNA{}                  & \cellNo{} & \cellNo{} \\
+			\hline
+			Reachability           & \styleIMI{EF(state\_predicate)}                  & \cellYes{} & \cellYes{} \\
+			\hline
+			Safety                 & \styleIMI{AGnot(state\_predicate)}               & \cellYes{} & \cellYes{} \\
+
+			% Optimized reachability
+
+			\hline
+			Parameter minimization & \styleIMI{EFpmin(state\_predicate, p)}           & \cellYes{} & \cellYes{} \\
+			\hline
+			Parameter maximization & \styleIMI{EFpmax(state\_predicate, p)}           & \cellYes{} & \cellYes{} \\
+			\hline
+			Minimal-time           & \styleIMI{EFtmin(state\_predicate)}              & \cellYes{} & \cellYes{} \\
+
+			% Cycles
+
+			\hline
+			Cycle                  & \styleIMI{Cycle}                            & \cellNo{} & \cellNo{}  \\
+			\hline
+			Accepting cycle        & \styleIMI{CycleThrough(state\_predicate)} & \cellNo{} & \cellNo{}  \\
+			\hline
+			Non-Zeno cycles        & \styleIMI{NZCycle}                            & \cellNo{} & \cellNo{}  \\
+
+			% Deadlock-freeness
+
+			\hline
+			Deadlock-freeness      & \styleIMI{DeadlockFree}                          & \cellYes{} & \cellYes{}  \\
+
+			% Inverse method
+
+			\hline
+			Inverse method         & \styleIMI{IM(parameter\_valuation)}              & \cellNo{} & \cellNo{}  \\
+			\hline
+			Inverse method         & \styleIMI{IMK(parameter\_valuation)}             & \cellNo{} & \cellNo{}  \\
+			\hline
+			Inverse method         & \styleIMI{IMunion(parameter\_valuation)}         & \cellNo{} & \cellNo{}  \\
+
+			% Cartography
+
+			\hline
+			Cartography            & \styleIMI{BCcover(hyper\_rectangle)}             & \cellNo{} & \cellNo{}  \\
+			Cartography            & \styleIMI{BCrandom(hyper\_rectangle, nb)}        & \cellNo{} & \cellNo{}  \\
+			Cartography            & \styleIMI{BCrandomseq(hyper\_rectangle, nb)}     & \cellNo{} & \cellNo{}  \\
+			Cartography            & \styleIMI{BCshuffle(hyper\_rectangle)}           & \cellNo{} & \cellNo{}  \\
+
+			% PRP, PRPC
+
+			\hline
+			PRP                    & \styleIMI{PRP(state\_pred, parameter\_val)}      & \cellYes{} & \cellYes{}  \\
+			\hline
+			PRPC                   & \styleIMI{PRPC(state\_pred, hyper\_rect)}        & \cellYes{} & \cellYes{}  \\
+
+			\hline
+		\end{tabular}
+
+	}
+
+	\label{table:summary:algorithms}
+\end{table}
+
+
+% TODO refer to this table
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
