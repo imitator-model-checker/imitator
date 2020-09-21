@@ -23,14 +23,31 @@ PreBuildCommand: python gen_build_info.py
 # strip: considerably reduces the size!
 PostBuildCommand: python incrementer.py ; echo "Copying main binary file to bin/imitator ..." ; cp _build/src/IMITATOR.native bin/imitator ; strip bin/imitator
 
+Flag "dev"
+  Description: Build imitator with development options 
+  Default: false
 
 Executable imitator
-  Path:       .
-  BuildTools: ocamlbuild
-  MainIs:     src/IMITATOR.ml
-  BuildDepends: gmp, extlib, ppl, str, unix, threads, fileutils
-#  CCLib: -lstdc++
-  CCLib: -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx'
+  Path:           .
+  Build$:         !flag(dev)
+  BuildTools:     ocamlbuild
+  MainIs:         src/IMITATOR.ml
+  BuildDepends:   gmp, extlib, ppl, str, unix, threads, fileutils
+# CCLib:          -lstdc++
+  CCLib:          -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx'
+
+# -static to have a static compiling (+ ' ' around)
+# I removed -lcamlrun because I wrote "best" instead of "byte"
+  CompiledObject: best
+
+Executable "imitator_dev"
+  Path:           .
+  Build$:         flag(dev)
+  BuildTools:     ocamlbuild
+  MainIs:         src/IMITATOR.ml
+  BuildDepends:   gmp, extlib, ppl, str, unix, threads, fileutils
+  CompiledObject: best
+  NativeOpt:      '-opaque'
 
 # -static to have a static compiling (+ ' ' around)
 # I removed -lcamlrun because I wrote "best" instead of "byte"

@@ -52,6 +52,9 @@ benchmarks/**/*.states
 benchmarks/**/*.pdf
 benchmarks/**/*.xml
 
+*_cart.png
+*_cart_bounds.txt
+
 tests/**/*-regenerated.imi
 tests/**/*.log
 tests/**/*.jpg
