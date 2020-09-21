@@ -162,6 +162,9 @@ class imitator_options =
 		(* first depth to explore for the iterative deepening in NDFS algorithm *)
 		val mutable depth_init = None
 
+		(* Step for NDFS *)
+		val mutable depth_step = NumConst.one
+
 		(* Distributed version of IMITATOR *)
 		val mutable distribution_mode = AbstractAlgorithm.Non_distributed
 
@@ -236,9 +239,6 @@ class imitator_options =
 
 		(* limit number of states *)
 		val mutable states_limit = None
-
-		(* Step for NDFS *)
-		val mutable step = NumConst.one
 
 		(* Subsumption for NDFS *)
 		val mutable subsumption : bool option = None
@@ -357,7 +357,7 @@ class imitator_options =
 
 		method recompute_green = recompute_green
 		method pending_order = pending_order
-		method step = step
+		method depth_step = depth_step
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -658,12 +658,15 @@ class imitator_options =
         Use `NDFS` for NDFS algorithms [NPvdP18] (default).
 				");
 
-				("-depth-limit", Int (fun i -> depth_limit <- Some i), " Limits the depth of the exploration of the state space. Default: no limit.
-				");
-
 				("-depth-init", Int (fun i -> depth_init <- Some i), " Initial depth for iterative deepening in NDFS exploration of the state space.
 				");
 				(*** TODO: what's default? ***)
+
+				("-depth-limit", Int (fun i -> depth_limit <- Some i), " Limits the depth of the exploration of the state space. Default: no limit.
+				");
+
+				("-depth-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) depth_step <- (NumConst.numconst_of_string i)), " Step for NDFS iterative deepening. Default: 1.
+				");
 
 				("-distributed", String set_distributed, " Distributed version of the behavioral cartography and PRPC.
         Use `no` for the non-distributed mode (default).
@@ -831,9 +834,6 @@ class imitator_options =
 				");
 
 				("-statistics", Unit (fun _ -> statistics <- true; Statistics.enable_all_counters()), " Print info on number of calls to PPL, and other statistics. Default: disabled.
-				");
-
-				("-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) step <- (NumConst.numconst_of_string i)), " Step for NDFS iterative deepening. Default: 1.
 				");
 
 				("-subsumption", Unit (fun () -> warn_if_set subsumption "subsumption"; subsumption <- Some true), " NDFS with subsumption (for NDFS algorithms only) [NPvdP18]. Default: enabled.");

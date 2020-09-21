@@ -1089,7 +1089,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 
 			if execute_again then(
 				ResultProcessor.process_result self#compute_result "Iterative deepening" None;
-				current_depth <- current_depth + (NumConst.to_int options#step);
+				current_depth <- current_depth + (NumConst.to_int options#depth_step);
 				()
 			);
 		done; (* end of the big loop *)
