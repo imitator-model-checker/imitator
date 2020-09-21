@@ -3,7 +3,7 @@
  *                       IMITATOR
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
- * LIPN, Université Paris 13 (France)
+ * LIPN, Université Paris 13 & CNRS (France)
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: All graphics handling (cartography, trace set…)

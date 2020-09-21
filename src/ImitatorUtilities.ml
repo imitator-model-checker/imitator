@@ -344,7 +344,7 @@ let print_header_string () =
 	^ "*                                       Étienne André et al.  *\n"
 	^ "*                                                2009 - " ^ (BuildInfo.build_year) ^ "  *\n"
 	^ "*                          LSV, ENS de Cachan & CNRS, France  *\n"
-	^ "*                          LIPN, Université Paris 13, France  *\n"
+	^ "*                   LIPN, Université Paris 13 & CNRS, France  *\n"
 	^ "*  Université de Lorraine, CNRS, Inria, LORIA, Nancy, France  *\n"
 	^ "*  " ^ (string_n_times (length_header - (String.length imitator_url)) " ") ^ imitator_url ^ "  *\n"
 	^ "*                                                             *\n"

@@ -3,7 +3,7 @@
  *                     IMITATOR
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
- * Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
+ * Universite Paris 13, Sorbonne Paris Cite, CNRS, LIPN (France)
  * 
  * Description:   parser for CosyVerif properties (temporary version, and quite ugly engineering)
  * WARNING:       This file is mostly copy-pasted from ModelParser.mll
