@@ -166,23 +166,23 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		in
 *)
         let printtable colour thetable =
-            if verbose_mode_greater Verbose_low then(
+            if verbose_mode_greater Verbose_medium then(
                     let printrecord state_index u rest =
                             (string_of_int state_index) ^ " " ^ rest;
-                    in print_message Verbose_low("Table " ^ colour ^ " : [ "
+                    in print_message Verbose_medium("Table " ^ colour ^ " : [ "
                             ^ Hashtbl.fold printrecord thetable "" ^ "]")
             );
         in
 
 		let printpendingqueue colour thequeue =
-			if verbose_mode_greater Verbose_low then(
+			if verbose_mode_greater Verbose_medium then(
 				let rec r_printqueue thequeue = match thequeue with
 					| [] -> "";
 					| (state_index,state_depth)::body  ->
 						"(" ^ (string_of_int state_index)
 							^ ", " ^ (string_of_int state_depth) ^ ") "
 							^ (r_printqueue body);
-				in print_message Verbose_low("Queue " ^ colour ^ " : [ "
+				in print_message Verbose_medium("Queue " ^ colour ^ " : [ "
 						^ r_printqueue thequeue ^ "]")
 			);
 		in
@@ -372,10 +372,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		(* printing zone projection on parameters *)
 		(******************************************)
 		let print_projection verbose_level thestate =
-			let state_constr = (StateSpace.get_state state_space thestate).px_constraint in
-			let constr = LinearConstraint.px_hide_nonparameters_and_collapse state_constr in
-			print_message verbose_level ("Projected constraint : \n"
-				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr)
+			if verbose_mode_greater verbose_level then (
+				let state_constr = (StateSpace.get_state state_space thestate).px_constraint in
+				let constr = LinearConstraint.px_hide_nonparameters_and_collapse state_constr in
+				print_message verbose_level ("Projected constraint : \n"
+					^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr))
 		in
 
 		(***********************************)
@@ -492,7 +493,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 			end;
 			if (limit_reached <> Keep_going) then raise (TerminateAnalysis)
 			else(
-			print_highlighted_message Shell_bold Verbose_low("Executing rundfs at depth "
+			print_highlighted_message Shell_bold Verbose_medium("Executing rundfs at depth "
 				^ (string_of_int thestate_depth)
 				^ " with "
 				^ (if State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space thestate)
@@ -520,7 +521,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				let rec process_sucs suclist = match suclist with
 					| [] -> ();
 					| suc_id::body ->
-						print_message Verbose_low("Handling "
+						print_message Verbose_medium("Handling "
 							^ (if State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space suc_id)
 								then "accepting " else "")
 							^ "successor "
@@ -623,11 +624,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						print_message Verbose_low
 							(ModelPrinter.string_of_state model
 								(StateSpace.get_state state_space astate));
+						print_projection Verbose_low astate;
 						(* For synthesis: we do not stop immediately *)
 						if (property.synthesis_type = Synthesis) then
 							termination_status <- Some Regular_termination
 						else termination_status <- Some Target_found;
-						print_projection Verbose_low astate;
 						let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 						constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 						collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
@@ -672,9 +673,9 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								print_message Verbose_low
 									(ModelPrinter.string_of_state model
 										(StateSpace.get_state state_space astate));
+								print_projection Verbose_low astate;
 								(* For synthesis: we do not stop immediately *)
 								termination_status <- Some Target_found;
-								print_projection Verbose_low astate;
 								let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 								constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 								collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
@@ -700,7 +701,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						in
 					(try (rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index 0;)
 						with TerminateAnalysis -> ());
-					print_message Verbose_low("Finished the calls")
+					print_message Verbose_medium("Finished the calls")
 
 				(* No layer, subsumption *)
 				| false, true ->
@@ -731,11 +732,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						print_message Verbose_low
 							(ModelPrinter.string_of_state model
 								(StateSpace.get_state state_space astate));
-								(* For synthesis: we do not stop immediately *)
+						print_projection Verbose_low astate;
+						(* For synthesis: we do not stop immediately *)
 						if (property.synthesis_type = Synthesis) then
 							termination_status <- Some Regular_termination
 						else termination_status <- Some Target_found;
-						print_projection Verbose_low astate;
 						let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 						constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 						collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
@@ -781,11 +782,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								print_message Verbose_low
 									(ModelPrinter.string_of_state model
 										(StateSpace.get_state state_space astate));
+								print_projection Verbose_low astate;
 								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
 								else termination_status <- Some Target_found;
-								print_projection Verbose_low astate;
 								let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 								constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 								collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
@@ -812,7 +813,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						in
 					(try (rundfs enterdfs predfs withLookahead cyclefound filterdfs testaltdfs alternativedfs testrecursivedfs postdfs init_state_index 0;)
 						with TerminateAnalysis -> ());
-					print_message Verbose_low("Finished the calls")
+					print_message Verbose_medium("Finished the calls")
 
 				(* Layers, no subsumption *)
 				| true, false ->
@@ -823,7 +824,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						| [] -> print_message Verbose_standard ("Impossible case");
 						| (thestate,thestate_depth)::body ->
 							pending := body;
-							print_message Verbose_low ("Popped state "
+							print_message Verbose_medium ("Popped state "
 								^ (string_of_int thestate));
 							printpendingqueue "Pending" !pending;
 							if (not (table_test blue thestate) &&
@@ -855,11 +856,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								print_message Verbose_low
 									(ModelPrinter.string_of_state model
 										(StateSpace.get_state state_space astate));
-									(* For synthesis: we do not stop immediately *)
+								print_projection Verbose_low astate;
+								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
 								else termination_status <- Some Target_found;
-								print_projection Verbose_low astate;
 								let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 								constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 								collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
@@ -900,16 +901,16 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 										if (property.synthesis_type = Witness) then
 											print_highlighted_message Shell_bold Verbose_standard
 												("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
-										else print_highlighted_message Shell_bold Verbose_low
+										else print_highlighted_message Shell_bold Verbose_standard
 											("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
 										print_message Verbose_low
 											(ModelPrinter.string_of_state model
 												(StateSpace.get_state state_space astate));
+										print_projection Verbose_low astate;
 										(* For synthesis: we do not stop immediately *)
 										if (property.synthesis_type = Synthesis) then
 											termination_status <- Some Regular_termination
 										else termination_status <- Some Target_found;
-										print_projection Verbose_standard astate;
 										let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 										constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 										collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
@@ -939,7 +940,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 					done;)
 
 								with TerminateAnalysis -> ());
-					print_message Verbose_low("Finished the calls")
+					print_message Verbose_medium("Finished the calls")
 
 				(* Layers, subsumption *)
 				| true, true ->
@@ -950,7 +951,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						| [] -> print_message Verbose_standard ("Impossible case");
 						| (thestate,thestate_depth)::body ->
 							pending := body;
-							print_message Verbose_low ("Popped state "
+							print_message Verbose_medium ("Popped state "
 								^ (string_of_int thestate));
 							printpendingqueue "Pending" !pending;
 							if (not (table_test blue thestate) &&
@@ -982,11 +983,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								print_message Verbose_low
 									(ModelPrinter.string_of_state model
 										(StateSpace.get_state state_space astate));
-									(* For synthesis: we do not stop immediately *)
+								print_projection Verbose_low astate;
+								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
 								else termination_status <- Some Target_found;
-								print_projection Verbose_low astate;
 								let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 								constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 								collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
@@ -1033,11 +1034,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 										print_message Verbose_low
 											(ModelPrinter.string_of_state model
 												(StateSpace.get_state state_space astate));
+										print_projection Verbose_low astate;
 										(* For synthesis: we do not stop immediately *)
 										if (property.synthesis_type = Synthesis) then
 											termination_status <- Some Regular_termination
 										else termination_status <- Some Target_found;
-										print_projection Verbose_low astate;
 										let state_constr = (StateSpace.get_state state_space astate).px_constraint in
 										constraint_list := (LinearConstraint.px_hide_nonparameters_and_collapse state_constr)::(!constraint_list);
 										collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
@@ -1067,7 +1068,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 					done;)
 
 								with TerminateAnalysis -> ());
-					print_message Verbose_low("Finished the calls")
+					print_message Verbose_medium("Finished the calls")
 
 (* 	                       | _ -> raise (InternalError ("Unknown exploration order in NDFS")) *)
 			end;
