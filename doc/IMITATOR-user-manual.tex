@@ -984,10 +984,6 @@ list via the \styleOption{-pending-order} option:
 \end{description}
 
 
-% TODO: step
-
-
-
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
 \paragraph{Accepting cycle (NDFS) with iterative deepening}\label{sss:accepting-loop-NDFS-iterative}
 %-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%-%
@@ -1002,9 +998,9 @@ uses the following options :
 \begin{description}
 	\item[\styleOption{-depth-init}] allows for starting this iterative computing by indicating
 	      the initial depth limit to be used;
-	\item[\styleOption{-step}] indicates the step between the depths of two iterations;
 	\item[\styleOption{-depth-limit}] is the maximal depth at which the last iteration
 	      will be run.
+	\item[\styleOption{-depth-step}] indicates the step between the depths of two iterations;
 \end{description}
 
 The results obtained at each iteration are displayed, thus giving valuable information
@@ -1802,7 +1798,7 @@ See
 	\styleOption{-pending-order},
 	\styleOption{-depth-init},
 	\styleOption{-depth-limit},
-	\styleOption{-step}
+	\styleOption{-depth-step}
 for possible additional options.
 
 
@@ -1822,6 +1818,13 @@ at each iteration.
 Limits the depth of the exploration of the state space.
 In the cartography mode, this option gives a limit to \emph{each} call to the inverse method.
 Setting \styleOption{-depth-limit} guarantees the termination of any execution of \imitator{}, but not necessarily the correctness of the algorithms.
+
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-depth-step} (default: \styleOption{1})}
+%------------------------------------------------------------
+For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}),
+\styleOption{-depth-step} is used for iterative NDFS: it indicates the step between two iterations.
 
 
 %------------------------------------------------------------
@@ -2225,13 +2228,6 @@ Warning: the program may have to first finish computing the current iteration (\
 Print info on number of calls to PPL, and other statistics about memory and time.
 Warning: enabling this option may slightly slow down the analysis, and will certainly induce some extra computational time at the end.
 
-
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-step} (default: \styleOption{1})}
-%------------------------------------------------------------
-For the cycle detection using NDFS (\cref{sss:accepting-loop-NDFS}),
-\styleOption{-step} is used for iterative NDFS: it indicates the step between two iterations.
 
 
 %------------------------------------------------------------
