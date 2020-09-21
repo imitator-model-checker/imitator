@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/09/17
+# Last modified     : 2020/09/21
 #************************************************************
 
 
@@ -6325,7 +6325,9 @@ Constraint nature             : good/bad
 			} #end result file
 		] # end expectations
 	} # end test case
+			
 	,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test the inverse method (flip-flop)',
@@ -6340,7 +6342,31 @@ END CONSTRAINT
 			} #end result file
 		] # end expectations
 	} # end test case
+	
 	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/21
+		# Last modified            : 2020/09/21
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test the inverse method (flip-flop) #witness',
+		'input_files': ['flipflop.imi', 'flipflop-witness.pi0'],
+		'options'    : '',
+		'expectations' : [
+# NOTE: witness is not recognized by IM, therefore will raise a warning and give the same result as synthesis
+			{'file': 'flipflop.res' , 'content' : """
+BEGIN CONSTRAINT
+dG3_u + dG4_u >= 17 & dG3_u >= 8 & dG4_u >= 3 & 17 > dG3_u & 24 > dG3_u + dG4_u
+END CONSTRAINT
+			"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	
+	,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test the convex inverse method (SIMOP)',

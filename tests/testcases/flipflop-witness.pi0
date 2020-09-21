@@ -1,0 +1,66 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Modeling of the circuit described in "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella)
+ *
+ * Description     : A flip-flop circuit made of 4 gates
+ * Correctness     : TODO
+ * Source          : "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella); Design Automation Conference, 2004. Proceedings of the ASP-DAC 2004. Asia and South Pacific; DOI: 10.1109/ASPDAC.2004.1337668
+ * Author          : Roberto Clariso and Jordi Cortadella
+ * Modeling        : Etienne Andre and Laurent Fribourg
+ * Input by        : Etienne Andre
+ *
+ * Created         : 2007/11
+ * Last modified   : 2020/09/21
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+ 
+(*
+(***** BAD ONE *****)
+	& tHI = 20
+	& tLO = 15
+	& tSetup = 10
+	& tHold = 15
+	& dG1_l = 1
+	& dG1_u = 1
+	& dG2_l = 8
+ 	& dG2_u = 10
+	& dG3_l = 5
+ 	& dG3_u = 6
+	& dG4_l = 3
+	& dG4_u = 5
+*)
+
+
+
+(* IJFCS [ACEF09] *)
+property := #witness IM(
+	& tHI    = 24
+	& tLO    = 15
+	& tSetup = 10
+	& tHold  = 17
+	& dG1_l  = 7
+	& dG1_u  = 7
+	& dG2_l  = 5
+	& dG2_u  = 6
+	& dG3_l  = 8
+	& dG3_u  = 10
+	& dG4_l  = 3
+	& dG4_u  = 7
+);
+
+(*
+-- 	& tHI    = 24
+-- 	& tLO    = 15
+-- 	& tSetup = 10
+-- 	& tHold  = 17
+-- 	& dG1_l  = 7
+-- 	& dG1_u  = 7
+-- 	& dG2_l  = 5
+-- 	& dG2_u  = 6
+-- 	& dG3_l  = 8
+-- 	& dG3_u  = 16.9
+-- 	& dG4_l  = 3
+-- 	& dG4_u  = 7.8
+*)
