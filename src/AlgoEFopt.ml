@@ -71,14 +71,6 @@ class virtual algoEFopt (state_predicate : AbstractProperty.state_predicate) (pa
 	(*------------------------------------------------------------*)
 	
 	val parameters_to_hide =
-(*		(* First retrieve the parameter index (OCaml does not let us use the 'parameter_index' variable *)
-		let parameter_index =
-		match (Input.get_property ()).property with
-		(* Shortcut for both algorithms *)
-		| EFpmin (_, parameter_index) -> parameter_index
-		| EFpmax (_, parameter_index) -> parameter_index
-		| _ -> raise (InternalError("An optimized parameter should be defined in the property to run EFopt"))
-		in*)
 			OCamlUtilities.list_remove_first_occurence parameter_index (Input.get_model ()).parameters
 	
 
