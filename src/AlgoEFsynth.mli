@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2020/04/16
+ * Last modified     : 2020/09/21
  *
  ************************************************************)
 
@@ -32,9 +32,6 @@ class virtual algoEFsynth : AbstractProperty.state_predicate ->
 
 		method virtual algorithm_name : string
 		
-		(* Non-necessarily convex constraint allowing the reachability of the bad location *)
-		val mutable bad_constraint : LinearConstraint.p_nnconvex_constraint
-	
 		(* Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is used at the end of the algorithm) *)
 		(*** WARNING: these lines are copied from AlgoDeadlockFree ***)
 		val init_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint

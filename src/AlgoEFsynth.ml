@@ -44,11 +44,6 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 	(* Class variables *)
 	(************************************************************)
 	
-	(* Non-necessarily convex constraint allowing the reachability of the bad location *)
-	val mutable bad_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
-		
-
-	
 	(* Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is used at the end of the algorithm) *)
 	(*** WARNING: these lines are copied from AlgoDeadlockFree ***)
 	val init_p_nnconvex_constraint : LinearConstraint.p_nnconvex_constraint =
@@ -63,20 +58,11 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 	val counter_found_bad = create_discrete_counter_and_register "found target state" PPL_counter Verbose_low
 	(* The constraint of a new state is smaller than the bad constraint: cut branch *)
 	val counter_cut_branch = create_discrete_counter_and_register "cut branch (constraint <= bad)" PPL_counter Verbose_low
-	(* How many times the cache was useful *)
-	val counter_cache = create_discrete_counter_and_register "cache (EF)" PPL_counter Verbose_low
-	(* Number of cache misses *)
-	val counter_cache_miss = create_discrete_counter_and_register "cache miss (EF)" PPL_counter Verbose_low
 	(* Methods counters *)
 	val counter_process_state = create_hybrid_counter_and_register "EFsynth.process_state" States_counter Verbose_experiments
-	val counter_compute_p_constraint_with_cache = create_hybrid_counter_and_register "EFsynth.compute_p_constraint_with_cache" States_counter Verbose_experiments
 	val counter_add_a_new_state = create_hybrid_counter_and_register "EFsynth.add_a_new_state" States_counter Verbose_experiments
 
 	
-	
-	(* Mini cache system: keep in memory the current p-constraint to save computation time *)
-	(*** WARNING: a bit dangerous, as its handling is not very very strictly controlled ***)
-	val mutable cached_p_constraint : LinearConstraint.p_linear_constraint option = None
 	
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -97,7 +83,7 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 		super#initialize_variables;
 		
 		(*** NOTE: duplicate operation ***)
-		bad_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
+		synthesized_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
 
 		(* The end *)
 		()
@@ -129,8 +115,8 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 				);
 
 				(* Project onto the parameters *)
-				(*** NOTE: here, we use the cache system ***)
-				let p_constraint = self#compute_p_constraint_with_cache state_constraint in
+				(*** NOTE: here, we use the mini-cache system ***)
+				let p_constraint = self#compute_p_constraint_with_minicache state_constraint in
 
 				(* Projecting onto SOME parameters if required *)
 				(*** BADPROG: Duplicate code (AlgoLoopSynth / AlgoPRP) ***)
@@ -165,7 +151,7 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 				
 				(*** NOTE: do NOT do it in mode no_leq_test_in_ef ***)
 				
-				if (not options#no_leq_test_in_ef) && LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) bad_constraint then(
+				if (not options#no_leq_test_in_ef) && LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) synthesized_constraint then(
 					self#print_algo_message Verbose_low "Found a target state (but the constraint was already known).";
 				)else(
 					(* The constraint is new! *)
@@ -174,8 +160,8 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 					self#print_algo_message Verbose_standard "Found a new target state.";
 						
 					(* Update the bad constraint using the current constraint *)
-					(*** NOTE: perhaps try first whether p_constraint <= bad_constraint ? ***)
-					LinearConstraint.p_nnconvex_p_union_assign bad_constraint p_constraint;
+					(*** NOTE: perhaps try first whether p_constraint <= synthesized_constraint ? ***)
+					LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint p_constraint;
 					
 					(* Print some information *)
 					if verbose_mode_greater Verbose_low then(
@@ -183,7 +169,7 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 						print_message Verbose_low (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 						
 						self#print_algo_message Verbose_low "The synthesized constraint is now:";
-						print_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
+						print_message Verbose_low (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
 					);
 				); (* end if new bad constraint *)
 				
@@ -213,49 +199,6 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 	method process_initial_state initial_state = self#process_state initial_state
 
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Compute the p-constraint only if it is not cached *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private compute_p_constraint_with_cache px_linear_constraint =
-
-		(* Statistics *)
-		counter_compute_p_constraint_with_cache#increment;
-		counter_compute_p_constraint_with_cache#start;
-		
-		let result =
-		match cached_p_constraint with
-		(* Cache empty: *)
-		| None ->
-			(* Compute the p_constraint *)
-			let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_linear_constraint in
-			(* Statistics *)
-			counter_cache_miss#increment;
-			(* Print some information *)
-			if verbose_mode_greater Verbose_medium then(
-				self#print_algo_message Verbose_medium "\nCache miss!";
-			);
-			(* Update cache *)
-			cached_p_constraint <- Some p_constraint;
-			(* Return result *)
-			p_constraint
-		(* Cache not empty: directly use it *)
-		| Some p_constraint ->
-			(* Statistics *)
-			counter_cache#increment;
-			(* Print some information *)
-			if verbose_mode_greater Verbose_medium then(
-				self#print_algo_message Verbose_medium "\nCache hit!";
-			);
-			(* Return the value in cache *)
-			p_constraint
-		in
-		
-		(* Statistics *)
-		counter_compute_p_constraint_with_cache#stop;
-
-		result
-		
-		
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Generate counter-example(s) if required by the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -297,11 +240,11 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
-			self#print_algo_message Verbose_medium "Entering add_a_new_state (and reset cache)…";
+			self#print_algo_message Verbose_medium "Entering `add_a_new_state` (and reset cache)…";
 		);
 		
-		(* Reset the cached p-constraint *)
-		cached_p_constraint <- None;
+		(* Reset the mini-cache (for the p-constraint) *)
+		self#reset_minicache;
 		
 		(* Try to add the new state to the state space *)
 		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
@@ -339,8 +282,8 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 				);
 
 				(* Project onto the parameters *)
-				(*** NOTE: here, we use the cache system ***)
-				let p_constraint = self#compute_p_constraint_with_cache new_state.px_constraint in
+				(*** NOTE: here, we use the mini-cache system ***)
+				let p_constraint = self#compute_p_constraint_with_minicache new_state.px_constraint in
 				
 				(* Print some information *)
 				self#print_algo_message Verbose_medium "Checking whether the new state is included into known synthesized valuations…";
@@ -349,13 +292,13 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 					print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 					
 					self#print_algo_message Verbose_high "\nCurrent synthesized constraint:";
-					print_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
+					print_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
 				);
 
-				(* if p_constraint <= bad_constraint *)
+				(* if p_constraint <= synthesized_constraint *)
 				(*** NOTE: don't perform this test if the associated option is enabled ***)
 				if not options#no_leq_test_in_ef then(
-					if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) bad_constraint then (
+					if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) synthesized_constraint then (
 						(* Statistics *)
 						counter_cut_branch#increment;
 						

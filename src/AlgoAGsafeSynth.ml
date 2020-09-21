@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/02/03
- * Last modified     : 2020/04/16
+ * Last modified     : 2020/09/21
  *
  ************************************************************)
 
@@ -70,7 +70,7 @@ class algoAGsafeSynth (state_predicate : AbstractProperty.state_predicate) =
 		);
 		
 		
-		(* Perform result = initial_state|P \ bad_constraint *)
+		(* Perform result = initial_state|P \ synthesized_constraint *)
 		
 		(* Projecting onto SOME parameters if required *)
 		let result =
@@ -103,7 +103,7 @@ class algoAGsafeSynth (state_predicate : AbstractProperty.state_predicate) =
 		in
 		
 		(* Perform the difference *)
-		LinearConstraint.p_nnconvex_difference_assign result bad_constraint;
+		LinearConstraint.p_nnconvex_difference_assign result synthesized_constraint;
 		
 		
 		(* Print some information *)

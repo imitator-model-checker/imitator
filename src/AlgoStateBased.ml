@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/09/17
+ * Last modified     : 2020/09/21
  *
  ************************************************************)
 
@@ -2628,6 +2628,26 @@ class virtual algoStateBased =
 	(*** NOTE: public only for AlgoEFoptQueue ***)
 	(*** TODO: merge with termination_status… ***)
 	val mutable limit_reached = Keep_going
+	
+	
+	(* Non-necessarily convex constraint storing the parameter synthesis result (for selected algorithm) *)
+	val mutable synthesized_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
+		
+	(* Mini cache system: keep in memory the current p-constraint to save computation time (for selected algorithms such as EFsynth) *)
+	(*** WARNING: a bit dangerous, as its handling is not very very strictly controlled ***)
+	val mutable cached_p_constraint : LinearConstraint.p_linear_constraint option = None
+	
+
+	
+	(* Counters *)
+	(*** NOTE: if the algorithm is called several times sequentially, then each call will create a counter ***)
+
+	val counter_compute_p_constraint_with_cache = create_hybrid_counter_and_register "AlgoStateBased.compute_p_constraint_with_cache" States_counter Verbose_experiments
+
+	(* How many times the cache was useful *)
+	val counter_cache = create_discrete_counter_and_register "cache (EF)" PPL_counter Verbose_low
+	(* Number of cache misses *)
+	val counter_cache_miss = create_discrete_counter_and_register "cache miss (EF)" PPL_counter Verbose_low
 
 
 	(************************************************************)
@@ -2677,6 +2697,55 @@ class virtual algoStateBased =
 
 
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Compute the p-constraint only if it is not cached using the mini-cache system *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method compute_p_constraint_with_minicache px_linear_constraint =
+
+		(* Statistics *)
+		counter_compute_p_constraint_with_cache#increment;
+		counter_compute_p_constraint_with_cache#start;
+		
+		let result =
+		match cached_p_constraint with
+		(* Cache empty: *)
+		| None ->
+			(* Compute the p_constraint *)
+			let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_linear_constraint in
+			(* Statistics *)
+			counter_cache_miss#increment;
+			(* Print some information *)
+			if verbose_mode_greater Verbose_medium then(
+				self#print_algo_message Verbose_medium "\nCache miss!";
+			);
+			(* Update cache *)
+			cached_p_constraint <- Some p_constraint;
+			(* Return result *)
+			p_constraint
+		(* Cache not empty: directly use it *)
+		| Some p_constraint ->
+			(* Statistics *)
+			counter_cache#increment;
+			(* Print some information *)
+			if verbose_mode_greater Verbose_medium then(
+				self#print_algo_message Verbose_medium "\nCache hit!";
+			);
+			(* Return the value in cache *)
+			p_constraint
+		in
+		
+		(* Statistics *)
+		counter_compute_p_constraint_with_cache#stop;
+
+		result
+
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Reset the mini-cache *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method reset_minicache : unit =
+		cached_p_constraint <- None;
+		()
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

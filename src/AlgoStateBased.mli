@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2020/09/09
+ * Last modified     : 2020/09/21
  *
  ************************************************************)
 
@@ -227,6 +227,9 @@ class virtual algoStateBased :
 		(*** NOTE: public only for AlgoEFoptQueue ***)
 		val mutable limit_reached : bfs_limit_reached
 		
+		(* Non-necessarily convex constraint storing the parameter synthesis result (for selected algorithm) *)
+		val mutable synthesized_constraint : LinearConstraint.p_nnconvex_constraint
+
 		
 		(************************************************************)
 		(* Class methods *)
@@ -252,6 +255,16 @@ class virtual algoStateBased :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method set_patator_termination_function : (unit -> unit) -> unit
 	
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Compute the p-constraint only if it is not cached using the mini-cache system *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method compute_p_constraint_with_minicache : (LinearConstraint.px_linear_constraint -> LinearConstraint.p_linear_constraint)
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Reset the mini-cache *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method reset_minicache : unit
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Update the nature of the trace set *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

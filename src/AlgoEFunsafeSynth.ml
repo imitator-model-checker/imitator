@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/02/03
- * Last modified     : 2020/04/16
+ * Last modified     : 2020/09/21
  *
  ************************************************************)
 
@@ -74,21 +74,21 @@ class algoEFunsafeSynth (state_predicate : AbstractProperty.state_predicate) =
 			let abstract_property = Input.get_property() in
 			match abstract_property.projection with
 				(* No projection: copy the initial p constraint *)
-				| None -> bad_constraint
+				| None -> synthesized_constraint
 				(* Project *)
 				| Some parameters ->
 					(* Print some information *)
 					if verbose_mode_greater Verbose_medium then(
 						self#print_algo_message Verbose_medium "Projecting the bad constraint onto some of the parameters.";
 						self#print_algo_message Verbose_medium "Before projection:";
-						print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
+						print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
 					);
 
 					(*** TODO! do only once for all… ***)
 					let all_but_projectparameters = list_diff model.parameters parameters in
 					
 					(* Eliminate other parameters *)
-					let projected_init_p_nnconvex_constraint = LinearConstraint.p_nnconvex_hide all_but_projectparameters bad_constraint in
+					let projected_init_p_nnconvex_constraint = LinearConstraint.p_nnconvex_hide all_but_projectparameters synthesized_constraint in
 
 					(* Print some information *)
 					if verbose_mode_greater Verbose_medium then(
@@ -101,7 +101,7 @@ class algoEFunsafeSynth (state_predicate : AbstractProperty.state_predicate) =
 				
 		)else(
 			(* No projection: copy the initial p constraint *)
-			bad_constraint
+			synthesized_constraint
 		) (* end if has property *)
 		in
 		
