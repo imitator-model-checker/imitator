@@ -1200,18 +1200,20 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 			| Some status -> status
 		in
 
-(*		let soundness =
-			if (termination_status = Regular_termination && not depth_reached)
-			then Constraint_exact
-			else Constraint_maybe_under
-		in*)
-		let soundness =
+ 		(* LP: the condition with depth_reached is NECESSARY:
+ 			the depth_limit is handled with boolean depth_reached as the depth
+ 			exception would stop the exploration too early *)
+ 		let completed =
+ 				(termination_status = Regular_termination && not depth_reached) in
+ 		let abstracted = (options#inclusion || options#merge) in
+
+ 		let soundness =
 			(* EXACT if termination is normal and no inclusion nor merge *)
-			if termination_status = Regular_termination && not options#inclusion && not options#merge then Constraint_exact
+			if completed && not abstracted then Constraint_exact
 			(* UNDER-APPROXIMATED if termination is NOT normal AND neither merging nor state inclusion was used *)
-			else if termination_status <> Regular_termination && not options#inclusion && not options#merge then Constraint_maybe_under
+			else if not completed && not abstracted then Constraint_maybe_under
 			(* OVER-APPROXIMATED if termination is normal AND merging or state inclusion was used *)
-			else if termination_status = Regular_termination && (options#inclusion || options#merge) then Constraint_maybe_over
+			else if completed && abstracted then Constraint_maybe_over
 			(* UNKNOWN otherwise *)
 			else Constraint_maybe_invalid
 		in
