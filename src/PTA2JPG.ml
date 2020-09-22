@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2012/08/24
- * Last modified     : 2020/08/21
+ * Last modified     : 2020/09/22
  *
  ************************************************************)
 
@@ -157,6 +157,21 @@ let string_of_transitions model automaton_index location_index =
 (* Convert a location of an automaton into a string *)
 let string_of_location model automaton_index location_index =
 	print_message Verbose_high "\n Entering string_of_location…";
+	
+	let is_accepting = model.is_accepting automaton_index location_index in
+	let is_urgent = model.is_urgent automaton_index location_index in
+	
+	let location_color =
+		match is_accepting, is_urgent with
+		(* Accepting AND urgent: orange *)
+		| true, true -> "orange"
+		(* Accepting: red *)
+		| true, false -> "red"
+		(* Urgent: yellow *)
+		| false, true -> "yellow"
+		(* Normal: standard *)
+		| false, false -> "paleturquoise2"
+	in
 
 	let result =
 (* 	s_0[fillcolor=red, style=filled, shape=Mrecord, label="s_0|{InputInit|And111|Or111}"]; *)
@@ -164,13 +179,15 @@ let string_of_location model automaton_index location_index =
 	(* Id *)
 	^ (id_of_location automaton_index location_index) ^ "["
 	(* Color *)
-	^ "fillcolor=" ^ (if model.is_urgent automaton_index location_index then "yellow" else "paleturquoise2") (*(color location_index)*) ^ ", style=filled, fontsize=16"
+	^ "fillcolor=" ^ location_color (*(color location_index)*) ^ ", style=filled, fontsize=16"
 	(* LP: shape MRecord inhibits the peripheries display *)
-	^ (if model.is_accepting automaton_index location_index then ", peripheries=2" else "")
+	^ (if is_accepting then ", peripheries=2" else "")
 	(* Label: start *)
 	^ ", label=\""
+	(* Label: accepting *)
+	^ (if is_accepting then "acc |" else "")
 	(* Label: urgency *)
-	^ (if model.is_urgent automaton_index location_index then "U |" else "")
+	^ (if is_urgent then "U |" else "")
 	(* Label: name *)
 	^ (model.location_names automaton_index location_index)
 	(* Label: invariant *)
