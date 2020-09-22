@@ -776,7 +776,7 @@ class imitator_options =
 				("-no-acceptfirst", Unit (fun () -> no_acceptfirst <- true), "In NDFS, do not put accepting states at the head of the successors list. Default: enabled.
 				");
 
-				("-no-inclusion-test-in-EF", Unit (fun () -> no_leq_test_in_ef <- true), " In EFsynth, no inclusion test of the new states constraints in the already computed constraint. Default: enabled (i.e., inclusion test).
+				("-no-cumulative-pruning", Unit (fun () -> no_leq_test_in_ef <- true), " In reachability/safety/loop synthesis, no inclusion test of the new states parameter constraints in the already computed constraint. Default: enabled (i.e., inclusion test).
 				");
 
 (* 				("-no-initprune", Unit (fun () -> no_initprune <- true), " In collecting NDFS, no pruning if the initial constraint is included in the collected zone. Default: disabled."); *)
@@ -1014,7 +1014,7 @@ class imitator_options =
 			(* No no_leq_test_in_ef if not EF *)
 			if imitator_mode <> Algorithm && no_leq_test_in_ef then
 (*			if no_leq_test_in_ef && (imitator_mode <> EF_synthesis && imitator_mode <> EF_min && imitator_mode <> EF_max && imitator_mode <> EF_synth_min && imitator_mode <> EF_synth_max && imitator_mode <> EF_synth_min_priority_queue && imitator_mode <> EFunsafe_synthesis && imitator_mode <> EFexemplify && imitator_mode <> PRP) then*)(
-				print_warning ("The option `-no-inclusion-test-in-EF` is reserved for EF and PRP. It will thus be ignored.");
+				print_warning ("The option `-no-cumulative-pruning` is reserved for EF and PRP. It will thus be ignored.");
 			);
 
 

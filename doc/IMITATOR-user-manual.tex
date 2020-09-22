@@ -2166,11 +2166,13 @@ do not put accepting states at the head of the successors list.
 
 
 %------------------------------------------------------------
-\paragraph{\styleOption{-no-inclusion-test-in-EF} (default: disabled)}
+\paragraph{\styleOption{-no-cumulative-pruning} (default: disabled)}
 %------------------------------------------------------------
-In \EFsynth{}, no inclusion test of the new states constraints in the already computed constraint is performed when this option is enabled.
-Otherwise, in normal mode, the algorithm checks whether a new state parameter constraint is included into the already computed parameter constraint and, if so, cuts the branch.
-This can save time by cutting branches, but can also slow down the analysis for complex constraints.
+In \EFsynth{} and BFS-based (accepting) loop synthesis, no inclusion test of the new states parameter constraints in the already synthesized constraint is performed when this option is enabled.
+Otherwise, by default, the algorithm checks whether a new state parameter constraint is included into the already computed parameter constraint and, if so, cuts the branch.
+This can save time by cutting branches, but can also slow down the analysis for very complex constraints with dozens or hundreds of disjunctions.
+This option was designed when using \imitator{} for \emph{monitoring} or \emph{parametric timed pattern matching}, when constraints can contain up to thousands of disjunctions~\cite{AHW18}.
+
 
 %------------------------------------------------------------
 \paragraph{\styleOption{-no-lookahead} (default: disabled)}

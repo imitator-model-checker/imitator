@@ -1834,9 +1834,9 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test EF on toy example: synthesis (-no-merge -no-inclusion -no-inclusion-test-in-EF)',
+		'purpose'    : 'Test EF on toy example: synthesis (-no-merge -no-inclusion -no-cumulative-pruning)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
-		'options'    : '-no-merge -no-inclusion -no-inclusion-test-in-EF',
+		'options'    : '-no-merge -no-inclusion -no-cumulative-pruning',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2202,7 +2202,7 @@ Constraint nature                       : good
 		# Test since               : 2020/09/22
 		# Last modified            : 2020/09/22
 		# Test for IMITATOR version: 3.0
-		'purpose'    : 'Test EF (without option -no-inclusion-test-in-EF)',
+		'purpose'    : 'Test EF (without option -no-cumulative-pruning)',
 		'input_files': ['testInclusionEF.imi', 'testInclusionEF-EF.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -2234,9 +2234,9 @@ Number of computed states               : 3
 		# Test since               : 2020/09/22
 		# Last modified            : 2020/09/22
 		# Test for IMITATOR version: 3.0
-		'purpose'    : 'Test EF (with option -no-inclusion-test-in-EF)',
+		'purpose'    : 'Test EF (with option -no-cumulative-pruning)',
 		'input_files': ['testInclusionEF.imi', 'testInclusionEF-EF.imiprop'],
-		'options'    : '-no-inclusion-test-in-EF',
+		'options'    : '-no-cumulative-pruning',
 		'expectations' : [
 			{'file': 'testInclusionEF.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4823,7 +4823,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (under-approx with -depth-limit)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
-		'options'    : '-cycle-algo BFS -depth-limit 3 -no-inclusion-test-in-EF',
+		'options'    : '-cycle-algo BFS -depth-limit 3 -no-cumulative-pruning',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5056,7 +5056,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (under-approx with -depth-limit)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
-		'options'    : '-cycle-algo BFS -depth-limit 3 -no-inclusion-test-in-EF',
+		'options'    : '-cycle-algo BFS -depth-limit 3 -no-cumulative-pruning',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5228,7 +5228,7 @@ Constraint nature                       : good
 		# Test since               : 2020/09/22
 		# Last modified            : 2020/09/22
 		# Test for IMITATOR version: 3.0
-		'purpose'    : 'Test AccLoopSynth (without option -no-inclusion-test-in-EF)',
+		'purpose'    : 'Test AccLoopSynth (without option -no-cumulative-pruning)',
 		'input_files': ['testInclusionEF.imi', 'testInclusionEF-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
 		'expectations' : [
@@ -5260,9 +5260,9 @@ Number of computed states               : 5
 		# Test since               : 2020/09/22
 		# Last modified            : 2020/09/22
 		# Test for IMITATOR version: 3.0
-		'purpose'    : 'Test AccLoopSynth (with option -no-inclusion-test-in-EF)',
+		'purpose'    : 'Test AccLoopSynth (with option -no-cumulative-pruning)',
 		'input_files': ['testInclusionEF.imi', 'testInclusionEF-loop.imiprop'],
-		'options'    : '-cycle-algo BFS -no-inclusion-test-in-EF',
+		'options'    : '-cycle-algo BFS -no-cumulative-pruning',
 		'expectations' : [
 			{'file': 'testInclusionEF.res' , 'content' : """
 BEGIN CONSTRAINT
