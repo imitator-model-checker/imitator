@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/09/14
+ * Last modified     : 2020/09/22
  *
  ************************************************************)
  
@@ -682,6 +682,10 @@ try(
 		(* Print some information *)
 		print_message Verbose_medium ("Removing V0 file…");
 		delete_file file_v0_name;
+		
+		(* Print some information *)
+		print_message Verbose_medium ("Removing bounds file…");
+		delete_file file_bounds_name;
 		
 		(* Remove all constraints files *)
 		
