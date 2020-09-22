@@ -2170,6 +2170,7 @@ Constraint nature                       : good
 	{
 		# Test version             : 1
 		# Test since               : 2020/09/04
+		# Last modified            : 2020/09/04
 		# Test for IMITATOR version: 3.0
 		'purpose'    : 'Test EF (difference between emptiness and synthesis, here synthesis)',
 		'input_files': ['testEFemptiness.imi', 'testEFemptiness-synth.imiprop'],
@@ -2187,6 +2188,70 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/22
+		# Last modified            : 2020/09/22
+		# Test for IMITATOR version: 3.0
+		'purpose'    : 'Test EF (without option -no-inclusion-test-in-EF)',
+		'input_files': ['testInclusionEF.imi', 'testInclusionEF-EF.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testInclusionEF.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p
+& p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 3
+Number of transitions                   : 2
+Number of computed states               : 3
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/22
+		# Last modified            : 2020/09/22
+		# Test for IMITATOR version: 3.0
+		'purpose'    : 'Test EF (with option -no-inclusion-test-in-EF)',
+		'input_files': ['testInclusionEF.imi', 'testInclusionEF-EF.imiprop'],
+		'options'    : '-no-inclusion-test-in-EF',
+		'expectations' : [
+			{'file': 'testInclusionEF.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p
+& p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 14
+Number of transitions                   : 13
+Number of computed states               : 14
 """
 			} #end result file
 		] # end expectations
@@ -5149,6 +5214,70 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/22
+		# Last modified            : 2020/09/22
+		# Test for IMITATOR version: 3.0
+		'purpose'    : 'Test AccLoopSynth (without option -no-inclusion-test-in-EF)',
+		'input_files': ['testInclusionEF.imi', 'testInclusionEF-loop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testInclusionEF.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p
+& p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 4
+Number of transitions                   : 4
+Number of computed states               : 5
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/22
+		# Last modified            : 2020/09/22
+		# Test for IMITATOR version: 3.0
+		'purpose'    : 'Test AccLoopSynth (with option -no-inclusion-test-in-EF)',
+		'input_files': ['testInclusionEF.imi', 'testInclusionEF-loop.imiprop'],
+		'options'    : '-cycle-algo BFS -no-inclusion-test-in-EF',
+		'expectations' : [
+			{'file': 'testInclusionEF.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p
+& p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 14
+Number of transitions                   : 15
+Number of computed states               : 16
 """
 			} #end result file
 		] # end expectations
