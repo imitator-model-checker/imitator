@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/09/21
+ * Last modified     : 2020/09/22
  *
  ************************************************************)
 
@@ -397,8 +397,8 @@ class imitator_options =
 
 
 			and set_cycle_algorithm cycle_algorithm_string =
-				if cycle_algorithm_string = "Loop" then
-					cycle_algorithm <- Some AbstractAlgorithm.Loop
+				if cycle_algorithm_string = "BFS" then
+					cycle_algorithm <- Some AbstractAlgorithm.BFS
 				else if cycle_algorithm_string = "NDFS" then
 					cycle_algorithm <- Some AbstractAlgorithm.NDFS
 				else(
@@ -654,7 +654,7 @@ class imitator_options =
 				");
 
 				("-cycle-algo", String set_cycle_algorithm, " Algorithm for loop synthesis.
-        Use `Loop` for BFS with a variant of Tarjan's strongly connected components algorithm.
+        Use `BFS`  for BFS with a variant of Tarjan's strongly connected components algorithm.
         Use `NDFS` for NDFS algorithms [NPvdP18] (default).
 				");
 

@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/18
- * Last modified     : 2020/09/14
+ * Last modified     : 2020/09/22
  *
  ************************************************************)
 
@@ -134,7 +134,7 @@ type graphical_state_space =
 
 type cycle_algorithm =
 	(* Standard BFS algorithm using a variant of Tarjan's strongly connected components algorithm *)
-	| Loop
+	| BFS
 	(* NDFS based algorithm [NPvdP18] *)
 	| NDFS
 

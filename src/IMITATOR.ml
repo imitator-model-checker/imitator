@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/09/14
+ * Last modified     : 2020/09/22
  *
  ************************************************************)
 
@@ -716,7 +716,7 @@ match options#imitator_mode with
 				let myalgo :> AlgoGeneric.algoGeneric =
 				(* Branching depending on the requested algorithm *)
 				match options#cycle_algorithm with
-					| AbstractAlgorithm.Loop -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth state_predicate in myalgo
+					| AbstractAlgorithm.BFS -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoAccLoopSynth.algoAccLoopSynth state_predicate in myalgo
 					| AbstractAlgorithm.NDFS -> let myalgo :> AlgoGeneric.algoGeneric = new AlgoNDFS.algoNDFS state_predicate in myalgo
 				in myalgo
 

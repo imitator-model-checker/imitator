@@ -4525,7 +4525,7 @@ END RESULT
 	{
 		'purpose'    : 'Test LoopSynth: flip-flop (no loop)',
 		'input_files': ['flipflop.imi', 'flipflop-loop.imiprop'],
-		'options'    : '-cycle-algo Loop',
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4549,7 +4549,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop',
 		'input_files': ['PDFC4.imi', 'PDFC-loop.imiprop'],
-		'options'    : '-cycle-algo Loop',
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'PDFC4.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4579,7 +4579,7 @@ Number of computed states               : 3
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation',
 		'input_files': ['PDFC5.imi', 'PDFC-loop.imiprop'],
-		'options'    : '-cycle-algo Loop',
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4609,7 +4609,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: witness vs. synthesis (witness)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-loop-witness.imiprop'],
-		'options'    : '-cycle-algo Loop',
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4637,7 +4637,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: witness vs. synthesis (synthesis)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-loop.imiprop'],
-		'options'    : '-cycle-algo Loop',
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4668,7 +4668,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with 1 real loop',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
-		'options'    : '-cycle-algo Loop',
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4696,7 +4696,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (over-approx with -inclusion)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
-		'options'    : '-inclusion -cycle-algo Loop',
+		'options'    : '-inclusion -cycle-algo BFS',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4726,7 +4726,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (over-approx with -inclusion -merge)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
-		'options'    : '-cycle-algo Loop -inclusion -merge',
+		'options'    : '-cycle-algo BFS -inclusion -merge',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4758,7 +4758,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (under-approx with -depth-limit)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
-		'options'    : '-cycle-algo Loop -depth-limit 3 -no-inclusion-test-in-EF',
+		'options'    : '-cycle-algo BFS -depth-limit 3 -no-inclusion-test-in-EF',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4786,7 +4786,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (invalid with -inclusion -depth-limit)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
-		'options'    : '-cycle-algo Loop -inclusion -depth-limit 3',
+		'options'    : '-cycle-algo BFS -inclusion -depth-limit 3',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4814,7 +4814,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: witness vs. synthesis (witness)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-accloop-witness.imiprop'],
-		'options'    : '-cycle-algo Loop',
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4842,7 +4842,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: witness vs. synthesis (synthesis)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-accloop.imiprop'],
-		'options'    : '-cycle-algo Loop',
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4873,7 +4873,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
-		'options'    : '-cycle-algo Loop',
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4901,7 +4901,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (syntax variant without parentheses)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop-noparen.imiprop'],
-		'options'    : '-cycle-algo Loop',
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4929,7 +4929,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (over-approx with -inclusion)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
-		'options'    : '-cycle-algo Loop -inclusion',
+		'options'    : '-cycle-algo BFS -inclusion',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4959,7 +4959,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (over-approx with -inclusion -merge)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
-		'options'    : '-cycle-algo Loop -inclusion -merge',
+		'options'    : '-cycle-algo BFS -inclusion -merge',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4991,7 +4991,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (under-approx with -depth-limit)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
-		'options'    : '-cycle-algo Loop -depth-limit 3 -no-inclusion-test-in-EF',
+		'options'    : '-cycle-algo BFS -depth-limit 3 -no-inclusion-test-in-EF',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5019,7 +5019,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (invalid with -inclusion -depth-limit)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
-		'options'    : '-cycle-algo Loop -inclusion -depth-limit 3',
+		'options'    : '-cycle-algo BFS -inclusion -depth-limit 3',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5075,7 +5075,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example 1',
 		'input_files': ['testNDFS-1.imi', 'testNDFS1-accloop.imiprop'],
-		'options'    : '-cycle-algo Loop',
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testNDFS-1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5103,7 +5103,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example 2',
 		'input_files': ['testNDFS-2.imi', 'testNDFS2-accloop.imiprop'],
-		'options'    : '-cycle-algo Loop',
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testNDFS-2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5135,7 +5135,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example 3 (accepting for all valuations)',
 		'input_files': ['PDFC5.imi', 'PDFC5-accloop.imiprop'],
-		'options'    : '-cycle-algo Loop',
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5448,7 +5448,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test state predicate with `accepting` keyword and location predicate in property: Loop',
 		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop.imiprop'],
-		'options'    : '-cycle-algo Loop',
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testEFaccepting.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5479,7 +5479,7 @@ Constraint nature                       : good
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test only `accepting` keyword: Loop',
 		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred.imiprop'],
-		'options'    : '-cycle-algo Loop',
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testEFaccepting.res' , 'content' : """
 BEGIN CONSTRAINT
