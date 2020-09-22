@@ -1267,9 +1267,8 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 	(* Create the array of dot colors *)
 	let dot_colors = Array.of_list dot_colors in
 	
-	(* Local function checking whether a state is bad *)
-	let is_bad_state (state : state) : bool =
-		(* If BAD location: red *)
+	(* Local function checking whether a state is a target state *)
+	let is_target_state (state : state) : bool =
 		if Input.has_property() then(
 			
 			(* Try to get the state predicate*)
@@ -1312,22 +1311,18 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 			| None -> false
 
 			end
-	(*		| Some (Unreachable unreachable_global_locations) ->
-				(* Check whether the current location matches one of the unreachable global locations *)
-				State.match_unreachable_global_locations unreachable_global_locations global_location
-			| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))*)
 		)else(
-			(* No property: no bad state *)
+			(* No property: no target state *)
 			false
 		)
 
 	in
 	
 	(* Coloring function for each location *)
-	let get_location_color = fun location_index is_bad ->
+	let get_location_color = fun location_index is_target ->
 		try(
-		(* If BAD location: red *)
-		if is_bad then "red"
+		(* If target location: red *)
+		if is_target then "red"
 		else 
 		(* If normal location: pick color from array *)
 			dot_colors.(location_index)
@@ -1560,11 +1555,11 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 			(* Get the location index *)
 			let location_index = StateSpace.get_global_location_index state_space state_index in
 			
-			(* Check whether is bad *)
-			let is_bad = is_bad_state state in
+			(* Check whether is target *)
+			let is_target = is_target_state state in
 			
 			(* Find the location color *)
-			let location_color = get_location_color location_index is_bad in
+			let location_color = get_location_color location_index is_target in
 			
 			(* create node index *)
 			let node_index = "s_" ^ (string_of_int state_index) in
@@ -1637,8 +1632,8 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 					^ "[fillcolor=" ^ location_color
 					^ ", style=filled, shape=Mrecord, label=\"" 
 					^ node_index
-					(* Add a smiley if bad location *)
-					^ (if is_bad then "\n:-(" else "")
+					(* Add a tag if target location *)
+					^ (if is_target then "\n acc" else "")
 					^ "|{" 
 					^ label ^ label_discrete ^ "}" ^ pxd_constraint ^ p_constraint ^ "\"];";
 			) else (
