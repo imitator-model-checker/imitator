@@ -971,6 +971,40 @@ class imitator_options =
 
 
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			(* Check compatibility between options: options with threats on the result correctness *)
+			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+			
+			(*------------------------------------------------------------*)
+			(* Inclusion *)
+			(*------------------------------------------------------------*)
+			
+			if inclusion = Some true then(
+				match property_option with
+				| None ->
+					print_warning ("The `-inclusion` option may not preserve the correctness of this analysis. Result may be incorrect.");
+				| Some property ->
+					if not (AlgorithmOptions.inclusion_needed property) then(
+						print_warning ("The `-inclusion` option may not preserve the correctness of this algorithm. Result may be incorrect.");
+					);
+			);
+
+			(*------------------------------------------------------------*)
+			(* Merging *)
+			(*------------------------------------------------------------*)
+			
+			if merge = Some true then(
+				match property_option with
+				| None ->
+					print_warning ("The `-merge` option may not preserve the correctness of this analysis. Result may be incorrect.");
+				| Some property ->
+					if not (AlgorithmOptions.merge_needed property) then(
+						print_warning ("The `-merge` option may not preserve the correctness of this algorithm. Result may be incorrect.");
+					);
+			);
+
+			
+			
+			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Check compatibility between options: ignoring some options *)
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			
@@ -1011,18 +1045,52 @@ class imitator_options =
 			);
 
 
-			(* No no_leq_test_in_ef if not EF *)
-			if imitator_mode <> Algorithm && no_leq_test_in_ef then
-(*			if no_leq_test_in_ef && (imitator_mode <> EF_synthesis && imitator_mode <> EF_min && imitator_mode <> EF_max && imitator_mode <> EF_synth_min && imitator_mode <> EF_synth_max && imitator_mode <> EF_synth_min_priority_queue && imitator_mode <> EFunsafe_synthesis && imitator_mode <> EFexemplify && imitator_mode <> PRP) then*)(
-				print_warning ("The option `-no-cumulative-pruning` is reserved for EF and PRP. It will thus be ignored.");
+			(*------------------------------------------------------------*)
+			(* No no_leq_test_in_ef if not EF/PRP/cycles… *)
+			(*------------------------------------------------------------*)
+			if no_leq_test_in_ef then(
+				if imitator_mode <> Algorithm then(
+					print_warning ("The option `-no-cumulative-pruning` is reserved for selected synthesis algorithms. It will thus be ignored.");
+				)else(
+					let property = get_property() in
+					
+					(*** HACK: hard-coded => to externalize somewhere? ***)
+					match property.property with
+					(* Reachability *)
+					| EF _
+					(* Safety *)
+					| AGnot _
+					(** EF-synthesis with examples of (un)safe words *)
+					| EFexemplify _
+					(* Reachability with minimization of a parameter valuation *)
+					| EFpmin _
+					(* Reachability with maximization of a parameter valuation *)
+					| EFpmax _
+					(* Reachability with minimal-time *)
+					| EFtmin _
+					(** Accepting infinite-run (cycle) through a state predicate *)
+					| Cycle_through _
+					(* Parametric reachability preservation *)
+(* 					| PRP _ *)
+					(* Parametric reachability preservation *)
+(* 					| PRPC _ *)
+						(* This option is allowed *)
+						-> ()
+					| _ ->
+						(* This option is irrelevant *)
+						print_warning ("The option `-no-cumulative-pruning` is irrelevant for this algorithm. It will thus be ignored.");
+				);
 			);
 
 
-			(*** TODO: check compatibility for #witness and #synthesis wrt the various algorithms ***)
 
-
+			(*------------------------------------------------------------*)
+			(*------------------------------------------------------------*)
 			if imitator_mode <> Algorithm && draw_cart then print_warning ("The `-draw-cart` option is reserved for synthesis algorithms. Ignored.");
-			
+
+
+			(*------------------------------------------------------------*)
+			(*------------------------------------------------------------*)
 			if imitator_mode = Algorithm then(
 				let property = get_property() in
 				
@@ -1032,18 +1100,6 @@ class imitator_options =
 			);
 
 
-			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-			(* Check compatibility between options: options with threats on the result correctness *)
-			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-			
-			(*** TODO ***)
-(*			(* AF is not safe with incl or merging *)
-			if imitator_mode = AF_synthesis then(
-				if !inclusion then print_warning "The state inclusion option may not preserve the correctness of AFsynth.";
-				if !merge || !mergeq then print_warning "The merging option may not preserve the correctness of AFsynth.";
-			);*)
-			
-			(*** TODO: incl / merge for IM, cycles… ***)
 			
 			(*** TODO: check NDFS options only for NDFS; and NDFS only for Cycle_through ***)
 
