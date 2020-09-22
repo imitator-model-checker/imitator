@@ -1,0 +1,5 @@
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+(* property := unreachable loc[receiver] = FailureR; *)
+property := #synth AGnot(loc[receiver] = FailureR)

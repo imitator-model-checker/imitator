@@ -22,26 +22,27 @@ echo -e '\e[42m                              \e[0m'
 echo -e '\e[42m  Experiments of section 6.1  \e[0m'
 echo -e '\e[42m                              \e[0m'
 
-execute_imi "-mode EF -mergeq -incl $exp_dir/brp_Channels.imi"
-execute_imi "-mode EF -mergeq -incl $exp_dir/brp_RC.imi"
-execute_imi "-mode EF -mergeq -incl $exp_dir/brp_RC_MAX3.imi"
-execute_imi "-mode EF -mergeq -incl $exp_dir/brp_RC_MAX4.imi"
-execute_imi "-mode EF -mergeq -incl $exp_dir/brp_RC_MAX20.imi"
+execute_imi "-mergeq -inclusion $exp_dir/brp_Channels.imi $exp_dir/brp_Channels.imiprop"
+execute_imi "-mergeq -inclusion $exp_dir/brp_RC.imi $exp_dir/brp_RC.imiprop"
+execute_imi "-mergeq -inclusion $exp_dir/brp_RC_MAX3.imi $exp_dir/brp_RC.imiprop"
+execute_imi "-mergeq -inclusion $exp_dir/brp_RC_MAX4.imi $exp_dir/brp_RC.imiprop"
+execute_imi "-mergeq -inclusion $exp_dir/brp_RC_MAX20.imi $exp_dir/brp_RC.imiprop"
 
 # experiments of section 6.2
 echo -e '\e[42m                              \e[0m'
 echo -e '\e[42m  Experiments of section 6.2  \e[0m'
 echo -e '\e[42m                              \e[0m'
-execute_imi "-mode AccLoopSynthNDFS -explOrder=NDFSsub $exp_dir/brp_RC.imi -depth-limit=20"
-execute_imi "-mode AccLoopSynthNDFS -explOrder=NDFSsub $exp_dir/brp_RC_loop20.imi -depth-limit=40"
-execute_imi "-mode AccLoopSynthNDFS -explOrder=NDFSsub $exp_dir/brp_RC_loop40.imi -depth-limit=45"
+execute_imi "$exp_dir/brp_RC.imi $exp_dir/accepting.imiprop -depth-limit=20"
+#LP: strange results for the next two lines
+execute_imi "$exp_dir/brp_RC_loop20.imi $exp_dir/accepting.imiprop -depth-limit=40"
+execute_imi "$exp_dir/brp_RC_loop40.imi $exp_dir/accepting.imiprop -depth-limit=45"
 
 # experiments of section 6.3
 echo -e '\e[42m                              \e[0m'
 echo -e '\e[42m  Experiments of section 6.3  \e[0m'
 echo -e '\e[42m                              \e[0m'
-execute_imi "-mode AccLoopSynthNDFS -explOrder=NDFS $exp_dir/brp_GF_S_in_RC.imi -incl"
-execute_imi "-mode AccLoopSynthNDFS -explOrder=NDFS $exp_dir/brp_GF_S_in_RC2.imi -incl"
-execute_imi "-mode AccLoopSynthNDFS -explOrder=NDFSsub -counterexample $exp_dir/brp_GSinFSnok.imi"
-execute_imi "-mode AccLoopSynthNDFS -explOrder=NDFSsub $exp_dir/brp_GSinFSnok.imi"
-execute_imi "-mode AccLoopSynthNDFS -explOrder=NDFS $exp_dir/brp_GSinFSdk.imi -incl"
+execute_imi "-no-subsumption -inclusion $exp_dir/brp_GF_S_in_RC.imi $exp_dir/accepting.imiprop"
+execute_imi "-no-subsumption -inclusion $exp_dir/brp_GF_S_in_RC2.imi $exp_dir/accepting.imiprop"
+execute_imi "$exp_dir/brp_GSinFSnok.imi $exp_dir/accepting_one.imiprop"
+execute_imi "$exp_dir/brp_GSinFSnok.imi $exp_dir/accepting.imiprop"
+execute_imi "-no-subsumption -inclusion $exp_dir/brp_GSinFSdk.imi $exp_dir/accepting.imiprop"
