@@ -409,38 +409,45 @@ try(
 	
 	
 	(*------------------------------------------------------------*)
-	(* Handle the v0 rectangle *)
+	(* Handle the v0 rectangle, if any *)
 	(*------------------------------------------------------------*)
 	
-	(* Convert a num_const to a string, specifically for Graph *)
-	let graph_string_of_numconst n = 
-		(* Check that it is an integer *)
-		if not (NumConst.is_int n) then(
-			raise (InternalError("Only integers can be handled for the cartography, so far. Found: '" ^ (NumConst.string_of_numconst n) ^ "'"))
-		);
-		(* Convert to a string, and add a "." at the end *)
-		(NumConst.string_of_numconst n) ^ "."
-	in
-
 	(* Create a temp file containing the V0 coordinates *)
 	let file_v0_name = cartography_file_prefix ^ "_v0.txt" in
 	let file_rectangle_v0 = open_out file_v0_name in
 	
-	(* Print some information *)
-	print_message Verbose_low ("Computing the zone…");
+	let str_rectangle_v0 = match v0_option with
+	| Some _ ->
 	
-	let str_rectangle_v0 =
-				(graph_string_of_numconst (fst (reference_rectangle_coordinates.(x_index))))
-		^" "^(graph_string_of_numconst (snd (reference_rectangle_coordinates.(y_index))))
-		^"\n"^(graph_string_of_numconst (snd (reference_rectangle_coordinates.(x_index))))
-		^" "^ (graph_string_of_numconst (snd (reference_rectangle_coordinates.(y_index))))
-		^"\n"^(graph_string_of_numconst (snd (reference_rectangle_coordinates.(x_index))))
-		^" "^ (graph_string_of_numconst (fst (reference_rectangle_coordinates.(y_index))))
-		^"\n"^(graph_string_of_numconst (fst (reference_rectangle_coordinates.(x_index))))
-		^" "^ (graph_string_of_numconst (fst (reference_rectangle_coordinates.(y_index))))
-		^"\n"^(graph_string_of_numconst (fst (reference_rectangle_coordinates.(x_index))))
-		^" "^ (graph_string_of_numconst (snd (reference_rectangle_coordinates.(y_index))))
+		(* Convert a num_const to a string, specifically for Graph *)
+		let graph_string_of_numconst n = 
+			(* Check that it is an integer *)
+			if not (NumConst.is_int n) then(
+				raise (InternalError("Only integers can be handled for the cartography, so far. Found: '" ^ (NumConst.string_of_numconst n) ^ "'"))
+			);
+			(* Convert to a string, and add a "." at the end *)
+			(NumConst.string_of_numconst n) ^ "."
+		in
+
+		(* Print some information *)
+		print_message Verbose_low ("Computing the zone…");
+		
+		(* Create the file content *)
+					(graph_string_of_numconst (fst (reference_rectangle_coordinates.(x_index))))
+			^" "^(graph_string_of_numconst (snd (reference_rectangle_coordinates.(y_index))))
+			^"\n"^(graph_string_of_numconst (snd (reference_rectangle_coordinates.(x_index))))
+			^" "^ (graph_string_of_numconst (snd (reference_rectangle_coordinates.(y_index))))
+			^"\n"^(graph_string_of_numconst (snd (reference_rectangle_coordinates.(x_index))))
+			^" "^ (graph_string_of_numconst (fst (reference_rectangle_coordinates.(y_index))))
+			^"\n"^(graph_string_of_numconst (fst (reference_rectangle_coordinates.(x_index))))
+			^" "^ (graph_string_of_numconst (fst (reference_rectangle_coordinates.(y_index))))
+			^"\n"^(graph_string_of_numconst (fst (reference_rectangle_coordinates.(x_index))))
+			^" "^ (graph_string_of_numconst (snd (reference_rectangle_coordinates.(y_index))))
+	
+	| _ -> ""
+	
 	in
+	
 	output_string file_rectangle_v0 str_rectangle_v0;
 	close_out file_rectangle_v0;
 
@@ -461,8 +468,8 @@ try(
 
 	
 	(* Create a temp file containing the bounds rectangle coordinates *)
-	let file_bounds_name = cartography_file_prefix ^ "_bounds.txt" in
-	let file_rectangle_bounds = open_out file_bounds_name in
+	let bounds_file_name = cartography_file_prefix ^ "_bounds.txt" in
+	let file_rectangle_bounds = open_out bounds_file_name in
 	
 	(* Print some information *)
 	print_message Verbose_low ("Computing the zone…");
@@ -508,7 +515,7 @@ try(
 	(* find the minimum and maximum abscissa and ordinate for each constraint and store them in a list *)
 	
 	(* Add the min bounds rectangle *)
-	script_line := !script_line ^ " --line-mode 0 --fill-fraction -1 " ^ file_bounds_name ^ " ";
+	script_line := !script_line ^ " --line-mode 0 --fill-fraction -1 " ^ bounds_file_name ^ " ";
 	
 	
 	(* Print some information *)
@@ -685,7 +692,7 @@ try(
 		
 		(* Print some information *)
 		print_message Verbose_medium ("Removing bounds file…");
-		delete_file file_bounds_name;
+		delete_file bounds_file_name;
 		
 		(* Remove all constraints files *)
 		
