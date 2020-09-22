@@ -127,7 +127,7 @@ class imitator_options :
 
 		method recompute_green : bool
 		method pending_order : pending_order
-		method depth_step : NumConst.t
+		method depth_step : int option
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Set methods *)

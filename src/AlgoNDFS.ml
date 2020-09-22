@@ -61,6 +61,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 	val mutable depth_reached = false (* used when a max depth has been reached *)
 	val mutable execute_again = true (* used when not doing iterative deepening for 1 execution only *)
 	val mutable current_depth = -1 (* used for iterative deepening *)
+	val mutable the_depth_step = -1 (* used for iterative deepening *)
 	val mutable max_depth = -1 (* used for iterative deepening *)
 	val mutable min_depth_found = -1 (* minimal depth at which a cycle is found *)
 	val mutable max_depth_reached = 0 (* maximum depth actually reached *)
@@ -504,10 +505,10 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				^ (ModelPrinter.string_of_state model
 					(StateSpace.get_state state_space thestate)));
 			let depth_ok = match options#depth_limit with
-				| None -> if options#depth_init = None then true
+				| None -> if the_depth_step = -1 then true
 										else if (current_depth  >= thestate_depth) then true
 											else (depth_reached <- true; false)
-				| Some depth_value -> if options#depth_init = None then (if (depth_value  >= thestate_depth) then true
+				| Some depth_value -> if the_depth_step = -1 then (if (depth_value  >= thestate_depth) then true
 											else (depth_reached <- true; false)
 										)
 										else if (current_depth  >= thestate_depth) then true
@@ -566,22 +567,31 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 
 		(* loop for iterative deepening, otherwise used only once *)
 
-		current_depth <- (match options#depth_init with
-						| None -> -1
-						| Some depth_value -> depth_value);
+		(match options#depth_init, options#depth_step with
+			| None, None -> current_depth <- -1; the_depth_step <- -1
+			| Some depth_value, None ->
+				current_depth <- depth_value;
+				the_depth_step <- 1
+			| None, Some step_value ->
+				current_depth <- 1;
+				the_depth_step <- step_value
+			| Some depth_value, Some step_value ->
+				current_depth <- depth_value;
+				the_depth_step <- step_value);
+		
 		max_depth <- (match options#depth_limit with
 						| None -> -1
 						| Some depth_value -> depth_value);
 
 		while execute_again do
-			if options#depth_init = None then execute_again <- false;
-			if options#depth_init <> None && options#depth_limit <> None && current_depth >= max_depth then(
+			if the_depth_step = -1 then execute_again <- false;
+			if the_depth_step <> -1 && options#depth_limit <> None && current_depth >= max_depth then(
 				execute_again <- false;
 				current_depth <- max_depth
 			);
 
 			print_message Verbose_standard("---------------- Starting exploration ----------------");
-			if options#depth_init <> None then(
+			if the_depth_step <> -1 then(
 				print_message Verbose_standard("---------------- until depth " ^ (string_of_int current_depth) ^ " ----------------");
 				(* Clear the colours of previous iteration *)
 				Hashtbl.clear cyan;
@@ -1089,7 +1099,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 
 			if execute_again then(
 				ResultProcessor.process_result self#compute_result "Iterative deepening" None;
-				current_depth <- current_depth + (NumConst.to_int options#depth_step);
+				current_depth <- current_depth + the_depth_step;
 				()
 			);
 		done; (* end of the big loop *)
@@ -1186,10 +1196,10 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		let nb_states = StateSpace.nb_states state_space in
 		print_message Verbose_standard ("Number of computed states: " ^ (string_of_int nb_states));
 		print_message Verbose_standard ("Number of processed states: " ^ (string_of_int processed_blue));
-		if options#depth_init <> None then
+		if the_depth_step <> -1 then
 			print_message Verbose_standard ("Total number of processed states: " ^ (string_of_int total_processed_blue));
 		print_message Verbose_standard ("Number of cycles found: " ^ (string_of_int cyclecount));
-		if options#depth_init <> None then
+		if the_depth_step <> -1 then
 			print_message Verbose_standard ("Total number of cycles found: " ^ (string_of_int total_cyclecount));
 		if (min_depth_found <> -1) then
 			print_message Verbose_standard ("Minimum depth at which a cycle was found: " ^ (string_of_int min_depth_found));

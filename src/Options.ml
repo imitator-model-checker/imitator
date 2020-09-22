@@ -163,7 +163,7 @@ class imitator_options =
 		val mutable depth_init = None
 
 		(* Step for NDFS *)
-		val mutable depth_step = NumConst.one
+		val mutable depth_step = None
 
 		(* Distributed version of IMITATOR *)
 		val mutable distribution_mode = AbstractAlgorithm.Non_distributed
@@ -665,7 +665,7 @@ class imitator_options =
 				("-depth-limit", Int (fun i -> depth_limit <- Some i), " Limits the depth of the exploration of the state space. Default: no limit.
 				");
 
-				("-depth-step", String (fun i -> (* TODO: SHOULD CHECK HERE THAT STEP IS EITHER A FLOAT OR AN INT *) depth_step <- (NumConst.numconst_of_string i)), " Step for NDFS iterative deepening. Default: 1.
+				("-depth-step", Int (fun i -> depth_step <- Some i), " Step for NDFS iterative deepening.
 				");
 
 				("-distributed", String set_distributed, " Distributed version of the behavioral cartography and PRPC.
