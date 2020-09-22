@@ -1986,7 +1986,7 @@ Constraint nature                       : good
 
 	##------------------------------------------------------------
 	#{
-		#'purpose'    : 'Test EF (old version) with complex unreachability property',
+		#'purpose'    : 'Test EF (old version) with complex safety property',
 		#'input_files': ['coffeeDrinker.imi'],
 		#'options'    : '-mode EFold -merge ',
 		#'expectations' : [
@@ -2058,7 +2058,7 @@ Constraint nature                       : good
 	#,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with complex unreachability property',
+		'purpose'    : 'Test EF with complex safety property',
 		'input_files': ['coffeeDrinker.imi', 'coffeeDrinker.imiprop'],
 		'options'    : '',
 		'expectations' : [
