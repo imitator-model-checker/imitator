@@ -1594,7 +1594,7 @@ Constraint nature                       : good
 
 	##------------------------------------------------------------
 	#{
-		#'purpose'    : 'Test EF (old version) with basic unreachability property for Fischer:3',
+		#'purpose'    : 'Test EF (old version) with basic safety property for Fischer:3',
 		#'input_files': ['F3.imi'],
 		#'options'    : '-mode EFold -merge -incl ',
 		#'expectations' : [
@@ -1861,7 +1861,7 @@ Constraint nature                       : good
 	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with basic unreachability property for Fischer:3',
+		'purpose'    : 'Test EF with basic safety property for Fischer:3',
 		'input_files': ['F3.imi', 'F3.imiprop'],
 		'options'    : '',
 		'expectations' : [
@@ -1886,7 +1886,7 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (double-directional inclusion)',
+		'purpose'    : 'Test EF with basic safety property for Fischer:3 (double-directional inclusion)',
 		'input_files': ['F3.imi', 'F3.imiprop'],
 		'options'    : '-merge -inclusion-bidir ',
 		'expectations' : [
@@ -1911,7 +1911,7 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (queueBFS exploration order)',
+		'purpose'    : 'Test EF with basic safety property for Fischer:3 (queueBFS exploration order)',
 		'input_files': ['F3.imi', 'F3.imiprop'],
 		'options'    : '-expl-order queueBFS',
 		'expectations' : [
@@ -1936,7 +1936,7 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (layerBFS exploration order) with counterexample',
+		'purpose'    : 'Test EF with basic safety property for Fischer:3 (layerBFS exploration order) with counterexample',
 		'input_files': ['F3.imi', 'F3-witness.imiprop'],
 		'options'    : '-expl-order layerBFS',
 		'expectations' : [
@@ -1961,7 +1961,7 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (queueBFS exploration order) with counterexample',
+		'purpose'    : 'Test EF with basic safety property for Fischer:3 (queueBFS exploration order) with counterexample',
 		'input_files': ['F3.imi', 'F3-witness.imiprop'],
 		'options'    : '-expl-order queueBFS',
 		'expectations' : [
