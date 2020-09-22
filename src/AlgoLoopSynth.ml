@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2020/09/21
+ * Last modified     : 2020/09/22
  *
  ************************************************************)
 
@@ -22,6 +22,7 @@
 open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
+open Statistics
 open AbstractModel
 open AbstractProperty
 open Result
@@ -58,7 +59,12 @@ class virtual algoLoopSynth =
 		let model = Input.get_model () in
 		LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint model.initial_p_constraint
 
-	
+
+	(* Counters *)
+	(*** NOTE: if the algorithm is called several times sequentially, then each call will create a counter ***)
+	val scc_search = create_hybrid_counter_and_register "algoLoopSynth.scc_search" States_counter Verbose_experiments
+	val nb_cycles = create_discrete_counter_and_register "algoLoopSynth.nb_cycles" States_counter Verbose_experiments
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -142,15 +148,37 @@ class virtual algoLoopSynth =
 			(* Old state (possibly updated) -> possible loop *)
 			| StateSpace.State_already_present _ | StateSpace.State_replacing _ ->
 				(* Now that the transitions were updated, try to look for a loop *)
+				
+				(* Print some information *)
 				self#print_algo_message Verbose_medium ("Computing SCC starting from s_" ^ (string_of_int source_state_index) ^ "…");
+
+				(* Statistics *)
+				scc_search#increment;
+				scc_search#start;
+
 				let scc_option = StateSpace.reconstruct_scc state_space source_state_index in
+				
+				(* Statistics *)
+				scc_search#stop;
 		
 				let loop_result =
 				match scc_option with
 					(* No loop *)
-					| None -> No_loop
+					| None ->
+						(* Print some information *)
+						self#print_algo_message Verbose_high "No cycle found!";
+						
+						No_loop
+						
 					(* Some loop *)
-					| Some scc -> Loop scc
+					| Some scc ->
+						(* Print some information *)
+						self#print_algo_message Verbose_high "Cycle found!";
+						
+						(* Statistics *)
+						nb_cycles#increment;
+						
+						Loop scc
 				in loop_result
 		in
 		
@@ -158,8 +186,11 @@ class virtual algoLoopSynth =
 		begin
 		match has_loop with
 			| No_loop -> ()
+
 			| Loop scc ->
+				(* Print some information *)
 				self#print_algo_message Verbose_standard "Found a cycle.";
+
 				(*** NOTE: this method is called AFTER the transition table was updated ***)
 				self#process_loop_constraint ((*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) scc new_state.px_constraint;
 		end; (* end if found a loop *)
