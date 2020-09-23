@@ -890,14 +890,17 @@ let compute_time_polyhedron (direction : time_direction) (location : Location.gl
 	(* Create the inequalities `var = 0`, for var in variables_constant *)
 	let inequalities_constant = create_inequalities_constant model.parameters_and_discrete in
 
-	(* Print some information *)
-	print_message Verbose_total ("Creating linear constraint for time elapsing with explicit flows…");
-	
-	(* Perform time elapsing *)
-	print_message Verbose_high ("Now applying time " ^ (string_of_time_direction direction) ^ "…");
-	
 	(* Convert both sets of inequalities to a constraint *)
-	LinearConstraint.make_pxd_constraint (List.rev_append inequalities_flows inequalities_constant)
+	let time_polyhedron = LinearConstraint.make_pxd_constraint (List.rev_append inequalities_flows inequalities_constant) in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Creating linear constraint for time elapsing with explicit flows…");
+		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_polyhedron);
+	);
+	
+	(* Return result *)
+	time_polyhedron
 
 
 
@@ -933,6 +936,9 @@ let apply_time_shift (direction : time_direction) (location : Location.global_lo
 			
 			(* Create the time polyhedron depending on the clocks *)
 			let time_polyhedron = compute_time_polyhedron direction location in
+			
+			(* Perform time elapsing *)
+			print_message Verbose_high ("Now applying time " ^ (string_of_time_direction direction) ^ "…");
 			
 			(* Apply time elapsing *)
 			LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron time_polyhedron the_constraint;
@@ -1018,8 +1024,9 @@ let constraint_zone_predecessor_g_u
 	gn_minus_1
 	(updates_n_minus_1 : AbstractModel.clock_updates list)
 	(zn : LinearConstraint.px_linear_constraint)
-	(variables_elapse_n : Automaton.variable_index list)
-	(variables_constant_n : Automaton.variable_index list)
+	(time_polyhedron : LinearConstraint.pxd_linear_constraint)
+(*	(variables_elapse_n : Automaton.variable_index list)
+	(variables_constant_n : Automaton.variable_index list)*)
 	gn
 	(updates_n : AbstractModel.clock_updates list)
 	(zn_plus_1 : LinearConstraint.px_linear_constraint)
@@ -1075,7 +1082,10 @@ let constraint_zone_predecessor_g_u
 	(* Step 2: compute the time predecessors of zn' in zn *)
 	(* Method: zn' => backward elapsing => intersection with zn *)
 	
-	LinearConstraint.pxd_time_past_assign variables_elapse_n variables_constant_n pxd_linear_constraint;
+	(*** BEGIN OLD VERSION (< 2020/09) ***)
+(* 	LinearConstraint.pxd_time_past_assign variables_elapse_n variables_constant_n pxd_linear_constraint; *)
+	(*** END OLD VERSION (< 2020/09) ***)
+	LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron pxd_linear_constraint time_polyhedron;
 	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
@@ -2253,6 +2263,8 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		let all_stopped_variables_n = List.rev_append stopped_clocks_n model.parameters in
 		(*** END OLD VERSION (< 2020/09) ***)
 		
+		(* Create the time polyhedron depending on the clocks *)
+		let time_polyhedron = compute_time_polyhedron Backward location_n in
 		
 		(* Zn+1 is the target valuation, preceeded by time past plus invariant intersection *)
 		
@@ -2266,8 +2278,9 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 			(* gn-1 *) continuous_guard_n_minus_1
 			(* Un-1 *) updates_n_minus_1
 			(* Zn *)   z_n
-			(* tn *)    elapsing_clocks_n
-			(* nontn *) all_stopped_variables_n
+			(* time polyhedron *)time_polyhedron
+(*			(* tn *)    elapsing_clocks_n
+			(* nontn *) all_stopped_variables_n*)
 			(* gn *)   continuous_guard_n
 			(*** NOTE: a bit twice the work here, as they were processed by get_updates_in_combined_transition ***)
 			(* Un *)   [clock_updates]
