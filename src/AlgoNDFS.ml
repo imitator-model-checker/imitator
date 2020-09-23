@@ -432,6 +432,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						not (table_test blue astate)
 				in
 				if (successors = [] ||
+						options#no_green ||
 						(not (List.exists is_green successors) &&
 							(!pending = [] ||
 								not (List.exists is_pending_not_blue successors)))) then (
@@ -463,6 +464,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
  *)				if options#recompute_green &&
 					(IntMap.find thestate !greendepth) < thedepth
 				then( (* the reexplored state must also be removed from previous red exploration *)
+					table_rem green thestate;
 					table_rem red thestate;
 					true
 				) else false)
@@ -549,7 +551,8 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				else (process_sucs successors;
 					postdfs thestate thestate_depth)
 			) else (* thestate is not explored because it is either too deep or covered by the constraint already *)
-				if not depth_ok then (
+				if not depth_ok &&
+					not options#no_green then (
 					table_add green thestate;
 					if options#recompute_green
 					then greendepth := IntMap.add thestate thestate_depth !greendepth;

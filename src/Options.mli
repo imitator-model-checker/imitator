@@ -82,6 +82,7 @@ class imitator_options :
 		method model_file_name : string
 		method no_acceptfirst : bool
 		method nb_args : int
+		method no_green : bool
 		method no_leq_test_in_ef : bool
 		method no_lookahead : bool
 		method no_pending_ordered : bool

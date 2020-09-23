@@ -201,6 +201,9 @@ class imitator_options =
 		(* do not put accepting states at the head of successors list in NDFS *)
 		val mutable no_acceptfirst = false
 
+		(* do not use green colour in NDFS *)
+		val mutable no_green = false
+
 		(* do not use pruning of initial zone in NDFS *)
 (* 		val mutable no_initprune = false *)
 
@@ -312,6 +315,7 @@ class imitator_options =
 		method model_file_name = model_file_name
 		method nb_args = nb_args
 		method no_acceptfirst = no_acceptfirst
+		method no_green = no_green
 		method no_leq_test_in_ef = no_leq_test_in_ef
 		method no_lookahead = no_lookahead
 		method no_pending_ordered = no_pending_ordered
@@ -777,6 +781,9 @@ class imitator_options =
 				");
 
 				("-no-cumulative-pruning", Unit (fun () -> no_leq_test_in_ef <- true), " In reachability/safety/loop synthesis, no inclusion test of the new states parameter constraints in the already computed constraint. Default: enabled (i.e., inclusion test).
+				");
+
+				("-no-green", Unit (fun () -> no_green <- true), " In NDFS, Do not use green colour in NDFS. Default: enabled (i.e., green).
 				");
 
 (* 				("-no-initprune", Unit (fun () -> no_initprune <- true), " In collecting NDFS, no pruning if the initial constraint is included in the collected zone. Default: disabled."); *)
@@ -1297,7 +1304,12 @@ class imitator_options =
 			if no_lookahead then
 				print_message Verbose_standard ("No lookahead in NDFS search.")
 			else
-				print_message Verbose_medium ("Lookahead for succesors closing accepting cycles in NDFS (default).");
+				print_message Verbose_medium ("Lookahead for successors closing accepting cycles in NDFS (default).");
+
+			if no_green then
+				print_message Verbose_standard ("No green colours in NDFS search.")
+			else
+				print_message Verbose_medium ("Green colour used in NDFS (default).");
 
 			if recompute_green then
 				print_message Verbose_standard ("Re-processing green states in NDFS.")
