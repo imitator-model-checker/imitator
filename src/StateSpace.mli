@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2019/08/09
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -54,8 +54,10 @@ type state_comparison =
 	| No_check
 	(* Does not add the new state if another state is exactly equal to it *)
 	| Equality_check
-	(* Does not add the new state if it is included in another state *)
+	(* Does not add the new state if it is included in (i.e., is smaller than) another state *)
 	| Inclusion_check
+	(* Does not add the new state if it includes (i.e., is larger than) another state; the state is NOT replaced in any case *)
+	| Including_check
 	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
 	| Double_inclusion_check
 

@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2019/09/23
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -46,8 +46,10 @@ type state_comparison =
 	| No_check
 	(* Does not add the new state if another state is exactly equal to it *)
 	| Equality_check
-	(* Does not add the new state if it is included in another state *)
+	(* Does not add the new state if it is included in (i.e., is smaller than) another state *)
 	| Inclusion_check
+	(* Does not add the new state if it includes (i.e., is larger than) another state; the state is NOT replaced in any case *)
+	| Including_check
 	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
 	| Double_inclusion_check
 
@@ -1374,6 +1376,23 @@ let add_state state_space state_comparison (new_state : state) =
 							(* Statistics *)
 							statespace_dcounter_nb_states_included#increment;
 							raise (Found_old state_index)
+						)
+
+					(* Inclusion: check for new >= old *)
+					| Including_check ->
+						statespace_dcounter_nb_state_comparisons#increment;
+						if state_included state new_state then(
+							(* Print some information *)
+							print_message Verbose_medium ("Found an old state <= the new state");
+							
+							(* Replace old with new *)
+							replace_constraint state_space state_index new_state.px_constraint;
+
+							(* Statistics *)
+							statespace_dcounter_nb_states_including#increment;
+							
+							(* Stop looking for states *)
+							raise (Found_new state_index)
 						)
 
 					(* Double inclusion: check for new <= old OR old <= new, in which case replace *)
