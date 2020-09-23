@@ -139,6 +139,130 @@ let default_state_comparison property : AbstractAlgorithm.state_comparison_opera
 		-> Inclusion_check
 
 
+
+(* Does the use of a given state_comparison_operator for a given abstract_property preserve the result correctness? *)
+let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_property) (state_comparison_operator : AbstractAlgorithm.state_comparison_operator) : bool =
+	match abstract_property.property with
+	(*------------------------------------------------------------*)
+	(* Non-nested CTL *)
+	(*------------------------------------------------------------*)
+
+	(* Reachability *)
+	| EF _
+	
+	(* Safety *)
+	| AGnot _
+	
+	
+	(*------------------------------------------------------------*)
+	(* Reachability and specification illustration *)
+	(*------------------------------------------------------------*)
+	
+	(** EF-synthesis with examples of (un)safe words *)
+	| EFexemplify _
+	
+	(*------------------------------------------------------------*)
+	(* Optimized reachability *)
+	(*------------------------------------------------------------*)
+	
+	(* Reachability with minimization of a parameter valuation *)
+	| EFpmin _
+	
+	(* Reachability with maximization of a parameter valuation *)
+	| EFpmax _
+	
+	(* Reachability with minimal-time *)
+	| EFtmin _
+
+		(* All comparison operators preserve correctness *)
+		-> true
+
+
+	(*------------------------------------------------------------*)
+	(* Cycles *)
+	(*------------------------------------------------------------*)
+	
+	(** Accepting infinite-run (cycle) through a state predicate *)
+	| Cycle_through _
+		(* No inclusion allowed except old <= new *)
+		(*** WARNING: for NDFS, Including_check is not allowed; this is handled directly in Options.ml! ***)
+		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check || state_comparison_operator = Including_check
+	
+	(** Infinite-run (cycle) with non-Zeno assumption *)
+	| NZ_Cycle
+		(* No inclusion allowed *)
+		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
+	
+
+	(*------------------------------------------------------------*)
+	(* Deadlock-freeness *)
+	(*------------------------------------------------------------*)
+	
+	(* Deadlock-free synthesis *)
+	| Deadlock_Freeness
+		(* All comparison operators preserve correctness *)
+		(*** WARNING: not sure…? ***)
+		-> true
+
+	
+	(*------------------------------------------------------------*)
+	(* Inverse method, trace preservation, robustness *)
+	(*------------------------------------------------------------*)
+	
+	(* Inverse method with complete, non-convex result *)
+	| IM _
+
+	(* Non-complete, non-deterministic inverse method with convex result *)
+	| ConvexIM _
+
+	(* Variant IMK of the Inverse method *)
+	| IMK _
+
+	(* Variant IMunion of the Inverse method *)
+	| IMunion _
+		(* No inclusion allowed *)
+		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
+
+	(* Parametric reachability preservation *)
+	| PRP _
+		(* All comparison operators preserve correctness *)
+		-> true
+
+	
+	(*------------------------------------------------------------*)
+	(* Cartography algorithms *)
+	(*------------------------------------------------------------*)
+	
+	(* Cartography *)
+	| Cover_cartography _
+
+	(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+	| Shuffle_cartography _
+	
+	(** Look for the border using the cartography*)
+	| Border_cartography _
+	
+	(** Randomly pick up values for a given number of iterations *)
+	| Random_cartography _
+	
+	(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+	| RandomSeq_cartography _
+		(* No inclusion allowed *)
+		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
+
+	(** Cover the whole cartography using learning-based abstractions *)
+	| Learning_cartography _
+		(* All comparison operators preserve correctness *)
+		(*** WARNING: not sure…? ***)
+		-> true
+	
+	(* Parametric reachability preservation *)
+	| PRPC _
+		(* All comparison operators preserve correctness *)
+		-> true
+
+
+
 (*------------------------------------------------------------*)
 (* Merge *)
 (*------------------------------------------------------------*)

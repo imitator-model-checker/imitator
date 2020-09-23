@@ -14,6 +14,8 @@
 
 
 val default_state_comparison	: AbstractProperty.abstract_property -> AbstractAlgorithm.state_comparison_operator
+(* Does the use of a given state_comparison_operator for a given abstract_property preserve the result correctness? *)
+val is_state_comparison_correct	: AbstractProperty.abstract_property -> AbstractAlgorithm.state_comparison_operator -> bool
 val merge_needed				: AbstractProperty.abstract_property -> bool
 
 (* val default_exploration_order : AbstractProperty.abstract_property -> AbstractAlgorithm.exploration_order *)

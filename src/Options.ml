@@ -981,17 +981,34 @@ class imitator_options =
 			(* Inclusion *)
 			(*------------------------------------------------------------*)
 			
-			(*** TODO: reintroduce ***)
-(*			if inclusion = Some true then(
-				match property_option with
-				| None ->
-					print_warning ("The `-inclusion` option may not preserve the correctness of this analysis. Result may be incorrect.");
-				| Some property ->
-					if not (AlgorithmOptions.inclusion_needed property) then(
-						print_warning ("The `-inclusion` option may not preserve the correctness of this algorithm. Result may be incorrect.");
-					);
-			);*)
+			begin
+			match property_option with
+			| None ->
+				begin
+				(*** HACK: hard-coded, should be elsewhere… ***)
+				match comparison_operator with
+				| Some Inclusion_check
+				| Some Including_check
+				| Some Double_inclusion_check
+					-> print_warning ("The `-comparator` option value may not preserve the correctness of this analysis. Result may be incorrect.");
+				| _ -> ()
+				end;
+			
+			| Some property ->
+				if not (AlgorithmOptions.is_state_comparison_correct property self#comparison_operator) then(
+					print_warning ("The `-comparator` option value may not preserve the correctness of this analysis. Result may be incorrect.");
+				);
+				
+				(*** HACK: hard-coded special case for NDFS + Including_check => also a warning! ***)
+				begin
+				match property.property, comparison_operator with
+				| Cycle_through _ , Some Including_check when cycle_algorithm = Some NDFS ->
+					print_warning ("The `-comparator` option value may not preserve the correctness of this NDFS analysis. Result may be incorrect.");
+				| _ -> ()
+				end;
+			end;
 
+			
 			(*------------------------------------------------------------*)
 			(* Merging *)
 			(*------------------------------------------------------------*)
