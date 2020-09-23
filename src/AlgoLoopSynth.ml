@@ -101,7 +101,7 @@ class virtual algoLoopSynth =
 		self#reset_minicache;
 
 		(* Try to add the new state to the state space *)
-		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
+		let addition_result = StateSpace.add_state state_space StateSpace.Including_check(*(self#state_comparison_operator_of_options)*) new_state in
 		
 		begin
 		match addition_result with
