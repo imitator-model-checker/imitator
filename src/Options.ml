@@ -28,6 +28,7 @@ open Arg
 open Exceptions
 open OCamlUtilities
 open ImitatorUtilities
+open AbstractModel
 open AbstractAlgorithm
 open AbstractProperty
 
@@ -1129,6 +1130,12 @@ class imitator_options =
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			(* Recall modes *)
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+			(* With or without stopwatches *)
+			if model.has_stopwatches then
+				print_message Verbose_standard ("The model contains clocks with a non-1 flow.")
+			else
+				print_message Verbose_low ("The model is purely timed (no stopwatches nor flows).");
 
 			(* Comparison operator *)
 			begin

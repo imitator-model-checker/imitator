@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2020/08/24
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -228,13 +228,6 @@ let compile_model_and_property options =
 	let nb_words = gc_stat.minor_words +. gc_stat.major_words -. gc_stat.promoted_words in
 	let nb_ko = nb_words *. 4.0 /. 1024.0 in
 	print_message Verbose_experiments ("Memory for abstract model: " ^ (round3_float nb_ko) ^ " KiB (i.e., " ^ (string_of_int (int_of_float nb_words)) ^ " words)");
-
-	(*** TODO: move somewhere else! ***)
-	(* With or without stopwatches *)
-	if model.has_stopwatches then
-		print_message Verbose_standard ("The model contains stopwatches.")
-	else
-		print_message Verbose_low ("The model is purely timed (no stopwatches).");
 
 	(* Ugly line break *)
 	print_message Verbose_experiments "";

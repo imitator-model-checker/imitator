@@ -171,7 +171,7 @@ type abstract_model = {
 	nb_locations  : int;
 	nb_transitions: int;
 
-	(* Is there any stopwatch in the model? *)
+	(* Is there any clock going at a rate <> 1 in the model? *)
 	has_stopwatches : bool;
 	(* Is the model an L/U-PTA? *)
 	lu_status : lu_status;

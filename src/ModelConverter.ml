@@ -5020,7 +5020,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	nb_locations   = nb_locations;
 	nb_transitions = nb_transitions;
 
-	(* Is there any stopwatch in the model? *)
+	(* Is there any clock going at a rate <> 1 in the model? *)
 	has_stopwatches = has_stopwatches;
 	(* Is the model an L/U-PTA? *)
 	lu_status = lu_status;
