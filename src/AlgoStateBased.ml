@@ -815,6 +815,12 @@ let compute_flows (location : Location.global_location) : ((Automaton.clock_inde
 
 type time_direction = Forward | Backward
 
+let string_of_time_direction = function
+	| Forward	-> "elapsing"
+	| Backward	-> "past"
+
+
+
 let create_inequalities_constant variables_constant =
 	(* Create the inequalities var = 0, for var in variables_constant *)
 	List.map (fun variable ->
@@ -853,19 +859,55 @@ let time_elapsing_polyhedron : LinearConstraint.pxd_linear_constraint option ref
 let time_past_polyhedron : LinearConstraint.pxd_linear_constraint option ref = ref None
 
 
+let compute_time_polyhedron (direction : time_direction) (location : Location.global_location) =
+	(* Get the model *)
+	let model = Input.get_model() in
+
+	(* Print some information *)
+	print_message Verbose_high ("Computing list of explicit flows…");
+	
+	let flows = compute_flows location in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then(
+		let list_of_flows = List.map (fun (clock_id, flow_value) -> (model.variable_names clock_id) ^ "' = " ^ (NumConst.string_of_numconst flow_value)) flows in
+		print_message Verbose_total ("Flows: " ^ (string_of_list_of_string_with_sep ", " list_of_flows));
+	);
+
+	(* Compute polyhedron *)
+	(* Create the inequalities `clock_id = flow_value` *)
+	let inequalities_flows = List.map (fun (clock_id, flow_value) ->
+		(* Create a linear term `clock_id + (-)flow_value`; the value is negated iff direction is foward, to create `clock_id - flow_value = 0`, equivalent to `clock_id = flow_value` *)
+		let negated_flow_value = match direction with
+		| Forward	-> NumConst.neg flow_value
+		| Backward	-> flow_value
+		in
+		let linear_term = LinearConstraint.make_pxd_linear_term [(NumConst.one, clock_id)] negated_flow_value in
+		(* Create the inequality *)
+		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
+	) flows in
+	
+	(* Create the inequalities `var = 0`, for var in variables_constant *)
+	let inequalities_constant = create_inequalities_constant model.parameters_and_discrete in
+
+	(* Print some information *)
+	print_message Verbose_total ("Creating linear constraint for time elapsing with explicit flows…");
+	
+	(* Perform time elapsing *)
+	print_message Verbose_high ("Now applying time " ^ (string_of_time_direction direction) ^ "…");
+	
+	(* Convert both sets of inequalities to a constraint *)
+	LinearConstraint.make_pxd_constraint (List.rev_append inequalities_flows inequalities_constant)
+
+
 
 let apply_time_shift (direction : time_direction) (location : Location.global_location) (the_constraint : LinearConstraint.pxd_linear_constraint) =
 	(* Get the model *)
 	let model = Input.get_model() in
 
-	let direction_str = match direction with
-		| Forward	-> "elapsing"
-		| Backward	-> "past"
-	in
-
 	(* If urgent: no time elapsing *)
 	if is_location_urgent location then (
-		print_message Verbose_high ("Location urgent: NO time " ^ direction_str);
+		print_message Verbose_high ("Location urgent: NO time " ^ (string_of_time_direction direction));
 		()
 	(* If not urgent: apply time elapsing *)
 	)else(
@@ -886,69 +928,11 @@ let apply_time_shift (direction : time_direction) (location : Location.global_lo
 			(* Apply time elapsing *)
 			LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron time_polyhedron the_constraint;
 		
-		)else(
-			(* BEGIN FORMER VERSION WITH STOPWATCHES (2020/09) ***)
-(*			(* Otherwise, compute dynamically the list of stopwatches *)
-			let stopped_clocks, elapsing_clocks = compute_stopwatches location in
-			print_message Verbose_high ("Computing list of stopwatches");
-			if verbose_mode_greater Verbose_total then(
-				let list_of_names = List.map model.variable_names stopped_clocks in
-				print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
-				let list_of_names = List.map model.variable_names elapsing_clocks in
-				print_message Verbose_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
-			);
-
-			(* Perform time elapsing *)
-			print_message Verbose_high ("Now applying time " ^ direction_str ^ "…");
-			let time_shift_function = match direction with
-				| Forward	-> LinearConstraint.pxd_time_elapse_assign
-				| Backward	-> LinearConstraint.pxd_time_past_assign
-			in
-			(*** NOTE: the comment is to be changed in alternative TE mode ***)
-			time_shift_function
-				elapsing_clocks
-				(List.rev_append stopped_clocks model.parameters_and_discrete)
-				the_constraint
-			;*)
-			(* END FORMER VERSION WITH STOPWATCHES (2020/09) ***)
-			
+		)else(			
 			(* Otherwise, compute dynamically the list of clocks with their respective flow *)
 			
-			(* Print some information *)
-			print_message Verbose_high ("Computing list of explicit flows…");
-			
-			let flows = compute_flows location in
-			
-			(* Print some information *)
-			if verbose_mode_greater Verbose_total then(
-				let list_of_flows = List.map (fun (clock_id, flow_value) -> (model.variable_names clock_id) ^ "' = " ^ (NumConst.string_of_numconst flow_value)) flows in
-				print_message Verbose_total ("Flows: " ^ (string_of_list_of_string_with_sep ", " list_of_flows));
-			);
-
-			(* Compute polyhedron *)
-			(* Create the inequalities `clock_id = flow_value` *)
-			let inequalities_flows = List.map (fun (clock_id, flow_value) ->
-				(* Create a linear term `clock_id + (-)flow_value`; the value is negated iff direction is foward, to create `clock_id - flow_value = 0`, equivalent to `clock_id = flow_value` *)
-				let negated_flow_value = match direction with
-				| Forward	-> NumConst.neg flow_value
-				| Backward	-> flow_value
-				in
-				let linear_term = LinearConstraint.make_pxd_linear_term [(NumConst.one, clock_id)] negated_flow_value in
-				(* Create the inequality *)
-				LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
-			) flows in
-			
-			(* Create the inequalities `var = 0`, for var in variables_constant *)
-			let inequalities_constant = create_inequalities_constant model.parameters_and_discrete in
-	
-			(* Print some information *)
-			print_message Verbose_total ("Creating linear constraint for time elapsing with explicit flows…");
-			
-			(* Perform time elapsing *)
-			print_message Verbose_high ("Now applying time " ^ direction_str ^ "…");
-			
-			(* Convert both sets of inequalities to a constraint *)
-			let time_polyhedron = LinearConstraint.make_pxd_constraint (List.rev_append inequalities_flows inequalities_constant) in
+			(* Create the time polyhedron depending on the clocks *)
+			let time_polyhedron = compute_time_polyhedron direction location in
 			
 			(* Apply time elapsing *)
 			LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron time_polyhedron the_constraint;
@@ -2262,9 +2246,12 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		let _, _, continuous_guards_n, updates_n = compute_new_location_guards_updates location_n symbolic_step_n.transition in
 		let continuous_guard_n = LinearConstraint.pxd_intersection continuous_guards_n in
 		
+
+		(*** BEGIN OLD VERSION (< 2020/09) ***)
 		(* Get the elapsed and stopped clocks (+ other variables) *)
 		let stopped_clocks_n, elapsing_clocks_n = compute_stopwatches location_n in
 		let all_stopped_variables_n = List.rev_append stopped_clocks_n model.parameters in
+		(*** END OLD VERSION (< 2020/09) ***)
 		
 		
 		(* Zn+1 is the target valuation, preceeded by time past plus invariant intersection *)
