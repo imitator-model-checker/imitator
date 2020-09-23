@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Ulrich Kühne
  * Created           : 2009/12/08
- * Last modified     : 2019/08/09
+ * Last modified     : 2019/09/23
  *
  ************************************************************)
 
@@ -359,7 +359,7 @@ let get_state state_space state_index =
 		(* Exception just in case *)
 		try (
 			Hashtbl.find state_space.all_states state_index
-		) with Not_found -> raise (InternalError ("State of index '" ^ (string_of_int state_index) ^ "' was not found in state_space (in function: get_state)."))
+		) with Not_found -> raise (InternalError ("State of index `" ^ (string_of_int state_index) ^ "` was not found in state_space (in function: get_state)."))
 	in
 
 	(* Find the pair (location_index, constraint) *)
@@ -386,7 +386,7 @@ let get_global_location_index state_space state_index =
 		(* Exception just in case *)
 		try (
 			(Hashtbl.find state_space.all_states state_index).global_location_index
-		) with Not_found -> raise (InternalError ("State of index '" ^ (string_of_int state_index) ^ "' was not found in state_space (in function: StateSpace.get_global_location_index)."))
+		) with Not_found -> raise (InternalError ("State of index `" ^ (string_of_int state_index) ^ "` was not found in state_space (in function: StateSpace.get_global_location_index)."))
 	in
 
 	(* Statistics *)
@@ -476,7 +476,7 @@ let get_action_from_combined_transition combined_transition =
 		let transition = model.transitions_description first_transition_index in
 		(* Get the action index *)
 		transition.action
-	) with Failure msg -> raise (InternalError ("Empty list of transitions in a combined_transition found in get_action_from_combined_transition, although this should not have been the case: '" ^ msg ^ "'."))
+	) with Failure msg -> raise (InternalError ("Empty list of transitions in a combined_transition found in get_action_from_combined_transition, although this should not have been the case: `" ^ msg ^ "`."))
 	in
 	action_index
 
@@ -1308,7 +1308,7 @@ let replace_constraint state_space state_index px_linear_constraint =
 		let location_index = (Hashtbl.find state_space.all_states state_index).global_location_index in
 		(* Replace with the new constraint *)
 		Hashtbl.replace state_space.all_states state_index {global_location_index = location_index; px_constraint = linear_constraint_copy};
-	) with Not_found -> raise (InternalError ("Error when replacing state '" ^ (string_of_int state_index) ^ "' in StateSpace.replace_constraint."))
+	) with Not_found -> raise (InternalError ("Error when replacing state `" ^ (string_of_int state_index) ^ "` in StateSpace.replace_constraint."))
 
 
 
@@ -1336,7 +1336,7 @@ let add_state state_space state_comparison (new_state : state) =
 			let old_states = Hashtbl.find_all state_space.states_for_comparison location_index in
 			if verbose_mode_greater Verbose_total then (
 				let nb_old = List.length old_states in
-				print_message Verbose_total ("list with states on same location of length " ^ (string_of_int nb_old));
+				print_message Verbose_total ("The list of states with the same location has length " ^ (string_of_int nb_old));
 			);
 
 			(* Statistics *)
@@ -1360,7 +1360,7 @@ let add_state state_space state_comparison (new_state : state) =
 				match state_comparison with
 
 					(* No_check: case considered above already *)
-					| No_check -> raise (InternalError("Case 'No_check' should have been handled before, in function StateSpace.add_state"))
+					| No_check -> raise (InternalError("Case `No_check` should have been handled before, in function StateSpace.add_state"))
 
 					(* Equality: check for equality *)
 					| Equality_check ->
