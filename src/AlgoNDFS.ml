@@ -437,6 +437,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 							(!pending = [] ||
 								not (List.exists is_pending_not_blue successors)))) then (
 					table_add blue thestate;
+table_rem green thestate;
 					printtable "Blue (mark_blue_or_green)" blue
 				) else (
 					if options#recompute_green &&
@@ -462,7 +463,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 (* 				let print_depth astate adepth = print_string ("(" ^ (string_of_int astate) ^ "," ^ (string_of_int adepth)) in
 				print_message Verbose_high (IntMap.iter print_depth !greendepth);
  *)				if options#recompute_green &&
-					(IntMap.find thestate !greendepth) < thedepth
+					(IntMap.find thestate !greendepth) > thedepth
 				then( (* the reexplored state must also be removed from previous red exploration *)
 					table_rem green thestate;
 					table_rem red thestate;
@@ -552,6 +553,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 					postdfs thestate thestate_depth)
 			) else (* thestate is not explored because it is either too deep or covered by the constraint already *)
 				if not depth_ok &&
+					not (table_test blue thestate) &&
 					not options#no_green then (
 					table_add green thestate;
 					if options#recompute_green
@@ -616,6 +618,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						if (property.synthesis_type = Synthesis &&
 								check_parameter_leq_list astate) then (
 							table_add blue astate;
+table_rem green astate;
 							printtable "Blue (enterdfs)" blue;
 							false
 						) else true in
@@ -648,6 +651,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 						(* table_add blue astate; *)
 						table_add blue thestate;
+table_rem green thestate;
 						printtable "Blue (cyclefound)" blue;
 						(* and the current state is popped from the cyan list *)
 						table_rem cyan thestate;
@@ -723,6 +727,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						if (property.synthesis_type = Synthesis && check_parameter_leq_list astate) then (
 							(* State astate has been handled and must now become blue *)
 							table_add blue astate;
+table_rem green astate;
 							printtable "Blue (enterdfs)" blue;
 							false
 						) else true
@@ -757,6 +762,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						(* the state where the lookahead has found a cycle is now set blue *)
 						(* table_add blue astate; *)
 						table_add blue thestate;
+table_rem green thestate;
 						printtable "Blue (cyclefound)" blue;
 						(* and the current state is popped from the cyan list *)
 						table_rem cyan thestate;
@@ -847,6 +853,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								if (property.synthesis_type = Synthesis && check_parameter_leq_list astate) then (
 									(* State astate has been handled and must now become blue *)
 									table_add blue astate;
+table_rem green astate;
 									printtable "Blue (enterdfs)" blue;
 									false
 								) else true
@@ -881,6 +888,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								(* the state where the lookahead has found a cycle is now set blue *)
 								(* table_add blue astate; *)
 								table_add blue thestate;
+table_rem green thestate;
 								printtable "Blue (cyclecount)" blue;
 								(* and the current state is popped from the cyan list *)
 								table_rem cyan thestate;
@@ -974,6 +982,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								if (property.synthesis_type = Synthesis && check_parameter_leq_list astate) then (
 									(* State astate has been handled and must now become blue *)
 									table_add blue astate;
+table_rem green astate;
 									printtable "Blue (enterdfs)" blue;
 									false
 								) else true
@@ -1008,6 +1017,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								(* the state where the lookahead has found a cycle is now set blue *)
 								(* table_add blue astate; *)
 								table_add blue thestate;
+table_rem green thestate;
 								printtable "Blue (cyclecount)" blue;
 								(* and the current state is popped from the cyan list *)
 								table_rem cyan thestate;
