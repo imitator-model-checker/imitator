@@ -473,14 +473,6 @@ class imitator_options =
 					exploration_order <- Some Exploration_queue_BFS_RS
 				else if order = "queueBFSPRIOR" then
 					exploration_order <- Some Exploration_queue_BFS_PRIOR
-(*				else if order = "NDFS" then
-					exploration_order <- Some Exploration_NDFS
-				else if order = "NDFSsub" then
-					exploration_order <- Some Exploration_NDFS_sub
-				else if order = "layerNDFS" then
-					exploration_order <- Some Exploration_layer_NDFS
-				else if order = "layerNDFSsub" then
-					exploration_order <- Some Exploration_layer_NDFS_sub*)
 				else(
 					print_error ("The exploration order `" ^ order ^ "` is not valid.");
 					Arg.usage speclist usage_msg;
@@ -691,12 +683,12 @@ class imitator_options =
 				");
 
 				("-distributed", String set_distributed, " Distributed version of the behavioral cartography and PRPC.
-        Use `no` for the non-distributed mode (default).
-        Use `static` for a static domain partitioning [ACN15].
+        Use `no`         for the non-distributed mode (default).
+        Use `static`     for a static domain partitioning [ACN15].
         Use `sequential` for a master-worker scheme with sequential point distribution [ACE14].
-        Use `randomXX` for a master-worker scheme with random point distribution (e.g., random5 or random10); after XX successive unsuccessful attempts (where the generated point is already covered), the algorithm will switch to an exhaustive sequential iteration [ACE14].
-        Use `shuffle` for a master-worker scheme with shuffle point distribution [ACN15].
-        Use `dynamic` for a master-worker dynamic subdomain decomposition [ACN15].
+        Use `randomXX`   for a master-worker scheme with random point distribution (e.g., random5 or random10); after XX successive unsuccessful attempts (where the generated point is already covered), the algorithm will switch to an exhaustive sequential iteration [ACE14].
+        Use `shuffle`    for a master-worker scheme with shuffle point distribution [ACN15].
+        Use `dynamic`    for a master-worker dynamic subdomain decomposition [ACN15].
 				");
 
 				("-distributed-kill-IM", Unit (fun () -> distributedKillIM <- true), " In distributed cartography, kill processes covered by other tiles [ACN15]; only works with selected distribution schemes. Default: disabled.
@@ -714,24 +706,20 @@ class imitator_options =
 
 				("-draw-statespace", String set_statespace, " Draw the state space in a graphical form (using `dot`).
        Use value `undetailed` for the structure only (no location names).
-       Use value `normal` for location names.
-       Use value `full` for location names and constraints.
+       Use value `normal`     for location names.
+       Use value `full`       for location names and constraints.
 				");
 
 				("-dynamic-elimination", Unit (fun () -> dynamic_clock_elimination <- true), " Dynamic clock elimination [FSFMA13]. Default: disabled.
 				");
 
 				("-expl-order", String set_exploration_order, " Exploration order [EXPERIMENTAL].
-        Use `layerBFS` for a layer-based breadth-first search (default for most algorithms).
-        Use `queueBFS` for a queue-based breadth-first search. [ANP17]
-        Use `queueBFSRS` for a queue-based breadth-first search with ranking system. [ANP17]
+        Use `layerBFS`      for a layer-based breadth-first search (default for most algorithms).
+        Use `queueBFS`      for a queue-based breadth-first search. [ANP17]
+        Use `queueBFSRS`    for a queue-based breadth-first search with ranking system. [ANP17]
         Use `queueBFSPRIOR` for a priority-based BFS with ranking system. [ANP17]
         Default: layerBFS.
 				");
-(*        Use `NDFS` for standard NDFS. [NPvdP18]
-        Use `NDFSsub` for standard NDFS with subsumption. [NPvdP18]
-        Use `layerNDFS` for layered NDFS. [NPvdP18]
-        Use `layerNDFSsub` for layered NDFS with subsumption. [NPvdP18] (default for NDFS algorithms)*)
 
 				("-graphics-source", Unit (fun () -> with_graphics_source <- true), " Keep file(s) used for generating graphical output. Default: disabled.
 				");
@@ -780,12 +768,12 @@ class imitator_options =
 				("-no-mergeq", Unit (fun () -> warn_if_set mergeq "mergeq"; mergeq <- Some false), " Do not use the merging technique of [AFS13] on the queue only. Default: depending on the algorithm.
 				");
 
-				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Options are `always`, `targetseen`, `pq10`, `pq100`, `iter10`, `iter100`. Default: `iter10`.
+				("-merge-heuristic", String set_merge_heuristic, " Merge heuristic for EFsynthminpq. Possible values are `always`, `targetseen`, `pq10`, `pq100`, `iter10`, `iter100`. Default: `iter10`.
 				");
 
-				("-mode", String set_mode, " Mode for " ^ Constants.program_name ^ ".
+				("-mode", String set_mode, " Special mode for " ^ Constants.program_name ^ ".
         Use `checksyntax` for a simple syntax check and no analysis.
-        Use `statespace` for the generation of the entire parametric state space."
+        Use `statespace`  for the generation of the entire parametric state space."
         );
 
 				("-no-acceptfirst", Unit (fun () -> no_acceptfirst <- true), "In NDFS, do not put accepting states at the head of the successors list. Default: enabled.
@@ -821,7 +809,7 @@ class imitator_options =
 				");
 
 				("-nz-method", String set_nz_method, " Method for non-Zeno CUB-PTA algorithms [ANPS17].
-        Use `check` to try to synthesize loops only for the valuations for which the PTA is already CUB.
+        Use `check`     to try to synthesize loops only for the valuations for which the PTA is already CUB.
         Use `transform` to transform the PTA into an equivalent CUB-PTA, and then to look for loops.
         Default: `transform`.
 				");
@@ -829,9 +817,9 @@ class imitator_options =
 
 				("-pending-order", String set_pending_order, " Pending list exploration order [EXPERIMENTAL].
         Use `accepting` for a layered NDFS where pending list has accepting states first.
-        Use `none` for a layered NDFS where pending list has no ordering policy.
-        Use `param` for a layered NDFS where pending list has bigger parametric zones first.
-        Use `zone` for a layered NDFS where pending list has bigger full zone first.
+        Use `none`      for a layered NDFS where pending list has no ordering policy.
+        Use `param`     for a layered NDFS where pending list has bigger parametric zones first.
+        Use `zone`      for a layered NDFS where pending list has bigger full zone first.
         Default: `none`.
 				");
 
@@ -1153,33 +1141,6 @@ class imitator_options =
 				| Merge_iter100 -> print_message Verbose_experiments ("Merge heuristic: iter100.")
 			end;
 
-
-
-			(*** TODO ***)
-(*			(* Variant of the inverse method *)
-			if !inclusion then
-				(*** NOTE: why this test??? better to warn if this option is used in another context ***)
-				begin
-				match imitator_mode with
-				| Inverse_method | Inverse_method_complete | Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _ | RandomSeq_cartography _
-					-> print_message Verbose_standard ("Considering variant of IM with inclusion in the fixpoint [AS11].")
-				| _ -> print_message Verbose_standard ("Considering fixpoint variant with monodirectional inclusion of symbolic zones (instead of equality).")
-				end
-			else
-				print_message Verbose_medium ("No fixpoint variant (default).");
-
-			(* Variant of the inverse method *)
-			if !inclusion2 then
-				(*** NOTE: why this test??? better to warn if this option is used in another context ***)
-				begin
-				match imitator_mode with
-				| Inverse_method | Inverse_method_complete | Cover_cartography | Learning_cartography | Shuffle_cartography | Border_cartography | Random_cartography _ | RandomSeq_cartography _
-					-> print_message Verbose_standard ("Considering variant of IM with bidirectional inclusion in the fixpoint.")
-				| _ -> print_message Verbose_standard ("Considering fixpoint variant with bidirectional inclusion of symbolic zones (instead of equality).")
-				end
-			else
-				print_message Verbose_medium ("No bidirectional fixpoint variant (default).");
-*)
 
 			if no_time_elapsing then
 				print_message Verbose_standard ("Time elapsing will be applied at the beginning of the computation of a new state.")
@@ -1556,7 +1517,6 @@ class imitator_options =
 
 
 			()
-			(*** TODO: warning if output_tiles_files but no cartography ***)
 
 
 	end
