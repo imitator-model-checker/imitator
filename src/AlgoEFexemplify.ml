@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/08
- * Last modified     : 2020/04/16
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -53,8 +53,8 @@ class algoEFexemplify (state_predicate : AbstractProperty.state_predicate) =
 	(* Negative examples spotted (negative examples: *impossible* concrete runs to the target state) *)
 	val mutable negative_examples : Result.valuation_and_concrete_run list = []
 	
-	val nb_POSITIVE_EXAMPLES_MAX = 3
-	val nb_NEGATIVE_EXAMPLES_MAX = 3
+	val nb_POSITIVE_EXAMPLES_MAX = 6
+	val nb_NEGATIVE_EXAMPLES_MAX = 6
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
