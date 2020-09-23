@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/09/22
+# Last modified     : 2020/09/23
 #************************************************************
 
 
@@ -4629,9 +4629,6 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
-Number of states                        : 2
-Number of transitions                   : 2
-Number of computed states               : 3
 """
 			} #end result file
 		] # end expectations
