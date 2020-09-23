@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2020/09/22
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -343,7 +343,7 @@ class virtual algoLoopSynth =
 		in
 
 		let soundness =
-			let dangerous_inclusion = options#comparison_operator = Inclusion_check || options#comparison_operator = Double_inclusion_check in
+			let dangerous_inclusion = options#comparison_operator = AbstractAlgorithm.Inclusion_check || options#comparison_operator = AbstractAlgorithm.Double_inclusion_check in
 			
 			(* EXACT if termination is normal and no inclusion nor merge *)
 			if termination_status = Regular_termination && (not dangerous_inclusion) && not options#merge then Constraint_exact

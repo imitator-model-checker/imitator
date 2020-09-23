@@ -167,7 +167,7 @@ class algoIMcomplete (pval : PVal.pval) =
 		
 		(* Constraint is… *)
 		let soundness =
-			let dangerous_inclusion = options#comparison_operator = Inclusion_check || options#comparison_operator = Including_check || options#comparison_operator = Double_inclusion_check in
+			let dangerous_inclusion = options#comparison_operator = AbstractAlgorithm.Inclusion_check || options#comparison_operator = AbstractAlgorithm.Including_check || options#comparison_operator = AbstractAlgorithm.Double_inclusion_check in
 
 			(* EXACT if termination is normal and no incl and no merge were performed *)
 			if termination_status = Regular_termination && not dangerous_inclusion && not options#merge then Constraint_exact
