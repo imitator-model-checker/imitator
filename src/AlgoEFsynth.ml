@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2020/09/21
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -245,7 +245,7 @@ class virtual algoEFsynth (state_predicate : AbstractProperty.state_predicate) =
 		self#reset_minicache;
 		
 		(* Try to add the new state to the state space *)
-		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
+		let addition_result = StateSpace.add_state state_space options#comparison_operator new_state in
 		
 		(* Boolean to check whether the state is a target state *)
 		let is_target = ref false in

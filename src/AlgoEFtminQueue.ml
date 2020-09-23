@@ -9,7 +9,7 @@
  * 
  * File contributors : Vincent Bloemen, Étienne André
  * Created           : 2018/10/08
- * Last modified     : 2020/09/14
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -840,7 +840,7 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method add_a_new_state source_state_index combined_transition new_state =
 		(* Try to add the new state to the state space *)
-		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
+		let addition_result = StateSpace.add_state state_space options#comparison_operator new_state in
 		
 		begin
 		match addition_result with

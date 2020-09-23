@@ -1312,60 +1312,62 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 
 			% Non-nested CTL
 			\hline
-			\rowHeader{} Algorithm & Syntax                                           & \styleOption{-inclusion}      & \styleOption{-merge}    \\
+			\rowHeader{} Algorithm & Syntax                                           & \styleOption{-merge}      & \styleOption{-comparison}    \\
 			\hline
-			State space computation           & \cellNA{}                  & \cellNo{} & \cellNo{} \\
+			State space computation           & \cellNA{}                  & \cellNo{} & \styleOption{equality} \\
 			\hline
-			Reachability           & \styleIMI{EF(state\_predicate)}                  & \cellYes{} & \cellYes{} \\
+			Reachability           & \styleIMI{EF(state\_predicate)}                  & \cellYes{} & \styleOption{inclusion} \\
 			\hline
-			Safety                 & \styleIMI{AGnot(state\_predicate)}               & \cellYes{} & \cellYes{} \\
+			Safety                 & \styleIMI{AGnot(state\_predicate)}               & \cellYes{} & \styleOption{inclusion} \\
 
 			% Optimized reachability
 
 			\hline
-			Parameter minimization & \styleIMI{EFpmin(state\_predicate, p)}           & \cellYes{} & \cellYes{} \\
+			Parameter minimization & \styleIMI{EFpmin(state\_predicate, p)}           & \cellYes{} & \styleOption{inclusion} \\
 			\hline
-			Parameter maximization & \styleIMI{EFpmax(state\_predicate, p)}           & \cellYes{} & \cellYes{} \\
+			Parameter maximization & \styleIMI{EFpmax(state\_predicate, p)}           & \cellYes{} & \styleOption{inclusion} \\
 			\hline
-			Minimal-time           & \styleIMI{EFtmin(state\_predicate)}              & \cellYes{} & \cellYes{} \\
+			Minimal-time           & \styleIMI{EFtmin(state\_predicate)}              & \cellYes{} & \styleOption{inclusion} \\
 
 			% Cycles
 
 			\hline
-			Cycle                  & \styleIMI{Cycle}                            & \cellNo{} & \cellNo{}  \\
+			Cycle                  & \styleIMI{Cycle}                            & \cellNo{} & \styleOption{equality}  \\
 			\hline
-			Accepting cycle        & \styleIMI{CycleThrough(state\_predicate)} & \cellNo{} & \cellNo{}  \\
+			Accepting cycle (NDFS)        & \styleIMI{CycleThrough(state\_predicate)} & \cellNo{} & \styleOption{equality}  \\
 			\hline
-			Non-Zeno cycles        & \styleIMI{NZCycle}                            & \cellNo{} & \cellNo{}  \\
+			Accepting cycle (BFS)        & \styleIMI{CycleThrough(state\_predicate)} & \cellNo{} & \styleOption{including}  \\
+			\hline
+			Non-Zeno cycles        & \styleIMI{NZCycle}                            & \cellNo{} & \styleOption{equality}  \\
 
 			% Deadlock-freeness
 
 			\hline
-			Deadlock-freeness      & \styleIMI{DeadlockFree}                          & \cellYes{} & \cellYes{}  \\
+			Deadlock-freeness      & \styleIMI{DeadlockFree}                          & \cellYes{} & \styleOption{inclusion}  \\
 
 			% Inverse method
 
 			\hline
-			Inverse method         & \styleIMI{IM(parameter\_valuation)}              & \cellNo{} & \cellNo{}  \\
+			Inverse method         & \styleIMI{IM(parameter\_valuation)}              & \cellNo{} & \styleOption{equality}  \\
 			\hline
-			Inverse method         & \styleIMI{IMK(parameter\_valuation)}             & \cellNo{} & \cellNo{}  \\
+			Inverse method         & \styleIMI{IMK(parameter\_valuation)}             & \cellNo{} & \styleOption{equality}  \\
 			\hline
-			Inverse method         & \styleIMI{IMunion(parameter\_valuation)}         & \cellNo{} & \cellNo{}  \\
+			Inverse method         & \styleIMI{IMunion(parameter\_valuation)}         & \cellNo{} & \styleOption{equality}  \\
 
 			% Cartography
 
 			\hline
-			Cartography            & \styleIMI{BCcover(hyper\_rectangle)}             & \cellNo{} & \cellNo{}  \\
-			Cartography            & \styleIMI{BCrandom(hyper\_rectangle, nb)}        & \cellNo{} & \cellNo{}  \\
-			Cartography            & \styleIMI{BCrandomseq(hyper\_rectangle, nb)}     & \cellNo{} & \cellNo{}  \\
-			Cartography            & \styleIMI{BCshuffle(hyper\_rectangle)}           & \cellNo{} & \cellNo{}  \\
+			Cartography            & \styleIMI{BCcover(hyper\_rectangle)}             & \cellNo{} & \styleOption{equality} \\
+			Cartography            & \styleIMI{BCrandom(hyper\_rectangle, nb)}        & \cellNo{} & \styleOption{equality}  \\
+			Cartography            & \styleIMI{BCrandomseq(hyper\_rectangle, nb)}     & \cellNo{} & \styleOption{equality}  \\
+			Cartography            & \styleIMI{BCshuffle(hyper\_rectangle)}           & \cellNo{} & \styleOption{equality}  \\
 
 			% PRP, PRPC
 
 			\hline
-			PRP                    & \styleIMI{PRP(state\_pred, parameter\_val)}      & \cellYes{} & \cellYes{}  \\
+			PRP                    & \styleIMI{PRP(state\_pred, parameter\_val)}      & \cellYes{} & \styleOption{inclusion}  \\
 			\hline
-			PRPC                   & \styleIMI{PRPC(state\_pred, hyper\_rect)}        & \cellYes{} & \cellYes{}  \\
+			PRPC                   & \styleIMI{PRPC(state\_pred, hyper\_rect)}        & \cellYes{} & \styleOption{inclusion}  \\
 
 			\hline
 		\end{tabular}
@@ -1844,6 +1846,42 @@ In contrast, \styleOption{-time-limit} is applied to each call to the inverse me
 % Note that this option is not implemented as nicely as it could be, and can hence turn very costly.
 %
 
+
+%------------------------------------------------------------
+\paragraph{\styleOption{-comparison} (default: depending on the algorithm)}
+%------------------------------------------------------------
+This option specifies how to compare the constraint of a newly computed symbolic state with the constraints of the formerly computed symbolic states.
+Possible values are:
+\begin{description}
+	\item[\styleOption{none}]:
+	Does not test if a new state was already encountered.
+To be set to this value \emph{only} if the state space is a tree with all states being different (otherwise analysis may loop).
+
+	\item[\styleOption{equality}]
+	Test the \emph{equality} of the constraints.
+
+	\item[\styleOption{inclusion}]
+Consider an \emph{inclusion} of parametric zone instead of the equality when computing the successors of a set of states.
+In other terms, when encountering a new state, \imitator{} checks whether an old state shares the same discrete part (location and value of the discrete variables) and is such that the new state constraint is included into (\ie{} is smaller than or equal to) the old state constraint; if so, \imitator{} discards this ``new'' state.
+
+	\item[\styleOption{including}]
+When encountering a new state, \imitator{} checks whether an old state shares the same discrete part (location and value of the discrete variables) and is such that the new state constraint includes (\ie{} is larger than or equal to) the old state constraint; if so, \imitator{} replaces the old state with the new state, and explores it further.
+
+	\item[\styleOption{doubleinclusion}]
+Consider a bidirectional inclusion of parametric zones when computing the successors of a set of states.
+When this value is enabled, it suffices that a previous state with the same location and a constraint greater than or equal to (resp.\ \emph{smaller or equal} to) the constraint of the new state has been encountered to discard the new state (resp.\ the old state, which is replaced by the new one).
+
+It seems that, although less states are computed, this value is \emph{less} efficient than \styleOption{-comparison inclusion} (in part due to the extra inclusion checks required by \styleOption{-comparison doubleinclusion}).
+This explains why this option, while preserving the correctness, is not default for reachability algorithms.
+\end{description}
+
+In reachability algorithms (\cref{ss:mode:EFsynth,ss:mode:EF,ss:mode:EFmin,ss:mode:EFmax,ss:mode:EFopt,ss:mode:prop,ss:mode:PRP}), \styleOption{-comparison inclusion} is usually enabled by default; however, for loop synthesis algorithms (\cref{ss:mode:LoopSynth,ss:mode:Zeno}), \styleOption{-comparison equality} is used, as inclusion may introduce spurious cycles.
+Note that the BFS cycle synthesis uses \styleOption{-comparison including} as default.
+See \cref{table:summary:options} for the default behavior of algorithms \wrt{} this option.
+
+
+
+
 % %------------------------------------------------------------
 % \paragraph{\styleOption{-completeIM} (default: disabled)}
 % %------------------------------------------------------------
@@ -2086,33 +2124,6 @@ Note that node positioning is not (much) supported, so may want to edit manually
 Translates the input model to a \uppaal{} model, and exits.
 See \cref{section:uppaal} for details.
 
-
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-inclusion} (default: depending on the algorithm)}
-%------------------------------------------------------------
-Consider an inclusion of parametric zone instead of the equality when computing the successors of a set of states.
-In other terms, when encountering a new state, \imitator{} checks if the same state (same location and same constraint) has been encountered before and, if so, discards this ``new'' state.
-However, when the \styleOption{-inclusion} option is activated, it suffices that a previous state with the same location and a constraint \emph{greater than or equal} to the constraint of the new state has been encountered to discard the new state and stop exploring the current branch.
-This option corresponds to the way that, \eg{} \hytech{} works, and suffices when one wants to check the \emph{non-reachability} of a given bad state.
-
-In reachability algorithms (\cref{ss:mode:EFsynth,ss:mode:EF,ss:mode:EFmin,ss:mode:EFmax,ss:mode:EFopt,ss:mode:prop,ss:mode:PRP}), \styleOption{-inclusion} is usually enabled by default; however, for loop synthesis algorithms (\cref{ss:mode:LoopSynth,ss:mode:Zeno}), it is disabled as it may introduce spurious cycles.
-See \cref{table:summary:options} for the default behavior of algorithms \wrt{} this option.
-
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-no-inclusion} (default: depending on the algorithm)}
-%------------------------------------------------------------
-Force disabling inclusion, even if the selected algorithm normally requires it.
-
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-inclusion-bidir} (default: disabled)}
-%------------------------------------------------------------
-Consider a bidirectional inclusion of parametric zone instead of the equality when computing the successors of a set of states.
-When the \code{-inclusion-bidir} option is activated, it suffices that a previous state with the same location and a constraint greater than or equal to (resp.\ \emph{smaller or equal} to) the constraint of the new state has been encountered to discard the new state (resp.\ the old state, which is replaced by the new one).
-
-It seems that, although less states are computed, this option is \emph{less} efficient than \styleOption{-inclusion} (in part due to the extra inclusion checks required by \styleOption{-inclusion-bidir}).
 
 
 %------------------------------------------------------------
@@ -2359,12 +2370,6 @@ In the cartography mode, this option represents a \emph{global} time limit, not 
 Add a timing information to each shell output of the program.
 
 
-
-%------------------------------------------------------------
-\paragraph{\styleOption{-tree} (default: disabled)}
-%------------------------------------------------------------
-Does not test if a new state was already encountered.
-To be set \emph{only} if the reachability graph is a tree with all states being different (otherwise analysis may loop).
 
 
 

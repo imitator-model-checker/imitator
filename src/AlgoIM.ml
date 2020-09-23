@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/06
- * Last modified     : 2020/09/09
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -111,12 +111,14 @@ class algoIM (pval : PVal.pval) =
 		
 		(* Constraint is… *)
 		let soundness = 
+			let dangerous_inclusion = options#comparison_operator = Inclusion_check || options#comparison_operator = Including_check || options#comparison_operator = Double_inclusion_check in
+
 			(* EXACT if termination is normal and no random selections and no incl and no merge were performed *)
-			if termination_status = Regular_termination && nb_random_selections = 0 && not options#inclusion && not options#merge then Constraint_exact
+			if termination_status = Regular_termination && nb_random_selections = 0 && not dangerous_inclusion && not options#merge then Constraint_exact
 			(* UNDER-APPROXIMATED if termination is normal and random selections and no incl and no merge were performed *)
-			else if termination_status = Regular_termination && nb_random_selections > 0 && not options#inclusion && not options#merge then Constraint_maybe_under
+			else if termination_status = Regular_termination && nb_random_selections > 0 && not dangerous_inclusion && not options#merge then Constraint_maybe_under
 			(* OVER-APPROXIMATED if no random selections were performed and either termination is not normal or merging was used or state inclusion was used *)
-			else if nb_random_selections = 0 && (termination_status <> Regular_termination || options#inclusion || options#merge) then Constraint_maybe_over
+			else if nb_random_selections = 0 && (termination_status <> Regular_termination || dangerous_inclusion || options#merge) then Constraint_maybe_over
 			(* UNKNOWN otherwise *)
 			else Constraint_maybe_invalid
 		in

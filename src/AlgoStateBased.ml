@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/09/21
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -3268,16 +3268,6 @@ class virtual algoStateBased =
 
 			| None -> raise (InternalError "The termination status should be set when displaying warnings concerning early termination.")
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Create a State_space.state_comparison from the options *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method state_comparison_operator_of_options =
-		(* Mode tree: no comparison *)
-		if options#tree then StateSpace.No_check
-			else if options#inclusion then StateSpace.Inclusion_check
-			else if options#inclusion2 then StateSpace.Double_inclusion_check
-			else StateSpace.Equality_check
-
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the queue-based BFS algorithm  *)
@@ -4348,7 +4338,7 @@ class virtual algoStateBased =
 		)else(
 
 		(* Add the initial state to the reachable states; no need to check whether the state is present since it is the first state anyway *)
-		let init_state_index = match StateSpace.add_state state_space StateSpace.No_check init_state with
+		let init_state_index = match StateSpace.add_state state_space AbstractAlgorithm.No_check init_state with
 			(* The state is necessarily new as the state space was empty *)
 			| StateSpace.New_state state_index -> state_index
 			| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")

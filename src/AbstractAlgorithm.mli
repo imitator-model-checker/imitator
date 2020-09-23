@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/18
- * Last modified     : 2020/09/22
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -151,6 +151,24 @@ type nz_method =
 	| NZ_already
 
 
+
+(************************************************************)
+(** Check when adding a new state *)
+(************************************************************)
+type state_comparison_operator =
+	(* Does not check whether the state is present, add directly *)
+	| No_check
+	(* Does not add the new state if another state is exactly equal to it *)
+	| Equality_check
+	(* Does not add the new state if it is included in (i.e., is smaller than) another state *)
+	| Inclusion_check
+	(* Does not add the new state if it includes (i.e., is larger than) another state *)
+	| Including_check
+	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
+	| Double_inclusion_check
+
+
+
 (************************************************************)
 (** Predicates on mode *)
 (************************************************************)
@@ -169,8 +187,8 @@ val cartography_drawing_possible : imitator_mode -> bool
 (** Conversions of modes to string *)
 (************************************************************)
 
-val string_of_mode				: imitator_mode		-> string
-val string_of_translation		: translation		-> string
-val string_of_exploration_order	: exploration_order	-> string
-val string_of_cycle_algorithm	: cycle_algorithm	-> string
-
+val string_of_mode						: imitator_mode				-> string
+val string_of_translation				: translation				-> string
+val string_of_exploration_order			: exploration_order			-> string
+val string_of_cycle_algorithm			: cycle_algorithm			-> string
+val string_of_state_comparison_operator	: state_comparison_operator	-> string

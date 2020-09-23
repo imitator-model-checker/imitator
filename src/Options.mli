@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2020/09/14
+ * Last modified: 2020/09/23
  *
  ************************************************************)
 
@@ -38,6 +38,10 @@ class imitator_options :
 		method check_ippta : bool
 		method check_point : bool
 		
+		method comparison_operator			: AbstractAlgorithm.state_comparison_operator
+		method is_set_comparison_operator	: bool
+		method set_comparison_operator		: AbstractAlgorithm.state_comparison_operator -> unit
+
 		(* Algorithm for cycle detection in cycle synthesis algorithms *)
 		method cycle_algorithm : AbstractAlgorithm.cycle_algorithm
 		method is_set_cycle_algorithm : bool
@@ -57,12 +61,6 @@ class imitator_options :
 		
 		method files_prefix : string
 		method imitator_mode : AbstractAlgorithm.imitator_mode
-
-		method inclusion : bool
-		method is_set_inclusion : bool
-		method set_inclusion: bool -> unit
-
-		method inclusion2 : bool
 
 		method layer : bool
 		method is_set_layer : bool
@@ -121,7 +119,6 @@ class imitator_options :
 		method sync_auto_detection : bool
 		method time_limit : int option
 		method timed_mode : bool
-		method tree : bool
 		method graphical_state_space : graphical_state_space
 		method with_graphics_source : bool
 		method states_description : bool

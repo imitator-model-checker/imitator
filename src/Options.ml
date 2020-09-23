@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/09/22
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -42,7 +42,7 @@ let value_of_option option_name (a : 'a option) : 'a = match a with
 	| None -> raise (InternalError ("Option `" ^ option_name ^ "` is not yet initialized."))
 
 
-(* Warn if an option is already set; this helps to detect cases when both `-inclusion` and `-no-inclusion` are called, for example *)
+(* Warn if an option is already set; this helps to detect cases when both `-merge` and `-no-merge` are called, for example *)
 let warn_if_set option_value option_name =
 	if option_value <> None then(
 		print_warning ("Option `" ^ option_name ^ "` may be set to two different values. Behavior is unspecified.");
@@ -153,6 +153,9 @@ class imitator_options =
 		(* Check whether the accumulated constraint is restricted to pi0 *)
 		val mutable check_point = false
 
+		(* Comparison operator between states when adding a new state to the state space *)
+		val mutable comparison_operator : AbstractAlgorithm.state_comparison_operator option = None
+
 		(* Algorithm for cycle detection in cycle synthesis algorithms *)
 		val mutable cycle_algorithm : AbstractAlgorithm.cycle_algorithm option = None
 
@@ -176,12 +179,6 @@ class imitator_options =
 
 		(* Remove useless clocks (slightly experimental) *)
 		val mutable dynamic_clock_elimination = false
-
-		(* inclusion mode *)
-		val mutable inclusion : bool option = None
-
-		(* Double inclusion mode *)
-		val mutable inclusion2 = false
 
 		(* Layered NDFS *)
 		val mutable layer : bool option = None
@@ -252,9 +249,6 @@ class imitator_options =
 		(* limit on runtime *)
 		val mutable time_limit = None
 
-		(* tree mode: never compare inclusion or equality of any new state with a former state *)
-		val mutable tree = false
-
 
 		(************************************************************)
 		(* Class methods *)
@@ -272,9 +266,13 @@ class imitator_options =
 		method check_ippta = check_ippta
 		method check_point = check_point
 		
+		method comparison_operator			= value_of_option "comparison_operator" comparison_operator
+		method is_set_comparison_operator	= comparison_operator <> None
+		method set_comparison_operator b	= comparison_operator <- Some b
+
 		(* Algorithm for cycle detection in cycle synthesis algorithms *)
-		method cycle_algorithm : AbstractAlgorithm.cycle_algorithm = value_of_option "cycle_algorithm" cycle_algorithm
-		method is_set_cycle_algorithm : bool = cycle_algorithm <> None
+		method cycle_algorithm : AbstractAlgorithm.cycle_algorithm	= value_of_option "cycle_algorithm" cycle_algorithm
+		method is_set_cycle_algorithm : bool						= cycle_algorithm <> None
 		method set_cycle_algorithm (new_cycle_algorithm : AbstractAlgorithm.cycle_algorithm) = cycle_algorithm <- Some new_cycle_algorithm
 
 		method depth_limit = depth_limit
@@ -291,12 +289,6 @@ class imitator_options =
 		
 		method files_prefix = files_prefix
 		method imitator_mode = imitator_mode
-
-		method inclusion = value_of_option "inclusion" inclusion
-		method is_set_inclusion = inclusion <> None
-		method set_inclusion b = inclusion <- Some b
-
-		method inclusion2 = inclusion2
 
 		method layer = value_of_option "layer" layer
 		method is_set_layer = layer <> None
@@ -354,7 +346,6 @@ class imitator_options =
 		method sync_auto_detection = sync_auto_detection
 		method time_limit = time_limit
 		method timed_mode = timed_mode
-		method tree = tree
 		method graphical_state_space = graphical_state_space
 		method with_graphics_source = with_graphics_source
 		method states_description = states_description
@@ -398,6 +389,25 @@ class imitator_options =
 					abort_program ();
 					exit(1); in
 				set_verbose_mode mode
+
+
+			and set_comparison_operator comparison_operator_string =
+				if comparison_operator_string = "none" then
+					comparison_operator <- Some AbstractAlgorithm.No_check
+				else if comparison_operator_string = "equality" then
+					comparison_operator <- Some AbstractAlgorithm.Equality_check
+				else if comparison_operator_string = "inclusion" then
+					comparison_operator <- Some AbstractAlgorithm.Inclusion_check
+				else if comparison_operator_string = "including" then
+					comparison_operator <- Some AbstractAlgorithm.Including_check
+				else if comparison_operator_string = "doubleinclusion" then
+					comparison_operator <- Some AbstractAlgorithm.Double_inclusion_check
+				else(
+					print_error ("The value of `-comparison` `" ^ comparison_operator_string ^ "` is not valid.");
+					Arg.usage speclist usage_msg;
+					abort_program ();
+					exit(1);
+				)
 
 
 			and set_cycle_algorithm cycle_algorithm_string =
@@ -657,6 +667,14 @@ class imitator_options =
 					exit 0), " Print contributors and exit.
 				");
 
+				("-comparison", String set_comparison_operator, " Comparison technique between symbolic states constraints when a new state is computed.
+        Use `none`            for no comparison (all states are added to the state space).
+        Use `equality`        to check old = new (default for selected algorithms).
+        Use `inclusion`       to check new <= old (default for selected algorithms).
+        Use `including`       to check old <= new.
+        Use `doubleinclusion` to check old <= new and new <= old.
+				");
+
 				("-cycle-algo", String set_cycle_algorithm, " Algorithm for loop synthesis.
         Use `BFS`  for BFS with a variant of Tarjan's strongly connected components algorithm.
         Use `NDFS` for NDFS algorithms [NPvdP18] (default).
@@ -747,13 +765,6 @@ class imitator_options =
 				), "Translate the model into an Uppaal model, and exit without performing any analysis. Some features may not be translated, see user manual. Default: disabled
 				");
 
-
-				("-inclusion", Unit (fun () -> warn_if_set inclusion "inclusion"; inclusion <- Some true), " Consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: depending on the algorithm");
-				("-no-inclusion", Unit (fun () -> warn_if_set inclusion "inclusion"; inclusion <- Some false), " Do not consider a monodirectional inclusion of symbolic zones (new <= old) instead of the equality when checking for a fixpoint. Default: depending on the algorithm.
-				");
-
-				("-inclusion-bidir", Unit (fun () -> inclusion2 <- true), " Consider a bidirectional inclusion of symbolic zones (new <= old or old <= new) instead of the equality when checking for a fixpoint. Default: disabled.
-				");
 
 				("-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some true), " Layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled.");
 				("-no-layer", Unit (fun () -> warn_if_set layer "layer"; layer <- Some false), " No layered NDFS (for NDFS algorithms only) [NPvdP18]. Default: disabled.
@@ -860,9 +871,6 @@ class imitator_options =
 				");
 
 				("-timed", Unit (fun () -> timed_mode <- true), " Adds a timing information to each output of the program. Default: disabled.
-				");
-
-				("-tree", Unit (fun () -> tree <- true), " Does not test if a new state was already encountered. To be set ONLY if the state space is a tree (otherwise analysis may loop). Default: disabled.
 				");
 
 				("-verbose", String set_verbose_mode_ref, " Print more or less information. Can be set to `mute`, `warnings`, `standard`, `experiments`, `low`, `medium`, `high`, `total`. Default: `standard`.
@@ -985,7 +993,8 @@ class imitator_options =
 			(* Inclusion *)
 			(*------------------------------------------------------------*)
 			
-			if inclusion = Some true then(
+			(*** TODO: reintroduce ***)
+(*			if inclusion = Some true then(
 				match property_option with
 				| None ->
 					print_warning ("The `-inclusion` option may not preserve the correctness of this analysis. Result may be incorrect.");
@@ -993,7 +1002,7 @@ class imitator_options =
 					if not (AlgorithmOptions.inclusion_needed property) then(
 						print_warning ("The `-inclusion` option may not preserve the correctness of this algorithm. Result may be incorrect.");
 					);
-			);
+			);*)
 
 			(*------------------------------------------------------------*)
 			(* Merging *)
@@ -1015,9 +1024,9 @@ class imitator_options =
 			(* Check compatibility between options: ignoring some options *)
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 			
-			if acyclic && tree then (
+			if acyclic && comparison_operator = Some No_check then (
 				acyclic <- false;
-				print_warning ("Ayclic mode is set although tree mode is already set. Only tree mode will be considered.");
+				print_warning ("Ayclic mode is set although no state comparison is requested.");
 			);
 
 			(* Set some options depending on the IMITATOR mode *)
@@ -1116,6 +1125,15 @@ class imitator_options =
 			(* Recall modes *)
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
+			(* Comparison operator *)
+			begin
+			match comparison_operator with
+				| Some comparison_operator -> print_message Verbose_experiments ("State comparison operator: " ^ AbstractAlgorithm.string_of_state_comparison_operator comparison_operator)
+				
+				| None -> print_message Verbose_low ("No state comparison operator set.")
+			end;
+			
+			
 			(* Exploration order *)
 			begin
 			match exploration_order with
@@ -1351,11 +1369,6 @@ class imitator_options =
 				print_message Verbose_standard ("Computing the best worst-case bound for EFsynthminpq.")
 			else
 				print_message Verbose_medium ("No best-worst case bound for EFsynthminpq (default).");*)
-
-			if tree then
-				print_message Verbose_standard ("Tree mode: will never check inclusion or equality of a new state into a former state.")
-			else
-				print_message Verbose_medium ("No tree mode (default).");
 
 			if dynamic_clock_elimination then
 				print_message Verbose_standard ("Dynamic clock elimination activated.")

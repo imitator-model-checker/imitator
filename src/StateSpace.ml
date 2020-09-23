@@ -24,8 +24,9 @@ open OCamlUtilities
 open ImitatorUtilities
 open Statistics
 open Automaton
-open AbstractModel
 open State
+open AbstractModel
+open AbstractAlgorithm
 
 
 
@@ -37,21 +38,6 @@ type statespace_nature =
 	| Bad
 	| Unknown
 
-
-(************************************************************)
-(** Check when adding a new state *)
-(************************************************************)
-type state_comparison =
-	(* Does not check whether the state is present, add directly *)
-	| No_check
-	(* Does not add the new state if another state is exactly equal to it *)
-	| Equality_check
-	(* Does not add the new state if it is included in (i.e., is smaller than) another state *)
-	| Inclusion_check
-	(* Does not add the new state if it includes (i.e., is larger than) another state; the state is NOT replaced in any case *)
-	| Including_check
-	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
-	| Double_inclusion_check
 
 
 (************************************************************)
@@ -1320,9 +1306,6 @@ let add_state state_space state_comparison (new_state : state) =
 	counter_add_state#increment;
 	counter_add_state#start;
 
-	(* Retrieve the input options *)
-(* 	let options = Input.get_options () in *)
-
 	let result =
 
         let location_index = new_location_index state_space new_state.global_location in
@@ -1382,17 +1365,28 @@ let add_state state_space state_comparison (new_state : state) =
 					| Including_check ->
 						statespace_dcounter_nb_state_comparisons#increment;
 						if state_included state new_state then(
-							(* Print some information *)
-							print_message Verbose_medium ("Found an old state <= the new state");
-							
-							(* Replace old with new *)
-							replace_constraint state_space state_index new_state.px_constraint;
-
 							(* Statistics *)
 							statespace_dcounter_nb_states_including#increment;
 							
-							(* Stop looking for states *)
-							raise (Found_new state_index)
+							(* Check if equality, i.e., reverse direction *)
+							if state_included new_state state then(
+								(* Print some information *)
+								print_message Verbose_medium ("Found an old state = the new state");
+								
+								(* Statistics *)
+								statespace_dcounter_nb_states_included#increment;
+								
+								raise (Found_old state_index)
+							)else(
+								(* Print some information *)
+								print_message Verbose_medium ("Found an old state < the new state");
+								
+								(* Replace old with new *)
+								replace_constraint state_space state_index new_state.px_constraint;
+
+								(* Stop looking for states *)
+								raise (Found_new state_index)
+							)
 						)
 
 					(* Double inclusion: check for new <= old OR old <= new, in which case replace *)
@@ -1409,7 +1403,7 @@ let add_state state_space state_comparison (new_state : state) =
 						statespace_dcounter_nb_state_comparisons#increment;
 						if state_included state new_state then (
 							(* Print some information *)
-							print_message Verbose_medium ("Found an old state <= the new state");
+							print_message Verbose_medium ("Found an old state < the new state");
 
 							(* Replace old with new *)
 							replace_constraint state_space state_index new_state.px_constraint;

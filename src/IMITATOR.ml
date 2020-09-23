@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/09/22
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -182,37 +182,7 @@ if not options#is_set_output_result then(
 );
 
 
-(*------------------------------------------------------------*)
-(* Incl *)
-(*------------------------------------------------------------*)
 
-(* Get value depending on the algorithm *)
-begin match property_option, options#imitator_mode with
-	| Some property, _
-		->
-		let inclusion_needed = AlgorithmOptions.inclusion_needed property in
-		(* Update if not yet set *)
-		if not options#is_set_inclusion then(
-			(* Print some information *)
-			print_message Verbose_high ("Set option `-inclusion` to its default value: `" ^ (string_of_bool inclusion_needed) ^ "`");
-
-			options#set_inclusion (inclusion_needed);
-		);
-
-	| _, State_space_computation
-		->
-		(* Update if not yet set *)
-		if not options#is_set_inclusion then(
-			(* Print some information *)
-			print_message Verbose_high ("Set option `-inclusion` to its default value: `false`");
-
-			(*** BADPROG: this default option value should not be hard-coded here ***)
-			options#set_inclusion (false);
-		);
-
-	| None, _ -> ()
-
-end;
 
 
 (*------------------------------------------------------------*)
@@ -222,9 +192,10 @@ end;
 (* Get value depending on the algorithm *)
 begin match property_option, options#imitator_mode with
 	| Some property, _ ->
-		let merge_needed = AlgorithmOptions.merge_needed property in
 		(* Update if not yet set *)
 		if not options#is_set_mergeq then (
+			let merge_needed = AlgorithmOptions.merge_needed property in
+			
 			(* Print some information *)
 			print_message Verbose_high ("Case option `-mergeq` not set");
 			
@@ -300,20 +271,20 @@ end;*)
 begin match property_option, options#imitator_mode with
 	| Some property, _
 		->
-		(*** HACK: hard-coded directly ***)
-		let default_cycle_algorithm_option = match property.property with
-			| Cycle_through _ -> Some NDFS
-			| _ -> None
-		in
-
 		(* Update if not yet set *)
 		if not options#is_set_cycle_algorithm then(
+			(*** HACK: hard-coded directly ***)
+			let default_cycle_algorithm_option = match property.property with
+				| Cycle_through _ -> Some NDFS
+				| _ -> None
+			in
+
 			match default_cycle_algorithm_option with
 			| Some default_cycle_algorithm ->
 				(* Print some information *)
-				print_message Verbose_high ("Set option `-cycleAlgo` to its default value: `" ^ (AbstractAlgorithm.string_of_cycle_algorithm default_cycle_algorithm) ^ "`");
+				print_message Verbose_high ("Set option `-cycle-algo` to its default value: `" ^ (AbstractAlgorithm.string_of_cycle_algorithm default_cycle_algorithm) ^ "`");
 
-				options#set_cycle_algorithm (default_cycle_algorithm);
+				options#set_cycle_algorithm default_cycle_algorithm;
 			| None -> ()
 		);
 
@@ -321,6 +292,60 @@ begin match property_option, options#imitator_mode with
 	| None, _ ->
 		(* Nothing to do *)
 		()
+end;
+
+
+(*------------------------------------------------------------*)
+(* Comparison operator between states *)
+(*------------------------------------------------------------*)
+(*** NOTE: important to do it AFTER the cycle algorithm has been set! ***)
+
+(* Get value depending on the algorithm *)
+begin match property_option, options#imitator_mode with
+	| Some property, _
+		->
+		(* Update if not yet set *)
+		if not options#is_set_comparison_operator then(
+			
+			let default_state_comparison = AlgorithmOptions.default_state_comparison property in
+			
+			let overwritten_default_state_comparison =
+			
+			(*** HACK! Hard-code / force the default value for cycle algorithms ***)
+			match property.property with
+			| Cycle_through _ ->
+				let result =
+				match options#cycle_algorithm with
+					| NDFS -> Equality_check
+					| BFS  -> Including_check
+				in result
+			
+			| _ ->
+			(* Rely on default value *)
+				default_state_comparison
+				
+			in
+
+			(* Print some information *)
+			print_message Verbose_high ("Set option `-comparison` to its default value: `" ^ (AbstractAlgorithm.string_of_state_comparison_operator overwritten_default_state_comparison) ^ "`");
+
+			(* Set *)
+			options#set_comparison_operator overwritten_default_state_comparison;
+		);
+
+	| _, State_space_computation
+		->
+		(* Update if not yet set *)
+		if not options#is_set_comparison_operator then(
+			(* Print some information *)
+			print_message Verbose_high ("Set option `-comparison` to its default value: `equality`");
+
+			(*** BADPROG: this default option value should not be hard-coded here ***)
+			options#set_comparison_operator Equality_check;
+		);
+
+	| None, _ -> ()
+
 end;
 
 

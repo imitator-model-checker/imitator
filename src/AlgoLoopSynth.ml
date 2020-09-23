@@ -101,7 +101,7 @@ class virtual algoLoopSynth =
 		self#reset_minicache;
 
 		(* Try to add the new state to the state space *)
-		let addition_result = StateSpace.add_state state_space StateSpace.Including_check(*(self#state_comparison_operator_of_options)*) new_state in
+		let addition_result = StateSpace.add_state state_space options#comparison_operator new_state in
 		
 		begin
 		match addition_result with
@@ -343,12 +343,14 @@ class virtual algoLoopSynth =
 		in
 
 		let soundness =
+			let dangerous_inclusion = options#comparison_operator = Inclusion_check || options#comparison_operator = Double_inclusion_check in
+			
 			(* EXACT if termination is normal and no inclusion nor merge *)
-			if termination_status = Regular_termination && not options#inclusion && not options#merge then Constraint_exact
+			if termination_status = Regular_termination && (not dangerous_inclusion) && not options#merge then Constraint_exact
 			(* UNDER-APPROXIMATED if termination is NOT normal AND neither merging nor state inclusion was used *)
-			else if termination_status <> Regular_termination && not options#inclusion && not options#merge then Constraint_maybe_under
+			else if termination_status <> Regular_termination && (not dangerous_inclusion) && not options#merge then Constraint_maybe_under
 			(* OVER-APPROXIMATED if termination is normal AND merging or state inclusion was used *)
-			else if termination_status = Regular_termination && (options#inclusion || options#merge) then Constraint_maybe_over
+			else if termination_status = Regular_termination && (dangerous_inclusion || options#merge) then Constraint_maybe_over
 			(* UNKNOWN otherwise *)
 			else Constraint_maybe_invalid
 		in

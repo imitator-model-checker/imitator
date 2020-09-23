@@ -9,7 +9,7 @@
  *
  * File contributors : Laure Petrucci, Jaco van de Pol, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2020/09/14
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -1134,7 +1134,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method add_a_new_state source_state_index combined_transition new_state =
 		(* Try to add the new state to the state space *)
-		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
+		let addition_result = StateSpace.add_state state_space options#comparison_operator new_state in
 
 		begin
 		match addition_result with
@@ -1219,7 +1219,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
  			exception would stop the exploration too early *)
  		let completed =
  				(termination_status = Regular_termination && not depth_reached) in
- 		let abstracted = (options#inclusion || options#merge) in
+		
+		(*** TODO (ÉA): is Including_check dangerous? ***)
+		let dangerous_inclusion = options#comparison_operator = Inclusion_check || options#comparison_operator = Including_check || options#comparison_operator = Double_inclusion_check in
+		
+ 		let abstracted = (dangerous_inclusion || options#merge) in
 
  		let soundness =
 			(* EXACT if termination is normal and no inclusion nor merge *)

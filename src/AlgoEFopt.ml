@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2020/09/14
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -454,7 +454,7 @@ class virtual algoEFopt (state_predicate : AbstractProperty.state_predicate) (pa
 		(* Only process if we have to *)
 		if keep_processing then(
 			(* Try to add the new state to the state space *)
-			let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
+			let addition_result = StateSpace.add_state state_space options#comparison_operator new_state in
 			
 			begin
 			match addition_result with

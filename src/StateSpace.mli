@@ -19,6 +19,7 @@
 (************************************************************)
 open Automaton
 open State
+open AbstractAlgorithm
 
 
 (************************************************************)
@@ -45,21 +46,6 @@ type statespace_nature =
 	| Bad
 	| Unknown
 
-
-(************************************************************)
-(** Check when adding a new state *)
-(************************************************************)
-type state_comparison =
-	(* Does not check whether the state is present, add directly *)
-	| No_check
-	(* Does not add the new state if another state is exactly equal to it *)
-	| Equality_check
-	(* Does not add the new state if it is included in (i.e., is smaller than) another state *)
-	| Inclusion_check
-	(* Does not add the new state if it includes (i.e., is larger than) another state; the state is NOT replaced in any case *)
-	| Including_check
-	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
-	| Double_inclusion_check
 
 
 (************************************************************)
@@ -319,7 +305,7 @@ val backward_symbolic_run : state_space -> state_index -> state_index -> predece
 val increment_nb_gen_states : state_space -> unit
 
 (** Add a state to a state space: takes as input the state space, a comparison instruction, the state to add, and returns whether the state was indeed added or not *)
-val add_state : state_space -> state_comparison -> state -> addition_result
+val add_state : state_space -> AbstractAlgorithm.state_comparison_operator -> state -> addition_result
 
 (**Add a state to a state space dynamically**)
 (* val add_state_dyn : AbstractModel.abstract_model -> state_space -> state -> LinearConstraint.linear_constraint -> (state_index * bool) *)

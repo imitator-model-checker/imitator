@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2020/09/21
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -276,11 +276,6 @@ class virtual algoStateBased :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method update_statespace_nature : State.state -> unit
 		
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Create a StateSpace.state_comparison from the options *)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method state_comparison_operator_of_options : StateSpace.state_comparison
-
 		
 		(*------------------------------------------------------------*)
 		(* Add a new state to the state space (if indeed needed) *)

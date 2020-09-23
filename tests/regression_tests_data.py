@@ -1740,9 +1740,9 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test EF on toy example: synthesis (explicit -merge -inclusion)',
+		'purpose'    : 'Test EF on toy example: synthesis (explicit -merge -comparison inclusion)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
-		'options'    : '-merge -inclusion',
+		'options'    : '-merge -comparison inclusion',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1802,9 +1802,9 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test EF on toy example: synthesis (-no-merge -no-inclusion)',
+		'purpose'    : 'Test EF on toy example: synthesis (-no-merge -comparison equality)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
-		'options'    : '-no-merge -no-inclusion',
+		'options'    : '-no-merge -comparison equality',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1834,9 +1834,9 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test EF on toy example: synthesis (-no-merge -no-inclusion -no-cumulative-pruning)',
+		'purpose'    : 'Test EF on toy example: synthesis (-no-merge -comparison equality -no-cumulative-pruning)',
 		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
-		'options'    : '-no-merge -no-inclusion -no-cumulative-pruning',
+		'options'    : '-no-merge -comparison equality -no-cumulative-pruning',
 		'expectations' : [
 			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1888,7 +1888,7 @@ Constraint nature                       : good
 	{
 		'purpose'    : 'Test EF with basic safety property for Fischer:3 (double-directional inclusion)',
 		'input_files': ['F3.imi', 'F3.imiprop'],
-		'options'    : '-merge -inclusion-bidir ',
+		'options'    : '-merge -comparison doubleinclusion',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4756,9 +4756,9 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (over-approx with -inclusion)',
+		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (over-approx with -comparison inclusion)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
-		'options'    : '-inclusion -cycle-algo BFS',
+		'options'    : '-comparison inclusion -cycle-algo BFS',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4786,9 +4786,9 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (over-approx with -inclusion -merge)',
+		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (over-approx with -comparison inclusion -merge)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
-		'options'    : '-cycle-algo BFS -inclusion -merge',
+		'options'    : '-cycle-algo BFS -comparison inclusion -merge',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4846,9 +4846,9 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/09
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (invalid with -inclusion -depth-limit)',
+		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (invalid with -comparison inclusion -depth-limit)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
-		'options'    : '-cycle-algo BFS -inclusion -depth-limit 3',
+		'options'    : '-cycle-algo BFS -comparison inclusion -depth-limit 3',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4989,9 +4989,9 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (over-approx with -inclusion)',
+		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (over-approx with -comparison inclusion)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
-		'options'    : '-cycle-algo BFS -inclusion',
+		'options'    : '-cycle-algo BFS -comparison inclusion',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5019,9 +5019,9 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (over-approx with -inclusion -merge)',
+		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (over-approx with -comparison inclusion -merge)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
-		'options'    : '-cycle-algo BFS -inclusion -merge',
+		'options'    : '-cycle-algo BFS -comparison inclusion -merge',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5079,9 +5079,9 @@ Constraint nature                       : good
 		# Test since               : 2020/09/09
 		# Last modified            : 2020/09/10
 		# Test for IMITATOR version: 3
-		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (invalid with -inclusion -depth-limit)',
+		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (invalid with -comparison inclusion -depth-limit)',
 		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
-		'options'    : '-cycle-algo BFS -inclusion -depth-limit 3',
+		'options'    : '-cycle-algo BFS -comparison inclusion -depth-limit 3',
 		'expectations' : [
 			{'file': 'exLoopIncl.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -6254,7 +6254,7 @@ Constraint nature             : good
 	{
 		'purpose'    : 'Test PDFC: basic example with disjunction (no inclusion)',
 		'input_files': ['PDFC5.imi', 'PDFC-deadlockfree.imiprop'],
-		'options'    : '-no-inclusion',
+		'options'    : '-comparison equality',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -6289,7 +6289,7 @@ Constraint nature             : good
 	{
 		'purpose'    : 'Test PDFC: basic example with disjunction (explicit inclusion)',
 		'input_files': ['PDFC5.imi', 'PDFC-deadlockfree.imiprop'],
-		'options'    : '-inclusion',
+		'options'    : '-comparison inclusion',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -6497,7 +6497,7 @@ END CONSTRAINT
 	{
 		'purpose'    : 'Test the convex inverse method (SIMOP)',
 		'input_files': ['simop.imi', 'simop.pi0'],
-		'options'    : '-merge -no-random -inclusion',
+		'options'    : '-merge -no-random -comparison inclusion',
 		'expectations' : [
 			{'file': 'simop.res' , 'content' : """
 BEGIN CONSTRAINT
