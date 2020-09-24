@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/09/23
+ * Last modified     : 2020/09/24
  *
  ************************************************************)
 
@@ -991,20 +991,20 @@ class imitator_options =
 				| Some Inclusion_check
 				| Some Including_check
 				| Some Double_inclusion_check
-					-> print_warning ("The `-comparator` option value may not preserve the correctness of this analysis. Result may be incorrect.");
+					-> print_warning ("The `-comparison` option value may not preserve the correctness of this analysis. Result may be incorrect.");
 				| _ -> ()
 				end;
 			
 			| Some property ->
 				if not (AlgorithmOptions.is_state_comparison_correct property self#comparison_operator) then(
-					print_warning ("The `-comparator` option value may not preserve the correctness of this analysis. Result may be incorrect.");
+					print_warning ("The `-comparison` option value may not preserve the correctness of this analysis. Result may be incorrect.");
 				);
 (*				
 				(*** HACK: hard-coded special case for NDFS + Including_check => also a warning! ***)
 				begin
 				match property.property, comparison_operator with
 				| Cycle_through _ , Some Including_check when cycle_algorithm = Some NDFS ->
-					print_warning ("The `-comparator` option value may not preserve the correctness of this NDFS analysis. Result may be incorrect.");
+					print_warning ("The `-comparison` option value may not preserve the correctness of this NDFS analysis. Result may be incorrect.");
 				| _ -> ()
 				end;*)
 			end;
