@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/09/23
+ * Last modified     : 2020/09/24
  *
  ************************************************************)
 
@@ -311,7 +311,7 @@ begin match property_option, options#imitator_mode with
 			
 			let overwritten_default_state_comparison =
 			
-			(*** HACK! Hard-code / force the default value for cycle algorithms ***)
+(*			(*** HACK! Hard-code / force the default value for cycle algorithms ***)
 			match property.property with
 			| Cycle_through _ ->
 				let result =
@@ -320,7 +320,7 @@ begin match property_option, options#imitator_mode with
 					| BFS  -> Including_check
 				in result
 			
-			| _ ->
+			| _ ->*)
 			(* Rely on default value *)
 				default_state_comparison
 				

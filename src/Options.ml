@@ -999,14 +999,14 @@ class imitator_options =
 				if not (AlgorithmOptions.is_state_comparison_correct property self#comparison_operator) then(
 					print_warning ("The `-comparator` option value may not preserve the correctness of this analysis. Result may be incorrect.");
 				);
-				
+(*				
 				(*** HACK: hard-coded special case for NDFS + Including_check => also a warning! ***)
 				begin
 				match property.property, comparison_operator with
 				| Cycle_through _ , Some Including_check when cycle_algorithm = Some NDFS ->
 					print_warning ("The `-comparator` option value may not preserve the correctness of this NDFS analysis. Result may be incorrect.");
 				| _ -> ()
-				end;
+				end;*)
 			end;
 
 			

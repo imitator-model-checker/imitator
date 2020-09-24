@@ -1334,9 +1334,7 @@ We summarize algorithms in \cref{table:summary:algorithms}, recalling the basic 
 			\hline
 			Cycle                  & \styleIMI{Cycle}                            & \cellNo{} & \styleOption{equality}  \\
 			\hline
-			Accepting cycle (NDFS)        & \styleIMI{CycleThrough(state\_predicate)} & \cellNo{} & \styleOption{equality}  \\
-			\hline
-			Accepting cycle (BFS)        & \styleIMI{CycleThrough(state\_predicate)} & \cellNo{} & \styleOption{including}  \\
+			Accepting cycle        & \styleIMI{CycleThrough(state\_predicate)} & \cellNo{} & \styleOption{equality}  \\
 			\hline
 			Non-Zeno cycles        & \styleIMI{NZCycle}                            & \cellNo{} & \styleOption{equality}  \\
 
@@ -1876,7 +1874,7 @@ This explains why this option, while preserving the correctness, is not default 
 \end{description}
 
 In reachability algorithms (\cref{ss:mode:EFsynth,ss:mode:EF,ss:mode:EFmin,ss:mode:EFmax,ss:mode:EFopt,ss:mode:prop,ss:mode:PRP}), \styleOption{-comparison inclusion} is usually enabled by default; however, for loop synthesis algorithms (\cref{ss:mode:LoopSynth,ss:mode:Zeno}), \styleOption{-comparison equality} is used, as inclusion may introduce spurious cycles.
-Note that the BFS cycle synthesis uses \styleOption{-comparison including} as default.
+%
 See \cref{table:summary:options} for the default behavior of algorithms \wrt{} this option.
 
 

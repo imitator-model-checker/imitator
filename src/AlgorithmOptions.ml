@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2020/08/25
- * Last modified     : 2020/09/23
+ * Last modified     : 2020/09/24
  *
  ************************************************************)
 
@@ -185,8 +185,7 @@ let is_state_comparison_correct (abstract_property : AbstractProperty.abstract_p
 	(** Accepting infinite-run (cycle) through a state predicate *)
 	| Cycle_through _
 		(* No inclusion allowed except old <= new *)
-		(*** WARNING: for NDFS, Including_check is not allowed; this is handled directly in Options.ml! ***)
-		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check || state_comparison_operator = Including_check
+		-> state_comparison_operator = Equality_check || state_comparison_operator = No_check
 	
 	(** Infinite-run (cycle) with non-Zeno assumption *)
 	| NZ_Cycle
