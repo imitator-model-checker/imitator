@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/09/23
+# Last modified     : 2020/09/24
 #************************************************************
 
 
@@ -4639,6 +4639,62 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2020/09/24
+		# Last modified            : 2020/09/24
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with no real loop (1a)',
+		'input_files': ['testNoCycle-1a.imi', 'loop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testNoCycle-1a.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/24
+		# Last modified            : 2020/09/24
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with no real loop (1b)',
+		'input_files': ['testNoCycle-1b.imi', 'loop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testNoCycle-1b.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation',
 		'input_files': ['PDFC5.imi', 'PDFC-loop.imiprop'],
 		'options'    : '-cycle-algo BFS',
@@ -4912,6 +4968,62 @@ BEGIN CONSTRAINT
 OR
   5 > p
 & p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/24
+		# Last modified            : 2020/09/24
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: simple example with no real loop (1a)',
+		'input_files': ['testNoCycle-1a.imi', 'acceptingLoop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testNoCycle-1a.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/24
+		# Last modified            : 2020/09/24
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: simple example with no real loop (1b)',
+		'input_files': ['testNoCycle-1b.imi', 'acceptingLoop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testNoCycle-1b.res' , 'content' : """
+BEGIN CONSTRAINT
+False
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -5314,6 +5426,62 @@ Constraint nature                       : good
 		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/24
+		# Last modified            : 2020/09/24
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynthNDFS: simple example with no real loop (1a)',
+		'input_files': ['testNoCycle-1a.imi', 'acceptingLoop.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testNoCycle-1a.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/24
+		# Last modified            : 2020/09/24
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynthNDFS: simple example with no real loop (1b)',
+		'input_files': ['testNoCycle-1b.imi', 'acceptingLoop.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testNoCycle-1b.res' , 'content' : """
 BEGIN CONSTRAINT
 False
 END CONSTRAINT

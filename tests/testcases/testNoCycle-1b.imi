@@ -1,0 +1,77 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy example for which there is no infinite run; but (wrong) abstractions might lead to finding one.
+ *
+ * Description     : Toy example for which there is no infinite run; but (wrong) abstractions might lead to finding one.
+ * Correctness     : Accepting cycle
+ * Source          : Own work
+ * Author          : Jaco Van de Pol
+ * Modeling        : Jaco Van de Pol
+ * Input by        : Jaco Van de Pol, Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/09/24
+ * Last modified   : 2020/09/24
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+
+loc l1: invariant True
+	when True goto l3;
+	when True goto l4;
+
+accepting loc l2: invariant True
+	when x < 1 goto l3;
+
+loc l3: invariant True
+	when x >= 1 & x = p goto l2;
+
+loc l4: invariant True
+	when True goto l2;
+
+end
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
