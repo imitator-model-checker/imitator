@@ -36,7 +36,7 @@ synclabs: a;
 
 loc l1: invariant x <= 1
 	when x = 1 do {x := 0} goto l1;
-	when y >= p do {y := 0} goto lGoal;
+	when x = 0 & y >= p do {x := 0, y := 0} goto lGoal;
 
 loc lGoal: invariant True
 
