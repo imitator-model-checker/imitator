@@ -424,6 +424,8 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		(***********************************************************)
 		let mark_blue_or_green thestate thedepth =
 			(* mark only if not blue due to lookahead *)
+			(* if the green colour is not used (option no_green),
+				then the state is necessarily marked blue *)
 			if not (table_test blue thestate) then(
 				let successors = StateSpace.get_successors state_space thestate
 					and is_green astate = table_test green astate
@@ -600,7 +602,8 @@ table_rem green thestate;
 				print_message Verbose_standard("---------------- until depth " ^ (string_of_int current_depth) ^ " ----------------");
 				(* Clear the colours of previous iteration *)
 				Hashtbl.clear cyan;
-				Hashtbl.clear green; (* We keep the blue states from the previous run*)
+				Hashtbl.clear green; (* We keep the blue states from the previous run unless we do not use the green colour *)
+				if options#no_green then Hashtbl.clear blue;
 				greendepth := IntMap.empty;
 				processed_blue <- 0;
 				cyclecount <-0;
