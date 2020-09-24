@@ -25,6 +25,10 @@ The property syntax is entirely new.
 ### Export
 * By default, all files are now exported in the current directory instead of the model directory. Option `-output-prefix` can still be used to change the directory.
 
+### Benchmarks
+* Created a new `Unsolvable` section in the `benchmarks` repository, containing very simple models for which IMITATOR cannot (yet) provide a result.
+
+
 
 *******************************************************
 # release 2.12.1 (2019-10-01)
