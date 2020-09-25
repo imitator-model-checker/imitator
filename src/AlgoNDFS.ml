@@ -179,17 +179,6 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		(***********************)
 		(* printing the queues *)
 		(***********************)
-(* 		let printqueue colour thequeue =
-			if verbose_mode_greater Verbose_low then(
-				let rec r_printqueue thequeue = match thequeue with
-					| [] -> "";
-					| state_index::body  ->
-						(string_of_int state_index) ^ " " ^ (r_printqueue body);
-				in print_message Verbose_low("Queue " ^ colour ^ " : [ "
-						^ r_printqueue thequeue ^ "]")
-			);
-		in
-*)
         let printtable colour thetable =
             if verbose_mode_greater Verbose_medium then(
                     let printrecord state_index u rest =
@@ -252,14 +241,15 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		let same_parameter_projection state_index1 state_index2 =
 			let constr1 = find_or_compute_pzone state_index1 in
 			let constr2 = find_or_compute_pzone state_index2 in
-			print_message Verbose_high ("Projected constraint 1: \n"
-				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
-				^ " state: "
-				^ (StateSpace.string_of_state_index state_index1));
-			print_message Verbose_high ("Projected constraint 2: \n"
-				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr2
-				^ " state: "
-				^ (StateSpace.string_of_state_index state_index2));
+			if verbose_mode_greater Verbose_high then(
+				print_message Verbose_high ("Projected constraint 1: \n"
+					^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
+					^ " state: "
+					^ (StateSpace.string_of_state_index state_index1));
+				print_message Verbose_high ("Projected constraint 2: \n"
+					^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr2
+					^ " state: "
+					^ (StateSpace.string_of_state_index state_index2)));
 			LinearConstraint.p_is_equal constr1 constr2
 		in
 
@@ -269,14 +259,15 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		let smaller_parameter_projection state_index1 state_index2 =
 			let constr1 = find_or_compute_pzone state_index1 in
 			let constr2 = find_or_compute_pzone state_index2 in
-			print_message Verbose_high ("Projected constraint 1: \n"
-				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
-				^ " state: "
-				^ (StateSpace.string_of_state_index state_index1));
-			print_message Verbose_high ("Projected constraint 2: \n"
-				^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr2
-				^ " state: "
-				^ (StateSpace.string_of_state_index state_index2));
+			if verbose_mode_greater Verbose_high then(
+				print_message Verbose_high ("Projected constraint 1: \n"
+					^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr1
+					^ " state: "
+					^ (StateSpace.string_of_state_index state_index1));
+				print_message Verbose_high ("Projected constraint 2: \n"
+					^ LinearConstraint.string_of_p_linear_constraint model.variable_names constr2
+					^ " state: "
+					^ (StateSpace.string_of_state_index state_index2)));
 			LinearConstraint.p_is_leq constr1 constr2
 		in
 
@@ -337,12 +328,13 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		let subsumes bigstate_index smallstate_index =
 			(* Does bigstate subsume (or equal) smallstate? *)
 			(* Precondition: the states have already the same location *)
-			print_message Verbose_high "Compare (big?) state:";
-			print_message Verbose_high (ModelPrinter.string_of_state model
-						(StateSpace.get_state state_space bigstate_index));
-			print_message Verbose_high "with (small?) state:";
-			print_message Verbose_high (ModelPrinter.string_of_state model
-						(StateSpace.get_state state_space smallstate_index));
+			if verbose_mode_greater Verbose_high then(
+				print_message Verbose_high "Compare (big?) state:";
+				print_message Verbose_high (ModelPrinter.string_of_state model
+							(StateSpace.get_state state_space bigstate_index));
+				print_message Verbose_high "with (small?) state:";
+				print_message Verbose_high (ModelPrinter.string_of_state model
+							(StateSpace.get_state state_space smallstate_index)));
 			let bigstate_constr = (StateSpace.get_state state_space bigstate_index).px_constraint in
 			let smallstate_constr = (StateSpace.get_state state_space smallstate_index).px_constraint in
 			(LinearConstraint.px_is_leq smallstate_constr bigstate_constr)
@@ -355,7 +347,8 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
                 else let similar_states = StateSpace.get_comparable_states state_space smallstate
                 		and check_sub bigstate = (table_test setbig bigstate) && (subsumes bigstate smallstate)
 					in begin
-						print_message Verbose_high ("setsubsumes with " ^ string_of_int (List.length similar_states) ^ " states");
+						if verbose_mode_greater Verbose_high then(
+							print_message Verbose_high ("setsubsumes with " ^ string_of_int (List.length similar_states) ^ " states"));
 						List.exists check_sub similar_states
 					end
 		in
@@ -367,7 +360,8 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				else let similar_states = StateSpace.get_comparable_states state_space bigstate
 						and check_sub smallstate = (table_test setsmall smallstate) && (subsumes bigstate smallstate)
 					in begin
-						print_message Verbose_high ("subsumesset with " ^ string_of_int (List.length similar_states) ^ " states");
+						if verbose_mode_greater Verbose_high then(
+							print_message Verbose_high ("subsumesset with " ^ string_of_int (List.length similar_states) ^ " states"));
 						List.exists check_sub similar_states
 					end
 		in
@@ -380,7 +374,8 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 						and check_sub bigstate = (table_test setbig bigstate) && (subsumes bigstate smallstate)
 							&& (same_parameter_projection bigstate smallstate)
 					in begin
-						print_message Verbose_high ("layersetsubsumes with " ^ string_of_int (List.length similar_states) ^ " states");
+						if verbose_mode_greater Verbose_high then(
+							print_message Verbose_high ("layersetsubsumes with " ^ string_of_int (List.length similar_states) ^ " states"));
 						List.exists check_sub similar_states
 					end
 		in
@@ -471,9 +466,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 			if not (table_test green thestate)
 			then true
 			else( (* it is green => check the depth if recomputation is required *)
-(* 				let print_depth astate adepth = print_string ("(" ^ (string_of_int astate) ^ "," ^ (string_of_int adepth)) in
-				print_message Verbose_high (IntMap.iter print_depth !greendepth);
- *)				if options#recompute_green &&
+ 				if options#recompute_green &&
 					(IntMap.find thestate !greendepth) > thedepth
 				then( (* the reexplored state must also be removed from previous red exploration *)
 					table_rem green thestate;
@@ -536,12 +529,13 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 				let rec process_sucs suclist = match suclist with
 					| [] -> ();
 					| suc_id::body ->
-						print_message Verbose_medium("Handling "
-							^ (if State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space suc_id)
-								then "accepting " else "")
-							^ "successor "
-							^ (ModelPrinter.string_of_state model
-								(StateSpace.get_state state_space suc_id)));
+						if verbose_mode_greater Verbose_medium then(
+							print_message Verbose_medium("Handling "
+								^ (if State.match_state_predicate model.is_accepting state_predicate (StateSpace.get_state state_space suc_id)
+									then "accepting " else "")
+								^ "successor "
+								^ (ModelPrinter.string_of_state model
+									(StateSpace.get_state state_space suc_id))));
 						if (filterdfs thestate suc_id (thestate_depth + 1)) then (
 							if (testaltdfs thestate suc_id) then (alternativedfs suc_id thestate_depth)
 							else
@@ -650,10 +644,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 						else print_highlighted_message Shell_bold Verbose_standard
 								("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
-						print_message Verbose_low
-							(ModelPrinter.string_of_state model
-								(StateSpace.get_state state_space astate));
-						print_projection Verbose_low astate;
+						if verbose_mode_greater Verbose_low then(
+							print_message Verbose_medium
+								(ModelPrinter.string_of_state model
+									(StateSpace.get_state state_space astate));
+							print_projection Verbose_low astate);
 						(* For synthesis: we do not stop immediately *)
 						if (property.synthesis_type = Synthesis) then
 							termination_status <- Some Regular_termination
@@ -699,10 +694,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 										("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 								else print_highlighted_message Shell_bold Verbose_standard
 									("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
-								print_message Verbose_low
-									(ModelPrinter.string_of_state model
-										(StateSpace.get_state state_space astate));
-								print_projection Verbose_low astate;
+								if verbose_mode_greater Verbose_low then (
+									print_message Verbose_medium
+										(ModelPrinter.string_of_state model
+											(StateSpace.get_state state_space astate));
+									print_projection Verbose_low astate);
 								(* For synthesis: we do not stop immediately *)
 								termination_status <- Some Target_found;
 								let pzone = find_or_compute_pzone astate in
@@ -758,10 +754,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 						else print_highlighted_message Shell_bold Verbose_standard
 								("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
-						print_message Verbose_low
-							(ModelPrinter.string_of_state model
-								(StateSpace.get_state state_space astate));
-						print_projection Verbose_low astate;
+						if verbose_mode_greater Verbose_low then (
+							print_message Verbose_medium
+								(ModelPrinter.string_of_state model
+									(StateSpace.get_state state_space astate));
+							print_projection Verbose_low astate);
 						(* For synthesis: we do not stop immediately *)
 						if (property.synthesis_type = Synthesis) then
 							termination_status <- Some Regular_termination
@@ -808,10 +805,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 										("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 								else print_highlighted_message Shell_bold Verbose_standard
 									("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
-								print_message Verbose_low
-									(ModelPrinter.string_of_state model
-										(StateSpace.get_state state_space astate));
-								print_projection Verbose_low astate;
+								if verbose_mode_greater Verbose_low then (
+									print_message Verbose_medium
+										(ModelPrinter.string_of_state model
+											(StateSpace.get_state state_space astate));
+									print_projection Verbose_low astate);
 								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
@@ -882,10 +880,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 										("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 								else print_highlighted_message Shell_bold Verbose_standard
 										("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
-								print_message Verbose_low
-									(ModelPrinter.string_of_state model
-										(StateSpace.get_state state_space astate));
-								print_projection Verbose_low astate;
+								if verbose_mode_greater Verbose_low then (
+									print_message Verbose_medium
+										(ModelPrinter.string_of_state model
+											(StateSpace.get_state state_space astate));
+									print_projection Verbose_low astate);
 								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
@@ -932,10 +931,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 												("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 										else print_highlighted_message Shell_bold Verbose_standard
 											("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
-										print_message Verbose_low
-											(ModelPrinter.string_of_state model
-												(StateSpace.get_state state_space astate));
-										print_projection Verbose_low astate;
+										if verbose_mode_greater Verbose_low then (
+											print_message Verbose_medium
+												(ModelPrinter.string_of_state model
+													(StateSpace.get_state state_space astate));
+											print_projection Verbose_low astate);
 										(* For synthesis: we do not stop immediately *)
 										if (property.synthesis_type = Synthesis) then
 											termination_status <- Some Regular_termination
@@ -1009,10 +1009,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 										("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 								else print_highlighted_message Shell_bold Verbose_standard
 										("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
-								print_message Verbose_low
-									(ModelPrinter.string_of_state model
-										(StateSpace.get_state state_space astate));
-								print_projection Verbose_low astate;
+								if verbose_mode_greater Verbose_low then (
+									print_message Verbose_medium
+										(ModelPrinter.string_of_state model
+											(StateSpace.get_state state_space astate));
+									print_projection Verbose_low astate);
 								(* For synthesis: we do not stop immediately *)
 								if (property.synthesis_type = Synthesis) then
 									termination_status <- Some Regular_termination
@@ -1060,10 +1061,11 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 												("Cycle found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth))
 										else print_highlighted_message Shell_bold Verbose_standard
 											("Cycle " ^ (string_of_int total_cyclecount) ^ " found at state " ^ (string_of_int astate) ^ ", depth " ^ (string_of_int astate_depth));
-										print_message Verbose_low
-											(ModelPrinter.string_of_state model
-												(StateSpace.get_state state_space astate));
-										print_projection Verbose_low astate;
+										if verbose_mode_greater Verbose_low then (
+											print_message Verbose_medium
+												(ModelPrinter.string_of_state model
+													(StateSpace.get_state state_space astate));
+											print_projection Verbose_low astate);
 										(* For synthesis: we do not stop immediately *)
 										if (property.synthesis_type = Synthesis) then
 											termination_status <- Some Regular_termination
