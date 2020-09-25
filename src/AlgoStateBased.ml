@@ -2168,6 +2168,10 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	(* Get the location state_n_plus_1 *)
 	let location_n_plus_1 = target_state.global_location in
 	
+	if verbose_mode_greater Verbose_medium then(
+		print_message Verbose_medium ("Location n+1: " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names false location_n_plus_1));
+	);
+	
 (*	(* Get the elapsed and stopped clocks (+ other variables) *)
 	let stopped_clocks_n_plus_1, elapsing_clocks_n_plus_1 = compute_stopwatches location_n_plus_1 in
 	let all_stopped_variables_n_plus_1 = List.rev_append stopped_clocks_n_plus_1 model.parameters in
@@ -2215,6 +2219,9 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	
 	(* To make things more human-friendly, we change the initial valuation only if it did not belong to the admissible "initial points" before time elapsing *)
 	
+	(* Print some information *)
+	print_message Verbose_high ("Trying to make the valuation more friendly…");
+	
 	let concrete_target_px_valuation_before_time_elapsing = 
 	(* If intersection is empty, find new valuation *)
 	if LinearConstraint.px_is_false (
@@ -2224,10 +2231,16 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 			z_n_plus_1
 		]
 	) then(
+		(* Print some information *)
+		print_message Verbose_high ("Oops! Intersection of the chosen point with z_n_plus_1 is empty… re-choose a valuation within z_n_plus_1…");
+		
 		(* Re-choose a valuation in this constraint *)
 		LinearConstraint.px_exhibit_point z_n_plus_1
 	(* Otherwise, keep the original valuation *)
 	)else(
+		(* Print some information *)
+		print_message Verbose_high ("Intersection of the chosen point with z_n_plus_1 is non-empty… keep it.");
+
 		concrete_target_px_valuation
 	)
 	in
