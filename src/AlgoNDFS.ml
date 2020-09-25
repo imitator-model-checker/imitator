@@ -581,11 +581,14 @@ table_rem green thestate;
 				current_depth <- depth_value;
 				the_depth_step <- 1
 			| None, Some step_value ->
-				current_depth <- 1;
-				the_depth_step <- step_value
+				current_depth <- 0;
+				if step_value > 0 then the_depth_step <- step_value
+				else the_depth_step <- 1
 			| Some depth_value, Some step_value ->
 				current_depth <- depth_value;
-				the_depth_step <- step_value);
+				if step_value > 0 then the_depth_step <- step_value
+				else the_depth_step <- 1
+			);
 		
 		max_depth <- (match options#depth_limit with
 						| None -> -1

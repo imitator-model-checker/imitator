@@ -1,15 +1,15 @@
 #!/bin/bash
 
-###########################################
-# Script for generating experiments table #
-# with layers and strategies              #
-# Author: Laure Petrucci                  #
-# Version: 2.2                            #
-# Date: 2020-08-17                       #
-###########################################
+################################################
+# Script for generating experiments table      #
+# with strategies (layers are a script option) #
+# Author: Laure Petrucci                       #
+# Version: 3.0                                 #
+# Date: 2020-09-25                             #
+################################################
 
 function usage {
-	echo -e "\033[1;31musage\033[0m: $0 [-h | [-t timeout] -o table_filename [-S | -i input_models]]"
+	echo -e "\033[1;31musage\033[0m: $0 [-h | [-l] [-t timeout] -o table_filename [-S | -i input_models]]"
 }
 
 function help {
@@ -17,6 +17,7 @@ function help {
 	usage
 	echo -e "\nExecutes the experiments on all models. The result is written in the file specified with the \033[1m-o\033[0m option"
 	echo -e "\n\033[1m-h\033[0m\t\t\tThis help"
+	echo -e "\n\033[1m-l\033[0m\t\t\tExecute exploration with layers"
 	echo -e "\n\033[1m-t timeout\033[0m\t\tUses a specified value for the timeout (in seconds) \033[4m[default: 90]\033[0m"
 	echo -e "\n\033[1m-o table_filename\033[0m\tOutputs the results in a csv file (with separator ;) named \033[4mtable_filename\033[0m"
 	echo -e "\n\033[1m-S\033[0m\t\t\tUses a subset of the models"
@@ -37,7 +38,7 @@ function process_results {
 	echo -n `grep "processed states" $one_result | grep -v Total | cut -d: -f2 | sed -e 's/\[0m//'`' ; ' >> $output_file
 	exceeds_time=`grep "under-approximation" $one_result`
 	if [ -z "$exceeds_time" ]
-	then echo -n `grep "completed after" $one_result | sed -e 's/\[NDFS\] State space exploration completed after //' \
+	then echo -n `grep "completed after" $one_result | sed -e 's/\[Cycle (NDFS)\] State space exploration completed after //' \
 		| sed -e 's/ seconds.//' | sed -e 's/ second.//'  | sed -e 's/\[0m//'` >> $output_file
 	else echo -n "TO" >> $output_file
 	fi
@@ -46,6 +47,7 @@ function process_results {
 # main part of the script
 
 # get the options
+layers= # no layers by default
 timeout=90 # 1.5 minute by default
 output_file=
 exp_dir="tests/acceptingExamples"
@@ -60,8 +62,9 @@ input_files="BRP coffee \
 		Sched2.50.2 simop \
 		spsmall tgcTogether2 \
 		WFAS-BBLS15-det"
-while getopts "ht:o:Si:" opt; do
+while getopts "lht:o:Si:" opt; do
 case $opt in
+	l) layers="-layer" ;;
 	h) help ;;
 	t) timeout=$OPTARG ;;
 	o) output_file=$OPTARG ;;
@@ -81,11 +84,13 @@ then usage
 fi
 
 extension=".${output_file##*.}"
-one_result="`basename $2 $extension`.tmp"
+one_result="`basename $output_file $extension`.tmp"
 rm -f $one_result
 rm -f $output_file
-# table with layers
-echo ' ; ; ; ; No strategy ; ; ; ; ; Subsumption ; ; ; ; ; Ordering ; ; ; ; ; Lookahead ; ; ; ; ; Order+Look ; ; ; ; ; O + L + Sub ; ; ; ;' > $output_file
+# print the command line that was used
+echo $0 $* > $output_file
+# table
+echo ' ; ; ; ; No strategy ; ; ; ; ; Subsumption ; ; ; ; ; AcceptFirst ; ; ; ; ; Lookahead ; ; ; ; ; Accept+Look ; ; ; ; ; A + L + Sub ; ; ; ;' >> $output_file
 echo 'Model ; L ; X ; P ; d ; m ; c ; s ; t ; d ; m ; c ; s ; t ; d ; m ; c ; s ; t ; d ; m ; c ; s ; t ; d ; m ; c ; s ; t ; d ; m ; c ; s ; t' >> $output_file
 for f in $input_files
 	do echo -e "Running experiments for model \033[1;31m$f\033[0m"
@@ -98,32 +103,32 @@ for f in $input_files
 			| sed -e 's/ parameters/ \; /' | sed -e 's/ parameter/ \; /' ` >> $output_file
 	# no strategy
 		echo -e "\twithout strategy"
-		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFS -no-lookahead -no-acceptfirst -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
+		bin/imitator $layers -no-lookahead -no-acceptfirst -no-subsumption -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
 		process_results
 		echo -n ' ; ' >> $output_file
 	# subsumption
 		echo -e "\tsubsumption only"
-		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFSsub -no-lookahead -no-acceptfirst -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
+		bin/imitator $layers -no-lookahead -no-acceptfirst -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
 		process_results
 		echo -n ' ; ' >> $output_file
-	# ordering
-		echo -e "\tordering only"
-		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFS -no-lookahead -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
+	# acceptfirst
+		echo -e "\tacceptfirst only"
+		bin/imitator $layers -no-lookahead -no-subsumption -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
 		process_results
 		echo -n ' ; ' >> $output_file
 	# lookahead
 		echo -e "\tlookahead only"
-		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFS -no-acceptfirst -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
+		bin/imitator $layers -no-acceptfirst -no-subsumption -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
 		process_results
 		echo -n ' ; ' >> $output_file
 	# lookahead + ordering
-		echo -e "\tlookahead and ordering"
-		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFS -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
+		echo -e "\tlookahead and acceptfirst"
+		bin/imitator $layers -no-subsumption -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
 		process_results
 		echo -n ' ; ' >> $output_file
 	# lookahead + ordering + subsumption
-		echo -e "\tsubsumption, lookahead and ordering"
-		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFSsub -time-limit $timeout $exp_dir/$f.imi > $one_result 2> /dev/null
+		echo -e "\tsubsumption, lookahead and acceptfirst"
+		bin/imitator $layers -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
 		process_results
 		echo '' >> $output_file
 	done

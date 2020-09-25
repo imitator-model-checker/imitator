@@ -4,12 +4,12 @@
 # Script for generating experiments table #
 # for iterative deepening                 #
 # Author: Laure Petrucci                  #
-# Version: 1.1                            #
-# Date: 2020-08-17                        #
+# Version: 2.0                            #
+# Date: 2020-09-25                        #
 ###########################################
 
 function usage {
-	echo -e "\033[1;31musage\033[0m: $0 [-h | [-d depth_init] [-s depth_step] [-t timeout] -o table_filename [-S | -i input_models]]"
+	echo -e "\033[1;31musage\033[0m: $0 [-h | [-d depth_init] [-s depth_step] [-l] [-t timeout] -o table_filename [-S | -i input_models]]"
 }
 
 function help {
@@ -17,6 +17,7 @@ function help {
 	usage
 	echo -e "\nExecutes the experiments on all models. The result is written in the file specified with the \033[1m-o\033[0m option"
 	echo -e "\n\033[1m-h\033[0m\t\t\tThis help"
+	echo -e "\n\033[1m-l\033[0m\t\t\tExecute exploration with layers"
 	echo -e "\n\033[1m-t timeout\033[0m\t\tUses a specified value for the timeout (in seconds) \033[4m[default: 90]\033[0m"
 	echo -e "\n\033[1m-d depth_init\033[0m\t\tUses a specified value for the initial depth \033[4m[default: 5]\033[0m"
 	echo -e "\n\033[1m-s depth_step\033[0m\t\tUses a specified value for the step between iterations \033[4m[default: same as depth_init]\033[0m"
@@ -44,7 +45,7 @@ function process_results {
 	in_time=`grep "exact" $one_result`
 	if [ -z "$in_time" ]
 	then echo -n "TO" >> $output_file
-	else echo -n `grep "completed after" $one_result | tail -n 1 | sed -e 's/\[NDFS\] State space exploration completed after //' \
+	else echo -n `grep "completed after" $one_result | tail -n 1 | sed -e 's/\[Cycle (NDFS)\] State space exploration completed after //' \
 		| sed -e 's/ seconds.//' | sed -e 's/ second.//'  | sed -e 's/\[0m//'` >> $output_file
 	fi
 }
@@ -52,6 +53,7 @@ function process_results {
 # main part of the script
 
 # get the options
+layers= # no layers by default
 timeout=90 # 1.5 minute by default
 output_file=
 depth_init=5 # initial depth of 5 by default
@@ -69,8 +71,9 @@ input_files="BRP coffee \
 		Sched2.50.2 simop \
 		spsmall tgcTogether2 \
 		WFAS-BBLS15-det"
-while getopts "hd:s:t:o:Si:" opt; do
+while getopts "lhd:s:t:o:Si:" opt; do
 case $opt in
+	l) layers="-layer" ;;
 	h) help ;;
 	d) depth_init=$OPTARG ;;
 	s) depth_step=$OPTARG ; new_step=true;;
@@ -97,12 +100,15 @@ then depth_step=$depth_init
 fi
 
 extension=".${output_file##*.}"
-one_result="`basename $2 $extension`.tmp"
+one_result="`basename $output_file $extension`.tmp"
 rm -f $one_result
 rm -f $output_file
+
+# print the command line that was used
+echo $0 $* > $output_file
+echo "initial depth $depth_init, step $depth_step" >> $output_file
 # table with iterative depth
-echo ' ; ; ; ; No layers ; ; ; ; ; Layers ; ; ; ;' >> $output_file
-echo 'Model ; L ; X ; P ; d ; m ; c ; s ; t ; d ; m ; c ; s ; t' >> $output_file
+echo 'Model ; L ; X ; P ; d ; m ; c ; s ; t' >> $output_file
 for f in $input_files
 	do echo -e "Running experiments for model \033[1;31m$f\033[0m"
 		bin/imitator -mode checksyntax -verbose low $exp_dir/$f.imi > $one_result 2> /dev/null
@@ -112,14 +118,8 @@ for f in $input_files
 		echo -n `grep -e locations $one_result | cut -d, -f2,5,7 | sed -e 's/^ //' \
 			| sed -e 's/ locations, / \; /' | sed -e 's/ clock variables, / \; /' \
 			| sed -e 's/ parameters/ \; /' | sed -e 's/ parameter/ \; /' ` >> $output_file
-	# no layers
-		echo -e "\twithout layers"
-		bin/imitator -mode AccLoopSynthNDFS -explOrder NDFSsub -time-limit $timeout -depth-init $depth_init -step $depth_step $exp_dir/$f.imi > $one_result 2> /dev/null
-		process_results
-		echo -n ' ; ' >> $output_file
-	# layers
-		echo -e "\twith layers"
-		bin/imitator -mode AccLoopSynthNDFS -explOrder layerNDFSsub -time-limit $timeout -depth-init $depth_init -step $depth_step $exp_dir/$f.imi > $one_result 2> /dev/null
+	# iterative deepening
+		bin/imitator $layers -time-limit $timeout -depth-init $depth_init -depth-step $depth_step $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
 		process_results
 		echo '' >> $output_file
 	done

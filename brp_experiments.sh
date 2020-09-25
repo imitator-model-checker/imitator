@@ -26,13 +26,15 @@ execute_imi "-mergeq -comparison inclusion $exp_dir/brp_Channels.imi $exp_dir/br
 execute_imi "-mergeq -comparison inclusion $exp_dir/brp_RC.imi $exp_dir/brp_RC.imiprop"
 execute_imi "-mergeq -comparison inclusion $exp_dir/brp_RC_MAX3.imi $exp_dir/brp_RC.imiprop"
 execute_imi "-mergeq -comparison inclusion $exp_dir/brp_RC_MAX4.imi $exp_dir/brp_RC.imiprop"
-execute_imi "-mergeq -comparison inclusion $exp_dir/brp_RC_MAX20.imi $exp_dir/brp_RC.imiprop"
+# LP: commented out the next line that takes too long
+# execute_imi "-mergeq -comparison inclusion $exp_dir/brp_RC_MAX20.imi $exp_dir/brp_RC.imiprop"
 
 # experiments of section 6.2
 echo -e '\e[42m                              \e[0m'
 echo -e '\e[42m  Experiments of section 6.2  \e[0m'
 echo -e '\e[42m                              \e[0m'
 execute_imi "$exp_dir/brp_RC.imi $exp_dir/accepting.imiprop -depth-limit=20"
+execute_imi "$exp_dir/brp_RC_R1.imi $exp_dir/accepting.imiprop -depth-init=10 -depth-step=5"
 #LP: strange results for the next two lines
 # execute_imi "$exp_dir/brp_RC_loop20.imi $exp_dir/accepting.imiprop -depth-limit=40"
 # execute_imi "$exp_dir/brp_RC_loop40.imi $exp_dir/accepting.imiprop -depth-limit=45"
