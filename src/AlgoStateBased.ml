@@ -1025,8 +1025,6 @@ let constraint_zone_predecessor_g_u
 	(updates_n_minus_1 : AbstractModel.clock_updates list)
 	(zn : LinearConstraint.px_linear_constraint)
 	(time_polyhedron : LinearConstraint.pxd_linear_constraint)
-(*	(variables_elapse_n : Automaton.variable_index list)
-	(variables_constant_n : Automaton.variable_index list)*)
 	gn
 	(updates_n : AbstractModel.clock_updates list)
 	(zn_plus_1 : LinearConstraint.px_linear_constraint)
@@ -2263,11 +2261,11 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		let continuous_guard_n = LinearConstraint.pxd_intersection continuous_guards_n in
 		
 
-		(*** BEGIN OLD VERSION (< 2020/09) ***)
+(*		(*** BEGIN OLD VERSION (< 2020/09) ***)
 		(* Get the elapsed and stopped clocks (+ other variables) *)
 		let stopped_clocks_n, elapsing_clocks_n = compute_stopwatches location_n in
 		let all_stopped_variables_n = List.rev_append stopped_clocks_n model.parameters in
-		(*** END OLD VERSION (< 2020/09) ***)
+		(*** END OLD VERSION (< 2020/09) ***)*)
 		
 		(* Create the time polyhedron depending on the clocks *)
 		let time_polyhedron = compute_time_polyhedron Backward location_n in
@@ -2285,8 +2283,6 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 			(* Un-1 *) updates_n_minus_1
 			(* Zn *)   z_n
 			(* time polyhedron *)time_polyhedron
-(*			(* tn *)    elapsing_clocks_n
-			(* nontn *) all_stopped_variables_n*)
 			(* gn *)   continuous_guard_n
 			(*** NOTE: a bit twice the work here, as they were processed by get_updates_in_combined_transition ***)
 			(* Un *)   [clock_updates]
