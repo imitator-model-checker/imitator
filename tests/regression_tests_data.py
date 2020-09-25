@@ -5597,11 +5597,11 @@ Constraint nature                       : good
 		'expectations' : [
 			{'file': 'testNDFS-2.res' , 'content' : """
 BEGIN CONSTRAINT
- p = 4
+ p = 2
 OR
   p = 1
 OR
-  p = 2
+  p = 4
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -5805,9 +5805,9 @@ Constraint nature                       : good
 		'expectations' : [
 			{'file': 'testEFaccepting.res' , 'content' : """
 BEGIN CONSTRAINT
-  p = 4
+  p = 2
  OR
-   p = 2
+   p = 4
 
 END CONSTRAINT
 

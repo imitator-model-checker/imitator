@@ -138,7 +138,6 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 		(**************************************)
 		(* variable for the synthesis results *)
 		(**************************************)
-		let constraint_list = ref [] in (* list of results found *)
 		let collected_constr = ref (LinearConstraint.false_p_nnconvex_constraint()) in
 
 
@@ -654,8 +653,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 							termination_status <- Some Regular_termination
 						else termination_status <- Some Target_found;
 						let pzone = find_or_compute_pzone astate in
-						constraint_list := pzone::(!constraint_list);
-						collected_constr := LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
+						LinearConstraint.p_nnconvex_p_union_assign !collected_constr pzone;
 						if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 						(* table_add blue astate; *)
 						table_add blue thestate;
@@ -702,8 +700,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								(* For synthesis: we do not stop immediately *)
 								termination_status <- Some Target_found;
 								let pzone = find_or_compute_pzone astate in
-								constraint_list := pzone::(!constraint_list);
-								collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
+								LinearConstraint.p_nnconvex_p_union_assign !collected_constr pzone;
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 							in
 							let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
@@ -764,8 +761,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 							termination_status <- Some Regular_termination
 						else termination_status <- Some Target_found;
 						let pzone = find_or_compute_pzone astate in
-						constraint_list := pzone::(!constraint_list);
-						collected_constr := LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
+						LinearConstraint.p_nnconvex_p_union_assign !collected_constr pzone;
 						if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 						(* the state where the lookahead has found a cycle is now set blue *)
 						(* table_add blue astate; *)
@@ -815,8 +811,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 									termination_status <- Some Regular_termination
 								else termination_status <- Some Target_found;
 								let pzone = find_or_compute_pzone astate in
-								constraint_list := pzone::(!constraint_list);
-								collected_constr :=	LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
+								LinearConstraint.p_nnconvex_p_union_assign !collected_constr pzone;
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 							in
 							let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
@@ -890,8 +885,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 									termination_status <- Some Regular_termination
 								else termination_status <- Some Target_found;
 								let pzone = find_or_compute_pzone astate in
-								constraint_list := pzone::(!constraint_list);
-								collected_constr := LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
+								LinearConstraint.p_nnconvex_p_union_assign !collected_constr pzone;
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 								(* the state where the lookahead has found a cycle is now set blue *)
 								(* table_add blue astate; *)
@@ -941,8 +935,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 											termination_status <- Some Regular_termination
 										else termination_status <- Some Target_found;
 										let pzone = find_or_compute_pzone astate in
-										constraint_list := pzone::(!constraint_list);
-										collected_constr := LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
+										LinearConstraint.p_nnconvex_p_union_assign !collected_constr pzone;
 									if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 									in
 									let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
@@ -1019,8 +1012,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 									termination_status <- Some Regular_termination
 								else termination_status <- Some Target_found;
 								let pzone = find_or_compute_pzone astate in
-								constraint_list := pzone::(!constraint_list);
-								collected_constr := LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
+								LinearConstraint.p_nnconvex_p_union_assign !collected_constr pzone;
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 								(* the state where the lookahead has found a cycle is now set blue *)
 								(* table_add blue astate; *)
@@ -1071,8 +1063,7 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 											termination_status <- Some Regular_termination
 										else termination_status <- Some Target_found;
 										let pzone = find_or_compute_pzone astate in
-										constraint_list := pzone::(!constraint_list);
-										collected_constr := LinearConstraint.p_nnconvex_constraint_of_p_linear_constraints !constraint_list;
+										LinearConstraint.p_nnconvex_p_union_assign !collected_constr pzone;
 									if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 									in
 									let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
