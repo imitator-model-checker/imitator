@@ -554,13 +554,14 @@ table_rem green thestate;
 				else (process_sucs successors;
 					postdfs thestate thestate_depth)
 			) else (* thestate is not explored because it is either too deep or covered by the constraint already *)
-				if not depth_ok &&
-					not (table_test blue thestate) &&
-					not options#no_green then (
-					table_add green thestate;
+				if not depth_ok && not (table_test blue thestate) then (
+					if options#no_green then (
+						table_add blue thestate;
+					) else
+					( table_add green thestate;
 					if options#recompute_green
 					then greendepth := IntMap.add thestate thestate_depth !greendepth;
-					()
+					() )
 				)
 		)
 		in
