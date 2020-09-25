@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/09/23
+ * Last modified     : 2020/09/25
  *
  ************************************************************)
 
@@ -1030,6 +1030,7 @@ let constraint_zone_predecessor_g_u
 	gn
 	(updates_n : AbstractModel.clock_updates list)
 	(zn_plus_1 : LinearConstraint.px_linear_constraint)
+		: LinearConstraint.px_linear_constraint
 		=
 	(* Retrieve the model *)
 	let model = Input.get_model() in
@@ -1085,7 +1086,13 @@ let constraint_zone_predecessor_g_u
 	(*** BEGIN OLD VERSION (< 2020/09) ***)
 (* 	LinearConstraint.pxd_time_past_assign variables_elapse_n variables_constant_n pxd_linear_constraint; *)
 	(*** END OLD VERSION (< 2020/09) ***)
-	LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron pxd_linear_constraint time_polyhedron;
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("The time polyhedron is: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_polyhedron) ^ "");
+	);
+
+	LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron time_polyhedron pxd_linear_constraint;
 	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
@@ -1133,7 +1140,6 @@ let constraint_zone_predecessor_g_u
 		print_message Verbose_medium ("Initial valuations of Zn: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint ) ^ "");
 	);
 
-	
 	(* Return the result on px dimensions *)
 	LinearConstraint.pxd_hide_discrete_and_collapse pxd_linear_constraint
 	
@@ -2287,9 +2293,19 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 			(* Zn+1 *) z_n_plus_1
 			in
 		
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high ("Predecessors of valution n+1:\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names predecessors_of_valuation_n_plus_1));
+		);
 		
 		(* Pick a valuation *)
-		let valuation_n = LinearConstraint.px_exhibit_point predecessors_of_valuation_n_plus_1 in
+		let valuation_n =
+			try(
+				LinearConstraint.px_exhibit_point predecessors_of_valuation_n_plus_1
+			)with LinearConstraint.EmptyConstraint ->(
+				raise (InternalError "Empty constraint found when picking a point in the predecessors of n+1!")
+			)
+		in
 		
 		(* Now compute the time spent between the previous and the new valuation *)
 
