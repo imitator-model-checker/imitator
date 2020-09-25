@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2020/09/16
+ * Last modified     : 2020/09/25
  *
  ************************************************************)
 
@@ -63,7 +63,7 @@ type d_valuation = (variable -> coef)
 
 (* type linear_term *)
 type p_linear_term
-(* type px_linear_term *)
+type px_linear_term
 type pxd_linear_term
 
 
@@ -76,6 +76,7 @@ type pxd_linear_term
 (** Create a linear term using a list of coef and variables, and a constant *)
 (* val make_linear_term : (coef * variable) list -> coef -> linear_term *)
 val make_p_linear_term : (coef * variable) list -> coef -> p_linear_term
+val make_px_linear_term : (coef * variable) list -> coef -> px_linear_term
 val make_pxd_linear_term : (coef * variable) list -> coef -> pxd_linear_term
 
 
@@ -141,8 +142,8 @@ type pxd_linear_inequality
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Create a linear inequality using linear term and an operator *)
-(* val make_linear_inequality : linear_term -> op -> linear_inequality *)
 val make_p_linear_inequality : p_linear_term -> op -> p_linear_inequality
+val make_px_linear_inequality : px_linear_term -> op -> px_linear_inequality
 val make_pxd_linear_inequality : pxd_linear_term -> op -> pxd_linear_inequality
 
 
@@ -456,7 +457,7 @@ val pxd_rename_variables_assign : (variable * variable) list -> pxd_linear_const
 (*------------------------------------------------------------*)
 
 (* Time elapsing function wrt a polyhedron: `pxd_time_elapse_assign_wrt_polyhedron linear_constraint_time linear_constraint` modifies `linear_constraint` by letting time elapse according to the rates defined in the polyhedron `linear_constraint_time` *)
-val px_time_elapse_assign_wrt_polyhedron : pxd_linear_constraint -> px_linear_constraint -> unit
+val px_time_elapse_assign_wrt_polyhedron : px_linear_constraint -> px_linear_constraint -> unit
 val pxd_time_elapse_assign_wrt_polyhedron : pxd_linear_constraint -> pxd_linear_constraint -> unit
 
 
