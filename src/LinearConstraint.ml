@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2020/09/04
+ * Last modified     : 2020/09/25
  *
  ************************************************************)
 
@@ -2307,7 +2307,8 @@ let pxd_time_elapse_assign_wrt_polyhedron = time_elapse_assign_wrt_polyhedron
 (* 'reverse_direction' should be minus_one for growing, one for decreasing *)
 let time_elapse_gen_assign reverse_direction nb_dimensions variables_elapse variables_constant linear_constraint =
 	(* Print some information *)
-	print_message Verbose_total ("Entering `time_elapse_gen_assign` with " ^ (string_of_int nb_dimensions) ^ " dimension" ^ (s_of_int nb_dimensions) ^ "…");
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total ("Entering `time_elapse_gen_assign` with " ^ (string_of_int nb_dimensions) ^ " dimension" ^ (s_of_int nb_dimensions) ^ "…");
 
 	(* Create the inequalities var = 1, for var in variables_elapse *)
 	let inequalities_elapse = List.map (fun variable ->
@@ -2331,6 +2332,11 @@ let time_elapse_gen_assign reverse_direction nb_dimensions variables_elapse vari
 	(* Convert both sets of inequalities to a constraint *)
 	let linear_constraint_time = make nb_dimensions (List.rev_append inequalities_elapse inequalities_constant) in
 	
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Time polyhedron =");
+		print_message Verbose_total (string_of_pxd_linear_constraint debug_variable_names linear_constraint_time);
+	);
+
 	(* Call dedicated function *)
 	time_elapse_assign_wrt_polyhedron linear_constraint_time linear_constraint
 
