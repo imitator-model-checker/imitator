@@ -426,31 +426,25 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 			(* mark only if not blue due to lookahead *)
 			(* if the green colour is not used (option no_green),
 				then the state is necessarily marked blue *)
-			if not (table_test blue thestate) then(
+			if not (table_test blue thestate) then (
 				let successors = StateSpace.get_successors state_space thestate
 					and is_green astate = table_test green astate
 					and is_pending_not_blue astate =
 						(in_queue astate !pending) &&
-						not (table_test blue astate)
+							not (table_test blue astate)
 				in
-				if (successors = [] ||
-						options#no_green ||
-						(not (List.exists is_green successors) &&
-							(!pending = [] ||
-								not (List.exists is_pending_not_blue successors)))) then (
-					table_add blue thestate;
-table_rem green thestate;
-					printtable "Blue (mark_blue_or_green)" blue
-				) else (
-					if options#recompute_green &&
+				if ( options#no_green || List.exists is_green successors ||
+					(!pending != [] &&
+						List.exists is_pending_not_blue successors))
+				then ( if options#recompute_green &&
 						(not (is_green thestate) ||
 							(IntMap.find thestate !greendepth) > thedepth)
-					then (
-						table_add green thestate;
-						greendepth := IntMap.add thestate thedepth !greendepth
-					) else table_add green thestate;
+					then (greendepth := IntMap.add thestate thedepth !greendepth);
+					table_add green thestate;
 					printtable "Green (mark_blue_or_green)" green)
-			)
+				else (  table_add blue thestate;
+					printtable "Blue (mark_blue_or_green)" blue)
+				)
 		in
 
 		(***********************************************)
@@ -555,13 +549,10 @@ table_rem green thestate;
 					postdfs thestate thestate_depth)
 			) else (* thestate is not explored because it is either too deep or covered by the constraint already *)
 				if not depth_ok && not (table_test blue thestate) then (
-					if options#no_green then (
-						table_add blue thestate;
-					) else
-					( table_add green thestate;
+					table_add green thestate;
 					if options#recompute_green
 					then greendepth := IntMap.add thestate thestate_depth !greendepth;
-					() )
+					()
 				)
 		)
 		in
@@ -606,7 +597,8 @@ table_rem green thestate;
 				print_message Verbose_standard("---------------- until depth " ^ (string_of_int current_depth) ^ " ----------------");
 				(* Clear the colours of previous iteration *)
 				Hashtbl.clear cyan;
-				Hashtbl.clear green; (* We keep the blue states from the previous run unless we do not use the green colour *)
+				Hashtbl.clear green;
+				(* We keep the blue states from the previous run unless we do not use the green colour *)
 				if options#no_green then Hashtbl.clear blue;
 				greendepth := IntMap.empty;
 				processed_blue <- 0;
@@ -625,7 +617,6 @@ table_rem green thestate;
 						if (property.synthesis_type = Synthesis &&
 								check_parameter_leq_list astate) then (
 							table_add blue astate;
-table_rem green astate;
 							printtable "Blue (enterdfs)" blue;
 							false
 						) else true in
@@ -658,7 +649,6 @@ table_rem green astate;
 						if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 						(* table_add blue astate; *)
 						table_add blue thestate;
-table_rem green thestate;
 						printtable "Blue (cyclefound)" blue;
 						(* and the current state is popped from the cyan list *)
 						table_rem cyan thestate;
@@ -734,7 +724,6 @@ table_rem green thestate;
 						if (property.synthesis_type = Synthesis && check_parameter_leq_list astate) then (
 							(* State astate has been handled and must now become blue *)
 							table_add blue astate;
-table_rem green astate;
 							printtable "Blue (enterdfs)" blue;
 							false
 						) else true
@@ -769,7 +758,6 @@ table_rem green astate;
 						(* the state where the lookahead has found a cycle is now set blue *)
 						(* table_add blue astate; *)
 						table_add blue thestate;
-table_rem green thestate;
 						printtable "Blue (cyclefound)" blue;
 						(* and the current state is popped from the cyan list *)
 						table_rem cyan thestate;
@@ -860,7 +848,6 @@ table_rem green thestate;
 								if (property.synthesis_type = Synthesis && check_parameter_leq_list astate) then (
 									(* State astate has been handled and must now become blue *)
 									table_add blue astate;
-table_rem green astate;
 									printtable "Blue (enterdfs)" blue;
 									false
 								) else true
@@ -895,7 +882,6 @@ table_rem green astate;
 								(* the state where the lookahead has found a cycle is now set blue *)
 								(* table_add blue astate; *)
 								table_add blue thestate;
-table_rem green thestate;
 								printtable "Blue (cyclecount)" blue;
 								(* and the current state is popped from the cyan list *)
 								table_rem cyan thestate;
@@ -989,7 +975,6 @@ table_rem green thestate;
 								if (property.synthesis_type = Synthesis && check_parameter_leq_list astate) then (
 									(* State astate has been handled and must now become blue *)
 									table_add blue astate;
-table_rem green astate;
 									printtable "Blue (enterdfs)" blue;
 									false
 								) else true
@@ -1024,7 +1009,6 @@ table_rem green astate;
 								(* the state where the lookahead has found a cycle is now set blue *)
 								(* table_add blue astate; *)
 								table_add blue thestate;
-table_rem green thestate;
 								printtable "Blue (cyclecount)" blue;
 								(* and the current state is popped from the cyan list *)
 								table_rem cyan thestate;
