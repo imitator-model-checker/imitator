@@ -456,6 +456,7 @@ val pxd_rename_variables_assign : (variable * variable) list -> pxd_linear_const
 (*------------------------------------------------------------*)
 
 (* Time elapsing function wrt a polyhedron: `pxd_time_elapse_assign_wrt_polyhedron linear_constraint_time linear_constraint` modifies `linear_constraint` by letting time elapse according to the rates defined in the polyhedron `linear_constraint_time` *)
+val px_time_elapse_assign_wrt_polyhedron : pxd_linear_constraint -> px_linear_constraint -> unit
 val pxd_time_elapse_assign_wrt_polyhedron : pxd_linear_constraint -> pxd_linear_constraint -> unit
 
 
@@ -465,8 +466,8 @@ val pxd_time_elapse_assign : variable list -> variable list -> pxd_linear_constr
 
 (** Time elapsing function, in backward direction (corresponds to the "past" operation in, e.g., [JLR15]) *)
 (*** NOTE: elapsing variables are constrained to be non-negative ***)
-val px_time_past_assign : variable list -> variable list -> px_linear_constraint -> unit
-val pxd_time_past_assign : variable list -> variable list -> pxd_linear_constraint -> unit
+(* val px_time_past_assign : variable list -> variable list -> px_linear_constraint -> unit *)
+(* val pxd_time_past_assign : variable list -> variable list -> pxd_linear_constraint -> unit *)
 
 (** Remove all upper bounds on the first variable list; the second list will remain constant *)
 (*** WARNING: this function is certainly not optimized at all! ***)

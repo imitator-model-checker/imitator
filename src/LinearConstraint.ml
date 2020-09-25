@@ -2300,6 +2300,7 @@ let time_elapse_assign_wrt_polyhedron linear_constraint_time linear_constraint =
 	(* Apply the time elapsing using PPL *)
 	ippl_time_elapse_assign linear_constraint linear_constraint_time
 
+let px_time_elapse_assign_wrt_polyhedron = time_elapse_assign_wrt_polyhedron
 let pxd_time_elapse_assign_wrt_polyhedron = time_elapse_assign_wrt_polyhedron
 
 
