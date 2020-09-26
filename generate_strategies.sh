@@ -9,7 +9,7 @@
 ################################################
 
 function usage {
-	echo -e "\033[1;31musage\033[0m: $0 [-h | [-l] [-t timeout] -o table_filename [-S | -i input_models]]"
+	echo -e "\033[1;31musage\033[0m: $0 [-h | [-l] [-g] [-t timeout] -o table_filename [-S | -i input_models]]"
 }
 
 function help {
@@ -18,6 +18,7 @@ function help {
 	echo -e "\nExecutes the experiments on all models. The result is written in the file specified with the \033[1m-o\033[0m option"
 	echo -e "\n\033[1m-h\033[0m\t\t\tThis help"
 	echo -e "\n\033[1m-l\033[0m\t\t\tExecute exploration with layers"
+	echo -e "\n\033[1m-g\033[0m\t\t\tUse the green colour"
 	echo -e "\n\033[1m-t timeout\033[0m\t\tUses a specified value for the timeout (in seconds) \033[4m[default: 90]\033[0m"
 	echo -e "\n\033[1m-o table_filename\033[0m\tOutputs the results in a csv file (with separator ;) named \033[4mtable_filename\033[0m"
 	echo -e "\n\033[1m-S\033[0m\t\t\tUses a subset of the models"
@@ -48,6 +49,7 @@ function process_results {
 
 # get the options
 layers= # no layers by default
+green="-no-green" # no green colour by default
 timeout=90 # 1.5 minute by default
 output_file=
 exp_dir="tests/acceptingExamples"
@@ -62,9 +64,10 @@ input_files="BRP coffee \
 		Sched2.50.2 simop \
 		spsmall tgcTogether2 \
 		WFAS-BBLS15-det"
-while getopts "lht:o:Si:" opt; do
+while getopts "lght:o:Si:" opt; do
 case $opt in
 	l) layers="-layer" ;;
+	g) green="" ;;
 	h) help ;;
 	t) timeout=$OPTARG ;;
 	o) output_file=$OPTARG ;;
@@ -103,32 +106,32 @@ for f in $input_files
 			| sed -e 's/ parameters/ \; /' | sed -e 's/ parameter/ \; /' ` >> $output_file
 	# no strategy
 		echo -e "\twithout strategy"
-		bin/imitator $layers -no-lookahead -no-acceptfirst -no-subsumption -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
+		bin/imitator $layers $green -no-lookahead -no-acceptfirst -no-subsumption -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
 		process_results
 		echo -n ' ; ' >> $output_file
 	# subsumption
 		echo -e "\tsubsumption only"
-		bin/imitator $layers -no-lookahead -no-acceptfirst -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
+		bin/imitator $layers $green -no-lookahead -no-acceptfirst -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
 		process_results
 		echo -n ' ; ' >> $output_file
 	# acceptfirst
 		echo -e "\tacceptfirst only"
-		bin/imitator $layers -no-lookahead -no-subsumption -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
+		bin/imitator $layers $green -no-lookahead -no-subsumption -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
 		process_results
 		echo -n ' ; ' >> $output_file
 	# lookahead
 		echo -e "\tlookahead only"
-		bin/imitator $layers -no-acceptfirst -no-subsumption -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
+		bin/imitator $layers $green -no-acceptfirst -no-subsumption -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
 		process_results
 		echo -n ' ; ' >> $output_file
 	# lookahead + ordering
 		echo -e "\tlookahead and acceptfirst"
-		bin/imitator $layers -no-subsumption -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
+		bin/imitator $layers $green -no-subsumption -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
 		process_results
 		echo -n ' ; ' >> $output_file
 	# lookahead + ordering + subsumption
 		echo -e "\tsubsumption, lookahead and acceptfirst"
-		bin/imitator $layers -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
+		bin/imitator $layers $green -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
 		process_results
 		echo '' >> $output_file
 	done

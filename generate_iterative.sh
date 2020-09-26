@@ -18,6 +18,7 @@ function help {
 	echo -e "\nExecutes the experiments on all models. The result is written in the file specified with the \033[1m-o\033[0m option"
 	echo -e "\n\033[1m-h\033[0m\t\t\tThis help"
 	echo -e "\n\033[1m-l\033[0m\t\t\tExecute exploration with layers"
+	echo -e "\n\033[1m-g\033[0m\t\t\tUse the green colour"
 	echo -e "\n\033[1m-t timeout\033[0m\t\tUses a specified value for the timeout (in seconds) \033[4m[default: 90]\033[0m"
 	echo -e "\n\033[1m-d depth_init\033[0m\t\tUses a specified value for the initial depth \033[4m[default: 5]\033[0m"
 	echo -e "\n\033[1m-s depth_step\033[0m\t\tUses a specified value for the step between iterations \033[4m[default: same as depth_init]\033[0m"
@@ -54,6 +55,7 @@ function process_results {
 
 # get the options
 layers= # no layers by default
+green="-no-green" # no green colour by default
 timeout=90 # 1.5 minute by default
 output_file=
 depth_init=5 # initial depth of 5 by default
@@ -71,9 +73,10 @@ input_files="BRP coffee \
 		Sched2.50.2 simop \
 		spsmall tgcTogether2 \
 		WFAS-BBLS15-det"
-while getopts "lhd:s:t:o:Si:" opt; do
+while getopts "lghd:s:t:o:Si:" opt; do
 case $opt in
 	l) layers="-layer" ;;
+	g) green="" ;;
 	h) help ;;
 	d) depth_init=$OPTARG ;;
 	s) depth_step=$OPTARG ; new_step=true;;
@@ -119,7 +122,7 @@ for f in $input_files
 			| sed -e 's/ locations, / \; /' | sed -e 's/ clock variables, / \; /' \
 			| sed -e 's/ parameters/ \; /' | sed -e 's/ parameter/ \; /' ` >> $output_file
 	# iterative deepening
-		bin/imitator $layers -time-limit $timeout -depth-init $depth_init -depth-step $depth_step $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
+		bin/imitator $layers $green -time-limit $timeout -depth-init $depth_init -depth-step $depth_step $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
 		process_results
 		echo '' >> $output_file
 	done

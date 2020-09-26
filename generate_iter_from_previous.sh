@@ -19,6 +19,7 @@ function help {
 	echo -e "\nExecutes the experiments on all models. The result is written in the file specified with the \033[1m-o\033[0m option"
 	echo -e "\n\033[1m-h\033[0m\t\t\tThis help"
 	echo -e "\n\033[1m-l\033[0m\t\t\tExecute exploration with layers"
+	echo -e "\n\033[1m-g\033[0m\t\t\tUse the green colour"
 	echo -e "\n\033[1m-t timeout\033[0m\t\tUses a specified value for the timeout (in seconds) \033[4m[default: 90]\033[0m"
 	echo -e "\n\033[1m-o table_filename\033[0m\tOutputs the results in a csv file (with separator ;) named \033[4mtable_filename\033[0m"
 	echo -e "\n\033[1m-S\033[0m\t\t\tUses a subset of the models"
@@ -52,6 +53,7 @@ function process_results {
 
 # get the options
 layers= # no layers by default
+green="-no-green" # no green colour by default
 timeout=90 # 1.5 minute by default
 output_file=
 depth_step=5
@@ -80,10 +82,11 @@ input_depths="12 4 \
 		25 13 \
 		3"
 
-while getopts "lht:o:S" opt; do
+while getopts "lght:o:S" opt; do
 case $opt in
 	h) help ;;
 	l) layers="-layer" ;;
+	g) green="" ;;
 	t) timeout=$OPTARG ;;
 	o) output_file=$OPTARG ;;
 	S) input_files="critical-region critical-region4 F3 F4 FDDI4 FischerAHV93 flipflop fmtv1A1-v2 \
@@ -131,7 +134,7 @@ for ((i=0;i<input_len;i++))
 			| sed -e 's/ parameters/ \; /' | sed -e 's/ parameter/ \; /' ` >> $output_file
 	# iterative deepening
 		echo -n " ${depths[$i]} ; " >> $output_file
-		bin/imitator $layers -time-limit $timeout -depth-init ${depths[$i]} -depth-step $depth_step $exp_dir/${files[$i]}.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
+		bin/imitator $layers $green -time-limit $timeout -depth-init ${depths[$i]} -depth-step $depth_step $exp_dir/${files[$i]}.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
 		process_results
 		echo '' >> $output_file
 	done
