@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2020/09/23
+ * Last modified     : 2020/09/28
  *
  ************************************************************)
 
@@ -219,6 +219,9 @@ class virtual algoStateBased :
 		
 		(* List of state_index that have unexplored successors in case of premature termination *)
 		val mutable unexplored_successors : unexplored_successors
+		
+		(* Variable to denote whether the analysis may continue, or whether the analysis should terminate; useful to terminate, e.g., when a witness is found (at least for BFS algorithms) *)
+		val mutable algorithm_keep_going : bool
 		
 		(* The current new state indexes *)
 		val mutable new_states_indexes : state_index list

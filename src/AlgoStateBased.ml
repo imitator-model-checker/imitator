@@ -2712,10 +2712,13 @@ class virtual algoStateBased =
 	(* The current new state indexes *)
 	val mutable new_states_indexes : State.state_index list = []
 
-	(* Variable to remain of the termination *)
+	(* Variable to remind of the termination *)
 	(*** NOTE: public only for AlgoEFoptQueue ***)
 	(*** TODO: merge with termination_status… ***)
 	val mutable limit_reached = Keep_going
+	
+	(* Variable to denote whether the analysis may continue, or whether the analysis should terminate; useful to terminate, e.g., when a witness is found (at least for BFS algorithms) *)
+	val mutable algorithm_keep_going = true
 	
 	
 	(* Non-necessarily convex constraint storing the parameter synthesis result (for selected algorithm) *)
@@ -3388,9 +3391,9 @@ class virtual algoStateBased =
 
 		(* Set the limit *)
 		limit_reached <- Keep_going;
-
+		
 		(* Flag modified by the algorithm to perhaps terminate earlier *)
-		let algorithm_keep_going = ref true in
+		algorithm_keep_going <- true;
 
 		(* Count the states for verbose purpose: *)
 		let num_state = ref 0 in
@@ -3905,7 +3908,7 @@ class virtual algoStateBased =
 
 
 		(* Explore further until the limit is reached or the queue is empty *)
-		while limit_reached = Keep_going && !queue <> [] && !algorithm_keep_going do
+		while limit_reached = Keep_going && !queue <> [] && algorithm_keep_going do
 			print_message Verbose_low ("I am here!!!!!!");
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then (
@@ -4041,7 +4044,7 @@ class virtual algoStateBased =
 				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (bfs_current_depth - 1)) ^ "…");
 
 				if self#check_termination_at_post_n then(
-					algorithm_keep_going := false;
+					algorithm_keep_going <- false;
 				);
 			);
 
@@ -4080,7 +4083,7 @@ class virtual algoStateBased =
 		(*** NOTE: must be done after setting the limit (above) ***)
 		self#bfs_print_warnings_limit ();
 
-		if not !algorithm_keep_going && nb_unexplored_successors > 0 then(
+		if not algorithm_keep_going && nb_unexplored_successors > 0 then(
 			self#print_algo_message Verbose_standard ("A sufficient condition to ensure termination was met although there were still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore");
 		);
 
@@ -4123,6 +4126,12 @@ class virtual algoStateBased =
 		(* Set the depth to 1 *)
 		bfs_current_depth <- 1;
 
+		(* To check whether the time limit / state limit is reached *)
+		limit_reached <- Keep_going;
+
+		(* Flag modified by the algorithm to perhaps terminate earlier *)
+		algorithm_keep_going <- true;
+
 
 		(*------------------------------------------------------------*)
 		(* Perform the post^* *)
@@ -4130,14 +4139,8 @@ class virtual algoStateBased =
 		(* Set of states computed at the previous depth *)
 		let post_n = ref [init_state_index] in
 
-		(* To check whether the time limit / state limit is reached *)
-		limit_reached <- Keep_going;
-
-		(* Flag modified by the algorithm to perhaps terminate earlier *)
-		let algorithm_keep_going = ref true in
-
 		(* Explore further until the limit is reached or the list of states computed at the previous depth is empty *)
-		while limit_reached = Keep_going && !post_n <> [] && !algorithm_keep_going do
+		while limit_reached = Keep_going && !post_n <> [] && algorithm_keep_going do
 			(* Print some information *)
 			if verbose_mode_greater Verbose_standard then (
 				print_message Verbose_low ("\n");
@@ -4173,8 +4176,13 @@ class virtual algoStateBased =
 				List.rev_append current_post_n_plus_1 new_states
 			) [] !post_n
 			)
-			(* If analysis terminate: successors are just the empty list *)
-			with TerminateAnalysis -> []
+			with TerminateAnalysis ->(
+				(* Set the flag *)
+				algorithm_keep_going <- false;
+				(* If analysis terminated: successors are just the empty list *)
+				(*** TODO: it should be possible to change the flag witness_found from inside the function instead of deleting this list ***)
+				[]
+			)
 
 			in
 
@@ -4190,6 +4198,9 @@ class virtual algoStateBased =
 			(* Statistics *)
 			counter_process_post_n#stop;
 
+			(*------------------------------------------------------------*)
+			(* Begin merging *)
+			(*------------------------------------------------------------*)
 			(* Merge states! *)
 			let new_states_after_merging = ref post_n_plus_1 in
 			(*** HACK here! For #merge_before, we should ONLY merge here; but, in order not to change the full structure of the post computation, we first merge locally before the pi0-compatibility test, then again here ***)
@@ -4211,6 +4222,9 @@ class virtual algoStateBased =
 				
 			(* Update the post_n, i.e., at that point we replace the post^n by post^n+1 in our BFS algorithm, and go one step deeper in the state space *)
 			post_n := !new_states_after_merging;
+			(*------------------------------------------------------------*)
+			(* End merging *)
+			(*------------------------------------------------------------*)
 
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then (
@@ -4303,7 +4317,7 @@ class virtual algoStateBased =
 				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (bfs_current_depth - 1)) ^ " with a queue of " ^ (string_of_int (List.length !post_n)) ^ " unexplored state" ^ (s_of_int (List.length !post_n)) ^ "…");
 
 				if self#check_termination_at_post_n then(
-					algorithm_keep_going := false;
+					algorithm_keep_going <- false;
 				);
 			);
 
@@ -4342,7 +4356,7 @@ class virtual algoStateBased =
 		(*** NOTE: must be done after setting the limit (above) ***)
 		self#bfs_print_warnings_limit ();
 
-		if not !algorithm_keep_going && nb_unexplored_successors > 0 then(
+		if not algorithm_keep_going && nb_unexplored_successors > 0 then(
 			self#print_algo_message Verbose_standard ("A sufficient condition to ensure termination was met although there were still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore");
 		);
 
