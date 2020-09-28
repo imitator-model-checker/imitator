@@ -517,7 +517,7 @@ class algoEFexemplify (state_predicate : AbstractProperty.state_predicate) =
 								let state_index_i_plus_1 = nth_state_index_of_symbolic_run symbolic_run (!i+1) in
 								let location_i_plus_1 : Location.global_location = (StateSpace.get_state state_space state_index_i_plus_1).global_location in
 								
-								print_message Verbose_low ("\nFound a shrinking of clock constraint between positions " ^ (string_of_int !i) ^ " and " ^ (string_of_int (!i+1)) ^ ", i.e., states `" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names false location_i) ^ "` and `" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names false location_i_plus_1) ^ "`:");
+								print_message Verbose_low ("\nFound a shrinking of clock constraint between positions " ^ (string_of_int !i) ^ " and " ^ (string_of_int (!i+1)) ^ ", i.e., states `" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display location_i) ^ "` and `" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display location_i_plus_1) ^ "`:");
 							);
 							
 							(* Update flag *)

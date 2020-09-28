@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/09/25
+ * Last modified     : 2020/09/28
  *
  ************************************************************)
 
@@ -2169,7 +2169,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	let location_n_plus_1 = target_state.global_location in
 	
 	if verbose_mode_greater Verbose_medium then(
-		print_message Verbose_medium ("Location n+1: " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names false location_n_plus_1));
+		print_message Verbose_medium ("Location n+1: " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display location_n_plus_1));
 	);
 	
 (*	(* Get the elapsed and stopped clocks (+ other variables) *)

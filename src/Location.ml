@@ -11,7 +11,7 @@
  * File contributors        : Étienne André
  * Created                  : 2010/03/10
  * Renamed from Automaton.ml: 2015/10/22
- * Last modified            : 2020/09/14
+ * Last modified            : 2020/09/28
  *
  ************************************************************)
  
@@ -61,6 +61,13 @@ let location_equal loc1 loc2 =
 			(* all entries equal *)			
 		) 
 	)
+
+
+(** Should the float be displaid using exact rationals or (possibly approximated) floats? *)
+type rational_display =
+	| Exact_display
+	| Float_display
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Automata} *)
@@ -281,8 +288,8 @@ and match_state_predicate (locations_acceptance_condition : automaton_index -> l
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** 'string_of_location automata_names location_names discrete_names location' converts a location to a string. The Boolean indicates whether the discrete variables should be converted into float or not *)
-let string_of_location automata_names location_names discrete_names convert_to_float location =
+(** 'string_of_location automata_names location_names discrete_names location' converts a location to a string. *)
+let string_of_location automata_names location_names discrete_names rational_display location =
 	(* Get the locations per automaton *)
 	let locations = get_locations location in
 	(* Get the values for discrete variables *)
@@ -294,12 +301,11 @@ let string_of_location automata_names location_names discrete_names convert_to_f
 	let location_string = string_of_array_of_string_with_sep ", " string_array in
 	(* Convert the discrete *)
 	let string_array = Array.mapi (fun discrete_index value ->
-		(string_of_discrete discrete_names discrete_index) ^ " = " ^ (NumConst.string_of_numconst value) ^(
+		(string_of_discrete discrete_names discrete_index) ^ " = " ^ (NumConst.string_of_numconst value) ^ (
 			(* Convert to float? *)
-			if convert_to_float then (
-				" (~ " ^ (string_of_float (NumConst.to_float value)) ^ ")"
-			)
-			else ""
+			match rational_display with
+			| Exact_display -> ""
+			| Float_display -> " (~ " ^ (string_of_float (NumConst.to_float value)) ^ ")"
 		)
 	) discrete in
 	let discrete_string = string_of_array_of_string_with_sep ", " string_array in

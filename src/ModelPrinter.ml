@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/12/02
- * Last modified     : 2020/09/16
+ * Last modified     : 2020/09/28
  *
  ************************************************************)
 
@@ -918,13 +918,13 @@ let string_of_state model (state : state) =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names options#output_float state.global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names state.px_constraint) ^ ""
+	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names (if options#output_float then Location.Float_display else Location.Exact_display) state.global_location) ^ " ==> \n&" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names state.px_constraint) ^ ""
 
 let string_of_concrete_state model (state : State.concrete_state) =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
 
-	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names options#output_float state.global_location) ^ " ==> \n" ^ (string_of_px_valuation model state.px_valuation) ^ ""
+	"" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names (if options#output_float then Location.Float_display else Location.Exact_display) state.global_location) ^ " ==> \n" ^ (string_of_px_valuation model state.px_valuation) ^ ""
 	
 
 

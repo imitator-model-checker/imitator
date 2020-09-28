@@ -11,7 +11,7 @@
  * File contributors        : Étienne André
  * Created                  : 2010/03/10
  * Renamed from Automaton.ml: 2015/10/22
- * Last modified            : 2020/09/14
+ * Last modified            : 2020/09/28
  *
  ************************************************************)
 
@@ -35,7 +35,10 @@ type global_location_index = int
 (** Global location: location for each automaton + value of the discrete *)
 type global_location
 
-
+(** Should the float be displaid using exact rationals or (possibly approximated) floats? *)
+type rational_display =
+	| Exact_display
+	| Float_display
 
 
 
@@ -98,5 +101,5 @@ val match_state_predicate : (automaton_index -> location_index -> bool) -> Abstr
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
-(** 'string_of_location automata_names location_names discrete_names location' converts a location to a string. The Boolean indicates whether the discrete variables should be converted into float or not *)
-val string_of_location : (automaton_index -> automaton_name) -> (automaton_index -> location_index -> location_name) -> (discrete_index -> variable_name) -> bool -> global_location -> string
+(** 'string_of_location automata_names location_names discrete_names location' converts a location to a string. *)
+val string_of_location : (automaton_index -> automaton_name) -> (automaton_index -> location_index -> location_name) -> (discrete_index -> variable_name) -> rational_display -> global_location -> string
