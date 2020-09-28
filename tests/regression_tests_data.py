@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/09/24
+# Last modified     : 2020/09/28
 #************************************************************
 
 
@@ -1164,6 +1164,49 @@ end
 	##------------------------------------------------------------
 
 	#,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/28
+		# Last modified            : 2020/09/28
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test the state space (no float conversion)',
+		'input_files': ['testFloat.imi'],
+		'options'    : '-mode statespace -states-description',
+		'expectations' : [
+			{'file': 'testFloat-statespace.states' , 'content' : """
+pta: l2, i = 5/4, j = 1/3
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/28
+		# Last modified            : 2020/09/28
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test the state space (with float conversion)',
+		'input_files': ['testFloat.imi'],
+		'options'    : '-mode statespace -states-description -output-float',
+		'expectations' : [
+		# NOTE: cut the end of the float just in case the OS doesn't represent them the same way…
+			{'file': 'testFloat-statespace.states' , 'content' : """
+pta: l2, i = 5/4 (~ 1.25), j = 1/3 (~ 0.3333333333
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
 
 	#------------------------------------------------------------
 	{
