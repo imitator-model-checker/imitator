@@ -2605,6 +2605,10 @@ type bfs_limit_reached =
 	(* Termination due to a number of explored states reached *)
 	| States_limit_reached
 
+	(* Termination because a witness has been found *)
+	| Witness_found
+
+
 exception BFS_Limit_detected of bfs_limit_reached
 
 
@@ -4076,6 +4080,10 @@ class virtual algoStateBased =
 
 			(* Termination due to a number of explored states reached *)
 			| States_limit_reached -> termination_status <- Some (Result.States_limit nb_unexplored_successors)
+			
+			(* Termination because a witness has been found *)
+			(*** NOTE/TODO: add a new result termination type? ***)
+			| Witness_found -> termination_status <- Some (Result.Regular_termination)
 		end
 		;
 
@@ -4180,7 +4188,7 @@ class virtual algoStateBased =
 				(* Set the flag *)
 				algorithm_keep_going <- false;
 				(* If analysis terminated: successors are just the empty list *)
-				(*** TODO: it should be possible to change the flag witness_found from inside the function instead of deleting this list ***)
+				(*** TODO: it should be possible to change the flag algorithm_keep_going from inside the function instead of deleting this list ***)
 				[]
 			)
 

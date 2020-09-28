@@ -50,6 +50,10 @@ type bfs_limit_reached =
 	(* Termination due to a number of explored states reached *)
 	| States_limit_reached
 
+	(* Termination because a witness has been found *)
+	| Witness_found
+
+
 (************************************************************)
 (** Statistics *)
 (************************************************************)
