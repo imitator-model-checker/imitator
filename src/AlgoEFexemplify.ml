@@ -261,7 +261,11 @@ class algoEFexemplify (state_predicate : AbstractProperty.state_predicate) =
 				
 				(*** TODO: handle non-deterministic ***)
 				
-				if model.strongly_deterministic && not model.has_silent_actions then(
+				if not model.strongly_deterministic then(
+					print_warning "Model is not strongly deterministic: skip negative counter-examples.";
+				)else if model.has_silent_actions then(
+					print_warning "Model has silent actions: skip negative counter-examples.";
+				)else(
 
 					(*------------------------------------------------------------*)
 					(* Part 2a: negative counterexample for a different parameter valuation*)
