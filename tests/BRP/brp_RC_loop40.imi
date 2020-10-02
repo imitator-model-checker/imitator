@@ -58,7 +58,7 @@ synclabs: start;
 loc l1: invariant True
 urgent accepting loc l0: invariant True
 	when True sync start goto l1;
-	when TR > 2*TS & TR + TD > SYNC + TS goto l0;
+	when 2*TR + TD > SYNC + 6*TS & 3*TS + 3*TD >= TR & TR + TD > SYNC + 3*TS goto l0;
 	when 2*TS + 3*TD >= TR goto l0;
 end (* prune *)
 
@@ -124,7 +124,7 @@ loc idleR: invariant z<=TR
 	when z=TR & rbN=1 do {rbN:=0,exp_ab:=0} goto new_file;
 
 accepting loc FailureR: invariant True
-    	when True do {} goto FailureR;
+    	when True goto FailureR;
 
 end (* receiver *)
 

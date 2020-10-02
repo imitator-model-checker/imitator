@@ -123,7 +123,7 @@ loc idleR: invariant z<=TR
 	when z=TR & rbN=1 do {rbN:=0,exp_ab:=0} goto new_file;
 
 accepting loc FailureR: invariant True
-    	when True do {} goto FailureR;
+    	when True goto FailureR;
 
 end (* receiver *)
 
