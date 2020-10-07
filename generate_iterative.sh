@@ -2,14 +2,14 @@
 
 ###########################################
 # Script for generating experiments table #
-# for iterative deepening                 #
+# for iterative deepening and BFS         #
 # Author: Laure Petrucci                  #
-# Version: 2.0                            #
-# Date: 2020-09-25                        #
+# Version: 3.0                            #
+# Date: 2020-10-07                        #
 ###########################################
 
 function usage {
-	echo -e "\033[1;31musage\033[0m: $0 [-h | [-d depth_init] [-s depth_step] [-l] [-t timeout] -o table_filename [-S | -i input_models]]"
+	echo -e "\033[1;31musage\033[0m: $0 [-h | [-l] [-t timeout] -o table_filename [-S | -i input_models]]"
 }
 
 function help {
@@ -18,10 +18,7 @@ function help {
 	echo -e "\nExecutes the experiments on all models. The result is written in the file specified with the \033[1m-o\033[0m option"
 	echo -e "\n\033[1m-h\033[0m\t\t\tThis help"
 	echo -e "\n\033[1m-l\033[0m\t\t\tExecute exploration with layers"
-	echo -e "\n\033[1m-g\033[0m\t\t\tUse the green colour"
 	echo -e "\n\033[1m-t timeout\033[0m\t\tUses a specified value for the timeout (in seconds) \033[4m[default: 90]\033[0m"
-	echo -e "\n\033[1m-d depth_init\033[0m\t\tUses a specified value for the initial depth \033[4m[default: 5]\033[0m"
-	echo -e "\n\033[1m-s depth_step\033[0m\t\tUses a specified value for the step between iterations \033[4m[default: same as depth_init]\033[0m"
 	echo -e "\n\033[1m-o table_filename\033[0m\tOutputs the results in a csv file (with separator ;) named \033[4mtable_filename\033[0m"
 	echo -e "\n\033[1m-S\033[0m\t\t\tUses a subset of the models"
 	echo -e "\n\033[1m-i input_models\033[0m\t\tOnly the models in \033[4minput_models\033[0m are used"
@@ -30,7 +27,6 @@ function help {
 
 function process_results {
 	# find maximal depth
-	# echo -n `grep "until depth" $one_result | tail -n 1 | cut -d' ' -f5 `' ; '>> $output_file
 	echo -n `grep "depth actually" $one_result | tail -n 1 | cut -d: -f2 | sed -e 's/\[0m//'`' ;'>> $output_file
 	# minimal depth at which a cycle was found
 	min_depth=`grep "Minimum depth" $one_result | tail -n 1 | cut -d: -f2 | sed -e 's/\[0m//'`
@@ -51,15 +47,26 @@ function process_results {
 	fi
 }
 
+function process_BFS_results {
+	# find maximal depth
+	echo -n `grep "depth of" $one_result | cut -d: -f2 | cut -d' ' -f2 | sed -e 's/\[0m//'`' ;'>> $output_file
+	# total number of processed states
+	echo -n `grep "states with" $one_result | cut -d: -f2 | cut -d' ' -f2 | sed -e 's/\[0m//'`' ; ' >> $output_file
+	# time of computation
+	in_time=`grep "exact" $one_result`
+	if [ -z "$in_time" ]
+	then echo -n "TO" >> $output_file
+	else echo -n `grep "completed after" $one_result  | sed -e 's/\[Cycle\] Algorithm completed after //' \
+		| sed -e 's/ seconds.//' | sed -e 's/ second.//'  | sed -e 's/\[0m//'` >> $output_file
+	fi
+}
+
 # main part of the script
 
 # get the options
 layers= # no layers by default
-green="-no-green" # no green colour by default
-timeout=90 # 1.5 minute by default
+timeout=120 # 2 minutes by default
 output_file=
-depth_init=5 # initial depth of 5 by default
-new_step=false # to check if a new step was set as argument
 
 exp_dir="tests/acceptingExamples"
 input_files="BRP coffee \
@@ -73,13 +80,10 @@ input_files="BRP coffee \
 		Sched2.50.2 simop \
 		spsmall tgcTogether2 \
 		WFAS-BBLS15-det"
-while getopts "lghd:s:t:o:Si:" opt; do
+while getopts "lhd:s:t:o:Si:" opt; do
 case $opt in
 	l) layers="-layer" ;;
-	g) green="" ;;
 	h) help ;;
-	d) depth_init=$OPTARG ;;
-	s) depth_step=$OPTARG ; new_step=true;;
 	t) timeout=$OPTARG ;;
 	o) output_file=$OPTARG ;;
 	S) input_files="critical-region critical-region4 F3 F4 FDDI4 FischerAHV93 flipflop fmtv1A1-v2 \
@@ -97,11 +101,6 @@ then usage
 	exit
 fi
 
-# if no step was given as argument, use the initial depth as a step
-if [ "$new_step" = false ]
-then depth_step=$depth_init
-fi
-
 extension=".${output_file##*.}"
 one_result="`basename $output_file $extension`.tmp"
 rm -f $one_result
@@ -109,21 +108,47 @@ rm -f $output_file
 
 # print the command line that was used
 echo $0 $* > $output_file
-echo "initial depth $depth_init, step $depth_step" >> $output_file
-# table with iterative depth
-echo 'Model ; L ; X ; P ; d ; m ; c ; s ; t' >> $output_file
+# table with iterative depth and BFS
+echo ' ; ; ; ; init=5, step=5 ; ; ; ; ; init=5, step=5, nogreen ; ; ; ; ; init=10, step=5 ; ; ; ; ; init=10, step=10 ; ; ; ; ; init=0, step=1 ; ; ; ; ; BFS ; ;' >> $output_file
+echo 'Model ; L ; X ; P ; d ; m ; c ; s ; t ; d ; m ; c ; s ; t ; d ; m ; c ; s ; t ; d ; m ; c ; s ; t ; d ; m ; c ; s ; t ; d ; s ; t' >> $output_file
 for f in $input_files
-	do echo -e "Running experiments for model \033[1;31m$f\033[0m"
-		bin/imitator -mode checksyntax -verbose low $exp_dir/$f.imi > $one_result 2> /dev/null
-		# first column = benchmark file name
-		echo -n "$f ; " >> $output_file
-		# columns 2 to 4 = L, X, P
-		echo -n `grep -e locations $one_result | cut -d, -f2,5,7 | sed -e 's/^ //' \
-			| sed -e 's/ locations, / \; /' | sed -e 's/ clock variables, / \; /' \
-			| sed -e 's/ parameters/ \; /' | sed -e 's/ parameter/ \; /' ` >> $output_file
-	# iterative deepening
-		bin/imitator $layers $green -time-limit $timeout -depth-init $depth_init -depth-step $depth_step $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
-		process_results
-		echo '' >> $output_file
-	done
+do echo -e "Running experiments for model \033[1;31m$f\033[0m"
+	bin/imitator -mode checksyntax -verbose low $exp_dir/$f.imi > $one_result 2> /dev/null
+	# first column = benchmark file name
+	echo -n "$f ; " >> $output_file
+	# columns 2 to 4 = L, X, P
+	echo -n `grep -e locations $one_result | cut -d, -f2,5,7 | sed -e 's/^ //' \
+		| sed -e 's/ locations, / \; /' | sed -e 's/ clock variables, / \; /' \
+		| sed -e 's/ parameters/ \; /' | sed -e 's/ parameter/ \; /' ` >> $output_file
+# iterative deepening depth-init=5, depth-step=5
+	echo -e "\tdepth-init=5, depth-step=5"
+	bin/imitator $layers -time-limit $timeout -depth-init 5 -depth-step 5 $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
+	process_results
+	echo -n ' ; ' >> $output_file
+# iterative deepening depth-init=5, depth-step=5, no green
+	echo -e "\tdepth-init=5, depth-step=5, no green"
+	bin/imitator $layers -no-green -time-limit $timeout -depth-init 5 -depth-step 5 $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
+	process_results
+	echo -n ' ; ' >> $output_file
+# iterative deepening depth-init=10, depth-step=5
+	echo -e "\tdepth-init=10, depth-step=5"
+	bin/imitator $layers -time-limit $timeout -depth-init 10 -depth-step 5 $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
+	process_results
+	echo -n ' ; ' >> $output_file
+# iterative deepening depth-init=10, depth-step=10
+	echo -e "\tdepth-init=10, depth-step=10"
+	bin/imitator $layers -time-limit $timeout -depth-init 10 -depth-step 10 $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
+	process_results
+	echo -n ' ; ' >> $output_file
+# iterative deepening depth-init=0, depth-step=1
+	echo -e "\tdepth-init=0, depth-step=1"
+	bin/imitator $layers -time-limit $timeout -depth-init 0 -depth-step 1 $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
+	process_results
+	echo -n ' ; ' >> $output_file
+# BFS
+	echo -e "\tBFS"
+	bin/imitator -cycle-algo=BFS -time-limit $timeout $exp_dir/$f.imi $exp_dir/accepting.imiprop > $one_result 2> /dev/null
+	process_BFS_results
+	echo '' >> $output_file
+done
 rm -f $one_result
