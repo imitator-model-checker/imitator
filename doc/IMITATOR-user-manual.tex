@@ -70,7 +70,7 @@ Numerous benchmarks are available at \imitator{} Web page~\cite{imitator}.
 In this document, we present the input syntax, we formally define the input model of \imitator{}, and we explain how to perform various analyses using the numerous options.
 
 
-\paragraph{Keywords:} formal verification, model checking, software verification, parameter synthesis
+\paragraph{Keywords:} formal verification, model checking, software verification, parametric timed automata, parameter synthesis
 
 
 
@@ -1600,7 +1600,7 @@ To generate an equivalent \uppaal{} model without performing any analysis, use:
 \styleCommand{\binimitator{} model.imi -imi2Uppaal}
 
 \imitator{} will generate a file \stylePath{model-uppaal.xml}.
-Note that translation of properties is not supported.
+Note that the translation of properties is not supported.
 
 Due to the different semantics and features between \imitator{} and \uppaal{}, the translation is done in a ``best effort'' manner, but the semantics may differ.
 We review some points in the following.
@@ -1660,7 +1660,7 @@ To generate an equivalent \hytech{} model without performing any analysis, use:
 \styleCommand{\binimitator{} model.imi -imi2HyTech}
 
 \imitator{} will generate a file \stylePath{model.hy}.
-Note that translation of properties is not supported.
+Note that the translation of properties is not supported.
 % TODO
 
 
@@ -2427,8 +2427,7 @@ Furthermore, the names of the sets of locations of various \IPTA{} are not-neces
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 The \imitator{} input model is described by the following grammar.
-Non-terminals appear \nt{within angled parentheses}.
-% TODO: angled??
+Non-terminals appear \nt{within chevrons}.
 A non-terminal followed by two colons is defined by the list of immediately following non-blank lines, each of which represents a legal expansion.
 Input characters of terminals appear in \styleIMI{typewritter} font.
 The meta symbol \emptystring{} denotes the empty string.
@@ -3546,7 +3545,7 @@ However, in this latter case, the non-linear power of arithmetic expressions (mu
 
 \imitator{} does not implement specific algorithms for lower-bound / upper-bound PTA (L/U-PTA).
 This subclass of PTA, introduced in~\cite{HRSV02}, constrains parameters to appear either always as upper-bounds in inequalities comparing them with clocks, or always as lower-bounds.
-L/U-PTA benefit from some decidability results (see \eg{} \cite{HRSV02,BlT09,JLR15,AM15,ALime17}); however, exact synthesis seems to be intractable in practice~\cite{JLR15,ALR16decision}.
+L/U-PTA benefit from some decidability results (see \eg{} \cite{HRSV02,BlT09,JLR15,AM15,ALime17}); however, exact synthesis seems to be intractable in practice~\cite{JLR15,ALR16ICFEM}.
 Still, some subclasses for which exact synthesis can be performed were proposed~\cite{BlT09,ALR18FORMATS}.
 
 However, \imitator{} does detect whether an input model is an L/U-PTA, in which case a message is printed with the list of lower-bounds parameters and upper-bounds parameters.
