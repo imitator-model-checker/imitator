@@ -704,7 +704,8 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 								if (property.synthesis_type = Witness) then raise TerminateAnalysis;
 							in
 							let filterdfs (thestate : State.state_index) (astate : State.state_index) (astate_depth : int) : bool =
-								true in
+								(same_parameter_projection thestate astate)
+							in
 							let testaltdfs (thestate : State.state_index) (astate : State.state_index) : bool =
 								(table_test cyan astate)
 							in
