@@ -1,0 +1,25 @@
+(************************************************************
+ *          WARNING: the -output-cart results of this model by EF and PRP are different!!!
+ *
+ *                      IMITATOR MODEL                      
+ *
+ * IMITATOR uniproc-fp-idle-sched-3tasks-3params-WARNING.imi uniproc-fp-idle-sched-3tasks-3params-WARNING.pi0 -mode cover -PRP  -incl -merge 
+ *
+ * Model derived from the "idle scheduler" in the SynCop 2014 paper with 3 tasks. 
+ * Tasks have implicit deadlines; that is, for a task,  its period and deadline are the same in the model.  
+ * Author: Youcheng Sun
+ * References: ''Toward Parametric Timed Interfaces for Real-Time Components'' (2014) by 
+ *                  Youcheng Sun, Giuseppe Lipari, Étienne André and Laurent Fribourg
+ *
+ * Date: 2014/04/01
+ * Last modified: 2020/08/18
+ * IMITATOR version: 3 
+ ************************************************************)
+
+property := #synth BCcover(
+ (*t2_C = 5 & t3_C = 20*)
+
+	t2_C = 0..100
+& 	t3_C = 5..150
+& 	t3_arr_P = 20..55
+);

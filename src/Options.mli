@@ -1,73 +1,98 @@
 (************************************************************
  *
  *                       IMITATOR
- * 
+ *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
- * 
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
+ *
  * Module description: Options definitions
- * 
+ *
  * File contributors : Étienne André, Laure Petrucci
  * Created:       2012/05/10
- * Last modified: 2019/05/29
+ * Last modified: 2020/09/23
  *
  ************************************************************)
- 
-
-open ImitatorUtilities
 
 
+open AbstractAlgorithm
 
 
 class imitator_options :
 	object
-		
+
 		(************************************************************)
 		(* Class methods *)
 		(************************************************************)
-		
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Get methods *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		
+
 		method acyclic : bool
 (* 		method best_worst_case : bool *)
-		method branch_and_bound : bool
+(* 		method branch_and_bound : bool *)
 (* 		method branch_and_bound_unset : unit *)
-		method cart : bool
-		method cartonly : bool
 		method carto_tiles_limit : int option
 		method carto_time_limit : int option
 		method check_ippta : bool
 		method check_point : bool
-(* 		method completeIM : bool *)
-		method counterex : bool
+		
+		method comparison_operator			: AbstractAlgorithm.state_comparison_operator
+		method is_set_comparison_operator	: bool
+		method set_comparison_operator		: AbstractAlgorithm.state_comparison_operator -> unit
+
+		(* Algorithm for cycle detection in cycle synthesis algorithms *)
+		method cycle_algorithm : AbstractAlgorithm.cycle_algorithm
+		method is_set_cycle_algorithm : bool
+		method set_cycle_algorithm : AbstractAlgorithm.cycle_algorithm -> unit
+
 		method depth_limit : int option
+		method depth_init : int option
 		method distribution_mode : distribution_mode
 		method distributedKillIM : bool
+		method draw_cart : bool
 (* 		method dynamic : bool *)
 		method dynamic_clock_elimination : bool
-		method early_terminate : bool
-		method efim : bool
-		method exploration_order : exploration_order
+		
+		method exploration_order : AbstractAlgorithm.exploration_order
+		method is_set_exploration_order : bool
+		method set_exploration_order : AbstractAlgorithm.exploration_order -> unit
+		
 		method files_prefix : string
-		method imitator_mode : imitator_mode
-		(* experimental variant for EFsynth *)
-		method new_ef_mode : bool
-		method inclusion : bool
-		method inclusion2 : bool
+		method imitator_mode : AbstractAlgorithm.imitator_mode
+
+		method layer : bool
+		method is_set_layer : bool
+		method set_layer : bool -> unit
+
 		method merge : bool
-(* 		method merge_before : bool *)
+		method is_set_merge : bool
+		method set_merge : bool -> unit
+
+		(* 		method merge_before : bool *)
+		method mergeq : bool
+		method is_set_mergeq : bool
+		method set_mergeq : bool -> unit
+
+		(* 		method merge_before : bool *)
 		method merge_heuristic : merge_heuristic
-		method model_input_file_name : string
+		method model_file_name : string
 		method no_acceptfirst : bool
 		method nb_args : int
+		method no_green : bool
 		method no_leq_test_in_ef : bool
 		method no_lookahead : bool
 		method no_pending_ordered : bool
 		method no_random : bool
 		method no_time_elapsing : bool
 		method no_variable_autoremove : bool
+		
+		(* Method used for infinite-run (cycle) with non-Zeno assumption *)
+		method nz_method : AbstractAlgorithm.nz_method
+		method is_set_nz_method : bool
+		method set_nz_method : AbstractAlgorithm.nz_method -> unit
+		
 		method output_bc_cart : bool
 		method output_bc_result : bool
 		method output_cart_x_min : int option
@@ -75,49 +100,62 @@ class imitator_options :
 		method output_cart_y_min : int option
 		method output_cart_y_max : int option
 		method output_float : bool
+
 		method output_result : bool
+		method is_set_output_result : bool
+		method set_output_result : bool -> unit
+
 		method output_tiles_files : bool
 		method pi_compatible : bool
 		method precomputepi0 : bool
-(* 		method pta2clp : bool *)
-		method pta2hytech : bool
-		method pta2imi : bool
-		method pta2jpg : bool
-		method pta2pdf : bool
-		method pta2png : bool
-		method pta2tikz : bool
-		method pta2uppaal : bool
-		method second_file_name : string
+		method property_file_name : string option
 		method states_limit : int option
 		method statistics : bool
-		method step : NumConst.t
+		
+		method subsumption : bool
+		method is_set_subsumption : bool
+		method set_subsumption : bool -> unit
+
 		method sync_auto_detection : bool
 		method time_limit : int option
 		method timed_mode : bool
-		method tree : bool
-		method union : bool
 		method graphical_state_space : graphical_state_space
 		method with_graphics_source : bool
-		method with_log : bool
+		method states_description : bool
+
+		method recompute_green : bool
+		method pending_order : pending_order
+		method depth_step : int option
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Set methods *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		
-		(*** NOTE: set methods are only used for the learning-based abstraction construction ***)
-		
+
+		(*** NOTE: these set methods are only used for the learning-based abstraction construction ***)
+
 		method set_file : string -> unit
 
 		method set_files_prefix : string -> unit
 
-		
+
+		(*** NOTE: this set method is only used for the CUB NZ algorithms ***)
+		method set_no_time_elapsing : unit
+
+
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Other methods *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		
+
 		method parse : unit
-		
-		(* Recall options *)
-		method recall : unit -> unit
-		
+
+		(* Recall options, print info, and check compatibility with the actual algorithm *)
+		method recall_and_warn : AbstractModel.abstract_model -> AbstractProperty.abstract_property option -> unit
+
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Force some options when the mode is cartography *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method set_options_for_cartography : bool -> unit
+
+
 end

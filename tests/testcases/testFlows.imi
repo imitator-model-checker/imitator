@@ -1,0 +1,86 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Simple example to test flows
+ *
+ * Description     : Simple example to test flows
+ * Correctness     : N/A
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/09/17
+ * Last modified   : 2020/09/17
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y, z
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant x <= 1 flow{x' = 1, y' = 2, z' = 2.5}
+	(* At that point, x = 1, y = 2, z = 2.5 *)
+	when x = 1 sync a do {x := 0} goto l2;
+
+urgent loc l2: invariant True
+	(* At that point, x = 0, y = 2, z = 2.5 *)
+	when True sync a goto l3;
+
+loc l3: invariant z <= 13 stop {x} flow{y' = -1, z' = (20 + 1) / 2}
+	(* At that point, x = 0, y = 1, z = 13 *)
+	when z = 13 sync a goto l4;
+
+loc l4: invariant x <= 2045 stop {z} flow{z' = -(36 - 37)} (*** NOTE: will trigger a warning, but irrelevant to our analysis ***)
+	(* At that point, x = 2045, y = 2046, z = ? => p = 2046 *)
+	when x= 2045 & y = p sync a goto l5;
+
+urgent loc l5: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+	& z = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

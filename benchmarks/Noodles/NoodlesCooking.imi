@@ -11,9 +11,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2014/03/21
- * Last modified   : 2015/07/30
+ * Last modified   : 2020/08/13
  *
- * IMITATOR version: 2.7.1
+ * IMITATOR version: 3
  ************************************************************)
 
 var 	xPot, xTimer
@@ -28,22 +28,21 @@ var 	xPot, xTimer
   automaton system
 (************************************************************)
 synclabs: startTimer, ring, boilover, miam;
-initially heating;
 
-loc heating: while xPot <= dPot wait {}
-	when True do {xTimer' = 0} sync startTimer goto ticking;
+loc heating: invariant xPot <= dPot
+	when True do {xTimer := 0} sync startTimer goto ticking;
 	when xPot = dPot sync boilover goto catastrophe;
 
-loc ticking: while xPot <= dPot & xTimer <= dTimer wait {}
+loc ticking: invariant xPot <= dPot & xTimer <= dTimer
 	when xTimer = dTimer sync ring goto cooked;
 	when xPot = dPot sync boilover goto catastrophe;
 
-loc cooked: while xPot <= dPot wait {}
+loc cooked: invariant xPot <= dPot
 	when xPot = dPot sync miam goto eating;
 
-loc eating: while True wait {}
+loc eating: invariant True
 
-loc catastrophe: while True wait {}
+loc catastrophe: invariant True
 end (* system *)
 
 
@@ -69,13 +68,6 @@ init :=
 	& dPot >= 0
 	& dTimer >= 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[system] = catastrophe;
 
 
 (************************************************************)

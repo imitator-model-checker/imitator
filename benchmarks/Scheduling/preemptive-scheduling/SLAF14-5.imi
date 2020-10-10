@@ -10,12 +10,12 @@
  * Author: Giuseppe Lipari
  * Date: January 2014
  * References: ''Reachability Preservation Based Parameter Synthesis for Timed Automata'' (2015) by 
- *                 Etienne Andre, Giuseppe Lipari, Hoang Gia Nguyen and Youcheng Sun; Sched5
+ *                 Étienne André, Giuseppe Lipari, Hoang Gia Nguyen and Youcheng Sun; Sched5
  *             ''Toward Parametric Timed Interfaces for Real-Time Components'' (2014) by 
- *                 Youcheng Sun, Giuseppe Lipari, Etienne Andre and Laurent Fribourg
+ *                 Youcheng Sun, Giuseppe Lipari, Étienne André and Laurent Fribourg
  * Created: < 2015/10/30
- * Last modified: 2018/09/07
- * IMITATOR version: 2.10.3
+ * Last modified: 2020/08/18
+ * IMITATOR version: 3
  ************************************************************)
 
 
@@ -545,5 +545,7 @@ init :=     loc[Task_t1] = t1_loc_idle &
 		& 10 <= t5_C 
     	& t5_C <= 50
 ;
-    
-property := unreachable loc[OBS_dline] = dline_loc_miss
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

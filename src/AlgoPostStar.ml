@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
- * Module description: PostStar algorithm, i.e., simple computation of all symbolic states
+ * Module description: PostStar algorithm, i.e., simple forward computation of all symbolic states
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/25
- * Last modified     : 2019/06/13
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -69,7 +70,7 @@ class algoPostStar =
 	method add_a_new_state source_state_index combined_transition new_state =
 
 		(* Try to add the new state to the state space *)
-		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
+		let addition_result = StateSpace.add_state state_space options#comparison_operator new_state in
 		
 		(* Print some information *)
 		print_message Verbose_total ("New state addition attempt successfully performed.");
@@ -142,7 +143,7 @@ class algoPostStar =
 
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
-			| None -> raise (InternalError "Termination status not set in EFsynth.compute_result")
+			| None -> raise (InternalError "Termination status not set in PostStar.compute_result")
 			| Some status -> status
 		in
 
@@ -154,7 +155,7 @@ class algoPostStar =
 		in
 
 		(* Return result *)
-		PostStar_result
+		State_space_computation_result
 		{
 			(* Explored state space *)
 			state_space			= state_space;

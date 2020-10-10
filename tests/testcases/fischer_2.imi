@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : < 2012/02/14
- * Last modified   : 2018/02/22
+ * Last modified   : 2020/03/20
  *
- * IMITATOR version: 2.10.1
+ * IMITATOR version: 3
  ************************************************************)
  
 var 
@@ -132,13 +132,6 @@ init :=
 	& a >= 0
 	& b >= 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[proc1] = CS & loc[proc2] = CS;
 
 
 (************************************************************)

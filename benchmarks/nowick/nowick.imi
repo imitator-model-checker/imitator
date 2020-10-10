@@ -1,15 +1,22 @@
 (************************************************************
- *                         IMITATOR
+ *                      IMITATOR MODEL                      
  *
- * Model of the nowick example
- * Source: "Verification of Concurrent Systems with Parametric Delays Using Octahedra" by Clariso and Cortadella (2005)
+ * nowick example
  *
- * Author          : Christopher Makanga, Etienne Andre
+ * Description     : nowick example
+ * Correctness     : ?
+ * Source          : "Verification of Concurrent Systems with Parametric Delays Using Octahedra" by Clarisó and Cortadella (2005)
+ * Author          : Clarisó and Cortadella
+ * Modeling        : Christopher Makanga, Étienne André
+ * Input by        : Christopher Makanga, Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
  * Created         : 2014/08/29
- * Last modified   : 2014/09/26
- * IMITATOR version: 2.6.2
+ * Last modified   : 2020/08/13
+ *
+ * IMITATOR version: 3.0
  ************************************************************)
-
+ 
  var 	ckiiAnd, ckOr3, ckOr2, ckOr1, ckAnd1, ckii3And1, ckii3And2,
 		(*ckInputA, ckInputB, ckInputC, *)
 			x_a, x_b, x_c,
@@ -75,46 +82,46 @@ synclabs: fUp, fDown, gUp, gDown,
 	yUp, yDown;
 
 (* Stable *)
-loc Or3_000: while True wait {}
-	when True sync fUp do {ckOr3' = 0} goto Or3_100;
-	when True sync gUp do {ckOr3' = 0} goto Or3_010;
+loc Or3_000: invariant True
+	when True sync fUp do {ckOr3 := 0} goto Or3_100;
+	when True sync gUp do {ckOr3 := 0} goto Or3_010;
 
 (* Unstable *)
-loc Or3_001: while ckOr3 <= D7 wait {}
+loc Or3_001: invariant ckOr3 <= D7
 	when True sync fUp do {} goto Or3_101;
 	when True sync gUp do {} goto Or3_011;
 	when ckOr3 >= d7 sync yDown do {} goto Or3_000;
 
 (* Unstable *)
-loc Or3_010: while ckOr3 <= D7 wait {}
-	when True sync fUp do {ckOr3' = 0} goto Or3_110;
+loc Or3_010: invariant ckOr3 <= D7
+	when True sync fUp do {ckOr3 := 0} goto Or3_110;
 	when True sync gDown do {} goto Or3_000;
 	when ckOr3 >= d7 sync yUp do {} goto Or3_011;
 
 (* Stable *)
-loc Or3_011: while True wait {}
+loc Or3_011: invariant True
 	when True sync fUp do {} goto Or3_111;
-	when True sync gDown do {ckOr3' = 0} goto Or3_001;
+	when True sync gDown do {ckOr3 := 0} goto Or3_001;
 
 (* Unstable *)
-loc Or3_100: while ckOr3 <= D7 wait {}
+loc Or3_100: invariant ckOr3 <= D7
 	when True sync fDown do {} goto Or3_000;
-	when True sync gUp do {ckOr3' = 0} goto Or3_110;
+	when True sync gUp do {ckOr3 := 0} goto Or3_110;
 	when ckOr3 >= d7 sync yUp do {} goto Or3_101;
 
 (* Stable *)
-loc Or3_101: while True wait {}
-	when True sync fDown do {ckOr3' = 0} goto Or3_001;
+loc Or3_101: invariant True
+	when True sync fDown do {ckOr3 := 0} goto Or3_001;
 	when True sync gUp do {} goto Or3_111;
 
 (* Unstable *)
-loc Or3_110: while ckOr3 <= D7  wait {}
-	when True sync fDown do {ckOr3' = 0} goto Or3_010;
-	when True sync gDown do {ckOr3' = 0} goto Or3_100;
+loc Or3_110: invariant ckOr3 <= D7 
+	when True sync fDown do {ckOr3 := 0} goto Or3_010;
+	when True sync gDown do {ckOr3 := 0} goto Or3_100;
 	when ckOr3 >= d7 sync yUp do {} goto Or3_111;
 
 (* Stable *)
-loc Or3_111: while True wait {}
+loc Or3_111: invariant True
 	when True sync fDown do {} goto Or3_011;
 	when True sync gDown do {} goto Or3_101;
 
@@ -128,46 +135,46 @@ synclabs: eUp, eDown, fUp, fDown,
 	xUp, xDown;
 
 (* Stable *)
-loc Or2_000: while True wait {}
-	when True sync eUp do {ckOr2' = 0} goto Or2_100;
-	when True sync fUp do {ckOr2' = 0} goto Or2_010;
+loc Or2_000: invariant True
+	when True sync eUp do {ckOr2 := 0} goto Or2_100;
+	when True sync fUp do {ckOr2 := 0} goto Or2_010;
 
 (* Unstable *)
-loc Or2_001: while ckOr2 <= D6 wait {}
+loc Or2_001: invariant ckOr2 <= D6
 	when True sync eUp do {} goto Or2_101;
 	when True sync fUp do {} goto Or2_011;
 	when ckOr2 >= d6 sync xDown do {} goto Or2_000;
 
 (* Unstable *)
-loc Or2_010: while ckOr2 <= D6 wait {}
-	when True sync eUp do {ckOr2' = 0} goto Or2_110;
+loc Or2_010: invariant ckOr2 <= D6
+	when True sync eUp do {ckOr2 := 0} goto Or2_110;
 	when True sync fDown do {} goto Or2_000;
 	when ckOr2 >= d6 sync xUp do {} goto Or2_011;
 
 (* Stable *)
-loc Or2_011: while True wait {}
+loc Or2_011: invariant True
 	when True sync eUp do {} goto Or2_111;
-	when True sync fDown do {ckOr2' = 0} goto Or2_001;
+	when True sync fDown do {ckOr2 := 0} goto Or2_001;
 
 (* Unstable *)
-loc Or2_100: while ckOr2 <= D6 wait {}
+loc Or2_100: invariant ckOr2 <= D6
 	when True sync eDown do {} goto Or2_000;
-	when True sync fUp do {ckOr2' = 0} goto Or2_110;
+	when True sync fUp do {ckOr2 := 0} goto Or2_110;
 	when ckOr2 >= d6 sync xUp do {} goto Or2_101;
 
 (* Stable *)
-loc Or2_101: while True wait {}
-	when True sync eDown do {ckOr2' = 0} goto Or2_001;
+loc Or2_101: invariant True
+	when True sync eDown do {ckOr2 := 0} goto Or2_001;
 	when True sync fUp do {} goto Or2_111;
 
 (* Unstable *)
-loc Or2_110: while ckOr2 <= D6  wait {}
-	when True sync eDown do {ckOr2' = 0} goto Or2_010;
-	when True sync fDown do {ckOr2' = 0} goto Or2_100;
+loc Or2_110: invariant ckOr2 <= D6 
+	when True sync eDown do {ckOr2 := 0} goto Or2_010;
+	when True sync fDown do {ckOr2 := 0} goto Or2_100;
 	when ckOr2 >= d6 sync xUp do {} goto Or2_111;
 
 (* Stable *)
-loc Or2_111: while True wait {}
+loc Or2_111: invariant True
 	when True sync eDown do {} goto Or2_011;
 	when True sync fDown do {} goto Or2_101;
 
@@ -183,46 +190,46 @@ synclabs: kUp, kDown, cUp, cDown,
 (* Configuration : kch *)
 	
 (* Stable *)
-loc Or1_000: while True wait {}
-	when True sync kUp do {ckOr1' = 0} goto Or1_100;
-	when True sync cUp do {ckOr1' = 0} goto Or1_010;
+loc Or1_000: invariant True
+	when True sync kUp do {ckOr1 := 0} goto Or1_100;
+	when True sync cUp do {ckOr1 := 0} goto Or1_010;
 
 (* Unstable *)
-loc Or1_001: while ckOr1 <= D5 wait {}
+loc Or1_001: invariant ckOr1 <= D5
 	when True sync kUp do {} goto Or1_101;
 	when True sync cUp do {} goto Or1_011;
 	when ckOr1 >= d5 sync hDown do {} goto Or1_000;
 
 (* Unstable *)
-loc Or1_010: while ckOr1 <= D5 wait {}
-	when True sync kUp do {ckOr1' = 0} goto Or1_110;
+loc Or1_010: invariant ckOr1 <= D5
+	when True sync kUp do {ckOr1 := 0} goto Or1_110;
 	when True sync cDown do {} goto Or1_000;
 	when ckOr1 >= d5 sync hUp do {} goto Or1_011;
 
 (* Stable *)
-loc Or1_011: while True wait {}
+loc Or1_011: invariant True
 	when True sync kUp do {} goto Or1_111;
-	when True sync cDown do {ckOr1' = 0} goto Or1_001;
+	when True sync cDown do {ckOr1 := 0} goto Or1_001;
 
 (* Unstable *)
-loc Or1_100: while ckOr1 <= D5 wait {}
+loc Or1_100: invariant ckOr1 <= D5
 	when True sync kDown do {} goto Or1_000;
-	when True sync cUp do {ckOr1' = 0} goto Or1_110;
+	when True sync cUp do {ckOr1 := 0} goto Or1_110;
 	when ckOr1 >= d5 sync hUp do {} goto Or1_101;
 
 (* Stable *)
-loc Or1_101: while True wait {}
-	when True sync kDown do {ckOr1' = 0} goto Or1_001;
+loc Or1_101: invariant True
+	when True sync kDown do {ckOr1 := 0} goto Or1_001;
 	when True sync cUp do {} goto Or1_111;
 
 (* Unstable *)
-loc Or1_110: while ckOr1 <= D5  wait {}
-	when True sync kDown do {ckOr1' = 0} goto Or1_010;
-	when True sync cDown do {ckOr1' = 0} goto Or1_100;
+loc Or1_110: invariant ckOr1 <= D5 
+	when True sync kDown do {ckOr1 := 0} goto Or1_010;
+	when True sync cDown do {ckOr1 := 0} goto Or1_100;
 	when ckOr1 >= d5 sync hUp do {} goto Or1_111;
 
 (* Stable *)
-loc Or1_111: while True wait {}
+loc Or1_111: invariant True
 	when True sync kDown do {} goto Or1_011;
 	when True sync cDown do {} goto Or1_101;
 
@@ -236,48 +243,48 @@ end (*OrGate*)
 synclabs: hUp, hDown, aUp, aDown, kUp, kDown;
 
 (* Stable *)
-loc And1_000: while True wait {}
+loc And1_000: invariant True
 	when True sync hUp do {} goto And1_100;
 	when True sync aUp do {} goto And1_010;
 
 (* Untable *)
-loc And1_001: while ckAnd1 <= D4 wait {}
-	when True sync hUp do {ckAnd1' = 0} goto And1_101;
-	when True sync aUp do {ckAnd1' = 0} goto And1_011;
+loc And1_001: invariant ckAnd1 <= D4
+	when True sync hUp do {ckAnd1 := 0} goto And1_101;
+	when True sync aUp do {ckAnd1 := 0} goto And1_011;
 	when ckAnd1 >= d4 sync kDown do {} goto And1_000;
 
 (* Stable *)
-loc And1_010: while True wait {}
-	when True sync hUp do {ckAnd1' = 0} goto And1_110;
+loc And1_010: invariant True
+	when True sync hUp do {ckAnd1 := 0} goto And1_110;
 	when True sync aDown do {} goto And1_000;
 
 (* Untable *)
-loc And1_011: while ckAnd1 <= D4 wait {}
+loc And1_011: invariant ckAnd1 <= D4
 	when True sync hUp do {} goto And1_111;
-	when True sync aDown do {ckAnd1' = 0} goto And1_001;
+	when True sync aDown do {ckAnd1 := 0} goto And1_001;
 	when ckAnd1 >= d4 sync kDown do {} goto And1_010;
 
 (* Stable *)
-loc And1_100: while True wait {}
+loc And1_100: invariant True
 	when True sync hDown do {} goto And1_000;
-	when True sync aUp do {ckAnd1' = 0} goto And1_110;
+	when True sync aUp do {ckAnd1 := 0} goto And1_110;
 
 (* Untable *)
-loc And1_101: while ckAnd1 <= D4 wait {}
-	when True sync hDown do {ckAnd1' = 0} goto And1_001;
+loc And1_101: invariant ckAnd1 <= D4
+	when True sync hDown do {ckAnd1 := 0} goto And1_001;
 	when True sync aUp do {} goto And1_111;
 	when ckAnd1 >= d4 sync kDown do {} goto And1_100;
 
 (* Untable *)
-loc And1_110: while ckAnd1 <= D4  wait {}
+loc And1_110: invariant ckAnd1 <= D4 
 	when True sync hDown do {} goto And1_010;
 	when True sync aDown do {} goto And1_100;
 	when ckAnd1 >= d4 sync kUp do {} goto And1_111;
 
 (* Stable *)
-loc And1_111: while True wait {}
-	when True sync hDown do {ckAnd1' = 0} goto And1_011;
-	when True sync aDown do {ckAnd1' = 0} goto And1_101;
+loc And1_111: invariant True
+	when True sync hDown do {ckAnd1 := 0} goto And1_011;
+	when True sync aDown do {ckAnd1 := 0} goto And1_101;
 
 end (*And1Gate*)
 
@@ -291,107 +298,107 @@ synclabs: hUp, hDown, aUp, aDown,bUp, bDown,
 
 
 (* Stable *)
-loc ii3And2_0000: while True wait {}
+loc ii3And2_0000: invariant True
 	when True sync hUp do {} goto ii3And2_1000;
 	when True sync aUp do {} goto ii3And2_0100;
 	when True sync bUp do {} goto ii3And2_0010;
 
 (* Unstable *)
-loc ii3And2_0001: while ckii3And2 <= D2 wait {}
-	when True sync hUp do {ckii3And2' = 0} goto ii3And2_1001;
-	when True sync aUp do {ckii3And2' = 0} goto ii3And2_0101;
-	when True sync bUp do {ckii3And2' = 0} goto ii3And2_0011;	
+loc ii3And2_0001: invariant ckii3And2 <= D2
+	when True sync hUp do {ckii3And2 := 0} goto ii3And2_1001;
+	when True sync aUp do {ckii3And2 := 0} goto ii3And2_0101;
+	when True sync bUp do {ckii3And2 := 0} goto ii3And2_0011;	
 	when ckii3And2 >= d2 sync fDown do {} goto ii3And2_0000;
 
 (* Stable *)
-loc ii3And2_0010: while True wait {}
+loc ii3And2_0010: invariant True
 	when True sync hUp do {} goto ii3And2_1010;
-	when True sync aUp do {ckii3And2' = 0} goto ii3And2_0110;
+	when True sync aUp do {ckii3And2 := 0} goto ii3And2_0110;
 	when True sync bDown do {} goto ii3And2_0000;
 
 (* Unstable *)
-loc ii3And2_0011: while ckii3And2 <= D2 wait {}
-	when True sync hUp do {ckii3And2' = 0} goto ii3And2_1011;
+loc ii3And2_0011: invariant ckii3And2 <= D2
+	when True sync hUp do {ckii3And2 := 0} goto ii3And2_1011;
 	when True sync aUp do {} goto ii3And2_0111;
-	when True sync bDown do {ckii3And2' = 0} goto ii3And2_0001;
+	when True sync bDown do {ckii3And2 := 0} goto ii3And2_0001;
 	when ckii3And2 >= d2 sync fDown do {} goto ii3And2_0010;
 
 (* Stable *)
-loc ii3And2_0100: while True wait {} 
+loc ii3And2_0100: invariant True 
 	when True sync hUp do {} goto ii3And2_1100;
 	when True sync aDown do {} goto ii3And2_0000;
-	when True sync bUp do {ckii3And2' = 0} goto ii3And2_0110;
+	when True sync bUp do {ckii3And2 := 0} goto ii3And2_0110;
 
 (* Unstable *)
-loc ii3And2_0101: while ckii3And2 <= D2 wait {}
-	when True sync hUp do {ckii3And2' = 0} goto ii3And2_1101;
-	when True sync aDown do {ckii3And2' = 0} goto ii3And2_0001;
+loc ii3And2_0101: invariant ckii3And2 <= D2
+	when True sync hUp do {ckii3And2 := 0} goto ii3And2_1101;
+	when True sync aDown do {ckii3And2 := 0} goto ii3And2_0001;
 	when True sync bUp do {} goto ii3And2_0111;
 	when ckii3And2 >= d2 sync fDown do {} goto ii3And2_0100;
 
 (* Unstable *)
-loc ii3And2_0110: while ckii3And2 <= D2  wait {}
-	when True sync hUp do {ckii3And2' = 0} goto ii3And2_1110;
+loc ii3And2_0110: invariant ckii3And2 <= D2 
+	when True sync hUp do {ckii3And2 := 0} goto ii3And2_1110;
 	when True sync aDown do {} goto ii3And2_0010;
 	when True sync bDown do {} goto ii3And2_0100;
 	when ckii3And2 >= d2 sync fUp do {} goto ii3And2_0111;
 
 (* Stable *)
-loc ii3And2_0111: while True wait {}
-	when True sync hUp do {ckii3And2' = 0} goto ii3And2_1111;
-	when True sync aDown do {ckii3And2' = 0} goto ii3And2_0011;
-	when True sync bDown do {ckii3And2' = 0} goto ii3And2_0101;
+loc ii3And2_0111: invariant True
+	when True sync hUp do {ckii3And2 := 0} goto ii3And2_1111;
+	when True sync aDown do {ckii3And2 := 0} goto ii3And2_0011;
+	when True sync bDown do {ckii3And2 := 0} goto ii3And2_0101;
 
 (* Stable *)
-loc ii3And2_1000: while True wait {}
+loc ii3And2_1000: invariant True
 	when True sync hDown do {} goto ii3And2_0000;
 	when True sync aUp do {} goto ii3And2_1100;
 	when True sync bUp do {} goto ii3And2_1010;
 
 (* Unstable *)
-loc ii3And2_1001: while ckii3And2 <= D2 wait {}
-	when True sync hDown do {ckii3And2' = 0} goto ii3And2_0001;
-	when True sync aUp do {ckii3And2' = 0} goto ii3And2_1101;
-	when True sync bUp do {ckii3And2' = 0} goto ii3And2_1011;
+loc ii3And2_1001: invariant ckii3And2 <= D2
+	when True sync hDown do {ckii3And2 := 0} goto ii3And2_0001;
+	when True sync aUp do {ckii3And2 := 0} goto ii3And2_1101;
+	when True sync bUp do {ckii3And2 := 0} goto ii3And2_1011;
 	when ckii3And2 >= d2 sync fDown do {} goto ii3And2_1000;
 
 (* Stable *)
-loc ii3And2_1010: while True wait {}
+loc ii3And2_1010: invariant True
 	when True sync hDown do {} goto ii3And2_0010;
 	when True sync aUp do {} goto ii3And2_1110;
 	when True sync bDown do {} goto ii3And2_1000;
 
 (* Unstable *)
-loc ii3And2_1011: while ckii3And2 <= D2 wait {}
-	when True sync hDown do {ckii3And2' = 0} goto ii3And2_0011;
-	when True sync aUp do {ckii3And2' = 0} goto ii3And2_1111;
-	when True sync bDown do {ckii3And2' = 0} goto ii3And2_1001;
+loc ii3And2_1011: invariant ckii3And2 <= D2
+	when True sync hDown do {ckii3And2 := 0} goto ii3And2_0011;
+	when True sync aUp do {ckii3And2 := 0} goto ii3And2_1111;
+	when True sync bDown do {ckii3And2 := 0} goto ii3And2_1001;
 	when ckii3And2 >= d2 sync fDown do {} goto ii3And2_1010;
 
 (* Stable *)
-loc ii3And2_1100: while True wait {}
+loc ii3And2_1100: invariant True
 	when True sync hDown do {} goto ii3And2_0100;
 	when True sync aDown do {} goto ii3And2_1000;
 	when True sync bUp do {} goto ii3And2_1110;
 
 (* Unstable *)
-loc ii3And2_1101: while ckii3And2 <= D2 wait {}
-	when True sync hDown do {ckii3And2' = 0} goto ii3And2_0101;
-	when True sync aDown do {ckii3And2' = 0} goto ii3And2_1001;
-	when True sync bUp do {ckii3And2' = 0} goto ii3And2_1111;
+loc ii3And2_1101: invariant ckii3And2 <= D2
+	when True sync hDown do {ckii3And2 := 0} goto ii3And2_0101;
+	when True sync aDown do {ckii3And2 := 0} goto ii3And2_1001;
+	when True sync bUp do {ckii3And2 := 0} goto ii3And2_1111;
 	when ckii3And2 >= d2 sync fDown do {} goto ii3And2_1100;
 
 (* Stable *)
-loc ii3And2_1110: while True wait {}
-	when True sync hDown do {ckii3And2' = 0} goto ii3And2_0110;
+loc ii3And2_1110: invariant True
+	when True sync hDown do {ckii3And2 := 0} goto ii3And2_0110;
 	when True sync aDown do {} goto ii3And2_1010;
 	when True sync bDown do {} goto ii3And2_1100;
 
 (* Unstable *)
-loc ii3And2_1111: while ckii3And2 <= D2 wait {}
+loc ii3And2_1111: invariant ckii3And2 <= D2
 	when True sync hDown do {} goto ii3And2_0111;
-	when True sync aDown do {ckii3And2' = 0} goto ii3And2_1011;
-	when True sync bDown do {ckii3And2' = 0} goto ii3And2_1101;
+	when True sync aDown do {ckii3And2 := 0} goto ii3And2_1011;
+	when True sync bDown do {ckii3And2 := 0} goto ii3And2_1101;
 	when ckii3And2 >= d2 sync fDown do {} goto ii3And2_1110;
 
 end (*ii3And2Gate*)
@@ -405,107 +412,107 @@ synclabs: cUp, cDown, aUp, aDown,bUp, bDown,
 	eUp, eDown;
 
 (* Stable *)
-loc ii3And1_0000: while True wait {}
+loc ii3And1_0000: invariant True
 	when True sync cUp do {} goto ii3And1_1000;
 	when True sync aUp do {} goto ii3And1_0100;
 	when True sync bUp do {} goto ii3And1_0010;
 
 (* Unstable *)
-loc ii3And1_0001: while ckii3And1 <= D1 wait {}
-	when True sync cUp do {ckii3And1' = 0} goto ii3And1_1001;
-	when True sync aUp do {ckii3And1' = 0} goto ii3And1_0101;
-	when True sync bUp do {ckii3And1' = 0} goto ii3And1_0011;	
+loc ii3And1_0001: invariant ckii3And1 <= D1
+	when True sync cUp do {ckii3And1 := 0} goto ii3And1_1001;
+	when True sync aUp do {ckii3And1 := 0} goto ii3And1_0101;
+	when True sync bUp do {ckii3And1 := 0} goto ii3And1_0011;	
 	when ckii3And1 >= d1 sync eDown do {} goto ii3And1_0000;
 
 (* Stable *)
-loc ii3And1_0010: while True wait {}
+loc ii3And1_0010: invariant True
 	when True sync cUp do {} goto ii3And1_1010;
-	when True sync aUp do {ckii3And1' = 0} goto ii3And1_0110;
+	when True sync aUp do {ckii3And1 := 0} goto ii3And1_0110;
 	when True sync bDown do {} goto ii3And1_0000;
 
 (* Unstable *)
-loc ii3And1_0011: while ckii3And1 <= D1 wait {}
-	when True sync cUp do {ckii3And1' = 0} goto ii3And1_1011;
+loc ii3And1_0011: invariant ckii3And1 <= D1
+	when True sync cUp do {ckii3And1 := 0} goto ii3And1_1011;
 	when True sync aUp do {} goto ii3And1_0111;
-	when True sync bDown do {ckii3And1' = 0} goto ii3And1_0001;
+	when True sync bDown do {ckii3And1 := 0} goto ii3And1_0001;
 	when ckii3And1 >= d1 sync eDown do {} goto ii3And1_0010;
 
 (* Stable *)
-loc ii3And1_0100: while True wait {} 
+loc ii3And1_0100: invariant True 
 	when True sync cUp do {} goto ii3And1_1100;
 	when True sync aDown do {} goto ii3And1_0000;
-	when True sync bUp do {ckii3And1' = 0} goto ii3And1_0110;
+	when True sync bUp do {ckii3And1 := 0} goto ii3And1_0110;
 
 (* Unstable *)
-loc ii3And1_0101: while ckii3And1 <= D1 wait {}
-	when True sync cUp do {ckii3And1' = 0} goto ii3And1_1101;
-	when True sync aDown do {ckii3And1' = 0} goto ii3And1_0001;
+loc ii3And1_0101: invariant ckii3And1 <= D1
+	when True sync cUp do {ckii3And1 := 0} goto ii3And1_1101;
+	when True sync aDown do {ckii3And1 := 0} goto ii3And1_0001;
 	when True sync bUp do {} goto ii3And1_0111;
 	when ckii3And1 >= d1 sync eDown do {} goto ii3And1_0100;
 
 (* Unstable *)
-loc ii3And1_0110: while ckii3And1 <= D1  wait {}
-	when True sync cUp do {ckii3And1' = 0} goto ii3And1_1110;
+loc ii3And1_0110: invariant ckii3And1 <= D1 
+	when True sync cUp do {ckii3And1 := 0} goto ii3And1_1110;
 	when True sync aDown do {} goto ii3And1_0010;
 	when True sync bDown do {} goto ii3And1_0100;
 	when ckii3And1 >= d1 sync eUp do {} goto ii3And1_0111;
 
 (* Stable *)
-loc ii3And1_0111: while True wait {}
-	when True sync cUp do {ckii3And1' = 0} goto ii3And1_1111;
-	when True sync aDown do {ckii3And1' = 0} goto ii3And1_0011;
-	when True sync bDown do {ckii3And1' = 0} goto ii3And1_0101;
+loc ii3And1_0111: invariant True
+	when True sync cUp do {ckii3And1 := 0} goto ii3And1_1111;
+	when True sync aDown do {ckii3And1 := 0} goto ii3And1_0011;
+	when True sync bDown do {ckii3And1 := 0} goto ii3And1_0101;
 
 (* Stable *)
-loc ii3And1_1000: while True wait {}
+loc ii3And1_1000: invariant True
 	when True sync cDown do {} goto ii3And1_0000;
 	when True sync aUp do {} goto ii3And1_1100;
 	when True sync bUp do {} goto ii3And1_1010;
 	
 (* Unstable *)
-loc ii3And1_1001: while ckii3And1 <= D1 wait {}
-	when True sync cDown do {ckii3And1' = 0} goto ii3And1_0001;
-	when True sync aUp do {ckii3And1' = 0} goto ii3And1_1101;
-	when True sync bUp do {ckii3And1' = 0} goto ii3And1_1011;
+loc ii3And1_1001: invariant ckii3And1 <= D1
+	when True sync cDown do {ckii3And1 := 0} goto ii3And1_0001;
+	when True sync aUp do {ckii3And1 := 0} goto ii3And1_1101;
+	when True sync bUp do {ckii3And1 := 0} goto ii3And1_1011;
 	when ckii3And1 >= d1 sync eDown do {} goto ii3And1_1000;
 
 (* Stable *)
-loc ii3And1_1010: while True wait {}
+loc ii3And1_1010: invariant True
 	when True sync cDown do {} goto ii3And1_0010;
 	when True sync aUp do {} goto ii3And1_1110;
 	when True sync bDown do {} goto ii3And1_1000;
 
 (* Unstable *)
-loc ii3And1_1011: while ckii3And1 <= D1 wait {}
-	when True sync cDown do {ckii3And1' = 0} goto ii3And1_0011;
-	when True sync aUp do {ckii3And1' = 0} goto ii3And1_1111;
-	when True sync bDown do {ckii3And1' = 0} goto ii3And1_1001;
+loc ii3And1_1011: invariant ckii3And1 <= D1
+	when True sync cDown do {ckii3And1 := 0} goto ii3And1_0011;
+	when True sync aUp do {ckii3And1 := 0} goto ii3And1_1111;
+	when True sync bDown do {ckii3And1 := 0} goto ii3And1_1001;
 	when ckii3And1 >= d1 sync eDown do {} goto ii3And1_1010;
 
 (* Stable *)
-loc ii3And1_1100: while True wait {}
+loc ii3And1_1100: invariant True
 	when True sync cDown do {} goto ii3And1_0100;
 	when True sync aDown do {} goto ii3And1_1000;
 	when True sync bUp do {} goto ii3And1_1110;
 
 (* Unstable *)
-loc ii3And1_1101: while ckii3And1 <= D1 wait {}
-	when True sync cDown do {ckii3And1' = 0} goto ii3And1_0101;
-	when True sync aDown do {ckii3And1' = 0} goto ii3And1_1001;
-	when True sync bUp do {ckii3And1' = 0} goto ii3And1_1111;
+loc ii3And1_1101: invariant ckii3And1 <= D1
+	when True sync cDown do {ckii3And1 := 0} goto ii3And1_0101;
+	when True sync aDown do {ckii3And1 := 0} goto ii3And1_1001;
+	when True sync bUp do {ckii3And1 := 0} goto ii3And1_1111;
 	when ckii3And1 >= d1 sync eDown do {} goto ii3And1_1100;
 
 (* Stable *)
-loc ii3And1_1110: while True wait {}
-	when True sync cDown do {ckii3And1' = 0} goto ii3And1_0110;
+loc ii3And1_1110: invariant True
+	when True sync cDown do {ckii3And1 := 0} goto ii3And1_0110;
 	when True sync aDown do {} goto ii3And1_1010;
 	when True sync bDown do {} goto ii3And1_1100;
 
 (* Unstable *)
-loc ii3And1_1111: while ckii3And1 <= D1 wait {}
+loc ii3And1_1111: invariant ckii3And1 <= D1
 	when True sync cDown do {} goto ii3And1_0111;
-	when True sync aDown do {ckii3And1' = 0} goto ii3And1_1011;
-	when True sync bDown do {ckii3And1' = 0} goto ii3And1_1101;
+	when True sync aDown do {ckii3And1 := 0} goto ii3And1_1011;
+	when True sync bDown do {ckii3And1 := 0} goto ii3And1_1101;
 	when ckii3And1 >= d1 sync eDown do {} goto ii3And1_1110;
 
 end (*ii3And1Gate*)
@@ -519,46 +526,46 @@ synclabs: hUp, hDown, bUp, bDown,
 	gUp, gDown;
 
 (* Stable *)
-loc iiAnd_000: while True wait {}
-	when True sync hUp do {ckiiAnd' = 0} goto iiAnd_100;
+loc iiAnd_000: invariant True
+	when True sync hUp do {ckiiAnd := 0} goto iiAnd_100;
 	when True sync bUp do {} goto iiAnd_010;
 
 (* Unstable *)
-loc iiAnd_001: while ckiiAnd <= D3 wait {}
+loc iiAnd_001: invariant ckiiAnd <= D3
 	when True sync hUp do {} goto iiAnd_101;
-	when True sync bUp do {ckiiAnd' = 0} goto iiAnd_011;
+	when True sync bUp do {ckiiAnd := 0} goto iiAnd_011;
 	when ckiiAnd >= d3 sync gDown do {} goto iiAnd_000;
 
 (* Stable *)
-loc iiAnd_010: while True wait {}
+loc iiAnd_010: invariant True
 	when True sync hUp do {} goto iiAnd_110;
 	when True sync bDown do {} goto iiAnd_000;
 
 (* Unstable *)
-loc iiAnd_011: while ckiiAnd <= D3 wait {}
-	when True sync hUp do {ckiiAnd' = 0} goto iiAnd_111;
-	when True sync bDown do {ckiiAnd' = 0} goto iiAnd_001;
+loc iiAnd_011: invariant ckiiAnd <= D3
+	when True sync hUp do {ckiiAnd := 0} goto iiAnd_111;
+	when True sync bDown do {ckiiAnd := 0} goto iiAnd_001;
 	when ckiiAnd >= d3 sync gDown do {} goto iiAnd_010;
 
 (* Unstable *)
-loc iiAnd_100: while ckiiAnd <= D3 wait {}
+loc iiAnd_100: invariant ckiiAnd <= D3
 	when True sync hDown do {} goto iiAnd_000;
 	when True sync bUp do {} goto iiAnd_110;
 	when ckiiAnd >= d3 sync gUp do {} goto iiAnd_101;
 
 (* Stable *)
-loc iiAnd_101: while True wait {}
-	when True sync hDown do {ckiiAnd' = 0} goto iiAnd_001;
-	when True sync bUp do {ckiiAnd' = 0} goto iiAnd_111;
+loc iiAnd_101: invariant True
+	when True sync hDown do {ckiiAnd := 0} goto iiAnd_001;
+	when True sync bUp do {ckiiAnd := 0} goto iiAnd_111;
 
 (* Stable *)
-loc iiAnd_110: while True wait {}
+loc iiAnd_110: invariant True
 	when True sync hDown do {} goto iiAnd_010;
-	when True sync bDown do {ckiiAnd' = 0} goto iiAnd_100;
+	when True sync bDown do {ckiiAnd := 0} goto iiAnd_100;
 
 (* Unstable *)
-loc iiAnd_111: while ckiiAnd <= D3  wait {}
-	when True sync hDown do {ckiiAnd' = 0} goto iiAnd_011;
+loc iiAnd_111: invariant ckiiAnd <= D3 
+	when True sync hDown do {ckiiAnd := 0} goto iiAnd_011;
 	when True sync bDown do {} goto iiAnd_101;
 	when ckiiAnd >= d3 sync gDown do {} goto iiAnd_110;
 
@@ -570,11 +577,11 @@ end (*iiAndGate*)
 (************************************************************)
 synclabs: cUp, cDown;
 
-loc InputC_0: while ckInputC <= 6 wait {}
-	when ckInputC >= 4 sync cUp do {ckInputC' = 0} goto InputC_1;
+loc InputC_0: invariant ckInputC <= 6
+	when ckInputC >= 4 sync cUp do {ckInputC := 0} goto InputC_1;
 
-loc InputC_1: while ckInputC <= 6 wait {}
-	when ckInputC >= 4 sync cDown do {ckInputC' = 0} goto InputC_0;
+loc InputC_1: invariant ckInputC <= 6
+	when ckInputC >= 4 sync cDown do {ckInputC := 0} goto InputC_0;
 
 end (*InputC*)
 
@@ -584,11 +591,11 @@ end (*InputC*)
 (************************************************************)
 synclabs: aUp, aDown;
 
-loc InputA_0: while ckInputA <= 9 wait {}
-	when ckInputA >= 2 sync aUp do {ckInputA' = 0} goto InputA_1;
+loc InputA_0: invariant ckInputA <= 9
+	when ckInputA >= 2 sync aUp do {ckInputA := 0} goto InputA_1;
 
-loc InputA_1: while ckInputA <= 9 wait {}
-	when ckInputA >= 2 sync aDown do {ckInputA' = 0} goto InputA_0;
+loc InputA_1: invariant ckInputA <= 9
+	when ckInputA >= 2 sync aDown do {ckInputA := 0} goto InputA_0;
 
 end (*InputA*)
 
@@ -598,11 +605,11 @@ end (*InputA*)
 (************************************************************)
 synclabs: bUp, bDown;
 
-loc InputB_0: while ckInputB <= 6 wait {}
-	when ckInputB >= 3 sync bUp do {ckInputB' = 0} goto InputB_1;
+loc InputB_0: invariant ckInputB <= 6
+	when ckInputB >= 3 sync bUp do {ckInputB := 0} goto InputB_1;
 
-loc InputB_1: while ckInputB <= 6 wait {}
-	when ckInputB >= 3 sync bDown do {ckInputB' = 0} goto InputB_0;
+loc InputB_1: invariant ckInputB <= 6
+	when ckInputB >= 3 sync bDown do {ckInputB := 0} goto InputB_0;
 
 end (*InputB*)*)
 
@@ -612,32 +619,32 @@ end (*InputB*)*)
 (************************************************************)
 synclabs: aUp, aDown, (*xUp, *)xDown,yUp, yDown;
 	  
-	  loc inputa_Low : while True wait {}
-	      when True sync yDown do {x_a' = 0} goto inputa_rising;
+	  loc inputa_Low : invariant True
+	      when True sync yDown do {x_a := 0} goto inputa_rising;
 	  
-	loc inputa_rising : while x_a <= DaMax wait {}
+	loc inputa_rising : invariant x_a <= DaMax
 		when x_a >= DaMin sync aUp do {} goto inputa_waiting_yUp;
 	      
-	loc inputa_waiting_yUp : while True wait {}
+	loc inputa_waiting_yUp : invariant True
 		when True sync yUp do {} goto inputa_waiting_xDown;
 	      
-	loc inputa_waiting_xDown : while True wait {}
+	loc inputa_waiting_xDown : invariant True
 		when True sync xDown do {} goto inputa_waiting_yDown;
 	      
-	loc inputa_waiting_yDown : while True wait {}
+	loc inputa_waiting_yDown : invariant True
 		when True sync yDown do {} goto inputa_High;      
 	  
-	  loc inputa_High : while True wait {}
+	  loc inputa_High : invariant True
 	      when True sync xDown do {} goto inputa_xDown;
 	      when True sync yUp do {} goto inputa_yUp;
 
-	  loc inputa_xDown : while True wait {}
-	      when True sync yUp do {x_a' = 0} goto inputa_falling;
+	  loc inputa_xDown : invariant True
+	      when True sync yUp do {x_a := 0} goto inputa_falling;
 	  
-	  loc inputa_yUp : while True wait {}
-	      when True sync xDown do {x_a' = 0} goto inputa_falling;
+	  loc inputa_yUp : invariant True
+	      when True sync xDown do {x_a := 0} goto inputa_falling;
 	  
-	  loc inputa_falling : while x_a <= DaMax wait {}
+	  loc inputa_falling : invariant x_a <= DaMax
 	    when x_a >= DaMin sync aDown do {} goto inputa_Low;
 
 end (*InputaManagement*)
@@ -648,29 +655,29 @@ end (*InputaManagement*)
 (************************************************************)
 synclabs: bUp, bDown, xUp, (*xDown,*)(*yUp, *)yDown;
 	  
-	  loc inputb_Low : while True wait {}
-	      when True sync yDown do {x_b' = 0} goto inputb_rising;
+	  loc inputb_Low : invariant True
+	      when True sync yDown do {x_b := 0} goto inputb_rising;
 	  
-	  loc inputb_rising : while x_b <= DbMax wait {}
+	  loc inputb_rising : invariant x_b <= DbMax
 	      when x_b >= DbMin sync bUp do {} goto inputb_High1;
 	  
-	  loc inputb_High1 : while True wait {}
+	  loc inputb_High1 : invariant True
 	      when True sync xUp do {} goto inputb_High2;
 
-	loc inputb_High2 : while True wait {}
+	loc inputb_High2 : invariant True
 	      when True sync xUp do {} goto inputb_xUp;
 	      when True sync yDown do {} goto inputb_yDown;
 
-	  loc inputb_xUp : while True wait {}
-	      when True sync yDown do {x_b' = 0} goto inputb_falling;
+	  loc inputb_xUp : invariant True
+	      when True sync yDown do {x_b := 0} goto inputb_falling;
 	  
-	  loc inputb_yDown : while True wait {}
-	      when True sync xUp do {x_b' = 0} goto inputb_falling;
+	  loc inputb_yDown : invariant True
+	      when True sync xUp do {x_b := 0} goto inputb_falling;
 	  
-	  loc inputb_falling : while x_b <= DbMax wait {}
+	  loc inputb_falling : invariant x_b <= DbMax
 	    when x_b >= DbMin sync bDown do {} goto (* inputb_Low_waiting_yDown;
 
-	  loc inputb_Low_waiting_yDown : while True wait {}
+	  loc inputb_Low_waiting_yDown : invariant True
 	    when sync yDown do {} goto *)inputb_Low;
 
 end (*InputaManagement*)
@@ -682,36 +689,36 @@ end (*InputaManagement*)
 (************************************************************)
 synclabs: cUp, cDown, xUp, xDown, yUp(*, yDown*);
 	  
-	  loc inputc_Low : while True wait {}
+	  loc inputc_Low : invariant True
 	      when True sync xUp do {} goto inputc_xUp;
 	      when True sync yUp do {} goto inputc_yUp;
 
-	  loc inputc_xUp : while True wait {}
-	      when True sync yUp do {x_c' = 0} goto inputc_rising;
+	  loc inputc_xUp : invariant True
+	      when True sync yUp do {x_c := 0} goto inputc_rising;
 	  
-	  loc inputc_yUp : while True wait {}
-	      when True sync xUp do {x_c' = 0} goto inputc_rising;
+	  loc inputc_yUp : invariant True
+	      when True sync xUp do {x_c := 0} goto inputc_rising;
 	  
-	  loc inputc_rising : while x_c <= DcMax wait {}
+	  loc inputc_rising : invariant x_c <= DcMax
 	    when x_c >= DcMin sync cUp do {} goto inputc_High;
 	  
-	  loc inputc_High : while True wait {}
-	      when True sync xDown do {x_c' = 0} goto inputc_falling;
+	  loc inputc_High : invariant True
+	      when True sync xDown do {x_c := 0} goto inputc_falling;
 	  
-	  loc inputc_falling : while x_c <= DcMax wait {}
+	  loc inputc_falling : invariant x_c <= DcMax
 	      when x_c >= DcMin sync cDown do {} goto inputc_Low_waiting_xUp;
 
-	loc inputc_Low_waiting_xUp : while True wait {}
+	loc inputc_Low_waiting_xUp : invariant True
 		when True sync xUp goto inputc_Low_waiting_xDown_yUp;
 	
-	loc inputc_Low_waiting_xDown_yUp : while True wait {}
+	loc inputc_Low_waiting_xDown_yUp : invariant True
 		when True sync xDown goto inputc_Low_waiting_yUp;
 		when True sync yUp goto inputc_Low_waiting_xDown;
 	
-	loc inputc_Low_waiting_xDown : while True wait {}
+	loc inputc_Low_waiting_xDown : invariant True
 		when True sync xDown goto inputc_Low;
 	
-	loc inputc_Low_waiting_yUp : while True wait {}
+	loc inputc_Low_waiting_yUp : invariant True
 		when True sync yUp goto inputc_Low;
 
 end (*InputcManagement*)
@@ -722,26 +729,26 @@ end (*InputcManagement*)
 (************************************************************)
 synclabs: aUp, aDown, bUp, bDown, cUp, cDown;
 
-loc env0: while True wait {}
+loc env0: invariant True
 	when True sync aUp goto env1;
 	when True sync bUp goto env1prime;
 
-loc env1: while True wait {}
+loc env1: invariant True
 	when True sync bUp goto env2;
 
-loc env1prime: while True wait {}
+loc env1prime: invariant True
 	when True sync aUp goto env2;
 
-loc env2: while True wait {}
+loc env2: invariant True
 	when True sync cUp goto env3;
 
-loc env3: while True wait {}
+loc env3: invariant True
 	when True sync cDown goto env4;
 
-loc env4: while True wait {}
+loc env4: invariant True
 	when True sync bDown goto env5;
 
-loc env5: while True wait {}
+loc env5: invariant True
 	when True sync aDown goto env0;
 
 end (* environment with input only *)*)
@@ -752,74 +759,74 @@ end (* environment with input only *)*)
 (************************************************************)
 synclabs: aUp, aDown, bUp, bDown, cUp, cDown, xUp, xDown, yUp, yDown;
 
-loc env0: while True wait {}
+loc env0: invariant True
 	when True sync aUp goto env1;
 	when True sync bUp goto env1prime;
 
-loc env1: while True wait {}
+loc env1: invariant True
 	when True sync bUp goto env2;
 
-loc env1prime: while True wait {}
+loc env1prime: invariant True
 	when True sync aUp goto env2;
 
-loc env2: while True wait {}
+loc env2: invariant True
 	when True sync xUp goto env3;
 	when True sync yUp goto env3prime;
 
-loc env3: while True wait {}
+loc env3: invariant True
 	when True sync yUp goto env4;
 
-loc env3prime: while True wait {}
+loc env3prime: invariant True
 	when True sync xUp goto env4;
 
-loc env4: while True wait {}
+loc env4: invariant True
 	when True sync cUp goto env5;
 
-loc env5: while True wait {}
+loc env5: invariant True
 	when True sync xDown goto env6;
 
-loc env6: while True wait {}
+loc env6: invariant True
 	when True sync cDown goto env7;
 
-loc env7: while True wait {}
+loc env7: invariant True
 	when True sync xUp goto env8;
 	when True sync yDown goto env8prime;
 
-loc env8: while True wait {}
+loc env8: invariant True
 	when True sync yDown goto env9;
 
-loc env8prime: while True wait {}
+loc env8prime: invariant True
 	when True sync xUp goto env9;
 
-loc env9: while True wait {}
+loc env9: invariant True
 	when True sync bDown goto env10;
 
-loc env10: while True wait {}
+loc env10: invariant True
 	when True sync yUp goto env11;
 	when True sync xDown goto env11prime;
 
-loc env11: while True wait {}
+loc env11: invariant True
 	when True sync xDown goto env12;
 
-loc env11prime: while True wait {}
+loc env11prime: invariant True
 	when True sync yUp goto env12;
 
-loc env12: while True wait {}
+loc env12: invariant True
 	when True sync aDown goto env13;
 
-loc env13: while True wait {}
+loc env13: invariant True
 	when True sync yDown goto env0;
 
 end (* full environment *)*)
 
 (************************************************************)
-(* Analysis *)
+(* Initial state *)
 (************************************************************)
 
 init := True
-	(*------------------------------------------------------------
-	   INITIAL LOCATION
-	  ------------------------------------------------------------*)
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
 	& loc[Or3Gate] = Or3_000
 	& loc[Or2Gate] = Or2_000
 	& loc[Or1Gate] = Or1_000
@@ -835,9 +842,9 @@ init := True
 	& loc[InputbManagement] = inputb_rising
 	& loc[InputcManagement] = inputc_Low
 		
-	(*------------------------------------------------------------
-	   INITIAL CLOCKS
-	  ------------------------------------------------------------*)
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
 	& ckiiAnd = 0
 	& ckOr3 = 0
 	& ckOr2 = 0
@@ -853,9 +860,9 @@ init := True
 	& x_b = 0
 	& x_c = 0
 
-	(*------------------------------------------------------------
-	   PARAMETER CONSTRAINTS
-	  ------------------------------------------------------------*)
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
 	& d1 >= 0
 	& d2 >= 0
 	& d3 >= 0
@@ -872,11 +879,15 @@ init := True
 	& d7 <= D7
 	
 	
-	(*------------------------------------------------------------
-	   THE CONSTRAINT IN [CC05]
-	  ------------------------------------------------------------*)
+	(*------------------------------------------------------------*)
+	(* The constraint in [CC05] *)
+	(*------------------------------------------------------------*)
 (*	& D4 + D5 < d1 + d6 + 2
 	& D1 < d2 + d7 + 4*)
 
-	;
+;
+
+(************************************************************)
+(* The end *)
+(************************************************************)
 end

@@ -1,19 +1,23 @@
---************************************************************--
---************************************************************--
---   Laboratoire Specification et Verification
---
---   Race on a digital circuit (SR Latch)
---   Version with point traversal delays (no interval)
---
---   Etienne ANDRE
---
---   Created                 : 2010/03/19
---   Copied from SRlatch.imi : 2014/08/26
---   Last modified           : 2014/08/26
---   Note: this file was rewritten (2014/08/26) because the original seems to have been lost
---************************************************************--
---************************************************************--
-
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Race on a digital circuit (SR Latch)
+ *
+ * Description     : Race on a digital circuit (SR Latch). Version with point traversal delays (no interval). Note: this file was rewritten (2014/08/26) because the original seems to have been lost
+ * Correctness     : TODO
+ * Source          : TODO
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2010/03/19
+ * Last modified   : 2020/08/19
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+ 
+ 
 var 	ckNor1, ckNor2, s
 		: clock;
 	
@@ -23,188 +27,188 @@ var 	ckNor1, ckNor2, s
 	t_down (*= 1*)
 			: parameter;
 
---************************************************************--
--- DESCRIPTION
---************************************************************--
--- We consider that the following connections :
--- ** norGate1 :
--- 	* input1 : R
--- 	* input2 : overQ
--- 	* output : Q
--- ** norGate2 :
--- 	* input1 : Q
--- 	* input2 : S
--- 	* output : overQ
+(************************************************************)
+(* DESCRIPTION*)
+(************************************************************)
+
+(* We consider that the following connections :
+ ** norGate1 :
+ 	* input1 : R
+ 	* input2 : overQ
+ 	* output : Q
+ ** norGate2 :
+ 	* input1 : Q
+ 	* input2 : S
+ 	* output : overQ
+*)
 
 
---************************************************************--
+(************************************************************)
   automaton norGate1
---************************************************************--
+(************************************************************)
+
 synclabs: R_Up, R_Down, overQ_Up, overQ_Down,
 	Q_Up, Q_Down;
--- initially Nor1_001;
-initially Nor1_110;
 
--- UNSTABLE
-loc Nor1_000: while ckNor1 <= dNor1 wait {}
+(* UNSTABLE *)
+loc Nor1_000: invariant ckNor1 <= dNor1
 	when True sync R_Up do {} goto Nor1_100;
 	when True sync overQ_Up do {} goto Nor1_010;
 	when ckNor1 = dNor1 sync Q_Up do {} goto Nor1_001;
 
--- STABLE
-loc Nor1_001: while True wait {}
-	when True sync R_Up do {ckNor1' = 0} goto Nor1_101;
-	when True sync overQ_Up do {ckNor1' = 0} goto Nor1_011;
+(* STABLE *)
+loc Nor1_001: invariant True
+	when True sync R_Up do {ckNor1 := 0} goto Nor1_101;
+	when True sync overQ_Up do {ckNor1 := 0} goto Nor1_011;
 
--- STABLE
-loc Nor1_010: while True wait {}
+(* STABLE *)
+loc Nor1_010: invariant True
 	when True sync R_Up do {} goto Nor1_110;
-	when True sync overQ_Down do {ckNor1' = 0} goto Nor1_000;
+	when True sync overQ_Down do {ckNor1 := 0} goto Nor1_000;
 
--- UNSTABLE
-loc Nor1_011: while ckNor1 <= dNor1 wait {}
-	when True sync R_Up do {ckNor1' = 0} goto Nor1_111;
+(* UNSTABLE *)
+loc Nor1_011: invariant ckNor1 <= dNor1
+	when True sync R_Up do {ckNor1 := 0} goto Nor1_111;
 	when True sync overQ_Down do {} goto Nor1_001;
 	when ckNor1 = dNor1 sync Q_Down do {} goto Nor1_010;
 
--- STABLE
-loc Nor1_100: while True wait {}
-	when True sync R_Down do {ckNor1' = 0} goto Nor1_000;
+(* STABLE *)
+loc Nor1_100: invariant True
+	when True sync R_Down do {ckNor1 := 0} goto Nor1_000;
 	when True sync overQ_Up do {} goto Nor1_110;
 
--- UNSTABLE
-loc Nor1_101: while ckNor1 <= dNor1 wait {}
+(* UNSTABLE *)
+loc Nor1_101: invariant ckNor1 <= dNor1
 	when True sync R_Down do {} goto Nor1_001;
-	when True sync overQ_Up do {ckNor1' = 0} goto Nor1_111;
+	when True sync overQ_Up do {ckNor1 := 0} goto Nor1_111;
 	when ckNor1 = dNor1 sync Q_Down do {} goto Nor1_100;
 
--- STABLE
-loc Nor1_110: while True wait {}
+(* STABLE *)
+loc Nor1_110: invariant True
 	when True sync R_Down do {} goto Nor1_010;
 	when True sync overQ_Down do {} goto Nor1_100;
 
--- UNSTABLE
-loc Nor1_111: while ckNor1 <= dNor1 wait {}
-	when True sync R_Down do {ckNor1' = 0} goto Nor1_011;
-	when True sync overQ_Down do {ckNor1' = 0} goto Nor1_101;
+(* UNSTABLE *)
+loc Nor1_111: invariant ckNor1 <= dNor1
+	when True sync R_Down do {ckNor1 := 0} goto Nor1_011;
+	when True sync overQ_Down do {ckNor1 := 0} goto Nor1_101;
 	when ckNor1 = dNor1 sync Q_Down do {} goto Nor1_110;
 
-end -- norGate1
+end (*norGate1*)
 
 
---************************************************************--
+(************************************************************)
+
   automaton norGate2
---************************************************************--
+(************************************************************)
+
 synclabs: Q_Up, Q_Down, S_Up, S_Down,
 	overQ_Up, overQ_Down;
--- initially Nor2_110;
-initially Nor2_001;
 
--- UNSTABLE
-loc Nor2_000: while ckNor2 <= dNor2 wait {}
+(* UNSTABLE *)
+loc Nor2_000: invariant ckNor2 <= dNor2
 	when True sync Q_Up do {} goto Nor2_100;
 	when True sync S_Up do {} goto Nor2_010;
 	when ckNor2 = dNor2 sync overQ_Up do {} goto Nor2_001;
 
--- STABLE
-loc Nor2_001: while True wait {}
-	when True sync Q_Up do {ckNor2' = 0} goto Nor2_101;
-	when True sync S_Up do {ckNor2' = 0} goto Nor2_011;
+(* STABLE *)
+loc Nor2_001: invariant True
+	when True sync Q_Up do {ckNor2 := 0} goto Nor2_101;
+	when True sync S_Up do {ckNor2 := 0} goto Nor2_011;
 
--- STABLE
-loc Nor2_010: while True wait {}
+(* STABLE *)
+loc Nor2_010: invariant True
 	when True sync Q_Up do {} goto Nor2_110;
-	when True sync S_Down do {ckNor2' = 0} goto Nor2_000;
+	when True sync S_Down do {ckNor2 := 0} goto Nor2_000;
 
--- UNSTABLE
-loc Nor2_011: while ckNor2 <= dNor2 wait {}
-	when True sync Q_Up do {ckNor2' = 0} goto Nor2_111;
+(* UNSTABLE *)
+loc Nor2_011: invariant ckNor2 <= dNor2
+	when True sync Q_Up do {ckNor2 := 0} goto Nor2_111;
 	when True sync S_Down do {} goto Nor2_001;
 	when ckNor2 = dNor2 sync overQ_Down do {} goto Nor2_010;
 
--- STABLE
-loc Nor2_100: while True wait {}
-	when True sync Q_Down do {ckNor2' = 0} goto Nor2_000;
+(* STABLE *)
+loc Nor2_100: invariant True
+	when True sync Q_Down do {ckNor2 := 0} goto Nor2_000;
 	when True sync S_Up do {} goto Nor2_110;
 
--- UNSTABLE
-loc Nor2_101: while ckNor2 <= dNor2 wait {}
+(* UNSTABLE *)
+loc Nor2_101: invariant ckNor2 <= dNor2
 	when True sync Q_Down do {} goto Nor2_001;
-	when True sync S_Up do {ckNor2' = 0} goto Nor2_111;
+	when True sync S_Up do {ckNor2 := 0} goto Nor2_111;
 	when ckNor2 = dNor2 sync overQ_Down do {} goto Nor2_100;
 
--- STABLE
-loc Nor2_110: while True wait {}
+(* STABLE *)
+loc Nor2_110: invariant True
 	when True sync Q_Down do {} goto Nor2_010;
 	when True sync S_Down do {} goto Nor2_100;
 
--- UNSTABLE
-loc Nor2_111: while ckNor2 <= dNor2 wait {}
-	when True sync Q_Down do {ckNor2' = 0} goto Nor2_011;
-	when True sync S_Down do {ckNor2' = 0} goto Nor2_101;
+(* UNSTABLE *)
+loc Nor2_111: invariant ckNor2 <= dNor2
+	when True sync Q_Down do {ckNor2 := 0} goto Nor2_011;
+	when True sync S_Down do {ckNor2 := 0} goto Nor2_101;
 	when ckNor2 = dNor2 sync overQ_Down do {} goto Nor2_110;
 
-end -- norGate2
+end (*norGate2*)
 
 
---************************************************************--
+(************************************************************)
   automaton env
---************************************************************--
+(************************************************************)
+
 synclabs: R_Down, R_Up, S_Down, S_Up;
-initially env_11;
 
--- loc env_R: while s <= t_down wait {}
--- 	when s = t_down sync R_Down do {} goto env_final;
+(*-- loc env_R: invariant s <= t_down
+-- 	when s = t_down sync R_Down do {} goto env_final;*)
 
--- loc env_S: while s <= t_down wait {}
--- 	when s = t_down sync S_Down do {} goto env_final;
+(*-- loc env_S: invariant s <= t_down
+-- 	when s = t_down sync S_Down do {} goto env_final;*)
 
 
--- ENVIRONMENT : first S then R at constant time
-loc env_11: while True wait {}
-	when True sync S_Down do {s' = 0} goto env_10;
+(* -- ENVIRONMENT : first S then R at constant time *)
+loc env_11: invariant True
+	when True sync S_Down do {s := 0} goto env_10;
 
-loc env_10: while s <= t_down wait {}
+loc env_10: invariant s <= t_down
 	when s = t_down sync R_Down do {} goto env_final;
 
 
--- ENVIRONMENT : R and S go down anytime
--- loc env_11: while True wait {}
+(* -- ENVIRONMENT : R and S go down anytime *)
+(*-- loc env_11: invariant True
 -- 	when True sync R_Down do {} goto env_01;
 -- 	when True sync S_Down do {} goto env_10;
 -- 
--- loc env_01: while True wait {}
+-- loc env_01: invariant True
 -- 	when True sync S_Down do {} goto env_final;
 -- 
--- loc env_10: while True wait {}
--- 	when True sync R_Down do {} goto env_final;
+-- loc env_10: invariant True
+-- 	when True sync R_Down do {} goto env_final;*)
 
--- ENVIRONMENT : S and R anytime (at a parametric time)
--- loc env_11: while s <= t_R_down & s <= t_S_down wait {}
+(* -- ENVIRONMENT : S and R anytime (at a parametric time) *)
+(*-- loc env_11: invariant s <= t_R_down & s <= t_S_down
 -- 	when s = t_R_down sync R_Down do {} goto env_01;
 -- 	when s = t_S_down sync S_Down do {} goto env_10;
 -- 
--- loc env_01: while s <= t_S_down wait {}
+-- loc env_01: invariant s <= t_S_down
 -- 	when s = t_S_down sync S_Down do {} goto env_final;
 -- 
--- loc env_10: while s <= t_R_down wait {}
--- 	when s = t_R_down sync R_Down do {} goto env_final;
+-- loc env_10: invariant s <= t_R_down
+-- 	when s = t_R_down sync R_Down do {} goto env_final;*)
 
-loc env_final: while True wait {}
+loc env_final: invariant True
 
-end -- env
+end (*env*)
 
---************************************************************--
--- ANALYSIS
---************************************************************--
+(************************************************************)
+(* Initial state *)
+(************************************************************)
 
-var init : region;
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
 
-init := True
-	------------------------------------------------------------
-	-- INITIAL LOCATIONS
-	------------------------------------------------------------
-	-- R down
+(*	-- R down
 -- 	& loc[norGate1] = Nor1_110
 -- 	& loc[norGate2] = Nor2_001
 -- 	& loc[env]		= env_R
@@ -212,26 +216,29 @@ init := True
 	-- S down
 -- 	& loc[norGate1] = Nor1_001
 -- 	& loc[norGate2] = Nor2_110
--- 	& loc[env]		= env_S
+-- 	& loc[env]		= env_S*)
 
-	-- S and R down
+(* 	-- S and R down *)
 	& loc[norGate1] = Nor1_100
 	& loc[norGate2] = Nor2_010
 	& loc[env]		= env_11
 
-	------------------------------------------------------------
-	-- INITIAL CONSTRAINTS
-	------------------------------------------------------------
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
 	& ckNor1	= 0
 	& ckNor2	= 0
 	& s			= 0
 
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
 	& dNor1 >= 0
 	& dNor2 >= 0
 
-	------------------------------------------------------------
-	-- PI0
-	------------------------------------------------------------
+	(*------------------------------------------------------------*)
+	(* Pi0 *)
+	(*------------------------------------------------------------*)
 (*	& dNor1	= 2
  	& dNor2	= 2
 *)
@@ -239,5 +246,8 @@ init := True
 
 ;
 
-(* Not exactly the property that we would like! The real property is "the system eventually reaches a state where \overline{Q} = 1" *)
-(* property := if overQ_Up then R_Down has happened before; *)
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

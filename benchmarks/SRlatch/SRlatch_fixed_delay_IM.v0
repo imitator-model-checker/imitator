@@ -1,21 +1,24 @@
---************************************************************--
---************************************************************--
---   IMITATOR
---
---   Race on a digital circuit (SR Latch)
---   Version with point traversal delays (no interval)
---   V0 coming from "The Inverse Method" book
---
---   Etienne ANDRE
---
---   Created:        2014/08/26
---   Last modified : 2014/08/26
---************************************************************--
---************************************************************--
-
-	------------------------------------------------------------
-	-- PI0
-	------------------------------------------------------------
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Race on a digital circuit (SR Latch)
+ *
+ * Description     : Race on a digital circuit (SR Latch). Version with point traversal delays (no interval). V0 coming from "The Inverse Method" book
+ * Correctness     : TODO
+ * Source          : TODO
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2010/03/19
+ * Last modified   : 2020/08/19
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+ 
+property := #synth BCcover(
 	& dNor1		= 0 .. 2
 	& dNor2		= 0 .. 2
 	& t_down	= 1
+);

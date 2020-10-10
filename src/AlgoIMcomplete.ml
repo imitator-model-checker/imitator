@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: IM algorithm with complete result, i.e., possibly non-convex and without random selection [AM15]
  * 
  * File contributors : Étienne André
  * Created           : 2017/03/21
- * Last modified     : 2019/08/22
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -33,8 +34,8 @@ open AlgoIMK
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoIMcomplete =
-	object (self) inherit algoIMK as super
+class algoIMcomplete (pval : PVal.pval) =
+	object (self) inherit algoIMK pval as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -51,7 +52,7 @@ class algoIMcomplete =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "IM complete"
+	method algorithm_name = "IM"
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -77,7 +78,7 @@ class algoIMcomplete =
 		(* Retrieve the input options *)
 (* 		let options = Input.get_options () in *)
 		(* Retrieve the pi0 (dynamic!) *)
-		let pi0 = Input.get_pi0 () in
+		let pi0 = self#get_reference_pval in
 		
 		self#print_algo_message_newline Verbose_medium ("Sarting pi0-compatibility check…");
 		
@@ -165,11 +166,13 @@ class algoIMcomplete =
 		in
 		
 		(* Constraint is… *)
-		let soundness = 
+		let soundness =
+			let dangerous_inclusion = options#comparison_operator = AbstractAlgorithm.Inclusion_check || options#comparison_operator = AbstractAlgorithm.Including_check || options#comparison_operator = AbstractAlgorithm.Double_inclusion_check in
+
 			(* EXACT if termination is normal and no incl and no merge were performed *)
-			if termination_status = Regular_termination && not options#inclusion && not options#merge then Constraint_exact
+			if termination_status = Regular_termination && not dangerous_inclusion && not options#merge then Constraint_exact
 			(* OVER-APPROXIMATED if no random selections were performed and either termination is not normal or merging was used or state inclusion was used *)
-			else if termination_status <> Regular_termination || options#inclusion || options#merge then Constraint_maybe_over
+			else if termination_status <> Regular_termination || dangerous_inclusion || options#merge then Constraint_maybe_over
 			(* UNKNOWN otherwise *)
 			else Constraint_maybe_invalid
 		in
@@ -185,7 +188,7 @@ class algoIMcomplete =
 		Point_based_result
 		{
 			(* Reference valuation *)
-			reference_val		= Input.get_pi0();
+			reference_val		= self#get_reference_pval;
 			
 			(* Result of the algorithm *)
 			result				= result;

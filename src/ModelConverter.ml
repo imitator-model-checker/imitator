@@ -4,12 +4,13 @@
  *
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: Convert a parsing structure into an abstract model
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2019/08/13
+ * Last modified     : 2020/09/16
  *
  ************************************************************)
 
@@ -26,8 +27,9 @@ open ImitatorUtilities
 open Options
 open Automaton
 open ParsingStructure
+open DiscreteExpressions
 open AbstractModel
-open ModelPrinter
+open AbstractProperty
 
 
 (************************************************************)
@@ -35,11 +37,6 @@ open ModelPrinter
 (** Exceptions *)
 (************************************************************)
 (************************************************************)
-(* When checking pi0 *)
-exception InvalidPi0
-(* When checking V0 *)
-exception InvalidV0
-
 (* For constraint conversion *)
 exception False_exception
 
@@ -47,587 +44,166 @@ exception False_exception
 exception Not_strongly_deterministic
 
 
+exception InvalidModel
 
-(************************************************************)
-(************************************************************)
-(** Global variables: saved data structures between model parsing and second file parsing *)
-(************************************************************)
-(************************************************************)
-
-(*** HACK: at the end of model parsing, we will backup some data structures that will be used for reference valuation (pi0) / reference hyper-rectangle (v0) parsing and checking ***)
-let saved_index_of_variables	= ref None
-let saved_nb_parameters			= ref None
-let saved_parameters			= ref None
-let saved_parameters_names		= ref None
-let saved_variables				= ref None
+exception InvalidProperty
 
 
 
 (************************************************************)
 (************************************************************)
-(** Model conversion *)
+(** Type definition *)
 (************************************************************)
 (************************************************************)
 
-(** Checks if a update is a normal update *)
-let is_normal_update = function
-  | Normal _ -> true
-  | _ -> false
-
-(** Returns the value of a normal update *)
-let get_normal_update_value = function
-  | Normal u -> u
-  | _ -> assert false
-
-(** Returns the value of a conditonal update *)
-let get_conditional_update_value = function
-  | Condition u -> u
-  | _ -> assert false
-
-(*------------------------------------------------------------*)
-(* Convert a ParsingStructure.tile_nature into a Result.tile_nature *)
-(*------------------------------------------------------------*)
-(*** TODO: this part has nothing to do with model conversion and should preferably go elsewhere… ***)
-let convert_tile_nature = function
-  | ParsingStructure.Good -> StateSpace.Good
-  | ParsingStructure.Bad -> StateSpace.Bad
-  | ParsingStructure.Unknown -> StateSpace.Unknown
-
-
-(*------------------------------------------------------------*)
-(* Convert a ParsingStructure.linear_expression into an array of coef and constant *)
-(*------------------------------------------------------------*)
-let array_of_coef_of_linear_expression index_of_variables constants linear_expression =
-  (* Create an array of coef *)
-  let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
-  (* Create a zero constant *)
-  let constant = ref NumConst.zero in
-
-  (* Internal function to update the array for a linear term *)
-  let update_array_linear_term mul_coef = function
-    (* Case constant -> update the constant with the coef *)
-    | Constant c -> constant := NumConst.add !constant (NumConst.mul c mul_coef);
-      (* Case variables -> update the array with the coef  *)
-    | Variable (coef, variable_name) ->
-      (* Try to find the variable_index *)
-      if Hashtbl.mem index_of_variables variable_name then (
-        let variable_index = Hashtbl.find index_of_variables variable_name in
-        (* Update the variable with its coef *)
-        array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) (NumConst.mul coef mul_coef);
-        (* Try to find a constant *)
-      ) else (
-        if Hashtbl.mem constants variable_name then (
-          (* Retrieve the value of the global constant *)
-          let value = Hashtbl.find constants variable_name in
-          (* Update the NumConst *)
-          constant := NumConst.add !constant (NumConst.mul (NumConst.mul value coef) mul_coef);
-        ) else (
-          raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although this should have been checked before."))
-        )
-      );
-  in
-
-  (* Internal function to update the array for a linear expression *)
-  let rec update_array_linear_expression = function
-    | Linear_term lt -> update_array_linear_term NumConst.one lt
-    | Linear_plus_expression (le, lt) ->
-      (* Fill the array with le *)
-      update_array_linear_expression le;
-      (* Fill the array with lt *)
-      update_array_linear_term NumConst.one lt;
-    | Linear_minus_expression (le, lt) ->
-      (* Fill the array with le *)
-      update_array_linear_expression le;
-      (* Fill the array with lt *)
-      update_array_linear_term NumConst.minus_one lt;
-  in
-  (* Call the recursive function *)
-  update_array_linear_expression linear_expression;
-  (* Return the array of coef and the constant *)
-  array_of_coef, !constant
-
-
-(*------------------------------------------------------------*)
-(* Convert an array of variable coef into a linear term *)
-(*------------------------------------------------------------*)
-let linear_term_of_array array_of_coef constant =
-  (* Create an empty list of members *)
-  let members = ref [] in
-  (* Iterate on the coef *)
-  Array.iteri (fun variable_index coef ->
-      if NumConst.neq coef NumConst.zero then (
-        (* Add the member *)
-        members := (coef, variable_index) :: !members;
-      );
-    ) array_of_coef;
-  (* Create the linear term *)
-  LinearConstraint.make_pxd_linear_term !members constant
-
-
-(*------------------------------------------------------------*)
-(* Direct conversion of a ParsingStructure.linear_expression into a Linear_constraint.linear_term *)
-(*------------------------------------------------------------*)
-let linear_term_of_linear_expression index_of_variables constants linear_expression =
-  let array_of_coef, constant = array_of_coef_of_linear_expression index_of_variables constants linear_expression in
-  linear_term_of_array array_of_coef constant
-
-
-(*------------------------------------------------------------*)
-(* Perform the substraction of 2 NumConst array of same size *)
-(*------------------------------------------------------------*)
-let sub_array array1 array2 =
-  (* Create the result *)
-  let result = Array.make (Array.length array1) NumConst.zero in
-  (* Iterate on both arrays *)
-  for i = 0 to (Array.length array1) - 1 do
-    (* Perform array1 - array2 *)
-    result.(i) <- NumConst.sub array1.(i) array2.(i);
-  done;
-  (* Return the result *)
-  result
-
-
-(*------------------------------------------------------------*)
-(* Convert a ParsingStructure.linear_constraint into a Constraint.linear_inequality *)
-(*------------------------------------------------------------*)
-let linear_inequality_of_linear_constraint index_of_variables constants (linexpr1, relop, linexpr2) =
-  (* Get the array of variables and constant associated to the linear terms *)
-  let array1, constant1 = array_of_coef_of_linear_expression index_of_variables constants linexpr1 in
-  let array2, constant2 = array_of_coef_of_linear_expression index_of_variables constants linexpr2 in
-  (* Consider the operator *)
-  match relop with
-  (* a < b <=> b - a > 0 *)
-  | OP_L ->
-    (* Create the array *)
-    let array12 = sub_array array2 array1 in
-    (* Create the constant *)
-    let constant12 = NumConst.sub constant2 constant1 in
-    (* Create the linear_term *)
-    let linear_term = linear_term_of_array array12 constant12 in
-    (* Return the linear_inequality *)
-    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
-  (* 	(Constraint.substract_linear_terms lt2 lt1), Constraint.Op_g *)
-
-  (* a <= b <=> b - a >= 0 *)
-  | OP_LEQ ->
-    (* Create the array *)
-    let array12 = sub_array array2 array1 in
-    (* Create the constant *)
-    let constant12 = NumConst.sub constant2 constant1 in
-    (* Create the linear_term *)
-    let linear_term = linear_term_of_array array12 constant12 in
-    (* Return the linear_inequality *)
-    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_ge
-  (* 	(Constraint.substract_linear_terms lt2 lt1), Constraint.Op_ge *)
-
-  (* a = b <=> b - a = 0 *)
-  | OP_EQ ->
-    (* Create the array *)
-    let array12 = sub_array array2 array1 in
-    (* Create the constant *)
-    let constant12 = NumConst.sub constant2 constant1 in
-    (* Create the linear_term *)
-    let linear_term = linear_term_of_array array12 constant12 in
-    (* Return the linear_inequality *)
-    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
-
-  (* 	(Constraint.substract_linear_terms lt1 lt2), Constraint.Op_eq *)
-
-  (* a >= b <=> a - b >= 0 *)
-  | OP_GEQ ->
-    (* Create the array *)
-    let array12 = sub_array array1 array2 in
-    (* Create the constant *)
-    let constant12 = NumConst.sub constant1 constant2 in
-    (* Create the linear_term *)
-    let linear_term = linear_term_of_array array12 constant12 in
-    (* Return the linear_inequality *)
-    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_ge
-  (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_ge *)
-
-  (* a > b <=> a - b > 0 *)
-  | OP_G ->
-    (* Create the array *)
-    let array12 = sub_array array1 array2 in
-    (* Create the constant *)
-    let constant12 = NumConst.sub constant1 constant2 in
-    (* Create the linear_term *)
-    let linear_term = linear_term_of_array array12 constant12 in
-    (* Return the linear_inequality *)
-    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
-  (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_g *)
-
-  | OP_NEQ ->
-    raise (InternalError("Inequality <> not yet supported"))
-
-
-(*------------------------------------------------------------*)
-(* Convert a ParsingStructure.convex_predicate into a Constraint.linear_constraint *)
-(*------------------------------------------------------------*)
-let linear_constraint_of_convex_predicate index_of_variables constants convex_predicate : LinearConstraint.pxd_linear_constraint =
-  try(
-    (* Compute a list of inequalities *)
-    let linear_inequalities = List.fold_left
-        (fun linear_inequalities linear_inequality ->
-           match linear_inequality with
-           | True_constraint -> linear_inequalities
-           | False_constraint -> raise False_exception
-           | Linear_constraint (linexpr1, relop, linexpr2) -> (linear_inequality_of_linear_constraint index_of_variables constants (linexpr1, relop, linexpr2)) :: linear_inequalities
-        ) [] convex_predicate
-    in LinearConstraint.make_pxd_constraint linear_inequalities
-    (* Stop if any false constraint is found *)
-  ) with False_exception -> LinearConstraint.pxd_false_constraint ()
-
-
-(************************************************************)
-(** Functions to get the variable names from the parsing structure *)
-(************************************************************)
-
-(*------------------------------------------------------------*)
-(* Get all (possibly identical) names of variables in the header *)
-(*------------------------------------------------------------*)
-let get_declared_variable_names variable_declarations =
-  let get_variables_and_constants =
-    List.fold_left (fun (current_list, constants) (name, possible_value) ->
-        match possible_value with
-        (* If no value: add to names *)
-        | None -> (name :: current_list , constants)
-        (* Otherwise: add to constants *)
-        | Some value -> (current_list , (name, value) :: constants)
-      ) ([], [])
-  in
-  (* Get all (possibly identical) names of variables in one variable declaration and add it to the computed n-uple *)
-  let get_variables_in_variable_declaration (clocks, discrete, parameters, constants, unassigned_constants) (var_type, list_of_names) =
-    let new_list, new_constants = get_variables_and_constants list_of_names in
-    match var_type with
-    | ParsingStructure.Var_type_clock ->
-      (List.rev_append new_list clocks, discrete, parameters, List.rev_append new_constants constants, unassigned_constants)
-    | ParsingStructure.Var_type_constant ->
-      (clocks, discrete, parameters, List.rev_append new_constants constants, List.rev_append new_list unassigned_constants)
-    | ParsingStructure.Var_type_discrete ->
-      (clocks, List.rev_append new_list discrete, parameters, List.rev_append new_constants constants, unassigned_constants)
-    | ParsingStructure.Var_type_parameter ->
-      (clocks, discrete, List.rev_append new_list parameters, List.rev_append new_constants constants, unassigned_constants)
-  in
-  let (clocks, discrete, parameters, constants, unassigned_constants) = List.fold_left get_variables_in_variable_declaration ([], [], [], [], []) variable_declarations in
-  (* Do not reverse lists *)
-  (clocks, discrete, parameters, constants, unassigned_constants)
-
-
-(*------------------------------------------------------------*)
-(* Get all (possibly identical) names of automata *)
-(*------------------------------------------------------------*)
-let get_declared_automata_names =
-  List.map (fun (automaton_name, _, _) -> automaton_name)
-
-(*------------------------------------------------------------*)
-(* Get all (all different) names of synclabs *)
-(*------------------------------------------------------------*)
-let get_declared_synclabs_names =
-  List.fold_left (fun synclabs_names (_, synclabs, _) -> list_union synclabs_names synclabs) []
-
-
-(************************************************************)
-(** Getting the variables used *)
-(************************************************************)
-(*** TODO: these 'get' functions could be merged with the 'check' functions 'check_automata' ***)
-
-(* First define a string set structure *)
+(* Define a string set structure to gather sets of variables *)
 module StringSet = Set.Make(String)
+
+
+(************************************************************)
+(************************************************************)
+(** Useful data structure to avoid multiple parameters in functions *)
+(************************************************************)
+(************************************************************)
+
+type useful_parsing_model_information = {
+	(* The locations for each automaton: automaton_index -> location_index -> location_name *)
+	actions								: action_name array;
+	array_of_location_names				: location_name array array;
+	automata							: automaton_index list;
+	automata_names						: (automaton_index -> automaton_name);
+	constants							: (Automaton.variable_name , NumConst.t) Hashtbl.t;
+	discrete							: variable_index list;
+	index_of_actions					: (Automaton.action_name , Automaton.action_index) Hashtbl.t;
+	index_of_automata					: (Automaton.automaton_name , Automaton.automaton_index) Hashtbl.t;
+	index_of_locations					: ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array;
+	index_of_variables					: (Automaton.variable_name , Automaton.variable_index) Hashtbl.t;
+	nb_clocks							: int;
+	nb_parameters						: int;
+	parameter_names						: variable_name list;
+	removed_action_names				: action_name list;
+	type_of_variables					: Automaton.variable_index -> AbstractModel.var_type;
+	variable_names						: variable_name list;
+	variables							: variable_name array;
+	removed_variable_names				: variable_name list;
+}
+
+
+
+(************************************************************)
+(************************************************************)
+(** Checking and converting discrete arithmetic expressions *)
+(************************************************************)
+(************************************************************)
+
+(************************************************************)
+(** Getting variables *)
+(************************************************************)
+
+(*** TODO: these 'get' functions could be merged with the 'check' functions 'check_automata' ***)
 
 
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a parsed_update_arithmetic_expression *)
 (*------------------------------------------------------------*)
 let rec get_variables_in_parsed_update_factor variables_used_ref = function
-  | Parsed_UF_variable variable_name ->
-    (* Add the variable name to the set and update the reference *)
-    variables_used_ref := StringSet.add variable_name !variables_used_ref
+	| Parsed_DF_variable variable_name ->
+		(* Add the variable name to the set and update the reference *)
+		variables_used_ref := StringSet.add variable_name !variables_used_ref
 
-  | Parsed_UF_constant _ -> ()
+	| Parsed_DF_constant _ -> ()
 
-  | Parsed_UF_expression parsed_update_arithmetic_expression ->
-    get_variables_in_parsed_update_arithmetic_expression variables_used_ref parsed_update_arithmetic_expression
+	| Parsed_DF_expression parsed_update_arithmetic_expression ->
+		get_variables_in_parsed_update_arithmetic_expression variables_used_ref parsed_update_arithmetic_expression
 
+	| Parsed_DF_unary_min parsed_discrete_factor -> get_variables_in_parsed_update_factor variables_used_ref parsed_discrete_factor
 
 and get_variables_in_parsed_update_term variables_used_ref = function
-  | Parsed_UT_mul (parsed_update_term, parsed_update_factor)
-  | Parsed_UT_div (parsed_update_term, parsed_update_factor) ->
-    get_variables_in_parsed_update_term variables_used_ref parsed_update_term;
-    get_variables_in_parsed_update_factor variables_used_ref parsed_update_factor
+	| Parsed_DT_mul (parsed_update_term, parsed_update_factor)
+	| Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
+		get_variables_in_parsed_update_term variables_used_ref parsed_update_term;
+		get_variables_in_parsed_update_factor variables_used_ref parsed_update_factor
 
-  | Parsed_UT_factor parsed_update_factor ->
-    get_variables_in_parsed_update_factor variables_used_ref parsed_update_factor
+	| Parsed_DT_factor parsed_update_factor ->
+		get_variables_in_parsed_update_factor variables_used_ref parsed_update_factor
 
 (** Add variables names in the update expression *)
 and get_variables_in_parsed_update_arithmetic_expression variables_used_ref = function
-  | Parsed_UAE_plus (parsed_update_arithmetic_expression, parsed_update_term)
-  | Parsed_UAE_minus (parsed_update_arithmetic_expression , parsed_update_term) ->
-    get_variables_in_parsed_update_arithmetic_expression variables_used_ref parsed_update_arithmetic_expression;
-    get_variables_in_parsed_update_term variables_used_ref parsed_update_term
+	| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term)
+	| Parsed_DAE_minus (parsed_update_arithmetic_expression , parsed_update_term) ->
+		get_variables_in_parsed_update_arithmetic_expression variables_used_ref parsed_update_arithmetic_expression;
+		get_variables_in_parsed_update_term variables_used_ref parsed_update_term
 
-  | Parsed_UAE_term parsed_update_term ->
-    get_variables_in_parsed_update_term variables_used_ref parsed_update_term
+	| Parsed_DAE_term parsed_update_term ->
+		get_variables_in_parsed_update_term variables_used_ref parsed_update_term
 
 (** Add variables names in normal and conditional updates *)
 and get_variables_in_parsed_update variables_used_ref = function
-  | Normal (_, arithmetic_expression) -> get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expression
-  | Condition (bool_expr, update_list_if, update_list_else) -> (** recolect in bool exprs *)
-    get_variables_in_parsed_boolean_expression variables_used_ref bool_expr;
-    List.iter (fun (_, arithmetic_expression) ->
-        get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expression
-      ) (update_list_if@update_list_else)
+	| Normal (_, arithmetic_expression) -> get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expression
+	| Condition (bool_expr, update_list_if, update_list_else) -> (** recolect in bool exprs *)
+		get_variables_in_parsed_boolean_expression variables_used_ref bool_expr;
+		List.iter (fun (_, arithmetic_expression) ->
+			get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expression
+		) (update_list_if@update_list_else)
 and get_variables_in_parsed_boolean_expression variables_used_ref = function
-  | And (bool_expr1, bool_expr2)
-  | Or (bool_expr1, bool_expr2) ->
-    get_variables_in_parsed_boolean_expression variables_used_ref bool_expr1;
-    get_variables_in_parsed_boolean_expression variables_used_ref bool_expr2;
-  | Not bool_expr -> get_variables_in_parsed_boolean_expression variables_used_ref bool_expr
-  | Expression (arithmetic_expr1, _ (* relop *), arithmetic_expr2) ->
-    get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr1;
-    get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr2;
-  | _ -> ()  (** add nothing *)
+	| Parsed_True -> ()
+	| Parsed_False -> ()
+	| Parsed_And (bool_expr1, bool_expr2)
+	| Parsed_Or (bool_expr1, bool_expr2) ->
+		get_variables_in_parsed_boolean_expression variables_used_ref bool_expr1;
+		get_variables_in_parsed_boolean_expression variables_used_ref bool_expr2;
+	| Parsed_Not bool_expr -> get_variables_in_parsed_boolean_expression variables_used_ref bool_expr
+	| Parsed_Discrete_boolean_expression bool_expr -> get_variables_in_parsed_discrete_boolean_expression variables_used_ref bool_expr
+and get_variables_in_parsed_discrete_boolean_expression variables_used_ref  = function
+	| Parsed_expression (arithmetic_expr1, _ (* relop *), arithmetic_expr2) ->
+		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr1;
+		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr2;
+	| Parsed_expression_in (arithmetic_expr1, arithmetic_expr2, arithmetic_expr3) ->
+		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr1;
+		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr2;
+		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr3
 
+	
 (*------------------------------------------------------------*)
-(* Gather all variable names used in a linear_term *)
+(* Gather all variable names used in a parsed_update_arithmetic_expression *)
 (*------------------------------------------------------------*)
-let get_variables_in_linear_term variables_used_ref = function
-  | Constant _ -> ()
-  | Variable (_, variable_name) ->
-    (* Add the variable name to the set and update the reference *)
-    variables_used_ref := StringSet.add variable_name !variables_used_ref
+let rec get_variables_in_parsed_discrete_factor variables_used_ref = function
+	| Parsed_DF_variable variable_name ->
+		(* Add the variable name to the set and discrete the reference *)
+		variables_used_ref := StringSet.add variable_name !variables_used_ref
 
-(*------------------------------------------------------------*)
-(* Gather all variable names used in a linear_expression *)
-(*------------------------------------------------------------*)
-let rec get_variables_in_linear_expression variables_used_ref = function
-  | Linear_term linear_term -> get_variables_in_linear_term variables_used_ref linear_term
-  | Linear_plus_expression (linear_expression, linear_term)
-    ->
-    get_variables_in_linear_expression variables_used_ref linear_expression;
-    get_variables_in_linear_term variables_used_ref linear_term
-  | Linear_minus_expression (linear_expression, linear_term)
-    ->
-    get_variables_in_linear_expression variables_used_ref linear_expression; get_variables_in_linear_term variables_used_ref linear_term
+	| Parsed_DF_constant _ -> ()
 
+	| Parsed_DF_expression parsed_discrete_arithmetic_expression ->
+		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref parsed_discrete_arithmetic_expression
 
-(*------------------------------------------------------------*)
-(* Gather all variable names used in a linear_constraint *)
-(*------------------------------------------------------------*)
-let get_variables_in_linear_constraint variables_used_ref = function
-  | True_constraint -> ()
-  | False_constraint -> ()
-  | Linear_constraint (linear_expression1, (*relop*)_, linear_expression2) ->
-    get_variables_in_linear_expression variables_used_ref linear_expression1;
-    get_variables_in_linear_expression variables_used_ref linear_expression2
+	| Parsed_DF_unary_min parsed_discrete_factor -> get_variables_in_parsed_discrete_factor variables_used_ref parsed_discrete_factor
 
-(*------------------------------------------------------------*)
-(* Gather all variable names used in the property definition *)
-(*------------------------------------------------------------*)
-let get_variables_in_property variables_used_ref = function
-  | Parsed_unreachable_locations (parsed_unreachable_global_location_list) ->
-    List.iter (fun parsed_unreachable_global_location ->
-        List.iter (function
-            | Parsed_unreachable_discrete parsed_discrete_constraint ->
-              begin
-                match parsed_discrete_constraint with
-                | Parsed_discrete_l (variable_name, (*discrete_value*)_)
-                | Parsed_discrete_leq (variable_name, (*discrete_value*)_)
-                | Parsed_discrete_equal (variable_name, (*discrete_value*)_)
-                | Parsed_discrete_geq (variable_name, (*discrete_value*)_)
-                | Parsed_discrete_g (variable_name, (*discrete_value*)_)
-                  -> variables_used_ref := StringSet.add variable_name !variables_used_ref
-                | Parsed_discrete_interval (variable_name, (*discrete_value*)_, (*discrete_value*)_)
-                  -> variables_used_ref := StringSet.add variable_name !variables_used_ref
-              end
-            | Parsed_unreachable_loc _ -> ()
-          ) parsed_unreachable_global_location;
-      ) parsed_unreachable_global_location_list
+and get_variables_in_parsed_discrete_term variables_used_ref = function
+	| Parsed_DT_mul (parsed_discrete_term, parsed_discrete_factor)
+	| Parsed_DT_div (parsed_discrete_term, parsed_discrete_factor) ->
+		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term;
+		get_variables_in_parsed_discrete_factor variables_used_ref parsed_discrete_factor
 
-  (* if a2 then a1 has happened before *)
-  | Action_precedence_acyclic _
-  (* everytime a2 then a1 has happened before *)
-  | Action_precedence_cyclic _
-  (* everytime a2 then a1 has happened exactly once before *)
-  | Action_precedence_cyclicstrict _
-    -> ()
+	| Parsed_DT_factor parsed_discrete_factor ->
+		get_variables_in_parsed_discrete_factor variables_used_ref parsed_discrete_factor
 
-  (* a no later than d *)
-  | Action_deadline (sync_name , duration)
-    -> get_variables_in_linear_expression variables_used_ref duration
+(** Add variables names in the discrete expression *)
+and get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref = function
+	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression, parsed_discrete_term)
+	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
+		get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref parsed_discrete_arithmetic_expression;
+		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term
 
-  (* if a2 then a1 happened within d before *)
-  | TB_Action_precedence_acyclic ((*sync_name*)_, (*sync_name*)_, duration)
-  (* everytime a2 then a1 happened within d before *)
-  | TB_Action_precedence_cyclic ((*sync_name*)_, (*sync_name*)_, duration)
-  (* everytime a2 then a1 happened once within d before *)
-  | TB_Action_precedence_cyclicstrict ((*sync_name*)_, (*sync_name*)_, duration)
-
-  (* if a1 then eventually a2 within d *)
-  | TB_response_acyclic ((*sync_name*)_, (*sync_name*)_, duration)
-  (* everytime a1 then eventually a2 within d *)
-  | TB_response_cyclic ((*sync_name*)_, (*sync_name*)_, duration)
-  (* everytime a1 then eventually a2 within d once before next *)
-  | TB_response_cyclicstrict ((*sync_name*)_, (*sync_name*)_, duration)
-    -> get_variables_in_linear_expression variables_used_ref duration
-
-  (* sequence: a1, …, an *)
-  | Sequence_acyclic _
-  (* sequence: always a1, …, an *)
-  | Sequence_cyclic _
-    -> ()
-
-
-(*------------------------------------------------------------*)
-(* Gather all variable names used in a convex predicate *)
-(*------------------------------------------------------------*)
-let get_variables_in_convex_predicate variables_used_ref =
-  List.iter (get_variables_in_linear_constraint variables_used_ref)
-
-
-(* Get all variable names used in the parsing structure and return a set *)
-let get_all_variables_used parsed_automata parsed_property_definition =
-  (* Create a set structure for variable names *)
-  let all_variables_used = ref StringSet.empty in
-
-  (*** NOTE: we pass this set by reference ***)
-
-  (* Gather in each automaton *)
-  List.iter (fun (automaton_name, sync_name_list, locations) ->
-      print_message Verbose_total ("      Gathering variables used in automaton " ^ automaton_name);
-
-      (* Gather in each location *)
-      List.iter (fun (location : parsed_location) ->
-          print_message Verbose_total ("        Gathering variables used in location " ^ location.name);
-
-          (* Gather in the cost *)
-          begin
-            match location.cost with
-            | Some cost ->
-              print_message Verbose_total ("          Gathering variables in used cost");
-              get_variables_in_linear_expression all_variables_used cost;
-            | None -> ()
-          end;
-
-          (* Gather in the stopwatches *)
-          print_message Verbose_total ("          Gathering variables used in possible stopwatches");
-          List.iter (fun stopwatch_name ->
-              all_variables_used := StringSet.add stopwatch_name !all_variables_used
-            ) location.stopped;
-
-          (* Gather in the convex predicate *)
-          print_message Verbose_total ("          Gathering variables in convex predicate");
-          get_variables_in_convex_predicate all_variables_used location.invariant;
-
-          (* Gather in transitions *)
-          print_message Verbose_total ("          Gathering variables in transitions");
-          List.iter (fun (convex_predicate, updates, (*sync*)_, (*target_location_name*)_) ->
-              (* Gather in the convex predicate (guard) *)
-              print_message Verbose_total ("            Gathering variables in convex predicate");
-              get_variables_in_convex_predicate all_variables_used convex_predicate;
-
-              (* Gather in the updates *)
-              print_message Verbose_total ("            Gathering variables in updates");
-              (* List.iter (fun (variable_name, arithmetic_expression) -> *)
-              List.iter (fun update_expression ->
-                  (*** NOTE: let us NOT consider that a reset is a 'use' of a variable; it must still be used in a guard, an invariant, in the right-hand side term of a reset, or a property, to be considered 'used' in the model ***)
-                  (* First add the variable to be updated *)
-                  (* 					all_variables_used := StringSet.add variable_name !all_variables_used; *)
-                  (* Second add the variable names in the update expression *)
-                  (* get_variables_in_parsed_update_arithmetic_expression all_variables_used arithmetic_expression; *)
-                  get_variables_in_parsed_update all_variables_used update_expression
-                ) updates;
-            ) location.transitions;
-        ) locations;
-    ) parsed_automata;
-
-  (* Now gather in property *)
-  begin
-    match parsed_property_definition with
-    | None -> ()
-    | Some parsed_property_definition ->
-      get_variables_in_property all_variables_used parsed_property_definition;
-  end;
-
-  (* Return the set of variables actually used *)
-  (*StringSet.elements *)!all_variables_used
+	| Parsed_DAE_term parsed_discrete_term ->
+		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term
 
 
 
+		
 (************************************************************)
-(** Verification functions *)
+(** Checking discrete arithmetic expressions *)
 (************************************************************)
-
-(*------------------------------------------------------------*)
-(* Check that variable names are all different, return false otherwise; warns if a variable is defined twice as the same type *)
-(*------------------------------------------------------------*)
-let check_variable_names clock_names discrete_names parameters_names constants =
-  (* Warn if a variable is defined twice as the same type *)
-  let warn_for_multiply_defined_variables list_of_variables =
-    (* Compute the multiply defined variables *)
-    let multiply_defined_variables = elements_existing_several_times list_of_variables in
-    (* Print a warning for each of them *)
-    List.iter (fun variable_name -> print_warning ("Multiply-declared variable '" ^ variable_name ^"'")) multiply_defined_variables;
-  in
-  warn_for_multiply_defined_variables clock_names;
-  warn_for_multiply_defined_variables discrete_names;
-  warn_for_multiply_defined_variables parameters_names;
-  (* Check different from constants *)
-  let different_from_constants l =
-    try(
-      List.iter (fun name ->
-          if Hashtbl.mem constants name then (
-            print_error ("Constant '" ^ name ^ "' is also defined as a variable.");
-            raise False_exception;
-          )
-        ) l;
-      true
-    ) with False_exception -> false
-  in
-  (* Error for variables defined as different types *)
-  let error_for_multiply_defined_variables l1 l2 =
-    let inter = list_inter l1 l2 in
-    match inter with
-    | [] -> true
-    | _ -> List.iter (fun variable_name -> print_error ("The variable '" ^ variable_name ^ "' is defined twice as two different types.")) inter; false
-  in
-  let check1 = error_for_multiply_defined_variables clock_names discrete_names in
-  let check2 = error_for_multiply_defined_variables clock_names parameters_names in
-  let check3 = error_for_multiply_defined_variables discrete_names parameters_names in
-  let check4 = different_from_constants clock_names in
-  let check5 = different_from_constants discrete_names in
-  let check6 = different_from_constants parameters_names in
-  check1 && check2 && check3 && check4 && check5 && check6
-
-
-(*------------------------------------------------------------*)
-(* Check that the names of automata are all different; return false otherwise *)
-(*------------------------------------------------------------*)
-let check_declared_automata_names automata_names =
-  (* Compute the multiply defined variables *)
-  let multiply_defined_names = elements_existing_several_times automata_names in
-  (* Print an error for each of them *)
-  match multiply_defined_names with
-  | [] -> true
-  | _ -> List.iter (fun variable_name -> print_error ("Several automata have name " ^ variable_name ^ ".")) multiply_defined_names; false
-
-
-(*------------------------------------------------------------*)
-(* Check that all locations of a given automaton are different *)
-(*------------------------------------------------------------*)
-let all_locations_different =
-  (* Check for every automaton *)
-  List.fold_left
-    (fun all_different (automaton_name, _, locations) ->
-       (* Get all the location names *)
-       let locations =
-         List.map (fun (location : parsed_location) -> location.name) locations in
-       (* Look for multiply declared locations *)
-       let multiply_declared_locations = elements_existing_several_times locations in
-       List.iter (fun location_name -> print_error ("Several locations have name '" ^ location_name ^ "' in automaton '" ^ automaton_name ^ "'.")) multiply_declared_locations;
-       if multiply_declared_locations = [] then all_different else false
-    )
-    true
 
 
 (*------------------------------------------------------------*)
@@ -635,34 +211,38 @@ let all_locations_different =
 (*------------------------------------------------------------*)
 (*** NOTE: f : variable_name -> bool is the function to check *)
 let rec check_f_in_parsed_update_factor f = function
-  | Parsed_UF_variable variable_name ->
-    f variable_name
+	| Parsed_DF_variable variable_name ->
+		f variable_name
 
-  | Parsed_UF_constant _ -> true
+	| Parsed_DF_constant _ -> true
 
-  | Parsed_UF_expression parsed_update_arithmetic_expression ->
-    check_f_in_parsed_update_arithmetic_expression f parsed_update_arithmetic_expression
+	| Parsed_DF_expression parsed_update_arithmetic_expression ->
+		check_f_in_parsed_update_arithmetic_expression f parsed_update_arithmetic_expression
+	
+	| Parsed_DF_unary_min parsed_discrete_factor ->
+		check_f_in_parsed_update_factor f parsed_discrete_factor
+
 
 
 and check_f_in_parsed_update_term f = function
-  | Parsed_UT_mul (parsed_update_term, parsed_update_factor)
-  | Parsed_UT_div (parsed_update_term, parsed_update_factor) ->
+  | Parsed_DT_mul (parsed_update_term, parsed_update_factor)
+  | Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
     evaluate_and
       (check_f_in_parsed_update_term f parsed_update_term)
       (check_f_in_parsed_update_factor f parsed_update_factor)
 
-  | Parsed_UT_factor parsed_update_factor ->
+  | Parsed_DT_factor parsed_update_factor ->
     check_f_in_parsed_update_factor f parsed_update_factor
 
 
 and check_f_in_parsed_update_arithmetic_expression f = function
-  | Parsed_UAE_plus (parsed_update_arithmetic_expression, parsed_update_term)
-  | Parsed_UAE_minus (parsed_update_arithmetic_expression , parsed_update_term) ->
+  | Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term)
+  | Parsed_DAE_minus (parsed_update_arithmetic_expression , parsed_update_term) ->
     evaluate_and
       (check_f_in_parsed_update_arithmetic_expression f parsed_update_arithmetic_expression)
       (check_f_in_parsed_update_term f parsed_update_term)
 
-  | Parsed_UAE_term parsed_update_term ->
+  | Parsed_DAE_term parsed_update_term ->
     check_f_in_parsed_update_term f parsed_update_term
 
 
@@ -672,7 +252,7 @@ and check_f_in_parsed_update_arithmetic_expression f = function
 let all_variables_defined_in_parsed_update_arithmetic_expression variable_names constants =
   check_f_in_parsed_update_arithmetic_expression (fun variable_name ->
       if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
-        print_error ("The variable '" ^ variable_name ^ "' used in an arithmetic expression was not declared."); false
+        print_error ("The variable `" ^ variable_name ^ "` used in an arithmetic expression was not declared."); false
       ) else true
     )
 
@@ -694,48 +274,464 @@ let check_only_discretes_in_parsed_update_arithmetic_expression index_of_variabl
         ) with Not_found -> (
             (* Variable not found! *)
             (*** TODO: why is this checked here…? It should have been checked before ***)
-            print_error ("The variable '" ^ variable_name ^ "' used in an update was not declared.");
+            print_error ("The variable `" ^ variable_name ^ "` used in an update was not declared.");
             false
           )
       )
     )
 
 
+
+
+(************************************************************)
+(** Converting discrete arithmetic expressions *)
+(************************************************************)
+
 (*------------------------------------------------------------*)
-(* Check that a parsed_update_arithmetic_expression contains non-constant at only selected parts *)
+(* Convert a parsed_update_arithmetic_expression into a discrete_arithmetic_expression*)
 (*------------------------------------------------------------*)
-let valuate_parsed_update_arithmetic_expression constants =
 
-  let rec check_constants_in_parsed_update_arithmetic_expression_rec = function
-    | Parsed_UAE_plus (parsed_update_arithmetic_expression, parsed_update_term)
-    | Parsed_UAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
-      evaluate_and
-        (check_constants_in_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression)
-        (check_constants_in_parsed_update_term parsed_update_term)
-    | Parsed_UAE_term parsed_update_term ->
-      check_constants_in_parsed_update_term parsed_update_term
+(*** TODO (though really not critical): try to do some simplifications… ***)
 
-  and check_constants_in_parsed_update_term = function
-    | Parsed_UT_mul (parsed_update_term, parsed_update_factor) ->
-      (* Constants only forbidden in the parsed_update_term *)
-      check_constants_in_parsed_update_term parsed_update_term
-    | Parsed_UT_div (parsed_update_term, parsed_update_factor) ->
-      (* Constants only forbidden in the parsed_update_factor *)
-      check_constants_in_parsed_update_factor parsed_update_factor
-    | Parsed_UT_factor parsed_update_factor -> check_constants_in_parsed_update_factor parsed_update_factor
+(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
+let discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants =
+	let rec discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec = function
+		| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		DAE_plus ((discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (discrete_term_of_parsed_update_term parsed_update_term))
+		| Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		DAE_minus ((discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (discrete_term_of_parsed_update_term parsed_update_term))
+		| Parsed_DAE_term parsed_update_term ->
+		DAE_term (discrete_term_of_parsed_update_term parsed_update_term)
 
-  and check_constants_in_parsed_update_factor = function
-    | Parsed_UF_variable variable_name ->
-      if Hashtbl.mem constants variable_name then (
-        true
-      ) else (
-        print_error ("Variable '" ^ variable_name ^ "' cannot be used at this place in an update.");
-        false
-      )
-    | Parsed_UF_constant var_value -> true
-    | Parsed_UF_expression parsed_update_arithmetic_expression -> check_constants_in_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression
+	and discrete_term_of_parsed_update_term = function
+		| Parsed_DT_mul (parsed_update_term, parsed_discrete_factor) ->
+		DT_mul ((discrete_term_of_parsed_update_term parsed_update_term), (discrete_factor_of_parsed_update_factor parsed_discrete_factor))
+		| Parsed_DT_div (parsed_update_term, parsed_discrete_factor) ->
+		DT_div ((discrete_term_of_parsed_update_term parsed_update_term), (discrete_factor_of_parsed_update_factor parsed_discrete_factor))
+		| Parsed_DT_factor parsed_discrete_factor -> DT_factor (discrete_factor_of_parsed_update_factor parsed_discrete_factor)
 
-  in check_constants_in_parsed_update_arithmetic_expression_rec
+	and discrete_factor_of_parsed_update_factor = function
+		| Parsed_DF_variable variable_name ->
+		(* Try to find the variable_index *)
+		if Hashtbl.mem index_of_variables variable_name then (
+			let variable_index = Hashtbl.find index_of_variables variable_name in
+			(* Convert *)
+			DF_variable variable_index
+			(* Try to find a constant *)
+		) else (
+			if Hashtbl.mem constants variable_name then (
+			(* Retrieve the value of the global constant *)
+			let value = Hashtbl.find constants variable_name in
+			(* Convert *)
+			DF_constant value
+			) else (
+			raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` although this should have been checked before."))
+			)
+		)
+		| Parsed_DF_constant var_value -> DF_constant var_value
+		(*** TODO: here, we could very easily get rid of the DF_unary_min by negating the inside expression… ***)
+		| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (discrete_factor_of_parsed_update_factor parsed_discrete_factor)
+		| Parsed_DF_expression parsed_update_arithmetic_expression -> DF_expression (discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression)
+	in
+	discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec
+
+
+
+
+(*** TODO (though really not critical): try to do some simplifications… ***)
+
+(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
+let discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression index_of_variables constants =
+	let rec discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec = function
+		| Parsed_DAE_plus (parsed_discrete_arithmetic_expression, parsed_discrete_term) ->
+			DAE_plus ((discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec parsed_discrete_arithmetic_expression), (discrete_term_of_parsed_discrete_term parsed_discrete_term))
+		| Parsed_DAE_minus (parsed_discrete_arithmetic_expression, parsed_discrete_term) ->
+			DAE_minus ((discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec parsed_discrete_arithmetic_expression), (discrete_term_of_parsed_discrete_term parsed_discrete_term))
+		| Parsed_DAE_term parsed_discrete_term ->
+			DAE_term (discrete_term_of_parsed_discrete_term parsed_discrete_term)
+
+	and discrete_term_of_parsed_discrete_term = function
+		| Parsed_DT_mul (parsed_discrete_term, parsed_discrete_factor) ->
+			DT_mul ((discrete_term_of_parsed_discrete_term parsed_discrete_term), (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor))
+		| Parsed_DT_div (parsed_discrete_term, parsed_discrete_factor) ->
+			DT_div ((discrete_term_of_parsed_discrete_term parsed_discrete_term), (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor))
+		| Parsed_DT_factor parsed_discrete_factor -> DT_factor (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor)
+
+	and discrete_factor_of_parsed_discrete_factor = function
+		| Parsed_DF_variable variable_name ->
+		(* Try to find the variable_index *)
+		if Hashtbl.mem index_of_variables variable_name then (
+			let variable_index = Hashtbl.find index_of_variables variable_name in
+			(* Convert *)
+			DF_variable variable_index
+			(* Try to find a constant *)
+		) else (
+			if Hashtbl.mem constants variable_name then (
+			(* Retrieve the value of the global constant *)
+			let value = Hashtbl.find constants variable_name in
+			(* Convert *)
+			DF_constant value
+			) else (
+			raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` although this should have been checked before."))
+			)
+		)
+		| Parsed_DF_constant var_value -> DF_constant var_value
+		| Parsed_DF_expression parsed_discrete_arithmetic_expression -> DF_expression (discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec parsed_discrete_arithmetic_expression)
+		| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor)
+	in
+	(* Call high-level function *)
+	discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec
+
+
+
+(*------------------------------------------------------------*)
+(* Convert a parsed_update_arithmetic_expression into a linear_term *)
+(*------------------------------------------------------------*)
+
+
+(*** TODO (though really not critical): try to do some simplifications… ***)
+(* First valuate a parsed_update_arithmetic_expression if requested; raises InternalError if some non-constant variable is met *)
+let rec valuate_parsed_update_arithmetic_expression constants = function
+	| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		NumConst.add
+		(valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression)
+		(valuate_parsed_update_term constants parsed_update_term)
+	| Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		NumConst.sub
+		(valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression)
+		(valuate_parsed_update_term constants parsed_update_term)
+	| Parsed_DAE_term parsed_update_term ->
+		valuate_parsed_update_term constants parsed_update_term;
+
+	and valuate_parsed_update_term constants = function
+	| Parsed_DT_mul (parsed_update_term, parsed_update_factor) ->
+		NumConst.mul
+		(valuate_parsed_update_term constants parsed_update_term)
+		(valuate_parsed_update_factor constants parsed_update_factor)
+	| Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
+		NumConst.div
+		(valuate_parsed_update_term constants parsed_update_term)
+		(valuate_parsed_update_factor constants parsed_update_factor)
+	| Parsed_DT_factor parsed_update_factor -> valuate_parsed_update_factor constants parsed_update_factor
+
+	and valuate_parsed_update_factor constants = function
+	| Parsed_DF_variable variable_name ->
+		if Hashtbl.mem constants variable_name then (
+		(* Retrieve the value of the global constant *)
+		Hashtbl.find constants variable_name
+		) else (
+		raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'valuate_parsed_update_arithmetic_expression' although it should have been checked before."))
+		)
+	| Parsed_DF_constant var_value -> var_value
+	| Parsed_DF_unary_min parsed_discrete_factor -> NumConst.neg (valuate_parsed_update_factor constants parsed_discrete_factor)
+	| Parsed_DF_expression parsed_update_arithmetic_expression -> valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression
+
+
+
+
+(** Convert a Boolean operator to its abstract model *)
+let convert_parsed_relop = function
+	| PARSED_OP_L	-> OP_L
+	| PARSED_OP_LEQ	-> OP_LEQ
+	| PARSED_OP_EQ	-> OP_EQ
+	| PARSED_OP_NEQ	-> OP_NEQ
+	| PARSED_OP_GEQ	-> OP_GEQ
+	| PARSED_OP_G 	-> OP_G
+
+
+let convert_discrete_bool_expr index_of_variables constants = function
+	| Parsed_expression (expr1, relop, expr2) -> Expression (
+		(discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr1),
+		(convert_parsed_relop relop),
+		(discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr2)
+		)
+	| Parsed_expression_in (expr1, expr2, expr3) -> Expression_in (
+		(discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr1),
+		(discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr2),
+		(discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr3)
+		)
+		
+(** Convert a boolean expression in its abstract model *)
+let rec convert_bool_expr index_of_variables constants = function
+	| Parsed_True -> True_bool
+	| Parsed_False -> False_bool
+	| Parsed_Not e -> Not_bool (convert_bool_expr index_of_variables constants e)
+	| Parsed_And (e1,e2) -> And_bool ((convert_bool_expr index_of_variables constants e1), (convert_bool_expr index_of_variables constants e2))
+	| Parsed_Or (e1, e2) -> Or_bool ((convert_bool_expr index_of_variables constants e1), (convert_bool_expr index_of_variables constants e2))
+	| Parsed_Discrete_boolean_expression parsed_discrete_boolean_expression ->
+		Discrete_boolean_expression (convert_discrete_bool_expr index_of_variables constants parsed_discrete_boolean_expression)
+
+
+
+(*------------------------------------------------------------*)
+(* Functions for property conversion *)
+(*------------------------------------------------------------*)
+
+(* Convert parsed_discrete_arithmetic_expression *)
+let rec convert_parsed_discrete_arithmetic_expression useful_parsing_model_information = function
+	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
+		DAE_plus (
+			(convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
+			,
+			(convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
+		)
+	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
+		DAE_minus (
+			(convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
+			,
+			(convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
+		)
+	| Parsed_DAE_term parsed_discrete_term -> DAE_term (convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
+
+and convert_parsed_discrete_term useful_parsing_model_information = function
+	| Parsed_DT_mul (parsed_discrete_term , parsed_discrete_factor) ->
+		DT_mul ((convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term) , convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
+	| Parsed_DT_div (parsed_discrete_term , parsed_discrete_factor) ->
+		DT_div ((convert_parsed_discrete_term useful_parsing_model_information parsed_discrete_term) , convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
+	| Parsed_DT_factor parsed_discrete_factor -> DT_factor (convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
+
+and convert_parsed_discrete_factor useful_parsing_model_information = function
+	| Parsed_DF_variable variable_name ->
+		(* First check whether this is a constant *)
+		if Hashtbl.mem useful_parsing_model_information.constants variable_name then
+			DF_constant (Hashtbl.find useful_parsing_model_information.constants variable_name)
+		(* Otherwise: a variable *)
+		else DF_variable (Hashtbl.find useful_parsing_model_information.index_of_variables variable_name)
+	| Parsed_DF_constant var_value -> DF_constant var_value
+	| Parsed_DF_expression parsed_discrete_arithmetic_expression -> DF_expression (convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
+	| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (convert_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
+
+
+(* Convert parsed_discrete_boolean_expression *)
+let convert_parsed_discrete_boolean_expression useful_parsing_model_information = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Parsed_expression (parsed_discrete_arithmetic_expression1 , parsed_relop , parsed_discrete_arithmetic_expression2) ->
+		Expression (
+			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1
+			,
+			convert_parsed_relop parsed_relop
+			,
+			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2
+		)
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| Parsed_expression_in (parsed_discrete_arithmetic_expression1 , parsed_discrete_arithmetic_expression2 , parsed_discrete_arithmetic_expression3) ->
+		Expression_in (
+			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1
+			,
+			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2
+			,
+			convert_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression3
+		)
+
+	
+(* Convert parsed_loc_predicate *)
+let convert_parsed_loc_predicate useful_parsing_model_information = function
+	| Parsed_loc_predicate_EQ (automaton_name, location_name) ->
+		let automaton_index = Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name in
+		Loc_predicate_EQ ( automaton_index , (Hashtbl.find useful_parsing_model_information.index_of_locations.(automaton_index) location_name))
+	| Parsed_loc_predicate_NEQ (automaton_name, location_name) ->
+		let automaton_index = Hashtbl.find useful_parsing_model_information.index_of_automata automaton_name in
+		Loc_predicate_NEQ (automaton_index , (Hashtbl.find useful_parsing_model_information.index_of_locations.(automaton_index) location_name))
+
+
+(* Convert parsed_simple_predicate *)
+let convert_parsed_simple_predicate useful_parsing_model_information = function
+	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression -> Discrete_boolean_expression (convert_parsed_discrete_boolean_expression useful_parsing_model_information parsed_discrete_boolean_expression)
+	| Parsed_loc_predicate parsed_loc_predicate -> Loc_predicate (convert_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate)
+	| Parsed_state_predicate_true -> State_predicate_true
+	| Parsed_state_predicate_false -> State_predicate_false
+	| Parsed_state_predicate_accepting -> State_predicate_accepting
+
+
+(* Convert parsed_state_predicate *)
+let rec convert_parsed_state_predicate_factor useful_parsing_model_information = function
+	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor -> State_predicate_factor_NOT (convert_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor)
+	| Parsed_simple_predicate parsed_simple_predicate -> Simple_predicate (convert_parsed_simple_predicate useful_parsing_model_information parsed_simple_predicate)
+	| Parsed_state_predicate parsed_state_predicate -> State_predicate (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+
+and convert_parsed_state_predicate_term useful_parsing_model_information = function
+	| Parsed_state_predicate_term_AND (parsed_state_predicate_term1, parsed_state_predicate_term2) ->
+		State_predicate_term_AND (
+			convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term1
+			,
+			convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term2
+		)
+	| Parsed_state_predicate_factor parsed_state_predicate_factor -> State_predicate_factor (convert_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor)
+
+and convert_parsed_state_predicate useful_parsing_model_information = function
+	| Parsed_state_predicate_OR (parsed_state_predicate1, parsed_state_predicate2) ->
+		State_predicate_OR (
+			convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate1
+			,
+			convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate2
+		)
+	| Parsed_state_predicate_term parsed_state_predicate_term -> State_predicate_term (convert_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term)
+
+
+
+
+
+(************************************************************)
+(************************************************************)
+(** Checking and converting linear constraints *)
+(************************************************************)
+(************************************************************)
+
+(************************************************************)
+(** Getting variables *)
+(************************************************************)
+
+
+(*------------------------------------------------------------*)
+(* Gather all variable names used in a linear_term *)
+(*------------------------------------------------------------*)
+let get_variables_in_linear_term variables_used_ref = function
+  | Constant _ -> ()
+  | Variable (_, variable_name) ->
+    (* Add the variable name to the set and update the reference *)
+    variables_used_ref := StringSet.add variable_name !variables_used_ref
+
+
+(*------------------------------------------------------------*)
+(* Gather all variable names used in a linear_expression *)
+(*------------------------------------------------------------*)
+let rec get_variables_in_linear_expression variables_used_ref = function
+  | Linear_term linear_term -> get_variables_in_linear_term variables_used_ref linear_term
+  | Linear_plus_expression (linear_expression, linear_term)
+    ->
+    get_variables_in_linear_expression variables_used_ref linear_expression;
+    get_variables_in_linear_term variables_used_ref linear_term
+  | Linear_minus_expression (linear_expression, linear_term)
+    ->
+    get_variables_in_linear_expression variables_used_ref linear_expression; get_variables_in_linear_term variables_used_ref linear_term
+
+
+(*------------------------------------------------------------*)
+(* Gather all variable names used in a linear_constraint *)
+(*------------------------------------------------------------*)
+let get_variables_in_linear_constraint variables_used_ref = function
+  | Parsed_true_constraint -> ()
+  | Parsed_false_constraint -> ()
+  | Parsed_linear_constraint (linear_expression1, (*relop*)_, linear_expression2) ->
+    get_variables_in_linear_expression variables_used_ref linear_expression1;
+    get_variables_in_linear_expression variables_used_ref linear_expression2
+
+    
+(*------------------------------------------------------------*)
+(* Gather all variable names used in a parsed_init_state_predicate *)
+(*------------------------------------------------------------*)
+let get_variables_in_init_state_predicate variables_used_ref = function
+	| Parsed_loc_assignment _ -> ()
+	| Parsed_linear_predicate linear_constraint -> get_variables_in_linear_constraint variables_used_ref linear_constraint
+
+	
+(*(*------------------------------------------------------------*)
+(* Gather all variable names used in a parsed_loc_predicate *)
+(*------------------------------------------------------------*)
+let get_variables_in_parsed_loc_predicate variables_used_ref = function
+	| Parsed_loc_predicate_EQ of automaton_name * location_name
+	| Parsed_loc_predicate_NEQ of automaton_name * location_name*)
+
+
+(*------------------------------------------------------------*)
+(* Gather all variable names used in a Simple_predicate *)
+(*------------------------------------------------------------*)
+let get_variables_in_parsed_simple_predicate variables_used_ref = function
+	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression ->
+		get_variables_in_parsed_discrete_boolean_expression variables_used_ref parsed_discrete_boolean_expression
+		
+	| Parsed_loc_predicate parsed_loc_predicate ->
+		(* No variable in location predicate *)
+		()
+
+	| Parsed_state_predicate_true | Parsed_state_predicate_false | Parsed_state_predicate_accepting ->
+		()
+
+
+(*------------------------------------------------------------*)
+(* Gather all variable names used in a parsed_state_predicate_factor *)
+(*------------------------------------------------------------*)
+let rec get_variables_in_parsed_state_predicate_factor variables_used_ref = function
+	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor ->
+		get_variables_in_parsed_state_predicate_factor variables_used_ref parsed_state_predicate_factor
+		
+	| Parsed_simple_predicate parsed_simple_predicate ->
+		get_variables_in_parsed_simple_predicate variables_used_ref parsed_simple_predicate
+		
+	| Parsed_state_predicate parsed_state_predicate ->
+		get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
+
+	
+	
+(*------------------------------------------------------------*)
+(* Gather all variable names used in a parsed_state_predicate_term *)
+(*------------------------------------------------------------*)
+and get_variables_in_parsed_state_predicate_term variables_used_ref = function
+	| Parsed_state_predicate_term_AND ( parsed_state_predicate_term1, parsed_state_predicate_term2) ->
+		get_variables_in_parsed_state_predicate_term variables_used_ref parsed_state_predicate_term1;
+		get_variables_in_parsed_state_predicate_term variables_used_ref parsed_state_predicate_term2;
+			
+	| Parsed_state_predicate_factor parsed_state_predicate_factor ->
+		get_variables_in_parsed_state_predicate_factor variables_used_ref parsed_state_predicate_factor
+
+
+(*------------------------------------------------------------*)
+(* Gather all variable names used in a parsed_state_predicate *)
+(*------------------------------------------------------------*)
+and get_variables_in_parsed_state_predicate variables_used_ref = function
+	| Parsed_state_predicate_OR (parsed_state_predicate1 , parsed_state_predicate2) ->
+		get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate1;
+		get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate2;
+	
+	| Parsed_state_predicate_term parsed_state_predicate_term ->
+		get_variables_in_parsed_state_predicate_term variables_used_ref parsed_state_predicate_term
+
+
+(*------------------------------------------------------------*)
+(* Gather all variable names used in a convex predicate *)
+(*------------------------------------------------------------*)
+let get_variables_in_convex_predicate variables_used_ref =
+  List.iter (get_variables_in_linear_constraint variables_used_ref)
+
+
+  
+(*------------------------------------------------------------*)
+(* Find the clocks in a linear_constraint *)
+(*------------------------------------------------------------*)
+
+let get_clocks_in_linear_constraint clocks =
+  (* Get a long list with duplicates, and then simplify *)
+  (*	(* Should not be too inefficient, because our linear constraints are relatively small *)
+    	let list_of_clocks = List.fold_left (fun current_list_of_clocks linear_inequality ->
+    		list_append current_list_of_clocks (get_clocks_in_linear_inequality is_clock linear_inequality)
+    	) [] linear_constraint
+    	in
+    	(* Simplify *)
+    	list_only_once list_of_clocks*)
+  LinearConstraint.pxd_find_variables clocks
+
+
+(*** WARNING: duplicate function in ClockElimination ***)
+let rec get_clocks_in_updates updates : clock_index list =
+  let get_clocks: clock_updates -> clock_index list = function
+    (* No update at all *)
+    | No_update -> []
+    (* Reset to 0 only *)
+    | Resets clock_reset_list -> clock_reset_list
+    (* Reset to arbitrary value (including discrete, parameters and clocks) *)
+    | Updates clock_update_list ->
+      let result, _ = List.split clock_update_list in result
+  in
+  let clocks_in_conditons = List.flatten (List.map
+    (fun (b, u1, u2) -> (get_clocks_in_updates u1) @ (get_clocks_in_updates u2) )
+    updates.conditional)
+  in
+  (get_clocks updates.clock) @ clocks_in_conditons
+
+
+(************************************************************)
+(** Checking linear constraints *)
+(************************************************************)
 
 
 (*------------------------------------------------------------*)
@@ -744,7 +740,7 @@ let valuate_parsed_update_arithmetic_expression constants =
 let all_variables_defined_in_linear_term variable_names constants = function
   | Constant _ -> true
   | Variable (_, variable_name) -> if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
-      print_error ("The variable '" ^ variable_name ^ "' used in a linear constraint was not declared."); false
+      print_error ("The variable `" ^ variable_name ^ "` used in a linear constraint was not declared."); false
     ) else true
 
 
@@ -763,9 +759,9 @@ let rec all_variables_defined_in_linear_expression variable_names constants = fu
 (* Check that all variables are defined in a linear_constraint *)
 (*------------------------------------------------------------*)
 let all_variables_defined_in_linear_constraint variable_names constants = function
-  | True_constraint -> true
-  | False_constraint -> true
-  | Linear_constraint (linear_expression1, relop, linear_expression2) ->
+  | Parsed_true_constraint -> true
+  | Parsed_false_constraint -> true
+  | Parsed_linear_constraint (linear_expression1, relop, linear_expression2) ->
     evaluate_and (all_variables_defined_in_linear_expression variable_names constants linear_expression1)
       (all_variables_defined_in_linear_expression variable_names constants linear_expression2)
 
@@ -814,7 +810,7 @@ let only_discrete_in_linear_term index_of_variables type_of_variables constants 
     ) with Not_found -> (
         (* Variable not found! *)
         (*** TODO: why is this checked here…? It should have been checked before ***)
-        print_error ("The variable '" ^ variable_name ^ "' used in an update was not declared.");
+        print_error ("The variable `" ^ variable_name ^ "` used in an update was not declared.");
         false
       )
 
@@ -837,1037 +833,843 @@ let no_variables_in_linear_expression = check_f_in_linear_expression no_variable
 
 
 
+(************************************************************)
+(** Converting linear constraints *)
+(************************************************************)
+
+
+
+(*------------------------------------------------------------*)
+(* Convert a ParsingStructure.linear_expression into an array of coef and constant *)
+(*------------------------------------------------------------*)
+let array_of_coef_of_linear_expression index_of_variables constants linear_expression =
+  (* Create an array of coef *)
+  let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
+  (* Create a zero constant *)
+  let constant = ref NumConst.zero in
+
+  (* Internal function to update the array for a linear term *)
+  let update_array_linear_term mul_coef = function
+    (* Case constant -> update the constant with the coef *)
+    | Constant c -> constant := NumConst.add !constant (NumConst.mul c mul_coef);
+      (* Case variables -> update the array with the coef  *)
+    | Variable (coef, variable_name) ->
+      (* Try to find the variable_index *)
+      if Hashtbl.mem index_of_variables variable_name then (
+        let variable_index = Hashtbl.find index_of_variables variable_name in
+        (* Update the variable with its coef *)
+        array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) (NumConst.mul coef mul_coef);
+        (* Try to find a constant *)
+      ) else (
+        if Hashtbl.mem constants variable_name then (
+          (* Retrieve the value of the global constant *)
+          let value = Hashtbl.find constants variable_name in
+          (* Update the NumConst *)
+          constant := NumConst.add !constant (NumConst.mul (NumConst.mul value coef) mul_coef);
+        ) else (
+          raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` although this should have been checked before."))
+        )
+      );
+  in
+
+  (* Internal function to update the array for a linear expression *)
+  let rec update_array_linear_expression = function
+    | Linear_term lt -> update_array_linear_term NumConst.one lt
+    | Linear_plus_expression (le, lt) ->
+      (* Fill the array with le *)
+      update_array_linear_expression le;
+      (* Fill the array with lt *)
+      update_array_linear_term NumConst.one lt;
+    | Linear_minus_expression (le, lt) ->
+      (* Fill the array with le *)
+      update_array_linear_expression le;
+      (* Fill the array with lt *)
+      update_array_linear_term NumConst.minus_one lt;
+  in
+  (* Call the recursive function *)
+  update_array_linear_expression linear_expression;
+  (* Return the array of coef and the constant *)
+  array_of_coef, !constant
+
+
+(*------------------------------------------------------------*)
+(* Convert an array of variable coef into a linear term *)
+(*------------------------------------------------------------*)
+let linear_term_of_array array_of_coef constant =
+  (* Create an empty list of members *)
+  let members = ref [] in
+  (* Iterate on the coef *)
+  Array.iteri (fun variable_index coef ->
+      if NumConst.neq coef NumConst.zero then (
+        (* Add the member *)
+        members := (coef, variable_index) :: !members;
+      );
+    ) array_of_coef;
+  (* Create the linear term *)
+  LinearConstraint.make_pxd_linear_term !members constant
+
+
+(*------------------------------------------------------------*)
+(* Direct conversion of a ParsingStructure.linear_expression into a Parsed_linear_constraint.linear_term *)
+(*------------------------------------------------------------*)
+let linear_term_of_linear_expression index_of_variables constants linear_expression =
+  let array_of_coef, constant = array_of_coef_of_linear_expression index_of_variables constants linear_expression in
+  linear_term_of_array array_of_coef constant
+
+
+(*------------------------------------------------------------*)
+(* Perform the substraction of 2 NumConst array of same size *)
+(*------------------------------------------------------------*)
+let sub_array array1 array2 =
+  (* Create the result *)
+  let result = Array.make (Array.length array1) NumConst.zero in
+  (* Iterate on both arrays *)
+  for i = 0 to (Array.length array1) - 1 do
+    (* Perform array1 - array2 *)
+    result.(i) <- NumConst.sub array1.(i) array2.(i);
+  done;
+  (* Return the result *)
+  result
+
+
+(*------------------------------------------------------------*)
+(* Convert a ParsingStructure.linear_constraint into a Constraint.linear_inequality *)
+(*------------------------------------------------------------*)
+let linear_inequality_of_linear_constraint index_of_variables constants (linexpr1, relop, linexpr2) =
+  (* Get the array of variables and constant associated to the linear terms *)
+  let array1, constant1 = array_of_coef_of_linear_expression index_of_variables constants linexpr1 in
+  let array2, constant2 = array_of_coef_of_linear_expression index_of_variables constants linexpr2 in
+  (* Consider the operator *)
+  match relop with
+  (* a < b <=> b - a > 0 *)
+  | PARSED_OP_L ->
+    (* Create the array *)
+    let array12 = sub_array array2 array1 in
+    (* Create the constant *)
+    let constant12 = NumConst.sub constant2 constant1 in
+    (* Create the linear_term *)
+    let linear_term = linear_term_of_array array12 constant12 in
+    (* Return the linear_inequality *)
+    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
+  (* 	(Constraint.substract_linear_terms lt2 lt1), Constraint.Op_g *)
+
+  (* a <= b <=> b - a >= 0 *)
+  | PARSED_OP_LEQ ->
+    (* Create the array *)
+    let array12 = sub_array array2 array1 in
+    (* Create the constant *)
+    let constant12 = NumConst.sub constant2 constant1 in
+    (* Create the linear_term *)
+    let linear_term = linear_term_of_array array12 constant12 in
+    (* Return the linear_inequality *)
+    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_ge
+  (* 	(Constraint.substract_linear_terms lt2 lt1), Constraint.Op_ge *)
+
+  (* a = b <=> b - a = 0 *)
+  | PARSED_OP_EQ ->
+    (* Create the array *)
+    let array12 = sub_array array2 array1 in
+    (* Create the constant *)
+    let constant12 = NumConst.sub constant2 constant1 in
+    (* Create the linear_term *)
+    let linear_term = linear_term_of_array array12 constant12 in
+    (* Return the linear_inequality *)
+    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
+
+  (* 	(Constraint.substract_linear_terms lt1 lt2), Constraint.Op_eq *)
+
+  (* a >= b <=> a - b >= 0 *)
+  | PARSED_OP_GEQ ->
+    (* Create the array *)
+    let array12 = sub_array array1 array2 in
+    (* Create the constant *)
+    let constant12 = NumConst.sub constant1 constant2 in
+    (* Create the linear_term *)
+    let linear_term = linear_term_of_array array12 constant12 in
+    (* Return the linear_inequality *)
+    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_ge
+  (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_ge *)
+
+  (* a > b <=> a - b > 0 *)
+  | PARSED_OP_G ->
+    (* Create the array *)
+    let array12 = sub_array array1 array2 in
+    (* Create the constant *)
+    let constant12 = NumConst.sub constant1 constant2 in
+    (* Create the linear_term *)
+    let linear_term = linear_term_of_array array12 constant12 in
+    (* Return the linear_inequality *)
+    LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_g
+  (* (Constraint.substract_linear_terms lt1 lt2), Constraint.Op_g *)
+
+  | PARSED_OP_NEQ ->
+    raise (InternalError("Inequality <> not yet supported"))
+
+
+(*------------------------------------------------------------*)
+(* Convert a ParsingStructure.convex_predicate into a Constraint.linear_constraint *)
+(*------------------------------------------------------------*)
+let linear_constraint_of_convex_predicate index_of_variables constants convex_predicate : LinearConstraint.pxd_linear_constraint =
+  try(
+    (* Compute a list of inequalities *)
+    let linear_inequalities = List.fold_left
+        (fun linear_inequalities linear_inequality ->
+           match linear_inequality with
+           | Parsed_true_constraint -> linear_inequalities
+           | Parsed_false_constraint -> raise False_exception
+           | Parsed_linear_constraint (linexpr1, relop, linexpr2) -> (linear_inequality_of_linear_constraint index_of_variables constants (linexpr1, relop, linexpr2)) :: linear_inequalities
+        ) [] convex_predicate
+    in LinearConstraint.make_pxd_constraint linear_inequalities
+    (* Stop if any false constraint is found *)
+  ) with False_exception -> LinearConstraint.pxd_false_constraint ()
+
+
+
+
+
+
+(************************************************************)
+(************************************************************)
+(** Checking and converting model *)
+(************************************************************)
+(************************************************************)
+
+(************************************************************)
+(** Getting variables *)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(* Get all (possibly identical) names of variables in the header *)
+(*------------------------------------------------------------*)
+let get_declared_variable_names variable_declarations =
+  let get_variables_and_constants =
+    List.fold_left (fun (current_list, constants) (name, possible_value) ->
+        match possible_value with
+        (* If no value: add to names *)
+        | None -> (name :: current_list , constants)
+        (* Otherwise: add to constants *)
+        | Some value -> (current_list , (name, value) :: constants)
+      ) ([], [])
+  in
+  (* Get all (possibly identical) names of variables in one variable declaration and add it to the computed n-uple *)
+  let get_variables_in_variable_declaration (clocks, discrete, parameters, constants, unassigned_constants) (var_type, list_of_names) =
+    let new_list, new_constants = get_variables_and_constants list_of_names in
+    match var_type with
+    | ParsingStructure.Var_type_clock ->
+      (List.rev_append new_list clocks, discrete, parameters, List.rev_append new_constants constants, unassigned_constants)
+    | ParsingStructure.Var_type_constant ->
+      (clocks, discrete, parameters, List.rev_append new_constants constants, List.rev_append new_list unassigned_constants)
+    | ParsingStructure.Var_type_discrete ->
+      (clocks, List.rev_append new_list discrete, parameters, List.rev_append new_constants constants, unassigned_constants)
+    | ParsingStructure.Var_type_parameter ->
+      (clocks, discrete, List.rev_append new_list parameters, List.rev_append new_constants constants, unassigned_constants)
+  in
+  let (clocks, discrete, parameters, constants, unassigned_constants) = List.fold_left get_variables_in_variable_declaration ([], [], [], [], []) variable_declarations in
+  (* Do not reverse lists *)
+  (clocks, discrete, parameters, constants, unassigned_constants)
+
+
+(*------------------------------------------------------------*)
+(* Get all (possibly identical) names of automata *)
+(*------------------------------------------------------------*)
+let get_declared_automata_names =
+  List.map (fun (automaton_name, _, _) -> automaton_name)
+
+(*------------------------------------------------------------*)
+(* Get all (all different) names of synclabs *)
+(*------------------------------------------------------------*)
+let get_declared_synclabs_names =
+  List.fold_left (fun action_names (_, synclabs, _) -> list_union action_names synclabs) []
+
+  
+
+(* Get the set of all variable names used in the parsed model *)
+let get_all_variables_used_in_model (parsed_model : ParsingStructure.parsed_model) =
+	(* Create a set structure for variable names *)
+	let all_variables_used = ref StringSet.empty in
+
+	(*** NOTE: we pass this set by reference ***)
+
+	(* Gather in each automaton *)
+	List.iter (fun (automaton_name, sync_name_list, locations) ->
+		print_message Verbose_total ("      Gathering variables used in automaton " ^ automaton_name);
+
+		(* Gather in each location *)
+		List.iter (fun (location : parsed_location) ->
+			print_message Verbose_total ("        Gathering variables used in location " ^ location.name);
+
+			(* Gather in the cost *)
+			begin
+				match location.cost with
+				| Some cost ->
+				print_message Verbose_total ("          Gathering variables in used cost");
+				get_variables_in_linear_expression all_variables_used cost;
+				| None -> ()
+			end;
+
+			(* Gather in the stopwatches *)
+			print_message Verbose_total ("          Gathering variables used in possible stopwatches");
+			List.iter (fun stopwatch_name ->
+				all_variables_used := StringSet.add stopwatch_name !all_variables_used
+				) location.stopped;
+
+			(* Gather in the flows *)
+			print_message Verbose_total ("          Gathering variables used in possible flows");
+			List.iter (fun (clock_name, _) ->
+				all_variables_used := StringSet.add clock_name !all_variables_used
+				) location.flow;
+
+			(* Gather in the convex predicate *)
+			print_message Verbose_total ("          Gathering variables in convex predicate");
+			get_variables_in_convex_predicate all_variables_used location.invariant;
+
+			(* Gather in transitions *)
+			print_message Verbose_total ("          Gathering variables in transitions");
+			List.iter (fun (convex_predicate, updates, (*sync*)_, (*target_location_name*)_) ->
+				(* Gather in the convex predicate (guard) *)
+				print_message Verbose_total ("            Gathering variables in convex predicate");
+				get_variables_in_convex_predicate all_variables_used convex_predicate;
+
+				(* Gather in the updates *)
+				print_message Verbose_total ("            Gathering variables in updates");
+				(* List.iter (fun (variable_name, arithmetic_expression) -> *)
+				List.iter (fun update_expression ->
+					(*** NOTE: let us NOT consider that a reset is a 'use' of a variable; it must still be used in a guard, an invariant, in the right-hand side term of a reset, or a property, to be considered 'used' in the model ***)
+					(* First add the variable to be updated *)
+					(* 					all_variables_used := StringSet.add variable_name !all_variables_used; *)
+					(* Second add the variable names in the update expression *)
+					(* get_variables_in_parsed_update_arithmetic_expression all_variables_used arithmetic_expression; *)
+					get_variables_in_parsed_update all_variables_used update_expression
+					) updates;
+				) location.transitions;
+			) locations;
+		) parsed_model.automata;
+	
+	(*** NOTE: disabled because we DO want to eliminate variables that appear ONLY in the init definition ***)
+(*	(* Gather the variables used in init *)
+	let init_definition = parsed_model.init_definition in
+	List.iter (function
+		(* `loc[automaton] = location`: no variable => nothing to do *)
+		| Parsed_loc_assignment _ -> ()
+		(* Linear constraint: get variables *)
+		| Parsed_linear_predicate linear_constraint ->
+			get_variables_in_linear_constraint all_variables_used linear_constraint
+	) init_definition;*)
+
+	(* Return the set of variables actually used *)
+	!all_variables_used
+
+
+
+(************************************************************)
+(** Checking the model *)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(* Check that variable names are all different, return false otherwise; warns if a variable is defined twice as the same type *)
+(*------------------------------------------------------------*)
+let check_variable_names clock_names discrete_names parameters_names constants =
+	(* Warn if a variable is defined twice as the same type *)
+	let warn_for_multiply_defined_variables list_of_variables =
+		(* Compute the multiply defined variables *)
+		let multiply_defined_variables = elements_existing_several_times list_of_variables in
+		(* Print a warning for each of them *)
+		List.iter (fun variable_name -> print_warning ("Multiply-declared variable '" ^ variable_name ^"'")) multiply_defined_variables;
+	in
+	warn_for_multiply_defined_variables clock_names;
+	warn_for_multiply_defined_variables discrete_names;
+	warn_for_multiply_defined_variables parameters_names;
+	(* Check different from constants *)
+	let different_from_constants l =
+		try(
+		List.iter (fun name ->
+			if Hashtbl.mem constants name then (
+				print_error ("Constant `" ^ name ^ "` is also defined as a variable.");
+				raise False_exception;
+			)
+			) l;
+		true
+		) with False_exception -> false
+	in
+	(* Error for variables defined as different types *)
+	let error_for_multiply_defined_variables l1 l2 =
+		let inter = list_inter l1 l2 in
+		match inter with
+		| [] -> true
+		| _ -> List.iter (fun variable_name -> print_error ("The variable `" ^ variable_name ^ "` is defined twice as two different types.")) inter; false
+	in
+	let check1 = error_for_multiply_defined_variables clock_names discrete_names in
+	let check2 = error_for_multiply_defined_variables clock_names parameters_names in
+	let check3 = error_for_multiply_defined_variables discrete_names parameters_names in
+	let check4 = different_from_constants clock_names in
+	let check5 = different_from_constants discrete_names in
+	let check6 = different_from_constants parameters_names in
+	check1 && check2 && check3 && check4 && check5 && check6
+
+
+(*------------------------------------------------------------*)
+(* Check that the names of automata are all different; return false otherwise *)
+(*------------------------------------------------------------*)
+let check_declared_automata_names automata_names =
+	(* Compute the multiply defined variables *)
+	let multiply_defined_names = elements_existing_several_times automata_names in
+	(* Print an error for each of them *)
+	match multiply_defined_names with
+	| [] -> true
+	| _ -> List.iter (fun variable_name -> print_error ("Several automata have name " ^ variable_name ^ ".")) multiply_defined_names; false
+
+
+(*------------------------------------------------------------*)
+(* Check that all locations of a given automaton are different *)
+(*------------------------------------------------------------*)
+let all_locations_different =
+	(* Check for every automaton *)
+	List.fold_left
+		(fun all_different (automaton_name, _, locations) ->
+		(* Get all the location names *)
+		let locations =
+			List.map (fun (location : parsed_location) -> location.name) locations in
+		(* Look for multiply declared locations *)
+		let multiply_declared_locations = elements_existing_several_times locations in
+		List.iter (fun location_name -> print_error ("Several locations have name `" ^ location_name ^ "` in automaton `" ^ automaton_name ^ "`.")) multiply_declared_locations;
+		if multiply_declared_locations = [] then all_different else false
+		)
+		true
+
+
+
 (*------------------------------------------------------------*)
 (* Check that an update is well formed *)
 (*------------------------------------------------------------*)
 let check_update index_of_variables type_of_variables variable_names removed_variable_names constants automaton_name update =
 
-  let check_update_normal (variable_name, arithmetic_expression) =
-    (* Check whether this variable is to be removed because unused elswhere than in resets *)
-    let to_be_removed = List.mem variable_name removed_variable_names in
+	let check_update_normal (variable_name, arithmetic_expression) =
+		(* Check whether this variable is to be removed because unused elswhere than in resets *)
+		let to_be_removed = List.mem variable_name removed_variable_names in
 
-    (* Get the index of the variable *)
-    let index, declared = try (Hashtbl.find index_of_variables variable_name, true)
-      with Not_found -> (
-          if to_be_removed then 0, true else (
-            print_error ("The variable '" ^ variable_name ^ "' used in an update in automaton '" ^ automaton_name ^ "' was not declared."); 0, false
-          )
-        )
-    in
+		(* Get the index of the variable *)
+		let index, declared = try (Hashtbl.find index_of_variables variable_name, true)
+		with Not_found -> (
+			if to_be_removed then 0, true else (
+				print_error ("The variable `" ^ variable_name ^ "` used in an update in automaton `" ^ automaton_name ^ "` was not declared."); 0, false
+			)
+			)
+		in
 
-    if not declared then false else (
-      (* Only check the rest if the variable is not to be removed *)
-      if to_be_removed then true else (
-        (* Get the type of the variable *)
-        print_message Verbose_total ("                Getting the type of the variable'" ^ variable_name ^ "'");
+		if not declared then false else (
+		(* Only check the rest if the variable is not to be removed *)
+		if to_be_removed then true else (
+			(* Get the type of the variable *)
+			print_message Verbose_total ("                Getting the type of the variable`" ^ variable_name ^ "`");
 
-        let type_of_variable = try (type_of_variables index)
-          with Invalid_argument comment -> (
-              raise (InternalError ("The variable '" ^ variable_name ^ "' was not found in '" ^ automaton_name ^ "', although this has been checked before. OCaml says: " ^ comment ^ "."))
-            ) in
+			let type_of_variable = try (type_of_variables index)
+			with Invalid_argument comment -> (
+				raise (InternalError ("The variable `" ^ variable_name ^ "` was not found in `" ^ automaton_name ^ "`, although this has been checked before. OCaml says: " ^ comment ^ "."))
+				) in
 
-        print_message Verbose_total ("                Checking the type of the variable '" ^ variable_name ^ "'");
-        match type_of_variable with
-        (* Type clock: allow any linear term in updates: so just check that variables have been declared *)
-        | AbstractModel.Var_type_clock ->
-          print_message Verbose_total ("                A clock!");
-          all_variables_defined_in_parsed_update_arithmetic_expression variable_names constants arithmetic_expression
+			print_message Verbose_total ("                Checking the type of the variable `" ^ variable_name ^ "`");
+			match type_of_variable with
+			(* Type clock: allow any linear term in updates: so just check that variables have been declared *)
+			| AbstractModel.Var_type_clock ->
+			print_message Verbose_total ("                A clock!");
+			all_variables_defined_in_parsed_update_arithmetic_expression variable_names constants arithmetic_expression
 
-        (* Case of a discrete var.: allow only an arithmetic expression of constants and discrete *)
-        | AbstractModel.Var_type_discrete ->
-          print_message Verbose_total ("                A discrete!");
-          let result = check_only_discretes_in_parsed_update_arithmetic_expression index_of_variables type_of_variables constants arithmetic_expression in
-          if not result then
-            (print_error ("The variable '" ^ variable_name ^ "' is a discrete and its update can only be an arithmetic expression over constants and discrete variables in automaton '" ^ automaton_name ^ "'."); false)
-          else (
-            print_message Verbose_total ("                Check passed.");
-            true
-          )
-        (* Case of a parameter: forbidden! *)
-        | AbstractModel.Var_type_parameter -> print_error ("The variable '" ^ variable_name ^ "' is a parameter and cannot be updated in automaton '" ^ automaton_name ^ "'."); false
-      )
-    )
-  in
-  (* Print some information *)
-  print_message Verbose_total ("              Checking one update");
+			(* Case of a discrete var.: allow only an arithmetic expression of constants and discrete *)
+			| AbstractModel.Var_type_discrete ->
+			print_message Verbose_total ("                A discrete!");
+			let result = check_only_discretes_in_parsed_update_arithmetic_expression index_of_variables type_of_variables constants arithmetic_expression in
+			if not result then
+				(print_error ("The variable `" ^ variable_name ^ "` is a discrete and its update can only be an arithmetic expression over constants and discrete variables in automaton `" ^ automaton_name ^ "`."); false)
+			else (
+				print_message Verbose_total ("                Check passed.");
+				true
+			)
+			(* Case of a parameter: forbidden! *)
+			| AbstractModel.Var_type_parameter -> print_error ("The variable `" ^ variable_name ^ "` is a parameter and cannot be updated in automaton `" ^ automaton_name ^ "`."); false
+		)
+		)
+	in
+	(* Print some information *)
+	print_message Verbose_total ("              Checking one update");
 
-  match update with
-  | Normal update -> check_update_normal update
-  | Condition (_, updates_if, updates_else) ->
-    List.fold_left (fun acc u ->
-        (check_update_normal u) && acc
-      ) true (updates_if@updates_else)
+	match update with
+	| Normal update -> check_update_normal update
+	| Condition (_, updates_if, updates_else) ->
+		List.fold_left (fun acc u ->
+			(check_update_normal u) && acc
+		) true (updates_if@updates_else)
 
 
 (*------------------------------------------------------------*)
 (* Check that a sync is well formed *)
 (*------------------------------------------------------------*)
 let check_sync sync_name_list automaton_name = function
-  | Sync sync_name ->  if not (List.mem sync_name sync_name_list) then (
-      print_error ("The sync label '" ^ sync_name ^ "' used in automaton '" ^ automaton_name ^ "' was not declared for this automaton."); false)
-    else true
-  | NoSync -> true
+	| Sync sync_name ->  if not (List.mem sync_name sync_name_list) then (
+		print_error ("The sync action '" ^ sync_name ^ "' used in automaton `" ^ automaton_name ^ "` was not declared for this automaton."); false)
+		else true
+	| NoSync -> true
 
 (*------------------------------------------------------------*)
 (* Check that a sync is used in all the automata where it is declared *)
 (*------------------------------------------------------------*)
 let synclab_used_everywhere automata synclab_name =
-  (* Try to find the synclab in all the automaton where it is declared *)
-  try(
-    (* Check each automaton *)
-    List.iter (fun (automaton_name, sync_name_list, locations) ->
-        (* Only check if the synclab is declared here *)
-        if List.mem synclab_name sync_name_list then(
-          (* Check that at least one location contains the synclab *)
-          if not (List.exists (fun (location : parsed_location) ->
-              (* Check that at least one transition contains the synclab *)
-              List.exists (fun (_, _, sync, _) -> sync = (Sync synclab_name)) location.transitions
-            ) locations ) then (
-            (* No location contains the synclab: warning and exception (to save a bit of time) *)
-            (*** TODO: perform exhaustive search, i.e., remove the exception mechanism ***)
-            print_warning ("The synclab '" ^ synclab_name ^ "' is not used in (at least) the automaton '" ^ automaton_name ^ "' where it is declared: it will thus be removed from the whole model.");
-            raise Not_found;
-          );
-        );
-      ) automata;
-    (* The synclab was found everywhere: true *)
-    true
-    (* At least one automata does not use the synclab : false *)
-  ) with Not_found -> false
+	(* Try to find the synclab in all the automaton where it is declared *)
+	try(
+		(* Check each automaton *)
+		List.iter (fun (automaton_name, sync_name_list, locations) ->
+			(* Only check if the synclab is declared here *)
+			if List.mem synclab_name sync_name_list then(
+			(* Check that at least one location contains the synclab *)
+			if not (List.exists (fun (location : parsed_location) ->
+				(* Check that at least one transition contains the synclab *)
+				List.exists (fun (_, _, sync, _) -> sync = (Sync synclab_name)) location.transitions
+				) locations ) then (
+				(* No location contains the synclab: warning and exception (to save a bit of time) *)
+				(*** TODO: perform exhaustive search, i.e., remove the exception mechanism ***)
+				print_warning ("The synclab '" ^ synclab_name ^ "' is not used in (at least) the automaton `" ^ automaton_name ^ "` where it is declared: it will thus be removed from the whole model.");
+				raise Not_found;
+			);
+			);
+		) automata;
+		(* The synclab was found everywhere: true *)
+		true
+		(* At least one automata does not use the synclab : false *)
+	) with Not_found -> false
 
 
 (*------------------------------------------------------------*)
 (* Check that all variables mentioned in a list of stopwatches exist and are clocks *)
 (*------------------------------------------------------------*)
-let check_stopwatches index_of_variables type_of_variables stopwatches =
-  let ok = ref true in
-  List.iter (fun stopwatch ->
-      (* Get variable name *)
-      try (
-        let variable_index = Hashtbl.find index_of_variables stopwatch in
-        if type_of_variables variable_index != Var_type_clock then (
-          print_error ("The variable '" ^ stopwatch ^ "' that should be stopped is not defined as a clock.");
-          ok := false;
-        );
-      ) with Not_found -> (
-          print_error ("The variable '" ^ stopwatch ^ "' that should be stopped is not defined.");
-          ok := false;
-        );
-    ) stopwatches;
-  !ok
+let check_stopwatches index_of_variables type_of_variables location_name stopwatches =
+	let ok = ref true in
+	List.iter (fun stopwatch ->
+		(* Get variable name *)
+		try (
+			let variable_index = Hashtbl.find index_of_variables stopwatch in
+			if type_of_variables variable_index != Var_type_clock then (
+			print_error ("The variable `" ^ stopwatch ^ "` that should be stopped in location `" ^ location_name ^ "` is not defined as a clock.");
+			ok := false;
+			);
+		) with Not_found -> (
+			print_error ("The variable `" ^ stopwatch ^ "` that should be stopped in location `" ^ location_name ^ "` is not defined.");
+			ok := false;
+			);
+		) stopwatches;
+	!ok
+
+
+(*------------------------------------------------------------*)
+(* Check that all variables mentioned in a list of flows exist and are clocks *)
+(*------------------------------------------------------------*)
+
+(*** TODO: check for duplicates (and warn), check for discrepancies (and raise error) ***)
+
+let check_flows nb_clocks index_of_variables type_of_variables location_name flows =
+	(* Create a hash table variable_index => flow value *)
+	let temp_flow_hashtable : (variable_index, NumConst.t) Hashtbl.t = Hashtbl.create nb_clocks in
+
+	(* Flag *)
+	let ok = ref true in
+	List.iter (fun (clock_name, flow_value) ->
+		(* Get variable name *)
+		try (
+			let variable_index = Hashtbl.find index_of_variables clock_name in
+			
+			(* Check variable type *)
+			if type_of_variables variable_index != Var_type_clock then (
+				print_error ("The variable `" ^ clock_name ^ "` used in a flow in location `" ^ location_name ^ "` is not defined as a clock.");
+				ok := false;
+			);
+			
+			(* Check whether a value was already defined *)
+			if Hashtbl.mem temp_flow_hashtable variable_index then(
+				(* Check whether the value is the same or not *)
+				let previous_value = Hashtbl.find temp_flow_hashtable variable_index in
+				(* If same value: warn *)
+				if NumConst.equal flow_value previous_value then(
+					print_warning("Duplicate clock flow value for variable `" ^ clock_name ^ "` in location `" ^ location_name ^ "`.");
+				)else(
+				(* If different value: error *)
+					print_error("Multiple and different clock flow values for variable `" ^ clock_name ^ "` in location `" ^ location_name ^ "`.");
+					ok := false;
+				);
+			)else(
+				(* Add the value to the table *)
+				Hashtbl.add temp_flow_hashtable variable_index flow_value;
+			);
+			
+			
+		) with Not_found -> (
+			print_error ("The variable `" ^ clock_name ^ "` used in a flow in location `" ^ location_name ^ "` is not defined.");
+			ok := false;
+			);
+		) flows;
+	!ok
 
 
 (*------------------------------------------------------------*)
 (* Check that the automata are well-formed *)
 (*------------------------------------------------------------*)
-let check_automata index_of_variables type_of_variables variable_names removed_variable_names index_of_automata locations_per_automaton constants automata =
-  let well_formed = ref true in
+let check_automata useful_parsing_model_information automata =
+	let constants				= useful_parsing_model_information.constants in
+	let index_of_automata		= useful_parsing_model_information.index_of_automata in
+	let index_of_variables		= useful_parsing_model_information.index_of_variables in
+	let array_of_location_names	= useful_parsing_model_information.array_of_location_names in
+	let removed_variable_names	= useful_parsing_model_information.removed_variable_names in
+	let type_of_variables		= useful_parsing_model_information.type_of_variables in
+	let variable_names			= useful_parsing_model_information.variable_names in
 
-  (* Check each automaton *)
-  List.iter (fun (automaton_name, sync_name_list, locations) ->
-      print_message Verbose_total ("      Checking automaton " ^ automaton_name);
-      (* Get the index of the automaton *)
-      let index = try (Hashtbl.find index_of_automata automaton_name) with
-          Not_found -> raise (InternalError ("Impossible to find the index of automaton '" ^ automaton_name ^ "'."))
-      in
-      (* Check each location *)
-      List.iter (fun (location : parsed_location) ->
-          print_message Verbose_total ("        Checking location " ^ location.name);
-          (* Check that the location_name exists (which is obvious) *)
-          if not (in_array location.name locations_per_automaton.(index)) then(
-            print_error ("The location '" ^ location.name ^ "' declared in automaton '" ^ automaton_name ^ "' does not exist.");
-            well_formed := false);
+	let well_formed = ref true in
 
-          (* Check the cost *)
-          begin
-            match location.cost with
-            | Some cost ->
-              print_message Verbose_total ("          Checking cost");
-              if not (all_variables_defined_in_linear_expression variable_names constants cost) then well_formed := false;
-            | None -> ()
-          end;
+	(* Check each automaton *)
+	List.iter (fun (automaton_name, sync_name_list, locations) ->
+		print_message Verbose_total ("      Checking automaton `" ^ automaton_name ^ "`");
+		(* Get the index of the automaton *)
+		let index = try (Hashtbl.find index_of_automata automaton_name) with
+			Not_found -> raise (InternalError ("Impossible to find the index of automaton `" ^ automaton_name ^ "`."))
+		in
+		(* Check each location *)
+		List.iter (fun (location : parsed_location) ->
+			print_message Verbose_total ("        Checking location " ^ location.name);
+			(* Check that the location_name exists (which is obvious) *)
+			if not (in_array location.name array_of_location_names.(index)) then(
+				print_error ("The location `" ^ location.name ^ "` declared in automaton `" ^ automaton_name ^ "` does not exist.");
+				well_formed := false);
 
-          (* Check the stopwatches *)
-          print_message Verbose_total ("          Checking possible stopwatches");
-          if not (check_stopwatches index_of_variables type_of_variables location.stopped) then well_formed := false;
+			(* Check the cost *)
+			begin
+				match location.cost with
+				| Some cost ->
+				print_message Verbose_total ("          Checking cost");
+				if not (all_variables_defined_in_linear_expression variable_names constants cost) then well_formed := false;
+				| None -> ()
+			end;
 
+			(* Check the stopwatches *)
+			print_message Verbose_total ("          Checking stopwatches");
+			if not (check_stopwatches index_of_variables type_of_variables location.name location.stopped) then well_formed := false;
 
-          (* Check the convex predicate *)
-
-          (*** TODO: preciser quel automate et quelle location en cas d'erreur ***)
-
-          print_message Verbose_total ("          Checking convex predicate");
-          if not (all_variables_defined_in_convex_predicate variable_names constants location.invariant) then well_formed := false;
+			(* Check the flows *)
+			print_message Verbose_total ("          Checking flows");
+			if not (check_flows useful_parsing_model_information.nb_clocks index_of_variables type_of_variables location.name location.flow) then well_formed := false;
 
 
-          (* Check transitions *)
-          print_message Verbose_total ("          Checking transitions");
-          List.iter (fun (convex_predicate, updates, sync, target_location_name) ->
-              (* Check the convex predicate *)
-              print_message Verbose_total ("            Checking convex predicate");
-              if not (all_variables_defined_in_convex_predicate variable_names constants convex_predicate) then well_formed := false;
-              (* Check the updates *)
-              print_message Verbose_total ("            Checking updates");
-              List.iter (fun update -> if not (check_update index_of_variables type_of_variables variable_names removed_variable_names constants automaton_name update) then well_formed := false) updates;
-              (* Check the sync *)
-              print_message Verbose_total ("            Checking sync name ");
-              if not (check_sync sync_name_list automaton_name sync) then well_formed := false;
-              (* Check that the target location exists for this automaton *)
-              if not (in_array target_location_name locations_per_automaton.(index)) then(
-                print_error ("The target location '" ^ target_location_name ^ "' used in automaton '" ^ automaton_name ^ "' does not exist.");
-                well_formed := false);
-            ) location.transitions;
-        ) locations;
-    ) automata;
+			(* Check the convex predicate *)
 
-  (* Return whether the automata passed the tests *)
-  !well_formed
+			(*** TODO: preciser quel automate et quelle location en cas d'erreur ***)
+
+			print_message Verbose_total ("          Checking convex predicate");
+			if not (all_variables_defined_in_convex_predicate variable_names constants location.invariant) then well_formed := false;
+
+
+			(* Check transitions *)
+			print_message Verbose_total ("          Checking transitions");
+			List.iter (fun (convex_predicate, updates, sync, target_location_name) ->
+				(* Check the convex predicate *)
+				print_message Verbose_total ("            Checking convex predicate");
+				if not (all_variables_defined_in_convex_predicate variable_names constants convex_predicate) then well_formed := false;
+				(* Check the updates *)
+				print_message Verbose_total ("            Checking updates");
+				List.iter (fun update -> if not (check_update index_of_variables type_of_variables variable_names removed_variable_names constants automaton_name update) then well_formed := false) updates;
+				(* Check the sync *)
+				print_message Verbose_total ("            Checking sync name ");
+				if not (check_sync sync_name_list automaton_name sync) then well_formed := false;
+				(* Check that the target location exists for this automaton *)
+				if not (in_array target_location_name array_of_location_names.(index)) then(
+					print_error ("The target location `" ^ target_location_name ^ "` used in automaton `" ^ automaton_name ^ "` does not exist.");
+					well_formed := false);
+				) location.transitions;
+			) locations;
+		) automata;
+
+	(* Return whether the automata passed the tests *)
+	!well_formed
 
 
 (*------------------------------------------------------------*)
 (* Check that the init_definition are well-formed *)
 (*------------------------------------------------------------*)
-let check_init discrete variable_names removed_variable_names constants index_of_variables type_of_variables automata automata_names index_of_automata locations_per_automaton init_definition observer_automaton =
-  let well_formed = ref true in
-  (* Check that (automaton / location / variable) names exist in each predicate *)
-  List.iter (function
-      | Loc_assignment (automaton_name, location_name) ->
-        (* Check that the automaton_name exists *)
-        let index, exists = try (Hashtbl.find index_of_automata automaton_name, true) with
-            Not_found -> (print_error ("The automaton '" ^ automaton_name ^ "' mentioned in the init definition does not exist."); well_formed := false; 0, false) in
-        (* Check that the location_name exists (only if the automaton_name exists) *)
-        if exists && not (in_array location_name locations_per_automaton.(index)) then (
-          print_error ("The location '" ^ location_name ^ "' mentioned in the init definition does not exist in automaton '" ^ automaton_name ^ "'."); well_formed := false
-        )
-      | Linear_predicate linear_constraint ->
-        begin
-          (*** NOTE: do not check linear constraints made of a variable to be removed compared to a linear term ***)
-          match linear_constraint with
-          | Linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) when List.mem variable_name removed_variable_names ->
-            print_message Verbose_total ("Variable '" ^ variable_name ^ "' is compared to a linear term, but will be removed: no check." );
-            (* Still check the second term *)
-            if not (all_variables_defined_in_linear_expression variable_names constants linear_expression) then well_formed := false;
-            (* General case: check *)
-          | _ -> if not (all_variables_defined_in_linear_constraint variable_names constants linear_constraint) then well_formed := false;
-        end
-    ) init_definition;
+let check_init useful_parsing_model_information init_definition observer_automaton_index_option =
+	let array_of_location_names	= useful_parsing_model_information.array_of_location_names in
+	let automata				= useful_parsing_model_information.automata in
+	let automata_names			= useful_parsing_model_information.automata_names in
+	let constants				= useful_parsing_model_information.constants in
+	let discrete				= useful_parsing_model_information.discrete in
+	let index_of_automata		= useful_parsing_model_information.index_of_automata in
+	let index_of_variables		= useful_parsing_model_information.index_of_variables in
+	let type_of_variables		= useful_parsing_model_information.type_of_variables in
+	let variable_names			= useful_parsing_model_information.variable_names in
+	let removed_variable_names	= useful_parsing_model_information.removed_variable_names in
 
-  (* Get all the Loc_assignment *)
-  let loc_assignments, init_inequalities = List.partition (function
-      | Loc_assignment _ -> true
-      | Linear_predicate _ -> false
-    ) init_definition in
-  (* Make pairs (automaton_name, location_name) *)
-  let initial_locations = List.map (function
-      | Loc_assignment (automaton_name, location_name) -> (automaton_name, location_name)
-      | _ -> raise (InternalError "Something else than a Loc_assignment was found in a Loc_assignment list")
-    ) loc_assignments in
+	let well_formed = ref true in
+	(* Check that (automaton / location / variable) names exist in each predicate *)
+	List.iter (function
+		| Parsed_loc_assignment (automaton_name, location_name) ->
+			(* Check that the automaton_name exists *)
+			let index, exists = try (Hashtbl.find index_of_automata automaton_name, true) with
+				Not_found -> (print_error ("The automaton `" ^ automaton_name ^ "` mentioned in the init definition does not exist."); well_formed := false; 0, false) in
+			(* Check that the location_name exists (only if the automaton_name exists) *)
+			if exists && not (in_array location_name array_of_location_names.(index)) then (
+			print_error ("The location `" ^ location_name ^ "` mentioned in the init definition does not exist in automaton `" ^ automaton_name ^ "`."); well_formed := false
+			)
+		| Parsed_linear_predicate linear_constraint ->
+			begin
+			(*** NOTE: do not check linear constraints made of a variable to be removed compared to a linear term ***)
+			match linear_constraint with
+			| Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , linear_expression) when List.mem variable_name removed_variable_names ->
+				print_message Verbose_total ("Variable `" ^ variable_name ^ "` is compared to a linear term, but will be removed: no check." );
+				(* Still check the second term *)
+				if not (all_variables_defined_in_linear_expression variable_names constants linear_expression) then well_formed := false;
+				(* General case: check *)
+			| _ -> if not (all_variables_defined_in_linear_constraint variable_names constants linear_constraint) then well_formed := false;
+			end
+		) init_definition;
 
-  (* Check that every automaton is given at most one initial location *)
-  let init_locations_for_automata = Hashtbl.create (List.length automata) in
-  List.iter (fun (automaton_name, location_name) ->
-      (* Check if this automaton was already given an initial location before *)
-      if Hashtbl.mem init_locations_for_automata automaton_name then(
-        (* Get the initial location already declared previously *)
-        let previous_location = Hashtbl.find init_locations_for_automata automaton_name in
-        (* If identical : only warns *)
-        if location_name = previous_location then (
-          print_warning ("The automaton '" ^ automaton_name ^ "' is assigned twice the initial location '" ^ location_name ^ "' in the init definition.");
-          (* If different : error *)
-        ) else (
-          print_error ("The automaton '" ^ automaton_name ^ "' is assigned several different locations in the init definition.");
-          well_formed := false;
-        );
-        (* If not already given : add it *)
-      ) else (
-        Hashtbl.add init_locations_for_automata automaton_name location_name;
-      );
-    ) initial_locations;
-  (* Check that every automaton is given at least one initial location *)
-  List.iter (fun automaton_index ->
-      let is_observer i = match observer_automaton with
-        | None -> false
-        | Some observer_id -> i = observer_id
-      in
-      (* No check for the observer (will be added later) *)
-      if not (is_observer automaton_index) then (
-        (* Get the name *)
-        let automaton_name = automata_names automaton_index in
-        (* Look for it in the hash table *)
-        if not (Hashtbl.mem init_locations_for_automata automaton_name) then (
-          (* Error *)
-          print_error ("The automaton '" ^ automaton_name ^ "' is not given any initial location in the init definition.");
-          well_formed := false;
-        );
-      );
-    ) automata;
+	(* Get all the Parsed_loc_assignment *)
+	let loc_assignments, init_inequalities = List.partition (function
+		| Parsed_loc_assignment _ -> true
+		| Parsed_linear_predicate _ -> false
+		) init_definition in
+	(* Make pairs (automaton_name, location_name) *)
+	let initial_locations = List.map (function
+		| Parsed_loc_assignment (automaton_name, location_name) -> (automaton_name, location_name)
+		| _ -> raise (InternalError "Something else than a Parsed_loc_assignment was found in a Parsed_loc_assignment list")
+		) loc_assignments in
 
-  (* Remove the inequalities of which the left-hand term is a removed variable *)
-  let filtered_init_inequalities = List.filter (function
-      | Linear_predicate (Linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
-        (* Filter out if the left-hand is in the removed variable names *)
-        not (List.mem variable_name removed_variable_names)
-      (* Any other combination is OK *)
-      | _ ->
-        true
-    ) init_inequalities
-  in
+	(* Check that every automaton is given at most one initial location *)
+	let init_locations_for_automata = Hashtbl.create (List.length automata) in
+	List.iter (fun (automaton_name, location_name) ->
+		(* Check if this automaton was already given an initial location before *)
+		if Hashtbl.mem init_locations_for_automata automaton_name then(
+			(* Get the initial location already declared previously *)
+			let previous_location = Hashtbl.find init_locations_for_automata automaton_name in
+			(* If identical : only warns *)
+			if location_name = previous_location then (
+			print_warning ("The automaton `" ^ automaton_name ^ "` is assigned twice the initial location `" ^ location_name ^ "` in the init definition.");
+			(* If different : error *)
+			) else (
+			print_error ("The automaton `" ^ automaton_name ^ "` is assigned several different locations in the init definition.");
+			well_formed := false;
+			);
+			(* If not already given : add it *)
+		) else (
+			Hashtbl.add init_locations_for_automata automaton_name location_name;
+		);
+		) initial_locations;
+	(* Check that every automaton is given at least one initial location *)
+	List.iter (fun automaton_index ->
+		let is_observer i = match observer_automaton_index_option with
+			| None -> false
+			| Some observer_id -> i = observer_id
+		in
+		(* No check for the observer (will be added later) *)
+		if not (is_observer automaton_index) then (
+			(* Get the name *)
+			let automaton_name = automata_names automaton_index in
+			(* Look for it in the hash table *)
+			if not (Hashtbl.mem init_locations_for_automata automaton_name) then (
+			(* Error *)
+			print_error ("The automaton `" ^ automaton_name ^ "` is not given any initial location in the init definition.");
+			well_formed := false;
+			);
+		);
+		) automata;
 
-  (* Partition the init inequalities between the discrete init assignments, and other inequalities *)
-  let discrete_init, other_inequalities = List.partition (function
-      (* Check if the left part is only a variable name *)
-      | Linear_predicate (Linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
-        let is_discrete =
-          (* Try to get the variable index *)
-          if (Hashtbl.mem index_of_variables variable_name) then (
-            let variable_index =  Hashtbl.find index_of_variables variable_name in
-            (* Keep if this is a discrete *)
-            type_of_variables variable_index = Var_type_discrete
-          ) else (
-            (* Case constant *)
-            if (Hashtbl.mem constants variable_name) then false
-            else (
-              (* Otherwise: problem! *)
-              raise (InternalError ("The variable '" ^ variable_name ^ "' mentioned in the init definition does not exist."));
-            ))
-        in is_discrete
-      (* Otherwise false *)
-      | _ -> false
-    ) filtered_init_inequalities in
+	(* Remove the inequalities of which the left-hand term is a removed variable *)
+	let filtered_init_inequalities = List.filter (function
+		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
+			(* Filter out if the left-hand is in the removed variable names *)
+			not (List.mem variable_name removed_variable_names)
+		(* Any other combination is OK *)
+		| _ ->
+			true
+		) init_inequalities
+	in
 
-  (* Check that every discrete variable is given only one (rational) initial value *)
-  let init_values_for_discrete = Hashtbl.create (List.length discrete) in
-  List.iter (fun lp ->
-      match lp with
-      | Linear_predicate (Linear_constraint (Linear_term (Variable (coeff, discrete_name)), op , expression)) ->
-        if NumConst.neq coeff NumConst.one then (
-          print_error ("The discrete variable '" ^ discrete_name ^ "' must have a coeff 1 in the init definition.");
-          well_formed := false;
-        );
-        (* Check if the assignment is well formed, and keep the discrete value *)
-        let discrete_value =
-          match (op, expression) with
-          (* Simple constant: OK *)
-          | (OP_EQ, Linear_term (Constant c)) -> c
-          (* Constant: OK *)
-          | (OP_EQ, Linear_term (Variable (coef, variable_name))) ->
-            (* Get the value of  the variable *)
-            let value = Hashtbl.find constants variable_name in
-            NumConst.mul coef value
-          | _ -> print_error ("The initial value for discrete variable '" ^ discrete_name ^ "' must be given in the form '" ^ discrete_name ^ " = c', where c is an integer, a rational or a constant.");
-            well_formed := false;
-            NumConst.zero
-        in
-        (* Get the variable index *)
-        let discret_index =  Hashtbl.find index_of_variables discrete_name in
-        (* Check if it was already declared *)
-        if Hashtbl.mem init_values_for_discrete discret_index then(
-          print_error ("The discrete variable '" ^ discrete_name ^ "' is given an initial value several times in the init definition.");
-          well_formed := false;
-        ) else (
-          (* Else add it *)
-          Hashtbl.add init_values_for_discrete discret_index discrete_value;
-        );
-      | _ -> raise (InternalError ("Must have this form since it was checked before."))
-    ) discrete_init;
+	(* Partition the init inequalities between the discrete init assignments, and other inequalities *)
+	let discrete_init, other_inequalities = List.partition (function
+		(* Check if the left part is only a variable name *)
+		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
+			let is_discrete =
+			(* Try to get the variable index *)
+			if (Hashtbl.mem index_of_variables variable_name) then (
+				let variable_index =  Hashtbl.find index_of_variables variable_name in
+				(* Keep if this is a discrete *)
+				type_of_variables variable_index = Var_type_discrete
+			) else (
+				(* Case constant *)
+				if (Hashtbl.mem constants variable_name) then false
+				else (
+				(* Otherwise: problem! *)
+				raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist."));
+				))
+			in is_discrete
+		(* Otherwise false *)
+		| _ -> false
+		) filtered_init_inequalities in
 
-  (* Check that every discrete variable is given at least one (rational) initial value (if not: warns) *)
-  List.iter (fun discrete_index ->
-      if not (Hashtbl.mem init_values_for_discrete discrete_index) then(
-        print_warning ("The discrete variable '" ^ (List.nth variable_names discrete_index) ^ "' was not given an initial value in the init definition: it will be assigned to 0.");
-        Hashtbl.add init_values_for_discrete discrete_index NumConst.zero
-      );
-    ) discrete;
+	(* Check that every discrete variable is given only one (rational) initial value *)
+	let init_values_for_discrete = Hashtbl.create (List.length discrete) in
+	List.iter (fun lp ->
+		match lp with
+		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (coeff, discrete_name)), op , expression)) ->
+			if NumConst.neq coeff NumConst.one then (
+			print_error ("The discrete variable `" ^ discrete_name ^ "` must have a coeff 1 in the init definition.");
+			well_formed := false;
+			);
+			(* Check if the assignment is well formed, and keep the discrete value *)
+			let discrete_value =
+			match (op, expression) with
+			(* Simple constant: OK *)
+			| (PARSED_OP_EQ, Linear_term (Constant c)) -> c
+			(* Constant: OK *)
+			| (PARSED_OP_EQ, Linear_term (Variable (coef, variable_name))) ->
+				(* Get the value of  the variable *)
+				let value = Hashtbl.find constants variable_name in
+				NumConst.mul coef value
+			| _ -> print_error ("The initial value for discrete variable `" ^ discrete_name ^ "` must be given in the form `" ^ discrete_name ^ " = c`, where `c` is an integer, a rational or a constant.");
+				well_formed := false;
+				NumConst.zero
+			in
+			(* Get the variable index *)
+			let discret_index =  Hashtbl.find index_of_variables discrete_name in
+			(* Check if it was already declared *)
+			if Hashtbl.mem init_values_for_discrete discret_index then(
+			print_error ("The discrete variable `" ^ discrete_name ^ "` is given an initial value several times in the init definition.");
+			well_formed := false;
+			) else (
+			(* Else add it *)
+			Hashtbl.add init_values_for_discrete discret_index discrete_value;
+			);
+		| _ -> raise (InternalError ("Must have this form since it was checked before."))
+		) discrete_init;
 
-  (* Convert the Hashtbl to pairs (discrete_index, init_value) *)
-  let discrete_values_pairs =
-    List.map (fun discrete_index ->
-        discrete_index, Hashtbl.find init_values_for_discrete discrete_index
-      ) discrete
-  in
+	(* Check that every discrete variable is given at least one (rational) initial value (if not: warns) *)
+	List.iter (fun discrete_index ->
+		if not (Hashtbl.mem init_values_for_discrete discrete_index) then(
+			print_warning ("The discrete variable '" ^ (List.nth variable_names discrete_index) ^ "' was not given an initial value in the init definition: it will be assigned to 0.");
+			Hashtbl.add init_values_for_discrete discrete_index NumConst.zero
+		);
+		) discrete;
 
-  (* Check that no discrete variable is used in other inequalities (warns if yes) *)
-  (**** TO DO ****) (*use 'other_inequalities' *)
+	(* Convert the Hashtbl to pairs (discrete_index, init_value) *)
+	let discrete_values_pairs =
+		List.map (fun discrete_index ->
+			discrete_index, Hashtbl.find init_values_for_discrete discrete_index
+		) discrete
+	in
 
-  (* Return whether the init declaration passed the tests *)
-  discrete_values_pairs, !well_formed
+	(* Check that no discrete variable is used in other inequalities (warns if yes) *)
+	(*** TODO ***) (*use 'other_inequalities' *)
 
-
-
-
-(************************************************************)
-(** Verification functions dedicated to property declaration *)
-(************************************************************)
-
-(*------------------------------------------------------------*)
-(* Local functions checking existence of a name in property specifications
- * May print warnings or errors
-*)
-(*------------------------------------------------------------*)
-let check_automaton_name index_of_automata automaton_name =
-  if not (Hashtbl.mem index_of_automata automaton_name)
-  then (
-    print_error ("The automaton name '" ^ automaton_name ^ "' used in the correctness property does not exist.");
-    false
-  )
-  else true
-
-(*------------------------------------------------------------*)
-let check_location_name index_of_locations automaton_index automaton_name location_name =
-  if not (Hashtbl.mem index_of_locations.(automaton_index) location_name)
-  then (
-    print_error ("The location name '" ^ location_name ^ "' used in the correctness property does not exist in automaton '" ^ automaton_name ^ "'.");
-    false
-  )
-  else true
-
-(*------------------------------------------------------------*)
-let check_action_name index_of_actions action_name =
-  if not (Hashtbl.mem index_of_actions action_name)
-  then (
-    print_error ("The action '" ^ action_name ^ "' used in the correctness property does not exist in this model.");
-    false
-  )
-  else true
-
-
-(*------------------------------------------------------------*)
-(* Check a list of local location declaration (i.e., of the form 'loc[automaton] = location')
- * Return a list of unreachable_location, and a Boolean encoding whether all checks passed
- * May print warnings or errors
-*)
-(*------------------------------------------------------------*)
-let check_and_convert_unreachable_local_locations index_of_automata index_of_locations parsed_unreachable_locations =
-  (* Create a hash table to check for double declarations *)
-  let hashtable = Hashtbl.create (Hashtbl.length index_of_automata) in
-
-  (* Global check *)
-  let checks_passed = ref true in
-
-  (* Iterate on parsed_unreachable_locations and check for names *)
-  List.iter(fun parsed_unreachable_predicate ->
-      let automaton_name , location_name =
-        match parsed_unreachable_predicate with
-        | Parsed_unreachable_loc (automaton_name , location_name) -> automaton_name , location_name
-        | _ -> raise (InternalError("Expecting a Parsed_unreachable_loc, which should have been checked earlier."))
-      in
-      (* Check automaton name *)
-      let check1 = check_automaton_name index_of_automata automaton_name in
-
-      (* Check location name *)
-      let check2 =
-        (* Only perform check2 if check1 passed *)
-        if not check1 then false else(
-          (* Retrieve automaton index *)
-          let automaton_index = Hashtbl.find index_of_automata automaton_name in
-          (* Check location name for this automaton *)
-          check_location_name index_of_locations automaton_index automaton_name location_name
-        )
-      in
-
-      (* Check whether another location was declared for this automaton and, if not, store the location *)
-      let check3 = if Hashtbl.mem hashtable automaton_name then(
-          (* Retrieve former location name *)
-          let old_name = Hashtbl.find hashtable automaton_name in
-          (* If same name: just warning *)
-          if old_name = location_name then(
-            (* Warning *)
-            print_warning ("Automaton '" ^ automaton_name ^ "' is assigned several times to location name '" ^ location_name ^ "' in the correctness property.");
-            (* No problem *)
-            true
-          )else(
-            (* Otherwise: error *)
-            print_warning ("Automaton '" ^ automaton_name ^ "' is assigned to several different location names (e.g., '" ^ location_name ^ "' and '" ^ old_name ^ "') in the correctness property.");
-            (* Problem *)
-            false
-          )
-        ) else (
-          (* Add to hash table *)
-          Hashtbl.add hashtable automaton_name location_name;
-          (* No problem *)
-          true
-        )
-      in
-
-      (* Update checks *)
-      checks_passed := !checks_passed && check1 && check2 && check3;
-
-    ) parsed_unreachable_locations;
-
-  (* If problem: returns dummy result *)
-  if not !checks_passed then(
-    [] , false
-  )else(
-    (* Return all pairs 'loc[automaton] = location' *)
-    let pairs = Hashtbl.fold (fun automaton_name location_name former_pairs ->
-        (* Retrieve automaton index (no test because was tested earlier) *)
-        let automaton_index = Hashtbl.find index_of_automata automaton_name in
-        (* Retrieve location index (no test because was tested earlier) *)
-        let location_index = Hashtbl.find index_of_locations.(automaton_index) location_name in
-        (* Add new pair *)
-        (automaton_index, location_index) :: former_pairs
-      ) hashtable [] in
-    pairs , true
-  )
-
-
-(*------------------------------------------------------------*)
-(* Check a list of discrete constraints declaration (i.e., of the form 'd ~ constant(s)')
- * Return a list of discrete_constraint, and a Boolean encoding whether all checks passed
- * May print warnings or errors
-*)
-(*------------------------------------------------------------*)
-let check_and_convert_unreachable_discrete_constraints index_of_variables type_of_variables variable_names discrete parsed_unreachable_locations =
-  (* Create a hash table to check for double declarations *)
-  let hashtable = Hashtbl.create (List.length discrete) in
-
-  (*(* Horrible hack: store not the constants, but their string representation (to allow for a quick representation of single constants and pairs of constants in intervals) *)
-    	let string_of_parsed_discrete_constraint = function
-    		| Parsed_discrete_l (_ , v)
-    			-> "<" ^ (NumConst.string_of_numconst v)
-    		| Parsed_discrete_leq (_ , v)
-    			-> "<=" ^ (NumConst.string_of_numconst v)
-    		| Parsed_discrete_equal (_ , v)
-    			-> "=" ^ (NumConst.string_of_numconst v)
-    		| Parsed_discrete_geq (_ , v)
-    			-> ">=" ^ (NumConst.string_of_numconst v)
-    		| Parsed_discrete_g (_ , v)
-    			-> ">" ^ (NumConst.string_of_numconst v)
-    		| Parsed_discrete_interval (_ , min_bound, max_bound)
-    			-> " in [" ^ (NumConst.string_of_numconst min_bound)
-    					^ " .. "
-    					^ (NumConst.string_of_numconst max_bound)
-    					^ "]"
-    	in*)
-
-  (* Local function to convert a parsed constraint into an abstract discrete constraint *)
-  (*** NOTE: will only be called once the discrete variable name has been checked for name and type ***)
-  let convert_discrete_constraint = function
-    | Parsed_discrete_l (discrete_name , v)
-      -> Discrete_l (Hashtbl.find index_of_variables discrete_name , v)
-    | Parsed_discrete_leq (discrete_name , v)
-      -> Discrete_leq (Hashtbl.find index_of_variables discrete_name , v)
-    | Parsed_discrete_equal (discrete_name , v)
-      -> Discrete_equal (Hashtbl.find index_of_variables discrete_name , v)
-    | Parsed_discrete_geq (discrete_name , v)
-      -> Discrete_geq (Hashtbl.find index_of_variables discrete_name , v)
-    | Parsed_discrete_g (discrete_name , v)
-      -> Discrete_g (Hashtbl.find index_of_variables discrete_name , v)
-    | Parsed_discrete_interval (discrete_name , min_bound, max_bound)
-      -> Discrete_interval (Hashtbl.find index_of_variables discrete_name , min_bound, max_bound)
-  in
-
-  (* Global check *)
-  let checks_passed = ref true in
-
-  (* Iterate on parsed_unreachable_predicate and check for names and values *)
-  List.iter(fun parsed_unreachable_predicate ->
-      let parsed_discrete_constraint =
-        match parsed_unreachable_predicate with
-        | Parsed_unreachable_discrete parsed_discrete_constraint -> parsed_discrete_constraint
-        | _ -> raise (InternalError("Expecting a Parsed_unreachable_discrete, which should have been checked earlier."))
-      in
-
-      (* Get discrete variable name *)
-      let discrete_name = match parsed_discrete_constraint with
-        | Parsed_discrete_l (variable_name , _)
-        | Parsed_discrete_leq (variable_name , _)
-        | Parsed_discrete_equal (variable_name , _)
-        | Parsed_discrete_geq (variable_name , _)
-        | Parsed_discrete_g (variable_name , _)
-          -> variable_name
-        | Parsed_discrete_interval (variable_name , _, _)
-          -> variable_name
-      in
-
-      (* Check discrete name and type *)
-      let check1 =
-        (* 1a. Check for name *)
-        if not (Hashtbl.mem index_of_variables discrete_name) then(
-          (* Print error *)
-          print_error ("The discrete variable '" ^ discrete_name ^ "' used in the correctness property does not exist in this model.");
-          (* Problem *)
-          false
-          (* 1b. Check for type *)
-        )else(
-          (* Get variable index *)
-          (*** NOTE: safe because Hashtbl.mem was checked in test 1a ***)
-          let variable_index = Hashtbl.find index_of_variables discrete_name in
-          (* Check type *)
-          let variable_type = type_of_variables variable_index in
-          if variable_type <> Var_type_discrete then(
-            (* Print error *)
-            print_error ("The variable '" ^ discrete_name ^ "' used in the correctness property must be a discrete variable (clocks and parameters are not allowed at this stage).");
-            (* Problem *)
-            false
-          )else true
-        )
-      in
-
-      (* Check value1 <= value2 *)
-      let check2 = match parsed_discrete_constraint with
-        | Parsed_discrete_l _
-        | Parsed_discrete_leq _
-        | Parsed_discrete_equal _
-        | Parsed_discrete_geq _
-        | Parsed_discrete_g _
-          -> true
-        | Parsed_discrete_interval (_ , min_bound , max_bound )
-          -> if NumConst.g min_bound max_bound then(
-            print_error ("The interval '[" ^ (NumConst.string_of_numconst min_bound) ^ " , " ^ (NumConst.string_of_numconst max_bound) ^ "]' used in the correctness property is not well-formed.");
-            (* Problem *)
-            false
-          ) else true
-      in
-
-      (* Check whether another value was declared for this discrete and, if not, store the value *)
-      let check3 =
-        (* Only perform this if further checks passed *)
-        if not (check1 && check2) then false else(
-          (* Compute abstract constraint *)
-          let abstract_constraint = convert_discrete_constraint parsed_discrete_constraint in
-          (* Check whether another value was declared for this discrete *)
-          if Hashtbl.mem hashtable discrete_name then(
-            (* Retrieve former value *)
-            let old_constraint = Hashtbl.find hashtable discrete_name in
-            (* If same name: just warning *)
-            if old_constraint = abstract_constraint then(
-              (* Warning *)
-              print_warning ("Discrete variable '" ^ discrete_name ^ "' is compared several times to the same constant in the correctness property.");
-              (* No problem *)
-              true
-            )else(
-              (* Otherwise: error *)
-              print_warning ("Discrete variable '" ^ discrete_name ^ "' is compared several times to different constants in the correctness property.");
-              (* Problem *)
-              false
-            )
-          ) else (
-            (* Add to hash table *)
-            Hashtbl.add hashtable discrete_name abstract_constraint;
-            (* No problem *)
-            true
-          )
-        )
-      in
-
-      (* Update checks *)
-      checks_passed := !checks_passed && check1 && check2 && check3;
-
-    ) parsed_unreachable_locations;
-
-  (* If problem: returns dummy result *)
-  if not !checks_passed then(
-    [] , false
-  )else(
-    (* Return all abstract constraints *)
-    let abstract_constraints = Hashtbl.fold (fun _ abstract_constraint former_abstract_constraints ->
-        (*			(* Retrieve automaton index (no test because was tested earlier) *)
-          			let discrete_index = Hashtbl.find index_of_variables discrete_name in*)
-        (* Add new abstract_constraint *)
-        abstract_constraint :: former_abstract_constraints
-      ) hashtable [] in
-    abstract_constraints , true
-  )
-
-
-(*------------------------------------------------------------*)
-(* Check one global location declaration (i.e., a list of location predicates and/or of discrete constraints)
- * Return a converted global location, and a Boolean encoding whether all checks passed
- * May print warnings or errors
-*)
-(*------------------------------------------------------------*)
-let check_and_convert_unreachable_global_location index_of_variables type_of_variables discrete variable_names index_of_automata index_of_locations parsed_unreachable_global_location =
-  (* Split the predicates in location and discrete *)
-  let parsed_unreachable_locations, parsed_discrete_constraints = List.partition (function
-      | Parsed_unreachable_loc _ -> true
-      | _ -> false
-    ) parsed_unreachable_global_location
-  in
-
-  (* Call dedicated functions *)
-  let unreachable_locations, check1 = check_and_convert_unreachable_local_locations index_of_automata index_of_locations parsed_unreachable_locations in
-  let discrete_constraints, check2 = check_and_convert_unreachable_discrete_constraints index_of_variables type_of_variables variable_names discrete parsed_discrete_constraints in
-
-  (* Return *)
-  {
-    unreachable_locations = unreachable_locations;
-    discrete_constraints  = discrete_constraints;
-  }
-  ,
-  check1 && check2
-
-
-(*------------------------------------------------------------*)
-(* Check the correctness property declaration       *)
-(*------------------------------------------------------------*)
-let check_and_convert_property index_of_variables type_of_variables discrete variable_names constants index_of_actions index_of_automata index_of_locations parsed_property_definition =
-
-  (* Generic check and conversion function for 2 actions *)
-  let gen_check_and_convert_2act property a1 a2 =
-    (* Check action names (perform 2 even if one fails) *)
-    let check1 = check_action_name index_of_actions a1 in
-    let check2 = check_action_name index_of_actions a2 in
-    if not (check1 && check2)
-    then (Noproperty , false)
-    else (
-      (* Get action indexes *)
-      let action_index1 = Hashtbl.find index_of_actions a1 in
-      let action_index2 = Hashtbl.find index_of_actions a2 in
-      (*** BADPROG (but couldn't see how to do better!) *)
-      (* Match again and create the property *)
-      match property with
-      | ParsingStructure.Action_precedence_acyclic _ -> AbstractModel.Action_precedence_acyclic (action_index1, action_index2), true
-      | ParsingStructure.Action_precedence_cyclic _ -> AbstractModel.Action_precedence_cyclic (action_index1, action_index2), true
-      | ParsingStructure.Action_precedence_cyclicstrict _ -> AbstractModel.Action_precedence_cyclicstrict (action_index1, action_index2), true
-      (*** NOT IMPLEMENTED ***)
-      (*			| ParsingStructure.Eventual_response_acyclic _ -> AbstractModel.Eventual_response_acyclic (action_index1, action_index2), true
-        			| ParsingStructure.Eventual_response_cyclic _ -> AbstractModel.Eventual_response_cyclic (action_index1, action_index2), true
-        			| ParsingStructure.Eventual_response_cyclicstrict _ -> AbstractModel.Eventual_response_cyclicstrict (action_index1, action_index2), true*)
-      | _ -> raise (InternalError ("Impossible case while looking for properties with 2 actions; all cases should have been taken into account."))
-    )
-  in
-
-  (* Generic check and conversion function for 2 actions and one deadline *)
-  let gen_check_and_convert_2actd property a1 a2 d =
-    (* Check action names and deadline (perform 3 even if one fails) *)
-    let check1 = check_action_name index_of_actions a1 in
-    let check2 = check_action_name index_of_actions a2 in
-    let check3 = all_variables_defined_in_linear_expression variable_names constants d in
-    let check4 = (if no_variables_in_linear_expression index_of_variables type_of_variables constants d
-                  then true
-                  else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
-    in
-    if not (check1 && check2 && check3 && check4)
-    then (Noproperty , false)
-    else (
-      (* Get action indexes *)
-      let action_index1 = Hashtbl.find index_of_actions a1 in
-      let action_index2 = Hashtbl.find index_of_actions a2 in
-      (* Convert deadline *)
-      let d = LinearConstraint.cast_p_of_pxd_linear_term (linear_term_of_linear_expression index_of_variables constants d) true in
-
-
-      (*** BADPROG (but couldn't see how to do better!) ***)
-
-      (* Match again and create the property *)
-      match property with
-      | ParsingStructure.TB_Action_precedence_acyclic _ -> AbstractModel.TB_Action_precedence_acyclic (action_index1, action_index2, d), true
-      | ParsingStructure.TB_Action_precedence_cyclic _ -> AbstractModel.TB_Action_precedence_cyclic (action_index1, action_index2, d), true
-      | ParsingStructure.TB_Action_precedence_cyclicstrict _ -> AbstractModel.TB_Action_precedence_cyclicstrict (action_index1, action_index2, d), true
-      | ParsingStructure.TB_response_acyclic _ -> AbstractModel.TB_response_acyclic (action_index1, action_index2, d), true
-      | ParsingStructure.TB_response_cyclic _ -> AbstractModel.TB_response_cyclic (action_index1, action_index2, d), true
-      | ParsingStructure.TB_response_cyclicstrict _ -> AbstractModel.TB_response_cyclicstrict (action_index1, action_index2, d), true
-      | _ -> raise (InternalError ("Impossible case while looking for properties with 2 actions and a deadline; all cases should have been taken into account."))
-    )
-  in
-
-  (* Generic check and conversion function for a list of actions *)
-  let gen_check_and_convert_list property actions_list =
-    (* Check action names (use a fold_left instead of forall to ensure that all actions will be checked) *)
-    if not (List.fold_left (fun current_result a -> check_action_name index_of_actions a && current_result) true actions_list)
-    then (Noproperty , false)
-    else (
-      (* Get action indexes *)
-      let action_index_list = List.map (Hashtbl.find index_of_actions) actions_list in
-      (*** BADPROG (but couldn't see how to do better!) ***)
-      (* Match again and create the property *)
-      match property with
-      | ParsingStructure.Sequence_acyclic _ -> AbstractModel.Sequence_acyclic action_index_list, true
-      | ParsingStructure.Sequence_cyclic _ -> AbstractModel.Sequence_cyclic action_index_list, true
-      | _ -> raise (InternalError ("Impossible case while looking for properties with a sequence; all cases should have been taken into account."))
-    )
-  in
-
-
-  (* Check and convert *)
-  match parsed_property_definition with
-  | None -> (Noproperty , true)
-  | Some property ->
-    begin
-      match property with
-
-      (* CASE NON-REACHABILITY *)
-      | Parsed_unreachable_locations parsed_unreachable_global_location_list (*(automaton_name , location_name)*) ->
-        (* Global flag for checks *)
-        let checks_passed = ref true in
-        (* Check and convert each global location *)
-        let unreachable_global_location_list = List.map (fun parsed_unreachable_global_location ->
-            (* Check and convert this parsed_unreachable_global_location *)
-            let unreachable_global_location , checked = check_and_convert_unreachable_global_location index_of_variables type_of_variables discrete variable_names index_of_automata index_of_locations parsed_unreachable_global_location in
-            (* Update global variable *)
-            checks_passed := !checks_passed && checked;
-            (* Keep abstract global location *)
-            unreachable_global_location
-          ) parsed_unreachable_global_location_list
-        in
-        (* Return abstract structure and flag for checks *)
-        Unreachable_locations unreachable_global_location_list , !checks_passed
-
-
-      (* CASE TWO ACTIONS *)
-      (* if a2 then a1 has happened before *)
-      | ParsingStructure.Action_precedence_acyclic ( a1 , a2 )
-      (* everytime a2 then a1 has happened before *)
-      | ParsingStructure.Action_precedence_cyclic ( a1 , a2 )
-      (* everytime a2 then a1 has happened exactly once before *)
-      | ParsingStructure.Action_precedence_cyclicstrict ( a1 , a2 )
-        (*** NOT IMPLEMENTED ***)
-        (*		(* if a1 then eventually a2 *)
-          		| ParsingStructure.Eventual_response_acyclic ( a1 , a2 )
-          		(* everytime a1 then eventually a2 *)
-          		| ParsingStructure.Eventual_response_cyclic ( a1 , a2 )
-          		(* everytime a1 then eventually a2 once before next *)
-          		| ParsingStructure.Eventual_response_cyclicstrict ( a1 , a2 )*)
-        -> gen_check_and_convert_2act property a1 a2
-
-      (* CASE ACTION + DEADLINE *)
-      | ParsingStructure.Action_deadline ( a , d )
-        ->
-        (* Check action name and deadline (perform 2 even if one fails) *)
-        let check1 = check_action_name index_of_actions a in
-        let check2 = all_variables_defined_in_linear_expression variable_names constants d in
-        let check3 = all_variables_defined_in_linear_expression variable_names constants d in
-        let check4 = (if no_variables_in_linear_expression index_of_variables type_of_variables constants d
-                      then true
-                      else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
-        in
-        if not (check1 && check2 && check3 && check4) then (Noproperty , false)
-        else (
-          (* Get action indexes *)
-          let action_index = Hashtbl.find index_of_actions a in
-          (* Convert deadline *)
-          let d = LinearConstraint.cast_p_of_pxd_linear_term (linear_term_of_linear_expression index_of_variables constants d) true in
-          AbstractModel.Action_deadline ( action_index , d ), true
-        )
-
-      (* CASE 2 ACTIONS + DEADLINE *)
-      (* if a2 then a1 happened within d before *)
-      | ParsingStructure.TB_Action_precedence_acyclic (a1, a2, d)
-      (* everytime a2 then a1 happened within d before *)
-      | ParsingStructure.TB_Action_precedence_cyclic (a1, a2, d)
-      (* everytime a2 then a1 happened once within d before *)
-      | ParsingStructure.TB_Action_precedence_cyclicstrict (a1, a2, d)
-      (* if a1 then eventually a2 within d *)
-      | ParsingStructure.TB_response_acyclic (a1, a2, d)
-      (* everytime a1 then eventually a2 within d *)
-      | ParsingStructure.TB_response_cyclic (a1, a2, d)
-      (* everytime a1 then eventually a2 within d once before next *)
-      | ParsingStructure.TB_response_cyclicstrict (a1, a2, d)
-        -> gen_check_and_convert_2actd property a1 a2 d
-
-      (* CASE SEQUENCES (list of actions) *)
-      (* sequence: a1, …, an *)
-      | ParsingStructure.Sequence_acyclic (actions_list)
-      (* sequence: always a1, …, an *)
-      | ParsingStructure.Sequence_cyclic (actions_list)
-        -> gen_check_and_convert_list property actions_list
-
-      (*		(* Otherwise : error ! *)
-        		| _ -> raise (InternalError ("In the bad definition, not all possibilities are implemented yet."))*)
-    end
-(*	in
-  	[n action_index], !well_formed*)
-
+	(* Return whether the init declaration passed the tests *)
+	discrete_values_pairs, !well_formed
 
 
 
 (************************************************************)
-(** Verification functions w.r.t. parameters *)
+(** Converting the model *)
 (************************************************************)
-
-
-(*------------------------------------------------------------*)
-(** Check that all parameters in the projection definition are valid *)
-(*------------------------------------------------------------*)
-let check_projection_definition parameters_names = function
-  | None -> true
-  | Some parsed_parameters -> (
-      let well_formed = ref true in
-      List.iter (fun parsed_parameter ->
-          if not (List.mem parsed_parameter parameters_names) then(
-            print_error ("Parameter " ^ parsed_parameter  ^ " is not a valid parameter in the projection definition.");
-            well_formed := false
-          );
-        ) parsed_parameters;
-      !well_formed
-    )
-
-(*------------------------------------------------------------*)
-(** Check that the optimization definition is valid *)
-(*------------------------------------------------------------*)
-let check_optimization parameters_names = function
-  | No_parsed_optimization -> true
-  | Parsed_minimize parameter_name | Parsed_maximize parameter_name ->
-    if not (List.mem parameter_name parameters_names) then(
-      print_error ("Parameter " ^ parameter_name  ^ " is not a valid parameter in the optimization definition.");
-      false
-    ) else true
-
-
-(************************************************************)
-(** MODEL CONVERSION *)
-(************************************************************)
-
-(*------------------------------------------------------------*)
-(* Convert a parsed_update_arithmetic_expression into a discrete_arithmetic_expression*)
-(*------------------------------------------------------------*)
-
-(*** TODO (though really not critical): try to do some simplifications… ***)
-
-(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
-let discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants =
-  let rec discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec = function
-    | Parsed_UAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
-      DAE_plus ((discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (discrete_term_of_parsed_update_term parsed_update_term))
-    | Parsed_UAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
-      DAE_minus ((discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression), (discrete_term_of_parsed_update_term parsed_update_term))
-    | Parsed_UAE_term parsed_update_term ->
-      DAE_term (discrete_term_of_parsed_update_term parsed_update_term)
-
-  and discrete_term_of_parsed_update_term = function
-    | Parsed_UT_mul (parsed_update_term, parsed_update_factor) ->
-      DT_mul ((discrete_term_of_parsed_update_term parsed_update_term), (discrete_factor_of_parsed_update_factor parsed_update_factor))
-    | Parsed_UT_div (parsed_update_term, parsed_update_factor) ->
-      DT_div ((discrete_term_of_parsed_update_term parsed_update_term), (discrete_factor_of_parsed_update_factor parsed_update_factor))
-    | Parsed_UT_factor parsed_update_factor -> DT_factor (discrete_factor_of_parsed_update_factor parsed_update_factor)
-
-  and discrete_factor_of_parsed_update_factor = function
-    | Parsed_UF_variable variable_name ->
-      (* Try to find the variable_index *)
-      if Hashtbl.mem index_of_variables variable_name then (
-        let variable_index = Hashtbl.find index_of_variables variable_name in
-        (* Convert *)
-        DF_variable variable_index
-        (* Try to find a constant *)
-      ) else (
-        if Hashtbl.mem constants variable_name then (
-          (* Retrieve the value of the global constant *)
-          let value = Hashtbl.find constants variable_name in
-          (* Convert *)
-          DF_constant value
-        ) else (
-          raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' although this should have been checked before."))
-        )
-      )
-    | Parsed_UF_constant var_value -> DF_constant var_value
-    | Parsed_UF_expression parsed_update_arithmetic_expression -> DF_expression (discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec parsed_update_arithmetic_expression)
-  in
-  discrete_arithmetic_expression_of_parsed_update_arithmetic_expression_rec
-
-
-(*------------------------------------------------------------*)
-(* Convert a parsed_update_arithmetic_expression into a linear_term *)
-(*------------------------------------------------------------*)
-
-
-(*** TODO (though really not critical): try to do some simplifications… ***)
-(* First valuate a parsed_update_arithmetic_expression if requested; raises InternalError if some non-constant variable is met *)
-let rec valuate_parsed_update_arithmetic_expression constants = function
-  | Parsed_UAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
-    NumConst.add
-      (valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression)
-      (valuate_parsed_update_term constants parsed_update_term)
-  | Parsed_UAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
-    NumConst.sub
-      (valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression)
-      (valuate_parsed_update_term constants parsed_update_term)
-  | Parsed_UAE_term parsed_update_term ->
-    valuate_parsed_update_term constants parsed_update_term;
-
-and valuate_parsed_update_term constants = function
-  | Parsed_UT_mul (parsed_update_term, parsed_update_factor) ->
-    NumConst.mul
-      (valuate_parsed_update_term constants parsed_update_term)
-      (valuate_parsed_update_factor constants parsed_update_factor)
-  | Parsed_UT_div (parsed_update_term, parsed_update_factor) ->
-    NumConst.div
-      (valuate_parsed_update_term constants parsed_update_term)
-      (valuate_parsed_update_factor constants parsed_update_factor)
-  | Parsed_UT_factor parsed_update_factor -> valuate_parsed_update_factor constants parsed_update_factor
-
-and valuate_parsed_update_factor constants = function
-  | Parsed_UF_variable variable_name ->
-    if Hashtbl.mem constants variable_name then (
-      (* Retrieve the value of the global constant *)
-      Hashtbl.find constants variable_name
-    ) else (
-      raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' in function 'valuate_parsed_update_arithmetic_expression' although it should have been checked before."))
-    )
-  | Parsed_UF_constant var_value -> var_value
-  | Parsed_UF_expression parsed_update_arithmetic_expression -> valuate_parsed_update_arithmetic_expression constants parsed_update_arithmetic_expression
-
-
-(*** TODO (though really not critical): try to do some simplifications… ***)
-(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
-let linear_term_of_parsed_update_arithmetic_expression index_of_variables constants pdae =
-  (* Create an array of coef *)
-  let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
-  (* Create a zero constant *)
-  let constant = ref NumConst.zero in
-
-  let rec update_coef_array_in_parsed_update_arithmetic_expression mult_factor = function
-    | Parsed_UAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
-      (* Update coefficients in the arithmetic expression *)
-      update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
-      (* Update coefficients in the term *)
-      update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
-    | Parsed_UAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
-      (* Update coefficients in the arithmetic expression *)
-      update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
-      (* Update coefficients in the term: multiply by -1 for negation *)
-      update_coef_array_in_parsed_update_term (NumConst.neg mult_factor) parsed_update_term;
-    | Parsed_UAE_term parsed_update_term ->
-      update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
-
-  and update_coef_array_in_parsed_update_term mult_factor = function
-    (* Multiplication is only allowed with a constant multiplier *)
-    | Parsed_UT_mul (parsed_update_term, parsed_update_factor) ->
-      (* Valuate the term *)
-      let valued_term = valuate_parsed_update_term constants parsed_update_term in
-      (* Update coefficients *)
-      update_coef_array_in_parsed_update_factor (NumConst.mul valued_term mult_factor) parsed_update_factor
-
-    | Parsed_UT_div (parsed_update_term, parsed_update_factor) ->
-      (* Valuate the discrete factor *)
-      let valued_factor = valuate_parsed_update_factor constants parsed_update_factor in
-      (* Update coefficients *)
-      update_coef_array_in_parsed_update_term (NumConst.div mult_factor valued_factor) parsed_update_term
-
-    | Parsed_UT_factor parsed_update_factor ->
-      update_coef_array_in_parsed_update_factor mult_factor parsed_update_factor
-
-  and update_coef_array_in_parsed_update_factor mult_factor = function
-    | Parsed_UF_variable variable_name ->
-      (* Try to find the variable_index *)
-      if Hashtbl.mem index_of_variables variable_name then (
-        let variable_index = Hashtbl.find index_of_variables variable_name in
-        (* Update the array *)
-        array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) (mult_factor);
-        (* Try to find a constant *)
-      ) else (
-        if Hashtbl.mem constants variable_name then (
-          (* Retrieve the value of the global constant *)
-          let value = Hashtbl.find constants variable_name in
-          (* Update the constant *)
-          constant := NumConst.add !constant (NumConst.mul mult_factor value)
-        ) else (
-          raise (InternalError ("Impossible to find the index of variable '" ^ variable_name ^ "' in function 'linear_term_of_parsed_update_arithmetic_expression' although this should have been checked before."))
-        )
-      )
-    | Parsed_UF_constant var_value ->
-      (* Update the constant *)
-      constant := NumConst.add !constant (NumConst.mul mult_factor var_value)
-    | Parsed_UF_expression parsed_update_arithmetic_expression ->
-      update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
-  in
-
-  (* Call the recursive function updating the coefficients *)
-  update_coef_array_in_parsed_update_arithmetic_expression NumConst.one pdae;
-
-  (* Create the linear term *)
-  linear_term_of_array array_of_coef !constant
-
 
 
 
@@ -1876,27 +1678,27 @@ let linear_term_of_parsed_update_arithmetic_expression index_of_variables consta
 (*------------------------------------------------------------*)
 let make_constants constants =
   (* Create hash table *)
-  let hashtable = Hashtbl.create (List.length constants) in
-  (* Manage boolean for checking errors *)
+  let constants_hashtable : (string, NumConst.t) Hashtbl.t = Hashtbl.create (List.length constants) in
+  (* Manage Boolean for checking errors *)
   let correct = ref true in
   List.iter (fun (name, value) ->
-      if (Hashtbl.mem hashtable name) then (
-        let old_value = Hashtbl.find hashtable name in
+      if (Hashtbl.mem constants_hashtable name) then (
+        let old_value = Hashtbl.find constants_hashtable name in
         (* If same: warning *)
         if(NumConst.equal old_value value) then(
-          print_warning ("Constant '" ^ name ^ "' is defined twice.");
+          print_warning ("Constant `" ^ name ^ "` is defined twice.");
         )else(
           (* If different: error *)
-          print_error ("Constant '" ^ name ^ "' is given different values.");
+          print_error ("Constant `" ^ name ^ "` is given different values.");
           correct := false;
         );
       )else(
         (* Otherwise: add it *)
-        Hashtbl.add hashtable name value;
+        Hashtbl.add constants_hashtable name value;
       );
     ) constants;
   (* Return hash table *)
-  hashtable, !correct
+  constants_hashtable, !correct
 
 
 (*------------------------------------------------------------*)
@@ -1912,10 +1714,10 @@ let make_actions_per_automaton index_of_actions index_of_automata automata =
       (* Update the array *)
       actions_per_automaton.(automaton_index) <-
         List.map (fun sync_name ->
-            (* Get the index of the label *)
-            let label_index = Hashtbl.find index_of_actions sync_name in
-            (* Return the label index *)
-            label_index
+            (* Get the index of the action *)
+            let action_index = Hashtbl.find index_of_actions sync_name in
+            (* Return the action index *)
+            action_index
           ) sync_name_list;
     ) automata;
   (* Return the array *)
@@ -1933,7 +1735,7 @@ let make_locations_per_automaton index_of_automata parsed_automata nb_automata =
     (fun (automaton_name, _, transitions) ->
        (* Get the index of the automaton *)
        let index = try(Hashtbl.find index_of_automata automaton_name)
-         with Not_found -> raise (InternalError ("Automaton name '" ^ automaton_name ^ "' not found in function 'make_locations_per_automaton' although this had been checked before."))
+         with Not_found -> raise (InternalError ("Automaton name `" ^ automaton_name ^ "` not found in function 'make_locations_per_automaton' although this had been checked before."))
        in
        (* Get the location names *)
        let location_names = List.map (fun (location : parsed_location) -> location.name) transitions in
@@ -1983,7 +1785,15 @@ let make_locations_per_automaton index_of_automata parsed_automata nb_automata =
 (*------------------------------------------------------------*)
 (* Get all the possible actions for every location of every automaton *)
 (*------------------------------------------------------------*)
-let make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions (*removed_variable_names*) removed_synclab_names parsed_automata with_observer_action =
+let make_automata useful_parsing_model_information parsed_automata (with_observer_action : bool) =
+	let constants				= useful_parsing_model_information.constants in
+	let index_of_actions		= useful_parsing_model_information.index_of_actions in
+	let index_of_automata		= useful_parsing_model_information.index_of_automata in
+	let index_of_locations		= useful_parsing_model_information.index_of_locations in
+	let index_of_variables		= useful_parsing_model_information.index_of_variables in
+	let actions					= useful_parsing_model_information.actions in
+	let removed_action_names	= useful_parsing_model_information.removed_action_names in
+
 	(* Number of automata *)
 	let nb_automata = Hashtbl.length index_of_automata in
 	(* Create an empty array for the actions of every automaton *)
@@ -2000,19 +1810,22 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 	let transitions = Array.make nb_automata (Array.make 0 []) in
 	(* Create an empty array for the invariants *)
 	let invariants = Array.make nb_automata (Array.make 0 (LinearConstraint.pxd_false_constraint ())) in
-	(* Create an empty array for the invariants *)
+	(* Create an empty array for the stopwatches *)
 	let stopwatches_array = Array.make nb_automata (Array.make 0 []) in
+	(* Create an empty array for the flows *)
+	let flow_array = Array.make nb_automata (Array.make 0 []) in
+	
 	(* Does the model has any stopwatch? *)
 	let has_stopwatches = ref false in
 	(* Maintain the index of no_sync *)
-	let no_sync_index = ref (Array.length labels) in
+	let no_sync_index = ref (Array.length actions) in
 
 	(* For each automaton (except the observer, if any): *)
 	List.iter
 		(fun (automaton_name, _, locations) ->
 		(* Get the index of the automaton *)
 		print_message Verbose_total ("    - Building automaton " ^ automaton_name);
-		let automaton_index = try (Hashtbl.find index_of_automata automaton_name) with Not_found -> raise (InternalError ("Impossible to find the index of automaton '" ^ automaton_name ^ "'.")) in
+		let automaton_index = try (Hashtbl.find index_of_automata automaton_name) with Not_found -> raise (InternalError ("Impossible to find the index of automaton `" ^ automaton_name ^ "`.")) in
 		(* Get the number of locations *)
 		let nb_locations = List.length locations in
 		(* Create the array of lists of actions for this automaton *)
@@ -2029,28 +1842,30 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 		invariants.(automaton_index) <- Array.make nb_locations (LinearConstraint.pxd_false_constraint ());
 		(* Create the array of stopwatches for this automaton *)
 		stopwatches_array.(automaton_index) <- Array.make nb_locations [];
+		(* Create the array of flows for this automaton *)
+		flow_array.(automaton_index) <- Array.make nb_locations [];
 
 		(* For each location: *)
 		List.iter
 			(fun (location : parsed_location) ->
 				(* Get the index of the location *)
-				let location_index = try (Hashtbl.find index_of_locations.(automaton_index) location.name) with Not_found -> raise (InternalError ("Impossible to find the index of location '" ^ location.name ^ "'.")) in
+				let location_index = try (Hashtbl.find index_of_locations.(automaton_index) location.name) with Not_found -> raise (InternalError ("Impossible to find the index of location `" ^ location.name ^ "`.")) in
 
 				(* Create the list of actions for this location, by iterating on parsed_transitions *)
 				let list_of_actions, list_of_transitions =  List.fold_left (fun (current_list_of_actions, current_list_of_transitions) (guard, updates, sync, target_location_name) ->
 					(* Get the index of the target location *)
-					let target_location_index = try (Hashtbl.find index_of_locations.(automaton_index) target_location_name) with Not_found -> raise (InternalError ("Impossible to find the index of location '" ^ target_location_name ^ "'.")) in
+					let target_location_index = try (Hashtbl.find index_of_locations.(automaton_index) target_location_name) with Not_found -> raise (InternalError ("Impossible to find the index of location `" ^ target_location_name ^ "`.")) in
 					(* Depend on the action type *)
 					match sync with
 					| ParsingStructure.Sync action_name ->
 					(* If the 'sync' is within the removed actions, do nothing *)
-					if List.mem action_name removed_synclab_names then (
+					if List.mem action_name removed_action_names then (
 						current_list_of_actions, current_list_of_transitions
 						(* Else : *)
 					) else (
 						(* Get the action index *)
 						let action_index =
-						try (Hashtbl.find index_of_actions action_name) with Not_found -> raise (InternalError ("Impossible to find the index of action '" ^ action_name ^ "'."))
+						try (Hashtbl.find index_of_actions action_name) with Not_found -> raise (InternalError ("Impossible to find the index of action `" ^ action_name ^ "`."))
 						in
 						(* Compute the list of actions *)
 						(action_index :: current_list_of_actions)
@@ -2112,10 +1927,22 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 				(* Convert the stopwatches names into variables *)
 				let list_of_stopwatch_names = list_only_once location.stopped in
 				(* Update the array of stopwatches *)
-				stopwatches_array.(automaton_index).(location_index) <- List.map (fun stopwatch_index ->
-					Hashtbl.find index_of_variables stopwatch_index
-				)
-					list_of_stopwatch_names;
+				stopwatches_array.(automaton_index).(location_index) <- List.map (fun clock_index ->
+					Hashtbl.find index_of_variables clock_index
+				) list_of_stopwatch_names;
+
+				(* Does the model has stopwatches? *)
+				if location.flow != [] then has_stopwatches := true;
+				(* Convert the flow names into variables *)
+				(* Update the array of flows *)
+				flow_array.(automaton_index).(location_index) <-
+					(* Sort the list and remove duplicates, just to potentially speed up a bit *)
+					List.sort_uniq Pervasives.compare
+					(
+						List.map (fun (clock_index, flow_value) ->
+							(Hashtbl.find index_of_variables clock_index), flow_value
+						) location.flow
+					);
 
 			) locations;
 		(* Update the array of actions per automaton *)
@@ -2132,17 +1959,17 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 	(* Create the array of action types (sync / no_sync) *)
 	let array_of_action_types = Array.make nb_actions Action_type_sync in
 	(* Fill the sync actions *)
-	for i = 0 to (Array.length labels) - 1 do
-		array_of_action_names.(i) <- labels.(i);
+	for i = 0 to (Array.length actions) - 1 do
+		array_of_action_names.(i) <- actions.(i);
 	done;
 	(* Fill the no sync actions *)
-	for i = Array.length labels to nb_actions - 1 - (if with_observer_action then 1 else 0) do
-		array_of_action_names.(i) <- ("nosync_" ^ (string_of_int (i - (Array.length labels) + 1)));
+	for i = Array.length actions to nb_actions - 1 - (if with_observer_action then 1 else 0) do
+		array_of_action_names.(i) <- ("nosync_" ^ (string_of_int (i - (Array.length actions) + 1)));
 		array_of_action_types.(i) <- Action_type_nosync;
 	done;
 	(* Fill the array for the observer no_sync *)
 	if with_observer_action then(
-		array_of_action_names.(nb_actions - 1) <- ("nosync_obs");
+		array_of_action_names.(nb_actions - 1) <- Constants.observer_nosync_name;
 		array_of_action_types.(nb_actions - 1) <- Action_type_nosync;
 	);
 
@@ -2150,7 +1977,7 @@ let make_automata index_of_variables constants index_of_automata index_of_locati
 	let actions = list_of_interval 0 (nb_actions - 1) in
 
 	(* Return all the structures in a functional representation *)
-	actions, array_of_action_names, array_of_action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, !has_stopwatches, transitions, (if with_observer_action then Some (nb_actions - 1) else None)
+	actions, array_of_action_names, array_of_action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, !has_stopwatches, flow_array, transitions, (if with_observer_action then Some (nb_actions - 1) else None)
 
 
 
@@ -2182,9 +2009,9 @@ let split_convex_predicate_into_discrete_and_continuous index_of_variables type_
   List.partition
     (fun linear_inequality ->
        match linear_inequality with
-       | True_constraint -> true (*** NOTE: we arbitrarily send "true" to the discrete part ***)
-       | False_constraint -> raise False_exception
-       | Linear_constraint (linexpr1, _, linexpr2) -> only_discrete_in_linear_expression index_of_variables type_of_variables constants linexpr1 && only_discrete_in_linear_expression index_of_variables type_of_variables constants linexpr2
+       | Parsed_true_constraint -> true (*** NOTE: we arbitrarily send "true" to the discrete part ***)
+       | Parsed_false_constraint -> raise False_exception
+       | Parsed_linear_constraint (linexpr1, _, linexpr2) -> only_discrete_in_linear_expression index_of_variables type_of_variables constants linexpr1 && only_discrete_in_linear_expression index_of_variables type_of_variables constants linexpr2
     ) convex_predicate
 
 
@@ -2226,6 +2053,103 @@ let convert_guard index_of_variables type_of_variables constants guard_convex_pr
     (* If some false construct found: false guard *)
   ) with False_exception -> False_guard
 
+
+(*------------------------------------------------------------*)
+(* Convert updates *)
+(*------------------------------------------------------------*)
+
+(** Checks if a update is a normal update *)
+let is_normal_update = function
+  | Normal _ -> true
+  | _ -> false
+
+(** Returns the value of a normal update *)
+let get_normal_update_value = function
+  | Normal u -> u
+  | _ -> assert false
+
+(** Returns the value of a conditonal update *)
+let get_conditional_update_value = function
+  | Condition u -> u
+  | _ -> assert false
+
+
+
+(*** TODO (though really not critical): try to do some simplifications… ***)
+(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
+let linear_term_of_parsed_update_arithmetic_expression index_of_variables constants pdae =
+	(* Create an array of coef *)
+	let array_of_coef = Array.make (Hashtbl.length index_of_variables) NumConst.zero in
+	(* Create a zero constant *)
+	let constant = ref NumConst.zero in
+
+	let rec update_coef_array_in_parsed_update_arithmetic_expression mult_factor = function
+		| Parsed_DAE_plus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		(* Update coefficients in the arithmetic expression *)
+		update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
+		(* Update coefficients in the term *)
+		update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
+		| Parsed_DAE_minus (parsed_update_arithmetic_expression, parsed_update_term) ->
+		(* Update coefficients in the arithmetic expression *)
+		update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression;
+		(* Update coefficients in the term: multiply by -1 for negation *)
+		update_coef_array_in_parsed_update_term (NumConst.neg mult_factor) parsed_update_term;
+		| Parsed_DAE_term parsed_update_term ->
+		update_coef_array_in_parsed_update_term mult_factor parsed_update_term;
+
+	and update_coef_array_in_parsed_update_term mult_factor = function
+		(* Multiplication is only allowed with a constant multiplier *)
+		| Parsed_DT_mul (parsed_update_term, parsed_update_factor) ->
+		(* Valuate the term *)
+		let valued_term = valuate_parsed_update_term constants parsed_update_term in
+		(* Update coefficients *)
+		update_coef_array_in_parsed_update_factor (NumConst.mul valued_term mult_factor) parsed_update_factor
+
+		| Parsed_DT_div (parsed_update_term, parsed_update_factor) ->
+		(* Valuate the discrete factor *)
+		let valued_factor = valuate_parsed_update_factor constants parsed_update_factor in
+		(* Update coefficients *)
+		update_coef_array_in_parsed_update_term (NumConst.div mult_factor valued_factor) parsed_update_term
+
+		| Parsed_DT_factor parsed_update_factor ->
+		update_coef_array_in_parsed_update_factor mult_factor parsed_update_factor
+
+	and update_coef_array_in_parsed_update_factor mult_factor = function
+		| Parsed_DF_variable variable_name ->
+			(* Try to find the variable_index *)
+			if Hashtbl.mem index_of_variables variable_name then (
+				let variable_index = Hashtbl.find index_of_variables variable_name in
+				(* Update the array *)
+				array_of_coef.(variable_index) <- NumConst.add array_of_coef.(variable_index) (mult_factor);
+				(* Try to find a constant *)
+			) else (
+				if Hashtbl.mem constants variable_name then (
+				(* Retrieve the value of the global constant *)
+				let value = Hashtbl.find constants variable_name in
+				(* Update the constant *)
+				constant := NumConst.add !constant (NumConst.mul mult_factor value)
+				) else (
+				raise (InternalError ("Impossible to find the index of variable `" ^ variable_name ^ "` in function 'linear_term_of_parsed_update_arithmetic_expression' although this should have been checked before."))
+				)
+			)
+		| Parsed_DF_constant var_value ->
+			(* Update the constant *)
+			constant := NumConst.add !constant (NumConst.mul mult_factor var_value)
+		| Parsed_DF_unary_min parsed_discrete_factor ->
+			update_coef_array_in_parsed_update_factor mult_factor parsed_discrete_factor
+		| Parsed_DF_expression parsed_update_arithmetic_expression ->
+			update_coef_array_in_parsed_update_arithmetic_expression mult_factor parsed_update_arithmetic_expression
+	in
+
+	(* Call the recursive function updating the coefficients *)
+	update_coef_array_in_parsed_update_arithmetic_expression NumConst.one pdae;
+
+	(* Create the linear term *)
+	linear_term_of_array array_of_coef !constant
+
+
+
+  
 (* Filter the updates that should assign some variable name to be removed to any expression *)
 let filtered_updates removed_variable_names updates =
   let not_removed_variable (variable_name, _) =
@@ -2287,7 +2211,7 @@ let split_to_clock_discrete_updates index_of_variables only_resets type_of_varia
     (* Retrieve variable type *)
     if type_of_variables (Hashtbl.find index_of_variables variable_name) = Var_type_clock then (
       (* Update flag *)
-      if parsed_update_arithmetic_expression <> Parsed_UAE_term (Parsed_UT_factor (Parsed_UF_constant NumConst.zero)) then (
+      if parsed_update_arithmetic_expression <> Parsed_DAE_term (Parsed_DT_factor (Parsed_DF_constant NumConst.zero)) then (
         only_resets := false;
       );
       true
@@ -2298,44 +2222,25 @@ let split_to_clock_discrete_updates index_of_variables only_resets type_of_varia
 
 (** Translate a normal parsed update into its abstract model *)
 let convert_normal_updates index_of_variables constants type_of_variables updates_list =
-  (* Flag to check if there are clock resets only to 0 *)
-  let only_resets = ref true in
+	(* Flag to check if there are clock resets only to 0 *)
+	let only_resets = ref true in
 
-  (** split clock and discrete updates *)
-  let parsed_clock_updates, parsed_discrete_updates = split_to_clock_discrete_updates index_of_variables only_resets type_of_variables updates_list in
+	(** split clock and discrete updates *)
+	let parsed_clock_updates, parsed_discrete_updates = split_to_clock_discrete_updates index_of_variables only_resets type_of_variables updates_list in
 
-  (* Convert the discrete updates *)
-  let discrete_updates : discrete_update list = List.map (to_abstract_discrete_update index_of_variables constants) parsed_discrete_updates in
+	(* Convert the discrete updates *)
+	let discrete_updates : discrete_update list = List.map (to_abstract_discrete_update index_of_variables constants) parsed_discrete_updates in
 
-  (* Convert the clock updates *)
-  let converted_clock_updates : clock_updates = to_abstract_clock_update index_of_variables constants only_resets parsed_clock_updates in
+	(* Convert the clock updates *)
+	let converted_clock_updates : clock_updates = to_abstract_clock_update index_of_variables constants only_resets parsed_clock_updates in
 
-  (** update abstract model *)
-  { clock = converted_clock_updates;
-    discrete = discrete_updates;
-    conditional = [] }
+	(** update abstract model *)
+	{
+		clock = converted_clock_updates;
+		discrete = discrete_updates;
+		conditional = [];
+	}
 
-(** Convert a boolean operator in its abstract model *)
-let parsed_relop_to_boolean_op = function
-  | OP_L -> BOOL_L
-  | OP_LEQ -> BOOL_LEQ
-  | OP_EQ -> BOOL_EQ
-  | OP_NEQ -> BOOL_NEQ
-  | OP_GEQ -> BOOL_GEQ
-  | OP_G -> BOOL_G
-
-(** Convert a boolean expression in its abstract model *)
-let rec convert_bool_expr index_of_variables constants = function
-  | True -> True_bool
-  | False -> False_bool
-  | Not e -> Not_bool (convert_bool_expr index_of_variables constants e)
-  | And (e1,e2) -> And_bool ((convert_bool_expr index_of_variables constants e1), (convert_bool_expr index_of_variables constants e2))
-  | Or (e1, e2) -> Or_bool ((convert_bool_expr index_of_variables constants e1), (convert_bool_expr index_of_variables constants e2))
-  | Expression (expr1, relop, expr2) -> Expression_bool (
-      (discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr1),
-      (parsed_relop_to_boolean_op relop),
-      (discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_of_variables constants expr2)
-    )
 
 (** convert normal and conditional updates *)
 let convert_updates index_of_variables constants type_of_variables updates : updates =
@@ -2495,153 +2400,1480 @@ let convert_transitions nb_transitions nb_actions index_of_variables constants r
 (* Create the initial state *)
 (*------------------------------------------------------------*)
 let make_initial_state index_of_automata locations_per_automaton index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs init_definition =
-  (* Get the location initialisations and the constraint *)
-  let loc_assignments, linear_predicates = List.partition (function
-      | Loc_assignment _ -> true
-      | _ -> false
-    ) init_definition in
-  (* Make pairs (automaton_name, location_name) *)
-  let initial_locations = List.map (function
-      | Loc_assignment (automaton_name, location_name) -> (automaton_name, location_name)
-      | _ -> raise (InternalError "Something else than a Loc_assignment was found in a Loc_assignment list")
-    ) loc_assignments in
-  (* Convert the pairs to automaton_index, location_index *)
-  let locations = List.map (fun (automaton_name, location_name) ->
-      (* Find the automaton index *)
-      let automaton_index = Hashtbl.find index_of_automata automaton_name in
-      (* Find the location index *)
-      automaton_index,
-      Hashtbl.find index_of_locations.(automaton_index) location_name
-    ) initial_locations in
+	(* Get the location initialisations and the constraint *)
+	let loc_assignments, linear_predicates = List.partition (function
+		| Parsed_loc_assignment _ -> true
+		| _ -> false
+		) init_definition in
+	(* Make pairs (automaton_name, location_name) *)
+	let initial_locations = List.map (function
+		| Parsed_loc_assignment (automaton_name, location_name) -> (automaton_name, location_name)
+		| _ -> raise (InternalError "Something else than a Parsed_loc_assignment was found in a Parsed_loc_assignment list")
+		) loc_assignments in
+	(* Convert the pairs to automaton_index, location_index *)
+	let locations = List.map (fun (automaton_name, location_name) ->
+		(* Find the automaton index *)
+		let automaton_index = Hashtbl.find index_of_automata automaton_name in
+		(* Find the location index *)
+		automaton_index,
+		Hashtbl.find index_of_locations.(automaton_index) location_name
+		) initial_locations in
 
-  (* Construct the initial location *)
-  let initial_location = Location.make_location locations init_discrete_pairs in
+	(* Construct the initial location *)
+	let initial_location = Location.make_location locations init_discrete_pairs in
 
-  (* Remove the init definitions for discrete variables *)
-  let other_inequalities = List.filter (function
-      (* Check if the left part is only a variable name *)
-      | Linear_predicate (Linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
-        (* First check whether it was removed *)
-        if List.mem variable_name removed_variable_names then false
-        else
-          let is_discrete =
-            (* Try to get the variable index *)
-            if (Hashtbl.mem index_of_variables variable_name) then (
-              let variable_index =  Hashtbl.find index_of_variables variable_name in
-              (* Keep if this is a discrete *)
-              type_of_variables variable_index = Var_type_discrete
-            ) else (
-              (* Case constant *)
-              if (Hashtbl.mem constants variable_name) then false
-              else (
-                (* Otherwise: problem! *)
-                raise (InternalError ("The variable '" ^ variable_name ^ "' mentioned in the init definition does not exist, although this should have been checked before."));
-              ))
-          in not is_discrete
-      | _ -> true
-    ) linear_predicates in
-  (* Convert the inequalities *)
-  let convex_predicate = List.map (function
-      | Linear_predicate lp -> lp
-      | _ -> raise (InternalError "Something else than a Linear_predicate was found in a Linear_predicate list.")
-    ) other_inequalities in
-  let initial_constraint : LinearConstraint.px_linear_constraint =
+	(* Remove the init definitions for discrete variables *)
+	let other_inequalities = List.filter (function
+		(* Check if the left part is only a variable name *)
+		| Parsed_linear_predicate (Parsed_linear_constraint (Linear_term (Variable (_, variable_name)), _ , _)) ->
+			(* First check whether it was removed *)
+			if List.mem variable_name removed_variable_names then false
+			else
+			let is_discrete =
+				(* Try to get the variable index *)
+				if (Hashtbl.mem index_of_variables variable_name) then (
+				let variable_index =  Hashtbl.find index_of_variables variable_name in
+				(* Keep if this is a discrete *)
+				type_of_variables variable_index = Var_type_discrete
+				) else (
+				(* Case constant *)
+				if (Hashtbl.mem constants variable_name) then false
+				else (
+					(* Otherwise: problem! *)
+					raise (InternalError ("The variable `" ^ variable_name ^ "` mentioned in the init definition does not exist, although this should have been checked before."));
+				))
+			in not is_discrete
+		| _ -> true
+		) linear_predicates in
+	(* Convert the inequalities *)
+	let convex_predicate = List.map (function
+		| Parsed_linear_predicate lp -> lp
+		| _ -> raise (InternalError "Something else than a Parsed_linear_predicate was found in a Parsed_linear_predicate list.")
+		) other_inequalities in
+	let initial_constraint : LinearConstraint.px_linear_constraint =
 
-    (* Create pairs of (index , value) for discrete variables *)
-    (* 		let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value initial_location discrete_index)) model.discrete in *)
+		(* Create pairs of (index , value) for discrete variables *)
+		(* 		let discrete_values = List.map (fun discrete_index -> discrete_index, (Location.get_discrete_value initial_location discrete_index)) model.discrete in *)
 
-    (* Create a constraint encoding the value of the discretes *)
-    let discretes = LinearConstraint.pxd_constraint_of_discrete_values init_discrete_pairs in
+		(* Create a constraint encoding the value of the discretes *)
+		let discretes = LinearConstraint.pxd_constraint_of_discrete_values init_discrete_pairs in
 
-    (* Create initial constraint (through parsing) *)
-    let initial_constraint = (linear_constraint_of_convex_predicate index_of_variables constants convex_predicate) in
+		(* Create initial constraint (through parsing) *)
+		let initial_constraint = (linear_constraint_of_convex_predicate index_of_variables constants convex_predicate) in
 
-    (* Intersects initial constraint with discretes *)
-    LinearConstraint.pxd_intersection_assign initial_constraint [discretes];
+		(* Intersects initial constraint with discretes *)
+		LinearConstraint.pxd_intersection_assign initial_constraint [discretes];
 
-    (* Remove discretes *)
-    LinearConstraint.pxd_hide_discrete_and_collapse initial_constraint
+		(* Remove discretes *)
+		LinearConstraint.pxd_hide_discrete_and_collapse initial_constraint
+	in
+
+	(* PERFORM VERIFICATIONS *)
+	(* Check that all parameters are bound to be >= 0 *)
+	List.iter (fun parameter_id ->
+		(* Print some information *)
+		print_message Verbose_low ("Checking that parameter '" ^ (variable_names parameter_id) ^ "' is >= 0 in the initial constraint…");
+
+		(* Check *)
+		if not (LinearConstraint.px_is_positive_in parameter_id initial_constraint) then
+			print_warning ("Parameter '" ^ (variable_names parameter_id) ^ "' is not necessarily positive in the initial constraint. The behavior of " ^ Constants.program_name ^ " is unspecified in this case. You are advised to add inequality '" ^ (variable_names parameter_id) ^ " >= 0' to the initial state of the model.");
+		) parameters;
+
+	(* Return the initial state *)
+	initial_location, initial_constraint
+
+
+
+
+(************************************************************)
+(************************************************************)
+(** Checking and converting property *)
+(************************************************************)
+(************************************************************)
+
+(************************************************************)
+(** Getting variables *)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(* Gather the set of all variable names used in a parsed reference valuation *)
+(*------------------------------------------------------------*)
+let get_variables_in_parsed_pval (parsed_pval : ParsingStructure.parsed_pval) : variable_name list =
+	(* Return the left part of all pairs *)
+	let left, _ = List.split parsed_pval in
+	left
+
+(*------------------------------------------------------------*)
+(* Gather the set of all variable names used in a parsed reference valuation *)
+(*------------------------------------------------------------*)
+let get_variables_in_parsed_hyper_rectangle (parsed_hyper_rectangle : ParsingStructure.parsed_pdomain) : variable_name list =
+	(* Return the left part of all triples *)
+	List.map (fun (parameter_name, _, _) -> parameter_name) parsed_hyper_rectangle
+
+
+
+
+(*------------------------------------------------------------*)
+(* Gather the set of all variable names used in the parsed property *)
+(*------------------------------------------------------------*)
+
+let get_variables_in_property_option (parsed_property_option : ParsingStructure.parsed_property option) =
+	(* First create the set *)
+	let variables_used_ref = ref StringSet.empty in
+	
+	(* Gather variables to the set, passed by reference *)
+	begin
+	match parsed_property_option with
+	| None -> ()
+	| Some parsed_property ->
+		begin
+		match parsed_property.property with
+	
+		(*------------------------------------------------------------*)
+		(* Non-nested CTL *)
+		(*------------------------------------------------------------*)
+		(* Reachability *)
+		| Parsed_EF parsed_state_predicate
+		(* Safety *)
+		| Parsed_AGnot parsed_state_predicate
+			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
+			
+		
+		(*------------------------------------------------------------*)
+		(* Reachability and specification illustration *)
+		(*------------------------------------------------------------*)
+		
+		(** EF-synthesis with examples of (un)safe words *)
+		| Parsed_EFexemplify parsed_state_predicate
+			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
+		
+		
+		(*------------------------------------------------------------*)
+		(* Optimized reachability *)
+		(*------------------------------------------------------------*)
+		
+		(* Reachability with minimization of a parameter valuation *)
+		| Parsed_EFpmin (parsed_state_predicate , parameter_name)
+		| Parsed_EFpmax (parsed_state_predicate , parameter_name)
+			(* First get the variables in the state predicate *)
+			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate;
+			(* Then add the parameter name *)
+			variables_used_ref := StringSet.add parameter_name !variables_used_ref
+		
+		(* Reachability with minimal-time *)
+		| Parsed_EFtmin parsed_state_predicate
+			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
+
+		
+		(*------------------------------------------------------------*)
+		(* Cycles *)
+		(*------------------------------------------------------------*)
+		
+		(** Accepting infinite-run (cycle) through a state predicate *)
+		| Parsed_Cycle_Through parsed_state_predicate
+			-> get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate
+
+		(** Infinite-run (cycle) with non-Zeno assumption *)
+		| Parsed_NZ_Cycle -> ()
+		
+
+		(*------------------------------------------------------------*)
+		(* Deadlock-freeness *)
+		(*------------------------------------------------------------*)
+		
+		(* Deadlock-free synthesis *)
+		| Parsed_Deadlock_Freeness -> ()
+		
+		
+		(*------------------------------------------------------------*)
+		(* Inverse method, trace preservation, robustness *)
+		(*------------------------------------------------------------*)
+		
+		(* Inverse method with complete, non-convex result *)
+		| Parsed_IM parsed_pval
+		(* Non-complete, non-deterministic inverse method with convex result *)
+		| Parsed_ConvexIM parsed_pval
+		(* IMK *)
+		| Parsed_IMK parsed_pval
+		(* IMunion *)
+		| Parsed_IMunion parsed_pval
+			->
+			variables_used_ref := StringSet.of_list (get_variables_in_parsed_pval parsed_pval);
+		
+		(* Non-complete, non-deterministic inverse method with convex result *)
+		| Parsed_PRP (parsed_state_predicate , parsed_pval) ->
+			(* First get the variables in the state predicate *)
+			get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate;
+			(* Then add the pval *)
+			variables_used_ref := StringSet.union !variables_used_ref (StringSet.of_list (get_variables_in_parsed_pval parsed_pval))
+		
+		
+		(*------------------------------------------------------------*)
+		(* Cartography algorithms *)
+		(*------------------------------------------------------------*)
+		
+		(* Cartography *)
+		| Parsed_Cover_cartography (parsed_hyper_rectangle, _)
+		(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+		| Parsed_Shuffle_cartography (parsed_hyper_rectangle, _)
+		(** Look for the border using the cartography*)
+		| Parsed_Border_cartography (parsed_hyper_rectangle, _)
+		(** Randomly pick up values for a given number of iterations *)
+		| Parsed_Random_cartography (parsed_hyper_rectangle, _, _)
+		(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+		| Parsed_RandomSeq_cartography (parsed_hyper_rectangle, _, _)
+			->
+			variables_used_ref := StringSet.of_list (get_variables_in_parsed_hyper_rectangle parsed_hyper_rectangle);
+		
+
+		(** Cover the whole cartography using learning-based abstractions *)
+		| Parsed_Learning_cartography (parsed_state_predicate, parsed_hyper_rectangle, _)
+		(* Parametric reachability preservation *)
+		| Parsed_PRPC (parsed_state_predicate, parsed_hyper_rectangle, _)
+			->
+			(* First get the variables in the state predicate *)
+			get_variables_in_parsed_state_predicate variables_used_ref parsed_state_predicate;
+			(* Then add the HyperRectangle *)
+			variables_used_ref := StringSet.union !variables_used_ref (StringSet.of_list (get_variables_in_parsed_hyper_rectangle parsed_hyper_rectangle));
+
+
+		(*------------------------------------------------------------*)
+		(* Observer patterns *)
+		(*------------------------------------------------------------*)
+		(* if a2 then a1 has happened before *)
+		| Parsed_action_precedence_acyclic _
+		(* everytime a2 then a1 has happened before *)
+		| Parsed_action_precedence_cyclic _
+		(* everytime a2 then a1 has happened once before *)
+		| Parsed_action_precedence_cyclicstrict _
+			-> ()
+
+		(* a within d *)
+		| Parsed_action_deadline (_ , duration)
+			-> get_variables_in_linear_expression variables_used_ref duration
+
+		(* if a2 then a1 happened within d before *)
+		| Parsed_TB_Action_precedence_acyclic ((*sync_name*)_, (*sync_name*)_, duration)
+		(* everytime a2 then a1 happened within d before *)
+		| Parsed_TB_Action_precedence_cyclic ((*sync_name*)_, (*sync_name*)_, duration)
+		(* everytime a2 then a1 happened once within d before *)
+		| Parsed_TB_Action_precedence_cyclicstrict ((*sync_name*)_, (*sync_name*)_, duration)
+			-> get_variables_in_linear_expression variables_used_ref duration
+
+		(* if a1 then eventually a2 within d *)
+		| Parsed_TB_response_acyclic (_, _, parsed_duration)
+		(* everytime a1 then eventually a2 within d *)
+		| Parsed_TB_response_cyclic (_, _, parsed_duration)
+		(* everytime a1 then eventually a2 within d once before next *)
+		| Parsed_TB_response_cyclicstrict (_, _, parsed_duration)
+			-> get_variables_in_linear_expression variables_used_ref parsed_duration
+
+		(* sequence a1, …, an *)
+		| Parsed_Sequence_acyclic _
+		(* always sequence a1, …, an *)
+		| Parsed_Sequence_cyclic _
+			-> ()
+
+	
+		end;
+	end;
+	(* Return the set *)
+	!variables_used_ref
+
+
+    
+(************************************************************)
+(** Checking the property *)
+(************************************************************)
+
+
+(*
+
+(*------------------------------------------------------------*)
+(* Local functions checking existence of a name in property specifications
+ * May print warnings or errors
+*)
+(*------------------------------------------------------------*)
+let check_automaton_name index_of_automata automaton_name =
+  if not (Hashtbl.mem index_of_automata automaton_name)
+  then (
+    print_error ("The automaton name `" ^ automaton_name ^ "` used in the correctness property does not exist.");
+    false
+  )
+  else true
+
+(*------------------------------------------------------------*)
+let check_location_name index_of_locations automaton_index automaton_name location_name =
+  if not (Hashtbl.mem index_of_locations.(automaton_index) location_name)
+  then (
+    print_error ("The location name `" ^ location_name ^ "` used in the correctness property does not exist in automaton `" ^ automaton_name ^ "`.");
+    false
+  )
+  else true
+
+*)
+(*------------------------------------------------------------*)
+let check_action_name index_of_actions action_name =
+	if not (Hashtbl.mem index_of_actions action_name)
+	then (
+		print_error ("The action `" ^ action_name ^ "` used in the property does not exist in this model.");
+		false
+	)
+	else true
+
+(*
+(*------------------------------------------------------------*)
+(* Check a list of local location declaration (i.e., of the form 'loc[automaton] = location')
+ * Return a list of unreachable_location, and a Boolean encoding whether all checks passed
+ * May print warnings or errors
+*)
+(*------------------------------------------------------------*)
+let check_and_convert_unreachable_local_locations index_of_automata index_of_locations parsed_unreachable_locations =
+  (* Create a hash table to check for double declarations *)
+  let hashtable = Hashtbl.create (Hashtbl.length index_of_automata) in
+
+  (* Global check *)
+  let checks_passed = ref true in
+
+  (* Iterate on parsed_unreachable_locations and check for names *)
+  List.iter(fun parsed_unreachable_predicate ->
+      let automaton_name , location_name =
+        match parsed_unreachable_predicate with
+        | Parsed_unreachable_loc (automaton_name , location_name) -> automaton_name , location_name
+        | _ -> raise (InternalError("Expecting a Parsed_unreachable_loc, which should have been checked earlier."))
+      in
+      (* Check automaton name *)
+      let check1 = check_automaton_name index_of_automata automaton_name in
+
+      (* Check location name *)
+      let check2 =
+        (* Only perform check2 if check1 passed *)
+        if not check1 then false else(
+          (* Retrieve automaton index *)
+          let automaton_index = Hashtbl.find index_of_automata automaton_name in
+          (* Check location name for this automaton *)
+          check_location_name index_of_locations automaton_index automaton_name location_name
+        )
+      in
+
+      (* Check whether another location was declared for this automaton and, if not, store the location *)
+      let check3 = if Hashtbl.mem hashtable automaton_name then(
+          (* Retrieve former location name *)
+          let old_name = Hashtbl.find hashtable automaton_name in
+          (* If same name: just warning *)
+          if old_name = location_name then(
+            (* Warning *)
+            print_warning ("Automaton `" ^ automaton_name ^ "` is assigned several times to location name `" ^ location_name ^ "` in the correctness property.");
+            (* No problem *)
+            true
+          )else(
+            (* Otherwise: error *)
+            print_warning ("Automaton `" ^ automaton_name ^ "` is assigned to several different location names (e.g., `" ^ location_name ^ "` and '" ^ old_name ^ "') in the correctness property.");
+            (* Problem *)
+            false
+          )
+        ) else (
+          (* Add to hash table *)
+          Hashtbl.add hashtable automaton_name location_name;
+          (* No problem *)
+          true
+        )
+      in
+
+      (* Update checks *)
+      checks_passed := !checks_passed && check1 && check2 && check3;
+
+    ) parsed_unreachable_locations;
+
+  (* If problem: returns dummy result *)
+  if not !checks_passed then(
+    [] , false
+  )else(
+    (* Return all pairs 'loc[automaton] = location' *)
+    let pairs = Hashtbl.fold (fun automaton_name location_name former_pairs ->
+        (* Retrieve automaton index (no test because was tested earlier) *)
+        let automaton_index = Hashtbl.find index_of_automata automaton_name in
+        (* Retrieve location index (no test because was tested earlier) *)
+        let location_index = Hashtbl.find index_of_locations.(automaton_index) location_name in
+        (* Add new pair *)
+        (automaton_index, location_index) :: former_pairs
+      ) hashtable [] in
+    pairs , true
+  )
+
+
+(*------------------------------------------------------------*)
+(* Check a list of discrete constraints declaration (i.e., of the form 'd ~ constant(s)')
+ * Return a list of discrete_constraint, and a Boolean encoding whether all checks passed
+ * May print warnings or errors
+*)
+(*------------------------------------------------------------*)
+let check_and_convert_unreachable_discrete_constraints index_of_variables type_of_variables variable_names discrete parsed_unreachable_locations =
+  (* Create a hash table to check for double declarations *)
+  let hashtable = Hashtbl.create (List.length discrete) in
+
+  (*(* Horrible hack: store not the constants, but their string representation (to allow for a quick representation of single constants and pairs of constants in intervals) *)
+    	let string_of_parsed_discrete_constraint = function
+    		| Parsed_discrete_l (_ , v)
+    			-> "<" ^ (NumConst.string_of_numconst v)
+    		| Parsed_discrete_leq (_ , v)
+    			-> "<=" ^ (NumConst.string_of_numconst v)
+    		| Parsed_discrete_equal (_ , v)
+    			-> "=" ^ (NumConst.string_of_numconst v)
+    		| Parsed_discrete_geq (_ , v)
+    			-> ">=" ^ (NumConst.string_of_numconst v)
+    		| Parsed_discrete_g (_ , v)
+    			-> ">" ^ (NumConst.string_of_numconst v)
+    		| Parsed_discrete_interval (_ , min_bound, max_bound)
+    			-> " in [" ^ (NumConst.string_of_numconst min_bound)
+    					^ " .. "
+    					^ (NumConst.string_of_numconst max_bound)
+    					^ "]"
+    	in*)
+
+  (* Local function to convert a parsed constraint into an abstract discrete constraint *)
+  (*** NOTE: will only be called once the discrete variable name has been checked for name and type ***)
+  let convert_discrete_constraint = function
+    | Parsed_discrete_l (discrete_name , v)
+      -> Discrete_l (Hashtbl.find index_of_variables discrete_name , v)
+    | Parsed_discrete_leq (discrete_name , v)
+      -> Discrete_leq (Hashtbl.find index_of_variables discrete_name , v)
+    | Parsed_discrete_equal (discrete_name , v)
+      -> Discrete_equal (Hashtbl.find index_of_variables discrete_name , v)
+    | Parsed_discrete_geq (discrete_name , v)
+      -> Discrete_geq (Hashtbl.find index_of_variables discrete_name , v)
+    | Parsed_discrete_g (discrete_name , v)
+      -> Discrete_g (Hashtbl.find index_of_variables discrete_name , v)
+    | Parsed_discrete_interval (discrete_name , min_bound, max_bound)
+      -> Discrete_interval (Hashtbl.find index_of_variables discrete_name , min_bound, max_bound)
   in
 
-  (* PERFORM VERIFICATIONS *)
-  (* Check that all parameters are bound to be >= 0 *)
-  List.iter (fun parameter_id ->
-      (* Print some information *)
-      print_message Verbose_low ("Checking that parameter '" ^ (variable_names parameter_id) ^ "' is >= 0 in the initial constraint…");
+  (* Global check *)
+  let checks_passed = ref true in
 
-      (* Check *)
-      if not (LinearConstraint.px_is_positive_in parameter_id initial_constraint) then
-        print_warning ("Parameter '" ^ (variable_names parameter_id) ^ "' is not necessarily positive in the initial constraint. The behavior of " ^ Constants.program_name ^ " is unspecified in this case. You are advised to add inequality '" ^ (variable_names parameter_id) ^ " >= 0' to the initial state of the model.");
-    ) parameters;
+  (* Iterate on parsed_unreachable_predicate and check for names and values *)
+  List.iter(fun parsed_unreachable_predicate ->
+      let parsed_discrete_constraint =
+        match parsed_unreachable_predicate with
+        | Parsed_unreachable_discrete parsed_discrete_constraint -> parsed_discrete_constraint
+        | _ -> raise (InternalError("Expecting a Parsed_unreachable_discrete, which should have been checked earlier."))
+      in
 
-  (* Return the initial state *)
-  initial_location, initial_constraint
+      (* Get discrete variable name *)
+      let discrete_name = match parsed_discrete_constraint with
+        | Parsed_discrete_l (variable_name , _)
+        | Parsed_discrete_leq (variable_name , _)
+        | Parsed_discrete_equal (variable_name , _)
+        | Parsed_discrete_geq (variable_name , _)
+        | Parsed_discrete_g (variable_name , _)
+          -> variable_name
+        | Parsed_discrete_interval (variable_name , _, _)
+          -> variable_name
+      in
+
+      (* Check discrete name and type *)
+      let check1 =
+        (* 1a. Check for name *)
+        if not (Hashtbl.mem index_of_variables discrete_name) then(
+          (* Print error *)
+          print_error ("The discrete variable `" ^ discrete_name ^ "` used in the correctness property does not exist in this model.");
+          (* Problem *)
+          false
+          (* 1b. Check for type *)
+        )else(
+          (* Get variable index *)
+          (*** NOTE: safe because Hashtbl.mem was checked in test 1a ***)
+          let variable_index = Hashtbl.find index_of_variables discrete_name in
+          (* Check type *)
+          let variable_type = type_of_variables variable_index in
+          if variable_type <> Var_type_discrete then(
+            (* Print error *)
+            print_error ("The variable `" ^ discrete_name ^ "` used in the correctness property must be a discrete variable (clocks and parameters are not allowed at this stage).");
+            (* Problem *)
+            false
+          )else true
+        )
+      in
+
+      (* Check value1 <= value2 *)
+      let check2 = match parsed_discrete_constraint with
+        | Parsed_discrete_l _
+        | Parsed_discrete_leq _
+        | Parsed_discrete_equal _
+        | Parsed_discrete_geq _
+        | Parsed_discrete_g _
+          -> true
+        | Parsed_discrete_interval (_ , min_bound , max_bound )
+          -> if NumConst.g min_bound max_bound then(
+            print_error ("The interval '[" ^ (NumConst.string_of_numconst min_bound) ^ " , " ^ (NumConst.string_of_numconst max_bound) ^ "]' used in the correctness property is not well-formed.");
+            (* Problem *)
+            false
+          ) else true
+      in
+
+      (* Check whether another value was declared for this discrete and, if not, store the value *)
+      let check3 =
+        (* Only perform this if further checks passed *)
+        if not (check1 && check2) then false else(
+          (* Compute abstract constraint *)
+          let abstract_constraint = convert_discrete_constraint parsed_discrete_constraint in
+          (* Check whether another value was declared for this discrete *)
+          if Hashtbl.mem hashtable discrete_name then(
+            (* Retrieve former value *)
+            let old_constraint = Hashtbl.find hashtable discrete_name in
+            (* If same name: just warning *)
+            if old_constraint = abstract_constraint then(
+              (* Warning *)
+              print_warning ("Discrete variable `" ^ discrete_name ^ "` is compared several times to the same constant in the correctness property.");
+              (* No problem *)
+              true
+            )else(
+              (* Otherwise: error *)
+              print_warning ("Discrete variable `" ^ discrete_name ^ "` is compared several times to different constants in the correctness property.");
+              (* Problem *)
+              false
+            )
+          ) else (
+            (* Add to hash table *)
+            Hashtbl.add hashtable discrete_name abstract_constraint;
+            (* No problem *)
+            true
+          )
+        )
+      in
+
+      (* Update checks *)
+      checks_passed := !checks_passed && check1 && check2 && check3;
+
+    ) parsed_unreachable_locations;
+
+  (* If problem: returns dummy result *)
+  if not !checks_passed then(
+    [] , false
+  )else(
+    (* Return all abstract constraints *)
+    let abstract_constraints = Hashtbl.fold (fun _ abstract_constraint former_abstract_constraints ->
+        (*			(* Retrieve automaton index (no test because was tested earlier) *)
+          			let discrete_index = Hashtbl.find index_of_variables discrete_name in*)
+        (* Add new abstract_constraint *)
+        abstract_constraint :: former_abstract_constraints
+      ) hashtable [] in
+    abstract_constraints , true
+  )
+
+
+(*------------------------------------------------------------*)
+(* Check one global location declaration (i.e., a list of location predicates and/or of discrete constraints)
+ * Return a converted global location, and a Boolean encoding whether all checks passed
+ * May print warnings or errors
+*)
+(*------------------------------------------------------------*)
+let check_and_convert_unreachable_global_location index_of_variables type_of_variables discrete variable_names index_of_automata index_of_locations parsed_unreachable_global_location =
+  (* Split the predicates in location and discrete *)
+  let parsed_unreachable_locations, parsed_discrete_constraints = List.partition (function
+      | Parsed_unreachable_loc _ -> true
+      | _ -> false
+    ) parsed_unreachable_global_location
+  in
+
+  (* Call dedicated functions *)
+  let unreachable_locations, check1 = check_and_convert_unreachable_local_locations index_of_automata index_of_locations parsed_unreachable_locations in
+  let discrete_constraints, check2 = check_and_convert_unreachable_discrete_constraints index_of_variables type_of_variables variable_names discrete parsed_discrete_constraints in
+
+  (* Return *)
+  {
+    unreachable_locations = unreachable_locations;
+    discrete_constraints  = discrete_constraints;
+  }
+  ,
+  check1 && check2
+
+*)
+
+(*------------------------------------------------------------*)
+(** Check a discrete Boolean expression *)
+(*------------------------------------------------------------*)
+
+let rec check_parsed_discrete_arithmetic_expression useful_parsing_model_information = function
+	| Parsed_DAE_plus (parsed_discrete_arithmetic_expression , parsed_discrete_term)
+	| Parsed_DAE_minus (parsed_discrete_arithmetic_expression , parsed_discrete_term) ->
+		evaluate_and
+			(check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression)
+			(check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
+	| Parsed_DAE_term parsed_discrete_term -> check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term
+
+and check_parsed_discrete_term useful_parsing_model_information = function
+	| Parsed_DT_mul (parsed_discrete_term , parsed_discrete_factor)
+	| Parsed_DT_div (parsed_discrete_term , parsed_discrete_factor) ->
+		evaluate_and
+			(check_parsed_discrete_term useful_parsing_model_information parsed_discrete_term)
+			(check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor)
+	| Parsed_DT_factor parsed_discrete_factor ->
+		check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor
+
+and check_parsed_discrete_factor useful_parsing_model_information = function
+	| Parsed_DF_variable variable_name ->
+		if not (Hashtbl.mem useful_parsing_model_information.index_of_variables variable_name) && not (Hashtbl.mem useful_parsing_model_information.constants variable_name) then (
+			print_error ("Undefined variable name `" ^ variable_name ^ "` in the property");
+			false
+		)else(
+			true
+		)
+	| Parsed_DF_constant _ -> true
+	| Parsed_DF_expression parsed_discrete_arithmetic_expression ->
+		check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression
+	| Parsed_DF_unary_min parsed_discrete_factor ->
+		check_parsed_discrete_factor useful_parsing_model_information parsed_discrete_factor
+
+
+(* Check correct variable names in parsed_discrete_boolean_expression *)
+let check_parsed_discrete_boolean_expression useful_parsing_model_information = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Parsed_expression (parsed_discrete_arithmetic_expression1 , _ , parsed_discrete_arithmetic_expression2) ->
+		evaluate_and
+			(check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1)
+			(check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2)
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| Parsed_expression_in (parsed_discrete_arithmetic_expression1 , parsed_discrete_arithmetic_expression2 , parsed_discrete_arithmetic_expression3) ->
+		let check1 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression1 in
+		let check2 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression2 in
+		let check3 = check_parsed_discrete_arithmetic_expression useful_parsing_model_information parsed_discrete_arithmetic_expression3 in
+		check1 && check2 && check3
+
+
+		
+(*------------------------------------------------------------*)
+(** Check a state predicate *)
+(*------------------------------------------------------------*)
+let check_parsed_loc_predicate useful_parsing_model_information = function
+	| Parsed_loc_predicate_EQ (automaton_name , location_name)
+	| Parsed_loc_predicate_NEQ (automaton_name , location_name)
+		->
+		(* Useful variables *)
+		let index_of_automata  = useful_parsing_model_information.index_of_automata  in
+		let index_of_locations : ((Automaton.location_name, Automaton.location_index) Hashtbl.t) array = useful_parsing_model_information.index_of_locations in
+		
+		(* Find the automaton *)
+		if not (Hashtbl.mem index_of_automata automaton_name) then(
+			print_error ("Unknown automaton name `" ^ automaton_name ^ "` in the property.");
+			false
+		)else(
+			let automaton_index : Automaton.automaton_index = Hashtbl.find index_of_automata automaton_name in
+			(* Find the location *)
+			if not (Hashtbl.mem index_of_locations.(automaton_index) location_name) then(
+				print_error ("Unknown location name `" ^ location_name ^ "` in automaton `" ^ automaton_name ^ "` in the property.");
+				false
+			)else(
+				(* Both checks passed *)
+				true
+			)
+		)
+
+
+let check_parsed_simple_predicate useful_parsing_model_information = function
+	| Parsed_discrete_boolean_expression parsed_discrete_boolean_expression ->
+		check_parsed_discrete_boolean_expression useful_parsing_model_information parsed_discrete_boolean_expression
+	| Parsed_loc_predicate parsed_loc_predicate ->
+		check_parsed_loc_predicate useful_parsing_model_information parsed_loc_predicate
+	| Parsed_state_predicate_true | Parsed_state_predicate_false | Parsed_state_predicate_accepting ->
+		true
+
+
+let rec check_parsed_state_predicate useful_parsing_model_information = function
+	| Parsed_state_predicate_OR (parsed_state_predicate_1 , parsed_state_predicate_2) ->
+		(* Check both even if one fails, so as to provide users with more errors at once *)
+		evaluate_and
+			(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_1)
+			(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate_2)
+		
+	| Parsed_state_predicate_term parsed_state_predicate_term ->
+		check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term
+
+
+and check_parsed_state_predicate_term useful_parsing_model_information = function
+	| Parsed_state_predicate_term_AND (parsed_state_predicate_term_1 , parsed_state_predicate_term_2) ->
+		(* Check both even if one fails, so as to provide users with more errors at once *)
+		evaluate_and
+			(check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term_1)
+			(check_parsed_state_predicate_term useful_parsing_model_information parsed_state_predicate_term_2)
+	| Parsed_state_predicate_factor parsed_state_predicate_factor ->
+		check_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor
+
+and check_parsed_state_predicate_factor useful_parsing_model_information = function
+	| Parsed_state_predicate_factor_NOT parsed_state_predicate_factor ->
+		check_parsed_state_predicate_factor useful_parsing_model_information parsed_state_predicate_factor
+	| Parsed_simple_predicate parsed_simple_predicate ->
+		check_parsed_simple_predicate useful_parsing_model_information parsed_simple_predicate
+	| Parsed_state_predicate parsed_state_predicate ->
+		check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+
+
+
+(*------------------------------------------------------------*)
+(** Generic function checking whether a name is a valid parameter name *)
+(*------------------------------------------------------------*)
+let check_parameter_name suffix_explanation_string useful_parsing_model_information parameter_name =
+	(* First check it is a variable *)
+	if not(Hashtbl.mem useful_parsing_model_information.index_of_variables parameter_name) then(
+		print_error ("Parameter " ^ parameter_name ^ " is not a defined variable" ^ suffix_explanation_string);
+		false
+	) else(
+		let parameter_index = Hashtbl.find useful_parsing_model_information.index_of_variables parameter_name in
+		if not(useful_parsing_model_information.type_of_variables parameter_index = Var_type_parameter) then(
+			print_error ("Variable " ^ parameter_name ^ " is not a parameter" ^ suffix_explanation_string);
+			false
+		)else true
+	)
+
+(*------------------------------------------------------------*)
+(** Check that all parameters in the projection definition are valid *)
+(*------------------------------------------------------------*)
+let check_projection_definition useful_parsing_model_information = function
+	| None -> true
+	| Some parsed_parameters -> (
+		let well_formed = ref true in
+		List.iter (fun parsed_parameter ->
+			if not (check_parameter_name " in the projection definition" useful_parsing_model_information parsed_parameter) then
+				well_formed := false
+			) parsed_parameters;
+		!well_formed
+		)
+
+(*------------------------------------------------------------*)
+(** Check that the optimization definition is valid *)
+(*------------------------------------------------------------*)
+(*let check_optimization parameters_names = function
+	| No_parsed_optimization -> true
+	
+	| Parsed_minimize parameter_name | Parsed_maximize parameter_name ->
+		if not (List.mem parameter_name parameters_names) then(
+		print_error ("Parameter " ^ parameter_name  ^ " is not a valid parameter in the optimization definition.");
+		false
+		) else true*)
+
+
+(*------------------------------------------------------------*)
+(* Check the parsed_pval w.r.t. the model parameters *)
+(*------------------------------------------------------------*)
+let check_parsed_pval useful_parsing_model_information (parsed_pval : ParsingStructure.parsed_pval) =
+	(* Compute the list of variable names *)
+	let list_of_variables, _ = List.split parsed_pval in
+
+	(* Compute the multiply defined variables *)
+	let multiply_defined_variables = elements_existing_several_times list_of_variables in
+	(* Print an error for each of them *)
+	List.iter (fun variable_name -> print_error ("The parameter `" ^ variable_name ^ "` was assigned several times a valuation in the reference valuation.")) multiply_defined_variables;
+
+	(*** TODO: only warns if it is always defined to the same value ***)
+
+		(* Check if the variables are all defined *)
+		let all_defined = List.fold_left
+				(fun all_defined variable_name ->
+					if List.mem variable_name list_of_variables then all_defined
+					else (
+					print_error ("The parameter `" ^ variable_name ^ "` was not assigned a valuation in the reference valuation.");
+					false
+					)
+				)
+				true
+				useful_parsing_model_information.parameter_names
+		in
+
+	(* Check if some defined variables are not parameters (and warn) *)
+	List.iter
+		(fun variable_name ->
+		if not (List.mem variable_name useful_parsing_model_information.parameter_names) then (
+			print_warning ("`" ^ variable_name ^ "`, which is assigned a valuation in the reference valuation, is not a valid parameter name.")
+		)
+		)
+		list_of_variables
+	;
+	
+	(* If something went wrong: raise an error *)
+	multiply_defined_variables = [] && all_defined
+
+
+(*------------------------------------------------------------*)
+(* Check the parsed_pval w.r.t. the model parameters *)
+(*------------------------------------------------------------*)
+let check_parsed_hyper_rectangle useful_parsing_model_information (parsed_hyper_rectangle : ParsingStructure.parsed_pdomain) =
+	(* Compute the list of variable names *)
+	let list_of_variables = List.map (fun (parameter_name, _, _) -> parameter_name) parsed_hyper_rectangle in
+
+	(* Compute the multiply defined variables *)
+	let multiply_defined_variables = elements_existing_several_times list_of_variables in
+	(* Print an error for each of them *)
+	List.iter (fun variable_name -> print_error ("The parameter `" ^ variable_name ^ "` was assigned several times a valuation in the reference parameter domain.")) multiply_defined_variables;
+
+	(*** TODO: only warns if it is always defined to the same value ***)
+
+		(* Check if the variables are all defined *)
+		let all_defined = List.fold_left
+				(fun all_defined variable_name ->
+					if List.mem variable_name list_of_variables then all_defined
+					else (
+					print_error ("The parameter `" ^ variable_name ^ "` was not assigned a valuation in the reference parameter domain.");
+					false
+					)
+				)
+				true
+				useful_parsing_model_information.parameter_names
+		in
+
+	(* Check that the intervals are not null *)
+	let all_intervals_ok = List.fold_left
+		(fun all_intervals_ok (variable_name, a, b) ->
+			if NumConst.le a b then all_intervals_ok
+			else (
+			print_error ("The interval [" ^ (NumConst.string_of_numconst a) ^ ", " ^ (NumConst.string_of_numconst b) ^ "] is empty for parameter `" ^ variable_name ^ "` in the reference parameter domain.");
+			false
+			)
+		)
+		true
+		parsed_hyper_rectangle
+	in
+
+	(* Check if some defined variables are not parameters (and warn) *)
+	List.iter
+		(fun variable_name ->
+		if not (List.mem variable_name useful_parsing_model_information.parameter_names) then (
+			print_warning ("`" ^ variable_name ^ "`, which is assigned a valuation in the reference parameter domain, is not a valid parameter name.")
+		)
+		)
+		list_of_variables
+	;
+	
+	(* If something went wrong: raise an error *)
+	multiply_defined_variables = [] && all_defined && all_intervals_ok
+
+
+(*------------------------------------------------------------*)
+(* Check the correctness property declaration       *)
+(*------------------------------------------------------------*)
+let check_property_option useful_parsing_model_information (parsed_property_option : ParsingStructure.parsed_property option) =
+	let constants			= useful_parsing_model_information.constants in
+(* 	let discrete			= useful_parsing_model_information.discrete in *)
+	let index_of_actions	= useful_parsing_model_information.index_of_actions in
+(* 	let index_of_automata	= useful_parsing_model_information.index_of_automata in *)
+(* 	let index_of_locations	= useful_parsing_model_information.index_of_locations in *)
+	let index_of_variables	= useful_parsing_model_information.index_of_variables in
+	let type_of_variables	= useful_parsing_model_information.type_of_variables in
+	let variable_names		= useful_parsing_model_information.variable_names in
+
+	(* Check *)
+	match parsed_property_option with
+	| None -> true
+	| Some parsed_property ->
+		begin
+		match parsed_property.property with
+
+		(*------------------------------------------------------------*)
+		(* Non-nested CTL *)
+		(*------------------------------------------------------------*)
+		(* Reachability *)
+		| Parsed_EF parsed_state_predicate
+		
+		(* Safety *)
+		| Parsed_AGnot parsed_state_predicate
+			->
+			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+		
+		
+		(*------------------------------------------------------------*)
+		(* Reachability and specification illustration *)
+		(*------------------------------------------------------------*)
+		
+		(** EF-synthesis with examples of (un)safe words *)
+		| Parsed_EFexemplify parsed_state_predicate
+			-> check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+
+		
+		(*------------------------------------------------------------*)
+		(* Optimized reachability *)
+		(*------------------------------------------------------------*)
+		
+		(* Reachability with minimization of a parameter valuation *)
+		| Parsed_EFpmin (parsed_state_predicate , parameter_name)
+		| Parsed_EFpmax (parsed_state_predicate , parameter_name)
+			->
+			(*** NOTE: two checks to allow to check both side of the equality whatever happens ***)
+			evaluate_and
+				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+				(check_parameter_name " in the optimization definition" useful_parsing_model_information parameter_name)
+
+		
+		(* Reachability with minimal-time *)
+		| Parsed_EFtmin parsed_state_predicate ->
+			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+		
+		
+		(*------------------------------------------------------------*)
+		(* Cycles *)
+		(*------------------------------------------------------------*)
+		
+		(** Accepting infinite-run (cycle) through a state predicate *)
+		| Parsed_Cycle_Through parsed_state_predicate ->
+			check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+		
+		(** Infinite-run (cycle) with non-Zeno assumption *)
+		| Parsed_NZ_Cycle -> true
+
+
+		(*------------------------------------------------------------*)
+		(* Deadlock-freeness *)
+		(*------------------------------------------------------------*)
+		
+		(* Deadlock-free synthesis *)
+		| Parsed_Deadlock_Freeness -> true
+		
+		
+		(*------------------------------------------------------------*)
+		(* Inverse method, trace preservation, robustness *)
+		(*------------------------------------------------------------*)
+		
+		(* Inverse method with complete, non-convex result *)
+		| Parsed_IM parsed_pval
+		(* Non-complete, non-deterministic inverse method with convex result *)
+		| Parsed_ConvexIM parsed_pval
+		(* IMK *)
+		| Parsed_IMK parsed_pval
+		(* IMunion *)
+		| Parsed_IMunion parsed_pval
+			->
+			check_parsed_pval useful_parsing_model_information parsed_pval
+		
+		(* PRP *)
+		| Parsed_PRP (parsed_state_predicate, parsed_pval) ->
+			(*** NOTE: two checks to allow to check both side of the equality whatever happens ***)
+			evaluate_and
+				(check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+				(check_parsed_pval useful_parsing_model_information parsed_pval)
+		
+		
+		(*------------------------------------------------------------*)
+		(* Cartography algorithms *)
+		(*------------------------------------------------------------*)
+		
+		(* Cartography *)
+		| Parsed_Cover_cartography (parsed_hyper_rectangle, step)
+		(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+		| Parsed_Shuffle_cartography (parsed_hyper_rectangle, step)
+		(** Look for the border using the cartography*)
+		| Parsed_Border_cartography (parsed_hyper_rectangle, step)
+		(** Randomly pick up values for a given number of iterations *)
+		| Parsed_Random_cartography (parsed_hyper_rectangle, _, step)
+		(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+		| Parsed_RandomSeq_cartography (parsed_hyper_rectangle, _, step)
+			->
+			evaluate_and
+				(* The step has to be > 0 *)
+				(NumConst.g step NumConst.zero)
+				(check_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle)
+	
+		(** Cover the whole cartography using learning-based abstractions *)
+		| Parsed_Learning_cartography (parsed_state_predicate, parsed_hyper_rectangle, step)
+		(* Parametric reachability preservation *)
+		| Parsed_PRPC (parsed_state_predicate, parsed_hyper_rectangle, step)
+		->
+			(* The step has to be > 0 *)
+			let check1 = NumConst.g step NumConst.zero in
+			let check2 = check_parsed_state_predicate useful_parsing_model_information parsed_state_predicate in
+			let check3 = check_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle in
+			check1 && check2 && check3
+
+
+		(*------------------------------------------------------------*)
+		(* Observer patterns *)
+		(*------------------------------------------------------------*)
+		
+		(* CASE TWO ACTIONS *)
+		
+		(* if a2 then a1 has happened before *)
+		| ParsingStructure.Parsed_action_precedence_acyclic ( a1 , a2 )
+		(* everytime a2 then a1 has happened before *)
+		| ParsingStructure.Parsed_action_precedence_cyclic ( a1 , a2 )
+		(* everytime a2 then a1 has happened once before *)
+		| ParsingStructure.Parsed_action_precedence_cyclicstrict ( a1 , a2 )
+			->
+			(* Check action names (perform 2 even if one fails) *)
+			evaluate_and
+				(check_action_name index_of_actions a1)
+				(check_action_name index_of_actions a2)
+		
+
+		(* CASE ACTION + DEADLINE *)
+		
+		(* a within d *)
+		| ParsingStructure.Parsed_action_deadline ( a , d )
+			->
+			(* Check action name and deadline (perform all even if one fails) *)
+			let check1 = check_action_name index_of_actions a in
+			let check2 = all_variables_defined_in_linear_expression variable_names constants d in
+			let check3 = (if no_variables_in_linear_expression index_of_variables type_of_variables constants d
+						then true
+						else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
+			in
+			check1 && check2 && check3
+
+
+		(* CASE 2 ACTIONS + DEADLINE *)
+		
+		(* if a2 then a1 happened within d before *)
+		| ParsingStructure.Parsed_TB_Action_precedence_acyclic (a1, a2, d)
+		(* everytime a2 then a1 happened within d before *)
+		| ParsingStructure.Parsed_TB_Action_precedence_cyclic (a1, a2, d)
+		(* everytime a2 then a1 happened once within d before *)
+		| ParsingStructure.Parsed_TB_Action_precedence_cyclicstrict (a1, a2, d)
+		
+		(* if a1 then eventually a2 within d *)
+		| ParsingStructure.Parsed_TB_response_acyclic (a1, a2, d)
+		(* everytime a1 then eventually a2 within d *)
+		| ParsingStructure.Parsed_TB_response_cyclic (a1, a2, d)
+		(* everytime a1 then eventually a2 within d once before next *)
+		| ParsingStructure.Parsed_TB_response_cyclicstrict (a1, a2, d)
+			->
+			(* Check action names and deadline (perform 3 even if one fails) *)
+			let check1 = check_action_name index_of_actions a1 in
+			let check2 = check_action_name index_of_actions a2 in
+			let check3 = all_variables_defined_in_linear_expression variable_names constants d in
+			let check4 = (if no_variables_in_linear_expression index_of_variables type_of_variables constants d
+						then true
+						else (print_error("No variable is allowed in the property definition (only constants and parameters)."); false))
+			in
+			check1 && check2 && check3 && check4
+
+
+		(* CASE SEQUENCES (list of actions) *)
+
+		(* sequence a1, …, an *)
+		| ParsingStructure.Parsed_Sequence_acyclic (actions_list)
+		(* always sequence a1, …, an *)
+		| ParsingStructure.Parsed_Sequence_cyclic (actions_list)
+			->
+			(* Check action names (use a fold_left instead of forall to ensure that all actions will be checked) *)
+			List.fold_left (fun current_result a ->
+				(* Make sure we do evaluate this part even if current_result is false *)
+				let check = check_action_name index_of_actions a in
+				current_result && check
+				) true actions_list
+
+		end
+
+
+
+(************************************************************)
+(** Converting the property  *)
+(************************************************************)
+
+
+(*------------------------------------------------------------*)
+(* Convert the parsed parsed_pval into a valid parsed_pval *)
+(*------------------------------------------------------------*)
+let convert_parsed_pval useful_parsing_model_information (parsed_pval : ParsingStructure.parsed_pval) : PVal.pval =
+	let pval = new PVal.pval in
+	for i = 0 to useful_parsing_model_information.nb_parameters - 1 do
+		let parameter_name = useful_parsing_model_information.variables.(i) in
+		let valuation = try(
+			List.assoc parameter_name parsed_pval
+		) with Not_found ->
+			raise (InternalError ("The parameter name '" ^ parameter_name ^ "' was not found in parsed_pval although checks should have been performed before."))
+		in
+		pval#set_value i valuation
+	done;
+	(* Return the parameter valuation *)
+	pval
+
+
+(*------------------------------------------------------------*)
+(* Convert the parsed hyper_rectangle into a valid hyper_rectangle *)
+(*------------------------------------------------------------*)
+let convert_parsed_hyper_rectangle useful_parsing_model_information (parsed_hyper_rectangle : ParsingStructure.parsed_pdomain) : HyperRectangle.hyper_rectangle =
+	
+	let hyper_rectangle = new HyperRectangle.hyper_rectangle in
+	
+	List.iter (fun (variable_name, a, b) ->
+		try
+			(* Get the variable index *)
+			let variable_index = Hashtbl.find useful_parsing_model_information.index_of_variables variable_name in
+			(* Update the variable value *)
+			hyper_rectangle#set_min variable_index a;
+			hyper_rectangle#set_max variable_index b;
+		with Not_found ->
+			(* No problem: this must be an invalid parameter name (which is ignored) *)
+			()
+			(* 			raise (InternalError ("The variable name `" ^ variable_name ^ "` was not found in the list of variables although checks should have been performed before.")) *)
+		) parsed_hyper_rectangle;
+	hyper_rectangle
+
+
+let convert_synthesis_type = function
+	| Parsed_witness	-> Witness
+	| Parsed_synthesis	-> Synthesis
+
 
 
 (*------------------------------------------------------------*)
 (** Convert a list of parsed parameters into a list of variable_index *)
 (*------------------------------------------------------------*)
-let convert_projection_definition index_of_variables = function
-  | None -> None
-  | Some parsed_parameters -> Some (List.map (fun parsed_parameter ->
-      (* No check because this was checked before *)
-      Hashtbl.find index_of_variables parsed_parameter
-    ) parsed_parameters)
+let convert_projection_definition (index_of_variables : (Automaton.variable_name, Automaton.variable_index) Hashtbl.t)  = function
+	(* No property *)
+	| None -> None
+	(* Some property *)
+	| Some (parsed_property : parsed_property) ->
+	begin
+		match parsed_property.projection with
+		| None -> None
+		| Some (parsed_parameters : string list) -> Some (List.map (fun (parsed_parameter_name : string) ->
+			(* No check because this was checked before *)
+			Hashtbl.find index_of_variables parsed_parameter_name
+			) parsed_parameters)
+	end
+
+
+
+type converted_observer_structure = {
+	(*  observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions *)
+	observer_structure					: Automaton.action_index list * (Automaton.action_index list) array * AbstractModel.location_urgency array * LinearConstraint.pxd_linear_constraint array * AbstractModel.transition list array array;
+	
+	nb_transitions_for_observer			: int;
+	
+	initial_observer_constraint_option	: LinearConstraint.px_linear_constraint option;
+}
+
+
+(* Convert ParsingStructure.parsed_property into AbstractProperty.property *)
+let convert_property_option useful_parsing_model_information (nb_actions : int) (observer_automaton_index_option : automaton_index option) (observer_nosync_index_option : action_index option) (parsed_property_option : ParsingStructure.parsed_property option) : (AbstractProperty.abstract_property option * converted_observer_structure option) =
+	let constants			= useful_parsing_model_information.constants in
+(* 	let discrete			= useful_parsing_model_information.discrete in *)
+	let index_of_actions	= useful_parsing_model_information.index_of_actions in
+(* 	let index_of_automata	= useful_parsing_model_information.index_of_automata in *)
+(* 	let index_of_locations	= useful_parsing_model_information.index_of_locations in *)
+	let index_of_variables	= useful_parsing_model_information.index_of_variables in
+(* 	let type_of_variables	= useful_parsing_model_information.type_of_variables in *)
+(* 	let variable_names		= useful_parsing_model_information.variable_names in *)
+
+
+
+
+	(* Convert *)
+	match parsed_property_option with
+	(* No property, no observer *)
+	| None -> None, None
+	
+	(* Some property *)
+	| Some parsed_property ->
+		let property , converted_observer_structure_option =
+		match parsed_property.property with
+
+		(*------------------------------------------------------------*)
+		(* Non-nested CTL *)
+		(*------------------------------------------------------------*)
+		(* Reachability *)
+		| Parsed_EF parsed_state_predicate ->
+			(* Return a property and no observer *)
+			EF (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+			,
+			None
+			
+		(* Safety *)
+		| Parsed_AGnot parsed_state_predicate ->
+			(* Return a property and no observer *)
+			AGnot (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+			,
+			None
+		
+		
+		(*------------------------------------------------------------*)
+		(* Reachability and specification illustration *)
+		(*------------------------------------------------------------*)
+		
+		(** EF-synthesis with examples of (un)safe words *)
+		| Parsed_EFexemplify parsed_state_predicate ->
+			EFexemplify (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+			,
+			None
+
+		
+		(*------------------------------------------------------------*)
+		(* Optimized reachability *)
+		(*------------------------------------------------------------*)
+		
+		(* Reachability with minimization of a parameter valuation *)
+		| Parsed_EFpmin (parsed_state_predicate , parameter_name) ->
+			EFpmin (
+				convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+				,
+				Hashtbl.find useful_parsing_model_information.index_of_variables parameter_name
+			)
+			,
+			None
+		
+		(* Reachability with maximization of a parameter valuation *)
+		| Parsed_EFpmax (parsed_state_predicate , parameter_name) ->
+			EFpmax (
+				convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate
+				,
+				Hashtbl.find useful_parsing_model_information.index_of_variables parameter_name
+			)
+			,
+			None
+		
+		(* Reachability with minimal-time *)
+		| Parsed_EFtmin parsed_state_predicate ->
+			EFtmin (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+			,
+			None
+		
+		
+		(*------------------------------------------------------------*)
+		(* Cycles *)
+		(*------------------------------------------------------------*)
+		
+		(** Accepting infinite-run (cycle) through a state predicate *)
+		| Parsed_Cycle_Through parsed_state_predicate ->
+			Cycle_through (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate)
+			,
+			None
+		
+		(** Infinite-run (cycle) with non-Zeno assumption *)
+		| Parsed_NZ_Cycle -> NZ_Cycle, None
+		
+
+		(*------------------------------------------------------------*)
+		(* Deadlock-freeness *)
+		(*------------------------------------------------------------*)
+		
+		(* Deadlock-free synthesis *)
+		| Parsed_Deadlock_Freeness -> Deadlock_Freeness, None
+		
+		
+		(*------------------------------------------------------------*)
+		(* Inverse method, trace preservation, robustness *)
+		(*------------------------------------------------------------*)
+		
+		(* Inverse method with complete, non-convex result *)
+		| Parsed_IM parsed_pval ->
+			IM (convert_parsed_pval useful_parsing_model_information parsed_pval)
+			,
+			None
+			
+		(* Non-complete, non-deterministic inverse method with convex result *)
+		| Parsed_ConvexIM parsed_pval ->
+			ConvexIM (convert_parsed_pval useful_parsing_model_information parsed_pval)
+			,
+			None
+
+		(* PRP *)
+		| Parsed_PRP (parsed_state_predicate , parsed_pval) ->
+			PRP (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_pval useful_parsing_model_information parsed_pval)
+			,
+			None
+
+		(* IMK *)
+		| Parsed_IMK parsed_pval ->
+			IMK (convert_parsed_pval useful_parsing_model_information parsed_pval)
+			,
+			None
+
+		(* IMunion *)
+		| Parsed_IMunion parsed_pval ->
+			IMunion (convert_parsed_pval useful_parsing_model_information parsed_pval)
+			,
+			None
+
+			
+		(*------------------------------------------------------------*)
+		(* Cartography algorithms *)
+		(*------------------------------------------------------------*)
+		
+		(* Cartography *)
+		| Parsed_Cover_cartography (parsed_hyper_rectangle, step) ->
+			Cover_cartography ((convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle) , step)
+			,
+			None
+		
+		(** Cover the whole cartography using learning-based abstractions *)
+		| Parsed_Learning_cartography (parsed_state_predicate, parsed_hyper_rectangle, step) ->
+			Learning_cartography ((convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle , step))
+			,
+			None
+		
+		(** Cover the whole cartography after shuffling point (mostly useful for the distributed IMITATOR) *)
+		| Parsed_Shuffle_cartography (parsed_hyper_rectangle, step) ->
+			Shuffle_cartography (convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle , step)
+			,
+			None
+		
+		(** Look for the border using the cartography*)
+		| Parsed_Border_cartography (parsed_hyper_rectangle, step) ->
+			Border_cartography (convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle , step)
+			,
+			None
+		
+		(** Randomly pick up values for a given number of iterations *)
+		| Parsed_Random_cartography (parsed_hyper_rectangle, nb, step) ->
+			Random_cartography (convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle , nb , step)
+			,
+			None
+		
+		(** Randomly pick up values for a given number of iterations, then switch to sequential algorithm once no more point has been found after a given max number of attempts (mostly useful for the distributed IMITATOR) *)
+		| Parsed_RandomSeq_cartography (parsed_hyper_rectangle, nb, step) ->
+			RandomSeq_cartography (convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle , nb , step)
+			,
+			None
+	
+		(* Parametric reachability preservation *)
+		| Parsed_PRPC (parsed_state_predicate, parsed_hyper_rectangle, step) ->
+			PRPC (convert_parsed_state_predicate useful_parsing_model_information parsed_state_predicate , convert_parsed_hyper_rectangle useful_parsing_model_information parsed_hyper_rectangle , step)
+			,
+			None
+
+
+		(*------------------------------------------------------------*)
+		(* Observer patterns *)
+		(*------------------------------------------------------------*)
+		
+		(* CASE TWO ACTIONS *)
+		
+		(* if a2 then a1 has happened before *)
+		| ParsingStructure.Parsed_action_precedence_acyclic _
+		(* everytime a2 then a1 has happened before *)
+		| ParsingStructure.Parsed_action_precedence_cyclic _
+		(* everytime a2 then a1 has happened once before *)
+		| ParsingStructure.Parsed_action_precedence_cyclicstrict _
+
+		(* CASE ACTION + DEADLINE *)
+		
+		(* a within d *)
+		| ParsingStructure.Parsed_action_deadline _
+		
+		(* CASE 2 ACTIONS + DEADLINE *)
+		
+		(* if a2 then a1 happened within d before *)
+		| ParsingStructure.Parsed_TB_Action_precedence_acyclic _
+		(* everytime a2 then a1 happened within d before *)
+		| ParsingStructure.Parsed_TB_Action_precedence_cyclic _
+		(* everytime a2 then a1 happened once within d before *)
+		| ParsingStructure.Parsed_TB_Action_precedence_cyclicstrict _
+		
+		(* if a1 then eventually a2 within d *)
+		| Parsed_TB_response_acyclic _
+		(* everytime a1 then eventually a2 within d *)
+		| Parsed_TB_response_cyclic _
+		(* everytime a1 then eventually a2 within d once before next *)
+		| Parsed_TB_response_cyclicstrict _
+		
+		(* CASE SEQUENCES *)
+		
+		(* sequence a1, …, an *)
+		| Parsed_Sequence_acyclic _
+		(* always sequence a1, …, an *)
+		| Parsed_Sequence_cyclic _
+		
+			->
+			
+			(* Print some information *)
+			print_message Verbose_low ("*** The property is an observer pattern. Generating the observer…");
+			
+			(* First, let us retrieve some useful information *)
+			
+			(* Get the silent action index for the observer *)
+			let observer_nosync_index = match observer_nosync_index_option with
+				| Some action_index -> action_index
+				| None -> raise (InternalError ("An observer action should have been defined."))
+			in
+			
+			(* Get the observer automaton index *)
+			let observer_automaton_index = match observer_automaton_index_option with
+				| Some automaton_index -> automaton_index
+				| None -> raise (InternalError ("An observer automaton index should have been defined."))
+			in
+			
+			(* Print some information *)
+			print_message Verbose_total ("*** Retrieved the observer automaton index: `" ^ (string_of_int observer_automaton_index) ^ "`");
+			
+			(* Get the local clock for the observer *)
+			(*** WARNING: quite a HACK, here ***)
+			let clock_obs = useful_parsing_model_information.nb_parameters + useful_parsing_model_information.nb_clocks - 1 in
+			
+			(* Print some information *)
+			print_message Verbose_total ("*** Retrieved the observer's clock index (if any): `" ^ (string_of_int clock_obs) ^ "`");
+			
+			(* Create the function action index -> action name *)
+			let action_index_of_action_name action_name = try (Hashtbl.find index_of_actions action_name) with Not_found -> raise (InternalError ("Action `" ^ action_name ^ "` not found in HashTable `index_of_actions` when defining function `action_index_of_action_name`, althoug this should have been checked before.")) in
+			
+			(* Create the function converting a ParsingStructure.parsed_duration into a LinearConstraint.p_linear_term *)
+			let p_linear_term_of_parsed_duration (parsed_duration : ParsingStructure.parsed_duration) : LinearConstraint.p_linear_term = LinearConstraint.cast_p_of_pxd_linear_term (linear_term_of_linear_expression index_of_variables constants parsed_duration) true in
+			
+			(* Get the info from the observer pattern *)
+			let observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions, initial_observer_constraint, abstract_property =
+				ObserverPatterns.get_observer_automaton action_index_of_action_name p_linear_term_of_parsed_duration nb_actions observer_automaton_index observer_nosync_index clock_obs parsed_property in
+
+			(* Count transitions *)
+			let nb_transitions_for_observer =
+			(* Iterate on locations *)
+				Array.fold_left (fun nb_transitions_for_locations transitions_for_this_location ->
+					Array.fold_left (fun nb_transitions_for_actions transitions_for_this_action ->
+					nb_transitions_for_actions + (List.length transitions_for_this_action)
+					) nb_transitions_for_locations transitions_for_this_location
+				) 0 observer_transitions
+			in
+			
+			(* Create the structure *)
+			let converted_observer_structure = {
+				observer_structure					= observer_actions , observer_actions_per_location , observer_location_urgency , observer_invariants , observer_transitions;
+				
+				nb_transitions_for_observer			= nb_transitions_for_observer;
+				
+				initial_observer_constraint_option	= initial_observer_constraint;
+			}
+			in
+			
+			(* Return the property and the structure *)
+			abstract_property
+			,
+			Some converted_observer_structure
+	
+		in
+		
+		(* Get the synthesis or emptiness type *)
+		let synthesis_type = convert_synthesis_type parsed_property.synthesis_type in
+		
+		(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Convert the projection definition *)
+		(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		print_message Verbose_total ("*** Building the projection definition…");
+		let projection = convert_projection_definition index_of_variables parsed_property_option in
+
+		(* Return the property *)
+		Some {
+			(* Emptiness or synthesis *)
+			synthesis_type	= synthesis_type;
+			(* Property *)
+			property		= property;
+			(* Projection of the result *)
+			projection		= projection;
+		}
+		,
+		converted_observer_structure_option
+
+
+
+
+
+(************************************************************)
+(************************************************************)
+(** MODEL AND PROPERTY CONVERSION *)
+(************************************************************)
+(************************************************************)
+
 
 
 (*------------------------------------------------------------*)
-(** Convert the optimization definition *)
+(* Convert the parsed model and the parsed property into an abstract model and an abstract property *)
 (*------------------------------------------------------------*)
-let convert_optimization_definition index_of_variables = function
-  | No_parsed_optimization -> No_optimization
-  | Parsed_minimize parameter_name -> Minimize (
-      (* No check because this was checked before *)
-      Hashtbl.find index_of_variables parameter_name
-    )
-  | Parsed_maximize parameter_name -> Maximize (
-      (* No check because this was checked before *)
-      Hashtbl.find index_of_variables parameter_name
-    )
-
-
-(*------------------------------------------------------------*)
-(* Find the clocks in a linear_constraint *)
-(*------------------------------------------------------------*)
-
-let get_clocks_in_linear_constraint clocks =
-  (* Get a long list with duplicates, and then simplify *)
-  (*	(* Should not be too inefficient, because our linear constraints are relatively small *)
-    	let list_of_clocks = List.fold_left (fun current_list_of_clocks linear_inequality ->
-    		list_append current_list_of_clocks (get_clocks_in_linear_inequality is_clock linear_inequality)
-    	) [] linear_constraint
-    	in
-    	(* Simplify *)
-    	list_only_once list_of_clocks*)
-  LinearConstraint.pxd_find_variables clocks
-
-
-(*** WARNING: duplicate function in ClockElimination ***)
-let rec get_clocks_in_updates updates : clock_index list =
-  let get_clocks: clock_updates -> clock_index list = function
-    (* No update at all *)
-    | No_update -> []
-    (* Reset to 0 only *)
-    | Resets clock_reset_list -> clock_reset_list
-    (* Reset to arbitrary value (including discrete, parameters and clocks) *)
-    | Updates clock_update_list ->
-      let result, _ = List.split clock_update_list in result
-  in
-  let clocks_in_conditons = List.flatten (List.map
-    (fun (b, u1, u2) -> (get_clocks_in_updates u1) @ (get_clocks_in_updates u2) )
-    updates.conditional)
-  in
-  (get_clocks updates.clock) @ clocks_in_conditons
-
-
-(*------------------------------------------------------------*)
-(* Convert the parsing structure into an abstract model *)
-(*------------------------------------------------------------*)
-let abstract_model_of_parsing_structure options (with_special_reset_clock : bool) (parsed_variable_declarations, parsed_automata, parsed_init_definition, parsed_property_definition, parsed_projection_definition, parsed_optimization_definition, parsed_carto_definition) =
+let abstract_structures_of_parsing_structures options (parsed_model : ParsingStructure.parsed_model) (parsed_property_option : ParsingStructure.parsed_property option) : AbstractModel.abstract_model * (AbstractProperty.abstract_property option) =
+	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Debug functions *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2656,37 +3888,31 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* Get names *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Get the declared variable names *)
-	let possibly_multiply_defined_clock_names, possibly_multiply_defined_discrete_names, possibly_multiply_defined_parameter_names, constants, unassigned_constants = get_declared_variable_names parsed_variable_declarations in
+	let possibly_multiply_defined_clock_names, possibly_multiply_defined_discrete_names, possibly_multiply_defined_parameter_names, constants, unassigned_constants = get_declared_variable_names parsed_model.variable_declarations in
 	(* Get the declared automata names *)
-	let declared_automata_names = get_declared_automata_names parsed_automata in
+	let declared_automata_names = get_declared_automata_names parsed_model.automata in
 	(* Get the declared synclabs names *)
-	let synclabs_names = get_declared_synclabs_names parsed_automata in
+	let action_names = get_declared_synclabs_names parsed_model.automata in
 
-
-
-	(* Print some information *)
-	if verbose_mode_greater Verbose_total then(
-		print_message Verbose_total ("Automata names : " ^ (string_of_list_of_string_with_sep ", " declared_automata_names));
-	);
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the synclabs declarations *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let synclabs_names, removed_synclab_names = if options#sync_auto_detection then synclabs_names, [] else (
+	let action_names, removed_action_names = if options#sync_auto_detection then action_names, [] else (
 		(* Keep only the synclabs which are used in ALL the automata where they are declared *)
-		List.partition (synclab_used_everywhere parsed_automata) (*(fun synclab_name -> if synclab_used_everywhere parsed_automata synclab_name then
+		List.partition (synclab_used_everywhere parsed_model.automata) (*(fun synclab_name -> if synclab_used_everywhere parsed_model.automata synclab_name then
 			(* If it is used everywhere: keep *)
 			true
 			(* If there exists an automaton where it is not used : warns and remove *)
 			else (print_warning ("The synclab '" ^ synclab_name ^ "' is not used in some of the automata where it is declared: it will thus be removed."); false)
-		)*) synclabs_names
+		)*) action_names
 	) in
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Make the array of constants *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let constants, constants_consistent = make_constants constants in
+	let (constants : (Automaton.variable_name , NumConst.t) Hashtbl.t), constants_consistent = make_constants constants in
 
 	if verbose_mode_greater Verbose_high then(
 		(* Constants *)
@@ -2734,13 +3960,18 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 
 	(* Stop here if model not well formed *)
  	if not (constants_consistent && all_variables_different && all_automata_different && at_least_one_automaton) then raise InvalidModel;
-
-
+ 	
+ 	
+ 	
+ 	
  	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Add clock and automaton for the observer *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Note that the observer has not been checked yet, but it doesn't matter *)
-	let observer_automaton, observer_clock_option = ObserverPatterns.new_elements parsed_property_definition in
+	let observer_automaton, observer_clock_option = match parsed_property_option with
+		| None -> None, None
+		| Some parsed_property -> ObserverPatterns.new_elements parsed_property
+	in
 
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
@@ -2756,7 +3987,14 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 		end;
 	);
 
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Automata names : " ^ (string_of_list_of_string_with_sep ", " declared_automata_names));
+	);
 
+
+	
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Start building variable lists *)
@@ -2766,6 +4004,10 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	let single_clock_names = list_only_once possibly_multiply_defined_clock_names in
 	let single_discrete_names = list_only_once possibly_multiply_defined_discrete_names in
 	let single_parameter_names = list_only_once possibly_multiply_defined_parameter_names in
+	
+	(*------------------------------------------------------------*)
+	(* Remove unused variables *)
+	(*------------------------------------------------------------*)
 
 	(* Unless a specific option is activated, we first remove all variables declared but unused *)
 	let clock_names, discrete_names, parameter_names, removed_variable_names =
@@ -2774,7 +4016,9 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 		single_clock_names, single_discrete_names, single_parameter_names, []
 	)else (
 		(* Gather all variables used *)
-		let all_variable_used = get_all_variables_used parsed_automata parsed_property_definition in
+		let all_variables_used_in_model = get_all_variables_used_in_model parsed_model in
+		let all_variables_used_in_property = get_variables_in_property_option parsed_property_option in
+		let all_variable_used = StringSet.union all_variables_used_in_model all_variables_used_in_property in
 
 		(* Remove variable unused *)
 		let remove_unused_variables_gen variable_type_name = List.partition (fun variable_name ->
@@ -2788,7 +4032,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 			then true
 			else (
 				(* First print a warning *)
-				print_warning ("The " ^ variable_type_name ^ " '" ^ variable_name ^ "' is declared but never used in the model; it is therefore removed from the model. Use option -no-var-autoremove to keep it.");
+				print_warning ("The " ^ variable_type_name ^ " `" ^ variable_name ^ "` is declared but never used in the model; it is therefore removed from the model. Use option -no-var-autoremove to keep it.");
 				(* Filter out *)
 				false
 			)
@@ -2801,41 +4045,70 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 		single_clock_names, single_discrete_names, single_parameter_names, List.rev_append removed_clock_names (List.rev_append removed_discrete_names removed_parameter_names)
 	)
 	in
+	
+
+	(*------------------------------------------------------------*)
+	(* Special clocks *)
+	(*------------------------------------------------------------*)
 
 	(* First handle the observer clock if any *)
 	let observer_clock_list = match observer_clock_option with
 		| None -> []
 		| Some observer_clock_name -> [observer_clock_name]
 	in
+	
 	(* Second handle the special_reset_clock *)
+	let with_special_reset_clock = match parsed_property_option with
+	| Some parsed_property ->
+		begin
+		match parsed_property.property with
+		| Parsed_NZ_Cycle
+			->
+			print_message Verbose_high ("\nDefining special reset clock…");
+			true
+			
+		| _ -> false
+		end
+	
+	| None -> false
+	in
+	
 	let special_reset_clock_list = if with_special_reset_clock then [Constants.special_reset_clock_name] else [] in
+	
 
+	(*------------------------------------------------------------*)
+	(* Create lists *)
+	(*------------------------------------------------------------*)
+	
 	let clock_names = list_append (list_append clock_names observer_clock_list) special_reset_clock_list in
 	let discrete_names = discrete_names in
-	let parameters_names = parameter_names in
 
 	(* Make only one list for all variables *)
-	let variable_names = list_append (list_append parameters_names clock_names) discrete_names in
+	let variable_names = list_append (list_append parameter_names clock_names) discrete_names in
 
 	(* Update automata names with the observer automaton *)
 	let declared_automata_names = match observer_automaton with
 		| None -> declared_automata_names
-		| Some automaton_obs -> list_append declared_automata_names [automaton_obs]
+		| Some automaton_name -> list_append declared_automata_names [automaton_name]
 	in
 
 	(* Numbers *)
-	let nb_automata = List.length declared_automata_names in
-	let nb_labels = List.length synclabs_names in
-	let nb_clocks = List.length clock_names in
-	let nb_discrete = List.length discrete_names in
-	let nb_parameters = List.length parameters_names in
-	let nb_variables = List.length variable_names in
+	let nb_automata		= List.length declared_automata_names in
+	let nb_actions		= List.length action_names in
+	let nb_clocks		= List.length clock_names in
+	let nb_discrete		= List.length discrete_names in
+	let nb_parameters	= List.length parameter_names in
+	let nb_variables	= List.length variable_names in
 
 
 	(* Compute the index for the observer automaton *)
-	let observer_automaton = match observer_automaton with
+	let observer_automaton_index_option = match observer_automaton with
 		| None -> None
-		| Some _ -> Some (nb_automata-1)
+		| Some _ ->
+			(* Print some information *)
+			print_message Verbose_high ("\nObserver automaton index is: " ^ (string_of_int (nb_automata - 1)));
+			
+			Some (nb_automata - 1)
 	in
 
 
@@ -2843,8 +4116,25 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Set the LinearConstraint dimensions *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Print some information *)
 	print_message Verbose_high ("\nSetting dimensions…");
 	LinearConstraint.set_dimensions nb_parameters nb_clocks nb_discrete;
+	
+	
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Set the parameter dimensions *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+
+	(*** NOTE: must be done one and exactly one time ***)
+
+	(* Set dimensions for hyper rectangles *)
+	HyperRectangle.set_dimensions nb_parameters;
+
+	(* Set dimensions for parameter valuations *)
+	PVal.set_dimensions nb_parameters;
+
+
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2857,26 +4147,31 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* The array of automata names ; index -> automaton name *)
 	let array_of_automata_names = Array.of_list declared_automata_names in
 	(* A (constant) hash table 'automaton name -> index' *)
-	let index_of_automata = Hashtbl.create nb_automata in
+	let index_of_automata : (Automaton.automaton_name, Automaton.automaton_index) Hashtbl.t = Hashtbl.create nb_automata in
 	for i = 0 to nb_automata - 1 do
 		Hashtbl.add index_of_automata array_of_automata_names.(i) i;
 	done;
 
 	(* Functional version *)
-	let automata_names = fun automaton_index -> array_of_automata_names.(automaton_index) in
+	let (automata_names : automaton_index -> automaton_name) = fun automaton_index ->
+		(* Add a safety mechanism *)
+		try(
+			array_of_automata_names.(automaton_index)
+		) with Invalid_argument msg -> raise (InternalError ("Automaton name of index `" ^ (string_of_int automaton_index) ^ "` not found in `automata_names` function. Additional details: `" ^ msg ^ "`"))
+	in
 
-	(* The array of labels ; index -> label name *)
-	let labels = Array.of_list synclabs_names in
-	(* A (constant) hash table 'label name -> index' *)
-	let index_of_actions = Hashtbl.create nb_labels in
-	for i = 0 to nb_labels - 1 do
-		Hashtbl.add index_of_actions labels.(i) i;
+	(* The array of actions ; index -> action name *)
+	let actions : action_name array = Array.of_list action_names in
+	(* A (constant) hash table 'action name -> index' *)
+	let index_of_actions = Hashtbl.create nb_actions in
+	for i = 0 to nb_actions - 1 do
+		Hashtbl.add index_of_actions actions.(i) i;
 	done;
 
 	(* The array of variables names ; index -> variable name *)
 	let variables = Array.of_list variable_names in
 	(* A (constant) hash table 'variable name -> index' *)
-	let index_of_variables = Hashtbl.create nb_variables in
+	let index_of_variables : (Automaton.variable_name, Automaton.variable_index) Hashtbl.t = Hashtbl.create nb_variables in
 	for i = 0 to nb_variables - 1 do
 		Hashtbl.add index_of_variables variables.(i) i;
 	done;
@@ -2897,9 +4192,9 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	let type_of_variables = fun variable_index -> type_of_variables.(variable_index) in
 
 	(* Create the lists of different variables *)
-	let parameters = list_of_interval first_parameter_index (first_clock_index - 1) in
-	let clocks     = list_of_interval first_clock_index (first_discrete_index - 1) in
-	let discrete   = list_of_interval first_discrete_index (nb_variables - 1) in
+	let (parameters : parameter_index list)	= list_of_interval first_parameter_index (first_clock_index - 1) in
+	let (clocks : clock_index list)			= list_of_interval first_clock_index (first_discrete_index - 1) in
+	let (discrete : discrete_index list)	= list_of_interval first_discrete_index (nb_variables - 1) in
 
 	(* Create the type check functions *)
 	let is_clock = (fun variable_index -> try (type_of_variables variable_index = Var_type_clock) with Invalid_argument _ ->  false) in
@@ -2921,14 +4216,14 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 		print_message Verbose_high ("\n*** Array of automata names:");
 		debug_print_array Verbose_high array_of_automata_names;
 
-		(* Labels *)
+		(* Actions *)
 		print_message Verbose_high ("\n*** Array of declared synchronization action names:");
-		debug_print_array Verbose_high labels;
+		debug_print_array Verbose_high actions;
 
 		(* Variables *)
 		print_message Verbose_total ("\n*** Variable names:");
 		Array.iteri (fun i e ->
-			print_message Verbose_total ((string_of_int i) ^ " -> " ^ e ^ " : " ^ (string_of_var_type (type_of_variables i)))
+			print_message Verbose_total ((string_of_int i) ^ " -> " ^ e ^ " : " ^ (ModelPrinter.string_of_var_type (type_of_variables i)))
 		) variables;
 	);
 
@@ -2937,18 +4232,23 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* Get all the locations *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check that all the location names of an automaton are different *)
-	if not (all_locations_different parsed_automata) then raise InvalidModel;
+	if not (all_locations_different parsed_model.automata) then raise InvalidModel;
 
 	(* Get all the locations for each automaton: automaton_index -> location_index -> location_name *)
-	let array_of_location_names = make_locations_per_automaton index_of_automata parsed_automata nb_automata in
+	let (array_of_location_names : location_name array array) = make_locations_per_automaton index_of_automata parsed_model.automata nb_automata in
 	(* Add the observer locations *)
 	begin
-	match observer_automaton with
+	match observer_automaton_index_option with
 		| None -> ()
 			(*** WARNING: we assume here that observer automaton is the last one ! ***)
 		| Some automaton_index ->
+			(* Get the property *)
+			let parsed_property = match parsed_property_option with
+				| None -> raise (InternalError "A property must be defined at this point since we have an observer automaton")
+				| Some parsed_property -> parsed_property
+			in
 			print_message Verbose_high ("Adding the observer locations.");
-			array_of_location_names.(automaton_index) <- ObserverPatterns.get_locations parsed_property_definition
+			array_of_location_names.(automaton_index) <- ObserverPatterns.get_locations parsed_property
 	end;
 
 	(* A (constant) array of hash tables 'automaton_index -> location_name -> location_index' *)
@@ -2967,9 +4267,15 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 		array_of_locations_per_automaton.(automaton_index) <-
 		Array.to_list (Array.mapi (fun location_index _ -> location_index) array_of_location_names.(automaton_index));
 	done;
-	let locations_per_automaton = fun automaton_index -> array_of_locations_per_automaton.(automaton_index) in
+	let (locations_per_automaton : automaton_index -> location_index list) = fun automaton_index -> array_of_locations_per_automaton.(automaton_index) in
+	
 	(* Create the access function returning a location name *)
-	let location_names = fun automaton_index location_index -> array_of_location_names.(automaton_index).(location_index) in
+	let location_names = fun automaton_index location_index ->
+		(* Add a safety mechanism *)
+		try(
+			array_of_location_names.(automaton_index).(location_index)
+		) with Invalid_argument msg -> raise (InternalError ("Location name of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in `location_names` function. Additional details: `" ^ msg ^ "`"))
+	in
 
 
 	(* Debug print *)
@@ -2987,10 +4293,36 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Create useful parsing structure, used in subsequent functions *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	
+	let useful_parsing_model_information = {
+		actions						= actions;
+		array_of_location_names		= array_of_location_names;
+		automata_names				= automata_names;
+		automata					= automata;
+		constants					= constants;
+		discrete					= discrete;
+		index_of_actions			= index_of_actions;
+		index_of_automata			= index_of_automata;
+		index_of_locations			= index_of_locations;
+		index_of_variables			= index_of_variables;
+		nb_clocks					= nb_clocks;
+		nb_parameters				= nb_parameters;
+		parameter_names				= parameter_names;
+		removed_action_names		= removed_action_names;
+		type_of_variables			= type_of_variables;
+		variable_names				= variable_names;
+		variables					= variables;
+		removed_variable_names		= removed_variable_names;
+	} in
+
+
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check the automata *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Checking automata…");
-	let well_formed_automata = check_automata index_of_variables type_of_variables variable_names removed_variable_names index_of_automata array_of_location_names constants parsed_automata in
+	let well_formed_automata = check_automata useful_parsing_model_information parsed_model.automata in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3007,63 +4339,23 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	print_message Verbose_high ("*** Checking init definition…");
 	(* Get pairs for the initialisation of the discrete variables, and check the init definition *)
 
-	let init_discrete_pairs, well_formed_init =
-		check_init discrete variable_names removed_variable_names constants index_of_variables type_of_variables automata automata_names index_of_automata array_of_location_names parsed_init_definition observer_automaton in
+	let init_discrete_pairs, well_formed_init = check_init useful_parsing_model_information parsed_model.init_definition observer_automaton_index_option in
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Check projection definition *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let well_formed_projection = check_projection_definition parameters_names parsed_projection_definition in
+	let well_formed_projection = match parsed_property_option with
+		| None -> true
+		| Some parsed_property -> check_projection_definition useful_parsing_model_information parsed_property.projection
+	in
 
-
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Check optimization definition *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let well_formed_optimization = check_optimization parameters_names parsed_optimization_definition in
-
-
-
-
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Check property definition *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** WARNING: might be a problem if the check_automata test fails ***)
-	let property, well_formed_property =
-		check_and_convert_property index_of_variables type_of_variables discrete variable_names constants index_of_actions index_of_automata index_of_locations parsed_property_definition in
-
-
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Check polyhedra definition in (optional) carto mode *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let well_formed_carto = ref true in
-
-
-
-	(*** TODO!!! reintroduce differently ***)
-(*	let parsed_constraints , (p1_min , p1_max) , (p2_min , p2_max)  = parsed_carto_definition in
-	let carto_linear_constraints = List.map (fun (parsed_convex_predicate , tile_nature) ->
-		(* Check well-formedness *)
-		if all_variables_defined_in_convex_predicate variable_names constants parsed_convex_predicate then(
-			(* Convert to a AbstractModel.linear_constraint *)
-			LinearConstraint.cast_p_of_pxd_linear_constraint (linear_constraint_of_convex_predicate index_of_variables constants parsed_convex_predicate) true
-			,
-			(* Convert the tile nature *)
-			convert_tile_nature tile_nature
-		)else(
-			(* Set well-formedness to false *)
-			well_formed_carto := false;
-			(* Return anything *)
-			LinearConstraint.p_false_constraint () , AbstractModel.Unknown
-		)
-	) parsed_constraints in*)
-	(*** TODO!!! reintroduce differently ***)
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* exit if not well formed *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	if not (check_no_unassigned_constants && well_formed_automata && well_formed_property && well_formed_projection && well_formed_optimization && well_formed_init && !well_formed_carto)
+	if not (well_formed_projection && well_formed_init)
 		then raise InvalidModel;
 
 	print_message Verbose_medium ("Model syntax successfully checked.");
@@ -3074,51 +4366,37 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Building automata…");
 	(* Get all the possible actions for every location of every automaton *)
-	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_stopwatches, transitions, nosync_obs =
-		make_automata index_of_variables constants index_of_automata index_of_locations labels index_of_actions (*removed_variable_names *)removed_synclab_names parsed_automata (observer_automaton != None) in
+	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_stopwatches, flow_array, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option != None) in
+	
 	let nb_actions = List.length actions in
+	
+	(* Print some information *)
+	print_message Verbose_high ("The model contains " ^ (string_of_int nb_actions) ^ " action" ^ (s_of_int nb_actions) ^ ".");
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Get the observer information here *)
+	(* Create the abstract property from the parsed property *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	let observer_structure, nb_transitions_for_observer, correctness_condition, initial_observer_constraint =
-	match observer_automaton with
-	| None -> print_message Verbose_total ("*** (No observer)");
-		(* Still check the case of non-reachability user-defined property *)
-		begin
-		match property with
-			| Unreachable_locations unreachable_global_location_list -> None, 0, Some (Unreachable unreachable_global_location_list), None
-			| _ -> None, 0, None, None
-		end
-	| Some observer_id ->
-		print_message Verbose_low ("*** Generating the observer…");
-		(* Get the silent action index for the observer *)
-		let nosync_obs = match nosync_obs with
-			| Some nosync_obs -> nosync_obs
-			| None -> raise (InternalError ("An observer action should have been defined."))
-		in
-		(* Get the local clock for the observer *)
-		(*** WARNING: quite a HACK, here ***)
-		let clock_obs = nb_parameters + nb_clocks - 1 in
-		(* Get the info from the observer pattern *)
-		let observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions, initial_observer_constraint, correctness_condition =
-			ObserverPatterns.get_automaton nb_actions observer_id nosync_obs clock_obs property in
-
-		(* Return the structure and the correctness_condition *)
-		Some (observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions),
-		((* Iterate on locations *)
-			Array.fold_left (fun nb_transitions_for_locations transitions_for_this_location ->
-				Array.fold_left (fun nb_transitions_for_actions transitions_for_this_action ->
-				nb_transitions_for_actions + (List.length transitions_for_this_action)
-				) nb_transitions_for_locations transitions_for_this_location
-			) 0 observer_transitions
-		),
-		Some correctness_condition,
-		initial_observer_constraint
+	
+	(* We may need to create additional structures for the observer, if any *)
+	
+	let abstract_property_option, converted_observer_structure_option = convert_property_option useful_parsing_model_information nb_actions observer_automaton_index_option observer_nosync_index_option parsed_property_option in
+	
+	(* Convert some variables to catch up with older code below *)
+	let observer_structure_option, nb_transitions_for_observer, initial_observer_constraint_option = match converted_observer_structure_option with
+		| None -> None, 0, None
+		| Some converted_observer_structure ->
+			Some converted_observer_structure.observer_structure,
+			converted_observer_structure.nb_transitions_for_observer,
+			converted_observer_structure.initial_observer_constraint_option
 	in
+	
+	
+
+
 
 	
+
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Convert the transitions to their final form *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3148,29 +4426,36 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* Add the observer structure to the automata *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	begin
-	match observer_automaton with
+	match observer_automaton_index_option with
 	| None -> ()
 	| Some observer_id ->
 		(* Get the info from the observer pattern *)
 		begin
-		match observer_structure with
+		match observer_structure_option with
 		| None -> raise (InternalError ("No observer structure saved although it should have been set at that point"))
+		
+		(*** TODO: create a structure !!! ***)
+		
 		| Some (observer_actions, observer_actions_per_location, observer_location_urgency, observer_invariants, observer_transitions) ->
 			print_message Verbose_high ("*** Adding observer data to automata…");
 			(* Retrieve the number of locations of the observer *)
 			let nb_locations = Array.length observer_actions_per_location in
 			(* Update actions per automaton *)
-			actions_per_automaton.(observer_id) <- observer_actions;
+			actions_per_automaton.(observer_id)	<- observer_actions;
 			(* Update actions per location *)
-			actions_per_location.(observer_id) <- observer_actions_per_location;
+			actions_per_location.(observer_id)	<- observer_actions_per_location;
 			(* Update urgency *)
-			location_urgency.(observer_id) <- observer_location_urgency;
+			location_urgency.(observer_id)		<- observer_location_urgency;
 			(* Create the array of accepting locations for this automaton (for now: all non accepting) *)
-			location_acceptance.(observer_id) <- Array.make nb_locations Location_nonaccepting;
+			location_acceptance.(observer_id)	<- Array.make nb_locations Location_nonaccepting;
 			(* Update invariants *)
-			invariants.(observer_id) <- observer_invariants;
+			invariants.(observer_id)			<- observer_invariants;
 			(* Update costs (no costs in observers) *)
-			costs.(observer_id) <- Array.make nb_locations None;
+			costs.(observer_id)					<- Array.make nb_locations None;
+			(* Update stopwatches (no stopwatches in observers) *)
+			stopwatches_array.(observer_id)		<- Array.make nb_locations [];
+			(* Update stopwatches (no stopwatches in observers) *)
+			flow_array.(observer_id)			<- Array.make nb_locations [];
 			
 			(* Update transitions *)
 			
@@ -3237,29 +4522,108 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	done;
 
 	(* Create the functional representation *)
-	let variable_names = fun i -> array_of_variable_names.(i) in
+	let variable_names = fun variable_index ->
+		(* Add a safety mechanism *)
+		try(
+			array_of_variable_names.(variable_index) 
+		) with Invalid_argument msg -> raise (InternalError ("Could not find name of variable `" ^ (string_of_int variable_index) ^ "` in function `variable_names`. Additional details: `" ^ msg ^ "`"))
+	in
+
 	(* Create the functional representation for action types *)
-	let action_types = fun action_index -> action_types.(action_index) in
+	let action_types = fun action_index ->
+		(* Add a safety mechanism *)
+		try(
+			action_types.(action_index)
+		) with Invalid_argument msg -> raise (InternalError ("Could not find type of action `" ^ (string_of_int action_index) ^ "` in function `action_types`. Additional details: `" ^ msg ^ "`"))
+	in
+	
 	(* Create the functional representation for the actions of every automaton *)
-	let actions_per_automaton = fun automaton_index -> actions_per_automaton.(automaton_index) in
+	let actions_per_automaton = fun automaton_index ->
+		(* Add a safety mechanism *)
+		try(
+			actions_per_automaton.(automaton_index)
+		) with Invalid_argument msg -> raise (InternalError ("Could not find list of actions for automaton of index `" ^ (string_of_int automaton_index) ^ "` in function `actions_per_automaton`. Additional details: `" ^ msg ^ "`"))
+	in
+	
 	(* Create the functional representation for the actions of every location of every automaton *)
-	let actions_per_location = fun automaton_index location_index -> actions_per_location.(automaton_index).(location_index) in
+	let actions_per_location = fun automaton_index location_index ->
+		(* Add a safety mechanism *)
+		try(
+			actions_per_location.(automaton_index).(location_index)
+		) with Invalid_argument msg -> raise (InternalError ("Could not find list of actions for automaton of index `" ^ (string_of_int automaton_index) ^ "` and location of index `" ^ (string_of_int location_index) ^ "` in function `actions_per_location`. Additional details: `" ^ msg ^ "`"))
+	in
+	
 	(* Invariants *)
-	let invariants = fun automaton_index location_index -> invariants.(automaton_index).(location_index) in
+	let invariants = fun automaton_index location_index ->
+		(* Add a safety mechanism *)
+		try(
+			invariants.(automaton_index).(location_index)
+		) with Invalid_argument msg -> raise (InternalError ("Could not find invariant for automaton of index `" ^ (string_of_int automaton_index) ^ "` and location of index `" ^ (string_of_int location_index) ^ "` in function `invariants`. Additional details: `" ^ msg ^ "`"))
+	in
+	
 	(* Accepting locations *)
-	let is_accepting = fun automaton_index location_index -> location_acceptance.(automaton_index).(location_index) = Location_accepting in
+	let is_accepting = fun automaton_index location_index ->
+		(* Add a safety mechanism *)
+		try(
+			location_acceptance.(automaton_index).(location_index) = Location_accepting
+		) with Invalid_argument msg -> raise (InternalError ("Acceptance of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `is_accepting`. Additional details: `" ^ msg ^ "`"))
+	in
+	
 	(* Urgency *)
-	let is_urgent = fun automaton_index location_index -> location_urgency.(automaton_index).(location_index) = Location_urgent in
+	let is_urgent = fun automaton_index location_index ->
+		(* Add a safety mechanism *)
+		try(
+			location_urgency.(automaton_index).(location_index) = Location_urgent
+		) with Invalid_argument msg -> raise (InternalError ("Urgency of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `is_urgent`. Additional details: `" ^ msg ^ "`"))
+	in
+	
 	(* Costs *)
-	let costs = fun automaton_index location_index -> costs.(automaton_index).(location_index) in
+	let costs = fun automaton_index location_index ->
+		(* Add a safety mechanism *)
+		try(
+			costs.(automaton_index).(location_index)
+		) with Invalid_argument msg -> raise (InternalError ("Cost of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `costs`. Additional details: `" ^ msg ^ "`"))
+	in
+	
 	(* Stopwatches *)
-	let stopwatches = (fun automaton_index location_index -> stopwatches_array.(automaton_index).(location_index)) in
+	let stopwatches = fun automaton_index location_index ->
+		(* Add a safety mechanism *)
+		try(
+			stopwatches_array.(automaton_index).(location_index)
+		) with Invalid_argument msg -> raise (InternalError ("Clocks stopped at location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `stopwatches`. Additional details: `" ^ msg ^ "`"))
+	in
+	
+	(* Flow *)
+	let flow = fun automaton_index location_index ->
+		(* Add a safety mechanism *)
+		try(
+			flow_array.(automaton_index).(location_index)
+		) with Invalid_argument msg -> raise (InternalError ("List of flows at location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `flow`. Additional details: `" ^ msg ^ "`"))
+	in
+	
 	(* Transitions *)
-	let transitions = fun automaton_index location_index action_index -> transitions.(automaton_index).(location_index).(action_index) in
+	let transitions = fun automaton_index location_index action_index ->
+		(* Add a safety mechanism *)
+		try(
+			transitions.(automaton_index).(location_index).(action_index)
+		) with Invalid_argument msg -> raise (InternalError ("Transitions of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` via action of index `" ^ (string_of_int action_index) ^ "` not found in function `transitions`. Additional details: `" ^ msg ^ "`"))
+	in
+	
 	(* Transition description *)
-	let transitions_description = fun transition_index -> transitions_description.(transition_index) in
+	let transitions_description = fun transition_index ->
+		(* Add a safety mechanism *)
+		try(
+			transitions_description.(transition_index)
+		) with Invalid_argument msg -> raise (InternalError ("Description of transition of index `" ^ (string_of_int transition_index) ^ "` not found in function `transitions_description`. Additional details: `" ^ msg ^ "`"))
+	in
+	
 	(* Automaton of transition *)
-	let automaton_of_transition = fun transition_index -> automaton_of_transition.(transition_index) in
+	let automaton_of_transition = fun transition_index ->
+		(* Add a safety mechanism *)
+		try(
+			automaton_of_transition.(transition_index)
+		) with Invalid_argument msg -> raise (InternalError ("Automaton of transition of index `" ^ (string_of_int transition_index) ^ "` not found in function `automaton_of_transition`. Additional details: `" ^ msg ^ "`"))
+	in
 	
 	(* Actions *)
 	let action_names = fun action_index ->
@@ -3294,10 +4658,6 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	print_message Verbose_total ("*** Building invariants…");
 	let invariants = convert_invariants index_of_variables constants invariants in*)
 
-	(* Convert the stopwatches *)
-(* 	print_message Verbose_total ("*** Building stopwatches…"); *)
-(*	let stopwatches_fun = (fun automaton_index location_index -> stopwatches.(automaton_index).(location_index)) in*)
-
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Handling the special reset clock *)
@@ -3315,13 +4675,13 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	in
 
 	(* Print metrics if verbose low or in any case in mode translation *)
-	if verbose_mode_greater Verbose_low || options#imitator_mode = Translation then(
+	if verbose_mode_greater Verbose_low || (match options#imitator_mode with AbstractAlgorithm.Translation _ -> true | _ -> false) then(
 		print_message Verbose_standard (
 			(string_of_int nb_automata) ^ " automat" ^ (if nb_automata > 1 then "a" else "on")
 			^ ", "
 			^ (string_of_int nb_locations) ^ " location" ^ (s_of_int nb_locations) ^ ", "
 			^ (string_of_int nb_transitions) ^ " transition" ^ (s_of_int nb_transitions) ^ ", "
-			^ (string_of_int nb_labels) ^ " declared synchronization action" ^ (s_of_int nb_labels) ^ ", "
+			^ (string_of_int nb_actions) ^ " declared synchronization action" ^ (s_of_int nb_actions) ^ ", "
 			^ (string_of_int nb_clocks) ^ " clock variable" ^ (s_of_int nb_clocks) ^ ", "
 			^ (string_of_int nb_discrete) ^ " discrete variable" ^ (s_of_int nb_discrete) ^ ", "
 			^ (string_of_int nb_parameters) ^ " parameter" ^ (s_of_int nb_parameters) ^ ", "
@@ -3334,7 +4694,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Detect the strongly deterministic nature of the PTA *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** NOTE: strongly deterministic = for each PTA, for each location, for each VISIBLE (non-silent) action label, at most one outgoing transition with this action label ***)
+	(*** NOTE: strongly deterministic = for each PTA, for each location, for each VISIBLE (non-silent) action action, at most one outgoing transition with this action action ***)
 
 	(* Print some information *)
 	print_message Verbose_high ("*** Detecting the strongly-deterministic nature of the model…");
@@ -3360,7 +4720,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 				if List.length transitions_for_this_location > 1 then(
 					(* Write a message *)
 					if verbose_mode_greater Verbose_high then(
-						print_message Verbose_high ("This network of PTAs is not strongly deterministic: in automaton '" ^ (automata_names automaton_index) ^ "', in location '" ^ (location_names automaton_index location_index) ^ "', there are " ^ (string_of_int (List.length transitions_for_this_location)) ^ "outgoing transitions labeled with action '" ^ (action_names action_index) ^ "'.");
+						print_message Verbose_high ("This network of PTAs is not strongly deterministic: in automaton '" ^ (automata_names automaton_index) ^ "', in location '" ^ (location_names automaton_index location_index) ^ "', there are " ^ (string_of_int (List.length transitions_for_this_location)) ^ " outgoing transitions labeled with action '" ^ (action_names action_index) ^ "'.");
 					);
 
 					(* Update flag *)
@@ -3464,11 +4824,11 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	print_message Verbose_high ("*** Building initial state…");
 	
 	let (initial_location, initial_constraint) =
-		make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs parsed_init_definition in
+		make_initial_state index_of_automata array_of_location_names index_of_locations index_of_variables parameters removed_variable_names constants type_of_variables variable_names init_discrete_pairs parsed_model.init_definition in
 
 	(* Add the observer initial constraint *)
 	begin
-	match initial_observer_constraint with
+	match initial_observer_constraint_option with
 		| None -> ()
 		| Some c -> LinearConstraint.px_intersection_assign initial_constraint [c];
 	end;
@@ -3503,20 +4863,6 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 		print_message Verbose_medium ("Constraint X >= 0 ^ K0:");
 		print_message Verbose_medium (LinearConstraint.string_of_px_linear_constraint variable_names px_clocks_non_negative_and_initial_p_constraint);
 	);
-
-
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Convert the projection definition *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	print_message Verbose_total ("*** Building the projection definition…");
-	let projection = convert_projection_definition index_of_variables parsed_projection_definition in
-
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Convert the optimization definition *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	print_message Verbose_total ("*** Building the optimization definition…");
-	let optimization = convert_optimization_definition index_of_variables parsed_optimization_definition in
-
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3638,14 +4984,14 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* Debug print: special global clock *)
 	begin
 	match global_time_clock with
-		| Some name -> print_message Verbose_standard ("A global time clock '" ^ Constants.global_time_clock_name ^ "' has been detected.");
-		| None -> print_message Verbose_medium ("No global time clock '" ^ Constants.global_time_clock_name ^ "' detected.");
+		| Some name -> print_message Verbose_standard ("A global time clock `" ^ Constants.global_time_clock_name ^ "` has been detected.");
+		| None -> print_message Verbose_medium ("No global time clock `" ^ Constants.global_time_clock_name ^ "` detected.");
 	end;
 
 	
 	(* Debug print: strong determinism *)
 	if !strongly_deterministic then
-		print_message Verbose_standard ("This PTA is strongly deterministic.")
+		print_message Verbose_low ("This PTA is strongly deterministic.")
 	else
 		print_message Verbose_medium ("This PTA is not strongly deterministic.")
 	;
@@ -3653,21 +4999,11 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	
 	(* Debug print: silent transitions *)
 	if has_silent_actions then
-		print_message Verbose_low ("Silent actions detected.")
+		print_message Verbose_medium ("Silent actions detected.")
 	else
-		print_message Verbose_standard ("No silent action detected.")
+		print_message Verbose_low ("No silent action detected.")
 	;
 
-
-
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** HACK (big big hack): save some data structures to be used by the parsing and checking of additional file (pi0 or v0), if any ***)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	saved_index_of_variables	:= Some index_of_variables;
-	saved_nb_parameters			:= Some nb_parameters;
-	saved_parameters			:= Some parameters;
-	saved_parameters_names		:= Some parameters_names;
-	saved_variables				:= Some variables;
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -3684,7 +5020,7 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	nb_locations   = nb_locations;
 	nb_transitions = nb_transitions;
 
-	(* Is there any stopwatch in the model? *)
+	(* Is there any clock going at a rate <> 1 in the model? *)
 	has_stopwatches = has_stopwatches;
 	(* Is the model an L/U-PTA? *)
 	lu_status = lu_status;
@@ -3695,9 +5031,9 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 
 
 	(* The observer *)
-	observer_pta = observer_automaton;
+	observer_pta = observer_automaton_index_option;
 	is_observer = (fun automaton_index ->
-		match observer_automaton with
+		match observer_automaton_index_option with
 		| Some pta -> pta = automaton_index
 		| None -> false
 	);
@@ -3764,6 +5100,8 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	transitions = transitions;
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches = stopwatches;
+	(* The list of pairs (clock, NumConst.t) defining the flow of some clocks at each automaton and each location *)
+	flow = flow;
 	(* An array transition_index -> transition *)
 	transitions_description = transitions_description;
 	(* An array transition_index -> automaton_index *)
@@ -3780,302 +5118,11 @@ let abstract_model_of_parsing_structure options (with_special_reset_clock : bool
 	(* Initial constraint of the model projected onto P and all clocks non-negative *)
 	px_clocks_non_negative_and_initial_p_constraint = px_clocks_non_negative_and_initial_p_constraint;
 
-
-	(* Property defined by the user *)
-	user_property = property;
-	(* Property defined by the model *)
-	correctness_condition = correctness_condition;
-	(* List of parameters to project the result onto *)
-	projection = projection;
-	(* Parameter to be minimized or maximized *)
-	optimized_parameter = optimization;
-
-	(* Optional polyhedra *)
-(* 	carto = carto_linear_constraints , (p1_min , p1_max) , (p2_min , p2_max); *)
 	}
 
+	,
+	
+	abstract_property_option
 
 
 
-(************************************************************)
-(************************************************************)
-(** Pi0 conversion *)
-(************************************************************)
-(************************************************************)
-
-(*------------------------------------------------------------*)
-(* Check the pi0 w.r.t. the model parameters *)
-(*------------------------------------------------------------*)
-let check_pi0 pi0 parameters_names =
-  (* Compute the list of variable names *)
-  (**** TO OPTIMIZE: not tail recursvie ****)
-  let list_of_variables, _ = List.split pi0 in
-
-  (* Compute the multiply defined variables *)
-  let multiply_defined_variables = elements_existing_several_times list_of_variables in
-  (* Print an error for each of them *)
-  List.iter (fun variable_name -> print_error ("The parameter '" ^ variable_name ^ "' was assigned several times a valuation in pi0.")) multiply_defined_variables;
-
-  (*** TODO: only warns if it is always defined to the same value ***)
-
-  (* Check if the variables are all defined *)
-  let all_defined = List.fold_left
-      (fun all_defined variable_name ->
-         if List.mem variable_name list_of_variables then all_defined
-         else (
-           print_error ("The parameter '" ^ variable_name ^ "' was not assigned a valuation in pi0.");
-           false
-         )
-      )
-      true
-      parameters_names
-  in
-
-  (* Check if some defined variables are not parameters (and warn) *)
-  List.iter
-    (fun variable_name ->
-       if not (List.mem variable_name parameters_names) then (
-         print_warning ("'" ^ variable_name ^ "', which is assigned a valuation in pi0, is not a valid parameter name.")
-       )
-    )
-    list_of_variables
-  ;
-
-  (* If something went wrong: launch an error *)
-  (*	if multiply_defined_variables != [] || not all_defined
-    	then false else true*)
-  multiply_defined_variables = [] && all_defined
-
-
-
-(*------------------------------------------------------------*)
-(* Convert the parsed pi0 into a valid pi0 *)
-(*------------------------------------------------------------*)
-let make_pi0 parsed_pi0 variables nb_parameters =
-  let pi0 = new PVal.pval in
-  for i = 0 to nb_parameters - 1 do
-    let parameter_name = variables.(i) in
-    let value = try(
-      List.assoc parameter_name parsed_pi0
-    ) with Not_found ->
-      raise (InternalError ("The parameter name '" ^ parameter_name ^ "' was not found in pi0 although checks should have been performed before."))
-    in
-    pi0#set_value i value
-  done;
-  pi0
-
-
-(*------------------------------------------------------------*)
-(* Main function for pi0 parsing and converting *)
-(*------------------------------------------------------------*)
-let check_and_make_pi0 parsed_pi0 =
-  (* Print some information *)
-  print_message Verbose_total ("*** Building reference valuation…");
-
-  (*** HACK (big big hack): retrieve the structures saved at the end of the model parsing, and kept for efficiency ***)
-  let nb_parameters, parameters, parameters_names, variables =
-    match !saved_nb_parameters, !saved_parameters, !saved_parameters_names, !saved_variables with
-    | Some nb_parameters, Some parameters, Some parameters_names, Some variables -> nb_parameters, parameters, parameters_names, variables
-    | _ -> raise (InternalError("Saved data structures (nb_parameters, parameters_names, variables) not available when parsing reference valuation"))
-  in
-
-  (* Verification of the pi0 *)
-  if not (check_pi0 parsed_pi0 parameters_names) then raise InvalidPi0;
-
-  (* Construction of the pi0 *)
-  let pi0 = make_pi0 parsed_pi0 variables nb_parameters in
-
-  (* Print some information *)
-  print_message Verbose_medium ("\n*** Reference valuation pi0:");
-  List.iter (fun parameter ->
-      print_message Verbose_medium (
-        variables.(parameter) ^ " : " ^ (NumConst.string_of_numconst (pi0#get_value parameter))
-      )
-    ) parameters;
-
-  (* Return the valuation *)
-  pi0
-
-
-
-(************************************************************)
-(************************************************************)
-(** V0 conversion *)
-(************************************************************)
-(************************************************************)
-
-(*------------------------------------------------------------*)
-(* Check the V0 w.r.t. the model parameters *)
-(*------------------------------------------------------------*)
-let check_v0 parsed_v0 parameters_names =
-  (* Compute the list of variable names *)
-  let list_of_variables = List.map (fun (v, _, _) -> v) parsed_v0 in
-
-  (* Compute the multiply defined variables *)
-  let multiply_defined_variables = elements_existing_several_times list_of_variables in
-  (* Print an error for each of them *)
-  List.iter (fun variable_name -> print_error ("The parameter '" ^ variable_name ^ "' was assigned several times a valuation in v0.")) multiply_defined_variables;
-
-  (*** TODO: only warns if it is always defined to the same value ***)
-
-  (* Check if the variables are all defined *)
-  let all_defined = List.fold_left
-      (fun all_defined variable_name ->
-         if List.mem variable_name list_of_variables then all_defined
-         else (
-           print_error ("The parameter '" ^ variable_name ^ "' was not assigned a valuation in v0.");
-           false
-         )
-      )
-      true
-      parameters_names
-  in
-
-  (* Check that the intervals are not null *)
-  let all_intervals_ok = List.fold_left
-      (fun all_intervals_ok (variable_name, a, b) ->
-         if NumConst.le a b then all_intervals_ok
-         else (
-           print_error ("The interval [" ^ (NumConst.string_of_numconst a) ^ ", " ^ (NumConst.string_of_numconst b) ^ "] is null for parameter '" ^ variable_name ^ "' in v0.");
-           false
-         )
-      )
-      true
-      parsed_v0
-  in
-
-  (* Check if some defined variables are not parameters (and warn) *)
-  List.iter
-    (fun variable_name ->
-       if not (List.mem variable_name parameters_names) then (
-         print_warning ("'" ^ variable_name ^ "', which is assigned a valuation in v0, is not a valid parameter name.")
-       )
-    )
-    list_of_variables
-  ;
-
-  (* If something went wrong: launch an error *)
-  multiply_defined_variables = [] && all_defined && all_intervals_ok
-
-
-(*------------------------------------------------------------*)
-(* Convert the parsed v0 into a valid v0 *)
-(*------------------------------------------------------------*)
-let make_v0 parsed_v0 index_of_variables =
-  let v0 = new HyperRectangle.hyper_rectangle in
-  List.iter (fun (variable_name, a, b) ->
-      try
-        (* Get the variable index *)
-        let variable_index = Hashtbl.find index_of_variables variable_name in
-        (* Update the variable value *)
-        v0#set_min variable_index a;
-        v0#set_max variable_index b;
-      with Not_found ->
-        (* No problem: this must be an invalid parameter name (which is ignored) *)
-        ()
-        (* 			raise (InternalError ("The variable name '" ^ variable_name ^ "' was not found in the list of variables although checks should have been performed before.")) *)
-    ) parsed_v0;
-  v0
-
-
-(*------------------------------------------------------------*)
-(* Main function for v0 parsing and converting *)
-(*------------------------------------------------------------*)
-let check_and_make_v0 parsed_v0 =
-  (* Print some information *)
-  print_message Verbose_total ("*** Building reference hyper-rectangle…");
-
-  (*** HACK (big big hack): retrieve the structures saved at the end of the model parsing, and kept for efficiency ***)
-  let index_of_variables, nb_parameters, parameters_names, variables =
-    match !saved_index_of_variables, !saved_nb_parameters, !saved_parameters_names, !saved_variables with
-    | Some index_of_variables, Some nb_parameters, Some parameters_names, Some variables -> index_of_variables, nb_parameters, parameters_names, variables
-    | _ -> raise (InternalError("Saved data structures (index_of_variables, nb_parameters, parameters_names, variables) not available when parsing hyper-rectangle"))
-  in
-
-  (* Verification *)
-  if not (check_v0 parsed_v0 parameters_names) then raise InvalidV0;
-
-  (* Construction *)
-  let v0 = make_v0 parsed_v0 index_of_variables in
-
-  (* Print some information *)
-  print_message Verbose_medium ("\n*** Reference rectangle V0:");
-  for parameter_index = 0 to nb_parameters - 1 do
-    let min = v0#get_min parameter_index in
-    let max = v0#get_max parameter_index in
-    print_message Verbose_medium (
-      variables.(parameter_index) ^ " : [" ^ (NumConst.string_of_numconst min) ^ ", " ^ (NumConst.string_of_numconst max) ^ "]"
-    );
-  done;
-
-  (* Return the hyper-rectangle *)
-  v0
-
-
-
-(*
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Constuct the pi0 *)
-	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-
-	let (pi0 : AbstractModel.pi0), (v0 : AbstractModel.v0) =
-		match options#imitator_mode with
-		(* No pi0 / v0 *)
-		(*** BADPROG : should be an option !!! ***)
-		| Translation | State_space_exploration | NDFS_exploration | EF_synthesis | Parametric_deadlock_checking ->
-			(* Return blank values *)
-			(new PVal.pval)
-			,
-			(new HyperRectangle.hyper_rectangle)
-
-		(* IM : Pi0 *)
-		| Inverse_method ->
-			print_message Verbose_total ("*** Building reference valuation…");
-			(* Verification of the pi0 *)
-			if not (check_pi0 parsed_pi0 parameters_names) then raise InvalidPi0;
-			(* Construction of the pi0 *)
-			let pi0 = make_pi0 parsed_pi0 variables nb_parameters in
-			(* Return the pair *)
-			pi0
-			,
-			(new HyperRectangle.hyper_rectangle)
-
-		(* BC : V0 *)
-		| Cover_cartography | Learning_cartography | Shuffle_cartography | Random_cartography _ | RandomSeq_cartography _ | Border_cartography ->
-			print_message Verbose_total ("*** Building reference rectangle…");
-			(* Verification of the pi0 *)
-			if not (check_v0 parsed_v0 parameters_names) then raise InvalidV0;
-			(* Construction of the pi0 *)
-			let v0 = make_v0 parsed_v0 index_of_variables nb_parameters in
-			(* Return the pair *)
-			(new PVal.pval)
-			,
-			v0
-	in
-
-
-	(* Debut print: Pi0 / V0 *)
-	if verbose_mode_greater Verbose_medium then(
-		match options#imitator_mode with
-		| Inverse_method ->
-			print_message Verbose_medium ("\n*** Reference valuation pi0:");
-			List.iter (fun parameter ->
-				print_message Verbose_medium (
-					variables.(parameter) ^ " : " ^ (NumConst.string_of_numconst (pi0#get_value parameter))
-				)
-			) parameters;
-
-		| Cover_cartography | Border_cartography | Random_cartography _ ->
-			print_message Verbose_medium ("\n*** Reference rectangle V0:");
-			for parameter_index = 0 to nb_parameters - 1 do
-				let min = v0#get_min parameter_index in
-				let max = v0#get_max parameter_index in
-				print_message Verbose_medium (
-					variables.(parameter_index) ^ " : [" ^ (NumConst.string_of_numconst min) ^ ", " ^ (NumConst.string_of_numconst max) ^ "]"
-				);
-			done;
-
-		(* If not IM and not BC: no print *)
-		| _ -> ()
-	);
-	*)

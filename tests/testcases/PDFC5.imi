@@ -13,9 +13,9 @@
 
  *
  * Created         : 2016/02/12
- * Last modified   : 2019/07/22
+ * Last modified   : 2020/04/01
  *
- * IMITATOR version: 2.8
+ * IMITATOR version: 3
  ************************************************************)
  
 
@@ -36,14 +36,14 @@ var
 (************************************************************)
 synclabs: a;
 
-loc l1: while x1 <= 5 + p1 wait {}
+loc l1: invariant x1 <= 5 + p1
 	when x1 <= p2 sync a goto l2;
 	when x2 = p3 goto l3;
 
-loc l2: while True wait {}
+loc l2: invariant True
 	when True sync a goto l3;
 
-loc l3: while True wait {}
+loc l3: invariant True
 	when True sync a goto l2;
 
 end (* pta *)
@@ -74,12 +74,6 @@ init :=
 	& p3 >= 0
 ;
 
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[pta] = l2;
 
 
 (************************************************************)

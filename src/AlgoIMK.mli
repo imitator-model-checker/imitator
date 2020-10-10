@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: IMK algorithm [AS11]
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2019/06/13
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -22,7 +23,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoIMK :
+class algoIMK : PVal.pval ->
 	object inherit algoStateBased
 		(************************************************************)
 		(* Class variables *)
@@ -43,6 +44,14 @@ class algoIMK :
 		method run : unit -> Result.imitator_result
 		
 		
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(* Get the reference valuation *)
+		(*** HACK: for now, it is obtained from the property, stored in the Input module ***)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method get_reference_pval : PVal.pval
+
+	
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Checks a new state for pi0-compatibility .*)
 		(* constr            : new state constraint            *)

@@ -1,1 +1,26 @@
-C3_WORST=20..100 & b=10..50
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ *	IMITATOR Sched2.50.0.imi -mode EF -incl -output-cart -merge
+ *	IMITATOR Sched2.50.0.imi Sched2.50.0.pi0 -mode cover -PRP -incl -output-cart -merge
+ *
+ * Modeling of the uniprocessor Non-Preemptive Fixed-Priority scheduling of three periodic tasks
+ *
+ * Description     : Three periodic tasks run upon a uniprocessor by their fixed priorites, and the execution of a task cannot be preempted.
+ *		     The priority order: tau_1 > tau_2 > tau_3.
+ *		     Task periods T1 = a, T2 = 2a, T3 = 3a.
+ *		     Execution Times: C1 in [e=10, b], C2 in [c, d], C3 in [C3_BEST, C3_WORST]
+ * References      : "Integer Parameter Synthesis for Timed Automata" (2013) by A. Jovanovic, D. Lime and O.H. Roux; Section 6
+                     "Reachability Preservation Based Parameter Synthesis for Timed Automata" (2015) by Etienne Andre, Giuseppe Lipari, Hoang Gia Nguyen and Youcheng Sun; Sched2.50.0 
+ * Modeling        : Youcheng Sun
+ * Input by        : Youcheng Sun, Étienne André
+ *
+ * Created         : xxxx (< 2015/10/30)
+ * Last modified   : 2020/08/18
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+ 
+property := #synth BCcover(
+	C3_WORST=20..100 & b=10..50
+);

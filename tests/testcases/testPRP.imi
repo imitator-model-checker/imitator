@@ -13,9 +13,9 @@
 
  *
  * Created         : 2016/01/15
- * Last modified   : 2016/01/15
+ * Last modified   : 2020/04/10
  *
- * IMITATOR version: 2.7.4-working
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -35,37 +35,37 @@ var
 (************************************************************)
 (* synclabs: a; *)
 
-loc l1: while True wait {}
+loc l1: invariant True 
 	when True goto l2;
 	(* p2 >= 4 *)
-	when x >= 4 & y = p2 do {x' = 0, y' = 0} goto locBad1;
+	when x >= 4 & y = p2 do {x := 0, y := 0} goto locBad1;
 	(* p2 >= 5 *)
-	when x >= 5 & y = p2 do {x' = 0, y' = 0} goto infiniteLoop;
+	when x >= 5 & y = p2 do {x := 0, y := 0} goto infiniteLoop;
 
-loc l2: while True wait {}
+loc l2: invariant True 
 	(* p2 <= 1 *)
-	when x <= 1 & y = p2 do {x' = 0, y' = 0} goto l3;
+	when x <= 1 & y = p2 do {x := 0, y := 0} goto l3;
 	(* p1 >= p2 *)
-	when p1 >= x & y >= p2 do {x' = 0, y' = 0} goto l4;
+	when p1 >= x & y >= p2 do {x := 0, y := 0} goto l4;
 	(* p1 >= 3 *)
-	when x >= 3 & y = p1 do {x' = 0, y' = 0} goto locBad2;
+	when x >= 3 & y = p1 do {x := 0, y := 0} goto locBad2;
 
 (* Good infinite loop location *)
-loc l3: while x <= p1 wait {}
-	when x = p1 do {x' = 0, y' = 0} goto l3;
+loc l3: invariant x <= p1 
+	when x = p1 do {x := 0, y := 0} goto l3;
 
 (* Good deadlock location *)
-loc l4: while True wait {}
+loc l4: invariant True 
 
-loc locBad1: while True wait {}
+loc locBad1: invariant True 
 
-loc locBad2: while True wait {}
+loc locBad2: invariant True 
 	(* Go to infinite loop, but PRP shall not go there *)
-	when True do {x' = 0, y' = 0} goto infiniteLoop;
+	when True do {x := 0, y := 0} goto infiniteLoop;
 
 (* Simulate an infinite loop for IMITATOR (with some extrapolation, this loop could terminate, but then we could use another PTA gadget to simulate an infinite loop) *)
-loc infiniteLoop: while x <= 1 wait {}
-	when x = 1 do {x' = 0} goto infiniteLoop;
+loc infiniteLoop: invariant x <= 1 
+	when x = 1 do {x := 0} goto infiniteLoop;
 
 end (* pta *)
 
@@ -94,12 +94,6 @@ init :=
 	& p2 >= 0
 ;
 
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[pta] = locBad1 or loc[pta] = locBad2;
 
 
 (************************************************************)

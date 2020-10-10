@@ -1,0 +1,16 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ *        IMITATOR uniproc-fp-idle-sched-3tasks-2params.imi uniproc-fp-idle-sched-3tasks-2params.pi0 -mode cover -PRP  -incl -merge 
+ * Model derived from the "idle scheduler" in the SynCop 2014 paper with 3 tasks. 
+ * Tasks have implicit deadlines; that is, for a task,  its period and deadline are the same in the model.  
+ * Author: Youcheng Sun
+ * References: ''Toward Parametric Timed Interfaces for Real-Time Components'' (2014) by 
+ *                  Youcheng Sun, Giuseppe Lipari, Étienne André and Laurent Fribourg
+ *
+ * Date: 2020/08/18
+ * Last modified: 2020/08/18
+ * IMITATOR version: 3
+ ************************************************************)
+
+property := #synth AGnot(loc[OBS_dline] = dline_loc_miss);

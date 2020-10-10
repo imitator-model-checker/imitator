@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2019/07/18
- * Last modified   : 2019/07/18
+ * Last modified   : 2020/09/10
  *
- * IMITATOR version: 2.12
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -38,7 +38,7 @@ loc l1: invariant True
 	when x < 1 sync a do {x := 0} goto l1;
 	when x = 1 & x = p sync a do {x := 0} goto l2;
 
-accepting loc l2: invariant True
+(*accepting*) loc l2: invariant True
 	when x = 1 goto l2;
 
 end (* pta *)
@@ -66,13 +66,6 @@ init :=
 	& p >= 0
 ;
 
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-(*** NOTE: we use both the 'accepting' syntax (for NDFS) and the usual IMITATOR syntax for LoopSynth ***)
-property := unreachable loc[pta] = l2;
 
 
 (************************************************************)

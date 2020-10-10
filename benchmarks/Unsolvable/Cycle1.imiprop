@@ -1,0 +1,20 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Unsolvable benchmark for cycle synthesis
+ *
+ * Description     : Unsolvable benchmark for cycle synthesis. The tool cannot find the cycle because the generated clock constraints grow forever.
+ * Correctness     : Cycle
+ * Source          : Own work
+ * Author          : Jaco Van de Pol
+ * Modeling        : Jaco Van de Pol
+ * Input by        : Jaco Van de Pol, Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/08
+ * Last modified   : 2020/09/24
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+property := #synth Loop;

@@ -1,0 +1,20 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy benchmark for which the result is "p >= 0" but IMITATOR cannot find it because the accumulated constraints grow forever
+ *
+ * Description     : Toy benchmark for which the result is "p >= 0" but IMITATOR cannot find it because the accumulated constraints grow forever
+ * Correctness     : Reachability
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/09/24
+ * Last modified   : 2020/09/24
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+property := #synth EF(loc[pta] = lGoal);

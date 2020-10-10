@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Checks whether a PTA is a CUB-PTA and/or transform it into a CUB-PTA
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2019/07/09
+ * Last modified     : 2020/09/16
  *
  ************************************************************)
 
@@ -2034,7 +2035,6 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	let new_location_names_array = Array.make (model.nb_automata) (Array.make 0 "UNINITIALIZED") in
 	
 	(* Accepting locations in PTA: Array : automaton_index : -> (Array : location_index -> bool) *)
-	(*** TODO: not used, but should be! (the idea would be to set as accepting any location the equivalent of which was accepting in the original model) ***)
 	let new_accepting_array = Array.make (model.nb_automata) (Array.make 0 false) in
 
 	(* Urgency in PTA: Array : automaton_index : -> (Array : location_index -> bool) *)
@@ -3052,9 +3052,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	let location_name_of_location_index = Array.make new_nb_locations "UNINITIALIZED" in
 	
 	(* Create the structure location_index -> accepting (bool) *)
-	(*** NOTE LP: set all locations to be non-accepting ***)
-	(*** TODO ! ***)
-(* 	let accepting_of_location_index = Array.make new_nb_locations false in *)
+	let accepting_of_location_index = Array.make new_nb_locations false in
 
 	(* Create the structure location_index -> urgent (bool) *)
 	(*** NOTE: quite a hack, we set all locations to be urgent, and then all old locations will be erased to their former value; so new (initial) locations will automatically be urgent! ***)
@@ -3066,6 +3064,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Initialize the invariants for this PTA (initially all true) *)
 	(*** NOTE: would be better to first create to a dummy constraint, instead of creating a new p_true_constraint() for each cell, that will be overwritten anyway ***)
 	new_invariants_array.(automaton_index) <- Array.make new_nb_locations (LinearConstraint.pxd_true_constraint());
+	
 	
 
 
@@ -3093,12 +3092,14 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 			(* Hashtbl.add new_loc_index_tbl old_loc_index !current_location_index; *)
 			
 			(* Update the urgency *)
-			(* urgency_of_location_index.(!current_location_index) <- (model.is_urgent automaton_index old_loc_index); *)
 			old_locations_to_new_locations.(automaton_index).(old_loc_index) <- !current_location_index :: old_locations_to_new_locations.(automaton_index).(old_loc_index);
 			
 			(* TESTING INFORNATION IN new_loc_index_tbl *)
 
 			urgency_of_location_index.(!current_location_index) <- (model.is_urgent automaton_index old_loc_index);
+			
+			(* Update the acceptance: same as in the original automaton *)
+			accepting_of_location_index.(!current_location_index) <- (model.is_accepting automaton_index old_loc_index);
 			);
 		
 		(* Add the binding location_index , location_name to the new structure *)
@@ -3131,6 +3132,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 
 	(* 3a) Handle urgency *)
 	new_urgency_array.(automaton_index) <- urgency_of_location_index;
+
+	(* 3a') Handle acceptance *)
+	new_accepting_array.(automaton_index) <- urgency_of_location_index;
 
 	(* 3b) Handle initial location *)
 	(* Update the array of new initial location *)
@@ -3304,20 +3308,48 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		else model.automata_per_action action_index
 	in
 	
-	let new_invariants_function automaton_index location_index = new_invariants_array.(automaton_index).(location_index) in
+	let new_invariants_function automaton_index location_index =
+		(* Add a safety mechanism *)
+		try(
+			new_invariants_array.(automaton_index).(location_index)
+		) with Invalid_argument msg -> raise (InternalError ("Could not find invariant for automaton of index `" ^ (string_of_int automaton_index) ^ "` and location of index `" ^ (string_of_int location_index) ^ "` in function `new_invariants_function`. Additional details: `" ^ msg ^ "`"))
+	in
+	
+	let new_locations_per_automaton_function automaton_index =
+		(* Add a safety mechanism *)
+		try(
+			new_locations_per_automaton_array.(automaton_index)
+		) with Invalid_argument msg -> raise (InternalError ("Could not find list of locations for automaton of index `" ^ (string_of_int automaton_index) ^ "` in function `new_locations_per_automaton_function`. Additional details: `" ^ msg ^ "`"))
+	in
 	
 	
-	let new_locations_per_automaton_function automaton_index = new_locations_per_automaton_array.(automaton_index) in
+	let new_actions_per_location_function automaton_index location_index =
+		(* Add a safety mechanism *)
+		try(
+			new_actions_per_location_array.(automaton_index).(location_index)
+		) with Invalid_argument msg -> raise (InternalError ("Could not find list of actions for automaton of index `" ^ (string_of_int automaton_index) ^ "` and location of index `" ^ (string_of_int location_index) ^ "` in function `new_actions_per_location_function`. Additional details: `" ^ msg ^ "`"))
+	in
 	
+	let new_location_names_function automaton_index location_index =
+		(* Add a safety mechanism *)
+		try(
+			new_location_names_array.(automaton_index).(location_index)
+		) with Invalid_argument msg -> raise (InternalError ("Could not find location name for automaton of index `" ^ (string_of_int automaton_index) ^ "` and location of index `" ^ (string_of_int location_index) ^ "` in function `new_location_names_function`. Additional details: `" ^ msg ^ "`"))
+	in
 	
-	let new_actions_per_location_function automaton_index location_index = new_actions_per_location_array.(automaton_index).(location_index) in
+	let new_accepting_function automaton_index location_index =
+		(* Add a safety mechanism *)
+		try(
+			new_accepting_array.(automaton_index).(location_index)
+		) with Invalid_argument msg -> raise (InternalError ("Acceptance of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `new_accepting_function`. Additional details: `" ^ msg ^ "`"))
+	in
 	
-	
-	let new_location_names_function automaton_index location_index = new_location_names_array.(automaton_index).(location_index) in
-	
-	let new_accepting_function automaton_index location_index = new_accepting_array.(automaton_index).(location_index) in
-	
-	let new_urgency_function automaton_index location_index = new_urgency_array.(automaton_index).(location_index) in
+	let new_urgency_function automaton_index location_index =
+		(* Add a safety mechanism *)
+		try(
+			new_urgency_array.(automaton_index).(location_index)
+		) with Invalid_argument msg -> raise (InternalError ("Urgency of location of index `" ^ (string_of_int location_index) ^ "` in automaton of index `" ^ (string_of_int automaton_index) ^ "` not found in function `new_urgency_function`. Additional details: `" ^ msg ^ "`"))
+	in
 	
 
  	let new_initial_location =
@@ -3362,7 +3394,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 	(* Automaton of transition_index *)
 	let new_automaton_of_transition = DynArray.get automaton_of_transition in
 	
-	(* Transform the property *)
+(*	(* Transform the property *)
 	(*** NOTE! only support reachability properties for now ***)
 	let new_unreachable_locations =
 		match model.correctness_condition with
@@ -3432,7 +3464,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		*)
 		(* Other cases not supported (in the entire tool) *)
 		| _ -> raise (NotImplemented "Properties different from reachability using a single automaton and a single location are not supported yet in the CUB transformation")
-	in
+	in*)
 		
 	
 	(*------------------------------------------------------------*)
@@ -3643,6 +3675,10 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(*** TODO ***)
 		(*** NOTE: dummy function ***)
 		stopwatches = (fun _ _-> []);
+		(* The list of pairs (clock, NumConst.t) defining the flow of some clocks at each automaton and each location *)
+		(*** TODO ***)
+		(*** NOTE: dummy function ***)
+		flow = (fun _ _-> []);
 
 	
 		(* All clocks non-negative *)
@@ -3660,13 +3696,13 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		(* Property defined by the user *)
 		(*** TODO ***)
 		(*** WARNING: any property will be turned into an (equivalent) reachability property, i.e., the original user property is lost ***)
-		user_property = if new_unreachable_locations = [] then Noproperty else Unreachable_locations new_unreachable_locations;
+(* 		user_property = if new_unreachable_locations = [] then Noproperty else Unreachable_locations new_unreachable_locations; *)
 		(* Property defined by the model *)
-		correctness_condition = if new_unreachable_locations = [] then None else Some (Unreachable new_unreachable_locations);
+(* 		correctness_condition = if new_unreachable_locations = [] then None else Some (Unreachable new_unreachable_locations); *)
 		(* List of parameters to project the result onto *)
-		projection = model.projection;
+(* 		projection = model.projection; *)
 		(* Parameter to be minimized or maximized *)
-		optimized_parameter = model.optimized_parameter;
+(* 		optimized_parameter = model.optimized_parameter; *)
 	}
 	
 	in

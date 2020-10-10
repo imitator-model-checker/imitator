@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Random Behavioral Cartography with a maximum number of consecutive failed attempts to find a non-integer point not covered by any tile [AF10]
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/02
- * Last modified     : 2016/03/17
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -23,8 +24,7 @@ open AlgoCartoGeneric
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-(*** NOTE: this function cannot have max_tries as a parameter, as it it inherits algoCartoGeneric which has none ***)
-class algoBCRandom : (*int ->*)
+class algoBCRandom : HyperRectangle.hyper_rectangle -> NumConst.t -> int -> (PVal.pval -> AlgoStateBased.algoStateBased) -> tiles_storage ->
 	object inherit algoCartoGeneric
 		(************************************************************)
 		(* Class variables *)
@@ -35,11 +35,6 @@ class algoBCRandom : (*int ->*)
 		(* Class methods *)
 		(************************************************************)
 		method algorithm_name : string
-		
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Set the maximum number of tries (must be done right after creating the algorithm object!) *)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method set_max_tries : int -> unit
 		
 		method initialize_variables : unit
 		

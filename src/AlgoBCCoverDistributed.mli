@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: master-worker with point-based distribution of points. [ACE14,ACN15]
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/04
- * Last modified     : 2017/03/08
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -23,30 +24,15 @@ open AlgoCartoGeneric
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoBCCoverDistributed :
+class virtual algoBCCoverDistributed : HyperRectangle.hyper_rectangle -> NumConst.t -> (PVal.pval -> AlgoStateBased.algoStateBased) -> AlgoCartoGeneric.tiles_storage ->
 	object
 	inherit algoGeneric
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
+		(* The current algorithm instance *)
+		val mutable current_algo_instance : AlgoStateBased.algoStateBased
 
-
-		(************************************************************)
-		(* Class methods to simulate class parameters *)
-		(************************************************************)
-		
-		(* Sets the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-		method set_algo_instance_function : (unit -> AlgoStateBased.algoStateBased) -> unit
-
-		(* Get the function creating a new instance of the algorithm to call (typically IM or PRP) *)
-		method get_algo_instance_function : (unit -> AlgoStateBased.algoStateBased)
-
-		(* Set the tiles_manager type *)
-		method set_tiles_manager_type : tiles_storage -> unit
-		
-		(* Get the tiles_manager type *)
-		method get_tiles_manager_type : tiles_storage
-		
 		
 		(************************************************************)
 		(* Class methods *)

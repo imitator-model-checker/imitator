@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: subdomain. [ACN15]
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/03/24
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -177,9 +178,8 @@ let sliptLongestDimensionSubdomain (s : HyperRectangle.hyper_rectangle) =
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoBCCoverDistributedSubdomain =
-	object (self)
-	inherit AlgoBCCoverDistributed.algoBCCoverDistributed as super
+class virtual algoBCCoverDistributedSubdomain (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit AlgoBCCoverDistributed.algoBCCoverDistributed v0 step algo_instance_function tiles_manager_type as super
 	
 	
 	(************************************************************)
@@ -190,11 +190,6 @@ class virtual algoBCCoverDistributedSubdomain =
 	
 	(* Number of collaborators (including the coordinator) *)
 	val nb_collaborators = DistributedUtilities.get_nb_nodes ()
-	
-	(* The current algorithm instance *)
-	(*** NOTE: this initialiation is useless (and time consuming?), as a new instance will be overwritten when needed ***)
-(* 	val mutable current_bc_algo_instance : AlgoBCCover.algoBCCover = new AlgoBCCover.algoBCCover *)
-	
 	
 
 	
@@ -270,9 +265,6 @@ class virtual algoBCCoverDistributedSubdomain =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** WARNING: this function was originaly called with -1 for the number of collaborators ***)
 	method compute_initial_subdomains =
-		(* Get the v0 *)
-		let v0 = Input.get_v0() in
-		
 		(* Call generic method *)
 		self#compute_initial_subdomains_with v0 (nb_collaborators - 1)
 		

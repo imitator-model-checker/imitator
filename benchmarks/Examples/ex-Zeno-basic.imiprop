@@ -1,0 +1,14 @@
+(************************************************************
+ *                         IMITATOR
+ *
+ * Basic examples to study non-Zeno checking
+ *
+ * Author          : Étienne André
+ *
+ * Created         : 2020/08/14
+ * Last modified   : 2020/09/14
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+ 
+property := #synth NZCycle;

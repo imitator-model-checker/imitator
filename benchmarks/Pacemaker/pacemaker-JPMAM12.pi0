@@ -7,12 +7,13 @@
  * Zhihao Jiang, Miroslav Pajic, Salar Moarref, Rajeev Alur, Rahul Mangharam
  * TACAS 2014
  *
- * Author          : Etienne Andre
+ * Author          : Étienne André
  * Created         : 2015/02/25
- * Last modified   : 2015/02/25
- * IMITATOR version: 2.6.2
+ * Last modified   : 2020/08/18
+ * IMITATOR version: 3
  ************************************************************)
 
+property := #synth IM(
 &	TAVI		= 150
 &	TLRI		= 1000
 &	TPVARP		= 100
@@ -21,3 +22,4 @@
 &	TPVAB		= 50
 &	Aminwait	= 0 (*random value here !*)
 &	Amaxwait	= 1000 (*random value here !*)
+);

@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2016/10/21
- * Last modified   : 2016/10/21
+ * Last modified   : 2020/08/14
  *
- * IMITATOR version: 2.8
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -34,13 +34,13 @@ var
 (************************************************************)
 synclabs: ;
 
-loc l0: while True wait {}
+loc l0: invariant True
 	when x >= 2 & x <= a goto l1;
 	when x >= 0 goto l2;
 
-loc l1: while True wait {}
+loc l1: invariant True
 
-loc l2: while True wait {}
+loc l2: invariant True
 
 end (* pta *)
 

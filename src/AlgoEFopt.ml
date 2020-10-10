@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: "EF optimized" algorithm: minimization or minimization of a parameter valuation for which there exists a run leading to some states [ABPP19]
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2019/08/08
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -22,6 +23,7 @@ open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
+open AbstractProperty
 open Result
 open AlgoStateBased
 open Statistics
@@ -33,7 +35,7 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoEFopt =
+class virtual algoEFopt (state_predicate : AbstractProperty.state_predicate) (parameter_index : Automaton.parameter_index) =
 	object (self) inherit algoStateBased as super
 	
 	(************************************************************)
@@ -68,20 +70,7 @@ class virtual algoEFopt =
 	(* Shortcuts *)
 	(*------------------------------------------------------------*)
 	
-	(* Retrieve the parameter to be projected onto *)
-	val parameter_index = match (Input.get_model ()).optimized_parameter with
-		(* Shortcut for both algorithms *)
-		| Minimize parameter_index | Maximize parameter_index -> parameter_index
-		| _ -> raise (InternalError("A minimized parameter should be defined in the model to run EFmin"))
-		
 	val parameters_to_hide =
-		(* First retrieve the parameter index (OCaml does not let us use the 'parameter_index' variable *)
-		let parameter_index =
-		match (Input.get_model ()).optimized_parameter with
-		(* Shortcut for both algorithms *)
-		| Minimize parameter_index | Maximize parameter_index -> parameter_index
-		| _ -> raise (InternalError("A minimized parameter should be defined in the model to run EFmin"))
-		in
 			OCamlUtilities.list_remove_first_occurence parameter_index (Input.get_model ()).parameters
 	
 
@@ -151,19 +140,16 @@ class virtual algoEFopt =
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Compute the p-constraint of a state, projected onto the parameter to be optimized *)
+	(** Check if goal state *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private is_goal_state state_location =
+	method private is_goal_state state =
 		
 		(* Print some information *)
 		self#print_algo_message Verbose_total "Entering AlgoEFopt:is_goal_state…";
 		
-		(* Retrieve the correctness condition *)
-		match model.correctness_condition with
-		| Some (Unreachable unreachable_global_locations) ->
-			(* Check whether the current location matches one of the unreachable global locations *)
-			State.match_unreachable_global_locations unreachable_global_locations state_location
-		| _ -> raise (InternalError("A correctness property must be defined to perform EF-optimization. This should have been checked before."))
+		(* Check the state_predicate *)
+
+		State.match_state_predicate model.is_accepting state_predicate state
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -281,7 +267,7 @@ class virtual algoEFopt =
 			);
 			
 			(* If goal state, update the constraint *)
-			let is_goal_state = self#is_goal_state state_location in
+			let is_goal_state = self#is_goal_state state in
 			if is_goal_state then(
 				(* Compute the projection *)
 				let projected_constraint = self#project_constraint px_constraint in
@@ -367,7 +353,7 @@ class virtual algoEFopt =
 						discard := false;
 						
 						(* If goal location: update optimum! *)
-						if self#is_goal_state state_location then(
+						if self#is_goal_state state then(
 							(* Print some information *)
 							self#print_algo_message Verbose_medium ("This is a goal state: Update the optimum valuations");
 							
@@ -396,7 +382,7 @@ class virtual algoEFopt =
 			(* Otherwise: keep the state *)
 			)else(
 				(* If goal state, update the constraint *)
-				if self#is_goal_state state_location then(
+				if self#is_goal_state state then(
 				
 					(* Print some information *)
 					if verbose_mode_greater Verbose_medium then(
@@ -468,7 +454,7 @@ class virtual algoEFopt =
 		(* Only process if we have to *)
 		if keep_processing then(
 			(* Try to add the new state to the state space *)
-			let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
+			let addition_result = StateSpace.add_state state_space options#comparison_operator new_state in
 			
 			begin
 			match addition_result with

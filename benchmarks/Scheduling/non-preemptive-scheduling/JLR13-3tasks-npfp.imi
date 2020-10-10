@@ -15,9 +15,9 @@
  * Input by        : Youcheng Sun, Étienne André
  *
  * Created         : xxxx (< 2015/10/28)
- * Last modified   : 2018/09/07
+ * Last modified   : 2020/08/18
  *
- * IMITATOR version: 2.10.3
+ * IMITATOR version: 3
  ************************************************************)
  
 
@@ -128,7 +128,7 @@ loc x1W2W3R : invariant c3<=C3_WORST
     when True sync r1 goto error;
     when True sync r2 goto error;
 
-loc error : invariant True wait{}
+loc error : invariant True
 
 end
 
@@ -157,11 +157,6 @@ init :=
 	(*------------------------------------------------------------*)
 	& a >= C1_BEST & b >= C1_BEST & a <= 50 & b <= 50
 	;
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-property := unreachable loc[sched] = error;
 
 (************************************************************)
 (* The end *)

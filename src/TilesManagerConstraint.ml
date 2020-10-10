@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Concrete implementation of the tiles manager class to manage the tiles received in the cartography algorithms, using a single Result.good_or_bad_constraint
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/26
- * Last modified     : 2017/01/18
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -102,7 +103,7 @@ class tilesManagerConstraint =
 	(* Process the result of the cartography *)
 	(* If forced_coverage_option <> None, then the coverage is set to this argument; otherwise, it is computed as exepected (*** NOTE: used in Random to force the coverage to Unknown ***) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method process_result start_time nb_points_in_v0 nb_unsuccessful_points termination_status (forced_coverage_option : Result.bc_coverage option) =
+	method process_result start_time v0 nb_points_in_v0 nb_unsuccessful_points termination_status (forced_coverage_option : Result.bc_coverage option) =
 
 		(* Coverage is... *)
 		let coverage = match forced_coverage_option with
@@ -128,6 +129,9 @@ class tilesManagerConstraint =
 
 		(* Return result *)
 		Multiple_synthesis_result {
+			(* Parameter domain *)
+			parameter_domain	= v0;
+		
 			(* Number of points in V0 *)
 			size_v0				= nb_points_in_v0;
 			

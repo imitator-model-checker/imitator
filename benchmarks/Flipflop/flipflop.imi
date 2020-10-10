@@ -11,9 +11,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2007/11
- * Last modified   : 2018/08/16
+ * Last modified   : 2020/01/06
  *
- * IMITATOR version: 2.10
+ * IMITATOR version: 3.0
  ************************************************************)
 
 var 	s, ckG1, ckG2, ckG3, ckG4
@@ -379,15 +379,6 @@ init :=
 	& tSetup <= tLO
 	& tHold <= tHI
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-(* Not exactly the property that we would like! The real property is qUp and ckDown always occur, and qUp occurs before ckDown *)
-(* property := if qUp then eventually ckDown *)
-property := if ckDown then qUp has happened before;
 
 
 (************************************************************)

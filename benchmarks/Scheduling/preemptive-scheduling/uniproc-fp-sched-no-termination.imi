@@ -6,10 +6,11 @@
  * Author: Giuseppe Lipari
  * Date: January 2014
  * References: ''Toward Parametric Timed Interfaces for Real-Time Components'' (2014) by 
- *                  Youcheng Sun, Giuseppe Lipari, Etienne Andre and Lanrent Fribourg
+ *                  Youcheng Sun, Giuseppe Lipari, Étienne André and Laurent Fribourg
  *
- * Last modified: 2015/10/30
- * IMITATOR version: 2.7.3-working "Butter Guéméné" 
+ * Created: < 2015/10/30
+ * Last modified: 2020/08/18
+ * IMITATOR version: 3
  * Others: The analysis for this model will never terminate.
  ************************************************************)
 
@@ -21,108 +22,106 @@ var
 
 automaton Task_t1
 synclabs : t1_arr_event , t1_arr , t1_dis , t1_pre , t1_end , t1_miss;
-loc t1_loc_idle : while True wait {}
-    when True sync t1_arr_event do { t1_urgent' = 0 } goto t1_loc_act_event;
-loc t1_loc_act_event : while t1_urgent <= 0 wait {}
-    when t1_urgent = 0 sync t1_arr do { t1_c' = 0 , t1_d' = 0 , t1_inst' = 1 } goto t1_loc_act;
-loc t1_loc_act : while t1_d <= t1_arr_P stop { t1_c }
+loc t1_loc_idle : invariant True
+    when True sync t1_arr_event do { t1_urgent := 0 } goto t1_loc_act_event;
+loc t1_loc_act_event : invariant t1_urgent <= 0
+    when t1_urgent = 0 sync t1_arr do { t1_c := 0 , t1_d := 0 , t1_inst := 1 } goto t1_loc_act;
+loc t1_loc_act : invariant t1_d <= t1_arr_P stop { t1_c }
     when True sync t1_dis  goto t1_loc_exe;
     when t1_d  >=  t1_arr_P sync t1_miss  goto t1_loc_miss;
-    when True sync t1_arr_event do { t1_inst' = t1_inst+1 , t1_d' = 0 } goto t1_loc_act;
+    when True sync t1_arr_event do { t1_inst := t1_inst+1 , t1_d := 0 } goto t1_loc_act;
     when True sync t1_arr_event  goto t1_loc_act;
-loc t1_loc_exe : while t1_d <= t1_arr_P & t1_c <= 2 * t1_inst wait {}
+loc t1_loc_exe : invariant t1_d <= t1_arr_P & t1_c <= 2 * t1_inst
     when True sync t1_pre  goto t1_loc_act;
     when t1_d >= t1_arr_P & t1_c < 2 * t1_inst sync t1_miss  goto t1_loc_miss;
-    when True sync t1_arr_event do { t1_inst' = t1_inst+1 , t1_d' = 0 } goto t1_loc_exe;
+    when True sync t1_arr_event do { t1_inst := t1_inst+1 , t1_d := 0 } goto t1_loc_exe;
     when True sync t1_arr_event  goto t1_loc_exe;
     when t1_c = 2*t1_inst sync t1_end  goto t1_loc_idle;
-loc t1_loc_miss : while True wait {}
+loc t1_loc_miss : invariant True
 end
 
 
 
 automaton Periodic_t1_arr
 synclabs : t1_arr_event;
-loc t1_arr_loc_arr : while t1_arr_x<=t1_arr_P wait {}
-    when t1_arr_x=t1_arr_P sync t1_arr_event do { t1_arr_x'= 0 } goto t1_arr_loc_arr;
+loc t1_arr_loc_arr : invariant t1_arr_x<=t1_arr_P
+    when t1_arr_x=t1_arr_P sync t1_arr_event do { t1_arr_x :=  0 } goto t1_arr_loc_arr;
 end
 
 
 automaton Task_t2
 synclabs : t2_arr_event , t2_arr , t2_dis , t2_pre , t2_end , t2_miss;
-loc t2_loc_idle : while True wait {}
-    when True sync t2_arr_event do { t2_urgent' = 0 } goto t2_loc_act_event;
-loc t2_loc_act_event : while t2_urgent <= 0 wait {}
-    when t2_urgent = 0 sync t2_arr do { t2_c' = 0 , t2_d' = 0 , t2_inst' = 1 } goto t2_loc_act;
-loc t2_loc_act : while t2_d <= t2_arr_P stop { t2_c }
+loc t2_loc_idle : invariant True
+    when True sync t2_arr_event do { t2_urgent := 0 } goto t2_loc_act_event;
+loc t2_loc_act_event : invariant t2_urgent <= 0
+    when t2_urgent = 0 sync t2_arr do { t2_c := 0 , t2_d := 0 , t2_inst := 1 } goto t2_loc_act;
+loc t2_loc_act : invariant t2_d <= t2_arr_P stop { t2_c }
     when True sync t2_dis  goto t2_loc_exe;
     when t2_d  >=  t2_arr_P sync t2_miss  goto t2_loc_miss;
-    when True sync t2_arr_event do { t2_inst' = t2_inst+1 , t2_d' = 0 } goto t2_loc_act;
+    when True sync t2_arr_event do { t2_inst := t2_inst+1 , t2_d := 0 } goto t2_loc_act;
     when True sync t2_arr_event  goto t2_loc_act;
-loc t2_loc_exe : while t2_d <= t2_arr_P & t2_c <= 2 * t2_inst wait {}
+loc t2_loc_exe : invariant t2_d <= t2_arr_P & t2_c <= 2 * t2_inst
     when True sync t2_pre  goto t2_loc_act;
     when t2_d >= t2_arr_P & t2_c < 2 * t2_inst sync t2_miss  goto t2_loc_miss;
-    when True sync t2_arr_event do { t2_inst' = t2_inst+1 , t2_d' = 0 } goto t2_loc_exe;
+    when True sync t2_arr_event do { t2_inst := t2_inst+1 , t2_d := 0 } goto t2_loc_exe;
     when True sync t2_arr_event  goto t2_loc_exe;
     when t2_c = 2*t2_inst sync t2_end  goto t2_loc_idle;
-loc t2_loc_miss : while True wait {}
+loc t2_loc_miss : invariant True
 end
 
 
 
 automaton Periodic_t2_arr
 synclabs : t2_arr_event;
-loc t2_arr_loc_arr : while t2_arr_x<=t2_arr_P wait {}
-    when t2_arr_x=t2_arr_P sync t2_arr_event do { t2_arr_x'= 0 } goto t2_arr_loc_arr;
+loc t2_arr_loc_arr : invariant t2_arr_x<=t2_arr_P
+    when t2_arr_x=t2_arr_P sync t2_arr_event do { t2_arr_x :=  0 } goto t2_arr_loc_arr;
 end
 
 
 automaton sched_CPU1
 synclabs : t1_arr, t1_dis, t1_pre, t1_end, t2_arr, t2_dis, t2_pre, t2_end;
-loc CPU1_loc_ : while True wait {}
-    when True sync t1_arr do {CPU1_urgent' = 0} goto CPU1_loc_At1;
-    when True sync t2_arr do {CPU1_urgent' = 0} goto CPU1_loc_At2;
-loc CPU1_loc_At1 : while CPU1_urgent <= 0 wait
+loc CPU1_loc_ : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1;
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_At2;
+loc CPU1_loc_At1 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1;
-loc CPU1_loc_At2 : while CPU1_urgent <= 0 wait
+loc CPU1_loc_At2 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t2_dis goto CPU1_loc_Rt2;
 
-loc CPU1_loc_Rt2 : while True wait {}
-    when True sync t1_arr do {CPU1_urgent' = 0} goto CPU1_loc_At1Rt2;
-    when True sync t2_end do { CPU1_urgent' = 0 } goto CPU1_loc_Et2;
-loc CPU1_loc_Et2 : while CPU1_urgent <= 0 wait
+loc CPU1_loc_Rt2 : invariant True
+    when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt2;
+    when True sync t2_end do { CPU1_urgent := 0 } goto CPU1_loc_Et2;
+loc CPU1_loc_Et2 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0   goto CPU1_loc_;
-loc CPU1_loc_At1Rt2 : while CPU1_urgent <= 0 wait
+loc CPU1_loc_At1Rt2 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t2_pre goto CPU1_loc_At1Wt2;
-loc CPU1_loc_At1Wt2 : while CPU1_urgent <= 0 wait
+loc CPU1_loc_At1Wt2 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt2;
 
-loc CPU1_loc_Rt1 : while True wait {}
-    when True sync t2_arr do {CPU1_urgent' = 0} goto CPU1_loc_Rt1Wt2;
-    when True sync t1_end do { CPU1_urgent' = 0 } goto CPU1_loc_Et1;
-loc CPU1_loc_Et1 : while CPU1_urgent <= 0 wait
+loc CPU1_loc_Rt1 : invariant True
+    when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2;
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1;
+loc CPU1_loc_Et1 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0   goto CPU1_loc_;
 
-loc CPU1_loc_Rt1Wt2 : while True wait {}
-    when True sync t1_end do { CPU1_urgent' = 0 } goto CPU1_loc_Et1Wt2;
-loc CPU1_loc_Et1Wt2 : while CPU1_urgent <= 0 wait
+loc CPU1_loc_Rt1Wt2 : invariant True
+    when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt2;
+loc CPU1_loc_Et1Wt2 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t2_dis  goto CPU1_loc_Rt2;
 
-loc CPU1_loc_stop : while True wait {}
+loc CPU1_loc_stop : invariant True
 end
 
 
 
 automaton OBS_dline
 synclabs : t1_miss , t2_miss;
-loc dline_loc_nomiss : while True wait {}
-    when True sync t1_miss do { stop_flag' = 1 } goto dline_loc_miss;
-    when True sync t2_miss do { stop_flag' = 1 } goto dline_loc_miss;
-loc dline_loc_miss : while True wait {}
+loc dline_loc_nomiss : invariant True
+    when True sync t1_miss do { stop_flag := 1 } goto dline_loc_miss;
+    when True sync t2_miss do { stop_flag := 1 } goto dline_loc_miss;
+loc dline_loc_miss : invariant True
 end
 
-
-var init: region;
 
 init :=     loc[Task_t1] = t1_loc_idle &
     t1_urgent = 0 &    t1_c = 0 & t1_d = 0&
@@ -136,6 +135,13 @@ init :=     loc[Task_t1] = t1_loc_idle &
     CPU1_urgent = 0 &
     stop_flag = 0 &
     loc[OBS_dline] = dline_loc_nomiss &
+    
+    t1_arr_P >= 0 &
+    t2_arr_P >= 0 &
+    
     True;
     
-property := unreachable loc[OBS_dline] = dline_loc_miss
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

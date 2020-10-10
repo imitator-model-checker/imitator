@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: "EF min" algorithm: minimization of a parameter valuation for which there exists a run leading to some states [ABPP19]
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2018/08/16
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -33,8 +34,8 @@ open Statistics
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoEFmin =
-	object (self) inherit algoEFopt as super
+class algoEFmin (state_predicate : AbstractProperty.state_predicate) (parameter_index : Automaton.parameter_index) =
+	object (self) inherit algoEFopt state_predicate parameter_index as super
 	
 	(************************************************************)
 	(* Class variables *)

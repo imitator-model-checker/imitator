@@ -8,12 +8,12 @@
  * Source          : SMT-based Parameter Synthesis for L/U Automata, Michal Knapik and Wojciech Penczek
  * Author          : Michal Knapik and Wojciech Penczek
  * Modeling        : Michal Knapik and Wojciech Penczek
- * Input by        : Étienne André
+ * Input by        : Étienne André, Laure Petrucci
  *
  * Created         : 2015/09/18
- * Last modified   : 2015/09/23
+ * Last modified   : 2020/09/07
  *
- * IMITATOR version: 2.7.2
+ * IMITATOR version: 3.0
  ************************************************************)
 
 var
@@ -33,11 +33,11 @@ var
 (************************************************************)
 synclabs: ProdReset, Feed2;
 
-loc prodReady: while xprod <= d wait {}
-	when xprod >= c sync Feed2 do {xprod' = 0} goto prodWaiting;
+loc prodReady: invariant xprod <= d
+	when xprod >= c sync Feed2 do {xprod := 0} goto prodWaiting;
 
-loc prodWaiting: while xprod <= b wait {}
-	when xprod >= a sync ProdReset do {xprod' = 0} goto prodReady;
+loc prodWaiting: invariant xprod <= b
+	when xprod >= a sync ProdReset do {xprod := 0} goto prodReady;
 
 end (* Producer *)
 
@@ -48,11 +48,11 @@ end (* Producer *)
 (************************************************************)
 synclabs: ConsReset, Feed4;
 
-loc consReady: while xcons <= d wait {}
-	when xcons >= c sync Feed4 do {xcons' = 0} goto consWaiting;
+loc consReady: invariant xcons <= d
+	when xcons >= c sync Feed4 do {xcons := 0} goto consWaiting;
 
-accepting loc consWaiting: while xcons <= b wait {}
-	when xcons >= a sync ConsReset do {xcons' = 0} goto consReady;
+accepting loc consWaiting: invariant xcons <= b
+	when xcons >= a sync ConsReset do {xcons := 0} goto consReady;
 
 end (* Consumer *)
 
@@ -63,20 +63,20 @@ end (* Consumer *)
 (************************************************************)
 synclabs: Node1Process1, Node1Process2, Node1Process3, Feed2, Feed3;
 
-loc node1Ready: while xnode1 <= d wait {}
-	when xnode1 >= c sync Feed2 do {xnode1' = 0} goto intermediate1;
+loc node1Ready: invariant xnode1 <= d
+	when xnode1 >= c sync Feed2 do {xnode1 := 0} goto intermediate1;
 
-loc intermediate1: while xnode1 <= f wait {}
-	when xnode1 >= e sync Node1Process1 do {xnode1' = 0} goto intermediate2;
+loc intermediate1: invariant xnode1 <= f
+	when xnode1 >= e sync Node1Process1 do {xnode1 := 0} goto intermediate2;
 
-loc intermediate2: while xnode1 <= f wait {}
-	when xnode1 >= e sync Node1Process2 do {xnode1' = 0} goto intermediate3;
+loc intermediate2: invariant xnode1 <= f
+	when xnode1 >= e sync Node1Process2 do {xnode1 := 0} goto intermediate3;
 
-loc intermediate3: while xnode1 <= f wait {}
-	when xnode1 >= e sync Node1Process3 do {xnode1' = 0} goto send;
+loc intermediate3: invariant xnode1 <= f
+	when xnode1 >= e sync Node1Process3 do {xnode1 := 0} goto send;
 
-loc send: while xnode1 <= d wait {}
-	when xnode1 >= c sync Feed3 do {xnode1' = 0} goto node1Ready;
+loc send: invariant xnode1 <= d
+	when xnode1 >= c sync Feed3 do {xnode1 := 0} goto node1Ready;
 
 end (* Node1 *)
 
@@ -86,20 +86,20 @@ end (* Node1 *)
 (************************************************************)
 synclabs: Node2Process1, Node2Process2, Node2Process3, Feed3, Feed4;
 
-loc node2Ready: while xnode2 <= d wait {}
-	when xnode2 >= c sync Feed3 do {xnode2' = 0} goto intermediate1;
+loc node2Ready: invariant xnode2 <= d
+	when xnode2 >= c sync Feed3 do {xnode2 := 0} goto intermediate1;
 
-loc intermediate1: while xnode2 <= f wait {}
-	when xnode2 >= e sync Node2Process1 do {xnode2' = 0} goto intermediate2;
+loc intermediate1: invariant xnode2 <= f
+	when xnode2 >= e sync Node2Process1 do {xnode2 := 0} goto intermediate2;
 
-loc intermediate2: while xnode2 <= f wait {}
-	when xnode2 >= e sync Node2Process2 do {xnode2' = 0} goto intermediate3;
+loc intermediate2: invariant xnode2 <= f
+	when xnode2 >= e sync Node2Process2 do {xnode2 := 0} goto intermediate3;
 
-loc intermediate3: while xnode2 <= f wait {}
-	when xnode2 >= e sync Node2Process3 do {xnode2' = 0} goto send;
+loc intermediate3: invariant xnode2 <= f
+	when xnode2 >= e sync Node2Process3 do {xnode2 := 0} goto send;
 
-loc send: while xnode2 <= d wait {}
-	when xnode2 >= c sync Feed4 do {xnode2' = 0} goto node2Ready;
+loc send: invariant xnode2 <= d
+	when xnode2 >= c sync Feed4 do {xnode2 := 0} goto node2Ready;
 
 end (* Node2 *)
 

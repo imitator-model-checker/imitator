@@ -1,0 +1,2 @@
+property := #witness CycleThrough(accepting)
+

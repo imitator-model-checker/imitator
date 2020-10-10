@@ -1,0 +1,97 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Simple model to test observer patterns
+ *
+ * Description     : Simple model to test observer patterns "if a1 then eventually a2 within d", "everytime a1 then eventually a2 within d", and "everytime a1 then eventually a2 within d once before next"
+ * Correctness     : The pattern should be satisfied for the following parameter valuations:
+ *                   - pattern "if a1 then eventually a2 within p2"                        : p1 =/= 1 ^ p2 >= p1
+ *                   - pattern "everytime a1 then eventually a2 within p2"                 : (p1 < 2 ^ p1 =/= 1 ^ p2 >= p1) U (p1 >= 2 ^ p2 >= p1)
+ *                   - pattern "everytime a1 then eventually a2 within p2 once before next": (p1 < 2 ^ p1 =/= 1 ^ p2 >= p1) U (p1 \in [2, 4) ^ p2 >= p1 ^ p2 >= 3) U (p1 > 4 ^ p2 >= p1)
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/08/25
+ * Last modified   : 2020/08/25
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p1, p2
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a1, a2;
+
+loc l1: invariant True
+	(* I.e., p1 = 4 *)
+	when x = p1 & x = 4 sync a2 goto l2;
+
+	when True sync a1 do {x := 0} goto l3;
+
+	(* I.e., p1 = 1 *)
+	when x = p1 & x = 1 sync a1 goto l8;
+
+loc l2: invariant True
+
+loc l3: invariant x <= p1
+	when x = p1 sync a2 goto l4;
+	when x = 2 sync a2 do {x := 0} goto l5;
+
+loc l4: invariant True
+
+loc l5: invariant True
+	when True sync a1 do {x := 0} goto l6;
+
+loc l6: invariant x <= 3
+	(* I.e., p1 = 2 *)
+	when x = p1 & x = 0 sync a1 do {x := 0} goto l6;
+	when x = 3 sync a2 do {x := 0} goto l5;
+
+loc l8: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p1 >= 0
+	& p2 >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

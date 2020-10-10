@@ -3,6 +3,7 @@
  *                       IMITATOR
  *
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: main virtual class to explore the state space: only
  * defines post-related function, i.e., to compute the successor states of ONE
@@ -10,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2019/09/10
+ * Last modified     : 2020/09/28
  *
  ************************************************************)
 
@@ -22,7 +23,10 @@ open OCamlUtilities
 open Exceptions
 open ImitatorUtilities
 open Statistics
+open AbstractAlgorithm
 open AbstractModel
+open AbstractProperty
+open DiscreteExpressions
 open AlgoGeneric
 open State
 open Result
@@ -263,7 +267,7 @@ let predecessors_of_location_via_action (automaton_index : Automaton.automaton_i
 (************************************************************)
 
 
-
+(*
 (* Evaluate a discrete_arithmetic_expression using a discrete variable valuation *)
 (*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
 let evaluate_discrete_arithmetic_expression v =
@@ -290,9 +294,10 @@ let evaluate_discrete_arithmetic_expression v =
 	and evaluate_discrete_factor = function
 		| DF_variable discrete_index -> v discrete_index
 		| DF_constant discrete_value -> discrete_value
+		| DF_unary_min discrete_factor -> NumConst.neg (evaluate_discrete_factor discrete_factor)
 		| DF_expression discrete_arithmetic_expression -> evaluate_discrete_arithmetic_expression_rec discrete_arithmetic_expression
 	in
-	evaluate_discrete_arithmetic_expression_rec
+	evaluate_discrete_arithmetic_expression_rec*)
 
 
 
@@ -699,7 +704,7 @@ let compute_stopwatches (location : Location.global_location) : (Automaton.clock
 	(* If no stopwatches at all: just return the set of clocks *)
 	if not model.has_stopwatches then ([], model.clocks) else(
 		(* Hashtbl clock_id --> true if clock should be stopped by some automaton *)
-		let stopwatches_hash = Hashtbl.create (List.length model.clocks) in
+		let stopwatches_hashtable = Hashtbl.create (List.length model.clocks) in
 		let stopwatch_mode = ref false in
 		(* Update hash table *)
 		List.iter (fun automaton_index ->
@@ -711,7 +716,7 @@ let compute_stopwatches (location : Location.global_location) : (Automaton.clock
 			if stopped != [] then stopwatch_mode := true;
 			(* Add each clock *)
 			List.iter (fun stopwatch_id ->
-				Hashtbl.replace stopwatches_hash stopwatch_id true
+				Hashtbl.replace stopwatches_hashtable stopwatch_id true
 			) stopped;
 		) model.automata;
 		(* If there are no stopwatches then just return the set of clocks *)
@@ -719,7 +724,7 @@ let compute_stopwatches (location : Location.global_location) : (Automaton.clock
 			(* Computing the list of stopped clocks, and the list of elapsing clocks *)
 			List.fold_left (fun (stopped_clocks, elapsing_clocks) clock_id ->
 				(* Test if the clock should be stopped *)
-				if Hashtbl.mem stopwatches_hash clock_id then
+				if Hashtbl.mem stopwatches_hashtable clock_id then
 					clock_id :: stopped_clocks, elapsing_clocks
 				else
 					stopped_clocks, clock_id :: elapsing_clocks
@@ -728,55 +733,280 @@ let compute_stopwatches (location : Location.global_location) : (Automaton.clock
 	) (* if no stopwatch in the model *)
 
 
+(*------------------------------------------------------------*)
+(* Compute the list of clocks with their flow in a location   *)
+(* Returns a list of pairs (clock_index, flow)                *)
+(* Raises a warning whenever a clock is assigned to TWO different flows *)
+(*------------------------------------------------------------*)
+let compute_flows (location : Location.global_location) : ((Automaton.clock_index * NumConst.t) list) =
+	(* Retrieve the model *)
+	let model = Input.get_model() in
+
+	(* Hashtbl clock_id --> flow *)
+	let flows_hashtable = Hashtbl.create (List.length model.clocks) in
+	
+	(* Maintain a Boolean to see if any clock has a rate different from 1 *)
+	let flow_mode = ref false in
+	
+	(* Update hash table *)
+	List.iter (fun automaton_index ->
+		(* Get the current location *)
+		let location_index = Location.get_location location automaton_index in
+		
+		(* 1. Manage the list of stopped clocks *)
+		let stopped = model.stopwatches automaton_index location_index in
+		(* If list non null: we have flows <> 1 *)
+		if stopped != [] then flow_mode := true;
+		(* Add each clock *)
+		List.iter (fun stopwatch_id ->
+			Hashtbl.replace flows_hashtable stopwatch_id NumConst.zero
+		) stopped;
+		
+		(* 2. Manage the explicit flows *)
+		let flows = model.flow automaton_index location_index in
+		(* Add each clock *)
+		List.iter (fun (clock_id, flow_value) ->
+			(* If flow <> 1, update Boolean *)
+			if NumConst.neq flow_value NumConst.one then flow_mode := true;
+
+			(* Compare with previous value *)
+			try(
+				(* Get former value *)
+				let former_flow_value = Hashtbl.find flows_hashtable clock_id in
+				(* Compare *)
+				if NumConst.neq former_flow_value flow_value then(
+					
+					(*** TODO: a flag should be raised somewhere so that the result is said to be perhaps wrong! (or unspecified) ***)
+					
+					print_warning ("Clock `" ^ (model.variable_names clock_id) ^ "` is assigned to two different flow values at the same time (`" ^ (NumConst.string_of_numconst flow_value) ^ "` in location `" ^ (model.location_names automaton_index location_index) ^ "`, as well as `" ^ (NumConst.string_of_numconst former_flow_value) ^ "`). The behavior becomes unspecified!");
+				);
+				(* Do not add *)
+				()
+			) with Not_found ->(
+			(* Not found: not yet defined => add *)
+				Hashtbl.add flows_hashtable clock_id flow_value
+			);
+			
+		) flows;
+		
+	) model.automata;
+	
+	(* If there are no explicit flows then just return the set of clocks with flow 1 *)
+	if (not !flow_mode) then (List.map (fun clock_id -> clock_id, NumConst.one) model.clocks) else (
+		(* Computing the list of clocks with their flow *)
+		List.map (fun clock_id ->
+			(* Try to get the clock explicit flow *)
+			try(
+				(* Get value *)
+				let flow_value = Hashtbl.find flows_hashtable clock_id in
+				(* Return *)
+				clock_id, flow_value
+			) with Not_found ->
+				(* Absent: flow is 1 *)
+				clock_id, NumConst.one
+		) model.clocks
+	) (* if no explicit flow for this location *)
+
+
 
 (*------------------------------------------------------------*)
 (* Generic function to apply either time elapsing or time past to a constraint in a location *)
 (*------------------------------------------------------------*)
+
 type time_direction = Forward | Backward
+
+let string_of_time_direction = function
+	| Forward	-> "elapsing"
+	| Backward	-> "past"
+
+
+
+(*** WARNING: bad prog! Duplicate function with 2 different types ***)
+let pxd_create_inequalities_constant variables_constant =
+	(* Create the inequalities var = 0, for var in variables_constant *)
+	List.map (fun variable ->
+		(* Create a linear term *)
+		let linear_term = LinearConstraint.make_pxd_linear_term [(NumConst.one, variable)] NumConst.zero in
+		(* Create the inequality *)
+		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
+	) variables_constant
+
+(*** WARNING: bad prog! Duplicate function with 2 different types ***)
+let px_create_inequalities_constant variables_constant =
+	(* Create the inequalities var = 0, for var in variables_constant *)
+	List.map (fun variable ->
+		(* Create a linear term *)
+		let linear_term = LinearConstraint.make_px_linear_term [(NumConst.one, variable)] NumConst.zero in
+		(* Create the inequality *)
+		LinearConstraint.make_px_linear_inequality linear_term LinearConstraint.Op_eq
+	) variables_constant
+
+
+(* Generate a polyhedron for computing the time elapsing for (parametric) timed automata, i.e., without stopwatches nor flows. *)
+let generate_polyhedron_time_elapsing_pta time_direction variables_elapse variables_constant =
+	(* Create the inequalities var = 1, for var in variables_elapse *)
+	let inequalities_elapse = List.map (fun variable ->
+		(* Create a linear term of the form `var + (-1 | 1) = 0`, with `-1` for elapsing, or `1` for past *)
+		let linear_term = LinearConstraint.make_pxd_linear_term [(NumConst.one, variable)] (match time_direction with Forward -> NumConst.minus_one | Backward -> NumConst.one) in
+		(* Create the inequality *)
+		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
+	) variables_elapse in
+	
+	(* Create the inequalities `var = 0`, for var in variables_constant *)
+	let inequalities_constant = pxd_create_inequalities_constant variables_constant in
+	
+	(* Print some information *)
+	print_message Verbose_total ("Creating linear constraint for standard time elapsing…");
+	
+	(* Convert both sets of inequalities to a constraint *)
+	LinearConstraint.make_pxd_constraint (List.rev_append inequalities_elapse inequalities_constant)
+
+
+(*** HACK: should be an object!!! ***)
+(*** WARNING: won't work if NESTED analyses are performed! i.e., a AlgoStateBased calls another AlgoStateBased ***)
+(* Static polyhedron used for time elapsing computation, for "normal" PTAs, i.e., without stopwatches nor explicit flows *)
+let time_elapsing_polyhedron : LinearConstraint.pxd_linear_constraint option ref = ref None
+(* Static polyhedron used for time past computation, for "normal" PTAs, i.e., without stopwatches nor explicit flows *)
+let time_past_polyhedron : LinearConstraint.pxd_linear_constraint option ref = ref None
+
+
+(*** WARNING: bad prog! Duplicate function with 2 different types ***)
+let pxd_compute_time_polyhedron (direction : time_direction) (location : Location.global_location) : LinearConstraint.pxd_linear_constraint =
+	(* Get the model *)
+	let model = Input.get_model() in
+
+	(* Print some information *)
+	print_message Verbose_high ("Computing list of explicit flows…");
+	
+	let flows = compute_flows location in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then(
+		let list_of_flows = List.map (fun (clock_id, flow_value) -> (model.variable_names clock_id) ^ "' = " ^ (NumConst.string_of_numconst flow_value)) flows in
+		print_message Verbose_total ("Flows: " ^ (string_of_list_of_string_with_sep ", " list_of_flows));
+	);
+
+	(* Compute polyhedron *)
+	(* Create the inequalities `clock_id = flow_value` *)
+	let inequalities_flows = List.map (fun (clock_id, flow_value) ->
+		(* Create a linear term `clock_id + (-)flow_value`; the value is negated iff direction is foward, to create `clock_id - flow_value = 0`, equivalent to `clock_id = flow_value` *)
+		let negated_flow_value = match direction with
+		| Forward	-> NumConst.neg flow_value
+		| Backward	-> flow_value
+		in
+		let linear_term = LinearConstraint.make_pxd_linear_term [(NumConst.one, clock_id)] negated_flow_value in
+		(* Create the inequality *)
+		LinearConstraint.make_pxd_linear_inequality linear_term LinearConstraint.Op_eq
+	) flows in
+	
+	(* Create the inequalities `var = 0`, for var in variables_constant *)
+	let inequalities_constant = pxd_create_inequalities_constant model.parameters_and_discrete in
+
+	(* Convert both sets of inequalities to a constraint *)
+	let time_polyhedron = LinearConstraint.make_pxd_constraint (List.rev_append inequalities_flows inequalities_constant) in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Creating linear constraint for time elapsing with explicit flows…");
+		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_polyhedron);
+	);
+	
+	(* Return result *)
+	time_polyhedron
+
+(*** WARNING: bad prog! Duplicate function with 2 different types ***)
+let px_compute_time_polyhedron (direction : time_direction) (location : Location.global_location) : LinearConstraint.px_linear_constraint =
+	(* Get the model *)
+	let model = Input.get_model() in
+
+	(* Print some information *)
+	print_message Verbose_high ("Computing list of explicit flows…");
+	
+	let flows = compute_flows location in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then(
+		let list_of_flows = List.map (fun (clock_id, flow_value) -> (model.variable_names clock_id) ^ "' = " ^ (NumConst.string_of_numconst flow_value)) flows in
+		print_message Verbose_total ("Flows: " ^ (string_of_list_of_string_with_sep ", " list_of_flows));
+	);
+
+	(* Compute polyhedron *)
+	(* Create the inequalities `clock_id = flow_value` *)
+	let inequalities_flows = List.map (fun (clock_id, flow_value) ->
+		(* Create a linear term `clock_id + (-)flow_value`; the value is negated iff direction is foward, to create `clock_id - flow_value = 0`, equivalent to `clock_id = flow_value` *)
+		let negated_flow_value = match direction with
+		| Forward	-> NumConst.neg flow_value
+		| Backward	-> flow_value
+		in
+		let linear_term = LinearConstraint.make_px_linear_term [(NumConst.one, clock_id)] negated_flow_value in
+		(* Create the inequality *)
+		LinearConstraint.make_px_linear_inequality linear_term LinearConstraint.Op_eq
+	) flows in
+	
+	(* Create the inequalities `var = 0`, for var in variables_constant *)
+	let inequalities_constant = px_create_inequalities_constant model.parameters in
+
+	(* Convert both sets of inequalities to a constraint *)
+	let time_polyhedron = LinearConstraint.make_px_constraint (List.rev_append inequalities_flows inequalities_constant) in
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Creating linear constraint for time elapsing with explicit flows…");
+		print_message Verbose_total (LinearConstraint.string_of_px_linear_constraint model.variable_names time_polyhedron);
+	);
+	
+	(* Return result *)
+	time_polyhedron
+
+
 
 let apply_time_shift (direction : time_direction) (location : Location.global_location) (the_constraint : LinearConstraint.pxd_linear_constraint) =
 	(* Get the model *)
 	let model = Input.get_model() in
 
-	let direction_str = match direction with
-		| Forward -> "elapsing"
-		| Backward -> "past"
-	in
-
 	(* If urgent: no time elapsing *)
 	if is_location_urgent location then (
-		print_message Verbose_high ("Location urgent: NO time " ^ direction_str);
+		print_message Verbose_high ("Location urgent: NO time " ^ (string_of_time_direction direction));
 		()
 	(* If not urgent: apply time elapsing *)
 	)else(
-		(* Compute the list of stopwatches *)
-		let stopped_clocks, elapsing_clocks = compute_stopwatches location in
-		print_message Verbose_high ("Computing list of stopwatches");
-		if verbose_mode_greater Verbose_total then(
-			let list_of_names = List.map model.variable_names stopped_clocks in
-			print_message Verbose_total ("Stopped clocks : " ^ (string_of_list_of_string_with_sep ", " list_of_names));
-			let list_of_names = List.map model.variable_names elapsing_clocks in
-			print_message Verbose_total ("Elapsing clocks: " ^ (string_of_list_of_string_with_sep ", " list_of_names));
-		);
-
-		(* Perform time elapsing *)
-		print_message Verbose_high ("Now applying time " ^ direction_str ^ "…");
-		let time_shift_function = match direction with
-			| Forward -> LinearConstraint.pxd_time_elapse_assign
-			| Backward -> LinearConstraint.pxd_time_past_assign
-		in
-		(*** NOTE: the comment is to be changed in alternative TE mode ***)
-		time_shift_function
-			elapsing_clocks
-			(List.rev_append stopped_clocks model.parameters_and_discrete)
-			the_constraint
-		;
-		(* Print some information *)
-		if verbose_mode_greater Verbose_total then(
-			print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names the_constraint);
-		);
-		()
+		(* If normal PTA, i.e., without stopwatches nor flows: directly call using the static polyhedron *)
+		if not model.has_stopwatches then(
+			(* Get the statically computed time elapsing polyhedron *)
+			let time_polyhedron =
+				(* Choose the right variable depending on time direction *)
+				let appropriate_variable = match direction with
+					| Forward	-> !time_elapsing_polyhedron
+					| Backward	-> !time_past_polyhedron
+				in
+				match appropriate_variable with
+				| Some polyedron -> polyedron
+				| None -> raise (InternalError "The static polyhedron for time elapsing should have been computed in function `apply_time_shift`.")
+			in
+			
+			(* Apply time elapsing *)
+			LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron time_polyhedron the_constraint;
+		
+		)else(			
+			(* Otherwise, compute dynamically the list of clocks with their respective flow *)
+			
+			(* Create the time polyhedron depending on the clocks *)
+			let time_polyhedron = pxd_compute_time_polyhedron direction location in
+			
+			(* Perform time elapsing *)
+			print_message Verbose_high ("Now applying time " ^ (string_of_time_direction direction) ^ "…");
+			
+			(* Apply time elapsing *)
+			LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron time_polyhedron the_constraint;
+			
+			(* Print some information *)
+			if verbose_mode_greater Verbose_total then(
+				print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names the_constraint);
+			);
+			()
+		)
 	)
+
 
 (*------------------------------------------------------------*)
 (** Apply time elapsing in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
@@ -788,6 +1018,9 @@ let apply_time_elapsing = apply_time_shift Forward
 (** Apply time past in location to the_constraint (the location is needed to retrieve the stopwatches stopped in this location) *)
 (*------------------------------------------------------------*)
 let apply_time_past = apply_time_shift Backward
+
+
+
 
 
 (*------------------------------------------------------------*)
@@ -847,11 +1080,11 @@ let constraint_zone_predecessor_g_u
 	gn_minus_1
 	(updates_n_minus_1 : AbstractModel.clock_updates list)
 	(zn : LinearConstraint.px_linear_constraint)
-	(variables_elapse_n : Automaton.variable_index list)
-	(variables_constant_n : Automaton.variable_index list)
+	(time_polyhedron : LinearConstraint.pxd_linear_constraint)
 	gn
 	(updates_n : AbstractModel.clock_updates list)
 	(zn_plus_1 : LinearConstraint.px_linear_constraint)
+		: LinearConstraint.px_linear_constraint
 		=
 	(* Retrieve the model *)
 	let model = Input.get_model() in
@@ -904,7 +1137,16 @@ let constraint_zone_predecessor_g_u
 	(* Step 2: compute the time predecessors of zn' in zn *)
 	(* Method: zn' => backward elapsing => intersection with zn *)
 	
-	LinearConstraint.pxd_time_past_assign variables_elapse_n variables_constant_n pxd_linear_constraint;
+	(*** BEGIN OLD VERSION (< 2020/09) ***)
+(* 	LinearConstraint.pxd_time_past_assign variables_elapse_n variables_constant_n pxd_linear_constraint; *)
+	(*** END OLD VERSION (< 2020/09) ***)
+	
+	(* Print some information *)
+	if verbose_mode_greater Verbose_high then(
+		print_message Verbose_high ("The time polyhedron is: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_polyhedron) ^ "");
+	);
+
+	LinearConstraint.pxd_time_elapse_assign_wrt_polyhedron time_polyhedron pxd_linear_constraint;
 	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
@@ -952,7 +1194,6 @@ let constraint_zone_predecessor_g_u
 		print_message Verbose_medium ("Initial valuations of Zn: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint ) ^ "");
 	);
 
-	
 	(* Return the result on px dimensions *)
 	LinearConstraint.pxd_hide_discrete_and_collapse pxd_linear_constraint
 	
@@ -1062,6 +1303,31 @@ let compute_initial_state_or_abort () : state =
 	let model = Input.get_model() in
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
+	
+	(*** QUITE A HACK! Strange to have it here ***)
+	(* If normal PTA, i.e., without stopwatches nor flows, compute once for all the static time elapsing polyhedron *)
+	if not model.has_stopwatches then(
+		let variables_elapse		= model.clocks in
+		let variables_constant		= model.parameters_and_discrete in
+		let time_el_polyhedron		= generate_polyhedron_time_elapsing_pta Forward variables_elapse variables_constant in
+		let time_pa_polyhedron		= generate_polyhedron_time_elapsing_pta Backward variables_elapse variables_constant in
+		
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high "Computed the static time elapsing polyhedron:";
+			print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_el_polyhedron);
+			print_message Verbose_high "";
+			print_message Verbose_high "Computed the static time past polyhedron:";
+			print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_pa_polyhedron);
+			print_message Verbose_high "";
+		);
+		
+		(* Save them *)
+		time_elapsing_polyhedron	:= Some time_el_polyhedron;
+		time_past_polyhedron 		:= Some time_pa_polyhedron;
+	
+	);
+
 
 	(* Print the initial state *)
 	if verbose_mode_greater Verbose_medium then
@@ -1155,14 +1421,14 @@ let compute_possible_actions source_location =
 	true_indexes possible_actions
 
 (* interface with the NumConst module for discrete comparisons *)
-let compute_discrete_comparisons (op : AbstractModel.op_bool)  =
-  match op with
-  | BOOL_L -> NumConst.l
-  | BOOL_LEQ -> NumConst.le
-  | BOOL_EQ ->  NumConst.equal
-  | BOOL_NEQ -> NumConst.neq
-  | BOOL_GEQ -> NumConst.ge
-  | BOOL_G -> NumConst.g
+let compute_discrete_comparisons (relop : DiscreteExpressions.relop) =
+	match relop with
+	| OP_L		-> NumConst.l
+	| OP_LEQ	-> NumConst.le
+	| OP_EQ		->  NumConst.equal
+	| OP_NEQ	-> NumConst.neq
+	| OP_GEQ	-> NumConst.ge
+	| OP_G		-> NumConst.g
 
 (** Check if a boolean expression is satisfied *)
 let is_boolean_expression_satisfied location (boolean_expr : AbstractModel.boolean_expression) : bool =
@@ -1172,10 +1438,7 @@ let is_boolean_expression_satisfied location (boolean_expr : AbstractModel.boole
     | Not_bool b -> not (is_boolean_expression_satisfied_rec b) (* negation *)
     | And_bool (b1, b2) -> (is_boolean_expression_satisfied_rec b1) && (is_boolean_expression_satisfied_rec b2) (* conjunction *)
     | Or_bool (b1, b2) -> (is_boolean_expression_satisfied_rec b1) || (is_boolean_expression_satisfied_rec b2) (* disjunction *)
-    | Expression_bool (expr1, op, expr2) ->
-      let evaluation_expr1 = evaluate_discrete_arithmetic_expression (Location.get_discrete_value location) expr1 in
-      let evaluation_expr2 = evaluate_discrete_arithmetic_expression (Location.get_discrete_value location) expr2 in
-      (compute_discrete_comparisons op) evaluation_expr1 evaluation_expr2
+    | Discrete_boolean_expression dbe -> DiscreteExpressions.check_discrete_boolean_expression (Location.get_discrete_value location) dbe
   in
   is_boolean_expression_satisfied_rec boolean_expr
 
@@ -1268,7 +1531,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 			(* Compute its new value *)
 (* 			let new_value = LinearConstraint.evaluate_pxd_linear_term (Location.get_discrete_value source_location) linear_term in *)
 			let new_value = try(
-				evaluate_discrete_arithmetic_expression (Location.get_discrete_value source_location) arithmetic_expression)
+				DiscreteExpressions.eval_discrete_arithmetic_expression (Location.get_discrete_value source_location) arithmetic_expression)
 				with Division_by_0_while_evaluating_discrete -> (
 					(*** NOTE: we could still go on with the computation by setting the discrete to, e.g., 0 but this seems really not good for a model checker ***)
 					raise (Division_by_0 ("Division by 0 encountered when evaluating the successor of the discrete variables!"))
@@ -1904,13 +2167,24 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	
 	(* Get the location state_n_plus_1 *)
 	let location_n_plus_1 = target_state.global_location in
-	(* Get the elapsed and stopped clocks (+ other variables) *)
+	
+	if verbose_mode_greater Verbose_medium then(
+		print_message Verbose_medium ("Location n+1: " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display location_n_plus_1));
+	);
+	
+(*	(* Get the elapsed and stopped clocks (+ other variables) *)
 	let stopped_clocks_n_plus_1, elapsing_clocks_n_plus_1 = compute_stopwatches location_n_plus_1 in
 	let all_stopped_variables_n_plus_1 = List.rev_append stopped_clocks_n_plus_1 model.parameters in
+	LinearConstraint.px_time_past_assign elapsing_clocks_n_plus_1 all_stopped_variables_n_plus_1 z_n_plus_1;*)
+
+	(* Create the time polyhedron depending on the clocks *)
+	let time_polyhedron = px_compute_time_polyhedron Backward location_n_plus_1 in
+	
 	(* Apply time past *)
 	print_message Verbose_total ("Applying time past…");
-	LinearConstraint.px_time_past_assign elapsing_clocks_n_plus_1 all_stopped_variables_n_plus_1 z_n_plus_1;
 
+	LinearConstraint.px_time_elapse_assign_wrt_polyhedron time_polyhedron z_n_plus_1;
+	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
 		print_message Verbose_high ("Applied timed past at state n+1:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1) ^ "");
@@ -1945,6 +2219,9 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 	
 	(* To make things more human-friendly, we change the initial valuation only if it did not belong to the admissible "initial points" before time elapsing *)
 	
+	(* Print some information *)
+	print_message Verbose_high ("Trying to make the valuation more friendly…");
+	
 	let concrete_target_px_valuation_before_time_elapsing = 
 	(* If intersection is empty, find new valuation *)
 	if LinearConstraint.px_is_false (
@@ -1954,10 +2231,16 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 			z_n_plus_1
 		]
 	) then(
+		(* Print some information *)
+		print_message Verbose_high ("Oops! Intersection of the chosen point with z_n_plus_1 is empty… re-choose a valuation within z_n_plus_1…");
+		
 		(* Re-choose a valuation in this constraint *)
 		LinearConstraint.px_exhibit_point z_n_plus_1
 	(* Otherwise, keep the original valuation *)
 	)else(
+		(* Print some information *)
+		print_message Verbose_high ("Intersection of the chosen point with z_n_plus_1 is non-empty… keep it.");
+
 		concrete_target_px_valuation
 	)
 	in
@@ -1996,18 +2279,18 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		
 		(* Get the values *)
 		
-		let state_index_n_plus_1 : State.state_index =
+(*		let state_index_n_plus_1 : State.state_index =
 			if n = List.length symbolic_run.symbolic_steps - 1
 			then target_state_index
 			else ((List.nth symbolic_run.symbolic_steps (n+1)).source)
-		in
+		in*)
 
 		let symbolic_step_n : StateSpace.symbolic_step = List.nth symbolic_run.symbolic_steps n in
 		
 		(* Get state n *)
 		let state_n = StateSpace.get_state state_space symbolic_step_n.source in
 		(* Get state n+1 *)
-		let state_n_plus_1 = StateSpace.get_state state_space state_index_n_plus_1 in
+(* 		let state_n_plus_1 = StateSpace.get_state state_space state_index_n_plus_1 in *)
 		
 		(* Get the location and zone for state_n *)
 		let location_n, z_n = state_n.global_location, state_n.px_constraint in
@@ -2053,10 +2336,15 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		let _, _, continuous_guards_n, updates_n = compute_new_location_guards_updates location_n symbolic_step_n.transition in
 		let continuous_guard_n = LinearConstraint.pxd_intersection continuous_guards_n in
 		
+
+(*		(*** BEGIN OLD VERSION (< 2020/09) ***)
 		(* Get the elapsed and stopped clocks (+ other variables) *)
 		let stopped_clocks_n, elapsing_clocks_n = compute_stopwatches location_n in
 		let all_stopped_variables_n = List.rev_append stopped_clocks_n model.parameters in
+		(*** END OLD VERSION (< 2020/09) ***)*)
 		
+		(* Create the time polyhedron depending on the clocks *)
+		let time_polyhedron = pxd_compute_time_polyhedron Backward location_n in
 		
 		(* Zn+1 is the target valuation, preceeded by time past plus invariant intersection *)
 		
@@ -2070,17 +2358,26 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 			(* gn-1 *) continuous_guard_n_minus_1
 			(* Un-1 *) updates_n_minus_1
 			(* Zn *)   z_n
-			(* tn *)    elapsing_clocks_n
-			(* nontn *) all_stopped_variables_n
+			(* time polyhedron *)time_polyhedron
 			(* gn *)   continuous_guard_n
 			(*** NOTE: a bit twice the work here, as they were processed by get_updates_in_combined_transition ***)
 			(* Un *)   [clock_updates]
 			(* Zn+1 *) z_n_plus_1
 			in
 		
+		(* Print some information *)
+		if verbose_mode_greater Verbose_high then(
+			print_message Verbose_high ("Predecessors of valution n+1:\n" ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names predecessors_of_valuation_n_plus_1));
+		);
 		
 		(* Pick a valuation *)
-		let valuation_n = LinearConstraint.px_exhibit_point predecessors_of_valuation_n_plus_1 in
+		let valuation_n =
+			try(
+				LinearConstraint.px_exhibit_point predecessors_of_valuation_n_plus_1
+			)with LinearConstraint.EmptyConstraint ->(
+				raise (InternalError "Empty constraint found when picking a point in the predecessors of n+1!")
+			)
+		in
 		
 		(* Now compute the time spent between the previous and the new valuation *)
 
@@ -2308,6 +2605,10 @@ type bfs_limit_reached =
 	(* Termination due to a number of explored states reached *)
 	| States_limit_reached
 
+	(* Termination because a witness has been found *)
+	| Witness_found
+
+
 exception BFS_Limit_detected of bfs_limit_reached
 
 
@@ -2341,7 +2642,7 @@ class waiting_list =
 	(* Class variables *)
 	(************************************************************)
 	val mutable waiting_list = []
-
+	
 
 	(************************************************************)
 	(* Class methods *)
@@ -2415,10 +2716,35 @@ class virtual algoStateBased =
 	(* The current new state indexes *)
 	val mutable new_states_indexes : State.state_index list = []
 
-	(* Variable to remain of the termination *)
+	(* Variable to remind of the termination *)
 	(*** NOTE: public only for AlgoEFoptQueue ***)
 	(*** TODO: merge with termination_status… ***)
 	val mutable limit_reached = Keep_going
+	
+	(* Variable to denote whether the analysis may continue, or whether the analysis should terminate; useful to terminate, e.g., when a witness is found (at least for BFS algorithms) *)
+	val mutable algorithm_keep_going = true
+	
+	
+	(* Non-necessarily convex constraint storing the parameter synthesis result (for selected algorithm) *)
+	val mutable synthesized_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
+		
+	(* Mini cache system: keep in memory the current p-constraint to save computation time (for selected algorithms such as EFsynth) *)
+	(*** WARNING: a bit dangerous, as its handling is not very very strictly controlled ***)
+	val mutable cached_p_constraint : LinearConstraint.p_linear_constraint option = None
+	
+
+	
+	(* Counters *)
+	(*** NOTE: if the algorithm is called several times sequentially, then each call will create a counter ***)
+
+	val counter_compute_p_constraint_with_cache = create_hybrid_counter_and_register "AlgoStateBased.compute_p_constraint_with_cache" States_counter Verbose_experiments
+
+	(* How many times the cache was useful *)
+	val counter_cache = create_discrete_counter_and_register "cache (EF)" PPL_counter Verbose_low
+	(* Number of cache misses *)
+	val counter_cache_miss = create_discrete_counter_and_register "cache miss (EF)" PPL_counter Verbose_low
+	(* The constraint of a new state is smaller than the bad constraint: cut branch *)
+	val counter_cut_branch = create_discrete_counter_and_register "cut branch (constraint <= bad)" PPL_counter Verbose_low
 
 
 	(************************************************************)
@@ -2432,6 +2758,30 @@ class virtual algoStateBased =
 	method initialize_variables =
 		statespace_nature <- StateSpace.Unknown;
 		unexplored_successors <- UnexSucc_undef;
+		
+(*		(* If normal PTA, i.e., without stopwatches nor flows, compute once for all the static time elapsing polyhedron *)
+		if not model.has_stopwatches then(
+			let variables_elapse	= model.clocks in
+			let variables_constant	= model.parameters_and_discrete in
+			let time_el_polyhedron		= generate_polyhedron_time_elapsing_pta Forward variables_elapse variables_constant in
+			let time_pa_polyhedron		= generate_polyhedron_time_elapsing_pta Backward variables_elapse variables_constant in
+			
+			(* Print some information *)
+			if verbose_mode_greater Verbose_high then(
+				print_message Verbose_high "Computed the static time elapsing polyhedron:";
+				print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_el_polyhedron);
+				print_message Verbose_high "";
+				print_message Verbose_high "Computed the static time past polyhedron:";
+				print_message Verbose_high (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_pa_polyhedron);
+				print_message Verbose_high "";
+			);
+			
+			(* Save them *)
+			time_elapsing_polyhedron	:= Some time_el_polyhedron;
+			time_past_polyhedron 		:= Some time_pa_polyhedron;
+		
+		);*)
+
 		()
 		(* The end *)
 
@@ -2444,21 +2794,144 @@ class virtual algoStateBased =
 
 
 
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Compute the p-constraint only if it is not cached using the mini-cache system *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method compute_p_constraint_with_minicache px_linear_constraint =
+
+		(* Statistics *)
+		counter_compute_p_constraint_with_cache#increment;
+		counter_compute_p_constraint_with_cache#start;
+		
+		let result =
+		match cached_p_constraint with
+		(* Cache empty: *)
+		| None ->
+			(* Compute the p_constraint *)
+			let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse px_linear_constraint in
+			(* Statistics *)
+			counter_cache_miss#increment;
+			(* Print some information *)
+			if verbose_mode_greater Verbose_medium then(
+				self#print_algo_message Verbose_medium "\nCache miss!";
+			);
+			(* Update cache *)
+			cached_p_constraint <- Some p_constraint;
+			(* Return result *)
+			p_constraint
+		(* Cache not empty: directly use it *)
+		| Some p_constraint ->
+			(* Statistics *)
+			counter_cache#increment;
+			(* Print some information *)
+			if verbose_mode_greater Verbose_medium then(
+				self#print_algo_message Verbose_medium "\nCache hit!";
+			);
+			(* Return the value in cache *)
+			p_constraint
+		in
+		
+		(* Statistics *)
+		counter_compute_p_constraint_with_cache#stop;
+
+		result
+
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Reset the mini-cache *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method reset_minicache : unit =
+		cached_p_constraint <- None;
+		()
+
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Check whether the projection of a PX-constraint is included into the `synthesized_constraint` *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method check_whether_px_included_into_synthesized_constraint (px_linear_constraint : LinearConstraint.px_linear_constraint) : bool =
+		(* First project onto the parameters *)
+
+		(* Print some information *)
+		if verbose_mode_greater Verbose_medium then(
+			self#print_algo_message Verbose_medium "Projecting onto the parameters…";
+		);
+
+		(*** NOTE: here, we use the mini-cache system ***)
+		let p_constraint = self#compute_p_constraint_with_minicache px_linear_constraint in
+		
+		(* Print some information *)
+		self#print_algo_message Verbose_medium "Checking whether the new state is included into known synthesized valuations…";
+		if verbose_mode_greater Verbose_high then(
+			self#print_algo_message Verbose_high "\nNew constraint:";
+			print_message Verbose_high (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+			
+			self#print_algo_message Verbose_high "\nCurrent synthesized constraint:";
+			print_message Verbose_high (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
+		);
+
+		(* return p_constraint <= synthesized_constraint *)
+		if LinearConstraint.p_nnconvex_constraint_is_leq (LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint) synthesized_constraint then(
+			(* Statistics *)
+			counter_cut_branch#increment;
+			
+			true
+		)else(
+			false
+		)
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Update the nature of the trace set *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method update_statespace_nature (state : state) =
-		match model.correctness_condition with
-		| None -> ()
-		| Some (Unreachable unreachable_global_locations) ->
-			(* Check whether the current location matches one of the unreachable global locations *)
-			if State.match_unreachable_global_locations unreachable_global_locations state.global_location then(
-				statespace_nature <- StateSpace.Bad;
-			);
-		| _ -> raise (InternalError("IMITATOR currently ony implements the non-reachability-like properties."))
+		if Input.has_property() then(
+			let property = Input.get_property() in
+			
+			match property.property with
+				(* Reachability *)
+				| EF state_predicate
+				| AGnot state_predicate
+				| EFexemplify state_predicate
+				| EFpmin (state_predicate, _)
+				| EFpmax (state_predicate, _)
+				| EFtmin state_predicate
+				| Cycle_through state_predicate
+				| PRP (state_predicate , _)
+				| PRPC (state_predicate , _, _)
+				->
+					(* Check whether the current state matches the state predicate *)
+					if State.match_state_predicate model.is_accepting state_predicate state then(
+						statespace_nature <- StateSpace.Bad;
+					);
+	
+				
+				| NZ_Cycle
+				
+				| Deadlock_Freeness
+				
+				(* Inverse method *)
+				| IM _
+				| ConvexIM _
+				| IMK _
+				| IMunion _
+				
+				(* Cartography *)
+				| Cover_cartography _
+				| Learning_cartography _
+				| Shuffle_cartography _
+				| Border_cartography _
+				| Random_cartography _
+				| RandomSeq_cartography _
+					->
+					(* Cannot conclude anything from a single state yet *)
+					()
 
+			(*		| Some (Unreachable unreachable_global_locations) ->
+				(* Check whether the current location matches one of the unreachable global locations *)
+				if State.match_unreachable_global_locations unreachable_global_locations state.global_location then(
+					statespace_nature <- StateSpace.Bad;
+				);*)
+(* 				| _ -> raise (NotImplemented("AlgoStateBased > IMITATOR currently only implements selected algorithms in update_statespace_nature.")) *)
+		)
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(** Actions to perform with the initial state; returns true unless the initial state cannot be kept (in which case the algorithm will stop immediately) *)
@@ -2501,7 +2974,7 @@ class virtual algoStateBased =
 			let source_constraint = source_state.px_constraint in
 			let source_constraint_projection = LinearConstraint.px_hide_nonparameters_and_collapse source_constraint in
 			print_message Verbose_high ("Performing post from "
-				^ (if State.is_accepting source_state then "accepting " else "")
+				^ (if Location.is_accepting model.is_accepting source_state.global_location then "accepting " else "")
 				^ "state:");
 			print_message Verbose_high (ModelPrinter.string_of_state model source_state);
 			print_message Verbose_high ("\nThe projection of this constraint onto the parameters is:");
@@ -2749,6 +3222,21 @@ class virtual algoStateBased =
 	(** Check whether the algorithm should terminate at the end of some post, independently of the number of states to be processed (e.g., if the constraint is already true or false) *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method virtual check_termination_at_post_n : bool
+	
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(** Check whether the property is a #witness mode; if so, raise TerminateAnalysis *)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method terminate_if_witness : unit =
+		let property = Input.get_property() in
+		if property.synthesis_type = Witness then(
+			(* Update termination status *)
+			(*** NOTE/HACK: the number of unexplored states is not known, therefore we do not add it… ***)
+			self#print_algo_message Verbose_standard "Target state found! Terminating…";
+			termination_status <- Some Target_found;
+		
+			raise TerminateAnalysis;
+		)
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -2875,16 +3363,6 @@ class virtual algoStateBased =
 
 			| None -> raise (InternalError "The termination status should be set when displaying warnings concerning early termination.")
 
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Create a State_space.state_comparison from the options *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method state_comparison_operator_of_options =
-		(* Mode tree: no comparison *)
-		if options#tree then StateSpace.No_check
-			else if options#inclusion then StateSpace.Inclusion_check
-			else if options#inclusion2 then StateSpace.Double_inclusion_check
-			else StateSpace.Equality_check
-
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Main method to run the queue-based BFS algorithm  *)
@@ -2917,9 +3395,9 @@ class virtual algoStateBased =
 
 		(* Set the limit *)
 		limit_reached <- Keep_going;
-
+		
 		(* Flag modified by the algorithm to perhaps terminate earlier *)
-		let algorithm_keep_going = ref true in
+		algorithm_keep_going <- true;
 
 		(* Count the states for verbose purpose: *)
 		let num_state = ref 0 in
@@ -3434,7 +3912,7 @@ class virtual algoStateBased =
 
 
 		(* Explore further until the limit is reached or the queue is empty *)
-		while limit_reached = Keep_going && !queue <> [] && !algorithm_keep_going do
+		while limit_reached = Keep_going && !queue <> [] && algorithm_keep_going do
 			print_message Verbose_low ("I am here!!!!!!");
 			(* Print some information *)
 			if verbose_mode_greater Verbose_low then (
@@ -3516,9 +3994,19 @@ class virtual algoStateBased =
 			);
 
 
-
-
 			(* Merge states! *)
+			
+(*			(*** CASE mergeq ***)
+			if options#mergeq then(
+				queue := StateSpace.merge state_space !queue;
+				(*** TODO: the following code belongs to StateSpace ***)
+				(match options#exploration_order with
+					| Exploration_queue_BFS_RS -> hashtbl_filter (StateSpace.test_state_index state_space) rank_hashtable
+					| _ -> ();
+				)
+			)
+			(*** CASE merge (classical) ***)
+			else if options#merge then(
 			(*** Here, we merge only the queue ***)
 			(*** TODO: merge something else? ***)
 			let new_states_after_merging = ref (!queue) in
@@ -3526,21 +4014,29 @@ class virtual algoStateBased =
 				(* New version *)
 				let eaten_states = StateSpace.merge state_space !new_states_after_merging in
 				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
-
+				
 				(match options#exploration_order with
-					| Exploration_queue_BFS_RS ->
-													List.iter ( fun state_index ->
-														Hashtbl.remove rank_hashtable state_index;
-
-													) eaten_states;
-					| _ -> ();
+				
+				| Exploration_queue_BFS_RS -> List.iter ( fun state_index -> Hashtbl.remove rank_hashtable state_index;
+					) eaten_states;
+				| _ -> ();
 				)
-
-
 			);
 			(* Copy back the merged queue *)
 			queue := !new_states_after_merging;
-
+			);*)
+			
+			
+			(*** BEGIN OLD MIXED VERSION (2020-09) ***)
+			if options#merge (*|| options#merge_before*) then (
+				queue := StateSpace.merge state_space !queue;
+				(* TODO: the following code belongs in StateSpace *)
+				(match options#exploration_order with
+					| Exploration_queue_BFS_RS -> hashtbl_filter (StateSpace.test_state_index state_space) rank_hashtable
+					| _ -> ();
+				)
+			);
+			(*** END OLD MIXED VERSION (2020-09) ***)
 
 			(* Check if the limit has been reached *)
 			self#check_and_update_queue_bfs_limit;
@@ -3552,7 +4048,7 @@ class virtual algoStateBased =
 				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (bfs_current_depth - 1)) ^ "…");
 
 				if self#check_termination_at_post_n then(
-					algorithm_keep_going := false;
+					algorithm_keep_going <- false;
 				);
 			);
 
@@ -3584,6 +4080,10 @@ class virtual algoStateBased =
 
 			(* Termination due to a number of explored states reached *)
 			| States_limit_reached -> termination_status <- Some (Result.States_limit nb_unexplored_successors)
+			
+			(* Termination because a witness has been found *)
+			(*** NOTE/TODO: add a new result termination type? ***)
+			| Witness_found -> termination_status <- Some (Result.Regular_termination)
 		end
 		;
 
@@ -3591,7 +4091,7 @@ class virtual algoStateBased =
 		(*** NOTE: must be done after setting the limit (above) ***)
 		self#bfs_print_warnings_limit ();
 
-		if not !algorithm_keep_going && nb_unexplored_successors > 0 then(
+		if not algorithm_keep_going && nb_unexplored_successors > 0 then(
 			self#print_algo_message Verbose_standard ("A sufficient condition to ensure termination was met although there were still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore");
 		);
 
@@ -3634,6 +4134,12 @@ class virtual algoStateBased =
 		(* Set the depth to 1 *)
 		bfs_current_depth <- 1;
 
+		(* To check whether the time limit / state limit is reached *)
+		limit_reached <- Keep_going;
+
+		(* Flag modified by the algorithm to perhaps terminate earlier *)
+		algorithm_keep_going <- true;
+
 
 		(*------------------------------------------------------------*)
 		(* Perform the post^* *)
@@ -3641,14 +4147,8 @@ class virtual algoStateBased =
 		(* Set of states computed at the previous depth *)
 		let post_n = ref [init_state_index] in
 
-		(* To check whether the time limit / state limit is reached *)
-		limit_reached <- Keep_going;
-
-		(* Flag modified by the algorithm to perhaps terminate earlier *)
-		let algorithm_keep_going = ref true in
-
 		(* Explore further until the limit is reached or the list of states computed at the previous depth is empty *)
-		while limit_reached = Keep_going && !post_n <> [] && !algorithm_keep_going do
+		while limit_reached = Keep_going && !post_n <> [] && algorithm_keep_going do
 			(* Print some information *)
 			if verbose_mode_greater Verbose_standard then (
 				print_message Verbose_low ("\n");
@@ -3684,8 +4184,13 @@ class virtual algoStateBased =
 				List.rev_append current_post_n_plus_1 new_states
 			) [] !post_n
 			)
-			(* If analysis terminate: successors are just the empty list *)
-			with TerminateAnalysis -> []
+			with TerminateAnalysis ->(
+				(* Set the flag *)
+				algorithm_keep_going <- false;
+				(* If analysis terminated: successors are just the empty list *)
+				(*** TODO: it should be possible to change the flag algorithm_keep_going from inside the function instead of deleting this list ***)
+				[]
+			)
 
 			in
 
@@ -3701,17 +4206,33 @@ class virtual algoStateBased =
 			(* Statistics *)
 			counter_process_post_n#stop;
 
+			(*------------------------------------------------------------*)
+			(* Begin merging *)
+			(*------------------------------------------------------------*)
 			(* Merge states! *)
 			let new_states_after_merging = ref post_n_plus_1 in
 			(*** HACK here! For #merge_before, we should ONLY merge here; but, in order not to change the full structure of the post computation, we first merge locally before the pi0-compatibility test, then again here ***)
-			if options#merge (*|| options#merge_before*) then (
+			
+(*			if options#mergeq then(
+				new_states_after_merging := StateSpace.merge state_space !new_states_after_merging;
+			) else if options#merge then (
 	(* 			new_states_after_merging := try_to_merge_states state_space !new_states_after_merging; *)
 				(* New version *)
 				let eaten_states = StateSpace.merge state_space !new_states_after_merging in
 				new_states_after_merging := list_diff !new_states_after_merging eaten_states;
-			);
+			);*)
+			
+			(*** BEGIN OLD MIXED VERSION (2020-09) ***)
+
+			if options#merge (*|| options#merge_before*) then
+				new_states_after_merging := StateSpace.merge state_space !new_states_after_merging;
+			(*** END OLD MIXED VERSION (2020-09) ***)
+				
 			(* Update the post_n, i.e., at that point we replace the post^n by post^n+1 in our BFS algorithm, and go one step deeper in the state space *)
 			post_n := !new_states_after_merging;
+			(*------------------------------------------------------------*)
+			(* End merging *)
+			(*------------------------------------------------------------*)
 
 			(* Print some information *)
 			if verbose_mode_greater Verbose_medium then (
@@ -3804,7 +4325,7 @@ class virtual algoStateBased =
 				self#print_algo_message Verbose_low("Checking termination at post^" ^ (string_of_int (bfs_current_depth - 1)) ^ " with a queue of " ^ (string_of_int (List.length !post_n)) ^ " unexplored state" ^ (s_of_int (List.length !post_n)) ^ "…");
 
 				if self#check_termination_at_post_n then(
-					algorithm_keep_going := false;
+					algorithm_keep_going <- false;
 				);
 			);
 
@@ -3843,7 +4364,7 @@ class virtual algoStateBased =
 		(*** NOTE: must be done after setting the limit (above) ***)
 		self#bfs_print_warnings_limit ();
 
-		if not !algorithm_keep_going && nb_unexplored_successors > 0 then(
+		if not algorithm_keep_going && nb_unexplored_successors > 0 then(
 			self#print_algo_message Verbose_standard ("A sufficient condition to ensure termination was met although there were still " ^ (string_of_int nb_unexplored_successors) ^ " state" ^ (s_of_int nb_unexplored_successors) ^ " to explore");
 		);
 
@@ -3882,7 +4403,7 @@ class virtual algoStateBased =
 
 		(* Compute initial state *)
 		let init_state = compute_initial_state_or_abort() in
-
+		
 		(* copy init state, as it might be destroyed later *)
 		(*** NOTE: this operation appears to be here totally useless ***)
 		let init_loc, init_constr = init_state.global_location, init_state.px_constraint in
@@ -3891,15 +4412,13 @@ class virtual algoStateBased =
 		(* Set up the initial state constraint *)
 		initial_constraint <- Some init_constr;
 
-(*		(*Initialization of slast : used in union mode only*)
-		slast := [];*)
+		(* Variable initialization *)
+		(*** NOTE: must be done *after* the initial state computation (for PRP notably) ***)
+		print_message Verbose_low ("Initializing the algorithm local variables…");
+		self#initialize_variables;
 
 		(* Print some information *)
 		print_message Verbose_standard ("Starting running algorithm " ^ self#algorithm_name ^ "…\n");
-
-		(* Variable initialization *)
-		print_message Verbose_low ("Initializing the algorithm local variables…");
-		self#initialize_variables;
 
 		(* Debut prints *)
 		print_message Verbose_low ("Starting exploring the parametric zone graph from the following initial state:");
@@ -3929,7 +4448,7 @@ class virtual algoStateBased =
 		)else(
 
 		(* Add the initial state to the reachable states; no need to check whether the state is present since it is the first state anyway *)
-		let init_state_index = match StateSpace.add_state state_space StateSpace.No_check init_state with
+		let init_state_index = match StateSpace.add_state state_space AbstractAlgorithm.No_check init_state with
 			(* The state is necessarily new as the state space was empty *)
 			| StateSpace.New_state state_index -> state_index
 			| _ -> raise (InternalError "The result of adding the initial state to the state space should be New_state")
@@ -3945,12 +4464,10 @@ class virtual algoStateBased =
 			| Exploration_queue_BFS -> self#explore_queue_bfs init_state_index;
 			| Exploration_queue_BFS_RS -> self#explore_queue_bfs init_state_index;
 			| Exploration_queue_BFS_PRIOR -> self#explore_queue_bfs init_state_index;
-			| Exploration_NDFS -> self#explore_layer_bfs init_state_index;
+(*			| Exploration_NDFS -> self#explore_layer_bfs init_state_index;
             | Exploration_NDFS_sub -> self#explore_layer_bfs init_state_index;
-            | Exploration_layer_NDFS_sub -> self#explore_layer_bfs init_state_index;
-(*            | Exploration_syn_NDFS_sub -> self#explore_layer_bfs init_state_index;
-            | Exploration_syn_layer_NDFS_sub -> self#explore_layer_bfs init_state_index;*)
-(*             | Exploration_syn_mixed_NDFS -> self#explore_layer_bfs init_state_index; *)
+            | Exploration_layer_NDFS -> self#explore_layer_bfs init_state_index;
+            | Exploration_layer_NDFS_sub -> self#explore_layer_bfs init_state_index;*)
 		end;
 
 		(* Return the algorithm-dependent result *)

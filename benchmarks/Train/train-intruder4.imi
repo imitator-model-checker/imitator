@@ -15,9 +15,9 @@
  * Created         : 2015/09/24
  * Fork from       : train-intruder3.imi
  * Fork date       : 2015/09/25
- * Last modified   : 2015/09/25
+ * Last modified   : 2020/08/19
  *
- * IMITATOR version: 2.7.2-working
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -61,26 +61,26 @@ var
 (************************************************************)
 synclabs: sensor_far, sensor_close, pass;
 
-loc far: while x_train <= p_far wait {}
+loc far: invariant x_train <= p_far
 	(* Normal mode: sensors are on *)
-	when x_train = p_far & sensors_active = TRUE sync sensor_far do {x_train' = 0} goto approaching;
+	when x_train = p_far & sensors_active = TRUE sync sensor_far do {x_train := 0} goto approaching;
 	(* Failure: sensors are off *)
-	when x_train = p_far & sensors_active = FALSE do {x_train' = 0} goto approaching;
+	when x_train = p_far & sensors_active = FALSE do {x_train := 0} goto approaching;
 
-loc approaching: while x_train <= p_approaching - p_very_near wait {}
+loc approaching: invariant x_train <= p_approaching - p_very_near
 	when x_train = p_approaching - p_very_near sync sensor_close goto very_near;
 
-loc very_near: while x_train <= p_approaching wait {}
+loc very_near: invariant x_train <= p_approaching
 	(* Normal situation *)
-	when x_train = p_approaching & gate_down = TRUE do {x_train' = 0} sync pass goto gone;
+	when x_train = p_approaching & gate_down = TRUE do {x_train := 0} sync pass goto gone;
 	(* Gate not closed! *)
-	when x_train = p_approaching & gate_down = FALSE do {x_train' = 0} sync pass goto crash;
+	when x_train = p_approaching & gate_down = FALSE do {x_train := 0} sync pass goto crash;
 
 (** HACK: stop time to reduce state space *)
-loc gone: while x_train <= 0 wait {}
+loc gone: invariant x_train <= 0
 
 (** HACK: stop time to reduce state space *)
-loc crash: while x_train <= 0 wait {}
+loc crash: invariant x_train <= 0
 
 
 end (* train *)
@@ -91,56 +91,56 @@ end (* train *)
 (************************************************************)
 synclabs: pass, power_cut, sensor_far, sensor_close, start_lowering, end_lowering;
 
-loc up: while True wait {}
+loc up: invariant True
 	(* Normal situation: train detected *)
-	when True sync sensor_far do {x_gate' = 0} goto waiting;
+	when True sync sensor_far do {x_gate := 0} goto waiting;
 	(* Emergency situation: train is very near but was not detected when far *)
-	when True sync sensor_close do {x_gate' = 0} goto emergency_lowering;
+	when True sync sensor_close do {x_gate := 0} goto emergency_lowering;
 	(* When power cut: gate goes to emergency lowering *)
-	when True sync power_cut do {x_gate' = 0} goto no_power;
+	when True sync power_cut do {x_gate := 0} goto no_power;
 	(* Gate is reinitialized whenever the train passes *)
-	when True sync pass do {x_gate' = 0} goto up;
+	when True sync pass do {x_gate := 0} goto up;
 
-loc no_power: while x_gate <= p_emergency_waiting wait {}
+loc no_power: invariant x_gate <= p_emergency_waiting
 	(* Lower the gate after some time *)
-	when x_gate = p_emergency_waiting sync start_lowering do {x_gate' = 0} goto emergency_lowering;
+	when x_gate = p_emergency_waiting sync start_lowering do {x_gate := 0} goto emergency_lowering;
 	(* Emergency situation: train is very near but was not detected when far *)
-	when True sync sensor_close do {x_gate' = 0} goto emergency_lowering;
+	when True sync sensor_close do {x_gate := 0} goto emergency_lowering;
 	(* Just to prevent deadlock *)
-	when True sync pass do {x_gate' = 0} goto no_power;
-	when True sync sensor_far do {x_gate' = 0} goto no_power;
+	when True sync pass do {x_gate := 0} goto no_power;
+	when True sync sensor_far do {x_gate := 0} goto no_power;
 
-loc waiting: while x_gate <= p_waiting wait {}
+loc waiting: invariant x_gate <= p_waiting
 	(* Normal situation: wait a bit before lowering *)
-	when x_gate = p_waiting sync start_lowering do {x_gate' = 0} goto lowering;
+	when x_gate = p_waiting sync start_lowering do {x_gate := 0} goto lowering;
 	(* Emergency situation: train is very near but was not detected when far *)
-	when True sync sensor_close do {x_gate' = 0} goto emergency_lowering;
+	when True sync sensor_close do {x_gate := 0} goto emergency_lowering;
 	(* Gate is reinitialized whenever the train passes *)
-	when True sync pass do {x_gate' = 0} goto up;
+	when True sync pass do {x_gate := 0} goto up;
 	(* When power cut: gate goes to emergency lowering *)
-	when True sync power_cut do {x_gate' = 0} goto no_power;
+	when True sync power_cut do {x_gate := 0} goto no_power;
 
-loc lowering: while x_gate <= p_lowering wait {}
-	when x_gate = p_lowering sync end_lowering do {x_gate' = 0, gate_down' = TRUE} goto down;
+loc lowering: invariant x_gate <= p_lowering
+	when x_gate = p_lowering sync end_lowering do {x_gate := 0, gate_down := TRUE} goto down;
 	(* no influce of power cut when the gate is lowering (which is debatable) *)
 	when True sync power_cut goto lowering;
 	(* no influce of train being near when the gate is lowering (which is debatable, as we could increase the lowering speed) *)
 	when True sync sensor_close goto lowering;
 	(* Gate is reinitialized whenever the train passes *)
-	when True sync pass do {x_gate' = 0} goto up;
+	when True sync pass do {x_gate := 0} goto up;
 
-loc emergency_lowering: while x_gate <= p_emergency_lowering wait {}
-	when x_gate = p_emergency_lowering sync end_lowering do {x_gate' = 0, gate_down' = TRUE} goto down;
+loc emergency_lowering: invariant x_gate <= p_emergency_lowering
+	when x_gate = p_emergency_lowering sync end_lowering do {x_gate := 0, gate_down := TRUE} goto down;
 	(* Gate is reinitialized whenever the train passes *)
-	when True sync pass do {x_gate' = 0} goto up;
+	when True sync pass do {x_gate := 0} goto up;
 	(* no influce of power cut when the gate is lowering *)
 	when True sync power_cut goto emergency_lowering;
 	(* no influce of train being near when the gate is lowering *)
 	when True sync sensor_close goto emergency_lowering;
 
-loc down: while True wait {}
+loc down: invariant True
 	(* Gate is reinitialized whenever the train passes *)
-	when True sync pass do {x_gate' = 0} goto up;
+	when True sync pass do {x_gate := 0} goto up;
 	(* no influce of power cut when the gate is down *)
 	when True sync power_cut goto down;
 	(* no influce of train being near when the gate is down *)
@@ -154,17 +154,17 @@ end (* gate *)
 (************************************************************)
 synclabs: break_sensor, choose_house, choose_sensor, power_cut;
 
-urgent loc choosing: while True wait {}
+urgent loc choosing: invariant True
 	when True sync choose_sensor goto walking_sensor;
 	when True sync choose_house goto walking_house;
 
-loc walking_sensor: while x_intruder <= p_walking_sensor wait {}
-	when x_intruder = p_walking_sensor sync break_sensor do {sensors_active' = FALSE, x_intruder' = 0} goto intruder_done;
+loc walking_sensor: invariant x_intruder <= p_walking_sensor
+	when x_intruder = p_walking_sensor sync break_sensor do {sensors_active := FALSE, x_intruder := 0} goto intruder_done;
 
-loc walking_house: while x_intruder <= p_walking_house wait {}
-	when x_intruder = p_walking_house sync power_cut do {sensors_active' = FALSE, x_intruder' = 0} goto intruder_done;
+loc walking_house: invariant x_intruder <= p_walking_house
+	when x_intruder = p_walking_house sync power_cut do {sensors_active := FALSE, x_intruder := 0} goto intruder_done;
 
-loc intruder_done: while True wait {}
+loc intruder_done: invariant True
 
 end (* intruder *)
 
@@ -216,13 +216,6 @@ init :=
 	& p_walking_sensor     > 0
 	& p_walking_house      > 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[train] = crash;
 
 
 (************************************************************)

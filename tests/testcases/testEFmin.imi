@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2017/05/03
- * Last modified   : 2017/05/03
+ * Last modified   : 2020/03/20
  *
- * IMITATOR version: 2.9
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -38,11 +38,11 @@ var
 (************************************************************)
 synclabs: a;
 
-loc l1: while True wait {}
-	when i <= 10 sync a do {x' = 0, i' = i + 1} goto l1;
+loc l1: invariant True
+	when i <= 10 sync a do {x := 0, i := i + 1} goto l1;
 	when x = i & x = p sync a goto lbad;
 
-loc lbad: while True wait {}
+loc lbad: invariant True
 
 end (* pta *)
 
@@ -73,15 +73,6 @@ init :=
 	(*------------------------------------------------------------*)
 	& p >= 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[pta] = lbad;
-
-minimize(p);
 
 
 (************************************************************)

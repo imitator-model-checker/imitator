@@ -1,5 +1,6 @@
- deadlineBasic = 30 &
----------
+property := #synth IM(
+	deadlineBasic = 30 &
+(*---------
 --Etude 1--
 --WCET_1 = 20 &
 --WCET_2 = 40 &
@@ -9,9 +10,9 @@
 --per3 = 350
 --Off1 = 0
 --Off2 = 0
---Off3 = 0
-------------
--- Etude 2--
+--Off3 = 0*)
+(*------------
+-- Etude 2--*)
 WCET_1 = 1 &
 WCET_2 = 1 &
 WCET_3 = 2 &
@@ -21,7 +22,7 @@ per3 = 10
 Off1 = 0
 Off2 = 0
 Off3 = 0
-------------
+(*------------
 -- Etude 3--
 --WCET_1 = 20 &
 --WCET_2 = 40 &
@@ -31,4 +32,5 @@ Off3 = 0
 --per3 = 160
 --Off1 = 0
 --Off2 = 0
---Off3 = 0
+--Off3 = 0*)
+);

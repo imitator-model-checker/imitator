@@ -3,10 +3,11 @@
  *
  * Model of an "NOT" logical gate
  *
- * Author          : Etienne Andre
+ * Author          : Étienne André
  * Created         : 2015/01/29
- * Last modified   : 2015/01/29
- * IMITATOR version: 2.6.2
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3
  ************************************************************)
 
 var 	ckNot
@@ -22,20 +23,20 @@ var 	ckNot
 synclabs: iUp, iDown, oUp, oDown;
 
 (* Unstable *)
-loc Not00: while ckNot <= dNot_u wait {}
+loc Not00: invariant ckNot <= dNot_u
 	when True sync iUp do {} goto Not10;
 	when ckNot >= dNot_l sync oUp do {} goto Not01;
 
 (* Stable *)
-loc Not01: while True wait {}
-	when True sync iUp do {ckNot' = 0} goto Not11;
+loc Not01: invariant True
+	when True sync iUp do {ckNot := 0} goto Not11;
 
 (* Stable *)
-loc Not10: while True wait {}
-	when True sync iDown do {ckNot' = 0} goto Not00;
+loc Not10: invariant True
+	when True sync iDown do {ckNot := 0} goto Not00;
 
 (* Unstable *)
-loc Not11: while ckNot <= dNot_u wait {}
+loc Not11: invariant ckNot <= dNot_u
 	when True sync iDown goto Not01;
 	when ckNot >= dNot_l sync oDown goto Not10;
 

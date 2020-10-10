@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2017/01/20
- * Last modified   : 2017/01/20
+ * Last modified   : 2020/08/13
  *
- * IMITATOR version: 2.8
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -45,13 +45,13 @@ automaton controller
 (************************************************************)
 synclabs: (*coolc, restc*) cool_0, cool_1, rest_0, rest_1;
 
-loc lc0: while xc <= 900 wait {}
-        when xc = 900 sync cool_0 do {xc'=0} goto lc1;
-        when xc = 900 sync cool_1 do {xc'=0} goto lc1;
+loc lc0: invariant xc <= 900
+        when xc = 900 sync cool_0 do {xc := 0} goto lc1;
+        when xc = 900 sync cool_1 do {xc := 0} goto lc1;
 
-loc lc1: while xc <= 450 wait {}
-        when xc = 450 sync rest_0 do {xc'=0} goto lc0;
-        when xc = 450 sync rest_1 do {xc'=0} goto lc0;
+loc lc1: invariant xc <= 450
+        when xc = 450 sync rest_0 do {xc := 0} goto lc0;
+        when xc = 450 sync rest_1 do {xc := 0} goto lc0;
 
 end
 
@@ -61,11 +61,11 @@ automaton Rod_0
 (************************************************************)
 synclabs: cool_0, rest_0;
 
-loc l0_0: while True wait {}
+loc l0_0: invariant True
         when x_0 >= ct sync cool_0 do {} goto l1_0;
 
-loc l1_0: while True wait {}
-        when True sync rest_0 do {x_0'=0} goto l0_0;
+loc l1_0: invariant True
+        when True sync rest_0 do {x_0 := 0} goto l0_0;
 
 end
 
@@ -76,11 +76,11 @@ automaton Rod_1
 
 synclabs: cool_1, rest_1;
 
-loc l0_1: while True wait {}
+loc l0_1: invariant True
         when x_1 >= ct sync cool_1 do {} goto l1_1;
 
-loc l1_1: while True wait {}
-        when True sync rest_1 do {x_1'=0} goto l0_1;
+loc l1_1: invariant True
+        when True sync rest_1 do {x_1 := 0} goto l0_1;
 
 end
 
@@ -109,13 +109,6 @@ init :=
 	(*------------------------------------------------------------*)
 	& ct >= 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-(* property := unreachable loc[pta] = l1; *)
 
 
 (************************************************************)

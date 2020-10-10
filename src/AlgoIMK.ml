@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: IMK algorithm [AS11]
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/04
- * Last modified     : 2019/08/22
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -22,6 +23,7 @@ open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
+open AbstractProperty
 open Result
 open AlgoStateBased
 open State
@@ -33,7 +35,7 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoIMK =
+class algoIMK (pval : PVal.pval) =
 	object (self) inherit algoStateBased as super
 	
 	(************************************************************)
@@ -41,8 +43,7 @@ class algoIMK =
 	(************************************************************)
 	
 	val mutable nb_random_selections = 0
-
-	
+		
 	
 	(************************************************************)
 	(* Class methods *)
@@ -67,6 +68,14 @@ class algoIMK =
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Get the reference valuation *)
+	(*** HACK: for now, it is obtained from the property, stored in the Input module ***)
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	method get_reference_pval : PVal.pval =
+		pval
+
+	
+	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Checks a new state for pi0-compatibility .*)
 	(* constr            : new state constraint            *)
 	(*------------------------------------------------------------*)
@@ -80,7 +89,7 @@ class algoIMK =
 		(* Retrieve the input options *)
 		let options = Input.get_options () in
 		(* Retrieve the pi0 (dynamic!) *)
-		let pi0 = Input.get_pi0 () in
+		let reference_pval = self#get_reference_pval in
 		
 		self#print_algo_message_newline Verbose_medium ("Sarting pi0-compatibility check…");
 		
@@ -96,7 +105,7 @@ class algoIMK =
 		);
 		(* Check the pi0-compatibility *)
 		self#print_algo_message_newline Verbose_high ("Checking pi-compatibility:");
-		let compatible, incompatible = LinearConstraint.partition_pi0_compatible pi0#get_value p_constraint in
+		let compatible, incompatible = LinearConstraint.partition_pi0_compatible reference_pval#get_value p_constraint in
 		let is_pi0_incompatible = incompatible != [] in
 		
 		(* If pi0-incompatible: select an inequality *)
@@ -110,7 +119,7 @@ class algoIMK =
 				List.iter (fun inequality -> print_message Verbose_medium (LinearConstraint.string_of_p_linear_inequality model.variable_names inequality)) incompatible;
 				if verbose_mode_greater Verbose_high then(
 					self#print_algo_message_newline Verbose_high ("Recall that pi0 is:");
-					print_message Verbose_high   (ModelPrinter.string_of_pval model pi0);
+					print_message Verbose_high   (ModelPrinter.string_of_pval model reference_pval);
 				);
 			);
 			
@@ -140,7 +149,7 @@ class algoIMK =
 				if List.length incompatible > 1 then nb_random_selections <- nb_random_selections + 1;
 				
 				(* Negate the inequality *)
-				let negated_inequality = LinearConstraint.negate_wrt_pi0 pi0#get_value p_inequality in
+				let negated_inequality = LinearConstraint.negate_wrt_pi0 reference_pval#get_value p_inequality in
 				(* Print some information *)
 				if verbose_mode_greater Verbose_standard then(
 					let randomly = if not options#no_random then "randomly " else "" in
@@ -253,7 +262,7 @@ class algoIMK =
 			end;*)
 			
 		(* Try to add the new state to the state space *)
-		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
+		let addition_result = StateSpace.add_state state_space options#comparison_operator new_state in
 		
 		begin
 		match addition_result with
@@ -281,15 +290,6 @@ class algoIMK =
 			| StateSpace.State_already_present new_state_index ->
 				(* This may be a loop *)
 				self#process_looping_state new_state_index;
-	
-	(*** TODO: add back ***)
-(*			(* ELSE : add to SLAST if mode union *)
-				if options#union then (
-					print_message Verbose_low ("\nMode union: adding a looping state to SLast.");
-					(* Adding the state *)
-					(*** TODO / TO CHECK: what if new_state_index is already in slast?!! ***)
-					slast := new_state_index :: !slast;
-				);*)
 	
 			end; (* end else if added *)
 			
@@ -414,7 +414,7 @@ class algoIMK =
 		Point_based_result
 		{
 			(* Reference valuation *)
-			reference_val		= Input.get_pi0();
+			reference_val		= self#get_reference_pval;
 			
 			(* Result of the algorithm *)
 			result				= result;

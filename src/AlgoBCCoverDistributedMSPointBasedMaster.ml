@@ -3,12 +3,13 @@
  *                       IMITATOR
  *
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: master-worker with point-based distribution of points. [ACE14,ACN15]
  *
  * File contributors : Étienne André
  * Created           : 2016/03/10
- * Last modified     : 2016/10/10
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -39,9 +40,8 @@ open DistributedUtilities
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class virtual algoBCCoverDistributedMSPointBasedMaster =
-	object (self)
-	inherit AlgoBCCoverDistributed.algoBCCoverDistributed as super
+class virtual algoBCCoverDistributedMSPointBasedMaster (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit AlgoBCCoverDistributed.algoBCCoverDistributed v0 step algo_instance_function tiles_manager_type as super
 
 	(************************************************************)
 	(* Class variables *)
@@ -127,21 +127,21 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 	method private compute_and_send_point bc worker_rank =
 
 		(* Print some information *)
-		self#print_algo_message Verbose_low ("Computing next point to send...");
+		self#print_algo_message Verbose_low ("Computing next point to send…");
 
 		(* Find next point (dynamic fashion) *)
 		(*** NOTE: this operation (checking first point) could have been rather embedded in CartoGeneric ***)
 		let next_point =
 		if first_point then(
 			(* Print some information *)
-			self#print_algo_message Verbose_low ("Asking BC to compute the first point...");
+			self#print_algo_message Verbose_low ("Asking BC to compute the first point…");
 			(* Unset flag *)
 			first_point <- false;
 			(* Call specific function *)
 			bc#get_initial_point
 		)else(
 			(* Print some information *)
-			self#print_algo_message Verbose_low ("Asking BC to compute the next point...");
+			self#print_algo_message Verbose_low ("Asking BC to compute the next point…");
 			bc#compute_and_return_next_point
 		)
 		in
@@ -169,7 +169,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 	(* Processing requests from worker *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private process_pull_request bc =
-		self#print_algo_message Verbose_high ("Entered function 'process_pull_request'...");
+		self#print_algo_message Verbose_high ("Entered function 'process_pull_request'…");
 
 		(*** TODO ***)
 (* 		counter_master_waiting#start; *)
@@ -179,7 +179,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 
 		match pull_request with
 		| PullOnly worker_rank ->
-			self#print_algo_message Verbose_low ("Received PullOnly request...");
+			self#print_algo_message Verbose_low ("Received PullOnly request…");
 
 			(* Compute the next point and send it to the worker, or send terminate message if no more point *)
 			self#compute_and_send_point bc worker_rank;
@@ -189,12 +189,12 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 
 
 		| OutOfBound worker_rank ->
-			self#print_algo_message Verbose_low ("Received OutOfBound request...");
+			self#print_algo_message Verbose_low ("Received OutOfBound request…");
 			(*** TODO: DO SOMETHING TO HANDLE THE CASE OF A POINT THAT WAS NOT SUCCESSFUL ***)
 			raise (NotImplemented("OutOfBound not implemented."))
 
 		| Tile (worker_rank , abstract_point_based_result) ->
-			self#print_algo_message Verbose_low ("Received Tile request...");
+			self#print_algo_message Verbose_low ("Received Tile request…");
 			self#print_algo_message_newline Verbose_standard ("Received the following constraint from worker " ^ (string_of_int worker_rank));
 
 			(*** TODO: we may want to store somewhere the computation time of the worker, in order to infer its waiting/working time ***)
@@ -215,7 +215,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 	(* Processing last requests from worker, always send termination signal *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private process_termination_pull_request bc =
-		self#print_algo_message Verbose_high ("Entered function 'process_termination_pull_request'...");
+		self#print_algo_message Verbose_high ("Entered function 'process_termination_pull_request'…");
 
 		(*** TODO ***)
 (* 		counter_master_waiting#start; *)
@@ -225,7 +225,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 
 		match pull_request with
 		| PullOnly worker_rank ->
-			self#print_algo_message Verbose_low ("Received PullOnly request...");
+			self#print_algo_message Verbose_low ("Received PullOnly request…");
 
 			(* Send termination signal and keep track of the number of terminated workers *)
 			self#send_termination_signal worker_rank;
@@ -235,12 +235,12 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 
 
 		| OutOfBound worker_rank ->
-			self#print_algo_message Verbose_low ("Received OutOfBound request...");
+			self#print_algo_message Verbose_low ("Received OutOfBound request…");
 			(*** TODO: DO SOMETHING TO HANDLE THE CASE OF A POINT THAT WAS NOT SUCCESSFUL ***)
 			raise (NotImplemented("OutOfBound not implemented."))
 
 		| Tile (worker_rank , abstract_point_based_result) ->
-			self#print_algo_message Verbose_low ("Received Tile request...");
+			self#print_algo_message Verbose_low ("Received Tile request…");
 			self#print_algo_message Verbose_standard ("Received the following constraint from worker " ^ (string_of_int worker_rank));
 
 			(*** TODO: we may want to store somewhere the computation time of the worker, in order to infer its waiting/working time ***)
@@ -272,7 +272,7 @@ class virtual algoBCCoverDistributedMSPointBasedMaster =
 		(* Initialize the number of finished workers *)
 		nb_finished_workers <- 0;
 
-		self#print_algo_message Verbose_standard ("Starting...");
+		self#print_algo_message Verbose_standard ("Starting…");
 
 
 		(*** TODO : check that initial pi0 is suitable!! (could be incompatible with initial constraint) ***)

@@ -1,0 +1,78 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Sample latch circuit (ST-Microelectronics)
+ *
+ * Description     : Sample latch circuit
+ * Correctness     : ?
+ * Source          : Rémy Chevallier; Times by Patricia Renault (LIP6)
+ * Author          : Étienne André et al. (ANR VALMEM project)
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2009/12/28
+ * Last modified   : 2020/08/13
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+property := #synth IM(
+	(* First (old) valuations set (from IMITATOR 1?) *)
+(* 	& dClockHigh = 1000
+ 	& dClockLow = 1000
+ 
+ 	& dNot1Down_l = 147
+ 	& dNot1Down_u = 147
+ 
+ 	& dNot1Up_l= 219
+ 	& dNot1Up_u = 219
+ 
+ 	& dNot2Down_l = 163
+ 	& dNot2Down_u = 163
+ 
+ 	& dNot2Up_l = 155
+ 	& dNot2Up_u = 155
+ 
+ 	& dXorUp2Up_l = 147
+ 	& dXorUp2Up_u = 147
+ 
+ 	& dXorDown1Up_l = 416
+ 	& dXorDown1Up_u = 416
+ 	
+  	& dAndUp2_l = 80 
+  	& dAndUp2_u = 80
+ 
+ 	& dAndDown1_l = 155
+ 	& dAndDown1_u = 155
+ 
+ 	& dLatchUp_l = 240
+ 	& dLatchUp_u = 240
+ 
+  	& dHold = 350
+ 	& dSetup = 1
+	& dSetup = 140  value by PATRICIA
+	& dHold = -57 (!!!)  value by PATRICIA*)
+	
+	
+	(* Second (newer) valuations set *)
+	& dClockHigh = 1000
+	& dClockLow = 1000
+
+	& dNot1Down = 147
+	& dNot1Up= 219
+
+	& dNot2Down = 163
+	& dNot2Up = 155
+
+	& dXorUp2Up = 147
+	& dXorDown1Up = 416
+	
+	& dAndUp2 = 80 
+	& dAndDown1 = 155
+
+	& dLatchUp = 240
+
+	& dHold = 350
+	& dSetup = 1
+);

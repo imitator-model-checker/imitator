@@ -16,9 +16,9 @@
 
  *
  * Created         : 2015/12/04
- * Last modified   : 2015/12/04
+ * Last modified   : 2020/04/01
  *
- * IMITATOR version: 2.7.4-working
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -37,7 +37,7 @@ var
   automaton pta
 (************************************************************)
 
-loc l0: while True wait {}
+loc l0: invariant True
 	(* p <= 1 *)
 	when x <= 1 & x = p goto l1;
 
@@ -47,11 +47,11 @@ loc l0: while True wait {}
 	(* 2 <= p <= 4 *)
 	when 2 <= x & x <= 4 & x = p goto l3;
 
-loc l1: while True wait {}
+loc l1: invariant True
 
-loc l2: while True wait {}
+loc l2: invariant True
 
-loc l3: while True wait {}
+loc l3: invariant True
 
 end (* pta *)
 
@@ -78,12 +78,6 @@ init :=
 	& p >= 0
 ;
 
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-(* property := unreachable loc[pta] = l1; *)
 
 
 (************************************************************)

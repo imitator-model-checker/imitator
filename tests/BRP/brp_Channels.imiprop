@@ -1,0 +1,8 @@
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+(* property := unreachable 
+  (loc[channelK] = in_transitK & loc[channelL] = in_transitL);
+ *)
+property := #synth AGnot(loc[channelK] = in_transitK & loc[channelL] = in_transitL)
+

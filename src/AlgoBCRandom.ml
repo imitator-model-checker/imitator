@@ -3,13 +3,14 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Random Behavioral Cartography with a maximum number of consecutive failed attempts to find a non-integer point not covered by any tile [AF10]
  * Note: the algorithm does NOT track points already computed randomly but not kept because covered by some tile.
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/02
- * Last modified     : 2016/08/15
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -34,9 +35,8 @@ open AlgoCartoGeneric
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-(*** NOTE: this function cannot have max_tries as a parameter, as it it inherits algoCartoGeneric which has none ***)
-class algoBCRandom (*max_tries*) =
-	object (self) inherit algoCartoGeneric as super
+class algoBCRandom (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (max_tries: int) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
+	object (self) inherit algoCartoGeneric v0 step algo_instance_function tiles_manager_type as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -44,9 +44,6 @@ class algoBCRandom (*max_tries*) =
 	(* Current number of failed attempts to find an integer point not covered by any tile *)
 (* 	val mutable nb_failed_attempts = 0 *)
 
-	(* Variable to be initialized *)
-	val mutable max_tries : int option = None
-	
 	
 	(************************************************************)
 	(* Class methods *)
@@ -55,25 +52,9 @@ class algoBCRandom (*max_tries*) =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "BC random(" ^ (string_of_int self#get_max_tries) ^ ")"
+	method algorithm_name = "BC random(" ^ (string_of_int max_tries) ^ ")"
 
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Set the maximum number of tries (must be done right after creating the algorithm object!) *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method set_max_tries m =
-		max_tries <- Some m
-	
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Getting max_tries *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private get_max_tries : int =
-		match max_tries with
-			| Some m -> m
-			| None -> raise (InternalError ("In algoBCRandom.get_max_tries, the number of maximum tries should have been already initialized."))
-
-		
+			
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Variable initialization *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -104,9 +85,6 @@ class algoBCRandom (*max_tries*) =
 	(* Find the next point *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method find_next_point =
-		(* Get the max number of tries of BC *)
-		let max_tries = self#get_max_tries in
-
 		(* Print some information *)
 		self#print_algo_message Verbose_low ("Trying to randomly find a fresh pi0 with " ^ (string_of_int max_tries) ^ " tries.");
 
@@ -136,7 +114,7 @@ class algoBCRandom (*max_tries*) =
 		let tiles_manager = self#get_tiles_manager in
 		
 		(* Ask the tiles manager to process the result itself, by passing the appropriate arguments *)
-		tiles_manager#process_result start_time nb_points nb_unsuccessful_points termination_status forced_coverage_option
+		tiles_manager#process_result start_time v0 nb_points nb_unsuccessful_points termination_status forced_coverage_option
 
 
 (************************************************************)

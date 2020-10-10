@@ -4,13 +4,14 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: define global locations
  * 
  * File contributors        : Étienne André
  * Created                  : 2010/03/10
  * Renamed from Automaton.ml: 2015/10/22
- * Last modified            : 2019/10/16
+ * Last modified            : 2020/09/28
  *
  ************************************************************)
 
@@ -34,7 +35,10 @@ type global_location_index = int
 (** Global location: location for each automaton + value of the discrete *)
 type global_location
 
-
+(** Should the float be displaid using exact rationals or (possibly approximated) floats? *)
+type rational_display =
+	| Exact_display
+	| Float_display
 
 
 
@@ -85,10 +89,17 @@ val get_discrete_value : global_location -> discrete_index -> discrete_value
 (** Get a hash value for a location, including discrete values *)
 val hash_code : global_location -> int
 
+(** Check whether a global location is accepting according to the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
+val is_accepting : (automaton_index -> location_index -> bool) -> global_location -> bool
+
+(** Checks whether a global_location satisfies a state_predicate; takes as argument the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
+val match_state_predicate : (automaton_index -> location_index -> bool) -> AbstractProperty.state_predicate -> global_location -> bool
+
+
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 (** {3 Conversion} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
 
-(** 'string_of_location automata_names location_names discrete_names location' converts a location to a string. The Boolean indicates whether the discrete variables should be converted into float or not *)
-val string_of_location : (automaton_index -> automaton_name) -> (automaton_index -> location_index -> location_name) -> (discrete_index -> variable_name) -> bool -> global_location -> string
+(** 'string_of_location automata_names location_names discrete_names location' converts a location to a string. *)
+val string_of_location : (automaton_index -> automaton_name) -> (automaton_index -> location_index -> location_name) -> (discrete_index -> variable_name) -> rational_display -> global_location -> string

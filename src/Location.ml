@@ -4,13 +4,14 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: define global locations
  * 
  * File contributors        : Étienne André
  * Created                  : 2010/03/10
  * Renamed from Automaton.ml: 2015/10/22
- * Last modified            : 2019/10/16
+ * Last modified            : 2020/09/28
  *
  ************************************************************)
  
@@ -20,6 +21,7 @@
 (************************************************************)
 open OCamlUtilities
 open Automaton
+open AbstractProperty
 
 
 
@@ -60,9 +62,16 @@ let location_equal loc1 loc2 =
 		) 
 	)
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+
+(** Should the float be displaid using exact rationals or (possibly approximated) floats? *)
+type rational_display =
+	| Exact_display
+	| Float_display
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Automata} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 type automaton_index = int
 type automaton_name = string
@@ -114,9 +123,9 @@ let string_of_discrete names index =
 (** {2 Locations} *)
 (************************************************************)
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Initialization} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** 'initialize nb_automata min_discrete_index max_discrete_index' initializes the min and max discrete indexes and the number of automata. *)
 let initialize nb_auto min_discrete max_discrete =
@@ -125,9 +134,9 @@ let initialize nb_auto min_discrete max_discrete =
 	nb_automata := nb_auto
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Creation} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** 'make_location locations discrete_values' creates a new location. All automata should be given a location. Discrete variables may not be given a value (in which case they will be initialized to 0). *)
 let make_location locations_per_automaton discrete_values =
 	(* Create an array for locations *)
@@ -173,9 +182,10 @@ let update_location_with locations_per_automaton discrete_values (locations, dis
 	List.iter (fun (discrete_index, value) -> discrete.(discrete_index - !min_discrete_index) <- value) discrete_values
 
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Access} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
 (** Get the location associated to some automaton *)
 let get_location location automaton_index =
@@ -188,13 +198,98 @@ let get_discrete_value location discrete_index =
 	(* Do not forget the offset *)
 	discrete.(discrete_index - !min_discrete_index)
 
+	
 
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(************************************************************)
+(* Check whether the global location is accepting *)
+(************************************************************)
+
+(** Check whether a global location is accepting according to the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
+let is_accepting (locations_acceptance_condition : automaton_index -> location_index -> bool) (global_location : global_location) =
+	
+	let result = ref false in
+	(* Check whether a local location is accepting *)
+	
+	(*** TODO: rewrite using Array.exists! ***)
+	
+	Array.iteri (fun automaton_index location_index ->
+		result := !result || locations_acceptance_condition automaton_index location_index) (get_locations global_location);
+	
+	(* Return result *)
+	!result
+
+
+
+(************************************************************)
+(** Matching state predicates with a global location *)
+(************************************************************)
+
+(*------------------------------------------------------------*)
+(* Matching global_location predicates with a given global_location *)
+(*------------------------------------------------------------*)
+
+let match_loc_predicate loc_predicate global_location =
+	match loc_predicate with
+	| Loc_predicate_EQ (automaton_index, location_index) ->
+		get_location global_location automaton_index = location_index
+	| Loc_predicate_NEQ (automaton_index, location_index) ->
+		get_location global_location automaton_index <> location_index
+
+(*------------------------------------------------------------*)
+(* Matching simple predicates with a given global_location *)
+(*------------------------------------------------------------*)
+
+let match_simple_predicate (locations_acceptance_condition : automaton_index -> location_index -> bool) simple_predicate global_location =
+	match simple_predicate with
+	(* Here convert the global_location to a variable valuation *)
+	| Discrete_boolean_expression discrete_boolean_expression -> DiscreteExpressions.check_discrete_boolean_expression (get_discrete_value global_location) discrete_boolean_expression
+	
+	| Loc_predicate loc_predicate -> match_loc_predicate loc_predicate global_location
+
+	| State_predicate_true -> true
+	
+	| State_predicate_false -> false
+	
+	| State_predicate_accepting -> is_accepting locations_acceptance_condition global_location
+
+
+(*------------------------------------------------------------*)
+(* Matching state predicates with a given global_location *)
+(*------------------------------------------------------------*)
+
+(***TODO/NOTE: Might have been nicer to convert the acceptance condition during the ModelConverter phase :-/ ***)
+
+let rec match_state_predicate_factor (locations_acceptance_condition : automaton_index -> location_index -> bool) state_predicate_factor global_location : bool =
+	match state_predicate_factor with
+	| State_predicate_factor_NOT state_predicate_factor_neg -> not (match_state_predicate_factor locations_acceptance_condition state_predicate_factor_neg global_location)
+	| Simple_predicate simple_predicate -> match_simple_predicate locations_acceptance_condition simple_predicate global_location
+	| State_predicate state_predicate -> match_state_predicate locations_acceptance_condition state_predicate global_location
+
+and match_state_predicate_term (locations_acceptance_condition : automaton_index -> location_index -> bool) state_predicate_term global_location : bool =
+	match state_predicate_term with
+	| State_predicate_term_AND (state_predicate_term_1, state_predicate_term_2) ->
+		match_state_predicate_term locations_acceptance_condition state_predicate_term_1 global_location
+		&&
+		match_state_predicate_term locations_acceptance_condition state_predicate_term_2 global_location
+	| State_predicate_factor state_predicate_factor -> match_state_predicate_factor locations_acceptance_condition state_predicate_factor global_location
+
+and match_state_predicate (locations_acceptance_condition : automaton_index -> location_index -> bool) state_predicate global_location : bool =
+	match state_predicate with
+	| State_predicate_OR (state_predicate_1, state_predicate_2) ->
+		match_state_predicate locations_acceptance_condition state_predicate_1 global_location
+		||
+		match_state_predicate locations_acceptance_condition state_predicate_2 global_location
+	| State_predicate_term state_predicate_term -> match_state_predicate_term locations_acceptance_condition state_predicate_term global_location
+
+
+
+
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 (** {3 Conversion} *)
-(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**)
+(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(** 'string_of_location automata_names location_names discrete_names location' converts a location to a string. The Boolean indicates whether the discrete variables should be converted into float or not *)
-let string_of_location automata_names location_names discrete_names convert_to_float location =
+(** 'string_of_location automata_names location_names discrete_names location' converts a location to a string. *)
+let string_of_location automata_names location_names discrete_names rational_display location =
 	(* Get the locations per automaton *)
 	let locations = get_locations location in
 	(* Get the values for discrete variables *)
@@ -206,12 +301,11 @@ let string_of_location automata_names location_names discrete_names convert_to_f
 	let location_string = string_of_array_of_string_with_sep ", " string_array in
 	(* Convert the discrete *)
 	let string_array = Array.mapi (fun discrete_index value ->
-		(string_of_discrete discrete_names discrete_index) ^ " = " ^ (NumConst.string_of_numconst value) ^(
+		(string_of_discrete discrete_names discrete_index) ^ " = " ^ (NumConst.string_of_numconst value) ^ (
 			(* Convert to float? *)
-			if convert_to_float then (
-				" (~ " ^ (string_of_float (NumConst.to_float value)) ^ ")"
-			)
-			else ""
+			match rational_display with
+			| Exact_display -> ""
+			| Float_display -> " (~ " ^ (string_of_float (NumConst.to_float value)) ^ ")"
 		)
 	) discrete in
 	let discrete_string = string_of_array_of_string_with_sep ", " string_array in

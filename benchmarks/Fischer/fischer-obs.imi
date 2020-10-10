@@ -1,23 +1,30 @@
---************************************************************--
---************************************************************--
---
---   Fischer's mutual exclusion protocol
---
---   Romain SOULAT, Etienne ANDRE
---   Laboratoire Specification Verification & CNRS, France
---   LIPN, Universite Paris 13, France
---
---                                Created : < 2012/02/14
---                  Fork from fischer.imi :   2015/02/18
---                          Last modified :   2015/02/18
---************************************************************--
---************************************************************--
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Fischer's mutual exclusion protocol
+ *
+ * Description     : Fischer's mutual exclusion protocol
+ * Correctness     : At most 1 process in CS
+ * Source          : ?
+ * Author          : ?
+ * Modeling        : Romain Soulat, Étienne André
+ * Input by        : Romain Soulat, Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : < 2012/02/14
+ * Fork from       : 
+ * Fork date       : 2015/02/18
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+ 
 
 var 
-	x1, -- P1's clock
-	x2  -- P2's clock
-		:clock;
 	
+	x1, (*P1's clock*)
+	x2, (*P2's clock*)
+		:clock;
 
 	k
 		: discrete;
@@ -28,65 +35,65 @@ var
 
 
 
---************************************************************--
+(************************************************************)
 automaton proc1
---************************************************************--
+(************************************************************)
 synclabs : tau,start1,set1,enter1,abort1,release1;
 
 
-loc idle: while True wait {}
-	when k=0 sync start1 do {x1' =0} goto start;
+loc idle: invariant True
+	when k=0 sync start1 do {x1 :=0} goto start;
 	when True sync tau do {} goto idle;
 	
-loc start: while x1<=a wait {}
-	when True sync set1 do {k' =1 , x1' =0} goto check;
+loc start: invariant x1<=a
+	when True sync set1 do {k :=1 , x1 :=0} goto check;
 	when True sync tau do {} goto start;
 
-loc check: while True wait {}
+loc check: invariant True
 	when k=1 & x1>=b sync enter1 goto CS;
 	when k<1 & x1>=b sync abort1 goto idle;
 	when k>1 & x1>=b sync abort1 goto idle;
 	when True sync tau do {} goto check;
 
-loc CS: while True wait {}
-	when True sync release1 do {k' = 0} goto idle;
+loc CS: invariant True
+	when True sync release1 do {k := 0} goto idle;
 	when True sync tau do {} goto CS;
 end
 
---************************************************************--
+(************************************************************)
 automaton proc2
---************************************************************--
+(************************************************************)
 synclabs : tau,start2,set2,enter2,abort2,release2;
 
 
-loc idle: while True wait {}
-	when k=0 sync start2 do {x2' =0} goto start;
+loc idle: invariant True
+	when k=0 sync start2 do {x2 :=0} goto start;
 	when True sync tau do {} goto idle;
 	
-loc start: while x2<=a wait {}
-	when True sync set2 do {k' =2,x2' =0} goto check;
+loc start: invariant x2<=a
+	when True sync set2 do {k :=2,x2 :=0} goto check;
 	when True sync tau do {} goto start;
 
-loc check: while True wait {}
+loc check: invariant True
 	when k=2 & x2>=b sync enter2 goto CS;
 	when k<2 & x2>=b sync abort2 goto idle;
 	when k>2 & x2>=b sync abort2 goto idle;
 	when True sync tau do {} goto check;
 
-loc CS: while True wait {}
-	when True sync release2 do {k' = 0} goto idle;
+loc CS: invariant True
+	when True sync release2 do {k := 0} goto idle;
 	when True sync tau do {} goto CS;
 end
 
---************************************************************--
+(************************************************************)
 automaton arbitrer
---************************************************************--
+(************************************************************)
 synclabs : set1,release1,
            set2,release2,
 	   tau;
 	   
 
-loc loc_arbitrer: while True wait {}
+loc loc_arbitrer: invariant True
 	when True sync set1 do {} goto loc_arbitrer;
 	when True sync release1 do {} goto loc_arbitrer;
 	when True sync set2 do {} goto loc_arbitrer;
@@ -95,66 +102,64 @@ loc loc_arbitrer: while True wait {}
 end
 
 
---************************************************************--
+(************************************************************)
 automaton obs
---************************************************************--
+(************************************************************)
 synclabs : enter1, release1,
            enter2, release2;
 	   
 
-loc obs0: while True wait {}
+loc obs0: invariant True
 	when True sync enter1 goto obs1;
 	when True sync enter2 goto obs2;
 
-loc obs1: while True wait {}
+loc obs1: invariant True
 	when True sync release1 goto obs0;
 	when True sync enter2 goto violation;
 
-loc obs2: while True wait {}
+loc obs2: invariant True
 	when True sync release2 goto obs0;
 	when True sync enter1 goto violation;
 
-loc violation: while True wait {}
+loc violation: invariant True
 
 end
 
 
---************************************************************--
---************************************************************--
--- ANALYSIS
---************************************************************--
---************************************************************--
+(************************************************************)
+(* Initial state *)
+(************************************************************)
 
-
-var 
-   init: region;
-
-   
-init:=
-	----------------------
-	-- Initial locations
-	----------------------
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
 	  loc[proc1] = idle
 	& loc[proc2] = idle
 	& loc[arbitrer] = loc_arbitrer
 	& loc[obs] = obs0
 	
-	----------------------
-	-- Clocks
-	----------------------
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+	& k=0
+	
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
 	& x1 = 0
 	& x2 = 0
 	
-	----------------------
-	-- Discrete
-	----------------------
-	& k=0
 
-	----------------------
-	-- Parameters
-	----------------------
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
 	& a >= 0
 	& b >= 0
 ;
 
-property := unreachable loc[obs] = violation;
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -13,7 +13,7 @@ automaton checker
 synclabs: m_0_job_1_beginning, m_0_job_1_finishing, m_3_job_1_beginning, m_3_job_1_finishing, m_1_job_1_beginning, m_1_job_1_finishing, m_4_job_1_beginning, m_4_job_1_finishing, m_2_job_1_beginning, m_2_job_1_finishing,m_4_job_2_beginning, m_4_job_2_finishing, m_2_job_2_beginning, m_2_job_2_finishing, m_0_job_2_beginning, m_0_job_2_finishing, m_1_job_2_beginning, m_1_job_2_finishing, m_3_job_2_beginning, m_3_job_2_finishing, DEADLINE;
 
 
-loc check_1: while time <= deadline wait {}
+loc check_1: invariant time <= deadline
 	when True sync m_0_job_1_beginning goto check_1;
 	when True sync m_0_job_1_finishing goto check_1;
 	when True sync m_1_job_1_beginning goto check_1;
@@ -38,7 +38,7 @@ loc check_1: while time <= deadline wait {}
 
 	when time = deadline sync DEADLINE goto error;
 
-loc check_2: while time <= deadline wait {}
+loc check_2: invariant time <= deadline
 	when True sync m_0_job_1_beginning goto check_2;
 	when True sync m_0_job_1_finishing goto check_2;
 	when True sync m_1_job_1_beginning goto check_2;
@@ -63,9 +63,9 @@ loc check_2: while time <= deadline wait {}
 
 	when time = deadline sync DEADLINE goto error;
 
-loc success: while time <= deadline wait {}
+loc success: invariant time <= deadline
 
-loc error: while time <= deadline wait {}
+loc error: invariant time <= deadline
 
 end
 
@@ -73,17 +73,17 @@ automaton job_1
 
 synclabs: m_0_job_1_beginning, m_0_job_1_finishing, m_3_job_1_beginning, m_3_job_1_finishing, m_1_job_1_beginning, m_1_job_1_finishing, m_4_job_1_beginning, m_4_job_1_finishing, m_2_job_1_beginning, m_2_job_1_finishing, m_4_job_2_beginning, m_2_job_2_beginning, m_0_job_2_beginning, m_1_job_2_beginning, m_3_job_2_beginning;
 
--- TASK 1 --
+(*-- TASK 1 --*)
 
-loc m_0_waiting: while True stop{c_1} wait {}
-	when True sync m_0_job_1_beginning do {c_1'=0} goto m_0_running;
+loc m_0_waiting: invariant True stop{c_1}
+	when True sync m_0_job_1_beginning do {c_1 := 0} goto m_0_running;
 	when True sync m_4_job_2_beginning do {} goto m_0_waiting;
 	when True sync m_2_job_2_beginning do {} goto m_0_waiting;
 	when True sync m_0_job_2_beginning do {} goto m_0_waiting;
 	when True sync m_1_job_2_beginning do {} goto m_0_waiting;
 	when True sync m_3_job_2_beginning do {} goto m_0_waiting;
 
-loc m_0_running: while c_1 <= wcet_m_0_job_1 wait {}
+loc m_0_running: invariant c_1 <= wcet_m_0_job_1
 	when c_1 = wcet_m_0_job_1 sync m_0_job_1_finishing do {} goto m_3_waiting;
 	when c_1 < wcet_m_0_job_1 sync m_0_job_2_beginning do {} goto m_0_preempted;
 	when c_1 < wcet_m_0_job_1 sync m_4_job_2_beginning do {} goto m_0_running;
@@ -92,7 +92,7 @@ loc m_0_running: while c_1 <= wcet_m_0_job_1 wait {}
 	when c_1 < wcet_m_0_job_1 sync m_3_job_2_beginning do {} goto m_0_running;
 
 
-loc m_0_preempted: while True stop{c_1} wait {}
+loc m_0_preempted: invariant True stop{c_1}
 	when True sync m_0_job_1_beginning do {} goto m_0_running;
 	when True sync m_4_job_2_beginning do {} goto m_0_preempted;
 	when True sync m_1_job_2_beginning do {} goto m_0_preempted;
@@ -100,17 +100,17 @@ loc m_0_preempted: while True stop{c_1} wait {}
 	when True sync m_3_job_2_beginning do {} goto m_0_preempted;
 	when True sync m_0_job_2_beginning do {} goto m_0_preempted;
 
--- TASK 2 --
+(*-- TASK 2 --*)
 
-loc m_3_waiting: while True stop{c_1} wait {}
-	when True sync m_3_job_1_beginning do {c_1'=0} goto m_3_running;
+loc m_3_waiting: invariant True stop{c_1}
+	when True sync m_3_job_1_beginning do {c_1 := 0} goto m_3_running;
 	when True sync m_4_job_2_beginning do {} goto m_3_waiting;
 	when True sync m_1_job_2_beginning do {} goto m_3_waiting;
 	when True sync m_2_job_2_beginning do {} goto m_3_waiting;
 	when True sync m_3_job_2_beginning do {} goto m_3_waiting;
 	when True sync m_0_job_2_beginning do {} goto m_3_waiting;
 
-loc m_3_running: while c_1 <= wcet_m_3_job_1  wait {}
+loc m_3_running: invariant c_1 <= wcet_m_3_job_1 
 	when c_1 = wcet_m_3_job_1 sync m_3_job_1_finishing do {} goto m_1_waiting;
 	when c_1 < wcet_m_3_job_1 sync m_3_job_2_beginning do {} goto m_3_preempted;
 	when c_1 < wcet_m_3_job_1 sync m_4_job_2_beginning do {} goto m_3_running;
@@ -118,7 +118,7 @@ loc m_3_running: while c_1 <= wcet_m_3_job_1  wait {}
 	when c_1 < wcet_m_3_job_1 sync m_2_job_2_beginning do {} goto m_3_running;
 	when c_1 < wcet_m_3_job_1 sync m_0_job_2_beginning do {} goto m_3_running;
 
-loc m_3_preempted: while True stop{c_1} wait {}
+loc m_3_preempted: invariant True stop{c_1}
 	when True sync m_3_job_1_beginning do {} goto m_3_running;
 	when True sync m_4_job_2_beginning do {} goto m_3_preempted;
 	when True sync m_1_job_2_beginning do {} goto m_3_preempted;
@@ -126,17 +126,17 @@ loc m_3_preempted: while True stop{c_1} wait {}
 	when True sync m_3_job_2_beginning do {} goto m_3_preempted;
 	when True sync m_0_job_2_beginning do {} goto m_3_preempted;
 
--- TASK 3 --
+(* -- TASK 3 -- *)
 
-loc m_1_waiting: while True stop{c_1} wait {}
-	when True sync m_1_job_1_beginning do {c_1'=0} goto m_1_running;
+loc m_1_waiting: invariant True stop{c_1}
+	when True sync m_1_job_1_beginning do {c_1 := 0} goto m_1_running;
 	when True sync m_4_job_2_beginning do {} goto m_1_waiting;
 	when True sync m_1_job_2_beginning do {} goto m_1_waiting;
 	when True sync m_2_job_2_beginning do {} goto m_1_waiting;
 	when True sync m_3_job_2_beginning do {} goto m_1_waiting;
 	when True sync m_0_job_2_beginning do {} goto m_1_waiting;
 
-loc m_1_running: while c_1 <= wcet_m_1_job_1 wait {}
+loc m_1_running: invariant c_1 <= wcet_m_1_job_1
 	when c_1 = wcet_m_1_job_1 sync m_1_job_1_finishing do {} goto m_4_waiting;
 	when c_1 < wcet_m_1_job_1 sync m_1_job_2_beginning do {} goto m_1_preempted;
 	when c_1 < wcet_m_1_job_1 sync m_4_job_2_beginning do {} goto m_1_running;
@@ -144,7 +144,7 @@ loc m_1_running: while c_1 <= wcet_m_1_job_1 wait {}
 	when c_1 < wcet_m_1_job_1 sync m_3_job_2_beginning do {} goto m_1_running;
 	when c_1 < wcet_m_1_job_1 sync m_0_job_2_beginning do {} goto m_1_running;
 
-loc m_1_preempted: while True stop{c_1} wait {}
+loc m_1_preempted: invariant True stop{c_1}
 	when True sync m_1_job_1_beginning do {} goto m_1_running;
 	when True sync m_4_job_2_beginning do {} goto m_1_preempted;
 	when True sync m_1_job_2_beginning do {} goto m_1_preempted;
@@ -152,17 +152,17 @@ loc m_1_preempted: while True stop{c_1} wait {}
 	when True sync m_3_job_2_beginning do {} goto m_1_preempted;
 	when True sync m_0_job_2_beginning do {} goto m_1_preempted;
 
--- TASK 4 --
+(* -- TASK 4 -- *)
 
-loc m_4_waiting: while True stop{c_1} wait {}
-	when True sync m_4_job_1_beginning do {c_1'=0} goto m_4_running;
+loc m_4_waiting: invariant True stop{c_1}
+	when True sync m_4_job_1_beginning do {c_1 := 0} goto m_4_running;
 	when True sync m_4_job_2_beginning do {} goto m_4_waiting;
 	when True sync m_1_job_2_beginning do {} goto m_4_waiting;
 	when True sync m_2_job_2_beginning do {} goto m_4_waiting;
 	when True sync m_3_job_2_beginning do {} goto m_4_waiting;
 	when True sync m_0_job_2_beginning do {} goto m_4_waiting;
 
-loc m_4_running: while c_1 <= wcet_m_4_job_1 wait {}
+loc m_4_running: invariant c_1 <= wcet_m_4_job_1
 	when c_1 = wcet_m_4_job_1 sync m_4_job_1_finishing do {} goto m_2_waiting;
 	when c_1 < wcet_m_4_job_1 sync m_4_job_2_beginning do {} goto m_4_preempted;
 	when c_1 < wcet_m_4_job_1 sync m_1_job_2_beginning do {} goto m_4_running;
@@ -170,7 +170,7 @@ loc m_4_running: while c_1 <= wcet_m_4_job_1 wait {}
 	when c_1 < wcet_m_4_job_1 sync m_3_job_2_beginning do {} goto m_4_running;
 	when c_1 < wcet_m_4_job_1 sync m_0_job_2_beginning do {} goto m_4_running;
 
-loc m_4_preempted: while True stop{c_1} wait {}
+loc m_4_preempted: invariant True stop{c_1}
 	when True sync m_4_job_1_beginning do {} goto m_4_running;
 	when True sync m_4_job_2_beginning do {} goto m_4_preempted;
 	when True sync m_1_job_2_beginning do {} goto m_4_preempted;
@@ -178,17 +178,17 @@ loc m_4_preempted: while True stop{c_1} wait {}
 	when True sync m_3_job_2_beginning do {} goto m_4_preempted;
 	when True sync m_0_job_2_beginning do {} goto m_4_preempted;
 
--- TASK 5 --
+(* -- TASK 5 -- *)
 
-loc m_2_waiting: while True stop{c_1} wait {}
-	when True sync m_2_job_1_beginning do {c_1'=0} goto m_2_running;
+loc m_2_waiting: invariant True stop{c_1}
+	when True sync m_2_job_1_beginning do {c_1 := 0} goto m_2_running;
 	when True sync m_4_job_2_beginning do {} goto m_2_waiting;
 	when True sync m_1_job_2_beginning do {} goto m_2_waiting;
 	when True sync m_2_job_2_beginning do {} goto m_2_waiting;
 	when True sync m_3_job_2_beginning do {} goto m_2_waiting;
 	when True sync m_0_job_2_beginning do {} goto m_2_waiting;
 
-loc m_2_running: while c_1 <= wcet_m_2_job_1 wait {}
+loc m_2_running: invariant c_1 <= wcet_m_2_job_1
 	when c_1 = wcet_m_2_job_1 sync m_2_job_1_finishing do {} goto success;
 	when c_1 < wcet_m_2_job_1 sync m_2_job_2_beginning do {} goto m_2_preempted;
 	when c_1 < wcet_m_2_job_1 sync m_4_job_2_beginning do {} goto m_2_running;
@@ -196,7 +196,7 @@ loc m_2_running: while c_1 <= wcet_m_2_job_1 wait {}
 	when c_1 < wcet_m_2_job_1 sync m_3_job_2_beginning do {} goto m_2_running;
 	when c_1 < wcet_m_2_job_1 sync m_0_job_2_beginning do {} goto m_2_running;
 
-loc m_2_preempted: while True stop{c_1} wait {}
+loc m_2_preempted: invariant True stop{c_1}
 	when True sync m_2_job_1_beginning do {} goto m_2_running;
 	when True sync m_4_job_2_beginning do {} goto m_2_preempted;
 	when True sync m_1_job_2_beginning do {} goto m_2_preempted;
@@ -204,9 +204,9 @@ loc m_2_preempted: while True stop{c_1} wait {}
 	when True sync m_3_job_2_beginning do {} goto m_2_preempted;
 	when True sync m_0_job_2_beginning do {} goto m_2_preempted;
 
--- END --
+(* -- END -- *)
 
-loc success : while True wait {}
+loc success : invariant True
 
 end
 
@@ -216,17 +216,17 @@ automaton job_2
 
 synclabs: m_4_job_2_beginning, m_4_job_2_finishing, m_2_job_2_beginning, m_2_job_2_finishing, m_0_job_2_beginning, m_0_job_2_finishing, m_1_job_2_beginning, m_1_job_2_finishing, m_3_job_2_beginning, m_3_job_2_finishing, m_0_job_1_beginning, m_3_job_1_beginning, m_1_job_1_beginning, m_4_job_1_beginning, m_2_job_1_beginning;
 
--- TASK 1 --
+(* -- TASK 1 -- *)
 
-loc m_4_waiting: while True stop{c_2} wait {}
-	when True sync m_4_job_2_beginning do {c_2'=0} goto m_4_running;
+loc m_4_waiting: invariant True stop{c_2}
+	when True sync m_4_job_2_beginning do {c_2 := 0} goto m_4_running;
 	when True sync m_0_job_1_beginning do {} goto m_4_waiting;
 	when True sync m_3_job_1_beginning do {} goto m_4_waiting;
 	when True sync m_1_job_1_beginning do {} goto m_4_waiting;
 	when True sync m_4_job_1_beginning do {} goto m_4_waiting;
 	when True sync m_2_job_1_beginning do {} goto m_4_waiting;
 
-loc m_4_running: while c_2 <= wcet_m_4_job_2 wait {}
+loc m_4_running: invariant c_2 <= wcet_m_4_job_2
 	when c_2 = wcet_m_4_job_2 sync m_4_job_2_finishing do {} goto m_2_waiting;
 	when c_2 < wcet_m_4_job_2 sync m_4_job_1_beginning do {} goto m_4_preempted;
 	when c_2 < wcet_m_4_job_2 sync m_0_job_1_beginning do {} goto m_4_running;
@@ -235,7 +235,7 @@ loc m_4_running: while c_2 <= wcet_m_4_job_2 wait {}
 	when c_2 < wcet_m_4_job_2 sync m_2_job_1_beginning do {} goto m_4_running;
 
 
-loc m_4_preempted: while True stop{c_2} wait {}
+loc m_4_preempted: invariant True stop{c_2}
 	when True sync m_4_job_2_beginning do {} goto m_4_running;
 	when True sync m_0_job_1_beginning do {} goto m_4_preempted;
 	when True sync m_3_job_1_beginning do {} goto m_4_preempted;
@@ -243,17 +243,17 @@ loc m_4_preempted: while True stop{c_2} wait {}
 	when True sync m_4_job_1_beginning do {} goto m_4_preempted;
 	when True sync m_2_job_1_beginning do {} goto m_4_preempted;
 
--- TASK 2 --
+(* -- TASK 2 -- *)
 
-loc m_2_waiting: while True stop{c_2} wait {}
-	when True sync m_2_job_2_beginning do {c_2'=0} goto m_2_running;
+loc m_2_waiting: invariant True stop{c_2}
+	when True sync m_2_job_2_beginning do {c_2 := 0} goto m_2_running;
 	when True sync m_0_job_1_beginning do {} goto m_2_waiting;
 	when True sync m_3_job_1_beginning do {} goto m_2_waiting;
 	when True sync m_1_job_1_beginning do {} goto m_2_waiting;
 	when True sync m_4_job_1_beginning do {} goto m_2_waiting;
 	when True sync m_2_job_1_beginning do {} goto m_2_waiting;
 
-loc m_2_running: while c_2 <= wcet_m_2_job_2 wait {}
+loc m_2_running: invariant c_2 <= wcet_m_2_job_2
 	when c_2 = wcet_m_2_job_2 sync m_2_job_2_finishing do {} goto m_0_waiting;
 	when c_2 < wcet_m_2_job_2 sync m_2_job_1_beginning do {} goto m_2_preempted;
 	when c_2 < wcet_m_2_job_2 sync m_0_job_1_beginning do {} goto m_2_running;
@@ -261,7 +261,7 @@ loc m_2_running: while c_2 <= wcet_m_2_job_2 wait {}
 	when c_2 < wcet_m_2_job_2 sync m_1_job_1_beginning do {} goto m_2_running;
 	when c_2 < wcet_m_2_job_2 sync m_4_job_1_beginning do {} goto m_2_running;
 
-loc m_2_preempted: while True stop{c_2} wait {}
+loc m_2_preempted: invariant True stop{c_2}
 	when True sync m_2_job_2_beginning do {} goto m_2_running;
 	when True sync m_0_job_1_beginning do {} goto m_2_preempted;
 	when True sync m_3_job_1_beginning do {} goto m_2_preempted;
@@ -269,17 +269,17 @@ loc m_2_preempted: while True stop{c_2} wait {}
 	when True sync m_4_job_1_beginning do {} goto m_2_preempted;
 	when True sync m_2_job_1_beginning do {} goto m_2_preempted;
 
--- TASK 3 --
+(* -- TASK 3 -- *)
 
-loc m_0_waiting: while True stop{c_2} wait {}
-	when True sync m_0_job_2_beginning do {c_2'=0} goto m_0_running;
+loc m_0_waiting: invariant True stop{c_2}
+	when True sync m_0_job_2_beginning do {c_2 := 0} goto m_0_running;
 	when True sync m_0_job_1_beginning do {} goto m_0_waiting;
 	when True sync m_3_job_1_beginning do {} goto m_0_waiting;
 	when True sync m_1_job_1_beginning do {} goto m_0_waiting;
 	when True sync m_4_job_1_beginning do {} goto m_0_waiting;
 	when True sync m_2_job_1_beginning do {} goto m_0_waiting;
 
-loc m_0_running: while c_2 <= wcet_m_0_job_2 wait {}
+loc m_0_running: invariant c_2 <= wcet_m_0_job_2
 	when c_2 = wcet_m_0_job_2 sync m_0_job_2_finishing do {} goto m_1_waiting;
 	when c_2 < wcet_m_0_job_2 sync m_0_job_1_beginning do {} goto m_0_preempted;
 	when c_2 < wcet_m_0_job_2 sync m_3_job_1_beginning do {} goto m_0_running;
@@ -287,7 +287,7 @@ loc m_0_running: while c_2 <= wcet_m_0_job_2 wait {}
 	when c_2 < wcet_m_0_job_2 sync m_4_job_1_beginning do {} goto m_0_running;
 	when c_2 < wcet_m_0_job_2 sync m_2_job_1_beginning do {} goto m_0_running;
 
-loc m_0_preempted: while True stop{c_2} wait {}
+loc m_0_preempted: invariant True stop{c_2}
 	when True sync m_0_job_2_beginning do {} goto m_0_running;
 	when True sync m_0_job_1_beginning do {} goto m_0_preempted;
 	when True sync m_3_job_1_beginning do {} goto m_0_preempted;
@@ -295,17 +295,17 @@ loc m_0_preempted: while True stop{c_2} wait {}
 	when True sync m_4_job_1_beginning do {} goto m_0_preempted;
 	when True sync m_2_job_1_beginning do {} goto m_0_preempted;
 
--- TASK 4 --
+(* -- TASK 4 -- *)
 
-loc m_1_waiting: while True stop{c_2} wait {}
-	when True sync m_1_job_2_beginning do {c_2'=0} goto m_1_running;
+loc m_1_waiting: invariant True stop{c_2}
+	when True sync m_1_job_2_beginning do {c_2 := 0} goto m_1_running;
 	when True sync m_0_job_1_beginning do {} goto m_1_waiting;
 	when True sync m_3_job_1_beginning do {} goto m_1_waiting;
 	when True sync m_1_job_1_beginning do {} goto m_1_waiting;
 	when True sync m_4_job_1_beginning do {} goto m_1_waiting;
 	when True sync m_2_job_1_beginning do {} goto m_1_waiting;
 
-loc m_1_running: while c_2 <= wcet_m_1_job_2 wait {}
+loc m_1_running: invariant c_2 <= wcet_m_1_job_2
 	when c_2 = wcet_m_1_job_2 sync m_1_job_2_finishing do {} goto m_3_running;
 	when c_2 < wcet_m_1_job_2 sync m_1_job_1_beginning do {} goto m_1_preempted;
 	when c_2 < wcet_m_1_job_2 sync m_0_job_1_beginning do {} goto m_1_running;
@@ -313,7 +313,7 @@ loc m_1_running: while c_2 <= wcet_m_1_job_2 wait {}
 	when c_2 < wcet_m_1_job_2 sync m_4_job_1_beginning do {} goto m_1_running;
 	when c_2 < wcet_m_1_job_2 sync m_2_job_1_beginning do {} goto m_1_running;
 
-loc m_1_preempted: while True stop{c_2} wait {}
+loc m_1_preempted: invariant True stop{c_2}
 	when True sync m_1_job_2_beginning do {} goto m_1_running;
 	when True sync m_0_job_1_beginning do {} goto m_1_preempted;
 	when True sync m_3_job_1_beginning do {} goto m_1_preempted;
@@ -321,17 +321,17 @@ loc m_1_preempted: while True stop{c_2} wait {}
 	when True sync m_4_job_1_beginning do {} goto m_1_preempted;
 	when True sync m_2_job_1_beginning do {} goto m_1_preempted;
 
--- TASK 5 --
+(* -- TASK 5 -- *)
 
-loc m_3_waiting: while True stop{c_2} wait {}
-	when True sync m_3_job_2_beginning do {c_2'=0} goto m_3_running;
+loc m_3_waiting: invariant True stop{c_2}
+	when True sync m_3_job_2_beginning do {c_2 := 0} goto m_3_running;
 	when True sync m_0_job_1_beginning do {} goto m_3_waiting;
 	when True sync m_3_job_1_beginning do {} goto m_3_waiting;
 	when True sync m_1_job_1_beginning do {} goto m_3_waiting;
 	when True sync m_4_job_1_beginning do {} goto m_3_waiting;
 	when True sync m_2_job_1_beginning do {} goto m_3_waiting;
 
-loc m_3_running: while c_2 <= wcet_m_3_job_2 wait {}
+loc m_3_running: invariant c_2 <= wcet_m_3_job_2
 	when c_2 = wcet_m_3_job_2 sync m_3_job_2_finishing do {} goto success;
 	when c_2 < wcet_m_3_job_2 sync m_3_job_1_beginning do {} goto m_3_preempted;
 	when c_2 < wcet_m_3_job_2 sync m_0_job_1_beginning do {} goto m_3_running;
@@ -339,7 +339,7 @@ loc m_3_running: while c_2 <= wcet_m_3_job_2 wait {}
 	when c_2 < wcet_m_3_job_2 sync m_4_job_1_beginning do {} goto m_3_running;
 	when c_2 < wcet_m_3_job_2 sync m_2_job_1_beginning do {} goto m_3_running;
 
-loc m_3_preempted: while True stop{c_2} wait {}
+loc m_3_preempted: invariant True stop{c_2}
 	when True sync m_3_job_2_beginning do {} goto m_3_running;
 	when True sync m_0_job_1_beginning do {} goto m_3_preempted;
 	when True sync m_3_job_1_beginning do {} goto m_3_preempted;
@@ -347,15 +347,21 @@ loc m_3_preempted: while True stop{c_2} wait {}
 	when True sync m_4_job_1_beginning do {} goto m_3_preempted;
 	when True sync m_2_job_1_beginning do {} goto m_3_preempted;
 
--- END --
+(* -- END -- *)
 
-loc success : while True wait {}
+loc success : invariant True
 
 end
 
-var init: region;
+(************************************************************)
+(* Initial state *)
+(************************************************************)
 
-init:= 	loc[checker] = check_1 &
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+			loc[checker] = check_1 &
 			loc[job_1] = m_0_waiting &
 			loc[job_2] = m_4_waiting &
 			c_1 = 0 &
@@ -367,13 +373,27 @@ init:= 	loc[checker] = check_1 &
 			wcet_m_2_job_1 = 17 &
 			wcet_m_3_job_1 = 87 &			
 			wcet_m_4_job_1 = 76 &
---			wcet_m_0_job_2 = 24 &
+(*--			wcet_m_0_job_2 = 24 &
 --			wcet_m_1_job_2 = 18 &
 --			wcet_m_2_job_2 = 32 &
 --			wcet_m_3_job_2 = 81 &			
---			wcet_m_4_job_2 = 25 &
+--			wcet_m_4_job_2 = 25 &*)
 			deadline = 231 &
 			True
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+			& wcet_m_4_job_2 >= 0
+			& wcet_m_2_job_2 >= 0
+			& wcet_m_0_job_2 >= 0
+			& wcet_m_1_job_2 >= 0
+			& wcet_m_3_job_2 >= 0
 ;
 
 			
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

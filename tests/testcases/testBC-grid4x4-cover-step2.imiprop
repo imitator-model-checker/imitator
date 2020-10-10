@@ -1,0 +1,26 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy example to test BC
+ *
+ * Description     : Example for which each integer point has its own behavior, and hence yields a different tile in BC
+ * Correctness     : N/A
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+ *
+ * Created         : 2020/09/04
+ * Last modified   : 2020/09/04
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+property := #synth BCcover(
+p1 = 1..4
+p2 = 1..4
+,
+step=2
+);

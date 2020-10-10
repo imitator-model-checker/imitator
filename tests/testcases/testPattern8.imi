@@ -1,0 +1,89 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Simple model to test observer patterns
+ *
+ * Description     : Simple model to test observer patterns "sequence a1, …, an" and "always sequence a1, …, an"
+ * Correctness     : The pattern should be satisfied for the following parameter valuations:
+ *                   - pattern "sequence a1, …, an"        : p \in [0,4)
+ *                   - pattern "always sequence a1, …, an" : p \in [0,3) U (3, 4)
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/08/25
+ * Last modified   : 2020/08/25
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y
+		: clock;
+
+(* Parameters *)
+	p
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a1, a2, a3, a4, a5;
+
+loc l1: invariant True
+	when True sync a1 goto l2;
+
+loc l2: invariant True
+	(*** NOTE: a5 is NOT concerned by the property, which only constrains the order of the event *of the property* ***)
+	when True sync a5 goto l3;
+
+loc l3: invariant True
+	when True sync a2 goto l4;
+	(* I.e., p = 3 *)
+	when y > x & x = p & x = 3 sync a2 goto l3;
+
+loc l4: invariant True
+	when True sync a3 do {y := 0} goto l5;
+	(* I.e., p >= 4 *)
+	when y = 4 & y <= p sync a3 do {x := 0} goto l3;
+
+loc l5: invariant True
+	(* I.e., p >= 2 *)
+	when y = 2 & y <= p sync a4 do {x := 0} goto l1;
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

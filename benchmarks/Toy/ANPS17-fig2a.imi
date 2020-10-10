@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2016/12/07
- * Last modified   : 2016/12/07
+ * Last modified   : 2020/08/13
  *
- * IMITATOR version: 2.8
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -34,13 +34,13 @@ var
 (************************************************************)
 synclabs: ;
 
-loc l0: while x <= 1 & y <= 1 wait {}
-	when x <= p & y <= 2 do {y' = 0} goto l1;
+loc l0: invariant x <= 1 & y <= 1
+	when x <= p & y <= 2 do {y := 0} goto l1;
 
-loc l1: while x <= p1 & y <= p wait {}
+loc l1: invariant x <= p1 & y <= p
 	when x <= p2 & y <= p goto l2;
 
-loc l2: while True wait {}
+loc l2: invariant True
 
 end (* pta *)
 
@@ -69,13 +69,6 @@ init :=
 	& p1 >= 0
 	& p2 >= 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-(* property := unreachable loc[pta] = l1; *)
 
 
 (************************************************************)

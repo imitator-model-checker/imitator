@@ -1,0 +1,28 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * BRP (Bounded Retransmission Protocol)
+ *
+ * Description     : Bounded Retransmission Protocol [version slightly modified]
+ * Correctness     : V[] ((S.error ^ x = SYNC) => R.new_file)
+                     V [] (R.firstsafe_frame => rb1 = 1)
+ * Source          : "The Bounded Retransmission Protocol Must Be on Time!"
+ * Author          : Pedro R. D'Argenio , Joost-Pieter Katoen , Theo C. Ruys , G. Jan Tretmans
+ * Modeling        : ?? and Laurent Fribourg
+ * Input by        : ?? and Etienne Andre
+ *
+ * Created         : ? (< 09/2007)
+ * Last modified   : 2020/04/30
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+
+property := #synth BCcover(
+(*	& MAX  = 2
+	& N    = 2 *)
+	& TD   = 0 .. 50 (*1*)
+	& T1   = 3
+	& TR   = 0 .. 50 (*16*)
+	& SYNC = 17
+);

@@ -1,4 +1,10 @@
 *.annot
+*.bcf
+*.fdb*
+*.fls
+*.out
+*.run.xml
+*.synctex.*
 *.cmo
 *.cma
 *.cmi
@@ -8,6 +14,13 @@
 *.cmxs
 *.cmxa
 *.pyc
+
+# MAC users
+.DS_Store
+=
+
+# LP
+papers/*
 
 # PyCharm configuration
 .idea
@@ -23,8 +36,15 @@ myocamlbuild.ml
 src/BuildInfo.ml*
 src/PaTATOR.ml
 
+iamadeveloper
 
 # testing logs
+
+*-regenerated.imi
+*.res
+*.states
+
+benchmarks/**/*-regenerated.imi
 benchmarks/**/*.res
 benchmarks/**/*.png
 benchmarks/**/*.jpg
@@ -32,6 +52,10 @@ benchmarks/**/*.states
 benchmarks/**/*.pdf
 benchmarks/**/*.xml
 
+*_cart.png
+*_cart_bounds.txt
+
+tests/**/*-regenerated.imi
 tests/**/*.log
 tests/**/*.jpg
 tests/**/*.png
@@ -42,6 +66,8 @@ tests/**/*.sh
 tests/**/*.pdf
 tests/**/*.ps
 tests/**/*.xml
+*.pdf
+*.ps
 
 # binaries
 *.native
@@ -52,9 +78,12 @@ bin/patator
 doc/build
 doc/*.aux
 doc/*.bbl
+doc/*.bcf
 doc/*.blg
 doc/*.brf
 doc/*.log
+doc/*.run.xml
+doc/*.synctex.gz
 doc/*.toc
 doc/IMITATOR-not-developer-manual.out
 doc/IMITATOR-not-developer-manual.pdf

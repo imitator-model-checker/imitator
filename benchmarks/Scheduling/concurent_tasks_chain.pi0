@@ -1,3 +1,4 @@
+property := #synth IM(
 			offset_1_1 = 0 &
 			offset_1_2 = 20 &
 			offset_1_3 = 75 &
@@ -20,3 +21,4 @@
 			wcet2_2 = 40 &
 			bcet2_3 = 20 &
 			wcet2_3 = 70 
+);

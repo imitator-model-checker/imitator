@@ -7,13 +7,14 @@
 #             Data for non-regression tests
 #
 # Université Paris 13, LIPN, CNRS, France
+# Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
 #
-# File description: non-regression tests data
+# File description  : non-regression tests data
 #
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2019/09/10
+# Last modified     : 2020/09/28
 #************************************************************
 
 
@@ -31,10 +32,11 @@ tests = [
 	{
 		# Test version             : 1
 		# Test since               : 2019/07/09
+		# Last modified            : 2019/07/09
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test the L/U-nature (L-PTA)',
 		'input_files': ['testL.imi'],
-		'options'    : '-mode checksyntax -output-result',
+		'options'    : '-mode checksyntax ',
 		'expectations' : [
 			{'file': 'testL.res' , 'content' : """
 L/U subclass                            : L-PTA
@@ -54,7 +56,7 @@ L/U subclass                            : L-PTA
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test the L/U-nature (U-PTA)',
 		'input_files': ['testU.imi'],
-		'options'    : '-mode checksyntax -output-result',
+		'options'    : '-mode checksyntax ',
 		'expectations' : [
 			{'file': 'testU.res' , 'content' : """
 L/U subclass                            : U-PTA
@@ -74,7 +76,7 @@ L/U subclass                            : U-PTA
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test the L/U-nature (L/U-PTA)',
 		'input_files': ['testLU.imi'],
-		'options'    : '-mode checksyntax -output-result',
+		'options'    : '-mode checksyntax ',
 		'expectations' : [
 			{'file': 'testLU.res' , 'content' : """
 L/U subclass                            : L/U-PTA
@@ -94,7 +96,7 @@ L/U subclass                            : L/U-PTA
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test the L/U-nature (none)',
 		'input_files': ['testNotLU.imi'],
-		'options'    : '-mode checksyntax -output-result',
+		'options'    : '-mode checksyntax ',
 		'expectations' : [
 			{'file': 'testNotLU.res' , 'content' : """
 L/U subclass                            : not L/U
@@ -115,7 +117,7 @@ L/U subclass                            : not L/U
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test the L/U-nature (flip-flop: U)',
 		'input_files': ['flipflop.imi'],
-		'options'    : '-mode checksyntax -output-result',
+		'options'    : '-mode checksyntax ',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 L/U subclass                            : U-PTA
@@ -136,7 +138,7 @@ L/U subclass                            : U-PTA
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test the L/U-nature (JR15: L/U)',
 		'input_files': ['JLR-TACAS13.imi'],
-		'options'    : '-mode checksyntax -output-result',
+		'options'    : '-mode checksyntax ',
 		'expectations' : [
 			{'file': 'JLR-TACAS13.res' , 'content' : """
 L/U subclass                            : L/U-PTA
@@ -157,7 +159,7 @@ L/U subclass                            : L/U-PTA
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test the detection of silent actions: no',
 		'input_files': ['testLU.imi'],
-		'options'    : '-mode checksyntax -output-result',
+		'options'    : '-mode checksyntax ',
 		'expectations' : [
 			{'file': 'testLU.res' , 'content' : """
 Has silent actions?                            : false
@@ -178,7 +180,7 @@ Has silent actions?                            : false
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test the detection of silent actions: yes',
 		'input_files': ['testNotLU.imi'],
-		'options'    : '-mode checksyntax -output-result',
+		'options'    : '-mode checksyntax ',
 		'expectations' : [
 			{'file': 'testNotLU.res' , 'content' : """
 Has silent actions?                            : true
@@ -199,7 +201,7 @@ Has silent actions?                            : true
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test the detection of silent actions: JR15',
 		'input_files': ['JLR-TACAS13.imi'],
-		'options'    : '-mode checksyntax -output-result',
+		'options'    : '-mode checksyntax ',
 		'expectations' : [
 			{'file': 'JLR-TACAS13.res' , 'content' : """
 Has silent actions?                            : true
@@ -220,7 +222,7 @@ Has silent actions?                            : true
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test the detection of strong determinism: yes',
 		'input_files': ['testLU.imi'],
-		'options'    : '-mode checksyntax -output-result',
+		'options'    : '-mode checksyntax ',
 		'expectations' : [
 			{'file': 'testLU.res' , 'content' : """
 Is strongly deterministic?              : true
@@ -241,7 +243,7 @@ Is strongly deterministic?              : true
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test the detection of strong determinism: yes',
 		'input_files': ['testStrongDet.imi'],
-		'options'    : '-mode checksyntax -output-result',
+		'options'    : '-mode checksyntax ',
 		'expectations' : [
 			{'file': 'testStrongDet.res' , 'content' : """
 Is strongly deterministic?              : true
@@ -262,7 +264,7 @@ Is strongly deterministic?              : true
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test the detection of strong determinism: yes',
 		'input_files': ['testStrongDet2.imi'],
-		'options'    : '-mode checksyntax -output-result',
+		'options'    : '-mode checksyntax ',
 		'expectations' : [
 			{'file': 'testStrongDet2.res' , 'content' : """
 Is strongly deterministic?              : true
@@ -283,7 +285,7 @@ Is strongly deterministic?              : true
 		# Test for IMITATOR version: 2.12
 		'purpose'    : 'Test the detection of strong determinism: no',
 		'input_files': ['testNotStrongDet.imi'],
-		'options'    : '-mode checksyntax -output-result',
+		'options'    : '-mode checksyntax ',
 		'expectations' : [
 			{'file': 'testNotStrongDet.res' , 'content' : """
 Is strongly deterministic?              : false
@@ -301,7 +303,7 @@ Is strongly deterministic?              : false
 	{
 		'purpose'    : 'Test variable elimination in Boolean expressions',
 		'input_files': ['testConditions.imi'],
-		'options'    : '-mode statespace -output-states',
+		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'testConditions-statespace.states' , 'content' : """
   STATE 0:
@@ -319,7 +321,7 @@ Is strongly deterministic?              : false
 	{
 		'purpose'    : 'Test evaluation of <if> branch in conditional update',
 		'input_files': ['testConditions.imi'],
-		'options'    : '-mode statespace -output-states',
+		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'testConditions-statespace.states' , 'content' : """
 	STATE 1:
@@ -339,7 +341,7 @@ Is strongly deterministic?              : false
 	{
 		'purpose'    : 'Test evaluation of <else> branch in conditional update',
 		'input_files': ['testConditions.imi'],
-		'options'    : '-mode statespace -output-states',
+		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'testConditions-statespace.states' , 'content' : """
 	STATE 2:
@@ -359,9 +361,9 @@ Is strongly deterministic?              : false
 	{
 		'purpose'    : 'Test include files [1]',
 		'input_files': ['tests_include_model/example-include-1a.imi'],
-		'options'    : '-PTA2IMI -no-var-autoremove',
+		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
-			{'file': 'tests_include_model/example-include-1a-regenerated.imi' , 'content' : """
+			{'file': 'example-include-1a-regenerated.imi' , 'content' : """
 var
 	x
 		: clock;
@@ -371,17 +373,6 @@ var
 
 	p
 		: parameter;
-
-
-(************************************************************)
- automaton pta2
-(************************************************************)
- synclabs: a;
-
-loc l1: invariant True
-	when  x = 1 do {x := 0}  sync a goto l1;
- end (* pta2 *)
-(************************************************************)
 
 
 (************************************************************)
@@ -396,6 +387,17 @@ loc l1: invariant True
 
 
 (************************************************************)
+ automaton pta2
+(************************************************************)
+ synclabs: a;
+
+loc l1: invariant True
+	when  x = 1 do {x := 0}  sync a goto l1;
+ end (* pta2 *)
+(************************************************************)
+
+
+(************************************************************)
 (* Initial state *)
 (************************************************************)
 
@@ -403,8 +405,8 @@ init := True
 	(*------------------------------------------------------------*)
 	(* Initial location *)
 	(*------------------------------------------------------------*)
-	& loc[pta2] = l1
 	& loc[pta1] = l1
+	& loc[pta2] = l1
 
 	(*------------------------------------------------------------*)
 	(* Initial discrete assignments *)
@@ -418,14 +420,6 @@ init := True
 & x = 0
 
 ;
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[pta1] = l1
-
-
 
 
 (************************************************************)
@@ -445,19 +439,30 @@ end
 	{
 		'purpose'    : 'Test include files [2]',
 		'input_files': ['tests_include_model/example-include-2a.imi'],
-		'options'    : '-PTA2IMI -no-var-autoremove',
+		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
-			{'file': 'tests_include_model/example-include-2a-regenerated.imi' , 'content' : """
+			{'file': 'example-include-2a-regenerated.imi' , 'content' : """
 var
-	x, y
+	y, x
 		: clock;
 
-	i, j
+	j, i
 		: discrete;
 
 	p
 		: parameter;
 
+
+
+(************************************************************)
+ automaton pta1
+(************************************************************)
+ synclabs: a;
+
+loc l1: invariant True
+	when  p + 1 = x do {x := 0}  sync a goto l1;
+ end (* pta1 *)
+(************************************************************)
 
 (************************************************************)
  automaton pta2
@@ -471,17 +476,6 @@ loc l1: invariant True
 
 
 (************************************************************)
- automaton pta1
-(************************************************************)
- synclabs: a;
-
-loc l1: invariant True
-	when  p + 1 = x do {x := 0}  sync a goto l1;
- end (* pta1 *)
-(************************************************************)
-
-
-(************************************************************)
 (* Initial state *)
 (************************************************************)
 
@@ -489,30 +483,23 @@ init := True
 	(*------------------------------------------------------------*)
 	(* Initial location *)
 	(*------------------------------------------------------------*)
-	& loc[pta2] = l1
 	& loc[pta1] = l1
+	& loc[pta2] = l1
 
 	(*------------------------------------------------------------*)
 	(* Initial discrete assignments *)
 	(*------------------------------------------------------------*)
-	& i = 0
 	& j = 0
+	& i = 0
 
 	(*------------------------------------------------------------*)
 	(* Initial constraint *)
 	(*------------------------------------------------------------*)
 	 &  p >= 1
-& x = 0
 & y = 0
+& x = 0
 
 ;
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[pta1] = l1 & loc[pta2] = l1
-
 
 
 
@@ -533,30 +520,18 @@ end
 	{
 		'purpose'    : 'Test include files [3]',
 		'input_files': ['tests_include_model/example-include-3a.imi'],
-		'options'    : '-PTA2IMI -no-var-autoremove',
+		'options'    : '-imi2IMI -no-var-autoremove',
 		'expectations' : [
-			{'file': 'tests_include_model/example-include-3a-regenerated.imi' , 'content' : """
+			{'file': 'example-include-3a-regenerated.imi' , 'content' : """
 var
-	x, y
+	y, x
 		: clock;
 
-	i, j
+	j, i
 		: discrete;
 
 	p
 		: parameter;
-
-
-(************************************************************)
- automaton pta2
-(************************************************************)
- synclabs: a;
-
-loc l1: invariant True
-	when  y = 1 do {y := p}  sync a goto l1;
- end (* pta2 *)
-(************************************************************)
-
 
 (************************************************************)
  automaton pta1
@@ -570,6 +545,18 @@ loc l1: invariant True
 
 
 (************************************************************)
+ automaton pta2
+(************************************************************)
+ synclabs: a;
+
+loc l1: invariant True
+	when  y = 1 do {y := p}  sync a goto l1;
+ end (* pta2 *)
+(************************************************************)
+
+
+
+(************************************************************)
 (* Initial state *)
 (************************************************************)
 
@@ -577,32 +564,23 @@ init := True
 	(*------------------------------------------------------------*)
 	(* Initial location *)
 	(*------------------------------------------------------------*)
-	& loc[pta2] = l1
 	& loc[pta1] = l1
+	& loc[pta2] = l1
 
 	(*------------------------------------------------------------*)
 	(* Initial discrete assignments *)
 	(*------------------------------------------------------------*)
-	& i = 0
 	& j = 0
+	& i = 0
 
 	(*------------------------------------------------------------*)
 	(* Initial constraint *)
 	(*------------------------------------------------------------*)
 	 &  p >= 1
-& x = 0
 & y = 0
+& x = 0
 
 ;
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[pta1] = l1 & loc[pta2] = l1
-
-
-
 
 (************************************************************)
 (* The end *)
@@ -628,7 +606,7 @@ end
 		# Test for IMITATOR version: TODO
 		'purpose'    : 'Test the state space',
 		'input_files': ['flipflop.imi'],
-		'options'    : '-mode statespace -output-states -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'options'    : '-mode statespace -states-description -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'flipflop-statespace.states' , 'content' : """
   DESCRIPTION OF THE STATES
@@ -636,7 +614,7 @@ end
   /************************************************************/
   INITIAL
   STATE 0:
-  input: Input0, g1: G10011, g2: G2101, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==>
+  input: Input0, g1: G10011, g2: G2101, g3: G30011, g4: G410 ==>
 & 5 >= s
 & dG3_u >= 8
 & dG4_u >= 3
@@ -652,7 +630,7 @@ end
 
   /************************************************************/
   STATE 1:
-  input: Input1, g1: G11011, g2: G2101, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==>
+  input: Input1, g1: G11011, g2: G2101, g3: G30011, g4: G410 ==>
 & 12 >= s
 & dG3_u >= 8
 & dG4_u >= 3
@@ -668,7 +646,7 @@ end
 
   /************************************************************/
   STATE 2:
-  input: Input1, g1: G11010, g2: G2001, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==>
+  input: Input1, g1: G11010, g2: G2001, g3: G30011, g4: G410 ==>
 & 15 >= s
 & dG3_u >= 8
 & dG4_u >= 3
@@ -684,7 +662,7 @@ end
 
   /************************************************************/
   STATE 3:
-  input: Input2, g1: G11110, g2: G2011, g3: G30111, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==>
+  input: Input2, g1: G11110, g2: G2011, g3: G30111, g4: G410 ==>
 & dG3_u + 15 >= s
 & 32 >= s
 & dG3_u >= 8
@@ -701,7 +679,7 @@ end
 
   /************************************************************/
   STATE 4:
-  input: Input3, g1: G10110, g2: G2011, g3: G30111, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==>
+  input: Input3, g1: G10110, g2: G2011, g3: G30111, g4: G410 ==>
 & 39 >= s
 & dG3_u + 15 >= s
 & dG4_u >= 3
@@ -717,7 +695,7 @@ end
 
   /************************************************************/
   STATE 5:
-  input: Input2, g1: G11110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==>
+  input: Input2, g1: G11110, g2: G2011, g3: G30110, g4: G400 ==>
 & 32 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
@@ -734,7 +712,7 @@ end
 
   /************************************************************/
   STATE 6:
-  input: Input4, g1: G10010, g2: G2001, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_2 ==>
+  input: Input4, g1: G10010, g2: G2001, g3: G30011, g4: G410 ==>
 & dG3_u >= 24
 & dG4_u >= 3
 & ckG2 >= 39
@@ -749,7 +727,7 @@ end
 
   /************************************************************/
   STATE 7:
-  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==>
+  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400 ==>
 & 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
@@ -766,7 +744,7 @@ end
 
   /************************************************************/
   STATE 8:
-  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==>
+  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400 ==>
 & 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= ckG4
@@ -785,7 +763,7 @@ end
 
   /************************************************************/
   STATE 9:
-  input: Input2, g1: G11110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
+  input: Input2, g1: G11110, g2: G2011, g3: G31110, g4: G401 ==>
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 23 + ckG4
@@ -801,7 +779,7 @@ end
 
   /************************************************************/
   STATE 10:
-  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, automatically_generated_observer: loc_AutoGen_obs_2 ==>
+  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400 ==>
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & dG4_u >= 3
@@ -819,7 +797,7 @@ end
 
   /************************************************************/
   STATE 11:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
+  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401 ==>
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
 & s >= 32 + ckG4
@@ -835,7 +813,7 @@ end
 
   /************************************************************/
   STATE 12:
-  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, automatically_generated_observer: loc_AutoGen_obs_2 ==>
+  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400 ==>
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & ckG2 >= 39
@@ -852,7 +830,7 @@ end
 
   /************************************************************/
   STATE 13:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
+  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401 ==>
 & 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u + s >= 32 + ckG4
@@ -872,7 +850,7 @@ end
 
   /************************************************************/
   STATE 14:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
+  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401 ==>
 & 39 >= s
 & dG3_u + ckG4 + 15 >= s
 & dG4_u >= 3
@@ -889,7 +867,7 @@ end
 
   /************************************************************/
   STATE 15:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401 ==>
 & dG3_u + ckG4 >= 24
 & dG4_u + 7 >= ckG4
 & dG4_u >= 3
@@ -907,7 +885,7 @@ end
 
   /************************************************************/
   STATE 16:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_2 ==>
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401 ==>
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & ckG2 >= 39
@@ -924,7 +902,7 @@ end
 
   /************************************************************/
   STATE 17:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401 ==>
 & dG3_u + ckG4 >= 24
 & dG4_u >= 3
 & ckG2 >= 39
@@ -940,7 +918,7 @@ end
 
   /************************************************************/
   STATE 18:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_2 ==>
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401 ==>
 & dG3_u + ckG4 >= 24
 & dG4_u >= ckG4
 & ckG2 >= 39
@@ -957,7 +935,7 @@ end
 
   /************************************************************/
   STATE 19:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
+  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401 ==>
 & dG3_u + ckG4 >= 24
 & dG4_u >= 3
 & ckG2 >= 39
@@ -996,187 +974,232 @@ end
 		] # end expectations
 	} # end test case
 	,
+	##------------------------------------------------------------
+	#{
+		## Test version: 2.11
+		## Test since  : 2019/03/07
+		## Test until  : 2020/03/20
+		## Reason for removal: projectresult is now in the property, so a state space cannot be projected
+		#'purpose'    : 'Test state space with projection',
+		#'input_files': ['testProjectP.imi'],
+		#'options'    : '-mode statespace -states-description',
+		#'expectations' : [
+			#{'file': 'testProjectP-statespace.states' , 'content' : """
+  #DESCRIPTION OF THE STATES
+
+  #/************************************************************/
+  #INITIAL
+  #STATE 0:
+  #pta: l1 ==>
+#& pabs >= 0
+#& p1 >= x
+#& p3 >= 0
+#& x >= 0
+#& x = xabs
+
+  #Projection onto the parameters:
+   #p3 >= 0
+#& p1 >= 0
+#& pabs >= 0
+
+  #Projection onto selected parameters {pabs}:
+   #pabs >= 0
+
+  #/************************************************************/
+  #STATE 1:
+  #pta: l2 ==>
+#& pabs >= 0
+#& p1 >= 0
+#& p3 >= x
+#& x >= 0
+#& p1 + x = xabs
+
+  #Projection onto the parameters:
+   #p3 >= 0
+#& p1 >= 0
+#& pabs >= 0
+
+  #Projection onto selected parameters {pabs}:
+   #pabs >= 0
+
+  #/************************************************************/
+  #STATE 2:
+  #pta: lfinal ==>
+#& pabs >= 0
+#& p3 >= 0
+#& pabs = p1
+#& x = 0
+#& pabs = xabs
+
+  #Projection onto the parameters:
+   #p3 >= 0
+#& p1 >= 0
+#& pabs = p1
+
+  #Projection onto selected parameters {pabs}:
+   #pabs >= 0
+
+  #/************************************************************/
+  #STATE 3:
+  #pta: l3 ==>
+#& 2 >= x
+#& pabs >= 0
+#& p1 >= 0
+#& p3 >= 0
+#& x >= 0
+#& p1 + p3 + x = xabs
+
+  #Projection onto the parameters:
+   #p3 >= 0
+#& p1 >= 0
+#& pabs >= 0
+
+  #Projection onto selected parameters {pabs}:
+   #pabs >= 0
+
+  #/************************************************************/
+  #STATE 4:
+  #pta: lfinal ==>
+#& pabs >= p1
+#& p1 >= 0
+#& pabs = p1 + p3
+#& x = 0
+#& pabs = xabs
+
+  #Projection onto the parameters:
+   #p3 >= 0
+#& p1 >= 0
+#& pabs = p1 + p3
+
+  #Projection onto selected parameters {pabs}:
+   #pabs >= 0
+
+  #/************************************************************/
+  #STATE 5:
+  #pta: l4 ==>
+#& 2 >= x
+#& pabs >= 0
+#& p1 >= 0
+#& p3 >= 2
+#& x >= 0
+#& p1 + x + 2 = xabs
+
+  #Projection onto the parameters:
+   #p3 >= 2
+#& p1 >= 0
+#& pabs >= 0
+
+  #Projection onto selected parameters {pabs}:
+   #pabs >= 0
+
+  #/************************************************************/
+  #STATE 6:
+  #pta: lfinal ==>
+#& pabs >= 2
+#& p3 >= 2
+#& pabs = 2 + p1
+#& x = 0
+#& pabs = xabs
+
+  #Projection onto the parameters:
+   #p3 >= 2
+#& pabs >= 2
+#& pabs = 2 + p1
+
+  #Projection onto selected parameters {pabs}:
+   #pabs >= 2
+
+  #/************************************************************/
+  #STATE 7:
+  #pta: l4 ==>
+#& 2 >= x
+#& pabs >= 0
+#& p1 + p3 + x + 2 >= xabs
+#& p1 >= 0
+#& p3 >= 0
+#& x >= 0
+#& xabs >= p1 + p3 + x
+
+  #Projection onto the parameters:
+   #p3 >= 0
+#& p1 >= 0
+#& pabs >= 0
+
+  #Projection onto selected parameters {pabs}:
+   #pabs >= 0
+
+  #/************************************************************/
+  #STATE 8:
+  #pta: lfinal ==>
+#& p1 + p3 + 2 >= pabs
+#& pabs >= p1 + p3
+#& p1 >= 0
+#& p3 >= 0
+#& x = 0
+#& pabs = xabs
+
+  #Projection onto the parameters:
+   #p1 + p3 + 2 >= pabs
+#& pabs >= p1 + p3
+#& p3 >= 0
+#& p1 >= 0
+
+  #Projection onto selected parameters {pabs}:
+   #pabs >= 0
+
+  #DESCRIPTION OF THE TRANSITIONS
+  #s_0 -> s_1 via "a"
+  #s_0 -> s_2 via "a"
+  #s_1 -> s_3 via "a"
+  #s_1 -> s_4 via "a"
+  #s_1 -> s_5 via "b"
+  #s_1 -> s_6 via "b"
+  #s_3 -> s_7 via "a"
+  #s_3 -> s_8 via "a"
+#"""
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+
+	#,
+	
 	#------------------------------------------------------------
 	{
-		# Test version: 2.11
-		# Test since  : 2019/03/07
-		'purpose'    : 'Test state space with projection',
-		'input_files': ['testProjectP.imi'],
-		'options'    : '-mode statespace -output-states',
+		# Test version             : 1
+		# Test since               : 2020/09/28
+		# Last modified            : 2020/09/28
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test the state space (no float conversion)',
+		'input_files': ['testFloat.imi'],
+		'options'    : '-mode statespace -states-description',
 		'expectations' : [
-			{'file': 'testProjectP-statespace.states' , 'content' : """
-  DESCRIPTION OF THE STATES
+			{'file': 'testFloat-statespace.states' , 'content' : """
+pta: l2, i = 5/4, j = 1/3
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
 
-  /************************************************************/
-  INITIAL
-  STATE 0:
-  pta: l1 ==>
-& pabs >= 0
-& p1 >= x
-& p3 >= 0
-& x >= 0
-& x = xabs
+	,
 
-  Projection onto the parameters:
-   p3 >= 0
-& p1 >= 0
-& pabs >= 0
-
-  Projection onto selected parameters {pabs}:
-   pabs >= 0
-
-  /************************************************************/
-  STATE 1:
-  pta: l2 ==>
-& pabs >= 0
-& p1 >= 0
-& p3 >= x
-& x >= 0
-& p1 + x = xabs
-
-  Projection onto the parameters:
-   p3 >= 0
-& p1 >= 0
-& pabs >= 0
-
-  Projection onto selected parameters {pabs}:
-   pabs >= 0
-
-  /************************************************************/
-  STATE 2:
-  pta: lfinal ==>
-& pabs >= 0
-& p3 >= 0
-& pabs = p1
-& x = 0
-& pabs = xabs
-
-  Projection onto the parameters:
-   p3 >= 0
-& p1 >= 0
-& pabs = p1
-
-  Projection onto selected parameters {pabs}:
-   pabs >= 0
-
-  /************************************************************/
-  STATE 3:
-  pta: l3 ==>
-& 2 >= x
-& pabs >= 0
-& p1 >= 0
-& p3 >= 0
-& x >= 0
-& p1 + p3 + x = xabs
-
-  Projection onto the parameters:
-   p3 >= 0
-& p1 >= 0
-& pabs >= 0
-
-  Projection onto selected parameters {pabs}:
-   pabs >= 0
-
-  /************************************************************/
-  STATE 4:
-  pta: lfinal ==>
-& pabs >= p1
-& p1 >= 0
-& pabs = p1 + p3
-& x = 0
-& pabs = xabs
-
-  Projection onto the parameters:
-   p3 >= 0
-& p1 >= 0
-& pabs = p1 + p3
-
-  Projection onto selected parameters {pabs}:
-   pabs >= 0
-
-  /************************************************************/
-  STATE 5:
-  pta: l4 ==>
-& 2 >= x
-& pabs >= 0
-& p1 >= 0
-& p3 >= 2
-& x >= 0
-& p1 + x + 2 = xabs
-
-  Projection onto the parameters:
-   p3 >= 2
-& p1 >= 0
-& pabs >= 0
-
-  Projection onto selected parameters {pabs}:
-   pabs >= 0
-
-  /************************************************************/
-  STATE 6:
-  pta: lfinal ==>
-& pabs >= 2
-& p3 >= 2
-& pabs = 2 + p1
-& x = 0
-& pabs = xabs
-
-  Projection onto the parameters:
-   p3 >= 2
-& pabs >= 2
-& pabs = 2 + p1
-
-  Projection onto selected parameters {pabs}:
-   pabs >= 2
-
-  /************************************************************/
-  STATE 7:
-  pta: l4 ==>
-& 2 >= x
-& pabs >= 0
-& p1 + p3 + x + 2 >= xabs
-& p1 >= 0
-& p3 >= 0
-& x >= 0
-& xabs >= p1 + p3 + x
-
-  Projection onto the parameters:
-   p3 >= 0
-& p1 >= 0
-& pabs >= 0
-
-  Projection onto selected parameters {pabs}:
-   pabs >= 0
-
-  /************************************************************/
-  STATE 8:
-  pta: lfinal ==>
-& p1 + p3 + 2 >= pabs
-& pabs >= p1 + p3
-& p1 >= 0
-& p3 >= 0
-& x = 0
-& pabs = xabs
-
-  Projection onto the parameters:
-   p1 + p3 + 2 >= pabs
-& pabs >= p1 + p3
-& p3 >= 0
-& p1 >= 0
-
-  Projection onto selected parameters {pabs}:
-   pabs >= 0
-
-  DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_1 via "a"
-  s_0 -> s_2 via "a"
-  s_1 -> s_3 via "a"
-  s_1 -> s_4 via "a"
-  s_1 -> s_5 via "b"
-  s_1 -> s_6 via "b"
-  s_3 -> s_7 via "a"
-  s_3 -> s_8 via "a"
-"""
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/28
+		# Last modified            : 2020/09/28
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test the state space (with float conversion)',
+		'input_files': ['testFloat.imi'],
+		'options'    : '-mode statespace -states-description -output-float',
+		'expectations' : [
+		# NOTE: cut the end of the float just in case the OS doesn't represent them the same way…
+			{'file': 'testFloat-statespace.states' , 'content' : """
+pta: l2, i = 5/4 (~ 1.25), j = 1/3 (~ 0.3333333333
+		"""
 			} # end result file
 			,
 		] # end expectations
@@ -1189,7 +1212,7 @@ end
 	{
 		'purpose'    : 'Test urgency',
 		'input_files': ['testUrgency.imi'],
-		'options'    : '-mode statespace -output-states',
+		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'testUrgency-statespace.states' , 'content' : """
 		  DESCRIPTION OF THE TRANSITIONS
@@ -1215,7 +1238,7 @@ end
 	{
 		'purpose'    : 'Test synchronization model',
 		'input_files': ['testSynchro.imi'],
-		'options'    : '-mode statespace -output-states',
+		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'testSynchro-statespace.states' , 'content' : """
   DESCRIPTION OF THE STATES
@@ -1272,7 +1295,7 @@ end
 	{
 		'purpose'    : 'Test updates (printing)',
 		'input_files': ['testUpdates.imi'],
-		'options'    : '-PTA2IMI',
+		'options'    : '-imi2IMI',
 		'expectations' : [
 			{'file': 'testUpdates-regenerated.imi' , 'content' : """
   urgent loc idle: invariant True
@@ -1290,7 +1313,7 @@ end
 	{
 		'purpose'    : 'Test updates (state space)',
 		'input_files': ['testUpdates.imi'],
-		'options'    : '-mode statespace -depth-limit 4 -output-states',
+		'options'    : '-mode statespace -depth-limit 4 -states-description',
 		'expectations' : [
 			{'file': 'testUpdates-statespace.states' , 'content' : """
 
@@ -1345,9 +1368,67 @@ end
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2020/09/14
+		# Last modified            : 2020/09/14
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test stopwatches',
+		'input_files': ['testStopwatches.imi', 'testStopwatches.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testStopwatches.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 10
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/17
+		# Last modified            : 2020/09/17
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test flows',
+		'input_files': ['testFlows.imi', 'testFlows.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testFlows.res' , 'content' : """
+BEGIN CONSTRAINT
+p = 2046
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test clock elimination',
 		'input_files': ['loopingTAdyn.imi'],
-		'options'    : '-mode statespace -dynamic-elimination -output-states -depth-limit 10', # NOTE: depth-limit is just a safety to avoid yielding a loop if the test fails!
+		'options'    : '-mode statespace -dynamic-elimination -states-description -depth-limit 10', # NOTE: depth-limit is just a safety to avoid yielding a loop if the test fails!
 		'expectations' : [
 			{'file': 'loopingTAdyn-statespace.states' , 'content' : """
   DESCRIPTION OF THE STATES
@@ -1385,7 +1466,7 @@ end
 	{
 		'purpose'    : 'Test discrete variable automatic elimination',
 		'input_files': ['testVarElim.imi'],
-		'options'    : '-mode statespace -output-states',
+		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			# NOTE: we just parse the beginning of state 1 to check that the variables are properly removed
 			{'file': 'testVarElim-statespace.states' , 'content' : """
@@ -1404,7 +1485,7 @@ end
 	{
 		'purpose'    : 'Test absence of discrete variable automatic elimination',
 		'input_files': ['testVarElim.imi'],
-		'options'    : '-mode statespace -output-states -no-var-autoremove',
+		'options'    : '-mode statespace -states-description -no-var-autoremove',
 		'expectations' : [
 			# NOTE: we just parse the beginning of state 1 to check that the variables are properly removed
 			{'file': 'testVarElim-statespace.states' , 'content' : """
@@ -1419,39 +1500,39 @@ end
 
 	,
 
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test EF (old version) with bad initial state',
-		'input_files': ['testEFdegenerate1.imi'],
-		'options'    : '-mode EFold -merge -incl -output-result',
-		'expectations' : [
-			{'file': 'testEFdegenerate1.res' , 'content' : """
-BEGIN CONSTRAINT
- p2 >= 0
-& p1 >= 0
-END CONSTRAINT
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test EF (old version) with bad initial state',
+		#'input_files': ['testEFdegenerate1.imi', 'testEFdegenerate1.imiprop'],
+		#'options'    : '-merge -incl ',
+		#'expectations' : [
+			#{'file': 'testEFdegenerate1.res' , 'content' : """
+#BEGIN CONSTRAINT
+ #p2 >= 0
+#& p1 >= 0
+#END CONSTRAINT
 
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Number of states                        : 0
-Number of transitions                   : 0
-Number of computed states               : 0
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
+#------------------------------------------------------------
+#Constraint soundness                    : exact
+#Termination                             : regular termination
+#Constraint nature                       : good
+#------------------------------------------------------------
+#Number of states                        : 0
+#Number of transitions                   : 0
+#Number of computed states               : 0
+#"""
+			#} #end result file
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
 
-	,
+	#,
 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with bad initial state',
-		'input_files': ['testEFdegenerate1.imi'],
-		'options'    : '-mode EF -merge -incl -output-result',
+		'input_files': ['testEFdegenerate1.imi', 'testEFdegenerate1.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFdegenerate1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1474,39 +1555,39 @@ Number of computed states               : 0
 
 	,
 
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test EF (old version) with bad initial state and some constrained valuations',
-		'input_files': ['testEFdegenerate2.imi'],
-		'options'    : '-mode EFold -merge -incl -output-result',
-		'expectations' : [
-			{'file': 'testEFdegenerate2.res' , 'content' : """
-BEGIN CONSTRAINT
- p1 >= p2
-& p2 >= 0
-END CONSTRAINT
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test EF (old version) with bad initial state and some constrained valuations',
+		#'input_files': ['testEFdegenerate2.imi'],
+		#'options'    : '-mode EFold -merge -incl ',
+		#'expectations' : [
+			#{'file': 'testEFdegenerate2.res' , 'content' : """
+#BEGIN CONSTRAINT
+ #p1 >= p2
+#& p2 >= 0
+#END CONSTRAINT
 
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Number of states                        : 0
-Number of transitions                   : 0
-Number of computed states               : 0
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
+#------------------------------------------------------------
+#Constraint soundness                    : exact
+#Termination                             : regular termination
+#Constraint nature                       : good
+#------------------------------------------------------------
+#Number of states                        : 0
+#Number of transitions                   : 0
+#Number of computed states               : 0
+#"""
+			#} #end result file
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
 
-	,
+	#,
 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with bad initial state and some constrained valuations',
-		'input_files': ['testEFdegenerate2.imi'],
-		'options'    : '-mode EF -merge -incl -output-result',
+		'input_files': ['testEFdegenerate2.imi', 'testEFdegenerate2.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFdegenerate2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1532,8 +1613,8 @@ Number of computed states               : 0
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with the new syntax from 2.10.1',
-		'input_files': ['fischer_2.imi'],
-		'options'    : '-mode EF -merge -incl -output-result',
+		'input_files': ['fischer_2.imi', 'fischer_2.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'fischer_2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1554,32 +1635,278 @@ Constraint nature                       : good
 
 	,
 
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test EF (old version) with basic safety property for Fischer:3',
+		#'input_files': ['F3.imi'],
+		#'options'    : '-mode EFold -merge -incl ',
+		#'expectations' : [
+			#{'file': 'F3.res' , 'content' : """
+#BEGIN CONSTRAINT
+ #Delta > delta
+#& delta >= 0
+ #OR
+ #Delta > 2*delta
+#& delta >= 0
+#END CONSTRAINT
+#"""
+			#} #end result file
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+	#,
+
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF (old version) with basic unreachability property for Fischer:3',
-		'input_files': ['F3.imi'],
-		'options'    : '-mode EFold -merge -incl -output-result',
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EF on toy example: witness',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-witness.imiprop'],
+		'options'    : '',
 		'expectations' : [
-			{'file': 'F3.res' , 'content' : """
+			{'file': 'testEFInclMerge.res' , 'content' : """
 BEGIN CONSTRAINT
- Delta > delta
-& delta >= 0
- OR
- Delta > 2*delta
-& delta >= 0
+ p = 2046
 END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} #end result file
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
-	,
 
+	,
+	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with basic unreachability property for Fischer:3',
-		'input_files': ['F3.imi'],
-		'options'    : '-mode EF -merge -incl -output-result',
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EF on toy example: synthesis',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EF on toy example: synthesis (syntax without parentheses)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-noparen.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EF on toy example: synthesis (-output-prefix)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
+		'options'    : '-output-prefix mypersonnalizedprefix',
+		'expectations' : [
+			{'file': 'mypersonnalizedprefix.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EF on toy example: synthesis (explicit -merge -comparison inclusion)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
+		'options'    : '-merge -comparison inclusion',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EF on toy example: synthesis (-no-merge)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
+		'options'    : '-no-merge',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EF on toy example: synthesis (-no-merge -comparison equality)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
+		'options'    : '-no-merge -comparison equality',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	# TODO: merge without inclusion (for now: loops forever)
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test EF on toy example: synthesis (-no-merge -comparison equality -no-cumulative-pruning)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge.imiprop'],
+		'options'    : '-no-merge -comparison equality -no-cumulative-pruning',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test EF with basic safety property for Fischer:3',
+		'input_files': ['F3.imi', 'F3.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1602,9 +1929,9 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (double-directional inclusion)',
-		'input_files': ['F3.imi'],
-		'options'    : '-mode EF -merge -incl2 -output-result',
+		'purpose'    : 'Test EF with basic safety property for Fischer:3 (double-directional inclusion)',
+		'input_files': ['F3.imi', 'F3.imiprop'],
+		'options'    : '-merge -comparison doubleinclusion',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1627,9 +1954,9 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (queueBFS exploration order)',
-		'input_files': ['F3.imi'],
-		'options'    : '-mode EF -merge -incl -explOrder queueBFS -output-result',
+		'purpose'    : 'Test EF with basic safety property for Fischer:3 (queueBFS exploration order)',
+		'input_files': ['F3.imi', 'F3.imiprop'],
+		'options'    : '-expl-order queueBFS',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1652,9 +1979,9 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (layerBFS exploration order) with counterexample',
-		'input_files': ['F3.imi'],
-		'options'    : '-mode EF -merge -incl -explOrder layerBFS -counterexample -output-result',
+		'purpose'    : 'Test EF with basic safety property for Fischer:3 (layerBFS exploration order) with counterexample',
+		'input_files': ['F3.imi', 'F3-witness.imiprop'],
+		'options'    : '-expl-order layerBFS',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1677,9 +2004,9 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF with basic unreachability property for Fischer:3 (queueBFS exploration order) with counterexample',
-		'input_files': ['F3.imi'],
-		'options'    : '-mode EF -merge -incl -explOrder queueBFS -counterexample -output-result',
+		'purpose'    : 'Test EF with basic safety property for Fischer:3 (queueBFS exploration order) with counterexample',
+		'input_files': ['F3.imi', 'F3-witness.imiprop'],
+		'options'    : '-expl-order queueBFS',
 		'expectations' : [
 			{'file': 'F3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1700,85 +2027,85 @@ Constraint nature                       : good
 
 	,
 
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test EF (old version) with complex safety property',
+		#'input_files': ['coffeeDrinker.imi'],
+		#'options'    : '-mode EFold -merge ',
+		#'expectations' : [
+			#{'file': 'coffeeDrinker.res' , 'content' : """
+#BEGIN CONSTRAINT
+ #15 >= p_add_sugar
+#& p_button > 0
+#& p_add_sugar + p_coffee >= 15
+#& p_add_sugar >= 3*p_button
+#& p_coffee > 0
+ #OR
+ #p_add_sugar + p_coffee >= 15
+#& p_button >= 5
+#& 15 >= p_add_sugar
+#& p_coffee > 0
+#& p_add_sugar >= 2*p_button
+ #OR
+ #3*p_button >= p_add_sugar + p_coffee
+#& p_add_sugar >= 2*p_button
+#& 15 >= p_add_sugar + p_coffee
+#& p_coffee > 0
+ #OR
+ #5 >= p_button
+#& p_button > 0
+#& p_add_sugar >= 15
+#& p_coffee > 0
+ #OR
+ #15 >= 2*p_button
+#& p_button >= 5
+#& p_add_sugar >= 15
+#& p_coffee > 0
+ #OR
+ #p_add_sugar + p_coffee >= 15
+#& p_add_sugar >= p_button
+#& 15 >= p_add_sugar
+#& p_coffee > 0
+#& 2*p_button >= 15
+ #OR
+ #p_add_sugar >= p_button
+#& p_coffee > 0
+#& 15 >= p_add_sugar + p_coffee
+#& 2*p_button >= p_add_sugar + p_coffee
+ #OR
+ #p_coffee > 0
+#& 15 >= p_add_sugar
+#& p_add_sugar > 0
+#& p_add_sugar + p_coffee >= 15
+#& p_button >= 15
+ #OR
+ #p_add_sugar > 0
+#& 15 >= p_add_sugar + p_coffee
+#& p_coffee > 0
+#& p_button >= p_add_sugar + p_coffee
+ #OR
+ #2*p_button >= 15
+#& 15 >= p_button
+#& p_add_sugar >= 15
+#& p_coffee > 0
+ #OR
+ #p_button >= 15
+#& p_coffee > 0
+#& p_add_sugar >= 15
+#END CONSTRAINT
+#"""
+			#} #end result file
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+	#,
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test EF (old version) with complex unreachability property',
-		'input_files': ['coffeeDrinker-TACAS.imi'],
-		'options'    : '-mode EFold -merge -output-result',
+		'purpose'    : 'Test EF with complex safety property',
+		'input_files': ['coffeeDrinker.imi', 'coffeeDrinker.imiprop'],
+		'options'    : '',
 		'expectations' : [
-			{'file': 'coffeeDrinker-TACAS.res' , 'content' : """
-BEGIN CONSTRAINT
- 15 >= p_add_sugar
-& p_button > 0
-& p_add_sugar + p_coffee >= 15
-& p_add_sugar >= 3*p_button
-& p_coffee > 0
- OR
- p_add_sugar + p_coffee >= 15
-& p_button >= 5
-& 15 >= p_add_sugar
-& p_coffee > 0
-& p_add_sugar >= 2*p_button
- OR
- 3*p_button >= p_add_sugar + p_coffee
-& p_add_sugar >= 2*p_button
-& 15 >= p_add_sugar + p_coffee
-& p_coffee > 0
- OR
- 5 >= p_button
-& p_button > 0
-& p_add_sugar >= 15
-& p_coffee > 0
- OR
- 15 >= 2*p_button
-& p_button >= 5
-& p_add_sugar >= 15
-& p_coffee > 0
- OR
- p_add_sugar + p_coffee >= 15
-& p_add_sugar >= p_button
-& 15 >= p_add_sugar
-& p_coffee > 0
-& 2*p_button >= 15
- OR
- p_add_sugar >= p_button
-& p_coffee > 0
-& 15 >= p_add_sugar + p_coffee
-& 2*p_button >= p_add_sugar + p_coffee
- OR
- p_coffee > 0
-& 15 >= p_add_sugar
-& p_add_sugar > 0
-& p_add_sugar + p_coffee >= 15
-& p_button >= 15
- OR
- p_add_sugar > 0
-& 15 >= p_add_sugar + p_coffee
-& p_coffee > 0
-& p_button >= p_add_sugar + p_coffee
- OR
- 2*p_button >= 15
-& 15 >= p_button
-& p_add_sugar >= 15
-& p_coffee > 0
- OR
- p_button >= 15
-& p_coffee > 0
-& p_add_sugar >= 15
-END CONSTRAINT
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-	,
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test EF with complex unreachability property',
-		'input_files': ['coffeeDrinker-TACAS.imi'],
-		'options'    : '-mode EF -merge -output-result',
-		'expectations' : [
-			{'file': 'coffeeDrinker-TACAS.res' , 'content' : """
+			{'file': 'coffeeDrinker.res' , 'content' : """
 BEGIN CONSTRAINT
  p_add_sugar > 0
 & 2*p_button > p_add_sugar
@@ -1813,31 +2140,35 @@ END CONSTRAINT
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+
 	,
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test EF (old version) with observer + depth-limit + project-result (quite basic)',
-		'input_files': ['coffeeDrinker-TACAS-within.imi'],
-		'options'    : '-mode EFold -merge -depth-limit 10 -output-result',
-		'expectations' : [
-			{'file': 'coffeeDrinker-TACAS-within.res' , 'content' : """
-BEGIN CONSTRAINT
- p_coffee > 0
-END CONSTRAINT
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-	,
+	
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test EF (old version) with observer + depth-limit + project-result (quite basic)',
+		#'input_files': ['coffeeDrinker-within.imi'],
+		#'options'    : '-mode EFold -merge -depth-limit 10 ',
+		#'expectations' : [
+			#{'file': 'coffeeDrinker-within.res' , 'content' : """
+#BEGIN CONSTRAINT
+ #p_coffee > 0
+#END CONSTRAINT
+#"""
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+	
+	#,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EF with observer + depth-limit + project-result (quite basic)',
-		'input_files': ['coffeeDrinker-TACAS-within.imi'],
-		'options'    : '-mode EF -merge -depth-limit 10 -output-result',
+		'input_files': ['coffeeDrinker.imi', 'coffeeDrinker-within.imiprop'],
+		'options'    : '-depth-limit 10',
 		'expectations' : [
-			{'file': 'coffeeDrinker-TACAS-within.res' , 'content' : """
+			{'file': 'coffeeDrinker.res' , 'content' : """
 BEGIN CONSTRAINT
  False
 END CONSTRAINT
@@ -1854,11 +2185,132 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
+		# Test since               : 2020/09/04
+		# Test for IMITATOR version: 3.0
+		'purpose'    : 'Test EF (difference between emptiness and synthesis, here emptiness)',
+		'input_files': ['testEFemptiness.imi', 'testEFemptiness-empt.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFemptiness.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/04
+		# Last modified            : 2020/09/04
+		# Test for IMITATOR version: 3.0
+		'purpose'    : 'Test EF (difference between emptiness and synthesis, here synthesis)',
+		'input_files': ['testEFemptiness.imi', 'testEFemptiness-synth.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFemptiness.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 1
+ OR
+ p >= 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/22
+		# Last modified            : 2020/09/22
+		# Test for IMITATOR version: 3.0
+		'purpose'    : 'Test EF (without option -no-cumulative-pruning)',
+		'input_files': ['testInclusionEF.imi', 'testInclusionEF-EF.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testInclusionEF.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p
+& p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 3
+Number of transitions                   : 2
+Number of computed states               : 3
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/22
+		# Last modified            : 2020/09/22
+		# Test for IMITATOR version: 3.0
+		'purpose'    : 'Test EF (with option -no-cumulative-pruning)',
+		'input_files': ['testInclusionEF.imi', 'testInclusionEF-EF.imiprop'],
+		'options'    : '-no-cumulative-pruning',
+		'expectations' : [
+			{'file': 'testInclusionEF.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p
+& p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 14
+Number of transitions                   : 13
+Number of computed states               : 14
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
 		# Test since               : 2019/05/30
 		# Test for IMITATOR version: 2.11
 		'purpose'    : 'Test EFunsafe',
-		'input_files': ['testEFcounterex.imi'],
-		'options'    : '-mode EFunsafe -merge -incl -output-result',
+		'input_files': ['testEFcounterex.imi', 'testEFcounterex.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFcounterex.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1886,8 +2338,8 @@ Constraint nature                       : good
 		# Test since               : 2019/05/30
 		# Test for IMITATOR version: 2.11
 		'purpose'    : 'Test EFunsafe with counterexample',
-		'input_files': ['testEFcounterex.imi'],
-		'options'    : '-mode EFunsafe -merge -incl -counterexample -output-result',
+		'input_files': ['testEFcounterex.imi', 'testEFcounterex-witness.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFcounterex.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1909,9 +2361,508 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
+		'purpose'    : 'Test observer pattern "if a2 then a1 has happened before"',
+		'input_files': ['testPattern1.imi', 'testPattern1.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern1.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2 >= p1
+& p1 >= 0
+& p2 >= 0
+& p2 + 1 >= p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "if a2 then a1 has happened before" on a model for 3 patterns',
+		'input_files': ['testPattern2.imi', 'testPattern2-if.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern2.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 0
+& 1 > p
+OR
+  p > 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened before" on a model for 3 patterns',
+		'input_files': ['testPattern2.imi', 'testPattern2-everytime.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern2.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 0
+& 1 > p
+OR
+  p > 3
+OR
+  p > 2
+& 3 > p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened once before" on a model for 3 patterns',
+		'input_files': ['testPattern2.imi', 'testPattern2-everytimeonce.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern2.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 0
+& 1 > p
+OR
+  p > 5
+OR
+  p > 3
+& 5 > p
+OR
+  p > 2
+& 3 > p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	# WARNING: the expected result is different from the (mathematically) sound result, due to a time-lock; observer patterns are incorrect in presence of time-locks
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "a within d"',
+		'input_files': ['testPattern3.imi', 'testPattern3.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern3.res' , 'content' : """
+BEGIN CONSTRAINT
+ 3 >= p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	# WARNING: the expected result is different from the (mathematically) sound result, due to a time-lock; observer patterns are incorrect in presence of time-locks
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "a within d"',
+		'input_files': ['testPattern4.imi', 'testPattern4.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern4.res' , 'content' : """
+BEGIN CONSTRAINT
+ p > 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "a within d" with a parametric d',
+		'input_files': ['testPattern5.imi', 'testPattern5.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 3
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "if a2 then a1 has happened within d before"',
+		'input_files': ['testPattern6.imi', 'testPattern6-if.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern6.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= 0
+& 1 > p1
+OR
+  p1 > 5
+& p2 >= 0
+OR
+  5 > p1
+& p1 > 2
+& p2 >= 0
+OR
+  p2 >= 2015
+& p1 = 5
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened within d before"',
+		'input_files': ['testPattern6.imi', 'testPattern6-everytime.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern6.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= 0
+& 1 > p1
+OR
+  p1 > 5
+& p2 >= 0
+OR
+  p1 > 4
+& p2 >= 0
+& 5 > p1
+OR
+  p1 > 3
+& p2 >= 0
+& 4 > p1
+OR
+  p2 >= 4
+& p1 = 4
+OR
+  p2 >= 2015
+& p1 = 5
+OR
+  p1 > 2
+& p2 >= 0
+& 3 > p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "everytime a2 then a1 has happened once within d before"',
+		'input_files': ['testPattern6.imi', 'testPattern6-everytimeonce.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern6.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= 0
+& 1 > p1
+OR
+  p1 > 5
+& p2 >= 0
+OR
+  p1 > 4
+& p2 >= 0
+& 5 > p1
+OR
+  p1 > 3
+& p2 >= 0
+& 4 > p1
+OR
+  p2 >= 4
+& p1 = 4
+OR
+  p1 > 2
+& p2 >= 0
+& 3 > p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "if a1 then eventually a2 within d"',
+		'input_files': ['testPattern7.imi', 'testPattern7-if.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern7.res' , 'content' : """
+BEGIN CONSTRAINT
+  p1 > 1
+ & p2 >= p1
+ OR
+   p1 >= 0
+ & 1 > p1
+ & p2 >= p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "everytime a1 then eventually a2 within d"',
+		'input_files': ['testPattern7.imi', 'testPattern7-everytime.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern7.res' , 'content' : """
+BEGIN CONSTRAINT
+  p1 > 1
+ & 2 > p1
+ & p2 >= p1
+ OR
+   p2 >= 3
+ & p1 >= 2
+ & p2 >= p1
+ OR
+   p1 >= 0
+ & p2 >= p1
+ & 1 > p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "everytime a1 then eventually a2 within d once before next"',
+		'input_files': ['testPattern7.imi', 'testPattern7-everytimeonce.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern7.res' , 'content' : """
+BEGIN CONSTRAINT
+  p1 > 4
+ & p2 >= p1
+ OR
+   p1 > 1
+ & p2 >= p1
+ & 2 > p1
+ OR
+   p2 >= 3
+ & p1 >= 2
+ & p2 >= p1
+ & 4 > p1
+ OR
+   p1 >= 0
+ & p2 >= p1
+ & 1 > p1
+
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "sequence a1, …, an"',
+		'input_files': ['testPattern8.imi', 'testPattern8-sequence.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern8.res' , 'content' : """
+BEGIN CONSTRAINT
+  4 > p
+ & p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test observer pattern "always sequence a1, …, an"',
+		'input_files': ['testPattern8.imi', 'testPattern8-alwayssequence.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testPattern8.res' , 'content' : """
+BEGIN CONSTRAINT
+  p > 3
+ & 4 > p
+ OR
+   p >= 0
+ & 3 > p
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
 		'purpose'    : 'Test EFmin on a toy example',
-		'input_files': ['testEFmin.imi'],
-		'options'    : '-mode EFmin -merge -incl -output-result',
+		'input_files': ['testEFmin.imi', 'testEFmin.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFmin.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -1939,10 +2890,10 @@ Number of computed states               : 12
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFmax on a toy example',
-		'input_files': ['testEFmax.imi'],
-		'options'    : '-mode EFmax -merge -incl -output-result',
+		'input_files': ['testEFmin.imi', 'testEFmax.imiprop'],
+		'options'    : '',
 		'expectations' : [
-			{'file': 'testEFmax.res' , 'content' : """
+			{'file': 'testEFmin.res' , 'content' : """
 BEGIN CONSTRAINT
  p >= 0
 & 11 >= p
@@ -1969,8 +2920,8 @@ Number of computed states               : 20
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmin on a clock-free toy example 1',
-		'input_files': ['testEFsynthminParams1.imi'],
-		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'input_files': ['testEFsynthminParams1.imi', 'testEFsynthminParams1.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFsynthminParams1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2002,8 +2953,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmin on a clock-free toy example 2',
-		'input_files': ['testEFsynthminParams2.imi'],
-		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'input_files': ['testEFsynthminParams2.imi', 'testEFsynthminParams1.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFsynthminParams2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2038,8 +2989,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmin on a clock-free toy example 3',
-		'input_files': ['testEFsynthminParams3.imi'],
-		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'input_files': ['testEFsynthminParams3.imi', 'testEFsynthminParams1.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFsynthminParams3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2066,8 +3017,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmin on a clock-free toy example 4',
-		'input_files': ['testEFsynthminParams4.imi'],
-		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'input_files': ['testEFsynthminParams4.imi', 'testEFsynthminParams1.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFsynthminParams4.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2094,8 +3045,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmin on a clock-free toy example 5',
-		'input_files': ['testEFsynthminParams5.imi'],
-		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'input_files': ['testEFsynthminParams5.imi', 'testEFsynthminParams1.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFsynthminParams5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2121,8 +3072,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmin on a clock-free toy example 6',
-		'input_files': ['testEFsynthminParams6.imi'],
-		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'input_files': ['testEFsynthminParams6.imi', 'testEFsynthminParams1.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFsynthminParams6.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2148,8 +3099,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmin on a toy example',
-		'input_files': ['testEFsynthmin.imi'],
-		'options'    : '-mode EFsynthmin -merge -incl -output-result',
+		'input_files': ['testEFsynthmin.imi', 'testEFsynthmin.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFsynthmin.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2179,8 +3130,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmax on a clock-free toy example 1',
-		'input_files': ['testEFsynthmaxParams1.imi'],
-		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'input_files': ['testEFsynthmaxParams1.imi', 'testEFsynthmaxParams1.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFsynthmaxParams1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2211,8 +3162,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmax on a clock-free toy example 2',
-		'input_files': ['testEFsynthmaxParams2.imi'],
-		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'input_files': ['testEFsynthmaxParams2.imi', 'testEFsynthmaxParams1.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFsynthmaxParams2.res' , 'content' : """
 
@@ -2247,8 +3198,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmax on a clock-free toy example 3',
-		'input_files': ['testEFsynthmaxParams3.imi'],
-		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'input_files': ['testEFsynthmaxParams3.imi', 'testEFsynthmaxParams1.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFsynthmaxParams3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2274,8 +3225,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmax on a clock-free toy example 4',
-		'input_files': ['testEFsynthmaxParams4.imi'],
-		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'input_files': ['testEFsynthmaxParams4.imi', 'testEFsynthmaxParams1.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFsynthmaxParams4.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2301,8 +3252,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmax on a clock-free toy example 5',
-		'input_files': ['testEFsynthmaxParams5.imi'],
-		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'input_files': ['testEFsynthmaxParams5.imi', 'testEFsynthmaxParams1.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFsynthmaxParams5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2330,8 +3281,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmax on a clock-free toy example 6',
-		'input_files': ['testEFsynthmaxParams6.imi'],
-		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'input_files': ['testEFsynthmaxParams6.imi', 'testEFsynthmaxParams1.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFsynthmaxParams6.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2361,8 +3312,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFsynthmax on a toy example',
-		'input_files': ['testEFsynthmax.imi'],
-		'options'    : '-mode EFsynthmax -merge -incl -output-result',
+		'input_files': ['testEFsynthmax.imi', 'testEFsynthmax.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFsynthmax.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -2391,8 +3342,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example',
-		'input_files': ['testCounterExSimple-3.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple-3.imi', 'testCounterExSimple-3.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testCounterExSimple-3.res' , 'content' : """
 BEGIN RESULT
@@ -2491,8 +3442,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (clock initially non-zero, strict constraints)',
-		'input_files': ['testCounterExSimple-4.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple-4.imi', 'testCounterExSimple-4.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testCounterExSimple-4.res' , 'content' : """
 BEGIN RESULT
@@ -2593,8 +3544,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only in the initial state)',
-		'input_files': ['testCounterExSimple-5.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple-5.imi', 'testCounterExSimple-5.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5.res' , 'content' : """
 BEGIN RESULT
@@ -2730,8 +3681,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only at position 2)',
-		'input_files': ['testCounterExSimple-5b.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple-5b.imi', 'testCounterExSimple-5b.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5b.res' , 'content' : """
 BEGIN RESULT
@@ -2865,8 +3816,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (violation possible only at last position)',
-		'input_files': ['testCounterExSimple-5c.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple-5c.imi', 'testCounterExSimple-5c.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testCounterExSimple-5c.res' , 'content' : """
 BEGIN RESULT
@@ -2999,8 +3950,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter valuation derived)',
-		'input_files': ['testCounterExSimple-6.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple-6.imi', 'testCounterExSimple-6.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testCounterExSimple-6.res' , 'content' : """
 BEGIN RESULT
@@ -3096,8 +4047,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter nor clock valuation derived)',
-		'input_files': ['testCounterExSimple-7.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple-7.imi', 'testCounterExSimple-7.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testCounterExSimple-7.res' , 'content' : """
 
@@ -3156,8 +4107,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example (no bad parameter nor clock valuation derived)',
-		'input_files': ['testCounterExSimple-8.imi'],
-		'options'    : '-mode EFexemplify -output-result -output-cart',
+		'input_files': ['testCounterExSimple-8.imi', 'testCounterExSimple-8.imiprop'],
+		'options'    : '-draw-cart',
 		'expectations' : [
 			{'file': 'testCounterExSimple-8.res' , 'content' : """
 
@@ -3310,8 +4261,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy monitoring-style example',
-		'input_files': ['testCounterExSimple-9.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple-9.imi', 'testCounterExSimple-9.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testCounterExSimple-9.res' , 'content' : """
 
@@ -3407,8 +4358,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example without parameter',
-		'input_files': ['testCounterExSimple.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple.imi', 'testCounterExSimple.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testCounterExSimple.res' , 'content' : """
 
@@ -3520,8 +4471,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test EFexemplify on a toy example with parameters and discrete variables',
-		'input_files': ['testCounterExSimple-2.imi'],
-		'options'    : '-mode EFexemplify -output-result',
+		'input_files': ['testCounterExSimple-2.imi', 'testCounterExSimple-2.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testCounterExSimple-2.res' , 'content' : """
 
@@ -3681,8 +4632,8 @@ END RESULT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: flip-flop (no loop)',
-		'input_files': ['flipflop.imi'],
-		'options'    : '-mode LoopSynth -output-result',
+		'input_files': ['flipflop.imi', 'flipflop-loop.imiprop'],
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -3694,9 +4645,6 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
-Number of states                        : 20
-Number of transitions                   : 19
-Number of computed states               : 20
 """
 			} #end result file
 		] # end expectations
@@ -3708,8 +4656,8 @@ Number of computed states               : 20
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop',
-		'input_files': ['PDFC4.imi'],
-		'options'    : '-mode LoopSynth -output-result',
+		'input_files': ['PDFC4.imi', 'PDFC-loop.imiprop'],
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'PDFC4.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -3724,9 +4672,62 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
-Number of states                        : 2
-Number of transitions                   : 2
-Number of computed states               : 3
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/24
+		# Last modified            : 2020/09/24
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with no real loop (1a)',
+		'input_files': ['testNoCycle-1a.imi', 'loop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testNoCycle-1a.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/24
+		# Last modified            : 2020/09/24
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with no real loop (1b)',
+		'input_files': ['testNoCycle-1b.imi', 'loop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testNoCycle-1b.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} #end result file
 		] # end expectations
@@ -3738,8 +4739,8 @@ Number of computed states               : 3
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test LoopSynth: simple example with loop for any valuation',
-		'input_files': ['PDFC5.imi'],
-		'options'    : '-mode LoopSynth -output-result',
+		'input_files': ['PDFC5.imi', 'PDFC-loop.imiprop'],
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -3753,36 +4754,6 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
-Number of states                        : 5
-Number of transitions                   : 6
-Number of computed states               : 7
-"""
-			} #end result file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test AccLoopSynth: flipflop (no loop)',
-		'input_files': ['flipflop.imi'],
-		'options'    : '-mode AccLoopSynth -output-result',
-		'expectations' : [
-			{'file': 'flipflop.res' , 'content' : """
-BEGIN CONSTRAINT
-False
-END CONSTRAINT
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Number of states                        : 20
-Number of transitions                   : 19
-Number of computed states               : 20
 """
 			} #end result file
 		] # end expectations
@@ -3794,11 +4765,534 @@ Number of computed states               : 20
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: witness vs. synthesis (witness)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-loop-witness.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: witness vs. synthesis (synthesis)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-loop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with 1 real loop',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (over-approx with -comparison inclusion)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
+		'options'    : '-comparison inclusion -cycle-algo BFS',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+OR
+  p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (over-approx with -comparison inclusion -merge)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
+		'options'    : '-cycle-algo BFS -comparison inclusion -merge',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+OR
+  p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	# TODO: do -merge only! (so far does not terminate)
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (under-approx with -depth-limit)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
+		'options'    : '-cycle-algo BFS -depth-limit 3 -no-cumulative-pruning',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : depth limit (2 successors unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/09
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test LoopSynth: simple example with 1 real loop (invalid with -comparison inclusion -depth-limit)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-loop.imiprop'],
+		'options'    : '-cycle-algo BFS -comparison inclusion -depth-limit 3',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possibly invalid
+Termination                             : depth limit (1 successor unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: witness vs. synthesis (witness)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-accloop-witness.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : terminated after reaching a target state (some states may have been unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: witness vs. synthesis (synthesis)',
+		'input_files': ['testEFInclMerge.imi', 'testEFInclMerge-accloop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testEFInclMerge.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2046
+OR
+  5 > p
+& p >= 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/24
+		# Last modified            : 2020/09/24
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: simple example with no real loop (1a)',
+		'input_files': ['testNoCycle-1a.imi', 'acceptingLoop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testNoCycle-1a.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/24
+		# Last modified            : 2020/09/24
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: simple example with no real loop (1b)',
+		'input_files': ['testNoCycle-1b.imi', 'acceptingLoop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testNoCycle-1b.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (syntax variant without parentheses)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop-noparen.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (over-approx with -comparison inclusion)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
+		'options'    : '-cycle-algo BFS -comparison inclusion',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+OR
+  p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (over-approx with -comparison inclusion -merge)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
+		'options'    : '-cycle-algo BFS -comparison inclusion -merge',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+OR
+  p = 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible over-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	# TODO: do -merge only! (so far does not terminate)
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (under-approx with -depth-limit)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
+		'options'    : '-cycle-algo BFS -depth-limit 3 -no-cumulative-pruning',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : depth limit (2 successors unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/09
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynth: simple example with 1 real loop (invalid with -comparison inclusion -depth-limit)',
+		'input_files': ['exLoopIncl.imi', 'exLoopIncl-accloop.imiprop'],
+		'options'    : '-cycle-algo BFS -comparison inclusion -depth-limit 3',
+		'expectations' : [
+			{'file': 'exLoopIncl.res' , 'content' : """
+BEGIN CONSTRAINT
+ p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possibly invalid
+Termination                             : depth limit (1 successor unexplored)
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+
+	# NOTE: test removed since there is no accepting loop synthesis + observer patterns as of version 3
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test AccLoopSynth: flipflop (no loop)',
+		#'input_files': ['flipflop.imi', 'flipflop-accloop.imiprop'],
+		#'options'    : '',
+		#'expectations' : [
+			#{'file': 'flipflop.res' , 'content' : """
+#BEGIN CONSTRAINT
+#False
+#END CONSTRAINT
+
+#------------------------------------------------------------
+#Constraint soundness                    : exact
+#Termination                             : regular termination
+#Constraint nature                       : good
+#------------------------------------------------------------
+#Number of states                        : 20
+#Number of transitions                   : 19
+#Number of computed states               : 20
+#"""
+			#} #end result file
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+
+	#,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 2
 		# Test since               : 2019/07/22
-		# Test for IMITATOR version: 2.12
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example 1',
-		'input_files': ['testNDFS-1.imi'],
-		'options'    : '-mode AccLoopSynth -output-result',
+		'input_files': ['testNDFS-1.imi', 'testNDFS1-accloop.imiprop'],
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testNDFS-1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -3810,9 +5304,6 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
-Number of states                        : 3
-Number of transitions                   : 4
-Number of computed states               : 5
 """
 			} #end result file
 		] # end expectations
@@ -3823,12 +5314,13 @@ Number of computed states               : 5
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1
+		# Test version             : 2
 		# Test since               : 2019/07/22
-		# Test for IMITATOR version: 2.12
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example 2',
-		'input_files': ['testNDFS-2.imi'],
-		'options'    : '-mode AccLoopSynth -output-result',
+		'input_files': ['testNDFS-2.imi', 'testNDFS2-accloop.imiprop'],
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'testNDFS-2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -3844,9 +5336,6 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
-Number of states                        : 9
-Number of transitions                   : 13
-Number of computed states               : 14
 """
 			} #end result file
 		] # end expectations
@@ -3857,12 +5346,13 @@ Number of computed states               : 14
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1
+		# Test version             : 2
 		# Test since               : 2019/07/22
-		# Test for IMITATOR version: 2.12
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynth: simple example 3 (accepting for all valuations)',
-		'input_files': ['PDFC5.imi'],
-		'options'    : '-mode AccLoopSynth -output-result',
+		'input_files': ['PDFC5.imi', 'PDFC5-accloop.imiprop'],
+		'options'    : '-cycle-algo BFS',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -3876,9 +5366,70 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
-Number of states                        : 5
-Number of transitions                   : 6
-Number of computed states               : 7
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/22
+		# Last modified            : 2020/09/22
+		# Test for IMITATOR version: 3.0
+		'purpose'    : 'Test AccLoopSynth (without option -no-cumulative-pruning)',
+		'input_files': ['testInclusionEF.imi', 'testInclusionEF-loop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testInclusionEF.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p
+& p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 4
+Number of transitions                   : 4
+Number of computed states               : 5
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/22
+		# Last modified            : 2020/09/22
+		# Test for IMITATOR version: 3.0
+		'purpose'    : 'Test AccLoopSynth (with option -no-cumulative-pruning)',
+		'input_files': ['testInclusionEF.imi', 'testInclusionEF-loop.imiprop'],
+		'options'    : '-cycle-algo BFS -no-cumulative-pruning',
+		'expectations' : [
+			{'file': 'testInclusionEF.res' , 'content' : """
+BEGIN CONSTRAINT
+ 5 >= p
+& p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+Number of states                        : 14
+Number of transitions                   : 15
+Number of computed states               : 16
 """
 			} #end result file
 		] # end expectations
@@ -3890,8 +5441,8 @@ Number of computed states               : 7
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test AccLoopSynthNDFS emptiness: flipflop (no loop)',
-		'input_files': ['flipflop.imi'],
-		'options'    : '-mode AccLoopSynthNDFS -output-result -counterexample',
+		'input_files': ['flipflop.imi', 'flipflop-accloop-witness.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -3913,9 +5464,9 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test AccLoopSynthNDFS with complete constraint: flipflop (no loop)',
-		'input_files': ['flipflop.imi'],
-		'options'    : '-mode AccLoopSynthNDFS -explOrder NDFSsub -output-result',
+		'purpose'    : 'Test AccLoopSynthNDFS synthesis: flipflop (no loop)',
+		'input_files': ['flipflop.imi', 'flipflop-accloop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -3938,11 +5489,68 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		# Test version             : 1
+		# Test since               : 2020/09/24
+		# Last modified            : 2020/09/24
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynthNDFS: simple example with no real loop (1a)',
+		'input_files': ['testNoCycle-1a.imi', 'acceptingLoop.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testNoCycle-1a.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/24
+		# Last modified            : 2020/09/24
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynthNDFS: simple example with no real loop (1b)',
+		'input_files': ['testNoCycle-1b.imi', 'acceptingLoop.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testNoCycle-1b.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 2
 		# Test since               : 2019/07/22
-		# Test for IMITATOR version: 2.12
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynthNDFS emptiness: simple example 1',
-		'input_files': ['testNDFS-1.imi'],
-		'options'    : '-mode AccLoopSynthNDFS -output-result -counterexample',
+		'input_files': ['testNDFS-1.imi', 'testNDFS1-accloop-witness.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'testNDFS-1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -3964,12 +5572,13 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1
+		# Test version             : 2
 		# Test since               : 2019/08/01
-		# Test for IMITATOR version: 2.12
-		'purpose'    : 'Test AccLoopSynthNDFS: simple example 1 with complete constraint',
-		'input_files': ['testNDFS-1.imi'],
-		'options'    : '-mode AccLoopSynthNDFS -explOrder NDFSsub -output-result',
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynthNDFS synthesis: simple example 1',
+		'input_files': ['testNDFS-1.imi', 'testNDFS1-accloop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'testNDFS-1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -3991,16 +5600,19 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1
+		# Test version             : 2
 		# Test since               : 2019/08/01
-		# Test for IMITATOR version: 2.12
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
 		'purpose'    : 'Test AccLoopSynthNDFS emptiness: simple example 2',
-		'input_files': ['testNDFS-2.imi'],
-		'options'    : '-mode AccLoopSynthNDFS -output-result -counterexample',
+		'input_files': ['testNDFS-2.imi', 'testNDFS2-accloop-witness.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
-			{'file': 'testNDFS-2.res' , 'content' : """
+			{'file': 'testNDFS-2.res' , 'content' :
+# NOTE: p = 4 would also be an acceptable result
+"""
 BEGIN CONSTRAINT
- p = 4
+ p = 2
 END CONSTRAINT
 
 ------------------------------------------------------------
@@ -4018,26 +5630,301 @@ Constraint nature                       : good
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1
+		# Test version             : 2
 		# Test since               : 2019/08/01
-		# Test for IMITATOR version: 2.12
-		'purpose'    : 'Test AccLoopSynthNDFS: simple example 2 with complete constraint',
-		'input_files': ['testNDFS-2.imi'],
-		'options'    : '-mode AccLoopSynthNDFS -explOrder NDFSsub -output-result',
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test AccLoopSynthNDFS synthesis: simple example 2',
+		'input_files': ['testNDFS-2.imi', 'testNDFS2-accloop.imiprop'],
+		'options'    : '-cycle-algo NDFS',
 		'expectations' : [
 			{'file': 'testNDFS-2.res' , 'content' : """
 BEGIN CONSTRAINT
-   p = 2
- OR
-   p = 1
+ p = 2
+OR
+  p = 1
+OR
+  p = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/10
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test state predicate with `accepting` keyword and location predicate in property: EF',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-EF.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
  OR
    p = 4
+
 END CONSTRAINT
 
 ------------------------------------------------------------
 Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/14
+		# Last modified            : 2020/09/14
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test only `accepting` keyword: EF',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-EFaccepting.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/10
+		# Last modified            : 2020/09/14
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test empty state predicate: EF',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-EFnopred.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/14
+		# Last modified            : 2020/09/14
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test complex state predicate: EF',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-EFcomplex.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+	p = 2
+OR
+	p = 3
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/10
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test state predicate with `accepting` keyword and location predicate in property: Loop',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
+ OR
+   p = 4
+
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/10
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test only `accepting` keyword: Loop',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred.imiprop'],
+		'options'    : '-cycle-algo BFS',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/10
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test state predicate with `accepting` keyword and location predicate in property: NDFS',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
+ OR
+   p = 4
+
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/10
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test only `accepting` keyword: NDFS',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-accloop-nopred.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+  p = 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2020/09/10
+		# Last modified            : 2020/09/10
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test state predicate with `accepting` keyword and location predicate in property: PRPC',
+		'input_files': ['testEFaccepting.imi', 'testEFaccepting-PRPC.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testEFaccepting.res' , 'content' : """
+BEGIN CONSTRAINT
+ 2 > p
+& p >= 0
+OR
+  4 > p
+& p > 2
+OR
+  p > 4
+<good|bad>
+ p = 2
+OR
+  p = 4
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact <good|bad> exact
+Termination                             : regular termination
+Constraint nature                       : good/bad
+
 ------------------------------------------------------------
 """
 			} #end result file
@@ -4050,8 +5937,8 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: flip-flop (no loop)',
-		'input_files': ['flipflop.imi'],
-		'options'    : '-mode NZCUB -output-result',
+		'input_files': ['flipflop.imi', 'flipflop-NZCUB.imiprop'],
+		'options'    : '-nz-method already',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4063,9 +5950,6 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
-Number of states                        : 20
-Number of transitions                   : 19
-Number of computed states               : 20
 """
 			} #end result file
 		] # end expectations
@@ -4077,8 +5961,8 @@ Number of computed states               : 20
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno)',
-		'input_files': ['PDFC4.imi'],
-		'options'    : '-mode NZCUB -output-result',
+		'input_files': ['PDFC4.imi', 'PDFC4-NZCUB.imiprop'],
+		'options'    : '-nz-method already',
 		'expectations' : [
 			{'file': 'PDFC4.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4090,9 +5974,54 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
-Number of states                        : 4
-Number of transitions                   : 4
-Number of computed states               : 5
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno); check',
+		'input_files': ['PDFC4.imi', 'PDFC4-NZCUB.imiprop'],
+		'options'    : '-nz-method check',
+		'expectations' : [
+			{'file': 'PDFC4.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : possible under-approximation
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test NZCUB: PDFC4 (loop but Zeno); transform',
+		'input_files': ['PDFC4.imi', 'PDFC4-NZCUB.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'PDFC4.res' , 'content' : """
+BEGIN CONSTRAINT
+False
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} #end result file
 		] # end expectations
@@ -4104,8 +6033,8 @@ Number of computed states               : 5
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: CUBPTA1 (non-Zeno loop)',
-		'input_files': ['CUBPTA1.imi'],
-		'options'    : '-mode NZCUB -output-result',
+		'input_files': ['CUBPTA1.imi', 'CUBPTA-NZCUB.imiprop'],
+		'options'    : '-nz-method already',
 		'expectations' : [
 			{'file': 'CUBPTA1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4118,9 +6047,6 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
-Number of states                        : 4
-Number of transitions                   : 4
-Number of computed states               : 5
 """
 			} #end result file
 		] # end expectations
@@ -4132,8 +6058,8 @@ Number of computed states               : 5
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test NZCUB: CUBPTA2 (2 non-Zeno loops)',
-		'input_files': ['CUBPTA2.imi'],
-		'options'    : '-mode NZCUB -output-result',
+		'input_files': ['CUBPTA2.imi', 'CUBPTA-NZCUB.imiprop'],
+		'options'    : '-nz-method already',
 		'expectations' : [
 			{'file': 'CUBPTA2.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4149,9 +6075,54 @@ Constraint soundness                    : exact
 Termination                             : regular termination
 Constraint nature                       : good
 ------------------------------------------------------------
-Number of states                        : 9
-Number of transitions                   : 14
-Number of computed states               : 15
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test infinite run on one example (Zeno version)',
+		'input_files': ['testInfiniteRun.imi', 'testInfiniteRun-Zeno.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testInfiniteRun.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test infinite run on one example (non-Zeno version)',
+		'input_files': ['testInfiniteRun.imi', 'testInfiniteRun-nonZeno.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testInfiniteRun.res' , 'content' : """
+BEGIN CONSTRAINT
+ p >= 2
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} #end result file
 		] # end expectations
@@ -4163,8 +6134,8 @@ Number of computed states               : 15
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example without clocks',
-		'input_files': ['PDFC1.imi'],
-		'options'    : '-mode PDFC -output-result -output-states',
+		'input_files': ['PDFC1.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-states-description',
 		'expectations' : [
 			{'file': 'PDFC1.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4177,9 +6148,6 @@ Constraint soundness          : exact
 Termination                   : regular termination
 Constraint nature             : good
 ------------------------------------------------------------
-Number of states              : 2
-Number of transitions         : 2
-Number of computed states     : 3
 """
 			} #end result file
 			,
@@ -4221,8 +6189,8 @@ Number of computed states     : 3
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (false result)',
-		'input_files': ['PDFC3.imi'],
-		'options'    : '-mode PDFC -output-result  -output-states',
+		'input_files': ['PDFC3.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'PDFC3.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4284,8 +6252,8 @@ Number of computed states     : 2
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (normal result)',
-		'input_files': ['PDFC4.imi'],
-		'options'    : '-mode PDFC -output-result  -output-states',
+		'input_files': ['PDFC4.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'PDFC4.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4351,8 +6319,8 @@ Number of computed states     : 3
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (false result)',
-		'input_files': ['PDFC6.imi'],
-		'options'    : '-mode PDFC -output-result  -output-states -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'input_files': ['PDFC6.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : ' -states-description -no-var-autoremove',
 		'expectations' : [
 			{'file': 'PDFC6.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4399,12 +6367,14 @@ Number of computed states     : 2
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+
 	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: very basic example (true result)',
-		'input_files': ['PDFC7.imi'],
-		'options'    : '-mode PDFC -output-result  -output-states',
+		'input_files': ['PDFC7.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'PDFC7.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4453,12 +6423,14 @@ Number of computed states     : 3
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	
 	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: basic example with disjunction',
-		'input_files': ['PDFC5.imi'],
-		'options'    : '-mode PDFC -output-result  -output-states',
+		'input_files': ['PDFC5.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'PDFC5.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4481,109 +6453,89 @@ Constraint soundness          : exact
 Termination                   : regular termination
 Constraint nature             : good
 ------------------------------------------------------------
-Number of states              : 5
-Number of transitions         : 6
-Number of computed states     : 7
-"""
-			} #end result file
-			,
-			{'file': 'PDFC5-statespace.states' , 'content' : """
-  DESCRIPTION OF THE STATES
-
-  /************************************************************/
-  INITIAL
-  STATE 0:
-  pta: l1 ==>
-& p1 + 5 >= x1
-& p1 >= 0
-& p2 >= 0
-& p3 >= 0
-& x1 >= 0
-& x1 = x2
-
-  Projection onto the parameters:
-   p3 >= 0
-& p2 >= 0
-& p1 >= 0
-
-  /************************************************************/
-  STATE 1:
-  pta: l2 ==>
-& p1 >= 0
-& p2 >= 0
-& p3 >= 0
-& x1 >= 0
-& x1 = x2
-
-  Projection onto the parameters:
-   p3 >= 0
-& p2 >= 0
-& p1 >= 0
-
-  /************************************************************/
-  STATE 2:
-  pta: l3 ==>
-& p1 >= 0
-& p1 + 5 >= p3
-& p2 >= 0
-& p3 >= 0
-& x1 >= p3
-& x1 = x2
-
-  Projection onto the parameters:
-   p1 + 5 >= p3
-& p3 >= 0
-& p1 >= 0
-& p2 >= 0
-
-  /************************************************************/
-  STATE 3:
-  pta: l3 ==>
-& p1 >= 0
-& p2 >= 0
-& p3 >= 0
-& x1 >= 0
-& x1 = x2
-
-  Projection onto the parameters:
-   p3 >= 0
-& p2 >= 0
-& p1 >= 0
-
-  /************************************************************/
-  STATE 4:
-  pta: l2 ==>
-& p1 >= 0
-& p1 + 5 >= p3
-& p2 >= 0
-& p3 >= 0
-& x1 >= p3
-& x1 = x2
-
-  Projection onto the parameters:
-   p1 + 5 >= p3
-& p3 >= 0
-& p1 >= 0
-& p2 >= 0
-
-  DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_1 via "a"
-  s_0 -> s_2
-  s_1 -> s_3 via "a"
-  s_2 -> s_4 via "a"
-  s_3 -> s_1 via "a"
-  s_4 -> s_2 via "a"
 """
 			} #end result file
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+
 	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PDFC: basic example with disjunction (no inclusion)',
+		'input_files': ['PDFC5.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-comparison equality',
+		'expectations' : [
+			{'file': 'PDFC5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= 0
+& p1 + 5 = p3
+OR
+  p1 >= 0
+& p3 > 5 + p1
+& p2 >= 5 + p1
+OR
+  p1 >= 0
+& p1 + 5 > p3
+& p3 >= 0
+& p2 >= 5 + p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+Constraint nature             : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test PDFC: basic example with disjunction (explicit inclusion)',
+		'input_files': ['PDFC5.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-comparison inclusion',
+		'expectations' : [
+			{'file': 'PDFC5.res' , 'content' : """
+BEGIN CONSTRAINT
+ p1 >= 0
+& p2 >= 0
+& p1 + 5 = p3
+OR
+  p1 >= 0
+& p3 > 5 + p1
+& p2 >= 5 + p1
+OR
+  p1 >= 0
+& p1 + 5 > p3
+& p3 >= 0
+& p2 >= 5 + p1
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness          : exact
+Termination                   : regular termination
+Constraint nature             : good
+------------------------------------------------------------
+"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: example with early termination due to false constraint',
-		'input_files': ['flipflop.imi'],
-		'options'    : '-mode PDFC -output-result  -output-states -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'input_files': ['flipflop.imi', 'flipflop-deadlockfree.imiprop'],
+		'options'    : ' -states-description',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -4595,373 +6547,6 @@ Constraint soundness          : exact
 Termination                   : regular termination
 Constraint nature             : good
 ------------------------------------------------------------
-Number of states              : 20
-Number of transitions         : 19
-Number of computed states     : 20
-"""
-			} #end result file
-			,
-			{'file': 'flipflop-statespace.states' , 'content' : """
-  DESCRIPTION OF THE STATES
-
-  /************************************************************/
-  INITIAL
-  STATE 0:
-  input: Input0, g1: G10011, g2: G2101, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==>
-& 5 >= s
-& dG3_u >= 8
-& dG4_u >= 3
-& s >= 0
-& ckG1 >= s
-& ckG2 >= s
-& ckG3 >= s
-& ckG4 >= s
-
-  Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 8
-
-  /************************************************************/
-  STATE 1:
-  input: Input1, g1: G11011, g2: G2101, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==>
-& 12 >= s
-& dG3_u >= 8
-& dG4_u >= 3
-& s >= 5
-& ckG2 >= s
-& ckG3 >= s
-& ckG4 >= s
-& s = 5 + ckG1
-
-  Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 8
-
-  /************************************************************/
-  STATE 2:
-  input: Input1, g1: G11010, g2: G2001, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==>
-& 15 >= s
-& dG3_u >= 8
-& dG4_u >= 3
-& s >= 12
-& ckG2 >= s
-& ckG3 >= s
-& ckG4 >= s
-& s = 5 + ckG1
-
-  Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 8
-
-  /************************************************************/
-  STATE 3:
-  input: Input2, g1: G11110, g2: G2011, g3: G30111, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==>
-& dG3_u + 15 >= s
-& 32 >= s
-& dG3_u >= 8
-& dG4_u >= 3
-& ckG2 >= s
-& s >= 15
-& ckG4 >= s
-& s = 5 + ckG1
-& s = 15 + ckG3
-
-  Projection onto the parameters:
-   dG3_u >= 8
-& dG4_u >= 3
-
-  /************************************************************/
-  STATE 4:
-  input: Input3, g1: G10110, g2: G2011, g3: G30111, g4: G410, automatically_generated_observer: loc_AutoGen_obs_0 ==>
-& 39 >= s
-& dG3_u + 15 >= s
-& dG4_u >= 3
-& ckG2 >= s
-& s >= 32
-& ckG4 >= s
-& s = 5 + ckG1
-& s = 15 + ckG3
-
-  Projection onto the parameters:
-   dG3_u >= 17
-& dG4_u >= 3
-
-  /************************************************************/
-  STATE 5:
-  input: Input2, g1: G11110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==>
-& 32 >= s
-& dG3_u + ckG4 + 15 >= s
-& dG4_u >= 3
-& s >= 23 + ckG4
-& ckG4 >= 0
-& ckG2 >= s
-& dG4_u >= ckG4
-& s = 5 + ckG1
-& s = 15 + ckG3
-
-  Projection onto the parameters:
-   dG3_u >= 8
-& dG4_u >= 3
-
-  /************************************************************/
-  STATE 6:
-  input: Input4, g1: G10010, g2: G2001, g3: G30011, g4: G410, automatically_generated_observer: loc_AutoGen_obs_2 ==>
-& dG3_u >= 24
-& dG4_u >= 3
-& ckG2 >= 39
-& ckG4 >= 39
-& s = 0
-& ckG1 = 0
-& ckG3 = 24
-
-  Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 24
-
-  /************************************************************/
-  STATE 7:
-  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==>
-& 39 >= s
-& dG3_u + ckG4 + 15 >= s
-& dG4_u >= 3
-& s >= 32 + ckG4
-& ckG4 >= 0
-& ckG2 >= s
-& dG4_u >= ckG4
-& s = 5 + ckG1
-& s = 15 + ckG3
-
-  Projection onto the parameters:
-   dG3_u >= 17
-& dG4_u >= 3
-
-  /************************************************************/
-  STATE 8:
-  input: Input3, g1: G10110, g2: G2011, g3: G30110, g4: G400, automatically_generated_observer: loc_AutoGen_obs_0 ==>
-& 39 >= s
-& dG3_u + ckG4 + 15 >= s
-& dG4_u >= ckG4
-& dG4_u >= 3
-& ckG2 >= s
-& s >= 32
-& s >= 23 + ckG4
-& ckG4 + 32 >= s
-& s = 5 + ckG1
-& s = 15 + ckG3
-
-  Projection onto the parameters:
-   dG3_u + dG4_u >= 17
-& dG4_u >= 3
-& dG3_u >= 8
-
-  /************************************************************/
-  STATE 9:
-  input: Input2, g1: G11110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
-& dG3_u + ckG4 + 15 >= s
-& dG4_u >= 3
-& s >= 23 + ckG4
-& ckG4 >= 3
-& ckG2 >= s
-& 32 >= s
-& s = 5 + ckG1
-& s = 15 + ckG3
-
-  Projection onto the parameters:
-   dG3_u >= 8
-& dG4_u >= 3
-
-  /************************************************************/
-  STATE 10:
-  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, automatically_generated_observer: loc_AutoGen_obs_2 ==>
-& dG3_u + ckG4 >= 24
-& dG4_u >= ckG4
-& dG4_u >= 3
-& ckG2 >= 39
-& ckG4 >= 0
-& 7 >= ckG4
-& s = 0
-& ckG1 = 0
-& ckG3 = 0
-
-  Projection onto the parameters:
-   dG3_u + dG4_u >= 24
-& dG3_u >= 17
-& dG4_u >= 3
-
-  /************************************************************/
-  STATE 11:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
-& dG3_u + ckG4 + 15 >= s
-& dG4_u >= 3
-& s >= 32 + ckG4
-& ckG4 >= 3
-& ckG2 >= s
-& 39 >= s
-& s = 5 + ckG1
-& s = 15 + ckG3
-
-  Projection onto the parameters:
-   dG3_u >= 17
-& dG4_u >= 3
-
-  /************************************************************/
-  STATE 12:
-  input: Input4, g1: G10010, g2: G2001, g3: G30010, g4: G400, automatically_generated_observer: loc_AutoGen_obs_2 ==>
-& dG3_u + ckG4 >= 24
-& dG4_u >= ckG4
-& ckG2 >= 39
-& ckG4 >= 7
-& 16 >= ckG4
-& s = 0
-& ckG1 = 0
-& ckG3 = 0
-
-  Projection onto the parameters:
-   dG4_u >= 7
-& dG3_u >= 8
-& dG3_u + dG4_u >= 24
-
-  /************************************************************/
-  STATE 13:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
-& 39 >= s
-& dG3_u + ckG4 + 15 >= s
-& dG4_u + s >= 32 + ckG4
-& dG4_u >= 3
-& s >= 32
-& s >= 23 + ckG4
-& ckG4 >= 3
-& ckG2 >= s
-& ckG4 + 32 >= s
-& s = 5 + ckG1
-& s = 15 + ckG3
-
-  Projection onto the parameters:
-   dG3_u + dG4_u >= 17
-& dG3_u >= 8
-& dG4_u >= 3
-
-  /************************************************************/
-  STATE 14:
-  input: Input3, g1: G10110, g2: G2011, g3: G31110, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
-& 39 >= s
-& dG3_u + ckG4 + 15 >= s
-& dG4_u >= 3
-& ckG2 >= s
-& s >= 32
-& s >= 23 + ckG4
-& ckG4 + 29 >= s
-& s = 5 + ckG1
-& s = 15 + ckG3
-
-  Projection onto the parameters:
-   dG3_u >= 8
-& dG4_u >= 3
-
-  /************************************************************/
-  STATE 15:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
-& dG3_u + ckG4 >= 24
-& dG4_u + 7 >= ckG4
-& dG4_u >= 3
-& ckG2 >= 39
-& ckG4 >= 7
-& 16 >= ckG4
-& s = 0
-& ckG1 = 0
-& ckG3 = 24
-
-  Projection onto the parameters:
-   dG3_u + dG4_u >= 17
-& dG3_u >= 8
-& dG4_u >= 3
-
-  /************************************************************/
-  STATE 16:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_2 ==>
-& dG3_u + ckG4 >= 24
-& dG4_u >= ckG4
-& ckG2 >= 39
-& ckG4 >= 7
-& 16 >= ckG4
-& s = 0
-& ckG1 = 0
-& ckG3 = 0
-
-  Projection onto the parameters:
-   dG4_u >= 7
-& dG3_u >= 8
-& dG3_u + dG4_u >= 24
-
-  /************************************************************/
-  STATE 17:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
-& dG3_u + ckG4 >= 24
-& dG4_u >= 3
-& ckG2 >= 39
-& ckG4 >= 3
-& 7 >= ckG4
-& s = 0
-& ckG1 = 0
-& ckG3 = 24
-
-  Projection onto the parameters:
-   dG3_u >= 17
-& dG4_u >= 3
-
-  /************************************************************/
-  STATE 18:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_2 ==>
-& dG3_u + ckG4 >= 24
-& dG4_u >= ckG4
-& ckG2 >= 39
-& ckG4 >= 3
-& 7 >= ckG4
-& s = 0
-& ckG1 = 0
-& ckG3 = 0
-
-  Projection onto the parameters:
-   dG4_u >= 3
-& dG3_u >= 17
-& dG3_u + dG4_u >= 24
-
-  /************************************************************/
-  STATE 19:
-  input: Input4, g1: G10010, g2: G2001, g3: G31010, g4: G401, automatically_generated_observer: loc_AutoGen_obs_1 ==>
-& dG3_u + ckG4 >= 24
-& dG4_u >= 3
-& ckG2 >= 39
-& ckG4 >= 10
-& 16 >= ckG4
-& s = 0
-& ckG1 = 0
-& ckG3 = 24
-
-  Projection onto the parameters:
-   dG3_u >= 8
-& dG4_u >= 3
-
-  DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_1 via "dUp"
-  s_1 -> s_2 via "qG1Down"
-  s_2 -> s_3 via "ckUp"
-  s_3 -> s_4 via "dDown"
-  s_3 -> s_5 via "qG3Down"
-  s_4 -> s_6 via "ckDown"
-  s_4 -> s_7 via "qG3Down"
-  s_5 -> s_8 via "dDown"
-  s_5 -> s_9 via "qUp"
-  s_7 -> s_10 via "ckDown"
-  s_7 -> s_11 via "qUp"
-  s_8 -> s_12 via "ckDown"
-  s_8 -> s_13 via "qUp"
-  s_9 -> s_14 via "dDown"
-  s_10 -> s_18 via "qUp"
-  s_11 -> s_17 via "ckDown"
-  s_12 -> s_16 via "qUp"
-  s_13 -> s_15 via "ckDown"
-  s_14 -> s_19 via "ckDown"
 """
 			} #end result file
 		] # end expectations
@@ -4971,8 +6556,8 @@ Number of computed states     : 20
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: example with basic backward under-approximation',
-		'input_files': ['PDFC8.imi'],
-		'options'    : '-mode PDFC -output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'input_files': ['PDFC8.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-depth-limit 5 -no-var-autoremove',
 		'expectations' : [
 			{'file': 'PDFC8.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5005,8 +6590,8 @@ Number of computed states     : 8
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: example with basic backward under-approximation and exact result',
-		'input_files': ['PDFC8b.imi'],
-		'options'    : '-mode PDFC -output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'input_files': ['PDFC8b.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC8b.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5033,8 +6618,8 @@ Number of computed states     : 8
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: another example with basic backward under-approximation',
-		'input_files': ['PDFC9.imi'],
-		'options'    : '-mode PDFC -output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'input_files': ['PDFC9.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC9.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5049,9 +6634,6 @@ Constraint soundness          : possible under-approximation <good|bad> possible
 Termination                   : depth limit (1 successor unexplored)
 Constraint nature             : good/bad
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 8
-Number of computed states     : 9
 """
 			} #end result file
 		] # end expectations
@@ -5060,8 +6642,8 @@ Number of computed states     : 9
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PDFC: again another example with basic backward under-approximation',
-		'input_files': ['PDFC9b.imi'],
-		'options'    : '-mode PDFC -output-result -depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'input_files': ['PDFC9b.imi', 'PDFC-deadlockfree.imiprop'],
+		'options'    : '-depth-limit 5 -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'PDFC9b.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5076,19 +6658,18 @@ Constraint soundness          : possible under-approximation <good|bad> possible
 Termination                   : depth limit (1 successor unexplored)
 Constraint nature             : good/bad
 ------------------------------------------------------------
-Number of states              : 7
-Number of transitions         : 8
-Number of computed states     : 9
 """
 			} #end result file
 		] # end expectations
 	} # end test case
+			
 	,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test the inverse method (flip-flop)',
 		'input_files': ['flipflop.imi', 'flipflop.pi0'],
-		'options'    : '-output-result',
+		'options'    : '',
 		'expectations' : [
 			{'file': 'flipflop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5098,12 +6679,36 @@ END CONSTRAINT
 			} #end result file
 		] # end expectations
 	} # end test case
+	
 	,
+	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test the inverse method (SIMOP)',
+		# Test version             : 1
+		# Test since               : 2020/09/21
+		# Last modified            : 2020/09/21
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test the inverse method (flip-flop) #witness',
+		'input_files': ['flipflop.imi', 'flipflop-witness.pi0'],
+		'options'    : '',
+		'expectations' : [
+# NOTE: witness is not recognized by IM, therefore will raise a warning and give the same result as synthesis
+			{'file': 'flipflop.res' , 'content' : """
+BEGIN CONSTRAINT
+dG3_u + dG4_u >= 17 & dG3_u >= 8 & dG4_u >= 3 & 17 > dG3_u & 24 > dG3_u + dG4_u
+END CONSTRAINT
+			"""
+			} #end result file
+		] # end expectations
+	} # end test case
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test the convex inverse method (SIMOP)',
 		'input_files': ['simop.imi', 'simop.pi0'],
-		'options'    : '-merge -no-random -output-result',
+		'options'    : '-merge -no-random -comparison inclusion',
 		'expectations' : [
 			{'file': 'simop.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5119,8 +6724,23 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test variants of IM: here IM',
-		'input_files': ['testIM-IMK-IMunion.imi', 'testIM-IMK-IMunion.pi0'],
-		'options'    : '-output-result',
+		'input_files': ['testIM-IMK-IMunion.imi', 'testIM-IMK-IMunion-IM.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testIM-IMK-IMunion.res' , 'content' : """
+		  p = 2
+		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test variants of IM: here IMconvex',
+		'input_files': ['testIM-IMK-IMunion.imi', 'testIM-IMK-IMunion-IMconvex.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testIM-IMK-IMunion.res' , 'content' : """
 		  p = 2
@@ -5134,8 +6754,8 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test variants of IM: here IMK',
-		'input_files': ['testIM-IMK-IMunion.imi', 'testIM-IMK-IMunion.pi0'],
-		'options'    : '-IMK -output-result',
+		'input_files': ['testIM-IMK-IMunion.imi', 'testIM-IMK-IMunion-IMK.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testIM-IMK-IMunion.res' , 'content' : """
 		 p > 1
@@ -5149,8 +6769,8 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test variants of IM: here IMunion',
-		'input_files': ['testIM-IMK-IMunion.imi', 'testIM-IMK-IMunion.pi0'],
-		'options'    : '-IMunion -output-result',
+		'input_files': ['testIM-IMK-IMunion.imi', 'testIM-IMK-IMunion-IMunion.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testIM-IMK-IMunion.res' , 'content' : """
 		4 >= p & p > 1
@@ -5164,8 +6784,27 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test variants of IM (bis): here IM',
-		'input_files': ['exVariantes.imi', 'exVariantes.pi0'],
-		'options'    : '-output-result',
+		'input_files': ['exVariantes.imi', 'exVariantes-IM.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'exVariantes.res' , 'content' : """
+	BEGIN CONSTRAINT
+ 5*p1 > p2
+& p2 >= 3
+& p2 >= 4*p1
+END CONSTRAINT
+		  """
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	,
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test variants of IM (bis): here IMconvex',
+		'input_files': ['exVariantes.imi', 'exVariantes-IMconvex.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'exVariantes.res' , 'content' : """
 	p2 >= 3 & 5*p1 > p2 & p2 >= 4*p1
@@ -5179,8 +6818,8 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test variants of IM (bis): here IMK',
-		'input_files': ['exVariantes.imi', 'exVariantes.pi0'],
-		'options'    : '-IMK -output-result -no-random',
+		'input_files': ['exVariantes.imi', 'exVariantes-IMK.imiprop'],
+		'options'    : '-no-random',
 		'expectations' : [
 			{'file': 'exVariantes.res' , 'content' : """
  p2 > 2
@@ -5195,8 +6834,8 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test variants of IM (bis): here IMunion',
-		'input_files': ['exVariantes.imi', 'exVariantes.pi0'],
-		'options'    : '-IMunion -output-result -no-random',
+		'input_files': ['exVariantes.imi', 'exVariantes-IMunion.imiprop'],
+		'options'    : '-no-random',
 		'expectations' : [
 			{'file': 'exVariantes.res' , 'content' : """
 		 5*p1 > p2 & p2 >= 3 OR 5*p1 > p2 & p2 > 2 & p2 >= 4*p1
@@ -5210,8 +6849,8 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IM on an incomplete example',
-		'input_files': ['exIMnoncomplete.imi', 'exIMnoncomplete.pi0'],
-		'options'    : '-output-result -no-random',
+		'input_files': ['exIMnoncomplete.imi', 'exIMnoncomplete-IMconvex.imiprop'],
+		'options'    : '-no-random',
 		'expectations' : [
 			{'file': 'exIMnoncomplete.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5228,8 +6867,8 @@ END CONSTRAINT		  """
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test IMcomplete on an incomplete example',
-		'input_files': ['exIMnoncomplete.imi', 'exIMnoncomplete.pi0'],
-		'options'    : '-mode IMcomplete -output-result -no-random',
+		'input_files': ['exIMnoncomplete.imi', 'exIMnoncomplete-IM.imiprop'],
+		'options'    : '-no-random',
 		'expectations' : [
 			{'file': 'exIMnoncomplete.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5252,12 +6891,12 @@ END CONSTRAINT		  """
 
 	#------------------------------------------------------------
 	{
-		# Test version             : 1
+		# Test version             : 2
 		# Test since               : 2019/05/30
 		# Test for IMITATOR version: 2.11
 		'purpose'    : 'Test PRP on a very simple example',
-		'input_files': ['testEFcounterex.imi', 'testEFcounterex.pi0'],
-		'options'    : '-mode PRP -merge -incl -output-result',
+		'input_files': ['testEFcounterex.imi', 'testEFcounterex-prp.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'testEFcounterex.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5278,93 +6917,93 @@ Constraint nature                       : good
 
 	,
 
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test PRP (old version) on a simple example (good reference valuation)',
-		'input_files': ['testPRP.imi', 'testPRP.pigood'],
-		'options'    : '-PRP -output-result -output-states',
-		'expectations' : [
-			{'file': 'testPRP.res' , 'content' : """
-BEGIN CONSTRAINT
-	4 > p2
-    & 3 > p1
-    & p1 >= 0
-    & p2 >= 0
-END CONSTRAINT
-		  """
-			} # end result file
-			,
-			{'file': 'testPRP-statespace.states' , 'content' : """
-  DESCRIPTION OF THE STATES
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test PRP (old version) on a simple example (good reference valuation)',
+		#'input_files': ['testPRP.imi', 'testPRP.pigood'],
+		#'options'    : '-PRP  -states-description',
+		#'expectations' : [
+			#{'file': 'testPRP.res' , 'content' : """
+#BEGIN CONSTRAINT
+	#4 > p2
+    #& 3 > p1
+    #& p1 >= 0
+    #& p2 >= 0
+#END CONSTRAINT
+		  #"""
+			#} # end result file
+			#,
+			#{'file': 'testPRP-statespace.states' , 'content' : """
+  #DESCRIPTION OF THE STATES
 
-  /************************************************************/
-  INITIAL
-  STATE 0:
-  pta: l1 ==>
-& p1 >= 0
-& p2 >= 0
-& y >= 0
-& x = y
+  #/************************************************************/
+  #INITIAL
+  #STATE 0:
+  #pta: l1 ==>
+#& p1 >= 0
+#& p2 >= 0
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 0
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 0
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 1:
-  pta: l2 ==>
-& p1 >= 0
-& p2 >= 0
-& x >= 0
-& x = y
+  #/************************************************************/
+  #STATE 1:
+  #pta: l2 ==>
+#& p1 >= 0
+#& p2 >= 0
+#& x >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 0
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 0
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 2:
-  pta: l3 ==>
-& p1 >= x
-& p2 >= 0
-& x >= 0
-& 1 >= p2
-& x = y
+  #/************************************************************/
+  #STATE 2:
+  #pta: l3 ==>
+#& p1 >= x
+#& p2 >= 0
+#& x >= 0
+#& 1 >= p2
+#& x = y
 
-  Projection onto the parameters:
-   1 >= p2
-& p2 >= 0
-& p1 >= 0
+  #Projection onto the parameters:
+   #1 >= p2
+#& p2 >= 0
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 3:
-  pta: l4 ==>
-& p1 >= p2
-& p2 >= 0
-& y >= 0
-& x = y
+  #/************************************************************/
+  #STATE 3:
+  #pta: l4 ==>
+#& p1 >= p2
+#& p2 >= 0
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p1 >= p2
-& p2 >= 0
+  #Projection onto the parameters:
+   #p1 >= p2
+#& p2 >= 0
 
-  DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_1
-  s_1 -> s_2
-  s_1 -> s_3
-  s_2 -> s_2
-"""
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-	,
+  #DESCRIPTION OF THE TRANSITIONS
+  #s_0 -> s_1
+  #s_1 -> s_2
+  #s_1 -> s_3
+  #s_2 -> s_2
+#"""
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+	#,
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PRP on a simple example (good reference valuation)',
-		'input_files': ['testPRP.imi', 'testPRP.pigood'],
-		'options'    : '-mode PRP -output-result -output-states',
+		'input_files': ['testPRP.imi', 'testPRP-good.imiprop'],
+		'options'    : '-states-description',
 		'expectations' : [
 			{'file': 'testPRP.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -5442,101 +7081,101 @@ END CONSTRAINT
 	} # end test case
 	#------------------------------------------------------------
 	,
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test PRP (old version) on a simple example (bad reference valuation)',
-		'input_files': ['testPRP.imi', 'testPRP.pibad'],
-		'options'    : '-PRP -output-result -output-states',
-		'expectations' : [
-			{'file': 'testPRP.res' , 'content' : """
-		 & p1 >= 0
-OR
-  p2 >= 0
-& p1 >= 3
-		  """
-			} # end result file
-			,
-			{'file': 'testPRP-statespace.states' , 'content' : """
-  DESCRIPTION OF THE STATES
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test PRP (old version) on a simple example (bad reference valuation)',
+		#'input_files': ['testPRP.imi', 'testPRP.pibad'],
+		#'options'    : '-PRP  -states-description',
+		#'expectations' : [
+			#{'file': 'testPRP.res' , 'content' : """
+		 #& p1 >= 0
+#OR
+  #p2 >= 0
+#& p1 >= 3
+		  #"""
+			#} # end result file
+			#,
+			#{'file': 'testPRP-statespace.states' , 'content' : """
+  #DESCRIPTION OF THE STATES
 
-  /************************************************************/
-  INITIAL
-  STATE 0:
-  pta: l1 ==>
-& p1 >= 0
-& p2 >= 0
-& y >= 0
-& x = y
+  #/************************************************************/
+  #INITIAL
+  #STATE 0:
+  #pta: l1 ==>
+#& p1 >= 0
+#& p2 >= 0
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 0
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 0
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 1:
-  pta: l2 ==>
-& p1 >= 0
-& p2 >= 0
-& x >= 0
-& x = y
+  #/************************************************************/
+  #STATE 1:
+  #pta: l2 ==>
+#& p1 >= 0
+#& p2 >= 0
+#& x >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 0
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 0
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 2:
-  pta: locBad1 ==>
-& p1 >= 0
-& p2 >= 4
-& y >= 0
-& x = y
+  #/************************************************************/
+  #STATE 2:
+  #pta: locBad1 ==>
+#& p1 >= 0
+#& p2 >= 4
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 4
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 4
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 3:
-  pta: l4 ==>
-& p1 >= p2
-& p2 >= 0
-& y >= 0
-& x = y
+  #/************************************************************/
+  #STATE 3:
+  #pta: l4 ==>
+#& p1 >= p2
+#& p2 >= 0
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p1 >= p2
-& p2 >= 0
+  #Projection onto the parameters:
+   #p1 >= p2
+#& p2 >= 0
 
-  /************************************************************/
-  STATE 4:
-  pta: locBad2 ==>
-& p1 >= 3
-& p2 >= 0
-& y >= 0
-& x = y
+  #/************************************************************/
+  #STATE 4:
+  #pta: locBad2 ==>
+#& p1 >= 3
+#& p2 >= 0
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 0
-& p1 >= 3
+  #Projection onto the parameters:
+   #p2 >= 0
+#& p1 >= 3
 
-  DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_1
-  s_0 -> s_2
-  s_1 -> s_3
-  s_1 -> s_4
-		  """
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-	,
+  #DESCRIPTION OF THE TRANSITIONS
+  #s_0 -> s_1
+  #s_0 -> s_2
+  #s_1 -> s_3
+  #s_1 -> s_4
+		  #"""
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+	#,
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PRP on a simple example (bad reference valuation)',
-		'input_files': ['testPRP.imi', 'testPRP.pibad'],
-		'options'    : '-mode PRP -output-result -output-states',
+		'input_files': ['testPRP.imi', 'testPRP-bad.imiprop'],
+		'options'    : '-states-description',
 		'expectations' : [
 			{'file': 'testPRP.res' , 'content' : """
 		 & p1 >= 0
@@ -5622,232 +7261,232 @@ OR
 	} # end test case
 	#------------------------------------------------------------
 	,
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Test PRP (old version) on a simple example (looping reference valuation)',
-		'input_files': ['testPRP.imi', 'testPRP.piloop'],
-		'options'    : '-PRP -output-result -depth-limit 10 -output-states',
-		'expectations' : [
-			{'file': 'testPRP.res' , 'content' : """
- p2 >= 4
-    & p1 >= 0
-    OR
-      p2 >= 0
-    & p1 >= 3
-		  """
-			} # end result file
-			,
-			{'file': 'testPRP-statespace.states' , 'content' : """
-  DESCRIPTION OF THE STATES
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test PRP (old version) on a simple example (looping reference valuation)',
+		#'input_files': ['testPRP.imi', 'testPRP.piloop'],
+		#'options'    : '-PRP  -depth-limit 10 -states-description',
+		#'expectations' : [
+			#{'file': 'testPRP.res' , 'content' : """
+ #p2 >= 4
+    #& p1 >= 0
+    #OR
+      #p2 >= 0
+    #& p1 >= 3
+		  #"""
+			#} # end result file
+			#,
+			#{'file': 'testPRP-statespace.states' , 'content' : """
+  #DESCRIPTION OF THE STATES
 
-  /************************************************************/
-  INITIAL
-  STATE 0:
-  pta: l1 ==>
-& p1 >= 0
-& p2 >= 0
-& y >= 0
-& x = y
+  #/************************************************************/
+  #INITIAL
+  #STATE 0:
+  #pta: l1 ==>
+#& p1 >= 0
+#& p2 >= 0
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 0
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 0
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 1:
-  pta: l2 ==>
-& p1 >= 0
-& p2 >= 0
-& x >= 0
-& x = y
+  #/************************************************************/
+  #STATE 1:
+  #pta: l2 ==>
+#& p1 >= 0
+#& p2 >= 0
+#& x >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 0
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 0
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 2:
-  pta: locBad1 ==>
-& p1 >= 0
-& p2 >= 4
-& y >= 0
-& x = y
+  #/************************************************************/
+  #STATE 2:
+  #pta: locBad1 ==>
+#& p1 >= 0
+#& p2 >= 4
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 4
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 4
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 3:
-  pta: infiniteLoop ==>
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x = y
+  #/************************************************************/
+  #STATE 3:
+  #pta: infiniteLoop ==>
+#& 1 >= x
+#& p1 >= 0
+#& p2 >= 5
+#& x >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 5
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 4:
-  pta: l4 ==>
-& p1 >= p2
-& p2 >= 0
-& y >= 0
-& x = y
+  #/************************************************************/
+  #STATE 4:
+  #pta: l4 ==>
+#& p1 >= p2
+#& p2 >= 0
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p1 >= p2
-& p2 >= 0
+  #Projection onto the parameters:
+   #p1 >= p2
+#& p2 >= 0
 
-  /************************************************************/
-  STATE 5:
-  pta: locBad2 ==>
-& p1 >= 3
-& p2 >= 0
-& y >= 0
-& x = y
+  #/************************************************************/
+  #STATE 5:
+  #pta: locBad2 ==>
+#& p1 >= 3
+#& p2 >= 0
+#& y >= 0
+#& x = y
 
-  Projection onto the parameters:
-   p2 >= 0
-& p1 >= 3
+  #Projection onto the parameters:
+   #p2 >= 0
+#& p1 >= 3
 
-  /************************************************************/
-  STATE 6:
-  pta: infiniteLoop ==>
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x + 1 = y
+  #/************************************************************/
+  #STATE 6:
+  #pta: infiniteLoop ==>
+#& 1 >= x
+#& p1 >= 0
+#& p2 >= 5
+#& x >= 0
+#& x + 1 = y
 
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 5
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 7:
-  pta: infiniteLoop ==>
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x + 2 = y
+  #/************************************************************/
+  #STATE 7:
+  #pta: infiniteLoop ==>
+#& 1 >= x
+#& p1 >= 0
+#& p2 >= 5
+#& x >= 0
+#& x + 2 = y
 
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 5
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 8:
-  pta: infiniteLoop ==>
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x + 3 = y
+  #/************************************************************/
+  #STATE 8:
+  #pta: infiniteLoop ==>
+#& 1 >= x
+#& p1 >= 0
+#& p2 >= 5
+#& x >= 0
+#& x + 3 = y
 
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 5
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 9:
-  pta: infiniteLoop ==>
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x + 4 = y
+  #/************************************************************/
+  #STATE 9:
+  #pta: infiniteLoop ==>
+#& 1 >= x
+#& p1 >= 0
+#& p2 >= 5
+#& x >= 0
+#& x + 4 = y
 
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 5
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 10:
-  pta: infiniteLoop ==>
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x + 5 = y
+  #/************************************************************/
+  #STATE 10:
+  #pta: infiniteLoop ==>
+#& 1 >= x
+#& p1 >= 0
+#& p2 >= 5
+#& x >= 0
+#& x + 5 = y
 
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 5
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 11:
-  pta: infiniteLoop ==>
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x + 6 = y
+  #/************************************************************/
+  #STATE 11:
+  #pta: infiniteLoop ==>
+#& 1 >= x
+#& p1 >= 0
+#& p2 >= 5
+#& x >= 0
+#& x + 6 = y
 
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 5
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 12:
-  pta: infiniteLoop ==>
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x + 7 = y
+  #/************************************************************/
+  #STATE 12:
+  #pta: infiniteLoop ==>
+#& 1 >= x
+#& p1 >= 0
+#& p2 >= 5
+#& x >= 0
+#& x + 7 = y
 
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 5
+#& p1 >= 0
 
-  /************************************************************/
-  STATE 13:
-  pta: infiniteLoop ==>
-& 1 >= x
-& p1 >= 0
-& p2 >= 5
-& x >= 0
-& x + 8 = y
+  #/************************************************************/
+  #STATE 13:
+  #pta: infiniteLoop ==>
+#& 1 >= x
+#& p1 >= 0
+#& p2 >= 5
+#& x >= 0
+#& x + 8 = y
 
-  Projection onto the parameters:
-   p2 >= 5
-& p1 >= 0
+  #Projection onto the parameters:
+   #p2 >= 5
+#& p1 >= 0
 
-  DESCRIPTION OF THE TRANSITIONS
-  s_0 -> s_1
-  s_0 -> s_2
-  s_0 -> s_3
-  s_1 -> s_4
-  s_1 -> s_5
-  s_3 -> s_6
-  s_6 -> s_7
-  s_7 -> s_8
-  s_8 -> s_9
-  s_9 -> s_10
-  s_10 -> s_11
-  s_11 -> s_12
-  s_12 -> s_13
+  #DESCRIPTION OF THE TRANSITIONS
+  #s_0 -> s_1
+  #s_0 -> s_2
+  #s_0 -> s_3
+  #s_1 -> s_4
+  #s_1 -> s_5
+  #s_3 -> s_6
+  #s_6 -> s_7
+  #s_7 -> s_8
+  #s_8 -> s_9
+  #s_9 -> s_10
+  #s_10 -> s_11
+  #s_11 -> s_12
+  #s_12 -> s_13
 
 
-		  """
-			} # end result file
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
+		  #"""
+			#} # end result file
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
 
-	,
+	#,
 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PRP on a simple example (looping reference valuation)',
-		'input_files': ['testPRP.imi', 'testPRP.piloop'],
-		'options'    : '-mode PRP -output-result -depth-limit 10 -output-states',
+		'input_files': ['testPRP.imi', 'testPRP-loop.imiprop'],
+		'options'    : '-depth-limit 10 -states-description',
 		'expectations' : [
 			{'file': 'testPRP.res' , 'content' : """
  p2 >= 4
@@ -6067,8 +7706,8 @@ OR
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode cover (grid)',
-		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4.v0'],
-		'options'    : '-mode cover -output-result',
+		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4-cover.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'testBC-grid-plain.res' , 'content' : """
@@ -6480,9 +8119,33 @@ Average number of transitions : 7.0
 
 	#------------------------------------------------------------
 	{
+		# Test version             : 1
+		# Test since               : 2020/09/04
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test BC in mode cover (grid) with step=2',
+		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4-cover-step2.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testBC-grid-plain.res' , 'content' : """
+------------------------------------------------------------
+Number of integers in v0                : 4
+Number of tiles computed                : 4
+Coverage                                : integer-complete
+Termination                             : regular termination
+Number of unsuccessful points           : 0
+"""
+			} # end BC file
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+
+	{
 		'purpose'    : 'Test BC in mode cover (grid2)',
-		'input_files': ['testBC-grid2-plain.imi', 'testBC-grid5x5.v0'],
-		'options'    : '-mode cover -output-result',
+		'input_files': ['testBC-grid2-plain.imi', 'testBC-grid5x5-cover.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'testBC-grid2-plain.res' , 'content' : """
@@ -6726,8 +8389,8 @@ Average number of transitions : 4.0
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode cover + depth-limit (grid)',
-		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4.v0'],
-		'options'    : '-mode cover -depth-limit 5 -output-result',
+		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4-cover.imiprop'],
+		'options'    : '-depth-limit 5 ',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			#{'file': 'testBC-grid-plain.res' , 'content' : """
@@ -6881,8 +8544,8 @@ Number of unsuccessful points           : 16
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode cover with depth limit (JLR15)',
-		'input_files': ['JLR-TACAS13.imi', 'JLR-TACAS13.v0'],
-		'options'    : '-mode cover -depth-limit 10 -output-result',
+		'input_files': ['JLR-TACAS13.imi', 'JLR-TACAS13-cover.imiprop'],
+		'options'    : '-depth-limit 10 ',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'JLR-TACAS13.res' , 'content' : """
@@ -6925,7 +8588,7 @@ Local number of transitions             : 0
 ------------------------------------------------------------
 Constraint soundness                    : exact
 Termination                             : regular termination
-Constraint nature                       : bad
+Constraint nature                       : good
 ------------------------------------------------------------
 Local number of states                  : 2
 Local number of transitions             : 1
@@ -6951,8 +8614,8 @@ Local number of transitions             : 1
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode sequential + depth limit (grid with loop)',
-		'input_files': ['testBC-grid-plain-loop.imi', 'testBC-grid3x3.v0'],
-		'options'    : '-mode cover -depth-limit 10 -output-result',
+		'input_files': ['testBC-grid-plain-loop.imi', 'testBC-grid3x3-cover.imiprop'],
+		'options'    : '-depth-limit 10 ',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'testBC-grid-plain-loop.res' , 'content' : """
@@ -7147,8 +8810,8 @@ Average number of transitions           : 6.0
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode cover + graphical output (flip-flop)',
-		'input_files': ['flipflop.imi', 'flipflop.v0'],
-		'options'    : '-mode cover -output-result -output-cart -output-graphics-source',
+		'input_files': ['flipflop.imi', 'flipflop-cover.imiprop'],
+		'options'    : '-draw-cart -graphics-source',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'flipflop.res' , 'content' : """
@@ -7251,7 +8914,7 @@ Tile #7
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-Constraint nature             : bad
+Constraint nature             : good
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -7271,7 +8934,7 @@ Constraint nature             : bad
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-Constraint nature             : bad
+Constraint nature             : good
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -7313,8 +8976,8 @@ Average number of transitions : 14.1
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode cover with tiles limit (flip-flop)',
-		'input_files': ['flipflop.imi', 'flipflop.v0'],
-		'options'    : '-mode cover -cart-tiles-limit 4 -output-result',
+		'input_files': ['flipflop.imi', 'flipflop-cover.imiprop'],
+		'options'    : '-cart-tiles-limit 4 ',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'flipflop.res' , 'content' : """
@@ -7405,7 +9068,7 @@ Local number of transitions   : 14
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-Constraint nature             : bad
+Constraint nature             : good
 ------------------------------------------------------------
 Local number of states        : 17
 Local number of transitions   : 16
@@ -7432,8 +9095,8 @@ Average number of transitions : 11.7
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode random (grid)',
-		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4.v0'],
-		'options'    : '-mode random50 -output-result',
+		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4-random.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			# WARNING: this algorithm is… random! hence no absolute guarantee to find the result (this said, a max_tries of 20 generally allows one to find all tiles with a good probability)
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
@@ -7731,8 +9394,8 @@ Termination                   : regular termination
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode random (grid2)',
-		'input_files': ['testBC-grid2-plain.imi', 'testBC-grid5x5.v0'],
-		'options'    : '-mode random75 -output-result',
+		'input_files': ['testBC-grid2-plain.imi', 'testBC-grid5x5-random.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'testBC-grid2-plain.res' , 'content' : """
@@ -7909,8 +9572,8 @@ Termination                   : regular termination
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode random (flip-flop)',
-		'input_files': ['flipflop.imi', 'flipflop.v0'],
-		'options'    : '-mode random200 -output-result',
+		'input_files': ['flipflop.imi', 'flipflop-random.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			# WARNING: this algorithm is… random! hence no absolute guarantee to find the result (this said, a max_tries of 200 generally allows one to find all tiles with a good probability)
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)… and to check them separately as the order is of course unknown
@@ -7967,7 +9630,7 @@ Termination                   : regular termination
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-Constraint nature             : bad
+Constraint nature             : good
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -7980,7 +9643,7 @@ Constraint nature             : bad
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-Constraint nature             : bad
+Constraint nature             : good
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -8016,8 +9679,8 @@ Average number of transitions : 14.1
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode random+seq',
-		'input_files': ['flipflop.imi', 'flipflop.v0'],
-		'options'    : '-mode randomseq3 -output-result',
+		'input_files': ['flipflop.imi', 'flipflop-randomseq.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)… and to check them separately as the order is of course unknown
 			{'file': 'flipflop.res' , 'content' : """
@@ -8073,7 +9736,7 @@ Average number of transitions : 14.1
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-Constraint nature             : bad
+Constraint nature             : good
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -8086,7 +9749,7 @@ Constraint nature             : bad
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-Constraint nature             : bad
+Constraint nature             : good
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -8107,8 +9770,8 @@ Termination                   : regular termination
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode shuffle (grid)',
-		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4.v0'],
-		'options'    : '-mode shuffle -output-result',
+		'input_files': ['testBC-grid-plain.imi', 'testBC-grid4x4-shuffle.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'testBC-grid-plain.res' , 'content' : """
@@ -8407,8 +10070,8 @@ Average number of transitions : 7.0
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode shuffle (grid2)',
-		'input_files': ['testBC-grid2-plain.imi', 'testBC-grid5x5.v0'],
-		'options'    : '-mode shuffle -output-result',
+		'input_files': ['testBC-grid2-plain.imi', 'testBC-grid5x5-shuffle.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'testBC-grid2-plain.res' , 'content' : """
@@ -8588,8 +10251,8 @@ Average number of transitions : 4.0
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode shuffle (flip-flop)',
-		'input_files': ['flipflop.imi', 'flipflop.v0'],
-		'options'    : '-mode shuffle -output-result',
+		'input_files': ['flipflop.imi', 'flipflop-shuffle.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)… and to check them separately as the order is of course unknown
 			{'file': 'flipflop.res' , 'content' : """
@@ -8645,7 +10308,7 @@ Average number of transitions : 4.0
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-Constraint nature             : bad
+Constraint nature             : good
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -8658,7 +10321,7 @@ Constraint nature             : bad
 ------------------------------------------------------------
 Constraint soundness          : exact
 Termination                   : regular termination
-Constraint nature             : bad
+Constraint nature             : good
 ------------------------------------------------------------
 """
 			} # end BC file
@@ -8683,8 +10346,8 @@ Average number of transitions : 14.1
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test BC in mode cover (on the case study BC vs. PRPC)',
-		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
-		'options'    : '-mode cover -no-random -output-result',
+		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC-cover.imiprop'],
+		'options'    : '-no-random ',
 		'expectations' : [
 			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
 			{'file': 'diffBCPRPC.res' , 'content' : """
@@ -8752,7 +10415,7 @@ Local number of transitions             : 12
 ------------------------------------------------------------
 Constraint soundness                    : exact
 Termination                             : regular termination
-Constraint nature                       : bad
+Constraint nature                       : good
 ------------------------------------------------------------
 Local number of states                  : 7
 Local number of transitions             : 10
@@ -8776,7 +10439,7 @@ Local number of transitions             : 10
 ------------------------------------------------------------
 Constraint soundness                    : exact
 Termination                             : regular termination
-Constraint nature                       : bad
+Constraint nature                       : good
 ------------------------------------------------------------
 Local number of states                  : 7
 Local number of transitions             : 10
@@ -8848,7 +10511,7 @@ Local number of transitions             : 12
 ------------------------------------------------------------
 Constraint soundness                    : exact
 Termination                             : regular termination
-Constraint nature                       : bad
+Constraint nature                       : good
 ------------------------------------------------------------
 Local number of states                  : 7
 Local number of transitions             : 10
@@ -8872,7 +10535,7 @@ Local number of transitions             : 10
 ------------------------------------------------------------
 Constraint soundness                    : possible under-approximation
 Termination                             : regular termination
-Constraint nature                       : bad
+Constraint nature                       : good
 ------------------------------------------------------------
 Local number of states                  : 7
 Local number of transitions             : 10
@@ -8896,7 +10559,7 @@ Local number of transitions             : 10
 ------------------------------------------------------------
 Constraint soundness                    : exact
 Termination                             : regular termination
-Constraint nature                       : bad
+Constraint nature                       : good
 ------------------------------------------------------------
 Local number of states                  : 7
 Local number of transitions             : 10
@@ -8920,7 +10583,7 @@ Local number of transitions             : 10
 ------------------------------------------------------------
 Constraint soundness                    : possible under-approximation
 Termination                             : regular termination
-Constraint nature                       : bad
+Constraint nature                       : good
 ------------------------------------------------------------
 Local number of states                  : 8
 Local number of transitions             : 11
@@ -8947,8 +10610,8 @@ Average number of transitions           : 10.8
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test PRPC (on the case study BC vs. PRPC)',
-		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC.v0'],
-		'options'    : '-mode PRPC -no-random -output-result',
+		'input_files': ['diffBCPRPC.imi', 'diffBCPRPC-PRPC.imiprop'],
+		'options'    : '-no-random ',
 		'expectations' : [
 			{'file': 'diffBCPRPC.res' , 'content' : """
 BEGIN CONSTRAINT
@@ -8980,111 +10643,111 @@ Constraint nature                       : good/bad
 
 	,
 
+	##------------------------------------------------------------
+	#{
+		#'purpose'    : 'Test PRPC (old version) in mode cover with depth limit (JLR15)',
+		#'input_files': ['JLR-TACAS13.imi', 'JLR-TACAS13.v0'],
+		#'options'    : '-mode cover -PRP -depth-limit 10 ',
+		#'expectations' : [
+			## NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
+			#{'file': 'JLR-TACAS13.res' , 'content' : """
+#(************************************************************)
+ #Tile #1
+
+ #Pi1:
+  #a = 1
+#& b = 0
+
+ #K1:
+ #2 > b
+#& b >= 0
+#& a > b
+#& 10 >= a
+
+#------------------------------------------------------------
+#Constraint soundness                    : exact
+#Termination                             : regular termination
+#Constraint nature                       : good
+#------------------------------------------------------------
+#Local number of states                  : 1
+#Local number of transitions             : 0
+#"""
+			#} # end BC file
+			#,
+			#{'file': 'JLR-TACAS13.res' , 'content' : """
+#(************************************************************)
+ #Tile #2
+
+ #Pi2:
+  #a = 0
+#& b = 1
+
+ #K2:
+ #a >= 0
+#& 9*b >= 2
+#& 10 >= b
+#& b >= a
+
+
+#------------------------------------------------------------
+#Constraint soundness                    : possible under-approximation
+#Termination                             : depth limit (1 successor unexplored)
+#Constraint nature                       : bad
+#------------------------------------------------------------
+#Local number of states                  : 18
+#Local number of transitions             : 17
+#"""
+			#} # end BC file
+			#,
+			#{'file': 'JLR-TACAS13.res' , 'content' : """
+#(************************************************************)
+ #Tile #3
+
+ #Pi3:
+  #a = 3
+#& b = 2
+
+ #K3:
+ #b >= 2
+#& a >= 0
+#& 10 >= a
+#& 10 >= b
+
+#------------------------------------------------------------
+#Constraint soundness                    : exact
+#Termination                             : regular termination
+#Constraint nature                       : bad
+#------------------------------------------------------------
+#Local number of states                  : 2
+#Local number of transitions             : 1
+#"""
+			#} # end BC file
+			#,
+			#{'file': 'JLR-TACAS13.res' , 'content' : """
+#(************************************************************)
+#GENERAL STATISTICS
+#(************************************************************)
+#------------------------------------------------------------
+#Number of integers in v0                : 121
+#Number of tiles computed                : 3
+#Coverage                                : unknown
+#Termination                             : regular termination
+#Number of unsuccessful points           : 118
+#Average number of states                : 7.0
+#Average number of transitions           : 6.0
+#"""
+			#} # end BC file
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
+
+	#,
+
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Test PRPC (old version) in mode cover with depth limit (JLR15)',
-		'input_files': ['JLR-TACAS13.imi', 'JLR-TACAS13.v0'],
-		'options'    : '-mode cover -PRP -depth-limit 10 -output-result',
-		'expectations' : [
-			# NOTE: no other way for now that checking separately the constraints (because the computation times may of course differ)
-			{'file': 'JLR-TACAS13.res' , 'content' : """
-(************************************************************)
- Tile #1
-
- Pi1:
-  a = 1
-& b = 0
-
- K1:
- 2 > b
-& b >= 0
-& a > b
-& 10 >= a
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : good
-------------------------------------------------------------
-Local number of states                  : 1
-Local number of transitions             : 0
-"""
-			} # end BC file
-			,
-			{'file': 'JLR-TACAS13.res' , 'content' : """
-(************************************************************)
- Tile #2
-
- Pi2:
-  a = 0
-& b = 1
-
- K2:
- a >= 0
-& 9*b >= 2
-& 10 >= b
-& b >= a
-
-
-------------------------------------------------------------
-Constraint soundness                    : possible under-approximation
-Termination                             : depth limit (1 successor unexplored)
-Constraint nature                       : bad
-------------------------------------------------------------
-Local number of states                  : 18
-Local number of transitions             : 17
-"""
-			} # end BC file
-			,
-			{'file': 'JLR-TACAS13.res' , 'content' : """
-(************************************************************)
- Tile #3
-
- Pi3:
-  a = 3
-& b = 2
-
- K3:
- b >= 2
-& a >= 0
-& 10 >= a
-& 10 >= b
-
-------------------------------------------------------------
-Constraint soundness                    : exact
-Termination                             : regular termination
-Constraint nature                       : bad
-------------------------------------------------------------
-Local number of states                  : 2
-Local number of transitions             : 1
-"""
-			} # end BC file
-			,
-			{'file': 'JLR-TACAS13.res' , 'content' : """
-(************************************************************)
-GENERAL STATISTICS
-(************************************************************)
-------------------------------------------------------------
-Number of integers in v0                : 121
-Number of tiles computed                : 3
-Coverage                                : unknown
-Termination                             : regular termination
-Number of unsuccessful points           : 118
-Average number of states                : 7.0
-Average number of transitions           : 6.0
-"""
-			} # end BC file
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
-
-	,
-
-	#------------------------------------------------------------
-	{
-		'purpose'    : 'Simple example without merging',
+		'purpose'    : 'Testing state space + merging on a trivial example: -no-merge',
 		'input_files': ['exActionsNonPreserved.imi'],
-		'options'    : '-mode statespace -output-states',
+		'options'    : '-mode statespace -states-description -no-merge',
 		'expectations' : [
 			{'file': 'exActionsNonPreserved-statespace.states' , 'content' : """
 		*/
@@ -9131,12 +10794,57 @@ Average number of transitions           : 6.0
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	
 	,
+	
 	#------------------------------------------------------------
 	{
-		'purpose'    : 'Simple example with merging',
+		'purpose'    : 'Testing state space + merging on a trivial example: -merge',
 		'input_files': ['exActionsNonPreserved.imi'],
-		'options'    : '-mode statespace -output-states -merge',
+		'options'    : '-mode statespace -states-description -merge',
+		'expectations' : [
+			{'file': 'exActionsNonPreserved-statespace.states' , 'content' : """
+		*/
+
+  DESCRIPTION OF THE STATES
+
+  /************************************************************/
+  INITIAL
+  STATE 0:
+  pta: L1 ==>
+& 2 >= x
+& p >= 0
+& x >= 0
+
+  Projection onto the parameters:
+   p >= 0
+
+  /************************************************************/
+  STATE 2:
+  pta: L2 ==> 
+& p >= 0
+& x >= 2
+
+  Projection onto the parameters:
+   p >= 0
+
+  DESCRIPTION OF THE TRANSITIONS
+  s_0 -> s_2 via "b"
+  s_0 -> s_2 via "a"
+  """ 
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+	
+	,
+	
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Testing state space + merging on a trivial example: testing no option = -no-merge',
+		'input_files': ['exActionsNonPreserved.imi'],
+		'options'    : '-mode statespace -states-description',
 		'expectations' : [
 			{'file': 'exActionsNonPreserved-statespace.states' , 'content' : """
 		*/
@@ -9159,25 +10867,38 @@ Average number of transitions           : 6.0
   pta: L2 ==>
 & p >= 0
 & x >= 2
+& 2 >= p
 
   Projection onto the parameters:
-   p >= 0
+   2 >= p
+& p >= 0
+
+  /************************************************************/
+  STATE 2:
+  pta: L2 ==>
+& p >= 2
+& x >= 2
+
+  Projection onto the parameters:
+   p >= 2
 
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1 via "a"
-  s_0 -> s_1 via "b"
-  """
+  s_0 -> s_2 via "b"
+		"""
 			} # end result file
 			,
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
+	
 	,
+	
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test the model printer',
 		'input_files': ['Sched5.imi'],
-		'options'    : '-PTA2IMI',
+		'options'    : '-imi2IMI',
 		'expectations' : [
 			{'file': 'Sched5-regenerated.imi' , 'content' : """
  ************************************************************)
@@ -9911,12 +11632,6 @@ init := True
 
 ;
 
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[OBS_dline] = dline_loc_miss
-
 
 (************************************************************)
 (* The end *)
@@ -9933,7 +11648,7 @@ end
 	{
 		'purpose'    : 'Test the graphical state space generation (no details)',
 		'input_files': ['CUBPTA1.imi'],
-		'options'    : '-mode statespace -output-trace-set-nodetails -output-graphics-source',
+		'options'    : '-mode statespace -draw-statespace undetailed -graphics-source',
 		'expectations' : [
 			{'file': 'CUBPTA1-statespace.dot' , 'content' : """
   s_0 -> s_1 [label="a"];
@@ -9962,7 +11677,7 @@ end
 	{
 		'purpose'    : 'Test the graphical state space generation (normal)',
 		'input_files': ['CUBPTA1.imi'],
-		'options'    : '-mode statespace -output-trace-set -output-graphics-source',
+		'options'    : '-mode statespace -draw-statespace normal -graphics-source',
 		'expectations' : [
 			{'file': 'CUBPTA1-statespace.dot' , 'content' : """
   s_0 -> s_1 [label="a"];
@@ -9991,7 +11706,7 @@ end
 	{
 		'purpose'    : 'Test the graphical state space generation (verbose)',
 		'input_files': ['CUBPTA1.imi'],
-		'options'    : '-mode statespace -output-trace-set-verbose -output-graphics-source',
+		'options'    : '-mode statespace -draw-statespace full -graphics-source',
 		'expectations' : [
 			{'file': 'CUBPTA1-statespace.dot' , 'content' : """
   s_0 -> s_1 [label="a"];
@@ -10017,45 +11732,46 @@ end
 	} # end test case
 	#------------------------------------------------------------
 	,
-	#------------------------------------------------------------
-	{
-		# Test version: 2.11
-		# Test since  : 2019/03/07
-		'purpose'    : 'Test the graphical state space generation (verbose with projection)',
-		'input_files': ['CUBPTA1project.imi'],
-		'options'    : '-mode statespace -output-trace-set-verbose -output-graphics-source',
-		'expectations' : [
-			{'file': 'CUBPTA1project-statespace.dot' , 'content' : """
-  s_0 -> s_1 [label="a"];
-  s_1 -> s_2 [label="a"];
-  s_2 -> s_3 [label="a"];
-  s_3 -> s_2 [label="a"];
+	##------------------------------------------------------------
+	#{
+		## Test version: 2.11
+		## Test since  : 2019/03/07
+		## Test until  : 2020/04/10
+		#'purpose'    : 'Test the graphical state space generation (verbose with projection)',
+		#'input_files': ['CUBPTA1project.imi'],
+		#'options'    : '-mode statespace -draw-statespace full -graphics-source',
+		#'expectations' : [
+			#{'file': 'CUBPTA1project-statespace.dot' , 'content' : """
+  #s_0 -> s_1 [label="a"];
+  #s_1 -> s_2 [label="a"];
+  #s_2 -> s_3 [label="a"];
+  #s_3 -> s_2 [label="a"];
 
-/* Initial state */
-  s_init [shape=none, label="init"];
-  s_init -> s_0;
+#/* Initial state */
+  #s_init [shape=none, label="init"];
+  #s_init -> s_0;
 
-/* Colors */
+#/* Colors */
 
-  s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 0 \\n \& x \>= 0 \\n \& x = y| p2 \>= 0 \\n \& p1 \>= 0| p2 \>= 0}"];
-  s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& x \>= 0 \\n \& y \>= x| p2 \>= 0 \\n \& p1 \>= 0| p2 \>= 0}"];
-  s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& x = y| p2 \>= 1 \\n \& p1 \>= 0| p2 \>= 1}"];
-  s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1| p2 \>= 1}"];
-		"""
-			} # end result file
-			# NOTE (ÉA, 2019/03/07): I had to manually replace '\n' with '\\n' to make this test pass
-			,
-		] # end expectations
-	} # end test case
-	#------------------------------------------------------------
+  #s_0[fillcolor=blue, style=filled, shape=Mrecord, label="s_0|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 0 \\n \& x \>= 0 \\n \& x = y| p2 \>= 0 \\n \& p1 \>= 0| p2 \>= 0}"];
+  #s_1[fillcolor=yellow, style=filled, shape=Mrecord, label="s_1|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& x \>= 0 \\n \& y \>= x| p2 \>= 0 \\n \& p1 \>= 0| p2 \>= 0}"];
+  #s_2[fillcolor=blue, style=filled, shape=Mrecord, label="s_2|{pta : l1}|{ p1 \>= x \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& x = y| p2 \>= 1 \\n \& p1 \>= 0| p2 \>= 1}"];
+  #s_3[fillcolor=yellow, style=filled, shape=Mrecord, label="s_3|{pta : l2}|{ p1 + x \>= y \\n \& p2 \>= y \\n \& p2 \>= 1 \\n \& x \>= 0 \\n \& y \>= x| p1 \>= 0 \\n \& p2 \>= 1| p2 \>= 1}"];
+		#"""
+			#} # end result file
+			## NOTE (ÉA, 2019/03/07): I had to manually replace '\n' with '\\n' to make this test pass
+			#,
+		#] # end expectations
+	#} # end test case
+	##------------------------------------------------------------
 
-	,
+	#,
 
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'Test translation to HyTech',
 		'input_files': ['flipflop.imi'],
-		'options'    : '-PTA2HyTech -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
+		'options'    : '-imi2HyTech -no-var-autoremove', #TODO: re-do without '-no-var-autoremove'
 		'expectations' : [
 			{'file': 'flipflop.hy' , 'content' : """
  -- Created to be compatible with 'hytech-v1.04f-Linux_static'
@@ -10384,12 +12100,6 @@ init := True
 & s = 0
 ;
 
---************************************************************
---* Property specification
---************************************************************
-
---property := if ckDown then qUp has happened before; (NOT CONSIDERED BY HYTECH)
-
 
 --************************************************************
 --* The end
@@ -10408,7 +12118,7 @@ init := True
 	{
 		'purpose'    : 'Test translation to Uppaal with synchronization model',
 		'input_files': ['testSynchroUppaal.imi'],
-		'options'    : '-PTA2Uppaal',
+		'options'    : '-imi2Uppaal',
 		'expectations' : [
 			{'file': 'testSynchroUppaal-uppaal.xml' , 'content' : """
 /* Clocks declarations */
@@ -10534,17 +12244,20 @@ system pta1, pta2, pta3;
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'FMTV challenge: Test EF with project-result -verbose mute',
-		'input_files': ['fmtv1A1-v2.imi'],
-		'options'    : '-mode EF -merge -incl -output-result',
+		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-EF.imiprop'],
+		'options'    : '',
 		'expectations' : [
 			{'file': 'fmtv1A1-v2.res' , 'content' : """
 BEGIN CONSTRAINT
-125*e2e > 18126
-OR
-e2e >= 0
-&
-63 > e2e
+ 18126 >= 125*e2e
+& e2e >= 63
 END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+------------------------------------------------------------
 """
 			} # end result file
 			,
@@ -10557,10 +12270,10 @@ END CONSTRAINT
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'FMTV challenge: Test EFmin',
-		'input_files': ['fmtv1A1-v2-min.imi'],
-		'options'    : '-mode EFmin -merge -incl -output-result -verbose mute',
+		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-min.imiprop'],
+		'options'    : '-verbose mute',
 		'expectations' : [
-			{'file': 'fmtv1A1-v2-min.res' , 'content' : """
+			{'file': 'fmtv1A1-v2.res' , 'content' : """
 BEGIN CONSTRAINT
  e2e >= 63
 END CONSTRAINT
@@ -10582,10 +12295,10 @@ Constraint nature                       : good
 	#------------------------------------------------------------
 	{
 		'purpose'    : 'FMTV challenge: Test EFmax',
-		'input_files': ['fmtv1A1-v2-max.imi'],
-		'options'    : '-mode EFmax -merge -incl -output-result -verbose mute',
+		'input_files': ['fmtv1A1-v2.imi', 'fmtv1A1-v2-max.imiprop'],
+		'options'    : '-verbose mute',
 		'expectations' : [
-			{'file': 'fmtv1A1-v2-max.res' , 'content' : """
+			{'file': 'fmtv1A1-v2.res' , 'content' : """
 BEGIN CONSTRAINT
  e2e >= 0
 & 18126 >= 125*e2e

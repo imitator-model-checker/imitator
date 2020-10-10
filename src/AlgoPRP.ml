@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: PRP algorithm [ALNS15]
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/11
- * Last modified     : 2019/08/08
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -22,6 +23,7 @@ open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
+open AbstractProperty
 open Result
 open AlgoIMK
 open State
@@ -33,8 +35,8 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoPRP =
-	object (self) inherit algoIMK as super
+class algoPRP (pval : PVal.pval) (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoIMK pval as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -47,8 +49,8 @@ class algoPRP =
 	
 	(* Non-necessarily convex constraint ensuring reachability of at least one bad state *)
 	val mutable bad_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
-	
-	
+
+
 	(************************************************************)
 	(* Class methods *)
 	(************************************************************)
@@ -90,32 +92,37 @@ class algoPRP =
 		(* Retrieve the model *)
 		let model = Input.get_model () in
 		
-		let state_location, state_constraint = state.global_location, state.px_constraint in
-		
-		let to_be_added = match model.correctness_condition with
-		| None -> raise (InternalError("A correctness property must be defined to perform PRP. This should have been checked before."))
-		| Some (Unreachable unreachable_global_locations) ->
-			
+		let to_be_added = 
 			(* Check whether the current location matches one of the unreachable global locations *)
-			if State.match_unreachable_global_locations unreachable_global_locations state_location then(
+			if State.match_state_predicate model.is_accepting state_predicate state then(
 			
 				(* Project onto the parameters *)
-				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state_constraint in
+				let p_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state.px_constraint in
 				
 				(* Projecting onto SOME parameters if required *)
 				(*** BADPROG: Duplicate code (EFsynth / AlgoLoopSynth) ***)
-				begin
-				match model.projection with
-				(* Unchanged *)
-				| None -> ()
-				(* Project *)
-				| Some parameters ->
-					self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
-					(*** TODO! do only once for all... ***)
-					let all_but_projectparameters = list_diff model.parameters parameters in
-					(* Eliminate other parameters *)
-					LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
-				end;
+				if Input.has_property() then(
+					let abstract_property = Input.get_property() in
+					match abstract_property.projection with
+					(* Unchanged *)
+					| None -> ()
+					(* Project *)
+					| Some parameters ->
+						(* Print some information *)
+						if verbose_mode_greater Verbose_high then
+							self#print_algo_message Verbose_high "Projecting onto some of the parameters…";
+
+						(*** TODO! do only once for all… ***)
+						let all_but_projectparameters = list_diff model.parameters parameters in
+						
+						(* Eliminate other parameters *)
+						LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
+
+						(* Print some information *)
+						if verbose_mode_greater Verbose_medium then(
+							print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+						);
+				); (* end if projection *)
 				
 				(* Print some information *)
 				self#print_algo_message Verbose_standard "Found a state violating the property.";
@@ -148,7 +155,6 @@ class algoPRP =
 				(* Keep the state as it is not a bad state *)
 				true
 			)
-		| _ -> raise (InternalError("[PRP] IMITATOR currently ony implements the non-reachability-like properties. This should have been checked before."))
 
 		in
 		
@@ -185,7 +191,7 @@ class algoPRP =
 		if pi0compatible then (
 
 			(* Try to add the new state to the state space *)
-			let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
+			let addition_result = StateSpace.add_state state_space options#comparison_operator new_state in
 			
 			begin
 			match addition_result with
@@ -333,7 +339,7 @@ class algoPRP =
 		Point_based_result
 		{
 			(* Reference valuation *)
-			reference_val		= Input.get_pi0();
+			reference_val		= self#get_reference_pval;
 			
 			(* Result of the algorithm *)
 			result				= result;

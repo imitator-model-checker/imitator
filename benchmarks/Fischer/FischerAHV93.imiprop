@@ -1,0 +1,23 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Fischer protocol for mutual exclusion (parametric timed version)
+ *
+ * Description     : Fischer protocol for mutual exclusion (parametric timed version). Modeled exactly as in [AHV93] although smarter modeling could have been done thanks to the IMITATOR syntax.
+ * Correctness     : No two processes in the critical section (i.e., in P1_4 and P2_4 at the same time)
+ * Source          : Model described in "Parametric Real-Time Reasoning" (fig. 2) Alur, Henzinger, Vardi (STOC 1993)
+ * Author          : Alur, Henzinger, Vardi
+ * Modeling        : Alur, Henzinger, Vardi
+ * Input by        : Étienne André
+ *
+ * Created         : 2020/08/14
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+property := #synth AGnot(loc[P1] = P1_4 & loc[P2] = P2_4);

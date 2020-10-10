@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/19
- * Last modified     : 2016/08/15
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -32,8 +33,8 @@ open AlgoCartoGeneric
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCCover =
-	object (self) inherit algoCartoGeneric as super
+class algoBCCover (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
+	object (self) inherit algoCartoGeneric v0 step algo_instance_function tiles_manager_type as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -59,15 +60,6 @@ class algoBCCover =
 		
 		(* The end *)
 		()
-
-
-      
-(*	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_instance =
-		(* Create a new instance of IM *)
-		new AlgoIM.algoIM*)
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -105,7 +97,7 @@ class algoBCCover =
 		let tiles_manager = self#get_tiles_manager in
 		
 		(* Ask the tiles manager to process the result itself, by passing the appropriate arguments *)
-		tiles_manager#process_result start_time nb_points nb_unsuccessful_points termination_status None
+		tiles_manager#process_result start_time v0 nb_points nb_unsuccessful_points termination_status None
 
 
 (************************************************************)

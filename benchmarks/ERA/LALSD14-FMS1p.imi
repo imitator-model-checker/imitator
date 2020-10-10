@@ -13,9 +13,9 @@
 
  *
  * Created         : 2016/07/05
- * Last modified   : 2016/07/07
+ * Last modified   : 2020/08/14
  *
- * IMITATOR version: 2.8-beta
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -55,14 +55,14 @@ var
 (************************************************************)
 synclabs: B1_in, I_B1_C1, O_B1_R1;
 
-loc C0: while True wait {}
-	when True sync B1_in do {c_B1_in' = 0} goto C1;
+loc C0: invariant True
+	when True sync B1_in do {c_B1_in := 0} goto C1;
 
-loc C1: while True wait {}
-	when c_B1_in <= p_conveyor sync I_B1_C1 do {c_I_B1_C1' = 0} goto C2;
+loc C1: invariant True
+	when c_B1_in <= p_conveyor sync I_B1_C1 do {c_I_B1_C1 := 0} goto C2;
 
-loc C2: while True wait {}
-	when True sync O_B1_R1 do {xO_B1_R1' = 0} goto C0;
+loc C2: invariant True
+	when True sync O_B1_R1 do {xO_B1_R1 := 0} goto C0;
 
 end (* Conveyor1 *)
 
@@ -71,21 +71,21 @@ end (* Conveyor1 *)
 (************************************************************)
 synclabs: I_B3_R1, B3_in_M, B3_out_M, I_B3_M, O_B3_R2, O_B3_M;
 
-loc M0: while True wait {}
-	when True sync I_B3_R1 do {xI_B3_R1' = 0} goto M1;
-	when True sync B3_in_M do {xB3_in_M' = 0} goto M3;
+loc M0: invariant True
+	when True sync I_B3_R1 do {xI_B3_R1 := 0} goto M1;
+	when True sync B3_in_M do {xB3_in_M := 0} goto M3;
 
-loc M1: while True wait {}
-	when True sync B3_out_M do {xB3_out_M' = 0} goto M2;
+loc M1: invariant True
+	when True sync B3_out_M do {xB3_out_M := 0} goto M2;
 
-loc M2: while True wait {}
-	when True sync O_B3_M do {xO_B3_M' = 0} goto M0;
+loc M2: invariant True
+	when True sync O_B3_M do {xO_B3_M := 0} goto M0;
 
-loc M3: while True wait {}
-	when True sync I_B3_M do {xI_B3_M' = 0} goto M4;
+loc M3: invariant True
+	when True sync I_B3_M do {xI_B3_M := 0} goto M4;
 
-loc M4: while True wait {}
-	when True sync O_B3_R2 do {xO_B3_R2' = 0} goto M0;
+loc M4: invariant True
+	when True sync O_B3_R2 do {xO_B3_R2 := 0} goto M0;
 
 end (* Mill *)
 
@@ -94,23 +94,23 @@ end (* Mill *)
 (************************************************************)
 synclabs: I_B1_C1, B1_out, O_B1_R1, B3_in_R1, I_B3_R1, O_B3_M;
 
-loc R1_0: while True wait {}
-	when True sync I_B1_C1 do {c_I_B1_C1' = 0} goto R1_1;
+loc R1_0: invariant True
+	when True sync I_B1_C1 do {c_I_B1_C1 := 0} goto R1_1;
 
-loc R1_1: while True wait {}
-	when c_I_B1_C1 <= 1 sync B1_out do {xB1_out' = 0} goto R1_2;
+loc R1_1: invariant True
+	when c_I_B1_C1 <= 1 sync B1_out do {xB1_out := 0} goto R1_2;
 
-loc R1_2: while True wait {}
-	when True sync O_B1_R1 do {xO_B1_R1' = 0} goto R1_3;
+loc R1_2: invariant True
+	when True sync O_B1_R1 do {xO_B1_R1 := 0} goto R1_3;
 
-loc R1_3: while True wait {}
-	when True sync B3_in_R1 do {xB3_in_R1' = 0} goto R1_4;
+loc R1_3: invariant True
+	when True sync B3_in_R1 do {xB3_in_R1 := 0} goto R1_4;
 
-loc R1_4: while True wait {}
-	when True sync I_B3_R1 do {xI_B3_R1' = 0} goto R1_5;
+loc R1_4: invariant True
+	when True sync I_B3_R1 do {xI_B3_R1 := 0} goto R1_5;
 
-loc R1_5: while True wait {}
-	when True sync O_B3_M do {xO_B3_M' = 0} goto R1_0;
+loc R1_5: invariant True
+	when True sync O_B3_M do {xO_B3_M := 0} goto R1_0;
 
 end (* Robot1 *)
 
@@ -119,23 +119,23 @@ end (* Robot1 *)
 (************************************************************)
 synclabs: I_B3_M, B3_out_R2, O_B3_R2, B5_in_R2, I_B5_R2, O_B5_A;
 
-loc R2_0: while True wait {}
-	when True sync I_B3_M do {xI_B3_M' = 0} goto R2_1;
+loc R2_0: invariant True
+	when True sync I_B3_M do {xI_B3_M := 0} goto R2_1;
 
-loc R2_1: while True wait {}
-	when True sync B3_out_R2 do {xB3_out_R2' = 0} goto R2_2;
+loc R2_1: invariant True
+	when True sync B3_out_R2 do {xB3_out_R2 := 0} goto R2_2;
 
-loc R2_2: while True wait {}
-	when True sync O_B3_R2 do {xO_B3_R2' = 0} goto R2_3;
+loc R2_2: invariant True
+	when True sync O_B3_R2 do {xO_B3_R2 := 0} goto R2_3;
 
-loc R2_3: while True wait {}
-	when True sync B5_in_R2 do {xB5_in_R2' = 0} goto R2_4;
+loc R2_3: invariant True
+	when True sync B5_in_R2 do {xB5_in_R2 := 0} goto R2_4;
 
-loc R2_4: while True wait {}
-	when True sync I_B5_R2 do {xI_B5_R2' = 0} goto R2_5;
+loc R2_4: invariant True
+	when True sync I_B5_R2 do {xI_B5_R2 := 0} goto R2_5;
 
-loc R2_5: while True wait {}
-	when True sync O_B5_A do {xO_B5_A' = 0} goto R2_0;
+loc R2_5: invariant True
+	when True sync O_B5_A do {xO_B5_A := 0} goto R2_0;
 
 end (* Robot2 *)
 
@@ -144,17 +144,17 @@ end (* Robot2 *)
 (************************************************************)
 synclabs: I_B5_R2, B5_out_A, O_B5_A, product;
 
-loc A0: while True wait {}
-	when True sync I_B5_R2 do {xI_B5_R2' = 0} goto A1;
+loc A0: invariant True
+	when True sync I_B5_R2 do {xI_B5_R2 := 0} goto A1;
 
-loc A1: while True wait {}
-	when True sync B5_out_A do {xB5_out_A' = 0} goto A2;
+loc A1: invariant True
+	when True sync B5_out_A do {xB5_out_A := 0} goto A2;
 
-loc A2: while True wait {}
-	when True sync O_B5_A do {xO_B5_A' = 0} goto A3;
+loc A2: invariant True
+	when True sync O_B5_A do {xO_B5_A := 0} goto A3;
 
-loc A3: while True wait {}
-	when True sync product do {xproduct' = 0} goto A0;
+loc A3: invariant True
+	when True sync product do {xproduct := 0} goto A0;
 
 end (* AssemblyStation *)
 
@@ -164,16 +164,16 @@ end (* AssemblyStation *)
 (************************************************************)
 synclabs: B1_in, B1_out;
 
-loc S0: while True wait {}
-	when True sync B1_in do {c_B1_in' = 0} goto S1;
-	when True sync B1_out do {xB1_out' = 0} goto Serror;
+loc S0: invariant True
+	when True sync B1_in do {c_B1_in := 0} goto S1;
+	when True sync B1_out do {xB1_out := 0} goto Serror;
 
-loc S1: while True wait {}
-	when c_B1_in <= p_deadline sync B1_out do {xB1_out' = 0} goto S0;
-	when c_B1_in > p_deadline sync B1_out do {xB1_out' = 0} goto Serror;
-	when True sync B1_in do {c_B1_in' = 0} goto Serror;
+loc S1: invariant True
+	when c_B1_in <= p_deadline sync B1_out do {xB1_out := 0} goto S0;
+	when c_B1_in > p_deadline sync B1_out do {xB1_out := 0} goto Serror;
+	when True sync B1_in do {c_B1_in := 0} goto Serror;
 
-loc Serror: while True wait {}
+loc Serror: invariant True
 
 end (* Spec1 *)
 
@@ -184,15 +184,15 @@ end (* Spec1 *)
 (************************************************************)
 synclabs: O_B3_M, I_B3_M;
 
-loc S0: while True wait {}
-	when True sync O_B3_M do {xO_B3_M' = 0} goto S1;
-	when True sync I_B3_M do {xI_B3_M' = 0} goto Serror;
+loc S0: invariant True
+	when True sync O_B3_M do {xO_B3_M := 0} goto S1;
+	when True sync I_B3_M do {xI_B3_M := 0} goto Serror;
 
-loc S1: while True wait {}
-	when True sync O_B3_M do {xO_B3_M' = 0} goto Serror;
-	when True sync I_B3_M do {xI_B3_M' = 0} goto S0;
+loc S1: invariant True
+	when True sync O_B3_M do {xO_B3_M := 0} goto Serror;
+	when True sync I_B3_M do {xI_B3_M := 0} goto S0;
 
-loc Serror: while True wait {}
+loc Serror: invariant True
 
 end (* Spec3 *)
 
@@ -202,15 +202,15 @@ end (* Spec3 *)
 (************************************************************)
 synclabs: B5_in_R2, B5_out_A;
 
-loc S0: while True wait {}
-	when True sync B5_in_R2 do {xB5_in_R2' = 0} goto S1;
-	when True sync B5_out_A do {xB5_out_A' = 0} goto Serror;
+loc S0: invariant True
+	when True sync B5_in_R2 do {xB5_in_R2 := 0} goto S1;
+	when True sync B5_out_A do {xB5_out_A := 0} goto Serror;
 
-loc S1: while True wait {}
-	when True sync B5_in_R2 do {xB5_in_R2' = 0} goto Serror;
-	when True sync B5_out_A do {xB5_out_A' = 0} goto S0;
+loc S1: invariant True
+	when True sync B5_in_R2 do {xB5_in_R2 := 0} goto Serror;
+	when True sync B5_out_A do {xB5_out_A := 0} goto S0;
 
-loc Serror: while True wait {}
+loc Serror: invariant True
 
 end (* Spec5 *)
 *)
@@ -258,13 +258,6 @@ init :=
 	& p_conveyor >= 0
 	& p_deadline >= 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[Spec1] = Serror;
 
 
 (************************************************************)

@@ -13,9 +13,9 @@
 
  *
  * Created         : 2016/03/29
- * Last modified   : 2016/03/29
+ * Last modified   : 2020/08/20
  *
- * IMITATOR version: 2.7.4-working
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -35,21 +35,21 @@ var
 (************************************************************)
 synclabs: a, b, toloop;
 
-loc l1: while y <= p1 wait {}
+loc l1: invariant y <= p1
 	(* Branch to infinite loop *)
-	when x = 1 & x = p1 & x = p2 sync toloop do {x' = 0} goto infiniteLoop;
+	when x = 1 & x = p1 & x = p2 sync toloop do {x := 0} goto infiniteLoop;
 
-	when x = 1 sync a do {x' = 0} goto l1;
-	when p1-1 < y && y <= p1 & x = 0 sync b do {y' = 0} goto l2;
+	when x = 1 sync a do {x := 0} goto l1;
+	when p1-1 < y && y <= p1 & x = 0 sync b do {y := 0} goto l2;
 
-loc l2: while y <= p2 wait {}
-	when x = 1 sync a do {x' = 0} goto l2;
+loc l2: invariant y <= p2
+	when x = 1 sync a do {x := 0} goto l2;
 	when p2-1 < y && y <= p2 & x = 0 sync b goto l3;
 
-loc l3: while True wait {}
+loc l3: invariant True
 
-loc infiniteLoop: while x <= 1 wait {}
-	when x = 1 do {x' = 0} goto infiniteLoop;
+loc infiniteLoop: invariant x <= 1
+	when x = 1 do {x := 0} goto infiniteLoop;
 
 end (* pta *)
 
@@ -78,12 +78,6 @@ init :=
 	& p2 >= 0
 ;
 
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-(* property := unreachable loc[pta] = l1; *)
 
 
 (************************************************************)

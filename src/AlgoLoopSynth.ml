@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: LoopSynth algorithm [AL16] (synthesizes valuations for which there exists a loop in the PTA)
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2019/08/08
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -21,7 +22,9 @@
 open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
+open Statistics
 open AbstractModel
+open AbstractProperty
 open Result
 open AlgoStateBased
 open State
@@ -42,16 +45,12 @@ type has_loop =
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoLoopSynth =
+class virtual algoLoopSynth =
 	object (self) inherit algoStateBased as super
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	
-	(* Non-necessarily convex constraint allowing the presence of a loop *)
-	val mutable loop_constraint : LinearConstraint.p_nnconvex_constraint = LinearConstraint.false_p_nnconvex_constraint ()
-
 	
 	(* Non-necessarily convex parameter constraint of the initial state (constant object used as a shortcut, as it is used at the end of the algorithm) *)
 	(*** WARNING: these lines are copied from AlgoDeadlockFree ***)
@@ -60,11 +59,16 @@ class algoLoopSynth =
 		let model = Input.get_model () in
 		LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint model.initial_p_constraint
 
-	
+
+	(* Counters *)
+	(*** NOTE: if the algorithm is called several times sequentially, then each call will create a counter ***)
+	val scc_search = create_hybrid_counter_and_register "algoLoopSynth.scc_search" States_counter Verbose_experiments
+	val nb_cycles = create_discrete_counter_and_register "algoLoopSynth.nb_cycles" States_counter Verbose_experiments
+
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "LoopSynth"
+(* 	method algorithm_name = "Cycle" *)
 	
 	
 	
@@ -78,7 +82,7 @@ class algoLoopSynth =
 	method initialize_variables =
 		super#initialize_variables;
 		(*** NOTE: duplicate operation ***)
-		loop_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
+		synthesized_constraint <- LinearConstraint.false_p_nnconvex_constraint ();
 
 		(* The end *)
 		()
@@ -93,17 +97,38 @@ class algoLoopSynth =
 	(*** WARNING/BADPROG: the following is partially copy/paste from AlgoEF.ml (though much modified) ***)
 	method add_a_new_state source_state_index combined_transition new_state =
 
+		(* Reset the mini-cache (for the p-constraint) *)
+		self#reset_minicache;
+
 		(* Try to add the new state to the state space *)
-		let addition_result = StateSpace.add_state state_space (self#state_comparison_operator_of_options) new_state in
+		let addition_result = StateSpace.add_state state_space options#comparison_operator new_state in
 		
 		begin
 		match addition_result with
 		(* If this is really a new state, or a state larger than a former state *)
 		| StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index ->
 
+			let to_be_added =
+			(*** NOTE: don't perform the following test if the associated option is enabled ***)
+			if options#no_leq_test_in_ef then true else(
+				(* Check whether new_state.px_constraint <= synthesized_constraint *)
+				if self#check_whether_px_included_into_synthesized_constraint new_state.px_constraint then(
+					(* Print some information *)
+					self#print_algo_message Verbose_low "Found a state included in synthesized valuations; cut branch.";
+
+					(* Do NOT compute its successors; cut the branch *)
+					false
+				)else(
+					true
+				)
+			) in
+			
 			(* Add the state_index to the list of new states (used to compute their successors at the next iteration) *)
-			new_states_indexes <- new_state_index :: new_states_indexes;
+			if to_be_added then(
+				new_states_indexes <- new_state_index :: new_states_indexes;
+			);
 		 (* end if new state *)
+
 		(* If the state was present:  *)
 		| StateSpace.State_already_present new_state_index ->
 			(* Not added: means this state was already present before *)
@@ -123,15 +148,37 @@ class algoLoopSynth =
 			(* Old state (possibly updated) -> possible loop *)
 			| StateSpace.State_already_present _ | StateSpace.State_replacing _ ->
 				(* Now that the transitions were updated, try to look for a loop *)
+				
+				(* Print some information *)
 				self#print_algo_message Verbose_medium ("Computing SCC starting from s_" ^ (string_of_int source_state_index) ^ "…");
+
+				(* Statistics *)
+				scc_search#increment;
+				scc_search#start;
+
 				let scc_option = StateSpace.reconstruct_scc state_space source_state_index in
+				
+				(* Statistics *)
+				scc_search#stop;
 		
 				let loop_result =
 				match scc_option with
 					(* No loop *)
-					| None -> No_loop
+					| None ->
+						(* Print some information *)
+						self#print_algo_message Verbose_high "No cycle found!";
+						
+						No_loop
+						
 					(* Some loop *)
-					| Some scc -> Loop scc
+					| Some scc ->
+						(* Print some information *)
+						self#print_algo_message Verbose_high "Cycle found!";
+						
+						(* Statistics *)
+						nb_cycles#increment;
+						
+						Loop scc
 				in loop_result
 		in
 		
@@ -139,8 +186,11 @@ class algoLoopSynth =
 		begin
 		match has_loop with
 			| No_loop -> ()
+
 			| Loop scc ->
+				(* Print some information *)
 				self#print_algo_message Verbose_standard "Found a cycle.";
+
 				(*** NOTE: this method is called AFTER the transition table was updated ***)
 				self#process_loop_constraint ((*** HACK ***) match addition_result with | StateSpace.State_already_present new_state_index | StateSpace.New_state new_state_index | StateSpace.State_replacing new_state_index -> new_state_index) scc new_state.px_constraint;
 		end; (* end if found a loop *)
@@ -150,7 +200,7 @@ class algoLoopSynth =
 	
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* When a loop is found, update the loop constraint; current_constraint is a PX constraint that will not be modified. It will be projected onto the parameters and unified with the current parameter loop_constraint *)
+	(* When a loop is found, update the loop constraint; current_constraint is a PX constraint that will not be modified. It will be projected onto the parameters and unified with the current parameter synthesized_constraint *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method update_loop_constraint current_constraint =
 		(* Retrieve the model *)
@@ -161,29 +211,31 @@ class algoLoopSynth =
 		
 		(* Projecting onto SOME parameters if required *)
 		(*** BADPROG: Duplicate code (AlgoEF / AlgoPRP) ***)
-		begin
-		match model.projection with
-		(* Unchanged *)
-		| None -> ()
-		(* Project *)
-		| Some parameters ->
-			(* Print some information *)
-			self#print_algo_message Verbose_medium "Projecting onto some of the parameters.";
+		if Input.has_property() then(
+			let abstract_property = Input.get_property() in
+			match abstract_property.projection with
+			(* Unchanged *)
+			| None -> ()
+			(* Project *)
+			| Some parameters ->
+				(* Print some information *)
+				if verbose_mode_greater Verbose_high then
+					self#print_algo_message Verbose_high "Projecting onto some of the parameters…";
 
-			(*** TODO! do only once for all… ***)
-			let all_but_projectparameters = list_diff model.parameters parameters in
-			
-			(* Eliminate other parameters *)
-			LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
+				(*** TODO! do only once for all… ***)
+				let all_but_projectparameters = list_diff model.parameters parameters in
+				
+				(* Eliminate other parameters *)
+				LinearConstraint.p_hide_assign all_but_projectparameters p_constraint;
 
-			(* Print some information *)
-			if verbose_mode_greater Verbose_medium then(
-				print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
-			);
-		end;
+				(* Print some information *)
+				if verbose_mode_greater Verbose_medium then(
+					print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
+				);
+		); (* end if projection *)
 
 		(* Update the loop constraint using the current constraint *)
-		LinearConstraint.p_nnconvex_p_union_assign loop_constraint p_constraint;
+		LinearConstraint.p_nnconvex_p_union_assign synthesized_constraint p_constraint;
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
@@ -191,7 +243,7 @@ class algoLoopSynth =
 			print_message Verbose_medium (LinearConstraint.string_of_p_linear_constraint model.variable_names p_constraint);
 			
 			self#print_algo_message Verbose_medium "The loop constraint is now:";
-			print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names loop_constraint);
+			print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
 		);
 		
 		(* The end *)
@@ -217,12 +269,16 @@ class algoLoopSynth =
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Actions to perform when found a loop (after updating the state space) *)
+	(* Can raise an exception TerminateAnalysis to lead to an immediate termination *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method process_loop_constraint state_index scc loop_px_constraint =
 		(* Process loop constraint if accepting loop *)
 		if self#is_accepting scc then(
 			(* Just update the loop constraint *)
 			self#update_loop_constraint loop_px_constraint;
+			
+			(* If witness: raise TerminateAnalysis! *)
+			self#terminate_if_witness;
 		);
 		
 		(* The end *)
@@ -286,14 +342,25 @@ class algoLoopSynth =
 			| Some status -> status
 		in
 
-		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
-		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in
+		let soundness =
+			let dangerous_inclusion = options#comparison_operator = AbstractAlgorithm.Inclusion_check || options#comparison_operator = AbstractAlgorithm.Double_inclusion_check in
+			
+			(* EXACT if termination is normal and no inclusion nor merge *)
+			if termination_status = Regular_termination && (not dangerous_inclusion) && not options#merge then Constraint_exact
+			(* UNDER-APPROXIMATED if termination is NOT normal AND neither merging nor state inclusion was used *)
+			else if termination_status <> Regular_termination && (not dangerous_inclusion) && not options#merge then Constraint_maybe_under
+			(* OVER-APPROXIMATED if termination is normal AND merging or state inclusion was used *)
+			else if termination_status = Regular_termination && (dangerous_inclusion || options#merge) then Constraint_maybe_over
+			(* UNKNOWN otherwise *)
+			else Constraint_maybe_invalid
+		in
 
+			
 		(* Return the result *)
 		Single_synthesis_result
 		{
 			(* Non-necessarily convex constraint guaranteeing the existence of at least one loop *)
-			result				= Good_constraint (loop_constraint, soundness);
+			result				= Good_constraint (synthesized_constraint, soundness);
 			
 			(* English description of the constraint *)
 			constraint_description = "constraint for detecting cycles";

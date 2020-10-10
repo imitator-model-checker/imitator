@@ -1,0 +1,2 @@
+
+property := #witness AGnot(loc[observer] = obs_BAD);

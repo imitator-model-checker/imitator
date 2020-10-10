@@ -7,11 +7,11 @@ automaton act_Ptp
 
 synclabs: Release_PTP;
 
-loc WFO: while cPtp <= ptpOff wait {}
-	when cPtp = ptpOff sync Release_PTP do {cPtp'=0} goto WFP;
+loc WFO: invariant cPtp <= ptpOff
+	when cPtp = ptpOff sync Release_PTP do {cPtp := 0} goto WFP;
 
-loc WFP: while cPtp <= ptpPeriod wait {}
-	when cPtp = ptpPeriod sync Release_PTP do {cPtp' = 0} goto WFP;
+loc WFP: invariant cPtp <= ptpPeriod
+	when cPtp = ptpPeriod sync Release_PTP do {cPtp := 0} goto WFP;
 
 end
 
@@ -20,11 +20,11 @@ automaton act_Audio
 
 synclabs: Release_Audio;
 
-loc WFO: while cAudio <= audOff wait {}
-	when cAudio = audOff sync Release_Audio do {cAudio'=0} goto WFP;
+loc WFO: invariant cAudio <= audOff
+	when cAudio = audOff sync Release_Audio do {cAudio := 0} goto WFP;
 
-loc WFP: while cAudio <= audPeriod wait {}
-	when cAudio = audPeriod  sync Release_Audio do {cAudio' = 0} goto WFP;
+loc WFP: invariant cAudio <= audPeriod
+	when cAudio = audPeriod  sync Release_Audio do {cAudio := 0} goto WFP;
 
 end
 
@@ -33,55 +33,84 @@ automaton Audio_Checker
 
 synclabs: Release_PTP, Release_Audio, Ending_Audio;
 
-loc idle: while True stop{rAudioChecker} wait {}
-	when True sync Release_Audio do {cAudioChecker'=0, rAudioChecker'=C2} goto check;
-	when True sync Release_Audio do {cAudioChecker'=0, rAudioChecker'=C2} goto busy;
-	when True sync Release_PTP do {cAudioChecker'=0, rAudioChecker'=C1} goto busy;
+loc idle: invariant True stop{rAudioChecker}
+	when True sync Release_Audio do {cAudioChecker := 0, rAudioChecker := C2} goto check;
+	when True sync Release_Audio do {cAudioChecker := 0, rAudioChecker := C2} goto busy;
+	when True sync Release_PTP do {cAudioChecker := 0, rAudioChecker := C1} goto busy;
 
-loc busy: while True stop{rAudioChecker} wait {}
-	when cAudioChecker < rAudioChecker sync Release_Audio do {rAudioChecker' = rAudioChecker + C2} goto busy;
-	when cAudioChecker < rAudioChecker sync Release_PTP do {rAudioChecker' = rAudioChecker + C1} goto busy;
-	when cAudioChecker = rAudioChecker sync Ending_Audio do{rAudioChecker'=rAudioChecker} goto idle;
-	when cAudioChecker < rAudioChecker sync Release_Audio do {rAudioChecker' = rAudioChecker + C2 - cAudioChecker} goto check;
+loc busy: invariant True stop{rAudioChecker}
+	when cAudioChecker < rAudioChecker sync Release_Audio do {rAudioChecker := rAudioChecker + C2} goto busy;
+	when cAudioChecker < rAudioChecker sync Release_PTP do {rAudioChecker := rAudioChecker + C1} goto busy;
+	when cAudioChecker = rAudioChecker sync Ending_Audio do{rAudioChecker := rAudioChecker} goto idle;
+	when cAudioChecker < rAudioChecker sync Release_Audio do {rAudioChecker := rAudioChecker + C2 - cAudioChecker} goto check;
 
-loc check: while True stop{rAudioChecker} wait {}
-	when cAudioChecker = 0 sync Release_PTP do {rAudioChecker'= rAudioChecker + C1} goto check;
+loc check: invariant True stop{rAudioChecker}
+	when cAudioChecker = 0 sync Release_PTP do {rAudioChecker :=  rAudioChecker + C1} goto check;
 	when cAudioChecker > 0 & cAudioChecker < rAudioChecker & cAudioChecker < D2 - driftDelta sync Release_PTP goto check;
 	when True sync Release_Audio goto check;
 	when cAudioChecker = rAudioChecker & cAudioChecker <= D2 - driftDelta sync Ending_Audio goto idle;
 	when cAudioChecker < rAudioChecker & cAudioChecker = D2 - driftDelta goto error;
 
-loc error: while True stop{rAudioChecker} wait {}
+loc error: invariant True stop{rAudioChecker}
 
 end
 
 
-var init: region;
+(************************************************************)
+(* Initial state *)
+(************************************************************)
 
-init:=	loc[act_Ptp]  = WFO  &
-			loc[act_Audio]  = WFO  &
-			loc[Audio_Checker] = idle &	
-rAudioChecker = 0 &
-cAudioChecker = 0 &
-cPtp = 0 &
-cAudio = 0 &
-			-----------
-			-- PI 0  --
-			-----------
---	ptpOff = 0 &
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+		loc[act_Ptp]  = WFO  &
+		loc[act_Audio]  = WFO  &
+		loc[Audio_Checker] = idle &
+		
+		rAudioChecker = 0 &
+		cAudioChecker = 0 &
+		cPtp = 0 &
+		cAudio = 0 &
+	(*------------------------------------------------------------*)
+	(* Pi0 *)
+	(*------------------------------------------------------------*)
+(* 	ptpOff = 0 & *)
  ptpPeriod = 40 &
---	audOff = 0 &
+(* 	audOff = 0 & *)
 	audPeriod = 10 &
---	D1 = 10 &
---	driftDelta = 0 &
---	D2 = 10 &
---	C1 = 10 &
---	C2 = 5 &
+(* 	D1 = 10 & *)
+(* 	driftDelta = 0 & *)
+(* 	D2 = 10 & *)
+(* 	C1 = 10 & *)
+(* 	C2 = 5 & *)
 
---n1 = 0 &
+(*--n1 = 0 &
 --n2 = 0 &
 --task = 0 &
---dm = 0
+--dm = 0*)
 
 True
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+
+
+	& ptpOff >= 0
+	& ptpPeriod >= 0
+	& audOff >= 0
+	& audPeriod >= 0
+	& D1 >= 0
+	& driftDelta >= 0
+	& D2 >= 0
+	& C1 >= 0
+	& C2 >= 0
+
 ;
+
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

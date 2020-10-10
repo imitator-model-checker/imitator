@@ -1,4 +1,3 @@
-
 (************************************************************
  *                      IMITATOR MODEL                      
  *
@@ -11,12 +10,12 @@
  * Author: Giuseppe Lipari
  * Date: January 2014
  * References: ''Reachability Preservation Based Parameter Synthesis for Timed Automata'' (2015) by 
- *                 Etienne Andre, Giuseppe Lipari, Hoang Gia Nguyen and Youcheng Sun; Sched1
+ *                 Étienne André, Giuseppe Lipari, Hoang Gia Nguyen and Youcheng Sun; Sched1
  *             ''Toward Parametric Timed Interfaces for Real-Time Components'' (2014) by 
- *                 Youcheng Sun, Giuseppe Lipari, Etienne Andre and Laurent Fribourg
+ *                 Youcheng Sun, Giuseppe Lipari, Étienne André and Laurent Fribourg
  * Created: < 2015/10/30
- * Last modified: 2018/09/07
- * IMITATOR version: 2.10.3
+ * Last modified: 2020/08/18
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -124,71 +123,71 @@ loc CPU1_loc_ : invariant True
     when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1;
     when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_At2;
     when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_At3;
-loc CPU1_loc_At1 : invariant CPU1_urgent <= 0 wait
+loc CPU1_loc_At1 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1;
-loc CPU1_loc_At2 : invariant CPU1_urgent <= 0 wait
+loc CPU1_loc_At2 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t2_dis goto CPU1_loc_Rt2;
-loc CPU1_loc_At3 : invariant CPU1_urgent <= 0 wait
+loc CPU1_loc_At3 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t3_dis goto CPU1_loc_Rt3;
 
 loc CPU1_loc_Rt3 : invariant True
     when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt3;
     when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_At2Rt3;
     when True sync t3_end do { CPU1_urgent := 0 } goto CPU1_loc_Et3;
-loc CPU1_loc_Et3 : invariant CPU1_urgent <= 0 wait
+loc CPU1_loc_Et3 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0   goto CPU1_loc_stop;
-loc CPU1_loc_At1Rt3 : invariant CPU1_urgent <= 0 wait
+loc CPU1_loc_At1Rt3 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t3_pre goto CPU1_loc_At1Wt3;
-loc CPU1_loc_At1Wt3 : invariant CPU1_urgent <= 0 wait
+loc CPU1_loc_At1Wt3 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt3;
-loc CPU1_loc_At2Rt3 : invariant CPU1_urgent <= 0 wait
+loc CPU1_loc_At2Rt3 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t3_pre goto CPU1_loc_At2Wt3;
-loc CPU1_loc_At2Wt3 : invariant CPU1_urgent <= 0 wait
+loc CPU1_loc_At2Wt3 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t2_dis goto CPU1_loc_Rt2Wt3;
 
 loc CPU1_loc_Rt2 : invariant True
     when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt2;
     when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt2Wt3;
     when True sync t2_end do { CPU1_urgent := 0 } goto CPU1_loc_Et2;
-loc CPU1_loc_Et2 : invariant CPU1_urgent <= 0 wait
+loc CPU1_loc_Et2 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0   goto CPU1_loc_stop;
-loc CPU1_loc_At1Rt2 : invariant CPU1_urgent <= 0 wait
+loc CPU1_loc_At1Rt2 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t2_pre goto CPU1_loc_At1Wt2;
-loc CPU1_loc_At1Wt2 : invariant CPU1_urgent <= 0 wait
+loc CPU1_loc_At1Wt2 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt2;
 
 loc CPU1_loc_Rt2Wt3 : invariant True
     when True sync t1_arr do {CPU1_urgent := 0} goto CPU1_loc_At1Rt2Wt3;
     when True sync t2_end do { CPU1_urgent := 0 } goto CPU1_loc_Et2Wt3;
-loc CPU1_loc_Et2Wt3 : invariant CPU1_urgent <= 0 wait
+loc CPU1_loc_Et2Wt3 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t3_dis  goto CPU1_loc_Rt3;
-loc CPU1_loc_At1Rt2Wt3 : invariant CPU1_urgent <= 0 wait
+loc CPU1_loc_At1Rt2Wt3 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t2_pre goto CPU1_loc_At1Wt2Wt3;
-loc CPU1_loc_At1Wt2Wt3 : invariant CPU1_urgent <= 0 wait
+loc CPU1_loc_At1Wt2Wt3 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t1_dis goto CPU1_loc_Rt1Wt2Wt3;
 
 loc CPU1_loc_Rt1 : invariant True
     when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2;
     when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt3;
     when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1;
-loc CPU1_loc_Et1 : invariant CPU1_urgent <= 0 wait
+loc CPU1_loc_Et1 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0   goto CPU1_loc_stop;
 
 loc CPU1_loc_Rt1Wt3 : invariant True
     when True sync t2_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt3;
     when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt3;
-loc CPU1_loc_Et1Wt3 : invariant CPU1_urgent <= 0 wait
+loc CPU1_loc_Et1Wt3 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t3_dis  goto CPU1_loc_Rt3;
 
 loc CPU1_loc_Rt1Wt2 : invariant True
     when True sync t3_arr do {CPU1_urgent := 0} goto CPU1_loc_Rt1Wt2Wt3;
     when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt2;
-loc CPU1_loc_Et1Wt2 : invariant CPU1_urgent <= 0 wait
+loc CPU1_loc_Et1Wt2 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t2_dis  goto CPU1_loc_Rt2;
 
 loc CPU1_loc_Rt1Wt2Wt3 : invariant True
     when True sync t1_end do { CPU1_urgent := 0 } goto CPU1_loc_Et1Wt2Wt3;
-loc CPU1_loc_Et1Wt2Wt3 : invariant CPU1_urgent <= 0 wait
+loc CPU1_loc_Et1Wt2Wt3 : invariant CPU1_urgent <= 0
     when CPU1_urgent = 0 sync t2_dis  goto CPU1_loc_Rt2Wt3;
 
 loc CPU1_loc_stop : invariant True
@@ -227,4 +226,8 @@ init :=     loc[Task_t1] = t1_loc_idle &
     t2_arr_P>=20 & t2_arr_P<=100 &
     t2_D>=20 & t2_D<=100 &
     True;
-property := unreachable loc[OBS_dline] = dline_loc_miss
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

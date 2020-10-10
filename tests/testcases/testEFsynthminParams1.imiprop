@@ -1,0 +1,3 @@
+
+property := #synth EFpmin( loc[pta] = lbad, p1);
+

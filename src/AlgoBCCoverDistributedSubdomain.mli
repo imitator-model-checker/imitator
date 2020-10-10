@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: subdomain. [ACN15]
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/17
- * Last modified     : 2016/03/24
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -21,9 +22,8 @@ open AlgoGeneric
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoBCCoverDistributedSubdomain :
-	object
-	inherit AlgoBCCoverDistributed.algoBCCoverDistributed
+class virtual algoBCCoverDistributedSubdomain : HyperRectangle.hyper_rectangle -> NumConst.t -> (PVal.pval -> AlgoStateBased.algoStateBased) -> AlgoCartoGeneric.tiles_storage ->
+	object inherit AlgoBCCoverDistributed.algoBCCoverDistributed
 
 		(************************************************************)
 		(* Class variables *)

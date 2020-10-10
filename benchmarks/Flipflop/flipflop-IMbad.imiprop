@@ -1,0 +1,34 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Modeling of the circuit described in "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella)
+ *
+ * Description     : A flip-flop circuit made of 4 gates
+ * Correctness     : TODO
+ * Source          : "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella); Design Automation Conference, 2004. Proceedings of the ASP-DAC 2004. Asia and South Pacific; DOI: 10.1109/ASPDAC.2004.1337668
+ * Author          : Roberto Clariso and Jordi Cortadella
+ * Modeling        : Étienne André and Laurent Fribourg
+ * Input by        : Étienne André
+ *
+ * Created         : 2007/11
+ * Fork from       : flipflop.pi0
+ * Fork date       : 2014/03/26
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+ 
+property := #synth IM(
+	& tHI    = 20
+	& tLO    = 15
+	& tSetup = 10
+	& tHold  = 15
+	& dG1_l  = 7
+	& dG1_u  = 7
+	& dG2_l  = 5
+	& dG2_u  = 6
+	& dG3_l  = 8
+	& dG3_u  = 10
+	& dG4_l  = 3
+	& dG4_u  = 17 
+);

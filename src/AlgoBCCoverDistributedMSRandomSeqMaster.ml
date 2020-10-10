@@ -3,13 +3,14 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: master-worker with random pi0 and n retries before switching to sequential mode. [ACE14]
  * Master algorithm
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/16
- * Last modified     : 2016/03/17
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -36,35 +37,12 @@ open AlgoBCCover
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCCoverDistributedMSRandomSeqMaster =
-	object (self)
-	inherit AlgoBCCoverDistributedMSPointBasedMaster.algoBCCoverDistributedMSPointBasedMaster as super
+class algoBCCoverDistributedMSRandomSeqMaster (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (max_tries: int) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit AlgoBCCoverDistributedMSPointBasedMaster.algoBCCoverDistributedMSPointBasedMaster v0 step algo_instance_function tiles_manager_type as super
 	
 	(************************************************************)
 	(* Class variables *)
 	(************************************************************)
-	(* Variable to be initialized *)
-	val mutable max_tries : int option = None
-	
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Set the maximum number of tries (must be done right after creating the algorithm object!) *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method set_max_tries m =
-		(* Print some information *)
-		self#print_algo_message Verbose_standard ("Setting max_tries to " ^ (string_of_int m ) ^ "");
-		
-		(* Set *)
-		max_tries <- Some m
-	
-	
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(* Getting max_tries *)
-	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method private get_max_tries : int =
-		match max_tries with
-			| Some m -> m
-			| None -> raise (InternalError ("In algoBCCoverDistributedMSRandomSeqMaster.get_max_tries, the number of maximum tries should have been already initialized."))
 	
 	
 	(************************************************************)
@@ -74,9 +52,7 @@ class algoBCCoverDistributedMSRandomSeqMaster =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	(*** NOTE: raises an exception due to access to get_max_tries before setting max_tries ***)
-(* 	method algorithm_name = "BC (full cov) distr MS random(" ^ (string_of_int self#get_max_tries) ^ ")+seq MASTER" *)
-	method algorithm_name = "BC (full cov) distr MS random+seq MASTER"
+	method algorithm_name = "BC (full cov) distr MS random(" ^ (string_of_int max_tries) ^ ")+seq MASTER"
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -84,15 +60,10 @@ class algoBCCoverDistributedMSRandomSeqMaster =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method bc_instance =
 		(* Print some information *)
-		self#print_algo_message Verbose_standard ("Creating BC instance...");
+		self#print_algo_message Verbose_standard ("Creating BC instance…");
 		
-		let algo_bcrandom = new AlgoBCRandomSeq.algoBCRandomSeq in
-		
-		(*** NOTE: very important: must set NOW the maximum number of tries! ***)
-		algo_bcrandom#set_max_tries (self#get_max_tries);
-		algo_bcrandom#set_tiles_manager_type (self#get_tiles_manager_type);
-
-		let myalgo :> AlgoCartoGeneric.algoCartoGeneric = algo_bcrandom in
+		let algo_bcrandomseq = new AlgoBCRandomSeq.algoBCRandomSeq v0 step max_tries algo_instance_function tiles_manager_type in
+		let myalgo :> AlgoCartoGeneric.algoCartoGeneric = algo_bcrandomseq in
 		myalgo
 		
 		

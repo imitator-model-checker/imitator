@@ -11,9 +11,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2011/01/21
- * Last modified   : 2018/08/13
+ * Last modified   : 2020/08/13
  *
- * IMITATOR version: 2.10
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -131,14 +131,6 @@ init :=
 	& p_work_min <= p_work_max
 	& p_patience_max >= 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[researcher] = mad;
-projectresult(p_patience_max, p_press_min, p_coffee);
 
 
 (************************************************************)

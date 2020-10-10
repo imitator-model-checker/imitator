@@ -15,7 +15,7 @@
  * Created         : 2016/10/10
  * Fork from       : CUBPTA1.imi
  * Fork date       : 2016/10/18
- * Last modified   : 2016/10/18
+ * Last modified   : 2020/03/20
  *
  * IMITATOR version: 2.8
  ************************************************************)
@@ -37,11 +37,11 @@ var
 (************************************************************)
 synclabs: a;
 
-loc l1: while x <= p1 {}
-	when True sync a do {x' = 0} goto l2;
+loc l1: invariant x <= p1
+	when True sync a do {x := 0} goto l2;
 
-loc l2: while y <= p2 wait {}
-	when y >= 1 sync a do {x' = 0 , y' = 0} goto l1;
+loc l2: invariant y <= p2
+	when y >= 1 sync a do {x := 0 , y := 0} goto l1;
 
 end (* pta *)
 
@@ -71,11 +71,6 @@ init :=
 ;
 
 
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[pta] = l1;
 
 
 (************************************************************)
