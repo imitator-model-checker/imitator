@@ -4,17 +4,18 @@
 #
 #  Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
 #  Laboratoire d'Informatique de Paris Nord (Paris 13, France)
+#  Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
 #
-#  _oasis authors: Etienne Andre, Alban Linard
+#  _oasis authors: Étienne André, Alban Linard
 #  Created:        2014/08/18
-#  Last modified:  2017/02/08
+#  Last modified:  2020/08/28
 ###############################################################
 
 OASISFormat: 0.3
 Name:        IMITATOR
-Version:     2.8
+Version:     3.0
 Synopsis:    shortdescription
-Authors:     Etienne Andre et al.
+Authors:     Étienne André et al.
 License:     GPL-3.0
 
 # Handling build number (using Python)
@@ -22,14 +23,31 @@ PreBuildCommand: python gen_build_info.py
 # strip: considerably reduces the size!
 PostBuildCommand: python incrementer.py ; echo "Copying main binary file to bin/imitator ..." ; cp _build/src/IMITATOR.native bin/imitator ; strip bin/imitator
 
+Flag "dev"
+  Description: Build imitator with development options 
+  Default: false
 
 Executable imitator
-  Path:       .
-  BuildTools: ocamlbuild
-  MainIs:     src/IMITATOR.ml
-  BuildDepends: gmp, extlib, ppl, str, unix, threads, fileutils
-#  CCLib: -lstdc++
-  CCLib: -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx'
+  Path:           .
+  Build$:         !flag(dev)
+  BuildTools:     ocamlbuild
+  MainIs:         src/IMITATOR.ml
+  BuildDepends:   gmp, extlib, ppl, str, unix, threads, fileutils
+# CCLib:          -lstdc++
+  CCLib:          -static '-lppl -ltinfo -lppl_ocaml -lstdc++ -lgmp -lgmpxx'
+
+# -static to have a static compiling (+ ' ' around)
+# I removed -lcamlrun because I wrote "best" instead of "byte"
+  CompiledObject: best
+
+Executable "imitator_dev"
+  Path:           .
+  Build$:         flag(dev)
+  BuildTools:     ocamlbuild
+  MainIs:         src/IMITATOR.ml
+  BuildDepends:   gmp, extlib, ppl, str, unix, threads, fileutils
+  CompiledObject: best
+  NativeOpt:      '-opaque'
 
 # -static to have a static compiling (+ ' ' around)
 # I removed -lcamlrun because I wrote "best" instead of "byte"
@@ -45,15 +63,15 @@ Test tes1
 
 Test test2
   Command: echo "\n********** TEST 2 **********\n"; \
-      ./bin/imitator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.pi0 -output-trace-set -output-states -output-result -statistics
+      ./bin/imitator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.pi0 -draw-statespace normal -states-description -statistics
 
 Test test3
   Command: echo "\n********** TEST 3 **********\n"; \
-      ./bin/imitator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.v0 -mode cover -output-cart
+      ./bin/imitator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.v0 -draw-cart
 
 Test test4
   Command: echo "\n********** TEST 4 **********\n"; \
-      ./bin/imitator benchmarks/Examples/JLR-TACAS13.imi benchmarks/Examples/JLR-TACAS13.v0 -mode PRPC -output-result -output-cart -depth-limit 10 -verbose warnings
+      ./bin/imitator benchmarks/Examples/JLR-TACAS13.imi benchmarks/Examples/JLR-TACAS13-PRPC.imiprop -draw-cart -depth-limit 10 -verbose warnings
 
 Test finalcomment
   Command: echo "\n********** END TESTS **********\n"

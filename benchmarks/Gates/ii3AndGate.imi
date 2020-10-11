@@ -6,8 +6,9 @@
  *
  * Author          : Christopher Makanga
  * Created         : 2014/08/28
- * Last modified   : 2014/08/28
- * IMITATOR version: 2.6.2
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3
  ************************************************************)
 
 var 	ckii3And
@@ -24,107 +25,107 @@ synclabs: i1Up, i1Down, i2Up, i2Down,i3Up, i3Down,
 	sUp, sDown;
 
 (* Stable *)
-loc ii3And0000: while True wait {}
+loc ii3And0000: invariant True
 	when True sync i1Up do {} goto ii3And1000;
 	when True sync i2Up do {} goto ii3And0100;
 	when True sync i3Up do {} goto ii3And0010;
 
 (* Unstable *)
-loc ii3And0001: while ckii3And <= dii3And_u wait {}
-	when True sync i1Up do {ckii3And' = 0} goto ii3And1001;
-	when True sync i2Up do {ckii3And' = 0} goto ii3And0101;
-	when True sync i3Up do {ckii3And' = 0} goto ii3And0011;	
+loc ii3And0001: invariant ckii3And <= dii3And_u
+	when True sync i1Up do {ckii3And := 0} goto ii3And1001;
+	when True sync i2Up do {ckii3And := 0} goto ii3And0101;
+	when True sync i3Up do {ckii3And := 0} goto ii3And0011;	
 	when ckii3And >= dii3And_l sync sDown do {} goto ii3And0000;
 
 (* Stable *)
-loc ii3And0010: while True wait {}
+loc ii3And0010: invariant True
 	when True sync i1Up do {} goto ii3And1010;
-	when True sync i2Up do {ckii3And' = 0} goto ii3And0110;
+	when True sync i2Up do {ckii3And := 0} goto ii3And0110;
 	when True sync i3Down do {} goto ii3And0000;
 
 (* Unstable *)
-loc ii3And0011: while ckii3And <= dii3And_u wait {}
-	when True sync i1Up do {ckii3And' = 0} goto ii3And1011;
+loc ii3And0011: invariant ckii3And <= dii3And_u
+	when True sync i1Up do {ckii3And := 0} goto ii3And1011;
 	when True sync i2Up do {} goto ii3And0111;
-	when True sync i3Down do {ckii3And' = 0} goto ii3And0001;
+	when True sync i3Down do {ckii3And := 0} goto ii3And0001;
 	when ckii3And >= dii3And_l sync sDown do {} goto ii3And0010;
 
 (* Stable *)
-loc ii3And0100: while True wait {} 
+loc ii3And0100: invariant True 
 	when True sync i1Up do {} goto ii3And1100;
 	when True sync i2Down do {} goto ii3And0000;
-	when True sync i3Up do {ckii3And' = 0} goto ii3And0110;
+	when True sync i3Up do {ckii3And := 0} goto ii3And0110;
 
 (* Unstable *)
-loc ii3And0101: while ckii3And <= dii3And_u wait {}
-	when True sync i1Up do {ckii3And' = 0} goto ii3And1101;
-	when True sync i2Down do {ckii3And' = 0} goto ii3And0001;
+loc ii3And0101: invariant ckii3And <= dii3And_u
+	when True sync i1Up do {ckii3And := 0} goto ii3And1101;
+	when True sync i2Down do {ckii3And := 0} goto ii3And0001;
 	when True sync i3Up do {} goto ii3And0111;
 	when ckii3And >= dii3And_l sync sDown do {} goto ii3And0100;
 
 (* Unstable *)
-loc ii3And0110: while ckii3And <= dii3And_u  wait {}
-	when True sync i1Up do {ckii3And' = 0} goto ii3And1110;
+loc ii3And0110: invariant ckii3And <= dii3And_u 
+	when True sync i1Up do {ckii3And := 0} goto ii3And1110;
 	when True sync i2Down do {} goto ii3And0010;
 	when True sync i3Down do {} goto ii3And0100;
 	when ckii3And >= dii3And_l sync sUp do {} goto ii3And0111;
 
 (* Stable *)
-loc ii3And0111: while True wait {}
-	when True sync i1Up do {ckii3And' = 0} goto ii3And1111;
-	when True sync i2Down do {ckii3And' = 0} goto ii3And0011;
-	when True sync i3Down do {ckii3And' = 0} goto ii3And0101;
+loc ii3And0111: invariant True
+	when True sync i1Up do {ckii3And := 0} goto ii3And1111;
+	when True sync i2Down do {ckii3And := 0} goto ii3And0011;
+	when True sync i3Down do {ckii3And := 0} goto ii3And0101;
 
 (* Stable *)
-loc ii3And1000: while True wait {}
+loc ii3And1000: invariant True
 	when True sync i1Down do {} goto ii3And0000;
 	when True sync i2Up do {} goto ii3And1100;
 	when True sync i3Up do {} goto ii3And1010;
 
 (* Unstable *)
-loc ii3And1001: while ckii3And <= dii3And_u wait {}
-	when True sync i1Down do {ckii3And' = 0} goto ii3And0001;
-	when True sync i2Up do {ckii3And' = 0} goto ii3And1101;
-	when True sync i3Up do {ckii3And' = 0} goto ii3And1011;
+loc ii3And1001: invariant ckii3And <= dii3And_u
+	when True sync i1Down do {ckii3And := 0} goto ii3And0001;
+	when True sync i2Up do {ckii3And := 0} goto ii3And1101;
+	when True sync i3Up do {ckii3And := 0} goto ii3And1011;
 	when ckii3And >= dii3And_l sync sDown do {} goto ii3And1000;
 
 (* Stable *)
-loc ii3And1010: while True wait {}
+loc ii3And1010: invariant True
 	when True sync i1Down do {} goto ii3And0010;
 	when True sync i2Up do {} goto ii3And1110;
 	when True sync i3Down do {} goto ii3And1000;
 
 (* Unstable *)
-loc ii3And1011: while ckii3And <= dii3And_u wait {}
-	when True sync i1Down do {ckii3And' = 0} goto ii3And0011;
-	when True sync i2Up do {ckii3And' = 0} goto ii3And1111;
-	when True sync i3Down do {ckii3And' = 0} goto ii3And1001;
+loc ii3And1011: invariant ckii3And <= dii3And_u
+	when True sync i1Down do {ckii3And := 0} goto ii3And0011;
+	when True sync i2Up do {ckii3And := 0} goto ii3And1111;
+	when True sync i3Down do {ckii3And := 0} goto ii3And1001;
 	when ckii3And >= dii3And_l sync sDown do {} goto ii3And1010;
 
 (* Stable *)
-loc ii3And1100: while True wait {}
+loc ii3And1100: invariant True
 	when True sync i1Down do {} goto ii3And0100;
 	when True sync i2Down do {} goto ii3And1000;
 	when True sync i3Up do {} goto ii3And1110;
 
 (* Unstable *)
-loc ii3And1101: while ckii3And <= dii3And_u wait {}
-	when True sync i1Down do {ckii3And' = 0} goto ii3And0101;
-	when True sync i2Down do {ckii3And' = 0} goto ii3And1001;
-	when True sync i3Up do {ckii3And' = 0} goto ii3And1111;
+loc ii3And1101: invariant ckii3And <= dii3And_u
+	when True sync i1Down do {ckii3And := 0} goto ii3And0101;
+	when True sync i2Down do {ckii3And := 0} goto ii3And1001;
+	when True sync i3Up do {ckii3And := 0} goto ii3And1111;
 	when ckii3And >= dii3And_l sync sDown do {} goto ii3And1100;
 
 (* Stable *)
-loc ii3And1110: while True wait {}
-	when True sync i1Down do {ckii3And' = 0} goto ii3And0110;
+loc ii3And1110: invariant True
+	when True sync i1Down do {ckii3And := 0} goto ii3And0110;
 	when True sync i2Down do {} goto ii3And1010;
 	when True sync i3Down do {} goto ii3And1100;
 
 (* Unstable *)
-loc ii3And1111: while ckii3And <= dii3And_u wait {}
+loc ii3And1111: invariant ckii3And <= dii3And_u
 	when True sync i1Down do {} goto ii3And0111;
-	when True sync i2Down do {ckii3And' = 0} goto ii3And1011;
-	when True sync i3Down do {ckii3And' = 0} goto ii3And1101;
+	when True sync i2Down do {ckii3And := 0} goto ii3And1011;
+	when True sync i3Down do {ckii3And := 0} goto ii3And1101;
 	when ckii3And >= dii3And_l sync sDown do {} goto ii3And1110;
 
 

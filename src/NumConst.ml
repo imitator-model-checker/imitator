@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: unbounded exact rational computation using GMP
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/06/03
+ * Last modified     : 2020/04/22
  *
  ************************************************************)
  
@@ -122,14 +123,30 @@ let numconst_of_positive_string str =
 	(* Case int *)
 	if Str.string_match (Str.regexp "^[0-9]+$") str 0 then
 		numconst_of_int_string str
+	
 	(* Case fraction *)
 	else if Str.string_match (Str.regexp "^[0-9]+/[0-9]+$") str 0 then
 		let parts = Str.split (Str.regexp_string "/") str in
 		let denominator =  numconst_of_int_string (List.nth parts 0) in
-		let fractional = numconst_of_int_string(List.nth parts 1) in
+		let fractional = numconst_of_int_string (List.nth parts 1) in
 		denominator // fractional
+		
 	(* Case float *)
-	else if Str.string_match (Str.regexp "^[0-9]+.[0-9]+$") str 0 then numconst_of_float (float_of_string str)
+	else if Str.string_match (Str.regexp "^[0-9]+.[0-9]+$") str 0 then(
+(* 			numconst_of_float (float_of_string str) *)
+		(*** NOTE: float_of_string seems to follow a floating point representation, so we have to go manually ***)
+		(* Split *)
+		let parts = Str.split (Str.regexp_string ".") str in
+		let integer_part = numconst_of_int_string (List.nth parts 0) in
+		let fractional_part = numconst_of_int_string (List.nth parts 1) in
+		(* Divide the fractional part by 10 to the power of its string length *)
+		(* Build the denominator *)
+		let denominator = numconst_of_int_string ("1" ^ (String.make (String.length (List.nth parts 1)) '0')) in
+		(* Sum integer and fractional parts *)
+		integer_part +/ (fractional_part // denominator)
+	)
+
+	
 	(* Otherwise *)
 	else raise (Unknown_numconst ("Impossible to cast the string '" ^ str ^ "' to a NumConst in function numconst_of_string. Unknown type."))
 	(* 	Gmp.Q.from_z (Gmp.Z.from_string str) *)

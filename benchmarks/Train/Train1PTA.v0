@@ -1,20 +1,23 @@
---************************************************************--
---************************************************************--
---
---   Railroad Gate Controller
---
---   Simple model with 1 PTA only
---
---   Etienne ANDRE
---   Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
---
---                                Created : 2013/03/05
---                          Last modified : 2013/03/05
---                       IMITATOR version : 2.6.1
---************************************************************--
---************************************************************--
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Railroad Gate Controller
+ *
+ * Description     : Simple model with 1 PTA only
+ * Correctness     : "Crash" cannot happen
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ *
+ * Created         : 2013/03/05
+ * Last modified   : 2020/08/19
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
 
+property := #synth BCcover(
 	& dApproach = 0 .. 10 (* 5 *)
 	& dStartDown = 0..10 (* 2 *)
 	& dGetDown = 2 (* 2 *)
-
+);

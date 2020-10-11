@@ -7,15 +7,15 @@
 	Drinker: [ongoing work]
  * Correctness     : Many possibilities (e.g., "it is possible to get a coffee")
  * Source          : Own work
- * Author          : Etienne Andre
- * Input by        : Etienne Andre
+ * Author          : Étienne André
+ * Input by        : Étienne André
  *
  * Created         : 2011/01/21
  * Fork from       : coffeeDrinker.imi
  * Fork date       : 2015/10/14
- * Last modified   : 2016/01/28
+ * Last modified   : 2020/08/13
  *
- * IMITATOR version: 2.7.3
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -80,21 +80,21 @@ var
 (************************************************************)
 synclabs: press, cup, coffee, sleep;
 
-loc idle: while True wait {}
-	when True sync press do {x' = 0} goto add_sugar;
+loc idle: invariant True
+	when True sync press do {x := 0} goto add_sugar;
 
-loc add_sugar: while x <= p_add_sugar wait {}
+loc add_sugar: invariant x <= p_add_sugar
 (* 	when x1 < p_button sync press goto add_sugar; *)
 	when True sync press goto add_sugar;
-	when x = p_add_sugar sync cup do {x' = 0} goto preparing_coffee;
+	when x = p_add_sugar sync cup do {x := 0} goto preparing_coffee;
 
-loc preparing_coffee: while x <= p_coffee wait {}
+loc preparing_coffee: invariant x <= p_coffee
 (* 	when x2 = p_coffee sync coffee goto idle; *)
 (* 	when True sync press goto preparing_coffee; *)
-	when x = p_coffee sync coffee do {x' = 0} goto cdone;
+	when x = p_coffee sync coffee do {x := 0} goto cdone;
 
-loc cdone: while x <= 10 wait {}
-	when True sync press do {x' = 0} goto add_sugar;
+loc cdone: invariant x <= 10
+	when True sync press do {x := 0} goto add_sugar;
 	when x = 10 sync sleep goto idle;
 
 end (* machine *)
@@ -105,20 +105,20 @@ end (* machine *)
 (************************************************************)
 synclabs: press, coffee;
 
-loc researching: while y1 <= p_work_max wait {}
-	when y1 >= p_work_min sync press do {y1' = 0, y2' = 0, nb_sugar' = 0} goto add_sugar;
+loc researching: invariant y1 <= p_work_max
+	when y1 >= p_work_min sync press do {y1 := 0, y2 := 0, nb_sugar := 0} goto add_sugar;
 
-loc add_sugar: while y2 <= p_patience_max & y1 <= p_button & nb_sugar <= MAX_SUGAR - 1 wait {}
-	when y1 = p_button & nb_sugar < MAX_SUGAR - 1 sync press do {y1' = 0, nb_sugar' = nb_sugar + 1} goto add_sugar;
-	when y1 = p_button & nb_sugar = MAX_SUGAR - 1 sync press do {nb_sugar' = nb_sugar + 1} goto wait_coffee;
+loc add_sugar: invariant y2 <= p_patience_max & y1 <= p_button & nb_sugar <= MAX_SUGAR - 1
+	when y1 = p_button & nb_sugar < MAX_SUGAR - 1 sync press do {y1 := 0, nb_sugar := nb_sugar + 1} goto add_sugar;
+	when y1 = p_button & nb_sugar = MAX_SUGAR - 1 sync press do {nb_sugar := nb_sugar + 1} goto wait_coffee;
 	when y2 = p_patience_max goto mad;
 	when True sync coffee goto mad;
 
-loc wait_coffee: while y2 <= p_patience_max wait {}
-	when y2 < p_patience_max sync coffee do {y1' = 0, y2' = 0} goto researching;
+loc wait_coffee: invariant y2 <= p_patience_max
+	when y2 < p_patience_max sync coffee do {y1 := 0, y2 := 0} goto researching;
 	when y2 = p_patience_max goto mad;
 
-loc mad: while True wait {}
+loc mad: invariant True
 	(* Self-loop to avoid deadlocks when the researcher is already mad *)
 	when True sync coffee goto mad;
 
@@ -161,24 +161,6 @@ init :=
 	
 	& p_max >= 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-(* Comment out at most ONE of the following properties, and run EFsynth *)
-
-(* First property: the researcher never gets mad *)
-(* property := unreachable loc[researcher] = mad; *)
-
-(* Second property: the researcher never gets mad AND is ensured to have 3 doses of sugar *)
-property := unreachable loc[researcher] = mad or loc[machine] = cdone & nb_sugar < 3;
-(* projectresult((*p_patience_max, *)p_press, p_coffee); *)
-
-(* Third property: after the button is pressed, then coffee comes after a parametric time p_max *)
-(* property := if press then eventually coffee within p_max; (** Add option -depth-limit 15, or remove the 'sleep' transition in the machine PTA to avoid an unnecessary loop in the analysis (as we are interested in the first coffee here) **) *)
-(* projectresult(p_coffee, p_button, p_add_sugar); *)
 
 
 (************************************************************)

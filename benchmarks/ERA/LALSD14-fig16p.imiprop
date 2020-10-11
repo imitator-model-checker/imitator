@@ -1,0 +1,26 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Parametric version of Fig.16 from [LALSD14]
+ *
+ * Description     : Fig.16 from "Learning Assumptions for Compositional Verification of Timed Systems" [LALSD14]. Added a parametric deadline in the proprety. Note that this is a U-PTA, except if the deadline is set as a parameter (pdeadline).
+ * Correctness     : Pviolated not reachable
+ * Source          : "Learning Assumptions for Compositional Verification of Timed Systems" [LALSD14]
+ * Author          : Lin Shang-Wei
+ * Modeling        : Lin Shang-Wei + Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+ *
+ * Created         : 2020/08/14
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := #synth AGnot(loc[Mphihat] = Pviolated);
+

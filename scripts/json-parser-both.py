@@ -243,10 +243,10 @@ def create_imitator_file(cpu_list, pipeline_list,input_file_name, tid_list) :
 		else:
 			file.write(",DEADLINE_MISSED_{0}".format(cpu.id))
 	file.write(";\n\n")
-	file.write("\nloc ObserverOK: while True wait\n")
+	file.write("\nloc ObserverOK: invariant True\n")
 	for cpu in cpu_list :
 		file.write("\t\twhen True sync DEADLINE_MISSED_{0} goto ObserverNOK;\n".format(cpu.id));
-	file.write("\nloc ObserverNOK: while True wait\n")
+	file.write("\nloc ObserverNOK: invariant True\n")
 	file.write("\nend\n\n")
 		
 	#Time to deal with the pipelines
@@ -254,10 +254,10 @@ def create_imitator_file(cpu_list, pipeline_list,input_file_name, tid_list) :
 		# Write down the pipeline starters
 		#file.write("automaton pipeline_starter_{0}\n".format(pipeline.id));
 		#file.write("\t synclabs: start_pipeline_{0};\n\n".format(pipeline.id));
-		#file.write("\t loc starter: while t_starter_pipeline_{0} <= T_pipeline_{0} wait\n".format(pipeline.id));
+		#file.write("\t loc starter: invariant t_starter_pipeline_{0} <= T_pipeline_{0}\n".format(pipeline.id));
 		#file.write("\t\t when t_starter_pipeline_{0} = T_pipeline_{0} sync start_pipeline_{0} do ".format(pipeline.id));
 		#file.write("{t_starter_pipeline_");
-		#file.write("{0}\'=0".format(pipeline.id));
+		#file.write("{0}\ := 0".format(pipeline.id));
 		#file.write("} goto starter;\n");
 		#file.write("end\n\n");
 		#Write down the pipelines
@@ -272,10 +272,10 @@ def create_imitator_file(cpu_list, pipeline_list,input_file_name, tid_list) :
 			file.write(",task_{0}_act,task_{0}_done".format(task.id))
 
 		file.write(";\n\n");
-		#file.write("\tloc P{0}_1: while True wait\n".format(pipeline.id));
+		#file.write("\tloc P{0}_1: invariant True\n".format(pipeline.id));
 		#file.write("\t\t when True sync start_pipeline_{0} do ".format(pipeline.id));
 		#file.write("{t_pipeline_");
-		#file.write("{0}\'=0".format(pipeline.id));
+		#file.write("{0}\ := 0".format(pipeline.id));
 		#file.write("}");
 		#file.write("goto P{0}_2;\n".format(pipeline.id));
 		i=0
@@ -290,31 +290,31 @@ def create_imitator_file(cpu_list, pipeline_list,input_file_name, tid_list) :
 					else:
 						flag = 1;
 			#if flag ==1:
-			file.write("\tloc P{0}_{1}: while t_asap_{0} <= 0 wait\n".format(pipeline.id,i));
+			file.write("\tloc P{0}_{1}: invariant t_asap_{0} <= 0\n".format(pipeline.id,i));
 			file.write("\t\t when t_asap_{1}=0 sync task_{0}_act goto P{1}_{2};\n".format(task.id,pipeline.id,i+1));
 			#else:
-				#file.write("\tloc P{0}_{1}: while t_pipeline_{0} <= D_pipeline_{0} wait\n".format(pipeline.id,i));
+				#file.write("\tloc P{0}_{1}: invariant t_pipeline_{0} <= D_pipeline_{0}\n".format(pipeline.id,i));
 				#file.write("\t\t when True sync task_{0}_act goto P{1}_{2};\n".format(task.id,pipeline.id,i+1));
 			
 			i=i+1;
-			file.write("\tloc P{0}_{1}: while t_pipeline_{0} <= D_pipeline_{0} wait\n".format(pipeline.id,i));
+			file.write("\tloc P{0}_{1}: invariant t_pipeline_{0} <= D_pipeline_{0}\n".format(pipeline.id,i));
 			#if count == len(pipeline.task_list) :
-			#file.write("\t\t when True sync task_{0}_done do {t_asap_{1}'=0} goto P{1}_1;\n".format(task.id,pipeline.id));
+			#file.write("\t\t when True sync task_{0}_done do {t_asap_{1} := 0} goto P{1}_1;\n".format(task.id,pipeline.id));
 			#else: 
 			file.write("\t\t when t_pipeline_{1} <= D_pipeline_{1} sync task_{0}_done do".format(task.id,pipeline.id));
 			file.write(" {");
-			file.write("t_asap_{0}\'=0".format(pipeline.id));
+			file.write("t_asap_{0}\ := 0".format(pipeline.id));
 			file.write("} ");
 			file.write("goto P{0}_{1};\n".format(pipeline.id,i+1));
 			#file.write("\t\t when t_pipeline_{0} = D_pipeline_{0} + 1 sync DEADLINE_MISS_{0} goto DEADLINE_MISSED;\n".format(pipeline.id));
 			
-		file.write("\tloc P{0}_{1}: while t_pipeline_{0} <= T_pipeline_{0} wait\n".format(pipeline.id,i+1));
+		file.write("\tloc P{0}_{1}: invariant t_pipeline_{0} <= T_pipeline_{0}\n".format(pipeline.id,i+1));
 		file.write("\t\t when t_pipeline_{0} = T_pipeline_{0} do".format(pipeline.id));
 		file.write(" {");
-		file.write("t_pipeline_{0}\'=0,t_asap_{0}\'=0".format(pipeline.id));
+		file.write("t_pipeline_{0}\ := 0,t_asap_{0}\ := 0".format(pipeline.id));
 		file.write("} ");
 		file.write("sync pipeline_restart_{1} goto P{1}_{2};\n".format(task.id,pipeline.id,1));
-		#file.write("\tloc DEADLINE_MISSED: while True wait\n");
+		#file.write("\tloc DEADLINE_MISSED: invariant True\n");
 		file.write("end\n\n");
 
 	#We need CPUs in here
@@ -335,13 +335,13 @@ def create_imitator_file(cpu_list, pipeline_list,input_file_name, tid_list) :
 				else:
 					file.write(",task_{0}_act,task_{0}_done".format(task.id))
 			file.write(";\n\n")
-			file.write("\tloc DEADLINE_MISS: while True wait\n");
+			file.write("\tloc DEADLINE_MISS: invariant True\n");
 
 			n=len(task_on_cpu_list)
 			for i in range(0,n+1) :
 				list_loc = kbits(n,i)
 				for loc in list_loc :
-					file.write("\tloc proc_{0}_{1}: while ".format(task.cpu,loc))
+					file.write("\tloc proc_{0}_{1}: invariant ".format(task.cpu,loc))
 					task_running = -1;
 					max_prio = -1;
 					for i in range(0,n) :
@@ -360,7 +360,7 @@ def create_imitator_file(cpu_list, pipeline_list,input_file_name, tid_list) :
 							compt = compt + 1
 						elif task.id != task_running: 
 							file.write(",t_task_{0}".format(task.id))
-					file.write("} wait\n")
+					file.write("}\n")
 					if task_running == -1 :
 						compt = 0;
 						#for pipeline in pipeline_list:
@@ -369,7 +369,7 @@ def create_imitator_file(cpu_list, pipeline_list,input_file_name, tid_list) :
 							compt = compt +1;
 							file.write("\t\twhen True sync task_{0}_act do ".format(task.id))
 							file.write("{")
-							file.write("t_task_{0}\'=0".format(task.id))
+							file.write("t_task_{0}\ := 0".format(task.id))
 							file.write("} goto ")
 							file.write("proc_{0}_{1};\n".format(task.cpu,norm_loc(str(getBin(string_to_int(loc)+2**(n-compt))),n)))
 					else :
@@ -385,7 +385,7 @@ def create_imitator_file(cpu_list, pipeline_list,input_file_name, tid_list) :
 							if loc[compt-1] is "0" :
 								file.write("\t\twhen t_task_{1} < C_task_{1} sync task_{0}_act do ".format(task.id,task_running))
 								file.write("{")
-								file.write("t_task_{0}\'=0".format(task.id))
+								file.write("t_task_{0}\ := 0".format(task.id))
 								file.write("} goto ")
 								file.write("proc_{0}_{1};\n".format(task.cpu,norm_loc(str(getBin(string_to_int(loc)+2**(n-compt))),n)))
 							else :
@@ -408,7 +408,7 @@ def create_imitator_file(cpu_list, pipeline_list,input_file_name, tid_list) :
 				else:
 					file.write(",task_{0}_act,task_{0}_done".format(task.id))
 			file.write(";\n\n")
-			file.write("\t loc idle: while True stop");
+			file.write("\t loc idle: invariant True stop");
 			file.write("{");
 			compt = 0
 			for task in task_on_cpu_list :
@@ -417,19 +417,19 @@ def create_imitator_file(cpu_list, pipeline_list,input_file_name, tid_list) :
 					compt = compt + 1
 				elif task.id != task_running: 
 					file.write(",t_task_{0}".format(task.id))
-			file.write("} wait\n")
+			file.write("}\n")
 			#for pipeline in pipeline_list:
 				#file.write("\t\twhen t_pipeline_{1} = D_pipeline_{1} sync DEADLINE_MISSED_{1} goto DEADLINE_MISS;\n".format(task.id,pipeline.id));
 			for task in task_on_cpu_list :
 				file.write("\t\twhen True sync task_{0}_act do".format(task.id));
 				file.write("{Token_");
-				file.write("{0}\'=1".format(task.id));
+				file.write("{0}\ := 1".format(task.id));
 				file.write("}");
 				file.write("goto t_{0}_running;\n".format(task.id));
 			file.write("\n");
-			file.write("\tloc DEADLINE_MISS: while True wait\n");
+			file.write("\tloc DEADLINE_MISS: invariant True\n");
 			for task in task_on_cpu_list :
-				file.write("\tloc t_{0}_running: while t_task_{0} <= C_task_{0} ".format(task.id));
+				file.write("\tloc t_{0}_running: invariant t_task_{0} <= C_task_{0} ".format(task.id));
 				task_running = task.id;
 				file.write("stop {")
 				compt = 0
@@ -439,14 +439,14 @@ def create_imitator_file(cpu_list, pipeline_list,input_file_name, tid_list) :
 						compt = compt + 1
 					elif task2.id != task_running: 
 						file.write(",t_task_{0}".format(task2.id))
-				file.write("} wait\n")
+				file.write("}\n")
 				for pipeline in pipeline_list:
 					if (task in pipeline.task_list) :
 						file.write("\t\twhen t_task_{0} < C_task_{0} & t_pipeline_{1} = D_pipeline_{1} sync DEADLINE_MISSED_{2} goto DEADLINE_MISS;\n".format(task.id,pipeline.id,cpu.id));
 				for task2 in task_on_cpu_list :
 					file.write("\t\t when t_task_{0} <= 0 sync task_{1}_act do".format(task.id,task2.id));
 					file.write("{Token_");
-					file.write("{0}\'=1".format(task2.id));
+					file.write("{0}\ := 1".format(task2.id));
 					file.write("}");
 					if (task.prio > task2.prio):
 						file.write("goto t_{0}_running;\n".format(task.id));
@@ -454,7 +454,7 @@ def create_imitator_file(cpu_list, pipeline_list,input_file_name, tid_list) :
 						file.write("goto t_{0}_running;\n".format(task2.id));
 					file.write("\t\t when t_task_{0} > 0 sync task_{1}_act do".format(task.id,task2.id));
 					file.write("{Token_");
-					file.write("{0}\'=1".format(task2.id));
+					file.write("{0}\ := 1".format(task2.id));
 					file.write("}");
 					file.write("goto t_{0}_running;\n".format(task.id));
 				n = len(task_on_cpu_list)-1;
@@ -482,8 +482,8 @@ def create_imitator_file(cpu_list, pipeline_list,input_file_name, tid_list) :
 						file.write("{");
 						
 						if (task_running != -1):
-							file.write("t_task_{0}\'=0,".format(task_running));
-						file.write("Token_{0}'=0".format(task.id));
+							file.write("t_task_{0}\ := 0,".format(task_running));
+						file.write("Token_{0} := 0".format(task.id));
 						file.write("}");
 						if (task_running != -1):
 							file.write(" goto t_{0}_running;\n".format(task_running));
@@ -492,8 +492,8 @@ def create_imitator_file(cpu_list, pipeline_list,input_file_name, tid_list) :
 			file.write("end\n\n");
 					
 	# Write down the init region
-	file.write("var init:region;\n")
-	file.write("init:= loc[observer] = ObserverOK &\n")
+	#file.write("var init:region;\n")
+	file.write("init := loc[observer] = ObserverOK &\n")
 	#The locations
 	for cpu in cpu_list :
 		task_on_cpu_list = []
@@ -523,7 +523,7 @@ def create_imitator_file(cpu_list, pipeline_list,input_file_name, tid_list) :
 			#file.write("\tC_task_{0} = {1} & \n".format(task.id,task.wcet));
 			file.write("\tToken_{0} = 0 & \n".format(task.id));
 	file.write("\tTrue;")
-	file.write("\nbad := exists_location loc[observer] = ObserverNOK;\n");
+	#file.write("\nbad := exists_location loc[observer] = ObserverNOK;\n");
 
 	v0_file = open(v0_file_name,"w");
 	#The parameters

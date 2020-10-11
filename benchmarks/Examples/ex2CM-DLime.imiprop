@@ -1,0 +1,24 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Loop to make a parameter be arbitrarily small (coming from the 2-counter machine encoding by Didier Lime in [AM15])
+ *
+ * Description     : Loop to force a parameter to be arbitrarily small. This case study consists of the sole gadget encoding the increment of counter 1 (from the 2-counter machine encoding by Didier Lime in [AM15]). x encodes the value of counter 1; y encodes the value of counter 2. p is typically "small", in [0, epsilon], for some epsilon <= 1/(max(c1, c2)).
+ * Correctness     : sfinal (un)reachable
+ * Source          : Language Preservation Problems in Parametric Timed Automata (Étienne André, Nicolas Markey, FORMATS 2015)
+ * Author          : Didier Lime
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/08/14
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := #synth EF(loc[pta] = sfinal);

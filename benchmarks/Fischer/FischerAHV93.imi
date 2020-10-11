@@ -8,12 +8,12 @@
  * Source          : Model described in "Parametric Real-Time Reasoning" (fig. 2) Alur, Henzinger, Vardi (STOC 1993)
  * Author          : Alur, Henzinger, Vardi
  * Modeling        : Alur, Henzinger, Vardi
- * Input by        : Etienne Andre
+ * Input by        : Étienne André
  *
  * Created         : 2011/11/25
- * Last modified   : 2018/11/13
+ * Last modified   : 2020/08/14
  *
- * IMITATOR version: 2.10.4
+ * IMITATOR version: 3
  ************************************************************)
 
 
@@ -52,7 +52,7 @@ loc lock2: invariant True
 	when True sync set_0 goto lock0;
 	when True sync set_0_prime goto lock0;
 
-end -- lock
+end (*lock*)
 
 
 
@@ -80,7 +80,7 @@ loc P1_4: invariant True
 	when True goto P1_4;
 	when True sync set_0 goto P1_0;
 
-end -- P1
+end (*P1*)
 
 
 
@@ -108,43 +108,37 @@ loc P2_4: invariant True
 	when True goto P2_4;
 	when True sync set_0_prime goto P2_0;
 
-end -- P2
+end (*P2*)
 
 
 (************************************************************)
 (* Initial state *)
 (************************************************************)
 init :=
-	----------------------
+	(*----------------------
 	-- Initial locations
-	----------------------
+	----------------------*)
 	& loc[lock] = lock0
 	& loc[P1]   = P1_0
 	& loc[P2]   = P2_0
 	
-	----------------------
+	(*----------------------
 	-- Clocks
-	----------------------
+	----------------------*)
 
-	----------------------
+	(*----------------------
 	-- Given constraints
-	----------------------
+	----------------------*)
 	& a >= 0
 	& b >= 0
 	& c >= 0
 	& d >= 0
 
-	----------------------
+	(*----------------------
 	-- Instantiations
-	----------------------
+	----------------------*)
 
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-property := unreachable loc[P1] = P1_4 & loc[P2] = P2_4;
 
 
 (************************************************************)

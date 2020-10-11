@@ -1,0 +1,16 @@
+(************************************************************
+ *                         IMITATOR
+ *
+ * Model of a pacemaker
+ *
+ * "Modeling and Verification of a Dual Chamber Implantable Pacemaker"
+ * Zhihao Jiang, Miroslav Pajic, Salar Moarref, Rajeev Alur, Rahul Mangharam
+ * TACAS 2014
+ *
+ * Author          : Étienne André
+ * Created         : 2020/08/18
+ * Last modified   : 2020/08/18
+ * IMITATOR version: 3
+ ************************************************************)
+
+property := #synth AGnot(loc[monitor5a] = monitor5a_BAD);

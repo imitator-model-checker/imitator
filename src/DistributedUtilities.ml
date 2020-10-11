@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: All common functions needed for the interface with MPI
  * 
  * File contributors : Étienne André, Camille Coti
  * Created           : 2014/03/24
- * Last modified     : 2018/04/06
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
  
@@ -578,6 +579,11 @@ let unserialize_abstract_point_based_result_list abstract_point_based_result_lis
 
 
 let serialize_cartography_result (cartography_result : Result.cartography_result) : string =
+	(* Actual v0 *)
+	(serialize_hyper_rectangle cartography_result.parameter_domain)
+	^
+	serialize_SEP_SUPER_STRUCT
+	^
 	(* Number of points in V0 *)
 	(serialize_numconst cartography_result.size_v0)
 	^
@@ -614,17 +620,17 @@ let serialize_cartography_result (cartography_result : Result.cartography_result
 
 let unserialize_cartography_result (cartography_result_string : string) : Result.cartography_result =
 	print_message Verbose_high ("[Coordinator] About to unserialize '" ^ cartography_result_string ^ "'");
-	let size_v0_str, tiles_str, computation_time_str, (*find_point_time_str, *)nb_unsuccessful_points_str , coverage_str, termination_str =
+	let v0_str, size_v0_str, tiles_str, computation_time_str, nb_unsuccessful_points_str , coverage_str, termination_str =
 	match split serialize_SEP_SUPER_STRUCT cartography_result_string with
-		| [size_v0_str; tiles_str; computation_time_str; (*find_point_time_str; *)nb_unsuccessful_points_str ; coverage_str; termination_str ]
-			-> size_v0_str, tiles_str, computation_time_str, (*find_point_time_str, *)nb_unsuccessful_points_str , coverage_str, termination_str
+		| [v0_str; size_v0_str; tiles_str; computation_time_str; nb_unsuccessful_points_str ; coverage_str; termination_str ]
+			-> v0_str, size_v0_str, tiles_str, computation_time_str, nb_unsuccessful_points_str , coverage_str, termination_str
 		| _ -> raise (SerializationError ("Cannot unserialize im_result '" ^ cartography_result_string ^ "'."))
 	in
 	{
+		parameter_domain		= unserialize_hyper_rectangle v0_str;
 		size_v0 				= NumConst.numconst_of_string size_v0_str;
 		tiles 					= unserialize_abstract_point_based_result_list tiles_str;
 		computation_time		= float_of_string computation_time_str;
-(* 		find_point_time 		= float_of_string find_point_time_str; *)
 		nb_unsuccessful_points	= int_of_string nb_unsuccessful_points_str;
 		coverage				= unserialize_bc_coverage coverage_str;
 		termination				= unserialize_bc_termination termination_str;
@@ -1042,6 +1048,10 @@ let receive_pull_request () =
 
 	| Slave_bcresult_tag ->
 		raise (InternalError("Cannot receive a Slave_bcresult_tag at that point"))
+		
+	| _ ->
+		print_error "Unexpected tag received in function `receive_pull_request ()`";
+		raise (InternalError "Unexpected tag received in function `receive_pull_request ()`")
 ;;
 
 
@@ -1125,6 +1135,10 @@ let receive_work () =
 	| Master_terminate_tag -> Terminate
 	
 	| Master_continue_tag -> Continue
+	
+	| _ ->
+		print_error "Unexpected tag received in function `receive_work ()`";
+		raise (InternalError "Unexpected tag received in function `receive_work ()`")
 
 
 (* Function used for collaborator - coordinator static distribution scheme *)
@@ -1206,6 +1220,9 @@ let receive_pull_request_NZCUB () =
 	    print_message Verbose_high ("[Master] Received Slave_outofbound_tag");
 	    OutOfBound source_rank
 
+	| _ ->
+		print_error "Unexpected tag received in function `receive_pull_request_NZCUB ()`";
+		raise (InternalError "Unexpected tag received in function `receive_pull_request_NZCUB ()`")
 (* Master - End *)
 
  
@@ -1232,6 +1249,10 @@ let receive_work_NZCUB () =
 
 	| Master_terminate_tag -> Terminate
 
+
+	| _ ->
+		print_error "Unexpected tag received in function `receive_work_NZCUB ()`";
+		raise (InternalError "Unexpected tag received in function `receive_work_NZCUB ()`")
 
 
 (* Worker - End *)

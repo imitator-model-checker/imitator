@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: "AG not" algorithm (safety from a set of bad states) [JLR15]
  * 
  * File contributors : Étienne André
  * Created           : 2017/02/03
- * Last modified     : 2019/08/08
+ * Last modified     : 2020/09/21
  *
  ************************************************************)
 
@@ -22,6 +23,7 @@ open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
 open AbstractModel
+open AbstractProperty
 open Result
 open AlgoEFsynth
 
@@ -32,8 +34,8 @@ open AlgoEFsynth
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoAGsafeSynth =
-	object (self) inherit algoEFsynth as super
+class algoAGsafeSynth (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoEFsynth state_predicate as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -42,7 +44,7 @@ class algoAGsafeSynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "AGsafe"
+	method algorithm_name = "AG"
 	
 	
 	
@@ -68,11 +70,11 @@ class algoAGsafeSynth =
 		);
 		
 		
-		(* Perform result = initial_state|P \ bad_constraint *)
+		(* Perform result = initial_state|P \ synthesized_constraint *)
 		
 		(* Projecting onto SOME parameters if required *)
 		let result =
-		match model.projection with
+		match (Input.get_property()).projection with
 		(* No projection: copy the initial p constraint *)
 		| None -> LinearConstraint.p_nnconvex_copy init_p_nnconvex_constraint
 		(* Project *)
@@ -101,7 +103,7 @@ class algoAGsafeSynth =
 		in
 		
 		(* Perform the difference *)
-		LinearConstraint.p_nnconvex_difference_assign result bad_constraint;
+		LinearConstraint.p_nnconvex_difference_assign result synthesized_constraint;
 		
 		
 		(* Print some information *)

@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2015/12/01
- * Last modified   : 2015/12/01
+ * Last modified   : 2020/08/14
  *
- * IMITATOR version: 2.7.4-working
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -33,26 +33,26 @@ var
   automaton pta
 (************************************************************)
 
-loc s0: while True wait {}
-	when x = 1 + p & t <= 1 do {x ' = 0} goto s1;
-	when y = 1 do {y ' = 0} goto s1prime;
+loc s0: invariant True
+	when x = 1 + p & t <= 1 do {x  := 0} goto s1;
+	when y = 1 do {y  := 0} goto s1prime;
 
-loc s1: while True wait {}
-	when y = 1 do {y ' = 0} goto s2;
+loc s1: invariant True
+	when y = 1 do {y  := 0} goto s2;
 	
-loc s1prime: while True wait {}
-	when x = 1 + p & t <= 1 do {x ' = 0} goto s2;
+loc s1prime: invariant True
+	when x = 1 + p & t <= 1 do {x  := 0} goto s2;
 	
-loc s2: while True wait {}
-	when t = 1 do {t' = 0} goto s3;
+loc s2: invariant True
+	when t = 1 do {t := 0} goto s3;
 	
-loc s3: while t = 0 wait {}
+loc s3: invariant t = 0
 	(* Zero-test *)
 	when x = 1 & t = 0 goto sfinal;
 	(* Non-deterministic choice: go back to increment again *)
 	when True goto s0;
 
-loc sfinal: while True wait {}
+loc sfinal: invariant True
 end (* pta *)
 
 
@@ -79,13 +79,6 @@ init :=
 	(*------------------------------------------------------------*)
 	& p >= 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[pta] = sfinal;
 
 
 (************************************************************)

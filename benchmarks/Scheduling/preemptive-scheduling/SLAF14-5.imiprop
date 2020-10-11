@@ -1,0 +1,18 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Model derived from the "idle scheduler" in the SynCop 2014 paper with 5 tasks. 
+ * Tasks have implicit deadlines; that is, for a task,  its period and deadline are the same in the model.
+ * Model automatically generated from some script
+ * Author: Giuseppe Lipari
+ * Date: January 2014
+ * References: ''Reachability Preservation Based Parameter Synthesis for Timed Automata'' (2015) by 
+ *                 Étienne André, Giuseppe Lipari, Hoang Gia Nguyen and Youcheng Sun; Sched5
+ *             ''Toward Parametric Timed Interfaces for Real-Time Components'' (2014) by 
+ *                 Youcheng Sun, Giuseppe Lipari, Étienne André and Laurent Fribourg
+ * Created: 2020/08/18
+ * Last modified: 2020/08/18
+ * IMITATOR version: 3
+ ************************************************************)
+
+property := #synth AGnot(loc[OBS_dline] = dline_loc_miss);

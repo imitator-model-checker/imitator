@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/02
- * Last modified     : 2019/08/23
+ * Last modified     : 2020/09/28
  *
  ************************************************************)
 
@@ -49,6 +49,10 @@ type bfs_limit_reached =
 	
 	(* Termination due to a number of explored states reached *)
 	| States_limit_reached
+
+	(* Termination because a witness has been found *)
+	| Witness_found
+
 
 (************************************************************)
 (** Statistics *)
@@ -220,6 +224,9 @@ class virtual algoStateBased :
 		(* List of state_index that have unexplored successors in case of premature termination *)
 		val mutable unexplored_successors : unexplored_successors
 		
+		(* Variable to denote whether the analysis may continue, or whether the analysis should terminate; useful to terminate, e.g., when a witness is found (at least for BFS algorithms) *)
+		val mutable algorithm_keep_going : bool
+		
 		(* The current new state indexes *)
 		val mutable new_states_indexes : state_index list
 		
@@ -227,6 +234,9 @@ class virtual algoStateBased :
 		(*** NOTE: public only for AlgoEFoptQueue ***)
 		val mutable limit_reached : bfs_limit_reached
 		
+		(* Non-necessarily convex constraint storing the parameter synthesis result (for selected algorithm) *)
+		val mutable synthesized_constraint : LinearConstraint.p_nnconvex_constraint
+
 		
 		(************************************************************)
 		(* Class methods *)
@@ -253,15 +263,26 @@ class virtual algoStateBased :
 		method set_patator_termination_function : (unit -> unit) -> unit
 	
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Compute the p-constraint only if it is not cached using the mini-cache system *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method compute_p_constraint_with_minicache : (LinearConstraint.px_linear_constraint -> LinearConstraint.p_linear_constraint)
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Reset the mini-cache *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method reset_minicache : unit
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Check whether the projection of a PX-constraint is included into the `synthesized_constraint` *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method check_whether_px_included_into_synthesized_constraint : LinearConstraint.px_linear_constraint -> bool
+		
+
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Update the nature of the trace set *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method update_statespace_nature : State.state -> unit
 		
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(* Create a StateSpace.state_comparison from the options *)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		method state_comparison_operator_of_options : StateSpace.state_comparison
-
 		
 		(*------------------------------------------------------------*)
 		(* Add a new state to the state space (if indeed needed) *)
@@ -310,6 +331,11 @@ class virtual algoStateBased :
 		(*** NOTE: this is in fact a BFS function ***)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method virtual check_termination_at_post_n : bool
+		
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		(** Check whether the property is a #witness mode; if so, raise TerminateAnalysis *)
+		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+		method terminate_if_witness : unit
 		
 		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

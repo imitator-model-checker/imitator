@@ -12,9 +12,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2018/08/20
- * Last modified   : 2018/08/20
+ * Last modified   : 2020/08/18
  *
- * IMITATOR version: 2.10.4
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -179,14 +179,6 @@ init :=
 	& e >= 0
 	& f >= 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-(* φ2 = ConsWaiting ∧ ProdReady ∧ xtotal ≥ 5 *)
-property := unreachable loc[Consumer] = consWaiting & loc[Producer] = prodReady (*& xtotal >= 5*) & loc[observer] = finished;
 
 
 (************************************************************)

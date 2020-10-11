@@ -7,6 +7,7 @@ imitator
 [IMITATOR](https://www.imitator.fr) is an open source software tool to perform automated parameter synthesis for concurrent timed systems.
 
 IMITATOR takes as input a network of IMITATOR parametric timed automata (NIPTA): NIPTA are an extension of parametric timed automata [AHV93], a well-known formalism to specify and verify models of systems where timing constants can be replaced with parameters, i.e., unknown constants.
+The input formalism can be seen as a subclass of parametric linear hybrid automata, with constant clock rates (which includes stopwatches and multi-rate automata).
 
 IMITATOR addresses several variants of the following problem:
 _given a concurrent timed system, what are the values of the timing constants that guarantee that the model of the system satisfies some property?_

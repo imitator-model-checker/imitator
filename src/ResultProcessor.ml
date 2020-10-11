@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: process the result of IMITATOR: print results, creates files, generates graphics, etc.
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2019/09/05
+ * Last modified     : 2020/09/09
  *
  ************************************************************)
 
@@ -24,6 +25,15 @@ open Exceptions
 open Statistics
 open AbstractModel
 open Result
+
+
+
+(************************************************************)
+(* Statistics *)
+(************************************************************)
+
+(* Create counter *)
+let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low
 
 
 
@@ -249,9 +259,9 @@ let file_header () =
 	    "(************************************************************" 
 	(* Program version *)
 	^ "\n * Result output by " ^ Constants.program_name ^ ""
-	^ "\n * Version  : " ^ (ImitatorUtilities.program_name_and_version_and_nickname_and_build())
+	^ "\n * Version  : " ^ (ImitatorUtilities.program_name_and_version_and_nickname_and_build)
 	^ "\n * Git      : " ^ (ImitatorUtilities.git_branch_and_hash)
-	^ "\n * Model    : '" ^ options#model_input_file_name ^ "'"
+	^ "\n * Model    : '" ^ options#model_file_name ^ "'"
 	(* Date *)
 	^ "\n * Generated: " ^ (now()) ^ ""
 	(* Command *)
@@ -329,10 +339,6 @@ let result_nature_statistics_bc (soundness_str : string) termination (statespace
 
 (* Write an ef_synth result to the result file *)
 let export_to_file_noresult file_name =
-	(*** WARNING: duplicate code concerning the counter creation ***)
-	(* Create counter *)
-	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
-	
 	(* Start counter *)
 	counter#start;
 	
@@ -356,7 +362,7 @@ let export_to_file_noresult file_name =
 	
 	(* Write to file *)
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
 	
 	(* Stop counter *)
 	counter#stop;
@@ -368,10 +374,6 @@ let export_to_file_noresult file_name =
 
 (* Write an ef_synth result to the result file *)
 let export_to_file_deprecated_efsynth_result file_name (deprecated_efsynth_result : Result.deprecated_efsynth_result) =
-	(*** WARNING: duplicate code concerning the counter creation ***)
-	(* Create counter *)
-	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
-	
 	(* Start counter *)
 	counter#start;
 	
@@ -412,7 +414,7 @@ let export_to_file_deprecated_efsynth_result file_name (deprecated_efsynth_resul
 	
 	(* Write to file *)
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
 	
 	(* Stop counter *)
 	counter#stop;
@@ -423,10 +425,6 @@ let export_to_file_deprecated_efsynth_result file_name (deprecated_efsynth_resul
 
 (* Write a single_synthesis_result to the result file *)
 let export_to_file_single_synthesis_result file_name (single_synthesis_result : Result.single_synthesis_result) =
-	(*** WARNING: duplicate code concerning the counter creation ***)
-	(* Create counter *)
-	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
-	
 	(* Start counter *)
 	counter#start;
 
@@ -473,7 +471,7 @@ let export_to_file_single_synthesis_result file_name (single_synthesis_result : 
 	
 	(* Write to file *)
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
 	
 	(* Stop counter *)
 	counter#stop;
@@ -484,10 +482,6 @@ let export_to_file_single_synthesis_result file_name (single_synthesis_result : 
 
 (* Write a multiple_synthesis_result to the result file *)
 let export_to_file_multiple_synthesis_result file_name (multiple_synthesis_result : Result.multiple_synthesis_result) =
-	(*** WARNING: duplicate code concerning the counter creation ***)
-	(* Create counter *)
-	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
-	
 	(* Start counter *)
 	counter#start;
 
@@ -527,7 +521,7 @@ let export_to_file_multiple_synthesis_result file_name (multiple_synthesis_resul
 	
 	(* Write to file *)
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
 	
 	(* Stop counter *)
 	counter#stop;
@@ -539,10 +533,6 @@ let export_to_file_multiple_synthesis_result file_name (multiple_synthesis_resul
 
 (* Write an ef_synth result to the result file *)
 let export_to_file_point_based_result file_name (point_based_result : Result.point_based_result) =
-	(*** WARNING: duplicate code concerning the counter creation ***)
-	(* Create counter *)
-	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
-	
 	(* Start counter *)
 	counter#start;
 
@@ -599,7 +589,7 @@ let export_to_file_point_based_result file_name (point_based_result : Result.poi
 	
 	(* Write to file *)
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
 	
 	(* Stop counter *)
 	counter#stop;
@@ -645,10 +635,6 @@ let general_bc_statistics (cartography_result : Result.cartography_result) =
 		
 (* Write result of BC to file *)
 let export_to_file_cartography_result file_name (cartography_result : Result.cartography_result) =
-	(*** WARNING: duplicate code concerning the counter creation ***)
-	(* Create counter *)
-	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
-	
 	(* Start counter *)
 	counter#start;
 
@@ -696,7 +682,8 @@ let export_to_file_cartography_result file_name (cartography_result : Result.car
 	
 	(* Prepare the string to write *)
 	let file_content =
-		let v0 = Input.get_v0 () in
+	
+		let v0 = cartography_result.parameter_domain in
 
 		(* 1) The file header *)
 		file_header ()
@@ -727,10 +714,11 @@ let export_to_file_cartography_result file_name (cartography_result : Result.car
 		^ "\n" ^ (Statistics.string_of_all_counters())
 		^ "\n------------------------------------------------------------"
 		^ "\n"
+
 	in
 	(* Write to file *)
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
 	
 	(* Stop counter *)
 	counter#stop;
@@ -741,10 +729,6 @@ let export_to_file_cartography_result file_name (cartography_result : Result.car
 
 (* Export result of type 'Runs_exhibition_result' *)
 let export_to_file_runs_exhibition_result file_name (result : Result.runs_exhibition_result) =
-	(*** WARNING: duplicate code concerning the counter creation ***)
-	(* Create counter *)
-	let counter = Statistics.create_time_counter_and_register "file generation" Graphics_counter Verbose_low in
-	
 	(* Start counter *)
 	counter#start;
 
@@ -811,7 +795,7 @@ let export_to_file_runs_exhibition_result file_name (result : Result.runs_exhibi
 	
 	(* Write to file *)
 	write_to_file file_name file_content;
-	print_message Verbose_standard ("\nResult written to file '" ^ file_name ^ "'.");
+	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
 	
 	(* Stop counter *)
 	counter#stop;
@@ -951,12 +935,12 @@ let process_single_synthesis_or_point_based_result file_prefix algorithm_name re
 	
 	(* Draw state space *)
 	let radical = file_prefix ^ "-statespace" in
-	Graphics.draw_statespace state_space algorithm_name radical;
+	Graphics.draw_statespace_if_requested state_space algorithm_name radical;
 	
 	(* Render zones in a graphical form *)
-	if options#cart then (
+	if options#draw_cart then (
 		let zones = zones_of_good_bad_constraint result in
-		Graphics.draw_cartography zones (file_prefix ^ "_cart")
+		Graphics.draw_cartography zones (file_prefix ^ Constants.cart_file_suffix)
 	) else (
 			print_message Verbose_high "Graphical cartography not asked: not drawn.";
 	);
@@ -984,7 +968,7 @@ let process_result result algorithm_name prefix_option =
 	
 	
 	match result with
-	| No_analysis ->
+	| Syntax_check_result | Translation_result ->
 		(* Write to file if requested *)
 		if options#output_result then(
 			let file_name = file_prefix ^ Constants.result_file_extension in
@@ -1000,10 +984,10 @@ let process_result result algorithm_name prefix_option =
 		()
 
 
-	| PostStar_result poststar_result ->
+	| State_space_computation_result state_space_computation ->
 		print_message Verbose_low (
 			"Computation time: "
-			^ (string_of_seconds poststar_result.computation_time) ^ "."
+			^ (string_of_seconds state_space_computation.computation_time) ^ "."
 		);
 
 		(* Write to file if requested *)
@@ -1015,14 +999,14 @@ let process_result result algorithm_name prefix_option =
 		);
 
 		(* Print statistics *)
-		print_state_space_statistics poststar_result.computation_time poststar_result.state_space;
+		print_state_space_statistics state_space_computation.computation_time state_space_computation.state_space;
 		print_memory_statistics ();
 		
 		print_message Verbose_high "Drawing state space…";
 	
 		(* Draw state space *)
 		let radical = file_prefix ^ "-statespace" in
-		Graphics.draw_statespace poststar_result.state_space algorithm_name radical;
+		Graphics.draw_statespace_if_requested state_space_computation.state_space algorithm_name radical;
 		
 		(* The end *)
 		()
@@ -1078,12 +1062,12 @@ let process_result result algorithm_name prefix_option =
 	
 		(* Draw state space *)
 		let radical = file_prefix ^ "-statespace" in
-		Graphics.draw_statespace efsynth_result.state_space algorithm_name radical;
+		Graphics.draw_statespace_if_requested efsynth_result.state_space algorithm_name radical;
 		
 		(* Render zones in a graphical form *)
-		if options#cart then (
+		if options#draw_cart then (
 			let zones = List.map (fun p_linear_constraint -> (LinearConstraint.Convex_p_constraint p_linear_constraint, StateSpace.Bad)) efsynth_result.constraints in
-			Graphics.draw_cartography zones (file_prefix ^ "_cart")
+			Graphics.draw_cartography zones (file_prefix ^ Constants.cart_file_suffix)
 		) else (
 			print_message Verbose_high "Graphical cartography not asked: not drawn.";
 		);
@@ -1166,7 +1150,7 @@ let process_result result algorithm_name prefix_option =
 			) [] valid_tiles
 			in
 			
-			Graphics.draw_cartography zones (file_prefix ^ "_cart")
+			Graphics.draw_cartography zones (file_prefix ^ Constants.cart_file_suffix)
 		) else (
 			(* Print some information *)
 			print_message Verbose_high "Graphical cartography not asked: not drawn.";
@@ -1196,7 +1180,7 @@ let process_result result algorithm_name prefix_option =
 		(* Render zones in a graphical form *)
 		if options#output_bc_cart then (
 			let zones = zones_of_good_bad_constraint result.result in
-			Graphics.draw_cartography zones (file_prefix ^ "_cart")
+			Graphics.draw_cartography zones (file_prefix ^ Constants.cart_file_suffix)
 		) else (
 			print_message Verbose_high "Graphical cartography not asked: not drawn.";
 		);
@@ -1235,7 +1219,7 @@ let process_result result algorithm_name prefix_option =
 			end;
 
 			(* Print parameter zone *)
-			if options#cart then (
+			if options#draw_cart then (
 				print_message Verbose_low "Plotting cartography of the runs' constraints…";
 				(* Generate the graphics: parameters *)
 				let zones = [valuation_and_concrete_run.valuations, match valuation_and_concrete_run.concrete_run with Concrete_run _ -> StateSpace.Good | Impossible_concrete_run _ -> StateSpace.Bad] in

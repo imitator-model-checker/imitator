@@ -11,9 +11,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2015/12/01
- * Last modified   : 2015/12/01
+ * Last modified   : 2020/08/14
  *
- * IMITATOR version: 2.7.4-working
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -36,22 +36,22 @@ var
   automaton pta
 (************************************************************)
 
-loc l1: while True wait {}
+loc l1: invariant True
 	when x <= p goto l1;
-	when y = p do {z' = 0} goto l2;
+	when y = p do {z := 0} goto l2;
 
-loc l2: while True wait {}
-	when z >= p do {y' = 0} goto l2;
+loc l2: invariant True
+	when z >= p do {y := 0} goto l2;
 	when z = 0 goto l1;
 	when y < p goto l3;
 
-loc l3: while True wait {}
-	when y = p do {y' = 0} goto l3;
-	when z = 1 do {z' = 0} goto l3;
+loc l3: invariant True
+	when y = p do {y := 0} goto l3;
+	when z = 1 do {z := 0} goto l3;
 	when z = 1 goto lbad;
 	when x = 1 goto l2;
 
-loc lbad: while True wait {}
+loc lbad: invariant True
 end (* pta *)
 
 
@@ -61,10 +61,10 @@ end (* pta *)
 (************************************************************)
 synclabs: time_limit;
 
-loc running: while t <= T wait {}
-(*	when t = T do {t' = 0} sync time_limit goto blocked;
+loc running: invariant t <= T
+(*	when t = T do {t := 0} sync time_limit goto blocked;
 
-loc blocked: while t <= 0 wait {}*)
+loc blocked: invariant t <= 0*)
 end (* timechecker *)
 
 
@@ -92,13 +92,6 @@ init :=
 	(*------------------------------------------------------------*)
 	& p >= 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[pta] = lbad;
 
 
 (************************************************************)

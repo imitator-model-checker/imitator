@@ -9,21 +9,20 @@
  * Source          : From "Linear Parametric Model Checking of Timed Automata" Hune, Romijn, Stoelinga, Vaandrager, 2002
  * Author          : Hune, Romijn, Stoelinga, Vaandrager
  * Modeling        : Hune, Romijn, Stoelinga, Vaandrager
- * Input by        : Etienne Andre
+ * Input by        : Étienne André
  *
  * Created         : 2013/12/10
  * Fork from fischerHRSV02.imi : 2014/04/08
- * Last modified   : 2015/07/31
+ * Last modified   : 2020/08/14
  *
- * IMITATOR version: 2.7.1
+ * IMITATOR version: 3
  ************************************************************)
 
 
 var 
-	-- P1's clock
-	x_1,
-	-- P2's clock
-	x_2,
+	
+	x_1, (*P1's clock*)
+	x_2, (*P2's clock*)
 		:clock;
 	
 
@@ -36,117 +35,114 @@ var
 
 		
 
---************************************************************--
+(************************************************************)
 automaton pta_1
---************************************************************--
+(************************************************************)
 synclabs: enter_1, leave_1;
 
-loc start_1: while x_1 <= max_rw wait {}
+loc start_1: invariant x_1 <= max_rw
 	(* Actually lock != 0 *)
-	when lock > 0 & x_1 > min_rw do {x_1' = 0} goto start_1;
+	when lock > 0 & x_1 > min_rw do {x_1 := 0} goto start_1;
 
-	when lock = 0 & x_1 > min_rw do {x_1' = 0} goto set_1;
+	when lock = 0 & x_1 > min_rw do {x_1 := 0} goto set_1;
 
-loc set_1: while x_1 <= max_rw wait {}
+loc set_1: invariant x_1 <= max_rw
 	(* Actually lock = i *)
-	when x_1 > min_rw do {lock' = 1, x_1' = 0} goto tryenter_1;
+	when x_1 > min_rw do {lock := 1, x_1 := 0} goto tryenter_1;
 
-loc tryenter_1: while x_1 <= max_delay wait {}
+loc tryenter_1: invariant x_1 <= max_delay
 	(* Actually lock = i *)
 	when x_1 > min_delay & lock = 1 sync enter_1 goto cs_1;
 	(* Actually lock != i *)
-	when x_1 > min_delay & lock = 0 do {x_1' = 0} goto start_1;
-	when x_1 > min_delay & lock = 2 do {x_1' = 0} goto start_1;
+	when x_1 > min_delay & lock = 0 do {x_1 := 0} goto start_1;
+	when x_1 > min_delay & lock = 2 do {x_1 := 0} goto start_1;
 
-loc cs_1: while True wait {}
-	when True do {x_1' = 0, lock' = 0} sync leave_1 goto start_1;
+loc cs_1: invariant True
+	when True do {x_1 := 0, lock := 0} sync leave_1 goto start_1;
 
-end -- pta_1
+end (*pta_1*)
 
 
 
---************************************************************--
+(************************************************************)
 automaton pta_2
---************************************************************--
+(************************************************************)
 synclabs: enter_2, leave_2;
 
-loc start_2: while x_2 <= max_rw wait {}
+loc start_2: invariant x_2 <= max_rw
 	(* Actually lock != 0 *)
-	when lock > 0 & x_2 > min_rw do {x_2' = 0} goto start_2;
+	when lock > 0 & x_2 > min_rw do {x_2 := 0} goto start_2;
 
-	when lock = 0 & x_2 > min_rw do {x_2' = 0} goto set_2;
+	when lock = 0 & x_2 > min_rw do {x_2 := 0} goto set_2;
 
-loc set_2: while x_2 <= max_rw wait {}
+loc set_2: invariant x_2 <= max_rw
 	(* Actually lock = i *)
-	when x_2 > min_rw do {lock' = 2, x_2' = 0} goto tryenter_2;
+	when x_2 > min_rw do {lock := 2, x_2 := 0} goto tryenter_2;
 
-loc tryenter_2: while x_2 <= max_delay wait {}
+loc tryenter_2: invariant x_2 <= max_delay
 	(* Actually lock = i *)
 	when x_2 > min_delay & lock = 2 sync enter_2 goto cs_2;
 	(* Actually lock != i *)
-	when x_2 > min_delay & lock = 0 do {x_2' = 0} goto start_2;
-	when x_2 > min_delay & lock = 1 do {x_2' = 0} goto start_2;
+	when x_2 > min_delay & lock = 0 do {x_2 := 0} goto start_2;
+	when x_2 > min_delay & lock = 1 do {x_2 := 0} goto start_2;
 
-loc cs_2: while True wait {}
-	when True do {x_2' = 0, lock' = 0} sync leave_2 goto start_2;
+loc cs_2: invariant True
+	when True do {x_2 := 0, lock := 0} sync leave_2 goto start_2;
 
-end -- pta_2
-
-
+end (*pta_2*)
 
 
---************************************************************--
+
+
+(************************************************************)
 automaton observer
---************************************************************--
+(************************************************************)
 synclabs : enter_1, enter_2, leave_1, leave_2;
 
-loc obs_waiting: while True wait {}
+loc obs_waiting: invariant True
 	when True sync enter_1 goto obs_1;
 	when True sync enter_2 goto obs_2;
 
-loc obs_1: while True wait {}
+loc obs_1: invariant True
 	when True sync leave_1 goto obs_waiting;
 	when True sync enter_2 goto obs_violation;
 
-loc obs_2: while True wait {}
+loc obs_2: invariant True
 	when True sync leave_2 goto obs_waiting;
 	when True sync enter_1 goto obs_violation;
 
-loc obs_violation: while True wait {}
+loc obs_violation: invariant True
 (* 	HACK : no outgoing action to reduce state space *)
 
 end (* observer *)
 
 
---************************************************************--
---************************************************************--
--- ANALYSIS
---************************************************************--
---************************************************************--
+(************************************************************)
+(* Initial state *)
+(************************************************************)
 
-   
 init :=
-	----------------------
-	-- Initial locations
-	----------------------
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
 	& loc[pta_1] = start_1
 	& loc[pta_2] = start_2	
 	& loc[observer] = obs_waiting
 	
-	----------------------
-	-- Clocks
-	----------------------
+	(*------------------------------------------------------------*)
+	(* Initial discrete assignments *)
+	(*------------------------------------------------------------*)
+	& lock = 0
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
 	& x_1 = 0
 	& x_2 = 0
 
-	----------------------
-	-- Discrete
-	----------------------
-	& lock = 0
-
-	----------------------
-	-- Parameters
-	----------------------
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
 	& 0 <= min_rw
 	& min_rw <= max_rw
 	& 0 <= min_delay
@@ -157,4 +153,8 @@ init :=
 	& max_delay <= 10
 ;
 
-property := unreachable loc[observer] = obs_violation;
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

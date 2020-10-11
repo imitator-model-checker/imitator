@@ -1,0 +1,19 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Small problem with a nuclear plant that may explode
+ *
+ * Description     : Toy example of a nuclear plant that may explode
+ * Correctness     : The nuclear plant must not blow up
+ * Source          : "SITH" course final examination at Institut Galilée, Université Paris 13 (2013-2014)
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ *
+ * Created         : 2020/08/13
+ * Last modified   : 2020/08/13
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+property := #synth AGnot(loc[plant] = boom);

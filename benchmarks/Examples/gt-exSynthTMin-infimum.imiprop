@@ -1,0 +1,20 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy PTA to act as a discrimination between considering an infimum or a minimum execution time (version: minimization of time)
+ *
+ * Description     : Toy PTA to act as a discrimination between considering an infimum or a minimum execution time
+ * Correctness     : ltarget (un)reachable
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/08/14
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+property := #synth EFtmin(loc[pta] = ltarget);

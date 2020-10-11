@@ -1,28 +1,27 @@
---****************************************************--
---****************************************************--
---   Circuit described in
---   "Parameterized Reachability Analysis of the IEEE 1394 Root Contention Protocol using TReX"
---   Collomb-Annichini, Sighireanu (RTTOOLS 2001)
---
---   Etienne ANDRE and Laurent FRIBOURG
---   Laboratoire Specification et Verification
---
---                                Created : 2010/02/19
---                          Last modified : 2014/03/26
---****************************************************--
---****************************************************--
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * IEEE 1394 Root Contention Protocol
+ *
+ * Description     : IEEE 1394 Root Contention Protocol
+ * Correctness     : ?
+ * Source          : unknown source
+ * Author          : ?
+ * Modeling        : ?
+ * Input by        : Étienne André
+ *
+ * Created         : 2010/02/19
+ * Last modified   : 2020/08/18
+ *
+ * IMITATOR version: 3
+ ************************************************************)
 
+property := #synth BCcover(
+	(* Instantiations taken from "Probabilistic Model Checking of Deadline Properties in the IEEE 1394 FireWire Root Contention Protocol" (possible values for "delay": 30 or 360) *)
 
-	----------------------
-	-- Instanciations
-	----------------------
-	-- Instantiations taken from
-	-- "Probabilistic Model Checking of Deadline Properties in the IEEE 1394 FireWire Root Contention Protocol"
-	-- (possible values for "delay": 30 or 360)
-
-(*	& rc_fast_max = 85 -- 76 .. 100 -- 85
+	& rc_fast_max = 85 (* 76 .. 100 *) (* 85 *)
 	& rc_fast_min = 76
-	& rc_slow_max = 140 .. 200 -- 167*)
-	& rc_slow_min = 140 .. 200 -- 159
-	& delay       = 1 .. 50 -- 30
-
+	& rc_slow_max = 140 .. 200 (*167 *)
+	& rc_slow_min = 140 .. 200 (* 159 *)
+	& delay       = 1 .. 50 (* 30 *)
+);

@@ -3,7 +3,7 @@ PPL_VERSION=1.2
 
 if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then
     sudo apt-get update -qq
-    sudo apt-get install -qq wget unzip curl build-essential g++ m4 ocaml-native-compilers camlp4-extra ocaml oasis \
+    sudo apt-get install -qq wget unzip curl build-essential g++ m4 ocaml-native-compilers camlp4-extra ocaml oasis ocaml-findlib \
         libextlib-ocaml libextlib-ocaml-dev libfileutils-ocaml-dev \
         libgmp-dev libgmp-ocaml libgmp-ocaml-dev libmpfr-dev \
         libppl-dev \

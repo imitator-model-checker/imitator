@@ -15,7 +15,21 @@
  #
 ################################################################
 
-if [ -f "setup.ml" ]
+# options handling
+flags="--disable-dev"
+while test $# -gt 0; do
+  case "$1" in
+    --no-distclean)
+      disableDistClean=true;;
+    --dev)
+      disableDistClean=true
+      flags="--enable-dev";;
+  esac
+  shift
+done
+
+# clean the project
+if [ -f "setup.ml" ] && [ "$disableDistClean" != true ]
 then
   ocaml setup.ml -distclean
 fi
@@ -27,5 +41,5 @@ fi
 
 python gen_oasis.py \
 && oasis setup \
-&& ocaml setup.ml -configure --enable-tests \
+&& ocaml setup.ml -configure --enable-tests $flags \
 && ocaml setup.ml -all

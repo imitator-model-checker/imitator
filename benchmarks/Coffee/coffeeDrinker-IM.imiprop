@@ -1,0 +1,33 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Coffee vending machine with drinker
+ *
+ * Description     : Coffee vending machine; a single button is used to wake the machine up, and to add sugar. Then a cup, and coffee are delivered after a (parametric) time.
+	Drinker: [ongoing work]
+ * Correctness     : Many possibilities (e.g., "it is possible to get a coffee")
+ * Source          : Own work
+ * Author          : Étienne André
+ * Input by        : Étienne André
+ *
+ * Created         : 2018/08/13
+ * Last modified   : 2020/08/13
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+property := #synth IM(
+(* Parameters *)
+	(* time during which one can add sugar *)
+	p_add_sugar = 5,
+	(* time needed to prepare the coffee from the first button pressure *)
+	p_coffee = 8,
+
+	(* interval of work without need for coffee *)
+	p_work_min = 10,
+	p_work_max = 20,
+	(* Minimum interval of time between 2 consecutive pressures by the user *)
+	p_press_min = 1,
+	(* time after which the drinker gets mad *)
+	p_patience_max = 10,
+);

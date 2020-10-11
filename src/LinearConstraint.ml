@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2019/08/28
+ * Last modified     : 2020/09/25
  *
  ************************************************************)
 
@@ -539,7 +539,7 @@ let ippl_unconstrain linear_constraint variables =
 let ippl_add_dimensions nb_dimensions linear_constraint =
 	ippl_generic (fun () -> ppl_Polyhedron_add_space_dimensions_and_project linear_constraint nb_dimensions) ppl_tcounter_add_space_dimensions_and_project
 	
-(** Remove dimensions beyond 'new_dimensions' *)
+(** Remove dimensions beyond `new_dimensions` *)
 let ippl_remove_higher_dimensions linear_constraint new_dimensions =
 	ippl_generic (fun () -> ppl_Polyhedron_remove_higher_space_dimensions linear_constraint new_dimensions) ppl_tcounter_remove_higher_dimensions
 	
@@ -1994,7 +1994,7 @@ let intersection nb_dimensions linear_constraints =
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (
-			"Entering 'LinearConstraint.intersection' with " ^ (string_of_int nb_dimensions) ^ " dimensions.
+			"Entering `LinearConstraint.intersection` with " ^ (string_of_int nb_dimensions) ^ " dimensions.
 			The linear constraints to be intersected have " ^ (string_of_list_of_string_with_sep ", " (List.map (fun lc -> string_of_int (ippl_space_dimension lc)) linear_constraints )) ^ " dimensions."
 	);
 
@@ -2105,7 +2105,7 @@ let hide_assign nb_dimensions variables linear_constraint =
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then(
 		print_message Verbose_total (
-			"Function 'LinearConstraint.hide_assign': hiding variables "
+			"Function `LinearConstraint.hide_assign`: hiding variables "
 			^ (string_of_list_of_string_with_sep ", " (List.map string_of_int variables) )
 			^ ". Number of dimensions: " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ "."
 		);
@@ -2146,7 +2146,7 @@ let px_hide_nonparameters_and_collapse px_linear_constraint =
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (
-			"Function 'LinearConstraint.px_hide_nonparameters_and_collapse': hiding variables "
+			"Function `LinearConstraint.px_hide_nonparameters_and_collapse`: hiding variables "
 			^ (string_of_list_of_string_with_sep ", " (List.map string_of_int non_parameter_variables) )
 			^ "."
 		);
@@ -2165,7 +2165,7 @@ let px_hide_allclocks_and_someparameters_and_collapse parameters_to_hide px_line
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (
-			"Function 'LinearConstraint.px_hide_allclocks_and_someparameters_and_collapse': hiding variables "
+			"Function `LinearConstraint.px_hide_allclocks_and_someparameters_and_collapse`: hiding variables "
 			^ (string_of_list_of_string_with_sep ", " (List.map string_of_int variables_to_hide) )
 			^ "."
 		);
@@ -2185,7 +2185,7 @@ let pxd_hide_discrete_and_collapse pxd_linear_constraint =
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (
-			"Function 'LinearConstraint.pxd_hide_discrete_and_collapse': hiding variables "
+			"Function `LinearConstraint.pxd_hide_discrete_and_collapse`: hiding variables "
 			^ (string_of_list_of_string_with_sep ", " (List.map string_of_int discretes) )
 			^ "."
 		);
@@ -2231,7 +2231,7 @@ let remove_dimensions nb_dimensions linear_constraint =
 
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then (
-		print_message Verbose_total ("Function 'remove_dimensions': removing " ^ (string_of_int nb_dimensions) ^ " from " ^ (string_of_int current_space_dimension) ^ ", i.e., keeping " ^ (string_of_int new_space_dimension) ^ ".");
+		print_message Verbose_total ("Function `remove_dimensions`: removing " ^ (string_of_int nb_dimensions) ^ " from " ^ (string_of_int current_space_dimension) ^ ", i.e., keeping " ^ (string_of_int new_space_dimension) ^ ".");
 	);
 	
 	(* Projects the polyhedron referenced to by handle onto the first space_dimension dimensions *)
@@ -2292,11 +2292,24 @@ let rename_variables list_of_pairs linear_constraint =
 (* Time elapsing and time past *)
 (*------------------------------------------------------------*)
 
+(* Time elapsing function wrt a polyhedron: `time_elapse_assign_wrt_polyhedron linear_constraint_time linear_constraint` modifies `linear_constraint` by letting time elapse according to the rates defined in the polyhedron `linear_constraint_time` *)
+let time_elapse_assign_wrt_polyhedron linear_constraint_time linear_constraint =
+	(* Print some information *)
+	print_message Verbose_total ("Applying PPL time elapsing function…");
+
+	(* Apply the time elapsing using PPL *)
+	ippl_time_elapse_assign linear_constraint linear_constraint_time
+
+let px_time_elapse_assign_wrt_polyhedron = time_elapse_assign_wrt_polyhedron
+let pxd_time_elapse_assign_wrt_polyhedron = time_elapse_assign_wrt_polyhedron
+
+
 (* Generic time elapsing function *)
 (* 'reverse_direction' should be minus_one for growing, one for decreasing *)
 let time_elapse_gen_assign reverse_direction nb_dimensions variables_elapse variables_constant linear_constraint =
 	(* Print some information *)
-	print_message Verbose_total ("Entering time_elapse_gen_assign with " ^ (string_of_int nb_dimensions) ^ " dimension" ^ (s_of_int nb_dimensions) ^ "…");
+	if verbose_mode_greater Verbose_total then
+		print_message Verbose_total ("Entering `time_elapse_gen_assign` with " ^ (string_of_int nb_dimensions) ^ " dimension" ^ (s_of_int nb_dimensions) ^ "…");
 
 	(* Create the inequalities var = 1, for var in variables_elapse *)
 	let inequalities_elapse = List.map (fun variable ->
@@ -2316,15 +2329,17 @@ let time_elapse_gen_assign reverse_direction nb_dimensions variables_elapse vari
 	
 	(* Print some information *)
 	print_message Verbose_total ("Creating linear constraint for time elapsing…");
-
+	
 	(* Convert both sets of inequalities to a constraint *)
 	let linear_constraint_time = make nb_dimensions (List.rev_append inequalities_elapse inequalities_constant) in
 	
-	(* Print some information *)
-	print_message Verbose_total ("Applying PPL time elapsing function…");
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("Time polyhedron =");
+		print_message Verbose_total (string_of_pxd_linear_constraint debug_variable_names linear_constraint_time);
+	);
 
-	(* Apply the time elapsing using PPL *)
-	ippl_time_elapse_assign linear_constraint linear_constraint_time
+	(* Call dedicated function *)
+	time_elapse_assign_wrt_polyhedron linear_constraint_time linear_constraint
 
 
 (** Time elapsing function *)
@@ -2622,7 +2637,7 @@ let px_zone_predecessor z1 z2 z variables_elapse variables_constant variable_res
 (** {3 More testing functions} *)
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-(*** NOTE: function after the modification functions, because makes use of 'px_intersection_assign' ***)
+(*** NOTE: function after the modification functions, because makes use of `px_intersection_assign` ***)
 
 (** Check if a variable v is bound to be >= 0 in a constraint c *)
 let px_is_positive_in v c =
@@ -2664,7 +2679,7 @@ let pxd_is_zero_in v c = is_zero_in !pxd_dim v c
 
 (** Check if a variable v is bounded from above in a constraint *)
 let px_is_bounded_from_above_in v c =
-	(* Idea: use ppl_Polyhedron_bounds_from_above with 'v' as the linear_expression *)
+	(* Idea: use ppl_Polyhedron_bounds_from_above with `v` as the linear_expression *)
 	(* Create v *)
 	let v_lt = ppl_linear_expression_of_linear_term (make_px_linear_term [NumConst.one, v;] NumConst.zero) in
 
@@ -2744,7 +2759,7 @@ let rec grml_of_linear_term_ppl names t_level = function
 			| Times (z , _) -> Gmp.Z.equal z (Gmp.Z.from_int 0)
 			| _ -> false
 		in
-		(* If no right attribute: discard '+' *)
+		(* If no right attribute: discard `+` *)
 		if rightnull then grml_of_linear_term_ppl names t_level lterm
 		else
 		(* Else *)
@@ -3033,7 +3048,7 @@ let point_on_line p min_abs min_ord max_abs max_ord =
 let shape_of_poly x y linear_constraint =
 
 	(* Print some information *)
-	print_message Verbose_total ("Entering generate_points");
+	print_message Verbose_total ("Entering `shape_of_poly`…");
 	
 	(* Get the current number of dimensions *)
 	let space_dimension = ippl_space_dimension linear_constraint in
@@ -3075,6 +3090,7 @@ type direction =
 
 
 (* convert a linear constraint to a set of 2d points wrt. the variables x,y *)
+(*** WARNING/BUG: polyhedra outside the bounds should be excluded but they are not ***)
 let generate_points x y linear_constraint min_abs min_ord max_abs max_ord =
 
 	(* Print some information *)
@@ -3171,7 +3187,7 @@ let generate_points x y linear_constraint min_abs min_ord max_abs max_ord =
 let plot_2d x y linear_constraint min_abs min_ord max_abs max_ord =
 
 	(* Print some information *)
-	print_message Verbose_total "Entering 'plot_2d'";
+	print_message Verbose_total "Entering `plot_2d`";
 
 	let shape = generate_points x y linear_constraint min_abs min_ord max_abs max_ord in
 
@@ -3283,7 +3299,7 @@ let pdbm_add_linear_terms eij1 eij2 = match (eij1, eij2) with
 
 let pdbm_sub_linear_terms eij1 eij2 = match (eij1, eij2) with
 	| Infinity, _ -> Infinity
-	| _, Infinity -> raise (InternalError "[PDBMs] Not sure what to do with 'lt - infinity'; such case shall never happen anyway.")
+	| _, Infinity -> raise (InternalError "[PDBMs] Not sure what to do with `lt - infinity`; such case shall never happen anyway.")
 	| Eij lt1, Eij lt2 -> Eij (sub_linear_terms lt1 lt2)
 
 
@@ -3770,7 +3786,7 @@ let nnconvex_intersection_assign nb_dimensions nnconvex_constraint linear_constr
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (
-			"Entering 'LinearConstraint.p_nnconvex_intersection_assign' with " ^ (string_of_int (ippl_nncc_space_dimension nnconvex_constraint)) ^ " and " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions."
+			"Entering `LinearConstraint.p_nnconvex_intersection_assign` with " ^ (string_of_int (ippl_nncc_space_dimension nnconvex_constraint)) ^ " and " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions."
 	);
 
 	(* First retrieve inequalities *)
@@ -3794,7 +3810,7 @@ let nnconvex_union_assign nb_dimensions nnconvex_constraint linear_constraint =
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (
-			"Entering 'LinearConstraint.nnconvex_union_assign' with " ^ (string_of_int (ippl_nncc_space_dimension nnconvex_constraint)) ^ " and " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions. Expected: " ^ (string_of_int nb_dimensions) ^ "."
+			"Entering `LinearConstraint.nnconvex_union_assign` with " ^ (string_of_int (ippl_nncc_space_dimension nnconvex_constraint)) ^ " and " ^ (string_of_int (ippl_space_dimension linear_constraint)) ^ " dimensions. Expected: " ^ (string_of_int nb_dimensions) ^ "."
 	);
 	
 	(* Assert *)
@@ -3812,11 +3828,11 @@ let nnconvex_union_assign nb_dimensions nnconvex_constraint linear_constraint =
 
 (*** NOTE: must provide the argument so be sure the function is dyamically called; otherwise statically !p_dim is 0 ***)
 let p_nnconvex_p_union_assign c =
-	print_message Verbose_total ("Entering 'LinearConstraint.p_nnconvex_p_union_assign'");
+	print_message Verbose_total ("Entering `LinearConstraint.p_nnconvex_p_union_assign`");
 	nnconvex_union_assign !p_dim c
 
 let px_nnconvex_px_union_assign c =
-	print_message Verbose_total ("Entering 'LinearConstraint.px_nnconvex_px_union_assign'");
+	print_message Verbose_total ("Entering `LinearConstraint.px_nnconvex_px_union_assign`");
 	nnconvex_union_assign !px_dim c
 
 
@@ -3952,7 +3968,7 @@ let px_nnconvex_hide_nonparameters_and_collapse px_nnconvex_constraint =
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (
-			"Entering 'LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse' with " ^ (string_of_int (ippl_nncc_space_dimension px_nnconvex_constraint)) ^ " dimensions."
+			"Entering `LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse` with " ^ (string_of_int (ippl_nncc_space_dimension px_nnconvex_constraint)) ^ " dimensions."
 	);
 
 	(* Assert *)
@@ -3973,7 +3989,7 @@ let px_nnconvex_hide_nonparameters_and_collapse px_nnconvex_constraint =
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (
-			"Exiting 'LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse' with " ^ (string_of_int (ippl_nncc_space_dimension result)) ^ " dimensions."
+			"Exiting `LinearConstraint.px_nnconvex_hide_nonparameters_and_collapse` with " ^ (string_of_int (ippl_nncc_space_dimension result)) ^ " dimensions."
 	);
 
 	(* Return result *)
@@ -4184,10 +4200,10 @@ let serialize_SEP_CV = "*"
 (** Separator between linear terms *)
 let serialize_SEP_LT = "+"
 
-(** Separator between linear inequalities ('a' stands for 'and'; not using '^' because makes conflicts in regular expressions) *)
+(** Separator between linear inequalities (`a` stands for `and`; not using `^` because makes conflicts in regular expressions) *)
 let serialize_SEP_AND = "a"
 
-(** Separator between non-convex linear constraints ('o' stands for 'or') *)
+(** Separator between non-convex linear constraints (`o` stands for `or`) *)
 let serialize_SEP_OR = "o"
 
 
@@ -4201,7 +4217,7 @@ let unserialize_variable variable_string =
 	(* First check that it is an integer *)
 	(*** NOTE: test already performed by int_of_string? ***)
 	if not (Str.string_match (Str.regexp "^[0-9]+$") variable_string 0) then
-		raise (SerializationError ("Cannot unserialize variable '" ^ variable_string ^ "': int expected."));
+		raise (SerializationError ("Cannot unserialize variable `" ^ variable_string ^ "`: int expected."));
 	(* First check that it is an integer *)
 	int_of_string variable_string
 
@@ -4232,7 +4248,7 @@ let unserialize_op s = match s with
 	| "=" -> Equal_RS
 	| "g" -> Greater_Or_Equal_RS
 	| ">" -> Greater_Than_RS
-	| _ -> raise (SerializationError ("Cannot unserialize op '" ^ s ^ "'."))
+	| _ -> raise (SerializationError ("Cannot unserialize op `" ^ s ^ "`."))
 
 
 (*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -4247,7 +4263,7 @@ let unserialize_coef_var coef_var_pair_string =
 	(* Case coefficient alone *)
 	| [coef_string ] ->
 		Coefficient (unserialize_coef coef_string)
-	| _ -> raise (SerializationError ("Cannot unserialize string '" ^ coef_var_pair_string ^ "': (coef, variable_index) or coef expected."))
+	| _ -> raise (SerializationError ("Cannot unserialize string `" ^ coef_var_pair_string ^ "`: (coef, variable_index) or coef expected."))
 
 
 
@@ -4272,15 +4288,15 @@ let rec serialize_linear_term linear_term =
 				let fstr = serialize_coef z in
 				let tstr = serialize_linear_term rterm in
 					match rterm with
-						| Coefficient _ -> raise (InternalError("Case 'z * Coefficient' not taken into account in serialization"))
+						| Coefficient _ -> raise (InternalError("Case `z * Coefficient` not taken into account in serialization"))
 						| Variable    _ -> fstr ^ serialize_SEP_CV ^ tstr
-						| _ -> raise (InternalError("Case '_ * Coefficient' not taken into account in serialization"))
+						| _ -> raise (InternalError("Case `_ * Coefficient` not taken into account in serialization"))
 						
 				)
 
 
 let unserialize_linear_term linear_term_string =
-	(* Split according to the separator '+' *)
+	(* Split according to the separator `+` *)
 	let coef_var_pairs_string = split serialize_SEP_LT linear_term_string in
 	(* Convert to proper coefs and vars *)
 	let coef_var_pairs = List.map unserialize_coef_var coef_var_pairs_string in
@@ -4316,10 +4332,10 @@ let unserialize_linear_inequality linear_inequality_string =
 	(* Check accuracy *)
 	let matched = (*try*)
 		Str.string_match r linear_inequality_string 0
-		(*with Failure f -> raise (SerializationError("Failure while unserializing linear inequality '" ^ linear_inequality_string ^ "'. Expected: (lterm, op, rterm). Error: " ^ f));*)
+		(*with Failure f -> raise (SerializationError("Failure while unserializing linear inequality `" ^ linear_inequality_string ^ "`. Expected: (lterm, op, rterm). Error: " ^ f));*)
 	in
 	if not matched then(
-		raise (SerializationError("Found unexpected linear inequality '" ^ linear_inequality_string ^ "'. Expected: (lterm, op, rterm)."))
+		raise (SerializationError("Found unexpected linear inequality `" ^ linear_inequality_string ^ "`. Expected: (lterm, op, rterm)."))
 	);
 	(* Retrieve the 3 groups *)
 	let lstr = Str.matched_group 1 linear_inequality_string in
@@ -4332,7 +4348,7 @@ let unserialize_linear_inequality linear_inequality_string =
 		(unserialize_linear_term lstr)
 		(unserialize_linear_term rstr)
 		(unserialize_op op_string)
-	(*with Failure f -> raise (SerializationError("Failure while unserializing linear inequality '" ^ linear_inequality_string ^ "'. Error: " ^ f))*)
+	(*with Failure f -> raise (SerializationError("Failure while unserializing linear inequality `" ^ linear_inequality_string ^ "`. Error: " ^ f))*)
 	
 
 
@@ -4353,7 +4369,7 @@ let unserialize_p_linear_constraint linear_constraint_string =
 	let inequalities_string =
 		try
 			split serialize_SEP_AND linear_constraint_string
-		with Failure f -> raise (SerializationError("Splitting failure while unserializing linear inequality '" ^ linear_constraint_string ^ "'. Error: " ^ f))
+		with Failure f -> raise (SerializationError("Splitting failure while unserializing linear inequality `" ^ linear_constraint_string ^ "`. Error: " ^ f))
 	in
 	(* Convert to linear inequalities *)
 	let inequalities =  List.map unserialize_linear_inequality inequalities_string in
@@ -4375,7 +4391,7 @@ let unserialize_p_nnconvex_constraint p_nnconvex_constraint_string =
 	let constraints_string =
 		try
 			split serialize_SEP_OR p_nnconvex_constraint_string
-		with Failure f -> raise (SerializationError("Splitting failure while unserializing linear inequality '" ^ p_nnconvex_constraint_string ^ "'. Error: " ^ f))
+		with Failure f -> raise (SerializationError("Splitting failure while unserializing linear inequality `" ^ p_nnconvex_constraint_string ^ "`. Error: " ^ f))
 	in
 	(* Convert to linear constraints *)
 	let constraints =  List.map unserialize_p_linear_constraint constraints_string in
@@ -4395,7 +4411,7 @@ let unserialize_p_convex_or_nonconvex_constraint p_convex_or_nonconvex_constrain
 	(* A bit a hack: if there is a disjunction, then this is a p_nnconvex_constraint *)
 	(* First convert serialize_SEP_OR into a char *)
 	(*** HACK ***)
-	if String.length serialize_SEP_OR <> 1 then raise (InternalError("It was assumed that '" ^ serialize_SEP_OR ^ "' was only one character long."));
+	if String.length serialize_SEP_OR <> 1 then raise (InternalError("It was assumed that `" ^ serialize_SEP_OR ^ "` was only one character long."));
 	let sep_char = String.get serialize_SEP_OR 0 in
 	if String.contains p_convex_or_nonconvex_constraint_string sep_char then
 		Nonconvex_p_constraint (unserialize_p_nnconvex_constraint p_convex_or_nonconvex_constraint_string)
@@ -4485,7 +4501,7 @@ let rec get_coefs_vars linear_term =	let coefs_vars = ref [] in
 										| Ti (c1, rterm) -> (
 															match rterm with
 															| Var  v1 -> coefs_vars := !coefs_vars@[(v1, c1)]
-															| _ -> raise (InternalError("Could not detect RightTerm in Time*RightTerm error 'get_coefs_vars' function")) 
+															| _ -> raise (InternalError("Could not detect RightTerm in Time*RightTerm error `get_coefs_vars` function")) 
 															)
 										in 
 

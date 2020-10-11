@@ -1,0 +1,4 @@
+
+property := #synth EF (loc[T4] = T4end_ok);
+
+projectresult(e2e);

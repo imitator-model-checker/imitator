@@ -12,9 +12,9 @@
  *
  * Created         : 2015/09/24
  * Fork            : 2017/06/28
- * Last modified   : 2017/06/28
+ * Last modified   : 2020/08/19
  *
- * IMITATOR version: 2.9.1
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -57,23 +57,23 @@ p_sensor_far, p_pass, p_start_lowering, p_end_lowering, p_break_sensor
 (************************************************************)
 synclabs: sensor_far, pass;
 
-loc far: while x_train <= p_far wait {}
+loc far: invariant x_train <= p_far
 	(* Normal mode: sensors are on *)
-	when x_train = p_far & sensors_active = TRUE & p_sensor_far = ACTIVE sync sensor_far do {x_train' = 0} goto approaching;
+	when x_train = p_far & sensors_active = TRUE & p_sensor_far = ACTIVE sync sensor_far do {x_train := 0} goto approaching;
 	(* Failure: sensors are off *)
-	when x_train = p_far & sensors_active = FALSE do {x_train' = 0} goto approaching;
+	when x_train = p_far & sensors_active = FALSE do {x_train := 0} goto approaching;
 
-loc approaching: while x_train <= p_approaching wait {}
+loc approaching: invariant x_train <= p_approaching
 	(* Normal situation *)
-	when x_train = p_approaching & gate_down = TRUE & p_pass = ACTIVE  do {x_train' = 0} sync pass goto gone;
+	when x_train = p_approaching & gate_down = TRUE & p_pass = ACTIVE  do {x_train := 0} sync pass goto gone;
 	(* Gate not closed! *)
-	when x_train = p_approaching & gate_down = FALSE & p_pass = ACTIVE do {x_train' = 0} sync pass goto crash;
+	when x_train = p_approaching & gate_down = FALSE & p_pass = ACTIVE do {x_train := 0} sync pass goto crash;
 	
 (** HACK: stop time to reduce state space *)
-loc gone: while x_train <= 0 wait {}
+loc gone: invariant x_train <= 0
 
 (** HACK: stop time to reduce state space *)
-loc crash: while x_train <= 0 wait {}
+loc crash: invariant x_train <= 0
 
 
 end (* train *)
@@ -84,24 +84,24 @@ end (* train *)
 (************************************************************)
 synclabs: pass, sensor_far, start_lowering, end_lowering;
 
-loc up: while True wait {}
-	when True sync sensor_far do {x_gate' = 0} goto waiting;
+loc up: invariant True
+	when True sync sensor_far do {x_gate := 0} goto waiting;
 	(* Gate is reinitialized whenever the train passes *)
-	when p_pass = ACTIVE sync pass do {x_gate' = 0} goto up;
+	when p_pass = ACTIVE sync pass do {x_gate := 0} goto up;
 
-loc waiting: while x_gate <= p_waiting wait {}
-	when x_gate = p_waiting sync start_lowering do {x_gate' = 0} goto lowering;
+loc waiting: invariant x_gate <= p_waiting
+	when x_gate = p_waiting sync start_lowering do {x_gate := 0} goto lowering;
 	(* Gate is reinitialized whenever the train passes *)
-	when p_pass = ACTIVE sync pass do {x_gate' = 0} goto up;
+	when p_pass = ACTIVE sync pass do {x_gate := 0} goto up;
 
-loc lowering: while x_gate <= p_lowering wait {}
-	when x_gate = p_lowering & p_end_lowering = ACTIVE sync end_lowering do {x_gate' = 0, gate_down' = TRUE} goto down;
+loc lowering: invariant x_gate <= p_lowering
+	when x_gate = p_lowering & p_end_lowering = ACTIVE sync end_lowering do {x_gate := 0, gate_down := TRUE} goto down;
 	(* Gate is reinitialized whenever the train passes *)
-	when p_pass = ACTIVE sync pass do {x_gate' = 0} goto up;
+	when p_pass = ACTIVE sync pass do {x_gate := 0} goto up;
 
-loc down: while True wait {}
+loc down: invariant True
 	(* Gate is reinitialized whenever the train passes *)
-	when p_pass = ACTIVE sync pass do {x_gate' = 0} goto up;
+	when p_pass = ACTIVE sync pass do {x_gate := 0} goto up;
 
 end (* gate *)
 
@@ -111,10 +111,10 @@ end (* gate *)
 (************************************************************)
 synclabs: break_sensor;
 
-loc walking_sensor: while x_intruder <= p_walking_sensor wait {}
-	when x_intruder = p_walking_sensor & p_break_sensor = ACTIVE sync break_sensor do {sensors_active' = FALSE, x_intruder' = 0} goto intruder_done;
+loc walking_sensor: invariant x_intruder <= p_walking_sensor
+	when x_intruder = p_walking_sensor & p_break_sensor = ACTIVE sync break_sensor do {sensors_active := FALSE, x_intruder := 0} goto intruder_done;
 
-loc intruder_done: while True wait {}
+loc intruder_done: invariant True
 
 end (* intruder *)
 
@@ -160,13 +160,6 @@ init :=
 	& p_end_lowering >= 0
 	& p_break_sensor >= 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[train] = crash;
 
 
 (************************************************************)

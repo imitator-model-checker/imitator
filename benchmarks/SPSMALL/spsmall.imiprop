@@ -1,0 +1,21 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Portion of the SPSMALL memory circuit ("spsmall_blueb_lsv")
+ *
+ * Description     : Model with observer (to check whether tCKQ is conform with ST specification)
+ * Correctness     : s <= 166
+ * Source          : Project ANR Valmem
+ * Author          : ST-Microelectronics (design)
+ * Modeling        : LSV (timings by LIP6)
+ * Input by        : Emmanuelle Encrenaz, Laurent Fribourg, Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+ *
+ * Created         : 2020/08/19
+ * Last modified   : 2020/08/19
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+property := #synth AGnot(loc[observer] = observer_bad);

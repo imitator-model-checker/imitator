@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: "EF optimized" algorithm: minimization or minimization of a parameter valuation for which there exists a run leading to some states [ABPP19]
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2019/06/13
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -23,7 +24,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoEFopt :
+class virtual algoEFopt : AbstractProperty.state_predicate -> Automaton.parameter_index ->
 	object inherit algoStateBased
 		(************************************************************)
 		(* Class variables *)
@@ -38,13 +39,6 @@ class virtual algoEFopt :
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		method set_synthesize_valuations : bool -> unit
 		
-		(*------------------------------------------------------------*)
-		(* Shortcuts *)
-		(*------------------------------------------------------------*)
-		
-		(* Retrieve the parameter to be projected onto *)
-		val parameter_index : Automaton.parameter_index
-
 		
 		(*------------------------------------------------------------*)
 		(* Instantiating min/max *)

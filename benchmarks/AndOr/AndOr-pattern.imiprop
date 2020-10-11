@@ -1,0 +1,8 @@
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* b- x- a- b+ a+ x+ *)
+property := #synth pattern(always sequence(bDown, xDown, aDown, bUp, aUp, xUp)) ;
+

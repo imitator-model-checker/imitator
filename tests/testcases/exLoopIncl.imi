@@ -1,0 +1,81 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Toy case study for which the zone graph contains two loops when using inclusion, but only one is a real loop
+ *
+ * Description     : Toy case study for which the zone graph contains two loops when using inclusion, but only one is a real loop
+ * Correctness     : Loop through l1 and/or l3
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/09/09
+ * Last modified   : 2020/09/09
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant True
+	(* Real loop for p=2 *)
+	when x = 2 & x = p do {x := 0, y := 0} goto l1;
+
+	when True do {y := 0} goto l2;
+
+loc l2: invariant True
+	(*** NOTE: therefore we have 0 <= x <= y when arriving in l3 ***)
+	when True do {x := 0} goto l3;
+
+loc l3: invariant True
+	(*** NOTE: one can only take a FINITE number of times this transition (and only for p=1) ***)
+	when x = 1 & x = p & y < 5 sync a do {x := 0} goto l3;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

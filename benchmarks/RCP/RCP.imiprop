@@ -1,0 +1,24 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * IEEE 1394 Root Contention Protocol
+ *
+ * Description     : IEEE 1394 Root Contention Protocol
+ * Correctness     : ?
+ * Source          : unknown source
+ * Author          : ?
+ * Modeling        : ?
+ * Input by        : ?? (< 2007) and Étienne André
+ *
+ * Created         : 2008/01/10
+ * Last modified   : 2020/08/18
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+ 
+ 
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := #synth EF(loc[s1o] = S1oEnd);

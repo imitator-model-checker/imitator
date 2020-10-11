@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: master-worker with point-based distribution of points. [ACE14,ACN15]
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/10
- * Last modified     : 2016/03/17
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -21,9 +22,8 @@ open AlgoGeneric
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class virtual algoBCCoverDistributedMSPointBasedWorker :
-	object
-	inherit AlgoBCCoverDistributed.algoBCCoverDistributed
+class virtual algoBCCoverDistributedMSPointBasedWorker : HyperRectangle.hyper_rectangle -> NumConst.t -> (PVal.pval -> AlgoStateBased.algoStateBased) -> AlgoCartoGeneric.tiles_storage ->
+	object inherit AlgoBCCoverDistributed.algoBCCoverDistributed
 
 		(************************************************************)
 		(* Class variables *)
@@ -39,13 +39,7 @@ class virtual algoBCCoverDistributedMSPointBasedWorker :
 		
 		method initialize_variables : unit
 		
-		
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-		(** Return a new instance of the algorithm to be iteratively called (typically IM or PRP) *)
-		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-(* 		method virtual im_instance : AlgoIMK.algoIMK *)
 
-		
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 		(* Run the worker algorithm *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)

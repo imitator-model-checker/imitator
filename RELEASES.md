@@ -1,6 +1,33 @@
 *******************************************************
-# release X.XX (XXXX) FUTURE MAJOR RELEASE
+# release 3-beta (2020-10-11) Cheese
 MAJOR RELEASE
+
+### Calling paradigm
+The calling paradigm switches from a single file with numerous options (some of them compulsory) to *two* files and a few options (none of them compulsory):
+* a model file, containing the model
+* a property file, containing the property (and optionally the projection onto some parameters)
+The model syntax is almost entirely backward-compatible with (at least) the IMITATOR 2.10.1 syntax.
+The property syntax is entirely new.
+
+### Syntax improvement
+* IMITATOR now supports multi-rate clocks with a syntax of the form `flow {x' = 1, y' = 2.5, z = -3/5}`
+
+### Syntax changes in model
+* Terminate support for HyTech-style comments (`-- comment`) and C-style comments (`/* comment */`)
+* Terminate support for some HyTech-style optional syntax (regions declaration…)
+* Many backward-compatible useless syntactic features now raise warnings (e.g. using `while` instead of `invariant`, using `Wait {}`…)
+
+### Options
+* Most options changed since version 2.x
+* Some options were discarded, and are now part of the property syntax
+* Result is always output to a file by default; use `-no-output-result` to disable
+
+### Export
+* By default, all files are now exported in the current directory instead of the model directory. Option `-output-prefix` can still be used to change the directory.
+
+### Benchmarks
+* Created a new `Unsolvable` section in the `benchmarks` repository, containing very simple models for which IMITATOR cannot (yet) provide a result.
+
 
 
 *******************************************************

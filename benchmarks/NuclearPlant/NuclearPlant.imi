@@ -11,9 +11,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2014/03/21
- * Last modified   : 2015/07/30
+ * Last modified   : 2020/08/13
  *
- * IMITATOR version: 2.7.1
+ * IMITATOR version: 3
  ************************************************************)
 
 
@@ -35,27 +35,27 @@ var 	x1, x2
 synclabs: startHeating, tooHot, triggerAlarm, startWatering, endWatering, restart;
 initially normal;
 
-loc normal: while True wait {}
-	when True do {x1' = 0, x2' = 0} sync startHeating goto heating;
+loc normal: invariant True
+	when True do {x1 := 0, x2 := 0} sync startHeating goto heating;
 
-loc heating: while x1 <= p1 & x2 <= p2 wait {}
+loc heating: invariant x1 <= p1 & x2 <= p2
 	when x1 >= p1 sync tooHot goto boom;
-	when x2 = p2 do{x2' = 0} sync triggerAlarm goto ringing;
+	when x2 = p2 do{x2 := 0} sync triggerAlarm goto ringing;
 
-loc ringing: while x1 <= p1 & x2 <= p3 wait {}
+loc ringing: invariant x1 <= p1 & x2 <= p3
 	when x1 >= p1 sync tooHot goto boom;
-	when x2 = p3 do{x2' = 0} sync startWatering goto watering;
+	when x2 = p3 do{x2 := 0} sync startWatering goto watering;
 
-loc watering: while x1 <= p1 & x2 <= p4 wait {}
+loc watering: invariant x1 <= p1 & x2 <= p4
 	when x1 >= p1 sync tooHot goto boom;
-	when x2 <= p4 do {x1' = 0, x2' = 0} sync endWatering goto stopped;
+	when x2 <= p4 do {x1 := 0, x2 := 0} sync endWatering goto stopped;
 		(* reset to try to reduce state space *)
 
-loc stopped: while True wait {}
-	when True do {x1' = 0, x2' = 0} sync restart goto normal;
+loc stopped: invariant True
+	when True do {x1 := 0, x2 := 0} sync restart goto normal;
 		(* reset to try to reduce state space *)
 
-loc boom: while True wait {}
+loc boom: invariant True
 
 end (* plant *)
 
@@ -105,10 +105,10 @@ init :=
 	(*------------------------------------------------------------*)
 	(*   Parameter valuation to ensure not EF boom *)
 	(*------------------------------------------------------------*)
---	& p1 = 10
---	& p2 = 2
---	& p3 = 3
---	& p4 = 4
+(*	& p1 = 10
+	& p2 = 2
+	& p3 = 3
+	& p4 = 4*)
 
 	(*------------------------------------------------------------*)
 	(*   Parameter valuation to ensure AF boom *)
@@ -123,12 +123,6 @@ init :=
 
 ;
 
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[plant] = boom
 
 
 (************************************************************)

@@ -1,0 +1,3 @@
+
+property := #synth EFpmax( loc[pta] = lbad, p1);
+

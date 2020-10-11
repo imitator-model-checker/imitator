@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: IM algorithm [ACEF09]
  * 
  * File contributors : Étienne André
  * Created           : 2016/01/06
- * Last modified     : 2019/06/11
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -34,8 +35,8 @@ open State
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoIM =
-	object (self) inherit algoIMK as super
+class algoIM (pval : PVal.pval) =
+	object (self) inherit algoIMK pval as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -50,7 +51,7 @@ class algoIM =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "IM"
+	method algorithm_name = "IMconvex"
 
 	
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -74,7 +75,7 @@ class algoIM =
 		(* Create the result *)
 		let p_constraint = LinearConstraint.p_true_constraint() in
 		
-		self#print_algo_message Verbose_low ("Performing the intersection of all p-constraints...");
+		self#print_algo_message Verbose_low ("Performing the intersection of all p-constraints…");
 		
 		(* Iterate on all states *)
 (* 		val iterate_on_states : (state_index -> abstract_state -> unit) -> state_space -> unit *)
@@ -108,14 +109,16 @@ class algoIM =
 			else statespace_nature
 		in
 		
-		(* Constraint is... *)
+		(* Constraint is… *)
 		let soundness = 
+			let dangerous_inclusion = options#comparison_operator = AbstractAlgorithm.Inclusion_check || options#comparison_operator = AbstractAlgorithm.Including_check || options#comparison_operator = AbstractAlgorithm.Double_inclusion_check in
+
 			(* EXACT if termination is normal and no random selections and no incl and no merge were performed *)
-			if termination_status = Regular_termination && nb_random_selections = 0 && not options#inclusion && not options#merge then Constraint_exact
-			(* UNDER-APPROXIMATED if termination is normal and random selections and no incl and no merge were performed  were performed *)
-			else if termination_status = Regular_termination && nb_random_selections > 0 && not options#inclusion && not options#merge then Constraint_maybe_under
+			if termination_status = Regular_termination && nb_random_selections = 0 && not dangerous_inclusion && not options#merge then Constraint_exact
+			(* UNDER-APPROXIMATED if termination is normal and random selections and no incl and no merge were performed *)
+			else if termination_status = Regular_termination && nb_random_selections > 0 && not dangerous_inclusion && not options#merge then Constraint_maybe_under
 			(* OVER-APPROXIMATED if no random selections were performed and either termination is not normal or merging was used or state inclusion was used *)
-			else if nb_random_selections = 0 && (termination_status <> Regular_termination || options#inclusion || options#merge) then Constraint_maybe_over
+			else if nb_random_selections = 0 && (termination_status <> Regular_termination || dangerous_inclusion || options#merge) then Constraint_maybe_over
 			(* UNKNOWN otherwise *)
 			else Constraint_maybe_invalid
 		in
@@ -123,6 +126,7 @@ class algoIM =
 		let result = match statespace_nature with
 			(*** NOTE: if a safety property is defined and if the state space reaches some unsafe states, then the constraint is considered as bad.
 	In any other case (safe state space, or no safety property defined), the constraint nature is considered as good. ***)
+			(*** NOTE: this can probably not happen anymore as there is no property in the model (ÉA, 2020/09/09) ***)
 			| StateSpace.Good | StateSpace.Unknown -> Good_constraint(LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint, soundness)
 			| StateSpace.Bad -> Bad_constraint(LinearConstraint.p_nnconvex_constraint_of_p_linear_constraint p_constraint, soundness)
 		in
@@ -131,7 +135,7 @@ class algoIM =
 		Point_based_result
 		{
 			(* Reference valuation *)
-			reference_val		= Input.get_pi0();
+			reference_val		= self#get_reference_pval;
 			
 			(* Result of the algorithm *)
 			result				= result;

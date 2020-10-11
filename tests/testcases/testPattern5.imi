@@ -1,0 +1,78 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Simple model to test observer patterns
+ *
+ * Description     : Simple model to test observer pattern "a within d" with a parametric d
+ * Correctness     : The pattern should be satisfied for the following parameter valuations: p >= 3
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/08/24
+ * Last modified   : 2020/08/24
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a, b;
+
+loc l1: invariant x <= 4
+	when x = 3 sync a goto l2;
+	
+	when x = 2 sync b goto l3;
+
+loc l2: invariant True
+
+loc l3: invariant x <= 4
+	when x = 4 sync a goto l4;
+
+loc l4: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -1,0 +1,24 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Empty template of a case study
+ *
+ * Description     : Example with 1 parameter and 3 clocks over bounded time
+ * Correctness     : lbad unreachable
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ *
+ * Created         : 2020/08/14
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := #synth EF(loc[pta] = lbad);

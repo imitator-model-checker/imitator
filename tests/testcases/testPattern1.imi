@@ -1,0 +1,80 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Simple model to test observer patterns
+ *
+ * Description     : Simple model to test observer pattern "if a2 then a1 has happened before"
+ * Correctness     : The pattern should be satisfied for all parameter valuations in p1 <= p2 + 1 & p1 <= 2
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/08/21
+ * Last modified   : 2020/08/21
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p1, p2,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a1, a2;
+
+loc l1: invariant True
+	(* I.e., p1 < p2 *)
+	when p1 < x & x <= p2 sync a1 goto l2;
+	(* I.e., p1 > p2 + 1 *)
+	when p2 + 1 < x & x <= p1 sync a2 goto lend;
+	(* I.e., p1 > 2 *)
+	when 2 < x & x <= p1 sync a2 goto lend;
+
+loc l2: invariant True
+	when True sync a2 goto lend;
+
+loc lend: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p1 >= 0
+	& p2 >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

@@ -13,9 +13,9 @@
 
  *
  * Created         : 2016/01/22
- * Last modified   : 2016/01/22
+ * Last modified   : 2020/08/14
  *
- * IMITATOR version: 2.7.4-working
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -35,26 +35,26 @@ var
 (************************************************************)
 synclabs: a, b, c, d;
 
-loc l1: while x <= 4 wait {}
-	when x >= p sync a do {x' = 0} goto l2;
+loc l1: invariant x <= 4
+	when x >= p sync a do {x := 0} goto l2;
 	when True sync a goto l3;
 
-loc l2: while x <= p wait {}
+loc l2: invariant x <= p
 	when x >= 3 sync b goto l4;
 	when x = 2 & x = p sync c goto l5;
 
-loc l3: while True wait {}
+loc l3: invariant True
 	when True sync b goto l6;
 
-loc l4: while True wait {}
+loc l4: invariant True
 	when True sync a goto l7;
 
-loc l5: while True wait {}
+loc l5: invariant True
 	when True sync d goto l5;
 
-loc l6: while True wait {}
+loc l6: invariant True
 
-loc l7: while True wait {}
+loc l7: invariant True
 
 end (* pta *)
 
@@ -80,13 +80,6 @@ init :=
 	(*------------------------------------------------------------*)
 	& p >= 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[pta] = l4 or loc[pta] = l5;
 
 
 (************************************************************)

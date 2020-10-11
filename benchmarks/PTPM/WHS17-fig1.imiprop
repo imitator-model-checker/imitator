@@ -1,0 +1,30 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Parameterized version of [WHS17, fig.1], appearing in [AHW18]
+ *
+ * Description     : Empty template for the accel pattern matching
+ * Correctness     : N/A
+ * Source          : "Efficient Online Timed Pattern Matching by Automata-Based Skipping" by Waga, Hasuo and Suenaga, FORMATS 2017
+ * Author          : Waga, Hasuo and Suenaga
+ * Modeling        : Waga, Hasuo and Suenaga, André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/08/18
+ * Last modified   : 2020/08/18
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := #synth EFpmax(loc[pta] = s_end , p1);
+
+(* property := #synth EFpmin(loc[pta] = s_end , p2); *)
+
+(* projectresult(t,tprime) *)

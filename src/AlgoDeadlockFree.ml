@@ -8,7 +8,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2016/02/08
- * Last modified     : 2019/08/08
+ * Last modified     : 2019/09/09
  *
  ************************************************************)
 
@@ -571,17 +571,9 @@ class algoDeadlockFree =
 		
 		(* Get the termination status *)
 		 let termination_status = match termination_status with
-			| None -> raise (InternalError "Termination status not set in EFsynth.compute_result")
+			| None -> raise (InternalError "Termination status not set in AlgoDeadlockFree.compute_result")
 			| Some status -> status
 		in
-		
-		(*** NOTE: unused variable ***)
-(*		(* The tile nature is good if 1) it is not bad, and 2) the analysis terminated normally *)
-		let statespace_nature =
-			if statespace_nature = StateSpace.Unknown && termination_status = Regular_termination then StateSpace.Good
-			(* Otherwise: unchanged *)
-			else statespace_nature
-		in*)
 		
 		(* Constraint is exact if termination is normal, possibly over-approximated otherwise (since we compute the negation) *)
 		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_over in
@@ -640,10 +632,6 @@ class algoDeadlockFree =
 			
 		) (* end if not regular termination *)
 		in
-
-		(*** NOTE: unused variable ***)
-(*		(* Constraint is exact if termination is normal, possibly under-approximated otherwise *)
-		let soundness = if termination_status = Regular_termination then Constraint_exact else Constraint_maybe_under in*)
 
 		(* Return the result *)
 		Single_synthesis_result

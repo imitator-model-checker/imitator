@@ -1,25 +1,28 @@
---************************************************************--
---************************************************************--
---
---   Railroad Gate Controller
---
---   Model described in
---   "Parametric Real-Time Reasoning" (fig. 2)
---   Alur, Henzinger, Vardi (STOC 1993)
---
---   Etienne ANDRE
---   Laboratoire d'Informatique de Paris Nord
---
---                                Created : 2011/11/25
---                          Last modified : 2011/11/25
---************************************************************--
---************************************************************--
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Railroad Gate Controller
+ *
+ * Description     : Classical Railroad Gate Controller
+ * Correctness     : "Whenever the train is inside the gate, the gate should be closed"
+ * Source          : Model described in "Parametric Real-Time Reasoning" (fig. 2); Alur, Henzinger, Vardi (STOC 1993)
+ * Author          : Alur, Henzinger, Vardi
+ * Modeling        : Alur, Henzinger, Vardi
+ * Input by        : Étienne André
+ *
+ * Created         : 2011/11/25
+ * Last modified   : 2020/08/19
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+ 
+(*  a < d + f *)
 
--- a < d + f
+property := #synth IM(
 	& a = 4
 	& b = 6
 	& c = 1
 	& d = 2
 	& e = 2
 	& f = 3
-
+);

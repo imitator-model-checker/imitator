@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Shuffled version, used for the distributed cartography. [ACN15]
  * 
  * File contributors : Étienne André
  * Created           : 2016/03/14
- * Last modified     : 2019/08/22
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -44,8 +45,8 @@ exception Stop_loop of more_points
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCShuffle =
-	object (self) inherit algoCartoGeneric as super
+class algoBCShuffle (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : tiles_storage) =
+	object (self) inherit algoCartoGeneric v0 step algo_instance_function tiles_manager_type as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -79,7 +80,7 @@ class algoBCShuffle =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private compute_all_points =
 		(*** WARNING: step not implemented here! ***)
-		if NumConst.neq options#step NumConst.one then(
+		if NumConst.neq step NumConst.one then(
 			raise (InternalError("The step must be equal to 1 to compute all pi0 in V0 (for now)."));
 		);
 		
@@ -298,7 +299,7 @@ class algoBCShuffle =
 		let tiles_manager = self#get_tiles_manager in
 		
 		(* Ask the tiles manager to process the result itself, by passing the appropriate arguments *)
-		tiles_manager#process_result start_time nb_points nb_unsuccessful_points termination_status None
+		tiles_manager#process_result start_time v0 nb_points nb_unsuccessful_points termination_status None
 
 
 (************************************************************)

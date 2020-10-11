@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: EFexemplify algorithm [work in progress]. Structurally identical to EFsynth (at the beginning), so the code processes with simple add-ons
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/08
- * Last modified     : 2019/09/09
+ * Last modified     : 2020/09/28
  *
  ************************************************************)
 
@@ -31,6 +32,21 @@ open StateSpace
 
 
 
+(************************************************************)
+(************************************************************)
+(* Class-independent methods *)
+(************************************************************)
+(************************************************************)
+
+(* Get the n-th state_index of a symbolic run; raises InternalError if not found *)
+let nth_state_index_of_symbolic_run (symbolic_run : StateSpace.symbolic_run) (n : int) =
+	let nb_states = List.length symbolic_run.symbolic_steps in
+	(* Case n belonging to the states *)
+	if n < nb_states then (List.nth symbolic_run.symbolic_steps n).source
+	(* Case n = nb + 1 => final state *)
+	else if n = nb_states then symbolic_run.final_state
+	(* Otherwise: oops *)
+	else raise (InternalError ("Trying to access the " ^ (string_of_int n) ^ "-th state of a symbolic run of length " ^ (string_of_int nb_states) ^ "."))
 
 
 
@@ -39,8 +55,8 @@ open StateSpace
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoEFexemplify =
-	object (self) inherit algoEFsynth as super
+class algoEFexemplify (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoEFsynth state_predicate as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -52,8 +68,8 @@ class algoEFexemplify =
 	(* Negative examples spotted (negative examples: *impossible* concrete runs to the target state) *)
 	val mutable negative_examples : Result.valuation_and_concrete_run list = []
 	
-	val nb_POSITIVE_EXAMPLES_MAX = 3
-	val nb_NEGATIVE_EXAMPLES_MAX = 3
+	val nb_POSITIVE_EXAMPLES_MAX = 6
+	val nb_NEGATIVE_EXAMPLES_MAX = 6
 
 
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -245,7 +261,11 @@ class algoEFexemplify =
 				
 				(*** TODO: handle non-deterministic ***)
 				
-				if model.strongly_deterministic && not model.has_silent_actions then(
+				if not model.strongly_deterministic then(
+					print_warning "Model is not strongly deterministic: skip negative counter-examples.";
+				)else if model.has_silent_actions then(
+					print_warning "Model has silent actions: skip negative counter-examples.";
+				)else(
 
 					(*------------------------------------------------------------*)
 					(* Part 2a: negative counterexample for a different parameter valuation*)
@@ -273,7 +293,7 @@ class algoEFexemplify =
 						print_message Verbose_high ("\nConsidering position " ^ (string_of_int !i) ^ "");
 						
 						(* Get the state index at position i *)
-						let state_index_i = (List.nth symbolic_run.symbolic_steps !i).source in
+						let state_index_i = nth_state_index_of_symbolic_run symbolic_run !i in
 						(* Get the p-constraint at position i *)
 						let pconstraint_i : LinearConstraint.p_linear_constraint = LinearConstraint.px_hide_nonparameters_and_collapse (StateSpace.get_state state_space state_index_i).px_constraint in
 						
@@ -320,7 +340,7 @@ class algoEFexemplify =
 							(* Intersect with the px-constraint to then obtain px-valuation *)
 							
 							(* Get the px-constraint *)
-							let pxconstraint_i = (StateSpace.get_state state_space (List.nth symbolic_run.symbolic_steps !i).source).px_constraint in
+							let pxconstraint_i = (StateSpace.get_state state_space (nth_state_index_of_symbolic_run symbolic_run !i)).px_constraint in
 							(* Convert the p-valuation to a constraint *)
 							let concrete_p_valuation_constraint = LinearConstraint.p_constraint_of_point (List.map (fun parameter_index -> parameter_index , concrete_p_valuation parameter_index) model.parameters ) in
 							(* Convert to px-dimensions *)
@@ -473,7 +493,7 @@ class algoEFexemplify =
 						print_message Verbose_high ("\nConsidering position " ^ (string_of_int !i) ^ "");
 						
 						(* Get the state index at position i *)
-						let state_index_i = (List.nth symbolic_run.symbolic_steps !i).source in
+						let state_index_i = nth_state_index_of_symbolic_run symbolic_run !i in
 						(* Get the x-constraint at position i *)
 						let xconstraint_i : LinearConstraint.x_linear_constraint = LinearConstraint.px_valuate_parameters functional_pval_positive (StateSpace.get_state state_space state_index_i).px_constraint in
 						
@@ -493,7 +513,16 @@ class algoEFexemplify =
 						(* Check if difference is non-empty *)
 						if not (LinearConstraint.x_nnconvex_constraint_is_false difference) then(
 							(* Print some information *)
-							print_message Verbose_low ("\nFound a shrinking of clock constraint between positions " ^ (string_of_int !i) ^ " and " ^ (string_of_int (!i+1)) ^ ":");
+							if verbose_mode_greater Verbose_low then(
+								(* Get location i *)
+								let location_i : Location.global_location = (StateSpace.get_state state_space state_index_i).global_location in
+								
+								(* Get location i+1 *)
+								let state_index_i_plus_1 = nth_state_index_of_symbolic_run symbolic_run (!i+1) in
+								let location_i_plus_1 : Location.global_location = (StateSpace.get_state state_space state_index_i_plus_1).global_location in
+								
+								print_message Verbose_low ("\nFound a shrinking of clock constraint between positions " ^ (string_of_int !i) ^ " and " ^ (string_of_int (!i+1)) ^ ", i.e., states `" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display location_i) ^ "` and `" ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display location_i_plus_1) ^ "`:");
+							);
 							
 							(* Update flag *)
 							found := true;
@@ -579,10 +608,10 @@ class algoEFexemplify =
 								
 								(* Let initial_time elapse, and remove initial_time time units from the initial valuation to get it back to 0 *)
 								
-								let state_i_plus_one =
-									(* Careful! If run is too short, choose final state *)
+								let state_i_plus_one = nth_state_index_of_symbolic_run symbolic_run (!i+1)
+(*									(* Careful! If run is too short, choose final state *)
 									if !i = List.length symbolic_run.symbolic_steps - 1 then symbolic_run.final_state
-									else (List.nth symbolic_run.symbolic_steps (!i+1)).source
+									else (List.nth symbolic_run.symbolic_steps (!i+1)).source*)
 								in
 								let transition_i_plus_one = (List.nth symbolic_run.symbolic_steps (!i)).transition in
 								{
@@ -601,10 +630,10 @@ class algoEFexemplify =
 							
 								(*** NOTE: now, the only way to choose the NEXT point at position i+1 is to consider a 0-time transition from position i, because we know that the point exhibited at position i does not belong to the i+1 zone ***)
 								
-								let state_i_plus_one =
-									(* Careful! If run is too short, choose final state *)
+								let state_i_plus_one = nth_state_index_of_symbolic_run symbolic_run (!i+1)
+(*									(* Careful! If run is too short, choose final state *)
 									if !i = List.length symbolic_run.symbolic_steps - 1 then symbolic_run.final_state
-									else (List.nth symbolic_run.symbolic_steps (!i+1)).source
+									else (List.nth symbolic_run.symbolic_steps (!i+1)).source*)
 								in
 								let transition_i_plus_one = (List.nth symbolic_run.symbolic_steps (!i)).transition in
 								{

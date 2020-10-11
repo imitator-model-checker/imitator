@@ -13,9 +13,9 @@
  # Script authors  : Michal Knapick, Étienne André
  #
  # Created         : 2015/05/15
- # Last modified   : 2018/08/14
+ # Last modified   : 2020/08/14
  #
- # IMITATOR version: 2.10
+ # IMITATOR version: 3
  ############################################################
 
 import sys
@@ -102,7 +102,7 @@ def getInit(n):
     print("\t& nb = 0")
     print("\t& Delta >= 0\n\t& delta >= 0;")
     
-    print("\nproperty := unreachable loc[observer] = obs_BAD;")
+#    print("\nproperty := unreachable loc[observer] = obs_BAD;")
     
     print ("\nend")
 

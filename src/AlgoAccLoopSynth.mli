@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: AccLoopSynth algorithm (synthesizes valuations for which there exists an accepting loop in the PTA)
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/17
- * Last modified     : 2019/07/22
+ * Last modified     : 2020/04/21
  *
  ************************************************************)
 
@@ -23,7 +24,7 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoAccLoopSynth :
+class algoAccLoopSynth : AbstractProperty.state_predicate ->
 	object inherit algoLoopSynth
 		(************************************************************)
 		(* Class variables *)

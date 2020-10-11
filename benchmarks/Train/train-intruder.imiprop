@@ -1,0 +1,23 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Railroad Gate Controller
+ *
+ * Description     : Railway crossing with an intruder that can disable some sensor (preventing the gate do detect that the train is approaching), possibly provoking a crash. Simple model with few symbolic states reachable.
+ * Correctness     : "Crash" cannot happen
+ * Source          : Own work
+ * Author          : Étienne André, Michał Knapik
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ *
+ * Created         : 2020/08/19
+ * Last modified   : 2020/08/19
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := #synth AGnot(loc[train] = crash);

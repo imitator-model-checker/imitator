@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: IM algorithm with complete result, i.e., possibly non-convex and without random selection [AM15]
  * 
  * File contributors : Étienne André
  * Created           : 2017/03/21
- * Last modified     : 2017/03/21
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -22,7 +23,7 @@ open AlgoIMK
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoIMcomplete :
+class algoIMcomplete : PVal.pval ->
 	object inherit algoIMK
 		(************************************************************)
 		(* Class variables *)

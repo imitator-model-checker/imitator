@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Description of a state_index, a symbolic state and sets of states indexes
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2016/05/04
- * Last modified     : 2019/06/14
+ * Last modified     : 2020/09/14
  *
  ************************************************************)
 
@@ -48,9 +49,12 @@ type abstract_state = {
 (** Interrogation on one state *)
 (************************************************************)
 
-val match_unreachable_global_locations : AbstractModel.unreachable_global_location list -> Location.global_location -> bool
+(* Shortcut, the function is actually called on global locations *)
+(* val match_state_predicate : AbstractProperty.state_predicate -> state -> bool *)
 
-val is_accepting : state -> bool
+(* Tests whether a state matches `state_predicate`; takes as argument the accepting condition of the model of the form `automaton_index -> location_index -> acceptance of location_index in automaton_index` *)
+val match_state_predicate : (Automaton.automaton_index -> Automaton.location_index -> bool) -> AbstractProperty.state_predicate -> state -> bool
+
 
 (************************************************************)
 (************************************************************)

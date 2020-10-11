@@ -7,13 +7,13 @@
  * Correctness     : TODO
  * Source          : "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella); Design Automation Conference, 2004. Proceedings of the ASP-DAC 2004. Asia and South Pacific; DOI: 10.1109/ASPDAC.2004.1337668
  * Author          : Roberto Clariso and Jordi Cortadella
- * Modeling        : Etienne Andre and Laurent Fribourg
- * Input by        : Etienne Andre
+ * Modeling        : Étienne André and Laurent Fribourg
+ * Input by        : Étienne André
  *
  * Created         : 2007/11
- * Last modified   : 2010/03/30
+ * Last modified   : 2020/08/14
  *
- * IMITATOR version: 2.7.1
+ * IMITATOR version: 3.0
  ************************************************************)
  
 (*
@@ -34,7 +34,9 @@
 
 
 
------ IJFCS [ACEF09] -----
+(* ----- IJFCS [ACEF09] ----- *)
+
+property := #synth IM(
 	& tHI    = 24
 	& tLO    = 15
 	& tSetup = 10
@@ -47,7 +49,9 @@
 	& dG3_u  = 10
 	& dG4_l  = 3
 	& dG4_u  = 7
+);
 
+(*
 -- 	& tHI    = 24
 -- 	& tLO    = 15
 -- 	& tSetup = 10
@@ -60,3 +64,4 @@
 -- 	& dG3_u  = 16.9
 -- 	& dG4_l  = 3
 -- 	& dG4_u  = 7.8
+*)

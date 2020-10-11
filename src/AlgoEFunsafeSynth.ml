@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: "EF" algorithm (unsafe w.r.t. a set of bad states) [JLR15]
  * 
  * File contributors : Étienne André
  * Created           : 2017/02/03
- * Last modified     : 2019/07/11
+ * Last modified     : 2020/09/21
  *
  ************************************************************)
 
@@ -21,7 +22,9 @@
 open OCamlUtilities
 open ImitatorUtilities
 open Exceptions
+open AbstractAlgorithm
 open AbstractModel
+open AbstractProperty
 open Result
 open AlgoEFsynth
 
@@ -32,8 +35,8 @@ open AlgoEFsynth
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoEFunsafeSynth =
-	object (self) inherit algoEFsynth as super
+class algoEFunsafeSynth (state_predicate : AbstractProperty.state_predicate) =
+	object (self) inherit algoEFsynth state_predicate as super
 	
 	(************************************************************)
 	(* Class variables *)
@@ -42,7 +45,7 @@ class algoEFunsafeSynth =
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Name of the algorithm *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
-	method algorithm_name = "EFunsafe"
+	method algorithm_name = "EF"
 	
 	
 	
@@ -66,33 +69,40 @@ class algoEFunsafeSynth =
 		(*** TODO: compute as well *good* zones, depending whether the analysis was exact, or early termination occurred ***)
 				
 		(* Projecting onto SOME parameters if required *)
-		let result =
-		match model.projection with
-		(* No projection: copy the initial p constraint *)
-		| None -> bad_constraint
-		(* Project *)
-		| Some parameters ->
-			(* Print some information *)
-			if verbose_mode_greater Verbose_medium then(
-				self#print_algo_message Verbose_medium "Projecting the bad constraint onto some of the parameters.";
-				self#print_algo_message Verbose_medium "Before projection:";
-				print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names bad_constraint);
-			);
+		(*** NOTE: Useless test as we are in EF, so there is a property ***)
+		let result = if Input.has_property() then(
+			let abstract_property = Input.get_property() in
+			match abstract_property.projection with
+				(* No projection: copy the initial p constraint *)
+				| None -> synthesized_constraint
+				(* Project *)
+				| Some parameters ->
+					(* Print some information *)
+					if verbose_mode_greater Verbose_medium then(
+						self#print_algo_message Verbose_medium "Projecting the bad constraint onto some of the parameters.";
+						self#print_algo_message Verbose_medium "Before projection:";
+						print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names synthesized_constraint);
+					);
 
-			(*** TODO! do only once for all... ***)
-			let all_but_projectparameters = list_diff model.parameters parameters in
-			
-			(* Eliminate other parameters *)
-			let projected_init_p_nnconvex_constraint = LinearConstraint.p_nnconvex_hide all_but_projectparameters bad_constraint in
+					(*** TODO! do only once for all… ***)
+					let all_but_projectparameters = list_diff model.parameters parameters in
+					
+					(* Eliminate other parameters *)
+					let projected_init_p_nnconvex_constraint = LinearConstraint.p_nnconvex_hide all_but_projectparameters synthesized_constraint in
 
-			(* Print some information *)
-			if verbose_mode_greater Verbose_medium then(
-				self#print_algo_message Verbose_medium "After projection:";
-				print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names projected_init_p_nnconvex_constraint);
-			);
-			
-			(* Return *)
-			projected_init_p_nnconvex_constraint
+					(* Print some information *)
+					if verbose_mode_greater Verbose_medium then(
+						self#print_algo_message Verbose_medium "After projection:";
+						print_message Verbose_medium (LinearConstraint.string_of_p_nnconvex_constraint model.variable_names projected_init_p_nnconvex_constraint);
+					);
+					
+					(* Return *)
+					projected_init_p_nnconvex_constraint
+				
+		)else(
+			(* No projection: copy the initial p constraint *)
+			synthesized_constraint
+		) (* end if has property *)
 		in
 		
 		(* Get the termination status *)
@@ -115,7 +125,7 @@ class algoEFunsafeSynth =
 		(* Return the result *)
 		Single_synthesis_result
 		{
-			(* Non-necessarily convex constraint guaranteeing the reachability of the bad location *)
+			(* Non-necessarily convex constraint guaranteeing the reachability of the desired states *)
 			result				= Good_constraint (result, soundness);
 			
 			(* English description of the constraint *)

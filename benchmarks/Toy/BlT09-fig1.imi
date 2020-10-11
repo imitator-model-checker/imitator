@@ -11,9 +11,9 @@
  * Input by        : Étienne André
  *
  * Created         : 2015/11/17
- * Last modified   : 2015/11/17
+ * Last modified   : 2020/08/13
  *
- * IMITATOR version: 2.7.3
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -33,20 +33,20 @@ var
 (************************************************************)
 (* synclabs: a; *)
 
-loc l0: while True wait {}
+loc l0: invariant True
 	when True goto l0;
-	when True do {x' = 0, y' = 0} goto l1;
+	when True do {x := 0, y := 0} goto l1;
 
-loc l1: while True wait {}
+loc l1: invariant True
 	when True goto l1;
 	when -y < 2 - l goto l2;
 
 
-loc l2: while True wait {}
+loc l2: invariant True
 	when True goto l2;
 	when x < u goto l3;
 
-loc l3: while True wait {}
+loc l3: invariant True
 	when True goto l3;
 
 end (* pta *)
@@ -75,13 +75,6 @@ init :=
 	& l >= 0
 	& u >= 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-(* property := unreachable loc[pta] = l1; *)
 
 
 (************************************************************)

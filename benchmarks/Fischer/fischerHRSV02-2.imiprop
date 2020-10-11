@@ -1,0 +1,22 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Fischer's mutual exclusion protocol
+ *
+ * Description     : Fischer's mutual exclusion protocol. Version with 2 processes.
+ * Correctness     : No two processes in the mutual exclusion
+ * Source          : From "Linear Parametric Model Checking of Timed Automata" Hune, Romijn, Stoelinga, Vaandrager, 2002
+ * Author          : Hune, Romijn, Stoelinga, Vaandrager
+ * Modeling        : Hune, Romijn, Stoelinga, Vaandrager
+ * Input by        : Étienne André
+ *
+ * Created         : 2020/08/14
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+property := #synth AGnot(loc[process_1] = cs_1 & loc[process_2] = cs_2);

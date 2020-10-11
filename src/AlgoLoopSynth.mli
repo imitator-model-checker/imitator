@@ -3,12 +3,13 @@
  *                       IMITATOR
  * 
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: LoopSynth algorithm [AL16] (synthesizes valuations for which there exists a loop in the PTA)
  * 
  * File contributors : Étienne André
  * Created           : 2016/08/24
- * Last modified     : 2019/06/13
+ * Last modified     : 2020/09/21
  *
  ************************************************************)
 
@@ -23,17 +24,14 @@ open State
 (************************************************************)
 (* Class definition *)
 (************************************************************)
-class algoLoopSynth :
+class virtual algoLoopSynth :
 	object inherit algoStateBased
 		(************************************************************)
 		(* Class variables *)
 		(************************************************************)
 
-		method algorithm_name : string
+(* 		method algorithm_name : string *)
 		
-		(* Non-necessarily convex constraint allowing the presence of a loop *)
-		val mutable loop_constraint : LinearConstraint.p_nnconvex_constraint
-
 
 		(************************************************************)
 		(* Class methods *)

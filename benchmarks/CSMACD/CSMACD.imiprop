@@ -1,0 +1,28 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * CSMA/CD Protocol
+ *
+ * Description     : Non-probabilistic model deduced from the probabilistic model in "Symbolic Model Checking for Probabilistic Timed Automata" (M. Kwiatkowska, G. Norman, J. Sproston and F. Wang., FORMATS/FTRTFT'2004). See figures on http://www.prismmodelchecker.org/casestudies/csma.php.
+	Input by Laurent Fribourg and Étienne André (LSV)
+	Renamed actions (May 2012) for taking probabilities into account
+	Version with BC=1, i.e., up to waiting time of 3*timeslot
+ * Correctness     : Transmission completed
+ * Source          : http://www.prismmodelchecker.org/casestudies/csma.php
+ * Author          : M. Kwiatkowska, G. Norman, J. Sproston and F. Wang
+ * Modeling        : M. Kwiatkowska, G. Norman, J. Sproston and F. Wang
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2007
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := #synth EF(loc[sender1] = Done1 & loc[sender2] = Done2);

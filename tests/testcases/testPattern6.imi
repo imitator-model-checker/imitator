@@ -1,0 +1,108 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Simple model to test observer patterns
+ *
+ * Description     : Simple model to test observer patterns "if a2 then a1 has happened before", "everytime a2 then a1 has happened before", and "everytime a2 then a1 has happened once before"
+ * Correctness     : The pattern should be satisfied for the following parameter valuations:
+ *                   - pattern "if a2 then a1 has happened before"            : p1 \in [0,1) U (2,5) U (5,…) U p1 = 5 ^ p2 >= 2015
+ *                   - pattern "everytime a2 then a1 has happened before"     : p1 \in [0,1) U (2,3) U (3,4) U (4,5) U (5,…) U p1 = 4 ^ p2 >= 4 U p1 = 5 ^ p2 >= 2015
+ *                   - pattern "everytime a2 then a1 has happened once before": p1 \in [0,1) U (2,3) U (3,4) U (4,5) U (5,…) U p1 = 4 ^ p2 >= 4
+ * Source          : Own work
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/08/24
+ * Last modified   : 2020/08/25
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x,
+		: clock;
+
+(* Parameters *)
+	p1, p2
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a1, a2, a3;
+
+loc l1: invariant True
+	(* I.e., p1 \in [1,2] *)
+	when x = p1 & 1 <= x & x <= 2 sync a2 goto l2;
+
+	when x = 0 sync a1 goto l3;
+
+	(* I.e., p1 = 5 *)
+	when x = p1 & x = 5 sync a1 goto l8;
+
+loc l2: invariant True
+
+loc l3: invariant x <= p2
+	when x = p2 sync a2 do {x := 0} goto l4;
+
+loc l4: invariant True
+	(* I.e., p1 = 3 *)
+	when x = p1 & x = 3 sync a2 goto l5;
+	
+	when x = 0 sync a1 goto l6;
+
+loc l5: invariant True
+
+loc l6: invariant True
+	(* I.e., p1 = 4 *)
+	when x = p1 & x = 4 sync a2 goto l7;
+
+loc l7: invariant True
+
+loc l8: invariant True
+	when True sync a1 goto l9;
+
+loc l9: invariant True
+	(*** NOTE: will constrain the value of the parametric `within` in the property ***)
+	when x <= 2020 sync a2 goto l10;
+
+loc l10: invariant True
+	when True sync a3 goto l10;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p1 >= 0
+	& p2 >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

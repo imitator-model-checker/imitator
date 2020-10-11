@@ -7,16 +7,17 @@
  * Correctness     : TODO
  * Source          : "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella); Design Automation Conference, 2004. Proceedings of the ASP-DAC 2004. Asia and South Pacific; DOI: 10.1109/ASPDAC.2004.1337668
  * Author          : Roberto Clariso and Jordi Cortadella
- * Modeling        : Etienne Andre and Laurent Fribourg
- * Input by        : Etienne Andre
+ * Modeling        : Étienne André and Laurent Fribourg
+ * Input by        : Étienne André
  *
  * Created         : 2007/11
- * Last modified   : 2016/03/24
+ * Last modified   : 2020/07/17
  *
- * IMITATOR version: 2.7.4-working
+ * IMITATOR version: 3.0
  ************************************************************)
 
 
+property := #synth BCcover(
 	& dG3_u  = 8 .. 30
 	& dG4_u  = 3 .. 30
-
+);

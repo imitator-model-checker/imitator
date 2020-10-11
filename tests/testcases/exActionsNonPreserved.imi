@@ -7,14 +7,14 @@
  * (i.e., merging before pi0-compatibility test)
  * Correctness     : N/A
  * Source          : Own work
- * Author          : Etienne Andre
- * Modeling        : Etienne Andre
- * Input by        : Etienne Andre
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
  *
  * Created         : 2013/03/20
- * Last modified   : 2013/03/20
+ * Last modified   : 2020/08/19
  *
- * IMITATOR version: 2.6.1
+ * IMITATOR version: 3
  ************************************************************)
 
  
@@ -35,11 +35,11 @@ var
 (************************************************************)
 synclabs: a, b;
 
-	loc L1: while x <= 2 wait {}
+	loc L1: invariant x <= 2
 		when x = 2 & x >= p sync a goto L2; (* i.e., p <= 2 *)
 		when x = 2 & x <= p sync b goto L2; (* i.e., p >= 2 *)
 
-	loc L2: while True wait {}
+	loc L2: invariant True
 end (* pta *)
 
 

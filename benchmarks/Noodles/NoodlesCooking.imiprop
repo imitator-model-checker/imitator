@@ -1,0 +1,19 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Small problem to cook noodles
+ *
+ * Description     : Toy example to cook noodles
+ * Correctness     : The water must not boil over [in fact, no parameter valuation can prevent this, because the timer is not necessarily set from the beginning!]
+ * Source          : "SITH" course final examination at Institut Galilée, Université Paris 13 (2013-2014)
+ * Author          : Étienne André
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ *
+ * Created         : 2020/08/13
+ * Last modified   : 2020/08/13
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+property := #synth AGnot(loc[system] = catastrophe);

@@ -1,4 +1,5 @@
-			wcet_m_0_job_1 = 80 & --20 &
+property := #synth IM(
+			wcet_m_0_job_1 = 80 & (*--20 &*)
 			wcet_m_1_job_1 = 31 &
 			wcet_m_2_job_1 = 17 &
 			wcet_m_3_job_1 = 87 &			
@@ -17,3 +18,4 @@
 			wcet_m_4_job_3 = 28 &
 
 			deadline = 300
+);

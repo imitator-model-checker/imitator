@@ -3,13 +3,14 @@
  *                       IMITATOR
  *
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
  * Module description: Classical Behavioral Cartography with exhaustive coverage of integer points [AF10]. Distribution mode: subdomain. [ACN15]
  * Collaborator (non-coordinator) algorithm
  *
  * File contributors : Étienne André
  * Created           : 2016/03/24
- * Last modified     : 2016/08/15
+ * Last modified     : 2020/08/28
  *
  ************************************************************)
 
@@ -52,10 +53,8 @@ exception NewSubdomainAssigned of HyperRectangle.hyper_rectangle
 (* Class definition *)
 (************************************************************)
 (************************************************************)
-class algoBCCoverDistributedSubdomainDynamicCollaborator =
-	object (self)
-	inherit AlgoBCCoverDistributedSubdomain.algoBCCoverDistributedSubdomain as super
-
+class algoBCCoverDistributedSubdomainDynamicCollaborator (v0 : HyperRectangle.hyper_rectangle) (step : NumConst.t) (algo_instance_function : (PVal.pval -> AlgoStateBased.algoStateBased)) (tiles_manager_type : AlgoCartoGeneric.tiles_storage) =
+	object (self) inherit AlgoBCCoverDistributedSubdomain.algoBCCoverDistributedSubdomain v0 step algo_instance_function tiles_manager_type as super
 
 	(************************************************************)
 	(* Class variables *)
@@ -99,11 +98,8 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 	(* Create an instance of the sequential cartography *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(*** NOTE: in dynamic distribution mode, since each collaborator is responsible for its own cartography, the sequential cartography is perfectly suited ***)
-	method private new_bc_instance =
-		let bc_instance = new AlgoBCCover.algoBCCover in
-		(* Set the instance of IM / PRP that was itself set from the current cartography class *)
-		bc_instance#set_algo_instance_function self#get_algo_instance_function;
-		bc_instance#set_tiles_manager_type (self#get_tiles_manager_type);
+	method private new_bc_instance current_domain =
+		let bc_instance = new AlgoBCCover.algoBCCover current_domain step algo_instance_function tiles_manager_type in
 
 		(* Initialize *)
 		bc_instance#initialize_cartography;
@@ -325,12 +321,9 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 	(* Process subdomain received from the master: initialize, cover it, and send all tiles to the master *)
 	(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	method private process_subdomain subdomain =
-		(* Set the subdomain *)
-		(*** NOTE: would be better to have a nicer mechanism than that one… ***)
-		Input.set_v0 subdomain;
 
 		(* Perform initialization *)
-		let bc = self#new_bc_instance in
+		let bc = self#new_bc_instance subdomain in
 
 		(* Retrieve and set back the tiles computed previously (if any) *)
 		begin
@@ -439,14 +432,17 @@ class algoBCCoverDistributedSubdomainDynamicCollaborator =
 					finished := true
 
 			(* Otherwise: error! *)
-			| Work _ -> self#print_algo_error ("received unexpected Work tag from the master in method 'run'.");
-					raise (InternalError("received unexpected Work tag from the master in method 'run'."));
-			| Stop -> self#print_algo_error ("received unexpected Stop tag from the master in method 'run'.");
-					raise (InternalError("received unexpected Stop tag from the master in method 'run'."));
-			| TileUpdate _ -> self#print_algo_error ("received unexpected TileUpdate tag from the master in method 'run'.");
-					raise (InternalError("received unexpected TileUpdate tag from the master in method 'run'."));
-			| Continue -> self#print_algo_error ("received unexpected Continue tag from the master in method 'run'.");
-					raise (InternalError("received unexpected Continue tag from the master in method 'run'."));
+			| Work _ -> self#print_algo_error ("received unexpected Work tag from the master in method `run`.");
+					raise (InternalError("received unexpected Work tag from the master in method `run`."));
+			| Stop -> self#print_algo_error ("received unexpected Stop tag from the master in method `run`.");
+					raise (InternalError("received unexpected Stop tag from the master in method `run`."));
+			| TileUpdate _ -> self#print_algo_error ("received unexpected TileUpdate tag from the master in method `run`.");
+					raise (InternalError("received unexpected TileUpdate tag from the master in method `run`."));
+			| Continue -> self#print_algo_error ("received unexpected Continue tag from the master in method `run`.");
+					raise (InternalError("received unexpected Continue tag from the master in method `run`."));
+				
+			| _ -> self#print_algo_error ("received unexpected tag from the master in method `run`.");
+					raise (InternalError("received unexpected tag from the master in method `run`."));
 
 		done;
 

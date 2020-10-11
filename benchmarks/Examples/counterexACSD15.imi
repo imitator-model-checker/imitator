@@ -3,12 +3,12 @@
  *
  * Counter-example given by a reviewer of ACSD 2015
  *
- * Author          : "Reviewer 1" (input by Etienne Andre)
+ * Author          : "Reviewer 1" (input by Étienne André)
  *
  * Created         : 2015/03/26
- * Last modified   : 2015/05/06
+ * Last modified   : 2020/08/14
  *
- * IMITATOR version: 2.7-beta2
+ * IMITATOR version: 3
  ************************************************************)
 
 var 	x, y
@@ -31,24 +31,24 @@ var 	x, y
 (************************************************************)
 synclabs: ;
 
-loc l1: while True wait {}
-	when x = 1 do {x' = 0} goto l2;
+loc l1: invariant True
+	when x = 1 do {x := 0} goto l2;
 	when y = 0 & x >= 1 goto l4;
 
-loc l2: while True wait {}
-	when y = 1 do {y' = 0} goto l3;
+loc l2: invariant True
+	when y = 1 do {y := 0} goto l3;
 
-loc l3: while True wait {}
-	when y <= p do {y' = 0} goto l1;
+loc l3: invariant True
+	when y <= p do {y := 0} goto l1;
 
-loc l4: while True wait {}
+loc l4: invariant True
 
 end (*a*)
 
 
 
 (************************************************************)
-(* Analysis *)
+(* Initial state *)
 (************************************************************)
 
 init := True
@@ -70,7 +70,4 @@ init := True
 	& p <= 1
 ;
 
-property := unreachable loc[pta] = l4;
-
 end
-

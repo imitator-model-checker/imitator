@@ -12,15 +12,15 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2018/10/26
- * Last modified   : 2018/10/26
+ * Last modified   : 2020/08/27
  *
- * IMITATOR version: 2.10.4
+ * IMITATOR version: 3
  ************************************************************)
 
 var
 
 (* Clocks *)
- 	x, xabs,
+ 	x, global_time,
 		: clock;
 
 (* Parameters *)
@@ -34,7 +34,7 @@ var
 (************************************************************)
 synclabs: ;
 
-loc l1: invariant xabs >= 0
+loc l1: invariant global_time >= 0
 	when x > 1 & p = 1 goto ltarget;
 	when x >= 1 & p = 2 goto ltarget;
 
@@ -58,20 +58,13 @@ init :=
 	(* Initial clock constraints *)
 	(*------------------------------------------------------------*)
 	& x = 0
-	& xabs = 0
+	& global_time = 0
 
 	(*------------------------------------------------------------*)
 	(* Parameter constraints *)
 	(*------------------------------------------------------------*)
 	& 0 <= p
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[pta] = ltarget;
 
 
 (************************************************************)

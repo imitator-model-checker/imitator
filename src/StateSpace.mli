@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2009/12/08
- * Last modified     : 2019/08/09
+ * Last modified     : 2020/09/23
  *
  ************************************************************)
 
@@ -19,6 +19,7 @@
 (************************************************************)
 open Automaton
 open State
+open AbstractAlgorithm
 
 
 (************************************************************)
@@ -45,19 +46,6 @@ type statespace_nature =
 	| Bad
 	| Unknown
 
-
-(************************************************************)
-(** Check when adding a new state *)
-(************************************************************)
-type state_comparison =
-	(* Does not check whether the state is present, add directly *)
-	| No_check
-	(* Does not add the new state if another state is exactly equal to it *)
-	| Equality_check
-	(* Does not add the new state if it is included in another state *)
-	| Inclusion_check
-	(* Does not add the new state if it is included in another state, or if another state is included into the current state (in which case the new state replaces the old one in the state space) *)
-	| Double_inclusion_check
 
 
 (************************************************************)
@@ -198,6 +186,11 @@ val get_location : state_space -> Location.global_location_index -> Location.glo
 val get_state : state_space -> state_index -> state
 
 (*------------------------------------------------------------*)
+(** return the list of states with the same location (modulo hash collisions) *)
+(*------------------------------------------------------------*)
+val get_comparable_states : state_space -> state_index -> state_index list
+
+(*------------------------------------------------------------*)
 (** Return the global_location_index of a state_index *)
 (*------------------------------------------------------------*)
 val get_global_location_index : state_space -> state_index -> Location.global_location_index
@@ -238,6 +231,10 @@ val get_transitions_table : state_space -> (state_index , ((combined_transition 
 (*------------------------------------------------------------*)
 val all_state_indexes : state_space -> state_index list
 
+(*------------------------------------------------------------*)
+(** Test if state index is in the current statespace *)
+(*------------------------------------------------------------*)
+val test_state_index : state_space -> state_index -> bool
 
 (*------------------------------------------------------------*)
 (*** WARNING: big memory, here! Why not perform intersection on the fly? *)
@@ -308,7 +305,7 @@ val backward_symbolic_run : state_space -> state_index -> state_index -> predece
 val increment_nb_gen_states : state_space -> unit
 
 (** Add a state to a state space: takes as input the state space, a comparison instruction, the state to add, and returns whether the state was indeed added or not *)
-val add_state : state_space -> state_comparison -> state -> addition_result
+val add_state : state_space -> AbstractAlgorithm.state_comparison_operator -> state -> addition_result
 
 (**Add a state to a state space dynamically**)
 (* val add_state_dyn : AbstractModel.abstract_model -> state_space -> state -> LinearConstraint.linear_constraint -> (state_index * bool) *)
@@ -324,10 +321,7 @@ val add_p_constraint_to_states : state_space -> LinearConstraint.p_linear_constr
 (** Replace the constraint of a state in a state space by another one (the constraint is copied to avoid side-effects later) *)
 (* val replace_constraint : state_space -> LinearConstraint.linear_constraint -> state_index -> unit *)
 
-(** Merge two states by replacing the second one by the first one, in the whole state space structure (lists of states, and transitions) *)
-(* val merge_2_states : state_space -> state_index -> state_index -> unit *)
-
-(* Try to merge new states with existing ones. Returns updated list of new states (ULRICH) *)
+(* Merges states in queue with states in state space. Removes unreachable states. Returns unmerged part of queue *)
 val merge : state_space -> state_index list -> state_index list
 
 (** Empties the hash table giving the set of states for a given location; optimization for the jobshop example, where one is not interested in comparing  a state of iteration n with states of iterations < n *)

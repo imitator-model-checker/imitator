@@ -12,9 +12,9 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2018/08/16
- * Last modified   : 2018/08/16
+ * Last modified   : 2020/03/31
  *
- * IMITATOR version: 2.10.2
+ * IMITATOR version: 3
  ************************************************************)
 
 var
@@ -58,15 +58,6 @@ init :=
 	& p1 >= 0
 	& p2 >= 0
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[pta] = lbad;
-
-minimize(p1);
 
 
 (************************************************************)

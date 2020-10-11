@@ -19,9 +19,9 @@
  * Input by        : Youcheng Sun, Étienne André
  *
  * Created         : xxxx (< 2015/10/30)
- * Last modified   : 2018/09/07
+ * Last modified   : 2020/08/18
  *
- * IMITATOR version: 2.10.3
+ * IMITATOR version: 3
  ************************************************************)
 
 var 
@@ -66,7 +66,7 @@ loc idle : invariant True
     when True sync r3 do {c3 := 0} goto x3R;
 
 loc x1R : invariant c1<=b
-    --when c1>=10 goto idle;
+(*     when c1>=10 goto idle; *)
     when c1>=e goto idle;
     when c1<b sync r1 do{} goto error;
     when True sync r2 goto x1R2W;
@@ -172,13 +172,6 @@ init :=
 	& b >= b_min & b <= b_max
 	& C3_WORST >= C3_WORST_min & C3_WORST <= C3_WORST_max
 ;
-
-
-(************************************************************)
-(* Property specification *)
-(************************************************************)
-
-property := unreachable loc[sched] = error;
 
 
 (************************************************************)

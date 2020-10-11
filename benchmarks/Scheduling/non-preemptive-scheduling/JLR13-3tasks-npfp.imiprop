@@ -1,0 +1,26 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ *	IMITATOR JLR13-3tasks-npfp.imi -mode EF -incl -merge -output-cart
+ *	IMITATOR JLR13-3tasks-npfp.imi JLR13-3tasks-npfp.v0 -mode cover -PRP -incl -merge -output-cart
+ *
+ * Modeling of the uniprocessor Non-Preemptive Fixed-Priority scheduling of three periodic tasks
+ *
+ * Description     : Three periodic tasks run upon a uniprocessor by their fixed priorites, and the execution of a task cannot be preempted.
+ *		     The priority order: tau_1 > tau_2 > tau_3.
+ *		     Task periods T1 = a, T2 = 2a, T3 = 3a.
+ *		     Execution Times: C1 in [C1_BEST=10, b], C2 in [c, d], C3 in [C3_BEST, C3_WORST]
+ * Source          : From "Integer Parameter Synthesis for Timed Automata" (2013) by A. Jovanovic, D. Lime and O.H. Roux; Section 6
+ * Modeling        : Youcheng Sun
+ * Input by        : Youcheng Sun, Étienne André
+ *
+ * Created         : 2020/08/18
+ * Last modified   : 2020/08/18
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+property := #synth AGnot(loc[sched] = error);

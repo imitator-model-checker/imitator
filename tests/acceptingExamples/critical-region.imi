@@ -7,12 +7,12 @@
  * Correctness     : TODO
  * Source          : TODO
  * Author          : ME
- * Input by        : ME
+ * Input by        : ME, Laure Petrucci
  *
  * Created         : 1970/01/01
- * Last modified   : 1970/01/01
+ * Last modified   : 2020/09/07
  *
- * IMITATOR version: 2.7-beta3
+ * IMITATOR version: 3.0
  ************************************************************)
 
 var
@@ -43,12 +43,12 @@ var
   automaton counter
 (************************************************************)
 
-loc initial: while True wait {}
-	when id = 0 do {id' = 1} goto initCount;
+loc initial: invariant True
+	when id = 0 do {id := 1} goto initCount;
 
-accepting loc initCount: while True wait {}
-	when id < max_id do {id' = id + 1} goto initCount;
-	when id = max_id do {id' = 1} goto initCount;
+accepting loc initCount: invariant True
+	when id < max_id do {id := id + 1} goto initCount;
+	when id = max_id do {id := 1} goto initCount;
 	
 end (* counter *)
 
@@ -62,11 +62,11 @@ end (* counter *)
 
 synclabs: cellenter1; 
 
-loc l0: while True wait {}
-	when id > 0 & id <= max_id sync cellenter1 do {id' = 0} goto l1;
+loc l0: invariant True
+	when id > 0 & id <= max_id sync cellenter1 do {id := 0} goto l1;
 
-loc l1: while True wait {}
-	when True do {id' = id} goto l0;
+loc l1: invariant True
+	when True do {id := id} goto l0;
 	
 end (* arbiter1 *)
 
@@ -78,27 +78,27 @@ end (* arbiter1 *)
 
 synclabs: cellenter1, cellexit1; 
 
-loc notReady: while True wait {}
-	when x1 <= B do {x1' = 0} goto testing;
+loc notReady: invariant True
+	when x1 <= B do {x1 := 0} goto testing;
 
-loc testing: while x1 <= A wait {}
-	when x1 >= A do {x1' = 0} goto notReady;
+loc testing: invariant x1 <= A
+	when x1 >= A do {x1 := 0} goto notReady;
 	when x1 <= A - 1 do {} goto requesting;
 	
-loc requesting: while True wait {}
-	when True sync cellenter1 do {x1' = 0} goto critical;
+loc requesting: invariant True
+	when True sync cellenter1 do {x1 := 0} goto critical;
 	
-loc critical: while x1 <= B wait {}
-	when x1 <= A - 1 sync cellexit1 do {x1' = 0} goto testing2;
+loc critical: invariant x1 <= B
+	when x1 <= A - 1 sync cellexit1 do {x1 := 0} goto testing2;
 	when x1 >= B goto error;
 	
-loc error: while True wait {}
+loc error: invariant True
 
-loc testing2: while x1 <= A wait {}
+loc testing2: invariant x1 <= A
 	when x1 >= A do {} goto error;
 	when x1 <= A - 1 do {} goto safe;
 	
-loc safe: while True wait {}
+loc safe: invariant True
 
 end (* prodcell *)
 
@@ -112,11 +112,11 @@ end (* prodcell *)
 
 synclabs: cellenter2; 
 
-loc l0: while True wait {}
-	when id > 0 & id <= max_id sync cellenter2 do {id' = 0} goto l1;
+loc l0: invariant True
+	when id > 0 & id <= max_id sync cellenter2 do {id := 0} goto l1;
 
-loc l1: while True wait {}
-	when True do {id' = id} goto l0;
+loc l1: invariant True
+	when True do {id := id} goto l0;
 	
 end (* arbiter *)
 
@@ -128,27 +128,27 @@ end (* arbiter *)
 
 synclabs: cellenter2, cellexit2; 
 
-loc notReady: while True wait {}
-	when x2 <= B do {x2' = 0} goto testing;
+loc notReady: invariant True
+	when x2 <= B do {x2 := 0} goto testing;
 
-loc testing: while x2 <= A wait {}
-	when x2 >= A do {x2' = 0} goto notReady;
+loc testing: invariant x2 <= A
+	when x2 >= A do {x2 := 0} goto notReady;
 	when x2 <= A - 1 do {} goto requesting;
 	
-loc requesting: while True wait {}
-	when True sync cellenter2 do {x2' = 0} goto critical;
+loc requesting: invariant True
+	when True sync cellenter2 do {x2 := 0} goto critical;
 	
-loc critical: while x2 <= B wait {}
-	when x2 <= A - 1 sync cellexit2 do {x2' = 0} goto testing2;
+loc critical: invariant x2 <= B
+	when x2 <= A - 1 sync cellexit2 do {x2 := 0} goto testing2;
 	when x2 >= B do {} goto error;
 	
-loc error: while True wait {}
+loc error: invariant True
 
-loc testing2: while x2 <= A wait {}
+loc testing2: invariant x2 <= A
 	when x2 >= A do {} goto error;
 	when x2 <= A - 1 do {} goto safe;
 	
-loc safe: while True wait {}
+loc safe: invariant True
 
 end (* prodcell *)
 

@@ -46,6 +46,8 @@
 % END Watermarking
 
 
+\setcounter{secnumdepth}{3}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % MARGINS, HEADERS AND FOOTERS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -69,8 +71,8 @@
 
 \fancyhead[r]{%
 	\includegraphics[height=1em]{../logos/imitator-500.png}
-	\includegraphics[height=1em]{../logos/logo2-300.png}
-	\includegraphics[height=1em]{../logos/logo2-12-300.png}
+	\includegraphics[height=1em]{../logos/logo-3-300.png}
+% 	\includegraphics[height=1em]{../logos/logo-2-12-300.png}
 }
 
 \renewcommand{\headrulewidth}{.1pt}
@@ -84,6 +86,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % TIKZ
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[svgnames,table]{xcolor}
+
 \usepackage{pgf}
 \usepackage{tikz}
 \usetikzlibrary{arrows,automata,decorations.pathmorphing}
@@ -156,6 +160,7 @@
 \newcommand{\DVarCard}{J} % cardinality of discrete variables
 % \newcommand{\DVarinit}{\DVar_\init} % discrete variable
 \newcommand{\edge}{e}
+\newcommand{\flow}{\ensuremath{\mathit{flow}}}
 \newcommand{\guard}{g}
 \newcommand{\invariant}{I}
 \newcommand{\LConstraint}{\mathcal{LC}} % (#1)% set of all constraints over some set
@@ -175,7 +180,7 @@
 \newcommand{\pval}{v} % parameter valuation
 % \newcommand{\resets}{R}
 \newcommand{\steps}{ {\rightarrow} }
-\newcommand{\stopwatches}{S}
+% \newcommand{\stopwatches}{\mathit{SW}}
 \newcommand{\tuple}[1]{\langle#1\rangle}
 \newcommand{\unobs}{\ensuremath{\epsilon}}
 \newcommand{\Var}{\mathit{Var}} % set of variables
@@ -205,7 +210,7 @@
 \newcommand{\Tprime}{T}
 
 % Symboles
-\newcommand{\emptystring}{$\epsilon$}
+\newcommand{\emptystring}{\ensuremath{\epsilon}}
 \newcommand{\fleche}[1]{\stackrel{#1}{\rightarrow}}
 \newcommand{\Fleche}[1]{\stackrel{#1}{\Rightarrow}}
 % \newcommand{\steps}[0]{ {\rightarrow} }
@@ -250,6 +255,7 @@
 \newcommand{\ocaml}{OCaml}
 \newcommand{\pat}{PAT}
 \newcommand{\phaver}{PHAVer}
+\newcommand{\phaverLite}{PHAVerLite}
 % \newcommand{\polka}{NewPolka}
 % \newcommand{\prism}{\textsc{Prism}}
 % \newcommand{\red}{RED}
@@ -259,8 +265,8 @@
 
 
 % Current version
-\newcommand{\imitatorversion}{2.12}
-\newcommand{\imitatorversionname}{Butter Lobster}
+\newcommand{\imitatorversion}{3}
+\newcommand{\imitatorversionname}{Cheese}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -300,9 +306,14 @@
 	{\end{myhint}\end{mdframed}}
 
 \newtheorem{mywarning}{Warning} %[chapter]
-\newenvironment{warning}
+\newenvironment{becareful}
 	{\begin{mdframed}[roundcorner=3pt,backgroundcolor=red!20,linecolor=red!50!black,linewidth=2]\begin{mywarning}}
 	{\end{mywarning}\end{mdframed}}
+
+\newtheorem{myalias}{Syntax freedom} %[chapter]
+\newenvironment{syntaxalias}
+	{\begin{mdframed}[roundcorner=3pt,backgroundcolor=green!20,linecolor=green!50!black,linewidth=2]\begin{myalias}\small}
+	{\end{myalias}\end{mdframed}}
 
 
 
@@ -320,7 +331,8 @@
 % Rule name in a grammar
 \newcommand{\regleGrammaire}[1]{\bigskip \noindent \nt{#1} :: \\}
 % Not taken into account in the grammar
-\newcommand{\npec}[1]{\textcolor{green!50!black}{#1}}
+% \newcommand{\npec}[1]{\textcolor{green!50!black}{#1}}
+\newcommand{\commentgrammar}[1]{\textcolor{black!50}{\texttt{/* #1 */}}}
 
 \newcommand{\probleme}[2]{
 	\medskip
@@ -371,7 +383,7 @@
 \definecolor{filecontentcolor}{rgb}{.1, .4, .2}
 \newcommand{\styleFileContent}[1]{\textcolor{filecontentcolor}{\texttt{#1}}}
 
-\newcommand{\GitHubIMI}{GitHub} % TODO : URL
+\newcommand{\GitHubIMI}{\href{https://github.com/imitator-model-checker/imitator}{GitHub}}
 
 \newcommand{\styleCommand}[1]{
 	\medskip
@@ -400,6 +412,22 @@
 }
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% COLORS AND TABLES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\cellHeader}[1]{\cellcolor{blue!20}\textbf{#1}}
+\newcommand{\rowHeader}{\rowcolor{blue!20}}
+
+\definecolor{vertfonce}{rgb}{0.0, 0.5, 0.0}
+\definecolor{rougefonce}{rgb}{1, 0.0, 0.0}
+\newcommand{\compyes}{$\textcolor{vertfonce}{\mathbf{\surd}}$}
+\newcommand{\compno}{$\textcolor{rougefonce}{\mathbf{\times}}$}
+
+\newcommand{\cellYes}{\cellcolor{green!20}\textbf{\compyes}}
+\newcommand{\cellYesNo}{\cellcolor{orange!20}\textbf{\compyes/\compno}}
+\newcommand{\cellNo}{\cellcolor{red!20}\textbf{\compno}}
+\newcommand{\cellNA}{\cellcolor{black!20}N/A}
+\newcommand{\cellUnclear}{\cellcolor{yellow!20}\textbf{?}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % I.E. / E.G. / W.R.T.
@@ -445,7 +473,7 @@
 
 \lstdefinelanguage{Imitator}{
 	morekeywords={
-		and, automaton, clock, constant, discrete, do, end, endreach, False, forward, from, goto, if, in, init, initially, loc, locations, not, or, parameter, print, property, reach, region, unreachable, urgent, sync, synclabs, True, var, wait, when, while
+		and, automaton, clock, constant, discrete, do, end, endreach, False, forward, from, goto, if, in, init, initially, invariant, loc, locations, not, or, parameter, print, property, reach, region, unreachable, urgent, sync, synclabs, True, var, wait, when, while
 	},
 	sensitive=false,
 % 	morecomment=[l][\color{gray}]{--},

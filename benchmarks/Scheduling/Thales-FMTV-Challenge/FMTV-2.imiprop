@@ -1,0 +1,16 @@
+(**************************************************************************
+ *                         IMITATOR
+ *
+ * Model for Challenge 2 of FMTV 15 challenge at the WATERS workshop 
+ * References      : "Verification of Two Real-Time Systems Using Parametric Timed Automata" (2015) by 
+ *                      Youcheng Sun, Étienne André and Giuseppe Lipari
+ *
+ * Author          : G. Lipari and Youcheng Sun
+ * Created         : 2020/08/18
+ * Last modified   : 2020/08/18
+ *
+ * IMITATOR version: 3
+ **************************************************************************)
+
+property := #synth EF(loc[Observer] = Obs_stop);
+projectresult(D);

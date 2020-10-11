@@ -1,19 +1,23 @@
---************************************************************--
---************************************************************--
---
---   Example fro Figure 1 in "Integer Parameter Synthesis for Timed Automata"
---         by Jovanovic, Lime, Roux (TACAS, 2013)
-
---
---   Etienne ANDRE
---   Universite Paris 13, Sorbonne Paris Cite, LIPN (France)
---
---                                Created : 2014/06/06
---                          Last modified : 2014/06/06
---                       IMITATOR version : 2.6.2
---************************************************************--
---************************************************************--
-
-
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Example from Figure 1 in "Integer Parameter Synthesis for Timed Automata"
+ *
+ * Description     : Example from Figure 1
+ * Correctness     : TODO
+ * Source          : "Integer Parameter Synthesis for Timed Automata" (TACAS, 2013)
+ * Author          : Jovanovic, Lime, Roux
+ * Modeling        : Jovanovic, Lime, Roux
+ * Input by        : Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2014/06/06
+ * Last modified   : 2020/07/17
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+ 
+property := #synth BCcover(
 	& a = 0..10
 	& b = 0..10
+);

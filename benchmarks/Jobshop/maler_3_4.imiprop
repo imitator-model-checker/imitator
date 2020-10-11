@@ -1,0 +1,24 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Jobshop case study
+ *
+ * Description     : Jobshop case study
+ * Correctness     : All tasks performed on time
+ * Source          : Maler et al. ("Job-Shop Scheduling Using Timed Automata", by Yasmina Abdeddaı̈m and Oded Maler, CAV 2001 (??))
+ * Author          : Romain Soulat
+ * Modeling        : Romain Soulat
+ * Input by        : Romain Soulat, Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : 2020/08/17
+ * Last modified   : 2020/08/17
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+ 
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := #synth EF(loc[job1] = End1 & loc[job2] = End2 & loc[job3] = End3);

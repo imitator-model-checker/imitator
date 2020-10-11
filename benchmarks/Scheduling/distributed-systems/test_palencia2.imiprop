@@ -1,0 +1,23 @@
+
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * References: ''Parametric Schedulability Analysis of Fixed Priority Real-Time Distributed Systems'' (2013) by Youcheng Sun, Romain Soulat, Giuseppe Lipari, Etienne Andre and Laurent Fribourg; Test Case 1
+ 
+ * Note: might not be the final model of the paper (?)
+ 
+ * Note: we are not sure what is the property??
+              
+ * Created: 2020/08/18
+ * Last modified: 2018/08/20
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+
+property := #synth AGnot(
+	(loc[proc_1] = DEADLINE_MISS)
+	or
+	(loc[proc_2] = DEADLINE_MISS)
+	or
+	(loc[proc_3] = DEADLINE_MISS)
+);

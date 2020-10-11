@@ -1,0 +1,24 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * IEEE 1394 Root Contention Protocol
+ *
+ * Description     : Protocol described in "Parameterized Reachability Analysis of the IEEE 1394 Root Contention Protocol using TReX" Collomb-Annichini, Sighireanu (RTTOOLS 2001)
+ * Correctness     : see paper
+ * Source          : "Parameterized Reachability Analysis of the IEEE 1394 Root Contention Protocol using TReX"
+ * Author          : Collomb-Annichini, Sighireanu
+ * Modeling        : Collomb-Annichini, Sighireanu
+ * Input by        : Étienne André
+ *
+ * Created         : 2020/08/18
+ * Last modified   : 2020/08/18
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := #synth EF(loc[s1o] = S1oEnd);

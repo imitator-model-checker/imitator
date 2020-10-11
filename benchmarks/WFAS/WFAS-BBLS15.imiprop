@@ -1,0 +1,20 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Wireless fire alarm system
+ *
+ * Description     : wireless fire alarm system. Note that [BBLS15] only synthesize point valuations, and not the most general constraint satisfying correctness.
+ * Correctness     : No failure and no timeout (safety property)
+ *
+ * Source          : "Language Emptiness of Continuous-Time Parametric Timed Automata" by Nikola Benes, Peter Bezdek, Kim G. Larsen, and Jiri Srba (the model was described in Sergio Feo-Arenis, Bernd Westphal, Daniel Dietsch, Marco Mun ̃iz, and Siyar Andisha. The wireless fire alarm system: Ensuring conformance to industrial standards through formal verification. In FM'14, volume 8442 of LNCS, pages 658–672. Springer, 2014.)
+ * URL             : http://arxiv.org/abs/1504.07838v1
+ * Author          : cf. above
+ * Input by        : Étienne André
+ *
+ * Created         : 2020/08/13
+ * Last modified   : 2020/08/13
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+property := #synth EF(loc[controller] = fail or loc[controller] = timeout);

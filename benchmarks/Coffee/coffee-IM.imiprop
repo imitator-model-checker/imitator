@@ -1,0 +1,23 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Coffee machine
+ *
+ * Description     : Coffee machine (no coin, coffee is free!); a single button is used to wake the machine up, and to add sugar. Then a cup, and coffee are delivered after a (parametric) time.
+ * Correctness     : Many possibilities (e.g., "it is possible to get a coffee")
+ * Source          : Own work
+ * Author          : Étienne André
+ * Input by        : Étienne André
+ *
+ * Created         : 2011/01/21
+ * Last modified   : 2020/08/13
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+property := #synth IM(
+ (* With this valuation, one can get up to 5 sugars in the coffee; and no deadlock ever occurs *)
+	& p1 = 1
+	& p2 = 5
+	& p3 = 8
+);

@@ -1,0 +1,30 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Railroad Gate Controller
+ *
+ * Description     : Classical Railroad Gate Controller
+ * Correctness     : "Whenever the train is inside the gate, the gate should be closed"
+ * Source          : Model described in "Parametric Real-Time Reasoning" (fig. 2); Alur, Henzinger, Vardi (STOC 1993)
+ * Author          : Alur, Henzinger, Vardi
+ * Modeling        : Alur, Henzinger, Vardi
+ * Input by        : Étienne André
+ *
+ * Created         : 2020/08/19
+ * Last modified   : 2020/08/19
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+ 
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := #synth AGnot(
+	(* IMITATOR still misses the "<>", hence we need to enumerate other locations of gate *)
+		loc[train] = train2 & loc[gate] = gate0
+	or
+		loc[train] = train2 & loc[gate] = gate1
+	or
+		loc[train] = train2 & loc[gate] = gate3
+);

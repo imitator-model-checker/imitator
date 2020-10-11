@@ -1,19 +1,23 @@
---****************************************************--
---****************************************************--
---   Laboratoire Specification et Verification
---
---   Modeling of the circuit described in "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella)
---   Non deterministic trace with pi_0 verifying Clariso -- Cortadella's constraints
---
---   Etienne ANDRE and Laurent FRIBOURG
---
---   Created      : 2014/04/28
---   Last modified: 2014/04/28
---****************************************************--
---****************************************************--
-
-
------ V0 : dG3_u et dG4_u-----
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Modeling of the circuit described in "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella)
+ *
+ * Description     : A flip-flop circuit made of 4 gates. The environment is such that D raises, then CK raises then D falls, and then CK falls. No discrete variable. Version with 4 parameters.
+ * Correctness     : Q should raise before CK falls
+ * Source          : "Verification of timed circuits with symbolic delays" (Clariso -- Cortadella); Design Automation Conference, 2004. Proceedings of the ASP-DAC 2004. Asia and South Pacific; DOI: 10.1109/ASPDAC.2004.1337668
+ * Author          : Roberto Clariso and Jordi Cortadella
+ * Modeling        : Étienne André and Laurent Fribourg
+ * Input by        : Étienne André
+ *
+ * Created         : 2014/04/28
+ * Last modified   : 2020/08/14
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+ 
+property := #synth BCcover(
+(* V0 : dG3_u et dG4_u *)
 (* 	& tHI    = 24 *)
 (* 	& tLO    = 15 *)
 (* 	& tSetup = 10 *)
@@ -26,3 +30,4 @@
 	& dG3_u  = 8 .. 30 -- 10
 (* 	& dG4_l  = 3 *)
 	& dG4_u  = 3 .. 30 -- 7
+);

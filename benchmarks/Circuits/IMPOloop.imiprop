@@ -1,0 +1,20 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Model of a small acyclic asynchronous circuit
+ *
+ * Description     : Model of a small acyclic asynchronous circuit
+ * Correctness     : Q must not rise
+ * Source          : "Preserving Partial Order Runs in Parametric Time Petri Nets"  (ACSD 2015), Fig. 7
+ * Author          : Étienne André, Thomas Chatain, César Rodríguez
+ * Modeling        : Étienne André, Thomas Chatain, César Rodríguez
+ * Input by        : Étienne André
+ *
+ * Created         : 2020/08/13
+ * Last modified   : 2020/08/13
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+(* If qUp is performed, then And111 is necessarily reachable *)
+property := #synth AGnot(loc[AndGate] = And111);

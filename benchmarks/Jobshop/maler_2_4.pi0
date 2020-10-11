@@ -1,4 +1,25 @@
-d11 = 3
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Jobshop case study
+ *
+ * Description     : Jobshop case study
+ * Correctness     : All tasks performed on time
+ * Source          : Maler et al. ("Job-Shop Scheduling Using Timed Automata", by Yasmina Abdeddaı̈m and Oded Maler, CAV 2001 (??))
+ * Author          : Romain Soulat
+ * Modeling        : Romain Soulat
+ * Input by        : Romain Soulat, Étienne André
+ * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created         : ?
+ * Last modified   : 2020/08/17
+ *
+ * IMITATOR version: 3.0
+ ************************************************************)
+ 
+ 
+property := #synth IM(
+	d11 = 3
 	& d12=6
 	& d13=1
 	& d14=7
@@ -7,3 +28,4 @@ d11 = 3
 	& d22=8
 	& d23=5
 	& d24=4
+);

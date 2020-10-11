@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: description of the result output by IMITATOR
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2019/08/21
+ * Last modified     : 2020/04/16
  *
  ************************************************************)
 
@@ -131,7 +132,7 @@ type bc_coverage =
 (* BFS algorithms *)
 (*------------------------------------------------------------*)
 
-type poststar_result = {
+type state_space_computation_result = {
 	(* Explored state space *)
 	state_space			: StateSpace.state_space;
 	
@@ -244,6 +245,9 @@ type abstract_point_based_result = {
 
 (** Result for the original behavioral cartography and its variants: a list of tiles *)
 type cartography_result = {
+	(* Parameter domain *)
+	parameter_domain	: HyperRectangle.hyper_rectangle;
+	
 	(* Number of points in V0 *)
 	(*** NOTE: not technically part of the result, but useful to have it here *)
 	size_v0				: NumConst.t;
@@ -272,6 +276,9 @@ type cartography_result = {
 
 (** Result for the cartography-based algorithms for which mainly the resulting constraint (and not the list of tiles) is important: PRPC *)
 type multiple_synthesis_result = {
+	(* Parameter domain *)
+	parameter_domain	: HyperRectangle.hyper_rectangle;
+	
 	(* Number of points in V0 *)
 	(*** NOTE: not technically part of the result, but useful to have it here *)
 	size_v0				: NumConst.t;
@@ -343,11 +350,14 @@ type runs_exhibition_result = {
 (************************************************************)
 
 type imitator_result =
-	(* No analysis, syntactic check only (+ generation of the result file with syntactic information if requested) *)
-	| No_analysis
+	(* No analysis: syntactic check only (+ generation of the result file with syntactic information if requested) *)
+	| Syntax_check_result
 
+	(* No analysis: syntactic check only (+ generation of the result file with syntactic information if requested) *)
+	| Translation_result
+	
 	(* Result for Post* *)
-	| PostStar_result of poststar_result
+	| State_space_computation_result of state_space_computation_result
 
 	(* Result for old version of EFsynth *)
 	| Deprecated_efsynth_result of deprecated_efsynth_result
