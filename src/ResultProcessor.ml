@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2020/09/09
+ * Last modified     : 2020/10/19
  *
  ************************************************************)
 
@@ -923,6 +923,8 @@ let print_single_synthesis_or_point_based_result result computation_time constra
 	()
 
 
+
+
 let process_single_synthesis_or_point_based_result file_prefix algorithm_name result state_space computation_time termination =
 	(* Retrieve the input options *)
 	let options = Input.get_options () in
@@ -932,7 +934,6 @@ let process_single_synthesis_or_point_based_result file_prefix algorithm_name re
 	print_memory_statistics ();
 	
 	print_message Verbose_high "Drawing state space…";
-	
 	(* Draw state space *)
 	let radical = file_prefix ^ "-statespace" in
 	Graphics.draw_statespace_if_requested state_space algorithm_name radical;
@@ -966,6 +967,13 @@ let process_result result algorithm_name prefix_option =
 		| None -> options#files_prefix
 	in
 	
+	let draw_statespace_if_requested state_space =
+		print_message Verbose_high "Drawing state space…";
+		(* Draw state space *)
+		let radical = file_prefix ^ "-statespace" in
+		Graphics.draw_statespace_if_requested state_space algorithm_name radical
+	in
+		
 	
 	match result with
 	| Syntax_check_result | Translation_result ->
@@ -1002,11 +1010,8 @@ let process_result result algorithm_name prefix_option =
 		print_state_space_statistics state_space_computation.computation_time state_space_computation.state_space;
 		print_memory_statistics ();
 		
-		print_message Verbose_high "Drawing state space…";
-	
 		(* Draw state space *)
-		let radical = file_prefix ^ "-statespace" in
-		Graphics.draw_statespace_if_requested state_space_computation.state_space algorithm_name radical;
+		draw_statespace_if_requested state_space_computation.state_space;
 		
 		(* The end *)
 		()
@@ -1058,11 +1063,8 @@ let process_result result algorithm_name prefix_option =
 		print_state_space_statistics efsynth_result.computation_time efsynth_result.state_space;
 		print_memory_statistics ();
 		
-		print_message Verbose_high "Drawing state space…";
-	
 		(* Draw state space *)
-		let radical = file_prefix ^ "-statespace" in
-		Graphics.draw_statespace_if_requested efsynth_result.state_space algorithm_name radical;
+		draw_statespace_if_requested efsynth_result.state_space;
 		
 		(* Render zones in a graphical form *)
 		if options#draw_cart then (
@@ -1203,6 +1205,9 @@ let process_result result algorithm_name prefix_option =
 		(* Print statistics *)
 		print_memory_statistics ();
 
+		(* Draw state space *)
+		draw_statespace_if_requested result.state_space;
+		
 		(* Render signals and sets of parameters in a graphical form *)
 		List.iteri (fun index valuation_and_concrete_run ->
 			(* iteri starts counting from 0, but we like starting counting from 1 *)
