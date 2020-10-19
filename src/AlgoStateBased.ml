@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/09/28
+ * Last modified     : 2020/10/19
  *
  ************************************************************)
 
@@ -2153,6 +2153,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 
 	(* Print some information *)
 	if verbose_mode_greater Verbose_low then(
+		print_message Verbose_medium ("");
 		print_message Verbose_low ("Cancelling the time elapsing of the last valuation of the symbolic run…:\n " ^ (ModelPrinter.string_of_px_valuation model concrete_target_px_valuation) ^ "");
 	);
 
