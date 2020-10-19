@@ -2201,17 +2201,25 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		let state_n = StateSpace.get_state state_space symbolic_step_n.source in
 		let location_n = state_n.global_location in
 		(*** BADPROG: multiple computations! ***)
-		let _, _, _, updates_n = compute_new_location_guards_updates location_n symbolic_step_n.transition in
+		let _, _, continuous_guards, updates_n = compute_new_location_guards_updates location_n symbolic_step_n.transition in
 
 		(*** BADPROG: multiple conversions here! ***)
 		let z_n_plus_1 = LinearConstraint.pxd_of_px_constraint z_n_plus_1 in
 		apply_updates_assign z_n_plus_1 updates_n;
 		let z_n_plus_1 = LinearConstraint.pxd_hide_discrete_and_collapse z_n_plus_1 in
-
+		
+		(* Compute the guard minus the variables to be reset, projected onto the clocks *)
+		(*** WARNING: behavior might be incorrect here, e.g. for some reset of the form x := x, or similar! (ÉA, 2020/10/19) ***)
+		let continuous_guard = LinearConstraint.pxd_intersection continuous_guards in
+		apply_updates_assign continuous_guard updates_n;
+		(* Remove discrete *)
+		let continuous_guard_without_discrete = LinearConstraint.pxd_hide_discrete_and_collapse continuous_guard in
+		(* Intersect *)
+		LinearConstraint.px_intersection_assign z_n_plus_1 [continuous_guard_without_discrete];
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_high then(
-			print_message Verbose_high ("Intersected state n+1 with its invariant:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1) ^ "");
+			print_message Verbose_high ("Intersected state n+1 with its incoming guard and invariant:\n " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names z_n_plus_1) ^ "");
 		);
 		
 		z_n_plus_1
