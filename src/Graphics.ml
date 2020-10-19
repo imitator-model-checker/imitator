@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/09/22
+ * Last modified     : 2020/10/19
  *
  ************************************************************)
  
@@ -737,7 +737,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
-			print_message Verbose_medium ("Preparing signal plot for " ^ (ModelPrinter.string_of_var_type (model.type_of_variables variable_index)) ^  " '" ^ (model.variable_names variable_index) ^  "'…");
+			print_message Verbose_medium ("Preparing signal plot for " ^ (ModelPrinter.string_of_var_type (model.type_of_variables variable_index)) ^  " `" ^ (model.variable_names variable_index) ^  "`…");
 		);
 		
 		(*** TODO: remove consecutive identical points (not critical) ***)
@@ -751,7 +751,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_total then(
-				print_message Verbose_total ("Computing value for '" ^ (model.variable_names variable_index) ^  "' at time zero…");
+				print_message Verbose_total ("Computing value for `" ^ (model.variable_names variable_index) ^  "` at time zero…");
 			);
 			(* Get value *)
 			let zero_value = match model.type_of_variables variable_index with
@@ -771,7 +771,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("Generating points for '" ^ (model.variable_names variable_index) ^  "' at time zero with value '" ^ (NumConst.string_of_numconst zero_value) ^  "'…");
+					print_message Verbose_total ("Generating points for `" ^ (model.variable_names variable_index) ^  "` at time zero with value '" ^ (NumConst.string_of_numconst zero_value) ^  "'…");
 				);
 
 				(* Convert to the plotutils format *)
@@ -787,14 +787,14 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 			
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("Considering value for '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
+					print_message Verbose_total ("Considering value for `" ^ (model.variable_names variable_index) ^  "` at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
 				);
 				
 				(* Handle the point just before the current point: if a clock, need to manage time elapsing if reset; if discrete, we imagine (so far) an immediate change of the value right at (technically "before") this point *)
 				let previous_point_str , value =
 					(* Print some information *)
 					if verbose_mode_greater Verbose_total then(
-						print_message Verbose_total ("Checking type of variable '" ^ (model.variable_names variable_index) ^  "'…");
+						print_message Verbose_total ("Checking type of variable `" ^ (model.variable_names variable_index) ^  "`…");
 					);
 				
 					match model.type_of_variables variable_index with
@@ -816,7 +816,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 						if NumConst.equal !previous_value value then(
 							(* Print some information *)
 							if verbose_mode_greater Verbose_total then(
-								print_message Verbose_total ("Discrete '" ^ (model.variable_names variable_index) ^  "' did not evolve: skip");
+								print_message Verbose_total ("Discrete `" ^ (model.variable_names variable_index) ^  "` did not evolve: skip");
 							);
 							(* No new point *)
 							""
@@ -824,7 +824,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 						)else(
 							(* Print some information *)
 							if verbose_mode_greater Verbose_total then(
-								print_message Verbose_total ("New additional point for discrete '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
+								print_message Verbose_total ("New additional point for discrete `" ^ (model.variable_names variable_index) ^  "` at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
 							);
 							
 							(* Same value, current time *)
@@ -871,7 +871,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("Generating points for '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst !absolute_time) ^ " with value '" ^ (NumConst.string_of_numconst value) ^  "'…");
+					print_message Verbose_total ("Generating points for `" ^ (model.variable_names variable_index) ^  "` at time " ^ (NumConst.string_of_numconst !absolute_time) ^ " with value '" ^ (NumConst.string_of_numconst value) ^  "'…");
 				);
 
 				(* First add "previous" point *)
@@ -1002,7 +1002,7 @@ let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : st
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
-			print_message Verbose_medium ("Preparing signal plot for " ^ (ModelPrinter.string_of_var_type (model.type_of_variables variable_index)) ^  " '" ^ (model.variable_names variable_index) ^  "'…");
+			print_message Verbose_medium ("Preparing signal plot for " ^ (ModelPrinter.string_of_var_type (model.type_of_variables variable_index)) ^  " `" ^ (model.variable_names variable_index) ^  "`…");
 		);
 		
 		(*** TODO: remove consecutive identical points (not critical) ***)
@@ -1016,7 +1016,7 @@ let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : st
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_total then(
-				print_message Verbose_total ("Computing value for '" ^ (model.variable_names variable_index) ^  "' at time zero…");
+				print_message Verbose_total ("Computing value for `" ^ (model.variable_names variable_index) ^  "` at time zero…");
 			);
 			(* Get value *)
 			let zero_value = match model.type_of_variables variable_index with
@@ -1036,7 +1036,7 @@ let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : st
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("Generating points for '" ^ (model.variable_names variable_index) ^  "' at time zero with value '" ^ (NumConst.string_of_numconst zero_value) ^  "'…");
+					print_message Verbose_total ("Generating points for `" ^ (model.variable_names variable_index) ^  "` at time zero with value '" ^ (NumConst.string_of_numconst zero_value) ^  "'…");
 				);
 
 				(* Convert to the plotutils format *)
@@ -1052,14 +1052,14 @@ let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : st
 			
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("Considering value for '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
+					print_message Verbose_total ("Considering value for `" ^ (model.variable_names variable_index) ^  "` at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
 				);
 				
 				(* Handle the point just before the current point: if a clock, need to manage time elapsing if reset; if discrete, we imagine (so far) an immediate change of the value right at (technically "before") this point *)
 				let previous_point_str , value =
 					(* Print some information *)
 					if verbose_mode_greater Verbose_total then(
-						print_message Verbose_total ("Checking type of variable '" ^ (model.variable_names variable_index) ^  "'…");
+						print_message Verbose_total ("Checking type of variable `" ^ (model.variable_names variable_index) ^  "`…");
 					);
 				
 					match model.type_of_variables variable_index with
@@ -1081,7 +1081,7 @@ let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : st
 						if NumConst.equal !previous_value value then(
 							(* Print some information *)
 							if verbose_mode_greater Verbose_total then(
-								print_message Verbose_total ("Discrete '" ^ (model.variable_names variable_index) ^  "' did not evolve: skip");
+								print_message Verbose_total ("Discrete `" ^ (model.variable_names variable_index) ^  "` did not evolve: skip");
 							);
 							(* No new point *)
 							""
@@ -1089,7 +1089,7 @@ let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : st
 						)else(
 							(* Print some information *)
 							if verbose_mode_greater Verbose_total then(
-								print_message Verbose_total ("New additional point for discrete '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
+								print_message Verbose_total ("New additional point for discrete `" ^ (model.variable_names variable_index) ^  "` at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
 							);
 							
 							(* Same value, current time *)
@@ -1136,7 +1136,7 @@ let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : st
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("Generating points for '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst !absolute_time) ^ " with value '" ^ (NumConst.string_of_numconst value) ^  "'…");
+					print_message Verbose_total ("Generating points for `" ^ (model.variable_names variable_index) ^  "` at time " ^ (NumConst.string_of_numconst !absolute_time) ^ " with value '" ^ (NumConst.string_of_numconst value) ^  "'…");
 				);
 
 				(* First add "previous" point *)
