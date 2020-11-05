@@ -1072,19 +1072,18 @@ let apply_time_elapsing_to_concrete_valuation (location : Location.global_locati
 
 (** Given `Zn-1` and `Zn` such that
 	`Zn` is the successor zone of `Zn-1` by guard `g-1` and updating variables in `Un-1` to some values,
-	given `Zn+1` a set of concrete points (valuations) successor of zone `Zn` by elapsing of a set of variables `t` and non-elapsing of others `nont`, by guard `gn`, updates `Rn`,
-	then `zonepredgr(Zn-1, gn-1, Un-1, Zn, t, nont, gn, Un, Zn+1)` computes the subset of points in `Zn` that are predecessors of `Zn` (by updates of `Un`, guard `gn`, elapsing of `t`, non-elapsing of `nont`), and that are direct successors (without time elapsing) of `Zn-1` via `gn-1` and `Un-1`. *)
+	given `Zn+1` a set of concrete points (valuations) successor of zone `Zn` by guard `gn`, updates `Rn`,
+	then `constraint_zone_predecessor_g_u(Zn-1, gn-1, Un-1, Zn, gn, Un, Zn+1)` computes the subset of points in `Zn` that are predecessors of `Zn` (by updates of `Un`, guard `gn`), and that are direct successors (without time elapsing) of `Zn-1` via `gn-1` and `Un-1`. *)
 (*** NOTE: no check is made that Zn is a successor of Zn-1, nor that Zn+1 is a subset of Zn ***)
-(*** NOTE: no check is made that t and nont represent exactly the set of variables used in the polyhedra. ***)
 let constraint_zone_predecessor_g_u
-	(zn_minus_1 : LinearConstraint.px_linear_constraint)
-	gn_minus_1
-	(updates_n_minus_1 : AbstractModel.clock_updates list)
-	(zn : LinearConstraint.px_linear_constraint)
-	(time_polyhedron : LinearConstraint.pxd_linear_constraint)
-	gn
-	(updates_n : AbstractModel.clock_updates list)
-	(zn_plus_1 : LinearConstraint.px_linear_constraint)
+	(zn_minus_1			: LinearConstraint.px_linear_constraint)
+	(gn_minus_1			: LinearConstraint.pxd_linear_constraint)
+	(updates_n_minus_1	: AbstractModel.clock_updates list)
+	(zn					: LinearConstraint.px_linear_constraint)
+	(time_polyhedron	: LinearConstraint.pxd_linear_constraint)
+	(gn					: LinearConstraint.pxd_linear_constraint)
+	(updates_n			: AbstractModel.clock_updates list)
+	(zn_plus_1			: LinearConstraint.px_linear_constraint)
 		: LinearConstraint.px_linear_constraint
 		=
 	(* Retrieve the model *)
@@ -1095,6 +1094,21 @@ let constraint_zone_predecessor_g_u
 	
 	(* Useful conversions *)
 	let pxd_zn = LinearConstraint.pxd_of_px_constraint zn in
+
+	(* Print some information *)
+	if verbose_mode_greater Verbose_total then(
+		print_message Verbose_total ("\n------------------------------------------------------------");
+		print_message Verbose_total ("Entering constraint_zone_predecessor_g_u with the following arguments:");
+		print_message Verbose_total ("* zn_minus_1       : " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names zn_minus_1) ^ "\n");
+		print_message Verbose_total ("* gn_minus_1       : " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names gn_minus_1) ^ "\n");
+		print_message Verbose_total ("* updates_n_minus_1: " ^ (string_of_list_of_string_with_sep ", " (List.map (ModelPrinter.string_of_clock_updates model) updates_n_minus_1)) ^ "\n");
+		print_message Verbose_total ("* zn               : " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names zn) ^ "\n");
+		print_message Verbose_total ("* time_polyhedron  : " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names time_polyhedron) ^ "\n");
+		print_message Verbose_total ("* gn               : " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names gn) ^ "\n");
+		print_message Verbose_total ("* updates_n        : " ^ (string_of_list_of_string_with_sep ", " (List.map (ModelPrinter.string_of_clock_updates model) updates_n)) ^ "\n");
+		print_message Verbose_total ("* zn_plus_1        : " ^ (LinearConstraint.string_of_px_linear_constraint model.variable_names zn_plus_1) ^ "\n");
+		print_message Verbose_total ("------------------------------------------------------------");
+	);
 
 	
 	(* Step 1: compute the predecessors of zn_plus_1 in zn without time elapsing, i.e., the points zn' subset of zn such that zn' ^ g ^ updates = zn_plus_1 *)
