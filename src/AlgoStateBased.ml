@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/10/19
+ * Last modified     : 2020/11/05
  *
  ************************************************************)
 
@@ -465,7 +465,7 @@ let apply_updates_assign_gen (quantify: bool) (linear_constraint : LinearConstra
 		)else(if not !arbitrary_updates then(
 
 
-
+			print_message Verbose_total ("\n -- Case only resets");
 
 
 			(*** TODO : add "reset" function to LinearConstraint ***)
@@ -477,7 +477,7 @@ let apply_updates_assign_gen (quantify: bool) (linear_constraint : LinearConstra
 			let list_of_clocks_to_update = Hashtbl.fold (fun clock_id _ list_of_clocks -> clock_id :: list_of_clocks) clocks_hash [] in
 
 			(* Compute X = 0 for the variables appearing in resets *)
-			print_message Verbose_total ("\n -- Computing resets X = 0");
+			print_message Verbose_total ("\n -- Computing resets of the form `X = 0`");
 			let updates =
 				(List.map (fun variable_index ->
 					(* Consider cases for clocks *)
@@ -500,7 +500,7 @@ let apply_updates_assign_gen (quantify: bool) (linear_constraint : LinearConstra
 			(* Only in case of existential quantification: Hide clocks updated within the linear constraint, viz., exists X' : lc, for X' in rho(X) *)
 			if quantify then(
 				(* Print some information *)
-				print_message Verbose_total ("\n -- Computing exists X : lc for reset clocks");
+				print_message Verbose_total ("\n -- Computing exists `X : lc` for reset clocks");
 				
 				(* Eliminate variables *)
 				LinearConstraint.pxd_hide_assign list_of_clocks_to_update linear_constraint;
@@ -513,7 +513,7 @@ let apply_updates_assign_gen (quantify: bool) (linear_constraint : LinearConstra
 
 			(* Add the constraints X = 0 *)
 			(* Print some information *)
-			print_message Verbose_total ("\n -- Adding X = 0 for reset clocks");
+			print_message Verbose_total ("\n -- Adding `X = 0` for reset clocks");
 			
 			(* Apply intersection *)
 			LinearConstraint.pxd_intersection_assign linear_constraint [updates];
@@ -526,6 +526,7 @@ let apply_updates_assign_gen (quantify: bool) (linear_constraint : LinearConstra
 		(* CASE 3: updates to linear terms *)
 		)else(
 
+			print_message Verbose_total ("\n -- Case updates to linear terms");
 
 			(*** TODO (not urgent) : add "update" function to LinearConstraint ***)
 
@@ -551,7 +552,7 @@ let apply_updates_assign_gen (quantify: bool) (linear_constraint : LinearConstra
 					Hashtbl.add variable_of_prime !clock_prime_id clock_id;
 					(* Debug message *)
 					if verbose_mode_greater Verbose_total then(
-						print_message Verbose_total ("\nThe primed index of variable '" ^ (model.variable_names clock_id) ^ "' (index = " ^ (string_of_int clock_id) ^ ") is set to " ^ (string_of_int !clock_prime_id) ^ ".")
+						print_message Verbose_total ("\nThe primed index of variable `" ^ (model.variable_names clock_id) ^ "` (index = " ^ (string_of_int clock_id) ^ ") is set to " ^ (string_of_int !clock_prime_id) ^ ".")
 					);
 					(* Increment the prime id for next variable *)
 					clock_prime_id := !clock_prime_id + 1;
@@ -601,7 +602,7 @@ let apply_updates_assign_gen (quantify: bool) (linear_constraint : LinearConstra
 				(* Add the constraints X_i' = linear_term *)
 				
 				(* Print some information *)
-				print_message Verbose_total ("\n -- Adding X_i' = linear_term for updated clocks");
+				print_message Verbose_total ("\n -- Adding `X_i' = linear_term` for updated clocks");
 				(* Apply intersection *)
 				LinearConstraint.pxd_intersection_assign linear_constraint [inequalities];
 				(* Print some information *)
@@ -610,7 +611,7 @@ let apply_updates_assign_gen (quantify: bool) (linear_constraint : LinearConstra
 				(* Remove the variables X_i *)
 				let list_of_clocks_to_hide, _ = List.split updates in
 				(* Hide clocks updated within the linear constraint, viz., exists X_i : lc, for X_i in rho(X) *)
-				print_message Verbose_total ("\n -- Computing exists X : lc for updated clocks");
+				print_message Verbose_total ("\n -- Computing exists `X : lc` for updated clocks");
 				LinearConstraint.pxd_hide_assign list_of_clocks_to_hide linear_constraint;
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
@@ -1117,7 +1118,7 @@ let constraint_zone_predecessor_g_u
 	
 	(* Print some information *)
 	if verbose_mode_greater Verbose_high then(
-		print_message Verbose_high ("Hid variables concerned by the updates, i.e., '" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names (get_clocks_in_updates updates_n))) ^ "': " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
+		print_message Verbose_high ("Hid variables concerned by the updates, i.e., `" ^ (string_of_list_of_string_with_sep ", " (List.map model.variable_names (get_clocks_in_updates updates_n))) ^ "`: " ^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names pxd_linear_constraint) ^ "");
 	);
 
 	(* Print some information *)
