@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/11/05
+ * Last modified     : 2020/11/11
  *
  ************************************************************)
 
@@ -4381,6 +4381,10 @@ class virtual algoStateBased =
 
 			(* Termination due to a number of explored states reached *)
 			| States_limit_reached -> termination_status <- Some (Result.States_limit nb_unexplored_successors)
+			
+			(* Termination because a witness has been found *)
+			(*** NOTE/TODO: add a new result termination type? ***)
+			| Witness_found -> termination_status <- Some (Result.Regular_termination)
 		end
 		;
 
