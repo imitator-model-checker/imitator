@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/10/19
+ * Last modified     : 2020/11/11
  *
  ************************************************************)
  
@@ -719,6 +719,55 @@ try(
 (** Draw (using the plotutils graph utility) the evolution of clock and discrete variables valuations according to time. *)
 (*------------------------------------------------------------*)
 
+exception Found_flow of NumConst.t
+
+(* Side function to get the flow of a variable in a given global_location *)
+(*** NOTE: if incompatible flows are defined (i.e., a different flow in 2 different automata), the result is undefined (actually the first non-1 flow is returned) ***)
+(*** NOTE: this function could be defined elsewhere… ***)
+let get_flow
+(*	(stopwatches     : Automaton.automaton_index -> Automaton.location_index -> Automaton.clock_index list)
+	(flow            : Automaton.automaton_index -> Automaton.location_index -> (Automaton.clock_index * NumConst.t) list)*)
+	(model           : AbstractModel.abstract_model)
+	(global_location : Location.global_location)
+	(variable_index  : Automaton.variable_index)
+	:
+	NumConst.t
+	=
+	(* First try to iterate over stopwatches *)
+	if List.exists (fun automaton_index ->
+		(* Get location index *)
+		let location_index = Location.get_location global_location automaton_index in
+		(* Get list of stopped clocks *)
+		let stopwatches = model.stopwatches automaton_index location_index in
+		(* Check for membership *)
+		List.mem variable_index stopwatches
+	) model.automata
+	then NumConst.zero
+	else
+	(* Second: try for explicit flows *)
+	(*** TODO: replace with `find_map` when using OCaml v4.10 ***)
+	try(
+		List.iter (fun automaton_index ->
+			(* Get location index *)
+			let location_index = Location.get_location global_location automaton_index in
+			(* Get list of flows *)
+			let flows = model.flow automaton_index location_index in
+			(* Check for membership *)
+			match List.find_opt (fun (clock_index, _) -> clock_index = variable_index) flows with
+				(* We found a `<>1` flow: return! *)
+				| Some clock_and_flow ->
+					let _, flow = clock_and_flow in
+					raise (Found_flow flow)
+				(* No flow found for this variable: keep searching in the next automaton *)
+				| None -> ()
+		) model.automata;
+		
+		(* Otherwise: normal flow, i.e., 1 *)
+		NumConst.one
+		
+	) with Found_flow flow -> flow
+
+
 (* This generic function takes a list of "abstract steps", i.e., only the target and the duration; this is to unify concrete and impossible steps *)
 (*** TODO: draw differently the impossible part of impossible concrete runs ***)
 let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_state) (abstract_steps : (NumConst.t * State.concrete_state) list) (file_prefix : string) : unit =
@@ -764,6 +813,9 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 
 			(* Used to keep the previous value *)
 			let previous_value = ref zero_value in
+			
+			(* Used to get the flow of the variables *)
+			let previous_location = ref initial_state.global_location in
 			
 			(* Consider the value at time 0 *)
 			(
@@ -850,9 +902,18 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 						)else(
 							(* Increment the value of the clock by the elapsed time *)
 							
-							(*** TODO: urgency / stopwatches! ***)
+							(* Get the flow *)
+							let flow = get_flow model !previous_location variable_index in
 							
-							let clock_value_after_elapsing = NumConst.add !previous_value time_elapsed in
+(*							(*** TODO: urgency / stopwatches! ***)
+							let stopwatches = model.stopwatches (blublu) in 
+							
+							let flow =
+								(if *)
+							
+							(* Update the value of the clock using the flow *)
+							let clock_value_after_elapsing = NumConst.add !previous_value (NumConst.mul time_elapsed flow) in
+							
 							(* Same value, current time *)
 							(* Convert to the plotutils format *)
 							(draw_x_y !absolute_time clock_value_after_elapsing)
@@ -868,6 +929,9 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 				
 				(* Backup current point for next point *)
 				previous_value := value;
+				
+				(* Backup current location for next point *)
+				previous_location := step_target.global_location;
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
