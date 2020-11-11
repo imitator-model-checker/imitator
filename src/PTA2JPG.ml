@@ -6,11 +6,11 @@
  * Université Paris 13, LIPN, CNRS, France
  * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  *
- * Module description: Convert an IMITATOR model to a .jpg file generated thanks to the dot utility
+ * Module description: Convert an IMITATOR model to a .jpg file generated using the dot utility
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2012/08/24
- * Last modified     : 2020/09/22
+ * Last modified     : 2020/11/11
  *
  ************************************************************)
 
@@ -154,6 +154,18 @@ let string_of_transitions model automaton_index location_index =
 	result
 
 
+(* Convert a flow into a string (only <> 1 flows are printed) *)
+let string_of_flow model automaton_index location_index =
+	string_of_list_of_string_with_sep ", " (List.map (fun (clock_index, constant_value) -> 
+		(model.variable_names clock_index)
+		^ "' = "
+		^ (NumConst.string_of_numconst constant_value)
+		)
+		(model.flow automaton_index location_index)
+	)
+
+
+
 (* Convert a location of an automaton into a string *)
 let string_of_location model automaton_index location_index =
 	print_message Verbose_high "\n Entering string_of_location…";
@@ -195,8 +207,11 @@ let string_of_location model automaton_index location_index =
 	(* Label: stopwatches *)
 	^ (if model.has_stopwatches then (
 		let stopwatches = model.stopwatches automaton_index location_index in
-		"|" ^
-		(if stopwatches != [] then "stop " ^ string_of_list_of_variables model.variable_names stopwatches else "")
+		""
+		^ (if stopwatches <> [] then "| stop " ^ string_of_list_of_variables model.variable_names stopwatches ^ "" else "")
+		(*** TODO: better delimiter? ***)
+		^ ""
+		^ (if (model.flow automaton_index location_index) <> [] then "|" ^ (string_of_flow model automaton_index location_index) else "")
 	) else "")
 
 	(* The end *)
