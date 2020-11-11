@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2020/09/03
+ * Last modified     : 2020/11/11
  *
  ************************************************************)
 
@@ -287,7 +287,7 @@ let print_highlighted_message shell_highlighting_type message_verbose_mode messa
 		(* Add new lines and blanks everywhere *)
 		let formatted_message = spaces ^ (shell_code_of_shell_highlighting_type shell_highlighting_type) ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) ^ (shell_code_of_shell_highlighting_type Shell_normal) in
 		(* Print *)
-		print_message_generic print_string Pervasives.stdout formatted_message
+		print_message_generic print_string Stdlib.stdout formatted_message
 	)
 
 
@@ -305,7 +305,7 @@ let print_warning message =
 		let formatted_message = spaces ^ (shell_code_of_shell_highlighting_type Shell_warning) ^ "*** Warning: " ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) ^ (shell_code_of_shell_highlighting_type Shell_normal) in
 		(* Print *)
 		(*** NOTE: warnings are displaied to stderr (hence the OCaml function 'prerr_string') ***)
-		print_message_generic prerr_string Pervasives.stderr formatted_message
+		print_message_generic prerr_string Stdlib.stderr formatted_message
 	)
 
 
@@ -315,7 +315,7 @@ let print_error message =
 	(* Add new lines and blanks everywhere *)
 	let formatted_message = spaces ^ (shell_code_of_shell_highlighting_type Shell_error) ^ "*** ERROR: " ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) ^ (shell_code_of_shell_highlighting_type Shell_normal) in
 	(* Print *)
-	print_message_generic prerr_string Pervasives.stderr formatted_message
+	print_message_generic prerr_string Stdlib.stderr formatted_message
 
 
 
@@ -441,8 +441,8 @@ let abort_program () =
 	print_error (Constants.program_name ^ " aborted (" ^ (after_seconds ()) ^ ")");
 	(*** NOTE: print new line to stderr ***)
 	prerr_newline();
-	flush Pervasives.stderr;
-	flush Pervasives.stdout;
+	flush Stdlib.stderr;
+	flush Stdlib.stdout;
 	exit(1)
 
 
@@ -456,6 +456,6 @@ let terminate_program () =
 	);
 	(* The end *)
 	print_newline();
-	flush Pervasives.stderr;
-	flush Pervasives.stdout;
+	flush Stdlib.stderr;
+	flush Stdlib.stdout;
 	exit(0)

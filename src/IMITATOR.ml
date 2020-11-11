@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/09/24
+ * Last modified     : 2020/11/11
  *
  ************************************************************)
 
@@ -1135,7 +1135,7 @@ end;
 	counter_main_algorithm#stop;
 
 	print_error (error_message ^ "\nPlease (politely) insult the developers.");
-	Printexc.print_backtrace Pervasives.stderr;
+	Printexc.print_backtrace Stdlib.stderr;
 
 	abort_program ();
 	(* Safety *)

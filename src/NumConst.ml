@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2020/04/22
+ * Last modified     : 2020/11/11
  *
  ************************************************************)
  
@@ -385,7 +385,7 @@ let random_generator() =
 					(*** TODO: this mechanism should be factored in a "super Global.ml" module ***)
 					prerr_string("Fatal error during random generator initialization. Aborting.");
 					prerr_newline();
-					flush Pervasives.stdout;
+					flush Stdlib.stdout;
 					raise (Exceptions.Random_generator_initialization_exception);
 				);
 			in result
