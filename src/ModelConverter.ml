@@ -1937,7 +1937,7 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 				(* Update the array of flows *)
 				flow_array.(automaton_index).(location_index) <-
 					(* Sort the list and remove duplicates, just to potentially speed up a bit *)
-					List.sort_uniq Stdlib.compare
+					List.sort_uniq compare
 					(
 						List.map (fun (clock_index, flow_value) ->
 							(Hashtbl.find index_of_variables clock_index), flow_value

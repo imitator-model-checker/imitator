@@ -1135,7 +1135,7 @@ end;
 	counter_main_algorithm#stop;
 
 	print_error (error_message ^ "\nPlease (politely) insult the developers.");
-	Printexc.print_backtrace Stdlib.stderr;
+	Printexc.print_backtrace stderr;
 
 	abort_program ();
 	(* Safety *)
