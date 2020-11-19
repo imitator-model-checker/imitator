@@ -1052,7 +1052,7 @@ let backward_symbolic_run state_space (target_state_index : state_index) (source
 	let colortable = colortable_create (nb_states state_space) in
 
 	(* Function to sort the predecessors made of a pair of a combined_transition and a state_index *)
-	let sort_predecessors = List.sort (fun (_, a) (_, b) -> Stdlib.compare a b) in
+	let sort_predecessors = List.sort (fun (_, a) (_, b) -> compare a b) in
 
 	(*------------------------------------------------------------*)
 	(* Use a recursive procedure returning a (list of (state, combined transition))'option ; None denotes the current run is useless. The states are returned in reversed order. *)

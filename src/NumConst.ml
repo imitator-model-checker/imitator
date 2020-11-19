@@ -385,7 +385,7 @@ let random_generator() =
 					(*** TODO: this mechanism should be factored in a "super Global.ml" module ***)
 					prerr_string("Fatal error during random generator initialization. Aborting.");
 					prerr_newline();
-					flush Stdlib.stdout;
+					flush stdout;
 					raise (Exceptions.Random_generator_initialization_exception);
 				);
 			in result
