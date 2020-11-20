@@ -164,7 +164,7 @@ and get_variables_in_parsed_discrete_boolean_expression variables_used_ref  = fu
 		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr3
 
 	
-(*------------------------------------------------------------*)
+(*(*------------------------------------------------------------*)
 (* Gather all variable names used in a parsed_update_arithmetic_expression *)
 (*------------------------------------------------------------*)
 let rec get_variables_in_parsed_discrete_factor variables_used_ref = function
@@ -196,7 +196,7 @@ and get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref = 
 		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term
 
 	| Parsed_DAE_term parsed_discrete_term ->
-		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term
+		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term*)
 
 
 
@@ -340,7 +340,7 @@ let discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_
 
 (*** TODO (though really not critical): try to do some simplifications… ***)
 
-(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
+(*(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
 let discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression index_of_variables constants =
 	let rec discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec = function
 		| Parsed_DAE_plus (parsed_discrete_arithmetic_expression, parsed_discrete_term) ->
@@ -380,7 +380,7 @@ let discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression inde
 		| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor)
 	in
 	(* Call high-level function *)
-	discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec
+	discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec*)
 
 
 
