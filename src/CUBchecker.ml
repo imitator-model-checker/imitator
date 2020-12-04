@@ -3583,6 +3583,9 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		nb_locations = new_nb_locations;
 		nb_transitions = new_nb_transitions;
 		
+		(* Is there any invariant in the model? *)
+		(*** HACK: to check! ***)
+		has_invariants = model.has_invariants;
 		(* Is there any stopwatch in the model? *)
 		has_non_1rate_clocks = model.has_non_1rate_clocks;
 		(* Is the model an L/U-PTA? *)

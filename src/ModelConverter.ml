@@ -4827,6 +4827,22 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	) with Not_LU -> PTA_notLU
 	in
 
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check existence of invariants *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	let has_invariants = 
+	(* For all PTA *)
+	List.exists (fun automaton_index ->
+		let locations_for_this_automaton = locations_per_automaton automaton_index in
+		(* For all locations *)
+		List.exists (fun location_index ->
+			let invariant = invariants automaton_index location_index in
+			(* Costly test! But inherent to the invariants structure *)
+			not (LinearConstraint.pxd_is_true invariant)
+		) locations_for_this_automaton
+	) automata in
+
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -5033,6 +5049,8 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	nb_locations   = nb_locations;
 	nb_transitions = nb_transitions;
 
+	(* Is there any invariant in the model? *)
+	has_invariants = has_invariants;
 	(* Is there any clock going at a rate <> 1 in the model? *)
 	has_non_1rate_clocks = has_non_1rate_clocks;
 	(* Is the model an L/U-PTA? *)

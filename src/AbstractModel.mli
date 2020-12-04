@@ -171,6 +171,8 @@ type abstract_model = {
 	nb_locations  : int;
 	nb_transitions: int;
 
+	(* Is there any invariant in the model? *)
+	has_invariants : bool;
 	(* Is there any clock going at a rate <> 1 in the model? *)
 	has_non_1rate_clocks : bool;
 	(* Is the model an L/U-PTA? *)
