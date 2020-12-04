@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2015/03/24
- * Last modified     : 2020/01/08
+ * Last modified     : 2020/12/04
  *
  ****************************************************************)
 
@@ -242,7 +242,7 @@ let string_of_location model automaton_index location_index =
 	let color_id = ((location_index) mod LatexHeader.nb_colors) + 1 in
 
 	let has_invariant = not (LinearConstraint.pxd_is_true invariant) in
-	let has_stopwatches = model.has_stopwatches && (model.stopwatches automaton_index location_index != []) in
+	let has_non_1rate_clocks = model.has_non_1rate_clocks && (model.stopwatches automaton_index location_index != []) in
 
 	(*** TODO: better positioning! (from dot?) ***)
 (*	let pos_x = location_index in
@@ -276,10 +276,10 @@ let string_of_location model automaton_index location_index =
 			\\end{tabular}
 		};*)
 
-	^ (if has_invariant || has_stopwatches then (
+	^ (if has_invariant || has_non_1rate_clocks then (
 		(* Comment *)
 		let nature_for_comment =
-			match has_invariant, has_stopwatches with
+			match has_invariant, has_non_1rate_clocks with
 			| true , true -> "Invariant and stopwatches"
 			| true , false -> "Invariant"
 			| false , true -> "Stopwatches"
@@ -291,7 +291,8 @@ let string_of_location model automaton_index location_index =
 		(* Invariant *)
 		^ (if has_invariant then (tikz_string_of_linear_constraint invariant) ^ "\\\\" else "")
 		(* Stopwatches *)
-		^ (if has_stopwatches then (
+		(*** TODO: and flows!!! ***)
+		^ (if has_non_1rate_clocks then (
 			let stopwatches = model.stopwatches automaton_index location_index in
 			(" & stop(" ^ (string_of_list_of_string_with_sep ", " (List.map variable_names_with_style stopwatches)) ^ ")")
 			) else "")

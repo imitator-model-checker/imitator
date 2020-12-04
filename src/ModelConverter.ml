@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/11/20
+ * Last modified     : 2020/12/04
  *
  ************************************************************)
 
@@ -1815,8 +1815,8 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 	(* Create an empty array for the flows *)
 	let flow_array = Array.make nb_automata (Array.make 0 []) in
 	
-	(* Does the model has any stopwatch? *)
-	let has_stopwatches = ref false in
+	(* Does the model has any clock with a rate <>1? *)
+	let has_non_1rate_clocks = ref false in
 	(* Maintain the index of no_sync *)
 	let no_sync_index = ref (Array.length actions) in
 
@@ -1923,7 +1923,7 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 				invariants.(automaton_index).(location_index) <- linear_constraint_of_convex_predicate index_of_variables constants location.invariant;
 
 				(* Does the model has stopwatches? *)
-				if location.stopped != [] then has_stopwatches := true;
+				if location.stopped != [] then has_non_1rate_clocks := true;
 				(* Convert the stopwatches names into variables *)
 				let list_of_stopwatch_names = list_only_once location.stopped in
 				(* Update the array of stopwatches *)
@@ -1931,8 +1931,9 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 					Hashtbl.find index_of_variables clock_index
 				) list_of_stopwatch_names;
 
-				(* Does the model has stopwatches? *)
-				if location.flow != [] then has_stopwatches := true;
+				(* Does the model has clocks with <> rate? *)
+				(*** NOTE: technically, we should update the flag only whenever the rate is <> 1… ***)
+				if location.flow != [] then has_non_1rate_clocks := true;
 				(* Convert the flow names into variables *)
 				(* Update the array of flows *)
 				flow_array.(automaton_index).(location_index) <-
@@ -1977,7 +1978,7 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 	let actions = list_of_interval 0 (nb_actions - 1) in
 
 	(* Return all the structures in a functional representation *)
-	actions, array_of_action_names, array_of_action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, !has_stopwatches, flow_array, transitions, (if with_observer_action then Some (nb_actions - 1) else None)
+	actions, array_of_action_names, array_of_action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, !has_non_1rate_clocks, flow_array, transitions, (if with_observer_action then Some (nb_actions - 1) else None)
 
 
 
@@ -4378,7 +4379,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Building automata…");
 	(* Get all the possible actions for every location of every automaton *)
-	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_stopwatches, flow_array, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option != None) in
+	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_non_1rate_clocks, flow_array, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option != None) in
 	
 	let nb_actions = List.length actions in
 	
@@ -5033,7 +5034,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	nb_transitions = nb_transitions;
 
 	(* Is there any clock going at a rate <> 1 in the model? *)
-	has_stopwatches = has_stopwatches;
+	has_non_1rate_clocks = has_non_1rate_clocks;
 	(* Is the model an L/U-PTA? *)
 	lu_status = lu_status;
 	(* Is the model a strongly deterministic PTA? *)

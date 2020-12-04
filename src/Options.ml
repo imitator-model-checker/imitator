@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/09/24
+ * Last modified     : 2020/12/04
  *
  ************************************************************)
 
@@ -1131,8 +1131,8 @@ class imitator_options =
 			(* Recall modes *)
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-			(* With or without stopwatches *)
-			if model.has_stopwatches then
+			(* Does the model contain clocks with a non-1 rate? *)
+			if model.has_non_1rate_clocks then
 				print_message Verbose_standard ("The model contains clocks with a non-1 flow.")
 			else
 				print_message Verbose_low ("The model is purely timed (no stopwatches nor flows).");

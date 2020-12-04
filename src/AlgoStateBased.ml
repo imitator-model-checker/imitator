@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/11/11
+ * Last modified     : 2020/12/04
  *
  ************************************************************)
 
@@ -703,7 +703,7 @@ let compute_stopwatches (location : Location.global_location) : (Automaton.clock
 	let model = Input.get_model() in
 
 	(* If no stopwatches at all: just return the set of clocks *)
-	if not model.has_stopwatches then ([], model.clocks) else(
+	if not model.has_non_1rate_clocks then ([], model.clocks) else(
 		(* Hashtbl clock_id --> true if clock should be stopped by some automaton *)
 		let stopwatches_hashtable = Hashtbl.create (List.length model.clocks) in
 		let stopwatch_mode = ref false in
@@ -972,7 +972,7 @@ let apply_time_shift (direction : time_direction) (location : Location.global_lo
 	(* If not urgent: apply time elapsing *)
 	)else(
 		(* If normal PTA, i.e., without stopwatches nor flows: directly call using the static polyhedron *)
-		if not model.has_stopwatches then(
+		if not model.has_non_1rate_clocks then(
 			(* Get the statically computed time elapsing polyhedron *)
 			let time_polyhedron =
 				(* Choose the right variable depending on time direction *)
@@ -1321,7 +1321,7 @@ let compute_initial_state_or_abort () : state =
 	
 	(*** QUITE A HACK! Strange to have it here ***)
 	(* If normal PTA, i.e., without stopwatches nor flows, compute once for all the static time elapsing polyhedron *)
-	if not model.has_stopwatches then(
+	if not model.has_non_1rate_clocks then(
 		let variables_elapse		= model.clocks in
 		let variables_constant		= model.parameters_and_discrete in
 		let time_el_polyhedron		= generate_polyhedron_time_elapsing_pta Forward variables_elapse variables_constant in
@@ -2059,7 +2059,7 @@ let concrete_run_of_symbolic_run (state_space : StateSpace.state_space) (predece
 		nb_transitions = original_model.nb_transitions;
 
 		(* Is there any stopwatch in the model? *)
-		has_stopwatches = original_model.has_stopwatches;
+		has_non_1rate_clocks = original_model.has_non_1rate_clocks;
 		(* Is the model an L/U-PTA? *)
 		lu_status = original_model.lu_status;
 
@@ -2784,7 +2784,7 @@ class virtual algoStateBased =
 		unexplored_successors <- UnexSucc_undef;
 		
 (*		(* If normal PTA, i.e., without stopwatches nor flows, compute once for all the static time elapsing polyhedron *)
-		if not model.has_stopwatches then(
+		if not model.has_non_1rate_clocks then(
 			let variables_elapse	= model.clocks in
 			let variables_constant	= model.parameters_and_discrete in
 			let time_el_polyhedron		= generate_polyhedron_time_elapsing_pta Forward variables_elapse variables_constant in

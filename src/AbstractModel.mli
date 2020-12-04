@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/11
- * Last modified     : 2020/09/16
+ * Last modified     : 2020/12/04
  *
  ************************************************************)
 
@@ -172,7 +172,7 @@ type abstract_model = {
 	nb_transitions: int;
 
 	(* Is there any clock going at a rate <> 1 in the model? *)
-	has_stopwatches : bool;
+	has_non_1rate_clocks : bool;
 	(* Is the model an L/U-PTA? *)
 	lu_status : lu_status;
 	(* Is the model a strongly deterministic PTA? *)

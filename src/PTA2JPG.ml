@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2012/08/24
- * Last modified     : 2020/11/11
+ * Last modified     : 2020/12/04
  *
  ************************************************************)
 
@@ -205,7 +205,7 @@ let string_of_location model automaton_index location_index =
 	(* Label: invariant *)
 	^ "|{" ^ (escape_string_for_dot (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index)))
 	(* Label: stopwatches *)
-	^ (if model.has_stopwatches then (
+	^ (if model.has_non_1rate_clocks then (
 		let stopwatches = model.stopwatches automaton_index location_index in
 		""
 		^ (if stopwatches <> [] then "| stop " ^ string_of_list_of_variables model.variable_names stopwatches ^ "" else "")

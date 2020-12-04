@@ -9,7 +9,7 @@
  * 
  * File contributors : Nguyen Hoang Gia, Étienne André
  * Created           : 2016/04/13
- * Last modified     : 2020/09/16
+ * Last modified     : 2020/12/04
  *
  ************************************************************)
 
@@ -3584,7 +3584,7 @@ let cubpta_of_pta model : AbstractModel.abstract_model =
 		nb_transitions = new_nb_transitions;
 		
 		(* Is there any stopwatch in the model? *)
-		has_stopwatches = model.has_stopwatches;
+		has_non_1rate_clocks = model.has_non_1rate_clocks;
 		(* Is the model an L/U-PTA? *)
 		(*** TODO (for now, we just assume that after transformation the model is not an L/U PTA anymore ***)
 		lu_status = PTA_notLU;

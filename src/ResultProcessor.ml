@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2020/10/19
+ * Last modified     : 2020/12/04
  *
  ************************************************************)
 
@@ -277,7 +277,7 @@ let model_statistics () =
 	(* Create the statistics *)
 	    "Number of IPTAs                         : " ^ (string_of_int model.nb_automata)
 	^ "\nNumber of clocks                        : " ^ (string_of_int model.nb_clocks)
-	^ "\nHas stopwatches?                        : " ^ (string_of_bool model.has_stopwatches)
+	^ "\nHas clocks with rate <>1?               : " ^ (string_of_bool model.has_non_1rate_clocks)
 	^ "\nL/U subclass                            : " ^ (string_of_lu_status model.lu_status)
 	^ "\nHas silent actions?                     : " ^ (string_of_bool model.has_silent_actions)
 	^ "\nIs strongly deterministic?              : " ^ (string_of_bool model.strongly_deterministic)
