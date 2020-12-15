@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2020/09/25
+ * Last modified     : 2020/12/15
  *
  ************************************************************)
 
@@ -37,9 +37,6 @@ exception EmptyConstraint
 type variable = int
 type coef = NumConst.t
 
-
-(*(** Add on for TA2CLP *)
-val string_of_var : (variable -> string) -> variable -> string*)
 
 
 (************************************************************)
