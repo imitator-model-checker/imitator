@@ -4,12 +4,13 @@
  * 
  * Laboratoire Spécification et Vérification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN, CNRS, France
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Module description: Useful OCaml functions
  * 
  * File contributors : Étienne André
  * Created           : 2014/10/24
- * Last modified     : 2019/08/09
+ * Last modified     : 2020/12/15
  *
  ************************************************************)
  
@@ -377,9 +378,11 @@ let escape_string_for_dot str =
 (*		Str.global_substitute (Str.regexp ">\\|&") (fun s -> if s = ">" then "\\>" else if s = "&" then "\\&" else s)
 			str*)
 (* 		Str.global_replace (Str.regexp "\\(>\\|&\\)") ("\\" ^ "\\(\\1\\)") *)
-	Str.global_replace (Str.regexp "\n") (" \\n ")
-		(Str.global_replace (Str.regexp ">") ("\\>")
-			(Str.global_replace (Str.regexp "&") ("\\&") str)
+	Str.global_replace (Str.regexp "\"") ("\\\"")
+		(Str.global_replace (Str.regexp "\n") (" \\n ")
+			(Str.global_replace (Str.regexp ">") ("\\>")
+				(Str.global_replace (Str.regexp "&") ("\\&") str)
+			)
 		)
 
 

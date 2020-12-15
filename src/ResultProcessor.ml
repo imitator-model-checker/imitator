@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2020/12/04
+ * Last modified     : 2020/12/15
  *
  ************************************************************)
 
@@ -258,9 +258,7 @@ let file_header () =
 	let options = Input.get_options () in
 	    "(************************************************************" 
 	(* Program version *)
-	^ "\n * Result output by " ^ Constants.program_name ^ ""
-	^ "\n * Version  : " ^ (ImitatorUtilities.program_name_and_version_and_nickname_and_build)
-	^ "\n * Git      : " ^ (ImitatorUtilities.git_branch_and_hash)
+	^ "\n * Result by: " ^ (ImitatorUtilities.program_name_and_version_and_nickname_and_build)
 	^ "\n * Model    : '" ^ options#model_file_name ^ "'"
 	(* Date *)
 	^ "\n * Generated: " ^ (now()) ^ ""

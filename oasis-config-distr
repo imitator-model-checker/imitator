@@ -8,7 +8,7 @@
 #
 #  _oasis authors: Étienne André, Alban Linard
 #  Created:        2013/12/11
-#  Last modified:  2020/08/28
+#  Last modified:  2020/12/15
 ###############################################################
 
 OASISFormat: 0.3
@@ -20,7 +20,7 @@ License:     GPL-3.0
 
 # Handling build number (using Python)
 PreBuildCommand: python gen_build_info.py
-PostBuildCommand: python incrementer.py ; echo "Copying main binary file to bin/patator ..." ; cp _build/src/PaTATOR.native bin/patator ; strip bin/patator
+PostBuildCommand: echo "Copying main binary file to bin/patator …" ; cp _build/src/PaTATOR.native bin/patator ; strip bin/patator
 
 
 Executable patator

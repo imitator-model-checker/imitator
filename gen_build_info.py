@@ -7,13 +7,14 @@
 #
 #               Create module BuildInfo
 #
-# Etienne Andre
+# Étienne André
 #
 # Laboratoire d'Informatique de Paris Nord
 # Université Paris 13, France
+# Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
 #
 # Created      : 2013/09/26
-# Last modified: 2018/02/28
+# Last modified: 2020/12/15
 # ************************************************************
 
 from __future__ import print_function
@@ -24,7 +25,6 @@ from time import gmtime, strftime
 # ************************************************************
 # CONSTANTS
 # ************************************************************
-build_number_file_name = "build_number.txt"
 ml_file_name = "src/BuildInfo.ml"
 mli_file_name = "src/BuildInfo.mli"
 
@@ -37,17 +37,6 @@ current_build_date = strftime("%Y-%m-%d %H:%M:%S", gmtime()) + " UTC"
 # Just for generation date
 date_str = strftime("%Y-%m-%d", gmtime())
 year_str = strftime("%Y", gmtime())
-
-# ************************************************************
-# GET CURRENT BUILD NUMBER
-# ************************************************************
-# Open file in read mode
-with open(build_number_file_name) as file_handler:
-    # Read content
-    content = file_handler.read()
-
-    # Convert to int
-    current_build = int(content)
 
 # ************************************************************
 # TRY TO GET GIT INFORMATION
@@ -107,6 +96,7 @@ ml_fmt = """
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN (France)
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Author:        python script
  * 
@@ -114,7 +104,6 @@ ml_fmt = """
  *
  ****************************************************************)
  
-let build_number = "{current_build}"
 let build_time = "{current_build_date}"
 let build_year = "{year}"
 let git_branch = {git_branch}
@@ -123,7 +112,6 @@ let git_hash = {git_hash}
 """
 
 write_to_file(ml_file_name, ml_fmt.format(date=date_str,
-                                          current_build=current_build,
                                           current_build_date=current_build_date,
                                           year=year_str,
                                           git_branch=git_branch_ocaml,
@@ -137,6 +125,7 @@ mli_fmt = """
  * 
  * Laboratoire Specification et Verification (ENS Cachan & CNRS, France)
  * Université Paris 13, LIPN (France)
+ * Université de Lorraine, CNRS, Inria, LORIA, Nancy, France
  * 
  * Author:        python script
  * 
@@ -144,7 +133,6 @@ mli_fmt = """
  *
  ****************************************************************)
  
-val build_number : string
 val build_time   : string
 val build_year   : string
 val git_branch   : string option
