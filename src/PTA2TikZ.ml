@@ -9,7 +9,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2015/03/24
- * Last modified     : 2020/12/15
+ * Last modified     : 2021/01/07
  *
  ****************************************************************)
 
@@ -241,11 +241,9 @@ let string_of_location model automaton_index location_index =
 	let color_id = ((location_index) mod LatexHeader.nb_colors) + 1 in
 
 	let has_invariant = not (LinearConstraint.pxd_is_true invariant) in
-	let has_non_1rate_clocks = model.has_non_1rate_clocks && (model.stopwatches automaton_index location_index != []) in
+	let has_non_1rate_clocks = model.has_non_1rate_clocks && (model.stopwatches automaton_index location_index <> [] || model.flow automaton_index location_index <> []) in
 
 	(*** TODO: better positioning! (from dot?) ***)
-(*	let pos_x = location_index in
-	let pos_y = 0 in*)
 	let pos_x = 0 in
 	let pos_y = -location_index in
 
@@ -279,21 +277,29 @@ let string_of_location model automaton_index location_index =
 		(* Comment *)
 		let nature_for_comment =
 			match has_invariant, has_non_1rate_clocks with
-			| true , true -> "Invariant and stopwatches"
+			| true , true -> "Invariant and non-1 flows"
 			| true , false -> "Invariant"
-			| false , true -> "Stopwatches"
-			| _ -> raise (InternalError("Here the model must have invariants or stopwatches"))
+			| false , true -> "Non-1 flows"
+			| _ -> raise (InternalError("Here the model must have invariants or non-1 flows"))
 		in
 		"\n\t\t% " ^ nature_for_comment ^ " of location " ^ location_name
 		(* Begin *)
 		^ "\n\t\t\\node [invariant,right] at (" ^ location_name ^ ".east) {\\begin{tabular}{@{} c @{\\ } c@{} }"
 		(* Invariant *)
 		^ (if has_invariant then (tikz_string_of_linear_constraint invariant) ^ "\\\\" else "")
-		(* Stopwatches *)
-		(*** TODO: and flows!!! ***)
+		(* Stopwatches and flows *)
 		^ (if has_non_1rate_clocks then (
+			(* Stopwatches *)
 			let stopwatches = model.stopwatches automaton_index location_index in
-			(" & stop(" ^ (string_of_list_of_string_with_sep ", " (List.map variable_names_with_style stopwatches)) ^ ")")
+			(if stopwatches <> [] then
+				(" & stop(" ^ (string_of_list_of_string_with_sep ", " (List.map variable_names_with_style stopwatches)) ^ ")\\\\")
+			else "")
+			^
+			(* Flows *)
+			let flows = model.flow automaton_index location_index in
+			(if flows <> [] then
+				(" & " ^ (string_of_list_of_string_with_sep ", " (List.map (fun (clock_index, constant_flow) -> (variable_names_with_style clock_index) ^ "' = " ^ (NumConst.string_of_numconst constant_flow) ^ "") flows)) ^ "\\\\")
+			else "")
 			) else "")
 		(* The end *)
 		^ "\\end{tabular}};"
