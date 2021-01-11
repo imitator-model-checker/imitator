@@ -1510,7 +1510,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 		)
 		^ "\n"*)
 		(*** NOTE: LESS EASY VERSION BUT ORDER IS SPECIFIED (we rank by source states indices, and then by target) ***)
-		"\n  DESCRIPTION OF THE TRANSITIONS"
+		"\n  /************************************************************/\n  DESCRIPTION OF THE TRANSITIONS"
 		(* We iterate on the states *)
 		^ (List.fold_left (fun current_string source_index ->
 			(* Get the successors *)
