@@ -1,5 +1,5 @@
 *******************************************************
-# release 3-beta (2021-xx-xx) Cheese
+# release 3 (2021-xx-xx) Cheese
 MAJOR RELEASE
 
 ### Calling paradigm

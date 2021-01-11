@@ -15,7 +15,7 @@ Specifically, IMITATOR implements:
 * parametric safety and parametric reachability synthesis [AHV93,JLR15],
 * minimal-time and minimal-parameter reachability synthesis [ABPP19],
 * parametric deadlock-freeness checking [Andre16],
-* cycle-existence synthesis [NPP18],
+* cycle-existence synthesis [NPP18,AAPP21],
 * cycle-existence synthesis under the non-Zenoness assumption [ANPS17],
 * the inverse method (also known as (robust) language or trace preservation synthesis) [ACEF09,AS11,AM15],
 * the behavioral cartography [AF10], and
@@ -38,6 +38,8 @@ formal verification, model checking, software verification, parameter synthesis,
 
 
 ### References
+
+[AAPP21] Étienne André, Jaime Arias, Laure Petrucci and Jaco Van de Pol. **Iterative Bounded Synthesis for Efficient Cycle Detection in Parametric Timed Automata**. In Jan Friso Groote and Kim G. Larsen (eds.), TACAS’21, Springer LNCS, April 2021. *To appear.*
 
 [ABPP19] Étienne André, Vincent Bloemen, Laure Petrucci and Jaco Van de Pol. [**Minimal-Time Synthesis for Parametric Timed Automata**](https://doi.org/10.1007/978-3-030-17465-1_12). In Tomas Vojnar and Lijun Zhang (eds.), TACAS’19, Springer LNCS, April 2019.
 

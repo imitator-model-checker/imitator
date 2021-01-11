@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/12/04
+ * Last modified     : 2021/01/11
  *
  ************************************************************)
 
@@ -669,8 +669,8 @@ class imitator_options =
 				");
 
 				("-cycle-algo", String set_cycle_algorithm, " Algorithm for loop synthesis.
-        Use `BFS`  for BFS with a variant of Tarjan's strongly connected components algorithm.
-        Use `NDFS` for NDFS algorithms [NPvdP18] (default).
+        Use `BFS`  for BFS with a variant of Tarjan's strongly connected components algorithm [AAPP21].
+        Use `NDFS` for NDFS algorithms [NPvdP18,AAPP21] (default).
 				");
 
 				("-depth-init", Int (fun i -> depth_init <- Some i), " Initial depth for iterative deepening in NDFS exploration of the state space.
