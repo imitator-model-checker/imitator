@@ -1,5 +1,5 @@
 *******************************************************
-# release 3 (2021-xx-xx) Cheese
+# release 3 (2021-01-12) Cheese
 MAJOR RELEASE
 
 ### Calling paradigm
@@ -12,7 +12,7 @@ The property syntax is entirely new.
 ### Syntax improvement
 * IMITATOR now supports multi-rate clocks with a syntax of the form `flow {x' = 1, y' = 2.5, z = -3/5}`
 
-### Syntax changes in model
+### Syntax changes in the model
 * Terminate support for HyTech-style comments (`-- comment`) and C-style comments (`/* comment */`)
 * Terminate support for some HyTech-style optional syntax (regions declaration…)
 * Many backward-compatible useless syntactic features now raise warnings (e.g. using `while` instead of `invariant`, using `Wait {}`…)
