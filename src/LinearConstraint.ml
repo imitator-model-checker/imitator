@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2010/03/04
- * Last modified     : 2020/09/25
+ * Last modified     : 2020/12/15
  *
  ************************************************************)
 
@@ -334,10 +334,6 @@ type d_linear_constraint = linear_constraint
 type pxd_linear_constraint = linear_constraint
 
 
-
-(** Add on for TA2CLP *)
-let string_of_var names variable =
-	"V_" ^ (names variable)
 
 
 (************************************************************)

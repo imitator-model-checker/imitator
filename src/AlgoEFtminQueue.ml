@@ -9,7 +9,7 @@
  * 
  * File contributors : Vincent Bloemen, Étienne André
  * Created           : 2018/10/08
- * Last modified     : 2020/09/23
+ * Last modified     : 2020/11/11
  *
  ************************************************************)
 
@@ -774,6 +774,9 @@ if options#best_worst_case then (self#state_index_to_max_time suc_id) else
                 | Depth_limit_reached -> termination_status <- Some (Result.Depth_limit (List.length !pq))
                 (* Termination due to a number of explored states reached *)
                 | States_limit_reached -> termination_status <- Some (Result.States_limit (List.length !pq))
+				(* Termination because a witness has been found *)
+				(*** NOTE/TODO: add a new result termination type? ***)
+				| Witness_found -> termination_status <- Some (Result.Regular_termination)
             );
 
             iteration := !iteration + 1;

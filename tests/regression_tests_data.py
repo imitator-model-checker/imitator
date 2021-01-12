@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2020/09/28
+# Last modified     : 2021/01/11
 #************************************************************
 
 
@@ -949,6 +949,7 @@ end
    dG3_u >= 8
 & dG4_u >= 3
 
+/************************************************************/
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1 via "dUp"
   s_1 -> s_2 via "qG1Down"
@@ -1278,7 +1279,8 @@ pta: l2, i = 5/4 (~ 1.25), j = 1/3 (~ 0.3333333333
   Projection onto the parameters:
   True
 
-  DESCRIPTION OF THE TRANSITIONS
+/************************************************************/
+DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1 via "c"
   s_1 -> s_2 via "a"
   s_2 -> s_3 via "b"
@@ -1450,7 +1452,8 @@ Constraint nature                       : good
   Projection onto the parameters:
   True
 
-  DESCRIPTION OF THE TRANSITIONS
+  /************************************************************/
+DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1
   s_1 -> s_1 via "a"
 		"""
@@ -6175,6 +6178,7 @@ Constraint nature             : good
    p1 >= 0
 & p2 >= p1
 
+  /************************************************************/
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1 via "a"
   s_1 -> s_1 via "a"
@@ -6239,6 +6243,7 @@ Number of computed states     : 2
 & p1 >= 0
 & p1 + 5 >= p2
 
+  /************************************************************/
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1 via "a"
 """
@@ -6305,6 +6310,7 @@ Number of computed states     : 3
 & p1 >= 0
 & p1 + 5 >= p2
 
+  /************************************************************/
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1 via "a"
   s_1 -> s_1 via "a"
@@ -6360,6 +6366,7 @@ Number of computed states     : 2
   Projection onto the parameters:
    p >= 0
 
+  /************************************************************/
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1 via "a"
 """
@@ -6415,6 +6422,7 @@ Number of computed states     : 3
   Projection onto the parameters:
    p >= 0
 
+  /************************************************************/
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1 via "a"
   s_1 -> s_1 via "a"
@@ -6987,6 +6995,7 @@ Constraint nature                       : good
    #p1 >= p2
 #& p2 >= 0
 
+  #/************************************************************/
   #DESCRIPTION OF THE TRANSITIONS
   #s_0 -> s_1
   #s_1 -> s_2
@@ -7069,6 +7078,7 @@ END CONSTRAINT
    p1 >= p2
 & p2 >= 0
 
+  /************************************************************/
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1
   s_1 -> s_2
@@ -7159,6 +7169,7 @@ END CONSTRAINT
    #p2 >= 0
 #& p1 >= 3
 
+  #/************************************************************/
   #DESCRIPTION OF THE TRANSITIONS
   #s_0 -> s_1
   #s_0 -> s_2
@@ -7249,6 +7260,7 @@ OR
    p2 >= 0
 & p1 >= 3
 
+  /************************************************************/
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1
   s_0 -> s_2
@@ -7457,6 +7469,7 @@ OR
    #p2 >= 5
 #& p1 >= 0
 
+  #/************************************************************/
   #DESCRIPTION OF THE TRANSITIONS
   #s_0 -> s_1
   #s_0 -> s_2
@@ -7678,6 +7691,7 @@ OR
    p2 >= 5
 & p1 >= 0
 
+  /************************************************************/
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1
   s_0 -> s_2
@@ -10785,6 +10799,7 @@ Constraint nature                       : good/bad
   Projection onto the parameters:
    p >= 2
 
+  /************************************************************/
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1 via "a"
   s_0 -> s_2 via "b"
@@ -10828,6 +10843,7 @@ Constraint nature                       : good/bad
   Projection onto the parameters:
    p >= 0
 
+  /************************************************************/
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_2 via "b"
   s_0 -> s_2 via "a"
@@ -10882,6 +10898,7 @@ Constraint nature                       : good/bad
   Projection onto the parameters:
    p >= 2
 
+  /************************************************************/
   DESCRIPTION OF THE TRANSITIONS
   s_0 -> s_1 via "a"
   s_0 -> s_2 via "b"

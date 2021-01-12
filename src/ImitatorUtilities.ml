@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Laure Petrucci
  * Created           : 2014/10/24
- * Last modified     : 2020/09/03
+ * Last modified     : 2020/12/15
  *
  ************************************************************)
 
@@ -41,6 +41,29 @@ let counter = ref (Unix.gettimeofday())
 (** Versioning *)
 (************************************************************)
 
+(* Shorten the hash to 7 characters *)
+let shorten_hash_7 hash =
+	if String.length hash < 7 then hash
+	else String.sub hash 0 7
+
+(** GitHub branch and first 7 characters of git hash (if applicable) *)
+let git_branch_and_hash =
+	match BuildInfo.git_branch, BuildInfo.git_hash with
+	| None, None -> "unknown git info"
+	| Some branch, None -> branch ^ "/unknown hash"
+	| None, Some hash -> "unknown/" ^ (shorten_hash_7 hash)
+	| Some branch, Some hash -> branch ^ "/" ^ (shorten_hash_7 hash)
+
+
+(** GitHub branch and full git hash (if applicable) *)
+let git_branch_and_full_hash =
+	match BuildInfo.git_branch, BuildInfo.git_hash with
+	| None, None -> "unknown git info"
+	| Some branch, None -> branch ^ "/unknown hash"
+	| None, Some hash -> "unknown/" ^ hash
+	| Some branch, Some hash -> branch ^ "/" ^ hash
+
+
 (* Name + version *)
 let program_name_and_version =
 	Constants.program_name
@@ -64,7 +87,7 @@ let program_name_and_version_and_build =
 	^ " "
 	^ Constants.version_string
 	^ " (build "
-	^ BuildInfo.build_number
+	^ git_branch_and_hash
 	^ ")"
 
 
@@ -76,7 +99,7 @@ let program_name_and_version_and_nickname_and_build =
 	^ " \""
 	^ Constants.version_name
 	^ "\" (build "
-	^ BuildInfo.build_number
+	^ git_branch_and_hash
 	^ ")"
 
 
@@ -88,33 +111,11 @@ let program_name_and_version_and_nickname_and_build_time () =
 	^ " \""
 	^ Constants.version_name
 	^ "\" build "
-	^ BuildInfo.build_number
+	^ git_branch_and_hash
 	^ "\" ("
 	^ BuildInfo.build_time
 	^ ")"
 
-
-(* Shorten the hash to 7 characters *)
-let shorten_hash_7 hash =
-	if String.length hash < 7 then hash
-	else String.sub hash 0 7
-
-(** GitHub branch and first 7 characters of git hash (if applicable) *)
-let git_branch_and_hash =
-	match BuildInfo.git_branch, BuildInfo.git_hash with
-	| None, None -> "unknown git info"
-	| Some branch, None -> branch ^ "/unknown hash"
-	| None, Some hash -> "unknown/" ^ (shorten_hash_7 hash)
-	| Some branch, Some hash -> branch ^ "/" ^ (shorten_hash_7 hash)
-
-
-(** GitHub branch and full git hash (if applicable) *)
-let git_branch_and_full_hash =
-	match BuildInfo.git_branch, BuildInfo.git_hash with
-	| None, None -> "unknown git info"
-	| Some branch, None -> branch ^ "/unknown hash"
-	| None, Some hash -> "unknown/" ^ hash
-	| Some branch, Some hash -> branch ^ "/" ^ hash
 
 
 (* URL of IMITATOR without http:// *)
@@ -287,7 +288,7 @@ let print_highlighted_message shell_highlighting_type message_verbose_mode messa
 		(* Add new lines and blanks everywhere *)
 		let formatted_message = spaces ^ (shell_code_of_shell_highlighting_type shell_highlighting_type) ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) ^ (shell_code_of_shell_highlighting_type Shell_normal) in
 		(* Print *)
-		print_message_generic print_string Pervasives.stdout formatted_message
+		print_message_generic print_string stdout formatted_message
 	)
 
 
@@ -305,7 +306,7 @@ let print_warning message =
 		let formatted_message = spaces ^ (shell_code_of_shell_highlighting_type Shell_warning) ^ "*** Warning: " ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) ^ (shell_code_of_shell_highlighting_type Shell_normal) in
 		(* Print *)
 		(*** NOTE: warnings are displaied to stderr (hence the OCaml function 'prerr_string') ***)
-		print_message_generic prerr_string Pervasives.stderr formatted_message
+		print_message_generic prerr_string stderr formatted_message
 	)
 
 
@@ -315,7 +316,7 @@ let print_error message =
 	(* Add new lines and blanks everywhere *)
 	let formatted_message = spaces ^ (shell_code_of_shell_highlighting_type Shell_error) ^ "*** ERROR: " ^ (Str.global_replace (Str.regexp "\n") ("\n" ^ spaces) message) ^ (shell_code_of_shell_highlighting_type Shell_normal) in
 	(* Print *)
-	print_message_generic prerr_string Pervasives.stderr formatted_message
+	print_message_generic prerr_string stderr formatted_message
 
 
 
@@ -332,7 +333,9 @@ let print_header_string () =
 	let header_string = 
 	
 	(* Build info *)
-	let build_info = "Build: " ^ BuildInfo.build_number ^ " (" ^ BuildInfo.build_time ^ ")" in
+	let git_branch_and_hash_info = "Build: " ^ git_branch_and_hash in
+	let build_date_info = "Build date: " ^ BuildInfo.build_time in
+	
 	(* Lenght minus the starting "*  " and the ending "  *" *)
 	let length_header = 57 in
 	
@@ -348,8 +351,8 @@ let print_header_string () =
 	^ "*  Université de Lorraine, CNRS, Inria, LORIA, Nancy, France  *\n"
 	^ "*  " ^ (string_n_times (length_header - (String.length imitator_url)) " ") ^ imitator_url ^ "  *\n"
 	^ "*                                                             *\n"
-	^ "*  " ^ (string_n_times (length_header - (String.length build_info)) " ") ^ build_info ^ "  *\n"
-	^ "*  " ^ (string_n_times (length_header - (String.length git_branch_and_hash)) " ") ^ git_branch_and_hash ^ "  *\n"
+	^ "*  " ^ (string_n_times (length_header - (String.length git_branch_and_hash_info)) " ") ^ git_branch_and_hash_info ^ "  *\n"
+	^ "*  " ^ (string_n_times (length_header - (String.length build_date_info)) " ") ^ build_date_info ^ "  *\n"
 	^ "***" ^ (string_n_times length_header "*") ^ "***"
 	
 	in print_message Verbose_standard header_string
@@ -441,8 +444,8 @@ let abort_program () =
 	print_error (Constants.program_name ^ " aborted (" ^ (after_seconds ()) ^ ")");
 	(*** NOTE: print new line to stderr ***)
 	prerr_newline();
-	flush Pervasives.stderr;
-	flush Pervasives.stdout;
+	flush stderr;
+	flush stdout;
 	exit(1)
 
 
@@ -456,6 +459,6 @@ let terminate_program () =
 	);
 	(* The end *)
 	print_newline();
-	flush Pervasives.stderr;
-	flush Pervasives.stdout;
+	flush stderr;
+	flush stdout;
 	exit(0)

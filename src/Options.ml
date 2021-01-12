@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2020/09/24
+ * Last modified     : 2021/01/11
  *
  ************************************************************)
 
@@ -669,8 +669,8 @@ class imitator_options =
 				");
 
 				("-cycle-algo", String set_cycle_algorithm, " Algorithm for loop synthesis.
-        Use `BFS`  for BFS with a variant of Tarjan's strongly connected components algorithm.
-        Use `NDFS` for NDFS algorithms [NPvdP18] (default).
+        Use `BFS`  for BFS with a variant of Tarjan's strongly connected components algorithm [AAPP21].
+        Use `NDFS` for NDFS algorithms [NPvdP18,AAPP21] (default).
 				");
 
 				("-depth-init", Int (fun i -> depth_init <- Some i), " Initial depth for iterative deepening in NDFS exploration of the state space.
@@ -1131,8 +1131,8 @@ class imitator_options =
 			(* Recall modes *)
 			(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-			(* With or without stopwatches *)
-			if model.has_stopwatches then
+			(* Does the model contain clocks with a non-1 rate? *)
+			if model.has_non_1rate_clocks then
 				print_message Verbose_standard ("The model contains clocks with a non-1 flow.")
 			else
 				print_message Verbose_low ("The model is purely timed (no stopwatches nor flows).");

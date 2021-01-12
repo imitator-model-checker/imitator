@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2019/07/08
- * Last modified     : 2020/09/28
+ * Last modified     : 2020/10/19
  *
  ************************************************************)
 
@@ -295,7 +295,10 @@ class algoEFexemplify (state_predicate : AbstractProperty.state_predicate) =
 						(* Get the state index at position i *)
 						let state_index_i = nth_state_index_of_symbolic_run symbolic_run !i in
 						(* Get the p-constraint at position i *)
-						let pconstraint_i : LinearConstraint.p_linear_constraint = LinearConstraint.px_hide_nonparameters_and_collapse (StateSpace.get_state state_space state_index_i).px_constraint in
+						let state_i : State.state = StateSpace.get_state state_space state_index_i in
+						let pconstraint_i : LinearConstraint.p_linear_constraint = LinearConstraint.px_hide_nonparameters_and_collapse state_i.px_constraint in
+						(* Get the location at position i *)
+						let global_location_i = state_i.global_location in
 						
 						(* Print some information *)
 						if verbose_mode_greater Verbose_high then(
@@ -361,6 +364,7 @@ class algoEFexemplify (state_predicate : AbstractProperty.state_predicate) =
 							(* Print some information *)
 							if verbose_mode_greater Verbose_low then(
 								print_message Verbose_low ("Example of blocking point at position " ^ (string_of_int !i) ^ ":");
+								print_message Verbose_total ("(Location = " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display global_location_i) ^ ")");
 								print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation_i);
 							);
 							
@@ -495,8 +499,11 @@ class algoEFexemplify (state_predicate : AbstractProperty.state_predicate) =
 						(* Get the state index at position i *)
 						let state_index_i = nth_state_index_of_symbolic_run symbolic_run !i in
 						(* Get the x-constraint at position i *)
-						let xconstraint_i : LinearConstraint.x_linear_constraint = LinearConstraint.px_valuate_parameters functional_pval_positive (StateSpace.get_state state_space state_index_i).px_constraint in
-						
+						let state_i : State.state = StateSpace.get_state state_space state_index_i in
+						let xconstraint_i : LinearConstraint.x_linear_constraint = LinearConstraint.px_valuate_parameters functional_pval_positive state_i.px_constraint in
+						(* Get the location at position i *)
+						let global_location_i = state_i.global_location in
+
 						(* Print some information *)
 						if verbose_mode_greater Verbose_high then(
 							print_message Verbose_high ("\nAbout to compare clock constraint at position " ^ (string_of_int !i) ^ ":");
@@ -552,6 +559,7 @@ class algoEFexemplify (state_predicate : AbstractProperty.state_predicate) =
 							(* Print some information *)
 							if verbose_mode_greater Verbose_low then(
 								print_message Verbose_low ("Example of blocking point at position " ^ (string_of_int !i) ^ ":");
+								print_message Verbose_total ("(Location = " ^ (Location.string_of_location model.automata_names model.location_names model.variable_names Location.Exact_display global_location_i) ^ ")");
 								print_message Verbose_low (ModelPrinter.string_of_px_valuation model concrete_px_valuation_i);
 							);
 							

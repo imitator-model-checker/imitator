@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/11
- * Last modified     : 2020/09/16
+ * Last modified     : 2020/12/04
  *
  ************************************************************)
 
@@ -63,6 +63,8 @@ type location_urgency =
 	(* Non-urgent location *)
 	| Location_nonurgent
 
+(* Special non-necessary 1 flow (i.e., speed, or rate) for a clock in a location *)
+type flow = (clock_index * NumConst.t)
 
 
 (************************************************************)
@@ -171,8 +173,10 @@ type abstract_model = {
 	nb_locations  : int;
 	nb_transitions: int;
 
+	(* Is there any invariant in the model? *)
+	has_invariants : bool;
 	(* Is there any clock going at a rate <> 1 in the model? *)
-	has_stopwatches : bool;
+	has_non_1rate_clocks : bool;
 	(* Is the model an L/U-PTA? *)
 	lu_status : lu_status;
 	(* Is the model a strongly deterministic PTA? *)
@@ -250,7 +254,7 @@ type abstract_model = {
 	(* The list of clocks stopped for each automaton and each location *)
 	stopwatches : automaton_index -> location_index -> clock_index list;
 	(* The list of pairs (clock, NumConst.t) defining the flow of some clocks at each automaton and each location *)
-	flow : automaton_index -> location_index -> (clock_index * NumConst.t) list;
+	flow : automaton_index -> location_index -> flow list;
 	(* An array transition_index -> transition *)
 	transitions_description : transition_index -> transition;
 	(* An array transition_index -> automaton_index *)
