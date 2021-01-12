@@ -9,7 +9,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2017/05/02
- * Last modified     : 2020/09/23
+ * Last modified     : 2020/10/15
  *
  ************************************************************)
 
@@ -600,7 +600,7 @@ class virtual algoEFopt (state_predicate : AbstractProperty.state_predicate) (pa
 			result				= Good_constraint (result, soundness);
 			
 			(* English description of the constraint *)
-			constraint_description = "constraint guaranteeing " ^ self#str_optimum ^ "-time reachability";
+			constraint_description = "constraint guaranteeing " ^ self#str_optimum ^ "-parameter reachability";
 	
 			(* Explored state space *)
 			state_space			= state_space;

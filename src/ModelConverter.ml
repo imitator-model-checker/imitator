@@ -10,7 +10,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Laure Petrucci
  * Created           : 2009/09/09
- * Last modified     : 2020/09/16
+ * Last modified     : 2020/12/04
  *
  ************************************************************)
 
@@ -164,7 +164,7 @@ and get_variables_in_parsed_discrete_boolean_expression variables_used_ref  = fu
 		get_variables_in_parsed_update_arithmetic_expression variables_used_ref arithmetic_expr3
 
 	
-(*------------------------------------------------------------*)
+(*(*------------------------------------------------------------*)
 (* Gather all variable names used in a parsed_update_arithmetic_expression *)
 (*------------------------------------------------------------*)
 let rec get_variables_in_parsed_discrete_factor variables_used_ref = function
@@ -196,7 +196,7 @@ and get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref = 
 		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term
 
 	| Parsed_DAE_term parsed_discrete_term ->
-		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term
+		get_variables_in_parsed_discrete_term variables_used_ref parsed_discrete_term*)
 
 
 
@@ -340,7 +340,7 @@ let discrete_arithmetic_expression_of_parsed_update_arithmetic_expression index_
 
 (*** TODO (though really not critical): try to do some simplifications… ***)
 
-(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
+(*(*** NOTE: define a top-level function to avoid recursive passing of all common variables ***)
 let discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression index_of_variables constants =
 	let rec discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec = function
 		| Parsed_DAE_plus (parsed_discrete_arithmetic_expression, parsed_discrete_term) ->
@@ -380,7 +380,7 @@ let discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression inde
 		| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (discrete_factor_of_parsed_discrete_factor parsed_discrete_factor)
 	in
 	(* Call high-level function *)
-	discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec
+	discrete_arithmetic_expression_of_parsed_discrete_arithmetic_expression_rec*)
 
 
 
@@ -1815,8 +1815,8 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 	(* Create an empty array for the flows *)
 	let flow_array = Array.make nb_automata (Array.make 0 []) in
 	
-	(* Does the model has any stopwatch? *)
-	let has_stopwatches = ref false in
+	(* Does the model has any clock with a rate <>1? *)
+	let has_non_1rate_clocks = ref false in
 	(* Maintain the index of no_sync *)
 	let no_sync_index = ref (Array.length actions) in
 
@@ -1923,7 +1923,7 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 				invariants.(automaton_index).(location_index) <- linear_constraint_of_convex_predicate index_of_variables constants location.invariant;
 
 				(* Does the model has stopwatches? *)
-				if location.stopped != [] then has_stopwatches := true;
+				if location.stopped != [] then has_non_1rate_clocks := true;
 				(* Convert the stopwatches names into variables *)
 				let list_of_stopwatch_names = list_only_once location.stopped in
 				(* Update the array of stopwatches *)
@@ -1931,13 +1931,14 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 					Hashtbl.find index_of_variables clock_index
 				) list_of_stopwatch_names;
 
-				(* Does the model has stopwatches? *)
-				if location.flow != [] then has_stopwatches := true;
+				(* Does the model has clocks with <> rate? *)
+				(*** NOTE: technically, we should update the flag only whenever the rate is <> 1… ***)
+				if location.flow != [] then has_non_1rate_clocks := true;
 				(* Convert the flow names into variables *)
 				(* Update the array of flows *)
 				flow_array.(automaton_index).(location_index) <-
 					(* Sort the list and remove duplicates, just to potentially speed up a bit *)
-					List.sort_uniq Pervasives.compare
+					List.sort_uniq compare
 					(
 						List.map (fun (clock_index, flow_value) ->
 							(Hashtbl.find index_of_variables clock_index), flow_value
@@ -1977,7 +1978,7 @@ let make_automata useful_parsing_model_information parsed_automata (with_observe
 	let actions = list_of_interval 0 (nb_actions - 1) in
 
 	(* Return all the structures in a functional representation *)
-	actions, array_of_action_names, array_of_action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, !has_stopwatches, flow_array, transitions, (if with_observer_action then Some (nb_actions - 1) else None)
+	actions, array_of_action_names, array_of_action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, !has_non_1rate_clocks, flow_array, transitions, (if with_observer_action then Some (nb_actions - 1) else None)
 
 
 
@@ -4359,14 +4360,26 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 		then raise InvalidModel;
 
 	print_message Verbose_medium ("Model syntax successfully checked.");
+	
 
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check the property *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	
+	if not (check_property_option useful_parsing_model_information parsed_property_option)
+		then raise InvalidProperty;
 
+	print_message Verbose_medium ("Property syntax successfully checked.");
+	
+
+	
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	(* Construct the automata without the observer, and with the transitions in a non-finalized form *)
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 	print_message Verbose_high ("*** Building automata…");
 	(* Get all the possible actions for every location of every automaton *)
-	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_stopwatches, flow_array, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option != None) in
+	let actions, array_of_action_names, action_types, actions_per_automaton, actions_per_location, location_acceptance, location_urgency, costs, invariants, stopwatches_array, has_non_1rate_clocks, flow_array, transitions, observer_nosync_index_option = make_automata useful_parsing_model_information parsed_model.automata (observer_automaton_index_option != None) in
 	
 	let nb_actions = List.length actions in
 	
@@ -4814,6 +4827,22 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	) with Not_LU -> PTA_notLU
 	in
 
+	
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	(* Check existence of invariants *)
+	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
+	let has_invariants = 
+	(* For all PTA *)
+	List.exists (fun automaton_index ->
+		let locations_for_this_automaton = locations_per_automaton automaton_index in
+		(* For all locations *)
+		List.exists (fun location_index ->
+			let invariant = invariants automaton_index location_index in
+			(* Costly test! But inherent to the invariants structure *)
+			not (LinearConstraint.pxd_is_true invariant)
+		) locations_for_this_automaton
+	) automata in
+
 
 
 	(**-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
@@ -5020,8 +5049,10 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 	nb_locations   = nb_locations;
 	nb_transitions = nb_transitions;
 
+	(* Is there any invariant in the model? *)
+	has_invariants = has_invariants;
 	(* Is there any clock going at a rate <> 1 in the model? *)
-	has_stopwatches = has_stopwatches;
+	has_non_1rate_clocks = has_non_1rate_clocks;
 	(* Is the model an L/U-PTA? *)
 	lu_status = lu_status;
 	(* Is the model a strongly deterministic PTA? *)

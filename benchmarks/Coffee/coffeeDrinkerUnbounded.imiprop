@@ -1,0 +1,25 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Coffee vending machine with drinker
+ *
+ * Description     : Coffee vending machine; a single button is used to wake the machine up, and to add sugar. Then a cup, and coffee are delivered after a (parametric) time.
+	Drinker: Work for some parametric time [p_work_min, p_work_max], then needs coffee. Asks for a coffee with a non-deterministic number of sugars in [0, MAX_SUGAR]. If does not get its coffee within p_patience_max, then gets mad.
+	Variant of coffeeDrinker.imi, but chosing an arbitrary and unbounded number of sugars.
+ * Correctness     : The scientist never gets mad
+ * Source          : Own work
+ * Author          : Étienne André
+ * Input by        : Étienne André
+ *
+ * Created         : 2020/12/18
+ * Last modified   : 2020/12/18
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+property := #synth AGnot(loc[researcher] = mad);
+projectresult(p_patience_max, p_press_min, p_coffee);

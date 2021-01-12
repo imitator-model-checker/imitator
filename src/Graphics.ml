@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André, Ulrich Kühne
  * Created           : 2010/07/05
- * Last modified     : 2020/09/22
+ * Last modified     : 2020/11/11
  *
  ************************************************************)
  
@@ -719,6 +719,55 @@ try(
 (** Draw (using the plotutils graph utility) the evolution of clock and discrete variables valuations according to time. *)
 (*------------------------------------------------------------*)
 
+exception Found_flow of NumConst.t
+
+(* Side function to get the flow of a variable in a given global_location *)
+(*** NOTE: if incompatible flows are defined (i.e., a different flow in 2 different automata), the result is undefined (actually the first non-1 flow is returned) ***)
+(*** NOTE: this function could be defined elsewhere… ***)
+let get_flow
+(*	(stopwatches     : Automaton.automaton_index -> Automaton.location_index -> Automaton.clock_index list)
+	(flow            : Automaton.automaton_index -> Automaton.location_index -> (Automaton.clock_index * NumConst.t) list)*)
+	(model           : AbstractModel.abstract_model)
+	(global_location : Location.global_location)
+	(variable_index  : Automaton.variable_index)
+	:
+	NumConst.t
+	=
+	(* First try to iterate over stopwatches *)
+	if List.exists (fun automaton_index ->
+		(* Get location index *)
+		let location_index = Location.get_location global_location automaton_index in
+		(* Get list of stopped clocks *)
+		let stopwatches = model.stopwatches automaton_index location_index in
+		(* Check for membership *)
+		List.mem variable_index stopwatches
+	) model.automata
+	then NumConst.zero
+	else
+	(* Second: try for explicit flows *)
+	(*** TODO: replace with `find_map` when using OCaml v4.10 ***)
+	try(
+		List.iter (fun automaton_index ->
+			(* Get location index *)
+			let location_index = Location.get_location global_location automaton_index in
+			(* Get list of flows *)
+			let flows = model.flow automaton_index location_index in
+			(* Check for membership *)
+			match List.find_opt (fun (clock_index, _) -> clock_index = variable_index) flows with
+				(* We found a `<>1` flow: return! *)
+				| Some clock_and_flow ->
+					let _, flow = clock_and_flow in
+					raise (Found_flow flow)
+				(* No flow found for this variable: keep searching in the next automaton *)
+				| None -> ()
+		) model.automata;
+		
+		(* Otherwise: normal flow, i.e., 1 *)
+		NumConst.one
+		
+	) with Found_flow flow -> flow
+
+
 (* This generic function takes a list of "abstract steps", i.e., only the target and the duration; this is to unify concrete and impossible steps *)
 (*** TODO: draw differently the impossible part of impossible concrete runs ***)
 let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_state) (abstract_steps : (NumConst.t * State.concrete_state) list) (file_prefix : string) : unit =
@@ -737,7 +786,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
-			print_message Verbose_medium ("Preparing signal plot for " ^ (ModelPrinter.string_of_var_type (model.type_of_variables variable_index)) ^  " '" ^ (model.variable_names variable_index) ^  "'…");
+			print_message Verbose_medium ("Preparing signal plot for " ^ (ModelPrinter.string_of_var_type (model.type_of_variables variable_index)) ^  " `" ^ (model.variable_names variable_index) ^  "`…");
 		);
 		
 		(*** TODO: remove consecutive identical points (not critical) ***)
@@ -751,7 +800,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_total then(
-				print_message Verbose_total ("Computing value for '" ^ (model.variable_names variable_index) ^  "' at time zero…");
+				print_message Verbose_total ("Computing value for `" ^ (model.variable_names variable_index) ^  "` at time zero…");
 			);
 			(* Get value *)
 			let zero_value = match model.type_of_variables variable_index with
@@ -765,13 +814,16 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 			(* Used to keep the previous value *)
 			let previous_value = ref zero_value in
 			
+			(* Used to get the flow of the variables *)
+			let previous_location = ref initial_state.global_location in
+			
 			(* Consider the value at time 0 *)
 			(
 				(*** WARNING: do not use !absolute_time here, as it may be modified in the part FOLLOWING the :: (not sure how OCaml executes this!) ***)
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("Generating points for '" ^ (model.variable_names variable_index) ^  "' at time zero with value '" ^ (NumConst.string_of_numconst zero_value) ^  "'…");
+					print_message Verbose_total ("Generating points for `" ^ (model.variable_names variable_index) ^  "` at time zero with value '" ^ (NumConst.string_of_numconst zero_value) ^  "'…");
 				);
 
 				(* Convert to the plotutils format *)
@@ -787,14 +839,14 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 			
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("Considering value for '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
+					print_message Verbose_total ("Considering value for `" ^ (model.variable_names variable_index) ^  "` at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
 				);
 				
 				(* Handle the point just before the current point: if a clock, need to manage time elapsing if reset; if discrete, we imagine (so far) an immediate change of the value right at (technically "before") this point *)
 				let previous_point_str , value =
 					(* Print some information *)
 					if verbose_mode_greater Verbose_total then(
-						print_message Verbose_total ("Checking type of variable '" ^ (model.variable_names variable_index) ^  "'…");
+						print_message Verbose_total ("Checking type of variable `" ^ (model.variable_names variable_index) ^  "`…");
 					);
 				
 					match model.type_of_variables variable_index with
@@ -816,7 +868,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 						if NumConst.equal !previous_value value then(
 							(* Print some information *)
 							if verbose_mode_greater Verbose_total then(
-								print_message Verbose_total ("Discrete '" ^ (model.variable_names variable_index) ^  "' did not evolve: skip");
+								print_message Verbose_total ("Discrete `" ^ (model.variable_names variable_index) ^  "` did not evolve: skip");
 							);
 							(* No new point *)
 							""
@@ -824,7 +876,7 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 						)else(
 							(* Print some information *)
 							if verbose_mode_greater Verbose_total then(
-								print_message Verbose_total ("New additional point for discrete '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
+								print_message Verbose_total ("New additional point for discrete `" ^ (model.variable_names variable_index) ^  "` at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
 							);
 							
 							(* Same value, current time *)
@@ -850,9 +902,18 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 						)else(
 							(* Increment the value of the clock by the elapsed time *)
 							
-							(*** TODO: urgency / stopwatches! ***)
+							(* Get the flow *)
+							let flow = get_flow model !previous_location variable_index in
 							
-							let clock_value_after_elapsing = NumConst.add !previous_value time_elapsed in
+(*							(*** TODO: urgency / stopwatches! ***)
+							let stopwatches = model.stopwatches (blublu) in 
+							
+							let flow =
+								(if *)
+							
+							(* Update the value of the clock using the flow *)
+							let clock_value_after_elapsing = NumConst.add !previous_value (NumConst.mul time_elapsed flow) in
+							
 							(* Same value, current time *)
 							(* Convert to the plotutils format *)
 							(draw_x_y !absolute_time clock_value_after_elapsing)
@@ -869,9 +930,12 @@ let draw_run_generic (p_valuation : PVal.pval) (initial_state : State.concrete_s
 				(* Backup current point for next point *)
 				previous_value := value;
 				
+				(* Backup current location for next point *)
+				previous_location := step_target.global_location;
+				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("Generating points for '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst !absolute_time) ^ " with value '" ^ (NumConst.string_of_numconst value) ^  "'…");
+					print_message Verbose_total ("Generating points for `" ^ (model.variable_names variable_index) ^  "` at time " ^ (NumConst.string_of_numconst !absolute_time) ^ " with value '" ^ (NumConst.string_of_numconst value) ^  "'…");
 				);
 
 				(* First add "previous" point *)
@@ -1002,7 +1066,7 @@ let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : st
 		
 		(* Print some information *)
 		if verbose_mode_greater Verbose_medium then(
-			print_message Verbose_medium ("Preparing signal plot for " ^ (ModelPrinter.string_of_var_type (model.type_of_variables variable_index)) ^  " '" ^ (model.variable_names variable_index) ^  "'…");
+			print_message Verbose_medium ("Preparing signal plot for " ^ (ModelPrinter.string_of_var_type (model.type_of_variables variable_index)) ^  " `" ^ (model.variable_names variable_index) ^  "`…");
 		);
 		
 		(*** TODO: remove consecutive identical points (not critical) ***)
@@ -1016,7 +1080,7 @@ let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : st
 			
 			(* Print some information *)
 			if verbose_mode_greater Verbose_total then(
-				print_message Verbose_total ("Computing value for '" ^ (model.variable_names variable_index) ^  "' at time zero…");
+				print_message Verbose_total ("Computing value for `" ^ (model.variable_names variable_index) ^  "` at time zero…");
 			);
 			(* Get value *)
 			let zero_value = match model.type_of_variables variable_index with
@@ -1036,7 +1100,7 @@ let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : st
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("Generating points for '" ^ (model.variable_names variable_index) ^  "' at time zero with value '" ^ (NumConst.string_of_numconst zero_value) ^  "'…");
+					print_message Verbose_total ("Generating points for `" ^ (model.variable_names variable_index) ^  "` at time zero with value '" ^ (NumConst.string_of_numconst zero_value) ^  "'…");
 				);
 
 				(* Convert to the plotutils format *)
@@ -1052,14 +1116,14 @@ let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : st
 			
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("Considering value for '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
+					print_message Verbose_total ("Considering value for `" ^ (model.variable_names variable_index) ^  "` at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
 				);
 				
 				(* Handle the point just before the current point: if a clock, need to manage time elapsing if reset; if discrete, we imagine (so far) an immediate change of the value right at (technically "before") this point *)
 				let previous_point_str , value =
 					(* Print some information *)
 					if verbose_mode_greater Verbose_total then(
-						print_message Verbose_total ("Checking type of variable '" ^ (model.variable_names variable_index) ^  "'…");
+						print_message Verbose_total ("Checking type of variable `" ^ (model.variable_names variable_index) ^  "`…");
 					);
 				
 					match model.type_of_variables variable_index with
@@ -1081,7 +1145,7 @@ let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : st
 						if NumConst.equal !previous_value value then(
 							(* Print some information *)
 							if verbose_mode_greater Verbose_total then(
-								print_message Verbose_total ("Discrete '" ^ (model.variable_names variable_index) ^  "' did not evolve: skip");
+								print_message Verbose_total ("Discrete `" ^ (model.variable_names variable_index) ^  "` did not evolve: skip");
 							);
 							(* No new point *)
 							""
@@ -1089,7 +1153,7 @@ let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : st
 						)else(
 							(* Print some information *)
 							if verbose_mode_greater Verbose_total then(
-								print_message Verbose_total ("New additional point for discrete '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
+								print_message Verbose_total ("New additional point for discrete `" ^ (model.variable_names variable_index) ^  "` at time " ^ (NumConst.string_of_numconst !absolute_time) ^ "…");
 							);
 							
 							(* Same value, current time *)
@@ -1136,7 +1200,7 @@ let draw_concrete_run (concrete_run : StateSpace.concrete_run) (file_prefix : st
 				
 				(* Print some information *)
 				if verbose_mode_greater Verbose_total then(
-					print_message Verbose_total ("Generating points for '" ^ (model.variable_names variable_index) ^  "' at time " ^ (NumConst.string_of_numconst !absolute_time) ^ " with value '" ^ (NumConst.string_of_numconst value) ^  "'…");
+					print_message Verbose_total ("Generating points for `" ^ (model.variable_names variable_index) ^  "` at time " ^ (NumConst.string_of_numconst !absolute_time) ^ " with value '" ^ (NumConst.string_of_numconst value) ^  "'…");
 				);
 
 				(* First add "previous" point *)
@@ -1446,7 +1510,7 @@ let dot_of_statespace state_space algorithm_name (*~fancy*) =
 		)
 		^ "\n"*)
 		(*** NOTE: LESS EASY VERSION BUT ORDER IS SPECIFIED (we rank by source states indices, and then by target) ***)
-		"\n  DESCRIPTION OF THE TRANSITIONS"
+		"\n  /************************************************************/\n  DESCRIPTION OF THE TRANSITIONS"
 		(* We iterate on the states *)
 		^ (List.fold_left (fun current_string source_index ->
 			(* Get the successors *)

@@ -1,5 +1,5 @@
 *******************************************************
-# release 3-beta (2020-10-11) Cheese
+# release 3 (2021-01-12) Cheese
 MAJOR RELEASE
 
 ### Calling paradigm
@@ -12,7 +12,7 @@ The property syntax is entirely new.
 ### Syntax improvement
 * IMITATOR now supports multi-rate clocks with a syntax of the form `flow {x' = 1, y' = 2.5, z = -3/5}`
 
-### Syntax changes in model
+### Syntax changes in the model
 * Terminate support for HyTech-style comments (`-- comment`) and C-style comments (`/* comment */`)
 * Terminate support for some HyTech-style optional syntax (regions declaration…)
 * Many backward-compatible useless syntactic features now raise warnings (e.g. using `while` instead of `invariant`, using `Wait {}`…)
@@ -24,6 +24,9 @@ The property syntax is entirely new.
 
 ### Export
 * By default, all files are now exported in the current directory instead of the model directory. Option `-output-prefix` can still be used to change the directory.
+
+### Versioning
+* The build number is discontinued (and replaced by the sole short Git hash)
 
 ### Benchmarks
 * Created a new `Unsolvable` section in the `benchmarks` repository, containing very simple models for which IMITATOR cannot (yet) provide a result.

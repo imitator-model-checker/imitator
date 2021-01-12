@@ -9,7 +9,7 @@
  *
  * File contributors : Laure Petrucci, Jaco van de Pol, Étienne André
  * Created           : 2019/03/12
- * Last modified     : 2020/09/23
+ * Last modified     : 2020/11/11
  *
  ************************************************************)
 
@@ -497,6 +497,10 @@ class algoNDFS (state_predicate : AbstractProperty.state_predicate) =
 
 			(* Termination due to state space depth limit reached *)
 			| Depth_limit_reached -> termination_status <- Some (Result.Depth_limit (Hashtbl.length cyan))
+			
+			(* Termination because a witness has been found *)
+			(*** NOTE/TODO: add a new result termination type? ***)
+			| Witness_found -> termination_status <- Some (Result.Regular_termination)
 			end;
 			if (limit_reached <> Keep_going) then raise (TerminateAnalysis)
 			else(
