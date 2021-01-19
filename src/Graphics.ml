@@ -666,7 +666,7 @@ try(
 		^ " -C --line-mode 2 --fill-fraction -1 " ^ file_v0_name
 		
 		(* Part to set global options and to redirect to the output *)
-		^ " -L \"" ^ options#files_prefix ^ "\" -r 0.15 -u 0.12 -w 0.8 -h 0.75 --blankout 1.0 > " ^ cartography_image_file
+		^ " -L \"" ^ options#model_local_file_name ^ "\" -r 0.15 -u 0.12 -w 0.8 -h 0.75 --blankout 1.0 > " ^ cartography_image_file
 	;
 	
 	(* Print some information *)
