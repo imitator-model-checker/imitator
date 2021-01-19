@@ -95,8 +95,14 @@ type linear_constraint =
 	| Parsed_false_constraint (** False *)
 	| Parsed_linear_constraint of linear_expression * parsed_relop * linear_expression
 
+type nonlinear_constraint =
+    | Parsed_true_nonlinear_constraint (* True *)
+    | Parsed_false_nonlinear_constraint (* False *)
+    | Parsed_nonlinear_constraint of parsed_discrete_arithmetic_expression * parsed_relop * parsed_discrete_arithmetic_expression
 
-type convex_predicate = linear_constraint list
+
+
+type convex_predicate = nonlinear_constraint list (* old : linear_constraint list *)
 
 
 (** boolean expressions *)
@@ -137,7 +143,7 @@ type sync =
 	| NoSync
 
 type guard = convex_predicate
-type invariant = convex_predicate
+type invariant = linear_constraint list (*TODO transform back to convex_predicate *)
 
 
 (** Updates on transitions *)
