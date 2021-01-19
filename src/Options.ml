@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2010
- * Last modified     : 2021/01/11
+ * Last modified     : 2021/01/19
  *
  ************************************************************)
 
@@ -49,6 +49,14 @@ let warn_if_set option_value option_name =
 		print_warning ("Option `" ^ option_name ^ "` may be set to two different values. Behavior is unspecified.");
 	)
 
+
+(* Remove the path in a file name, to only keep the actual file name *)
+let remove_path_in_file_name model_file_name =
+	(* Split the string according to "/" *)
+	let split_file_prefix = Str.split (Str.regexp "/") model_file_name in
+
+	(* Keep the last one *)
+	list_last split_file_prefix
 
 
 (************************************************************)
@@ -917,12 +925,7 @@ class imitator_options =
 			if files_prefix = "" then(
 
 				(* Remove the beginning of the path, and set the prefix to the current directory, i.e., output the files in the current directory *)
-
-				(* Split the string according to "/" *)
-				let split_file_prefix = Str.split (Str.regexp "/") model_file_name in
-
-				(* Keep the last one *)
-				let last_part_path = list_last split_file_prefix in
+				let last_part_path = remove_path_in_file_name model_file_name in
 
 				(* Update *)
 				files_prefix <- last_part_path
