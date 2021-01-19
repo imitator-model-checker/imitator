@@ -78,6 +78,7 @@ class imitator_options :
 		(* 		method merge_before : bool *)
 		method merge_heuristic				: merge_heuristic
 		method model_file_name				: string
+		method model_local_file_name		: string
 		method no_acceptfirst				: bool
 		method nb_args						: int
 		method no_green						: bool

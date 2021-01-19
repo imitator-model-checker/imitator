@@ -74,8 +74,10 @@ class imitator_options =
 
 		(* INPUT OPTIONS *)
 
-		(* imitator model input file *)
+		(* Model input file *)
 		val mutable model_file_name = "uninitialized model input file name"
+		(* Local input file (i.e., without the path) *)
+		val mutable model_local_file_name = "uninitialized model input local file name"
 
 
 
@@ -314,6 +316,7 @@ class imitator_options =
 (* 		method merge_before = merge_before *)
 		method merge_heuristic = merge_heuristic
 		method model_file_name = model_file_name
+		method model_local_file_name = model_local_file_name
 		method nb_args = nb_args
 		method no_acceptfirst = no_acceptfirst
 		method no_green = no_green
@@ -371,7 +374,8 @@ class imitator_options =
 		(*** NOTE: these set methods are only used for the learning-based abstraction construction ***)
 
 		method set_file file_name =
-			model_file_name <- file_name
+			model_file_name <- file_name;
+			model_local_file_name <- remove_path_in_file_name file_name
 
 		method set_files_prefix file_name =
 			files_prefix <- file_name
@@ -887,6 +891,7 @@ class imitator_options =
 				if nb_args = 0 then(
 					nb_args <- nb_args + 1;
 					model_file_name <- arg;
+					model_local_file_name <- remove_path_in_file_name model_file_name
 				)
 				(* If 2nd argument: property file *)
 				else if nb_args = 1 then(
@@ -957,12 +962,12 @@ class imitator_options =
 			in
 
 			(* File *)
-			print_message Verbose_standard ("Model: " ^ model_file_name);
+			print_message Verbose_standard ("Model: `" ^ model_file_name ^ "`");
 			(* File prefix *)
-			print_message Verbose_low ("Prefix for output files: " ^ files_prefix);
+			print_message Verbose_low ("Prefix for output files: `" ^ files_prefix ^ "`");
 			(* Print full command *)
 			(*** WARNING: this command drops the "" or `` (if any) ***)
-			print_message Verbose_low ("Command: " ^ (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv));
+			print_message Verbose_low ("Command: `" ^ (OCamlUtilities.string_of_array_of_string_with_sep " " Sys.argv) ^ "`" );
 
 
 			(* Print mode or property *)
