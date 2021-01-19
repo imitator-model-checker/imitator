@@ -75,69 +75,69 @@ class imitator_options =
 		(* INPUT OPTIONS *)
 
 		(* Model input file *)
-		val mutable model_file_name = "uninitialized model input file name"
+		val mutable model_file_name					= "uninitialized model input file name"
 		(* Local input file (i.e., without the path) *)
-		val mutable model_local_file_name = "uninitialized model input local file name"
+		val mutable model_local_file_name 			= "uninitialized model input local file name"
 
 
 
 		(* OUTPUT OPTIONS *)
 
 		(* only plot cartography *)
-		val mutable cartonly = false
+		val mutable cartonly						= false
 
 		(* Plot cartography; in cartography mode, this option means ANY tile will output a cartography (activated if both `-draw-cart` and `-tiles-files` are true) *)
-		val mutable draw_cart = false
+		val mutable draw_cart						= false
 
 		(* prefix for output files *)
-		val mutable files_prefix = ""
+		val mutable files_prefix					= ""
 
 		(* plot cartography for BC; this options means that the global cartography of all tiles will be generated (activated if -draw-cart is true) *)
-		val mutable output_bc_cart = false
+		val mutable output_bc_cart					= false
 
 		(* Output result for BC to a file *)
-		val mutable output_bc_result = false
+		val mutable output_bc_result				= false
 
 		(* min/max values for the cartography *)
-		val mutable output_cart_x_min = None
-		val mutable output_cart_x_max = None
-		val mutable output_cart_y_min = None
-		val mutable output_cart_y_max = None
+		val mutable output_cart_x_min				= None
+		val mutable output_cart_x_max				= None
+		val mutable output_cart_y_min				= None
+		val mutable output_cart_y_max				= None
 
 		(* Output the approximate float value of discrete variables *)
-		val mutable output_float = false
+		val mutable output_float					= false
 
 		(* Output result to a file *)
 		(*** NOTE: type option since it can be modified to default values depending on the property, after the property is parsed ***)
-		val mutable output_result = None
+		val mutable output_result					= None
 
 		(* In cartography mode, output all tiles to files *)
-		val mutable output_tiles_files = false
+		val mutable output_tiles_files				= false
 
 		(* Gives statistics on number of calls *)
-		val mutable statistics = false
+		val mutable statistics						= false
 
 		(* print time stamps *)
-		val mutable timed_mode = false
+		val mutable timed_mode						= false
 
 		(* Print graph of reachable states *)
-		val mutable graphical_state_space = AbstractAlgorithm.Graphical_state_space_none
+		val mutable graphical_state_space			= AbstractAlgorithm.Graphical_state_space_none
 
 		(* Keep the source file used for dot *)
-		val mutable with_graphics_source = false
+		val mutable with_graphics_source			= false
 
 		(* Print logs *)
-		val mutable states_description = false
+		val mutable states_description				= false
 
 
 		(* ALGORITHIMS *)
 
 		(* yet another (testing) mode *)
-		val mutable branch_and_bound = false
+		val mutable branch_and_bound				= false
 
 		(* imitator mode *)
 		(*** NOTE: arbitrary initialization ***)
-		val mutable imitator_mode = Syntax_check
+		val mutable imitator_mode					= Syntax_check
 
 		(* Exploration order *)
 		(*** HACK: hard-coded default value ***)
@@ -150,19 +150,19 @@ class imitator_options =
 		(* ANALYSIS OPTIONS *)
 
 		(* acyclic mode: only compare inclusion or equality of a new state with former states of the same iteration (graph depth) *)
-		val mutable acyclic = false
+		val mutable acyclic							= false
 
 		(* limit on number of tiles computed by a cartography *)
-		val mutable carto_tiles_limit = None
+		val mutable carto_tiles_limit				= None
 
 		(* limit on global runtime for cartography *)
-		val mutable carto_time_limit = None
+		val mutable carto_time_limit				= None
 
 		(* Check whether each constraint contains an integer point *)
-		val mutable check_ippta = false
+		val mutable check_ippta						= false
 
 		(* Check whether the accumulated constraint is restricted to pi0 *)
-		val mutable check_point = false
+		val mutable check_point						= false
 
 		(* Comparison operator between states when adding a new state to the state space *)
 		val mutable comparison_operator : AbstractAlgorithm.state_comparison_operator option = None
@@ -171,94 +171,94 @@ class imitator_options =
 		val mutable cycle_algorithm : AbstractAlgorithm.cycle_algorithm option = None
 
 		(* Limit the depth in a BFS algorithm or in NDFS for early backtracking *)
-		val mutable depth_limit = None
+		val mutable depth_limit						= None
 
 		(* first depth to explore for the iterative deepening in NDFS algorithm *)
-		val mutable depth_init = None
+		val mutable depth_init						= None
 
 		(* Step for NDFS *)
-		val mutable depth_step = None
+		val mutable depth_step						= None
 
 		(* Distributed version of IMITATOR *)
-		val mutable distribution_mode = AbstractAlgorithm.Non_distributed
+		val mutable distribution_mode				= AbstractAlgorithm.Non_distributed
 
 		(* For distributed version: kill IM heuristics *)
-		val mutable distributedKillIM = false
+		val mutable distributedKillIM				= false
 
 		(* On-the-fly intersection (DEPRECATED) *)
 (* 		val mutable dynamic = ref false *)
 
 		(* Remove useless clocks (slightly experimental) *)
-		val mutable dynamic_clock_elimination = false
+		val mutable dynamic_clock_elimination		= false
 
 		(* Layered NDFS *)
-		val mutable layer : bool option = None
+		val mutable layer : bool option				= None
 
 		(* Merging states on the fly *)
-		val mutable merge : bool option = None
-		val mutable mergeq : bool option = None
+		val mutable merge : bool option				= None
+		val mutable mergeq : bool option			= None
 		(* Merging states on the fly (after pi0-compatibility check) *)
 (* 		val mutable merge_before = false *)
 
 		(* Merging heuristic *)
-		val mutable merge_heuristic = Merge_iter10
+		val mutable merge_heuristic					= Merge_iter10
 
 		(* Method for NZ algorithms *)
 		val mutable nz_method : AbstractAlgorithm.nz_method option = None
 
 		(* do not put accepting states at the head of successors list in NDFS *)
-		val mutable no_acceptfirst = false
+		val mutable no_acceptfirst					= false
 
 		(* do not use green colour in NDFS *)
-		val mutable no_green = false
+		val mutable no_green						= false
 
 		(* do not use pruning of initial zone in NDFS *)
 (* 		val mutable no_initprune = false *)
 
 		(* No leq test of the new states wrt the computed constraint in EFsynth *)
-		val mutable no_leq_test_in_ef = false
+		val mutable no_leq_test_in_ef				= false
 
 		(* do not use lookahead in NDFS *)
-		val mutable no_lookahead = false
+		val mutable no_lookahead					= false
 
 		(* do not order the pending list with bigger zones first in NDFS synthesis *)
-		val mutable no_pending_ordered = false
+		val mutable no_pending_ordered				= false
 
 		(* do not use random values *)
-		val mutable no_random = false
+		val mutable no_random						= false
 
 		(* no time elapsing in zones (in fact, time elapsing is performed before taking a transition, not after) *)
-		val mutable no_time_elapsing = false
+		val mutable no_time_elapsing				= false
 
 		(* No automatic removal of variables declared but never used *)
-		val mutable no_variable_autoremove = false
+		val mutable no_variable_autoremove			= false
 
 		(* Pending list exploration order *)
-		val mutable pending_order = Pending_none
+		val mutable pending_order					= Pending_none
 
 		(* Returns contraint K ("algo IMK") *)
-		val mutable pi_compatible = false
+		val mutable pi_compatible					= false
 
 		(* Pre-compute pi0 ? (in PaTATOR mode only) *)
-		val mutable precomputepi0 = false
+		val mutable precomputepi0					= false
 
 		(* Name for the file containing the property *)
-		val mutable property_file_name = None
+		val mutable property_file_name				= None
 
 		(* process again green states *)
-		val mutable recompute_green = false
+		val mutable recompute_green					= false
 
 		(* limit number of states *)
-		val mutable states_limit = None
+		val mutable states_limit					= None
 
 		(* Subsumption for NDFS *)
-		val mutable subsumption : bool option = None
+		val mutable subsumption : bool option		= None
 
 		(* autodetect sync actions *)
-		val mutable sync_auto_detection = false
+		val mutable sync_auto_detection				= false
 
 		(* limit on runtime *)
-		val mutable time_limit = None
+		val mutable time_limit						= None
 
 
 		(************************************************************)
@@ -269,102 +269,102 @@ class imitator_options =
 		(* Get methods *)
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
 
-		method acyclic = acyclic
+		method acyclic								= acyclic
 (* 		method best_worst_case = best_worst_case *)
 (* 		method branch_and_bound = branch_and_bound *)
-		method carto_tiles_limit = carto_tiles_limit
-		method carto_time_limit = carto_time_limit
-		method check_ippta = check_ippta
-		method check_point = check_point
+		method carto_tiles_limit					= carto_tiles_limit
+		method carto_time_limit						= carto_time_limit
+		method check_ippta							= check_ippta
+		method check_point							= check_point
 		
-		method comparison_operator			= value_of_option "comparison_operator" comparison_operator
-		method is_set_comparison_operator	= comparison_operator <> None
-		method set_comparison_operator b	= comparison_operator <- Some b
+		method comparison_operator					= value_of_option "comparison_operator" comparison_operator
+		method is_set_comparison_operator			= comparison_operator <> None
+		method set_comparison_operator b			= comparison_operator <- Some b
 
 		(* Algorithm for cycle detection in cycle synthesis algorithms *)
 		method cycle_algorithm : AbstractAlgorithm.cycle_algorithm	= value_of_option "cycle_algorithm" cycle_algorithm
-		method is_set_cycle_algorithm : bool						= cycle_algorithm <> None
+		method is_set_cycle_algorithm : bool		= cycle_algorithm <> None
 		method set_cycle_algorithm (new_cycle_algorithm : AbstractAlgorithm.cycle_algorithm) = cycle_algorithm <- Some new_cycle_algorithm
 
-		method depth_limit = depth_limit
-		method depth_init = depth_init
-		method distribution_mode = distribution_mode
-		method distributedKillIM = distributedKillIM
-		method draw_cart = draw_cart
+		method depth_limit							= depth_limit
+		method depth_init							= depth_init
+		method distribution_mode					= distribution_mode
+		method distributedKillIM					= distributedKillIM
+		method draw_cart							= draw_cart
 		(* method dynamic = dynamic *)
-		method dynamic_clock_elimination = dynamic_clock_elimination
+		method dynamic_clock_elimination			= dynamic_clock_elimination
 		
-		method exploration_order = value_of_option "exploration_order" exploration_order
-		method is_set_exploration_order = exploration_order <> None
+		method exploration_order					= value_of_option "exploration_order" exploration_order
+		method is_set_exploration_order				= exploration_order <> None
 		method set_exploration_order new_exploration_order = exploration_order <- Some new_exploration_order
 		
-		method files_prefix = files_prefix
-		method imitator_mode = imitator_mode
+		method files_prefix							= files_prefix
+		method imitator_mode						= imitator_mode
 
-		method layer = value_of_option "layer" layer
-		method is_set_layer = layer <> None
-		method set_layer b = layer <- Some b
+		method layer								= value_of_option "layer" layer
+		method is_set_layer							= layer <> None
+		method set_layer b							= layer <- Some b
 
-		method merge = value_of_option "merge" merge
-		method is_set_merge = merge <> None
-		method set_merge b = merge <- Some b
+		method merge								= value_of_option "merge" merge
+		method is_set_merge							= merge <> None
+		method set_merge b							= merge <- Some b
 
-		method mergeq = value_of_option "mergeq" mergeq
-		method is_set_mergeq = mergeq <> None
-		method set_mergeq b = mergeq <- Some b
+		method mergeq								= value_of_option "mergeq" mergeq
+		method is_set_mergeq						= mergeq <> None
+		method set_mergeq b							= mergeq <- Some b
 
 (* 		method merge_before = merge_before *)
-		method merge_heuristic = merge_heuristic
-		method model_file_name = model_file_name
-		method model_local_file_name = model_local_file_name
-		method nb_args = nb_args
-		method no_acceptfirst = no_acceptfirst
-		method no_green = no_green
-		method no_leq_test_in_ef = no_leq_test_in_ef
-		method no_lookahead = no_lookahead
-		method no_pending_ordered = no_pending_ordered
-		method no_time_elapsing = no_time_elapsing
-		method no_random = no_random
-		method no_variable_autoremove = no_variable_autoremove
+		method merge_heuristic						= merge_heuristic
+		method model_file_name						= model_file_name
+		method model_local_file_name				= model_local_file_name
+		method nb_args								= nb_args
+		method no_acceptfirst						= no_acceptfirst
+		method no_green								= no_green
+		method no_leq_test_in_ef					= no_leq_test_in_ef
+		method no_lookahead							= no_lookahead
+		method no_pending_ordered					= no_pending_ordered
+		method no_time_elapsing						= no_time_elapsing
+		method no_random							= no_random
+		method no_variable_autoremove				= no_variable_autoremove
 		
 		(* Method used for infinite-run (cycle) with non-Zeno assumption *)
 		method nz_method : AbstractAlgorithm.nz_method = value_of_option "nz_method" nz_method
-		method is_set_nz_method : bool = nz_method <> None
+		method is_set_nz_method : bool				= nz_method <> None
 		method set_nz_method (new_nz_method : AbstractAlgorithm.nz_method) = nz_method <- Some new_nz_method
 
-		method output_bc_cart = output_bc_cart
-		method output_bc_result = output_bc_result
-		method output_cart_x_min = output_cart_x_min
-		method output_cart_x_max = output_cart_x_max
-		method output_cart_y_min = output_cart_y_min
-		method output_cart_y_max = output_cart_y_max
-		method output_float = output_float
+		method output_bc_cart						= output_bc_cart
+		method output_bc_result						= output_bc_result
+		method output_cart_x_min					= output_cart_x_min
+		method output_cart_x_max					= output_cart_x_max
+		method output_cart_y_min					= output_cart_y_min
+		method output_cart_y_max					= output_cart_y_max
+		method output_float							= output_float
 
-		method output_result = value_of_option "output_result" output_result
-		method is_set_output_result = output_result <> None
-		method set_output_result b = output_result <- Some b
+		method output_result						= value_of_option "output_result" output_result
+		method is_set_output_result					= output_result <> None
+		method set_output_result b					= output_result <- Some b
 
-		method output_tiles_files = output_tiles_files
-		method pi_compatible = pi_compatible
-		method precomputepi0 = precomputepi0
-		method property_file_name = property_file_name
-		method states_limit = states_limit
-		method statistics = statistics
+		method output_tiles_files					= output_tiles_files
+		method pi_compatible						= pi_compatible
+		method precomputepi0						= precomputepi0
+		method property_file_name					= property_file_name
+		method states_limit							= states_limit
+		method statistics							= statistics
 
-		method subsumption = value_of_option "subsumption" subsumption
-		method is_set_subsumption = subsumption <> None
-		method set_subsumption b = subsumption <- Some b
+		method subsumption							= value_of_option "subsumption" subsumption
+		method is_set_subsumption					= subsumption <> None
+		method set_subsumption b					= subsumption <- Some b
 
-		method sync_auto_detection = sync_auto_detection
-		method time_limit = time_limit
-		method timed_mode = timed_mode
-		method graphical_state_space = graphical_state_space
-		method with_graphics_source = with_graphics_source
-		method states_description = states_description
+		method sync_auto_detection					= sync_auto_detection
+		method time_limit							= time_limit
+		method timed_mode							= timed_mode
+		method graphical_state_space				= graphical_state_space
+		method with_graphics_source					= with_graphics_source
+		method states_description					= states_description
 
-		method recompute_green = recompute_green
-		method pending_order = pending_order
-		method depth_step = depth_step
+		method recompute_green						= recompute_green
+		method pending_order						= pending_order
+		method depth_step							= depth_step
 
 
 		(*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*)
