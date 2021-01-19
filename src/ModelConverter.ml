@@ -1169,7 +1169,7 @@ let linear_constraint_of_convex_predicate index_of_variables constants convex_pr
 (* Convert a ParsingStructure.convex_predicate into a nonlinear_constraint *)
 (*------------------------------------------------------------*)
 (* benjamin *)
-let nonlinear_constraint_of_nonlinear_convex_predicate index_of_variables constants convex_predicate : AbstractModel.nonlinear_constraint =
+let nonlinear_constraint_of_nonlinear_convex_predicate index_of_variables constants convex_predicate : DiscreteExpressions.nonlinear_constraint =
   try(
     (* Compute a list of inequalities *)
     let nonlinear_inequalities = List.fold_left

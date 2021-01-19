@@ -59,7 +59,14 @@ type discrete_boolean_expression =
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 
 
-
+(* TODO move to DiscreteExpression *)
+(* Non linear custom expression without PPL *)
+type nonlinear_inequality = discrete_arithmetic_expression * relop * discrete_arithmetic_expression
+(*type nonlinear_constraint = nonlinear_inequality list*)
+type nonlinear_constraint =
+  | True_nonlinear_constraint
+  | False_nonlinear_constraint
+  | Nonlinear_constraint of nonlinear_inequality list
 
 (************************************************************)
 (** Evaluate arithmetic expressions with a valuation *)
@@ -142,3 +149,30 @@ let check_discrete_boolean_expression discrete_valuation = function
 			expr1_evaluated
 			<= 
 			(eval_discrete_arithmetic_expression discrete_valuation discrete_arithmetic_expression_3)
+
+
+(************************************************************)
+(** Check whether a non linear constraint evaluates to true when valuated with a valuation *)
+(************************************************************)
+(* TODO benjamin to verify *)
+
+let check_nonlinear_inequality discrete_valuation nonlinear_inequality =
+    let l_expr, relop, r_expr = nonlinear_inequality in
+    let l_expr_eval, r_expr_eval =
+      eval_discrete_arithmetic_expression discrete_valuation l_expr,
+      eval_discrete_arithmetic_expression discrete_valuation r_expr
+    in
+      eval_discrete_relop relop l_expr_eval l_expr_eval
+
+
+(* benjamin *)
+(* if all true, it's satisfied *)
+let check_nonlinear_inequalities discrete_valuation nonlinear_inequalities =
+  List.for_all (check_nonlinear_inequality discrete_valuation) nonlinear_inequalities
+
+(* benjamin *)
+(* Check if a nonlinear constraint is satisfied *)
+let check_nonlinear_constraint discrete_valuation = function
+  | True_nonlinear_constraint -> true
+  | False_nonlinear_constraint -> false
+  | Nonlinear_constraint nonlinear_inequalities -> check_nonlinear_inequalities discrete_valuation nonlinear_inequalities
