@@ -1840,14 +1840,18 @@ let evaluate_d_linear_constraint_in_location location =
 	(* Directly call the build-in function *)
 	LinearConstraint.d_is_pi0_compatible (Location.get_discrete_value location)
 
+(* benjamin *)
+let evaluate_d_nonlinear_constraint_in_location location =
+    DiscreteExpressions.check_nonlinear_constraint (Location.get_discrete_value location)
+
 (** Check whether the discrete part of a guard is satisfied by the discrete values in a location *)
 let is_discrete_guard_satisfied location (guard : AbstractModel.guard) : bool =
 	match guard with
 	| True_guard -> true
 	| False_guard -> false
-	| Discrete_guard discrete_guard -> evaluate_d_linear_constraint_in_location location discrete_guard
+	| Discrete_guard discrete_guard -> evaluate_d_nonlinear_constraint_in_location location discrete_guard
 	| Continuous_guard _ -> true
-	| Discrete_continuous_guard discrete_continuous_guard -> evaluate_d_linear_constraint_in_location location discrete_continuous_guard.discrete_guard
+	| Discrete_continuous_guard discrete_continuous_guard -> evaluate_d_nonlinear_constraint_in_location location discrete_continuous_guard.discrete_guard
 
 
 
@@ -1965,13 +1969,13 @@ let compute_transitions location constr action_index automata involved_automata_
 let post_from_one_state_via_one_transition (source_location : Location.global_location) (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr : LinearConstraint.pxd_linear_constraint) (combined_transition : StateSpace.combined_transition) : State.state option =
 
 	(* Compute the new location for the current combination of transitions *)
-	let target_location, (discrete_guards : LinearConstraint.d_linear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates source_location combined_transition in
+	let target_location, (discrete_guards : DiscreteExpressions.nonlinear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates source_location combined_transition in
 
 	(* Statistics *)
 	tcounter_compute_location_guards_discrete#stop;
 
 	(* Check if the discrete guards are satisfied *)
-	if not (List.for_all (evaluate_d_linear_constraint_in_location source_location) discrete_guards) then(
+	if not (List.for_all (evaluate_d_nonlinear_constraint_in_location source_location) discrete_guards) then(
 		(* Statistics *)
 		counter_nb_unsatisfiable_discrete#increment;
 		(* Print some information *)

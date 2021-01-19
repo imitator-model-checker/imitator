@@ -89,4 +89,4 @@ type nonlinear_constraint =
 (************************************************************)
 
 val check_discrete_boolean_expression : discrete_valuation -> discrete_boolean_expression -> bool
-
+val check_nonlinear_constraint : discrete_valuation -> nonlinear_constraint -> bool
