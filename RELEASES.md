@@ -10,12 +10,12 @@ The model syntax is almost entirely backward-compatible with (at least) the IMIT
 The property syntax is entirely new.
 
 ### Syntax improvement
-* IMITATOR now supports multi-rate clocks with a syntax of the form `flow {x' = 1, y' = 2.5, z = -3/5}`
+* IMITATOR now supports multi-rate clocks with a syntax of the form `flow {x' = 1, y' = 2.5, z' = -3/5}`
 
 ### Syntax changes in the model
 * Terminate support for HyTech-style comments (`-- comment`) and C-style comments (`/* comment */`)
 * Terminate support for some HyTech-style optional syntax (regions declaration…)
-* Many backward-compatible useless syntactic features now raise warnings (e.g. using `while` instead of `invariant`, using `Wait {}`…)
+* Many backward-compatible useless syntactic features now raise warnings (e.g., using `while` instead of `invariant`, using `Wait {}`…)
 
 ### Options
 * Most options changed since version 2.x
