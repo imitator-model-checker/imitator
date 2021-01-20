@@ -388,7 +388,7 @@ transitions:
 /************************************************************/
 
 transition:
-	| CT_WHEN convex_predicate update_synchronization CT_GOTO NAME SEMICOLON
+	| CT_WHEN nonlinear_convex_predicate update_synchronization CT_GOTO NAME SEMICOLON
 	{
 		let update_list, sync = $3 in
 			$2, update_list, sync, $5
@@ -523,10 +523,26 @@ convex_predicate_fol:
 	| linear_constraint { [$1] }
 ;
 
+/* We allow an optional "&" at the beginning of a convex predicate (sometimes useful) */
+nonlinear_convex_predicate:
+	| ampersand_opt nonlinear_convex_predicate_fol { $2 }
+;
+
+nonlinear_convex_predicate_fol:
+	| nonlinear_constraint AMPERSAND nonlinear_convex_predicate { $1 :: $3 }
+	| nonlinear_constraint { [$1] }
+;
+
 linear_constraint:
 	| linear_expression relop linear_expression { Parsed_linear_constraint ($1, $2, $3) }
 	| CT_TRUE { Parsed_true_constraint }
 	| CT_FALSE { Parsed_false_constraint }
+;
+
+nonlinear_constraint:
+    | arithmetic_expression relop arithmetic_expression { Parsed_nonlinear_constraint ($1, $2, $3) }
+    | CT_TRUE { Parsed_true_nonlinear_constraint }
+    | CT_FALSE { Parsed_false_nonlinear_constraint }
 ;
 
 relop:

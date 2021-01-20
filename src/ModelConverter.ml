@@ -1143,7 +1143,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (linexpr
 let nonlinear_inequality_of_nonlinear_constraint index_of_variables constants (expr1, relop, expr2) =
   let convert_relop = convert_parsed_relop relop
   in
-    let nl_inequality : nonlinear_inequality = (convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr1, convert_relop, convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr2)
+    let nl_inequality : NonlinearConstraint.nonlinear_inequality = (convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr1, convert_relop, convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr2)
     in nl_inequality
 
 
@@ -1169,7 +1169,7 @@ let linear_constraint_of_convex_predicate index_of_variables constants convex_pr
 (* Convert a ParsingStructure.convex_predicate into a nonlinear_constraint *)
 (*------------------------------------------------------------*)
 (* benjamin *)
-let nonlinear_constraint_of_nonlinear_convex_predicate index_of_variables constants convex_predicate : DiscreteExpressions.nonlinear_constraint =
+let nonlinear_constraint_of_nonlinear_convex_predicate index_of_variables constants convex_predicate : NonlinearConstraint.nonlinear_constraint =
   try(
     (* Compute a list of inequalities *)
     let nonlinear_inequalities = List.fold_left

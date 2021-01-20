@@ -54,6 +54,8 @@ and discrete_factor =
 	| DF_expression of discrete_arithmetic_expression
 	| DF_unary_min of discrete_factor
 
+val eval_discrete_relop : relop -> Automaton.discrete_value -> Automaton.discrete_value -> bool
+
 (************************************************************)
 (** Evaluate a discrete arithmetic expression with a valuation *)
 (************************************************************)
@@ -75,18 +77,8 @@ type discrete_boolean_expression =
 	| Expression_in of discrete_arithmetic_expression * discrete_arithmetic_expression * discrete_arithmetic_expression
 
 
-(* Non linear custom expression without PPL *)
-type nonlinear_inequality = discrete_arithmetic_expression * relop * discrete_arithmetic_expression
-(*type nonlinear_constraint = nonlinear_inequality list*)
-type nonlinear_constraint =
-  | True_nonlinear_constraint
-  | False_nonlinear_constraint
-  | Nonlinear_constraint of nonlinear_inequality list
-
-
 (************************************************************)
 (** Check whether a Boolean expression evaluates to true when valuated with a valuation *)
 (************************************************************)
 
 val check_discrete_boolean_expression : discrete_valuation -> discrete_boolean_expression -> bool
-val check_nonlinear_constraint : discrete_valuation -> nonlinear_constraint -> bool

@@ -1519,7 +1519,7 @@ let get_updates_in_combined_transition (source_location : Location.global_locati
 (*------------------------------------------------------------------*)
 (* returns the new location, the discrete guards (a list of d_linear_constraint), the continuous guards (a list of pxd_linear_constraint) and the updates *)
 (*------------------------------------------------------------------*)
-let compute_new_location_guards_updates (source_location: Location.global_location) (combined_transition : StateSpace.combined_transition) : (Location.global_location * DiscreteExpressions.nonlinear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list) =
+let compute_new_location_guards_updates (source_location: Location.global_location) (combined_transition : StateSpace.combined_transition) : (Location.global_location * NonlinearConstraint.nonlinear_constraint list * LinearConstraint.pxd_linear_constraint list * AbstractModel.clock_updates list) =
 	(* Retrieve the model *)
 	let model = Input.get_model() in
 
@@ -1842,7 +1842,7 @@ let evaluate_d_linear_constraint_in_location location =
 
 (* benjamin *)
 let evaluate_d_nonlinear_constraint_in_location location =
-    DiscreteExpressions.check_nonlinear_constraint (Location.get_discrete_value location)
+    NonlinearConstraint.check_nonlinear_constraint (Location.get_discrete_value location)
 
 (** Check whether the discrete part of a guard is satisfied by the discrete values in a location *)
 let is_discrete_guard_satisfied location (guard : AbstractModel.guard) : bool =
@@ -1969,7 +1969,7 @@ let compute_transitions location constr action_index automata involved_automata_
 let post_from_one_state_via_one_transition (source_location : Location.global_location) (source_constraint : LinearConstraint.px_linear_constraint) (discrete_constr : LinearConstraint.pxd_linear_constraint) (combined_transition : StateSpace.combined_transition) : State.state option =
 
 	(* Compute the new location for the current combination of transitions *)
-	let target_location, (discrete_guards : DiscreteExpressions.nonlinear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates source_location combined_transition in
+	let target_location, (discrete_guards : NonlinearConstraint.nonlinear_constraint list), (continuous_guards : LinearConstraint.pxd_linear_constraint list), clock_updates = compute_new_location_guards_updates source_location combined_transition in
 
 	(* Statistics *)
 	tcounter_compute_location_guards_discrete#stop;

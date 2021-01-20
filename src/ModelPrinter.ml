@@ -18,6 +18,7 @@ open OCamlUtilities
 open Exceptions
 open Result
 open DiscreteExpressions
+open NonlinearConstraint
 open AbstractModel
 open AbstractProperty
 open ImitatorUtilities
