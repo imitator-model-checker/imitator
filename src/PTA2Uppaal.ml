@@ -266,7 +266,7 @@ let string_of_guard actions_and_nb_automata variable_names x_coord_str y_coord_s
 
 		(*** NOTE/BUG: remove the true discrete guard! (not accepted by Uppaal) ***)
 
-		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ (LinearConstraint.customized_string_of_d_linear_constraint uppaal_strings variable_names discrete_guard) ^ "</label>"
+		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ (NonlinearConstraint.customized_string_of_nonlinear_constraint uppaal_strings variable_names discrete_guard) ^ "</label>"
 
 	| Continuous_guard continuous_guard ->
 		(* Remove true guard *)
@@ -276,7 +276,7 @@ let string_of_guard actions_and_nb_automata variable_names x_coord_str y_coord_s
 
 	| Discrete_continuous_guard discrete_continuous_guard ->
 		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ (
-			(LinearConstraint.customized_string_of_d_linear_constraint uppaal_strings variable_names discrete_continuous_guard.discrete_guard)
+			(NonlinearConstraint.customized_string_of_nonlinear_constraint uppaal_strings variable_names discrete_continuous_guard.discrete_guard)
 			^
 			(
 				(* Remove true guard *)

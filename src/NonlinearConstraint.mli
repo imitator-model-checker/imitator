@@ -8,3 +8,4 @@ type nonlinear_constraint =
   | Nonlinear_constraint of nonlinear_inequality list (* TODO to replace with discrete_boolean_expression ? *)
 
 val check_nonlinear_constraint : DiscreteExpressions.discrete_valuation -> nonlinear_constraint -> bool
+val customized_string_of_nonlinear_constraint : LinearConstraint.customized_string -> (Automaton.variable_index -> string) -> nonlinear_constraint -> string
