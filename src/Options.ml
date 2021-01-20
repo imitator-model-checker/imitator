@@ -792,7 +792,7 @@ class imitator_options =
 				("-no-acceptfirst", Unit (fun () -> no_acceptfirst <- true), "In NDFS, do not put accepting states at the head of the successors list. Default: enabled (accepting states are put at the head).
 				");
 
-				("-no-cumulative-pruning", Unit (fun () -> no_leq_test_in_ef <- true), " In reachability/safety/loop synthesis, no inclusion test of the new states parameter constraints in the already computed constraint. Default: enabled (i.e., inclusion test).
+				("-no-cumulative-pruning", Unit (fun () -> no_leq_test_in_ef <- true), " In reachability/safety/loop synthesis, no inclusion test of the new states parameter constraints in the already computed constraint. Default: enabled (i.e., inclusion test and pruning).
 				");
 
 				("-no-green", Unit (fun () -> no_green <- true), " In NDFS, Do not use green colour in NDFS. Default: enabled (i.e., green).
