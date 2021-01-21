@@ -48,6 +48,8 @@ exception InvalidModel
 
 exception InvalidProperty
 
+exception InvalidExpression of string
+
 
 
 (************************************************************)
@@ -2159,12 +2161,64 @@ let make_automata_per_action actions_per_automaton nb_automata nb_actions =
   (* Return a functional representation *)
   fun automaton_index -> automata_per_action.(automaton_index)
 
+(*------------------------------------------------------------*)
+(* Try to convert a non linear expression to a linear *)
+(* If it's not possible (due to non-linear expression involving clocks or parameters *)
+(* we raise an InvalidExpression exception *)
+(*------------------------------------------------------------*)
 
-(* TODO convert nonlinear_constraint to linear_constraint if possible *)
+(* benjamin *)
+let try_convert_linear_term_of_parsed_discrete_factor = function
+    | Parsed_DF_variable variable_name -> Variable(NumConst.one, variable_name) (* TODO check with Etienne *)
+    | Parsed_DF_constant var_value -> Constant var_value
+    | Parsed_DF_expression _
+    | Parsed_DF_unary_min _ as bad -> raise (InvalidExpression "A non-linear arithmetic expression involve clock(s) / parameter(s)")
+
+(* benjamin *)
+let rec try_convert_linear_term_of_parsed_discrete_term = function
+
+    | Parsed_DT_mul (term, factor) ->
+        (* TODO Check consistency of multiplication, if it keep constant we can convert to a linear term *)
+        let linear_term, linear_factor =
+        try_convert_linear_term_of_parsed_discrete_term term,
+        try_convert_linear_term_of_parsed_discrete_factor factor
+        in
+        (match linear_term, linear_factor with
+            (* Constant multiplied by constant, it's ok*)
+            | Constant l_const_value, Constant r_const_value ->
+                let value = (NumConst.to_float l_const_value) *. (NumConst.to_float r_const_value) in
+                Constant (NumConst.numconst_of_float value)
+            (* Constant multiplied by a variable (commutative), it's ok *)
+            | Variable (var_value, variable_name), Constant const_value
+            | Constant const_value, Variable (var_value, variable_name) ->
+                let value = (NumConst.to_float var_value) *. (NumConst.to_float const_value) in
+                Variable (NumConst.numconst_of_float value, variable_name)
+            (* Other cases are non linears, so it's impossible to make the conversion, we raise an exception *)
+            | _ -> raise (InvalidExpression "A non-linear arithmetic expression involve clock(s) / parameter(s)")
+        )
+    (* Division is non linear, so it's impossible to make the conversion, we raise an exception*)
+    | Parsed_DT_div _ as bad -> raise (InvalidExpression "A non-linear arithmetic expression involve clock(s) / parameter(s)")
+    (* Try to convert factor *)
+    | Parsed_DT_factor parsed_discrete_factor -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
+
+(* benjamin *)
+let rec try_convert_linear_expression_of_parsed_discrete_arithmetic_expression = function
+    | Parsed_DAE_plus (expr, term) -> Linear_plus_expression (try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr, try_convert_linear_term_of_parsed_discrete_term term)
+    | Parsed_DAE_minus (expr, term) -> Linear_minus_expression (try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr, try_convert_linear_term_of_parsed_discrete_term term)
+    | Parsed_DAE_term term -> Linear_term (try_convert_linear_term_of_parsed_discrete_term term)
+
+(* TODO convert nonlinear_constraint to linear_constraint if possible
+   and check bad use of non linear expressions when converting *)
+(* benjamin *)
 let linear_constraint_of_nonlinear_constraint = function
     | Parsed_true_nonlinear_constraint -> Parsed_true_constraint
     | Parsed_false_nonlinear_constraint -> Parsed_false_constraint
-    | _ -> raise False_exception (* TODO replace by real conversion *)
+    | Parsed_nonlinear_constraint (l_expr, relop, r_expr) ->
+        Parsed_linear_constraint (
+            try_convert_linear_expression_of_parsed_discrete_arithmetic_expression l_expr,
+            relop,
+            try_convert_linear_expression_of_parsed_discrete_arithmetic_expression r_expr
+        )
 
 
 (*------------------------------------------------------------*)
@@ -2191,7 +2245,7 @@ let split_convex_predicate_into_discrete_and_continuous_new index_of_variables t
        match nonlinear_inequality with
        | Parsed_true_nonlinear_constraint -> true (*** NOTE: we arbitrarily send "true" to the discrete part ***)
        | Parsed_false_nonlinear_constraint -> raise False_exception
-       | Parsed_nonlinear_constraint (expr1, _, expr2) -> only_discrete_in_nonlinear_expression index_of_variables type_of_variables constants expr1 && only_discrete_in_nonlinear_expression index_of_variables type_of_variables constants expr2
+       | Parsed_nonlinear_constraint (l_expr, _, r_expr) -> only_discrete_in_nonlinear_expression index_of_variables type_of_variables constants l_expr && only_discrete_in_nonlinear_expression index_of_variables type_of_variables constants r_expr
     ) convex_predicate
     in
     (* Get discrete part as a nonlinear constraint but convert back continuous part to a linear constraint *)

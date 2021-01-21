@@ -28,6 +28,7 @@ exception InvalidModel
 
 exception InvalidProperty
 
+exception InvalidExpression of string
 
 (****************************************************************)
 (** Types *)

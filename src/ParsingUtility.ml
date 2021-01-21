@@ -214,9 +214,10 @@ let compile_model_and_property options =
 	try (
 		ModelConverter.abstract_structures_of_parsing_structures options parsed_model parsed_property_option
 	) with
-		| ModelConverter.InvalidModel		-> (print_error ("The input model contains errors. Please check it again."); abort_program (); exit 1)
-		| ModelConverter.InvalidProperty	-> (print_error ("The property contains errors. Please check it again."); abort_program (); exit 1)
-		| InternalError e					-> (print_error ("Internal error while parsing the input model and the property: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
+		| ModelConverter.InvalidModel		        -> (print_error ("The input model contains errors. Please check it again."); abort_program (); exit 1)
+		| ModelConverter.InvalidProperty	        -> (print_error ("The property contains errors. Please check it again."); abort_program (); exit 1)
+		| ModelConverter.InvalidExpression message	-> (print_error ("An expression contains errors. Please check it again.\nDetails : " ^ message); abort_program (); exit 1)
+		| InternalError e					        -> (print_error ("Internal error while parsing the input model and the property: " ^ e ^ "\nPlease kindly insult the developers."); abort_program (); exit 1)
 		in
 
 	(* Statistics *)
