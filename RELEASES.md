@@ -1,4 +1,14 @@
 *******************************************************
+# FUTURE release XXX (202X-XX-XX) Cheese
+minor release
+
+### Result
+* IMITATOR now attempts to generate a result (`.res`) file even in the case of an error such as parsing error of the model or of the property
+
+
+
+
+*******************************************************
 # release 3 (2021-01-12) Cheese
 MAJOR RELEASE
 
