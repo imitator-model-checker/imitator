@@ -1,20 +1,6 @@
 open DiscreteExpressions
-open LinearConstraint (* TODO remove ref to LinearConstraint because of customized_string *)
 open OCamlUtilities
-
-(* TODO move to another module *)
-(** Default values *)
-let default_string = {
-	true_string   = "True";
-	false_string  = "False";
-	and_operator  = "\n& ";
-	or_operator   = " or ";
-	l_operator    = " < ";
-	le_operator   = " <= ";
-	eq_operator   = " = ";
-	ge_operator   = " >= ";
-	g_operator    = " > ";
-}
+open Constants
 
 (* Non linear custom expression without PPL *)
 type nonlinear_inequality = DiscreteExpressions.discrete_arithmetic_expression * DiscreteExpressions.relop * DiscreteExpressions.discrete_arithmetic_expression
@@ -27,7 +13,6 @@ type nonlinear_constraint =
 (************************************************************)
 (** Check whether a non linear constraint evaluates to true when valuated with a valuation *)
 (************************************************************)
-(* TODO benjamin to test *)
 
 let check_nonlinear_inequality discrete_valuation nonlinear_inequality =
     let l_expr, relop, r_expr = nonlinear_inequality in

@@ -26,7 +26,7 @@ open Result
 (** Customized values for constraint conversion *)
 (************************************************************)
 
-let uppaal_strings : LinearConstraint.customized_string = {
+let uppaal_strings : Constants.customized_string = {
 	true_string   = "true";
 	false_string  = "false";
 	and_operator  = " &amp;&amp; ";

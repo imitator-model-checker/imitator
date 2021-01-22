@@ -120,3 +120,24 @@ val special_reset_clock_name	: string
 
 (* Default step for the cartography algorithms *)
 val default_cartography_step	: NumConst.t
+
+(************************************************************)
+(************************************************************)
+(* Strings *)
+(************************************************************)
+(************************************************************)
+
+(** Data structure allowing for customizing string conversions *)
+type customized_string = {
+	true_string  : string;
+	false_string : string;
+	and_operator : string;
+	or_operator  : string;
+	l_operator   : string;
+	le_operator  : string;
+	eq_operator  : string;
+	ge_operator  : string;
+	g_operator   : string;
+}
+
+val default_string : customized_string

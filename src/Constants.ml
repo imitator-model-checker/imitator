@@ -133,3 +133,35 @@ let special_reset_clock_name	= "special_0_clock"
 
 (* Default step for the cartography algorithms *)
 let default_cartography_step	= NumConst.one
+
+(************************************************************)
+(************************************************************)
+(* Strings constants *)
+(************************************************************)
+(************************************************************)
+
+(** Data structure allowing for customizing string conversions *)
+type customized_string = {
+	true_string  : string;
+	false_string : string;
+	and_operator : string;
+	or_operator  : string;
+	l_operator   : string;
+	le_operator  : string;
+	eq_operator  : string;
+	ge_operator  : string;
+	g_operator   : string;
+}
+
+(** Default values *)
+let default_string = {
+	true_string   = "True";
+	false_string  = "False";
+	and_operator  = "\n& ";
+	or_operator   = " or ";
+	l_operator    = " < ";
+	le_operator   = " <= ";
+	eq_operator   = " = ";
+	ge_operator   = " >= ";
+	g_operator    = " > ";
+}
