@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/12/03
- * Last modified     : 2020/12/15
+ * Last modified     : 2021/01/22
  *
  ************************************************************)
 
@@ -336,7 +336,50 @@ let result_nature_statistics_bc (soundness_str : string) termination (statespace
 
 (*** TODO: would be smarter to have a generic function export_to_file_result : imitator_result -> unit () ***)
 
-(* Write an ef_synth result to the result file *)
+(* Write an `error_result` result to the result file *)
+let export_to_file_errorresult error_type file_name =
+	(* Start counter *)
+	counter#start;
+	
+	(* Error message *)
+	let error_message = match error_type with
+		| ModelFileNotFound_error		-> "model file not found"
+		| PropertyFileNotFound_error	-> "property file not found"
+		| InvalidModel_error			-> "invalid model"
+		| InvalidProperty_error			-> "invalid property"
+		| Lexing_error msg				-> "lexing error (" ^ msg ^ ")"
+		| ModelParsing_error msg		-> "model parsing error (" ^ msg ^ ")"
+		| PropertyParsing_error msg		-> "property parsing error (" ^ msg ^ ")"
+	in
+	
+	(* Prepare the string to write *)
+	let file_content =
+		(* 1) Header *)
+		file_header ()
+		
+		(* 2) Error message *)
+		^ "\n------------------------------------------------------------"
+		^ "\nError                                   : " ^ error_message
+		^ "\n------------------------------------------------------------"
+
+		(* 3) General statistics *)
+		^ "\n" ^ (Statistics.string_of_all_counters())
+		^ "\n------------------------------------------------------------"
+	in
+	
+	(* Write to file *)
+	write_to_file file_name file_content;
+	print_message Verbose_standard ("\nResult written to file `" ^ file_name ^ "`.");
+	
+	(* Stop counter *)
+	counter#stop;
+	
+	(* The end *)
+	()
+
+
+
+	(* Write a `no_result` result to the result file *)
 let export_to_file_noresult file_name =
 	(* Start counter *)
 	counter#start;
@@ -975,6 +1018,22 @@ let process_result result algorithm_name prefix_option =
 		
 	
 	match result with
+	| Error_result error_type ->
+		(* Write to file if requested *)
+		if options#output_result then(
+			let file_name = file_prefix ^ Constants.result_file_extension in
+			export_to_file_errorresult error_type file_name;
+		)else(
+			print_message Verbose_high "No result export to file requested.";
+		);
+		
+		(* Print statistics *)
+		print_memory_statistics ();
+		
+		(* The end *)
+		()
+
+
 	| Syntax_check_result | Translation_result ->
 		(* Write to file if requested *)
 		if options#output_result then(
@@ -1241,3 +1300,39 @@ let process_result result algorithm_name prefix_option =
 
 
 (* 	| _ -> raise (NotImplemented ("function process_result not implemented for all cases")) *)
+
+(************************************************************)
+(* Termination *)
+(************************************************************)
+
+(** Process the result of IMITATOR. The 3rd optional argument is the file name prefix (otherwise options#files_prefix is used). Then terminate with success *)
+let process_result_and_terminate (result : Result.imitator_result) (algorithm_name : string) prefix_option (global_counter : Statistics.timeCounter) =
+	(* Process the result and create output file *)
+	process_result result algorithm_name prefix_option;
+
+	(* Stop counter *)
+	global_counter#stop;
+
+	(* Only print counters if statistics are required, or experiments verbose mode *)
+	if (try (Input.get_options())#statistics with _ -> false) || verbose_mode_greater Verbose_experiments then
+		print_message Verbose_standard (string_of_all_counters());
+
+	(* Kenavo! *)
+	terminate_program()
+
+
+(** Process the result of IMITATOR. The 3rd optional argument is the file name prefix (otherwise options#files_prefix is used). Then terminate with failure *)
+let process_result_and_abort (error_type : Result.error_type) (algorithm_name : string) prefix_option (global_counter : Statistics.timeCounter) =
+	(* Process the result and create output file *)
+	process_result (Error_result error_type) algorithm_name prefix_option;
+
+	(* Stop counter *)
+	global_counter#stop;
+
+	(* Only print counters if statistics are required, or experiments verbose mode *)
+	if (try (Input.get_options())#statistics with _ -> false) || verbose_mode_greater Verbose_experiments then
+		print_message Verbose_standard (string_of_all_counters());
+
+	(* Abort *)
+	abort_program()
+
