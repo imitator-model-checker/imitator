@@ -10,10 +10,22 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2020/04/16
+ * Last modified     : 2021/01/22
  *
  ************************************************************)
 
+
+(************************************************************)
+(** Error types *)
+(************************************************************)
+type error_type =
+	| ModelFileNotFound_error
+	| PropertyFileNotFound_error
+	| InvalidModel_error
+	| InvalidProperty_error
+	| Lexing_error					of string
+	| ModelParsing_error			of string
+	| PropertyParsing_error			of string
 
 
 (************************************************************)
@@ -350,6 +362,9 @@ type runs_exhibition_result = {
 (************************************************************)
 
 type imitator_result =
+	(* Error result (parsing, etc.) *)
+	| Error_result of error_type
+	
 	(* No analysis: syntactic check only (+ generation of the result file with syntactic information if requested) *)
 	| Syntax_check_result
 
