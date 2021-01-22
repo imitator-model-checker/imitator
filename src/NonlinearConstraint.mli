@@ -7,5 +7,10 @@ type nonlinear_constraint =
   | False_nonlinear_constraint (* TODO to remove ? *)
   | Nonlinear_constraint of nonlinear_inequality list (* TODO to replace with discrete_boolean_expression list ? *)
 
+(* Evaluations *)
 val check_nonlinear_constraint : DiscreteExpressions.discrete_valuation -> nonlinear_constraint -> bool
+
+(* Strings *)
 val customized_string_of_nonlinear_constraint : LinearConstraint.customized_string -> (Automaton.variable_index -> string) -> nonlinear_constraint -> string
+
+val string_of_nonlinear_constraint : (Automaton.variable_index -> string) -> nonlinear_constraint -> string

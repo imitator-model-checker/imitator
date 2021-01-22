@@ -1181,9 +1181,9 @@ let nonlinear_constraint_of_nonlinear_convex_predicate index_of_variables consta
            | Parsed_false_nonlinear_constraint -> raise False_exception
            | Parsed_nonlinear_constraint (expr1, relop, expr2) -> (nonlinear_inequality_of_nonlinear_constraint index_of_variables constants (expr1, relop, expr2)) :: nonlinear_inequalities
         ) [] convex_predicate
-    in Nonlinear_constraint nonlinear_inequalities
+    in NonlinearConstraint.Nonlinear_constraint nonlinear_inequalities
     (* Stop if any false constraint is found *)
-  ) with False_exception -> False_nonlinear_constraint
+  ) with False_exception -> NonlinearConstraint.False_nonlinear_constraint
 
 
 
@@ -2172,7 +2172,7 @@ let try_convert_linear_term_of_parsed_discrete_factor = function
     | Parsed_DF_variable variable_name -> Variable(NumConst.one, variable_name) (* TODO check with Etienne *)
     | Parsed_DF_constant var_value -> Constant var_value
     | Parsed_DF_expression _
-    | Parsed_DF_unary_min _ as bad -> raise (InvalidExpression "A non-linear arithmetic expression involve clock(s) / parameter(s)")
+    | Parsed_DF_unary_min _ -> raise (InvalidExpression "A non-linear arithmetic expression involve clock(s) / parameter(s)")
 
 (* benjamin *)
 let rec try_convert_linear_term_of_parsed_discrete_term = function
@@ -2197,7 +2197,7 @@ let rec try_convert_linear_term_of_parsed_discrete_term = function
             | _ -> raise (InvalidExpression "A non-linear arithmetic expression involve clock(s) / parameter(s)")
         )
     (* Division is non linear, so it's impossible to make the conversion, we raise an exception*)
-    | Parsed_DT_div _ as bad -> raise (InvalidExpression "A non-linear arithmetic expression involve clock(s) / parameter(s)")
+    | Parsed_DT_div (_, _) -> raise (InvalidExpression "A non-linear arithmetic expression involve clock(s) / parameter(s)")
     (* Try to convert factor *)
     | Parsed_DT_factor parsed_discrete_factor -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
 

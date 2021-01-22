@@ -2,6 +2,20 @@ open DiscreteExpressions
 open LinearConstraint (* TODO remove ref to LinearConstraint *)
 open OCamlUtilities
 
+(* TODO move to another module *)
+(** Default values *)
+let default_string = {
+	true_string   = "True";
+	false_string  = "False";
+	and_operator  = "\n& ";
+	or_operator   = " or ";
+	l_operator    = " < ";
+	le_operator   = " <= ";
+	eq_operator   = " = ";
+	ge_operator   = " >= ";
+	g_operator    = " > ";
+}
+
 (* Non linear custom expression without PPL *)
 type nonlinear_inequality = DiscreteExpressions.discrete_arithmetic_expression * DiscreteExpressions.relop * DiscreteExpressions.discrete_arithmetic_expression
 (*type nonlinear_constraint = nonlinear_inequality list*)
@@ -98,7 +112,6 @@ let string_of_arithmetic_expression customized_string variable_names =
 
 
 (** Convert a non linear inequality into a string with customized string *)
-(* TODO refactor because, almost duplicate of ModelPrinter... *)
 let string_of_nonlinear_inequality customized_string variable_names (l_expr, op, r_expr) =
 	let lstr = string_of_arithmetic_expression customized_string variable_names l_expr in
 	let rstr = string_of_arithmetic_expression customized_string variable_names r_expr in
@@ -108,17 +121,21 @@ let string_of_nonlinear_inequality customized_string variable_names (l_expr, op,
 		| OP_EQ         -> customized_string.eq_operator
 		| OP_GEQ        -> customized_string.ge_operator
 		| OP_G          -> customized_string.g_operator
+		| OP_NEQ        -> customized_string.l_operator ^ customized_string.g_operator
 	in
 	lstr ^ opstr ^ rstr
 
 
-(* TODO change literal value of True and False with customized_string *)
+(* Get string of non-linear constraint inequalities with customized strings *)
 let customized_string_of_nonlinear_constraint customized_string variable_names = function
-    | True_nonlinear_constraint -> "True"
-    | False_nonlinear_constraint -> "False"
+    | True_nonlinear_constraint -> customized_string.true_string
+    | False_nonlinear_constraint -> customized_string.false_string
     | Nonlinear_constraint nonlinear_constraint ->
 	    " " ^
 	    (string_of_list_of_string_with_sep
 		    customized_string.and_operator
 		    (List.map (string_of_nonlinear_inequality customized_string variable_names) nonlinear_constraint)
 	    )
+
+(* Get string of non-linear constraint inequalities with default strings *)
+let string_of_nonlinear_constraint = customized_string_of_nonlinear_constraint default_string

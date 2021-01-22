@@ -210,33 +210,9 @@ let string_of_arithmetic_expression variable_names =
 	in string_of_arithmetic_expression
 
 
-(** Convert a non linear inequality into a string *)
-let string_of_nonlinear_inequality variable_names (l_expr, op, r_expr) =
-	let lstr = string_of_arithmetic_expression variable_names l_expr in
-	let rstr = string_of_arithmetic_expression variable_names r_expr in
-	let opstr = match op with
-		| OP_L          -> "<"
-		| OP_LEQ        -> "<="
-		| OP_EQ         -> "="
-		| OP_GEQ         -> ">="
-		| OP_G          -> ">"
-	in
-	lstr ^ opstr ^ rstr
 
 (* Get string of non-linear constraint inequalities *)
-(*let string_of_nonlinear_constraint variable_names nonlinear_constraint =*)
-(*  (string_of_list_of_string_with_sep*)
-(*    "&"*)
-(*    (List.map (string_of_nonlinear_inequality variable_names) nonlinear_constraint)*)
-(*  )*)
-let string_of_nonlinear_constraint variable_names = function
-  | False_nonlinear_constraint -> "False"
-  | True_nonlinear_constraint -> "True"
-  | Nonlinear_constraint nonlinear_constraint ->
-  (string_of_list_of_string_with_sep
-    "&"
-    (List.map (string_of_nonlinear_inequality variable_names) nonlinear_constraint)
-  )
+let string_of_nonlinear_constraint = NonlinearConstraint.string_of_nonlinear_constraint
 
 
 (************************************************************)
