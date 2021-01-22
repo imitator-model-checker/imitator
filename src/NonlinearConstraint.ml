@@ -34,7 +34,6 @@ let check_nonlinear_constraint discrete_valuation = function
 
 
 
-
 (* TODO use DiscreteExpression.string_of_arithmetic_expression when it will moved into *)
 (* Convert an arithmetic expression into a string *)
 (*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
@@ -66,7 +65,14 @@ let string_of_arithmetic_expression customized_string variable_names =
 			(string_of_factor customized_string (DF_constant c))
 			^ " * "
 			^ (string_of_factor customized_string (DF_variable v))
-		(*** TODO: No parentheses on the left for constant or variable * something ***)
+        (*** No parentheses on the left for constant or variable * something ***)
+        (* TODO refact the match it's ugly, create function is_variable_or_constant in DiscreteExpressions *)
+		| DT_mul (DT_factor const_or_var, discrete_factor)
+		| DT_mul (DT_factor const_or_var, discrete_factor) when (match const_or_var with | DF_constant _ | DF_variable _ -> true | _ -> false) ->
+		    (string_of_factor customized_string const_or_var)
+		    ^ " * "
+		    ^ (string_of_factor customized_string discrete_factor)
+
 		(* Otherwise: parentheses on the left *)
 		| DT_mul (discrete_term, discrete_factor) ->
 			"(" ^ (string_of_term customized_string discrete_term) ^ ")"
