@@ -1,5 +1,5 @@
 open DiscreteExpressions
-open LinearConstraint (* TODO remove ref to LinearConstraint *)
+open LinearConstraint (* TODO remove ref to LinearConstraint because of customized_string *)
 open OCamlUtilities
 
 (* TODO move to another module *)
@@ -35,11 +35,11 @@ let check_nonlinear_inequality discrete_valuation nonlinear_inequality =
       DiscreteExpressions.eval_discrete_arithmetic_expression discrete_valuation l_expr,
       DiscreteExpressions.eval_discrete_arithmetic_expression discrete_valuation r_expr
     in
-      DiscreteExpressions.eval_discrete_relop relop l_expr_eval l_expr_eval
+      DiscreteExpressions.eval_discrete_relop relop l_expr_eval r_expr_eval
 
 (* if all true, it's satisfied *)
-let check_nonlinear_inequalities discrete_valuation nonlinear_inequalities =
-  List.for_all (check_nonlinear_inequality discrete_valuation) nonlinear_inequalities
+let check_nonlinear_inequalities discrete_valuation =
+  List.for_all (check_nonlinear_inequality discrete_valuation)
 
 (* Check if a nonlinear constraint is satisfied *)
 let check_nonlinear_constraint discrete_valuation = function
@@ -50,7 +50,7 @@ let check_nonlinear_constraint discrete_valuation = function
 
 
 
-
+(* TODO use DiscreteExpression.string_of_arithmetic_expression when it will moved into *)
 (* Convert an arithmetic expression into a string *)
 (*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
 let string_of_arithmetic_expression customized_string variable_names =

@@ -2186,13 +2186,13 @@ let rec try_convert_linear_term_of_parsed_discrete_term = function
         (match linear_term, linear_factor with
             (* Constant multiplied by constant, it's ok*)
             | Constant l_const_value, Constant r_const_value ->
-                let value = (NumConst.to_float l_const_value) *. (NumConst.to_float r_const_value) in
-                Constant (NumConst.numconst_of_float value)
+                let value = (NumConst.mul l_const_value r_const_value) in
+                Constant value
             (* Constant multiplied by a variable (commutative), it's ok *)
             | Variable (var_value, variable_name), Constant const_value
             | Constant const_value, Variable (var_value, variable_name) ->
-                let value = (NumConst.to_float var_value) *. (NumConst.to_float const_value) in
-                Variable (NumConst.numconst_of_float value, variable_name)
+                let value = (NumConst.mul var_value const_value) in
+                Variable (value, variable_name)
             (* Other cases are non linears, so it's impossible to make the conversion, we raise an exception *)
             | _ -> raise (InvalidExpression "A non-linear arithmetic expression involve clock(s) / parameter(s)")
         )
