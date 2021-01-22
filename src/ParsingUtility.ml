@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André
  * Created           : 2014/03/15
- * Last modified     : 2020/09/23
+ * Last modified     : 2021/01/19
  *
  ************************************************************)
 
@@ -46,7 +46,7 @@ let parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name =
 	print_message Verbose_total ("Preparing actual parsing…");
 	let parsing_structure = try (
 		let absolute_filename = FilePath.make_absolute (FileUtil.pwd ()) file_name in
-		print_message Verbose_total ("Created absolute file name '" ^ absolute_filename ^ "'.");
+		print_message Verbose_total ("Created absolute file name `" ^ absolute_filename ^ "`.");
 		
 		print_message Verbose_total ("Assigning lex_curr_p…");
 		lexbuf.Lexing.lex_curr_p <- { lexbuf.Lexing.lex_curr_p with Lexing.pos_fname = absolute_filename };
@@ -54,7 +54,7 @@ let parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name =
 		print_message Verbose_total ("Assigning lex_start_p…");
 		lexbuf.Lexing.lex_start_p <- { lexbuf.Lexing.lex_start_p with Lexing.pos_fname = absolute_filename };
 
-		print_message Verbose_total ("Starting actual parsing of '" ^ absolute_filename ^ "'…");
+		print_message Verbose_total ("Starting actual parsing of `" ^ absolute_filename ^ "`…");
 		
 		let parsing_structure = the_parser the_lexer lexbuf in
 		print_message Verbose_total ("Parsing structure created");
@@ -81,24 +81,24 @@ let parser_lexer_gen the_parser the_lexer lexbuf string_of_input file_name =
 					let lines = Str.split (Str.regexp "\n") beginning_of_the_file in
 					let line = List.length lines in
 					(* Make the message *)
-					"near '" ^ error_symbol ^ "' at line " ^ (string_of_int line) ^ ".")
+					"near `" ^ error_symbol ^ "` at line " ^ (string_of_int line) ^ ".")
 				else "somewhere in the file, most probably in the very beginning."
 			in
 			(* Print the error message *)
-			print_error ("Parsing error in file " ^ file_name ^ " " ^ error_message); abort_program (); exit(1)
+			print_error ("Parsing error in file `" ^ file_name ^ "` " ^ error_message); abort_program (); exit(1)
 
 		| UnexpectedToken c ->
-			print_message Verbose_total ("Parsing error detected 'UnexpectedToken'. Processing…");
-			print_error ("Parsing error in file " ^ file_name ^ ": unexpected token '" ^ (Char.escaped c) ^ "'."); abort_program (); exit(1)
+			print_message Verbose_total ("Parsing error detected `UnexpectedToken`. Processing…");
+			print_error ("Parsing error in file `" ^ file_name ^ "`: unexpected token `" ^ (Char.escaped c) ^ "`."); abort_program (); exit(1)
 
 		(*** HACK: added because of some mysterious exception raised during parsing (2020/04/16) ***)
 		| Invalid_argument (*"index out of bounds"*)_ ->
-			print_message Verbose_total ("Parsing error detected 'index out of bounds'. Processing…");
-			print_error ("Mysterious parsing error in file " ^ file_name ^ ", maybe at the very beginning."); abort_program (); exit(1)
+			print_message Verbose_total ("Parsing error detected `index out of bounds`. Processing…");
+			print_error ("Mysterious parsing error in file `" ^ file_name ^ "`, maybe at the very beginning."); abort_program (); exit(1)
 		
 		| Failure f ->
-			print_message Verbose_total ("Parsing error detected 'Failure'. Processing…");
-			print_error ("Parsing error ('failure') in file " ^ file_name ^ ": " ^ f); abort_program (); exit(1)
+			print_message Verbose_total ("Parsing error detected `Failure`. Processing…");
+			print_error ("Parsing error (`failure`) in file `" ^ file_name ^ "`: " ^ f); abort_program (); exit(1)
 	in
 	parsing_structure
 
@@ -108,12 +108,12 @@ let parser_lexer_from_file the_parser the_lexer file_name =
 	(* Open file *)
 	print_message Verbose_total ("Opening in_channel…");
 	let in_channel = try (open_in file_name) with
-		| Sys_error e -> print_error ("The file '" ^ file_name ^ "' could not be opened.\n" ^ e); abort_program (); exit(1)
+		| Sys_error e -> print_error ("The file `" ^ file_name ^ "` could not be opened.\n" ^ e); abort_program (); exit(1)
 	in
 	(* Lexing *)
 	print_message Verbose_total ("Lexing…");
 	let lexbuf = try (Lexing.from_channel in_channel) with
-		| Failure f -> print_error ("Lexing error in file " ^ file_name ^ ": " ^ f); abort_program (); exit(1)
+		| Failure f -> print_error ("Lexing error in file `" ^ file_name ^ "`: " ^ f); abort_program (); exit(1)
 	in
 	(* Function to convert a in_channel to a string (in case of parsing error) *)
 	let string_of_input () =
