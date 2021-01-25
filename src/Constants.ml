@@ -165,3 +165,19 @@ let default_string = {
 	ge_operator   = " >= ";
 	g_operator    = " > ";
 }
+
+type customized_operator_string = {
+    plus_string : string;
+    minus_string : string;
+    mul_string : string;
+    div_string : string;
+    unary_min_string : string;
+}
+
+let default_operator_string = {
+    plus_string = " + ";
+    minus_string = " - ";
+    mul_string = " * ";
+    div_string = " / ";
+    unary_min_string = "-";
+}

@@ -34,78 +34,16 @@ let check_nonlinear_constraint discrete_valuation = function
 
 
 
-(* TODO use DiscreteExpression.string_of_arithmetic_expression when it will moved into *)
-(* Convert an arithmetic expression into a string *)
-(*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
-let string_of_arithmetic_expression customized_string variable_names =
-	let rec string_of_arithmetic_expression customized_string = function
-		(* Shortcut: Remove the "+0" / -"0" cases *)
-		| DAE_plus (discrete_arithmetic_expression, DT_factor (DF_constant c))
-		| DAE_minus (discrete_arithmetic_expression, DT_factor (DF_constant c)) when NumConst.equal c NumConst.zero ->
-			string_of_arithmetic_expression customized_string discrete_arithmetic_expression
 
-		| DAE_plus (discrete_arithmetic_expression, discrete_term) ->
-			(string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
-			^ " + "
-			^ (string_of_term customized_string discrete_term)
 
-		| DAE_minus (discrete_arithmetic_expression, discrete_term) ->
-			(string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
-			^ " - "
-			^ (string_of_term customized_string discrete_term)
-
-		| DAE_term discrete_term -> string_of_term customized_string discrete_term
-
-	and string_of_term customized_string = function
-		(* Eliminate the '1' coefficient *)
-		| DT_mul (DT_factor (DF_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
-			string_of_factor customized_string discrete_factor
-		(* No parentheses for constant * variable *)
-		| DT_mul (DT_factor (DF_constant c), DF_variable v) ->
-			(string_of_factor customized_string (DF_constant c))
-			^ " * "
-			^ (string_of_factor customized_string (DF_variable v))
-        (*** No parentheses on the left for constant or variable * something ***)
-        (* TODO refact the match it's ugly, create function is_variable_or_constant in DiscreteExpressions *)
-		| DT_mul (DT_factor const_or_var, discrete_factor)
-		| DT_mul (DT_factor const_or_var, discrete_factor) when (match const_or_var with | DF_constant _ | DF_variable _ -> true | _ -> false) ->
-		    (string_of_factor customized_string const_or_var)
-		    ^ " * "
-		    ^ (string_of_factor customized_string discrete_factor)
-
-		(* Otherwise: parentheses on the left *)
-		| DT_mul (discrete_term, discrete_factor) ->
-			"(" ^ (string_of_term customized_string discrete_term) ^ ")"
-			^ " * "
-			^ (string_of_factor customized_string discrete_factor)
-
-		(*** TODO: No parentheses on the left for constant or variable / something ***)
-		(*** TODO: No parentheses on the left for something / constant or variable ***)
-		(* Otherwise: parentheses on the left *)
-		| DT_div (discrete_term, discrete_factor) ->
-			"(" ^ (string_of_term customized_string discrete_term) ^ ")"
-			^ " / "
-			^ (string_of_factor customized_string discrete_factor)
-
-		| DT_factor discrete_factor -> string_of_factor customized_string discrete_factor
-
-	and string_of_factor customized_string = function
-		| DF_variable discrete_index -> variable_names discrete_index
-		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
-		| DF_unary_min discrete_factor -> "-" ^ (string_of_factor customized_string discrete_factor)
-		| DF_expression discrete_arithmetic_expression ->
-			(*** TODO: simplify a bit? ***)
-			"(" ^ (string_of_arithmetic_expression customized_string discrete_arithmetic_expression) ^ ")"
-	(* Call top-level *)
-	in string_of_arithmetic_expression customized_string
 
 
 
 
 (** Convert a non linear inequality into a string with customized string *)
 let string_of_nonlinear_inequality customized_string variable_names (l_expr, op, r_expr) =
-	let lstr = string_of_arithmetic_expression customized_string variable_names l_expr in
-	let rstr = string_of_arithmetic_expression customized_string variable_names r_expr in
+	let lstr = DiscreteExpressions.customized_string_of_arithmetic_expression customized_string variable_names l_expr in
+	let rstr = DiscreteExpressions.customized_string_of_arithmetic_expression customized_string variable_names r_expr in
 	let opstr = match op with
 		| OP_L          -> customized_string.l_operator
 		| OP_LEQ        -> customized_string.le_operator

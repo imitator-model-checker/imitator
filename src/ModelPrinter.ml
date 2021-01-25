@@ -151,65 +151,8 @@ let string_of_declarations model =
 		("\n\t" ^ (string_of_variables model.parameters) ^ "\n\t\t: parameter;\n") else "")
 
 
-(* Convert an arithmetic expression into a string *)
-(*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
-let string_of_arithmetic_expression variable_names =
-	let rec string_of_arithmetic_expression = function
-		(* Shortcut: Remove the "+0" / -"0" cases *)
-		| DAE_plus (discrete_arithmetic_expression, DT_factor (DF_constant c))
-		| DAE_minus (discrete_arithmetic_expression, DT_factor (DF_constant c)) when NumConst.equal c NumConst.zero ->
-			string_of_arithmetic_expression discrete_arithmetic_expression
-
-		| DAE_plus (discrete_arithmetic_expression, discrete_term) ->
-			(string_of_arithmetic_expression discrete_arithmetic_expression)
-			^ " + "
-			^ (string_of_term discrete_term)
-
-		| DAE_minus (discrete_arithmetic_expression, discrete_term) ->
-			(string_of_arithmetic_expression discrete_arithmetic_expression)
-			^ " - "
-			^ (string_of_term discrete_term)
-
-		| DAE_term discrete_term -> string_of_term discrete_term
-
-	and string_of_term = function
-		(* Eliminate the '1' coefficient *)
-		| DT_mul (DT_factor (DF_constant c), discrete_factor) when NumConst.equal c NumConst.one ->
-			string_of_factor discrete_factor
-		(* No parentheses for constant * variable *)
-		| DT_mul (DT_factor (DF_constant c), DF_variable v) ->
-			(string_of_factor (DF_constant c))
-			^ " * "
-			^ (string_of_factor (DF_variable v))
-		(*** TODO: No parentheses on the left for constant or variable * something ***)
-		(* Otherwise: parentheses on the left *)
-		| DT_mul (discrete_term, discrete_factor) ->
-			"(" ^ (string_of_term discrete_term) ^ ")"
-			^ " * "
-			^ (string_of_factor discrete_factor)
-
-		(*** TODO: No parentheses on the left for constant or variable / something ***)
-		(*** TODO: No parentheses on the left for something / constant or variable ***)
-		(* Otherwise: parentheses on the left *)
-		| DT_div (discrete_term, discrete_factor) ->
-			"(" ^ (string_of_term discrete_term) ^ ")"
-			^ " / "
-			^ (string_of_factor discrete_factor)
-
-		| DT_factor discrete_factor -> string_of_factor discrete_factor
-
-	and string_of_factor = function
-		| DF_variable discrete_index -> variable_names discrete_index
-		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
-		| DF_unary_min discrete_factor -> "-" ^ (string_of_factor discrete_factor)
-		| DF_expression discrete_arithmetic_expression ->
-			(*** TODO: simplify a bit? ***)
-			"(" ^ (string_of_arithmetic_expression discrete_arithmetic_expression) ^ ")"
-	(* Call top-level *)
-	in string_of_arithmetic_expression
-
-
-
+(* Get string of an arithmetic expression *)
+let string_of_arithmetic_expression = DiscreteExpressions.string_of_arithmetic_expression
 (* Get string of non-linear constraint inequalities *)
 let string_of_nonlinear_constraint = NonlinearConstraint.string_of_nonlinear_constraint
 

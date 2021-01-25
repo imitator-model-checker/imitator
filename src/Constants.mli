@@ -140,4 +140,13 @@ type customized_string = {
 	g_operator   : string;
 }
 
+type customized_operator_string = {
+    plus_string : string;
+    minus_string : string;
+    mul_string : string;
+    div_string : string;
+    unary_min_string : string;
+}
+
 val default_string : customized_string
+val default_operator_string : customized_operator_string
