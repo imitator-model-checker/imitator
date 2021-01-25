@@ -517,13 +517,11 @@ match options#imitator_mode with
 	(************************************************************)
 	(* Case no analysis *)
 	(************************************************************)
-	(* Generate directly the "empty" result for syntax check *)
-	ResultProcessor.process_result Syntax_check_result "syntax check" None;
-
 	(* If arrived here, syntax is correct *)
 	print_message Verbose_standard "Syntax is correct. Have fun!";
 
-	terminate_program()
+	(* Generate directly the "empty" result for syntax check *)
+	ResultProcessor.process_result_and_terminate Syntax_check_result "syntax check" None global_counter
 
 
 	(************************************************************)
@@ -589,9 +587,7 @@ match options#imitator_mode with
 		end;
 
 		(* Create a file with some statistics on the original model if requested *)
-		ResultProcessor.process_result Translation_result "translation to graphics" None;
-
-		terminate_program()
+		ResultProcessor.process_result_and_terminate Translation_result "translation to graphics" None global_counter
 
 
 	(************************************************************)
@@ -610,10 +606,9 @@ match options#imitator_mode with
 		counter_algorithm_and_parsing#stop;
 		counter_main_algorithm#stop;
 
-		(* Process *)
-		ResultProcessor.process_result result concrete_algorithm#algorithm_name None;
+		(* Process and terminate *)
+		ResultProcessor.process_result_and_terminate result concrete_algorithm#algorithm_name None global_counter
 
-		()
 
 	(************************************************************)
 	(* Some algorithm *)

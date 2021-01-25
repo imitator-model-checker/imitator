@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/01/11
+# Last modified     : 2021/01/22
 #************************************************************
 
 
@@ -23,6 +23,55 @@
 # TESTS TO CARRY
 #************************************************************
 tests = [
+
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# FILE NOT FOUND TESTS
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/01/22
+		# Last modified            : 2021/01/22
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test the absence of model',
+		'input_files': ['thisfiledoesnotexist.imi'],
+		'options'    : '-mode checksyntax ',
+		'expectations' : [
+			{'file': 'thisfiledoesnotexist.res' , 'content' : """
+Error                                   : model file not found
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/01/22
+		# Last modified            : 2021/01/22
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test the absence of property',
+		'input_files': ['testL.imi', 'thisfiledoesnotexist.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'testL.res' , 'content' : """
+Error                                   : property file not found
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	# TODO: same + `-mode checksyntax`
+
 
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# SYNTACTIC TESTS
