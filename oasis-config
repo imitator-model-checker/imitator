@@ -8,7 +8,7 @@
 #
 #  _oasis authors: Étienne André, Alban Linard
 #  Created:        2014/08/18
-#  Last modified:  2020/12/15
+#  Last modified:  2021/01/25
 ###############################################################
 
 OASISFormat: 0.3
@@ -59,15 +59,15 @@ Test startingcomment
 
 Test tes1
   Command: echo "\n********** TEST 1 **********\n"; \
-      ./bin/imitator benchmarks/Flipflop/flipflop.imi -mode statespace -depth-limit 5
+      ./bin/imitator benchmarks/Hardware/Flipflop/flipflop.imi -mode statespace -depth-limit 5
 
 Test test2
   Command: echo "\n********** TEST 2 **********\n"; \
-      ./bin/imitator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.pi0 -draw-statespace normal -states-description -statistics
+      ./bin/imitator benchmarks/Hardware/Flipflop/flipflop.imi benchmarks/Hardware/Flipflop/flipflop.pi0 -draw-statespace normal -states-description -statistics
 
 Test test3
   Command: echo "\n********** TEST 3 **********\n"; \
-      ./bin/imitator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.v0 -draw-cart
+      ./bin/imitator benchmarks/Hardware/Flipflop/flipflop.imi benchmarks/Hardware/Flipflop/flipflop.v0 -draw-cart
 
 Test test4
   Command: echo "\n********** TEST 4 **********\n"; \

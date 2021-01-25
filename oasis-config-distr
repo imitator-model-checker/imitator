@@ -8,7 +8,7 @@
 #
 #  _oasis authors: Étienne André, Alban Linard
 #  Created:        2013/12/11
-#  Last modified:  2020/12/15
+#  Last modified:  2021/01/25
 ###############################################################
 
 OASISFormat: 0.3
@@ -42,15 +42,15 @@ Test startingcomment
 
 Test tes1
   Command: echo "\n********** TEST 1 **********\n"; \
-      ./bin/patator benchmarks/Flipflop/flipflop.imi -mode statespace -depth-limit 5
+      ./bin/patator benchmarks/Hardware/Flipflop/flipflop.imi -mode statespace -depth-limit 5
 
 Test test2
   Command: echo "\n********** TEST 2 **********\n"; \
-      ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.pi0 -draw-statespace normal -states-description -statistics
+      ./bin/patator benchmarks/Hardware/Flipflop/flipflop.imi benchmarks/Hardware/Flipflop/flipflop.pi0 -draw-statespace normal -states-description -statistics
 
 Test test3
   Command: echo "\n********** TEST 3 **********\n"; \
-      ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.v0 -draw-cart
+      ./bin/patator benchmarks/Hardware/Flipflop/flipflop.imi benchmarks/Hardware/Flipflop/flipflop.v0 -draw-cart
 
 Test test4
   Command: echo "\n********** TEST 4 **********\n"; \
@@ -58,7 +58,7 @@ Test test4
 
 Test test5
   Command: echo "\n********** TEST 5 **********\n"; \
-      mpiexec -n 4 ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.v0 -draw-cart -distributed sequential -verbose standard
+      mpiexec -n 4 ./bin/patator benchmarks/Hardware/Flipflop/flipflop.imi benchmarks/Hardware/Flipflop/flipflop.v0 -draw-cart -distributed sequential -verbose standard
 
 Test test6
   Command: echo "\n********** TEST 6 **********\n"; \
@@ -66,7 +66,7 @@ Test test6
 
 Test test7
   Command: echo "\n********** TEST 7 **********\n"; \
-      mpiexec -n 4 ./bin/patator benchmarks/Flipflop/flipflop.imi benchmarks/Flipflop/flipflop.v0 -draw-cart -distributed dynamic -verbose mute
+      mpiexec -n 4 ./bin/patator benchmarks/Hardware/Flipflop/flipflop.imi benchmarks/Hardware/Flipflop/flipflop.v0 -draw-cart -distributed dynamic -verbose mute
 
 Test finalcomment
   Command: echo "\n********** END TESTS **********\n"
