@@ -146,21 +146,45 @@ let check_discrete_boolean_expression discrete_valuation = function
 
 (* benjamin *)
 (* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
-let is_dt_factor_has_parenthesis = function
+let is_discrete_factor_has_parenthesis = function
     | DF_expression(DAE_plus _)
     | DF_expression(DAE_minus _) -> true
     | _ -> false
 
-(* Check if a discrete term of an arithmetic expression should have parenthesis *)
-let is_discrete_term_has_parenthesis = function
-    | DT_factor factor -> is_dt_factor_has_parenthesis factor
+(* Check if discrete factor is a multiplication *)
+let is_discrete_factor_is_mul = function
+    | DF_expression(DAE_term(DT_mul _)) -> true
     | _ -> false
 
-let add_dt_parenthesis_if_needed expr str =
-    if is_discrete_term_has_parenthesis expr then "(" ^ str ^ ")" else str
+(* Check if a left expression should have parenthesis *)
+(* is (x + y) * z *)
+(* or (x - y) * z *)
+(* or (x + y) / z *)
+(* or (x - y) / z *)
+let is_left_expr_has_parenthesis = function
+    | DT_factor factor -> is_discrete_factor_has_parenthesis factor
+    | _ -> false
 
-let add_dt_factor_parenthesis_if_needed expr str =
-    if is_dt_factor_has_parenthesis expr then "(" ^ str ^ ")" else str
+(* Check if a right expression should have parenthesis *)
+(* is x * (y + z) *)
+(* or x * (y - z) *)
+(* or x / (y + z) *)
+(* or x / (y - z) *)
+(* or x / (y * z) *)
+let is_right_expr_has_parenthesis = function
+    (* check x / (y * z) *)
+    | DT_div (discrete_term, discrete_factor) when is_discrete_factor_is_mul discrete_factor -> true
+    (* check x / (y + z) or x / (y - z) *)
+    | DT_div (discrete_term, discrete_factor)
+    (* check x * (y + z) or x * (y - z) *)
+    | DT_mul (discrete_term, discrete_factor) -> is_discrete_factor_has_parenthesis discrete_factor
+    | _ -> false
+
+let add_left_parenthesis expr str =
+    if is_left_expr_has_parenthesis expr then "(" ^ str ^ ")" else str
+
+let add_right_parenthesis str expr =
+    if is_right_expr_has_parenthesis expr then "(" ^ str ^ ")" else str
 
 (* Convert an arithmetic expression into a string *)
 (*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
@@ -180,31 +204,33 @@ let customized_string_of_arithmetic_expression customized_string variable_names 
             ^ Constants.default_operator_string.minus_string
             ^ (string_of_term customized_string discrete_term)
         | DAE_term discrete_term -> string_of_term customized_string discrete_term
+
 	and string_of_term customized_string = function
 		(* Eliminate the '1' coefficient *)
 		| DT_mul (DT_factor (DF_constant c), discrete_factor) as expr when NumConst.equal c NumConst.one ->
 			string_of_factor customized_string discrete_factor
 		| DT_mul (discrete_term, discrete_factor) as expr ->
-		add_dt_parenthesis_if_needed discrete_term (
+		add_left_parenthesis discrete_term (
 			(string_of_term customized_string discrete_term)
 		)
         ^ Constants.default_operator_string.mul_string
         ^
-        (add_dt_factor_parenthesis_if_needed discrete_factor (
+        (add_right_parenthesis (
             string_of_factor customized_string discrete_factor
-        ))
+        ) expr)
 
 		| DT_div (discrete_term, discrete_factor) as expr ->
-		add_dt_parenthesis_if_needed discrete_term (
+		add_left_parenthesis discrete_term (
 			(string_of_term customized_string discrete_term)
         )
         ^ Constants.default_operator_string.div_string
         ^
-        (add_dt_factor_parenthesis_if_needed discrete_factor (
+        (add_right_parenthesis (
             string_of_factor customized_string discrete_factor
-        ))
+        ) expr)
 
 		| DT_factor discrete_factor as expr -> string_of_factor customized_string discrete_factor
+
 	and string_of_factor customized_string = function
 		| DF_variable discrete_index -> variable_names discrete_index
 		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
