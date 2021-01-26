@@ -1,20 +1,28 @@
-(************************************************************
- *                      IMITATOR MODEL                      
- *
- * Railroad Gate Controller
- *
- * Description     : Simple model with 1 PTA only
- * Correctness     : "Crash" cannot happen
- * Source          : Own work
- * Author          : Étienne André
- * Modeling        : Étienne André
- * Input by        : Étienne André
- *
- * Created         : 2012/03/13
- * Last modified   : 2020/03/20
- *
- * IMITATOR version: 3.0
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : Train1PTA
+ * Description      : Simple model with 1 PTA only
+ * Correctness      : "Crash" cannot happen
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : Education ; Toy
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : 
+ * 
+ * Created          : 2012/03/13
+ * Last modified    : 2020/03/20
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
 
 var
 
