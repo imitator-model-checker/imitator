@@ -1,25 +1,28 @@
-(************************************************************
- *                      IMITATOR MODEL                      
- *
- * CSMA/CD Protocol
- *
- * Description     : Non-probabilistic model deduced from the probabilistic model in "Symbolic Model Checking for Probabilistic Timed Automata" (M. Kwiatkowska, G. Norman, J. Sproston and F. Wang., FORMATS/FTRTFT'2004). See figures on http://www.prismmodelchecker.org/casestudies/csma.php.
-	Input by Laurent Fribourg and Étienne André (LSV)
-	Renamed actions (May 2012) for taking probabilities into account
-	Version with BC=10, i.e., up to waiting time of 2047*timeslot
-	(partially generated file!)
- * Correctness     : Transmission completed
- * Source          : http://www.prismmodelchecker.org/casestudies/csma.php
- * Author          : M. Kwiatkowska, G. Norman, J. Sproston and F. Wang
- * Modeling        : M. Kwiatkowska, G. Norman, J. Sproston and F. Wang
- * Input by        : Étienne André
- * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
- * Created         : 2007
- * Last modified   : 2020/08/14
- *
- * IMITATOR version: 3
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : CSMACD:bc10
+ * Description      : Non-probabilistic model deduced from the probabilistic model in "Symbolic Model Checking for Probabilistic Timed Automata" (M. Kwiatkowska, G. Norman, J. Sproston and F. Wang., FORMATS/FTRTFT'2004). See figures on http://www.prismmodelchecker.org/casestudies/csma.php.
+ * Correctness      : Transmission completed
+ * Scalable         : yes
+ * Generated        : yes
+ * Categories       : Academic ; Industrial ; Protocol ; RTS
+ * Source           : http://www.prismmodelchecker.org/casestudies/csma.php
+ * bibkey           : KNSW07
+ * Author           : M. Kwiatkowska, G. Norman, J. Sproston and F. Wang
+ * Modeling         : M. Kwiatkowska, G. Norman, J. Sproston and F. Wang
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ * 
+ * Created          : 2007
+ * Last modified    : 2020/08/14
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
 
 var
 
@@ -20589,7 +20592,7 @@ loc Init2: invariant x2 = 0
 loc Transmit2: invariant x2 <= lambda
 	when x2 = lambda sync end2 do {x2 := 0} goto Done2;
 	when True sync cd do {x2 := 0} goto Collide2_1;
-	
+
 (* STARTING AUTOMATED PROGRAM FOR CSMA/CD FOR STATION 2 WITH BCMAX = 10 *)
 
 (* Considering case with bc = 1, hence from 0 to 3 (i.e., 2^(bc+1) - 1) *)
