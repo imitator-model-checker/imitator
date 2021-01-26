@@ -1,21 +1,25 @@
-(************************************************************
- *                      IMITATOR MODEL                      
+(*******************************************************************************
+ *                                IMITATOR MODEL
  *
- * Empty template of a case study
+ * Title            : model
+ * Description      : Empty template of a case study
+ * Correctness      : TODO
+ * Scalable         : TBD
+ * Generated        : TBD
+ * Categories       : TBD
+ * Source           : TBD
+ * bibkey           : TBD
+ * Author           : ME
+ * Modeling         : ME
+ * Input by         : ME
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
- * Description     : TODO
- * Correctness     : TODO
- * Source          : TODO
- * Author          : ME
- * Modeling        : ME
- * Input by        : ME
- * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ * Created          : 2020/01/01
+ * Last modified    : 2020/01/01
+ * Model version    :
  *
- * Created         : 2020/01/01
- * Last modified   : 2020/01/01
- *
- * IMITATOR version: 3.0
- ************************************************************)
+ * IMITATOR version :
+ ******************************************************************************)
 
 var
 
