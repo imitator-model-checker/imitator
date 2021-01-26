@@ -1,22 +1,28 @@
-(************************************************************
- *                      IMITATOR MODEL                      
- *
- *        IMITATOR Sched5.imi Sched5.pi0 -mode cover -PRP  -incl -merge 
- *        IMITATOR Sched5.imi -mode EF -incl -merge 
- *
- * Model derived from the "idle scheduler" in the SynCop 2014 paper with 5 tasks. 
- * Tasks have implicit deadlines; that is, for a task,  its period and deadline are the same in the model.
- * Model automatically generated from some script
- * Author: Giuseppe Lipari
- * Date: January 2014
- * References: ''Reachability Preservation Based Parameter Synthesis for Timed Automata'' (2015) by 
- *                 Étienne André, Giuseppe Lipari, Hoang Gia Nguyen and Youcheng Sun; Sched5
- *             ''Toward Parametric Timed Interfaces for Real-Time Components'' (2014) by 
- *                 Youcheng Sun, Giuseppe Lipari, Étienne André and Laurent Fribourg
- * Created: < 2015/10/30
- * Last modified: 2020/08/18
- * IMITATOR version: 3
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : SLAF14-5
+ * Description      : 
+ * Correctness      : 
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : Academic ; Protocol ; RTS
+ * Source           : 
+ * bibkey           : SLAF14
+ * Author           : Giuseppe Lipari
+ * Modeling         : 
+ * Input by         : 
+ * License          : 
+ * 
+ * Created          : < 2015/10/30
+ * Last modified    : 2020/08/18
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
 
 
 var

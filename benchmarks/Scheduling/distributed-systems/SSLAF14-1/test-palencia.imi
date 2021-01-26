@@ -1,17 +1,28 @@
-(************************************************************
- *                      IMITATOR MODEL                      
- *
- * References: ''Parametric Schedulability Analysis of Fixed Priority Real-Time Distributed Systems'' (2013) by Youcheng Sun, Romain Soulat, Giuseppe Lipari, Etienne Andre and Laurent Fribourg; Test Case 1
- 
- * Note: might not be the final model of the paper (?)
- 
- * Note: we are not sure what is the property??
-              
- * Created: < 2013/10
- * Last modified: 2018/08/20
- *
- * IMITATOR version: 3.0
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : test-palencia
+ * Description      : 
+ * Correctness      : 
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : Protocol ; RTS
+ * Source           : 
+ * bibkey           : SSLAF13
+ * Author           : 
+ * Modeling         : 
+ * Input by         : 
+ * License          : 
+ * 
+ * Created          : < 2013/10
+ * Last modified    : 2018/08/20
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
 
 var 
 	t_asap_1:clock;

@@ -1,30 +1,33 @@
-(************************************************************
- *                      IMITATOR MODEL                      
- *
- *	IMITATOR Sched2.100.0.imi -mode EF -incl -output-cart -merge
- *	IMITATOR Sched2.100.0.imi Sched2.100.0.pi0 -mode cover -PRP -incl -output-cart -merge
- *
- * Modeling of the uniprocessor Non-Preemptive Fixed-Priority scheduling of three periodic tasks
- *
- * Description     : Three periodic tasks run upon a uniprocessor by their fixed priorites, and the execution of a task cannot be preempted.
- *		     The priority order: tau_1 > tau_2 > tau_3.
- *		     Task periods T1 = a, T2 = 2a, T3 = 3a.
- *		     Execution Times: C1 in [e=10, b], C2 in [c, d], C3 in [C3_BEST, C3_WORST]
- * References      : "Integer Parameter Synthesis for Timed Automata" (2013) by A. Jovanovic, D. Lime and O.H. Roux; Section 6
-                     "Reachability Preservation Based Parameter Synthesis for Timed Automata" (2015) by Etienne Andre, Giuseppe Lipari, Hoang Gia Nguyen and Youcheng Sun; Sched2.100.0 
- * Modeling        : Youcheng Sun
- * Input by        : Youcheng Sun, Étienne André
- *
- * Created         : xxxx (< 2015/10/29)
- * Last modified   : 2020/08/18
- *
- * IMITATOR version: 3
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : JLR13-3tasks-npfp-100:2
+ * Description      : Three periodic tasks run upon a uniprocessor by their fixed priorites, and the execution of a task cannot be preempted.
+ * Correctness      : 
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : Academic ; Protocol ; RTS
+ * Source           : 
+ * bibkey           : JLR13
+ * Author           : 
+ * Modeling         : Youcheng Sun
+ * Input by         : Youcheng Sun, Étienne André
+ * License          : 
+ * 
+ * Created          : xxxx (< 2015/10/29)
+ * Last modified    : 2020/08/18
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
 
 var 
     p1, p2, p3, c1, c2, c3 : clock;
     b, C3_WORST: parameter;
-    e=10,a=100, c=18, d=28, C3_BEST=20, J2=0: constant;
+    e=10,a=100, c=18, d=28, C3_BEST=20, J2=2: constant;
     b_min = 10, b_max = 1000, C3_WORST_min = 20, C3_WORST_max = 1000: constant;
 
 
@@ -170,6 +173,7 @@ init :=
 	& b >= b_min & b <= b_max
 	& C3_WORST >= C3_WORST_min & C3_WORST <= C3_WORST_max
 ;
+
 
 
 (************************************************************)

@@ -1,16 +1,28 @@
-(**************************************************************************
- *                         IMITATOR
- *
- * Model for Challenge 2 of FMTV 15 challenge at the WATERS workshop 
- * References      : "Verification of Two Real-Time Systems Using Parametric Timed Automata" (2015) by 
- *                      Youcheng Sun, Étienne André and Giuseppe Lipari
- *
- * Author          : G. Lipari and Youcheng Sun
- * Created         : 2015/xx/xx (< 2015/10/30)
- * Last modified   : 2020/08/18
- *
- * IMITATOR version: 3
- **************************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : FMTV-2
+ * Description      : 
+ * Correctness      : 
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : Industrial ; Protocol ; RTS
+ * Source           : 
+ * bibkey           : SAL15
+ * Author           : G. Lipari and Youcheng Sun
+ * Modeling         : 
+ * Input by         : 
+ * License          : 
+ * 
+ * Created          : 2015/xx/xx (< 2015/10/30)
+ * Last modified    : 2020/08/18
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
 
 var
  
