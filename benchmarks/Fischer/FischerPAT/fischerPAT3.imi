@@ -1,19 +1,28 @@
-(************************************************************
- *                      IMITATOR MODEL                      
- *
- * Fischer's mutual exclusion protocol
- *
- * Description     : Fischer's mutual exclusion protocol with 2 processes
- * Correctness     : Not 2 processes together in the critical section (location obs_violation unreachable)
- * Source          : PAT library of benchmarks
- * Author          : ?
- * Input by        : Étienne André
- *
- * Created         : 2012/10/08
- * Last modified   : 2020/08/14
- *
- * IMITATOR version: 3
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : fischerPAT3
+ * Description      : Fischer's mutual exclusion protocol with 2 processes
+ * Correctness      : Not 2 processes together in the critical section (location obs_violation unreachable)
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : Academic ; Protocol ; RTS
+ * Source           : PAT library of benchmarks
+ * bibkey           : 
+ * Author           : ?
+ * Modeling         : 
+ * Input by         : Étienne André
+ * License          : 
+ * 
+ * Created          : 2012/10/08
+ * Last modified    : 2020/08/14
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
 
 
 var 
@@ -21,9 +30,8 @@ var
 	x1,
 	(*P2's clock*)
 	x2,
-(*	(*P3's clocks*)
+	(*P3's clocks*)
 	x3,
-	y3,*)
 		:clock;
 	
 
@@ -136,6 +144,31 @@ loc CS2: invariant True
 end (*proc2*)
 
 
+(************************************************************)
+automaton proc3
+(************************************************************)
+synclabs: access_3, enter_3, exit_3, no_access_3, try_3, update_3;
+
+loc idle3: invariant True
+	when turn = IDLE sync try_3 do {x3 := 0} goto active3;
+
+loc active3: invariant x3 <= delta
+	when True sync update_3 do {turn := 3, x3 := 0} goto check3;
+
+loc check3: invariant True
+	when x3 >= epsilon & turn = 3 sync access_3 do {x3 := 0} goto access3;
+	when x3 >= epsilon & turn < 3 sync no_access_3 do {x3 := 0} goto idle3;
+	when x3 >= epsilon & turn > 3 sync no_access_3 do {x3 := 0} goto idle3; (*oops, no "<>" operator here!*)
+
+loc access3: invariant True
+	when True sync enter_3 do {counter := counter + 1} goto CS3;
+
+loc CS3: invariant True
+	when True sync exit_3 do {counter := counter - 1, turn := IDLE, x3 := 0} goto idle3;
+
+end (*proc3*)
+
+
 
 
 (************************************************************)
@@ -148,7 +181,7 @@ init :=
 	(*------------------------------------------------------------*)
 	& loc[proc1] = idle1
 	& loc[proc2] = idle2
-(* 	& loc[proc3] = idle3 *)
+	& loc[proc3] = idle3
 (*	& loc[proc4] = idle4*)
 
 	(*------------------------------------------------------------*)
@@ -162,6 +195,7 @@ init :=
 	(*------------------------------------------------------------*)
 	& x1 = 0
 	& x2 = 0
+	& x3 = 0
 
 	(*------------------------------------------------------------*)
 	(* Parameter constraints *)

@@ -1,20 +1,28 @@
-(************************************************************
- *                      IMITATOR MODEL                      
- *
- * Fischer's mutual exclusion protocol
- *
- * Description     : Fischer's mutual exclusion protocol. Version with 2 processes.
- * Correctness     : No two processes in the mutual exclusion
- * Source          : From "Linear Parametric Model Checking of Timed Automata" Hune, Romijn, Stoelinga, Vaandrager, 2002
- * Author          : Hune, Romijn, Stoelinga, Vaandrager
- * Modeling        : Hune, Romijn, Stoelinga, Vaandrager
- * Input by        : Étienne André
- *
- * Created         : 2013/12/10
- * Last modified   : 2020/08/14
- *
- * IMITATOR version: 3
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : fischerHRSV02-2
+ * Description      : Fischer's mutual exclusion protocol. Version with 2 processes.
+ * Correctness      : No two processes in the mutual exclusion
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : Academic ; Protocol ; RTS
+ * Source           : From "Linear Parametric Model Checking of Timed Automata" Hune, Romijn, Stoelinga, Vaandrager, 2002
+ * bibkey           : 
+ * Author           : Hune, Romijn, Stoelinga, Vaandrager
+ * Modeling         : Hune, Romijn, Stoelinga, Vaandrager
+ * Input by         : Étienne André
+ * License          : 
+ * 
+ * Created          : 2013/12/10
+ * Last modified    : 2020/08/14
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
 
 var 
 	
