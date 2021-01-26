@@ -1,20 +1,28 @@
-(************************************************************
- *                      IMITATOR MODEL                      
- *
- * Model of a small acyclic asynchronous circuit
- *
- * Description     : Model of a small acyclic asynchronous circuit
- * Correctness     : Q must not rise
- * Source          : "Preserving Partial Order Runs in Parametric Time Petri Nets"  (ACSD 2015), Fig. 7
- * Author          : Étienne André, Thomas Chatain, César Rodríguez
- * Modeling        : Étienne André, Thomas Chatain, César Rodríguez
- * Input by        : Étienne André
- *
- * Created         : 2015/01/29
- * Last modified   : 2020/08/13
- *
- * IMITATOR version: 3
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : IMPOloop
+ * Description      : Model of a small acyclic asynchronous circuit
+ * Correctness      : Q must not rise
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : Academic ; Hardware
+ * Source           : "Preserving Partial Order Runs in Parametric Time Petri Nets"  (ACSD 2015), Fig. 7
+ * bibkey           : ACR16
+ * Author           : Étienne André, Thomas Chatain, César Rodríguez
+ * Modeling         : Étienne André, Thomas Chatain, César Rodríguez
+ * Input by         : Étienne André
+ * License          : 
+ * 
+ * Created          : 2015/01/29
+ * Last modified    : 2020/08/13
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
 
 var 	ckNot1, ckNot2, ckNot3, ckAnd, ckEnv
 		: clock;
