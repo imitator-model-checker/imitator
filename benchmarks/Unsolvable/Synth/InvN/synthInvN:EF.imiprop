@@ -1,9 +1,9 @@
 (************************************************************
- *                      IMITATOR MODEL                      
+ *                      IMITATOR MODEL
  *
- * Toy benchmark for which the result is "p = i | i \in N" but IMITATOR cannot find it because the accumulated constraints grow forever
+ * Toy benchmark for which the result is easy for hand computation but IMITATOR cannot find it because the accumulated constraints grow forever
  *
- * Description     : Toy benchmark for which the result is "p = i | i \in N" but IMITATOR cannot find it because the accumulated constraints grow forever
+ * Description     : Toy benchmark for which the result is easy for hand computation but IMITATOR cannot find it because the accumulated constraints grow forever
  * Correctness     : Reachability
  * Source          : Own work
  * Author          : Étienne André
@@ -12,7 +12,7 @@
  * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
  *
  * Created         : 2020/09/24
- * Last modified   : 2020/09/24
+ * Last modified   : 2021/01/21
  *
  * IMITATOR version: 3.0
  ************************************************************)

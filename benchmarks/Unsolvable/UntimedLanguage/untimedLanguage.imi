@@ -1,0 +1,85 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : untimedLanguage
+ * Description      : Toy benchmark for which the associated language is untimed (a^n.b^n.c^n)
+ * Correctness      : Reachability
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : Academic ; Unsolvable
+ * Source           : André É., Lime D., Roux O.H. (2016) On the Expressiveness of Parametric Timed Automata. In: Fränzle M., Markey N. (eds) Formal Modeling and Analysis of Timed Systems. FORMATS 2016. Lecture Notes in Computer Science, vol 9884. Springer, Cham. https://doi.org/10.1007/978-3-319-44878-7_2. Fig 2
+ * bibkey           : ALR16
+ * Author           : Étienne André
+ * Modeling         : Dylan Marinho
+ * Input by         : Dylan Marinho
+ * License          : 
+ * 
+ * Created          : 2021/01/22
+ * Last modified    : 2021/01/22
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a, b, c;
+
+loc l1: invariant x <= 1 & y <= p
+	when x = 1 sync a do {x := 0} goto l1;
+	when x = 1 & y = p sync a do {x := 0, y := 0} goto l2;
+
+loc l2: invariant x <= 1 & y <= p
+	when x = 1 sync b do {x := 0} goto l2;
+	when x = 1 & y = p sync b do {x := 0, y := 0} goto l3;
+
+loc l3: invariant x <= 1 & y <= p
+	when x = 1 sync c do {x := 0} goto l3;
+	when x = 1 & y = p sync c do {x := 0, y := 0} goto l4;
+
+accepting loc l4: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

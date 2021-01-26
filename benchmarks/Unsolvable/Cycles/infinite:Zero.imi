@@ -1,21 +1,25 @@
-(************************************************************
- *                      IMITATOR MODEL                      
- *
- * Unsolvable benchmark for cycle synthesis
- *
- * Description     : Unsolvable benchmark for cycle synthesis. The tool cannot find the cycle because the generated clock constraints grow forever.
- * Correctness     : Cycle
- * Source          : Own work
- * Author          : Jaco Van de Pol
- * Modeling        : Jaco Van de Pol
- * Input by        : Jaco Van de Pol, Étienne André
- * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
- * Created         : 2020/08
- * Last modified   : 2020/09/24
- *
- * IMITATOR version: 3.0
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : infinite:Zero
+ * Description      : Toy benchmark for which there exists an infinite accepting run for q=0
+ * Correctness      : 
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : Academic ; Unsolvable
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Jaco van de Pol
+ * Modeling         : Dylan Marinho and Jaco van de Pol
+ * Input by         : Dylan Marinho
+ * License          : 
+ * 
+ * Created          : 2021/01/21
+ * Last modified    : 2021/01/21
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
 
 var
 
@@ -24,7 +28,7 @@ var
 		: clock;
 
 (* Parameters *)
-	p,
+	p, q
 		: parameter;
 
 
@@ -32,10 +36,12 @@ var
 (************************************************************)
   automaton pta
 (************************************************************)
+synclabs: a;
 
-accepting loc l1: invariant y <= p
-    when x >= 5 do {y := 0} goto l1;
-end
+accepting loc l1: invariant x <= q & y <= 1
+    when x >= q do {x := 0} goto l1;
+
+end (* pta *)
 
 
 
@@ -59,6 +65,7 @@ init :=
 	(* Parameter constraints *)
 	(*------------------------------------------------------------*)
 	& p >= 0
+  & q >= 0
 ;
 
 

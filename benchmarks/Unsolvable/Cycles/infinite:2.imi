@@ -1,0 +1,77 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : infinite:2
+ * Description      : Toy benchmark for which there exists an infinite accepting run for all p>=2 but IMITATOR cannot find it
+ * Correctness      : 
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : Academic ; Unsolvable
+ * Source           : Iterative Bounded Synthesis for Efficient Cycle Detection in Parametric Timed Automata, Fig. 1
+ * bibkey           : 
+ * Author           : Étienne André, Jaime Arias, Laure Petrucci, Jaco van de Pol
+ * Modeling         : Dylan Marinho
+ * Input by         : Dylan Marinho
+ * License          : 
+ * 
+ * Created          : 2021/01/21
+ * Last modified    : 2021/01/21
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l0: invariant x <= 1 & y <= p
+	when x >= 1 do {x := 0} goto l0;
+	when y >= 2 do {x := 0, y := 0} goto lGoal;
+
+accepting loc lGoal: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l0
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& p >= 0
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

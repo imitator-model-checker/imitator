@@ -1,21 +1,25 @@
-(************************************************************
- *                      IMITATOR MODEL                      
- *
- * Toy benchmark for which the result is "p = i | i \in N" but IMITATOR cannot find it because the accumulated constraints grow forever
- *
- * Description     : Toy benchmark for which the result is "p = i | i \in N" but IMITATOR cannot find it because the accumulated constraints grow forever
- * Correctness     : Reachability
- * Source          : Own work
- * Author          : Étienne André
- * Modeling        : Étienne André
- * Input by        : Étienne André
- * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
- * Created         : 2020/09/24
- * Last modified   : 2020/09/24
- *
- * IMITATOR version: 3.0
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : synthpN
+ * Description      : Toy benchmark for which the result is "p2 = i*p1 | i \in N" but IMITATOR cannot find it because the accumulated constraints grow forever
+ * Correctness      : Reachability
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : Academic ; Unsolvable
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Dylan Marinho
+ * Input by         : Dylan Marinho
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ * 
+ * Created          : 2021/01/21
+ * Last modified    : 2021/01/21
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
 
 var
 
@@ -24,7 +28,7 @@ var
 		: clock;
 
 (* Parameters *)
-	p,
+	p1, p2
 		: parameter;
 
 
@@ -35,8 +39,8 @@ var
 synclabs: a;
 
 loc l1: invariant x <= 1
-	when x = 1 do {x := 0} goto l1;
-	when x = 0 & y = p do {x := 0, y := 0} goto lGoal;
+	when x = p1 do {x := 0} goto l1;
+	when x = 0 & y = p2 do {x := 0, y := 0} goto lGoal;
 
 loc lGoal: invariant True
 
@@ -63,7 +67,8 @@ init :=
 	(*------------------------------------------------------------*)
 	(* Parameter constraints *)
 	(*------------------------------------------------------------*)
-	& p >= 0
+	& p1 >= 0
+  & p2 >= 0
 ;
 
 
