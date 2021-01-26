@@ -1350,7 +1350,7 @@ DESCRIPTION OF THE TRANSITIONS
 		'expectations' : [
 			{'file': 'testUpdates-regenerated.imi' , 'content' : """
   urgent loc idle: invariant True
-	when True do {x := 1/2*p + x + -7*i + -1, y := y + 1, i := ((3 * i - 1)) / ((5 * i) * i)}  sync a goto idle;
+	when True do {x := 1/2*p + x + -7*i + -1, y := y + 1, i := (3 * i - 1) / (5 * i * i)}  sync a goto idle;
 		"""
 			} # end result file
 			,
