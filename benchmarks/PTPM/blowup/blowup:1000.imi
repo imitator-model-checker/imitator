@@ -1,21 +1,28 @@
-(************************************************************
- *                      IMITATOR MODEL                      
- *
- * Parametric timed pattern matching benchmark: blowup (designed on purpose to test the limits of our algorithm)
- *
- * Description     : Template of a timed word alternating between a and c
- * Correctness     : N/A
- * Source          : Étienne André, Ichiro Husuo, Masaki Waga "Offline timed pattern matching under uncertainty" (ICECCS 2018)
- * Author          : Étienne André and Masaki Waga
- * Modeling        : Étienne André and Masaki Waga
- * Input by        : Étienne André
- * License         : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
- *
- * Created         : 2018/03/07
- * Last modified   : 2020/08/18
- *
- * IMITATOR version: 3
- ************************************************************)
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : blowup:1000
+ * Description      : Template of a timed word alternating between a and c
+ * Correctness      : N/A
+ * Scalable         : yes
+ * Generated        : yes
+ * Categories       : Toy
+ * Source           : Étienne André, Ichiro Husuo, Masaki Waga "Offline timed pattern matching under uncertainty" (ICECCS 2018)
+ * bibkey           : AHW18
+ * Author           : Étienne André and Masaki Waga
+ * Modeling         : Étienne André and Masaki Waga
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ * 
+ * Created          : 2018/03/07
+ * Last modified    : 2020/08/18
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+
+
 
 var
 
@@ -1672,10 +1679,410 @@ synclabs: a, b;
 		when xabs = 4053/100 sync a goto w799;
 	loc w799: invariant xabs <= 4054/100
 		when xabs = 4054/100 sync b goto w800;
+	loc w800: invariant xabs <= 4062/100
+		when xabs = 4062/100 sync a goto w801;
+	loc w801: invariant xabs <= 4071/100
+		when xabs = 4071/100 sync b goto w802;
+	loc w802: invariant xabs <= 4074/100
+		when xabs = 4074/100 sync a goto w803;
+	loc w803: invariant xabs <= 4079/100
+		when xabs = 4079/100 sync b goto w804;
+	loc w804: invariant xabs <= 4082/100
+		when xabs = 4082/100 sync a goto w805;
+	loc w805: invariant xabs <= 4091/100
+		when xabs = 4091/100 sync b goto w806;
+	loc w806: invariant xabs <= 4095/100
+		when xabs = 4095/100 sync a goto w807;
+	loc w807: invariant xabs <= 4097/100
+		when xabs = 4097/100 sync b goto w808;
+	loc w808: invariant xabs <= 4102/100
+		when xabs = 4102/100 sync a goto w809;
+	loc w809: invariant xabs <= 4110/100
+		when xabs = 4110/100 sync b goto w810;
+	loc w810: invariant xabs <= 4114/100
+		when xabs = 4114/100 sync a goto w811;
+	loc w811: invariant xabs <= 4122/100
+		when xabs = 4122/100 sync b goto w812;
+	loc w812: invariant xabs <= 4126/100
+		when xabs = 4126/100 sync a goto w813;
+	loc w813: invariant xabs <= 4135/100
+		when xabs = 4135/100 sync b goto w814;
+	loc w814: invariant xabs <= 4140/100
+		when xabs = 4140/100 sync a goto w815;
+	loc w815: invariant xabs <= 4145/100
+		when xabs = 4145/100 sync b goto w816;
+	loc w816: invariant xabs <= 4147/100
+		when xabs = 4147/100 sync a goto w817;
+	loc w817: invariant xabs <= 4156/100
+		when xabs = 4156/100 sync b goto w818;
+	loc w818: invariant xabs <= 4159/100
+		when xabs = 4159/100 sync a goto w819;
+	loc w819: invariant xabs <= 4165/100
+		when xabs = 4165/100 sync b goto w820;
+	loc w820: invariant xabs <= 4173/100
+		when xabs = 4173/100 sync a goto w821;
+	loc w821: invariant xabs <= 4180/100
+		when xabs = 4180/100 sync b goto w822;
+	loc w822: invariant xabs <= 4181/100
+		when xabs = 4181/100 sync a goto w823;
+	loc w823: invariant xabs <= 4189/100
+		when xabs = 4189/100 sync b goto w824;
+	loc w824: invariant xabs <= 4193/100
+		when xabs = 4193/100 sync a goto w825;
+	loc w825: invariant xabs <= 4198/100
+		when xabs = 4198/100 sync b goto w826;
+	loc w826: invariant xabs <= 4205/100
+		when xabs = 4205/100 sync a goto w827;
+	loc w827: invariant xabs <= 4214/100
+		when xabs = 4214/100 sync b goto w828;
+	loc w828: invariant xabs <= 4217/100
+		when xabs = 4217/100 sync a goto w829;
+	loc w829: invariant xabs <= 4224/100
+		when xabs = 4224/100 sync b goto w830;
+	loc w830: invariant xabs <= 4229/100
+		when xabs = 4229/100 sync a goto w831;
+	loc w831: invariant xabs <= 4231/100
+		when xabs = 4231/100 sync b goto w832;
+	loc w832: invariant xabs <= 4236/100
+		when xabs = 4236/100 sync a goto w833;
+	loc w833: invariant xabs <= 4239/100
+		when xabs = 4239/100 sync b goto w834;
+	loc w834: invariant xabs <= 4243/100
+		when xabs = 4243/100 sync a goto w835;
+	loc w835: invariant xabs <= 4252/100
+		when xabs = 4252/100 sync b goto w836;
+	loc w836: invariant xabs <= 4259/100
+		when xabs = 4259/100 sync a goto w837;
+	loc w837: invariant xabs <= 4267/100
+		when xabs = 4267/100 sync b goto w838;
+	loc w838: invariant xabs <= 4268/100
+		when xabs = 4268/100 sync a goto w839;
+	loc w839: invariant xabs <= 4274/100
+		when xabs = 4274/100 sync b goto w840;
+	loc w840: invariant xabs <= 4282/100
+		when xabs = 4282/100 sync a goto w841;
+	loc w841: invariant xabs <= 4289/100
+		when xabs = 4289/100 sync b goto w842;
+	loc w842: invariant xabs <= 4290/100
+		when xabs = 4290/100 sync a goto w843;
+	loc w843: invariant xabs <= 4295/100
+		when xabs = 4295/100 sync b goto w844;
+	loc w844: invariant xabs <= 4298/100
+		when xabs = 4298/100 sync a goto w845;
+	loc w845: invariant xabs <= 4301/100
+		when xabs = 4301/100 sync b goto w846;
+	loc w846: invariant xabs <= 4306/100
+		when xabs = 4306/100 sync a goto w847;
+	loc w847: invariant xabs <= 4307/100
+		when xabs = 4307/100 sync b goto w848;
+	loc w848: invariant xabs <= 4315/100
+		when xabs = 4315/100 sync a goto w849;
+	loc w849: invariant xabs <= 4318/100
+		when xabs = 4318/100 sync b goto w850;
+	loc w850: invariant xabs <= 4322/100
+		when xabs = 4322/100 sync a goto w851;
+	loc w851: invariant xabs <= 4330/100
+		when xabs = 4330/100 sync b goto w852;
+	loc w852: invariant xabs <= 4333/100
+		when xabs = 4333/100 sync a goto w853;
+	loc w853: invariant xabs <= 4339/100
+		when xabs = 4339/100 sync b goto w854;
+	loc w854: invariant xabs <= 4340/100
+		when xabs = 4340/100 sync a goto w855;
+	loc w855: invariant xabs <= 4349/100
+		when xabs = 4349/100 sync b goto w856;
+	loc w856: invariant xabs <= 4358/100
+		when xabs = 4358/100 sync a goto w857;
+	loc w857: invariant xabs <= 4362/100
+		when xabs = 4362/100 sync b goto w858;
+	loc w858: invariant xabs <= 4369/100
+		when xabs = 4369/100 sync a goto w859;
+	loc w859: invariant xabs <= 4371/100
+		when xabs = 4371/100 sync b goto w860;
+	loc w860: invariant xabs <= 4374/100
+		when xabs = 4374/100 sync a goto w861;
+	loc w861: invariant xabs <= 4377/100
+		when xabs = 4377/100 sync b goto w862;
+	loc w862: invariant xabs <= 4378/100
+		when xabs = 4378/100 sync a goto w863;
+	loc w863: invariant xabs <= 4383/100
+		when xabs = 4383/100 sync b goto w864;
+	loc w864: invariant xabs <= 4385/100
+		when xabs = 4385/100 sync a goto w865;
+	loc w865: invariant xabs <= 4393/100
+		when xabs = 4393/100 sync b goto w866;
+	loc w866: invariant xabs <= 4402/100
+		when xabs = 4402/100 sync a goto w867;
+	loc w867: invariant xabs <= 4407/100
+		when xabs = 4407/100 sync b goto w868;
+	loc w868: invariant xabs <= 4408/100
+		when xabs = 4408/100 sync a goto w869;
+	loc w869: invariant xabs <= 4414/100
+		when xabs = 4414/100 sync b goto w870;
+	loc w870: invariant xabs <= 4423/100
+		when xabs = 4423/100 sync a goto w871;
+	loc w871: invariant xabs <= 4428/100
+		when xabs = 4428/100 sync b goto w872;
+	loc w872: invariant xabs <= 4433/100
+		when xabs = 4433/100 sync a goto w873;
+	loc w873: invariant xabs <= 4435/100
+		when xabs = 4435/100 sync b goto w874;
+	loc w874: invariant xabs <= 4443/100
+		when xabs = 4443/100 sync a goto w875;
+	loc w875: invariant xabs <= 4444/100
+		when xabs = 4444/100 sync b goto w876;
+	loc w876: invariant xabs <= 4449/100
+		when xabs = 4449/100 sync a goto w877;
+	loc w877: invariant xabs <= 4454/100
+		when xabs = 4454/100 sync b goto w878;
+	loc w878: invariant xabs <= 4456/100
+		when xabs = 4456/100 sync a goto w879;
+	loc w879: invariant xabs <= 4463/100
+		when xabs = 4463/100 sync b goto w880;
+	loc w880: invariant xabs <= 4464/100
+		when xabs = 4464/100 sync a goto w881;
+	loc w881: invariant xabs <= 4467/100
+		when xabs = 4467/100 sync b goto w882;
+	loc w882: invariant xabs <= 4473/100
+		when xabs = 4473/100 sync a goto w883;
+	loc w883: invariant xabs <= 4474/100
+		when xabs = 4474/100 sync b goto w884;
+	loc w884: invariant xabs <= 4483/100
+		when xabs = 4483/100 sync a goto w885;
+	loc w885: invariant xabs <= 4491/100
+		when xabs = 4491/100 sync b goto w886;
+	loc w886: invariant xabs <= 4496/100
+		when xabs = 4496/100 sync a goto w887;
+	loc w887: invariant xabs <= 4497/100
+		when xabs = 4497/100 sync b goto w888;
+	loc w888: invariant xabs <= 4501/100
+		when xabs = 4501/100 sync a goto w889;
+	loc w889: invariant xabs <= 4510/100
+		when xabs = 4510/100 sync b goto w890;
+	loc w890: invariant xabs <= 4517/100
+		when xabs = 4517/100 sync a goto w891;
+	loc w891: invariant xabs <= 4521/100
+		when xabs = 4521/100 sync b goto w892;
+	loc w892: invariant xabs <= 4526/100
+		when xabs = 4526/100 sync a goto w893;
+	loc w893: invariant xabs <= 4529/100
+		when xabs = 4529/100 sync b goto w894;
+	loc w894: invariant xabs <= 4537/100
+		when xabs = 4537/100 sync a goto w895;
+	loc w895: invariant xabs <= 4545/100
+		when xabs = 4545/100 sync b goto w896;
+	loc w896: invariant xabs <= 4551/100
+		when xabs = 4551/100 sync a goto w897;
+	loc w897: invariant xabs <= 4556/100
+		when xabs = 4556/100 sync b goto w898;
+	loc w898: invariant xabs <= 4561/100
+		when xabs = 4561/100 sync a goto w899;
+	loc w899: invariant xabs <= 4563/100
+		when xabs = 4563/100 sync b goto w900;
+	loc w900: invariant xabs <= 4564/100
+		when xabs = 4564/100 sync a goto w901;
+	loc w901: invariant xabs <= 4566/100
+		when xabs = 4566/100 sync b goto w902;
+	loc w902: invariant xabs <= 4568/100
+		when xabs = 4568/100 sync a goto w903;
+	loc w903: invariant xabs <= 4570/100
+		when xabs = 4570/100 sync b goto w904;
+	loc w904: invariant xabs <= 4579/100
+		when xabs = 4579/100 sync a goto w905;
+	loc w905: invariant xabs <= 4582/100
+		when xabs = 4582/100 sync b goto w906;
+	loc w906: invariant xabs <= 4587/100
+		when xabs = 4587/100 sync a goto w907;
+	loc w907: invariant xabs <= 4591/100
+		when xabs = 4591/100 sync b goto w908;
+	loc w908: invariant xabs <= 4596/100
+		when xabs = 4596/100 sync a goto w909;
+	loc w909: invariant xabs <= 4601/100
+		when xabs = 4601/100 sync b goto w910;
+	loc w910: invariant xabs <= 4604/100
+		when xabs = 4604/100 sync a goto w911;
+	loc w911: invariant xabs <= 4607/100
+		when xabs = 4607/100 sync b goto w912;
+	loc w912: invariant xabs <= 4610/100
+		when xabs = 4610/100 sync a goto w913;
+	loc w913: invariant xabs <= 4615/100
+		when xabs = 4615/100 sync b goto w914;
+	loc w914: invariant xabs <= 4621/100
+		when xabs = 4621/100 sync a goto w915;
+	loc w915: invariant xabs <= 4624/100
+		when xabs = 4624/100 sync b goto w916;
+	loc w916: invariant xabs <= 4625/100
+		when xabs = 4625/100 sync a goto w917;
+	loc w917: invariant xabs <= 4630/100
+		when xabs = 4630/100 sync b goto w918;
+	loc w918: invariant xabs <= 4639/100
+		when xabs = 4639/100 sync a goto w919;
+	loc w919: invariant xabs <= 4642/100
+		when xabs = 4642/100 sync b goto w920;
+	loc w920: invariant xabs <= 4643/100
+		when xabs = 4643/100 sync a goto w921;
+	loc w921: invariant xabs <= 4648/100
+		when xabs = 4648/100 sync b goto w922;
+	loc w922: invariant xabs <= 4656/100
+		when xabs = 4656/100 sync a goto w923;
+	loc w923: invariant xabs <= 4660/100
+		when xabs = 4660/100 sync b goto w924;
+	loc w924: invariant xabs <= 4666/100
+		when xabs = 4666/100 sync a goto w925;
+	loc w925: invariant xabs <= 4669/100
+		when xabs = 4669/100 sync b goto w926;
+	loc w926: invariant xabs <= 4677/100
+		when xabs = 4677/100 sync a goto w927;
+	loc w927: invariant xabs <= 4678/100
+		when xabs = 4678/100 sync b goto w928;
+	loc w928: invariant xabs <= 4684/100
+		when xabs = 4684/100 sync a goto w929;
+	loc w929: invariant xabs <= 4693/100
+		when xabs = 4693/100 sync b goto w930;
+	loc w930: invariant xabs <= 4695/100
+		when xabs = 4695/100 sync a goto w931;
+	loc w931: invariant xabs <= 4698/100
+		when xabs = 4698/100 sync b goto w932;
+	loc w932: invariant xabs <= 4700/100
+		when xabs = 4700/100 sync a goto w933;
+	loc w933: invariant xabs <= 4704/100
+		when xabs = 4704/100 sync b goto w934;
+	loc w934: invariant xabs <= 4709/100
+		when xabs = 4709/100 sync a goto w935;
+	loc w935: invariant xabs <= 4713/100
+		when xabs = 4713/100 sync b goto w936;
+	loc w936: invariant xabs <= 4721/100
+		when xabs = 4721/100 sync a goto w937;
+	loc w937: invariant xabs <= 4724/100
+		when xabs = 4724/100 sync b goto w938;
+	loc w938: invariant xabs <= 4731/100
+		when xabs = 4731/100 sync a goto w939;
+	loc w939: invariant xabs <= 4735/100
+		when xabs = 4735/100 sync b goto w940;
+	loc w940: invariant xabs <= 4744/100
+		when xabs = 4744/100 sync a goto w941;
+	loc w941: invariant xabs <= 4746/100
+		when xabs = 4746/100 sync b goto w942;
+	loc w942: invariant xabs <= 4751/100
+		when xabs = 4751/100 sync a goto w943;
+	loc w943: invariant xabs <= 4758/100
+		when xabs = 4758/100 sync b goto w944;
+	loc w944: invariant xabs <= 4762/100
+		when xabs = 4762/100 sync a goto w945;
+	loc w945: invariant xabs <= 4764/100
+		when xabs = 4764/100 sync b goto w946;
+	loc w946: invariant xabs <= 4766/100
+		when xabs = 4766/100 sync a goto w947;
+	loc w947: invariant xabs <= 4769/100
+		when xabs = 4769/100 sync b goto w948;
+	loc w948: invariant xabs <= 4777/100
+		when xabs = 4777/100 sync a goto w949;
+	loc w949: invariant xabs <= 4782/100
+		when xabs = 4782/100 sync b goto w950;
+	loc w950: invariant xabs <= 4787/100
+		when xabs = 4787/100 sync a goto w951;
+	loc w951: invariant xabs <= 4789/100
+		when xabs = 4789/100 sync b goto w952;
+	loc w952: invariant xabs <= 4795/100
+		when xabs = 4795/100 sync a goto w953;
+	loc w953: invariant xabs <= 4800/100
+		when xabs = 4800/100 sync b goto w954;
+	loc w954: invariant xabs <= 4801/100
+		when xabs = 4801/100 sync a goto w955;
+	loc w955: invariant xabs <= 4804/100
+		when xabs = 4804/100 sync b goto w956;
+	loc w956: invariant xabs <= 4813/100
+		when xabs = 4813/100 sync a goto w957;
+	loc w957: invariant xabs <= 4816/100
+		when xabs = 4816/100 sync b goto w958;
+	loc w958: invariant xabs <= 4825/100
+		when xabs = 4825/100 sync a goto w959;
+	loc w959: invariant xabs <= 4832/100
+		when xabs = 4832/100 sync b goto w960;
+	loc w960: invariant xabs <= 4837/100
+		when xabs = 4837/100 sync a goto w961;
+	loc w961: invariant xabs <= 4839/100
+		when xabs = 4839/100 sync b goto w962;
+	loc w962: invariant xabs <= 4840/100
+		when xabs = 4840/100 sync a goto w963;
+	loc w963: invariant xabs <= 4846/100
+		when xabs = 4846/100 sync b goto w964;
+	loc w964: invariant xabs <= 4853/100
+		when xabs = 4853/100 sync a goto w965;
+	loc w965: invariant xabs <= 4861/100
+		when xabs = 4861/100 sync b goto w966;
+	loc w966: invariant xabs <= 4867/100
+		when xabs = 4867/100 sync a goto w967;
+	loc w967: invariant xabs <= 4874/100
+		when xabs = 4874/100 sync b goto w968;
+	loc w968: invariant xabs <= 4881/100
+		when xabs = 4881/100 sync a goto w969;
+	loc w969: invariant xabs <= 4888/100
+		when xabs = 4888/100 sync b goto w970;
+	loc w970: invariant xabs <= 4894/100
+		when xabs = 4894/100 sync a goto w971;
+	loc w971: invariant xabs <= 4901/100
+		when xabs = 4901/100 sync b goto w972;
+	loc w972: invariant xabs <= 4907/100
+		when xabs = 4907/100 sync a goto w973;
+	loc w973: invariant xabs <= 4916/100
+		when xabs = 4916/100 sync b goto w974;
+	loc w974: invariant xabs <= 4919/100
+		when xabs = 4919/100 sync a goto w975;
+	loc w975: invariant xabs <= 4923/100
+		when xabs = 4923/100 sync b goto w976;
+	loc w976: invariant xabs <= 4929/100
+		when xabs = 4929/100 sync a goto w977;
+	loc w977: invariant xabs <= 4937/100
+		when xabs = 4937/100 sync b goto w978;
+	loc w978: invariant xabs <= 4943/100
+		when xabs = 4943/100 sync a goto w979;
+	loc w979: invariant xabs <= 4950/100
+		when xabs = 4950/100 sync b goto w980;
+	loc w980: invariant xabs <= 4951/100
+		when xabs = 4951/100 sync a goto w981;
+	loc w981: invariant xabs <= 4957/100
+		when xabs = 4957/100 sync b goto w982;
+	loc w982: invariant xabs <= 4960/100
+		when xabs = 4960/100 sync a goto w983;
+	loc w983: invariant xabs <= 4967/100
+		when xabs = 4967/100 sync b goto w984;
+	loc w984: invariant xabs <= 4973/100
+		when xabs = 4973/100 sync a goto w985;
+	loc w985: invariant xabs <= 4975/100
+		when xabs = 4975/100 sync b goto w986;
+	loc w986: invariant xabs <= 4976/100
+		when xabs = 4976/100 sync a goto w987;
+	loc w987: invariant xabs <= 4977/100
+		when xabs = 4977/100 sync b goto w988;
+	loc w988: invariant xabs <= 4985/100
+		when xabs = 4985/100 sync a goto w989;
+	loc w989: invariant xabs <= 4986/100
+		when xabs = 4986/100 sync b goto w990;
+	loc w990: invariant xabs <= 4994/100
+		when xabs = 4994/100 sync a goto w991;
+	loc w991: invariant xabs <= 4999/100
+		when xabs = 4999/100 sync b goto w992;
+	loc w992: invariant xabs <= 5007/100
+		when xabs = 5007/100 sync a goto w993;
+	loc w993: invariant xabs <= 5012/100
+		when xabs = 5012/100 sync b goto w994;
+	loc w994: invariant xabs <= 5015/100
+		when xabs = 5015/100 sync a goto w995;
+	loc w995: invariant xabs <= 5018/100
+		when xabs = 5018/100 sync b goto w996;
+	loc w996: invariant xabs <= 5021/100
+		when xabs = 5021/100 sync a goto w997;
+	loc w997: invariant xabs <= 5023/100
+		when xabs = 5023/100 sync b goto w998;
+	loc w998: invariant xabs <= 5026/100
+		when xabs = 5026/100 sync a goto w999;
+	loc w999: invariant xabs <= 5029/100
+		when xabs = 5029/100 sync b goto w1000;
 
 	(* END AUTOMATICALLY GENERATED *)
 
-	loc w800: invariant True
+	loc w1000: invariant True
 end (* word *)
 
 (************************************************************)
