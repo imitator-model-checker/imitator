@@ -1,0 +1,27 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * Coffee vending machine with drinker. Version for an IMITATOR tool paper.
+ *
+ * Description     : Coffee vending machine; a single button is used to wake the machine up, and to add sugar. Then a cup, and coffee are delivered after a (parametric) time.
+	Drinker: [ongoing work]
+ * Correctness     : Many possibilities (e.g., "it is possible to get a coffee")
+ * Source          : Own work
+ * Author          : Étienne André
+ * Input by        : Étienne André
+ *
+ * Created         : 2020/08/13
+ * Last modified   : 2020/08/13
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+
+
+(************************************************************)
+(* Property specification *)
+(************************************************************)
+
+(* Second property: the researcher never gets mad AND is ensured to have 3 doses of sugar *)
+property := #synth AGnot ( loc[researcher] = mad or loc[machine] = cdone & nb_sugar < 3);
+
+(* projectresult((*p_patience_max, p_press,*) p_coffee); *)
