@@ -7,8 +7,8 @@
  * Scalable         : 
  * Generated        : 
  * Categories       : RTS ; Scheduling
- * Source           : Maler et al. ("Job-Shop Scheduling Using Timed Automata", by Yasmina Abdeddaı̈m and Oded Maler, CAV 2001 (??))
- * bibkey           : 
+ * Source           : Maler et al. ("Job-Shop Scheduling Using Timed Automata", by Yasmina Abdeddaïm and Oded Maler, CAV 2001 (??))
+ * bibkey           : AM01
  * Author           : Romain Soulat
  * Modeling         : Romain Soulat
  * Input by         : Romain Soulat, Étienne André
