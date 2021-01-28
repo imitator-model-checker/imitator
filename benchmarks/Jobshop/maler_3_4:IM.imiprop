@@ -5,7 +5,8 @@
  *
  * Description     : Jobshop case study
  * Correctness     : All tasks performed on time
- * Source          : Maler et al. ("Job-Shop Scheduling Using Timed Automata", by Yasmina Abdeddaı̈m and Oded Maler, CAV 2001 (??))
+ * Source           : Maler et al. ("Job-Shop Scheduling Using Timed Automata", by Yasmina Abdeddaïm and Oded Maler, CAV 2001 (??)) Source of this parameter valuation: unknown
+ * bibkey           : AM01
  * Author          : Romain Soulat
  * Modeling        : Romain Soulat
  * Input by        : Romain Soulat, Étienne André
