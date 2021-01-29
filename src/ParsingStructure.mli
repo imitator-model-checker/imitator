@@ -143,7 +143,7 @@ type sync =
 	| NoSync
 
 type guard = convex_predicate
-type invariant = linear_constraint list (*TODO transform back to convex_predicate *)
+type invariant = convex_predicate
 
 
 (** Updates on transitions *)

@@ -61,7 +61,6 @@ let is_constrained_in_guard clock_index : guard -> bool = function
   | Discrete_continuous_guard discrete_continuous_guard -> LinearConstraint.pxd_is_constrained discrete_continuous_guard.continuous_guard clock_index
 
 
-
 (*------------------------------------------------------------*)
 (* Find the local clocks per automaton *)
 (*------------------------------------------------------------*)
@@ -91,7 +90,7 @@ let find_local_clocks () =
     let clocks_for_locations = List.fold_left (fun list_of_clocks_for_previous_locations location_index ->
         (* Get the clocks in the invariant *)
         let invariant = model.invariants automaton_index location_index in
-        let clocks_in_invariant = LinearConstraint.pxd_find_variables model.clocks invariant in
+        let clocks_in_invariant = get_clocks_in_guard model.clocks invariant in
         (* Get the clocks from the stopwatches *)
         let clocks_in_stopwatches = model.stopwatches automaton_index location_index in
 
@@ -226,7 +225,7 @@ let find_useless_clocks_in_automata local_clocks_per_automaton =
                                  (* Retrieve the invariant *)
                                  let invariant = model.invariants automaton_index location_index in
                                  (* Check if the clock is present in the invariant *)
-                                 let constrained = LinearConstraint.pxd_is_constrained invariant clock_index in
+                                 let constrained = is_constrained_in_guard clock_index invariant in
                                  (* Print some information *)
                                  print_message Verbose_total ("Clock '" ^ (model.variable_names clock_index) ^ "' is " ^ (if constrained then "" else "NOT ") ^ "constrained in invariant of location '" ^ (model.location_names automaton_index location_index) ^ "'");
                                  (* Return true or false *)

@@ -2,16 +2,18 @@ open DiscreteExpressions
 open OCamlUtilities
 open Constants
 
-(* Non linear custom expression without PPL *)
+type variable = int
+
+(* Non-linear custom expression without PPL *)
 type nonlinear_inequality = DiscreteExpressions.discrete_arithmetic_expression * DiscreteExpressions.relop * DiscreteExpressions.discrete_arithmetic_expression
-(*type nonlinear_constraint = nonlinear_inequality list*)
+
 type nonlinear_constraint =
   | True_nonlinear_constraint
   | False_nonlinear_constraint
   | Nonlinear_constraint of nonlinear_inequality list
 
 (************************************************************)
-(** Check whether a non linear constraint evaluates to true when valuated with a valuation *)
+(** Check whether a non-linear constraint evaluates to true when valuated with a valuation *)
 (************************************************************)
 
 let check_nonlinear_inequality discrete_valuation nonlinear_inequality =
@@ -33,14 +35,64 @@ let check_nonlinear_constraint discrete_valuation = function
   | Nonlinear_constraint nonlinear_inequalities -> check_nonlinear_inequalities discrete_valuation nonlinear_inequalities
 
 
+(* Utility *)
+
+(*(*------------------------------------------------------------*)*)
+(*(* Check if a variable is present in a nonlinear constraint *)*)
+(*(*------------------------------------------------------------*)*)
+(*(* TODO see if it's possible to have general way to do that a general tree structure *)*)
+(*let rec is_variable_in_nonlinear_constraint variable = function*)
+(*    | True_nonlinear_constraint*)
+(*    | False_nonlinear_constraint -> false*)
+(*    | Nonlinear_constraint nonlinear_inequalities -> List.exists (is_variable_in_nonlinear_inequality variable) nonlinear_inequalities*)
+
+(*and is_variable_in_nonlinear_inequality variable nonlinear_inequality =*)
+(*    let l_expr, _ (* relop *), r_expr = nonlinear_inequality in*)
+(*        (is_variable_in_discrete_arithmetic_expression variable l_expr) ||*)
+(*        (is_variable_in_discrete_arithmetic_expression variable r_expr)*)
+
+(*and is_variable_in_discrete_arithmetic_expression variable = function*)
+(*	| DAE_plus (discrete_arithmetic_expression, discrete_term)*)
+(*	| DAE_minus (discrete_arithmetic_expression, discrete_term) ->*)
+(*	    (is_variable_in_discrete_arithmetic_expression variable discrete_arithmetic_expression) ||*)
+(*	    (is_variable_in_discrete_term variable discrete_term)*)
+(*	| DAE_term discrete_term ->*)
+(*	    is_variable_in_discrete_term variable discrete_term*)
+
+(*and is_variable_in_discrete_term variable = function*)
+(*	| DT_mul (discrete_term, discrete_factor)*)
+(*	| DT_div (discrete_term, discrete_factor) ->*)
+(*	    (is_variable_in_discrete_term variable discrete_term) ||*)
+(*	    (is_variable_in_discrete_factor variable discrete_factor)*)
+(*	| DT_factor discrete_factor ->*)
+(*	    is_variable_in_discrete_factor variable discrete_factor*)
+
+(*and is_variable_in_discrete_factor variable = function*)
+(*	| DF_variable variable_index -> variable == variable_index*)
+(*	| DF_constant variable_value -> false*)
+(*	| DF_expression discrete_arithmetic_expression -> is_variable_in_discrete_arithmetic_expression variable discrete_arithmetic_expression*)
+(*	| DF_unary_min discrete_factor -> is_variable_in_discrete_factor variable discrete_factor*)
+
+(*(* Get variables in this nonlinear constraint *)*)
+(*let is_constrained nonlinear_constraint variable =*)
+(*    	is_variable_in_nonlinear_constraint variable nonlinear_constraint*)
+
+
+(*let is_all_nonlinear_constraints_true =*)
+(*    List.for_all(fun guard -> match guard with | True_nonlinear_constraint -> true | _ -> false)*)
+
+(*let is_any_nonlinear_constraint_false =*)
+(*    List.exists(fun guard -> match guard with | False_nonlinear_constraint -> true | _ -> false)*)
+
+(*let intersection = function*)
+(*    | nonlinear_constraints when is_all_nonlinear_constraints_true nonlinear_constraints -> True_nonlinear_constraint*)
+(*    | nonlinear_constraints when is_any_nonlinear_constraint_false nonlinear_constraints -> False_nonlinear_constraint*)
+(*    | nonlinear_constraints ->*)
 
 
 
 
-
-
-
-(** Convert a non linear inequality into a string with customized string *)
+(** Convert a non-linear inequality into a string with customized string *)
 let string_of_nonlinear_inequality customized_string variable_names (l_expr, op, r_expr) =
 	let lstr = DiscreteExpressions.customized_string_of_arithmetic_expression customized_string variable_names l_expr in
 	let rstr = DiscreteExpressions.customized_string_of_arithmetic_expression customized_string variable_names r_expr in

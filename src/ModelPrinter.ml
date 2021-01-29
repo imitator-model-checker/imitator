@@ -209,7 +209,7 @@ let string_of_invariant model automaton_index location_index =
 	
 	(* Invariant *)
 	"invariant "
-	^ (LinearConstraint.string_of_pxd_linear_constraint model.variable_names (model.invariants automaton_index location_index))
+	^ (string_of_guard model.variable_names (model.invariants automaton_index location_index))
 
 	(* Handle stopwatches *)
 	^

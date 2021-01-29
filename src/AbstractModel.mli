@@ -92,9 +92,9 @@ type discrete_update = discrete_index * DiscreteExpressions.discrete_arithmetic_
 
 
 
-(** Guard: a linear constraint on the sole discrete variables, and a linear constraint on (possibly) all variables *)
+(** Guard: a non-linear constraint on the sole discrete variables, and a linear constraint on (possibly) all variables *)
 
-type discrete_guard = NonlinearConstraint.nonlinear_constraint (* LinearConstraint.d_linear_constraint *)
+type discrete_guard = NonlinearConstraint.nonlinear_constraint
 type continuous_guard = LinearConstraint.pxd_linear_constraint
 
 type discrete_continuous_guard = {
@@ -109,8 +109,8 @@ type guard =
 	| Discrete_continuous_guard of discrete_continuous_guard
 
 
-(** Invariant: linear constraint *)
-type invariant = LinearConstraint.pxd_linear_constraint
+(** Invariant: guard *)
+type invariant = guard
 
 (** Boolean expression *)
 type boolean_expression =

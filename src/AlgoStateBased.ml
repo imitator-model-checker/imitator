@@ -266,6 +266,80 @@ let predecessors_of_location_via_action (automaton_index : Automaton.automaton_i
 (* Main semantic functions *)
 (************************************************************)
 
+(** Check whether a d_linear_constraint is satisfied by the discrete values in a location *)
+let evaluate_d_linear_constraint_in_location location =
+	(* Directly call the build-in function *)
+	LinearConstraint.d_is_pi0_compatible (Location.get_discrete_value location)
+
+(** Check whether a discrete non-linear constraint is satisfied by the discrete values in a location **)
+let evaluate_d_nonlinear_constraint_in_location location =
+    NonlinearConstraint.check_nonlinear_constraint (Location.get_discrete_value location)
+
+(** Check whether the discrete part of a guard is satisfied by the discrete values in a location *)
+let is_discrete_guard_satisfied location (guard : AbstractModel.guard) : bool =
+	match guard with
+	| True_guard -> true
+	| False_guard -> false
+	| Discrete_guard discrete_guard -> evaluate_d_nonlinear_constraint_in_location location discrete_guard
+	| Continuous_guard _ -> true
+	| Discrete_continuous_guard discrete_continuous_guard -> evaluate_d_nonlinear_constraint_in_location location discrete_continuous_guard.discrete_guard
+
+(** Check whether the discrete part of a guards are satisfied by the discrete values in a location *)
+let is_discrete_guards_satisfied location =
+    List.for_all (is_discrete_guard_satisfied location)
+
+(** Check whether the intersection between a pxd_constraint with an AbstractModel.guard if satisfiable (both inputs remain unchanged) *)
+let is_constraint_and_continuous_guard_satisfiable pxd_linear_constraint = function
+	(* True: trivially satisfiable because we assume the original constraint was satisfiable *)
+	| True_guard -> true
+
+	(* False: trivially unsatisfiable *)
+	| False_guard -> false
+
+	(* Discrete guard: trivially satisfiable because no continuous part, and we assume the original constraint was satisfiable *)
+	| Discrete_guard _ -> true
+
+	(* Continuous guard: we have to intersect and check satisfiability *)
+	| Continuous_guard continuous_guard ->
+		LinearConstraint.pxd_is_satisfiable (LinearConstraint.pxd_intersection [pxd_linear_constraint; continuous_guard])
+
+	(* Discrete + continuous guard: we have to intersect and check satisfiability *)
+	| Discrete_continuous_guard discrete_continuous_guard ->
+		LinearConstraint.pxd_is_satisfiable (LinearConstraint.pxd_intersection [pxd_linear_constraint; discrete_continuous_guard.continuous_guard])
+
+(*(*------------------------------------------------------------*)*)
+(*(* Compute the intersection of guards *)*)
+(*(*------------------------------------------------------------*)*)
+(*let intersection_of_guards location guards =*)
+(*    (* Partition of discrete guards and continuous guards *)*)
+(*    let discrete_guards, continuous_guards = List.partition (fun guard -> match guard with | Discrete_guard _ -> true | _ -> false) guards in*)
+(*    match discrete_guards, continuous_guards with*)
+(*        (* is_discrete_guard_satisfied ? and then (thanks to short-circuit evaluation *)*)
+(*        (* is_constraint_and_continuous_guard_satisfiable ? *)*)
+(*        | dg, cg when*)
+(*            (List.for_all (fun guard -> is_discrete_guard_satisfied location guard) dg) ->*)
+
+(*                let pxd_linear_constraints = List.map(fun guard -> Continuous_guard guard) continuous_guards in*)
+(*                (* if yes, compute intersection of continuous part *)*)
+(*                (* Perform the intersection *)*)
+(*                LinearConstraint.pxd_intersection pxd_linear_constraints*)
+
+(*        (* no -> False ! *)*)
+(*        | _ -> False_guard*)
+
+(** Split guards into two list, one of discrete guards and other of continuous guards *)
+let split_guards_into_discrete_and_continuous =
+    List.fold_left (fun (current_discrete_guards, current_continuous_guards) guard ->
+		match guard with
+		(* True guard: unchanged *)
+		| True_guard -> current_discrete_guards, current_continuous_guards
+		(* False guard: should have been tested before! *)
+		| False_guard -> raise (InternalError "Met a false guard while computing new location, although this should have been tested in a local automaton")
+		| Discrete_guard discrete_guard -> discrete_guard :: current_discrete_guards, current_continuous_guards
+		| Continuous_guard continuous_guard -> current_discrete_guards, continuous_guard :: current_continuous_guards
+		| Discrete_continuous_guard discrete_continuous_guard ->
+			discrete_continuous_guard.discrete_guard :: current_discrete_guards, discrete_continuous_guard.continuous_guard :: current_continuous_guards
+	) ([], [])
 
 (*
 (* Evaluate a discrete_arithmetic_expression using a discrete variable valuation *)
@@ -299,8 +373,6 @@ let evaluate_discrete_arithmetic_expression v =
 	in
 	evaluate_discrete_arithmetic_expression_rec*)
 
-
-
 (*------------------------------------------------------------*)
 (* Create a PXD constraint of the form D_i = d_i for the discrete variables *)
 (*------------------------------------------------------------*)
@@ -313,24 +385,30 @@ let discrete_constraint_of_global_location (global_location : Location.global_lo
 	(* Constraint of the form D_i = d_i *)
 	LinearConstraint.pxd_constraint_of_point discrete_values
 
-
 (*------------------------------------------------------------*)
-(* Compute the invariant associated to a location   *)
+(* Get all invariants of model's automatas *)
+(* Note : use of Input.get_model *)
 (*------------------------------------------------------------*)
-let compute_plain_invariant (location : Location.global_location) : LinearConstraint.pxd_linear_constraint =
-	(* Retrieve the model *)
+let get_model_invariants (location : Location.global_location) =
+    (* Retrieve the model *)
 	let model = Input.get_model() in
 
-  (* construct invariant *)
-	let invariants = List.map (fun automaton_index ->
+	List.map (fun automaton_index ->
 		(* Get the current location *)
 		let location_index = Location.get_location location automaton_index in
 		(* Compute the invariant *)
 		model.invariants automaton_index location_index
-	) model.automata in
-	(* Perform the intersection *)
-	LinearConstraint.pxd_intersection invariants
+	) model.automata
 
+(*------------------------------------------------------------*)
+(* Compute the invariant associated to a location   *)
+(*------------------------------------------------------------*)
+let compute_plain_continuous_invariant (location : Location.global_location) : LinearConstraint.pxd_linear_constraint =
+    (* construct invariant *)
+	let invariants = get_model_invariants location in
+	let _ (* discrete_invariants *), continuous_invariants = split_guards_into_discrete_and_continuous invariants in
+	(* Perform the intersection *)
+	LinearConstraint.pxd_intersection continuous_invariants
 
 (*------------------------------------------------------------*)
 (* Compute the invariant I_l associated to a location  *)
@@ -348,7 +426,7 @@ let compute_invariant location =
 		| Some inv -> inv
 		| None -> (
 			(* Build plain invariant I_l(X) *)
-			let invariant = compute_plain_invariant location in
+			let invariant = compute_plain_continuous_invariant location in
 			(* Store in cache *)
 			Cache.store inv_cache locations invariant;
 			invariant
@@ -363,7 +441,7 @@ let compute_valuated_invariant (location : Location.global_location) : LinearCon
 	let model = Input.get_model() in
 
 	(* Compute the invariant with the discrete variables *)
-	let invariant = compute_plain_invariant location in
+	let invariant = compute_plain_continuous_invariant location in
 
 	(* Valuate the discrete variables *)
 	let discrete_constraint = discrete_constraint_of_global_location location in
@@ -1228,13 +1306,14 @@ let create_initial_state () : state =
 	let initial_location = model.initial_location in
 	let initial_constraint = model.initial_constraint in
 
+
 	(* Extend dimensions for discrete *)
 	let initial_constraint = LinearConstraint.pxd_of_px_constraint initial_constraint in
 
 	(* Compute the invariants I_l0(X) for the initial locations *)
 	print_message Verbose_high ("\nComputing initial invariant I_l0(X)");
 	(* Create the invariant *)
-	let invariant = compute_plain_invariant initial_location in
+	let invariant = compute_plain_continuous_invariant initial_location in
 	(* Print some information *)
 	if verbose_mode_greater Verbose_total then
 		print_message Verbose_total (LinearConstraint.string_of_pxd_linear_constraint model.variable_names invariant);
@@ -1599,17 +1678,7 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 	Location.update_location_with [] !updated_discrete_pairs location;
 
 	(* Split guards between discrete and continuous *)
-	let discrete_guards, continuous_guards = List.fold_left (fun (current_discrete_guards, current_continuous_guards) guard ->
-		match guard with
-		(* True guard: unchanged *)
-		| True_guard -> current_discrete_guards, current_continuous_guards
-		(* False guard: should have been tested before! *)
-		| False_guard -> raise (InternalError "Met a false guard while computing new location, although this should have been tested in a local automaton")
-		| Discrete_guard discrete_guard -> discrete_guard :: current_discrete_guards, current_continuous_guards
-		| Continuous_guard continuous_guard -> current_discrete_guards, continuous_guard :: current_continuous_guards
-		| Discrete_continuous_guard discrete_continuous_guard ->
-			discrete_continuous_guard.discrete_guard :: current_discrete_guards, discrete_continuous_guard.continuous_guard :: current_continuous_guards
-	) ([], []) guards in
+	let discrete_guards, continuous_guards = split_guards_into_discrete_and_continuous guards in
 
 	(* Return the new location, the guards, and the clock updates (if any!) *)
 	location, discrete_guards, continuous_guards, (if !has_updates then clock_updates else [])
@@ -1833,48 +1902,6 @@ let next_combination combination max_indexes =
 	done; (* end while *)
 	!valid_combination
 
-
-
-(** Check whether a d_linear_constraint is satisfied by the discrete values in a location *)
-let evaluate_d_linear_constraint_in_location location =
-	(* Directly call the build-in function *)
-	LinearConstraint.d_is_pi0_compatible (Location.get_discrete_value location)
-
-(* benjamin *)
-let evaluate_d_nonlinear_constraint_in_location location =
-    NonlinearConstraint.check_nonlinear_constraint (Location.get_discrete_value location)
-
-(** Check whether the discrete part of a guard is satisfied by the discrete values in a location *)
-let is_discrete_guard_satisfied location (guard : AbstractModel.guard) : bool =
-	match guard with
-	| True_guard -> true
-	| False_guard -> false
-	| Discrete_guard discrete_guard -> evaluate_d_nonlinear_constraint_in_location location discrete_guard
-	| Continuous_guard _ -> true
-	| Discrete_continuous_guard discrete_continuous_guard -> evaluate_d_nonlinear_constraint_in_location location discrete_continuous_guard.discrete_guard
-
-
-
-(** Check whether the intersection between a pxd_constraint with an AbstractModel.guard if satisfiable (both inputs remain unchanged) *)
-let is_constraint_and_continuous_guard_satisfiable pxd_linear_constraint = function
-	(* True: trivially satisfiable because we assume the original constraint was satisfiable *)
-	| True_guard -> true
-
-	(* False: trivially unsatisfiable *)
-	| False_guard -> false
-
-	(* Discrete guard: trivially satisfiable because no continuous part, and we assume the original constraint was satisfiable *)
-	| Discrete_guard _ -> true
-
-	(* Continuous guard: we have to intersect and check satisfiability *)
-	| Continuous_guard continuous_guard ->
-		LinearConstraint.pxd_is_satisfiable (LinearConstraint.pxd_intersection [pxd_linear_constraint; continuous_guard])
-
-	(* Discrete + continuous guard: we have to intersect and check satisfiability *)
-	| Discrete_continuous_guard discrete_continuous_guard ->
-		LinearConstraint.pxd_is_satisfiable (LinearConstraint.pxd_intersection [pxd_linear_constraint; discrete_continuous_guard.continuous_guard])
-
-
 (*------------------------------------------------------------*)
 (* Computes all possible transition combinations for the *)
 (* involved automata.                                    *)
@@ -1984,8 +2011,28 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 		(* Return *)
 		None
 		
-	(* Else: the discrete part is satisfied *)
+	(* Else: the discrete part of guards is satisfied *)
 	)else(
+
+	    (* Get model invariants for the target location *)
+	    let target_invariants = get_model_invariants target_location in
+	    (* Check if the discrete invariants are all satisfied *)
+        let is_discrete_target_invariants_satisfied = is_discrete_guards_satisfied target_location target_invariants in
+
+        (* Check if the discrete guards are satisfied *)
+        if not (is_discrete_target_invariants_satisfied) then(
+            (* Statistics *)
+            (* TODO check with Etienne ! *)
+            counter_nb_unsatisfiable_discrete#increment;
+            (* Print some information *)
+            print_message Verbose_high ("\nThis combination of discrete target invariants is not satisfiable.");
+
+            (* Return *)
+            None
+
+        (* Else: the discrete part of target invariant is satisfied *)
+        )else(
+
 		(* Compute the new constraint for the current transition *)
 		let new_constraint = compute_new_constraint source_constraint discrete_constr source_location target_location continuous_guards clock_updates in
 
@@ -2016,6 +2063,7 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 					Some { global_location = target_location ; px_constraint = final_constraint }
 				); (* end if satisfiable *)
 			) (* end if Some constraint *)
+	    ) (* end discrete part of target invariant is satisfied *)
 	) (* end discrete part of the guard is satisfied *)
 
 

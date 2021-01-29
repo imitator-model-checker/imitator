@@ -144,7 +144,7 @@ let check_discrete_boolean_expression discrete_valuation = function
 
 
 
-(* benjamin *)
+
 (* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
 let is_discrete_factor_has_parenthesis = function
     | DF_expression(DAE_plus _)
