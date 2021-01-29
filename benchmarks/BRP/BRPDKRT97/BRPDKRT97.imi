@@ -1,7 +1,7 @@
 (*******************************************************************************
  *                                IMITATOR MODEL                               
  * 
- * Title            : brp
+ * Title            : BRPDKRT97
  * Description      : Bounded Retransmission Protocol [version slightly modified]
  * Correctness      : V[] ((S.error ^ x = SYNC) => R.new_file)
  * Scalable         : 

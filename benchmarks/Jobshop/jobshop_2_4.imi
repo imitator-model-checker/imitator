@@ -1,7 +1,7 @@
 (*******************************************************************************
  *                                IMITATOR MODEL                               
  * 
- * Title            : maler_2_4
+ * Title            : jobshop_2_4
  * Description      : Jobshop case study
  * Correctness      : All tasks performed on time
  * Scalable         : 

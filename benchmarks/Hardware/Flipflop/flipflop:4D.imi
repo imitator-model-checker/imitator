@@ -1,7 +1,7 @@
 (*******************************************************************************
  *                                IMITATOR MODEL                               
  * 
- * Title            : flipflop4D
+ * Title            : flipflop:4D
  * Description      : A flip-flop circuit made of 4 gates. The environment is such that D raises, then CK raises then D falls, and then CK falls. No discrete variable. Version with 4 parameters.
  * Correctness      : Q should raise before CK falls
  * Scalable         : 

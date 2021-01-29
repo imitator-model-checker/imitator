@@ -17,4 +17,4 @@
  * IMITATOR version: 3
  ************************************************************)
 
-property := #synth EF(loc[controller] = fail or loc[controller] = timeout);
+property := #synth AGnot(loc[controller] = fail or loc[controller] = timeout);
