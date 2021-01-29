@@ -10,24 +10,24 @@
  * Modeling        : Étienne André and Laurent Fribourg
  * Input by        : Étienne André
  *
- * Created         : 2014/04/28
- * Last modified   : 2020/08/14
+ * Created         : 2007/11
+ * Last modified   : 2021/01/29
  *
  * IMITATOR version: 3
  ************************************************************)
  
 property := #synth BCcover(
-(* V0 : dG3_u et dG4_u *)
+(* V0 : dG3_u and dG4_u *)
 (* 	& tHI    = 24 *)
 (* 	& tLO    = 15 *)
 (* 	& tSetup = 10 *)
 (* 	& tHold  = 17 *)
 (* 	& dG1_l  = 7 *)
-	& dG1_u  = 7 .. 30
+	& dG1_u  = 7 .. 30 (* only used for flipflop4D *)
 (* 	& dG2_l  = 5 *)
-	& dG2_u  = 6 .. 30
+	& dG2_u  = 6 .. 30 (* only used for flipflop4D *)
 (* 	& dG3_l  = 8 *)
-	& dG3_u  = 8 .. 30 -- 10
+	& dG3_u  = 8 .. 30 (* 10 *)
 (* 	& dG4_l  = 3 *)
-	& dG4_u  = 3 .. 30 -- 7
+	& dG4_u  = 3 .. 30 (* 7 *)
 );
