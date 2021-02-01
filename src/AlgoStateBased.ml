@@ -1306,6 +1306,7 @@ let create_initial_state () : state =
 	let initial_location = model.initial_location in
 	let initial_constraint = model.initial_constraint in
 
+    (* TODO benjamin : check if the discrete part of invariant is satisfied *)
 
 	(* Extend dimensions for discrete *)
 	let initial_constraint = LinearConstraint.pxd_of_px_constraint initial_constraint in

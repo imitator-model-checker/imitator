@@ -1943,7 +1943,7 @@ let convert_guard index_of_variables type_of_variables constants guard_convex_pr
       let discrete_guard = nonlinear_constraint_of_nonlinear_convex_predicate index_of_variables constants discrete_guard_convex_predicate in
       let continuous_guard = linear_constraint_of_convex_predicate index_of_variables constants continuous_guard_convex_predicate in
 
-      (* TODO is possible to make this optimisation with separation of discretes and other types of vars ? *)
+      (* TODO benjamin is possible to make this optimisation with separation of discretes and other types of vars ? *)
       (*** NOTE: try to simplify a bit if possible (costly, but would save a lot of time later if checks are successful) ***)
 (*      let intersection = LinearConstraint.pxd_intersection_with_d continuous_guard discrete_guard in*)
 
@@ -5080,6 +5080,7 @@ let abstract_structures_of_parsing_structures options (parsed_model : ParsingStr
 			    | Continuous_guard continuous_invariant ->
                     (* Costly test! But inherent to the invariants structure *)
                     not (LinearConstraint.pxd_is_true continuous_invariant)
+                (* We assume that an exclusively discrete invariant does not count as an invariant *)
 			    | _ -> true
 		) locations_for_this_automaton
 	) automata in

@@ -245,45 +245,68 @@ let string_of_declarations model actions_and_nb_automata =
 
 
 (************************************************************)
-(** Guard *)
+(** Guard / Invariant *)
 (************************************************************)
+
+(** General function to get string of label XML tag for UPPAAL **)
+let get_uppaal_label_tag_string kind x_coord_str y_coord_str content =
+    "<label kind=\"" ^ kind ^ "\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ content ^ "</label>"
 
 (*** NOTE: special handling as we have a discrete and a continuous guard that must be handled homogeneously ***)
 
-(** Convert a guard into a string *)
-let string_of_guard actions_and_nb_automata variable_names x_coord_str y_coord_str = function
+(** Convert a guard or an invariant (according to kind) into a string *)
+let string_of_guard_or_invariant kind actions_and_nb_automata variable_names x_coord_str y_coord_str = function
 	(* True guard = no guard *)
 	| True_guard -> ""
 
 	(* False *)
 	| False_guard ->
-		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">false</label>"
-
+	    "false"
 
 	(*** TODO: use the proper Uppaal syntax here ***)
 
 	| Discrete_guard discrete_guard ->
 
-		(*** NOTE/BUG: remove the true discrete guard! (not accepted by Uppaal) ***)
-
-		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ (NonlinearConstraint.customized_string_of_nonlinear_constraint uppaal_strings variable_names discrete_guard) ^ "</label>"
+        let str_discrete_guard = (NonlinearConstraint.customized_string_of_nonlinear_constraint uppaal_strings variable_names discrete_guard) in
+        let str_discrete_guard_without_true = if kind = "invariant" && str_discrete_guard = "true" then "" else str_discrete_guard in
+        str_discrete_guard_without_true
 
 	| Continuous_guard continuous_guard ->
 		(* Remove true guard *)
-
 		if LinearConstraint.pxd_is_true continuous_guard then "" else
-		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ (LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings variable_names continuous_guard) ^ "</label>"
+		(LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings variable_names continuous_guard)
 
 	| Discrete_continuous_guard discrete_continuous_guard ->
-		"<label kind=\"guard\" x=\"" ^ x_coord_str ^ "\" y=\"" ^ y_coord_str ^ "\">" ^ (
-			(NonlinearConstraint.customized_string_of_nonlinear_constraint uppaal_strings variable_names discrete_continuous_guard.discrete_guard)
-			^
-			(
-				(* Remove true guard *)
-				if LinearConstraint.pxd_is_true discrete_continuous_guard.continuous_guard then ""
-				else uppaal_strings.and_operator ^ (LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings variable_names discrete_continuous_guard.continuous_guard)
-			)
-		) ^ "</label>"
+	    let content = (
+            (NonlinearConstraint.customized_string_of_nonlinear_constraint uppaal_strings variable_names discrete_continuous_guard.discrete_guard)
+            ^
+            (
+                (* Remove true guard *)
+                if LinearConstraint.pxd_is_true discrete_continuous_guard.continuous_guard then ""
+                else uppaal_strings.and_operator ^ (LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings variable_names discrete_continuous_guard.continuous_guard)
+            )
+        ) in
+        content
+
+(** Convert a guard into a string *)
+let string_of_guard =
+    string_of_guard_or_invariant "guard"
+
+(** Convert an invariant into a string *)
+let string_of_invariant =
+    string_of_guard_or_invariant "invariant"
+
+(** Convert a guard or an invariant into a XML string for Uppaal, ex : <label kind=\""guard\"">content</label> *)
+let uppaal_string_of_guard_or_invariant kind actions_and_nb_automata variable_names x_coord_str y_coord_str guard =
+    get_uppaal_label_tag_string kind x_coord_str y_coord_str (string_of_guard_or_invariant kind actions_and_nb_automata variable_names x_coord_str y_coord_str guard)
+
+(** Convert a guard into a XML string for Uppaal, ex : <label kind=\""guard\"">content</label> *)
+let uppaal_string_of_guard =
+    uppaal_string_of_guard_or_invariant "guard"
+
+(** Convert a guard into a XML string for Uppaal, ex : <label kind=\""invariant\"">content</label> *)
+let uppaal_string_of_invariant =
+    uppaal_string_of_guard_or_invariant "invariant"
 
 
 
@@ -311,24 +334,24 @@ let string_of_invariant model actions_and_nb_automata automaton_index location_i
 		) actions_and_nb_automata))
 	in
 
+    (* Compute coordinates *)
+    (*** NOTE: arbitrary positioning (location_id * scaling_factor, +20%) ***)
+    let x_coord_str, y_coord_str =
+        string_of_int (location_index * scaling_factor),
+        string_of_int (scaling_factor / 5)
+    in
 	(*** TODO: check well formed with constraints x <= … as requested by Uppaal, and issue a warning otherwise ***)
 
-	let invariant = LinearConstraint.customized_string_of_pxd_linear_constraint uppaal_strings model.variable_names (model.invariants automaton_index location_index) in
+    let invariant = string_of_invariant actions_and_nb_automata model.variable_names x_coord_str y_coord_str (model.invariants automaton_index location_index) in
 
 	(* Avoid "true and …" *)
 	let invariant_and_strong_broadcast_invariant =
-		if invariant = uppaal_strings.true_string then strong_broadcast_invariant
+		if invariant = "" then strong_broadcast_invariant
 		else if actions_and_nb_automata = [] then invariant
 		else invariant ^ uppaal_strings.and_operator ^ strong_broadcast_invariant
 	in
-
 	(* Invariant *)
-	(*** NOTE: arbitrary positioning (location_id * scaling_factor, +20%) ***)
-	"\n\t<label kind=\"invariant\" x=\"" ^ (string_of_int (location_index * scaling_factor)) ^ "\" y=\"" ^ (string_of_int (scaling_factor / 5)) ^ "\">"
-	^ invariant_and_strong_broadcast_invariant
-
-	(* The end *)
-	^ "</label>"
+	"\n\t" ^ get_uppaal_label_tag_string "invariant" x_coord_str y_coord_str invariant_and_strong_broadcast_invariant
 
 
 
@@ -545,7 +568,7 @@ let string_of_transition model actions_and_nb_automata automaton_index source_lo
 	^ (
 		(* Quite arbitrary positioning *)
 		let y_coord_str = (string_of_int (scaling_factor / 5)) in
-		"\n\t\t" ^ (string_of_guard actions_and_nb_automata model.variable_names x_coord_str y_coord_str transition.guard)
+		"\n\t\t" ^ (uppaal_string_of_guard actions_and_nb_automata model.variable_names x_coord_str y_coord_str transition.guard)
 	)
 
 	(* Updates *)

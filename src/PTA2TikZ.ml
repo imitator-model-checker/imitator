@@ -61,7 +61,7 @@ let tikz_string_of_lc_gen lc_fun lc =
 
 (** Proper form for constraints *)
 let tikz_string_of_linear_constraint =
-	tikz_string_of_lc_gen LinearConstraint.string_of_pxd_linear_constraint
+	tikz_string_of_lc_gen ModelPrinter.string_of_guard
 
 
 (** Proper form for constraints *)
@@ -240,7 +240,16 @@ let string_of_location model automaton_index location_index =
 	let invariant = model.invariants automaton_index location_index in
 	let color_id = ((location_index) mod LatexHeader.nb_colors) + 1 in
 
-	let has_invariant = not (LinearConstraint.pxd_is_true invariant) in
+    (* TODO check with Etienne *)
+	let has_invariant = (
+        match invariant with
+            | True_guard -> false
+            | Continuous_guard continuous_invariant ->
+                (* Costly test! But inherent to the invariants structure *)
+                not (LinearConstraint.pxd_is_true continuous_invariant)
+            (* We assume that an exclusively discrete invariant does not count as an invariant *)
+            | _ -> true)
+    in
 	let has_non_1rate_clocks = model.has_non_1rate_clocks && (model.stopwatches automaton_index location_index <> [] || model.flow automaton_index location_index <> []) in
 
 	(*** TODO: better positioning! (from dot?) ***)
