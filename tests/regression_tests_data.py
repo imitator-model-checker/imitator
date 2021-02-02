@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/01/22
+# Last modified     : 2021/02/02
 #************************************************************
 
 
@@ -72,9 +72,34 @@ Error                                   : property file not found
 	
 	# TODO: same + `-mode checksyntax`
 
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# TESTS TO CHECK THE SYNTAX
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/02/02
+		# Last modified            : 2021/02/02
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test syntax rejection: non-linear clock',
+		'input_files': ['testSyntaxNonLinearClock.imi'],
+		'options'    : '-mode checksyntax',
+		'expectations' : [
+			{'file': 'testSyntaxNonLinearClock.res' , 'content' : """
+Error                                   : model parsing error
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
 
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
-	# SYNTACTIC TESTS
+	# SYNTACTIC TESTS (statistics on models)
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
 	#------------------------------------------------------------
