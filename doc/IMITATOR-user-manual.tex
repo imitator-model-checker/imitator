@@ -1066,10 +1066,11 @@ Two options are possible in \imitator{}:
 	In contrast to most other algorithms of \imitator{}, these two algorithms work on a slightly restricted syntax:
 	\begin{itemize}
 		\item in a guard or invariant, each clock must be used at most once;
-		\item the conditional updates (new since version 2.12) are not supported;
+		\item invariants should not contain discrete inequalities (\ie{} inequalities over discrete variables only);
 		\item the use of discrete variables was not tested (and may not be always working);
+		\item the conditional updates (new since version 2.12) are not supported;
 		\item the use of coefficients on parameters (different from 0 or~1) was not tested;
-		\item the use of stopwatches was not tested (but should be no problem).
+		\item the use of stopwatches or multi-rate was not tested.
 	\end{itemize}
 	Overall, this part of \imitator{} has been less tested and is probably less stable than the rest of the tool.
 \end{becareful}
