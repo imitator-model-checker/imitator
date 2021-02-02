@@ -540,7 +540,7 @@ linear_constraint:
 ;
 
 nonlinear_constraint:
-    | arithmetic_expression relop arithmetic_expression { Parsed_nonlinear_constraint ($1, $2, $3) }
+	| discrete_boolean_expression { Parsed_nonlinear_constraint $1 }
     | CT_TRUE { Parsed_true_nonlinear_constraint }
     | CT_FALSE { Parsed_false_nonlinear_constraint }
 ;

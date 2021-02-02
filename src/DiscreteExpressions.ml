@@ -12,6 +12,7 @@
  *
  ************************************************************)
 
+open Constants
 
 
 (****************************************************************)
@@ -242,3 +243,34 @@ let customized_string_of_arithmetic_expression customized_string variable_names 
 	in string_of_arithmetic_expression customized_string
 
 let string_of_arithmetic_expression = customized_string_of_arithmetic_expression Constants.default_string
+
+(* TODO benjamin ref in ModelPrinter *)
+let string_of_boolean_operations customized_string = function
+	| OP_L		-> customized_string.l_operator
+	| OP_LEQ	-> customized_string.le_operator
+	| OP_EQ		-> customized_string.eq_operator
+	| OP_NEQ	-> customized_string.l_operator ^ customized_string.g_operator (* TODO benjamin remove whitespace *)
+	| OP_GEQ	-> customized_string.ge_operator
+	| OP_G		-> customized_string.g_operator
+
+(* TODO benjamin ref in ModelPrinter *)
+(** Convert a discrete_boolean_expression into a string *)
+let customized_string_of_discrete_boolean_expression customized_string variable_names = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
+		(string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
+		^ " "
+		^ (string_of_boolean_operations customized_string relop)
+		^ " "
+		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
+		(string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
+		^ " in ["
+		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+		^ " , "
+		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression3)
+		^ "]"
+
+(* TODO benjamin ref in ModelPrinter *)
+let string_of_discrete_boolean_expression = customized_string_of_discrete_boolean_expression Constants.default_string

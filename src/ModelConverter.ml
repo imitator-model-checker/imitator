@@ -247,6 +247,20 @@ and check_f_in_parsed_update_arithmetic_expression f = function
   | Parsed_DAE_term parsed_update_term ->
     check_f_in_parsed_update_term f parsed_update_term
 
+and check_f_in_parsed_update_boolean_expression f = function
+    | Parsed_expression (l_expr, _ (* relop*), r_expr) ->
+        evaluate_and
+            (check_f_in_parsed_update_arithmetic_expression f l_expr)
+            (check_f_in_parsed_update_arithmetic_expression f r_expr)
+    | Parsed_expression_in (expr1, expr2, expr3) ->
+        evaluate_and
+            (
+                evaluate_and
+                    (check_f_in_parsed_update_arithmetic_expression f expr1)
+                    (check_f_in_parsed_update_arithmetic_expression f expr2)
+            )
+            (check_f_in_parsed_update_arithmetic_expression f expr3)
+
 
 (*------------------------------------------------------------*)
 (* Generic function to test something in discrete arithmetic expression *)
@@ -278,6 +292,19 @@ and check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_o
   | Parsed_DAE_term parsed_update_term ->
     check_f_in_parsed_discrete_term f index_of_variables type_of_variables constants parsed_update_term
 
+and check_f_in_parsed_discrete_boolean_expression f index_of_variables type_of_variables constants = function
+    | Parsed_expression (l_expr, _ (* relop*), r_expr) ->
+        evaluate_and
+            (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants l_expr)
+            (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants r_expr)
+    | Parsed_expression_in (expr1, expr2, expr3) ->
+        evaluate_and
+            (
+                evaluate_and
+                    (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants expr1)
+                    (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants expr2)
+            )
+            (check_f_in_parsed_discrete_arithmetic_expression f index_of_variables type_of_variables constants expr3)
 
 
 (*------------------------------------------------------------*)
@@ -290,6 +317,15 @@ let all_variables_defined_in_parsed_update_arithmetic_expression variable_names 
       ) else true
     )
 
+(*------------------------------------------------------------*)
+(* Check that all variables are defined in a discrete boolean expression *)
+(*------------------------------------------------------------*)
+let all_variables_defined_in_parsed_discrete_boolean_expression variable_names constants =
+  check_f_in_parsed_update_boolean_expression (fun variable_name ->
+      if not (List.mem variable_name variable_names) && not (Hashtbl.mem constants variable_name) then(
+        print_error ("The variable `" ^ variable_name ^ "` used in an arithmetic expression was not declared."); false
+      ) else true
+    )
 
 (*------------------------------------------------------------*)
 (* Check that only discrete variables are used in a discrete update *)
@@ -539,6 +575,24 @@ and convert_parsed_discrete_factor2 index_of_variables constants = function
 	| Parsed_DF_expression parsed_discrete_arithmetic_expression -> DF_expression (convert_parsed_discrete_arithmetic_expression2 index_of_variables constants parsed_discrete_arithmetic_expression)
 	| Parsed_DF_unary_min parsed_discrete_factor -> DF_unary_min (convert_parsed_discrete_factor2 index_of_variables constants parsed_discrete_factor)
 
+(* Convert parsed_discrete_boolean_expression *)
+(* It's a version without using useful_parsing_model_information *)
+(* TODO benjamin refactor because it's almost a duplicate of convert_parsed_discrete_boolean_expression *)
+let convert_parsed_discrete_boolean_expression2 index_of_variables constants = function
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Parsed_expression (l_expr , parsed_relop ,r_expr) ->
+		Expression (
+			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants l_expr,
+			convert_parsed_relop parsed_relop,
+			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants r_expr
+		)
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| Parsed_expression_in (expr1 , expr2 , expr3) ->
+		Expression_in (
+			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr1,
+			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr2,
+			convert_parsed_discrete_arithmetic_expression2 index_of_variables constants expr3
+		)
 
 
 (* Convert parsed_discrete_arithmetic_expression *)
@@ -695,9 +749,8 @@ let get_variables_in_linear_constraint variables_used_ref = function
 let get_variables_in_nonlinear_constraint variables_used_ref = function
   | Parsed_true_nonlinear_constraint -> ()
   | Parsed_false_nonlinear_constraint -> ()
-  | Parsed_nonlinear_constraint (expr1, (*relop*)_, expr2) ->
-    get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref expr1;
-    get_variables_in_parsed_discrete_arithmetic_expression variables_used_ref expr2
+  | Parsed_nonlinear_constraint parsed_discrete_boolean_expression ->
+    get_variables_in_parsed_discrete_boolean_expression variables_used_ref parsed_discrete_boolean_expression
     
 (*------------------------------------------------------------*)
 (* Gather all variable names used in a parsed_init_state_predicate *)
@@ -858,9 +911,7 @@ let all_variables_defined_in_linear_constraint variable_names constants = functi
 let all_variables_defined_in_nonlinear_constraint variable_names constants = function
   | Parsed_true_nonlinear_constraint -> true
   | Parsed_false_nonlinear_constraint -> true
-  | Parsed_nonlinear_constraint (expr1, relop, expr2) ->
-    evaluate_and (all_variables_defined_in_parsed_update_arithmetic_expression variable_names constants expr1)
-      (all_variables_defined_in_parsed_update_arithmetic_expression variable_names constants expr2)
+  | Parsed_nonlinear_constraint nonlinear_constraint -> all_variables_defined_in_parsed_discrete_boolean_expression variable_names constants nonlinear_constraint
 
 
 (*------------------------------------------------------------*)
@@ -943,7 +994,9 @@ let only_discrete_in_nonlinear_term index_of_variables type_of_variables constan
       )
 
 let only_discrete_in_linear_expression = check_f_in_linear_expression only_discrete_in_linear_term
-let only_discrete_in_nonlinear_expression = check_f_in_parsed_discrete_arithmetic_expression only_discrete_in_nonlinear_term
+(* TODO benjamin remove when all passed to discrete_boolean_expression *)
+(*let only_discrete_in_nonlinear_expression = check_f_in_parsed_discrete_arithmetic_expression only_discrete_in_nonlinear_term*)
+let only_discrete_in_nonlinear_expression = check_f_in_parsed_discrete_boolean_expression only_discrete_in_nonlinear_term
 
 (*------------------------------------------------------------*)
 (* Check that a linear expression contains no variables (neither discrete nor clock) *)
@@ -1136,6 +1189,7 @@ let linear_inequality_of_linear_constraint index_of_variables constants (linexpr
 
 
 
+(* TODO benjamin remove when nonlinear_constraint equal to discrete_boolean_expression *)
 (*------------------------------------------------------------*)
 (* Convert a ParsingStructure.nonlinear_constraint into a NonlinearConstraint.nonlinear_inequality *)
 (*------------------------------------------------------------*)
@@ -1175,7 +1229,7 @@ let nonlinear_constraint_of_nonlinear_convex_predicate index_of_variables consta
            match nonlinear_inequality with
            | Parsed_true_nonlinear_constraint -> nonlinear_inequalities
            | Parsed_false_nonlinear_constraint -> raise False_exception
-           | Parsed_nonlinear_constraint (expr1, relop, expr2) -> (nonlinear_inequality_of_nonlinear_constraint index_of_variables constants (expr1, relop, expr2)) :: nonlinear_inequalities
+           | Parsed_nonlinear_constraint nonlinear_constraint -> (convert_parsed_discrete_boolean_expression2 index_of_variables constants nonlinear_constraint) :: nonlinear_inequalities
         ) [] convex_predicate
     in
     match nonlinear_inequalities with
@@ -1877,17 +1931,23 @@ let rec try_convert_linear_expression_of_parsed_discrete_arithmetic_expression =
     | Parsed_DAE_minus (expr, term) -> Linear_minus_expression (try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr, try_convert_linear_term_of_parsed_discrete_term term)
     | Parsed_DAE_term term -> Linear_term (try_convert_linear_term_of_parsed_discrete_term term)
 
-(* Convert nonlinear_constraint to linear_constraint if possible
-   and check bad use of non-linear expressions when converting *)
-let linear_constraint_of_nonlinear_constraint = function
-    | Parsed_true_nonlinear_constraint -> Parsed_true_constraint
-    | Parsed_false_nonlinear_constraint -> Parsed_false_constraint
-    | Parsed_nonlinear_constraint (l_expr, relop, r_expr) ->
+let try_convert_linear_expression_of_parsed_discrete_boolean_expression = function
+    | Parsed_expression (l_expr, relop, r_expr) ->
         Parsed_linear_constraint (
             try_convert_linear_expression_of_parsed_discrete_arithmetic_expression l_expr,
             relop,
             try_convert_linear_expression_of_parsed_discrete_arithmetic_expression r_expr
         )
+    (* Expression in used ! So it's impossible to make the conversion, we raise an exception*)
+    | Parsed_expression_in (_, _, _) -> raise (InvalidExpression "A boolean 'in' expression involve clock(s) / parameter(s)")
+
+(* Convert nonlinear_constraint to linear_constraint if possible
+   and check bad use of non-linear expressions when converting *)
+let linear_constraint_of_nonlinear_constraint = function
+    | Parsed_true_nonlinear_constraint -> Parsed_true_constraint
+    | Parsed_false_nonlinear_constraint -> Parsed_false_constraint
+    | Parsed_nonlinear_constraint nonlinear_constraint ->
+        try_convert_linear_expression_of_parsed_discrete_boolean_expression nonlinear_constraint
 
 
 (*------------------------------------------------------------*)
@@ -1913,7 +1973,7 @@ let split_convex_predicate_into_discrete_and_continuous_new index_of_variables t
        match nonlinear_inequality with
        | Parsed_true_nonlinear_constraint -> true (*** NOTE: we arbitrarily send "true" to the discrete part ***)
        | Parsed_false_nonlinear_constraint -> raise False_exception
-       | Parsed_nonlinear_constraint (l_expr, _, r_expr) -> only_discrete_in_nonlinear_expression index_of_variables type_of_variables constants l_expr && only_discrete_in_nonlinear_expression index_of_variables type_of_variables constants r_expr
+       | Parsed_nonlinear_constraint nonlinear_constraint -> only_discrete_in_nonlinear_expression index_of_variables type_of_variables constants nonlinear_constraint
     ) convex_predicate
     in
     (* Get discrete part as a nonlinear constraint but convert back continuous part to a linear constraint *)

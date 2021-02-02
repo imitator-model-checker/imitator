@@ -70,12 +70,28 @@ and parsed_discrete_factor =
 	| Parsed_DF_unary_min of parsed_discrete_factor
 
 
+(****************************************************************)
+(** Boolean expressions *)
+(****************************************************************)
+
+type parsed_discrete_boolean_expression =
+	(** Discrete arithmetic expression of the form Expr ~ Expr *)
+	| Parsed_expression of parsed_discrete_arithmetic_expression * parsed_relop * parsed_discrete_arithmetic_expression
+	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
+	| Parsed_expression_in of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
+
+
+type parsed_boolean_expression =
+	| Parsed_True (** True *)
+	| Parsed_False (** False *)
+	| Parsed_Not of parsed_boolean_expression (** Negation *)
+	| Parsed_And of parsed_boolean_expression * parsed_boolean_expression (** Conjunction *)
+	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
+	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
 
 (****************************************************************)
-(** Convex predicates and linear expressions *)
+(** Convex predicates, linear and non-linear expressions *)
 (****************************************************************)
-
-
 
 (** Linear expressions *)
 
@@ -95,34 +111,14 @@ type linear_constraint =
 	| Parsed_false_constraint (** False *)
 	| Parsed_linear_constraint of linear_expression * parsed_relop * linear_expression
 
+(** Non-linear expressions *)
+
 type nonlinear_constraint =
     | Parsed_true_nonlinear_constraint (* True *)
     | Parsed_false_nonlinear_constraint (* False *)
-    | Parsed_nonlinear_constraint of parsed_discrete_arithmetic_expression * parsed_relop * parsed_discrete_arithmetic_expression
+    | Parsed_nonlinear_constraint of parsed_discrete_boolean_expression
 
-
-
-type convex_predicate = nonlinear_constraint list (* old : linear_constraint list *)
-
-
-(** boolean expressions *)
-
-type parsed_discrete_boolean_expression =
-	(** Discrete arithmetic expression of the form Expr ~ Expr *)
-	| Parsed_expression of parsed_discrete_arithmetic_expression * parsed_relop * parsed_discrete_arithmetic_expression
-	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
-	| Parsed_expression_in of parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression * parsed_discrete_arithmetic_expression
-
-
-type parsed_boolean_expression =
-	| Parsed_True (** True *)
-	| Parsed_False (** False *)
-	| Parsed_Not of parsed_boolean_expression (** Negation *)
-	| Parsed_And of parsed_boolean_expression * parsed_boolean_expression (** Conjunction *)
-	| Parsed_Or of parsed_boolean_expression * parsed_boolean_expression (** Disjunction *)
-	| Parsed_Discrete_boolean_expression of parsed_discrete_boolean_expression
-
-
+type convex_predicate = nonlinear_constraint list
 
 
 (****************************************************************)
