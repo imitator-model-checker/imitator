@@ -5,6 +5,14 @@ import os.path
 import uuid
 import argparse
 import sys
+import tempfile
+
+# Prepare sandbox
+temp_dir = tempfile.gettempdir()
+sandbox_dir = os.path.join(temp_dir, 'version_comparator_' + str(uuid.uuid1()))
+os.mkdir(sandbox_dir)
+
+print("Sandbox created : " + sandbox_dir)
 
 # Parse arguments
 parser = argparse.ArgumentParser()
@@ -32,9 +40,10 @@ model_name = os.path.splitext(model_name_with_ext)[0]
 
 # Run IMITATOR and convert models
 def convert_model(binary):
-    subprocess.run([binary['path'], model, option])
-    target_name = model_name+'-regenerated-' + binary['version'] + "-" + str(uuid.uuid1()) + '.imi'
-    os.rename(model_name+'-regenerated.imi', target_name)
+    subprocess.run([binary['path'], model, option], cwd=sandbox_dir)
+    target_name = os.path.join(sandbox_dir, model_name+'-regenerated-' + binary['version'] + "-" + str(uuid.uuid1()) + '.imi')
+    source_name = os.path.join(sandbox_dir, model_name+'-regenerated.imi')
+    os.rename(source_name, target_name)
     return target_name
 
 # Compare generated models
@@ -50,17 +59,18 @@ def compare_generated_models(files):
         print(line)
 
 # Cleanup generated files
-def cleanup_generated_models(files):
+def cleanup_sandbox(files):
     for file in files:
         os.remove(file)
+    os.rmdir(sandbox_dir)
 
 def main():
     # Convert model with two version of IMITATOR
     gen_files = [convert_model(binary) for binary in binaries]
     # Compare converted models between versions of IMITATOR
     compare_generated_models(gen_files)
-    # Cleanup generated models
-    cleanup_generated_models(gen_files)
+    # Cleanup sandbox containing generated models
+    cleanup_sandbox(gen_files)
 
 # Run program
 main()
