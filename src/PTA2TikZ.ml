@@ -240,13 +240,15 @@ let string_of_location model automaton_index location_index =
 	let invariant = model.invariants automaton_index location_index in
 	let color_id = ((location_index) mod LatexHeader.nb_colors) + 1 in
 
-    (* TODO check with Etienne *)
 	let has_invariant = (
         match invariant with
             | True_guard -> false
             | Continuous_guard continuous_invariant ->
                 (* Costly test! But inherent to the invariants structure *)
                 not (LinearConstraint.pxd_is_true continuous_invariant)
+            | Discrete_continuous_guard discrete_continuous_invariant ->
+                (* Costly test! But inherent to the invariants structure *)
+                not (LinearConstraint.pxd_is_true discrete_continuous_invariant.continuous_guard)
             (* We assume that an exclusively discrete invariant does not count as an invariant *)
             | _ -> true)
     in

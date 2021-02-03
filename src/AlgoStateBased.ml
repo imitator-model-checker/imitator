@@ -180,6 +180,9 @@ let counter_nb_unsatisfiable = create_discrete_counter_and_register "unsatisfiab
 (* Number of discrete constraints unsatisfiable *)
 let counter_nb_unsatisfiable_discrete = create_discrete_counter_and_register "unsatisfiable global discrete constraints" States_counter Verbose_experiments
 
+(* Number of discrete invariants unsatisfiable *)
+let counter_nb_unsatisfiable_discrete_invariants = create_discrete_counter_and_register "unsatisfiable global discrete invariants" States_counter Verbose_experiments
+
 (* Number of different combinations considered when computing post *)
 let counter_nb_combinations = create_discrete_counter_and_register "different combinations" States_counter Verbose_experiments
 
@@ -2020,11 +2023,10 @@ let post_from_one_state_via_one_transition (source_location : Location.global_lo
 	    (* Check if the discrete invariants are all satisfied *)
         let is_discrete_target_invariants_satisfied = is_discrete_guards_satisfied target_location target_invariants in
 
-        (* Check if the discrete guards are satisfied *)
+        (* Check if the discrete invariants are satisfied *)
         if not (is_discrete_target_invariants_satisfied) then(
             (* Statistics *)
-            (* TODO check with Etienne ! *)
-            counter_nb_unsatisfiable_discrete#increment;
+            counter_nb_unsatisfiable_discrete_invariants#increment;
             (* Print some information *)
             print_message Verbose_high ("\nThis combination of discrete target invariants is not satisfiable.");
 
