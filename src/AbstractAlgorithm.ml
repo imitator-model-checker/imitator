@@ -26,6 +26,7 @@ open Exceptions
 type translation =
 	| HyTech
 	| IMI
+	| DOT
 	| JPG
 	| PDF
 	| PNG
@@ -211,6 +212,7 @@ let cartography_drawing_possible = function
 let string_of_translation = function
 	| HyTech -> "HyTech"
 	| IMI    -> "IMITATOR"
+	| DOT    -> "DOT"
 	| JPG    -> "JPG"
 	| PDF    -> "PDF"
 	| PNG    -> "PNG"

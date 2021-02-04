@@ -745,6 +745,10 @@ class imitator_options =
 					imitator_mode <- Translation IMI
 				), "Regenerate the model into an IMITATOR model, and exit without performing any analysis. Default: disabled");
 
+				("-imi2DOT", Unit (fun _ ->
+					imitator_mode <- Translation DOT
+				), "Translate the model into a dot graphics (graph) file, and exit without performing any analysis. Default: disabled");
+
 				("-imi2JPG", Unit (fun _ ->
 					imitator_mode <- Translation JPG
 				), "Translate the model into a graphics, and exit without performing any analysis. Default: disabled");

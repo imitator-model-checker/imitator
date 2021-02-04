@@ -21,6 +21,7 @@
 type translation =
 	| HyTech
 	| IMI
+	| DOT
 	| JPG
 	| PDF
 	| PNG

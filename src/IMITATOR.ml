@@ -528,7 +528,7 @@ match options#imitator_mode with
 	(* Case translation *)
 	(************************************************************)
 	(* Translation to text language (IMITATOR, other model checker, TikZ) *)
-	| Translation IMI | Translation HyTech | Translation TikZ | Translation Uppaal ->
+	| Translation IMI | Translation HyTech | Translation TikZ | Translation Uppaal | Translation DOT ->
 
 		(*** NOTE: not super nice… ***)
 		let printer = match options#imitator_mode with
@@ -536,6 +536,7 @@ match options#imitator_mode with
 			| Translation HyTech	-> PTA2HyTech.string_of_model
 			| Translation TikZ		-> PTA2TikZ.tikz_string_of_model
 			| Translation Uppaal	-> PTA2Uppaal.string_of_model
+			| Translation DOT       -> PTA2JPG.string_of_model
 			| _						-> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
 		in
 
@@ -544,7 +545,8 @@ match options#imitator_mode with
 			| Translation IMI		-> "-regenerated" ^ Constants.model_extension
 			| Translation HyTech	-> ".hy"
 			| Translation TikZ		-> ".tex"
-			| Translation Uppaal	->  "-uppaal.xml"
+			| Translation Uppaal	-> "-uppaal.xml"
+			| Translation DOT       -> ".dot"
 			| _						-> raise (InternalError ("Impossible situation: No target for translation was found, although it should have been"))
 		in
 

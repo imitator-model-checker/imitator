@@ -29,7 +29,7 @@ option = "-imi2IMI"
 
 # binaries execution to compare
 binaries = [
-    {'path':'/home/me/Work/imitator-v3.0.0-amd64', 'version':'v3'},
+    {'path':'imitator-v3.0.0-amd64', 'version':'v3'},
     {'path':'/home/me/Desktop/imitator/bin/imitator', 'version':'current'}
 ]
 
@@ -60,8 +60,10 @@ def compare_generated_models(files):
 
 # Cleanup generated files
 def cleanup_sandbox(files):
+    # Cleanup files
     for file in files:
         os.remove(file)
+    # Cleanup sandbox directory
     os.rmdir(sandbox_dir)
 
 def main():
