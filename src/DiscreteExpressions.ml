@@ -258,18 +258,16 @@ let string_of_boolean_operations customized_string = function
 let customized_string_of_discrete_boolean_expression customized_string variable_names = function
 	(** Discrete arithmetic expression of the form Expr ~ Expr *)
 	| Expression (discrete_arithmetic_expression1, relop, discrete_arithmetic_expression2) ->
-		(string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
-		^ " "
+		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
 		^ (string_of_boolean_operations customized_string relop)
-		^ " "
-		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression2)
 	(** Discrete arithmetic expression of the form 'Expr in [Expr, Expr ]' *)
 	| Expression_in (discrete_arithmetic_expression1, discrete_arithmetic_expression2, discrete_arithmetic_expression3) ->
-		(string_of_arithmetic_expression variable_names discrete_arithmetic_expression1)
+		(customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression1)
 		^ " in ["
-		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression2)
+		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression2)
 		^ " , "
-		^ (string_of_arithmetic_expression variable_names discrete_arithmetic_expression3)
+		^ (customized_string_of_arithmetic_expression customized_string variable_names discrete_arithmetic_expression3)
 		^ "]"
 
 (* TODO benjamin ref in ModelPrinter *)
