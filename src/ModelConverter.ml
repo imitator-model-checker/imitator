@@ -2451,7 +2451,7 @@ let filtered_updates removed_variable_names updates =
   let not_removed_variable (variable_name, _) =
     not (List.mem variable_name removed_variable_names)
   in
-  List.fold_left (fun acc u ->
+  List.fold_right (fun u acc ->
       match u with
       | Normal (update) ->
         if (not_removed_variable update) then u::acc else acc
