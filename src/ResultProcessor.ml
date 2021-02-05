@@ -351,6 +351,7 @@ let export_to_file_errorresult error_type file_name =
 		| Lexing_error msg				-> "lexing error (" ^ msg ^ ")"
 		| ModelParsing_error msg		-> "model parsing error (" ^ msg ^ ")"
 		| PropertyParsing_error msg		-> "property parsing error (" ^ msg ^ ")"
+		| Unsatisfiable_initial_state	-> "unsatisfiable initial state"
 	in
 	
 	(* Prepare the string to write *)

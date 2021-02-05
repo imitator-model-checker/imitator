@@ -32,6 +32,8 @@ type error_type =
 	| ModelParsing_error			of string
 	
 	| PropertyParsing_error			of string
+	
+	| Unsatisfiable_initial_state
 
 
 (************************************************************)

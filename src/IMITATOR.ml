@@ -1151,11 +1151,15 @@ end;
 	
 	begin match e with
 		(* "Good" (at least not bad) exceptions *)
+		
 		| Division_by_0 msg -> abort_with_good_exception (Result.Division_by_zero msg) msg
+		
+		| UnsatisfiableInitialState -> abort_with_good_exception (Result.Unsatisfiable_initial_state) "Unsatisfiable initial state"
 		
 		
 		
 		(* "Bad" exceptions *)
+		
 		| Failure msg -> abort_with_bad_exception ("`Failure` exception: `" ^ msg ^ "`")
 		
 		| InterfacingError msg -> abort_with_bad_exception ("Interfacing error: " ^ msg ^ "")
