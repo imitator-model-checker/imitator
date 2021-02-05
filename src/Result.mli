@@ -19,7 +19,7 @@
 (** Error types *)
 (************************************************************)
 type error_type =
-	| Division_by_zero
+	| Division_by_zero				of string
 
 	| ModelFileNotFound_error
 	| PropertyFileNotFound_error

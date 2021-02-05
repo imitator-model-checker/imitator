@@ -1144,7 +1144,7 @@ end;
 	
 	begin match e with
 		(* "Good" (at least not bad) exceptions *)
-		| Division_by_0 msg -> abort_with_good_exception Result.Division_by_zero
+		| Division_by_0 msg -> abort_with_good_exception (Result.Division_by_zero msg)
 		
 		
 		
