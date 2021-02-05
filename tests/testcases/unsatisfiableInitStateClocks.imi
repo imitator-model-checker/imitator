@@ -1,0 +1,65 @@
+(************************************************************
+ *                                IMITATOR MODEL
+ *
+ * Title            : Unsatisfiable initial constraint (clocks)
+ * Description      : Dummy example to test unsatisfiability of initial constraint
+ * Correctness      : N/A
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : Test
+ * Source           : Own work
+ * bibkey           : 
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ *
+ * Created          : 2021/02/05
+ * Last modified    : 2021/02/05
+ * Model version    : 0.1
+ *
+ * IMITATOR version :
+ ************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y,
+		: clock;
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: a;
+
+loc l1: invariant True
+	when x >= y sync a do {x := y} goto l1;
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x > y
+	& x = 2
+	& y >= 3
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end

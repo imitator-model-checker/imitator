@@ -65,6 +65,9 @@ val counter_explore_using_strategy : Statistics.hybridCounter
 (**************************************************************)
 (* Class-independent functions *)
 (**************************************************************)
+(*------------------------------------------------------------*)
+(* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, raise UnsatisfiableInitialState *)
+(*------------------------------------------------------------*)
 val compute_initial_state_or_abort : unit -> State.state
 
 

@@ -11,7 +11,7 @@
  *
  * File contributors : Étienne André, Jaime Arias, Nguyễn Hoàng Gia
  * Created           : 2015/12/02
- * Last modified     : 2020/12/04
+ * Last modified     : 2021/02/05
  *
  ************************************************************)
 
@@ -46,7 +46,7 @@ open StateSpace
 exception Unsat_exception
 
 (* Local exception to denote a division by 0 *)
-exception Division_by_0_while_evaluating_discrete
+(* exception Division_by_0_while_evaluating_discrete *)
 
 
 
@@ -1394,7 +1394,7 @@ let create_initial_state () : state =
 
 
 (*------------------------------------------------------------*)
-(* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, abort *)
+(* Compute the initial state with the initial invariants and time elapsing, and check whether it is satisfiable; if not, raise UnsatisfiableInitialState *)
 (*------------------------------------------------------------*)
 let compute_initial_state_or_abort () : state =
 	(* Retrieve the model *)
@@ -1434,7 +1434,7 @@ let compute_initial_state_or_abort () : state =
 	(* Check the satisfiability *)
 	if not (LinearConstraint.px_is_satisfiable model.initial_constraint) then (
 		print_warning "The initial constraint of the model is not satisfiable.";
-		terminate_program();
+		raise (UnsatisfiableInitialState);
 	)else(
 		print_message Verbose_total ("\nThe initial constraint of the model is satisfiable.");
 	);
@@ -1448,7 +1448,7 @@ let compute_initial_state_or_abort () : state =
 	let begin_message = "The initial constraint of the model after invariant " ^ (if not options#no_time_elapsing then "and time elapsing " else "") in
 	if not (LinearConstraint.px_is_satisfiable initial_constraint_after_time_elapsing) then (
 		print_warning (begin_message ^ "is not satisfiable.");
-		terminate_program();
+		raise (UnsatisfiableInitialState);
 	)else(
 		print_message Verbose_total ("\n" ^ begin_message ^ "is satisfiable.");
 	);
@@ -1628,13 +1628,13 @@ let compute_new_location_guards_updates (source_location: Location.global_locati
 		List.iter (fun (discrete_index, arithmetic_expression) ->
 			(* Compute its new value *)
 (* 			let new_value = LinearConstraint.evaluate_pxd_linear_term (Location.get_discrete_value source_location) linear_term in *)
-			let new_value = try(
-				DiscreteExpressions.eval_discrete_arithmetic_expression (Location.get_discrete_value source_location) arithmetic_expression)
-				with Division_by_0_while_evaluating_discrete -> (
+			let new_value = (*try( *)
+			DiscreteExpressions.eval_discrete_arithmetic_expression (Location.get_discrete_value source_location) arithmetic_expression
+(*				) with Division_by_0_while_evaluating_discrete -> (
 					(*** NOTE: we could still go on with the computation by setting the discrete to, e.g., 0 but this seems really not good for a model checker ***)
 					raise (Division_by_0 ("Division by 0 encountered when evaluating the successor of the discrete variables!"))
 					(*** TODO: give more info (i.e., "Value of the current variables: TODO Update: TODO ") ****)
-				)
+				)*)
 			in
 
 			(* Check if already updated *)
