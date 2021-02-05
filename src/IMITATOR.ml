@@ -1130,7 +1130,14 @@ end;
 	in
 	
 	(* Actions to perform for "good" exceptions, i.e., that depend on the user model *)
-	let abort_with_good_exception error_type =
+	let abort_with_good_exception error_type error_message =
+		(* Stop the main algorithm counters *)
+		counter_algorithm_and_parsing#stop;
+		counter_main_algorithm#stop;
+
+		(* Print error *)
+		print_error (error_message);
+
 		(* Force output result if not set *)
 		(*** NOTE: probably useless check ***)
 		let options = Input.get_options () in
@@ -1144,7 +1151,7 @@ end;
 	
 	begin match e with
 		(* "Good" (at least not bad) exceptions *)
-		| Division_by_0 msg -> abort_with_good_exception (Result.Division_by_zero msg)
+		| Division_by_0 msg -> abort_with_good_exception (Result.Division_by_zero msg) msg
 		
 		
 		

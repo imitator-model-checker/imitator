@@ -8,7 +8,7 @@
  *
  * File contributors : Étienne André
  * Created           : 2019/12/10
- * Last modified     : 2020/01/07
+ * Last modified     : 2021/02/05
  *
  ************************************************************)
 
@@ -84,10 +84,18 @@ and eval_discrete_term discrete_valuation = function
 		(eval_discrete_factor discrete_valuation discrete_factor)
 		
 	| DT_div (discrete_term, discrete_factor) ->
-			(*** TODO: division by zero ***)
+		let numerator	= (eval_discrete_term discrete_valuation discrete_term) in
+		let denominator	= (eval_discrete_factor discrete_valuation discrete_factor) in
+		
+		(* Check for 0-denominator *)
+		if NumConst.equal denominator NumConst.zero then(
+			raise (Exceptions.Division_by_0 ("Division by 0 found when trying to perform " ^ (NumConst.string_of_numconst numerator) ^ " / " ^ (NumConst.string_of_numconst denominator) ^ ""))
+		);
+
+		(* Divide *)
 		NumConst.div
-		(eval_discrete_term discrete_valuation discrete_term)
-		(eval_discrete_factor discrete_valuation discrete_factor)
+		numerator
+		denominator
 		
 	| DT_factor discrete_factor ->
 		eval_discrete_factor discrete_valuation discrete_factor
