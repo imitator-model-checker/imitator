@@ -80,14 +80,14 @@ Error                                   : property file not found
 	{
 		# Test version             : 1
 		# Test since               : 2021/02/02
-		# Last modified            : 2021/02/02
+		# Last modified            : 2021/02/05
 		# Test for IMITATOR version: 3
 		'purpose'    : 'Test syntax rejection: non-linear clock',
 		'input_files': ['testSyntaxNonLinearClock.imi'],
 		'options'    : '-mode checksyntax',
 		'expectations' : [
 			{'file': 'testSyntaxNonLinearClock.res' , 'content' : """
-Error                                   : model parsing error
+Error                                   : invalid model
 		"""
 			} # end result file
 			,
@@ -4588,7 +4588,7 @@ x = 0 & global_time = 4
 
  | 
  | via d = 1
- | followed by combined transition [PTA pta: guard{ x = 1} updates{d2 := (d2) / 2}  sync a Target l4] 
+ | followed by combined transition [PTA pta: guard{ x = 1} updates{d2 := d2 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/2, d2 = 25 ==> 
 x = 1 & global_time = 5
@@ -4635,7 +4635,7 @@ x = 0 & global_time = 4
 
  | 
  | via d = 1
- | followed by combined transition [PTA pta: guard{ x = 1} updates{d2 := (d2) / 2}  sync a Target l4] 
+ | followed by combined transition [PTA pta: guard{ x = 1} updates{d2 := d2 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/2, d2 = 25 ==> 
 x = 1 & global_time = 5
@@ -4703,7 +4703,7 @@ p = 1/2 & x = 0 & global_time = 4
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ 1 > p
-& x = 1} updates{d1 := (d1) / 2}  sync a Target l4] 
+& x = 1} updates{d1 := d1 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/4 ==> 
 p = 1/2 & x = 1 & global_time = 5
@@ -4798,7 +4798,7 @@ p = 1/2 & x = 0 & global_time = 4
  | 
  | via d = 1
  | followed by combined transition [PTA pta: guard{ 1 > p
-& x = 1} updates{d1 := (d1) / 2}  sync a Target l4] 
+& x = 1} updates{d1 := d1 / 2}  sync a Target l4] 
  | 
  v  pta: l4, d1 = 5/4 ==> 
 p = 1/2 & x = 1 & global_time = 5
