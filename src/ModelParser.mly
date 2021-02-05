@@ -499,7 +499,8 @@ arithmetic_term:
 	| rational NAME { Parsed_DT_mul (Parsed_DT_factor (Parsed_DF_constant $1), Parsed_DF_variable $2) }
 	| arithmetic_term OP_MUL arithmetic_factor { Parsed_DT_mul ($1, $3) }
 	| arithmetic_term OP_DIV arithmetic_factor { Parsed_DT_div ($1, $3) }
-	| OP_MINUS arithmetic_term { Parsed_DT_mul($2, Parsed_DF_constant NumConst.minus_one) }
+	/*| OP_MINUS arithmetic_term { Parsed_DT_mul($2, Parsed_DF_constant NumConst.minus_one) }*/
+	| OP_MINUS arithmetic_factor { Parsed_DT_factor(Parsed_DF_unary_min $2) }
 ;
 
 arithmetic_factor:
