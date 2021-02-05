@@ -374,6 +374,94 @@ Is strongly deterministic?              : false
 
 
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+	# TESTS ON UNSATISFIABLE INITIAL STATE
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/02/05
+		# Last modified            : 2021/02/05
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test unsatisfiable initial state (clock constraint)',
+		'input_files': ['unsatisfiableInitStateClocks.imi'],
+		'options'    : '-mode statespace',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateClocks.res' , 'content' : """
+Error                                   : unsatisfiable initial state
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/02/05
+		# Last modified            : 2021/02/05
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test unsatisfiable initial state (clock constraint + invariant)',
+		'input_files': ['unsatisfiableInitStateClocksInv.imi'],
+		'options'    : '-mode statespace',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateClocksInv.res' , 'content' : """
+Error                                   : unsatisfiable initial state
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/02/05
+		# Last modified            : 2021/02/05
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test unsatisfiable initial state (discrete+clock constraint)',
+		'input_files': ['unsatisfiableInitStateDiscrete.imi'],
+		'options'    : '-mode statespace',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateDiscrete.res' , 'content' : """
+Error                                   : unsatisfiable initial state
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#------------------------------------------------------------
+	{
+		# Test version             : 1
+		# Test since               : 2021/02/05
+		# Last modified            : 2021/02/05
+		# Test for IMITATOR version: 3
+		'purpose'    : 'Test unsatisfiable initial state (incompatible discrete invariant)',
+		'input_files': ['unsatisfiableInitStateDiscreteInv.imi'],
+		'options'    : '-mode statespace',
+		'expectations' : [
+			{'file': 'unsatisfiableInitStateDiscreteInv.res' , 'content' : """
+Error                                   : unsatisfiable initial state
+		"""
+			} # end result file
+			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+	
+	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 	# TESTS ON DISCRETE VARIABLES
 	#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
 
