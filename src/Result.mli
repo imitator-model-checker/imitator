@@ -10,7 +10,7 @@
  * 
  * File contributors : Étienne André
  * Created           : 2015/11/23
- * Last modified     : 2021/01/22
+ * Last modified     : 2021/02/05
  *
  ************************************************************)
 
@@ -19,12 +19,18 @@
 (** Error types *)
 (************************************************************)
 type error_type =
+	| Division_by_zero
+
 	| ModelFileNotFound_error
 	| PropertyFileNotFound_error
+
 	| InvalidModel_error
 	| InvalidProperty_error
+	
 	| Lexing_error					of string
+	
 	| ModelParsing_error			of string
+	
 	| PropertyParsing_error			of string
 
 
