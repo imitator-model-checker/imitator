@@ -10,7 +10,7 @@
  *
  * File contributors : Ulrich Kühne, Étienne André, Laure Petrucci
  * Created           : 2009/09/07
- * Last modified     : 2020/11/11
+ * Last modified     : 2021/02/05
  *
  ************************************************************)
 
@@ -1118,13 +1118,13 @@ end;
 		| InternalError msg -> "Fatal internal error: " ^ msg ^ ""
 		| NotImplemented msg -> "A non-implemented feature has been called: " ^ msg ^ ""
 		| Division_by_0 msg -> "Division by 0! " ^ msg ^ ""
-		| Failure msg -> "'Failure' exception: '" ^ msg ^ "'"
-		| Invalid_argument msg -> "'Invalid_argument' exception: '" ^ msg ^ "'"
+		| Failure msg -> "`Failure` exception: `" ^ msg ^ "`"
+		| Invalid_argument msg -> "`Invalid_argument` exception: `" ^ msg ^ "`"
 		| SerializationError msg -> "Serialization error: " ^ msg ^ ""
 		| InterfacingError msg -> "Interfacing error: " ^ msg ^ ""
-		| Not_found -> "'Not_found' exception!"
+		| Not_found -> "`Not_found` exception!"
 		| Random_generator_initialization_exception-> "A fatal error occurred during the random generator initialization."
-		| e -> "Fatal exception '" ^ (Printexc.to_string e) ^ "'."
+		| e -> "Fatal exception `" ^ (Printexc.to_string e) ^ "`."
 	in
 
 	(* Stop the main algorithm counters *)
