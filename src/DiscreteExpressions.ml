@@ -156,6 +156,7 @@ let check_discrete_boolean_expression discrete_valuation = function
 
 (* Check if a discrete term factor of an arithmetic expression should have parenthesis *)
 let is_discrete_factor_has_parenthesis = function
+    | DF_unary_min _
     | DF_expression(DAE_plus _)
     | DF_expression(DAE_minus _) -> true
     | _ -> false
@@ -194,6 +195,10 @@ let add_left_parenthesis expr str =
 
 let add_right_parenthesis str expr =
     if is_right_expr_has_parenthesis expr then "(" ^ str ^ ")" else str
+
+let add_parenthesis_to_unary_minus str = function
+    | DF_expression _ -> "(" ^ str ^ ")"
+    | _ -> str
 
 (* Convert an arithmetic expression into a string *)
 (*** NOTE: we consider more cases than the strict minimum in order to improve readability a bit ***)
@@ -243,7 +248,11 @@ let customized_string_of_arithmetic_expression customized_string variable_names 
 	and string_of_factor customized_string = function
 		| DF_variable discrete_index -> variable_names discrete_index
 		| DF_constant discrete_value -> NumConst.string_of_numconst discrete_value
-		| DF_unary_min discrete_factor as expr -> Constants.default_operator_string.unary_min_string ^ (string_of_factor customized_string discrete_factor)
+		| DF_unary_min discrete_factor as expr ->
+		    Constants.default_operator_string.unary_min_string ^
+		    add_parenthesis_to_unary_minus (
+		         (string_of_factor customized_string discrete_factor)
+		    ) discrete_factor
 		| DF_expression discrete_arithmetic_expression as expr ->
 			(*** TODO: simplify a bit? ***)
 			(string_of_arithmetic_expression customized_string discrete_arithmetic_expression)
