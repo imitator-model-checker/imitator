@@ -3,8 +3,8 @@
  * 
  * Title            : SLAF14-5
  * Description      : 
- * Correctness      : 
- * Scalable         : 
+ * Correctness      : System must be schedulable
+ * Scalable         : yes
  * Generated        : 
  * Categories       : Academic ; Protocol ; RTS
  * Source           : 
