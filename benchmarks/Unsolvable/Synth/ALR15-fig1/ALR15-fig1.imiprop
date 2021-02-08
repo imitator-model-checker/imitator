@@ -1,0 +1,23 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : ALR15-fig1
+ * Description      : Toy example for which reachability synthesis does not terminate. Expected result p \in (0, 1]
+ * Correctness      : Reachability
+ * Scalable         : 
+ * Generated        : 
+ * Categories       : Academic ; Unsolvable
+ * Source           : Own work
+ * bibkey           : ALR15
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ * 
+ * Created          : 2021/02/08
+ * Last modified    : 2021/02/08
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+property := #synth EF(loc[pta] = l4);

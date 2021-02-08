@@ -1,0 +1,83 @@
+(*******************************************************************************
+ *                                IMITATOR MODEL                               
+ * 
+ * Title            : ALR15-fig1
+ * Description      : Toy example for which reachability synthesis does not terminate. Expected result p \in (0, 1]
+ * Correctness      : Reachability
+ * Scalable         : no
+ * Generated        : no
+ * Categories       : Academic ; Unsolvable
+ * Source           : Own work
+ * bibkey           : ALR15
+ * Author           : Étienne André
+ * Modeling         : Étienne André
+ * Input by         : Étienne André
+ * License          : Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+ * 
+ * Created          : 2021/02/08
+ * Last modified    : 2021/02/08
+ * Model version    : 
+ * 
+ * IMITATOR version : 3
+ ******************************************************************************)
+
+var
+
+(* Clocks *)
+ 	x, y,
+		: clock;
+
+(* Parameters *)
+	p,
+		: parameter;
+
+
+
+(************************************************************)
+  automaton pta
+(************************************************************)
+synclabs: ;
+
+loc l1: invariant True
+	when x = 1 do {x := 0} goto l2;
+	when x >= 1 & y = 0 goto l4;
+
+loc l2: invariant True
+	when y = 1 do {y := 0} goto l3;
+
+loc l3: invariant True
+	when y <= p do {y := 0} goto l1;
+
+loc l4: invariant True
+
+end (* pta *)
+
+
+
+(************************************************************)
+(* Initial state *)
+(************************************************************)
+
+init :=
+	(*------------------------------------------------------------*)
+	(* Initial location *)
+	(*------------------------------------------------------------*)
+	& loc[pta] = l1
+
+	(*------------------------------------------------------------*)
+	(* Initial clock constraints *)
+	(*------------------------------------------------------------*)
+	& x = 0
+	& y = 0
+
+	(*------------------------------------------------------------*)
+	(* Parameter constraints *)
+	(*------------------------------------------------------------*)
+	& 0 <= p & p <= 1
+;
+
+
+(************************************************************)
+(* The end *)
+(************************************************************)
+end
