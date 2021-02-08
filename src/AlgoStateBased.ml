@@ -1314,6 +1314,7 @@ let create_initial_state () : state =
     (* Check if the discrete invariants are all satisfied *)
     let is_discrete_initial_invariants_satisfied = is_discrete_guards_satisfied initial_location initial_invariants in
 
+    (* Initial invariant is not satisfied, we raise an exception ! *)
     if not (is_discrete_initial_invariants_satisfied) then(
         raise UnsatisfiableInitialState
     );

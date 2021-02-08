@@ -1888,13 +1888,7 @@ let check_init useful_parsing_model_information init_definition observer_automat
 (* we raise an InvalidExpression exception *)
 (*------------------------------------------------------------*)
 
-(* Try to convert parsed discrete factor to a linear term *)
-(* If it's not possible, we raise an InvalidExpression exception *)
-let try_convert_linear_term_of_parsed_discrete_factor = function
-    | Parsed_DF_variable variable_name -> Variable(NumConst.one, variable_name)
-    | Parsed_DF_constant var_value -> Constant var_value
-    | Parsed_DF_expression _
-    | Parsed_DF_unary_min _ -> raise (InvalidExpression "A non-linear arithmetic expression involve clock(s) / parameter(s)")
+
 
 (* Try to convert parsed discrete term to a linear term *)
 (* If it's not possible, we raise an InvalidExpression exception *)
@@ -1926,10 +1920,26 @@ let rec try_convert_linear_term_of_parsed_discrete_term = function
 
 (* Try to convert parsed discrete arithmetic expression (non-linear expression) to a linear expression *)
 (* If it's not possible, we raise an InvalidExpression exception *)
-let rec try_convert_linear_expression_of_parsed_discrete_arithmetic_expression = function
+and try_convert_linear_expression_of_parsed_discrete_arithmetic_expression = function
     | Parsed_DAE_plus (expr, term) -> Linear_plus_expression (try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr, try_convert_linear_term_of_parsed_discrete_term term)
     | Parsed_DAE_minus (expr, term) -> Linear_minus_expression (try_convert_linear_expression_of_parsed_discrete_arithmetic_expression expr, try_convert_linear_term_of_parsed_discrete_term term)
     | Parsed_DAE_term term -> Linear_term (try_convert_linear_term_of_parsed_discrete_term term)
+
+(* Try to convert parsed discrete factor to a linear term *)
+(* If it's not possible, we raise an InvalidExpression exception *)
+and try_convert_linear_term_of_parsed_discrete_factor = function
+        | Parsed_DF_variable variable_name -> Variable(NumConst.one, variable_name)
+        | Parsed_DF_constant var_value -> Constant var_value
+        | Parsed_DF_unary_min parsed_discrete_factor ->
+            (* Check for unary min, negate variable and constant *)
+            (match parsed_discrete_factor with
+                | Parsed_DF_variable variable_name -> Variable(NumConst.minus_one, variable_name)
+                | Parsed_DF_constant var_value -> Constant (NumConst.neg var_value)
+                | _ -> try_convert_linear_term_of_parsed_discrete_factor parsed_discrete_factor
+            )
+        (* Parenthesis used in a linear expression ! So it's difficult to make the conversion, we raise an exception *)
+        (* Note : This error was managed by the syntactic analysis (parser) at the time when we could only use linear expressions *)
+        | Parsed_DF_expression expr -> raise (InvalidExpression "A linear arithmetic expression has invalid format, maybe caused by nested expression(s)")
 
 let try_convert_linear_expression_of_parsed_discrete_boolean_expression = function
     | Parsed_expression (l_expr, relop, r_expr) ->
