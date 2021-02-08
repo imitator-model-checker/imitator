@@ -4,8 +4,8 @@
  * Title            : fischerHRSV02-3
  * Description      : Fischer's mutual exclusion protocol. Version with 3 processes.
  * Correctness      : No two processes in the mutual exclusion
- * Scalable         : 
- * Generated        : 
+ * Scalable         : in the number of processes
+ * Generated        : no
  * Categories       : Academic ; Protocol ; RTS
  * Source           : From "Linear Parametric Model Checking of Timed Automata" Hune, Romijn, Stoelinga, Vaandrager, 2002
  * bibkey           : HRSV02
