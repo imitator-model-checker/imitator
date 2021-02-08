@@ -2,25 +2,24 @@
  *                                IMITATOR MODEL                               
  * 
  * Title            : Test-Thiele
- * Description      : 
- * Correctness      : 
- * Scalable         : 
- * Generated        : 
+ * Description      : Test Case 2 from [SSLAF13]. Note: might not be the final model of the paper (?)
+ * Correctness      : system is schedulable
+ * Scalable         : yes
+ * Generated        : yes
  * Categories       : Protocol ; RTS
- * Source           : 
+ * Source           : "Parametric Schedulability Analysis of Fixed Priority Real-Time Distributed Systems" (2013) by Youcheng Sun, Romain Soulat, Giuseppe Lipari, Etienne Andre and Laurent Fribourg; Test Case 2.
  * bibkey           : SSLAF13
- * Author           : 
- * Modeling         : 
- * Input by         : 
+ * Author           : Youcheng Sun, Romain Soulat, Giuseppe Lipari, Etienne Andre and Laurent Fribourg
+ * Modeling         : Youcheng Sun, Romain Soulat, Giuseppe Lipari, Etienne Andre and Laurent Fribourg
+ * Input by         : ?
  * License          : 
  * 
  * Created          : < 2015/10/30
- * Last modified    : 2020/08/18
+ * Last modified    : 2018/08/20
  * Model version    : 
  * 
  * IMITATOR version : 3
  ******************************************************************************)
-
 
 
 
