@@ -1309,7 +1309,6 @@ let create_initial_state () : state =
 	let initial_location = model.initial_location in
 	let initial_constraint = model.initial_constraint in
 
-    (* TODO benjamin : check if the discrete part of invariant is satisfied *)
     (* Get model invariants for the target location *)
     let initial_invariants = get_model_invariants initial_location in
     (* Check if the discrete invariants are all satisfied *)
