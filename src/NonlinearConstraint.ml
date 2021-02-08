@@ -115,7 +115,7 @@ let customized_string_of_nonlinear_constraint customized_string variable_names =
 	    " " ^
 	    (string_of_list_of_string_with_sep
 		    customized_string.and_operator
-		    (List.map (DiscreteExpressions.customized_string_of_discrete_boolean_expression customized_string variable_names) nonlinear_constraint)
+		    (List.rev_map (DiscreteExpressions.customized_string_of_discrete_boolean_expression customized_string variable_names) nonlinear_constraint)
 	    )
 
 (* Get string of non-linear constraint inequalities with default strings *)

@@ -266,7 +266,7 @@ let string_of_clock_updates model clock_updates =
 
 (* Convert a list of discrete updates into a string *)
 let string_of_discrete_updates ?(sep=", ") model updates =
-	string_of_list_of_string_with_sep sep (List.map (fun (variable_index, arithmetic_expression) ->
+	string_of_list_of_string_with_sep sep (List.rev_map (fun (variable_index, arithmetic_expression) ->
 		(* Convert the variable name *)
 		(model.variable_names variable_index)
 		^ " := "
