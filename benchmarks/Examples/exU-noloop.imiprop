@@ -1,0 +1,18 @@
+(************************************************************
+ *                      IMITATOR MODEL                      
+ *
+ * U-PTA for which there exists a loop in the trace set of p=infinity, but not for any actual parameter valuation.
+ *
+ * Description     : U-PTA for which there exists a loop in the trace set of p=infinity, but not for any actual parameter valuation.
+ * Correctness     : 
+ * Source          : Didier Lime
+ * Author          : Didier Lime
+ * Modeling        : Étienne André
+ * Input by        : Étienne André
+ *
+ * Created         : 2021/02/08
+ * Last modified   : 2021/02/08
+ *
+ * IMITATOR version: 3
+ ************************************************************)
+property := #synth CycleThrough(loc[pta] = l1);
