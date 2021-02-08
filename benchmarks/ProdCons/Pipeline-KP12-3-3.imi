@@ -4,7 +4,7 @@
  * Title            : Pipeline-KP12-3-3
  * Description      : The network presented in Figure 2 models the system consisting of the Producer feeding the Consumer with data sent through a sequence of nodes with additional processing capabilities. The model is scalable with respect to the number n of the processing nodes and the length m of each processing node and it contains three lower (a,c,e) and three upper (b,d,f) parameters. Note: the clocks were renamed (w.r.t. to [KP12]) for sake of simplicity.
  * Correctness      : φ2 = ConsWaiting ∧ ProdReady ∧ xtotal ≥ 5
- * Scalable         : 
+ * Scalable         : yes
  * Generated        : 
  * Categories       : Academic ; ProdCons
  * Source           : SMT-based Parameter Synthesis for L/U Automata, Michał Knapik and Wojciech Penczek
