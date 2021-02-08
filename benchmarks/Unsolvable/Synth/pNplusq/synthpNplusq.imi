@@ -15,7 +15,7 @@
  * License          : 
  * 
  * Created          : 2021/01/21
- * Last modified    : 2021/01/21
+ * Last modified    : 2021/02/08
  * Model version    : 
  * 
  * IMITATOR version : 3
@@ -36,7 +36,7 @@ var
 (************************************************************)
   automaton pta
 (************************************************************)
-synclabs: a;
+synclabs: ;
 
 loc l1: invariant True
 	when x = p do {x := 0} goto l1;
