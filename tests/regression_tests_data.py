@@ -14,7 +14,7 @@
 # File contributors : Étienne André, Jaime Arias
 #
 # Created           : 2015/10/23
-# Last modified     : 2021/02/05
+# Last modified     : 2021/02/08
 #************************************************************
 
 
@@ -4813,6 +4813,31 @@ END RESULT
 """
 			} # end result file
 			,
+		] # end expectations
+	} # end test case
+	#------------------------------------------------------------
+
+	,
+
+	#------------------------------------------------------------
+	{
+		'purpose'    : 'Test LoopSynth: BlT09-fig1',
+		'input_files': ['BlT09-fig1.imi', 'BlT09-fig1.imiprop'],
+		'options'    : '',
+		'expectations' : [
+			{'file': 'BlT09-fig1.res' , 'content' : """
+BEGIN CONSTRAINT
+ u + 2 > l
+& l >= 0
+& u > 0
+END CONSTRAINT
+
+------------------------------------------------------------
+Constraint soundness                    : exact
+Termination                             : regular termination
+Constraint nature                       : good
+"""
+			} #end result file
 		] # end expectations
 	} # end test case
 	#------------------------------------------------------------
